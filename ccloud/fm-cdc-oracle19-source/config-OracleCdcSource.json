@@ -13,6 +13,7 @@
     "kafka.api.secret": "PASSWORD",
     "kafka.auth.mode": "${connect.regional.connector}",
     "kafka.service.account.id": "STRING",
+    "key.converter.key.schema.id.serializer": "io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer",
     "key.converter.key.subject.name.strategy": "TopicNameStrategy",
     "key.template": "${primaryKeyStructOrValue}",
     "lob.topic.name.template": "STRING",
@@ -80,4 +81,5 @@
     "value.converter.connect.meta.data": "BOOLEAN",
     "value.converter.decimal.format": "BASE64",
     "value.converter.reference.subject.name.strategy": "DefaultReferenceSubjectNameStrategy",
+    "value.converter.value.schema.id.serializer": "io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer",
     "value.converter.value.subject.name.strategy": "TopicNameStrategy",

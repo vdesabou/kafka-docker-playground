@@ -481,6 +481,51 @@ Dictates the content of records produced to the error topic. If set to ``Error s
 ==========================
 Additional Configs
 ==========================
+🔘 key.converter.key.schema.id.serializer
+
+The class name of the schema ID serializer for keys. This is used to serialize schema IDs in the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.value.schema.id.serializer
+
+The class name of the schema ID serializer for values. This is used to serialize schema IDs in the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
+	 - Importance: LOW
+	 - Required: false
+
 🔘 errors.tolerance
 
 Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
@@ -499,27 +544,9 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 	 - Importance: LOW
 	 - Required: false
 
-🔘 value.converter.connect.meta.data
-
-
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
-	 - Required: LOW
-
 🔘 value.converter.value.subject.name.strategy
 
 Determines how to construct the subject name under which the value schema is registered with Schema Registry.
-
-	 - Type: STRING
-	 - Default: TopicNameStrategy
-	 - Importance: LOW
-	 - Required: false
-
-🔘 key.converter.key.subject.name.strategy
-
-How to construct the subject name for key schema registration.
 
 	 - Type: STRING
 	 - Default: TopicNameStrategy
@@ -532,15 +559,6 @@ Set the subject reference name strategy for value. Valid entries are DefaultRefe
 
 	 - Type: STRING
 	 - Default: DefaultReferenceSubjectNameStrategy
-	 - Importance: LOW
-	 - Required: false
-
-🔘 value.converter.ignore.default.for.nullables
-
-When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
-
-	 - Type: BOOLEAN
-	 - Default: false
 	 - Importance: LOW
 	 - Required: false
 
@@ -601,15 +619,6 @@ The time in milliseconds to wait for a connection to be established
 	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
 	 - Required: MEDIUM
 
-🔘 api1.http.request.timeout.ms
-
-The time in milliseconds to wait for a request response from the server
-
-	 - Type: INT
-	 - Default: 30000
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api1.http.request.body
 
 
@@ -618,6 +627,15 @@ The time in milliseconds to wait for a request response from the server
 	 - Default: STRING
 	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
 	 - Required: MEDIUM
+
+🔘 api1.http.request.timeout.ms
+
+The time in milliseconds to wait for a request response from the server
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api1.http.offset.mode
 
@@ -628,13 +646,13 @@ This config indicates how offsets are computed and how requests are generated. I
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 api1.max.retries
+🔘 api1.http.response.compression.enabled
 
-The maximum number of times to retry on errors before failing the task.
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
 
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api1.http.initial.offset
@@ -646,12 +664,12 @@ The maximum number of times to retry on errors before failing the task.
 	 - Importance: The initial offset to be used to generate the first request. This needs to be set if either one or more of the configs - 'url', 'http.request.parameters', or 'http.request.body' contain the template variable ``${offset}``.
 	 - Required: HIGH
 
-🔘 api1.retry.backoff.policy
+🔘 api1.max.retries
 
-The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+The maximum number of times to retry on errors before failing the task.
 
-	 - Type: STRING
-	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Type: INT
+	 - Default: 5
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -664,21 +682,21 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 	 - Importance: The JSON Pointer to the entity in the JSON response containing the actual data that should be written to Kafka as records. The entity can be an array (multiple records in a single response) or an object / scalar value (single record).
 	 - Required: HIGH
 
+🔘 api1.retry.backoff.policy
+
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api1.retry.backoff.ms
 
 The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
 
 	 - Type: INT
 	 - Default: 3000
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api1.retry.on.status.codes
-
-Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
-
-	 - Type: STRING
-	 - Default: 400-
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -691,15 +709,6 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: The JSON Pointer to the value in each record that corresponds to the offset for that record (it is relative to 'http.response.data.json.pointer'). The offset will be available to the subsequent request as ${offset} and it will also be used for checkpointing and recovery in case of connector failures or restarts. This config should only be set if 'http.offset.mode' is set to ``CHAINING``.
 	 - Required: MEDIUM
 
-🔘 api1.http.request.headers.separator
-
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
-
-	 - Type: STRING
-	 - Default: |
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api1.http.next.page.json.pointer
 
 
@@ -709,12 +718,21 @@ The character that separates multiple distinct headers within ``http.request.hea
 	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
-🔘 api1.http.request.parameters.separator
+🔘 api1.retry.on.status.codes
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
 
 	 - Type: STRING
-	 - Default: &
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api1.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -724,6 +742,15 @@ The time in milliseconds to wait between consecutive requests.
 
 	 - Type: INT
 	 - Default: 60000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api1.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -763,15 +790,6 @@ Whether to use cursor pagination with timestamp mode.
 	 - Importance: The initial start timestamp to be used to generate the first request. This needs to be set when using ``cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
 	 - Required: MEDIUM
 
-🔘 api1.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api1.http.cursor.pagination.parameter.name
 
 
@@ -779,6 +797,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Name of the request parameter which holds the next page token.
+	 - Required: MEDIUM
+
+🔘 api1.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api1.initial.end.timestamp.value
@@ -955,6 +982,15 @@ The time in milliseconds to wait for a connection to be established
 	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
 	 - Required: MEDIUM
 
+🔘 api2.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
+	 - Required: MEDIUM
+
 🔘 api2.http.request.timeout.ms
 
 The time in milliseconds to wait for a request response from the server
@@ -964,14 +1000,14 @@ The time in milliseconds to wait for a request response from the server
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api2.http.request.body
+🔘 api2.http.response.compression.enabled
 
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
-	 - Required: MEDIUM
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
 
 🔘 api2.http.offset.mode
 
@@ -982,15 +1018,6 @@ This config indicates how offsets are computed and how requests are generated. I
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 api2.max.retries
-
-The maximum number of times to retry on errors before failing the task.
-
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api2.http.initial.offset
 
 
@@ -999,6 +1026,15 @@ The maximum number of times to retry on errors before failing the task.
 	 - Default: STRING
 	 - Importance: The initial offset to be used to generate the first request. This needs to be set if either one or more of the configs - 'url', 'http.request.parameters', or 'http.request.body' contain the template variable ``${offset}``.
 	 - Required: HIGH
+
+🔘 api2.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api2.retry.backoff.policy
 
@@ -1018,15 +1054,6 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 	 - Importance: The JSON Pointer to the entity in the JSON response containing the actual data that should be written to Kafka as records. The entity can be an array (multiple records in a single response) or an object / scalar value (single record).
 	 - Required: HIGH
 
-🔘 api2.retry.backoff.ms
-
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
-
-	 - Type: INT
-	 - Default: 3000
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api2.http.offset.json.pointer
 
 
@@ -1035,6 +1062,15 @@ The initial duration in milliseconds to wait following an error before a retry a
 	 - Default: STRING
 	 - Importance: The JSON Pointer to the value in each record that corresponds to the offset for that record (it is relative to 'http.response.data.json.pointer'). The offset will be available to the subsequent request as ${offset} and it will also be used for checkpointing and recovery in case of connector failures or restarts. This config should only be set if 'http.offset.mode' is set to ``CHAINING``.
 	 - Required: MEDIUM
+
+🔘 api2.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api2.retry.on.status.codes
 
@@ -1081,15 +1117,6 @@ The character that separates multiple distinct request parameters within ``http.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api2.test.api
-
-Flag to determine if the api needs to be tested
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
-	 - Required: false
-
 🔘 api2.enable.cursor.pagination.with.timestamp.mode
 
 Whether to use cursor pagination with timestamp mode.
@@ -1097,6 +1124,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api2.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api2.http.timestamp.json.pointer
@@ -1126,15 +1162,6 @@ Whether to use cursor pagination with timestamp mode.
 	 - Importance: Name of the request parameter which holds the next page token.
 	 - Required: MEDIUM
 
-🔘 api2.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api2.initial.end.timestamp.value
 
 
@@ -1142,6 +1169,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
+	 - Required: MEDIUM
+
+🔘 api2.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api2.timestamp.format
@@ -1255,15 +1291,6 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 ==========================
 API-3 Configs
 ==========================
-🔘 api3.topics
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Kafka topics to publish data to.
-	 - Required: HIGH
-
 🔘 api3.http.api.path
 
 
@@ -1271,6 +1298,15 @@ API-3 Configs
 	 - Type: false
 	 - Default: STRING
 	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Required: HIGH
+
+🔘 api3.topics
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Kafka topics to publish data to.
 	 - Required: HIGH
 
 🔘 api3.http.request.headers
@@ -1336,13 +1372,13 @@ This config indicates how offsets are computed and how requests are generated. I
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 api3.max.retries
+🔘 api3.http.response.compression.enabled
 
-The maximum number of times to retry on errors before failing the task.
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
 
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api3.http.initial.offset
@@ -1354,12 +1390,12 @@ The maximum number of times to retry on errors before failing the task.
 	 - Importance: The initial offset to be used to generate the first request. This needs to be set if either one or more of the configs - 'url', 'http.request.parameters', or 'http.request.body' contain the template variable ``${offset}``.
 	 - Required: HIGH
 
-🔘 api3.retry.backoff.policy
+🔘 api3.max.retries
 
-The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+The maximum number of times to retry on errors before failing the task.
 
-	 - Type: STRING
-	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Type: INT
+	 - Default: 5
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1372,21 +1408,12 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 	 - Importance: The JSON Pointer to the entity in the JSON response containing the actual data that should be written to Kafka as records. The entity can be an array (multiple records in a single response) or an object / scalar value (single record).
 	 - Required: HIGH
 
-🔘 api3.retry.backoff.ms
+🔘 api3.retry.backoff.policy
 
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
-
-	 - Type: INT
-	 - Default: 3000
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api3.retry.on.status.codes
-
-Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
 
 	 - Type: STRING
-	 - Default: 400-
+	 - Default: EXPONENTIAL_WITH_JITTER
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1399,6 +1426,15 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: The JSON Pointer to the value in each record that corresponds to the offset for that record (it is relative to 'http.response.data.json.pointer'). The offset will be available to the subsequent request as ${offset} and it will also be used for checkpointing and recovery in case of connector failures or restarts. This config should only be set if 'http.offset.mode' is set to ``CHAINING``.
 	 - Required: MEDIUM
 
+🔘 api3.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api3.http.next.page.json.pointer
 
 
@@ -1407,6 +1443,15 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Default: STRING
 	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
+
+🔘 api3.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api3.http.request.headers.separator
 
@@ -1435,15 +1480,6 @@ The character that separates multiple distinct request parameters within ``http.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api3.test.api
-
-Flag to determine if the api needs to be tested
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
-	 - Required: false
-
 🔘 api3.enable.cursor.pagination.with.timestamp.mode
 
 Whether to use cursor pagination with timestamp mode.
@@ -1451,6 +1487,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api3.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api3.http.timestamp.json.pointer
@@ -1471,15 +1516,6 @@ Whether to use cursor pagination with timestamp mode.
 	 - Importance: The initial start timestamp to be used to generate the first request. This needs to be set when using ``cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
 	 - Required: MEDIUM
 
-🔘 api3.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api3.http.cursor.pagination.parameter.name
 
 
@@ -1496,6 +1532,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
+	 - Required: MEDIUM
+
+🔘 api3.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api3.timestamp.format
@@ -1681,6 +1726,15 @@ The time in milliseconds to wait for a request response from the server
 	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
 	 - Required: MEDIUM
 
+🔘 api4.http.response.compression.enabled
+
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
 🔘 api4.http.offset.mode
 
 This config indicates how offsets are computed and how requests are generated. If set to ``SIMPLE_INCREMENTING``, the ${offset} used to generate requests is simply the previous offset (or ``http.initial.offset``) incremented by 1 per sourced record. In this mode, ``http.initial.offset`` needs to be set to an integer value. If set to ``CHAINING``, the config 'http.offset.json.pointer' needs to be set, and the offset for a record is set to the value for the configured key in the response data. If the value is ``CURSOR_PAGINATION``, then the config 'http.next.page.json.pointer' needs to be set and the offset for the last record in each page will be set to the next page value. If set to ``SNAPSHOT_PAGINATION``, only the config 'http.offset.json.pointer' needs to be set.
@@ -1689,15 +1743,6 @@ This config indicates how offsets are computed and how requests are generated. I
 	 - Default: SIMPLE_INCREMENTING
 	 - Importance: HIGH
 	 - Required: true
-
-🔘 api4.max.retries
-
-The maximum number of times to retry on errors before failing the task.
-
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
-	 - Required: false
 
 🔘 api4.http.initial.offset
 
@@ -1708,21 +1753,12 @@ The maximum number of times to retry on errors before failing the task.
 	 - Importance: The initial offset to be used to generate the first request. This needs to be set if either one or more of the configs - 'url', 'http.request.parameters', or 'http.request.body' contain the template variable ``${offset}``.
 	 - Required: HIGH
 
-🔘 api4.retry.backoff.policy
+🔘 api4.max.retries
 
-The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
-
-	 - Type: STRING
-	 - Default: EXPONENTIAL_WITH_JITTER
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api4.retry.backoff.ms
-
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+The maximum number of times to retry on errors before failing the task.
 
 	 - Type: INT
-	 - Default: 3000
+	 - Default: 5
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1735,6 +1771,15 @@ The initial duration in milliseconds to wait following an error before a retry a
 	 - Importance: The JSON Pointer to the entity in the JSON response containing the actual data that should be written to Kafka as records. The entity can be an array (multiple records in a single response) or an object / scalar value (single record).
 	 - Required: HIGH
 
+🔘 api4.retry.backoff.policy
+
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api4.http.offset.json.pointer
 
 
@@ -1744,21 +1789,21 @@ The initial duration in milliseconds to wait following an error before a retry a
 	 - Importance: The JSON Pointer to the value in each record that corresponds to the offset for that record (it is relative to 'http.response.data.json.pointer'). The offset will be available to the subsequent request as ${offset} and it will also be used for checkpointing and recovery in case of connector failures or restarts. This config should only be set if 'http.offset.mode' is set to ``CHAINING``.
 	 - Required: MEDIUM
 
+🔘 api4.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api4.retry.on.status.codes
 
 Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
 
 	 - Type: STRING
 	 - Default: 400-
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api4.http.request.headers.separator
-
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
-
-	 - Type: STRING
-	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1771,12 +1816,12 @@ The character that separates multiple distinct headers within ``http.request.hea
 	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
-🔘 api4.http.request.parameters.separator
+🔘 api4.http.request.headers.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
 
 	 - Type: STRING
-	 - Default: &
+	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1786,6 +1831,15 @@ The time in milliseconds to wait between consecutive requests.
 
 	 - Type: INT
 	 - Default: 60000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api4.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1834,15 +1888,6 @@ Whether to use cursor pagination with timestamp mode.
 	 - Importance: Name of the request parameter which holds the next page token.
 	 - Required: MEDIUM
 
-🔘 api4.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api4.initial.end.timestamp.value
 
 
@@ -1850,6 +1895,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
+	 - Required: MEDIUM
+
+🔘 api4.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api4.timestamp.format
@@ -1999,15 +2053,6 @@ HTTP Request Method. Valid options are `GET` and `POST`.
 	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
 	 - Required: MEDIUM
 
-🔘 api5.http.connect.timeout.ms
-
-The time in milliseconds to wait for a connection to be established
-
-	 - Type: INT
-	 - Default: 30000
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api5.http.request.parameters
 
 
@@ -2016,6 +2061,15 @@ The time in milliseconds to wait for a connection to be established
 	 - Default: STRING
 	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
 	 - Required: MEDIUM
+
+🔘 api5.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api5.http.request.timeout.ms
 
@@ -2034,6 +2088,15 @@ The time in milliseconds to wait for a request response from the server
 	 - Default: STRING
 	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
 	 - Required: MEDIUM
+
+🔘 api5.http.response.compression.enabled
+
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
 
 🔘 api5.http.offset.mode
 
@@ -2062,15 +2125,6 @@ The maximum number of times to retry on errors before failing the task.
 	 - Importance: The initial offset to be used to generate the first request. This needs to be set if either one or more of the configs - 'url', 'http.request.parameters', or 'http.request.body' contain the template variable ``${offset}``.
 	 - Required: HIGH
 
-🔘 api5.retry.backoff.policy
-
-The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
-
-	 - Type: STRING
-	 - Default: EXPONENTIAL_WITH_JITTER
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api5.http.response.data.json.pointer
 
 
@@ -2080,12 +2134,12 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 	 - Importance: The JSON Pointer to the entity in the JSON response containing the actual data that should be written to Kafka as records. The entity can be an array (multiple records in a single response) or an object / scalar value (single record).
 	 - Required: HIGH
 
-🔘 api5.retry.backoff.ms
+🔘 api5.retry.backoff.policy
 
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
 
-	 - Type: INT
-	 - Default: 3000
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2097,6 +2151,15 @@ The initial duration in milliseconds to wait following an error before a retry a
 	 - Default: STRING
 	 - Importance: The JSON Pointer to the value in each record that corresponds to the offset for that record (it is relative to 'http.response.data.json.pointer'). The offset will be available to the subsequent request as ${offset} and it will also be used for checkpointing and recovery in case of connector failures or restarts. This config should only be set if 'http.offset.mode' is set to ``CHAINING``.
 	 - Required: MEDIUM
+
+🔘 api5.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api5.retry.on.status.codes
 
@@ -2116,21 +2179,21 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
-🔘 api5.http.request.headers.separator
-
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
-
-	 - Type: STRING
-	 - Default: |
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api5.request.interval.ms
 
 The time in milliseconds to wait between consecutive requests.
 
 	 - Type: INT
 	 - Default: 60000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api5.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2143,15 +2206,6 @@ The character that separates multiple distinct request parameters within ``http.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api5.test.api
-
-Flag to determine if the api needs to be tested
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
-	 - Required: false
-
 🔘 api5.enable.cursor.pagination.with.timestamp.mode
 
 Whether to use cursor pagination with timestamp mode.
@@ -2159,6 +2213,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api5.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api5.http.timestamp.json.pointer
@@ -2188,15 +2251,6 @@ Whether to use cursor pagination with timestamp mode.
 	 - Importance: Name of the request parameter which holds the next page token.
 	 - Required: MEDIUM
 
-🔘 api5.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api5.initial.end.timestamp.value
 
 
@@ -2204,6 +2258,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
+	 - Required: MEDIUM
+
+🔘 api5.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api5.timestamp.format
@@ -2317,15 +2380,6 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 ==========================
 API-6 Configs
 ==========================
-🔘 api6.topics
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Kafka topics to publish data to.
-	 - Required: HIGH
-
 🔘 api6.http.api.path
 
 
@@ -2333,6 +2387,15 @@ API-6 Configs
 	 - Type: false
 	 - Default: STRING
 	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Required: HIGH
+
+🔘 api6.topics
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Kafka topics to publish data to.
 	 - Required: HIGH
 
 🔘 api6.http.request.method
@@ -2353,15 +2416,6 @@ HTTP Request Method. Valid options are `GET` and `POST`.
 	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
 	 - Required: MEDIUM
 
-🔘 api6.http.connect.timeout.ms
-
-The time in milliseconds to wait for a connection to be established
-
-	 - Type: INT
-	 - Default: 30000
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api6.http.request.parameters
 
 
@@ -2371,14 +2425,14 @@ The time in milliseconds to wait for a connection to be established
 	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
 	 - Required: MEDIUM
 
-🔘 api6.http.request.body
+🔘 api6.http.connect.timeout.ms
 
+The time in milliseconds to wait for a connection to be established
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
-	 - Required: MEDIUM
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api6.http.request.timeout.ms
 
@@ -2389,6 +2443,15 @@ The time in milliseconds to wait for a request response from the server
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 api6.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
+	 - Required: MEDIUM
+
 🔘 api6.http.offset.mode
 
 This config indicates how offsets are computed and how requests are generated. If set to ``SIMPLE_INCREMENTING``, the ${offset} used to generate requests is simply the previous offset (or ``http.initial.offset``) incremented by 1 per sourced record. In this mode, ``http.initial.offset`` needs to be set to an integer value. If set to ``CHAINING``, the config 'http.offset.json.pointer' needs to be set, and the offset for a record is set to the value for the configured key in the response data. If the value is ``CURSOR_PAGINATION``, then the config 'http.next.page.json.pointer' needs to be set and the offset for the last record in each page will be set to the next page value. If set to ``SNAPSHOT_PAGINATION``, only the config 'http.offset.json.pointer' needs to be set.
@@ -2397,6 +2460,24 @@ This config indicates how offsets are computed and how requests are generated. I
 	 - Default: SIMPLE_INCREMENTING
 	 - Importance: HIGH
 	 - Required: true
+
+🔘 api6.http.response.compression.enabled
+
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api6.http.initial.offset
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The initial offset to be used to generate the first request. This needs to be set if either one or more of the configs - 'url', 'http.request.parameters', or 'http.request.body' contain the template variable ``${offset}``.
+	 - Required: HIGH
 
 🔘 api6.max.retries
 
@@ -2416,24 +2497,6 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api6.http.initial.offset
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The initial offset to be used to generate the first request. This needs to be set if either one or more of the configs - 'url', 'http.request.parameters', or 'http.request.body' contain the template variable ``${offset}``.
-	 - Required: HIGH
-
-🔘 api6.retry.backoff.ms
-
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
-
-	 - Type: INT
-	 - Default: 3000
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api6.http.response.data.json.pointer
 
 
@@ -2442,15 +2505,6 @@ The initial duration in milliseconds to wait following an error before a retry a
 	 - Default: STRING
 	 - Importance: The JSON Pointer to the entity in the JSON response containing the actual data that should be written to Kafka as records. The entity can be an array (multiple records in a single response) or an object / scalar value (single record).
 	 - Required: HIGH
-
-🔘 api6.retry.on.status.codes
-
-Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
-
-	 - Type: STRING
-	 - Default: 400-
-	 - Importance: MEDIUM
-	 - Required: false
 
 🔘 api6.http.offset.json.pointer
 
@@ -2461,12 +2515,21 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: The JSON Pointer to the value in each record that corresponds to the offset for that record (it is relative to 'http.response.data.json.pointer'). The offset will be available to the subsequent request as ${offset} and it will also be used for checkpointing and recovery in case of connector failures or restarts. This config should only be set if 'http.offset.mode' is set to ``CHAINING``.
 	 - Required: MEDIUM
 
-🔘 api6.http.request.headers.separator
+🔘 api6.retry.backoff.ms
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api6.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
 
 	 - Type: STRING
-	 - Default: |
+	 - Default: 400-
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2479,21 +2542,30 @@ The character that separates multiple distinct headers within ``http.request.hea
 	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
-🔘 api6.http.request.parameters.separator
-
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
-
-	 - Type: STRING
-	 - Default: &
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api6.request.interval.ms
 
 The time in milliseconds to wait between consecutive requests.
 
 	 - Type: INT
 	 - Default: 60000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api6.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api6.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2533,15 +2605,6 @@ Whether to use cursor pagination with timestamp mode.
 	 - Importance: The initial start timestamp to be used to generate the first request. This needs to be set when using ``cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
 	 - Required: MEDIUM
 
-🔘 api6.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api6.http.cursor.pagination.parameter.name
 
 
@@ -2558,6 +2621,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
+	 - Required: MEDIUM
+
+🔘 api6.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api6.timestamp.format
@@ -2689,15 +2761,6 @@ API-7 Configs
 	 - Importance: The name of the Kafka topics to publish data to.
 	 - Required: HIGH
 
-🔘 api7.http.request.headers
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
-	 - Required: MEDIUM
-
 🔘 api7.http.request.method
 
 HTTP Request Method. Valid options are `GET` and `POST`.
@@ -2706,6 +2769,15 @@ HTTP Request Method. Valid options are `GET` and `POST`.
 	 - Default: GET
 	 - Importance: HIGH
 	 - Required: false
+
+🔘 api7.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Required: MEDIUM
 
 🔘 api7.http.request.parameters
 
@@ -2743,13 +2815,13 @@ The time in milliseconds to wait for a request response from the server
 	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
 	 - Required: MEDIUM
 
-🔘 api7.max.retries
+🔘 api7.http.response.compression.enabled
 
-The maximum number of times to retry on errors before failing the task.
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
 
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api7.http.offset.mode
@@ -2760,6 +2832,15 @@ This config indicates how offsets are computed and how requests are generated. I
 	 - Default: SIMPLE_INCREMENTING
 	 - Importance: HIGH
 	 - Required: true
+
+🔘 api7.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api7.http.initial.offset
 
@@ -2779,15 +2860,6 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api7.retry.backoff.ms
-
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
-
-	 - Type: INT
-	 - Default: 3000
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api7.http.response.data.json.pointer
 
 
@@ -2796,6 +2868,15 @@ The initial duration in milliseconds to wait following an error before a retry a
 	 - Default: STRING
 	 - Importance: The JSON Pointer to the entity in the JSON response containing the actual data that should be written to Kafka as records. The entity can be an array (multiple records in a single response) or an object / scalar value (single record).
 	 - Required: HIGH
+
+🔘 api7.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api7.http.offset.json.pointer
 
@@ -2815,15 +2896,6 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api7.http.request.headers.separator
-
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
-
-	 - Type: STRING
-	 - Default: |
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api7.http.next.page.json.pointer
 
 
@@ -2832,6 +2904,15 @@ The character that separates multiple distinct headers within ``http.request.hea
 	 - Default: STRING
 	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
+
+🔘 api7.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api7.request.interval.ms
 
@@ -2851,15 +2932,6 @@ The character that separates multiple distinct request parameters within ``http.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api7.test.api
-
-Flag to determine if the api needs to be tested
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
-	 - Required: false
-
 🔘 api7.enable.cursor.pagination.with.timestamp.mode
 
 Whether to use cursor pagination with timestamp mode.
@@ -2867,6 +2939,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api7.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api7.http.timestamp.json.pointer
@@ -2887,15 +2968,6 @@ Whether to use cursor pagination with timestamp mode.
 	 - Importance: The initial start timestamp to be used to generate the first request. This needs to be set when using ``cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
 	 - Required: MEDIUM
 
-🔘 api7.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api7.http.cursor.pagination.parameter.name
 
 
@@ -2903,6 +2975,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Name of the request parameter which holds the next page token.
+	 - Required: MEDIUM
+
+🔘 api7.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api7.initial.end.timestamp.value
@@ -3097,6 +3178,15 @@ The time in milliseconds to wait for a request response from the server
 	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
 	 - Required: MEDIUM
 
+🔘 api8.http.response.compression.enabled
+
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
 🔘 api8.http.offset.mode
 
 This config indicates how offsets are computed and how requests are generated. If set to ``SIMPLE_INCREMENTING``, the ${offset} used to generate requests is simply the previous offset (or ``http.initial.offset``) incremented by 1 per sourced record. In this mode, ``http.initial.offset`` needs to be set to an integer value. If set to ``CHAINING``, the config 'http.offset.json.pointer' needs to be set, and the offset for a record is set to the value for the configured key in the response data. If the value is ``CURSOR_PAGINATION``, then the config 'http.next.page.json.pointer' needs to be set and the offset for the last record in each page will be set to the next page value. If set to ``SNAPSHOT_PAGINATION``, only the config 'http.offset.json.pointer' needs to be set.
@@ -3105,15 +3195,6 @@ This config indicates how offsets are computed and how requests are generated. I
 	 - Default: SIMPLE_INCREMENTING
 	 - Importance: HIGH
 	 - Required: true
-
-🔘 api8.max.retries
-
-The maximum number of times to retry on errors before failing the task.
-
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
-	 - Required: false
 
 🔘 api8.http.initial.offset
 
@@ -3124,21 +3205,21 @@ The maximum number of times to retry on errors before failing the task.
 	 - Importance: The initial offset to be used to generate the first request. This needs to be set if either one or more of the configs - 'url', 'http.request.parameters', or 'http.request.body' contain the template variable ``${offset}``.
 	 - Required: HIGH
 
+🔘 api8.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api8.retry.backoff.policy
 
 The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
 
 	 - Type: STRING
 	 - Default: EXPONENTIAL_WITH_JITTER
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api8.retry.backoff.ms
-
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
-
-	 - Type: INT
-	 - Default: 3000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3151,15 +3232,6 @@ The initial duration in milliseconds to wait following an error before a retry a
 	 - Importance: The JSON Pointer to the entity in the JSON response containing the actual data that should be written to Kafka as records. The entity can be an array (multiple records in a single response) or an object / scalar value (single record).
 	 - Required: HIGH
 
-🔘 api8.retry.on.status.codes
-
-Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
-
-	 - Type: STRING
-	 - Default: 400-
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api8.http.offset.json.pointer
 
 
@@ -3168,6 +3240,15 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Default: STRING
 	 - Importance: The JSON Pointer to the value in each record that corresponds to the offset for that record (it is relative to 'http.response.data.json.pointer'). The offset will be available to the subsequent request as ${offset} and it will also be used for checkpointing and recovery in case of connector failures or restarts. This config should only be set if 'http.offset.mode' is set to ``CHAINING``.
 	 - Required: MEDIUM
+
+🔘 api8.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api8.http.next.page.json.pointer
 
@@ -3178,12 +3259,12 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
-🔘 api8.http.request.headers.separator
+🔘 api8.retry.on.status.codes
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
 
 	 - Type: STRING
-	 - Default: |
+	 - Default: 400-
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3196,12 +3277,30 @@ The time in milliseconds to wait between consecutive requests.
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 api8.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api8.http.request.parameters.separator
 
 The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
 
 	 - Type: STRING
 	 - Default: &
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api8.enable.cursor.pagination.with.timestamp.mode
+
+Whether to use cursor pagination with timestamp mode.
+
+	 - Type: BOOLEAN
+	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3212,15 +3311,6 @@ Flag to determine if the api needs to be tested
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: LOW
-	 - Required: false
-
-🔘 api8.enable.cursor.pagination.with.timestamp.mode
-
-Whether to use cursor pagination with timestamp mode.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
 	 - Required: false
 
 🔘 api8.http.timestamp.json.pointer
@@ -3241,15 +3331,6 @@ Whether to use cursor pagination with timestamp mode.
 	 - Importance: The initial start timestamp to be used to generate the first request. This needs to be set when using ``cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
 	 - Required: MEDIUM
 
-🔘 api8.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api8.http.cursor.pagination.parameter.name
 
 
@@ -3266,6 +3347,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
+	 - Required: MEDIUM
+
+🔘 api8.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api8.timestamp.format
@@ -3379,15 +3469,6 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 ==========================
 API-9 Configs
 ==========================
-🔘 api9.topics
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Kafka topics to publish data to.
-	 - Required: HIGH
-
 🔘 api9.http.api.path
 
 
@@ -3395,6 +3476,15 @@ API-9 Configs
 	 - Type: false
 	 - Default: STRING
 	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Required: HIGH
+
+🔘 api9.topics
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Kafka topics to publish data to.
 	 - Required: HIGH
 
 🔘 api9.http.request.method
@@ -3415,15 +3505,6 @@ HTTP Request Method. Valid options are `GET` and `POST`.
 	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
 	 - Required: MEDIUM
 
-🔘 api9.http.request.parameters
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
-	 - Required: MEDIUM
-
 🔘 api9.http.connect.timeout.ms
 
 The time in milliseconds to wait for a connection to be established
@@ -3432,6 +3513,15 @@ The time in milliseconds to wait for a connection to be established
 	 - Default: 30000
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 api9.http.request.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
+	 - Required: MEDIUM
 
 🔘 api9.http.request.body
 
@@ -3460,13 +3550,13 @@ This config indicates how offsets are computed and how requests are generated. I
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 api9.max.retries
+🔘 api9.http.response.compression.enabled
 
-The maximum number of times to retry on errors before failing the task.
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
 
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api9.http.initial.offset
@@ -3476,6 +3566,24 @@ The maximum number of times to retry on errors before failing the task.
 	 - Type: false
 	 - Default: STRING
 	 - Importance: The initial offset to be used to generate the first request. This needs to be set if either one or more of the configs - 'url', 'http.request.parameters', or 'http.request.body' contain the template variable ``${offset}``.
+	 - Required: HIGH
+
+🔘 api9.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api9.http.response.data.json.pointer
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The JSON Pointer to the entity in the JSON response containing the actual data that should be written to Kafka as records. The entity can be an array (multiple records in a single response) or an object / scalar value (single record).
 	 - Required: HIGH
 
 🔘 api9.retry.backoff.policy
@@ -3495,15 +3603,6 @@ The initial duration in milliseconds to wait following an error before a retry a
 	 - Default: 3000
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api9.http.response.data.json.pointer
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The JSON Pointer to the entity in the JSON response containing the actual data that should be written to Kafka as records. The entity can be an array (multiple records in a single response) or an object / scalar value (single record).
-	 - Required: HIGH
 
 🔘 api9.http.offset.json.pointer
 
@@ -3532,21 +3631,21 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
-🔘 api9.http.request.headers.separator
-
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
-
-	 - Type: STRING
-	 - Default: |
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api9.request.interval.ms
 
 The time in milliseconds to wait between consecutive requests.
 
 	 - Type: INT
 	 - Default: 60000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api9.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3559,15 +3658,6 @@ The character that separates multiple distinct request parameters within ``http.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api9.test.api
-
-Flag to determine if the api needs to be tested
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
-	 - Required: false
-
 🔘 api9.enable.cursor.pagination.with.timestamp.mode
 
 Whether to use cursor pagination with timestamp mode.
@@ -3575,6 +3665,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api9.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api9.http.timestamp.json.pointer
@@ -3604,15 +3703,6 @@ Whether to use cursor pagination with timestamp mode.
 	 - Importance: Name of the request parameter which holds the next page token.
 	 - Required: MEDIUM
 
-🔘 api9.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api9.initial.end.timestamp.value
 
 
@@ -3620,6 +3710,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
+	 - Required: MEDIUM
+
+🔘 api9.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api9.timestamp.format
@@ -3805,13 +3904,13 @@ The time in milliseconds to wait for a request response from the server
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api10.max.retries
+🔘 api10.http.response.compression.enabled
 
-The maximum number of times to retry on errors before failing the task.
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
 
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api10.http.offset.mode
@@ -3823,6 +3922,15 @@ This config indicates how offsets are computed and how requests are generated. I
 	 - Importance: HIGH
 	 - Required: true
 
+🔘 api10.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api10.http.initial.offset
 
 
@@ -3831,15 +3939,6 @@ This config indicates how offsets are computed and how requests are generated. I
 	 - Default: STRING
 	 - Importance: The initial offset to be used to generate the first request. This needs to be set if either one or more of the configs - 'url', 'http.request.parameters', or 'http.request.body' contain the template variable ``${offset}``.
 	 - Required: HIGH
-
-🔘 api10.retry.backoff.policy
-
-The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
-
-	 - Type: STRING
-	 - Default: EXPONENTIAL_WITH_JITTER
-	 - Importance: MEDIUM
-	 - Required: false
 
 🔘 api10.http.response.data.json.pointer
 
@@ -3850,21 +3949,12 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 	 - Importance: The JSON Pointer to the entity in the JSON response containing the actual data that should be written to Kafka as records. The entity can be an array (multiple records in a single response) or an object / scalar value (single record).
 	 - Required: HIGH
 
-🔘 api10.retry.backoff.ms
+🔘 api10.retry.backoff.policy
 
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
-
-	 - Type: INT
-	 - Default: 3000
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api10.retry.on.status.codes
-
-Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
 
 	 - Type: STRING
-	 - Default: 400-
+	 - Default: EXPONENTIAL_WITH_JITTER
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3877,12 +3967,12 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: The JSON Pointer to the value in each record that corresponds to the offset for that record (it is relative to 'http.response.data.json.pointer'). The offset will be available to the subsequent request as ${offset} and it will also be used for checkpointing and recovery in case of connector failures or restarts. This config should only be set if 'http.offset.mode' is set to ``CHAINING``.
 	 - Required: MEDIUM
 
-🔘 api10.http.request.headers.separator
+🔘 api10.retry.backoff.ms
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
 
-	 - Type: STRING
-	 - Default: |
+	 - Type: INT
+	 - Default: 3000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3895,12 +3985,30 @@ The character that separates multiple distinct headers within ``http.request.hea
 	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
+🔘 api10.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api10.request.interval.ms
 
 The time in milliseconds to wait between consecutive requests.
 
 	 - Type: INT
 	 - Default: 60000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api10.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3913,15 +4021,6 @@ The character that separates multiple distinct request parameters within ``http.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api10.test.api
-
-Flag to determine if the api needs to be tested
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
-	 - Required: false
-
 🔘 api10.enable.cursor.pagination.with.timestamp.mode
 
 Whether to use cursor pagination with timestamp mode.
@@ -3929,6 +4028,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api10.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api10.http.timestamp.json.pointer
@@ -4141,15 +4249,6 @@ The time in milliseconds to wait for a connection to be established
 	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
 	 - Required: MEDIUM
 
-🔘 api11.http.request.timeout.ms
-
-The time in milliseconds to wait for a request response from the server
-
-	 - Type: INT
-	 - Default: 30000
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api11.http.request.body
 
 
@@ -4159,13 +4258,22 @@ The time in milliseconds to wait for a request response from the server
 	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
 	 - Required: MEDIUM
 
-🔘 api11.max.retries
+🔘 api11.http.request.timeout.ms
 
-The maximum number of times to retry on errors before failing the task.
+The time in milliseconds to wait for a request response from the server
 
 	 - Type: INT
-	 - Default: 5
+	 - Default: 30000
 	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api11.http.response.compression.enabled
+
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api11.http.offset.mode
@@ -4186,12 +4294,12 @@ This config indicates how offsets are computed and how requests are generated. I
 	 - Importance: The initial offset to be used to generate the first request. This needs to be set if either one or more of the configs - 'url', 'http.request.parameters', or 'http.request.body' contain the template variable ``${offset}``.
 	 - Required: HIGH
 
-🔘 api11.retry.backoff.policy
+🔘 api11.max.retries
 
-The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+The maximum number of times to retry on errors before failing the task.
 
-	 - Type: STRING
-	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Type: INT
+	 - Default: 5
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4204,12 +4312,12 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 	 - Importance: The JSON Pointer to the entity in the JSON response containing the actual data that should be written to Kafka as records. The entity can be an array (multiple records in a single response) or an object / scalar value (single record).
 	 - Required: HIGH
 
-🔘 api11.retry.backoff.ms
+🔘 api11.retry.backoff.policy
 
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
 
-	 - Type: INT
-	 - Default: 3000
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4221,6 +4329,15 @@ The initial duration in milliseconds to wait following an error before a retry a
 	 - Default: STRING
 	 - Importance: The JSON Pointer to the value in each record that corresponds to the offset for that record (it is relative to 'http.response.data.json.pointer'). The offset will be available to the subsequent request as ${offset} and it will also be used for checkpointing and recovery in case of connector failures or restarts. This config should only be set if 'http.offset.mode' is set to ``CHAINING``.
 	 - Required: MEDIUM
+
+🔘 api11.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api11.retry.on.status.codes
 
@@ -4240,21 +4357,21 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
-🔘 api11.http.request.headers.separator
-
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
-
-	 - Type: STRING
-	 - Default: |
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api11.request.interval.ms
 
 The time in milliseconds to wait between consecutive requests.
 
 	 - Type: INT
 	 - Default: 60000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api11.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4267,15 +4384,6 @@ The character that separates multiple distinct request parameters within ``http.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api11.test.api
-
-Flag to determine if the api needs to be tested
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
-	 - Required: false
-
 🔘 api11.enable.cursor.pagination.with.timestamp.mode
 
 Whether to use cursor pagination with timestamp mode.
@@ -4283,6 +4391,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api11.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api11.http.timestamp.json.pointer
@@ -4312,15 +4429,6 @@ Whether to use cursor pagination with timestamp mode.
 	 - Importance: Name of the request parameter which holds the next page token.
 	 - Required: MEDIUM
 
-🔘 api11.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api11.initial.end.timestamp.value
 
 
@@ -4328,6 +4436,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
+	 - Required: MEDIUM
+
+🔘 api11.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api11.timestamp.format
@@ -4459,15 +4576,6 @@ API-12 Configs
 	 - Importance: The name of the Kafka topics to publish data to.
 	 - Required: HIGH
 
-🔘 api12.http.request.method
-
-HTTP Request Method. Valid options are `GET` and `POST`.
-
-	 - Type: STRING
-	 - Default: GET
-	 - Importance: HIGH
-	 - Required: false
-
 🔘 api12.http.request.headers
 
 
@@ -4477,14 +4585,14 @@ HTTP Request Method. Valid options are `GET` and `POST`.
 	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
 	 - Required: MEDIUM
 
-🔘 api12.http.request.parameters
+🔘 api12.http.request.method
 
+HTTP Request Method. Valid options are `GET` and `POST`.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: GET
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 api12.http.connect.timeout.ms
 
@@ -4494,6 +4602,15 @@ The time in milliseconds to wait for a connection to be established
 	 - Default: 30000
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 api12.http.request.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
+	 - Required: MEDIUM
 
 🔘 api12.http.request.body
 
@@ -4513,15 +4630,6 @@ The time in milliseconds to wait for a request response from the server
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api12.max.retries
-
-The maximum number of times to retry on errors before failing the task.
-
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api12.http.offset.mode
 
 This config indicates how offsets are computed and how requests are generated. If set to ``SIMPLE_INCREMENTING``, the ${offset} used to generate requests is simply the previous offset (or ``http.initial.offset``) incremented by 1 per sourced record. In this mode, ``http.initial.offset`` needs to be set to an integer value. If set to ``CHAINING``, the config 'http.offset.json.pointer' needs to be set, and the offset for a record is set to the value for the configured key in the response data. If the value is ``CURSOR_PAGINATION``, then the config 'http.next.page.json.pointer' needs to be set and the offset for the last record in each page will be set to the next page value. If set to ``SNAPSHOT_PAGINATION``, only the config 'http.offset.json.pointer' needs to be set.
@@ -4530,6 +4638,24 @@ This config indicates how offsets are computed and how requests are generated. I
 	 - Default: SIMPLE_INCREMENTING
 	 - Importance: HIGH
 	 - Required: true
+
+🔘 api12.http.response.compression.enabled
+
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api12.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api12.http.initial.offset
 
@@ -4546,15 +4672,6 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 
 	 - Type: STRING
 	 - Default: EXPONENTIAL_WITH_JITTER
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api12.retry.backoff.ms
-
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
-
-	 - Type: INT
-	 - Default: 3000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4576,21 +4693,21 @@ The initial duration in milliseconds to wait following an error before a retry a
 	 - Importance: The JSON Pointer to the value in each record that corresponds to the offset for that record (it is relative to 'http.response.data.json.pointer'). The offset will be available to the subsequent request as ${offset} and it will also be used for checkpointing and recovery in case of connector failures or restarts. This config should only be set if 'http.offset.mode' is set to ``CHAINING``.
 	 - Required: MEDIUM
 
+🔘 api12.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api12.retry.on.status.codes
 
 Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
 
 	 - Type: STRING
 	 - Default: 400-
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api12.http.request.headers.separator
-
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
-
-	 - Type: STRING
-	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4612,12 +4729,30 @@ The time in milliseconds to wait between consecutive requests.
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 api12.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api12.http.request.parameters.separator
 
 The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
 
 	 - Type: STRING
 	 - Default: &
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api12.enable.cursor.pagination.with.timestamp.mode
+
+Whether to use cursor pagination with timestamp mode.
+
+	 - Type: BOOLEAN
+	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4628,15 +4763,6 @@ Flag to determine if the api needs to be tested
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: LOW
-	 - Required: false
-
-🔘 api12.enable.cursor.pagination.with.timestamp.mode
-
-Whether to use cursor pagination with timestamp mode.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
 	 - Required: false
 
 🔘 api12.http.timestamp.json.pointer
@@ -4831,15 +4957,6 @@ HTTP Request Method. Valid options are `GET` and `POST`.
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api13.http.request.parameters
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
-	 - Required: MEDIUM
-
 🔘 api13.http.connect.timeout.ms
 
 The time in milliseconds to wait for a connection to be established
@@ -4848,6 +4965,15 @@ The time in milliseconds to wait for a connection to be established
 	 - Default: 30000
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 api13.http.request.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
+	 - Required: MEDIUM
 
 🔘 api13.http.request.body
 
@@ -4867,13 +4993,13 @@ The time in milliseconds to wait for a request response from the server
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api13.max.retries
+🔘 api13.http.response.compression.enabled
 
-The maximum number of times to retry on errors before failing the task.
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
 
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api13.http.offset.mode
@@ -4893,6 +5019,15 @@ This config indicates how offsets are computed and how requests are generated. I
 	 - Default: STRING
 	 - Importance: The initial offset to be used to generate the first request. This needs to be set if either one or more of the configs - 'url', 'http.request.parameters', or 'http.request.body' contain the template variable ``${offset}``.
 	 - Required: HIGH
+
+🔘 api13.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api13.retry.backoff.policy
 
@@ -4921,15 +5056,6 @@ The initial duration in milliseconds to wait following an error before a retry a
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api13.retry.on.status.codes
-
-Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
-
-	 - Type: STRING
-	 - Default: 400-
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api13.http.offset.json.pointer
 
 
@@ -4938,6 +5064,15 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Default: STRING
 	 - Importance: The JSON Pointer to the value in each record that corresponds to the offset for that record (it is relative to 'http.response.data.json.pointer'). The offset will be available to the subsequent request as ${offset} and it will also be used for checkpointing and recovery in case of connector failures or restarts. This config should only be set if 'http.offset.mode' is set to ``CHAINING``.
 	 - Required: MEDIUM
+
+🔘 api13.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api13.http.next.page.json.pointer
 
@@ -4948,21 +5083,21 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
-🔘 api13.http.request.headers.separator
-
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
-
-	 - Type: STRING
-	 - Default: |
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api13.request.interval.ms
 
 The time in milliseconds to wait between consecutive requests.
 
 	 - Type: INT
 	 - Default: 60000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api13.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4975,15 +5110,6 @@ The character that separates multiple distinct request parameters within ``http.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api13.test.api
-
-Flag to determine if the api needs to be tested
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
-	 - Required: false
-
 🔘 api13.enable.cursor.pagination.with.timestamp.mode
 
 Whether to use cursor pagination with timestamp mode.
@@ -4991,6 +5117,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api13.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api13.http.timestamp.json.pointer
@@ -5011,15 +5146,6 @@ Whether to use cursor pagination with timestamp mode.
 	 - Importance: The initial start timestamp to be used to generate the first request. This needs to be set when using ``cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
 	 - Required: MEDIUM
 
-🔘 api13.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api13.http.cursor.pagination.parameter.name
 
 
@@ -5036,6 +5162,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
+	 - Required: MEDIUM
+
+🔘 api13.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api13.timestamp.format
@@ -5203,15 +5338,6 @@ The time in milliseconds to wait for a connection to be established
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api14.http.request.body
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
-	 - Required: MEDIUM
-
 🔘 api14.http.request.timeout.ms
 
 The time in milliseconds to wait for a request response from the server
@@ -5221,13 +5347,22 @@ The time in milliseconds to wait for a request response from the server
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api14.max.retries
+🔘 api14.http.request.body
 
-The maximum number of times to retry on errors before failing the task.
 
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
+	 - Required: MEDIUM
+
+🔘 api14.http.response.compression.enabled
+
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api14.http.offset.mode
@@ -5239,12 +5374,12 @@ This config indicates how offsets are computed and how requests are generated. I
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 api14.retry.backoff.policy
+🔘 api14.max.retries
 
-The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+The maximum number of times to retry on errors before failing the task.
 
-	 - Type: STRING
-	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Type: INT
+	 - Default: 5
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -5257,15 +5392,6 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 	 - Importance: The initial offset to be used to generate the first request. This needs to be set if either one or more of the configs - 'url', 'http.request.parameters', or 'http.request.body' contain the template variable ``${offset}``.
 	 - Required: HIGH
 
-🔘 api14.retry.backoff.ms
-
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
-
-	 - Type: INT
-	 - Default: 3000
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api14.http.response.data.json.pointer
 
 
@@ -5275,12 +5401,21 @@ The initial duration in milliseconds to wait following an error before a retry a
 	 - Importance: The JSON Pointer to the entity in the JSON response containing the actual data that should be written to Kafka as records. The entity can be an array (multiple records in a single response) or an object / scalar value (single record).
 	 - Required: HIGH
 
-🔘 api14.retry.on.status.codes
+🔘 api14.retry.backoff.policy
 
-Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
 
 	 - Type: STRING
-	 - Default: 400-
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api14.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -5293,12 +5428,12 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: The JSON Pointer to the value in each record that corresponds to the offset for that record (it is relative to 'http.response.data.json.pointer'). The offset will be available to the subsequent request as ${offset} and it will also be used for checkpointing and recovery in case of connector failures or restarts. This config should only be set if 'http.offset.mode' is set to ``CHAINING``.
 	 - Required: MEDIUM
 
-🔘 api14.http.request.headers.separator
+🔘 api14.retry.on.status.codes
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
 
 	 - Type: STRING
-	 - Default: |
+	 - Default: 400-
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -5311,12 +5446,12 @@ The character that separates multiple distinct headers within ``http.request.hea
 	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
-🔘 api14.http.request.parameters.separator
+🔘 api14.http.request.headers.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
 
 	 - Type: STRING
-	 - Default: &
+	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -5329,13 +5464,13 @@ The time in milliseconds to wait between consecutive requests.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api14.test.api
+🔘 api14.http.request.parameters.separator
 
-Flag to determine if the api needs to be tested
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
 
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
 	 - Required: false
 
 🔘 api14.enable.cursor.pagination.with.timestamp.mode
@@ -5345,6 +5480,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api14.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api14.http.timestamp.json.pointer
@@ -5557,15 +5701,6 @@ The time in milliseconds to wait for a connection to be established
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api15.http.request.timeout.ms
-
-The time in milliseconds to wait for a request response from the server
-
-	 - Type: INT
-	 - Default: 30000
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api15.http.request.body
 
 
@@ -5575,12 +5710,12 @@ The time in milliseconds to wait for a request response from the server
 	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
 	 - Required: MEDIUM
 
-🔘 api15.max.retries
+🔘 api15.http.request.timeout.ms
 
-The maximum number of times to retry on errors before failing the task.
+The time in milliseconds to wait for a request response from the server
 
 	 - Type: INT
-	 - Default: 5
+	 - Default: 30000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -5593,6 +5728,15 @@ This config indicates how offsets are computed and how requests are generated. I
 	 - Importance: HIGH
 	 - Required: true
 
+🔘 api15.http.response.compression.enabled
+
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
 🔘 api15.http.initial.offset
 
 
@@ -5600,6 +5744,24 @@ This config indicates how offsets are computed and how requests are generated. I
 	 - Type: false
 	 - Default: STRING
 	 - Importance: The initial offset to be used to generate the first request. This needs to be set if either one or more of the configs - 'url', 'http.request.parameters', or 'http.request.body' contain the template variable ``${offset}``.
+	 - Required: HIGH
+
+🔘 api15.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api15.http.response.data.json.pointer
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The JSON Pointer to the entity in the JSON response containing the actual data that should be written to Kafka as records. The entity can be an array (multiple records in a single response) or an object / scalar value (single record).
 	 - Required: HIGH
 
 🔘 api15.retry.backoff.policy
@@ -5620,15 +5782,6 @@ The initial duration in milliseconds to wait following an error before a retry a
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api15.http.response.data.json.pointer
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The JSON Pointer to the entity in the JSON response containing the actual data that should be written to Kafka as records. The entity can be an array (multiple records in a single response) or an object / scalar value (single record).
-	 - Required: HIGH
-
 🔘 api15.http.offset.json.pointer
 
 
@@ -5636,6 +5789,15 @@ The initial duration in milliseconds to wait following an error before a retry a
 	 - Type: false
 	 - Default: STRING
 	 - Importance: The JSON Pointer to the value in each record that corresponds to the offset for that record (it is relative to 'http.response.data.json.pointer'). The offset will be available to the subsequent request as ${offset} and it will also be used for checkpointing and recovery in case of connector failures or restarts. This config should only be set if 'http.offset.mode' is set to ``CHAINING``.
+	 - Required: MEDIUM
+
+🔘 api15.http.next.page.json.pointer
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
 	 - Required: MEDIUM
 
 🔘 api15.retry.on.status.codes
@@ -5647,30 +5809,21 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api15.http.request.headers.separator
-
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
-
-	 - Type: STRING
-	 - Default: |
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api15.http.next.page.json.pointer
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The JSON pointer to the value in the response which corresponds to the next page reference (either a page token, a full URL or a URL fragment). This will be stored as the offset and will be available to the subsequent request via the template variable ${offset}. This config should only be set if 'http.offset.mode' is set to ``CURSOR_PAGINATION``. The referenced value can be either a string or an integer.
-	 - Required: MEDIUM
-
 🔘 api15.request.interval.ms
 
 The time in milliseconds to wait between consecutive requests.
 
 	 - Type: INT
 	 - Default: 60000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api15.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -5728,15 +5881,6 @@ Whether to use cursor pagination with timestamp mode.
 	 - Importance: Name of the request parameter which holds the next page token.
 	 - Required: MEDIUM
 
-🔘 api15.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api15.initial.end.timestamp.value
 
 
@@ -5744,6 +5888,15 @@ Whether to use cursor pagination with timestamp mode.
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
+	 - Required: MEDIUM
+
+🔘 api15.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api15.timestamp.format

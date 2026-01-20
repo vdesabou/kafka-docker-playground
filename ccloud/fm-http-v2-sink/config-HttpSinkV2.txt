@@ -550,12 +550,30 @@ Whether to replace fields that have a default value and that are null to the def
 	 - Importance: LOW
 	 - Required: false
 
+🔘 value.converter.use.schema.id
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
+
 🔘 errors.tolerance
 
 Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
 
 	 - Type: STRING
 	 - Default: all
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.schema.id.deserializer
+
+The class name of the schema ID deserializer for keys. This is used to deserialize schema IDs from the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer
 	 - Importance: LOW
 	 - Required: false
 
@@ -567,6 +585,33 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 	 - Default: BASE64
 	 - Importance: LOW
 	 - Required: false
+
+🔘 value.converter.use.schema.guid
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
+
+🔘 value.converter.value.schema.id.deserializer
+
+The class name of the schema ID deserializer for values. This is used to deserialize schema IDs from the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.use.schema.guid
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
 
 🔘 value.converter.connect.meta.data
 
@@ -612,6 +657,15 @@ When set to true, this property ensures that the corresponding record in Kafka i
 	 - Default: false
 	 - Importance: LOW
 	 - Required: false
+
+🔘 key.converter.use.schema.id
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
 
 ==========================
 API-1 Configs
@@ -688,13 +742,13 @@ How to handle records with a non-null key and a null value (i.e. Kafka tombstone
 	 - Importance: LOW
 	 - Required: false
 
-🔘 api1.max.retries
+🔘 api1.http.response.compression.enabled
 
-The maximum number of times to retry on errors before failing the task.
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
 
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api1.request.body.format
@@ -715,12 +769,12 @@ The format of the request body. Valid options are JSON or String. The default va
 	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 	 - Required: HIGH
 
-🔘 api1.retry.backoff.policy
+🔘 api1.max.retries
 
-The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+The maximum number of times to retry on errors before failing the task.
 
-	 - Type: STRING
-	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Type: INT
+	 - Default: 5
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -733,21 +787,21 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 api1.retry.backoff.policy
+
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api1.retry.backoff.ms
 
 The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
 
 	 - Type: INT
 	 - Default: 3000
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api1.retry.on.status.codes
-
-Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
-
-	 - Type: STRING
-	 - Default: 400-
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -760,12 +814,12 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
 	 - Required: HIGH
 
-🔘 api1.http.request.headers.separator
+🔘 api1.retry.on.status.codes
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
 
 	 - Type: STRING
-	 - Default: |
+	 - Default: 400-
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -778,12 +832,12 @@ The character that separates multiple distinct headers within ``http.request.hea
 	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
 	 - Required: HIGH
 
-🔘 api1.http.request.parameters.separator
+🔘 api1.http.request.headers.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
 
 	 - Type: STRING
-	 - Default: &
+	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -796,13 +850,13 @@ Separator for records in a batch. This configuration can be set via CLI only.
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api1.test.api
+🔘 api1.http.request.parameters.separator
 
-Flag to determine if the api needs to be tested
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
 
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
 	 - Required: false
 
 🔘 api1.batch.json.as.array
@@ -812,6 +866,15 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: HIGH
+	 - Required: false
+
+🔘 api1.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api1.regex.patterns
@@ -841,15 +904,6 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
-🔘 api1.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api1.allow.get.request.body
 
 Allow Request Body in case of GET call. This configuration can be set via CLI only.
@@ -858,6 +912,15 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 api1.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
 
 🔘 api1.http.request.body
 
@@ -1015,13 +1078,13 @@ The format of the request body. Valid options are JSON or String. The default va
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api2.max.retries
+🔘 api2.http.response.compression.enabled
 
-The maximum number of times to retry on errors before failing the task.
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
 
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api2.batch.key.pattern
@@ -1033,21 +1096,21 @@ The maximum number of times to retry on errors before failing the task.
 	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 	 - Required: HIGH
 
+🔘 api2.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api2.retry.backoff.policy
 
 The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
 
 	 - Type: STRING
 	 - Default: EXPONENTIAL_WITH_JITTER
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api2.retry.backoff.ms
-
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
-
-	 - Type: INT
-	 - Default: 3000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1069,6 +1132,24 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
 	 - Required: HIGH
 
+🔘 api2.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api2.batch.suffix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
+	 - Required: HIGH
+
 🔘 api2.retry.on.status.codes
 
 Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
@@ -1087,21 +1168,21 @@ The character that separates multiple distinct headers within ``http.request.hea
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api2.batch.suffix
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
-	 - Required: HIGH
-
 🔘 api2.batch.separator
 
 Separator for records in a batch. This configuration can be set via CLI only.
 
 	 - Type: STRING
 	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api2.batch.json.as.array
+
+Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
+
+	 - Type: BOOLEAN
+	 - Default: false
 	 - Importance: HIGH
 	 - Required: false
 
@@ -1114,14 +1195,14 @@ The character that separates multiple distinct request parameters within ``http.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api2.batch.json.as.array
+🔘 api2.regex.patterns
 
-Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
 
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: HIGH
-	 - Required: false
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Required: MEDIUM
 
 🔘 api2.test.api
 
@@ -1131,15 +1212,6 @@ Flag to determine if the api needs to be tested
 	 - Default: false
 	 - Importance: LOW
 	 - Required: false
-
-🔘 api2.regex.patterns
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
-	 - Required: MEDIUM
 
 🔘 api2.regex.replacements
 
@@ -1324,15 +1396,6 @@ The time in milliseconds to wait for a request response from the server
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api3.max.retries
-
-The maximum number of times to retry on errors before failing the task.
-
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api3.request.body.format
 
 The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if ``input.data.format`` is ``STRING``, you should also set ``api3.request.body.format`` to ``STRING``.
@@ -1340,6 +1403,15 @@ The format of the request body. Valid options are JSON or String. The default va
 	 - Type: STRING
 	 - Default: JSON
 	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api3.http.response.compression.enabled
+
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api3.batch.key.pattern
@@ -1351,21 +1423,21 @@ The format of the request body. Valid options are JSON or String. The default va
 	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 	 - Required: HIGH
 
+🔘 api3.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api3.retry.backoff.policy
 
 The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
 
 	 - Type: STRING
 	 - Default: EXPONENTIAL_WITH_JITTER
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api3.retry.backoff.ms
-
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
-
-	 - Type: INT
-	 - Default: 3000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1387,12 +1459,12 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
 	 - Required: HIGH
 
-🔘 api3.retry.on.status.codes
+🔘 api3.retry.backoff.ms
 
-Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
 
-	 - Type: STRING
-	 - Default: 400-
+	 - Type: INT
+	 - Default: 3000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1405,12 +1477,12 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
 	 - Required: HIGH
 
-🔘 api3.http.request.headers.separator
+🔘 api3.retry.on.status.codes
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
 
 	 - Type: STRING
-	 - Default: |
+	 - Default: 400-
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1423,12 +1495,12 @@ Separator for records in a batch. This configuration can be set via CLI only.
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api3.http.request.parameters.separator
+🔘 api3.http.request.headers.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
 
 	 - Type: STRING
-	 - Default: &
+	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1439,6 +1511,15 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: HIGH
+	 - Required: false
+
+🔘 api3.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
 	 - Required: false
 
 🔘 api3.test.api
@@ -1486,15 +1567,6 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api3.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api3.http.request.body
 
 
@@ -1502,6 +1574,15 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 	 - Type: false
 	 - Default: STRING
 	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api3.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api3.report.only.status.code.to.success.topic
@@ -1642,13 +1723,13 @@ How to handle records with a non-null key and a null value (i.e. Kafka tombstone
 	 - Importance: LOW
 	 - Required: false
 
-🔘 api4.max.retries
+🔘 api4.http.response.compression.enabled
 
-The maximum number of times to retry on errors before failing the task.
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
 
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api4.request.body.format
@@ -1669,21 +1750,21 @@ The format of the request body. Valid options are JSON or String. The default va
 	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 	 - Required: HIGH
 
+🔘 api4.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api4.retry.backoff.policy
 
 The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
 
 	 - Type: STRING
 	 - Default: EXPONENTIAL_WITH_JITTER
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api4.retry.backoff.ms
-
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
-
-	 - Type: INT
-	 - Default: 3000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1705,21 +1786,21 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
 	 - Required: HIGH
 
+🔘 api4.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api4.retry.on.status.codes
 
 Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
 
 	 - Type: STRING
 	 - Default: 400-
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api4.http.request.headers.separator
-
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
-
-	 - Type: STRING
-	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1732,12 +1813,30 @@ The character that separates multiple distinct headers within ``http.request.hea
 	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
 	 - Required: HIGH
 
+🔘 api4.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api4.batch.separator
 
 Separator for records in a batch. This configuration can be set via CLI only.
 
 	 - Type: STRING
 	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api4.batch.json.as.array
+
+Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
+
+	 - Type: BOOLEAN
+	 - Default: false
 	 - Importance: HIGH
 	 - Required: false
 
@@ -1748,15 +1847,6 @@ The character that separates multiple distinct request parameters within ``http.
 	 - Type: STRING
 	 - Default: &
 	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api4.batch.json.as.array
-
-Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: HIGH
 	 - Required: false
 
 🔘 api4.test.api
@@ -1960,13 +2050,13 @@ How to handle records with a non-null key and a null value (i.e. Kafka tombstone
 	 - Importance: LOW
 	 - Required: false
 
-🔘 api5.max.retries
+🔘 api5.http.response.compression.enabled
 
-The maximum number of times to retry on errors before failing the task.
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
 
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api5.request.body.format
@@ -1987,12 +2077,12 @@ The format of the request body. Valid options are JSON or String. The default va
 	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 	 - Required: HIGH
 
-🔘 api5.retry.backoff.policy
+🔘 api5.max.retries
 
-The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+The maximum number of times to retry on errors before failing the task.
 
-	 - Type: STRING
-	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Type: INT
+	 - Default: 5
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2005,12 +2095,12 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api5.retry.backoff.ms
+🔘 api5.retry.backoff.policy
 
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
 
-	 - Type: INT
-	 - Default: 3000
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2023,21 +2113,21 @@ The initial duration in milliseconds to wait following an error before a retry a
 	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
 	 - Required: HIGH
 
+🔘 api5.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api5.retry.on.status.codes
 
 Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
 
 	 - Type: STRING
 	 - Default: 400-
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api5.http.request.headers.separator
-
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
-
-	 - Type: STRING
-	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2059,12 +2149,12 @@ Separator for records in a batch. This configuration can be set via CLI only.
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api5.http.request.parameters.separator
+🔘 api5.http.request.headers.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
 
 	 - Type: STRING
-	 - Default: &
+	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2077,13 +2167,13 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api5.test.api
+🔘 api5.http.request.parameters.separator
 
-Flag to determine if the api needs to be tested
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
 
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
 	 - Required: false
 
 🔘 api5.regex.patterns
@@ -2094,6 +2184,15 @@ Flag to determine if the api needs to be tested
 	 - Default: STRING
 	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
 	 - Required: MEDIUM
+
+🔘 api5.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
 
 🔘 api5.regex.replacements
 
@@ -2113,15 +2212,6 @@ Flag to determine if the api needs to be tested
 	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
-🔘 api5.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api5.allow.get.request.body
 
 Allow Request Body in case of GET call. This configuration can be set via CLI only.
@@ -2130,6 +2220,15 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 api5.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
 
 🔘 api5.http.request.body
 
@@ -2287,21 +2386,21 @@ The format of the request body. Valid options are JSON or String. The default va
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 api6.http.response.compression.enabled
+
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
 🔘 api6.max.retries
 
 The maximum number of times to retry on errors before failing the task.
 
 	 - Type: INT
 	 - Default: 5
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api6.retry.backoff.policy
-
-The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
-
-	 - Type: STRING
-	 - Default: EXPONENTIAL_WITH_JITTER
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2314,15 +2413,6 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 	 - Required: HIGH
 
-🔘 api6.retry.backoff.ms
-
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
-
-	 - Type: INT
-	 - Default: 3000
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api6.max.batch.size
 
 The number of records accumulated in a batch before the HTTP API is invoked. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
@@ -2332,12 +2422,21 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api6.retry.on.status.codes
+🔘 api6.retry.backoff.policy
 
-Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
 
 	 - Type: STRING
-	 - Default: 400-
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api6.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2359,12 +2458,12 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
 	 - Required: HIGH
 
-🔘 api6.http.request.headers.separator
+🔘 api6.retry.on.status.codes
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
 
 	 - Type: STRING
-	 - Default: |
+	 - Default: 400-
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2377,6 +2476,15 @@ Separator for records in a batch. This configuration can be set via CLI only.
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 api6.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api6.http.request.parameters.separator
 
 The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
@@ -2384,15 +2492,6 @@ The character that separates multiple distinct request parameters within ``http.
 	 - Type: STRING
 	 - Default: &
 	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api6.test.api
-
-Flag to determine if the api needs to be tested
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
 	 - Required: false
 
 🔘 api6.batch.json.as.array
@@ -2413,6 +2512,15 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
+🔘 api6.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 🔘 api6.regex.replacements
 
 
@@ -2431,15 +2539,6 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
-🔘 api6.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api6.allow.get.request.body
 
 Allow Request Body in case of GET call. This configuration can be set via CLI only.
@@ -2448,6 +2547,15 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 api6.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
 
 🔘 api6.http.request.body
 
@@ -2596,13 +2704,13 @@ The time in milliseconds to wait for a request response from the server
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api7.max.retries
+🔘 api7.http.response.compression.enabled
 
-The maximum number of times to retry on errors before failing the task.
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
 
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api7.request.body.format
@@ -2623,21 +2731,12 @@ The format of the request body. Valid options are JSON or String. The default va
 	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 	 - Required: HIGH
 
-🔘 api7.retry.backoff.policy
+🔘 api7.max.retries
 
-The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
-
-	 - Type: STRING
-	 - Default: EXPONENTIAL_WITH_JITTER
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api7.retry.backoff.ms
-
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+The maximum number of times to retry on errors before failing the task.
 
 	 - Type: INT
-	 - Default: 3000
+	 - Default: 5
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2650,6 +2749,15 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 api7.retry.backoff.policy
+
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api7.batch.prefix
 
 
@@ -2659,12 +2767,12 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
 	 - Required: HIGH
 
-🔘 api7.retry.on.status.codes
+🔘 api7.retry.backoff.ms
 
-Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
 
-	 - Type: STRING
-	 - Default: 400-
+	 - Type: INT
+	 - Default: 3000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2676,6 +2784,15 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Default: STRING
 	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
 	 - Required: HIGH
+
+🔘 api7.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api7.http.request.headers.separator
 
@@ -2695,15 +2812,6 @@ Separator for records in a batch. This configuration can be set via CLI only.
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api7.http.request.parameters.separator
-
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
-
-	 - Type: STRING
-	 - Default: &
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api7.batch.json.as.array
 
 Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
@@ -2713,13 +2821,13 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api7.test.api
+🔘 api7.http.request.parameters.separator
 
-Flag to determine if the api needs to be tested
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
 
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
 	 - Required: false
 
 🔘 api7.regex.patterns
@@ -2730,6 +2838,15 @@ Flag to determine if the api needs to be tested
 	 - Default: STRING
 	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
 	 - Required: MEDIUM
+
+🔘 api7.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
 
 🔘 api7.regex.replacements
 
@@ -2914,13 +3031,13 @@ How to handle records with a non-null key and a null value (i.e. Kafka tombstone
 	 - Importance: LOW
 	 - Required: false
 
-🔘 api8.max.retries
+🔘 api8.http.response.compression.enabled
 
-The maximum number of times to retry on errors before failing the task.
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
 
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api8.request.body.format
@@ -2941,12 +3058,12 @@ The format of the request body. Valid options are JSON or String. The default va
 	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 	 - Required: HIGH
 
-🔘 api8.retry.backoff.policy
+🔘 api8.max.retries
 
-The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+The maximum number of times to retry on errors before failing the task.
 
-	 - Type: STRING
-	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Type: INT
+	 - Default: 5
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2959,12 +3076,12 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api8.retry.backoff.ms
+🔘 api8.retry.backoff.policy
 
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
 
-	 - Type: INT
-	 - Default: 3000
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2977,12 +3094,12 @@ The initial duration in milliseconds to wait following an error before a retry a
 	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
 	 - Required: HIGH
 
-🔘 api8.retry.on.status.codes
+🔘 api8.retry.backoff.ms
 
-Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
 
-	 - Type: STRING
-	 - Default: 400-
+	 - Type: INT
+	 - Default: 3000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2995,12 +3112,12 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
 	 - Required: HIGH
 
-🔘 api8.http.request.headers.separator
+🔘 api8.retry.on.status.codes
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
 
 	 - Type: STRING
-	 - Default: |
+	 - Default: 400-
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3013,12 +3130,12 @@ Separator for records in a batch. This configuration can be set via CLI only.
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api8.http.request.parameters.separator
+🔘 api8.http.request.headers.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
 
 	 - Type: STRING
-	 - Default: &
+	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3031,13 +3148,13 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api8.test.api
+🔘 api8.http.request.parameters.separator
 
-Flag to determine if the api needs to be tested
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
 
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
 	 - Required: false
 
 🔘 api8.regex.patterns
@@ -3048,6 +3165,15 @@ Flag to determine if the api needs to be tested
 	 - Default: STRING
 	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
 	 - Required: MEDIUM
+
+🔘 api8.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
 
 🔘 api8.regex.replacements
 
@@ -3067,15 +3193,6 @@ Flag to determine if the api needs to be tested
 	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
-🔘 api8.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api8.allow.get.request.body
 
 Allow Request Body in case of GET call. This configuration can be set via CLI only.
@@ -3084,6 +3201,15 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 api8.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
 
 🔘 api8.http.request.body
 
@@ -3232,15 +3358,6 @@ The time in milliseconds to wait for a request response from the server
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api9.max.retries
-
-The maximum number of times to retry on errors before failing the task.
-
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api9.request.body.format
 
 The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if ``input.data.format`` is ``STRING``, you should also set ``api9.request.body.format`` to ``STRING``.
@@ -3248,6 +3365,15 @@ The format of the request body. Valid options are JSON or String. The default va
 	 - Type: STRING
 	 - Default: JSON
 	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api9.http.response.compression.enabled
+
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api9.batch.key.pattern
@@ -3259,21 +3385,21 @@ The format of the request body. Valid options are JSON or String. The default va
 	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 	 - Required: HIGH
 
+🔘 api9.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api9.retry.backoff.policy
 
 The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
 
 	 - Type: STRING
 	 - Default: EXPONENTIAL_WITH_JITTER
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api9.retry.backoff.ms
-
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
-
-	 - Type: INT
-	 - Default: 3000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3295,12 +3421,12 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
 	 - Required: HIGH
 
-🔘 api9.retry.on.status.codes
+🔘 api9.retry.backoff.ms
 
-Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
 
-	 - Type: STRING
-	 - Default: 400-
+	 - Type: INT
+	 - Default: 3000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3313,12 +3439,12 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
 	 - Required: HIGH
 
-🔘 api9.http.request.headers.separator
+🔘 api9.retry.on.status.codes
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
 
 	 - Type: STRING
-	 - Default: |
+	 - Default: 400-
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3331,22 +3457,13 @@ Separator for records in a batch. This configuration can be set via CLI only.
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api9.http.request.parameters.separator
+🔘 api9.http.request.headers.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
 
 	 - Type: STRING
-	 - Default: &
+	 - Default: |
 	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api9.test.api
-
-Flag to determine if the api needs to be tested
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
 	 - Required: false
 
 🔘 api9.batch.json.as.array
@@ -3358,6 +3475,15 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 api9.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api9.regex.patterns
 
 
@@ -3366,6 +3492,15 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 	 - Default: STRING
 	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
 	 - Required: MEDIUM
+
+🔘 api9.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
 
 🔘 api9.regex.replacements
 
@@ -3385,15 +3520,6 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
-🔘 api9.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api9.allow.get.request.body
 
 Allow Request Body in case of GET call. This configuration can be set via CLI only.
@@ -3402,6 +3528,15 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 api9.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
 
 🔘 api9.http.request.body
 
@@ -3550,13 +3685,13 @@ How to handle records with a non-null key and a null value (i.e. Kafka tombstone
 	 - Importance: LOW
 	 - Required: false
 
-🔘 api10.max.retries
+🔘 api10.http.response.compression.enabled
 
-The maximum number of times to retry on errors before failing the task.
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
 
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api10.request.body.format
@@ -3568,12 +3703,12 @@ The format of the request body. Valid options are JSON or String. The default va
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api10.retry.backoff.policy
+🔘 api10.max.retries
 
-The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+The maximum number of times to retry on errors before failing the task.
 
-	 - Type: STRING
-	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Type: INT
+	 - Default: 5
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3595,21 +3730,12 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api10.retry.backoff.ms
+🔘 api10.retry.backoff.policy
 
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
-
-	 - Type: INT
-	 - Default: 3000
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api10.retry.on.status.codes
-
-Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
 
 	 - Type: STRING
-	 - Default: 400-
+	 - Default: EXPONENTIAL_WITH_JITTER
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3622,6 +3748,15 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
 	 - Required: HIGH
 
+🔘 api10.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api10.batch.suffix
 
 
@@ -3631,21 +3766,21 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
 	 - Required: HIGH
 
+🔘 api10.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+
+	 - Type: STRING
+	 - Default: 400-
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api10.http.request.headers.separator
 
 The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
 
 	 - Type: STRING
 	 - Default: |
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api10.http.request.parameters.separator
-
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
-
-	 - Type: STRING
-	 - Default: &
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3665,6 +3800,15 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: HIGH
+	 - Required: false
+
+🔘 api10.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
 	 - Required: false
 
 🔘 api10.test.api
@@ -3712,15 +3856,6 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api10.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api10.http.request.body
 
 
@@ -3728,6 +3863,15 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 	 - Type: false
 	 - Default: STRING
 	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api10.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api10.report.only.status.code.to.success.topic
@@ -3868,15 +4012,6 @@ The time in milliseconds to wait for a request response from the server
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api11.max.retries
-
-The maximum number of times to retry on errors before failing the task.
-
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api11.request.body.format
 
 The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if ``input.data.format`` is ``STRING``, you should also set ``api11.request.body.format`` to ``STRING``.
@@ -3886,12 +4021,21 @@ The format of the request body. Valid options are JSON or String. The default va
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api11.retry.backoff.policy
+🔘 api11.http.response.compression.enabled
 
-The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
 
-	 - Type: STRING
-	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api11.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3913,12 +4057,12 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api11.retry.backoff.ms
+🔘 api11.retry.backoff.policy
 
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
 
-	 - Type: INT
-	 - Default: 3000
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3931,12 +4075,12 @@ The initial duration in milliseconds to wait following an error before a retry a
 	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
 	 - Required: HIGH
 
-🔘 api11.retry.on.status.codes
+🔘 api11.retry.backoff.ms
 
-Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
 
-	 - Type: STRING
-	 - Default: 400-
+	 - Type: INT
+	 - Default: 3000
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3949,12 +4093,12 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
 	 - Required: HIGH
 
-🔘 api11.http.request.headers.separator
+🔘 api11.retry.on.status.codes
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
 
 	 - Type: STRING
-	 - Default: |
+	 - Default: 400-
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3967,12 +4111,12 @@ Separator for records in a batch. This configuration can be set via CLI only.
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api11.http.request.parameters.separator
+🔘 api11.http.request.headers.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
 
 	 - Type: STRING
-	 - Default: &
+	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3985,13 +4129,13 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api11.test.api
+🔘 api11.http.request.parameters.separator
 
-Flag to determine if the api needs to be tested
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
 
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
 	 - Required: false
 
 🔘 api11.regex.patterns
@@ -4002,6 +4146,15 @@ Flag to determine if the api needs to be tested
 	 - Default: STRING
 	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
 	 - Required: MEDIUM
+
+🔘 api11.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
 
 🔘 api11.regex.replacements
 
@@ -4021,15 +4174,6 @@ Flag to determine if the api needs to be tested
 	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
-🔘 api11.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api11.allow.get.request.body
 
 Allow Request Body in case of GET call. This configuration can be set via CLI only.
@@ -4038,6 +4182,15 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 api11.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
 
 🔘 api11.http.request.body
 
@@ -4186,15 +4339,6 @@ The time in milliseconds to wait for a request response from the server
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api12.max.retries
-
-The maximum number of times to retry on errors before failing the task.
-
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api12.request.body.format
 
 The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if ``input.data.format`` is ``STRING``, you should also set ``api12.request.body.format`` to ``STRING``.
@@ -4204,12 +4348,21 @@ The format of the request body. Valid options are JSON or String. The default va
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api12.retry.backoff.policy
+🔘 api12.http.response.compression.enabled
 
-The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
 
-	 - Type: STRING
-	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api12.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4222,12 +4375,12 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 	 - Required: HIGH
 
-🔘 api12.retry.backoff.ms
+🔘 api12.retry.backoff.policy
 
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
 
-	 - Type: INT
-	 - Default: 3000
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4249,21 +4402,21 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
 	 - Required: HIGH
 
+🔘 api12.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api12.retry.on.status.codes
 
 Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
 
 	 - Type: STRING
 	 - Default: 400-
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api12.http.request.headers.separator
-
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
-
-	 - Type: STRING
-	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4285,6 +4438,15 @@ Separator for records in a batch. This configuration can be set via CLI only.
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 api12.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api12.http.request.parameters.separator
 
 The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
@@ -4292,15 +4454,6 @@ The character that separates multiple distinct request parameters within ``http.
 	 - Type: STRING
 	 - Default: &
 	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api12.test.api
-
-Flag to determine if the api needs to be tested
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
 	 - Required: false
 
 🔘 api12.batch.json.as.array
@@ -4321,6 +4474,15 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
+🔘 api12.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 🔘 api12.regex.replacements
 
 
@@ -4339,15 +4501,6 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
 	 - Required: MEDIUM
 
-🔘 api12.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api12.allow.get.request.body
 
 Allow Request Body in case of GET call. This configuration can be set via CLI only.
@@ -4364,6 +4517,15 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 	 - Type: false
 	 - Default: STRING
 	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api12.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api12.report.only.status.code.to.success.topic
@@ -4504,15 +4666,6 @@ How to handle records with a non-null key and a null value (i.e. Kafka tombstone
 	 - Importance: LOW
 	 - Required: false
 
-🔘 api13.max.retries
-
-The maximum number of times to retry on errors before failing the task.
-
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api13.request.body.format
 
 The format of the request body. Valid options are JSON or String. The default value is JSON. Note that if ``input.data.format`` is ``STRING``, you should also set ``api13.request.body.format`` to ``STRING``.
@@ -4522,12 +4675,21 @@ The format of the request body. Valid options are JSON or String. The default va
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api13.retry.backoff.policy
+🔘 api13.http.response.compression.enabled
 
-The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
 
-	 - Type: STRING
-	 - Default: EXPONENTIAL_WITH_JITTER
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 api13.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4549,12 +4711,12 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api13.retry.backoff.ms
+🔘 api13.retry.backoff.policy
 
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
 
-	 - Type: INT
-	 - Default: 3000
+	 - Type: STRING
+	 - Default: EXPONENTIAL_WITH_JITTER
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4567,21 +4729,21 @@ The initial duration in milliseconds to wait following an error before a retry a
 	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
 	 - Required: HIGH
 
+🔘 api13.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api13.retry.on.status.codes
 
 Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
 
 	 - Type: STRING
 	 - Default: 400-
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api13.http.request.headers.separator
-
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
-
-	 - Type: STRING
-	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4594,12 +4756,30 @@ The character that separates multiple distinct headers within ``http.request.hea
 	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
 	 - Required: HIGH
 
+🔘 api13.http.request.headers.separator
+
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: |
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 api13.batch.separator
 
 Separator for records in a batch. This configuration can be set via CLI only.
 
 	 - Type: STRING
 	 - Default: ,
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 api13.batch.json.as.array
+
+Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
+
+	 - Type: BOOLEAN
+	 - Default: false
 	 - Importance: HIGH
 	 - Required: false
 
@@ -4612,24 +4792,6 @@ The character that separates multiple distinct request parameters within ``http.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api13.test.api
-
-Flag to determine if the api needs to be tested
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
-	 - Required: false
-
-🔘 api13.batch.json.as.array
-
-Whether or not to use an array to bundle json records. Only used when request.body.format is set to json. This can be disabled only when max.batch.size is set to 1.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: HIGH
-	 - Required: false
-
 🔘 api13.regex.patterns
 
 
@@ -4638,6 +4800,15 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 	 - Default: STRING
 	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
 	 - Required: MEDIUM
+
+🔘 api13.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
 
 🔘 api13.regex.replacements
 
@@ -4666,15 +4837,6 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api13.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api13.http.request.body
 
 
@@ -4682,6 +4844,15 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 	 - Type: false
 	 - Default: STRING
 	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api13.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api13.report.only.status.code.to.success.topic
@@ -4822,13 +4993,13 @@ The time in milliseconds to wait for a request response from the server
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api14.max.retries
+🔘 api14.http.response.compression.enabled
 
-The maximum number of times to retry on errors before failing the task.
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
 
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api14.request.body.format
@@ -4837,6 +5008,15 @@ The format of the request body. Valid options are JSON or String. The default va
 
 	 - Type: STRING
 	 - Default: JSON
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api14.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4849,24 +5029,6 @@ The format of the request body. Valid options are JSON or String. The default va
 	 - Importance: Pattern used to build the key for a given batch. ${key} and ${topic} can be used to include message attributes here
 	 - Required: HIGH
 
-🔘 api14.retry.backoff.policy
-
-The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
-
-	 - Type: STRING
-	 - Default: EXPONENTIAL_WITH_JITTER
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 api14.retry.backoff.ms
-
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
-
-	 - Type: INT
-	 - Default: 3000
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api14.max.batch.size
 
 The number of records accumulated in a batch before the HTTP API is invoked. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
@@ -4876,12 +5038,12 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api14.retry.on.status.codes
+🔘 api14.retry.backoff.policy
 
-Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
+The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH_JITTER
 
 	 - Type: STRING
-	 - Default: 400-
+	 - Default: EXPONENTIAL_WITH_JITTER
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4894,12 +5056,21 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
 	 - Required: HIGH
 
-🔘 api14.http.request.headers.separator
+🔘 api14.retry.backoff.ms
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api14.retry.on.status.codes
+
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
 
 	 - Type: STRING
-	 - Default: |
+	 - Default: 400-
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4921,12 +5092,12 @@ Separator for records in a batch. This configuration can be set via CLI only.
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api14.http.request.parameters.separator
+🔘 api14.http.request.headers.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
 
 	 - Type: STRING
-	 - Default: &
+	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4939,13 +5110,13 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api14.test.api
+🔘 api14.http.request.parameters.separator
 
-Flag to determine if the api needs to be tested
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
 
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
 	 - Required: false
 
 🔘 api14.regex.patterns
@@ -4956,6 +5127,15 @@ Flag to determine if the api needs to be tested
 	 - Default: STRING
 	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
 	 - Required: MEDIUM
+
+🔘 api14.test.api
+
+Flag to determine if the api needs to be tested
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
 
 🔘 api14.regex.replacements
 
@@ -4984,15 +5164,6 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api14.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api14.http.request.body
 
 
@@ -5000,6 +5171,15 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 	 - Type: false
 	 - Default: STRING
 	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api14.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api14.report.only.status.code.to.success.topic
@@ -5140,13 +5320,13 @@ How to handle records with a non-null key and a null value (i.e. Kafka tombstone
 	 - Importance: LOW
 	 - Required: false
 
-🔘 api15.max.retries
+🔘 api15.http.response.compression.enabled
 
-The maximum number of times to retry on errors before failing the task.
+Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
 
-	 - Type: INT
-	 - Default: 5
-	 - Importance: MEDIUM
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 🔘 api15.request.body.format
@@ -5155,6 +5335,15 @@ The format of the request body. Valid options are JSON or String. The default va
 
 	 - Type: STRING
 	 - Default: JSON
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 api15.max.retries
+
+The maximum number of times to retry on errors before failing the task.
+
+	 - Type: INT
+	 - Default: 5
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -5176,15 +5365,6 @@ The backoff policy to use in terms of retry - CONSTANT_VALUE or EXPONENTIAL_WITH
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api15.retry.backoff.ms
-
-The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
-
-	 - Type: INT
-	 - Default: 3000
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api15.max.batch.size
 
 The number of records accumulated in a batch before the HTTP API is invoked. Note that Basic and Standard Clusters may experience throughput limitations, even with a higher batch size.
@@ -5192,6 +5372,15 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 	 - Type: INT
 	 - Default: 1
 	 - Importance: HIGH
+	 - Required: false
+
+🔘 api15.retry.backoff.ms
+
+The initial duration in milliseconds to wait following an error before a retry attempt is made. Subsequent backoff attempts can be a constant value or exponential with jitter (can be configured using api*.retry.backoff.policy parameter). Jitter adds randomness to the exponential backoff algorithm to prevent synchronized retries.
+
+	 - Type: INT
+	 - Default: 3000
+	 - Importance: MEDIUM
 	 - Required: false
 
 🔘 api15.batch.prefix
@@ -5203,15 +5392,6 @@ The number of records accumulated in a batch before the HTTP API is invoked. Not
 	 - Importance: Prefix added to record batches. This is applied once at the beginning of the batch of records
 	 - Required: HIGH
 
-🔘 api15.retry.on.status.codes
-
-Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
-
-	 - Type: STRING
-	 - Default: 400-
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 api15.batch.suffix
 
 
@@ -5221,12 +5401,12 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 	 - Importance: Suffix added to record batches. This is applied once at the end of the batch of records
 	 - Required: HIGH
 
-🔘 api15.http.request.headers.separator
+🔘 api15.retry.on.status.codes
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+Comma-separated list of HTTP status codes or range of codes to retry on. Ranges are specified with start and optional end code. Range boundaries are inclusive. For instance, 400- includes all codes greater than or equal to 400. 400-500 includes codes from 400 to 500, including 500. Multiple ranges and single codes can be specified together to achieve fine-grained control over retry behavior. For example, 404,408,500- will retry on 404 NOT FOUND, 408 REQUEST TIMEOUT, and all 5xx error codes. Note that some status codes will always be retried, such as unauthorized, timeouts and too many requests.
 
 	 - Type: STRING
-	 - Default: |
+	 - Default: 400-
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -5239,12 +5419,12 @@ Separator for records in a batch. This configuration can be set via CLI only.
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api15.http.request.parameters.separator
+🔘 api15.http.request.headers.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
 
 	 - Type: STRING
-	 - Default: &
+	 - Default: |
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -5255,6 +5435,15 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: HIGH
+	 - Required: false
+
+🔘 api15.http.request.parameters.separator
+
+The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+
+	 - Type: STRING
+	 - Default: &
+	 - Importance: MEDIUM
 	 - Required: false
 
 🔘 api15.test.api
@@ -5302,15 +5491,6 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api15.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api15.http.request.body
 
 
@@ -5318,6 +5498,15 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 	 - Type: false
 	 - Default: STRING
 	 - Importance: The custom payload that will be send to the destination instead of record. The value can be templated with key, topic and any other record key (for example: ``search_after: ${key}``) where ``${key}`` will be substituted with the key obtained from the record.
+	 - Required: MEDIUM
+
+🔘 api15.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api15.report.only.status.code.to.success.topic

@@ -92,6 +92,57 @@ How do you want to prefix table names?
 	 - Required: HIGH
 
 ==========================
+Authentication method
+==========================
+🔘 authentication.method
+
+Select how you want to authenticate with your database.
+
+	 - Type: STRING
+	 - Default: Password
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 secret.manager.enabled
+
+Fetch sensitive configuration values from a secret manager.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Secret manager configuration
+==========================
+🔘 secret.manager
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the secret manager to use for retrieving sensitive data.
+	 - Required: HIGH
+
+🔘 secret.manager.managed.configs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Select the configurations to fetch their values from the secret manager.
+	 - Required: HIGH
+
+🔘 secret.manager.provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing provider integration that has access to your secret manager.
+	 - Required: HIGH
+
+==========================
 How should we connect to your database?
 ==========================
 🔘 connection.host
@@ -148,15 +199,6 @@ Select database connection using sid or service name
 	 - Importance: JDBC database name.
 	 - Required: HIGH
 
-🔘 ssl.truststorefile
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The binary trust store file that contains the server's CA certificate. Only required if you use verify-ca or verify-full ssl mode. The connector supports files in JKS format. For REST API usage, you must base64-encode the binary trust store file and prefix it with ``data:text/plain;base64,``. For example, first, encode the file ``base64_truststore=<span>(cat /path/to/truststore.jks | base64)`` and then use ``data:text/plain;base64,</span>base64_truststore`` as the value.
-	 - Required: LOW
-
 🔘 ssl.mode
 
 What SSL mode should we use to connect to your database. `disabled` disables SSL entirely. `verify-ca` uses SSL for encryption and performs authentication of the server CA. `verify-ca` option requires a Java truststore containing the server CA and the truststore password to be provided.
@@ -166,13 +208,13 @@ What SSL mode should we use to connect to your database. `disabled` disables SSL
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 ssl.server.cert.dn
+🔘 ssl.truststorefile
 
 
 
 	 - Type: false
-	 - Default: STRING
-	 - Importance: Use this paramter to specify the distinguished name (DN) of the database server. Only required if using `verify-full` ssl mode.
+	 - Default: PASSWORD
+	 - Importance: The binary trust store file that contains the server's CA certificate. Only required if you use verify-ca or verify-full ssl mode. The connector supports files in JKS format. For REST API usage, you must base64-encode the binary trust store file and prefix it with ``data:text/plain;base64,``. For example, first, encode the file ``base64_truststore=<span>(cat /path/to/truststore.jks | base64)`` and then use ``data:text/plain;base64,</span>base64_truststore`` as the value.
 	 - Required: LOW
 
 🔘 ssl.truststorepassword
@@ -182,6 +224,15 @@ What SSL mode should we use to connect to your database. `disabled` disables SSL
 	 - Type: false
 	 - Default: PASSWORD
 	 - Importance: The trust store password containing server CA certificate. Only required if using `verify-ca` or `verify-full` ssl mode.
+	 - Required: LOW
+
+🔘 ssl.server.cert.dn
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Use this paramter to specify the distinguished name (DN) of the database server. Only required if using `verify-full` ssl mode.
 	 - Required: LOW
 
 ==========================
@@ -463,6 +514,15 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 	 - Importance: LOW
 	 - Required: false
 
+🔘 key.converter.key.schema.id.serializer
+
+The class name of the schema ID serializer for keys. This is used to serialize schema IDs in the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.connect.meta.data
 
 
@@ -487,6 +547,15 @@ How to construct the subject name for key schema registration.
 
 	 - Type: STRING
 	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.value.schema.id.serializer
+
+The class name of the schema ID serializer for values. This is used to serialize schema IDs in the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
 	 - Importance: LOW
 	 - Required: false
 
