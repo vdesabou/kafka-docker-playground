@@ -262,6 +262,15 @@ When to quote table names, column names, and other identifiers in SQL statements
 	 - Importance: LOW
 	 - Required: false
 
+🔘 numeric.mapping
+
+Map NUMERIC values by precision and optionally scale to integral or decimal types. Use `none` if all NUMERIC columns are to be represented by Connect's DECIMAL logical type. Use `best_fit` if NUMERIC columns should be cast to Connect's INT8, INT16, INT32, INT64, or FLOAT64 based upon the column's precision and scale.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 Output messages
 ==========================
@@ -295,6 +304,15 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 
 	 - Type: STRING
 	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.schema.id.serializer
+
+The class name of the schema ID serializer for keys. This is used to serialize schema IDs in the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
 	 - Importance: LOW
 	 - Required: false
 
@@ -349,6 +367,15 @@ When set to true, this property ensures that the corresponding record in Kafka i
 
 	 - Type: BOOLEAN
 	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.value.schema.id.serializer
+
+The class name of the schema ID serializer for values. This is used to serialize schema IDs in the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
 	 - Importance: LOW
 	 - Required: false
 
