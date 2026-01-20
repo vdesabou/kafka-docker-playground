@@ -1,3 +1,0 @@
-[submodule "reproduction-models"]
-	path = reproduction-models
-	url = git@github.com:confluentinc/kafka-docker-playground-internal.git
