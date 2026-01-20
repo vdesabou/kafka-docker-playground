@@ -223,6 +223,15 @@ Whether to replace fields that have a default value and that are null to the def
 	 - Importance: LOW
 	 - Required: false
 
+🔘 key.converter.key.schema.id.serializer
+
+The class name of the schema ID serializer for keys. This is used to serialize schema IDs in the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.reference.subject.name.strategy
 
 Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
@@ -283,6 +292,15 @@ When set to true, this property ensures that the corresponding record in Kafka i
 
 	 - Type: BOOLEAN
 	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.value.schema.id.serializer
+
+The class name of the schema ID serializer for values. This is used to serialize schema IDs in the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
 	 - Importance: LOW
 	 - Required: false
 
