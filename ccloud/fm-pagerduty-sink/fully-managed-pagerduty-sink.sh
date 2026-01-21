@@ -31,7 +31,7 @@ bootstrap_ccloud_environment
 set +e
 playground topic delete --topic incidents
 set -e
-
+sleep 3
 playground topic create --topic incidents
 
 log "Sending messages to topic incidents"
