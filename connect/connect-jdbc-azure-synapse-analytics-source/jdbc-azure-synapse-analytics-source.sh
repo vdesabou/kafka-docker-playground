@@ -15,7 +15,7 @@ cd ../../connect/connect-jdbc-azure-synapse-analytics-source
 if [ ! -f ${PWD}/sqljdbc_12.2/enu/mssql-jdbc-12.2.0.jre11.jar ]
 then
      log "Downloading Microsoft JDBC driver mssql-jdbc-12.2.0.jre11.jar"
-     curl -L https://go.microsoft.com/fwlink/?linkid=2222954 -o sqljdbc_12.2.0.0_enu.tar.gz
+     curl -k -L https://go.microsoft.com/fwlink/?linkid=2222954 -o sqljdbc_12.2.0.0_enu.tar.gz
      tar xvfz sqljdbc_12.2.0.0_enu.tar.gz
      rm -f sqljdbc_12.2.0.0_enu.tar.gz
 fi
