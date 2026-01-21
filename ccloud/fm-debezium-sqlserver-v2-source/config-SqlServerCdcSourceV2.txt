@@ -79,6 +79,15 @@ Select how you want to authenticate with the database. Valid options are ``Micro
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 secret.manager.enabled
+
+Fetch sensitive configuration values from a secret manager.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 provider.integration.id
 
 
@@ -86,6 +95,36 @@ Select how you want to authenticate with the database. Valid options are ``Micro
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Select an existing integration that has access to your resource.
+	 - Required: HIGH
+
+==========================
+Secret manager configuration
+==========================
+🔘 secret.manager
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the secret manager to use for retrieving sensitive data.
+	 - Required: HIGH
+
+🔘 secret.manager.managed.configs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Select the configurations to fetch their values from the secret manager.
+	 - Required: HIGH
+
+🔘 secret.manager.provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing provider integration that has access to your secret manager.
 	 - Required: HIGH
 
 ==========================
@@ -469,6 +508,15 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 	 - Importance: LOW
 	 - Required: false
 
+🔘 key.converter.key.schema.id.serializer
+
+The class name of the schema ID serializer for keys. This is used to serialize schema IDs in the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.connect.meta.data
 
 
@@ -493,6 +541,15 @@ How to construct the subject name for key schema registration.
 
 	 - Type: STRING
 	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.value.schema.id.serializer
+
+The class name of the schema ID serializer for values. This is used to serialize schema IDs in the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
 	 - Importance: LOW
 	 - Required: false
 

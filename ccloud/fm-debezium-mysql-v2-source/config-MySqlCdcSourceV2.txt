@@ -68,14 +68,23 @@ This config key only applies to data preview requests and governs whether the da
 	 - Required: false
 
 ==========================
-Auth Mode
+Authentication method
 ==========================
 🔘 authentication.method
 
-Select how you want to authenticate the DB. Username Password or AWS IAM Roles.
+Select how you want to authenticate with the database. Valid options are ``IAM Roles`` and ``Password``.
 
 	 - Type: STRING
 	 - Default: Password
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 secret.manager.enabled
+
+Fetch sensitive configuration values from a secret manager.
+
+	 - Type: BOOLEAN
+	 - Default: false
 	 - Importance: HIGH
 	 - Required: false
 
@@ -85,16 +94,37 @@ Select how you want to authenticate the DB. Username Password or AWS IAM Roles.
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Select an existing integration that has access to your resource. In case you need to integrate a new IAM role, use provider integration
+	 - Importance: Select an existing integration that has access to your resource.
 	 - Required: HIGH
 
-🔘 database.password
+==========================
+Secret manager configuration
+==========================
+🔘 secret.manager
 
 
 
 	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Password for the MySQL database user that has the required authorization
+	 - Default: STRING
+	 - Importance: Select the secret manager to use for retrieving sensitive data.
+	 - Required: HIGH
+
+🔘 secret.manager.managed.configs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Select the configurations to fetch their values from the secret manager.
+	 - Required: HIGH
+
+🔘 secret.manager.provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing provider integration that has access to your secret manager.
 	 - Required: HIGH
 
 ==========================
@@ -134,6 +164,15 @@ How should we connect to your database?
 	 - Type: true
 	 - Default: STRING
 	 - Importance: The name of the MySQL database user that has the required authorization.
+	 - Required: HIGH
+
+🔘 database.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password for the MySQL database user that has the required authorization
 	 - Required: HIGH
 
 🔘 database.ssl.mode
@@ -523,6 +562,15 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 	 - Importance: LOW
 	 - Required: false
 
+🔘 key.converter.key.schema.id.serializer
+
+The class name of the schema ID serializer for keys. This is used to serialize schema IDs in the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.connect.meta.data
 
 
@@ -547,6 +595,15 @@ How to construct the subject name for key schema registration.
 
 	 - Type: STRING
 	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.value.schema.id.serializer
+
+The class name of the schema ID serializer for values. This is used to serialize schema IDs in the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
 	 - Importance: LOW
 	 - Required: false
 
