@@ -89,7 +89,7 @@ aws s3 rm s3://$DATABRICKS_AWS_BUCKET_NAME --recursive --region $DATABRICKS_AWS_
 set -e
 
 log "Sending messages to topic pageviews"
-playground topic produce --topic pageviews --value predefined-schemas/datagen/pageviews_schema.avro--derive-value-schema-as AVRO --nb-messages 100
+playground topic produce --topic pageviews --value predefined-schemas/datagen/pageviews_schema.avro --derive-value-schema-as AVRO --nb-messages 100
 
 log "Creating Databricks Delta Lake Sink connector"
 playground connector create-or-update --connector databricks-delta-lake-sink  << EOF
