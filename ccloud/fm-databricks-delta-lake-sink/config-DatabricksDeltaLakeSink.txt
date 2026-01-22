@@ -87,10 +87,10 @@ Kafka Cluster credentials
 ==========================
 🔘 kafka.auth.mode
 
-Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode.
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode, whenever possible.
 
 	 - Type: STRING
-	 - Default: KAFKA_API_KEY
+	 - Default: ${connect.regional.connector}
 	 - Importance: HIGH
 	 - Required: false
 
@@ -298,6 +298,33 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 	 - Importance: LOW
 	 - Required: false
 
+🔘 key.converter.use.schema.guid
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
+
+🔘 value.converter.value.schema.id.deserializer
+
+The class name of the schema ID deserializer for values. This is used to deserialize schema IDs from the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.use.schema.guid
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
+
 🔘 value.converter.reference.subject.name.strategy
 
 Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
@@ -306,6 +333,15 @@ Set the subject reference name strategy for value. Valid entries are DefaultRefe
 	 - Default: DefaultReferenceSubjectNameStrategy
 	 - Importance: LOW
 	 - Required: false
+
+🔘 value.converter.use.schema.id
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
 
 🔘 errors.tolerance
 
@@ -352,6 +388,24 @@ When set to true, this property ensures that the corresponding record in Kafka i
 	 - Importance: LOW
 	 - Required: false
 
+🔘 key.converter.key.schema.id.deserializer
+
+The class name of the schema ID deserializer for keys. This is used to deserialize schema IDs from the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.use.schema.id
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
+
 ==========================
 Auto-restart policy
 ==========================
@@ -363,4 +417,16 @@ Enable connector to automatically restart on user-actionable errors.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
+
+==========================
+Egress allowlist
+==========================
+🔘 connector.egress.whitelist
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
+	 - Required: HIGH
 

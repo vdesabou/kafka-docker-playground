@@ -74,6 +74,57 @@ How should we connect to your data?
 	 - Required: HIGH
 
 ==========================
+Authentication method
+==========================
+🔘 authentication.method
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: How Confluent Cloud authenticates with Azure.
+	 - Required: HIGH
+
+🔘 secret.manager.enabled
+
+Fetch sensitive configuration values from a secret manager.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Secret manager configuration
+==========================
+🔘 secret.manager
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the secret manager to use for retrieving sensitive data.
+	 - Required: HIGH
+
+🔘 secret.manager.managed.configs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Select the configurations to fetch their values from the secret manager.
+	 - Required: HIGH
+
+🔘 secret.manager.provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing provider integration that has access to your secret manager.
+	 - Required: HIGH
+
+==========================
 Azure credentials
 ==========================
 🔘 provider.integration.id
@@ -83,15 +134,6 @@ Azure credentials
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Azure provider-integration to mint Microsoft Entra ID application tokens.
-	 - Required: HIGH
-
-🔘 authentication.method
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: How Confluent Cloud authenticates with Azure.
 	 - Required: HIGH
 
 🔘 azure.datalake.gen2.access.key
@@ -373,6 +415,15 @@ Whether to replace fields that have a default value and that are null to the def
 	 - Importance: LOW
 	 - Required: false
 
+🔘 value.converter.value.schema.id.deserializer
+
+The class name of the schema ID deserializer for values. This is used to deserialize schema IDs from the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.reference.subject.name.strategy
 
 Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
@@ -381,6 +432,15 @@ Set the subject reference name strategy for value. Valid entries are DefaultRefe
 	 - Default: DefaultReferenceSubjectNameStrategy
 	 - Importance: LOW
 	 - Required: false
+
+🔘 value.converter.use.schema.id
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
 
 🔘 value.converter.schemas.enable
 
@@ -409,6 +469,15 @@ When set to true, this property ensures that the corresponding record in Kafka i
 	 - Importance: LOW
 	 - Required: false
 
+🔘 key.converter.key.schema.id.deserializer
+
+The class name of the schema ID deserializer for keys. This is used to deserialize schema IDs from the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
@@ -417,6 +486,24 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 	 - Default: BASE64
 	 - Importance: LOW
 	 - Required: false
+
+🔘 key.converter.use.schema.guid
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
+
+🔘 value.converter.use.schema.guid
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
 
 🔘 value.converter.connect.meta.data
 
@@ -444,6 +531,15 @@ How to construct the subject name for key schema registration.
 	 - Default: TopicNameStrategy
 	 - Importance: LOW
 	 - Required: false
+
+🔘 key.converter.use.schema.id
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
 
 ==========================
 Auto-restart policy
