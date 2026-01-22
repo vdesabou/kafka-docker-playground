@@ -1881,7 +1881,7 @@
         },
         {
           "name": "kill-all",
-          "description": "💀 Kill all containers\n",
+          "description": "💀 Kill all containers and prune all volumes\n",
           "usage": "playground container kill-all",
           "options": []
         },

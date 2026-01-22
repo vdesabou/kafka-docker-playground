@@ -2444,7 +2444,7 @@ commands:
     - name: kill-all
       group: Container
       help: |-
-        💀 Kill all containers
+        💀 Kill all containers and prune all volumes
 
     - name: logs
       group: Container

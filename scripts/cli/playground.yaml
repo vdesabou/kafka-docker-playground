@@ -2190,7 +2190,7 @@ subcommands:
         options: []
       - name: kill-all
         description: | 
-          💀 Kill all containers
+          💀 Kill all containers and prune all volumes
         usage: playground container kill-all
         options: []
       - name: logs

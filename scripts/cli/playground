@@ -131,7 +131,7 @@ playground_usage() {
   printf "  %s   📝 Get properties file from a container\n" "$(green "container get-properties")                  "
   printf "  %s   💫 Recreate container(s)\n" "$(green "container recreate")                        "
   printf "  %s   🖥️  Get ip address of running containers\n" "$(green "container get-ip-addresses")                "
-  printf "  %s   💀 Kill all containers\n" "$(green "container kill-all")                        "
+  printf "  %s   💀 Kill all containers and prune all volumes\n" "$(green "container kill-all")                        "
   printf "  %s   🕵️  Tail and follow container logs\n" "$(green "container logs")                            "
   printf "  %s   🔥 Display all ERROR/FATAL logs in all containers. Useful for quick troubleshooting\n" "$(green "container display-error-all-containers")    "
   printf "  %s   🛬 SSH into container\n" "$(green "container ssh")                             "
@@ -4829,7 +4829,7 @@ playground_container_usage() {
   printf "%s\n" "$(bold "Container commands:")"
   printf "  %s   💫 Recreate container(s)\n" "$(green "recreate")                       "
   printf "  %s   🖥️  Get ip address of running containers\n" "$(green "get-ip-addresses")               "
-  printf "  %s   💀 Kill all containers\n" "$(green "kill-all")                       "
+  printf "  %s   💀 Kill all containers and prune all volumes\n" "$(green "kill-all")                       "
   printf "  %s   🕵️  Tail and follow container logs\n" "$(green "logs")                           "
   printf "  %s   🔥 Display all ERROR/FATAL logs in all containers. Useful for quick troubleshooting\n" "$(green "display-error-all-containers")   "
   printf "  %s   🛬 SSH into container\n" "$(green "ssh")                            "
@@ -4958,7 +4958,7 @@ playground_container_get_ip_addresses_usage() {
 
 # :command.usage
 playground_container_kill_all_usage() {
-  printf "playground container kill-all - 💀 Kill all containers\n\n"
+  printf "playground container kill-all - 💀 Kill all containers and prune all volumes\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground container kill-all\n"
@@ -23323,6 +23323,7 @@ playground_container_kill_all_command() {
   # src/commands/container/kill-all.sh
   log "💀 kill all docker containers"
   docker rm -f $(docker ps -qa) > /dev/null 2>&1
+  docker volume prune -f > /dev/null 2>&1
 }
 
 # :command.function
