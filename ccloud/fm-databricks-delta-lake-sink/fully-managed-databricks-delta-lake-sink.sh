@@ -65,6 +65,12 @@ set +e
 aws s3 rm s3://$DATABRICKS_AWS_BUCKET_NAME --recursive --region $DATABRICKS_AWS_BUCKET_REGION
 set -e
 
+set +e
+playground topic delete --topic pageviews
+sleep 3
+playground topic create --topic pageviews --nb-partitions 1
+set -e
+
 playground topic produce --topic pageviews --value predefined-schemas/datagen/pageviews_schema.avro --derive-value-schema-as AVRO --nb-messages 100
 
 connector_name="DatabricksDeltaLakeSink_$USER"
