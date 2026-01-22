@@ -306,7 +306,7 @@ The number of rows to provide as a hint to the JDBC driver when fetching rows fr
 Set start SCN for log mining session based on if there are active transactions or not. This is used only in the without continuous mining mode
 
 	 - Type: BOOLEAN
-	 - Default: false
+	 - Default: true
 	 - Importance: HIGH
 	 - Required: false
 
