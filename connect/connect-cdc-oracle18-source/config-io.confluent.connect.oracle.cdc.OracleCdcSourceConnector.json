@@ -147,4 +147,4 @@
     "table.rps.logging.interval.ms": "60000",
     "table.task.reconfig.checking.interval.ms": "300000",
     "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
-    "use.transaction.begin.for.mining.session": "false",
+    "use.transaction.begin.for.mining.session": "true",
