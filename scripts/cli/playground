@@ -23321,7 +23321,7 @@ playground_container_get_ip_addresses_command() {
 playground_container_kill_all_command() {
 
   # src/commands/container/kill-all.sh
-  log "💀 kill all docker containers"
+  log "💀 kill all docker containers (this also removes volumes)"
   docker rm -f $(docker ps -qa) > /dev/null 2>&1
   docker volume prune -f > /dev/null 2>&1
 }
