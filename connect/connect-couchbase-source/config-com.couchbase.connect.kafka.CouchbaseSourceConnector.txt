@@ -172,6 +172,15 @@ If you specify neither "couchbase.scope" nor "couchbase.collections", the connec
 	 - Importance: If you wish to stream from all collections within a scope, specify the scope name here.
 	 - Required: MEDIUM
 
+🔘 couchbase.jsonpath.filter
+
+A document passes the jsonpath filter if the expression matches something in the document. If the property is blank or not specified then all documents will pass
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: If you wish to filter the documents being sent, in addition to or instead of using a custom Filter class, this is applied before the couchbase.event.filter or the couchbase.source.handler
+	 - Required: MEDIUM
+
 🔘 couchbase.collection.to.topic
 
 Collection and Topic are joined by an equals sign. Map entries are delimited by commas.
@@ -253,15 +262,6 @@ Controls when in the history the connector starts streaming from.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 couchbase.jsonpath.filter
-
-A document passes the jsonpath filter if the expression matches something in the document. If the property is blank or not specified then all documents will pass
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: If you wish to filter the documents being sent, in addition to or instead of using a custom Filter class, this is applied before the couchbase.event.filter or the couchbase.source.handler
-	 - Required: MEDIUM
-
 🔘 couchbase.topic
 
 Name of the Kafka topic to publish data to.
@@ -292,23 +292,14 @@ If you specify neither "couchbase.scope" nor "couchbase.collections", the connec
 ==========================
 Schema
 ==========================
-🔘 couchbase.schema.mismatch.topic
+🔘 couchbase.schema.failure.action
 
-If set to a non-empty string, Documents that do not match the registered schema for a topic will be sent to the specified schema.
+Determines the behaviour when a Schema Mismatch or Missing Schema is encountered for a document using the Schema Registry. This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in `com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler` supports this property.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in 'com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler' supports this property.
-	 - Required: MEDIUM
-
-🔘 couchbase.missing.schema.topic
-
-If set to a non-empty string, Documents sent to a topic with no registered schema will be sent to the specified missing schema topic
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in 'com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler' supports this property.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: TERMINATE
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 couchbase.value.schema
 
@@ -318,6 +309,15 @@ This property will be ignored unless the source handler specified by `couchbase.
 	 - Default: STRING
 	 - Importance: The schema to apply to the value of each record.
 	 - Required: MEDIUM
+
+🔘 couchbase.dlq.topic
+
+This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in `com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler` supports this property.
+
+	 - Type: STRING
+	 - Default: couchbase.dlq
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Database Change Protocol
