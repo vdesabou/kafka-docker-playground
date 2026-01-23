@@ -100,6 +100,15 @@ Specifies the number of Oracle processor licenses required for the source databa
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 database.connect.timeout.ms
+
+Specifies the amount of time, in milliseconds, to connect to the database instance providing the requested service, and includes the time to establish a TCP connection to the listener. The timeout interval is applicable for each ADDRESS in an ADDRESS_LIST, and each IP address to which a host name is mapped. Set this to the maximum amount of time (in milliseconds) to wait for a response from an address before skipping to the next address.
+
+	 - Type: INT
+	 - Default: 15000
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 Connector
 ==========================

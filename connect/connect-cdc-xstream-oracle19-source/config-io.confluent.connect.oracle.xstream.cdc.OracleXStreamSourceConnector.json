@@ -1,6 +1,7 @@
     "binary.handling.mode": "bytes",
     "column.exclude.list": "",
     "column.include.list": "",
+    "database.connect.timeout.ms": "15000",
     "database.dbname": "",
     "database.hostname": "",
     "database.os.timezone": "Z",
