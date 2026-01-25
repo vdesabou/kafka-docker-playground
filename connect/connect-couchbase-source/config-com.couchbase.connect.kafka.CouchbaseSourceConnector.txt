@@ -154,6 +154,24 @@ The connector writes metrics to the log at this interval.
 ==========================
 Source Behavior
 ==========================
+🔘 couchbase.batch.size.max
+
+When the Kafka Connect framework polls the connector for new records, the connector returns no more than this many records at a time.
+
+	 - Type: INT
+	 - Default: 2000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.scope
+
+If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: If you wish to stream from all collections within a scope, specify the scope name here.
+	 - Required: MEDIUM
+
 🔘 couchbase.collection.to.topic
 
 Collection and Topic are joined by an equals sign. Map entries are delimited by commas.
@@ -244,24 +262,6 @@ A document passes the jsonpath filter if the expression matches something in the
 	 - Importance: If you wish to filter the documents being sent, in addition to or instead of using a custom Filter class, this is applied before the couchbase.event.filter or the couchbase.source.handler
 	 - Required: MEDIUM
 
-🔘 couchbase.batch.size.max
-
-When the Kafka Connect framework polls the connector for new records, the connector returns no more than this many records at a time.
-
-	 - Type: INT
-	 - Default: 2000
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.scope
-
-If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket.
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: If you wish to stream from all collections within a scope, specify the scope name here.
-	 - Required: MEDIUM
-
 🔘 couchbase.topic
 
 Name of the Kafka topic to publish data to.
@@ -322,6 +322,15 @@ This property will be ignored unless the source handler specified by `couchbase.
 ==========================
 Database Change Protocol
 ==========================
+🔘 couchbase.compression
+
+To reduce bandwidth usage, Couchbase Server 5.5 and later can send documents to the connector in compressed form. (Messages are always published to the Kafka topic in uncompressed form, regardless of this setting.)
+
+	 - Type: STRING
+	 - Default: ENABLED
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.persistence.polling.interval
 
 When a Couchbase Server node fails over, documents on the failing node that haven't been fully replicated may be "rolled back" to a previous state. To ensure consistency between Couchbase and the Kafka topic, the connector can defer publishing a document to Kafka until it has been saved to disk on all replicas.
@@ -364,15 +373,6 @@ When DCP trace is enabled, set this property to limit the trace to only document
 
 	 - Type: STRING
 	 - Default: .*
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.compression
-
-To reduce bandwidth usage, Couchbase Server 5.5 and later can send documents to the connector in compressed form. (Messages are always published to the Kafka topic in uncompressed form, regardless of this setting.)
-
-	 - Type: STRING
-	 - Default: ENABLED
 	 - Importance: MEDIUM
 	 - Required: false
 
