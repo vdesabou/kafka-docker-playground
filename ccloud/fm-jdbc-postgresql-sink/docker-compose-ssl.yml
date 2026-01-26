@@ -1,0 +1,38 @@
+---
+services:
+
+
+  postgres:
+    build:
+      context: ../../ccloud/fm-jdbc-postgresql-sink/ssl
+    hostname: postgres
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=mypassword
+      - POSTGRES_DB=postgres
+    volumes:
+     - ../../ccloud/fm-jdbc-postgresql-sink/ssl/my-postgres.conf:/etc/postgresql/postgresql.conf
+     - ../../ccloud/fm-jdbc-postgresql-sink/ssl/pg_hba.conf:/etc/postgresql/pg_hba.conf
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf -c hba_file=/etc/postgresql/pg_hba.conf
+
+  # https://ngrok.com/docs/using-ngrok-with/docker/
+  ngrok:
+    image: ngrok/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4040:4040
+    restart: unless-stopped
+    links:
+      - postgres
+    command:
+      - "start"
+      - "--all"
+      - "--log=stdout"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fm-jdbc-postgresql-sink/ngrok.yml:/etc/ngrok.yml
+    environment:
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN
