@@ -137,6 +137,36 @@ Whether to suppress or allow the inclusion of RFH2 Header
 	 - Required: false
 
 ==========================
+Exactly Once Delivery
+==========================
+🔘 exactly.once.enabled
+
+Enables exactly-once delivery semantics by using transacted JMS sessions and storing Kafka offsets in a dedicated IBM MQ queue. When enabled, the connector will write messages and offsets in the same transaction, ensuring exactly-once delivery guarantees. When disabled (default), the connector uses CLIENT_ACKNOWLEDGE mode for legacy at-least-once delivery. Requires ``mq.offsets.queue.name`` to be configured.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 mq.offsets.queue.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Optional. Name of the dedicated IBM MQ queue that stores Kafka offset information in JSON format. When configured, the task will synchronize offsets from this queue during startup. If not configured, offset synchronization is disabled.
+	 - Required: MEDIUM
+
+🔘 max.offset.sync.failures
+
+Maximum number of successive offset synchronization failures allowed before the connector fails. This applies when exactly-once delivery is enabled and the task attempts to synchronize offsets from the MQ offsets queue after a rebalance. If synchronization fails this many times consecutively, the connector will throw an exception and stop.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
 IBM MQ Secure Connection
 ==========================
 🔘 mq.tls.protocol

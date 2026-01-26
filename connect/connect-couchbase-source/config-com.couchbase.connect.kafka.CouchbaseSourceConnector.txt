@@ -292,23 +292,14 @@ If you specify neither "couchbase.scope" nor "couchbase.collections", the connec
 ==========================
 Schema
 ==========================
-🔘 couchbase.schema.mismatch.topic
+🔘 couchbase.schema.failure.action
 
-If set to a non-empty string, Documents that do not match the registered schema for a topic will be sent to the specified schema.
+Determines the behaviour when a Schema Mismatch or Missing Schema is encountered for a document using the Schema Registry. This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in `com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler` supports this property.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in 'com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler' supports this property.
-	 - Required: MEDIUM
-
-🔘 couchbase.missing.schema.topic
-
-If set to a non-empty string, Documents sent to a topic with no registered schema will be sent to the specified missing schema topic
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in 'com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler' supports this property.
-	 - Required: MEDIUM
+	 - Type: STRING
+	 - Default: TERMINATE
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 couchbase.value.schema
 
@@ -318,6 +309,15 @@ This property will be ignored unless the source handler specified by `couchbase.
 	 - Default: STRING
 	 - Importance: The schema to apply to the value of each record.
 	 - Required: MEDIUM
+
+🔘 couchbase.dlq.topic
+
+This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in `com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler` supports this property.
+
+	 - Type: STRING
+	 - Default: couchbase.dlq
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Database Change Protocol
