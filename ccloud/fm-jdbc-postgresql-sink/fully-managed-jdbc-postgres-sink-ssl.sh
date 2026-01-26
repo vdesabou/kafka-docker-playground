@@ -95,6 +95,8 @@ set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
 
+ca_crt=$(cat /tmp/ca.crt | tr -d '\n')
+
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
@@ -109,8 +111,9 @@ playground connector create-or-update --connector $connector_name << EOF
   "connection.user": "myuser",
   "connection.password": "mypassword",
 
-  "ssl.mode": "verify-full",
-  "ssl.root.cert": "/tmp/ca.crt",
+  "ssl.mode": "verify-ca",
+  "ssl.rootcertfile": "$ca_crt",
+  
   "db.name": "postgres",
   "topics": "myproducts",
   "db.timezone": "UTC",
