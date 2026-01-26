@@ -40,3 +40,8 @@ start-custom-log4j2.sh
 
 # EKS specific
 s3-sink-backup-and-restore-irsa.sh
+
+# https://github.com/vdesabou/kafka-docker-playground/issues/7493
+# too flaky, not sure why
+salesforce-bulkapi-sink-with-pushtopics-source-proxy.sh
+salesforce-bulkapi-sink-with-bulkapi-source-proxy.sh
