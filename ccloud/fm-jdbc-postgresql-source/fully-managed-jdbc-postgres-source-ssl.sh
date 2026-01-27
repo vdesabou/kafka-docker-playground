@@ -1,0 +1,199 @@
+#!/bin/bash
+set -e
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+source ${DIR}/../../scripts/utils.sh
+
+NGROK_AUTH_TOKEN=${NGROK_AUTH_TOKEN:-$1}
+
+display_ngrok_warning
+
+bootstrap_ccloud_environment
+
+set +e
+playground topic delete --topic postgres-customers
+set -e
+
+playground topic create --topic postgres-customers
+
+cd ${DIR}/ssl
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    chmod -R a+rw .
+else
+    # on CI, docker is run as runneradmin user, need to use sudo
+    sudo chmod -R a+rw .
+fi
+
+rm -f server.crt
+rm -f server.csr
+rm -f server.key
+rm -f ca.crt
+rm -f ca.key
+
+#https://blog.crunchydata.com/blog/ssl-certificate-authentication-postgresql-docker-containers
+log "Creating a Root Certificate Authority (CA)"
+docker run --quiet --rm -v $PWD:/tmp alpine/openssl req -new -x509 -days 365 -nodes -out /tmp/ca.crt -keyout /tmp/ca.key -subj "/CN=root-ca"
+
+log "Generate the PostgreSQL server key and certificate"
+docker run --quiet --rm -v $PWD:/tmp alpine/openssl req -new -nodes -out /tmp/server.csr -keyout /tmp/server.key -subj "/CN=postgres"
+docker run --quiet --rm -v $PWD:/tmp alpine/openssl x509 -req -in /tmp/server.csr -days 365 -CA /tmp/ca.crt -CAkey /tmp/ca.key -CAcreateserial -out /tmp/server.crt
+
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    chmod -R a+rw .
+else
+    # on CI, docker is run as runneradmin user, need to use sudo
+    sudo chmod -R a+rw .
+fi
+rm server.csr
+cp ca.crt /tmp/
+cd -
+
+docker compose -f docker-compose-ssl.yml build
+docker compose -f docker-compose-ssl.yml down -v --remove-orphans
+docker compose -f docker-compose-ssl.yml up -d --quiet-pull
+
+sleep 5
+
+log "Waiting for ngrok to start"
+while true
+do
+  container_id=$(docker ps -q -f name=ngrok)
+  if [ -n "$container_id" ]
+  then
+    status=$(docker inspect --format '{{.State.Status}}' $container_id)
+    if [ "$status" = "running" ]
+    then
+      log "Getting ngrok hostname and port"
+      NGROK_URL=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+      NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
+      NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
+
+      if ! [[ $NGROK_PORT =~ ^[0-9]+$ ]]
+      then
+        log "NGROK_PORT is not a valid number, keep retrying..."
+        continue
+      else 
+        break
+      fi
+    fi
+  fi
+  log "Waiting for container ngrok to start..."
+  sleep 5
+done
+
+
+log "Create CUSTOMERS table:"
+docker exec -i postgres psql -U myuser -d postgres << EOF
+create table CUSTOMERS (
+        id SERIAL PRIMARY KEY,
+        first_name VARCHAR(50),
+        last_name VARCHAR(50),
+        email VARCHAR(50),
+        gender VARCHAR(50),
+        club_status VARCHAR(20),
+        comments VARCHAR(90),
+        create_ts timestamp DEFAULT CURRENT_TIMESTAMP,
+        update_ts timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- Courtesy of https://techblog.covermymeds.com/databases/on-update-timestamps-mysql-vs-postgres/
+CREATE FUNCTION update_updated_at_column() RETURNS trigger
+    LANGUAGE plpgsql
+    AS \$\$
+  BEGIN
+    NEW.update_ts = NOW();
+    RETURN NEW;
+  END;
+\$\$;
+
+CREATE TRIGGER t1_updated_at_modtime BEFORE UPDATE ON CUSTOMERS FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Rica', 'Blaisdell', 'rblaisdell0@rambler.ru', 'Female', 'bronze', 'Universal optimal hierarchy');
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Ruthie', 'Brockherst', 'rbrockherst1@ow.ly', 'Female', 'platinum', 'Reverse-engineered tangible interface');
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Mariejeanne', 'Cocci', 'mcocci2@techcrunch.com', 'Female', 'bronze', 'Multi-tiered bandwidth-monitored capability');
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Hashim', 'Rumke', 'hrumke3@sohu.com', 'Male', 'platinum', 'Self-enabling 24/7 firmware');
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach');
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Robinet', 'Leheude', 'rleheude5@reddit.com', 'Female', 'platinum', 'Virtual upward-trending definition');
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Fay', 'Huc', 'fhuc6@quantcast.com', 'Female', 'bronze', 'Operative composite capacity');
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Patti', 'Rosten', 'prosten7@ihg.com', 'Female', 'silver', 'Integrated bandwidth-monitored instruction set');
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Even', 'Tinham', 'etinham8@facebook.com', 'Male', 'silver', 'Virtual full-range info-mediaries');
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Brena', 'Tollerton', 'btollerton9@furl.net', 'Female', 'silver', 'Diverse tangible methodology');
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Alexandro', 'Peeke-Vout', 'apeekevouta@freewebs.com', 'Male', 'gold', 'Ameliorated value-added orchestration');
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Sheryl', 'Hackwell', 'shackwellb@paginegialle.it', 'Female', 'gold', 'Self-enabling global parallelism');
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Laney', 'Toopin', 'ltoopinc@icio.us', 'Female', 'platinum', 'Phased coherent alliance');
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Isabelita', 'Talboy', 'italboyd@imageshack.us', 'Female', 'gold', 'Cloned transitional synergy');
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Rodrique', 'Silverton', 'rsilvertone@umn.edu', 'Male', 'gold', 'Re-engineered static application');
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Clair', 'Vardy', 'cvardyf@reverbnation.com', 'Male', 'bronze', 'Expanded bottom-line Graphical User Interface');
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Brianna', 'Paradise', 'bparadiseg@nifty.com', 'Female', 'bronze', 'Open-source global toolset');
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Waldon', 'Keddey', 'wkeddeyh@weather.com', 'Male', 'gold', 'Business-focused multi-state functionalities');
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Josiah', 'Brockett', 'jbrocketti@com.com', 'Male', 'gold', 'Realigned didactic info-mediaries');
+insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Anselma', 'Rook', 'arookj@europa.eu', 'Female', 'gold', 'Cross-group 24/7 application');
+
+EOF
+
+log "Show content of CUSTOMERS table:"
+docker exec -i postgres psql -U myuser -d postgres << EOF
+SELECT * FROM CUSTOMERS;
+EOF
+
+log "Adding an element to the table"
+docker exec -i postgres psql -U myuser -d postgres << EOF
+insert into customers (first_name, last_name, email, gender, comments) values ('Bernardo', 'Dudman', 'bdudmanb@lulu.com', 'Male', 'Robust bandwidth-monitored budgetary management');
+EOF
+
+log "Show content of CUSTOMERS table:"
+docker exec -i postgres psql -U myuser -d postgres << EOF
+SELECT * FROM CUSTOMERS;
+EOF
+
+connector_name="PostgresSource_$USER"
+set +e
+playground connector delete --connector $connector_name > /dev/null 2>&1
+set -e
+
+ca_crt=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' /tmp/ca.crt)
+
+log "Creating fully managed connector"
+playground connector create-or-update --connector $connector_name << EOF
+{
+  "connector.class": "PostgresSource",
+  "name": "$connector_name",
+  "kafka.auth.mode": "KAFKA_API_KEY",
+  "kafka.api.key": "$CLOUD_KEY",
+  "kafka.api.secret": "$CLOUD_SECRET",
+  "input.data.format": "AVRO",
+  "connection.host": "$NGROK_HOSTNAME",
+  "connection.port": "$NGROK_PORT",
+  "connection.user": "myuser",
+  "connection.password": "mypassword",
+
+  "ssl.mode": "verify-ca",
+  "ssl.rootcertfile": "$ca_crt",
+
+  "db.name": "postgres",
+  "table.whitelist": "customers",
+  "mode": "timestamp+incrementing",
+  "timestamp.column.name": "update_ts",
+  "incrementing.column.name": "id",
+  "topic.prefix": "postgres-",
+  "db.timezone": "UTC",
+  "tasks.max": "1"
+}
+EOF
+wait_for_ccloud_connector_up $connector_name 180
+
+sleep 5
+
+log "Verifying topic postgres-customers"
+playground topic consume --topic postgres-customers --min-expected-messages 5 --timeout 60
+
+
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name
