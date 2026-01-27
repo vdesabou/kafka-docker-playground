@@ -21,12 +21,11 @@ then
     else
         log "🧬 Set log level for package $package to $level (scope=cluster)"
         curl $security -s --request PUT \
-        --url "$connect_url/admin/loggers/$package" \
+        --url "$connect_url/admin/loggers/$package?scope=cluster" \
         --header 'Accept: application/json' \
         --header 'Content-Type: application/json' \
         --data "{
-        \"level\": \"$level\",
-        \"scope\": \"cluster\"
+        \"level\": \"$level\"
         }" | jq .
     fi
 
