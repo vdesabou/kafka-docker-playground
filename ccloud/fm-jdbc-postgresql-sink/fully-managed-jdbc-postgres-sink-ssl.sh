@@ -95,7 +95,7 @@ set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
 
-ca_crt=$(cat /tmp/ca.crt | tr -d '\n')
+ca_crt=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' /tmp/ca.crt)
 
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
