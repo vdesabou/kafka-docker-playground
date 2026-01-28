@@ -111,6 +111,9 @@ commands:
   - name: cur
     required: false
     help: correspond to completion $cur
+  - name: type
+    required: false
+    help: type (all, fm, onprem)
 
 - name: get-ccloud-environment-list
   help: Return some completion for ccloud environment
@@ -1478,7 +1481,7 @@ commands:
       repeatable: true
       arg: connector-plugin
       completions:
-        - $(playground get-connector-plugin "$cur")
+        - $(playground get-connector-plugin "$cur" "onprem")
       help: |-
         🔌 Add Connector plugin to CONNECT_PLUGIN_PATH
 
@@ -3714,7 +3717,7 @@ commands:
       required: true
       arg: connector-plugin
       completions:
-        - $(playground get-connector-plugin "$cur")
+        - $(playground get-connector-plugin "$cur" "onprem")
       help: |-
         🔌 Connector plugin name
 
@@ -3776,7 +3779,16 @@ commands:
       🏗️ Compile code and generate zip file(s) by providing --compile flag
 
     flags:
-      - *connector-plugin
+      - long: --connector-plugin
+        short: -c
+        required: true
+        arg: connector-plugin
+        completions:
+          - $(playground get-connector-plugin "$cur" "all")
+        help: |-
+          🔌 Connector plugin name
+
+          🎓 Tip: use <tab> completion to trigger fzf completion
       - long: --only-show-url
         help: |-
           🌐 Only show url
@@ -4219,6 +4231,28 @@ commands:
         🌎 browser name
 
         Default browser from your system if not set
+
+  - name: translate
+    help: |
+      💱 Translate Self Managed Connector Plugin Configurations to Fully Managed Connector Plugin Configuration
+
+      See https://docs.confluent.io/cloud/current/api.html#tag/Managed-Connector-Plugins-(connectv1)/operation/translateConnectv1ConnectorPlugin
+
+      The connector example should be ran with --environment flag set to <ccloud>
+    dependencies:
+      confluent: visit https://docs.confluent.io/confluent-cli/current/overview.html to install
+    flags:
+    - *connector
+    - *verbose
+    - long: --connector-plugin
+      required: true
+      arg: connector-plugin
+      completions:
+        - $(playground get-connector-plugin "$cur" "fm")
+      help: |-
+        🔌 Connector plugin name
+
+        🎓 Tip: use <tab> completion to trigger fzf completion
 
   - name: connect-migration-utility
     help: |

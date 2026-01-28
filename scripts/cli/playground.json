@@ -3368,6 +3368,36 @@
           ]
         },
         {
+          "name": "translate",
+          "description": "💱 Translate Self Managed Connector Plugin Configurations to Fully Managed Connector Plugin Configuration\n  \n  See https://docs.confluent.io/cloud/current/api.html#tag/Managed-Connector-Plugins-(connectv1)/operation/translateConnectv1ConnectorPlugin\n  \n  The connector example should be ran with --environment flag set to <ccloud>\n  \n",
+          "usage": "playground connector translate [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--connector",
+                "-c"
+              ],
+              "argument": "CONNECTOR",
+              "description": "🔗 Connector name\n\n🎓 Tip: If not specified, the command will apply to all connectors\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
+                "--connector-plugin"
+              ],
+              "argument": "CONNECTOR-PLUGIN",
+              "description": "🔌 Connector plugin name\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes\n"
+            }
+          ]
+        },
+        {
           "name": "connect-migration-utility",
           "description": "🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster\n  \n  The connector example should be ran with --environment flag set to <ccloud>\n  \n  See a full example at https://github.com/vdesabou/kafka-docker-playground/blob/master/ccloud/connect-migration-utility/README.md\n  \n",
           "usage": "playground connector connect-migration-utility COMMAND",

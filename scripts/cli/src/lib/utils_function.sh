@@ -3704,6 +3704,13 @@ function handle_ccloud_connect_rest_api () {
       elif echo "$curl_output" | jq 'has("errors")' 2> /dev/null | grep -q true
       then
         code=$(echo "$curl_output" | jq -r '.errors[0].status')
+
+        if [ "$code" == "null" ] || [ -z "$code" ]; then
+            # this happen in translate mode
+            echo "$curl_output" | jq .
+            return 0
+        fi
+
         message=$(echo "$curl_output" | jq -r '.errors[0].detail')
         logerror "Command failed with error code $code"
         logerror "$message"

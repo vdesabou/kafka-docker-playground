@@ -1,3 +1,3 @@
 cur="${args[cur]}"
-
-get_plugin_list "$cur"
+type="${args[type]}"
+get_plugin_list "$cur" "$type"
