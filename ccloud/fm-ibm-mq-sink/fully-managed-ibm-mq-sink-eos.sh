@@ -64,6 +64,17 @@ DEFINE QLOCAL(KAFKA.OFFSETS.QUEUE) DEFPSIST(YES) DEFSOPT(EXCL)
 END
 EOF
 
+# Set appropriate permissions for the connector user to read, write and browse the offsets queue
+docker exec -i ibmmq runmqsc QM1 << EOF
+SET AUTHREC OBJTYPE(QUEUE) PROFILE('KAFKA.OFFSETS.QUEUE') PRINCIPAL('app') AUTHADD(GET,PUT,BROWSE,DSP,INQ)
+END
+EOF
+
+log "Sending messages to topic sink-messages"
+playground topic produce --topic sink-messages --nb-messages 1 << 'EOF'
+This is my message
+EOF
+
 connector_name="IbmMqSink_$USER"
 set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
