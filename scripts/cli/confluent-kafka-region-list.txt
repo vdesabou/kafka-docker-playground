@@ -1,3 +1,4 @@
+azure/austriaeast
 aws/me-south-1
 gcp/europe-west1
 aws/ca-west-1
