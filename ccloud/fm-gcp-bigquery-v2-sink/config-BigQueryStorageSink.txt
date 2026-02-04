@@ -325,6 +325,24 @@ The time partitioning type to use when creating new partitioned tables. Existing
 	 - Importance: The name of the field in the value that contains the timestamp to partition by in BigQuery. This also enables timestamp partitioning for each table.
 	 - Required: LOW
 
+🔘 use.change.sequence.number
+
+Enables the _CHANGE_SEQUENCE_NUMBER pseudo-column for CDC operations to ensure correct record ordering in upsert mode. For identical primary keys, the record with the higher sequence number takes precedence. Because _CHANGE_SEQUENCE_NUMBER requires hexadecimal values, enable the hexadecimal converter if your source data produces decimal values. For more information, see `_CHANGE_SEQUENCE_NUMBER in CDC mode <https://docs.confluent.io/cloud/current/connectors/cc-gcp-bigquery-storage-sink.html#:~:text=_CHANGE_SEQUENCE_NUMBER%20in%20CDC%20mode>`__.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 use.hexadecimal.converter.for.change.sequence.number
+
+Only applies when ``use.change.sequence.number`` is enabled. Converts the _CHANGE_SEQUENCE_NUMBER string field from decimal to hexadecimal format, as required by BigQuery. Expects decimal numeric values as strings (for example, "255" converts to "FF"). Supports multi-part sequence numbers separated by forward slashes where each part is converted independently (for example, "100/200/300" becomes "64/C8/12C"). Supports a maximum of four parts with a maximum of 16 hex characters per part. Non-numeric values are sent to the DLQ, if configured. For more information, see `Hexadecimal converter <https://docs.confluent.io/cloud/current/connectors/cc-gcp-bigquery-storage-sink.html#:~:text=Hexadecimal%20converter>`__.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 🔘 use.date.time.formatter
 
 Specify whether to use a ``DateTimeFormatter`` to support a wide range of epochs. Setting this true will use ``DateTimeFormatter`` over default ``SimpleDateFormat``. The output might vary for same input between the two formatters.
