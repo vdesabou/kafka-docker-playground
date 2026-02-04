@@ -214,76 +214,13 @@ The URL of the Salesforce endpoint to use. When using 'CLIENT_CREDENTIALS' grant
 	 - Importance: Password used to access JWT keystore file.
 	 - Required: MEDIUM
 
-🔘 salesforce.object
+🔘 salesforce.object.num
 
+Number of Salesforce Objects to write to. Must be between 1 and 5.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: The Salesforce SObject to write to.
-	 - Required: HIGH
-
-🔘 salesforce.use.custom.id.field
-
-Flag to indicate whether to use the ``salesforce.custom.id.field.name`` for INSERT/UPSERT sink connector operations
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 salesforce.custom.id.field.name
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Name of a custom external ID field in SObject to structure Rest API calls for INSERT and UPSERT operations when ``salesforce.use.custom.id.field=true``
-	 - Required: MEDIUM
-
-🔘 salesforce.ignore.fields
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Comma separate list of fields from the source Kafka record to ignore when pushing a record into Salesforce.
-	 - Required: MEDIUM
-
-🔘 salesforce.ignore.reference.fields
-
-Flag to prevent reference type fields from being updated or inserted in Salesforce SObjects.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 skip.relationship.fields
-
-Flag to skip relationship fields in records from being updated or inserted in Salesforce SObjects.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 override.event.type
-
-A flag to indicate that the Kafka SObject source record EventType(create, update, delete) is overriden to use the operation specified in the salesforce.sink.object.operation configuration setting
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 salesforce.sink.object.operation
-
-The Salesforce sink operation to perform on the SObject. This feature works if ``override.event.type`` is true.
-
-	 - Type: STRING
-	 - Default: insert
-	 - Importance: MEDIUM
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
 	 - Required: false
 
 🔘 salesforce.version
@@ -293,6 +230,456 @@ The version of Salesforce API to use.
 	 - Type: STRING
 	 - Default: 65.0
 	 - Importance: LOW
+	 - Required: false
+
+==========================
+Object 1 configuration
+==========================
+🔘 salesforce.object1
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Salesforce SObject1 to write to.
+	 - Required: HIGH
+
+🔘 salesforce.object1.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma separated list of topics associated with Salesforce SObject1
+	 - Required: HIGH
+
+🔘 salesforce.object1.override.event.type
+
+Override SObject1 EventType(create, update, delete) with the configured sink operation.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object1.sink.object.operation
+
+The Salesforce sink operation to perform for SObject1 when override is enabled.
+
+	 - Type: STRING
+	 - Default: insert
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object1.ignore.fields
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma separated list of fields to ignore when pushing a record for SObject1.
+	 - Required: LOW
+
+🔘 salesforce.object1.ignore.reference.fields
+
+Prevent reference-type fields from being updated or inserted for SObject1.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object1.use.custom.id.field
+
+Use a custom external ID field for SObject1 insert/upsert operations.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object1.custom.id.field.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom external ID field name for SObject1.
+	 - Required: LOW
+
+🔘 skip.object1.relationship.fields
+
+Flag to skip relationship fields in records from being updated or inserted in Salesforce SObjects.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Object 2 configuration
+==========================
+🔘 salesforce.object2
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Salesforce SObject2 to write to.
+	 - Required: HIGH
+
+🔘 salesforce.object2.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma separated list of topics associated with Salesforce SObject2
+	 - Required: HIGH
+
+🔘 salesforce.object2.override.event.type
+
+Override SObject2 EventType with the configured sink operation.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object2.sink.object.operation
+
+The Salesforce sink operation to perform for SObject2 when override is enabled.
+
+	 - Type: STRING
+	 - Default: insert
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object2.ignore.fields
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma separated list of fields to ignore for SObject2.
+	 - Required: LOW
+
+🔘 salesforce.object2.ignore.reference.fields
+
+Prevent reference-type fields from being updated or inserted for SObject2.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object2.use.custom.id.field
+
+Use a custom external ID field for SObject2 insert/upsert operations.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object2.custom.id.field.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom external ID field name for SObject2.
+	 - Required: LOW
+
+🔘 skip.object2.relationship.fields
+
+Flag to skip relationship fields in records from being updated or inserted in Salesforce SObjects.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Object 3 configuration
+==========================
+🔘 salesforce.object3
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Salesforce SObject3 to write to.
+	 - Required: HIGH
+
+🔘 salesforce.object3.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma separated list of topics associated with Salesforce SObject3
+	 - Required: HIGH
+
+🔘 salesforce.object3.override.event.type
+
+Override SObject3 EventType with the configured sink operation.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object3.sink.object.operation
+
+The Salesforce sink operation to perform for SObject3 when override is enabled.
+
+	 - Type: STRING
+	 - Default: insert
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object3.ignore.fields
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma separated list of fields to ignore for SObject3.
+	 - Required: LOW
+
+🔘 salesforce.object3.ignore.reference.fields
+
+Prevent reference-type fields from being updated or inserted for SObject3.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object3.use.custom.id.field
+
+Use a custom external ID field for SObject3 insert/upsert operations.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object3.custom.id.field.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom external ID field name for SObject3.
+	 - Required: LOW
+
+🔘 skip.object3.relationship.fields
+
+Flag to skip relationship fields in records from being updated or inserted in Salesforce SObjects.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Object 4 configuration
+==========================
+🔘 salesforce.object4
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Salesforce SObject4 to write to.
+	 - Required: HIGH
+
+🔘 salesforce.object4.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma separated list of topics associated with Salesforce SObject4
+	 - Required: HIGH
+
+🔘 salesforce.object4.override.event.type
+
+Override SObject4 EventType with the configured sink operation.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object4.sink.object.operation
+
+The Salesforce sink operation to perform for SObject4 when override is enabled.
+
+	 - Type: STRING
+	 - Default: insert
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object4.ignore.fields
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma separated list of fields to ignore for SObject4.
+	 - Required: LOW
+
+🔘 salesforce.object4.ignore.reference.fields
+
+Prevent reference-type fields from being updated or inserted for SObject4.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object4.use.custom.id.field
+
+Use a custom external ID field for SObject4 insert/upsert operations.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object4.custom.id.field.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom external ID field name for SObject4.
+	 - Required: LOW
+
+🔘 skip.object4.relationship.fields
+
+Flag to skip relationship fields in records from being updated or inserted in Salesforce SObjects.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Object 5 configuration
+==========================
+🔘 salesforce.object5
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Salesforce SObject5 to write to.
+	 - Required: HIGH
+
+🔘 salesforce.object5.topics
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma separated list of topics associated with Salesforce SObject5
+	 - Required: HIGH
+
+🔘 salesforce.object5.override.event.type
+
+Override SObject5 EventType with the configured sink operation.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object5.sink.object.operation
+
+The Salesforce sink operation to perform for SObject5 when override is enabled.
+
+	 - Type: STRING
+	 - Default: insert
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object5.ignore.fields
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma separated list of fields to ignore for SObject5.
+	 - Required: LOW
+
+🔘 salesforce.object5.ignore.reference.fields
+
+Prevent reference-type fields from being updated or inserted for SObject5.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object5.use.custom.id.field
+
+Use a custom external ID field for SObject5 insert/upsert operations.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 salesforce.object5.custom.id.field.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The custom external ID field name for SObject5.
+	 - Required: LOW
+
+🔘 skip.object5.relationship.fields
+
+Flag to skip relationship fields in records from being updated or inserted in Salesforce SObjects.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+CSFLE
+==========================
+🔘 csfle.enabled
+
+Determines whether the connector honours CSFLE rules or not
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sr.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
+	 - Required: HIGH
+
+🔘 csfle.onFailure
+
+Configures the behavior for decryption failures. If set to ERROR, the connector will behave as configured for error behaviour. If set to NONE, the connector will ignore the decryption failure and proceed to write the data in its encrypted form.
+
+	 - Type: STRING
+	 - Default: ERROR
+	 - Importance: MEDIUM
 	 - Required: false
 
 ==========================
