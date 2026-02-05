@@ -101,7 +101,7 @@ docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" 
 
 
 
-connector_name="SalesforcePushTopicSource_$USER"
+connector_name="SFDCPushTopicSourceBulkAPI2_$USER"
 set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e

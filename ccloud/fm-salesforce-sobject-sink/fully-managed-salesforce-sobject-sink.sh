@@ -119,7 +119,7 @@ log "Create $PUSH_TOPICS_NAME"
 docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" -f \"/tmp/MyLeadPushTopics.apex\""
 
 log "Creating Salesforce PushTopics Source connector"
-connector_name="SalesforcePushTopicSource_$USER"
+connector_name="SFDCPushTopicSourceSObject_$USER"
 set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
