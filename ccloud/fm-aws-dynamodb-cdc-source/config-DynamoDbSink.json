@@ -1,6 +1,7 @@
     "authentication.method": "Access Keys",
     "auto.restart.on.user.error": "true",
     "aws.access.key.id": "PASSWORD",
+    "aws.dynamodb.instant.flush": "false",
     "aws.dynamodb.pk.hash": "partition",
     "aws.dynamodb.pk.sort": "offset",
     "aws.secret.access.key": "PASSWORD",

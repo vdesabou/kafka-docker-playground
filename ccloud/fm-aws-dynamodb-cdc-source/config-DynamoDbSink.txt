@@ -190,6 +190,15 @@ A format string for the destination table name, which may contain '${topic}' as 
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 aws.dynamodb.instant.flush
+
+When set to true, the connector flushes the data immediately to DynamoDB. Note: This setting is strictly for low throughput workloads and not for high throughput workloads. If enabled, it will affect the DynamoDB API calls for the user.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
 ==========================
 Consumer configuration
 ==========================
