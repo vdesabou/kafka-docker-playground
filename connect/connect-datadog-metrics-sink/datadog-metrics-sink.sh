@@ -119,7 +119,18 @@ EOF
 
 sleep 20
 
-log "Make sure perf.metric is present in Datadog"
-docker run -e DOGSHELL_API_KEY=$DD_API_KEY -e DOGSHELL_APP_KEY=$DD_APP_KEY dogshell:latest search query perf.metric > /tmp/result.log  2>&1
-cat /tmp/result.log
-grep "perf.metric" /tmp/result.log
+log "Verifying topic success-responses"
+playground topic consume --topic success-responses --min-expected-messages 1 --timeout 60
+
+playground topic consume --topic error-responses --min-expected-messages 0 --timeout 60
+
+playground connector show-lag --max-wait 300
+
+if [ -z "$GITHUB_RUN_NUMBER" ]
+then
+  # doesn't work on github actions
+    log "Make sure perf.metric is present in Datadog"
+    docker run -e DOGSHELL_API_KEY=$DD_API_KEY -e DOGSHELL_APP_KEY=$DD_APP_KEY dogshell:latest search query perf.metric > /tmp/result.log  2>&1
+    cat /tmp/result.log
+    grep "perf.metric" /tmp/result.log
+fi
