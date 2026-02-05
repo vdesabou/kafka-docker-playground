@@ -349,7 +349,23 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
-      - name: Send email notification with changes
+      - name: Prepare email with diff content
+        if: always() && env.HAS_CHANGES == 'true'
+        run: |
+          cat << 'EOF' > /tmp/email_body.txt
+          Connector configuration file has been updated in workflow run: ${{ github.run_id }}
+          
+          Repository: ${{ github.repository }}
+          Branch: ${{ github.ref_name }}
+          Commit: https://github.com/${{ github.repository }}/commit/${{ env.COMMIT_SHA }}
+          Workflow: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          
+          Changes:
+          ========
+          EOF
+          cat /tmp/config_changes.diff >> /tmp/email_body.txt
+          
+      - name: Send email notification
         if: always() && env.HAS_CHANGES == 'true'
         uses: dawidd6/action-send-mail@v3
         with:
@@ -360,16 +376,7 @@ jobs:
           subject: "[CI] Connector config file updated - ${{ github.repository }}"
           to: ${{ secrets.SALESFORCE_USERNAME }}
           from: GitHub Actions
-          body: |
-            Connector configuration file has been updated in workflow run: ${{ github.run_id }}
-            
-            Repository: ${{ github.repository }}
-            Branch: ${{ github.ref_name }}
-            Commit: https://github.com/${{ github.repository }}/commit/${{ env.COMMIT_SHA }}
-            Workflow: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-            
-            Changes attached as diff file.
-          attachments: /tmp/config_changes.diff
+          body: file:///tmp/email_body.txt
 
   execute_one_test:
     if: ${{ github.event.inputs.test_name != '' }}
@@ -592,7 +599,24 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
-      - name: Send email notification with changes
+      - name: Prepare email with diff content
+        if: always() && env.HAS_CHANGES == 'true'
+        run: |
+          DIFF_CONTENT=$(cat /tmp/config_changes.diff)
+          cat << 'EOF' > /tmp/email_body.txt
+          Connector configuration file has been updated in workflow run: ${{ github.run_id }}
+          
+          Repository: ${{ github.repository }}
+          Branch: ${{ github.ref_name }}
+          Commit: https://github.com/${{ github.repository }}/commit/${{ env.COMMIT_SHA }}
+          Workflow: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          
+          Changes:
+          ========
+          EOF
+          cat /tmp/config_changes.diff >> /tmp/email_body.txt
+
+      - name: Send email notification
         if: always() && env.HAS_CHANGES == 'true'
         uses: dawidd6/action-send-mail@v3
         with:
@@ -603,16 +627,7 @@ jobs:
           subject: "[CI] Connector config file updated - ${{ github.repository }}"
           to: ${{ secrets.SALESFORCE_USERNAME }}
           from: GitHub Actions
-          body: |
-            Connector configuration file has been updated in workflow run: ${{ github.run_id }}
-            
-            Repository: ${{ github.repository }}
-            Branch: ${{ github.ref_name }}
-            Commit: https://github.com/${{ github.repository }}/commit/${{ env.COMMIT_SHA }}
-            Workflow: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-            
-            Changes attached as diff file.
-          attachments: /tmp/config_changes.diff
+          body: file:///tmp/email_body.txt
 
   post-build:
     name: Cleanup resources and Update README
