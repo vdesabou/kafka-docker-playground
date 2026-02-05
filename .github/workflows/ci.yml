@@ -335,10 +335,41 @@ jobs:
           git checkout -- scripts
           git pull
           git add .
-          git diff --cached --quiet || git commit -m "updated config file with latest version"
-          git push
+          # Capture the diff before committing
+          git diff --cached > /tmp/config_changes.diff
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            echo "HAS_CHANGES=false" >> $GITHUB_ENV
+          else
+            git commit -m "updated config file with latest version"
+            git push
+            echo "HAS_CHANGES=true" >> $GITHUB_ENV
+            echo "COMMIT_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
+          fi
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+
+      - name: Send email notification with changes
+        if: always() && env.HAS_CHANGES == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.SALESFORCE_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "[CI] Connector config file updated - ${{ github.repository }}"
+          to: ${{ secrets.SALESFORCE_USERNAME }}
+          from: GitHub Actions
+          body: |
+            Connector configuration file has been updated in workflow run: ${{ github.run_id }}
+            
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Commit: https://github.com/${{ github.repository }}/commit/${{ env.COMMIT_SHA }}
+            Workflow: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            Changes attached as diff file.
+          attachments: /tmp/config_changes.diff
 
   execute_one_test:
     if: ${{ github.event.inputs.test_name != '' }}
@@ -547,11 +578,42 @@ jobs:
           git checkout -- scripts
           git pull
           git add .
-          git diff --cached --quiet || git commit -m "updated config file with latest version"
-          git push
+          # Capture the diff before committing
+          git diff --cached > /tmp/config_changes.diff
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            echo "HAS_CHANGES=false" >> $GITHUB_ENV
+          else
+            git commit -m "updated config file with latest version"
+            git push
+            echo "HAS_CHANGES=true" >> $GITHUB_ENV
+            echo "COMMIT_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
+          fi
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
-          
+
+      - name: Send email notification with changes
+        if: always() && env.HAS_CHANGES == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.SALESFORCE_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "[CI] Connector config file updated - ${{ github.repository }}"
+          to: ${{ secrets.SALESFORCE_USERNAME }}
+          from: GitHub Actions
+          body: |
+            Connector configuration file has been updated in workflow run: ${{ github.run_id }}
+            
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Commit: https://github.com/${{ github.repository }}/commit/${{ env.COMMIT_SHA }}
+            Workflow: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            Changes attached as diff file.
+          attachments: /tmp/config_changes.diff
+
   post-build:
     name: Cleanup resources and Update README
     runs-on: ubuntu-latest
