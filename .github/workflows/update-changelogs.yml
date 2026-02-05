@@ -50,12 +50,39 @@ jobs:
 
           tail -n +2 changelog_orig.md > changelog_tmp.md
 
-          echo "# 📜 Change Log" > ./docs/changelog.md
-          echo "" >> ./docs/changelog.md
           current_month=$(date +"%B %Y")
-          echo "## ${current_month}" >> ./docs/changelog.md
-          echo "${{ steps.read_release_file.outputs.content }}" | sed 's/^#/##/g' | sed 's/###/#####/g' >> ./docs/changelog.md
-          cat changelog_tmp.md >> ./docs/changelog.md
+          
+          # Check if current month section already exists
+          if grep -q "^## ${current_month}$" changelog_orig.md; then
+            echo "Month section '${current_month}' already exists, replacing it"
+            
+            # Get content before the current month section
+            awk -v month="## ${current_month}" '
+              $0 == month { exit }
+              { print }
+            ' changelog_orig.md > before_current.md
+            
+            # Get content after current month section (from next ## onwards)
+            awk -v month="## ${current_month}" '
+              BEGIN { found=0; after=0 }
+              found && /^## / && !after { after=1 }
+              after { print }
+              $0 == month { found=1 }
+            ' changelog_orig.md > after_current.md
+            
+            # Build new changelog
+            cat before_current.md > ./docs/changelog.md
+            echo "## ${current_month}" >> ./docs/changelog.md
+            echo "${{ steps.read_release_file.outputs.content }}" | sed 's/^#/##/g' | sed 's/###/#####/g' >> ./docs/changelog.md
+            cat after_current.md >> ./docs/changelog.md
+          else
+            echo "Creating new month section '${current_month}'"
+            echo "# 📜 Change Log" > ./docs/changelog.md
+            echo "" >> ./docs/changelog.md
+            echo "## ${current_month}" >> ./docs/changelog.md
+            echo "${{ steps.read_release_file.outputs.content }}" | sed 's/^#/##/g' | sed 's/###/#####/g' >> ./docs/changelog.md
+            cat changelog_tmp.md >> ./docs/changelog.md
+          fi
 
       - name: Pushes docs
         uses: dmnemec/copy_file_to_another_repo_action@main
