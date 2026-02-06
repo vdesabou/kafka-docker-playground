@@ -173,18 +173,6 @@ Azure credentials
 	 - Required: HIGH
 
 ==========================
-How should we connect to your ADLS Gen2 storage account?
-==========================
-🔘 azure.datalake.gen2.account.name
-
-
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Must be between 3-23 alphanumeric characters.
-	 - Required: HIGH
-
-==========================
 Kafka Cluster credentials
 ==========================
 🔘 kafka.auth.mode
@@ -226,6 +214,15 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 ==========================
 Destination
 ==========================
+🔘 azure.datalake.gen2.account.name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Must be between 3-23 alphanumeric characters.
+	 - Required: HIGH
+
 🔘 topics.dir
 
 Top-level directory where ingested data is stored. The `topics.dir` entry should not start with `/`.
