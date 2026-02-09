@@ -58,15 +58,6 @@ On startup, the connector will wait this long for a Couchbase connection to be e
 ==========================
 Security
 ==========================
-🔘 couchbase.trust.store.password
-
-Password for accessing the trust store.
-
-	 - Type: PASSWORD
-	 - Default: [hidden]
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.enable.tls
 
 Use secure connection to Couchbase Server.
@@ -121,6 +112,15 @@ Password for accessing the client certificate.
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 couchbase.trust.store.password
+
+Password for accessing the trust store.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
 ==========================
 Logging
 ==========================
@@ -154,15 +154,6 @@ The connector writes metrics to the log at this interval.
 ==========================
 Sink Behavior
 ==========================
-🔘 couchbase.default.collection
-
-Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
-
-	 - Type: STRING
-	 - Default: _default._default
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.topic.to.collection
 
 Topic and collection are joined by an equals sign. Map entries are delimited by commas.
@@ -232,6 +223,15 @@ Retry failed writes to Couchbase until this deadline is reached. If time runs ou
 
 	 - Type: STRING
 	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.default.collection
+
+Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
+
+	 - Type: STRING
+	 - Default: _default._default
 	 - Importance: MEDIUM
 	 - Required: false
 
