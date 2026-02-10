@@ -1,0 +1,314 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Monitoring Dashboard for Oracle XStream CDC Connector",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 11,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 6,
+      "panels": [],
+      "title": "Oracle XStream Streaming Metrics",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 1
+      },
+      "id": 48,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
+        "textMode": "auto"
+      },
+      "title": "Connected to Oracle",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "debezium_metrics_Connected{context=\"streaming\",instance=\"$instance\",name=\"$name\"}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 1
+      },
+      "id": 68,
+      "title": "Committed Transactions",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "debezium_metrics_NumberOfCommittedTransactions{context=\"streaming\",instance=\"$instance\",name=\"$name\"}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 8,
+        "y": 1
+      },
+      "id": 56,
+      "title": "Lag: Milliseconds Behind Source",
+      "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        }
+      },
+      "targets": [
+        {
+          "expr": "debezium_metrics_MilliSecondsBehindSource{context=\"streaming\",instance=\"$instance\",name=\"$name\"}",
+          "legendFormat": "Lag Behind Redo Log",
+          "refId": "A"
+        },
+        {
+          "expr": "debezium_metrics_CommitMilliSecondsBehindSource{context=\"streaming\",instance=\"$instance\",name=\"$name\"}",
+          "legendFormat": "Commit Lag",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 90,
+      "panels": [],
+      "title": "Oracle XStream Snapshot Metrics",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 10
+      },
+      "id": 22,
+      "title": "Total Table Count",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "debezium_metrics_TotalTableCount{context=\"snapshot\",instance=\"$instance\",name=\"$name\"}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 10
+      },
+      "id": 24,
+      "title": "Remaining Tables",
+      "type": "gauge",
+      "targets": [
+        {
+          "expr": "debezium_metrics_RemainingTableCount{context=\"snapshot\",instance=\"$instance\",name=\"$name\"}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 10
+      },
+      "id": 28,
+      "title": "Snapshot Running",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "debezium_metrics_SnapshotRunning{context=\"snapshot\",instance=\"$instance\",name=\"$name\"}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "id": 8,
+      "panels": [],
+      "title": "Oracle Schema History Metrics",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 15
+      },
+      "id": 12,
+      "title": "Schema Changes Applied",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "debezium_metrics_ChangesApplied{context=\"schema-history\",instance=\"$instance\",name=\"$name\"}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 15
+      },
+      "id": 99,
+      "title": "DDL Parse Errors",
+      "type": "stat",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "red", "value": 1}
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "debezium_metrics_TotalSchemaChangeParseErrorCount{context=\"streaming\",instance=\"$instance\",name=\"$name\"}",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": [
+    "oracle",
+    "xstream",
+    "confluent"
+  ],
+  "templating": {
+    "list": [
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA97CFB590B2093"
+        },
+        "definition": "debezium_metrics_Connected",
+        "includeAll": true,
+        "label": "Connector Name",
+        "name": "name",
+        "query": "label_values(debezium_metrics_Connected, name)",
+        "refresh": 1,
+        "type": "query"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA97CFB590B2093"
+        },
+        "definition": "debezium_metrics_Connected",
+        "label": "Instance",
+        "name": "instance",
+        "query": "label_values(debezium_metrics_Connected, instance)",
+        "refresh": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "title": "Oracle XStream CDC Monitoring",
+  "uid": "oracle-xstream-cdc"
+}
