@@ -25,9 +25,6 @@ AZURE_REGION=${AZURE_REGION:-westeurope}
 
 set +e
 az group delete --name $AZURE_RESOURCE_GROUP --yes
-# keep AD app
-# AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --is-fallback-public-client false --sign-in-audience AzureADandPersonalMicrosoftAccount --query appId -o tsv)
-# az ad app delete --id $AZURE_DATALAKE_CLIENT_ID
 set -e
 
 log "Add the CLI extension for Azure Data Lake Gen 2"
@@ -49,30 +46,33 @@ trap cleanup_cloud_resources EXIT
 
 AZURE_RESOURCE_GROUP_ID=$(az group show --name $AZURE_RESOURCE_GROUP | jq -r '.id')
 
-set +e
-log "Registering active directory App $AZURE_AD_APP_NAME, it might fail if already exist"
-AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --is-fallback-public-client false --sign-in-audience AzureADandPersonalMicrosoftAccount --query appId -o tsv)
-if [ $? != 0 ]
+if [ -z "$GITHUB_RUN_NUMBER" ]
 then
-    log "Failed to create Azure AD App. Attempting to delete existing app and recreate."
-    EXISTING_APP_ID=$(az ad app list --display-name "$AZURE_AD_APP_NAME" --query "[0].appId" -o tsv)
-    if [ ! -z "$EXISTING_APP_ID" ]
+    # not running with CI
+    set +e
+    log "Registering active directory App $AZURE_AD_APP_NAME, it might fail if already exist"
+    AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --is-fallback-public-client false --sign-in-audience AzureADandPersonalMicrosoftAccount --query appId -o tsv)
+    if [ $? != 0 ]
     then
-        az ad app delete --id "$EXISTING_APP_ID"
-        AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --is-fallback-public-client false --sign-in-audience AzureADandPersonalMicrosoftAccount --query appId -o tsv)
+        log "Failed to create Azure AD App. Attempting to delete existing app and recreate."
+        EXISTING_APP_ID=$(az ad app list --display-name "$AZURE_AD_APP_NAME" --query "[0].appId" -o tsv)
+        if [ ! -z "$EXISTING_APP_ID" ]
+        then
+            log "✅ Using pre-configured App ID: $AZURE_DATALAKE_CLIENT_ID"
+        fi
     fi
-fi
-AZURE_DATALAKE_CLIENT_PASSWORD=$(az ad app credential reset --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.password')
-set -e
+    AZURE_DATALAKE_CLIENT_PASSWORD=$(az ad app credential reset --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.password')
+    set -e
 
-if [ "$AZURE_DATALAKE_CLIENT_PASSWORD" == "" ]
-then
-  logerror "password could not be retrieved"
-  if [ -z "$GITHUB_RUN_NUMBER" ]
-  then
-    az ad app credential reset --id $AZURE_DATALAKE_CLIENT_ID
-  fi
-  exit 1
+    if [ "$AZURE_DATALAKE_CLIENT_PASSWORD" == "" ]
+    then
+    logerror "password could not be retrieved"
+    if [ -z "$GITHUB_RUN_NUMBER" ]
+    then
+        az ad app credential reset --id $AZURE_DATALAKE_CLIENT_ID
+    fi
+    exit 1
+    fi
 fi
 
 log "Getting Service Principal associated to the App $AZURE_DATALAKE_CLIENT_ID"
@@ -161,8 +161,3 @@ log "Getting one of the avro files locally and displaying content with avro-tool
 az storage blob download  --container-name topics --name datalake_topic/partition=0/datalake_topic+0+0000000000.avro --file /tmp/datalake_topic+0+0000000000.avro --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}"
 
 playground  tools read-avro-file --file /tmp/datalake_topic+0+0000000000.avro
-
-# keep AD app
-# log "Deleting active directory app"
-# az ad app delete --id $AZURE_DATALAKE_CLIENT_ID
-
