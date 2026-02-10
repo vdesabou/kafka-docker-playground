@@ -45,9 +45,17 @@ AZURE_SEARCH_ADMIN_PRIMARY_KEY=$(az search admin-key show \
 
 subscriptionId=$(az account list --query "[?isDefault].id" | jq -r '.[0]')
 tenantId=$(az account list --query "[?isDefault].tenantId" | jq -r '.[0]')
-# https://docs.confluent.io/cloud/current/connectors/cc-azure-cognitive-search-sink.html#az-service-principal
-appId=$(az ad sp create-for-rbac --name $AZURE_AD_APP --role Contributor --scopes /subscriptions/$subscriptionId/resourceGroups/$AZURE_RESOURCE_GROUP --output json | jq -r '.appId')
-appPassword=$(az ad sp create-for-rbac --name $AZURE_AD_APP --role Contributor --scopes /subscriptions/$subscriptionId/resourceGroups/$AZURE_RESOURCE_GROUP --output json | jq -r '.password')
+
+if [ -z "$GITHUB_RUN_NUMBER" ]
+then
+    # not running with CI
+    # https://docs.confluent.io/cloud/current/connectors/cc-azure-cognitive-search-sink.html#az-service-principal
+    appId=$(az ad sp create-for-rbac --name $AZURE_AD_APP --role Contributor --scopes /subscriptions/$subscriptionId/resourceGroups/$AZURE_RESOURCE_GROUP --output json | jq -r '.appId')
+    appPassword=$(az ad sp create-for-rbac --name $AZURE_AD_APP --role Contributor --scopes /subscriptions/$subscriptionId/resourceGroups/$AZURE_RESOURCE_GROUP --output json | jq -r '.password')
+else
+    appId=$AZURE_COGNITIVE_APP_ID
+    appPassword=$AZURE_COGNITIVE_APP_PASSWORD
+fi
 
 log "Creating Azure Search index"
 curl -X POST \
