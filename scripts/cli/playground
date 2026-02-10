@@ -2918,11 +2918,6 @@ playground_cleanup_cloud_resources_usage() {
     echo
 
     # :environment_variable.usage
-    printf "  %s\n" "$(cyan "AZ_PASS")"
-    printf "    Azure password\n"
-    echo
-
-    # :environment_variable.usage
     printf "  %s\n" "$(cyan "GCP_PROJECT")"
     printf "    GCP project\n"
     echo
@@ -13804,45 +13799,70 @@ function display_ngrok_warning () {
 
 function login_and_maybe_set_azure_subscription () {
 
-  if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
-  then
-    log "🫐 Logging to Azure using environment variables AZ_USER and AZ_PASS"
-    az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
-  else
-    logerror "❌ AZ_USER and AZ_PASS environment variables are not set (for Confluent employees, that is simply your Confluent email address and Okta password)"
-    exit 1
+  # 1. Warn if legacy AZ_PASS is being used
+  if [ ! -z "$AZ_PASS" ]; then
+    logwarn "AZ_PASS detected. User/Password login is no longer supported due to MFA requirements."
+    logwarn "Please unset AZ_PASS and use interactive login locally (https://learn.microsoft.com/en-us/cli/azure/authenticate-azure-cli-interactively?view=azure-cli-latest), or Service Principal in CI."
   fi
 
-  # when AZURE_SUBSCRIPTION_NAME env var is set, we need to set the correct subscription
-  if [ ! -z "$AZURE_SUBSCRIPTION_NAME" ]
-  then
-    log "💙 AZURE_SUBSCRIPTION_NAME ($AZURE_SUBSCRIPTION_NAME) is set, searching for subscription id..."
-    if [ ! -z "$GITHUB_RUN_NUMBER" ]
-    then
-      az account list --query "[?name=='$AZURE_SUBSCRIPTION_NAME']" | jq -r '.[].id'
+  # 2. Authentication Logic
+  if [ ! -z "$GITHUB_RUN_NUMBER" ]; then
+    # CI/CD Mode: Use Service Principal
+    if [ ! -z "$AZ_CLIENT_ID" ] && [ ! -z "$AZ_CLIENT_SECRET" ] && [ ! -z "$AZ_TENANT_ID" ]; then
+      log "🚀 GitHub Action detected: Logging in via Service Principal (MFA-exempt)"
+      az login --service-principal \
+               -u "$AZ_CLIENT_ID" \
+               -p "$AZ_CLIENT_SECRET" \
+               --tenant "$AZ_TENANT_ID" > /dev/null 2>&1
+    else
+      logerror "❌ CI Mode Error: GITHUB_RUN_NUMBER is set but Service Principal env vars (AZ_CLIENT_ID, etc.) are missing."
+      exit 1
     fi
-    subscriptionId=$(az account list --query "[?name=='$AZURE_SUBSCRIPTION_NAME']" | jq -r '.[].id')
-    if [ -z "$GITHUB_RUN_NUMBER" ]
-    then
-      log "💙 setting up account to use subscription $AZURE_SUBSCRIPTION_NAME ($subscriptionId)"
-    fi
-    az account set --subscription $subscriptionId
   else
-    # check if confluent employee, in that case enforce AZURE_SUBSCRIPTION_NAME
-    userEmail=$(az account show | jq -r '.user.name')
-    if [[ $userEmail == *"confluent.io"* ]]
-    then
-      logerror "🔒 Confluent employee detected, please set AZURE_SUBSCRIPTION_NAME environment variable to be sure to use correct subscription !"
-      if [ -z "$GITHUB_RUN_NUMBER" ]
-      then
-        logerror "✨ Here is the list of subscriptions using az account list, please choose one accordingly (for GTS, it should be COPS)"
-        az account list --query "[].{name:name, isDefault:isDefault, tenantId:tenantId}" | jq -r '.[] | "name: \(.name), isDefault: \(.isDefault), tenantId: \(.tenantId)"'
+    # Local Mode: Use Browser-based MFA login
+    log "🫐 Local detected: Opening browser for interactive MFA login..."
+    az login
+  fi
+
+  # 3. Handle Subscription Selection
+  if [ ! -z "$AZURE_SUBSCRIPTION_NAME" ]; then
+    log "💙 AZURE_SUBSCRIPTION_NAME ($AZURE_SUBSCRIPTION_NAME) is set, searching for id..."
+
+    # Using -o tsv is faster and safer than jq for single values
+    subscriptionId=$(az account list --query "[?name=='$AZURE_SUBSCRIPTION_NAME'].id" -o tsv)
+
+    if [ -z "$subscriptionId" ]; then
+        logerror "❌ Could not find subscription: $AZURE_SUBSCRIPTION_NAME"
+        exit 1
+    fi
+
+    [ -z "$GITHUB_RUN_NUMBER" ] && log "💙 Setting subscription to $AZURE_SUBSCRIPTION_NAME ($subscriptionId)"
+    az account set --subscription "$subscriptionId"
+
+  else
+    # 4. Confluent Safety Check
+    userEmail=$(az account show --query "user.name" -o tsv)
+
+    if [[ $userEmail == *"confluent.io"* ]]; then
+      logerror "🔒 Confluent account detected. Please set AZURE_SUBSCRIPTION_NAME to ensure correct billing/env!"
+      if [ -z "$GITHUB_RUN_NUMBER" ]; then
+        logerror "✨ Available subscriptions:"
+        az account list --query "[].{name:name, tenantId:tenantId}" -o table
       fi
       exit 1
     fi
 
-    default_subscription=$(az account list --query "[?isDefault].name" | jq -r '.[0]')
-    log "💎 AZURE_SUBSCRIPTION_NAME is not set, using default subscription $default_subscription"
+    default_sub=$(az account show --query "name" -o tsv)
+    log "💎 AZURE_SUBSCRIPTION_NAME not set, using default: $default_sub"
+  fi
+
+  if [ -z "$GITHUB_RUN_NUMBER" ]
+  then
+    if [ -z "$AZ_USER" ]
+    then
+        AZ_USER=$(az account show --query "user.name" -o tsv)
+    fi
+    log "👤 Logged in as: $AZ_USER"
   fi
 }
 
@@ -19557,11 +19577,6 @@ playground_cleanup_cloud_resources_command() {
   }
 
   function cleanup_azure () {
-      if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
-      then
-          az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
-      fi
-
       login_and_maybe_set_azure_subscription
 
       log "Cleanup Azure Resource groups"
@@ -37448,7 +37463,6 @@ playground_cleanup_cloud_resources_parse_requirements() {
   # :command.environment_variables_filter
 
   env_var_names+=("AZ_USER")
-  env_var_names+=("AZ_PASS")
   env_var_names+=("GCP_PROJECT")
   env_var_names+=("AWS_ACCESS_KEY_ID")
   env_var_names+=("AWS_SECRET_ACCESS_KEY")

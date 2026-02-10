@@ -84,14 +84,34 @@ max_attempts="10"
 sleep_interval="60"
 attempt_num=1
 
-until docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node20-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" > /dev/null 2>&1 && cd LocalFunctionProj && func azure functionapp publish \"$AZURE_FUNCTIONS_NAME\""
+if [ ! -z "$GITHUB_RUN_NUMBER" ]; then
+    log "🚀 CI Mode: Logging in on host via Service Principal"
+    az login --service-principal -u "$AZ_CLIENT_ID" -p "$AZ_CLIENT_SECRET" --tenant "$AZ_TENANT_ID" > /dev/null 2>&1
+else
+    log "🫐 Local Mode: Checking existing session..."
+    # Check if we are already logged in to avoid opening browser unnecessarily
+    if ! az account show > /dev/null 2>&1; then
+        log "Opening browser for MFA login..."
+        az login
+    fi
+fi
+
+# 2. Run the loop without 'az login' inside it
+
+TOKEN=$(az account get-access-token --query accessToken --output tsv)
+
+attempt_num=1
+until docker run \
+    --platform linux/amd64 \
+    -v "$PWD/LocalFunctionProj:/LocalFunctionProj" \
+    mcr.microsoft.com/azure-functions/node:4-node20-core-tools \
+    bash -c "cd LocalFunctionProj && func azure functionapp publish \"$AZURE_FUNCTIONS_NAME\" --access-token $TOKEN"
 do
-    if (( attempt_num == max_attempts ))
-    then
-        logerror "❌ Failed after $attempt_num attempts. Please troubleshoot and run again."
+    if (( attempt_num == max_attempts )); then
+        logerror "❌ Failed after $attempt_num attempts."
         exit 1
     else
-        log "Retrying after $sleep_interval seconds"
+        log "Retrying ($attempt_num/$max_attempts) after $sleep_interval seconds..."
         ((attempt_num++))
         sleep $sleep_interval
     fi
@@ -103,7 +123,7 @@ attempt_num=1
 
 until [ ! -z "$FUNCTIONS_URL" ]
 do
-    output=$(docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node20-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" > /dev/null 2>&1 && cd LocalFunctionProj && func azure functionapp list-functions \"$AZURE_FUNCTIONS_NAME\" --show-keys")
+    output=$(docker run --platform linux/amd64 -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node20-core-tools bash -c "cd LocalFunctionProj && func azure functionapp list-functions \"$AZURE_FUNCTIONS_NAME\" --show-keys --access-token $TOKEN")
 
     FUNCTIONS_URL=$(echo "$output" | grep "Invoke url" | grep -Eo 'https://[^ >]+' | head -1)
 

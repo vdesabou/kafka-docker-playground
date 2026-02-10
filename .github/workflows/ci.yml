@@ -39,7 +39,9 @@ jobs:
           ./playground cleanup-cloud-resources --force --user vsaboulin --resource ccloud --resource aws --resource azure --resource gcp
         env:
           AZ_USER: ${{ secrets.AZ_USER}}
-          AZ_PASS: ${{ secrets.AZ_PASS}}
+          AZ_CLIENT_ID: ${{ secrets.AZ_CLIENT_ID}}
+          AZ_CLIENT_SECRET: ${{ secrets.AZ_CLIENT_SECRET}}
+          AZ_TENANT_ID: ${{ secrets.AZ_TENANT_ID}}
           AZURE_SUBSCRIPTION_NAME: ${{ secrets.AZURE_SUBSCRIPTION_NAME}}
           CONFLUENT_CLOUD_EMAIL: ${{ secrets.CONFLUENT_CLOUD_EMAIL}}
           CONFLUENT_CLOUD_PASSWORD: ${{ secrets.CONFLUENT_CLOUD_PASSWORD}}
@@ -233,7 +235,9 @@ jobs:
           AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY}}
           AWS_STS_ROLE_ARN: ${{ secrets.AWS_STS_ROLE_ARN}}
           AZ_USER: ${{ secrets.AZ_USER}}
-          AZ_PASS: ${{ secrets.AZ_PASS}}
+          AZ_CLIENT_ID: ${{ secrets.AZ_CLIENT_ID}}
+          AZ_CLIENT_SECRET: ${{ secrets.AZ_CLIENT_SECRET}}
+          AZ_TENANT_ID: ${{ secrets.AZ_TENANT_ID}}
           AZURE_SUBSCRIPTION_NAME: ${{ secrets.AZURE_SUBSCRIPTION_NAME}}
           CONFLUENT_CLOUD_EMAIL: ${{ secrets.CONFLUENT_CLOUD_EMAIL}}
           CONFLUENT_CLOUD_PASSWORD: ${{ secrets.CONFLUENT_CLOUD_PASSWORD}}
@@ -483,7 +487,9 @@ jobs:
           AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY}}
           AWS_STS_ROLE_ARN: ${{ secrets.AWS_STS_ROLE_ARN}}
           AZ_USER: ${{ secrets.AZ_USER}}
-          AZ_PASS: ${{ secrets.AZ_PASS}}
+          AZ_CLIENT_ID: ${{ secrets.AZ_CLIENT_ID}}
+          AZ_CLIENT_SECRET: ${{ secrets.AZ_CLIENT_SECRET}}
+          AZ_TENANT_ID: ${{ secrets.AZ_TENANT_ID}}
           AZURE_SUBSCRIPTION_NAME: ${{ secrets.AZURE_SUBSCRIPTION_NAME}}
           CONFLUENT_CLOUD_EMAIL: ${{ secrets.CONFLUENT_CLOUD_EMAIL}}
           CONFLUENT_CLOUD_PASSWORD: ${{ secrets.CONFLUENT_CLOUD_PASSWORD}}
@@ -670,7 +676,9 @@ jobs:
           ./playground cleanup-cloud-resources --force --user vsaboulin
         env:
           AZ_USER: ${{ secrets.AZ_USER}}
-          AZ_PASS: ${{ secrets.AZ_PASS}}
+          AZ_CLIENT_ID: ${{ secrets.AZ_CLIENT_ID}}
+          AZ_CLIENT_SECRET: ${{ secrets.AZ_CLIENT_SECRET}}
+          AZ_TENANT_ID: ${{ secrets.AZ_TENANT_ID}}
           AZURE_SUBSCRIPTION_NAME: ${{ secrets.AZURE_SUBSCRIPTION_NAME}}
           CONFLUENT_CLOUD_EMAIL: ${{ secrets.CONFLUENT_CLOUD_EMAIL}}
           CONFLUENT_CLOUD_PASSWORD: ${{ secrets.CONFLUENT_CLOUD_PASSWORD}}

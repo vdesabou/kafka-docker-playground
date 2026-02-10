@@ -1303,8 +1303,6 @@ commands:
   environment_variables:
   - name: AZ_USER 
     help: Azure user
-  - name: AZ_PASS 
-    help: Azure password
   - name: GCP_PROJECT 
     help: GCP project
   - name: AWS_ACCESS_KEY_ID 

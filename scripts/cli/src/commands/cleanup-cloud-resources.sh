@@ -128,11 +128,6 @@ function cleanup_aws () {
 }
 
 function cleanup_azure () {
-    if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
-    then
-        az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
-    fi
-
     login_and_maybe_set_azure_subscription
 
     log "Cleanup Azure Resource groups"
