@@ -295,15 +295,6 @@ Calculates the end SCN of log mining sessions as the approximate SCN that corres
 	 - Importance: The name of the archive log destination to use when mining archived redo logs. For example, when configured with ``LOG_ARCHIVE_DEST_2``, the connector exclusively refers to the second destination for retrieving archived redo logs. This is only applicable for Oracle database versions 19c and later.
 	 - Required: LOW
 
-🔘 use.transaction.begin.for.mining.session
-
-Set start SCN for log mining session to the start SCN of the oldest relevant open transaction if one exists. A relevant transaction is defined as one that has changes to tables that the connector is setup to capture. It is recommended to set this to true when connecting to Oracle Real Application Clusters (RAC) databases or if large object datatypes (LOB) support is enabled (using ``enable.large.lob.object.support``). This configuration is applicable only for Oracle database versions 19c and later.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 log.mining.transaction.age.threshold.ms
 
 Specifies the threshold (in milliseconds) for transaction age. Transaction age is defined as the duration the transaction has been open on the database. If the transaction age exceeds this threshold then an action is taken depending on the value set for the ``log.mining.transaction.threshold.breached.action`` configuration. The default value is -1 which means that a transaction is retained in the buffer until the connector receives the commit or rollback event for the transaction. This configuration is applicable only when ``use.transaction.begin.for.mining.session`` is set to ``true``.

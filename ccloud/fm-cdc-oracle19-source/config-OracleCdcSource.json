@@ -77,7 +77,6 @@
     "table.inclusion.regex": "STRING",
     "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
     "tasks.max": "2",
-    "use.transaction.begin.for.mining.session": "false",
     "value.converter.connect.meta.data": "BOOLEAN",
     "value.converter.decimal.format": "BASE64",
     "value.converter.reference.subject.name.strategy": "DefaultReferenceSubjectNameStrategy",
