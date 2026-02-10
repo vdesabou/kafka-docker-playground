@@ -154,6 +154,15 @@ The connector writes metrics to the log at this interval.
 ==========================
 Sink Behavior
 ==========================
+🔘 couchbase.default.collection
+
+Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
+
+	 - Type: STRING
+	 - Default: _default._default
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.topic.to.collection
 
 Topic and collection are joined by an equals sign. Map entries are delimited by commas.
@@ -223,15 +232,6 @@ Retry failed writes to Couchbase until this deadline is reached. If time runs ou
 
 	 - Type: STRING
 	 - Default: 0
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.default.collection
-
-Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
-
-	 - Type: STRING
-	 - Default: _default._default
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -328,15 +328,6 @@ This property determines the time period after which client cancels the Query re
 ==========================
 Sub Document Sink Handler
 ==========================
-🔘 couchbase.subdocument.path
-
-This property is specific to `SubDocumentSinkHandler`.
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: JSON Pointer to the property of the Kafka message whose value is the subdocument path to use when modifying the Couchbase document.
-	 - Required: MEDIUM
-
 🔘 couchbase.subdocument.operation
 
 Setting to indicate the type of update to a sub-document.
@@ -363,6 +354,15 @@ This property controls whether to create the document if it does not exist.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 couchbase.subdocument.path
+
+This property is specific to `SubDocumentSinkHandler`.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: JSON Pointer to the property of the Kafka message whose value is the subdocument path to use when modifying the Couchbase document.
+	 - Required: MEDIUM
 
 ==========================
 null
