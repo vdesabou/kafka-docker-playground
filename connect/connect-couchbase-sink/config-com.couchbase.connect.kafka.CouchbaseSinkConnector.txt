@@ -328,6 +328,15 @@ This property determines the time period after which client cancels the Query re
 ==========================
 Sub Document Sink Handler
 ==========================
+🔘 couchbase.subdocument.path
+
+This property is specific to `SubDocumentSinkHandler`.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: JSON Pointer to the property of the Kafka message whose value is the subdocument path to use when modifying the Couchbase document.
+	 - Required: MEDIUM
+
 🔘 couchbase.subdocument.operation
 
 Setting to indicate the type of update to a sub-document.
@@ -354,15 +363,6 @@ This property controls whether to create the document if it does not exist.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 couchbase.subdocument.path
-
-This property is specific to `SubDocumentSinkHandler`.
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: JSON Pointer to the property of the Kafka message whose value is the subdocument path to use when modifying the Couchbase document.
-	 - Required: MEDIUM
 
 ==========================
 null
