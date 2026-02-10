@@ -73,22 +73,28 @@ then
     fi
     exit 1
     fi
-fi
 
-log "Getting Service Principal associated to the App $AZURE_DATALAKE_CLIENT_ID"
-set +e
-SERVICE_PRINCIPAL_ID=$(az ad sp show --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.id')
-if [ $? != 0 ] || [ "$SERVICE_PRINCIPAL_ID" == "" ]
-then
-  log "Service Principal does not appear to exist...Creating Service Principal associated to the App $AZURE_DATALAKE_CLIENT_ID" 
-  SERVICE_PRINCIPAL_ID=$(az ad sp create --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.id')
-  if [ $? != 0 ]
-  then
-    logerror "❌ Could not get or create Service Principal associated to the App $AZURE_DATALAKE_CLIENT_ID"
-    exit 1
-  fi
+    log "Getting Service Principal associated to the App $AZURE_DATALAKE_CLIENT_ID"
+    set +e
+    SERVICE_PRINCIPAL_ID=$(az ad sp show --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.id')
+    if [ $? != 0 ] || [ "$SERVICE_PRINCIPAL_ID" == "" ]
+    then
+    log "Service Principal does not appear to exist...Creating Service Principal associated to the App $AZURE_DATALAKE_CLIENT_ID" 
+    SERVICE_PRINCIPAL_ID=$(az ad sp create --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.id')
+    if [ $? != 0 ]
+    then
+        logerror "❌ Could not get or create Service Principal associated to the App $AZURE_DATALAKE_CLIENT_ID"
+        exit 1
+    fi
+    fi
+    set -e
+
+    log "Assigning Storage Blob Data Owner role to Service Principal $SERVICE_PRINCIPAL_ID"
+    az role assignment create --assignee $SERVICE_PRINCIPAL_ID --role "Storage Blob Data Owner" --scope $AZURE_RESOURCE_GROUP_ID
+
+    # Ensure the role assignment has been applied
+    sleep 30
 fi
-set -e
 
 tenantId=$(az account list --query "[?isDefault].tenantId" | jq -r '.[0]')
 AZURE_DATALAKE_TOKEN_ENDPOINT="https://login.microsoftonline.com/$tenantId/oauth2/token"
@@ -103,12 +109,6 @@ az storage account create \
     --tags cflt_managed_by=user cflt_managed_id="$USER"
 
 sleep 20
-
-log "Assigning Storage Blob Data Owner role to Service Principal $SERVICE_PRINCIPAL_ID"
-az role assignment create --assignee $SERVICE_PRINCIPAL_ID --role "Storage Blob Data Owner" --scope $AZURE_RESOURCE_GROUP_ID
-
-# Ensure the role assignment has been applied
-sleep 30
 
 # generate data file for externalizing secrets
 sed -e "s|:AZURE_DATALAKE_CLIENT_ID:|$AZURE_DATALAKE_CLIENT_ID|g" \
