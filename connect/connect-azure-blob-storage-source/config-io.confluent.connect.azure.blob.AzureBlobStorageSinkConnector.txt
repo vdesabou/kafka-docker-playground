@@ -452,6 +452,15 @@ Azure Proxy Password. This property is meant to be  used only if you need to acc
 	 - Importance: LOW
 	 - Required: false
 
+🔘 enable.conditional.writes
+
+Flag to control whether to enable conditional writes during multipart upload. The config will be ignored if scheduled rotation is disabled by setting `rotate.schedule.interval.ms` to -1 or the connector is configured to write kafka keys or headers to Azure Blob Storage
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 null
 ==========================

@@ -20,6 +20,7 @@
     "connect.meta.data": "true",
     "credentials.provider.class": "",
     "directory.delim": "/",
+    "enable.conditional.writes": "true",
     "enhanced.avro.schema.support": "true",
     "file.delim": "+",
     "filename.offset.zero.pad.width": "10",
