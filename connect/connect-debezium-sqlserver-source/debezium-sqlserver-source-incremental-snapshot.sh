@@ -69,7 +69,7 @@ playground connector create-or-update --connector debezium-sqlserver-source  << 
   "database.names" : "testDB",
 
   "table.include.list" : "dbo.customers,dbo.debezium_signal",
-  "signal.data.collection": "dbo.debezium_signal",
+  "signal.data.collection": "testDB.dbo.debezium_signal",
 
   "_comment": "old version before 2.x",
   "database.server.name": "server1",
