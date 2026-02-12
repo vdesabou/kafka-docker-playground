@@ -10,6 +10,8 @@ services:
       - "9300:9300"
     environment:
       discovery.type: single-node
+      xpack.security.enabled: "false"
+      xpack.security.http.ssl.enabled: "false"
 
   # https://ngrok.com/docs/using-ngrok-with/docker/
   ngrok:
