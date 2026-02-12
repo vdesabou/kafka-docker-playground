@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  elasticsearch:
+    addr: elasticsearch:9200
+    proto: tcp
