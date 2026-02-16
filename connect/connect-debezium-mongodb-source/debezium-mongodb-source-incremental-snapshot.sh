@@ -59,7 +59,7 @@ playground connector create-or-update --connector debezium-mongodb-source  << EO
 {
     "connector.class" : "io.debezium.connector.mongodb.MongoDbConnector",
     "tasks.max" : "1",
-        "_comment": "old version before 2.4.x",
+    "_comment": "old version before 2.4.x",
     "mongodb.hosts": "debezium/mongodb:27017",
     "_comment": "new version since 2.4.x",
     "mongodb.connection.string": "mongodb://mongodb:27017/?replicaSet=debezium",
@@ -70,7 +70,7 @@ playground connector create-or-update --connector debezium-mongodb-source  << EO
     "topic.prefix": "dbserver1",
 
     "signal.data.collection": "inventory.debezium_signal",
-    "collection.include.list": "inventory.customers,inventory.debezium_signal",
+    "collection.include.list": "inventory.customers",
 
     "mongodb.user" : "debezium",
     "mongodb.password" : "dbz",
@@ -101,7 +101,7 @@ playground connector create-or-update --connector debezium-mongodb-source  << EO
 {
     "connector.class" : "io.debezium.connector.mongodb.MongoDbConnector",
     "tasks.max" : "1",
-        "_comment": "old version before 2.4.x",
+    "_comment": "old version before 2.4.x",
     "mongodb.hosts": "debezium/mongodb:27017",
     "_comment": "new version since 2.4.x",
     "mongodb.connection.string": "mongodb://mongodb:27017/?replicaSet=debezium",
@@ -112,7 +112,7 @@ playground connector create-or-update --connector debezium-mongodb-source  << EO
     "topic.prefix": "dbserver1",
 
     "signal.data.collection": "inventory.debezium_signal",
-    "collection.include.list": "inventory.customers,inventory.debezium_signal,inventory.customers2",
+    "collection.include.list": "inventory.customers,inventory.customers2",
 
     "mongodb.user" : "debezium",
     "mongodb.password" : "dbz",
@@ -140,11 +140,11 @@ playground topic consume --topic dbserver1.inventory.customers2 --min-expected-m
 log "Trigger Ad hoc snapshot"
 docker exec -i mongodb mongosh << EOF
 use inventory
-db.debezium_signal.insert({type : 'execute-snapshot', data : { 'data-collections' : [ 'inventory.customer2'], type: 'incremental'} });
+db.debezium_signal.insert({type : 'execute-snapshot', data : { 'data-collections' : [ 'inventory.customers2'], type: 'incremental'} });
 EOF
 
 
 sleep 5
 
-log "Verifying topic server1.testDB.dbo.customers2: it should have all records"
+log "Verifying topic dbserver1.inventory.customers2: it should have all records"
 playground topic consume --topic dbserver1.inventory.customers2 --min-expected-messages 2 --timeout 60
