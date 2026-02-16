@@ -163,7 +163,7 @@ playground connector create-or-update --connector debezium-postgres-source  << E
   "key.converter.schema.registry.url": "http://schema-registry:8081",
   "value.converter" : "io.confluent.connect.avro.AvroConverter",
   "value.converter.schema.registry.url": "http://schema-registry:8081",
-  "table.include.list" : "public.customers,public.debezium_signal",
+  "table.include.list" : "public.customers",
   "signal.data.collection": "public.debezium_signal",
 
   "_comment:": "remove _ to use ExtractNewRecordState smt",
@@ -202,7 +202,7 @@ playground connector create-or-update --connector debezium-postgres-source  << E
   "key.converter.schema.registry.url": "http://schema-registry:8081",
   "value.converter" : "io.confluent.connect.avro.AvroConverter",
   "value.converter.schema.registry.url": "http://schema-registry:8081",
-  "table.include.list" : "public.customers,public.debezium_signal,public.customers2",
+  "table.include.list" : "public.customers,public.customers2",
   "signal.data.collection": "public.debezium_signal",
   "transforms": "unwrap",
   "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
