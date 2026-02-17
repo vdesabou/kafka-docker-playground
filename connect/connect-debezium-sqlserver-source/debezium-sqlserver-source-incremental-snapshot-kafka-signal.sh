@@ -68,7 +68,7 @@ playground connector create-or-update --connector debezium-sqlserver-source  << 
     "database.password": "Password!",
     "database.names" : "testDB",
 
-    "table.include.list" : "dbo.customers,dbo.debezium_signal",
+    "table.include.list" : "dbo.customers",
     "signal.data.collection": "testDB.dbo.debezium_signal",
     "signal.kafka.topic": "dbz-signals",
     "signal.kafka.bootstrap.servers": "broker:9092",
@@ -132,7 +132,7 @@ playground connector create-or-update --connector debezium-sqlserver-source  << 
     "database.password": "Password!",
     "database.names" : "testDB",
 
-    "table.include.list" : "dbo.customers,dbo.debezium_signal,dbo.customers2",
+    "table.include.list" : "dbo.customers,dbo.customers2",
     "signal.data.collection": "testDB.dbo.debezium_signal",
 
     "signal.kafka.topic": "dbz-signals",
