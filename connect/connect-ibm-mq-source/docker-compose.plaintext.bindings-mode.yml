@@ -1,0 +1,28 @@
+---
+services:
+  ibmmq:
+    image: icr.io/ibm-messaging/mq:9.3.2.0-r2
+    hostname: ibmmq
+    container_name: ibmmq
+    platform: linux/amd64
+    environment:
+      LICENSE: accept
+      MQ_QMGR_NAME: QM1
+      MQ_ADMIN_PASSWORD: passw0rd
+      MQ_APP_PASSWORD: passw0rd
+    ports:
+      - '1414:1414'
+      - '9443:9443'
+
+  connect:
+    # create CP image using ibm mq as basis
+    image: confluentinc/cp-server-playground-ibm-mq-bindings-connect-base:8.1.0
+    build:
+      context: ../../connect/connect-ibm-mq-source/bindings-mode/
+    volumes:
+        - ../../connect/connect-ibm-mq-source/com.ibm.mq.allclient.jar:/mnt/confluentinc-kafka-connect-ibmmq/lib/com.ibm.mq.allclient.jar
+        - ../../connect/connect-ibm-mq-source/jms.jar:/mnt/confluentinc-kafka-connect-ibmmq/lib/jms.jar
+    environment:
+      LICENSE: accept
+      MQ_QMGR_NAME: QM1
+      MQ_ADMIN_PASSWORD: passw0rd
