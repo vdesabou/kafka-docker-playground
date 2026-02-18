@@ -2880,6 +2880,16 @@ subcommands:
             Note: CP 7.2+ is required.
             
         - names:
+          - --schema-id-in-header
+          argument: ""
+          description: | 
+            🎯 Include schema ID in kafka header. 
+            
+            Uses HeaderSchemaIdSerializer for schema.id.seserializer
+            
+            Note: CP 8.1+ is required.
+            
+        - names:
           - --validate
           argument: ""
           description: | 

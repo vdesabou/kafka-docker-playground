@@ -3039,6 +3039,14 @@ commands:
           If not set, the key will also be null, hence generating a null record (both key and value being null)
 
           Note: CP 7.2+ is required.
+      - long: --schema-id-in-header
+        required: false
+        help: |-
+          🎯 Include schema ID in kafka header. 
+          
+          Uses HeaderSchemaIdSerializer for schema.id.seserializer
+
+          Note: CP 8.1+ is required.
       - long: --validate
         required: false
         help: |-
