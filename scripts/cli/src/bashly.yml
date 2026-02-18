@@ -3046,7 +3046,7 @@ commands:
           
           Uses HeaderSchemaIdSerializer for schema.id.seserializer
 
-          Note: CP 8.1+ is required.
+          Note: CP 8.1.1+ is required.
       - long: --validate
         required: false
         help: |-

@@ -2494,7 +2494,7 @@
                 "--schema-id-in-header"
               ],
               "argument": "",
-              "description": "🎯 Include schema ID in kafka header. \n\nUses HeaderSchemaIdSerializer for schema.id.seserializer\n\nNote: CP 8.1+ is required.\n"
+              "description": "🎯 Include schema ID in kafka header. \n\nUses HeaderSchemaIdSerializer for schema.id.seserializer\n\nNote: CP 8.1.1+ is required.\n"
             },
             {
               "names": [

@@ -5822,7 +5822,7 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--schema-id-in-header")"
-    printf "    🎯 Include schema ID in kafka header. \n    \n    Uses HeaderSchemaIdSerializer for schema.id.seserializer\n    \n    Note: CP 8.1+ is required.\n"
+    printf "    🎯 Include schema ID in kafka header. \n    \n    Uses HeaderSchemaIdSerializer for schema.id.seserializer\n    \n    Note: CP 8.1.1+ is required.\n"
     echo
 
     # :flag.usage
@@ -24892,9 +24892,9 @@ playground_topic_produce_command() {
   if [[ -n "$schema_id_in_header" ]]
   then
       get_connect_image
-      if ! version_gt $CP_CONNECT_TAG "8.0.99"
+      if ! version_gt $CP_CONNECT_TAG "8.1.0"
       then
-          logerror "❌ --schema-id-in-header is set but it can only be used with CP 8.1+"
+          logerror "❌ --schema-id-in-header is set but it can only be used with CP 8.1.1+"
           exit 1
       fi
   fi

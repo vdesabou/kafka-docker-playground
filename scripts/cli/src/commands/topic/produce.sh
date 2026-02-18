@@ -204,9 +204,9 @@ fi
 if [[ -n "$schema_id_in_header" ]]
 then
     get_connect_image
-    if ! version_gt $CP_CONNECT_TAG "8.0.99"
+    if ! version_gt $CP_CONNECT_TAG "8.1.0"
     then
-        logerror "❌ --schema-id-in-header is set but it can only be used with CP 8.1+"
+        logerror "❌ --schema-id-in-header is set but it can only be used with CP 8.1.1+"
         exit 1
     fi
 fi
