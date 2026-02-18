@@ -35,6 +35,8 @@ then
 fi
 cd -
 
+# make sure control-center is not disabled
+export ENABLE_CONTROL_CENTER=true
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.bindings-mode.yml" --wait-for-control-center
