@@ -49,7 +49,7 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
+        "w": 6,
         "x": 0,
         "y": 1
       },
@@ -59,7 +59,9 @@
         "graphMode": "none",
         "justifyMode": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "textMode": "auto"
       },
@@ -79,8 +81,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 4,
+        "w": 6,
+        "x": 6,
         "y": 1
       },
       "id": 68,
@@ -99,13 +101,13 @@
         "uid": "PBFA97CFB590B2093"
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 8,
+        "h": 4,
+        "w": 6,
+        "x": 12,
         "y": 1
       },
       "id": 56,
-      "title": "Lag: Milliseconds Behind Source",
+      "title": "Streaming Lag From Source",
       "type": "timeseries",
       "fieldConfig": {
         "defaults": {
@@ -115,13 +117,90 @@
       "targets": [
         {
           "expr": "debezium_metrics_MilliSecondsBehindSource{context=\"streaming\",instance=\"$instance\",name=\"$name\"}",
-          "legendFormat": "Lag Behind Redo Log",
+          "legendFormat": "Streaming Lag From Source",
           "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "id": 110,
+      "title": "Change Event Queue Remaining Capacity (Streaming)",
+      "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
         },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "debezium_metrics_QueueRemainingCapacity{context=\"streaming\",instance=\"$instance\",name=\"$name\"}",
+          "legendFormat": "Streaming",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 5
+      },
+      "id": 108,
+      "title": "Total Number Of Streaming Events Seen",
+      "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "debezium_metrics_TotalNumberOfEventsSeen{context=\"streaming\",instance=\"$instance\",name=\"$name\"}",
+          "legendFormat": "Total Streaming Events Seen",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 5
+      },
+      "id": 114,
+      "title": "Commit LCR behind Source in MilliSeconds",
+      "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "targets": [
         {
           "expr": "debezium_metrics_CommitMilliSecondsBehindSource{context=\"streaming\",instance=\"$instance\",name=\"$name\"}",
-          "legendFormat": "Commit Lag",
-          "refId": "B"
+          "legendFormat": "Commit LCR behind Source",
+          "refId": "A"
         }
       ]
     },
@@ -131,7 +210,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 9
+        "y": 13
       },
       "id": 90,
       "panels": [],
@@ -145,9 +224,9 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
+        "w": 6,
         "x": 0,
-        "y": 10
+        "y": 14
       },
       "id": 22,
       "title": "Total Table Count",
@@ -166,9 +245,9 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 4,
-        "y": 10
+        "w": 6,
+        "x": 6,
+        "y": 14
       },
       "id": 24,
       "title": "Remaining Tables",
@@ -187,9 +266,9 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 8,
-        "y": 10
+        "w": 6,
+        "x": 12,
+        "y": 14
       },
       "id": 28,
       "title": "Snapshot Running",
@@ -202,12 +281,66 @@
       ]
     },
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 14
+      },
+      "id": 112,
+      "title": "Change Event Queue Remaining Capacity (Snapshot)",
+      "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "debezium_metrics_QueueRemainingCapacity{context=\"snapshot\",instance=\"$instance\",name=\"$name\"}",
+          "legendFormat": "Snapshot",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 104,
+      "title": "Total Number Of Snapshot Events Seen",
+      "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "debezium_metrics_TotalNumberOfEventsSeen{context=\"snapshot\",instance=\"$instance\",name=\"$name\"}",
+          "legendFormat": "Total Snapshot Events Seen",
+          "refId": "A"
+        }
+      ]
+    },
+    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 14
+        "y": 26
       },
       "id": 8,
       "panels": [],
@@ -221,9 +354,9 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 6,
+        "w": 12,
         "x": 0,
-        "y": 15
+        "y": 27
       },
       "id": 12,
       "title": "Schema Changes Applied",
@@ -242,9 +375,9 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 15
+        "w": 12,
+        "x": 12,
+        "y": 27
       },
       "id": 99,
       "title": "DDL Parse Errors",
@@ -254,8 +387,14 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"color": "green", "value": null},
-              {"color": "red", "value": 1}
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
             ]
           }
         }
