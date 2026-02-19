@@ -56,7 +56,7 @@ cp ${PWD}/awscredentialsprovider-v2-irsa/target/awscredentialsprovider-irsa-1.0.
 handle_aws_credentials
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.backup-and-restore.irsa.yml"
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.irsa.yml"
 
 AWS_BUCKET_NAME=pg-bucket-${USER}
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}

@@ -37,7 +37,7 @@ $ just use <playground run> command and search for s3-sink-with-assuming-iam-rol
 or with AssumeRole using custom AWS credentials provider (⚠️ custom code is just an example, there is no support for it):
 
 ```
-$ just use <playground run> command and search for s3-sink-backup-and-restore-assuming-iam-role-with-custom-aws-credential-provider.sh in this folder
+$ just use <playground run> command and search for s3-sink-assuming-iam-role-with-custom-aws-credential-provider.sh in this folder
 ```
 
 Note: you can also export these values as environment variable
