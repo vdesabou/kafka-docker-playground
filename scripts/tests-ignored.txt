@@ -39,7 +39,7 @@ hdfs3-sink-ha-kerberos.sh
 start-custom-log4j2.sh
 
 # EKS specific
-s3-sink-backup-and-restore-irsa.sh
+s3-sink-irsa.sh
 
 # https://github.com/vdesabou/kafka-docker-playground/issues/7493
 # too flaky, not sure why
