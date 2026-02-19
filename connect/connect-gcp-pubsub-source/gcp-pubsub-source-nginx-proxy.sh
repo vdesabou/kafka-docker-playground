@@ -49,8 +49,8 @@ docker rm -f gcloud-config
 set -e
 docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --project ${GCP_PROJECT} --key-file /tmp/keyfile.json
 
-GCP_PUB_SUB_TOPIC="topic-1-$GITHUB_RUN_NUMBER"
-GCP_PUB_SUB_SUBSCRIPTION="subscription-1-$GITHUB_RUN_NUMBER"
+GCP_PUB_SUB_TOPIC="topic-1-g-$GITHUB_RUN_NUMBER"
+GCP_PUB_SUB_SUBSCRIPTION="subscription-1-g-$GITHUB_RUN_NUMBER"
 
 # cleanup if required
 set +e
