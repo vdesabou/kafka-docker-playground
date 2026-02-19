@@ -12,12 +12,12 @@ bootstrap_ccloud_environment
 
 
 set +e
-playground topic delete --topic orders
+playground topic delete --topic mysqlorders
 set -e
 
 
-log "Sending messages to topic orders"
-playground topic produce -t orders --nb-messages 1 << 'EOF'
+log "Sending messages to topic mysqlorders"
+playground topic produce -t mysqlorders --nb-messages 1 << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -42,7 +42,7 @@ playground topic produce -t orders --nb-messages 1 << 'EOF'
 }
 EOF
 
-playground topic produce -t orders --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
+playground topic produce -t mysqlorders --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -117,7 +117,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "connection.password": "password",
   "db.name": "mydb",
   "input.data.format": "AVRO",
-  "topics": "orders",
+  "topics": "mysqlorders",
   "insert.mode": "INSERT",
   "auto.create": "true",
   "auto.evolve": "true",
@@ -128,11 +128,11 @@ wait_for_ccloud_connector_up $connector_name 180
 
 sleep 5
 
-log "Describing the orders table in DB 'mydb':"
-docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'describe orders'"
+log "Describing the mysqlorders table in DB 'mydb':"
+docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'describe mysqlorders'"
 
-log "Show content of orders table:"
-docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from orders'" > /tmp/result.log  2>&1
+log "Show content of mysqlorders table:"
+docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from mysqlorders'" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "foo" /tmp/result.log
 

@@ -9,9 +9,9 @@ handle_aws_credentials
 bootstrap_ccloud_environment
 
 set +e
-playground topic delete --topic orders
+playground topic delete --topic redshiftorders
 sleep 3
-playground topic create --topic orders --nb-partitions 1
+playground topic create --topic redshiftorders --nb-partitions 1
 set -e
 
 CLUSTER_NAME=pg${USER}fmredshift${GITHUB_RUN_NUMBER}${TAG_BASE}
@@ -90,8 +90,8 @@ aws redshift modify-cluster --cluster-identifier $CLUSTER_NAME --vpc-security-gr
 
 sleep 60
 
-log "Sending messages to topic orders"
-playground topic produce -t orders --nb-messages 1 << 'EOF'
+log "Sending messages to topic redshiftorders"
+playground topic produce -t redshiftorders --nb-messages 1 << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -116,7 +116,7 @@ playground topic produce -t orders --nb-messages 1 << 'EOF'
 }
 EOF
 
-playground topic produce -t orders --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
+playground topic produce -t redshiftorders --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -157,7 +157,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "kafka.auth.mode": "KAFKA_API_KEY",
   "kafka.api.key": "$CLOUD_KEY",
   "kafka.api.secret": "$CLOUD_SECRET",
-  "topics": "orders",
+  "topics": "redshiftorders",
   "input.data.format": "AVRO",
   "aws.redshift.domain": "$CLUSTER",
   "aws.redshift.port": "5439",
@@ -178,7 +178,7 @@ sleep 20
 log "Verify data is in Redshift"
 timeout 30 docker run -i postgres:15 psql -h $CLUSTER -U masteruser -d dev -p 5439 << EOF > /tmp/result.log
 $PASSWORD
-SELECT * from orders;
+SELECT * from redshiftorders;
 EOF
 cat /tmp/result.log
 grep "foo" /tmp/result.log

@@ -30,10 +30,10 @@ fi
 bootstrap_ccloud_environment
 
 set +e
-playground topic delete --topic orders
+playground topic delete --topic mongodborders
 set -e
 
-playground topic create --topic orders
+playground topic create --topic mongodborders
 
 log "Drop customers collection, it might fail"
 set +e
@@ -44,8 +44,8 @@ EOF
 set -e
 
 
-log "Sending messages to topic orders"
-playground topic produce -t orders --nb-messages 1 << 'EOF'
+log "Sending messages to topic mongodborders"
+playground topic produce -t mongodborders --nb-messages 1 << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -70,7 +70,7 @@ playground topic produce -t orders --nb-messages 1 << 'EOF'
 }
 EOF
 
-playground topic produce -t orders --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
+playground topic produce -t mongodborders --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -108,7 +108,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",
-     "topics":"orders",
+     "topics":"mongodborders",
      "connection.host": "$MONGODB_ATLAS_HOST",
      "connection.user": "$MONGODB_ATLAS_USER",
      "connection.password": "$MONGODB_ATLAS_PASSWORD",
