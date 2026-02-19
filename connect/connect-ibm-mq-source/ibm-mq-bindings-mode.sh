@@ -44,7 +44,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 sleep 10
 
 function wait_for_connect_to_start () {
-     MAX_WAIT=600
+     MAX_WAIT=150
      CUR_WAIT=0
      sleep 5
      set +e
@@ -55,6 +55,7 @@ function wait_for_connect_to_start () {
           CUR_WAIT=$(( CUR_WAIT+10 ))
           if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
                echo -e "\nERROR: The logs still show 'Finished starting connectors and tasks' after $MAX_WAIT seconds.\n"
+               cat /tmp/out.txt
                exit 1
           fi
      done
