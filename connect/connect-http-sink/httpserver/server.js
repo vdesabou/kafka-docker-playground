@@ -49,7 +49,7 @@ const MAX_NEW_OBJECTS = 5; // up to 5 new objects per interval
 setInterval(() => {
   const add = Math.floor(Math.random() * (MAX_NEW_OBJECTS - MIN_NEW_OBJECTS + 1)) + MIN_NEW_OBJECTS;
   currentTotalObjects += add;
-  console.log(`[${new Date().toISOString()}] Added ${add} new objects. Total now: ${currentTotalObjects}`);
+  //console.log(`[${new Date().toISOString()}] Added ${add} new objects. Total now: ${currentTotalObjects}`);
 }, GROWTH_INTERVAL_MS);
 
 
@@ -71,7 +71,7 @@ const generateElasticsearchDocuments = (afterTime, pageSize) => {
   const maxAvailableDocuments = (elapsedSeconds + 1) * DOCUMENTS_PER_INTERVAL;
   const maxAvailableTimestamp = INITIAL_TIMESTAMP + (maxAvailableDocuments * 1000);
   
-  console.log(`Elapsed intervals: ${elapsedSeconds}, Max available documents: ${maxAvailableDocuments}, Max timestamp: ${maxAvailableTimestamp}`);
+  //console.log(`Elapsed intervals: ${elapsedSeconds}, Max available documents: ${maxAvailableDocuments}, Max timestamp: ${maxAvailableTimestamp}`);
   
   for (let i = 0; i < pageSize; i++) {
     const timestamp = startTime + (i * 1000) + 1000; // Increment by 1 second for each doc
@@ -94,7 +94,7 @@ const generateElasticsearchDocuments = (afterTime, pageSize) => {
     });
   }
   
-  console.log(`Returning ${hits.length} documents`);
+ // console.log(`Returning ${hits.length} documents`);
   return hits;
 };
 
@@ -258,7 +258,7 @@ setInterval(() => {
   for (let i = 0; i < add; i++) {
     spaces.push(makeSpace(spaces.length));
   }
-  console.log(`[${new Date().toISOString()}] Added ${add} new Confluence spaces. Total now: ${spaces.length}`);
+  //console.log(`[${new Date().toISOString()}] Added ${add} new Confluence spaces. Total now: ${spaces.length}`);
 }, SPACE_GROWTH_INTERVAL_MS);
 
 app.get('/wiki/rest/api/space', (req, res) => {
