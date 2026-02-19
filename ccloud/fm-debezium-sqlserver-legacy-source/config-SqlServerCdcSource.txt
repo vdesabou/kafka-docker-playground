@@ -202,15 +202,6 @@ A mode for taking an initial snapshot of the structure and optionally data of ca
 	 - Importance: LOW
 	 - Required: false
 
-🔘 tombstones.on.delete
-
-Controls whether a tombstone event should be generated after a delete event. When set to ``true``, the delete operations are represented by a delete event and a subsequent tombstone event. When set to ``false``, only a delete event is sent. Emitting the tombstone event (the default behavior) allows Kafka to completely delete all events pertaining to the given key, once the source record got deleted.
-
-	 - Type: STRING
-	 - Default: true
-	 - Importance: HIGH
-	 - Required: false
-
 🔘 datatype.propagate.source.type
 
 
@@ -219,6 +210,15 @@ Controls whether a tombstone event should be generated after a delete event. Whe
 	 - Default: LIST
 	 - Importance: A comma-separated list of regular expressions matching the database-specific data type names that adds the data type's original type and original length as parameters to the corresponding field schemas in the emitted change records.
 	 - Required: LOW
+
+🔘 tombstones.on.delete
+
+Controls whether a tombstone event should be generated after a delete event. When set to ``true``, the delete operations are represented by a delete event and a subsequent tombstone event. When set to ``false``, only a delete event is sent. Emitting the tombstone event (the default behavior) allows Kafka to completely delete all events pertaining to the given key, once the source record got deleted.
+
+	 - Type: STRING
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 column.exclude.list
 
@@ -346,15 +346,6 @@ Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROT
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 output.key.format
-
-Sets the output Kafka record key format. Valid entries are AVRO, JSON_SR, PROTOBUF, STRING or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
-
-	 - Type: STRING
-	 - Default: JSON
-	 - Importance: HIGH
-	 - Required: false
-
 🔘 after.state.only
 
 Controls whether the generated Kafka record should contain only the state after applying change events.
@@ -362,6 +353,15 @@ Controls whether the generated Kafka record should contain only the state after 
 	 - Type: STRING
 	 - Default: true
 	 - Importance: LOW
+	 - Required: false
+
+🔘 output.key.format
+
+Sets the output Kafka record key format. Valid entries are AVRO, JSON_SR, PROTOBUF, STRING or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
 	 - Required: false
 
 ==========================
@@ -379,6 +379,15 @@ Number of tasks for this connector
 ==========================
 Additional Configs
 ==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.replace.null.with.default
 
 Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
@@ -415,33 +424,6 @@ Use this property if you would like to configure the connector's error handling 
 	 - Importance: LOW
 	 - Required: false
 
-🔘 value.converter.ignore.default.for.nullables
-
-When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
-	 - Required: false
-
-🔘 value.converter.decimal.format
-
-Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
-
-	 - Type: STRING
-	 - Default: BASE64
-	 - Importance: LOW
-	 - Required: false
-
-🔘 key.converter.key.schema.id.serializer
-
-The class name of the schema ID serializer for keys. This is used to serialize schema IDs in the message headers.
-
-	 - Type: STRING
-	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
-	 - Importance: LOW
-	 - Required: false
-
 🔘 value.converter.connect.meta.data
 
 
@@ -469,12 +451,12 @@ How to construct the subject name for key schema registration.
 	 - Importance: LOW
 	 - Required: false
 
-🔘 value.converter.value.schema.id.serializer
+🔘 value.converter.ignore.default.for.nullables
 
-The class name of the schema ID serializer for values. This is used to serialize schema IDs in the message headers.
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
 
-	 - Type: STRING
-	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
+	 - Type: BOOLEAN
+	 - Default: false
 	 - Importance: LOW
 	 - Required: false
 
