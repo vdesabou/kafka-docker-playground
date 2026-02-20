@@ -20,7 +20,7 @@ log "Starting Splunk S2S Source ACK verification test"
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-playround topic create --topic splunk-s2s-ack-events
+playground topic create --topic splunk-s2s-ack-events
 
 log "Deploying Splunk S2S Source connector with ack support"
 playground connector create-or-update --connector splunk-s2s-source-ack-test << EOF
