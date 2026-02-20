@@ -64,7 +64,7 @@ function wait_for_connect_to_start () {
 }
 
 log "Run connect worker manually"
-docker exec -i connect bash -c "KAFKA_OPTS='-Dcom.ibm.mq.jmqi.threadWaitTimeout=1 -Djava.library.path=/opt/mqm/java/lib64' /mnt/confluent/bin/connect-distributed /mnt/confluent/config/connect-distributed.properties" > /tmp/out.txt 2>&1 &
+docker exec -i connect bash -c "JAVA_DEBUG_OPTS='' KAFKA_OPTS='-Dcom.ibm.mq.jmqi.threadWaitTimeout=1 -Djava.library.path=/opt/mqm/java/lib64' /mnt/confluent/bin/connect-distributed /mnt/confluent/config/connect-distributed.properties" > /tmp/out.txt 2>&1 &
 
 wait_for_connect_to_start
 
