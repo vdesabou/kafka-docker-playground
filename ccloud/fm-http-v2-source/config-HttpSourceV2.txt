@@ -481,15 +481,6 @@ Dictates the content of records produced to the error topic. If set to ``Error s
 ==========================
 Additional Configs
 ==========================
-🔘 key.converter.key.schema.id.serializer
-
-The class name of the schema ID serializer for keys. This is used to serialize schema IDs in the message headers.
-
-	 - Type: STRING
-	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
-	 - Importance: LOW
-	 - Required: false
-
 🔘 value.converter.connect.meta.data
 
 
@@ -514,15 +505,6 @@ When set to true, this property ensures that the corresponding record in Kafka i
 
 	 - Type: BOOLEAN
 	 - Default: false
-	 - Importance: LOW
-	 - Required: false
-
-🔘 value.converter.value.schema.id.serializer
-
-The class name of the schema ID serializer for values. This is used to serialize schema IDs in the message headers.
-
-	 - Type: STRING
-	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
 	 - Importance: LOW
 	 - Required: false
 
