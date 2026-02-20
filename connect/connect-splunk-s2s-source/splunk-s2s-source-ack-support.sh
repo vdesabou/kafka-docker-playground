@@ -20,7 +20,7 @@ log "Starting Splunk S2S Source ACK verification test"
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-playground topic create --topic splunk-s2s-ack-events
+playground topic create --topic splunk-s2s-events
 
 log "Deploying Splunk S2S Source connector with ack support"
 playground connector create-or-update --connector splunk-s2s-source-ack-test << EOF
@@ -71,7 +71,7 @@ docker exec -i splunk-uf bash -c "echo 'test event 3' >> /opt/splunkforwarder/sp
 # -------------------------------------------------------
 # 3️⃣  Verify Kafka Records
 # -------------------------------------------------------
-log "Verifying topic splunk-s2s-ack-events has expected records"
+log "Verifying topic splunk-s2s-events has expected records"
 playground topic consume --topic splunk-s2s-events --timeout 20 --min-expected-messages 3 --grep "test event" --max-messages=5000 
 events=$(playground topic consume --topic splunk-s2s-events --timeout 20 --min-expected-messages 3 --grep "test event" --max-messages=5000 \
   | grep -o '"event":"test event [0-9]*"' \
