@@ -1,0 +1,20 @@
+---
+services:
+
+  elasticsearch:
+    image: elasticsearch:9.3.0
+    hostname: elasticsearch
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      xpack.security.http.ssl.enabled: "false"
+      
+  connect:
+    depends_on:
+      - elasticsearch
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-http
