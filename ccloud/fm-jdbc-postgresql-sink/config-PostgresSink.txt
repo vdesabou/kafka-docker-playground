@@ -379,12 +379,12 @@ Number of tasks for this connector
 ==========================
 Additional Configs
 ==========================
-🔘 value.converter.value.schema.id.deserializer
+🔘 value.converter.decimal.format
 
-The class name of the schema ID deserializer for values. This is used to deserialize schema IDs from the message headers.
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
 
 	 - Type: STRING
-	 - Default: io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer
+	 - Default: BASE64
 	 - Importance: LOW
 	 - Required: false
 
@@ -397,15 +397,6 @@ Set the subject reference name strategy for value. Valid entries are DefaultRefe
 	 - Importance: LOW
 	 - Required: false
 
-🔘 value.converter.use.schema.id
-
-
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
-
 🔘 errors.tolerance
 
 Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
@@ -414,51 +405,6 @@ Use this property if you would like to configure the connector's error handling 
 	 - Default: all
 	 - Importance: LOW
 	 - Required: false
-
-🔘 value.converter.ignore.default.for.nullables
-
-When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
-	 - Required: false
-
-🔘 key.converter.key.schema.id.deserializer
-
-The class name of the schema ID deserializer for keys. This is used to deserialize schema IDs from the message headers.
-
-	 - Type: STRING
-	 - Default: io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer
-	 - Importance: LOW
-	 - Required: false
-
-🔘 value.converter.decimal.format
-
-Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
-
-	 - Type: STRING
-	 - Default: BASE64
-	 - Importance: LOW
-	 - Required: false
-
-🔘 key.converter.use.schema.guid
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
-
-🔘 value.converter.use.schema.guid
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
 
 🔘 value.converter.connect.meta.data
 
@@ -487,14 +433,14 @@ How to construct the subject name for key schema registration.
 	 - Importance: LOW
 	 - Required: false
 
-🔘 key.converter.use.schema.id
+🔘 value.converter.ignore.default.for.nullables
 
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
 
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Auto-restart policy

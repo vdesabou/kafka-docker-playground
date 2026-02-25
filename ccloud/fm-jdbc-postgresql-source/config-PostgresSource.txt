@@ -382,6 +382,15 @@ Number of tasks for this connector
 ==========================
 Additional Configs
 ==========================
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.replace.null.with.default
 
 Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
@@ -418,33 +427,6 @@ Use this property if you would like to configure the connector's error handling 
 	 - Importance: LOW
 	 - Required: false
 
-🔘 value.converter.ignore.default.for.nullables
-
-When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
-	 - Required: false
-
-🔘 value.converter.decimal.format
-
-Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
-
-	 - Type: STRING
-	 - Default: BASE64
-	 - Importance: LOW
-	 - Required: false
-
-🔘 key.converter.key.schema.id.serializer
-
-The class name of the schema ID serializer for keys. This is used to serialize schema IDs in the message headers.
-
-	 - Type: STRING
-	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
-	 - Importance: LOW
-	 - Required: false
-
 🔘 value.converter.connect.meta.data
 
 
@@ -472,12 +454,12 @@ How to construct the subject name for key schema registration.
 	 - Importance: LOW
 	 - Required: false
 
-🔘 value.converter.value.schema.id.serializer
+🔘 value.converter.ignore.default.for.nullables
 
-The class name of the schema ID serializer for values. This is used to serialize schema IDs in the message headers.
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
 
-	 - Type: STRING
-	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
+	 - Type: BOOLEAN
+	 - Default: false
 	 - Importance: LOW
 	 - Required: false
 
