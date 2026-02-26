@@ -461,7 +461,7 @@ then
                 current_jar_path="${DIR_UTILS}/../confluent-hub/$connector_path/lib/$jar"
               fi
               set -e
-              log "🔮 Remplacing $name-$CONNECTOR_TAG.jar by $connector_jar_name"
+              log "🔮 Replacing $name-$CONNECTOR_TAG.jar by $connector_jar_name"
               cp $CONNECTOR_JAR $current_jar_path
             fi
           fi
@@ -656,7 +656,7 @@ else
                 current_jar_path="${DIR_UTILS}/../confluent-hub/$connector_path/lib/$jar"
               fi
               set -e
-              log "🔮 Remplacing $name-$version.jar by $connector_jar_name"
+              log "🔮 Replacing $name-$version.jar by $connector_jar_name"
               cp $CONNECTOR_JAR $current_jar_path
             ###
             #  Neither CONNECTOR_ZIP or CONNECTOR_JAR are set
