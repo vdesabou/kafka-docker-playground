@@ -3228,8 +3228,39 @@
           ]
         },
         {
+          "name": "display-metrics-api",
+          "description": "〽️ Display metrics api for fully managed connector, see https://api.telemetry.confluent.cloud/docs/descriptors/datasets/cloud\n",
+          "usage": "playground connector display-metrics-api [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--connector",
+                "-c"
+              ],
+              "argument": "CONNECTOR",
+              "description": "🔗 Connector name\n\n🎓 Tip: If not specified, the command will apply to all connectors\n"
+            },
+            {
+              "names": [
+                "--open",
+                "-o"
+              ],
+              "argument": "",
+              "description": "🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)\n\nConflicts with: --wait-for-log\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        },
+        {
           "name": "select-config",
-          "description": "🗜️ Easily select config from all possible configuration parameters of connector\n  \n  🎓 Tip: use <tab> to select multiple config at once !\n",
+          "description": "🗜️ Easily select config from all possible configuration parameters of connector\n  \n  🎓 Tip: use <tab> to select multiple config at once, then press <enter> to confirm\n",
           "usage": "playground connector select-config [OPTIONS]",
           "options": [
             {

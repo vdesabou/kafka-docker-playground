@@ -3639,11 +3639,41 @@ subcommands:
           description: | 
             📂 Only show the path of the json file containing the configuration parameters
             
+      - name: display-metrics-api
+        description: | 
+          〽️ Display metrics api for fully managed connector, see https://api.telemetry.confluent.cloud/docs/descriptors/datasets/cloud
+        usage: playground connector display-metrics-api [OPTIONS]
+        options:
+        - names:
+          - --connector
+          - -c
+          argument: CONNECTOR
+          description: | 
+            🔗 Connector name
+            
+            🎓 Tip: If not specified, the command will apply to all connectors
+            
+        - names:
+          - --open
+          - -o
+          argument: ""
+          description: | 
+            🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
+            
+            Conflicts with: --wait-for-log
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
       - name: select-config
         description: | 
           🗜️ Easily select config from all possible configuration parameters of connector
             
-            🎓 Tip: use <tab> to select multiple config at once !
+            🎓 Tip: use <tab> to select multiple config at once, then press <enter> to confirm
         usage: playground connector select-config [OPTIONS]
         options:
         - names:
