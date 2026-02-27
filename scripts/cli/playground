@@ -29573,7 +29573,6 @@ playground_connector_display_metrics_api_command() {
 
   format_metric_value() {
       local value="$1"
-      local timestamp="$2"
       local printable_value
 
       if [[ "$value" =~ ^-?[0-9]+\.[0-9]+$ ]]
@@ -29583,19 +29582,18 @@ playground_connector_display_metrics_api_command() {
           printable_value="$value"
       fi
 
-      if [[ -n "$timestamp" ]]
+      echo "$printable_value"
+  }
+
+  format_metric_timestamp() {
+      local timestamp="$1"
+      if [[ -z "$timestamp" ]]
       then
-          local ts_seconds=$((timestamp / 1000))
-          local ts_human
-          ts_human=$(date -r "$ts_seconds" "+%Y-%m-%d %H:%M:%S" 2>/dev/null || true)
-          if [[ -n "$ts_human" ]]
-          then
-              echo "$printable_value (at $ts_human)"
-              return
-          fi
+          return
       fi
 
-      echo "$printable_value"
+      local ts_seconds=$((timestamp / 1000))
+      date -r "$ts_seconds" "+%Y-%m-%d %H:%M:%S" 2>/dev/null || true
   }
 
   extract_metric() {
@@ -29706,7 +29704,40 @@ playground_connector_display_metrics_api_command() {
       echo "Status: ${connector_status:-N/A}"
       echo "Tasks: ${task_statuses:-N/A}"
       echo ""
-      echo "〽️ Non-zero metrics"
+
+      local metrics_timestamp=""
+      while IFS= read -r metric_line
+      do
+          if [[ "$metric_line" =~ ^([^\{]+)\{(.*)\}[[:space:]]+([^[:space:]]+)([[:space:]]+([0-9]+))?$ ]]
+          then
+              local metric_name="${BASH_REMATCH[1]}"
+              local metric_value="${BASH_REMATCH[3]}"
+              local metric_ts="${BASH_REMATCH[5]}"
+
+              if is_summary_duplicate_metric "$metric_name"
+              then
+                  continue
+              fi
+
+              if is_zero_value "$metric_value"
+              then
+                  continue
+              fi
+
+              if [[ -n "$metric_ts" ]]
+              then
+                  metrics_timestamp=$(format_metric_timestamp "$metric_ts")
+              fi
+              break
+          fi
+      done < <(grep '^confluent_kafka_connect_.*{' "$source_file" | grep "connector_id=\"${connector_id}\"")
+
+      if [[ -n "$metrics_timestamp" ]]
+      then
+          echo "〽️ Non-zero metrics (at $metrics_timestamp)"
+      else
+          echo "〽️ Non-zero metrics"
+      fi
 
       local displayed=0
       local metric_line
@@ -29737,9 +29768,9 @@ playground_connector_display_metrics_api_command() {
 
               if [[ -n "$metric_context" ]]
               then
-                  echo " - ${display_name} (${metric_context}): $(format_metric_value "$metric_value" "$metric_ts")"
+                  echo " - ${display_name} (${metric_context}): $(format_metric_value "$metric_value")"
               else
-                  echo " - ${display_name}: $(format_metric_value "$metric_value" "$metric_ts")"
+                  echo " - ${display_name}: $(format_metric_value "$metric_value")"
               fi
               ((displayed+=1))
           fi
