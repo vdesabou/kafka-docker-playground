@@ -13,7 +13,7 @@ then
 fi
 
 log "🗜️ Easily select config from all possible configuration parameters"
-log "🎓 Tip: use <tab> to select multiple config at once !"
+log "🎓 Tip: use <tab> to select multiple config at once, then press <enter> to confirm"
 
 items=($connector)
 length=${#items[@]}
@@ -42,11 +42,13 @@ do
         fzf_option_rounded=""
     fi
 
-    res=$(cat $json_file | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🗜️" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
+    set +e
+    res=$(cat $json_file | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🗜️" --header="<enter> to confirm, <esc> to cancel" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
 
     log "🗜️ selected config parameter(s) for connector $connector"
     echo "$res"
 
+    set -e
     if [[ "$OSTYPE" == "darwin"* ]]
     then
         clipboard=$(playground config get clipboard)
