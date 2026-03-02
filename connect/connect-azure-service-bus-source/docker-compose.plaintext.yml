@@ -1,19 +1,15 @@
 ---
 services:
   connect:
-    volumes:
-      - ../../connect/connect-azure-service-bus-source/data:/data
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-azure-service-bus
 
   simple-send:
-    build:
-      context: ../../connect/connect-azure-service-bus-source/QueuesGettingStarted/
-      args:
-        CP_CONNECT_TAG: ${CP_CONNECT_TAG}
-        CP_CONNECT_IMAGE: ${CP_CONNECT_IMAGE}
-        KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
+    image: eclipse-temurin:11-jre
     hostname: simple-send
     container_name: simple-send
+    volumes:
+      - ../../connect/connect-azure-service-bus-source/QueuesGettingStarted/target/queuesgettingstarted-1.0.0-jar-with-dependencies.jar:/queuesgettingstarted-1.0.0-jar-with-dependencies.jar:ro
+    command: ["sleep", "infinity"]
     depends_on:
       - broker

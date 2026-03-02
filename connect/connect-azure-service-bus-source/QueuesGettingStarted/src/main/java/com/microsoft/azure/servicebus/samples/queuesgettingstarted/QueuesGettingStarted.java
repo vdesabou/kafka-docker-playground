@@ -3,16 +3,11 @@
 
 package com.microsoft.azure.servicebus.samples.queuesgettingstarted;
 
-import com.google.gson.reflect.TypeToken;
-import com.microsoft.azure.servicebus.*;
-import com.microsoft.azure.servicebus.primitives.ConnectionStringBuilder;
+import com.azure.messaging.servicebus.*;
 import com.google.gson.Gson;
-
-import static java.nio.charset.StandardCharsets.*;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.function.Function;
 
 import org.apache.commons.cli.*;
@@ -21,102 +16,53 @@ public class QueuesGettingStarted {
 
     static final Gson GSON = new Gson();
 
+    // Scientists data
+    private final Map<String, String>[] scientists = new Map[]{
+        Map.of("name", "Einstein", "firstName", "Albert"),
+        Map.of("name", "Heisenberg", "firstName", "Werner"),
+        Map.of("name", "Curie", "firstName", "Marie"),
+        Map.of("name", "Hawking", "firstName", "Steven"),
+        Map.of("name", "Newton", "firstName", "Isaac"),
+        Map.of("name", "Bohr", "firstName", "Niels"),
+        Map.of("name", "Faraday", "firstName", "Michael"),
+        Map.of("name", "Galilei", "firstName", "Galileo"),
+        Map.of("name", "Kepler", "firstName", "Johannes"),
+        Map.of("name", "Kopernikus", "firstName", "Nikolaus")
+    };
+
     public void run(String connectionString) throws Exception {
 
-        // Create a QueueClient instance for receiving using the connection string builder
-        // We set the receive mode to "PeekLock", meaning the message is delivered
-        // under a lock and must be acknowledged ("completed") to be removed from the queue
-        QueueClient receiveClient = new QueueClient(new ConnectionStringBuilder(connectionString, System.getenv("AZURE_SERVICE_BUS_QUEUE_NAME")), ReceiveMode.PEEKLOCK);
-        // We are using single thread executor as we are only processing one message at a time
-    	ExecutorService executorService = Executors.newSingleThreadExecutor();
-        this.registerReceiver(receiveClient, executorService);
+        String queueName = System.getenv("AZURE_SERVICE_BUS_QUEUE_NAME");
 
-        // Create a QueueClient instance for sending and then asynchronously send messages.
-        // Close the sender once the send operation is complete.
-        QueueClient sendClient = new QueueClient(new ConnectionStringBuilder(connectionString, System.getenv("AZURE_SERVICE_BUS_QUEUE_NAME")), ReceiveMode.PEEKLOCK);
-        this.sendMessagesAsync(sendClient).thenRunAsync(() -> sendClient.closeAsync());
+        // Create a ServiceBusSenderClient for sending messages
+        ServiceBusSenderClient senderClient = new ServiceBusClientBuilder()
+            .connectionString(connectionString)
+            .sender()
+            .queueName(queueName)
+            .buildClient();
 
-        // wait for ENTER or 10 seconds elapsing
-        waitForEnter(10);
-
-        // shut down receiver to close the receive loop
-        receiveClient.close();
-        executorService.shutdown();
-    }
-
-    CompletableFuture<Void> sendMessagesAsync(QueueClient sendClient) {
-        List<HashMap<String, String>> data =
-                GSON.fromJson(
-                        "[" +
-                                "{'name' = 'Einstein', 'firstName' = 'Albert'}," +
-                                "{'name' = 'Heisenberg', 'firstName' = 'Werner'}," +
-                                "{'name' = 'Curie', 'firstName' = 'Marie'}," +
-                                "{'name' = 'Hawking', 'firstName' = 'Steven'}," +
-                                "{'name' = 'Newton', 'firstName' = 'Isaac'}," +
-                                "{'name' = 'Bohr', 'firstName' = 'Niels'}," +
-                                "{'name' = 'Faraday', 'firstName' = 'Michael'}," +
-                                "{'name' = 'Galilei', 'firstName' = 'Galileo'}," +
-                                "{'name' = 'Kepler', 'firstName' = 'Johannes'}," +
-                                "{'name' = 'Kopernikus', 'firstName' = 'Nikolaus'}" +
-                                "]",
-                        new TypeToken<List<HashMap<String, String>>>() {}.getType());
-
-        List<CompletableFuture> tasks = new ArrayList<>();
-        for (int i = 0; i < data.size(); i++) {
-            final String messageId = Integer.toString(i);
-            Message message = new Message(GSON.toJson(data.get(i), Map.class).getBytes(UTF_8));
+        // Send messages synchronously
+        for (int i = 0; i < scientists.length; i++) {
+            ServiceBusMessage message = new ServiceBusMessage(GSON.toJson(scientists[i]));
+            message.setMessageId(Integer.toString(i));
             message.setContentType("application/json");
-            message.setLabel("Scientist");
-            message.setMessageId(messageId);
+            message.setSubject("Scientist");
             message.setTimeToLive(Duration.ofMinutes(2));
+
             System.out.printf("\nMessage sending: Id = %s", message.getMessageId());
-            tasks.add(
-                    sendClient.sendAsync(message).thenRunAsync(() -> {
-                        System.out.printf("\n\tMessage acknowledged: Id = %s", message.getMessageId());
-                    }));
+
+            try {
+                senderClient.sendMessage(message);
+                System.out.printf("\n\tMessage acknowledged: Id = %s", message.getMessageId());
+            } catch (Exception e) {
+                System.out.printf("\n\tFailed to send message: Id = %s, Error = %s",
+                                message.getMessageId(), e.getMessage());
+            }
         }
-        return CompletableFuture.allOf(tasks.toArray(new CompletableFuture<?>[tasks.size()]));
-    }
 
-    void registerReceiver(QueueClient queueClient, ExecutorService executorService) throws Exception {
-
-
-        // register the RegisterMessageHandler callback with executor service
-        queueClient.registerMessageHandler(new IMessageHandler() {
-                                               // callback invoked when the message handler loop has obtained a message
-                                               public CompletableFuture<Void> onMessageAsync(IMessage message) {
-                                                   // receives message is passed to callback
-                                                   if (message.getLabel() != null &&
-                                                           message.getContentType() != null &&
-                                                           message.getLabel().contentEquals("Scientist") &&
-                                                           message.getContentType().contentEquals("application/json")) {
-
-                                                       byte[] body = message.getBody();
-                                                       Map scientist = GSON.fromJson(new String(body, UTF_8), Map.class);
-
-                                                       System.out.printf(
-                                                               "\n\t\t\t\tMessage received: \n\t\t\t\t\t\tMessageId = %s, \n\t\t\t\t\t\tSequenceNumber = %s, \n\t\t\t\t\t\tEnqueuedTimeUtc = %s," +
-                                                                       "\n\t\t\t\t\t\tExpiresAtUtc = %s, \n\t\t\t\t\t\tContentType = \"%s\",  \n\t\t\t\t\t\tContent: [ firstName = %s, name = %s ]\n",
-                                                               message.getMessageId(),
-                                                               message.getSequenceNumber(),
-                                                               message.getEnqueuedTimeUtc(),
-                                                               message.getExpiresAtUtc(),
-                                                               message.getContentType(),
-                                                               scientist != null ? scientist.get("firstName") : "",
-                                                               scientist != null ? scientist.get("name") : "");
-                                                   }
-                                                   return CompletableFuture.completedFuture(null);
-                                               }
-
-                                               // callback invoked when the message handler has an exception to report
-                                               public void notifyException(Throwable throwable, ExceptionPhase exceptionPhase) {
-                                                   System.out.printf(exceptionPhase + "-" + throwable.getMessage());
-                                               }
-                                           },
-                // 1 concurrent call, messages are auto-completed, auto-renew duration
-                new MessageHandlerOptions(1, true, Duration.ofMinutes(1)),
-                executorService);
-
+        // Close the sender
+        senderClient.close();
+        System.out.println("\nAll messages sent and client closed successfully.");
     }
 
     public static void main(String[] args) {
@@ -164,21 +110,6 @@ public class QueuesGettingStarted {
         } catch (Exception e) {
             System.out.printf("%s", e.toString());
             return 3;
-        }
-    }
-
-    private void waitForEnter(int seconds) {
-        ExecutorService executor = Executors.newCachedThreadPool();
-        try {
-            executor.invokeAny(Arrays.asList(() -> {
-                System.in.read();
-                return 0;
-            }, () -> {
-                Thread.sleep(seconds * 1000);
-                return 0;
-            }));
-        } catch (Exception e) {
-            // absorb
         }
     }
 }

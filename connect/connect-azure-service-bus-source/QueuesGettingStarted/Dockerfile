@@ -1,6 +1,4 @@
-ARG CP_CONNECT_TAG
-ARG CP_CONNECT_IMAGE
-FROM ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
+FROM eclipse-temurin:11-jre
 COPY ./target/*.jar ./
 ENV JAVA_OPTS ""
 CMD sleep infinity

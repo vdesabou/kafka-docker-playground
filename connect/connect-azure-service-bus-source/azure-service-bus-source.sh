@@ -17,7 +17,7 @@ for component in QueuesGettingStarted
 do
      set +e
      log "🏗 Building jar for ${component}"
-     docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${PWD}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "${PWD}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
+     docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${PWD}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "${PWD}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
      if [ $? != 0 ]
      then
           logerror "❌ failed to build java component $component"
@@ -73,12 +73,6 @@ AZURE_SAS_KEY=$(az servicebus namespace authorization-rule keys list \
     --namespace-name $AZURE_SERVICE_BUS_NAMESPACE \
     --name "RootManageSharedAccessKey" | jq -r '.primaryKey')
 
-# generate data file for externalizing secrets
-sed -e "s|:AZURE_SAS_KEY:|$AZURE_SAS_KEY|g" \
-    -e "s|:AZURE_SERVICE_BUS_NAMESPACE:|$AZURE_SERVICE_BUS_NAMESPACE|g" \
-    -e "s|:AZURE_SERVICE_BUS_QUEUE_NAME:|$AZURE_SERVICE_BUS_QUEUE_NAME|g" \
-    ../../connect/connect-azure-service-bus-source/data.template > ../../connect/connect-azure-service-bus-source/data
-
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
@@ -89,18 +83,15 @@ playground connector create-or-update --connector azure-service-bus-source  << E
     "kafka.topic": "servicebus-topic",
     "tasks.max": "1",
     "azure.servicebus.sas.keyname": "RootManageSharedAccessKey",
-    "azure.servicebus.sas.key": "\${file:/data:AZURE_SAS_KEY}",
-    "azure.servicebus.namespace": "\${file:/data:AZURE_SERVICE_BUS_NAMESPACE}",
-    "azure.servicebus.entity.name": "\${file:/data:AZURE_SERVICE_BUS_QUEUE_NAME}",
+    "azure.servicebus.sas.key": "$AZURE_SAS_KEY",
+    "azure.servicebus.namespace": "$AZURE_SERVICE_BUS_NAMESPACE",
+    "azure.servicebus.entity.name": "$AZURE_SERVICE_BUS_QUEUE_NAME",
     "azure.servicebus.subscription" : "",
     "azure.servicebus.max.message.count" : "10",
     "azure.servicebus.max.waiting.time.seconds" : "30",
     "confluent.license": "",
     "confluent.topic.bootstrap.servers": "broker:9092",
-    "confluent.topic.replication.factor": "1",
-    "errors.tolerance": "all",
-    "errors.log.enable": "true",
-    "errors.log.include.messages": "true"
+    "confluent.topic.replication.factor": "1"
 }
 EOF
 
@@ -110,7 +101,7 @@ log "Inject data in Service Bus, using QueuesGettingStarted java program"
 SB_SAMPLES_CONNECTIONSTRING="Endpoint=sb://$AZURE_SERVICE_BUS_NAMESPACE.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=$AZURE_SAS_KEY"
 docker exec -e SB_SAMPLES_CONNECTIONSTRING="$SB_SAMPLES_CONNECTIONSTRING" -e AZURE_SERVICE_BUS_QUEUE_NAME="$AZURE_SERVICE_BUS_QUEUE_NAME" simple-send bash -c "java -jar queuesgettingstarted-1.0.0-jar-with-dependencies.jar"
 
-sleep 180
+sleep 15
 
 log "Verifying topic servicebus-topic"
 playground topic consume --topic servicebus-topic --min-expected-messages 5 --timeout 60

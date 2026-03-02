@@ -47,9 +47,9 @@
     </build>
     <dependencies>
         <dependency>
-            <groupId>com.microsoft.azure</groupId>
-            <artifactId>azure-servicebus</artifactId>
-            <version>3.6.7</version>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-messaging-servicebus</artifactId>
+            <version>7.17.14</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
