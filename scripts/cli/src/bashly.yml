@@ -4167,6 +4167,12 @@ commands:
     - *logsopen
     - *verbose
 
+  - name: display-metrics-api-with-grafana
+    help: |-
+      📊 Display metrics api for fully managed connector in Grafana dashboard
+    flags:
+    - *connector
+
   - name: select-config
     help: |-
       🗜️ Easily select config from all possible configuration parameters of connector

@@ -3669,6 +3669,20 @@ subcommands:
           description: | 
             🐞 Show command being ran.
             
+      - name: display-metrics-api-with-grafana
+        description: | 
+          📊 Display metrics api for fully managed connector in Grafana dashboard
+        usage: playground connector display-metrics-api-with-grafana [OPTIONS]
+        options:
+        - names:
+          - --connector
+          - -c
+          argument: CONNECTOR
+          description: | 
+            🔗 Connector name
+            
+            🎓 Tip: If not specified, the command will apply to all connectors
+            
       - name: select-config
         description: | 
           🗜️ Easily select config from all possible configuration parameters of connector

@@ -3259,6 +3259,21 @@
           ]
         },
         {
+          "name": "display-metrics-api-with-grafana",
+          "description": "📊 Display metrics api for fully managed connector in Grafana dashboard\n",
+          "usage": "playground connector display-metrics-api-with-grafana [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--connector",
+                "-c"
+              ],
+              "argument": "CONNECTOR",
+              "description": "🔗 Connector name\n\n🎓 Tip: If not specified, the command will apply to all connectors\n"
+            }
+          ]
+        },
+        {
           "name": "select-config",
           "description": "🗜️ Easily select config from all possible configuration parameters of connector\n  \n  🎓 Tip: use <tab> to select multiple config at once, then press <enter> to confirm\n",
           "usage": "playground connector select-config [OPTIONS]",
