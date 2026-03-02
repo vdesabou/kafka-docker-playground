@@ -15,9 +15,15 @@ Click on `Manage`->`Instance` and register for a Vancouver instance. After some 
 
 ## Create the test_table in ServiceNow
 
+Search for `Tables` in the `All` menu and select the one from `System Definition`:
+
+![create table](screenshot2.png)
+
+Then click on `New` button to create a new table:
+
 ![create table](Screenshot1.jpg)
 
-Do not set ACL
+**Do not set ACL**
 
 ## How to run
 
