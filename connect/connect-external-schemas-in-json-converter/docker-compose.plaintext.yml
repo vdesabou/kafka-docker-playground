@@ -1,0 +1,6 @@
+---
+services:
+  connect:
+    environment:
+      # in newer version, it is located in /usr/share/filestream-connectors
+      CONNECT_PLUGIN_PATH: /usr/share/filestream-connectors
