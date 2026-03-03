@@ -15,7 +15,7 @@ Class for the 'ExtractField' transformation.
 Version of the 'ExtractField' transformation.
 
 	 - Type: STRING
-	 - Default: 8.1.1-ce
+	 - Default: 8.2.0-ce
 	 - Importance: HIGH
 	 - Required: false
 
@@ -30,7 +30,7 @@ Field name to extract.
 
 🔘 transforms.ExtractField.field.syntax.version
 
-Defines the version of the syntax to access fields. If set to `V1`, then the field paths are limited to access the elements at the root level of the struct or map. If set to `V2`, the syntax will support accessing nested elements. To access nested elements, dotted notation is used. If dots are already included in the field name, then backtick pairs can be used to wrap field names containing dots. E.g. to access the subfield `baz` from a field named "foo.bar" in a struct/map the following format can be used to access its elements: "`foo.bar`.baz".
+Defines the version of the syntax to access fields. If set to <code>V1</code>, then the field paths are limited to access the elements at the root level of the struct or map. If set to <code>V2</code>, the syntax will support accessing nested elements. To access nested elements, dotted notation is used. If dots are already included in the field name, then backtick pairs can be used to wrap field names containing dots. E.g. to access the subfield <code>baz</code> from a field named "foo.bar" in a struct/map the following format can be used to access its elements: "<code>foo.bar</code>.baz".
 
 	 - Type: STRING
 	 - Default: V1
