@@ -154,6 +154,15 @@ The connector writes metrics to the log at this interval.
 ==========================
 Sink Behavior
 ==========================
+🔘 couchbase.default.collection
+
+Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
+
+	 - Type: STRING
+	 - Default: _default._default
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.topic.to.collection
 
 Topic and collection are joined by an equals sign. Map entries are delimited by commas.
@@ -226,15 +235,6 @@ Retry failed writes to Couchbase until this deadline is reached. If time runs ou
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 couchbase.default.collection
-
-Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
-
-	 - Type: STRING
-	 - Default: _default._default
-	 - Importance: MEDIUM
-	 - Required: false
-
 ==========================
 Durability
 ==========================
@@ -298,15 +298,6 @@ Controls whether to create the document if it does not exist.
 ==========================
 Analytics Sink Handler
 ==========================
-🔘 couchbase.analytics.query.timeout
-
-This property determines the time period after which client cancels the Query request for Analytics.
-
-	 - Type: STRING
-	 - Default: 5m
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.analytics.max.records.in.batch
 
 Every Batch consists of an UPSERT or a DELETE statement, based on mutations. This property determines the maximum number of records in the UPSERT or DELETE statement in the batch. Users can configure this parameter based on the capacity of their analytics cluster.
@@ -319,6 +310,15 @@ Every Batch consists of an UPSERT or a DELETE statement, based on mutations. Thi
 🔘 couchbase.analytics.max.size.in.batch
 
 Every Batch consists of an UPSERT or a DELETE statement, based on mutations. This property defines the max size of all docs in bytes in an UPSERT statement in a batch. Users can configure this parameter based on the capacity of their analytics cluster.
+
+	 - Type: STRING
+	 - Default: 5m
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.analytics.query.timeout
+
+This property determines the time period after which client cancels the Query request for Analytics.
 
 	 - Type: STRING
 	 - Default: 5m
