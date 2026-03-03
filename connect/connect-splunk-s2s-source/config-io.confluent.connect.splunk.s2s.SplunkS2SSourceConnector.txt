@@ -346,3 +346,12 @@ Include schemas within each of the serialized values and keys.
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 value.converter.schema.content
+
+When set, this is used as the schema for all messages, and the schemas within each of the message will be ignored.Otherwise, the schema will be included in the content of each message. This configuration applies only 'schemas.enable' is true, and it exclusively affects the sink connector.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
