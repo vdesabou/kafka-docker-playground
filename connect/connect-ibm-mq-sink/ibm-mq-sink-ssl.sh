@@ -80,7 +80,7 @@ playground connector create-or-update --connector ibm-mq-sink-ssl  << EOF
     "jms.destination.type": "queue",
     "mq.tls.truststore.location": "/tmp/truststore.jks",
     "mq.tls.truststore.password": "confluent",
-    "mq.ssl.cipher.suite":"TLS_RSA_WITH_AES_128_CBC_SHA256",
+    "mq.ssl.cipher.suite":"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
     "confluent.license": "",

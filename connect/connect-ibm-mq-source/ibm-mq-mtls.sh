@@ -91,7 +91,7 @@ playground connector create-or-update --connector ibm-mq-source-mtls  << EOF
      "mq.tls.truststore.password": "confluent",
      "mq.tls.keystore.location": "/tmp/keystore.jks",
      "mq.tls.keystore.password": "confluent",
-     "mq.ssl.cipher.suite":"TLS_RSA_WITH_AES_128_CBC_SHA256",
+     "mq.ssl.cipher.suite":"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
      "confluent.license": "",
      "confluent.topic.bootstrap.servers": "broker:9092",
      "confluent.topic.replication.factor": "1"

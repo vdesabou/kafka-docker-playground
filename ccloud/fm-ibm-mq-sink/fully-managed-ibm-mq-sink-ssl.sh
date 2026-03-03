@@ -98,7 +98,7 @@ playground connector create-or-update --connector $connector_name << EOF
 
     "mq.tls.truststore.location": "data:text/plain;base64,$base64_truststore",
     "mq.tls.truststore.password": "confluent",
-    "mq.ssl.cipher.suite":"TLS_RSA_WITH_AES_128_CBC_SHA256",
+    "mq.ssl.cipher.suite":"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
 
     "tasks.max" : "1"
 }
