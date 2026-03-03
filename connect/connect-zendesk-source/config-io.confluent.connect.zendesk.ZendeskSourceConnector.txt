@@ -201,7 +201,7 @@ Whether or not to connect to the endpoint via SSL.
 
 🔘 https.ssl.protocol
 
-The SSL protocol used to generate the SSLContext. The default is 'TLSv1.3', which should be fine for most use cases. A typical alternative to the default is 'TLSv1.2'. Allowed values for this config are dependent on the JVM. Clients using the defaults for this config and 'ssl.enabled.protocols' will downgrade to 'TLSv1.2' if the server does not support 'TLSv1.3'. If this config is set to 'TLSv1.2', however, clients will not use 'TLSv1.3' even if it is one of the values in `ssl.enabled.protocols` and the server only supports 'TLSv1.3'.
+The SSL protocol used to generate the SSLContext. The default is 'TLSv1.3', which should be fine for most use cases. A typical alternative to the default is 'TLSv1.2'. Allowed values for this config are dependent on the JVM. Clients using the defaults for this config and 'ssl.enabled.protocols' will downgrade to 'TLSv1.2' if the server does not support 'TLSv1.3'. If this config is set to 'TLSv1.2', however, clients will not use 'TLSv1.3' even if it is one of the values in <code>ssl.enabled.protocols</code> and the server only supports 'TLSv1.3'.
 
 	 - Type: STRING
 	 - Default: TLSv1.3
@@ -219,16 +219,16 @@ The name of the security provider used for SSL connections. Default value is the
 
 🔘 https.ssl.cipher.suites
 
-A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
 
-	 - Type: LIST
-	 - Default: null
-	 - Importance: LOW
-	 - Required: false
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A list of cipher suites. This is a named combination of authentication, encryption, MAC and key exchange algorithm used to negotiate the security settings for a network connection using TLS or SSL network protocol. By default all the available cipher suites are supported.
+	 - Required: LOW
 
 🔘 https.ssl.enabled.protocols
 
-The list of protocols enabled for SSL connections. The default is 'TLSv1.2,TLSv1.3'. This means that clients and servers will prefer TLSv1.3 if both support it and fallback to TLSv1.2 otherwise (assuming both support at least TLSv1.2). This default should be fine for most use cases. Also see the config documentation for `ssl.protocol` to understand how it can impact the TLS version negotiation behavior.
+The list of protocols enabled for SSL connections. The default is 'TLSv1.2,TLSv1.3'. This means that clients and servers will prefer TLSv1.3 if both support it and fallback to TLSv1.2 otherwise (assuming both support at least TLSv1.2). This default should be fine for most use cases. If this configuration is set to an empty list, Kafka will use the protocols enabled by default in the underlying SSLEngine, which may include additional protocols depending on the JVM version. Also see the config documentation for <code>ssl.protocol</code> to understand how it can impact the TLS version negotiation behavior.
 
 	 - Type: LIST
 	 - Default: TLSv1.2,TLSv1.3
@@ -237,7 +237,7 @@ The list of protocols enabled for SSL connections. The default is 'TLSv1.2,TLSv1
 
 🔘 https.ssl.keystore.type
 
-The file format of the key store file. This is optional for client. The values currently supported by the default `ssl.engine.factory.class` are [JKS, PKCS12, PEM].
+The file format of the key store file. This is optional for client. The values currently supported by the default <code>ssl.engine.factory.class</code> are [JKS, PKCS12, PEM].
 
 	 - Type: STRING
 	 - Default: JKS
@@ -300,7 +300,7 @@ Trusted certificates in the format specified by 'ssl.truststore.type'. Default S
 
 🔘 https.ssl.truststore.type
 
-The file format of the trust store file. The values currently supported by the default `ssl.engine.factory.class` are [JKS, PKCS12, PEM].
+The file format of the trust store file. The values currently supported by the default <code>ssl.engine.factory.class</code> are [JKS, PKCS12, PEM].
 
 	 - Type: STRING
 	 - Default: JKS
@@ -586,6 +586,15 @@ Include schemas within each of the serialized values and keys.
 
 	 - Type: BOOLEAN
 	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 value.converter.schema.content
+
+When set, this is used as the schema for all messages, and the schemas within each of the message will be ignored.Otherwise, the schema will be included in the content of each message. This configuration applies only 'schemas.enable' is true, and it exclusively affects the sink connector.
+
+	 - Type: STRING
+	 - Default: null
 	 - Importance: HIGH
 	 - Required: false
 
