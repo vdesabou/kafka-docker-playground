@@ -1,6 +1,41 @@
 DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR_UTILS}/../scripts/cli/src/lib/utils_function.sh
 
+function install_connector_with_retry {
+  local install_command="$1"
+  local max_retries=${CONNECTOR_INSTALL_MAX_RETRIES:-3}
+  local retry_delay_seconds=${CONNECTOR_INSTALL_RETRY_DELAY_SECONDS:-5}
+  local attempt=1
+
+  while [ "$attempt" -le "$max_retries" ]
+  do
+    set +e
+    eval "$install_command" > /tmp/result.log 2>&1
+    local status=$?
+    set -e
+
+    if [ "$status" -eq 0 ]
+    then
+      return 0
+    fi
+
+    if grep -Eiq "java\.net\.ConnectException|Connection refused" /tmp/result.log
+    then
+      if [ "$attempt" -lt "$max_retries" ]
+      then
+        logwarn "Transient connection error while installing connector (attempt $attempt/$max_retries), retrying in ${retry_delay_seconds}s"
+        sleep "$retry_delay_seconds"
+      fi
+    else
+      return "$status"
+    fi
+
+    attempt=$((attempt+1))
+  done
+
+  return 1
+}
+
 function cleanup-workaround-file {
   rm -f /tmp/without-cli-workaround > /dev/null 2>&1
 }
@@ -415,9 +450,8 @@ then
             mkdir -p ${DIR_UTILS}/../confluent-hub
           fi
           log "🎱 Installing connector $owner/$name:$CONNECTOR_VERSION"
-          set +e
-          docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "confluent-hub install --no-prompt $owner/$name:$CONNECTOR_VERSION && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" > /tmp/result.log 2>&1
-          if [ $? != 0 ]
+          install_command="docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c \"confluent-hub install --no-prompt $owner/$name:$CONNECTOR_VERSION && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components\""
+          if ! install_connector_with_retry "$install_command"
           then
               logerror "❌ failed to install connector $owner/$name:$CONNECTOR_VERSION"
               tail -500 /tmp/result.log
@@ -425,7 +459,6 @@ then
           else
             grep "Download" /tmp/result.log
           fi
-          set -e
 
         #   log "🤎 Listing jar files"
         #   cd ${DIR_UTILS}/../confluent-hub/$owner-$name/lib > /dev/null 2>&1
@@ -572,9 +605,8 @@ else
               cp $CONNECTOR_ZIP /tmp/
 
               log "🎱 Installing connector from zip $connector_zip_name"
-              set +e
-              docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components  -v /tmp:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "confluent-hub install --no-prompt /tmp/${connector_zip_name} && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" > /tmp/result.log 2>&1
-              if [ $? != 0 ]
+              install_command="docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components -v /tmp:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c \"confluent-hub install --no-prompt /tmp/${connector_zip_name} && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components\""
+              if ! install_connector_with_retry "$install_command"
               then
                   logerror "❌ failed to install connector from zip $connector_zip_name"
                   tail -500 /tmp/result.log
@@ -582,7 +614,6 @@ else
               else
                 grep "Installing" /tmp/result.log
               fi
-              set -e
               first_loop=false
               continue
             fi
@@ -613,9 +644,8 @@ else
             fi
 
             log "🎱 Installing connector $owner/$name:$version_to_get_from_hub"
-            set +e
-            docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "confluent-hub install --no-prompt $owner/$name:$version_to_get_from_hub && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components" > /tmp/result.log 2>&1
-            if [ $? != 0 ]
+            install_command="docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c \"confluent-hub install --no-prompt $owner/$name:$version_to_get_from_hub && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components\""
+            if ! install_connector_with_retry "$install_command"
             then
                 logerror "❌ failed to install connector $owner/$name:$version_to_get_from_hub"
                 tail -500 /tmp/result.log
@@ -623,7 +653,6 @@ else
             else
               grep "Download" /tmp/result.log
             fi
-            set -e
             # log "🤎 Listing jar files"
             # cd ${DIR_UTILS}/../confluent-hub/$owner-$name/lib > /dev/null 2>&1
             # ls -1 | sort
