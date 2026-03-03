@@ -6,6 +6,11 @@ source ${DIR}/../../scripts/utils.sh
 
 bootstrap_ccloud_environment
 
+set +e
+playground topic delete --topic pageviews
+sleep 3
+playground topic create --topic pageviews --nb-partitions 1
+set -e
 
 connector_name="DatagenSource_$USER"
 set +e
