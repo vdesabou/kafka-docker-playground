@@ -13,7 +13,7 @@
     "data.stream.timestamp.field": "LIST",
     "data.stream.type": "NONE",
     "drop.invalid.message": "false",
-    "elastic.https.ssl.cipher.suites": "",
+    "elastic.https.ssl.cipher.suites": "LIST",
     "elastic.https.ssl.enabled.protocols": "TLSv1.2,TLSv1.3",
     "elastic.https.ssl.endpoint.identification.algorithm": "https",
     "elastic.https.ssl.engine.factory.class": "",
