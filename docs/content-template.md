@@ -444,3 +444,4 @@ Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 - 💬 [MQTT Proxy](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/mqtt-proxy) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 💱 [Kafka Connect JSONata Transform](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/kafka-connect-jsonata) :other/kafka-connect-jsonata:
 - 🧠 [CLI examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cli) :other/cli:
+- 👽 [KIP-1054: Support external schemas in JSONConverter](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-external-schemas-in-json-converter)  ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
