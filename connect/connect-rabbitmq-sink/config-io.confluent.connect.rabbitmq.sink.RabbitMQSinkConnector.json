@@ -9,7 +9,7 @@
     "rabbitmq.forward.kafka.metadata": "false",
     "rabbitmq.handshake.timeout.ms": "10000",
     "rabbitmq.host": "localhost",
-    "rabbitmq.https.ssl.cipher.suites": "",
+    "rabbitmq.https.ssl.cipher.suites": "LIST",
     "rabbitmq.https.ssl.enabled.protocols": "TLSv1.2,TLSv1.3",
     "rabbitmq.https.ssl.endpoint.identification.algorithm": "https",
     "rabbitmq.https.ssl.engine.factory.class": "",

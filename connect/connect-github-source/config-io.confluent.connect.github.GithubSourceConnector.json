@@ -17,7 +17,7 @@
     "http.proxy.password": "[hidden]",
     "http.proxy.port": "0",
     "http.proxy.user": "STRING",
-    "https.ssl.cipher.suites": "",
+    "https.ssl.cipher.suites": "LIST",
     "https.ssl.enabled": "false",
     "https.ssl.enabled.protocols": "TLSv1.2,TLSv1.3",
     "https.ssl.endpoint.identification.algorithm": "https",
