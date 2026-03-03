@@ -1,4 +1,106 @@
 ==========================
+Transforms: InsertField
+==========================
+🔘 transforms.InsertField.type
+
+Class for the 'InsertField' transformation.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.InsertField.plugin.version
+
+Version of the 'InsertField' transformation.
+
+	 - Type: STRING
+	 - Default: 8.2.0-ce
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 transforms.InsertField.negate
+
+Whether the configured predicate should be negated.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertField.offset.field
+
+Field name for Kafka offset - only applicable to sink connectors.<br/>Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertField.partition.field
+
+Field name for Kafka partition. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertField.predicate
+
+The alias of a predicate used to determine whether to apply this transformation.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertField.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertField.static.field
+
+Field name for static data field. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertField.static.value
+
+Static field value, if field name configured.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertField.timestamp.field
+
+Field name for record timestamp. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.InsertField.topic.field
+
+Field name for Kafka topic. Suffix with <code>!</code> to make this a required field, or <code>?</code> to keep it optional (the default).
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
 Connection
 ==========================
 🔘 salesforce.instance
@@ -484,6 +586,15 @@ Include schemas within each of the serialized values and keys.
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 key.converter.schema.content
+
+When set, this is used as the schema for all messages, and the schemas within each of the message will be ignored.Otherwise, the schema will be included in the content of each message. This configuration applies only 'schemas.enable' is true, and it exclusively affects the sink connector.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
 ==========================
 Serialization
 ==========================
@@ -541,6 +652,15 @@ Include schemas within each of the serialized values and keys.
 
 	 - Type: BOOLEAN
 	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 value.converter.schema.content
+
+When set, this is used as the schema for all messages, and the schemas within each of the message will be ignored.Otherwise, the schema will be included in the content of each message. This configuration applies only 'schemas.enable' is true, and it exclusively affects the sink connector.
+
+	 - Type: STRING
+	 - Default: null
 	 - Importance: HIGH
 	 - Required: false
 
