@@ -24,9 +24,9 @@ export SR_PASSWORD=$(echo "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" | cut -d":" -f
 set +e
 playground topic delete --topic _confluent-monitoring
 log "Cleanup connect worker topics"
-playground topic delete --topic connect-status-${TAG}${GITHUB_RUN_NUMBER}
-playground topic delete --topic connect-offsets-${TAG}${GITHUB_RUN_NUMBER}
-playground topic delete --topic connect-configs-${TAG}${GITHUB_RUN_NUMBER}
+playground topic delete --topic connect-status-${TAG}
+playground topic delete --topic connect-offsets-${TAG}
+playground topic delete --topic connect-configs-${TAG}
 playground topic create --topic _confluent-monitoring
 set -e
 

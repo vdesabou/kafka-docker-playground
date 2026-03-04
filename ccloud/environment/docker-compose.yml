@@ -12,7 +12,7 @@ services:
       - ../../confluent-hub:/usr/share/confluent-hub-components
     environment:
       CONNECT_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
-      CONNECT_GROUP_ID: "connect-${TAG}${GITHUB_RUN_NUMBER}"
+      CONNECT_GROUP_ID: "connect-${TAG}"
       CONNECT_PRODUCER_CLIENT_ID: "connect-worker-producer"
       CONNECT_CLIENT_ID: "connect-adminclient-producer"
       CONNECT_CONFIG_STORAGE_TOPIC: connect-configs-${TAG}
