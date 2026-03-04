@@ -48,12 +48,12 @@ JAAS login context parameters for SASL connections in the format used by JAAS co
 
 🔘 consumer.override.bootstrap.servers
 
+A list of host/port pairs used to establish the initial connection to the Kafka cluster. Clients use this list to bootstrap and discover the full set of Kafka brokers. While the order of servers in the list does not matter, we recommend including more than one server to ensure resilience if any servers are down. This list does not need to contain the entire set of brokers, as Kafka clients automatically manage and update connections to the cluster efficiently. This list must be in the form <code>host1:port1,host2:port2,...</code>.
 
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: A list of host/port pairs used to establish the initial connection to the Kafka cluster. Clients use this list to bootstrap and discover the full set of Kafka brokers. While the order of servers in the list does not matter, we recommend including more than one server to ensure resilience if any servers are down. This list does not need to contain the entire set of brokers, as Kafka clients automatically manage and update connections to the cluster efficiently. This list must be in the form <code>host1:port1,host2:port2,...</code>.
-	 - Required: HIGH
+	 - Type: LIST
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 key.converter.converter.type
 
@@ -130,6 +130,15 @@ Include schemas within each of the serialized values and keys.
 
 	 - Type: BOOLEAN
 	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 value.converter.schema.content
+
+When set, this is used as the schema for all messages, and the schemas within each of the message will be ignored.Otherwise, the schema will be included in the content of each message. This configuration applies only 'schemas.enable' is true, and it exclusively affects the sink connector.
+
+	 - Type: STRING
+	 - Default: null
 	 - Importance: HIGH
 	 - Required: false
 
