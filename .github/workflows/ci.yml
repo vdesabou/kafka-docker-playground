@@ -108,7 +108,7 @@ jobs:
 
                       "🚀 ccloud/fm-aws-kinesis-source ccloud/fm-aws-redshift-sink ccloud/fm-aws-sqs-source ccloud/fm-aws-lambda-sink ccloud/fm-azure-blob-storage-sink ccloud/fm-azure-blob-storage-source ccloud/fm-azure-cognitive-search-sink ccloud/fm-mongodb-atlas-source ccloud/fm-mongodb-atlas-sink ccloud/fm-salesforce-bulkapi-source ccloud/fm-salesforce-bulkapi-2-0-source ccloud/custom-connector-connect-aws-s3-sink",
 
-                      "🚀 ccloud/fm-datadog-metrics-sink ccloud/fm-salesforce-bulkapi-2-0-sink ccloud/fm-salesforce-platform-events-source ccloud/fm-servicenow-source ccloud/fm-servicenow-v2-source ccloud/fm-servicenow-sink ccloud/fm-aws-dynamodb-cdc-source ccloud/fm-datagen-source ccloud/fm-couchbase-source ccloud/fm-couchbase-sink ccloud/connect-migration-utility",
+                      "🚀 ccloud/fm-datadog-metrics-sink ccloud/fm-salesforce-bulkapi-2-0-sink ccloud/fm-salesforce-platform-events-source ccloud/fm-servicenow-source ccloud/fm-servicenow-v2-source ccloud/fm-servicenow-sink ccloud/fm-aws-dynamodb-cdc-source ccloud/fm-datagen-source ccloud/fm-couchbase-source ccloud/fm-couchbase-sink",
 
                       "🚀 connect/connect-servicenow-sink connect/connect-servicenow-source connect/connect-datagen-source",
                       "🚀 connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source",
@@ -131,7 +131,7 @@ jobs:
                       "🚀 multi-data-center/replicator-executable",
                       "🚀 multi-data-center/mirrormaker2 connect/connect-pagerduty-sink connect/connect-zendesk-source connect/connect-datadog-metrics-sink connect/connect-gcp-spanner-sink connect/connect-gcp-firebase-source connect/connect-gcp-firebase-sink",
                       "🚀 other/filebeat-to-kafka other/rest-proxy-security-plugin other/tiered-storage-with-aws other/write-logs-to-files other/audit-logs schema-registry/multiple-event-types-in-topic other/broker-schema-validation other/schema-registry-security-plugin multi-data-center/cluster-linking other/secrets-management other/connect-secret-registry other/schema-format-protobuf other/schema-format-json-schema other/schema-format-avro",
-                      "🚀 ccloud/rest-proxy-security-plugin ccloud/schema-registry-security-plugin ccloud/audit-log-connector",
+                      "🚀 ccloud/rest-proxy-security-plugin ccloud/schema-registry-security-plugin ccloud/audit-log-connector ccloud/connect-migration-utility",
                       "🚀 connect/connect-cdc-oracle19-source connect/connect-cdc-xstream-oracle19-source",
                       "🚀 connect/connect-cdc-oracle18-source",
                       "🚀 connect/connect-cdc-oracle21-source",
