@@ -158,7 +158,7 @@ playground topic produce -t topic-json-schema --nb-messages 3 << 'EOF'
 EOF
 
 
-playground topic produce -t topic-proto --nb-messages 1 << 'EOF'
+playground topic produce -t topic-proto --nb-messages 1 --forced-value '{"count":"635282568338","first_name":"Ysr jkcrb.","last_name":"Qrhrby ixyjxnu cji vtvmnpt.","address":"Fjbeuedswx."}' << 'EOF'
 syntax = "proto3";
 
 package com.github.vdesabou;
