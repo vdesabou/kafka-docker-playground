@@ -129,6 +129,34 @@ fi
 get_environment_used
 get_sr_url_and_security
 
+
+get_connect_image
+
+if version_gt $CP_CONNECT_TAG "5.4.99"
+then
+    parameter_for_list_broker="--bootstrap-server"
+else
+    parameter_for_list_broker="--broker-list"
+fi
+
+if version_gt $CP_CONNECT_TAG "7.9.99"
+then
+    tool_log4j_jvm_arg="-Dlog4j2.configurationFile=file:/etc/kafka/tools-log4j2.yaml"
+else
+    tool_log4j_jvm_arg="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties"
+fi
+
+if version_gt $CP_CONNECT_TAG "8.1.99"
+then
+    property_name="--reader-property"
+    producer_property_name="--command-property"
+    producer_config_name="--command-config"
+else
+    property_name="--property"
+    producer_property_name="--producer-property"
+    producer_config_name="--producer.config"
+fi
+
 get_broker_container
 bootstrap_server="$broker_container:9092"
 get_connect_container
@@ -138,22 +166,22 @@ security=""
 if [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
 then
     container="client"
-    security="--producer.config /etc/kafka/producer.properties"
+    security="$producer_config_name /etc/kafka/producer.properties"
 
     docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
 elif [[ "$environment" == *"ssl"* ]]
 then
     sr_url_cli="https://schema-registry:8081"
-    security="--property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks --property schema.registry.ssl.truststore.password=confluent --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks --property schema.registry.ssl.keystore.password=confluent --producer.config /etc/kafka/secrets/client_without_interceptors.config"
+    security="$property_name schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks $property_name schema.registry.ssl.truststore.password=confluent $property_name schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks $property_name schema.registry.ssl.keystore.password=confluent $producer_config_name /etc/kafka/secrets/client_without_interceptors.config"
 elif [[ "$environment" == "rbac-sasl-plain" ]]
 then
-    security="--property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli --producer.config /etc/kafka/secrets/client_without_interceptors.config"
+    security="$property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli $producer_config_name /etc/kafka/secrets/client_without_interceptors.config"
 elif [[ "$environment" == "ldap-authorizer-sasl-plain" ]]
 then
-    security="--producer.config /service/kafka/users/client.properties"
+    security="$producer_config_name /service/kafka/users/client.properties"
 elif [[ "$environment" == "sasl-plain" ]] || [[ "$environment" == "sasl-scram" ]] || [[ "$environment" == "ldap-sasl-plain" ]]
 then
-    security="--producer.config /tmp/client.properties"
+    security="$producer_config_name /tmp/client.properties"
 elif [[ "$environment" == "ccloud" ]]
 then
     get_kafka_docker_playground_dir
@@ -189,7 +217,6 @@ then
         logwarn "--tombstone is set but neither --key or --forced-key are set, forcing key to NULL."
         key="NULL"
     fi
-    get_connect_image
     if ! version_gt $CP_CONNECT_TAG "7.1.99"
     then
         logerror "❌ --tombstone is set but it can be produced only with CP 7.2+"
@@ -203,7 +230,6 @@ fi
 
 if [[ -n "$schema_id_in_header" ]]
 then
-    get_connect_image
     if ! version_gt $CP_CONNECT_TAG "8.1.0"
     then
         logerror "❌ --schema-id-in-header is set but it can only be used with CP 8.1.1+"
@@ -213,7 +239,6 @@ fi
 
 if [[ -n "$headers" ]]
 then
-    get_connect_image
     if ! version_gt $CP_CONNECT_TAG "7.1.99"
     then
         logerror "❌ --headers is set but it can be produced only with CP 7.2+"
@@ -1059,21 +1084,21 @@ if [ $nb_messages -gt $max_nb_messages_per_batch ] || [ $nb_messages = -1 ]
 then
     log "✨ it will be done in batches of maximum $max_nb_messages_per_batch records$sleep_msg"
 
-    log "✨ setting --producer-property linger.ms=100 and --producer-property batch.size=500000"
-    producer_properties="$producer_properties --producer-property linger.ms=1000 --producer-property batch.size=500000"
+    log "✨ setting $producer_property_name linger.ms=100 and $producer_property_name batch.size=500000"
+    producer_properties="$producer_properties $producer_property_name linger.ms=1000 $producer_property_name batch.size=500000"
 fi
 
 if [ $record_size -ge 1048576 ]
 then
-    log "✨ record-size $record_size is greater than 1Mb (1048576), setting --producer-property max.request.size=$((record_size + 1000)) and --producer-property buffer.memory=67108864"
-    producer_properties="$producer_properties --producer-property max.request.size=$((record_size + 1000)) --producer-property buffer.memory=67108864"
+    log "✨ record-size $record_size is greater than 1Mb (1048576), setting $producer_property_name max.request.size=$((record_size + 1000)) and $producer_property_name buffer.memory=67108864"
+    producer_properties="$producer_properties $producer_property_name max.request.size=$((record_size + 1000)) $producer_property_name buffer.memory=67108864"
     log "✨ topic $topic max.message.bytes is also set to $((record_size + 1000))"
     playground topic alter --topic $topic --add-config max.message.bytes=$((record_size + 1000))
 fi
 
 for producer_prop in "${producer_property[@]}"
 do
-    producer_properties="$producer_properties --producer-property $producer_prop"
+    producer_properties="$producer_properties $producer_property_name $producer_prop"
 done
 
 if [ "$producer_properties" != "" ]
@@ -1090,14 +1115,14 @@ fi
 if [[ -n "$tombstone" ]]
 then
     log "🧟 Sending tombstone(s)"
-    tombstone="--property null.marker=NULL"
+    tombstone="$property_name null.marker=NULL"
 fi
 
 maybe_schema_id_in_header=""
 if [[ -n "$schema_id_in_header" ]]
 then
     log "🎯 Setting schema ID in kafka header"
-    maybe_schema_id_in_header="--property value.schema.id.serializer=io.confluent.kafka.serializers.schema.id.HeaderSchemaIdSerializer"
+    maybe_schema_id_in_header="$property_name value.schema.id.serializer=io.confluent.kafka.serializers.schema.id.HeaderSchemaIdSerializer"
 fi
 
 function handle_signal {
@@ -1106,23 +1131,6 @@ function handle_signal {
 }
 # Set the signal handler
 trap handle_signal SIGINT
-
-parameter_for_list_broker="--bootstrap-server"
-set +e
-tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
-if [ $? != 0 ] || [ "$tag" == "" ]
-then
-    # default to --bootstrap-server
-    parameter_for_list_broker="--bootstrap-server"
-fi
-set -e
-if [ "$tag" != "" ]
-then
-    if ! version_gt $tag "5.4.99"
-    then
-        parameter_for_list_broker="--broker-list"
-    fi
-fi 
 
 nb_messages_sent=0
 nb_messages_to_send=0
@@ -1161,13 +1169,6 @@ do
     then
         head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' > /tmp/verbose_input_file.txt
     fi
-    get_connect_image
-    if version_gt $CP_CONNECT_TAG "7.9.99"
-    then
-        tool_log4j_jvm_arg="-Dlog4j2.configurationFile=file:/etc/kafka/tools-log4j2.yaml"
-    else
-        tool_log4j_jvm_arg="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties"
-    fi
     switch_schema_type=""
     if [[ -n "$tombstone" ]]
     then
@@ -1183,40 +1184,36 @@ do
                 then
                     if [[ -n "$headers" ]]
                     then
-                        get_connect_image
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone --property parse.key=true --property key.separator=\"|\" --property parse.headers=true --property headers.delimiter=\"|\" --property headers.separator=\",\" --property headers.key.separator=\":\""
+                            echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic $producer_config_name /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator=\"|\" $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\""
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic $producer_config_name /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator="|" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":"
                     else
-                        get_connect_image
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone --property parse.key=true --property key.separator=\"|\" "
+                            echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic $producer_config_name /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator=\"|\" "
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone --property parse.key=true --property key.separator="|" 
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic $producer_config_name /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator="|" 
                     fi
                 else
                     if [[ -n "$headers" ]]
                     then
-                        get_connect_image
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone --property parse.headers=true --property headers.delimiter=\"|\" --property headers.separator=\",\" --property headers.key.separator=\":\""
+                            echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic $producer_config_name /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\""
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic $producer_config_name /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":"
                     else
-                        get_connect_image
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone"
+                            echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic $producer_config_name /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone"
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic $producer_config_name /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone
                     fi
                 fi
             else
@@ -1227,16 +1224,16 @@ do
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone --property parse.key=true --property key.separator=\"|\" --property parse.headers=true --property headers.delimiter=\"|\" --property headers.separator=\",\" --property headers.key.separator=\":\""
+                            echo "cat /tmp/verbose_input_file.txt | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator=\"|\" $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\""
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone --property parse.key=true --property key.separator="|" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator="|" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":"
                     else
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone --property parse.key=true --property key.separator=\"|\""
+                            echo "cat /tmp/verbose_input_file.txt | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator=\"|\""
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone --property parse.key=true --property key.separator="|"
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator="|"
                     fi
                 else
                     if [[ -n "$headers" ]]
@@ -1244,9 +1241,9 @@ do
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone --property parse.headers=true --property headers.delimiter=\"|\" --property headers.separator=\",\" --property headers.key.separator=\":\""
+                            echo "cat /tmp/verbose_input_file.txt | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\""
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":"
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":"
                     else
                         if [[ -n "$verbose" ]]
                         then
@@ -1262,26 +1259,26 @@ do
             force_schema_id=""
             if [[ -n "$value_schema_id" ]]
             then
-                log "🔰 --value-schema-id is set: adding --property value.schema.id=$value_schema_id --property auto.register=false --property use.latest.version=true"
-                force_schema_id="--property value.schema.id=$value_schema_id --property auto.register=false --property use.latest.version=true"
+                log "🔰 --value-schema-id is set: adding $property_name value.schema.id=$value_schema_id $property_name auto.register=false $property_name use.latest.version=true"
+                force_schema_id="$property_name value.schema.id=$value_schema_id $property_name auto.register=false $property_name use.latest.version=true"
             fi
 
             key_subject_name_strategy_property=""
             if [[ -n "$key_subject_name_strategy" ]]
             then
-                key_subject_name_strategy_property="--property key.subject.name.strategy=io.confluent.kafka.serializers.subject.$key_subject_name_strategy"
+                key_subject_name_strategy_property="$property_name key.subject.name.strategy=io.confluent.kafka.serializers.subject.$key_subject_name_strategy"
             fi
 
             value_subject_name_strategy_property=""
             if [[ -n "$value_subject_name_strategy" ]]
             then
-                value_subject_name_strategy_property="--property value.subject.name.strategy=io.confluent.kafka.serializers.subject.$value_subject_name_strategy"
+                value_subject_name_strategy_property="$property_name value.subject.name.strategy=io.confluent.kafka.serializers.subject.$value_subject_name_strategy"
             fi
 
             avro_use_logical_type_converters_property=""
             if [ "${value_schema_type}" == "avro" ]
             then
-                avro_use_logical_type_converters_property=" --property avro.use.logical.type.converters=true"
+                avro_use_logical_type_converters_property=" $property_name avro.use.logical.type.converters=true"
             fi
             if [[ "$environment" == "ccloud" ]]
             then
@@ -1299,60 +1296,54 @@ do
                     then
                         if [ "$key_schema_type" = "avro" ] || [ "$key_schema_type" = "protobuf" ] || [ "$key_schema_type" = "json-schema" ]
                         then
-                            get_connect_image
                             if [[ -n "$verbose" ]]
                             then
                                 log "🐞 CLI command used to produce data"
-                                echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config=\"$SASL_JAAS_CONFIG\" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema.file=/tmp/value_schema_file --property parse.key=true --property key.separator=\"|\" --property key.schema.file=\"/tmp/key_schema_file\" --property parse.headers=true --property headers.delimiter=\"|\" --property headers.separator=\",\" --property headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                                echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.schema.file=\"/tmp/key_schema_file\" $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
                             fi
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema.file="/tmp/value_schema_file" --property parse.key=true --property key.separator="|" --property key.schema.file="/tmp/key_schema_file" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.schema.file="/tmp/key_schema_file" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                         else
-                            get_connect_image
                             if [[ -n "$verbose" ]]
                             then
                                 log "🐞 CLI command used to produce data"
-                                echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config=\"$SASL_JAAS_CONFIG\" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema.file=/tmp/value_schema_file --property parse.key=true --property key.separator=\"|\" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer --property parse.headers=true --property headers.delimiter=\"|\" --property headers.separator=\",\" --property headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                                echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
                             fi
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema.file="/tmp/value_schema_file" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                         fi
                     else
                         if [ "$key_schema_type" = "avro" ] || [ "$key_schema_type" = "protobuf" ] || [ "$key_schema_type" = "json-schema" ]
                         then
-                            get_connect_image
                             if [[ -n "$verbose" ]]
                             then
                                 log "🐞 CLI command used to produce data"
-                                echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config=\"$SASL_JAAS_CONFIG\" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema.file=/tmp/value_schema_file --property parse.key=true --property key.separator=\"|\" --property key.schema.file=\"/tmp/key_schema_file\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                                echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.schema.file=\"/tmp/key_schema_file\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
                             fi
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema.file="/tmp/value_schema_file" --property parse.key=true --property key.separator="|" --property key.schema.file="/tmp/key_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
-                        else    
-                            get_connect_image
+                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.schema.file="/tmp/key_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                        else
                             if [[ -n "$verbose" ]]
                             then
                                 log "🐞 CLI command used to produce data"
-                                echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config=\"$SASL_JAAS_CONFIG\" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema.file=/tmp/value_schema_file --property parse.key=true --property key.separator=\"|\" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                                echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
                             fi
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema.file="/tmp/value_schema_file" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                         fi
                     fi
                 else
                     if [[ -n "$headers" ]]
                     then
-                        get_connect_image
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config=\"$SASL_JAAS_CONFIG\" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema.file=/tmp/value_schema_file --property parse.headers=true --property headers.delimiter=\"|\" --property headers.separator=\",\" --property headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                            echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema.file="/tmp/value_schema_file" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                     else
-                        get_connect_image
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config=\"$SASL_JAAS_CONFIG\" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema.file=/tmp/value_schema_file $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                            echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema.file="/tmp/value_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                     fi
                 fi
             else
@@ -1375,18 +1366,18 @@ do
                             if [[ -n "$verbose" ]]
                             then
                                 log "🐞 CLI command used to produce data"
-                                echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-$key_schema_type-console-producer $parameter_for_list_broker $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema.file=/tmp/value_schema_file --property parse.key=true --property key.separator=\"|\" --property key.schema.file=\"/tmp/key_schema_file\" --property parse.headers=true --property headers.delimiter=\"|\" --property headers.separator=\",\" --property headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                                echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-$key_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.schema.file=\"/tmp/key_schema_file\" $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
                             fi
 
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-$key_schema_type-console-producer $parameter_for_list_broker $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema.file="/tmp/value_schema_file" --property parse.key=true --property key.separator="|" --property key.schema.file="/tmp/key_schema_file" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-$key_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.schema.file="/tmp/key_schema_file" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                         else
                             if [[ -n "$verbose" ]]
                             then
                                 log "🐞 CLI command used to produce data"
-                                echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema.file=/tmp/value_schema_file --property parse.key=true --property key.separator=\"|\" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer --property parse.headers=true --property headers.delimiter=\"|\" --property headers.separator=\",\" --property headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                                echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
                             fi
 
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema.file="/tmp/value_schema_file" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                         fi
                     else
                         if [ "$key_schema_type" = "avro" ] || [ "$key_schema_type" = "protobuf" ] || [ "$key_schema_type" = "json-schema" ]
@@ -1394,16 +1385,16 @@ do
                             if [[ -n "$verbose" ]]
                             then
                                 log "🐞 CLI command used to produce data"
-                                echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-$key_schema_type-console-producer $parameter_for_list_broker $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema.file=/tmp/value_schema_file --property parse.key=true --property key.separator=\"|\" --property key.schema.file=\"/tmp/key_schema_file\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                                echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-$key_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.schema.file=\"/tmp/key_schema_file\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
                             fi
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-$key_schema_type-console-producer $parameter_for_list_broker $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema.file="/tmp/value_schema_file" --property parse.key=true --property key.separator="|" --property key.schema.file="/tmp/key_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-$key_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.schema.file="/tmp/key_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                         else
                             if [[ -n "$verbose" ]]
                             then
                                 log "🐞 CLI command used to produce data"
-                                echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema.file=/tmp/value_schema_file --property parse.key=true --property key.separator=\"|\" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                                echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
                             fi
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema.file="/tmp/value_schema_file" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                         fi
                     fi
                 else
@@ -1412,16 +1403,16 @@ do
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-$key_schema_type-console-producer $parameter_for_list_broker $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema.file=/tmp/value_schema_file --property parse.headers=true --property headers.delimiter=\"|\" --property headers.separator=\",\" --property headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                            echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-$key_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema.file="/tmp/value_schema_file" --property parse.headers=true --property headers.delimiter="|" --property headers.separator="," --property headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                     else
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema.file=/tmp/value_schema_file $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                            echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema.file="/tmp/value_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                     fi
                 fi
             fi
