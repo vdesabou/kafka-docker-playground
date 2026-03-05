@@ -173,12 +173,12 @@ EOF
 
 playground topic produce -t topic-jsql --nb-messages 10 << 'EOF'
 CREATE TABLE "notused"."notused" (
-    "id" int PRIMARY KEY,
+    "id" int PRIMARY KEY COMMENT 'faker.number.int({ min: 1, max: 1000000 })',
     "name" varchar COMMENT 'faker.internet.userName()',
     "merchant_id" int NOT NULL COMMENT 'faker.number.int()',
     "price" int COMMENT 'faker.number.int()',
     "status" int COMMENT 'faker.datatype.boolean()',
-    "created_at" datetime DEFAULT (now())
+    "created_at" datetime COMMENT 'faker.date.past().toISOString()'
 );
 EOF
 
@@ -405,7 +405,7 @@ playground topic produce -t topic-avro-example-forced-value --nb-messages 10  --
 EOF
 
 # --forced-value
-playground topic produce -t topic-avro-example-forced-value --nb-messages 1 --forced-value '{"count":4,"first_name":"Vincent","last_name":"de Saboulin","address":"xxx","createdDate":1697852606000,"warranty_expiration":{"int":19653}}' << 'EOF'
+playground topic produce -t topic-avro-example-forced-value --nb-messages 1 --forced-value '{"count":4,"first_name":"John","last_name":"Doe","address":"xxx","createdDate":1697852606000,"warranty_expiration":{"int":19653}}' << 'EOF'
 {
     "fields": [
     {
