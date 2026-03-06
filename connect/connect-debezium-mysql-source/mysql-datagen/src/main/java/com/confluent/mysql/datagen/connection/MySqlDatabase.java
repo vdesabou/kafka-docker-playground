@@ -16,7 +16,7 @@ public class MySqlDatabase {
   public MySqlDatabase(InputParams params) {
 
     try {
-      Class.forName("com.mysql.jdbc.Driver");
+      Class.forName("com.mysql.cj.jdbc.Driver");
     } catch (Exception e) {
       log.error("Error loading JDBC driver {}", e);
       throw new RuntimeException(e);
