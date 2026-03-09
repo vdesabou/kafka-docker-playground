@@ -115,6 +115,24 @@ A format string for the destination table name, which may contain '${topic}' as 
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 behavior.on.null.values
+
+How to handle records with a non-null key and a null value (i.e. Kafka tombstone records). Use option 'UPSERT' to upsert the tombstone records along with the key, option 'IGNORE' to skip processing of the tombstone records and option 'DELETE' to delete the corresponding tombstone record in DynamoDB table.
+
+	 - Type: STRING
+	 - Default: UPSERT
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 aws.dynamodb.instant.flush
+
+If set to true, the connector will flush the buffer immediately after receiving each record.This is useful for low latency requirements but may impact throughput. Default is false.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 null
 ==========================
