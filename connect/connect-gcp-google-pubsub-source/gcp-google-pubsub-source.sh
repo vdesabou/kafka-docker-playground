@@ -17,14 +17,14 @@ then
      wget -q https://repo1.maven.org/maven2/com/google/cloud/pubsub-group-kafka-connector/1.3.2/pubsub-group-kafka-connector-1.3.2.jar
 fi
 
-if [ ! -f ${DIR}/grpc-netty-1.70.0.jar ]
+if [ ! -f ${DIR}/grpc-netty-1.75.0.jar ]
 then
-     wget -q https://repo1.maven.org/maven2/io/grpc/grpc-netty/1.70.0/grpc-netty-1.70.0.jar
+     wget -q https://repo1.maven.org/maven2/io/grpc/grpc-netty/1.75.0/grpc-netty-1.75.0.jar
 fi
 
-if [ ! -f ${DIR}/grpc-rls-1.70.0.jar ]
+if [ ! -f ${DIR}/grpc-rls-1.75.0.jar ]
 then
-     wget -q https://repo1.maven.org/maven2/io/grpc/grpc-rls/1.70.0/grpc-rls-1.70.0.jar
+     wget -q https://repo1.maven.org/maven2/io/grpc/grpc-rls/1.75.0/grpc-rls-1.75.0.jar
 fi
 
 GCP_KEYFILE="${PWD}/keyfile.json"
@@ -48,8 +48,8 @@ cd ../../connect/connect-gcp-google-pubsub-source
 # Copy JAR files to confluent-hub for GCP pubsub connector
 mkdir -p ../../confluent-hub/pubsub-group-kafka-connector/
 [ -f pubsub-group-kafka-connector-1.3.2.jar ] && cp pubsub-group-kafka-connector-1.3.2.jar ../../confluent-hub/pubsub-group-kafka-connector/
-[ -f grpc-netty-1.70.0.jar ] && cp grpc-netty-1.70.0.jar ../../confluent-hub/pubsub-group-kafka-connector/
-[ -f grpc-rls-1.70.0.jar ] && cp grpc-rls-1.70.0.jar ../../confluent-hub/pubsub-group-kafka-connector/
+[ -f grpc-netty-1.75.0.jar ] && cp grpc-netty-1.75.0.jar ../../confluent-hub/pubsub-group-kafka-connector/
+[ -f grpc-rls-1.75.0.jar ] && cp grpc-rls-1.75.0.jar ../../confluent-hub/pubsub-group-kafka-connector/
 
 cd -
 
