@@ -1,0 +1,8 @@
+---
+services:
+  connect:
+    volumes:
+      - ../../other/confluent-log-redactor-plugin/connect-log4j2.yaml:/opt/connect/connect-log4j2.yaml
+      - ../../other/confluent-log-redactor-plugin/connect-log-redactor-rules.json:/opt/connect/connect-log-redactor-rules.json
+    environment:
+      KAFKA_LOG4J_OPTS: "-Dlog4j2.configurationFile=file:/opt/connect/connect-log4j2.yaml"
