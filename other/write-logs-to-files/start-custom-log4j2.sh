@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 set +e
-if connect_cp_version_greater_than_8
+if ! connect_cp_version_greater_than_8
 then
      logwarn "CP 8.0 or above should be used as log4j2 is not supported in CP 5/6/7"
      exit 111
