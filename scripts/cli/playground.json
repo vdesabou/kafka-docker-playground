@@ -1103,6 +1103,31 @@
           ]
         },
         {
+          "name": "validate-new-schemas",
+          "description": "🩺 Validate new schemas (default is true since CP 8.2.0)\n  \n  See https://docs.confluent.io/cloud/current/sr/fundamentals/serdes-develop/index.html#supported-formats:~:text=Strict%20namespace%20validation%20with%20Avro%20version%201.12\n",
+          "usage": "playground schema validate-new-schemas [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
+                "--value"
+              ],
+              "argument": [
+                true,
+                false
+              ],
+              "description": "true or false\n\nRequired: ✓ Yes\n\nAllowed values: true, false\n"
+            }
+          ]
+        },
+        {
           "name": "delete",
           "description": "🧟 Delete schema\n",
           "usage": "playground schema delete [OPTIONS]",

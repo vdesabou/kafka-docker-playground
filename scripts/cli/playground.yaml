@@ -1348,6 +1348,30 @@ subcommands:
             
             Allowed values: true, false
             
+      - name: validate-new-schemas
+        description: | 
+          🩺 Validate new schemas (default is true since CP 8.2.0)
+            
+            See https://docs.confluent.io/cloud/current/sr/fundamentals/serdes-develop/index.html#supported-formats:~:text=Strict%20namespace%20validation%20with%20Avro%20version%201.12
+        usage: playground schema validate-new-schemas [OPTIONS]
+        options:
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
+          - --value
+          argument: [true, false]
+          description: | 
+            true or false
+            
+            Required: ✓ Yes
+            
+            Allowed values: true, false
+            
       - name: delete
         description: | 
           🧟 Delete schema

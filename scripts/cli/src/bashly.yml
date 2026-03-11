@@ -1749,6 +1749,28 @@ commands:
       help: |-
         true or false
 
+
+  - name: validate-new-schemas
+    filters:
+    - not_mdc_environment
+    - schema_registry_running
+    group: Schema
+    help: |-
+      🩺 Validate new schemas (default is true since CP 8.2.0)
+
+      See https://docs.confluent.io/cloud/current/sr/fundamentals/serdes-develop/index.html#supported-formats:~:text=Strict%20namespace%20validation%20with%20Avro%20version%201.12
+    flags:
+    - *verbose
+    - long: --value
+      arg: value
+      allowed: 
+        - "true"
+        - "false"
+      required: true
+      help: |-
+        true or false
+
+
   - name: delete
     filters:
     - not_mdc_environment
