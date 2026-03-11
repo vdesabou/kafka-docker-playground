@@ -21,5 +21,4 @@ Configuration:
     Root:
       level: "INFO"
       AppenderRef:
-        - ref: STDOUT
         - ref: RedactorAppender
