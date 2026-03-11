@@ -22,20 +22,4 @@ Configuration:
       level: "INFO"
       AppenderRef:
         - ref: STDOUT
-    Logger:
-      - name: "org.I0Itec.zkclient"
-        level: "ERROR"
-        AppenderRef:
-          - ref: STDOUT
-      - name: "org.apache.kafka.connect.runtime.rest.RestServer"
-        level: "ERROR"
-        AppenderRef:
-          - ref: STDOUT
-      - name: "org.apache.zookeeper"
-        level: "ERROR"
-        AppenderRef:
-          - ref: STDOUT
-      - name: "org.reflections"
-        level: "ERROR"
-        AppenderRef:
-          - ref: STDOUT
+        - ref: RedactorAppender
