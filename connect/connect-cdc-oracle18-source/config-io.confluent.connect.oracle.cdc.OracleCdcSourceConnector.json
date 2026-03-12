@@ -111,6 +111,7 @@
     "redo.log.consumer.send.buffer.bytes": "131072",
     "redo.log.consumer.session.timeout.ms": "45000",
     "redo.log.consumer.share.acknowledgement.mode": "implicit",
+    "redo.log.consumer.share.acquire.mode": "BATCH_OPTIMIZED",
     "redo.log.consumer.socket.connection.setup.timeout.max.ms": "30000",
     "redo.log.consumer.socket.connection.setup.timeout.ms": "10000",
     "redo.log.consumer.ssl.enabled.protocols": "TLSv1.2,TLSv1.3",
