@@ -445,3 +445,4 @@ Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 - 💱 [Kafka Connect JSONata Transform](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/kafka-connect-jsonata) :other/kafka-connect-jsonata:
 - 🧠 [CLI examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cli) :other/cli:
 - 👽 [KIP-1054: Support external schemas in JSONConverter](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-external-schemas-in-json-converter)  ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
+- 🗝️ [Redact Confluent Logs in Confluent Platform](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/confluent-log-redactor-plugin) :other/confluent-log-redactor-plugin:

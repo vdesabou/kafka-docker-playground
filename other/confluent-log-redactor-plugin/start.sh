@@ -15,5 +15,4 @@ set -e
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-
-playground container  logs -c connect
+playground container logs --container connect --wait-for-log "xxxxxx" --max-wait 60
