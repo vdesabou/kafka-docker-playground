@@ -14,4 +14,5 @@
     "key.converter.converter.type": "",
     "staging.bucket.name": "",
     "staging.s3.access.key.id": "",
+    "staging.s3.max.files.per.cycle": "10000",
     "staging.s3.secret.access.key": "",

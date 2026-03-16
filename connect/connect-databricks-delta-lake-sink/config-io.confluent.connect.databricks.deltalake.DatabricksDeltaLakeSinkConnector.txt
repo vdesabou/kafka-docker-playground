@@ -142,6 +142,15 @@ The time interval in milliseconds to periodically invoke file commits. This conf
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 staging.s3.max.files.per.cycle
+
+The maximum number of S3 staging files to process per put cycle. When the staging bucket contains more files than this limit, the connector processes files in batches across multiple cycles. This prevents the connector from timing out when a large backlog of files exists. If fewer files exist, all files are processed.
+
+	 - Type: INT
+	 - Default: 10000
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 null
 ==========================
