@@ -283,6 +283,87 @@ When enabled the connector will emit advanced streaming metrics
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 connection.validation.timeout.ms
+
+The maximum time in milliseconds to wait for connection validation to complete. Defaults to 60 seconds.
+
+	 - Type: LONG
+	 - Default: 60000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 executor.shutdown.timeout.ms
+
+The maximum time in milliseconds to wait for task executor to shut down.
+
+	 - Type: LONG
+	 - Default: 4000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 openlineage.integration.enabled
+
+Enable Debezium to emit data lineage metadata through OpenLineage API
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 openlineage.integration.config.file.path
+
+Path to OpenLineage file configuration. See https://openlineage.io/docs/client/java/configuration
+
+	 - Type: STRING
+	 - Default: ./openlineage.yml
+	 - Importance: LOW
+	 - Required: false
+
+🔘 openlineage.integration.job.namespace
+
+The job's namespace emitted by Debezium
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 openlineage.integration.job.description
+
+The job's description emitted by Debezium
+
+	 - Type: STRING
+	 - Default: Debezium change data capture job
+	 - Importance: LOW
+	 - Required: false
+
+🔘 openlineage.integration.job.tags
+
+The job's tags emitted by Debezium. A comma-separated list of key-value pairs.For example: k1=v1,k2=v2
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 openlineage.integration.job.owners
+
+The job's owners emitted by Debezium. A comma-separated list of key-value pairs.For example: k1=v1,k2=v2
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 extended.headers.enabled
+
+Enable/Disable Debezium context headers that provides essential metadata for tracking and identifying the source of CDC events in downstream processing systems.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
 🔘 decimal.handling.mode
 
 Specify how DECIMAL and NUMERIC columns should be represented in change events, including: 'precise' (the default) uses java.math.BigDecimal to represent values, which are encoded in the change events using a binary representation and Kafka Connect's 'org.apache.kafka.connect.data.Decimal' type; 'string' uses string to represent values; 'double' represents values using Java's 'double', which may not offer the precision but will be far easier to use in consumers.
