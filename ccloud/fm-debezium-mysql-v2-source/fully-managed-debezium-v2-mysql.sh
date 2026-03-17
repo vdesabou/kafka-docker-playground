@@ -36,6 +36,7 @@ set_profiles
 
 set +e
 playground topic delete --topic dbserver1.mydb.team
+playground topic delete --topic "dbhistory.dbserver1.lcc-.*"
 set -e
 
 set_profiles
