@@ -65,6 +65,7 @@ cd -
 
 set +e
 playground topic delete --topic cflt.C__CFLTUSER.CUSTOMERS
+playground topic delete --topic "__orcl-schema-changes.cflt.lcc-.*"
 set -e
 
 set_profiles
