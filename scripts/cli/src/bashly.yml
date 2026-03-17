@@ -3698,7 +3698,9 @@ commands:
         completions:
           - $(playground get-topic-list)
         help: |-
-          🗳 Topic name
+          🗳 Topic name or regex pattern (full match)
+
+          Examples: my-topic, my-topic-.*
       - long: --skip-delete-schema
         required: false
         help: |-

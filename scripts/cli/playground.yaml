@@ -3079,7 +3079,9 @@ subcommands:
           - -t
           argument: TOPIC
           description: | 
-            🗳 Topic name
+            🗳 Topic name or regex pattern (full match)
+            
+            Examples: my-topic, my-topic-.*
             
             Required: ✓ Yes
             

@@ -2672,7 +2672,7 @@
                 "-t"
               ],
               "argument": "TOPIC",
-              "description": "🗳 Topic name\n\nRequired: ✓ Yes\n"
+              "description": "🗳 Topic name or regex pattern (full match)\n\nExamples: my-topic, my-topic-.*\n\nRequired: ✓ Yes\n"
             },
             {
               "names": [
