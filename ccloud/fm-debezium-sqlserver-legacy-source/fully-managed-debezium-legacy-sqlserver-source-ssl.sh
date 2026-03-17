@@ -57,6 +57,7 @@ bootstrap_ccloud_environment
 
 set +e
 playground topic delete --topic server1.dbo.customers
+playground topic delete --topic "dbhistory.server1.lcc-.*"
 set -e
 
 docker compose -f docker-compose-ssl.yml build
