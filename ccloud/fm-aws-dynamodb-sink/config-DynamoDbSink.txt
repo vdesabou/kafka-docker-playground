@@ -43,15 +43,6 @@ Add a schema context name. A schema context represents an independent scope in S
 ==========================
 Input messages
 ==========================
-🔘 input.data.format
-
-Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
-
-	 - Type: STRING
-	 - Default: JSON
-	 - Importance: HIGH
-	 - Required: true
-
 🔘 input.key.format
 
 Sets the input Kafka record key format. Valid entries are AVRO, BYTES, JSON, JSON_SR, PROTOBUF, or STRING. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
@@ -60,6 +51,15 @@ Sets the input Kafka record key format. Valid entries are AVRO, BYTES, JSON, JSO
 	 - Default: BYTES
 	 - Importance: HIGH
 	 - Required: false
+
+🔘 input.data.format
+
+Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
+	 - Required: true
 
 ==========================
 How should we connect to your data?
@@ -133,15 +133,6 @@ Select how you want to authenticate with AWS.
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 provider.integration.id
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select an existing integration that has access to your resource. In case you need to integrate a new IAM role, use provider integration
-	 - Required: HIGH
-
 🔘 aws.access.key.id
 
 
@@ -149,6 +140,15 @@ Select how you want to authenticate with AWS.
 	 - Type: false
 	 - Default: PASSWORD
 	 - Importance: 
+	 - Required: HIGH
+
+🔘 provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing integration that has access to your resource. In case you need to integrate a new IAM role, use provider integration
 	 - Required: HIGH
 
 🔘 aws.secret.access.key
@@ -187,6 +187,15 @@ A format string for the destination table name, which may contain '${topic}' as 
 
 	 - Type: STRING
 	 - Default: ${topic}
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 behavior.on.null.values
+
+How to handle records with a non-null key and a null value (i.e. Kafka tombstone records). Use option 'UPSERT' to upsert the tombstone records along with the key, option 'IGNORE' to skip processing of the tombstone records and option 'DELETE' to delete the corresponding tombstone record in DynamoDB table.
+
+	 - Type: STRING
+	 - Default: UPSERT
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -235,15 +244,6 @@ Number of tasks for this connector
 ==========================
 Additional Configs
 ==========================
-🔘 value.converter.decimal.format
-
-Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
-
-	 - Type: STRING
-	 - Default: BASE64
-	 - Importance: LOW
-	 - Required: false
-
 🔘 value.converter.replace.null.with.default
 
 Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
@@ -252,6 +252,51 @@ Whether to replace fields that have a default value and that are null to the def
 	 - Default: true
 	 - Importance: LOW
 	 - Required: false
+
+🔘 value.converter.value.schema.id.deserializer
+
+The class name of the schema ID deserializer for values. This is used to deserialize schema IDs from the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.flatten.unions
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 header.converter
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
+	 - Required: LOW
+
+🔘 value.converter.optional.for.proto2
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether proto2 optionals are supported. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 consumer.override.isolation.level
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Controls how to read messages written transactionally. If set to read_committed, consumer.poll() will only return transactional messages which have been committed. If set to read_uncommitted (the default), consumer.poll() will return all messages, even transactional messages which have been aborted. Non-transactional messages will be returned unconditionally in either mode.  More details: https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#isolation-level
+	 - Required: LOW
 
 🔘 value.converter.reference.subject.name.strategy
 
@@ -262,6 +307,15 @@ Set the subject reference name strategy for value. Valid entries are DefaultRefe
 	 - Importance: LOW
 	 - Required: false
 
+🔘 value.converter.use.schema.id
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
+
 🔘 value.converter.schemas.enable
 
 Include schemas within each of the serialized values. Input messages must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Converter.
@@ -271,39 +325,21 @@ Include schemas within each of the serialized values. Input messages must contai
 	 - Importance: LOW
 	 - Required: false
 
+🔘 value.converter.generate.struct.for.nulls
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
+	 - Required: LOW
+
 🔘 errors.tolerance
 
 Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
 
 	 - Type: STRING
 	 - Default: all
-	 - Importance: LOW
-	 - Required: false
-
-🔘 value.converter.connect.meta.data
-
-
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
-	 - Required: LOW
-
-🔘 value.converter.value.subject.name.strategy
-
-Determines how to construct the subject name under which the value schema is registered with Schema Registry.
-
-	 - Type: STRING
-	 - Default: TopicNameStrategy
-	 - Importance: LOW
-	 - Required: false
-
-🔘 key.converter.key.subject.name.strategy
-
-How to construct the subject name for key schema registration.
-
-	 - Type: STRING
-	 - Default: TopicNameStrategy
 	 - Importance: LOW
 	 - Required: false
 
@@ -315,6 +351,240 @@ When set to true, this property ensures that the corresponding record in Kafka i
 	 - Default: false
 	 - Importance: LOW
 	 - Required: false
+
+🔘 value.converter.wrapper.for.nullables
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 key.converter.key.schema.id.deserializer
+
+The class name of the schema ID deserializer for keys. This is used to deserialize schema IDs from the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.generate.index.for.unions
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.wrapper.for.raw.primitives
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.object.additional.properties
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
+	 - Required: LOW
+
+🔘 key.converter.use.schema.guid
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
+
+🔘 value.converter.int.for.enums
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to represent enums as integers. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.allow.optional.map.keys
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.latest.compatibility.strict
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Verify latest subject version is backward compatible when `use.latest.version` is `true`.
+	 - Required: LOW
+
+🔘 value.converter.use.schema.guid
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
+
+🔘 key.converter.schemas.enable
+
+Include schemas within each of the serialized keys. Input message keys must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Key Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.optional.for.nullables
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.auto.register.schemas
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Specify if the Serializer should attempt to register the Schema.
+	 - Required: LOW
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.use.latest.version
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Use latest version of schema in subject for serialization when auto.register.schemas is false.
+	 - Required: LOW
+
+🔘 key.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Key Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.enhanced.avro.schema.support
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.flatten.singleton.unions
+
+Whether to flatten singleton unions. Applicable for Avro and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.use.optional.for.nonrequired
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
+	 - Required: LOW
+
+🔘 value.converter.enhanced.protobuf.schema.support
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.scrub.invalid.names
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
+	 - Required: LOW
+
+🔘 consumer.override.auto.offset.reset
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Defines the behavior of the consumer when there is no committed position (which occurs when the group is first initialized) or when an offset is out of range. You can choose either to reset the position to the “earliest” offset (the default) or the “latest” offset. You can also select “none” if you would rather set the initial offset yourself and you are willing to handle out of range errors manually. More details: https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#auto-offset-reset
+	 - Required: LOW
+
+🔘 key.converter.use.schema.id
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
 
 ==========================
 Auto-restart policy
