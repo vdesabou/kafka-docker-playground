@@ -68,18 +68,6 @@ This config key only applies to data preview requests and governs whether the da
 	 - Required: false
 
 ==========================
-Which topic do you want to send data to?
-==========================
-🔘 kafka.topic
-
-
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Identifies the topic name to write the data to.
-	 - Required: HIGH
-
-==========================
 Schema Config
 ==========================
 🔘 schema.context.name
@@ -175,14 +163,14 @@ The URL of the Salesforce endpoint to use. When using 'CLIENT_CREDENTIALS' grant
 	 - Importance: Password used to access JWT keystore file.
 	 - Required: MEDIUM
 
-🔘 salesforce.object
+🔘 salesforce.object.num
 
+The number of salesforce objects to process.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: The Salesforce object to create topic for.
-	 - Required: HIGH
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 poll.interval.ms
 
@@ -193,27 +181,9 @@ How often to query Salesforce for new records.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 include.deleted.records
-
-If true, the connector will also fetch deleted records using queryAll operation type. This will include records that have been soft deleted (present in the recycle bin).
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 salesforce.since
-
-
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: CreatedDate after which the records should be pulled. Note that the time is in UTC and has required format: yyyy-MM-dd.
-	 - Required: MEDIUM
-
 🔘 result.max.rows
 
-The maximum number of records to retrieve per set of results for the Bulk API 2.0 query. The default/max value is set to 1000
+The maximum number of records to retrieve per set of results for the Bulk API 2.0 query. The default value is set to 1000. If multiple objects are processed, this limit is split across those objects.
 
 	 - Type: INT
 	 - Default: 1000
@@ -240,6 +210,201 @@ Determines whether the connector honours CSFLE rules or not
 	 - Default: STRING
 	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
 	 - Required: HIGH
+
+==========================
+Object 1 configuration
+==========================
+🔘 salesforce.object1
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Salesforce SObject1 to write to.
+	 - Required: HIGH
+
+🔘 salesforce.object1.topic
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Specify the topic name to write the data to for Object 1.
+	 - Required: HIGH
+
+🔘 salesforce.object1.since
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: CreatedDate after which the records should be pulled for SObject1. Note that the time is in UTC and has required format: yyyy-MM-dd.
+	 - Required: MEDIUM
+
+🔘 salesforce.object1.include.deleted.records
+
+If true, the connector will also fetch deleted records using queryAll operation type. This will include records that have been soft deleted (present in the recycle bin).
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Object 2 configuration
+==========================
+🔘 salesforce.object2
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Salesforce SObject2 to write to.
+	 - Required: HIGH
+
+🔘 salesforce.object2.topic
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Specify the topic name to write the data to for Object 2.
+	 - Required: HIGH
+
+🔘 salesforce.object2.since
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: CreatedDate after which the records should be pulled for SObject2. Note that the time is in UTC and has required format: yyyy-MM-dd.
+	 - Required: MEDIUM
+
+🔘 salesforce.object2.include.deleted.records
+
+If true, the connector will also fetch deleted records using queryAll operation type. This will include records that have been soft deleted (present in the recycle bin).
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Object 3 configuration
+==========================
+🔘 salesforce.object3
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Salesforce SObject3 to write to.
+	 - Required: HIGH
+
+🔘 salesforce.object3.topic
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Specify the topic name to write the data to for Object 3.
+	 - Required: HIGH
+
+🔘 salesforce.object3.since
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: CreatedDate after which the records should be pulled for SObject3. Note that the time is in UTC and has required format: yyyy-MM-dd.
+	 - Required: MEDIUM
+
+🔘 salesforce.object3.include.deleted.records
+
+If true, the connector will also fetch deleted records using queryAll operation type. This will include records that have been soft deleted (present in the recycle bin).
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Object 4 configuration
+==========================
+🔘 salesforce.object4
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Salesforce SObject4 to write to.
+	 - Required: HIGH
+
+🔘 salesforce.object4.topic
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Specify the topic name to write the data to for Object 4.
+	 - Required: HIGH
+
+🔘 salesforce.object4.since
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: CreatedDate after which the records should be pulled for SObject4. Note that the time is in UTC and has required format: yyyy-MM-dd.
+	 - Required: MEDIUM
+
+🔘 salesforce.object4.include.deleted.records
+
+If true, the connector will also fetch deleted records using queryAll operation type. This will include records that have been soft deleted (present in the recycle bin).
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Object 5 configuration
+==========================
+🔘 salesforce.object5
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Salesforce SObject5 to write to.
+	 - Required: HIGH
+
+🔘 salesforce.object5.topic
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Specify the topic name to write the data to for Object 5.
+	 - Required: HIGH
+
+🔘 salesforce.object5.since
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: CreatedDate after which the records should be pulled for SObject5. Note that the time is in UTC and has required format: yyyy-MM-dd.
+	 - Required: MEDIUM
+
+🔘 salesforce.object5.include.deleted.records
+
+If true, the connector will also fetch deleted records using queryAll operation type. This will include records that have been soft deleted (present in the recycle bin).
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Connection details
@@ -280,15 +445,6 @@ Number of tasks for this connector
 ==========================
 Additional Configs
 ==========================
-🔘 value.converter.decimal.format
-
-Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
-
-	 - Type: STRING
-	 - Default: BASE64
-	 - Importance: LOW
-	 - Required: false
-
 🔘 value.converter.replace.null.with.default
 
 Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
@@ -297,6 +453,33 @@ Whether to replace fields that have a default value and that are null to the def
 	 - Default: true
 	 - Importance: LOW
 	 - Required: false
+
+🔘 value.converter.flatten.unions
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 header.converter
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
+	 - Required: LOW
+
+🔘 value.converter.optional.for.proto2
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether proto2 optionals are supported. Applicable for Protobuf Converters.
+	 - Required: LOW
 
 🔘 value.converter.reference.subject.name.strategy
 
@@ -316,39 +499,21 @@ Include schemas within each of the serialized values. Input messages must contai
 	 - Importance: LOW
 	 - Required: false
 
+🔘 value.converter.generate.struct.for.nulls
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
+	 - Required: LOW
+
 🔘 errors.tolerance
 
 Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
 
 	 - Type: STRING
 	 - Default: none
-	 - Importance: LOW
-	 - Required: false
-
-🔘 value.converter.connect.meta.data
-
-
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
-	 - Required: LOW
-
-🔘 value.converter.value.subject.name.strategy
-
-Determines how to construct the subject name under which the value schema is registered with Schema Registry.
-
-	 - Type: STRING
-	 - Default: TopicNameStrategy
-	 - Importance: LOW
-	 - Required: false
-
-🔘 key.converter.key.subject.name.strategy
-
-How to construct the subject name for key schema registration.
-
-	 - Type: STRING
-	 - Default: TopicNameStrategy
 	 - Importance: LOW
 	 - Required: false
 
@@ -360,6 +525,213 @@ When set to true, this property ensures that the corresponding record in Kafka i
 	 - Default: false
 	 - Importance: LOW
 	 - Required: false
+
+🔘 producer.override.compression.type
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The compression type for all data generated by the producer. Valid values are none, gzip, snappy, lz4, and zstd.
+	 - Required: LOW
+
+🔘 value.converter.wrapper.for.nullables
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.generate.index.for.unions
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.wrapper.for.raw.primitives
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 producer.override.linger.ms
+
+
+
+	 - Type: false
+	 - Default: LONG
+	 - Importance: The producer groups together any records that arrive in between request transmissions into a single batched request. More details can be found in the documentation: https://docs.confluent.io/platform/current/installation/configuration/producer-configs.html#linger-ms.
+	 - Required: LOW
+
+🔘 value.converter.object.additional.properties
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
+	 - Required: LOW
+
+🔘 value.converter.int.for.enums
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to represent enums as integers. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.allow.optional.map.keys
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 key.converter.key.schema.id.serializer
+
+The class name of the schema ID serializer for keys. This is used to serialize schema IDs in the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.latest.compatibility.strict
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Verify latest subject version is backward compatible when `use.latest.version` is `true`.
+	 - Required: LOW
+
+🔘 value.converter.optional.for.nullables
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.auto.register.schemas
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Specify if the Serializer should attempt to register the Schema.
+	 - Required: LOW
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.use.latest.version
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Use latest version of schema in subject for serialization when auto.register.schemas is false.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.enhanced.avro.schema.support
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.flatten.singleton.unions
+
+Whether to flatten singleton unions. Applicable for Avro and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.use.optional.for.nonrequired
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
+	 - Required: LOW
+
+🔘 value.converter.value.schema.id.serializer
+
+The class name of the schema ID serializer for values. This is used to serialize schema IDs in the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.enhanced.protobuf.schema.support
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.scrub.invalid.names
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
+	 - Required: LOW
 
 ==========================
 Auto-restart policy
