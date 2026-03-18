@@ -69,6 +69,7 @@
     "timeseries.timefield.auto.convert": "false",
     "timeseries.timefield.auto.convert.date.format": "yyyy-MM-dd[['T'][ ]][HH:mm:ss[[.][SSSSSS][SSS]][ ]VV[ ]'['VV']'][HH:mm:ss[[.][SSSSSS][SSS]][ ]X][HH:mm:ss[[.][SSSSSS][SSS]]]",
     "timeseries.timefield.auto.convert.locale.language.tag": "en",
+    "topic.override.map": "{}",
     "topics": "LIST",
     "topics.regex": "STRING",
     "ts.granularity": "None",
