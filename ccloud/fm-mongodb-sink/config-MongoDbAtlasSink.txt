@@ -127,6 +127,15 @@ The class that handles how to build the delete write models for the sink documen
 	 - Importance: LOW
 	 - Required: false
 
+🔘 topic.override.map
+
+A JSON map to override sink connector properties for specific topics. Specify the map as ``{"<topicName>.<property>": "<value>"}``. For example, ``{"orders.collection": "orders_collection", "orders.database": "orders_db"}`` routes the *orders* topic to the *orders_collection* in the *orders_db* database. Supported properties are ``collection``, ``database``, and other topic-level sink configurations.
+
+	 - Type: STRING
+	 - Default: {}
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 CSFLE
 ==========================
