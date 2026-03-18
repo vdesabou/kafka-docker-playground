@@ -7,9 +7,9 @@ source ${DIR}/../../scripts/utils.sh
 bootstrap_ccloud_environment
 
 set +e
-playground topic delete --topic pageviews
+playground topic delete --topic datagen_pageviews
 sleep 3
-playground topic create --topic pageviews --nb-partitions 1
+playground topic create --topic datagen_pageviews --nb-partitions 1
 set -e
 
 connector_name="DatagenSource_$USER"
@@ -25,7 +25,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",
-     "kafka.topic" : "pageviews",
+     "kafka.topic" : "datagen_pageviews",
      "output.data.format" : "AVRO",
      "quickstart" : "PAGEVIEWS",
      "max.interval": "10000",
@@ -34,8 +34,8 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-log "Verifying topic pageviews"
-playground topic consume --topic pageviews --min-expected-messages 5 --timeout 60
+log "Verifying topic datagen_pageviews"
+playground topic consume --topic datagen_pageviews --min-expected-messages 5 --timeout 60
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
