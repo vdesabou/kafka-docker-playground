@@ -40,6 +40,7 @@
     "secret.manager.managed.configs": "LIST",
     "secret.manager.provider.integration.id": "STRING",
     "snowflake.database.name": "STRING",
+    "snowflake.disable.ocsp.checks": "false",
     "snowflake.enable.schematization": "false",
     "snowflake.https.nonProxyHosts": "STRING",
     "snowflake.https.proxyHost": "STRING",

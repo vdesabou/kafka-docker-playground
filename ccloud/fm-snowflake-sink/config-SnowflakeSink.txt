@@ -283,6 +283,15 @@ Enable HTTPS proxy for Snowflake connections
 	 - Importance: HTTPS proxy password for Snowflake connections
 	 - Required: LOW
 
+🔘 snowflake.disable.ocsp.checks
+
+If set to true, disables OCSP (Online Certificate Status Protocol) certificate revocation checks for Snowflake JDBC connections. This should only be enabled in environments where OCSP servers are not accessible. Default is false.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 Database details
 ==========================
