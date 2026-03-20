@@ -26,12 +26,12 @@ fi
 # https://github.com/oracle/docker-images/tree/main/OracleWebLogic/samples/12212-domain-online-config
 if test -z "$(docker images -q weblogic-jms:latest)"
 then
-     log "Building WebLogic JMS docker image..it can take a while..."
-     OLDDIR=$PWD
-     cd ${DIR}/docker-weblogic
-     docker build --build-arg ADMIN_PASSWORD="welcome1" -t 1213-domain ./1213-domain
-     docker build -t weblogic-jms:latest ./12212-domain-online-config -f ./12212-domain-online-config/Dockerfile
-     cd ${OLDDIR}
+    log "Building WebLogic JMS docker image..it can take a while..."
+    OLDDIR=$PWD
+    cd ${DIR}/docker-weblogic
+    docker build --platform=linux/amd64 --build-arg ADMIN_PASSWORD="welcome1" -t 1213-domain ./1213-domain
+    docker build --platform=linux/amd64 -t weblogic-jms:latest ./12212-domain-online-config -f ./12212-domain-online-config/Dockerfile
+    cd ${OLDDIR}
 fi
 
 if [ ! -f ${DIR}/jms-sender/lib/wlthint3client.jar ]
