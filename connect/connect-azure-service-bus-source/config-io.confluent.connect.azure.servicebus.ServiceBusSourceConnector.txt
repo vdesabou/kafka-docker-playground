@@ -72,7 +72,7 @@ Fully qualified Azure Service Bus Connection string for ``Message Entity`` from 
 Maximum number of messages to be pulled in a single poll from the configured Service Bus message entity.
 
 	 - Type: INT
-	 - Default: 10
+	 - Default: 50
 	 - Importance: LOW
 	 - Required: false
 
@@ -91,6 +91,27 @@ The maximum time until which connector will retry pulling records with exponenti
 
 	 - Type: LONG
 	 - Default: 5
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 azure.servicebus.max.auto.lock.renew.duration.minutes
+
+The maximum duration in minutes for which the lock on the message will be automatically renewed. This ensures that the message lock does not expire while the message is being processed.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+🔘 azure.servicebus.prefetch.count
+
+The prefetch count for the Service Bus receiver. Prefetching messages increases throughput by retrieving messages from the service before they are requested by the application. Setting this value to 0 disables prefetching.
+
+	 - Type: INT
+	 - Default: 0
 	 - Importance: LOW
 	 - Required: false
 
