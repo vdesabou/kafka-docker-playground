@@ -16,7 +16,7 @@
     "jms.subscription.name": "STRING",
     "kafka.topic": "",
     "max.pending.messages": "4096",
-    "max.poll.duration": "60000",
+    "max.poll.duration": "-1",
     "max.record.commit.timeout": "10",
     "max.retry.time": "3600000",
     "mq.channel": "",
