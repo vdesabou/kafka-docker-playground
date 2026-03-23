@@ -493,3 +493,51 @@ The class of type org.apache.kafka.common.security.auth.SslEngineFactory to prov
 	 - Importance: LOW
 	 - Required: false
 
+==========================
+Request
+==========================
+🔘 connection.disallow.local.ips
+
+Disallow local IP addresses after DNS resolution.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 connection.disallow.private.ips
+
+Disallow private IP addresses after DNS resolution.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 connection.disallow.class.e.ips
+
+Disallow Class E IP addresses after DNS resolution.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 connection.disallow.cidr.ranges
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Disallow IP addresses from the configured CIDR ranges after DNS resolution.
+	 - Required: MEDIUM
+
+🔘 connection.allow.cidr.ranges
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Allow IP addresses from the configured CIDR ranges after DNS resolution.
+	 - Required: MEDIUM
+
