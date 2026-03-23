@@ -178,6 +178,15 @@ CreatedDate after which the records should be pulled. The format should be yyyy-
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 query.delay.sec
+
+The delay in seconds introduced in the realtime query request to salesforce to ensure data integrity
+
+	 - Type: LONG
+	 - Default: 2
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 Serialization
 ==========================
