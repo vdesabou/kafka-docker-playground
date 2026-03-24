@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 log "Building Hadoop Docker image (replacing if exists)"
 cd ../../connect/connect-hdfs3-sink
-docker build -t kdp/hadoop:3.3.6 ${DIR}
+docker build -t kdp/hadoop:3.3.6 .
 cd -
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
