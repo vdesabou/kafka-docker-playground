@@ -1,0 +1,7 @@
+---
+services:
+  connect:
+    environment:
+      # in newer version, it is located in /usr/share/filestream-connectors
+      # common SMTs
+      CONNECT_PLUGIN_PATH: /usr/share/filestream-connectors,/usr/share/confluent-hub-components/confluentinc-connect-transforms,/usr/share/confluent-hub-components/jcustenborder-kafka-connect-transform-common,/usr/share/confluent-hub-components/jcustenborder-kafka-connect-json-schema
