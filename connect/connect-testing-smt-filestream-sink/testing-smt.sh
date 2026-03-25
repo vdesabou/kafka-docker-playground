@@ -60,6 +60,14 @@ playground connector create-or-update --connector filestream-sink  << EOF
 }
 EOF
 
+    # "value.converter": "io.confluent.connect.json.JsonSchemaConverter",
+    # "value.converter.schema.registry.url": "http://schema-registry:8081",
+
+    # "value.converter": "io.confluent.connect.protobuf.ProtobufConverter",
+    # "value.converter.schema.registry.url": "http://schema-registry:8081",
+
+    # "value.converter":"org.apache.kafka.connect.json.JsonConverter",
+    # "value.converter.schemas.enable":"false",
 
 sleep 5
 
