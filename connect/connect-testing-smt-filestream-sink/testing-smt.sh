@@ -7,8 +7,10 @@ source ${DIR}/../../scripts/utils.sh
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
+playground debug jscissors --class 'org.apache.kafka.connect.runtime.TransformationChain' --method "apply" --operation VALUES --operation RETURN_VALUE
+
 log "Sending messages to topic filestream"
-playground topic produce -t filestream --nb-messages 5 << 'EOF'
+playground topic produce -t filestream --nb-messages 1 << 'EOF'
 {
   "fields": [
     {
@@ -38,7 +40,6 @@ playground topic produce -t filestream --nb-messages 5 << 'EOF'
 }
 EOF
 
-playground debug log-level set -p "org.apache.kafka.connect.runtime.WorkerSinkTask" -l TRACE
 playground debug log-level set -p "org.apache.kafka.connect.runtime.TransformationChain" -l TRACE
 
 log "Creating FileStream Sink connector"
@@ -79,3 +80,6 @@ docker exec connect cat /tmp/output.json
 # Struct{count=3,first_name=Lilla,last_name=Jermaine,address=Manuel,MessageSource=Kafka Connect framework}
 # Struct{count=4,first_name=Bret,last_name=Kiana,address=Reyna,MessageSource=Kafka Connect framework}
 # Struct{count=5,first_name=George,last_name=Braeden,address=Karolann,MessageSource=Kafka Connect framework}
+
+
+playground container logs --container connect  --wait-for-log "Applying transformation "
