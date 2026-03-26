@@ -2038,6 +2038,10 @@ subcommands:
           description: | 
             method name to instrument (it supports regex like .*find.*)
             
+            🎓 Tip: you can pass multiple methods by specifying --method multiple times
+            
+            Repeatable: ✓ Yes
+            
             Default value: .*
             
         - names:

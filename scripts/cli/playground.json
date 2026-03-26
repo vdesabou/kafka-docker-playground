@@ -1736,7 +1736,7 @@
                 "--method"
               ],
               "argument": ".*",
-              "description": "method name to instrument (it supports regex like .*find.*)\n\nDefault value: .*\n"
+              "description": "method name to instrument (it supports regex like .*find.*)\n\n🎓 Tip: you can pass multiple methods by specifying --method multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: .*\n"
             },
             {
               "names": [

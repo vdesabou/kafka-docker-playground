@@ -2326,9 +2326,12 @@ commands:
       - long: --method
         arg: method
         required: false
+        repeatable: true
         default: ".*"
         help: |-
           method name to instrument (it supports regex like .*find.*)
+
+          🎓 Tip: you can pass multiple methods by specifying --method multiple times
       - *action_enable_disable
     examples:
     - playground debug jscissors

@@ -71,7 +71,6 @@ EOF
         then
             cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
     volumes:
-      - ${root_folder}/scripts/cli/src/jscissors/jscissors-1.0-SNAPSHOT.jar:/tmp/jscissors-1.0-SNAPSHOT.jar
       - /tmp/:/tmp/
 EOF
         fi
