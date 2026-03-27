@@ -119,6 +119,54 @@ A key store password to be used for SSL enabled connections
 	 - Required: false
 
 ==========================
+Client-Side Field Level Encryption
+==========================
+🔘 csfle.enabled
+
+Whether to enable Client-Side Field Level Encryption (CS-FLE) for the MongoDB connection.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 csfle.key.vault.namespace
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The key vault namespace for CS-FLE in the format 'database.collection'. Example: 'encryption.__keyVault'.
+	 - Required: MEDIUM
+
+🔘 csfle.local.master.key
+
+The Base64-encoded 96-byte local master key for CS-FLE with the local KMS provider. This key is used to encrypt and decrypt data encryption keys stored in the key vault.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 csfle.schema.map
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A JSON document defining the encryption schema map for CS-FLE. This maps namespaces to JSON schemas that specify which fields to encrypt and which encryption algorithm and key to use.
+	 - Required: MEDIUM
+
+🔘 csfle.bypass.query.analysis
+
+Whether to bypass automatic query analysis for CS-FLE. When true, automatic encryption based on schema maps is disabled and explicit encryption must be used. When false, automatic encryption is enabled but requires mongocryptd or crypt_shared library. Default is true to avoid external dependencies.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
 Overrides
 ==========================
 🔘 topic.override.%s.%s
@@ -351,6 +399,27 @@ An inline JSON array with objects describing regexp settings.
 	 - Default: []
 	 - Importance: LOW
 	 - Required: false
+
+==========================
+Field Value Transformation
+==========================
+🔘 field.value.transformer
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The fully qualified class name of a FieldValueTransformer implementation. When configured, the specified transformer is applied to the fields listed in 'field.value.transformer.fields' before writing to MongoDB. The class must implement com.mongodb.kafka.connect.sink.processor.field.transform.FieldValueTransformer and have a public no-arg constructor.
+	 - Required: MEDIUM
+
+🔘 field.value.transformer.fields
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A comma-separated list of field names to which the configured FieldValueTransformer will be applied. Nested fields in sub-documents with matching names will also be transformed.
+	 - Required: MEDIUM
 
 ==========================
 Id Strategies
