@@ -7,7 +7,8 @@ source ${DIR}/../../scripts/utils.sh
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-playground debug jscissors --class 'org.apache.kafka.connect.runtime.TransformationChain' --method "apply" --operation VALUES --operation RETURN_VALUE
+# log "✂️ Setting up Jscissors to intercept the transformation chain in Connect framework"
+# playground debug jscissors --class 'org.apache.kafka.connect.runtime.TransformationChain' --method "apply" --operation VALUES --operation RETURN_VALUE
 
 log "Sending messages to topic filestream"
 playground topic produce -t filestream --nb-messages 1 << 'EOF'
@@ -54,10 +55,18 @@ playground connector create-or-update --connector filestream-sink  << EOF
     "value.converter": "io.confluent.connect.avro.AvroConverter",
     "value.converter.schema.registry.url": "http://schema-registry:8081",
 
-    "transforms": "InsertField",
-    "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField\$Value",
-    "transforms.InsertField.static.field": "MessageSource",
-    "transforms.InsertField.static.value": "Kafka Connect framework"
+    "transforms": "InsertMeta,AddGroup,AddLoadTime,WrapPayload",
+    "transforms.AddGroup.static.field": "group_name",
+    "transforms.AddGroup.static.value": "my group",
+    "transforms.AddGroup.type": "org.apache.kafka.connect.transforms.InsertField\$Value",
+    "transforms.AddLoadTime.timestamp.field": "kafka_datetime",
+    "transforms.AddLoadTime.type": "org.apache.kafka.connect.transforms.InsertField\$Value",
+    "transforms.InsertMeta.offset.field": "offset_value",
+    "transforms.InsertMeta.partition.field": "partition_id",
+    "transforms.InsertMeta.topic.field": "topic_name",
+    "transforms.InsertMeta.type": "org.apache.kafka.connect.transforms.InsertField\$Value",
+    "transforms.WrapPayload.field": "payload",
+    "transforms.WrapPayload.type": "org.apache.kafka.connect.transforms.HoistField\$Value"
 }
 EOF
 
@@ -75,11 +84,6 @@ sleep 5
 log "Verify we have received the data in file"
 docker exec connect cat /tmp/output.json
 
-# Struct{count=1,first_name=Nola,last_name=Prudence,address=Brandon,MessageSource=Kafka Connect framework}
-# Struct{count=2,first_name=Blanca,last_name=Bethany,address=Yoshiko,MessageSource=Kafka Connect framework}
-# Struct{count=3,first_name=Lilla,last_name=Jermaine,address=Manuel,MessageSource=Kafka Connect framework}
-# Struct{count=4,first_name=Bret,last_name=Kiana,address=Reyna,MessageSource=Kafka Connect framework}
-# Struct{count=5,first_name=George,last_name=Braeden,address=Karolann,MessageSource=Kafka Connect framework}
-
+# Struct{payload=Struct{count=1,first_name=Mateo,last_name=Karolann,address=Oscar,topic_name=filestream,partition_id=0,offset_value=0,group_name=my group,kafka_datetime=Fri Mar 27 14:09:22 GMT 2026}}
 
 playground container logs --container connect  --wait-for-log "Applying transformation "
