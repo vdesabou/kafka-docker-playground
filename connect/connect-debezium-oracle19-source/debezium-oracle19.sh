@@ -39,6 +39,11 @@ then
     tar xvfz debezium-connector-oracle-${CONNECTOR_TAG}.tar.gz
 fi
 
+if [ -d debezium-connector-oracle ]; then
+    rm -rf debezium-connector-oracle
+fi
+
+tar xvfz debezium-connector-oracle-${CONNECTOR_TAG}.tar.gz
 
 VERSION=$CONNECTOR_TAG
 unset CONNECTOR_TAG
