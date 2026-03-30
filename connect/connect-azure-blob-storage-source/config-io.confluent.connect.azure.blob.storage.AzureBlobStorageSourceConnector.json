@@ -18,6 +18,7 @@
     "bucket.listing.max.objects.threshold": "-1",
     "bucket.scan.executor.threads": "5",
     "connect.azblob.useragent": "APN/1.0 Confluent/1.0 AzureBlobSource/",
+    "credentials.provider.class": "",
     "csv.case.sensitive.field.names": "false",
     "csv.escape.char": "92",
     "csv.file.charset": "UTF-8",

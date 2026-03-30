@@ -440,6 +440,21 @@ The Azure Blob Storage account key. Must not be null or empty to access the acco
 	 - Importance: HIGH
 	 - Required: false
 
+==========================
+null
+==========================
+🔘 credentials.provider.class
+
+
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Azure
+==========================
 🔘 azblob.sas.token
 
 A shared access signature (SAS) is a URI that grants restricted access rights to Azure Storage resources. You can provide a shared access signature to clients who should not be trusted with your storage account key but whom you wish to delegate access to certain storage account resources. By distributing a shared access signature URI to these clients, you grant them access to a resource for a specified period of time. An account-level SAS can delegate access to multiple storage services (i.e. blob, file, queue, table). Note that stored access policies are currently not supported for an account-level SAS.
