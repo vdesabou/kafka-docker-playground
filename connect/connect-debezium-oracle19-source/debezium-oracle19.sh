@@ -30,7 +30,7 @@ fi
 
 if [ -z "$CONNECTOR_TAG" ]
 then
-    CONNECTOR_TAG=2.3.4
+    CONNECTOR_TAG=3.4.1
 fi
 
 if [ ! -f debezium-connector-oracle-${CONNECTOR_TAG}.tar.gz ]
