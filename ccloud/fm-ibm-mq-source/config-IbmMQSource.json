@@ -4,6 +4,7 @@
     "connector.egress.whitelist": "STRING",
     "csfle.enabled": "false",
     "datapreview.schemas.enable": "false",
+    "disable.mqcsp.authentication": "false",
     "errors.tolerance": "none",
     "exactly.once.enabled": "false",
     "header.converter": "STRING",

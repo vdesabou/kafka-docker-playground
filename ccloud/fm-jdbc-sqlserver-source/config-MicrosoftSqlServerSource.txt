@@ -113,6 +113,18 @@ Fetch sensitive configuration values from a secret manager.
 	 - Required: false
 
 ==========================
+Azure credentials
+==========================
+🔘 provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Azure provider-integration to mint Microsoft Entra ID application tokens.
+	 - Required: HIGH
+
+==========================
 Secret manager configuration
 ==========================
 🔘 secret.manager
@@ -167,7 +179,7 @@ How should we connect to your database?
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: STRING
 	 - Importance: JDBC connection user.
 	 - Required: HIGH
@@ -176,7 +188,7 @@ How should we connect to your database?
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: PASSWORD
 	 - Importance: JDBC connection password.
 	 - Required: HIGH
