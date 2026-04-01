@@ -196,6 +196,8 @@ fi
 # fi
 
 log "⏺️ Registering schema to subject ${subject}"
+#url encode subject
+subject=$(urlencode "${subject}")
 if [[ -n "$verbose" ]]
 then
     log "🐞 curl command used"

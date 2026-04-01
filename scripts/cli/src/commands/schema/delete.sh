@@ -20,6 +20,8 @@ then
     if [[ -n "$version" ]]
     then
         log "🧟 Soft deleting 💯 version ${version} from subject 🔰 ${subject}"
+        #url encode subject
+        subject=$(urlencode "${subject}")
         if [[ -n "$verbose" ]]
         then
             log "🐞 curl command used"
@@ -39,6 +41,8 @@ then
     else
         logwarn "--version is not set, deleting all versions !"
         log "🧟 Soft deleting subject 🔰 ${subject}"
+        #url encode subject
+        subject=$(urlencode "${subject}")
         if [[ -n "$verbose" ]]
         then
             log "🐞 curl command used"
