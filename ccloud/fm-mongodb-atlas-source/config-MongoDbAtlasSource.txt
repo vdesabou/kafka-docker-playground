@@ -100,6 +100,24 @@ How do you want to name your topic(s)?
 	 - Importance: JSON object that maps change stream document namespaces to topics. Any prefix configuration will still apply. In case multiple collections with records having varying schema are mapped to single topic with AVRO, JSON_SR, and PROTOBUF, then multiple schemas will be registered under single subject name. If these schemas are not backward compatible to each other, the connector will fail until you change the schema compatibility in Confluent Cloud Schema Registry.
 	 - Required: LOW
 
+🔘 topic.separator
+
+Separator to use when joining prefix, database, collection, and suffix values. This generates the name of the Kafka topic to publish data to. Used by the 'DefaultTopicMapper'.
+
+	 - Type: STRING
+	 - Default: .
+	 - Importance: LOW
+	 - Required: false
+
+🔘 topic.suffix
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Suffix to append to database and collection names to generate the name of the Kafka topic to publish data to.
+	 - Required: LOW
+
 ==========================
 How should we connect to your MongoDB database?
 ==========================
@@ -411,24 +429,6 @@ The output format of json strings can be configured to be either: DefaultJson: T
 	 - Default: DefaultJson
 	 - Importance: HIGH
 	 - Required: false
-
-🔘 topic.separator
-
-Separator to use when joining prefix, database, collection, and suffix values. This generates the name of the Kafka topic to publish data to. Used by the 'DefaultTopicMapper'.
-
-	 - Type: STRING
-	 - Default: .
-	 - Importance: LOW
-	 - Required: false
-
-🔘 topic.suffix
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Suffix to append to database and collection names to generate the name of the Kafka topic to publish data to.
-	 - Required: LOW
 
 🔘 output.schema.infer.value
 
