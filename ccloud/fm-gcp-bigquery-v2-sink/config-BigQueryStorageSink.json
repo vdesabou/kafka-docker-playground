@@ -41,6 +41,7 @@
     "sanitize.topics": "true",
     "schema.context.name": "default",
     "sr.service.account.id": "STRING",
+    "string.value.column.name": "STRING",
     "tasks.max": "INT",
     "timestamp.partition.field.name": "STRING",
     "topic2clustering.fields.map": "STRING",

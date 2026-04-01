@@ -490,6 +490,15 @@ If set to true, the connector task will fail whenever it encounters an authoriza
 	 - Importance: LOW
 	 - Required: false
 
+🔘 enable.dynamic.flush
+
+If set to true, each connector task can consume from up to 2x topic partitions depending on the buffer size.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 Error handling
 ==========================
