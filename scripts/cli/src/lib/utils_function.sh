@@ -1157,6 +1157,8 @@ function stop_all() {
 }
 
 function wait_container_ready() {
+  # Record the start time
+  start_time=$SECONDS
   
   CONNECT_CONTAINER=${1:-"connect"}
   CONTROL_CENTER_CONTAINER=${1:-"control-center"}
@@ -1174,6 +1176,7 @@ function wait_container_ready() {
     log "⌛ Waiting up to $MAX_WAIT seconds for ${CONNECT_CONTAINER} to start"
     playground container logs --container $CONNECT_CONTAINER --wait-for-log "Finished starting connectors and tasks" --max-wait $MAX_WAIT
   fi
+
   # Verify Docker containers started
   if [[ $(docker container ps) =~ "Exit 137" ]]
   then
@@ -1181,7 +1184,10 @@ function wait_container_ready() {
     exit 1
   fi
 
-  log "🚦 containers have started!"
+  # Calculate elapsed time
+  elapsed_time=$(( SECONDS - start_time ))
+
+  log "🚦 containers have started! (took $elapsed_time seconds)"
 }
 
 function display_jmx_info() {
