@@ -14,6 +14,14 @@
         <confluent.ksql-udf.version>5.4.4</confluent.ksql-udf.version>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>confluent</id>
+            <name>Confluent</name>
+            <url>https://packages.confluent.io/maven/</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>io.confluent.ksql</groupId>

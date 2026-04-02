@@ -331,24 +331,6 @@ To reduce bandwidth usage, Couchbase Server 5.5 and later can send documents to 
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 couchbase.persistence.polling.interval
-
-When a Couchbase Server node fails over, documents on the failing node that haven't been fully replicated may be "rolled back" to a previous state. To ensure consistency between Couchbase and the Kafka topic, the connector can defer publishing a document to Kafka until it has been saved to disk on all replicas.
-
-	 - Type: STRING
-	 - Default: 100ms
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.flow.control.buffer
-
-The flow control buffer limits how much data Couchbase will send before waiting for the connector to acknowledge the data has been processed. The recommended size is between 10 MiB ("10m") and 50 MiB ("50m").
-
-	 - Type: STRING
-	 - Default: 16m
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.xattrs
 
 Should filters and source handlers have access to a document's extended attributes?
@@ -373,6 +355,24 @@ When DCP trace is enabled, set this property to limit the trace to only document
 
 	 - Type: STRING
 	 - Default: .*
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.persistence.polling.interval
+
+When a Couchbase Server node fails over, documents on the failing node that haven't been fully replicated may be "rolled back" to a previous state. To ensure consistency between Couchbase and the Kafka topic, the connector can defer publishing a document to Kafka until it has been saved to disk on all replicas.
+
+	 - Type: STRING
+	 - Default: 100ms
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.flow.control.buffer
+
+The flow control buffer limits how much data Couchbase will send before waiting for the connector to acknowledge the data has been processed. The recommended size is between 10 MiB ("10m") and 50 MiB ("50m").
+
+	 - Type: STRING
+	 - Default: 16m
 	 - Importance: MEDIUM
 	 - Required: false
 

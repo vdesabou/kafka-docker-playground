@@ -279,7 +279,7 @@ The type of JMS destination, which is either `queue` or `topic`.
 
 🔘 max.pending.messages
 
-The maximum number of messages per task that can be received from JMS brokers and produced to Kafka before the task acknowledges the JMS session/messages. If the task fails and is restarted, this is the maximum number of JMS messages the task may duplicate in Kafka.
+Specifies the maximum number of messages per task received from the JMS broker and produced to |ak| before the task acknowledges the JMS session. This value represents the maximum number of duplicate JMS messages that can be produced if a task fails and restarts. In IBM MQ, this property directly controls acknowledgment timing. A higher value increases throughput by buffering more messages before the acknowledgment, but also increases the time to commit transactions. If you encounter MQRC_BACKED_OUT (reason code 2003) errors indicating transaction rollbacks due to acknowledgment timeouts, reduce this value (for example, from 2000 to 500) to decrease the acknowledgment interval.
 
 	 - Type: INT
 	 - Default: 2000
@@ -441,6 +441,15 @@ IBM MQ broker port
 	 - Default: STRING
 	 - Importance: Sets a distinguished name (DN) pattern. If sslCipherSuite is set, this pattern can ensure that the correct queue manager is used. The connection attempt fails if the distinguished name provided by the queue manager does not match this pattern.
 	 - Required: HIGH
+
+🔘 disable.mqcsp.authentication
+
+Whether to disable MQCSP authentication in the connector. By default, the connector uses MQCSP authentication, which is the recommended secure authentication method. Disabling MQCSP will make the connector use legacy authentication mode. **WARNING: The legacy authentication mode is inherently insecure and should only be used when absolutely necessary. When MQCSP is disabled on non-SSL/TLS connections, credentials are transmitted in clear text, exposing them to potential interception and unauthorized access. It is strongly recommended to use MQCSP authentication (default) or, if legacy mode is required, configure a secure connection using SSL/TLS with an appropriate cipher suite.**
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Number of tasks for this connector

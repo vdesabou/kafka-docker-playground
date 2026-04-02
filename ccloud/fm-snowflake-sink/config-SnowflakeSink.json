@@ -10,6 +10,7 @@
     "consumer.override.isolation.level": "STRING",
     "csfle.enabled": "false",
     "csfle.onFailure": "ERROR",
+    "enable.dynamic.flush": "false",
     "enable.task.fail.on.authorization.errors": "true",
     "errors.deadletterqueue.topic.name": "dlq-${connector}",
     "errors.tolerance": "all",
