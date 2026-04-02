@@ -370,15 +370,6 @@ Determines how the connector stores INT8 (BYTE) and INT16 (SHORT) data types in 
 	 - Importance: LOW
 	 - Required: false
 
-🔘 string.value.column.name
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: When using the STRING input format, this configuration specifies the BigQuery column name to store the raw string value. The connector wraps the string into a single-column record using this name. If you don't set this configuration, you must use an SMT such as HoistField$Value to convert the string into a Struct or Map type before writing to the BigQuery table. This configuration is ignored if the record value is already a Struct or Map type, for example, when transformed by an SMT like HoistField.
-	 - Required: MEDIUM
-
 ==========================
 Consumer configuration
 ==========================
