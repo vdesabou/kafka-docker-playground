@@ -131,30 +131,6 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 	 - Required: HIGH
 
 ==========================
-Authentication method
-==========================
-🔘 authentication.method
-
-How Confluent Cloud authenticates with Azure. Allowed values - ``Password`` and ``Microsoft Entra ID application``
-
-	 - Type: STRING
-	 - Default: Password
-	 - Importance: HIGH
-	 - Required: false
-
-==========================
-Azure credentials
-==========================
-🔘 provider.integration.id
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Azure provider-integration to mint Microsoft Entra ID application tokens.
-	 - Required: HIGH
-
-==========================
 How should we connect to your database?
 ==========================
 🔘 connection.host
@@ -179,7 +155,7 @@ How should we connect to your database?
 
 
 
-	 - Type: false
+	 - Type: true
 	 - Default: STRING
 	 - Importance: JDBC connection user.
 	 - Required: HIGH
@@ -188,7 +164,7 @@ How should we connect to your database?
 
 
 
-	 - Type: false
+	 - Type: true
 	 - Default: PASSWORD
 	 - Importance: JDBC connection password.
 	 - Required: HIGH

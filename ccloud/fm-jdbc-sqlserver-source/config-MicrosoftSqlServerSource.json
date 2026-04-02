@@ -29,7 +29,6 @@
     "poll.interval.ms": "5000",
     "producer.override.compression.type": "STRING",
     "producer.override.linger.ms": "LONG",
-    "provider.integration.id": "STRING",
     "query": "PASSWORD",
     "quote.sql.identifiers": "ALWAYS",
     "schema.context.name": "default",

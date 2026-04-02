@@ -92,27 +92,6 @@ How do you want to prefix table names?
 	 - Required: HIGH
 
 ==========================
-Authentication method
-==========================
-🔘 authentication.method
-
-How Confluent Cloud authenticates with Azure or GCP. Allowed values - ``Password``, ``Microsoft Entra ID application`` and ``Google service account impersonation``.
-
-	 - Type: STRING
-	 - Default: Password
-	 - Importance: HIGH
-	 - Required: false
-
-🔘 provider.integration.id
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Select an existing integration that has access to your resource.
-	 - Required: HIGH
-
-==========================
 How should we connect to your database?
 ==========================
 🔘 connection.host
@@ -146,7 +125,7 @@ How should we connect to your database?
 
 
 
-	 - Type: false
+	 - Type: true
 	 - Default: PASSWORD
 	 - Importance: JDBC connection password.
 	 - Required: HIGH
