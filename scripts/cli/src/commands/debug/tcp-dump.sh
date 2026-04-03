@@ -25,6 +25,8 @@ do
 	logwarn "tcpdump is not installed on container $container, attempting to install it"
 	echo "using rpm" > $output_install_log
 	docker exec --privileged --user root $container bash -c "rpm -i --nosignature https://rpmfind.net/linux/centos/8-stream/AppStream/aarch64/os/Packages/tcpdump-4.9.3-2.el8.aarch64.rpm" >> $output_install_log 2>&1
+    # for 8.x install yum
+    playground container exec --root --command "microdnf -y install yum" > /dev/null 2>&1
 	echo "using yum" >> $output_install_log
 	docker exec --privileged --user root $container bash -c "yum update -y && yum install tcpdump -y" >> $output_install_log 2>&1
 

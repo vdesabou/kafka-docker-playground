@@ -159,7 +159,7 @@ do
             arr=($(echo "$row" | jq -r '.definition.group, .definition.name, .definition.default_value, .definition.type, .definition.required, .definition.importance, .definition.documentation'))
             group="${arr[0]}"
                                 set +x
-            if [[ "$group" == "Common" || "$group" == "Transforms" || "$group" == "Error Handling" || "$group" == "Topic Creation" || "$group" == "offsets.topic" || "$group" == "Exactly Once Support" || "$group" == "Predicates" || "$group" == "Confluent Licensing" ]] ; then
+            if [[ "$group" == "Common" || "$group" == "Transforms" || "$group" == "Error Handling" || "$group" == "Topic Creation" || "$group" == "offsets.topic" || "$group" == "Predicates" || "$group" == "Confluent Licensing" ]] ; then
                 continue
             fi
 

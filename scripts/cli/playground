@@ -22053,11 +22053,11 @@ playground_schema_delete_command() {
   # https://docs.confluent.io/platform/current/schema-registry/develop/api.html#delete--subjects-(string-%20subject)-versions-(versionId-%20version)
   if [[ -n "$subject" ]]
   then
-      #url encode subject
-      subject=$(urlencode "${subject}")
       if [[ -n "$version" ]]
       then
           log "🧟 Soft deleting 💯 version ${version} from subject 🔰 ${subject}"
+          #url encode subject
+          subject=$(urlencode "${subject}")
           if [[ -n "$verbose" ]]
           then
               log "🐞 curl command used"
@@ -22077,6 +22077,8 @@ playground_schema_delete_command() {
       else
           logwarn "--version is not set, deleting all versions !"
           log "🧟 Soft deleting subject 🔰 ${subject}"
+          #url encode subject
+          subject=$(urlencode "${subject}")
           if [[ -n "$verbose" ]]
           then
               log "🐞 curl command used"
@@ -23037,6 +23039,8 @@ playground_debug_tcp_dump_command() {
   	logwarn "tcpdump is not installed on container $container, attempting to install it"
   	echo "using rpm" > $output_install_log
   	docker exec --privileged --user root $container bash -c "rpm -i --nosignature https://rpmfind.net/linux/centos/8-stream/AppStream/aarch64/os/Packages/tcpdump-4.9.3-2.el8.aarch64.rpm" >> $output_install_log 2>&1
+      # for 8.x install yum
+      playground container exec --root --command "microdnf -y install yum" > /dev/null 2>&1
   	echo "using yum" >> $output_install_log
   	docker exec --privileged --user root $container bash -c "yum update -y && yum install tcpdump -y" >> $output_install_log 2>&1
 
@@ -29638,7 +29642,7 @@ playground_connector_show_config_parameters_command() {
               arr=($(echo "$row" | jq -r '.definition.group, .definition.name, .definition.default_value, .definition.type, .definition.required, .definition.importance, .definition.documentation'))
               group="${arr[0]}"
                                   set +x
-              if [[ "$group" == "Common" || "$group" == "Transforms" || "$group" == "Error Handling" || "$group" == "Topic Creation" || "$group" == "offsets.topic" || "$group" == "Exactly Once Support" || "$group" == "Predicates" || "$group" == "Confluent Licensing" ]] ; then
+              if [[ "$group" == "Common" || "$group" == "Transforms" || "$group" == "Error Handling" || "$group" == "Topic Creation" || "$group" == "offsets.topic" || "$group" == "Predicates" || "$group" == "Confluent Licensing" ]] ; then
                   continue
               fi
 
