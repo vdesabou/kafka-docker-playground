@@ -38,3 +38,6 @@
     "couchbase.username": "",
     "couchbase.value.schema": "STRING",
     "couchbase.xattrs": "false",
+    "exactly.once.support": "requested",
+    "transaction.boundary": "poll",
+    "transaction.boundary.interval.ms": "",
