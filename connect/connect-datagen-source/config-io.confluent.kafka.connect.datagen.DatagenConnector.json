@@ -1,3 +1,4 @@
+    "exactly.once.support": "requested",
     "iterations": "-1",
     "kafka.topic": "",
     "key.converter.converter.encoding": "UTF-8",
@@ -8,6 +9,8 @@
     "schema.filename": "STRING",
     "schema.keyfield": "STRING",
     "schema.string": "STRING",
+    "transaction.boundary": "poll",
+    "transaction.boundary.interval.ms": "",
     "value.converter.converter.type": "",
     "value.converter.decimal.format": "BASE64",
     "value.converter.replace.null.with.default": "true",
