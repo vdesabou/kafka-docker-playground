@@ -1,5 +1,6 @@
     "backoff.time.ms": "100",
     "batch.size": "1024",
+    "exactly.once.support": "requested",
     "kafka.topic": "",
     "rabbitmq.automatic.recovery.enabled": "true",
     "rabbitmq.connection.timeout.ms": "60000",
@@ -38,3 +39,5 @@
     "rabbitmq.topology.recovery.enabled": "true",
     "rabbitmq.username": "guest",
     "rabbitmq.virtual.host": "/",
+    "transaction.boundary": "poll",
+    "transaction.boundary.interval.ms": "",
