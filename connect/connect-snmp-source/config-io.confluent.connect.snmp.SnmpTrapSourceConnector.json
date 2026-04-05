@@ -1,4 +1,5 @@
     "dispatcher.thread.pool.size": "10",
+    "exactly.once.support": "requested",
     "kafka.topic": "",
     "snmp.batch.size": "1024",
     "snmp.listen.address": "0.0.0.0",
@@ -6,4 +7,6 @@
     "snmp.listen.protocol": "UDP",
     "snmp.poll.backoff.ms": "250",
     "snmp.v3.enabled": "false",
+    "transaction.boundary": "poll",
+    "transaction.boundary.interval.ms": "",
     "v3.security.context.users": "LIST",
