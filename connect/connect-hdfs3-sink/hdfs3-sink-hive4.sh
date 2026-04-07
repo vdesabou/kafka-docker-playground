@@ -7,7 +7,10 @@ source ${DIR}/../../scripts/utils.sh
 log "Building Hadoop Docker image (replacing if exists)"
 cd ../../connect/connect-hdfs3-sink
 docker build -t kdp/hadoop:3.3.6 .
+rm -f hadoop-config/hiveserver2.pid
 cd -
+
+
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.hive4.yml"
