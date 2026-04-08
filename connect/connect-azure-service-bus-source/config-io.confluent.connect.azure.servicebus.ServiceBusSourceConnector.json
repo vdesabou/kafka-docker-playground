@@ -9,4 +9,7 @@
     "azure.servicebus.sas.key": "",
     "azure.servicebus.sas.keyname": "",
     "azure.servicebus.subscription": "STRING",
+    "exactly.once.support": "requested",
     "kafka.topic": "",
+    "transaction.boundary": "poll",
+    "transaction.boundary.interval.ms": "",
