@@ -120,6 +120,7 @@ playground_usage() {
   printf "  %s   ⛑️ Generate a diagnostic bundle with Diagnostics Bundle Tool\n" "$(green "debug generate-diagnostics")                "
   printf "  %s   🎯 Take a java thread dump\n" "$(green "debug thread-dump")                         "
   printf "  %s   👻 Take a heap dump\n" "$(green "debug heap-dump")                           "
+  printf "  %s   🔬 Analyze a heap dump file using Eclipse MAT (Memory Analyzer Tool)\n" "$(green "debug heap-analyze")                        "
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "debug tcp-dump")                            "
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "debug block-traffic")                       "
   printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "debug java-debug")                          "
@@ -4180,6 +4181,7 @@ playground_debug_usage() {
   printf "  %s   ⛑️ Generate a diagnostic bundle with Diagnostics Bundle Tool\n" "$(green "generate-diagnostics")    "
   printf "  %s   🎯 Take a java thread dump\n" "$(green "thread-dump")             "
   printf "  %s   👻 Take a heap dump\n" "$(green "heap-dump")               "
+  printf "  %s   🔬 Analyze a heap dump file using Eclipse MAT (Memory Analyzer Tool)\n" "$(green "heap-analyze")            "
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "tcp-dump")                "
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "block-traffic")           "
   printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "java-debug")              "
@@ -4444,6 +4446,59 @@ playground_debug_heap_dump_usage() {
     printf "  playground debug heap-dump -c connect -c broker\n"
     printf "  playground debug heap-dump --container schema-registry --live\n"
     printf "  playground debug heap-dump -c connect -c broker --histo\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_debug_heap_analyze_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground debug heap-analyze\n\n"
+    printf "  🔬 Analyze a heap dump file using Eclipse MAT (Memory Analyzer Tool)\n  \n  📊 Generates automated leak suspects report, top components, and memory usage\n  analysis\n  \n  🔖 Analyzes .hprof files and generates HTML/ZIP reports with insights\n\n"
+  else
+    printf "playground debug heap-analyze - 🔬 Analyze a heap dump file using Eclipse MAT (Memory Analyzer Tool)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground debug heap-analyze [OPTIONS]\n"
+  printf "  playground debug heap-analyze --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file, -f FILE (required)")"
+    printf "    📁 Path to the .hprof heap dump file to analyze\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
+    printf "    📂 Output directory for analysis reports (default: ./heap-analysis)\n"
+    printf "    %s\n" "Default: ./heap-analysis"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--report-type, -r REPORT_TYPE")"
+    printf "    📋 Type of report to generate\n    \n    - all: Generate all available reports\n    - leaks: Leak suspects report only\n    - overview: System overview report\n    - top-components: Top memory consumers\n"
+    printf "    %s\n" "Allowed: all, leaks, overview, top-components"
+    printf "    %s\n" "Default: all"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground debug heap-analyze --file heap-dump-connect-2026-04-08.hprof\n"
+    printf "  playground debug heap-analyze -f heap-dump-broker.hprof --output-dir\n  ./analysis\n"
+    printf "  playground debug heap-analyze -f heap-dump-connect.hprof --report-type leaks\n"
     echo
 
   fi
@@ -23009,6 +23064,53 @@ playground_debug_heap_dump_command() {
 }
 
 # :command.function
+playground_debug_heap_analyze_command() {
+
+  # src/commands/debug/heap-analyze.sh
+  --------
+  1. Open the HTML reports in $output_dir_abs
+  2. Review leak suspects for potential memory issues
+  3. Check top components for largest memory consumers
+
+  For interactive analysis:
+  - Use VisualVM: https://visualvm.github.io/
+  - Use Eclipse MAT GUI: https://www.eclipse.org/mat/
+
+  EOF
+
+  # Try to extract basic stats using jmap if available
+  if command -v jmap >/dev/null 2>&1; then
+      log "📊 Extracting heap histogram..."
+      jmap -histo:file="$heap_file" | head -n 30 >> "$output_dir_abs/analysis-summary.txt" 2>/dev/null || true
+  fi
+
+  log "✅ Analysis complete!"
+  log ""
+  log "📁 Analysis reports available at:"
+  log "   $output_dir_abs"
+  log ""
+  log "📄 Summary: $output_dir_abs/analysis-summary.txt"
+
+  # List generated files
+  if ls "$output_dir_abs"/*.html >/dev/null 2>&1; then
+      log ""
+      log "📊 HTML Reports:"
+      for html_file in "$output_dir_abs"/*.html; do
+          log "   - $(basename "$html_file")"
+      done
+  fi
+
+  # Check if reports were generated
+  report_count=$(find "$output_dir_abs" -name "*.html" 2>/dev/null | wc -l)
+  if [ "$report_count" -eq 0 ]; then
+      logwarn "⚠️  No HTML reports were generated. Check the logs in /tmp/mat-analysis-*.log"
+      log ""
+      log "💡 Tip: You can still open the .hprof file with VisualVM or Eclipse MAT GUI for manual analysis"
+  fi
+
+}
+
+# :command.function
 playground_debug_tcp_dump_command() {
 
   # src/commands/debug/tcp-dump.sh
@@ -41554,6 +41656,13 @@ playground_debug_parse_requirements() {
       shift $#
       ;;
 
+    heap-analyze)
+      action="heap-analyze"
+      shift
+      playground_debug_heap_analyze_parse_requirements "$@"
+      shift $#
+      ;;
+
     tcp-dump)
       action="tcp-dump"
       shift
@@ -42065,6 +42174,110 @@ playground_debug_heap_dump_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--container']:-} ]] || args['--container']="connect"
+
+}
+
+# :command.parse_requirements
+playground_debug_heap_analyze_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_debug_heap_analyze_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="debug heap-analyze"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --file | -f)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --output-dir | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir, -o OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --report-type | -r)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--report-type']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--report-type requires an argument: --report-type, -r REPORT_TYPE" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--file']+x} ]]; then
+    printf "missing required flag: --file, -f FILE\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="./heap-analysis"
+  [[ -n ${args['--report-type']:-} ]] || args['--report-type']="all"
+
+  # :command.whitelist_filter
+  if [[ ${args['--report-type']:-} ]] && [[ ! ${args['--report-type']:-} =~ ^(all|leaks|overview|top-components)$ ]]; then
+    printf "%s\n" "--report-type must be one of: all, leaks, overview, top-components" >&2
+    exit 1
+  fi
 
 }
 
@@ -50786,6 +50999,7 @@ run() {
     "debug generate-diagnostics") playground_debug_generate_diagnostics_command ;;
     "debug thread-dump") playground_debug_thread_dump_command ;;
     "debug heap-dump") playground_debug_heap_dump_command ;;
+    "debug heap-analyze") playground_debug_heap_analyze_command ;;
     "debug tcp-dump") playground_debug_tcp_dump_command ;;
     "debug block-traffic") playground_debug_block_traffic_command ;;
     "debug java-debug") playground_debug_java_debug_command ;;

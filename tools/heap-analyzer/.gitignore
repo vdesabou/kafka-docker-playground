@@ -1,0 +1,14 @@
+# Heap dump files
+*.hprof
+
+# Analysis output
+heap-analysis*/
+output/
+analysis/
+
+# Build logs
+*.log
+
+# Temporary files
+tmp/
+temp/
