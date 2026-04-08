@@ -1,3 +1,4 @@
+    "exactly.once.support": "requested",
     "kafka.topic": "splunk-s2s-events",
     "key.converter.converter.encoding": "UTF-8",
     "key.converter.converter.type": "",
@@ -27,6 +28,8 @@
     "splunk.s2s.ssl.key.password": "[hidden]",
     "splunk.s2s.ssl.key.path": "STRING",
     "splunk.s2s.ssl.root.ca.cert.chain.path": "STRING",
+    "transaction.boundary": "poll",
+    "transaction.boundary.interval.ms": "",
     "value.converter.converter.type": "",
     "value.converter.decimal.format": "BASE64",
     "value.converter.replace.null.with.default": "true",
