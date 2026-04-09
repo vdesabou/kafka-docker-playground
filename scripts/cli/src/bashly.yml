@@ -2177,7 +2177,7 @@ commands:
 
       🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/) can be used to read the file.
 
-      It will run a full gc first. If you don't want this, use 
+      It will run a full gc first. If you don't want this, use
     flags:
       - *container
       - long: --live
@@ -2194,6 +2194,45 @@ commands:
     - playground debug heap-dump -c connect -c broker
     - playground debug heap-dump --container schema-registry --live
     - playground debug heap-dump -c connect -c broker --histo
+
+  - name: heap-analyze
+    help: |-
+      🔬 Analyze a heap dump file using Eclipse MAT (Memory Analyzer Tool)
+
+      📊 Generates automated leak suspects report, top components, and memory usage analysis
+
+      🔖 Analyzes .hprof files and generates HTML/ZIP reports with insights
+    flags:
+      - long: --file
+        short: -f
+        arg: file
+        required: true
+        help: |-
+          📁 Path to the .hprof heap dump file to analyze
+      - long: --output-dir
+        short: -o
+        arg: output_dir
+        required: false
+        default: "./heap-analysis"
+        help: |-
+          📂 Output directory for analysis reports (default: ./heap-analysis)
+      - long: --report-type
+        short: -r
+        arg: report_type
+        allowed: [all, leaks, overview, top-components]
+        required: false
+        default: "all"
+        help: |-
+          📋 Type of report to generate
+
+          - all: Generate all available reports
+          - leaks: Leak suspects report only
+          - overview: System overview report
+          - top-components: Top memory consumers
+    examples:
+    - playground debug heap-analyze --file heap-dump-connect-2026-04-08.hprof
+    - playground debug heap-analyze -f heap-dump-broker.hprof --output-dir ./analysis
+    - playground debug heap-analyze -f heap-dump-connect.hprof --report-type leaks
 
   - name: tcp-dump
     help: |-
