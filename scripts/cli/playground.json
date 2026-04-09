@@ -1570,7 +1570,7 @@
         },
         {
           "name": "heap-dump",
-          "description": "👻 Take a heap dump\n  \n  🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/) can be used to read the file.\n  \n  It will run a full gc first. If you don't want this, use \n",
+          "description": "👻 Take a heap dump\n  \n  🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/) can be used to read the file.\n  \n  It will run a full gc first. If you don't want this, use\n",
           "usage": "playground debug heap-dump [OPTIONS]",
           "options": [
             {
@@ -1594,6 +1594,37 @@
               ],
               "argument": "",
               "description": "📊 print histogram of java object heap\n"
+            }
+          ]
+        },
+        {
+          "name": "heap-analyze",
+          "description": "🔬 Analyze a heap dump file using Eclipse MAT (Memory Analyzer Tool)\n  \n  📊 Generates automated leak suspects report, top components, and memory usage analysis\n  \n  🔖 Analyzes .hprof files and generates HTML/ZIP reports with insights\n",
+          "usage": "playground debug heap-analyze [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--file",
+                "-f"
+              ],
+              "argument": "FILE",
+              "description": "📁 Path to the .hprof heap dump file to analyze\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--output-dir",
+                "-o"
+              ],
+              "argument": "./heap-analysis",
+              "description": "📂 Output directory for analysis reports (default: ./heap-analysis)\n\nDefault value: ./heap-analysis\n"
+            },
+            {
+              "names": [
+                "--report-type",
+                "-r"
+              ],
+              "argument": "all",
+              "description": "📋 Type of report to generate\n\n- all: Generate all available reports\n- leaks: Leak suspects report only\n- overview: System overview report\n- top-components: Top memory consumers\n\nDefault value: all\n\nAllowed values: all, leaks, overview, top-components\n"
             }
           ]
         },

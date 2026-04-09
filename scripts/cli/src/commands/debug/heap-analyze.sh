@@ -57,19 +57,19 @@ else
 fi
 
 # Generate summary
-cat > "$output_dir_abs/analysis-summary.txt" <<EOF
-Heap Dump Analysis Summary
-==========================
-Generated: $(date)
-Heap Dump: $(basename "$heap_file")
-File Size: $(du -h "$heap_file" | cut -f1)
+cat > "$output_dir_abs/analysis-summary.txt" << EOF
+    Heap Dump Analysis Summary
+    ==========================
+    Generated: $(date)
+    Heap Dump: $(basename "$heap_file")
+    File Size: $(du -h "$heap_file" | cut -f1)
 
-Reports Generated:
-- Location: $output_dir_abs
-- Type: $report_type
+    Reports Generated:
+    - Location: $output_dir_abs
+    - Type: $report_type
 
-Reports:
---------
+    Reports:
+    --------
 EOF
 
 # List generated files
@@ -80,17 +80,17 @@ if [ -f "$output_dir_abs/histogram.txt" ]; then
     echo "- histogram.txt (Heap histogram)" >> "$output_dir_abs/analysis-summary.txt"
 fi
 
-cat >> "$output_dir_abs/analysis-summary.txt" <<EOF
+cat >> "$output_dir_abs/analysis-summary.txt" << EOF
 
-Next Steps:
------------
-1. Open analysis-report.html in your browser
-2. Review top memory consumers
-3. Check for unexpected object accumulation
+    Next Steps:
+    -----------
+    1. Open analysis-report.html in your browser
+    2. Review top memory consumers
+    3. Check for unexpected object accumulation
 
-For deeper analysis:
-- Use VisualVM: https://visualvm.github.io/
-- Use Eclipse MAT: https://www.eclipse.org/mat/
+    For deeper analysis:
+    - Use VisualVM: https://visualvm.github.io/
+    - Use Eclipse MAT: https://www.eclipse.org/mat/
 EOF
 
 log ""

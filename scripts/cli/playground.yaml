@@ -1835,7 +1835,7 @@ subcommands:
             
             🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/) can be used to read the file.
             
-            It will run a full gc first. If you don't want this, use 
+            It will run a full gc first. If you don't want this, use
         usage: playground debug heap-dump [OPTIONS]
         options:
         - names:
@@ -1862,6 +1862,49 @@ subcommands:
           argument: ""
           description: | 
             📊 print histogram of java object heap
+            
+      - name: heap-analyze
+        description: | 
+          🔬 Analyze a heap dump file using Eclipse MAT (Memory Analyzer Tool)
+            
+            📊 Generates automated leak suspects report, top components, and memory usage analysis
+            
+            🔖 Analyzes .hprof files and generates HTML/ZIP reports with insights
+        usage: playground debug heap-analyze [OPTIONS]
+        options:
+        - names:
+          - --file
+          - -f
+          argument: FILE
+          description: | 
+            📁 Path to the .hprof heap dump file to analyze
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --output-dir
+          - -o
+          argument: ./heap-analysis
+          description: | 
+            📂 Output directory for analysis reports (default: ./heap-analysis)
+            
+            Default value: ./heap-analysis
+            
+        - names:
+          - --report-type
+          - -r
+          argument: all
+          description: | 
+            📋 Type of report to generate
+            
+            - all: Generate all available reports
+            - leaks: Leak suspects report only
+            - overview: System overview report
+            - top-components: Top memory consumers
+            
+            Default value: all
+            
+            Allowed values: all, leaks, overview, top-components
             
       - name: tcp-dump
         description: | 
