@@ -64,6 +64,8 @@ then
      exit 1
 fi
 
+logwarn "This example requires Snowflake to be Enterprise Edition for iceberg to work, if you are using trial account, please make sure to select Enterprise Edition when you sign up"
+
 if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]
 then
      logwarn "AWS credentials not found in environment variables, arguments, or ~/.aws files."

@@ -4,8 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-
-
 username=$(whoami)
 uppercase_username=$(echo $username | tr '[:lower:]' '[:upper:]')
 
@@ -42,6 +40,8 @@ then
      logerror "SNOWFLAKE_PASSWORD is not set. Export it as environment variable or pass it as argument"
      exit 1
 fi
+
+logwarn "This example requires Snowflake to be Enterprise Edition for iceberg to work, if you are using trial account, please make sure to select Enterprise Edition when you sign up"
 
 # https://<account_name>.<region_id>.snowflakecomputing.com:443
 SNOWFLAKE_URL="https://$SNOWFLAKE_ACCOUNT_NAME.snowflakecomputing.com"

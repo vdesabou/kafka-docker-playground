@@ -43,6 +43,8 @@ then
      exit 1
 fi
 
+logwarn "This example requires Snowflake to be Enterprise Edition for iceberg to work, if you are using trial account, please make sure to select Enterprise Edition when you sign up"
+
 bootstrap_ccloud_environment
 
 set +e
