@@ -1,3 +1,4 @@
+    "exactly.once.support": "requested",
     "gcp.pubsub.credentials.json": "[hidden]",
     "gcp.pubsub.credentials.path": "STRING",
     "gcp.pubsub.credentials.provider.class": "STRING",
@@ -12,3 +13,5 @@
     "gcp.pubsub.subscription.id": "STRING",
     "gcp.pubsub.topic.id": "STRING",
     "kafka.topic": "",
+    "transaction.boundary": "poll",
+    "transaction.boundary.interval.ms": "",
