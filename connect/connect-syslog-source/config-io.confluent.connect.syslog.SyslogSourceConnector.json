@@ -4,6 +4,7 @@
     "60000": "INT",
     "cef.timestamp.mode": "header",
     "cef.timestamp.mode.extension_field.key": "STRING",
+    "exactly.once.support": "requested",
     "netty.event.group.type": "EPOLL",
     "netty.trace.addresses": "LIST",
     "netty.trace.enabled": "false",
@@ -27,3 +28,5 @@
     "syslog.tcp.max.frame.size": "10000",
     "syslog.time.zone": "UTC",
     "syslog.use.length.as.delimiter": "false",
+    "transaction.boundary": "poll",
+    "transaction.boundary.interval.ms": "",
