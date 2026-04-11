@@ -20,6 +20,7 @@
     "errors.deadletterqueue.topic.name": "STRING",
     "errors.log.enable": "false",
     "errors.tolerance": "none",
+    "exactly.once.support": "requested",
     "heartbeat.interval.ms": "0",
     "heartbeat.topic.name": "__mongodb_heartbeats",
     "mongo.errors.deadletterqueue.topic.name": "STRING",
@@ -53,3 +54,5 @@
     "topic.prefix": "STRING",
     "topic.separator": ".",
     "topic.suffix": "STRING",
+    "transaction.boundary": "poll",
+    "transaction.boundary.interval.ms": "",
