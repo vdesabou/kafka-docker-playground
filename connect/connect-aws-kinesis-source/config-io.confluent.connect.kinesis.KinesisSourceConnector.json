@@ -1,5 +1,6 @@
     "aws.access.key.id": "STRING",
     "aws.secret.key.id": "",
+    "exactly.once.support": "requested",
     "kafka.topic": "",
     "kinesis.base.url": "STRING",
     "kinesis.credentials.provider.class": "software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider",
@@ -18,3 +19,5 @@
     "kinesis.throughput.exceeded.backoff.ms": "10000",
     "regex.timeout.ms": "100",
     "shard.ids": "LIST",
+    "transaction.boundary": "poll",
+    "transaction.boundary.interval.ms": "",
