@@ -1,5 +1,6 @@
     "aws.access.key.id": "",
     "aws.secret.key.id": "",
+    "exactly.once.support": "requested",
     "kafka.topic": "",
     "sqs.credentials.provider.class": "software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider",
     "sqs.max.retries": "3",
@@ -10,3 +11,5 @@
     "sqs.region": "STRING",
     "sqs.url": "",
     "sqs.waittime.seconds": "20",
+    "transaction.boundary": "poll",
+    "transaction.boundary.interval.ms": "",
