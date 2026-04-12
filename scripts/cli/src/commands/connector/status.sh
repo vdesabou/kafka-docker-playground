@@ -24,6 +24,29 @@ then
     log "✨ --connector flag was not provided, applying command to all connectors"
 fi
 
+if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+then
+    :
+else
+    if is_multiple_connect_workers_running
+    then
+        missing_connect_workers=""
+        for worker in connect connect2 connect3
+        do
+            if ! is_container_running "$worker"
+            then
+                missing_connect_workers="$missing_connect_workers $worker"
+            fi
+        done
+        if [ -n "$missing_connect_workers" ]
+        then
+            logwarn "⚠️ Connect workers not running:${missing_connect_workers}"
+        fi
+
+        leader_name=$(playground --output-level WARN connector display-leader-name)
+        leader_name=$(echo "$leader_name" | tr -d '[:space:]')
+    fi
+fi
 for connector in "${items[@]}"
 do
     set +e
@@ -129,9 +152,6 @@ do
 
         if is_multiple_connect_workers_running
         then
-            leader_name=$(playground --output-level WARN connector display-leader-name)
-            leader_name=$(echo "$leader_name" | tr -d '[:space:]')
-            
             connector_worker_id=$(echo "$curl_output" | jq -r '.connector.worker_id // empty' | sed 's/:8083$//' | sed 's/:8283$//' | sed 's/:8383$//')
             if [ -n "$connector_worker_id" ]
             then
