@@ -3477,6 +3477,12 @@
           ]
         },
         {
+          "name": "display-leader-name",
+          "description": "👑 Display Connect Worker leader name using JMX MBean leader-name from kafka.connect:type=connect-worker-rebalance-metrics\n  \n  This is useful when you have multiple connect workers and want to know which one is the leader.\n  \n  For onprem connectors, this is basically a shortcut for \"playground container exec -c connect -- bash -c 'export JMX_PORT=9404; jmxterm -l localhost:9404 -n -v silent -u admin -p admin123 -e \\\"get -b kafka.connect:type=connect-worker-rebalance-metrics name=leader-name\\\"'\", --connector flag is not relevant\n  \n  For Fully Managed connectors, this is not available as JMX is not accessible.\n",
+          "usage": "playground connector display-leader-name",
+          "options": []
+        },
+        {
           "name": "translate",
           "description": "💱 Translate Self Managed Connector Plugin Configurations to Fully Managed Connector Plugin Configuration\n  \n  See https://docs.confluent.io/cloud/current/api.html#tag/Managed-Connector-Plugins-(connectv1)/operation/translateConnectv1ConnectorPlugin\n  \n  The connector example should be ran with --environment flag set to <ccloud>\n  \n",
           "usage": "playground connector translate [OPTIONS]",

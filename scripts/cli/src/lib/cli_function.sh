@@ -18,6 +18,15 @@ function get_connect_container() {
   done
 }
 
+function is_multiple_connect_workers_running() {
+  if is_container_running "connect2" || is_container_running "connect3"
+  then
+    return 0
+  else
+    return 1
+  fi
+}
+
 function get_connect_url_and_security() {
   get_environment_used
 

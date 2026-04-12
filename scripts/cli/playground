@@ -191,6 +191,7 @@ playground_usage() {
   printf "  %s   🧬 Set connect log level\n" "$(green "connector log-level")                       "
   printf "  %s   🕵️  Tail and follow connect logs\n" "$(green "connector logs")                            "
   printf "  %s   🤖 Open Fully Managed connector in browser (Confluent Cloud dashboard)\n" "$(green "connector open-ccloud-connector-in-browser")"
+  printf "  %s   👑 Display Connect Worker leader name using JMX MBean leader-name from kafka.connect:type=connect-worker-rebalance-metrics\n" "$(green "connector display-leader-name")             "
   printf "  %s   💱 Translate Self Managed Connector Plugin Configurations to Fully Managed Connector Plugin Configuration\n" "$(green "connector translate")                       "
   printf "  %s   🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster\n" "$(green "connector connect-migration-utility")       "
   printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "connector create-or-update")                "
@@ -6381,6 +6382,7 @@ playground_connector_usage() {
   printf "%s\n" "$(bold "Connect commands:")"
   printf "  %s   🕵️  Tail and follow connect logs\n" "$(green "logs")                            "
   printf "  %s   🤖 Open Fully Managed connector in browser (Confluent Cloud dashboard)\n" "$(green "open-ccloud-connector-in-browser")"
+  printf "  %s   👑 Display Connect Worker leader name using JMX MBean leader-name from kafka.connect:type=connect-worker-rebalance-metrics\n" "$(green "display-leader-name")             "
   echo
 
   # :command.long_usage
@@ -7465,6 +7467,33 @@ playground_connector_open_ccloud_connector_in_browser_usage() {
 }
 
 # :command.usage
+playground_connector_display_leader_name_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector display-leader-name\n\n"
+    printf "  👑 Display Connect Worker leader name using JMX MBean leader-name from\n  kafka.connect:type=connect-worker-rebalance-metrics\n  \n  This is useful when you have multiple connect workers and want to know which\n  one is the leader.\n  \n  For onprem connectors, this is basically a shortcut for \"playground container\n  exec -c connect -- bash -c 'export JMX_PORT=9404; jmxterm -l localhost:9404 -n\n  -v silent -u admin -p admin123 -e \\"get -b\n  kafka.connect:type=connect-worker-rebalance-metrics name=leader-name\\"'\",\n  --connector flag is not relevant\n  \n  For Fully Managed connectors, this is not available as JMX is not accessible.\n\n"
+  else
+    printf "playground connector display-leader-name - 👑 Display Connect Worker leader name using JMX MBean leader-name from kafka.connect:type=connect-worker-rebalance-metrics\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector display-leader-name\n"
+  printf "  playground connector display-leader-name --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_connector_translate_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector translate\n\n"
@@ -8204,6 +8233,15 @@ function get_connect_container() {
       break
     fi
   done
+}
+
+function is_multiple_connect_workers_running() {
+  if is_container_running "connect2" || is_container_running "connect3"
+  then
+    return 0
+  else
+    return 1
+  fi
 }
 
 function get_connect_url_and_security() {
@@ -27851,9 +27889,6 @@ playground_connector_status_command() {
               ((attempt++))
           done
 
-          printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
-          echo "-------------------------------------------------------------------------------------------------------------"
-
           if [ "$status" == "RUNNING" ]; then status="✅ RUNNING"
           elif [ "$status" == "PAUSED" ]; then status="⏸️  PAUSED"
           elif [ "$status" == "FAILED" ]; then status="❌ FAILED"
@@ -27861,7 +27896,33 @@ playground_connector_status_command() {
           elif [ "$status" == "STOPPED" ]; then status="🛑 STOPPED"
           else status="🤔 UNKNOWN (API Error)"; fi
 
-          tasks=$(echo "$curl_output" | jq -r '.tasks[] | "\(.id):\(.state)[\(.worker_id)]"' | tr '\n' ',' | sed 's/,$/\n/' | sed 's/:8083//g' | sed 's/:8283//g' | sed 's/:8383//g')
+          status_display="$status"
+          tasks=$(echo "$curl_output" | jq -r '.tasks[] | "\(.id):\(.state)"' | tr '\n' ',' | sed 's/,$/\n/')
+
+          if is_multiple_connect_workers_running
+          then
+              leader_name=$(playground --output-level WARN connector display-leader-name)
+              leader_name=$(echo "$leader_name" | tr -d '[:space:]')
+
+              connector_worker_id=$(echo "$curl_output" | jq -r '.connector.worker_id // empty' | sed 's/:8083$//' | sed 's/:8283$//' | sed 's/:8383$//')
+              if [ -n "$connector_worker_id" ]
+              then
+                  status_display="$status[$connector_worker_id]"
+                  if [ -n "$leader_name" ] && [ "$connector_worker_id" == "$leader_name" ]
+                  then
+                      status_display="$status[$connector_worker_id 👑]"
+                  fi
+              fi
+
+              tasks=$(echo "$curl_output" | jq -r '.tasks[] | "\(.id):\(.state)[\(.worker_id)]"' | tr '\n' ',' | sed 's/,$/\n/' | sed 's/:8083//g' | sed 's/:8283//g' | sed 's/:8383//g')
+              if [ -n "$leader_name" ]
+              then
+                  tasks=$(echo "$tasks" | sed "s/\[$leader_name\]/[$leader_name 👑]/g")
+              fi
+          fi
+
+          printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
+          echo "-------------------------------------------------------------------------------------------------------------"
 
           if [[ "$tasks" == *"RUNNING"* ]]; then tasks="${tasks//RUNNING/🟢 RUNNING}"
           elif [[ "$tasks" == *"PAUSED"* ]]; then tasks="${tasks//PAUSED/⏸️  PAUSED}"
@@ -27877,7 +27938,7 @@ playground_connector_status_command() {
           if [ "$stacktrace_tasks" != "" ]; then stacktrace="$stacktrace tasks: $stacktrace_tasks"; fi
           if [ -z "$stacktrace" ]; then stacktrace="-"; fi
 
-          printf "%-30s %-12s %-30s %-50s\n" "$connector" "$status" "$tasks" "$stacktrace"
+          printf "%-30s %-12s %-30s %-50s\n" "$connector" "$status_display" "$tasks" "$stacktrace"
           echo "-------------------------------------------------------------------------------------------------------------"
       fi
       set -e
@@ -30976,6 +31037,27 @@ playground_connector_open_ccloud_connector_in_browser_command() {
           fi
       fi
   done
+}
+
+# :command.function
+playground_connector_display_leader_name_command() {
+
+  # src/commands/connector/display-leader-name.sh
+  connector_type=$(playground state get run.connector_type)
+  if [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
+  then
+      log "playground connector display-leader-name command is not supported with $connector_type connector"
+      exit 0
+  fi
+
+  get_connect_container
+
+  leader_name=$(playground get-jmx-metrics --container "$connect_container" --domain kafka.connect | awk -F'=' '/leader-name/ {print $2}' | tr -d ' ;')
+
+  log "👑 leader name is:"
+  # Convert values like http://connect:8083/ to connect
+  echo "$leader_name" | sed -E 's#^[a-zA-Z]+://##' | cut -d'/' -f1 | cut -d':' -f1
+
 }
 
 # :command.function
@@ -46997,6 +47079,13 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
+    display-leader-name)
+      action="display-leader-name"
+      shift
+      playground_connector_display_leader_name_parse_requirements "$@"
+      shift $#
+      ;;
+
     translate)
       action="translate"
       shift
@@ -49335,6 +49424,53 @@ playground_connector_open_ccloud_connector_in_browser_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_connector_display_leader_name_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_display_leader_name_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector display-leader-name"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
 playground_connector_translate_parse_requirements() {
   local key
 
@@ -51145,6 +51281,7 @@ run() {
     "connector log-level") playground_connector_log_level_command ;;
     "connector logs") playground_connector_logs_command ;;
     "connector open-ccloud-connector-in-browser") playground_connector_open_ccloud_connector_in_browser_command ;;
+    "connector display-leader-name") playground_connector_display_leader_name_command ;;
     "connector translate") playground_connector_translate_command ;;
     "connector connect-migration-utility") playground_connector_connect_migration_utility_command ;;
     "connector connect-migration-utility discovery") playground_connector_connect_migration_utility_discovery_command ;;
