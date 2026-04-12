@@ -117,9 +117,6 @@ do
             ((attempt++))
         done
 
-        printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
-        echo "-------------------------------------------------------------------------------------------------------------"
-        
         if [ "$status" == "RUNNING" ]; then status="✅ RUNNING"
         elif [ "$status" == "PAUSED" ]; then status="⏸️  PAUSED"
         elif [ "$status" == "FAILED" ]; then status="❌ FAILED"
@@ -127,7 +124,33 @@ do
         elif [ "$status" == "STOPPED" ]; then status="🛑 STOPPED"
         else status="🤔 UNKNOWN (API Error)"; fi
         
-        tasks=$(echo "$curl_output" | jq -r '.tasks[] | "\(.id):\(.state)[\(.worker_id)]"' | tr '\n' ',' | sed 's/,$/\n/' | sed 's/:8083//g' | sed 's/:8283//g' | sed 's/:8383//g')
+        status_display="$status"
+        tasks=$(echo "$curl_output" | jq -r '.tasks[] | "\(.id):\(.state)"' | tr '\n' ',' | sed 's/,$/\n/')
+
+        if is_multiple_connect_workers_running
+        then
+            leader_name=$(playground --output-level WARN connector display-leader-name)
+            leader_name=$(echo "$leader_name" | tr -d '[:space:]')
+            
+            connector_worker_id=$(echo "$curl_output" | jq -r '.connector.worker_id // empty' | sed 's/:8083$//' | sed 's/:8283$//' | sed 's/:8383$//')
+            if [ -n "$connector_worker_id" ]
+            then
+                status_display="$status[$connector_worker_id]"
+                if [ -n "$leader_name" ] && [ "$connector_worker_id" == "$leader_name" ]
+                then
+                    status_display="$status[$connector_worker_id 👑]"
+                fi
+            fi
+            
+            tasks=$(echo "$curl_output" | jq -r '.tasks[] | "\(.id):\(.state)[\(.worker_id)]"' | tr '\n' ',' | sed 's/,$/\n/' | sed 's/:8083//g' | sed 's/:8283//g' | sed 's/:8383//g')
+            if [ -n "$leader_name" ]
+            then
+                tasks=$(echo "$tasks" | sed "s/\[$leader_name\]/[$leader_name 👑]/g")
+            fi
+        fi
+
+        printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
+        echo "-------------------------------------------------------------------------------------------------------------"
         
         if [[ "$tasks" == *"RUNNING"* ]]; then tasks="${tasks//RUNNING/🟢 RUNNING}"
         elif [[ "$tasks" == *"PAUSED"* ]]; then tasks="${tasks//PAUSED/⏸️  PAUSED}"
@@ -143,7 +166,7 @@ do
         if [ "$stacktrace_tasks" != "" ]; then stacktrace="$stacktrace tasks: $stacktrace_tasks"; fi
         if [ -z "$stacktrace" ]; then stacktrace="-"; fi
 
-        printf "%-30s %-12s %-30s %-50s\n" "$connector" "$status" "$tasks" "$stacktrace"
+        printf "%-30s %-12s %-30s %-50s\n" "$connector" "$status_display" "$tasks" "$stacktrace"
         echo "-------------------------------------------------------------------------------------------------------------"
     fi
     set -e
