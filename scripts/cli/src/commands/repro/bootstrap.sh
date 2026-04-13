@@ -1011,6 +1011,21 @@ EOF
 fi
 ####
 #### pipeline
+remove_connect_cp_version_greater_than_8_blocks () {
+  awk '
+    /^[[:space:]]*if connect_cp_version_greater_than_8/ {skip=1; next}
+    skip && /^[[:space:]]*fi([[:space:]]*#.*)?$/ {skip=0; next}
+    !skip {print}
+  ' "$1" > $tmp_dir/tmp_file2
+  mv $tmp_dir/tmp_file2 "$1"
+}
+
+length=${#pipeline_array[@]}
+if ((length > 0))
+then
+  remove_connect_cp_version_greater_than_8_blocks "$repro_test_file"
+fi
+
 for sink_file in "${pipeline_array[@]}"; do
   if [[ -n "$sink_file" ]]
   then
@@ -1136,6 +1151,7 @@ for sink_file in "${pipeline_array[@]}"; do
     cp $repro_test_file $tmp_dir/tmp_file
 
     { head -n $(($line_final_environment-1)) $tmp_dir/tmp_file; cat $tmp_dir/pre_sink; tail -n +$line_final_environment $tmp_dir/tmp_file; } > $repro_test_file
+    remove_connect_cp_version_greater_than_8_blocks "$repro_test_file"
 
     sed -n "$(($line_sink_environment+1)),$ p" $sink_file > $tmp_dir/tmp_file
 
