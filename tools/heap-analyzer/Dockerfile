@@ -12,9 +12,11 @@ RUN apt-get update && \
 # Create analysis workspace
 WORKDIR /analysis
 
-# Copy analyzer script
+# Copy analyzer scripts
 COPY analyze-heap.sh /usr/local/bin/analyze-heap
-RUN chmod +x /usr/local/bin/analyze-heap
+COPY parse_hprof.py /usr/local/bin/parse_hprof.py
+RUN chmod +x /usr/local/bin/analyze-heap && \
+    chmod +x /usr/local/bin/parse_hprof.py
 
 # Default command
 ENTRYPOINT ["/usr/local/bin/analyze-heap"]

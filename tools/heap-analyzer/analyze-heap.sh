@@ -56,11 +56,20 @@ echo "Output directory: $OUTPUT_DIR"
 echo "Report type: $REPORT_TYPE"
 echo ""
 
-# Generate heap histogram
+# Generate heap histogram using Python parser
 echo "Generating heap histogram..."
-jmap -histo:file="$HEAP_FILE" > "$OUTPUT_DIR/histogram.txt" 2>&1 || {
-    echo "Warning: Could not generate histogram with jmap"
-}
+
+if python3 /usr/local/bin/parse_hprof.py "$HEAP_FILE" "$OUTPUT_DIR/histogram.txt" 2>&1; then
+    echo "✅ Histogram generated successfully"
+else
+    echo "⚠️ Warning: Could not parse heap dump"
+    echo "Heap dump file: $(basename "$HEAP_FILE")" > "$OUTPUT_DIR/histogram.txt"
+    echo "Size: $(du -h "$HEAP_FILE" | cut -f1)" >> "$OUTPUT_DIR/histogram.txt"
+    echo "" >> "$OUTPUT_DIR/histogram.txt"
+    echo "For detailed analysis, please use:" >> "$OUTPUT_DIR/histogram.txt"
+    echo "  - Eclipse MAT: https://www.eclipse.org/mat/" >> "$OUTPUT_DIR/histogram.txt"
+    echo "  - VisualVM: https://visualvm.github.io/" >> "$OUTPUT_DIR/histogram.txt"
+fi
 
 # Create HTML report
 cat > "$OUTPUT_DIR/analysis-report.html" <<'EOF'
@@ -249,32 +258,214 @@ EOF
     fi
 fi
 
-# Add recommendations section
+# Analyze histogram and generate dynamic insights
+INSIGHTS_FILE="$OUTPUT_DIR/.insights.tmp"
+WARNINGS_FILE="$OUTPUT_DIR/.warnings.tmp"
+SUSPECT_FILE="$OUTPUT_DIR/.suspects.tmp"
+> "$INSIGHTS_FILE"
+> "$WARNINGS_FILE"
+> "$SUSPECT_FILE"
+
+if [[ -f "$OUTPUT_DIR/histogram.txt" ]]; then
+    # Get total bytes for percentage calculations
+    total_bytes=$(grep "^Total:" "$OUTPUT_DIR/histogram.txt" | awk '{print $3}' | tr -d ',' || echo "0")
+
+    # Analyze top 50 entries
+    grep -E '^\s+[0-9]+:' "$OUTPUT_DIR/histogram.txt" | head -50 | while IFS= read -r line; do
+        instances=$(echo "$line" | awk '{print $2}')
+        bytes=$(echo "$line" | awk '{print $3}')
+        classname=$(echo "$line" | awk '{$1=$2=$3=""; print $0}' | sed 's/^[[:space:]]*//')
+
+        # Calculate percentage of total heap
+        if [[ $total_bytes -gt 0 ]]; then
+            pct=$(awk "BEGIN {printf \"%.1f\", ($bytes/$total_bytes)*100}")
+        else
+            pct="0"
+        fi
+
+        # Detect patterns and generate insights
+
+        # Large byte arrays (with percentage)
+        if [[ "$classname" == "byte[]" && $bytes -gt 10485760 ]]; then
+            size_mb=$(awk "BEGIN {printf \"%.1f\", $bytes/1048576}")
+            if [[ $(awk "BEGIN {print ($pct > 20)}") -eq 1 ]]; then
+                echo "<li>🔴 <strong>Large byte arrays detected:</strong> ${size_mb} MB (${pct}%) across $(printf "%'d" $instances 2>/dev/null || echo $instances) instances. This is significant - verify these are expected buffers/caches.</li>" >> "$INSIGHTS_FILE"
+            else
+                echo "<li><strong>Byte arrays:</strong> ${size_mb} MB (${pct}%) across $(printf "%'d" $instances 2>/dev/null || echo $instances) instances. Check if these are expected buffers/caches.</li>" >> "$INSIGHTS_FILE"
+            fi
+        fi
+
+        # High String/char[] count
+        if [[ "$classname" == "java/lang/String" ]]; then
+            if [[ $instances -gt 100000 ]]; then
+                echo "<li><strong>High String count:</strong> $(printf "%'d" $instances 2>/dev/null || echo $instances) String objects (${pct}% of heap). Consider string interning or deduplication.</li>" >> "$INSIGHTS_FILE"
+            elif [[ $(awk "BEGIN {print ($pct > 10)}") -eq 1 ]]; then
+                echo "<li><strong>String overhead:</strong> $(printf "%'d" $instances 2>/dev/null || echo $instances) String objects consuming ${pct}% of heap.</li>" >> "$INSIGHTS_FILE"
+            fi
+        fi
+
+        if [[ "$classname" == "char[]" && $instances -gt 50000 ]]; then
+            echo "<li><strong>Many char arrays:</strong> $(printf "%'d" $instances 2>/dev/null || echo $instances) instances. May indicate string duplication.</li>" >> "$INSIGHTS_FILE"
+        fi
+
+        # Detect custom classes (potential leak suspects)
+        # Exclude: Java standard libs, Kafka, Confluent, arrays, and primitive types
+        if [[ ! "$classname" =~ ^(java/|javax/|sun/|jdk/|org/apache/kafka/|io/confluent/|\[|byte\[\]|int\[\]|long\[\]|char\[\]|short\[\]|float\[\]|double\[\]|boolean\[\]) ]]; then
+            # Custom class not from standard libraries
+            if [[ $instances -gt 1000 || $(awk "BEGIN {print ($pct > 5)}") -eq 1 ]]; then
+                size_mb=$(awk "BEGIN {printf \"%.1f\", $bytes/1048576}")
+                echo "<li>⚠️ <strong>Custom class accumulation:</strong> <code>$classname</code> has $(printf "%'d" $instances 2>/dev/null || echo $instances) instances (${size_mb} MB, ${pct}%). Review for memory leaks.</li>" >> "$SUSPECT_FILE"
+            fi
+        fi
+
+        # Collection warnings
+        if [[ "$classname" =~ HashMap.*Node ]]; then
+            if [[ $instances -gt 100000 ]]; then
+                size_mb=$(awk "BEGIN {printf \"%.1f\", $bytes/1048576}")
+                echo "<li><strong>Large HashMap detected:</strong> $(printf "%'d" $instances 2>/dev/null || echo $instances) nodes (${size_mb} MB, ${pct}%). Verify expected size.</li>" >> "$WARNINGS_FILE"
+            elif [[ $(awk "BEGIN {print ($pct > 15)}") -eq 1 ]]; then
+                size_mb=$(awk "BEGIN {printf \"%.1f\", $bytes/1048576}")
+                echo "<li><strong>HashMap nodes:</strong> ${pct}% of heap (${size_mb} MB). Check if maps are growing unbounded.</li>" >> "$WARNINGS_FILE"
+            fi
+        fi
+
+        if [[ "$classname" =~ ArrayList && $instances -gt 50000 ]]; then
+            echo "<li><strong>Many ArrayList instances:</strong> $(printf "%'d" $instances 2>/dev/null || echo $instances) found. Ensure lists are properly cleared.</li>" >> "$WARNINGS_FILE"
+        fi
+
+        if [[ "$classname" =~ ConcurrentHashMap && $instances -gt 10000 ]]; then
+            echo "<li><strong>Many ConcurrentHashMap instances:</strong> $(printf "%'d" $instances 2>/dev/null || echo $instances) found. May indicate cache proliferation.</li>" >> "$WARNINGS_FILE"
+        fi
+
+        # Thread-related
+        if [[ "$classname" == "java/lang/Thread" && $instances -gt 100 ]]; then
+            echo "<li>⚠️ <strong>High thread count:</strong> $(printf "%'d" $instances 2>/dev/null || echo $instances) Thread objects. Check for thread leaks or unbounded thread pools.</li>" >> "$WARNINGS_FILE"
+        fi
+
+        if [[ "$classname" =~ ThreadLocal ]]; then
+            echo "<li><strong>ThreadLocal usage detected:</strong> $(printf "%'d" $instances 2>/dev/null || echo $instances) instances. Verify ThreadLocals are cleaned up properly.</li>" >> "$WARNINGS_FILE"
+        fi
+
+        # Kafka-specific
+        if [[ "$classname" =~ kafka.*Record && ! "$classname" =~ RecordMetadata ]]; then
+            size_mb=$(awk "BEGIN {printf \"%.1f\", $bytes/1048576}")
+            echo "<li><strong>Kafka Records in heap:</strong> <code>$classname</code> - $(printf "%'d" $instances 2>/dev/null || echo $instances) instances (${size_mb} MB). Check consumer commit/poll frequency.</li>" >> "$WARNINGS_FILE"
+        fi
+
+        if [[ "$classname" =~ BoundedConcurrentHashMap.*HashEntry ]]; then
+            size_mb=$(awk "BEGIN {printf \"%.1f\", $bytes/1048576}")
+            if [[ $(awk "BEGIN {print ($pct > 5)}") -eq 1 ]]; then
+                echo "<li><strong>Schema Registry cache:</strong> ${size_mb} MB (${pct}%) in schema cache. Consider tuning cache size limits.</li>" >> "$WARNINGS_FILE"
+            fi
+        fi
+
+        if [[ "$classname" =~ connect.*Task ]]; then
+            echo "<li><strong>Connect Tasks:</strong> $(printf "%'d" $instances 2>/dev/null || echo $instances) task instances. Verify proper cleanup on reconfiguration.</li>" >> "$WARNINGS_FILE"
+        fi
+
+        # Couchbase-specific
+        if [[ "$classname" =~ couchbase ]]; then
+            size_mb=$(awk "BEGIN {printf \"%.1f\", $bytes/1048576}")
+            echo "<li><strong>Couchbase objects:</strong> <code>$classname</code> - ${size_mb} MB (${pct}%). Monitor connection pool and buffer usage.</li>" >> "$WARNINGS_FILE"
+        fi
+
+        # Netty buffers
+        if [[ "$classname" =~ netty.*ByteBuf ]]; then
+            size_mb=$(awk "BEGIN {printf \"%.1f\", $bytes/1048576}")
+            echo "<li><strong>Netty buffers:</strong> $(printf "%'d" $instances 2>/dev/null || echo $instances) ByteBuf instances (${size_mb} MB). Check for buffer leaks - ensure .release() is called.</li>" >> "$WARNINGS_FILE"
+        fi
+
+        # Metrics
+        if [[ "$classname" =~ Metric && $instances -gt 10000 ]]; then
+            echo "<li><strong>High metric count:</strong> $(printf "%'d" $instances 2>/dev/null || echo $instances) metric objects (${pct}% of heap). Review JMX metric retention.</li>" >> "$WARNINGS_FILE"
+        fi
+
+        if [[ "$classname" =~ KafkaMetric ]]; then
+            echo "<li><strong>Kafka metrics:</strong> $(printf "%'d" $instances 2>/dev/null || echo $instances) KafkaMetric objects. Check if metric reporters are consuming excessive memory.</li>" >> "$WARNINGS_FILE"
+        fi
+    done
+fi
+
+# Generate dynamic analysis section
 cat >> "$OUTPUT_DIR/analysis-report.html" <<'EOF'
 
     <div class="section">
-        <h2>💡 Analysis Tips</h2>
+        <h2>💡 Heap Analysis Insights</h2>
+EOF
 
-        <div class="tip">
-            <strong>🔍 What to Look For:</strong>
+# Add leak suspects if any
+if [[ -s "$SUSPECT_FILE" ]]; then
+    cat >> "$OUTPUT_DIR/analysis-report.html" <<'EOF'
+        <div class="warning" style="border-left-color: #f44336; background: #ffebee;">
+            <strong>🔴 Potential Memory Leak Suspects:</strong>
             <ul>
-                <li><strong>Large byte arrays</strong> - Check if they're expected (caches, buffers) or unexpected (leaks)</li>
-                <li><strong>Many instances of business objects</strong> - May indicate objects not being released</li>
-                <li><strong>High char[] or String count</strong> - Possible string duplication or not interning strings</li>
-                <li><strong>Collection growth</strong> - Maps, Lists, Sets that are growing unbounded</li>
+EOF
+    cat "$SUSPECT_FILE" >> "$OUTPUT_DIR/analysis-report.html"
+    cat >> "$OUTPUT_DIR/analysis-report.html" <<'EOF'
+            </ul>
+            <p style="margin-top: 10px; font-size: 13px; color: #666;">
+                <strong>💡 Tip:</strong> Take another heap dump after reproducing the issue and compare object counts. Growing instances indicate a leak.
+            </p>
+        </div>
+EOF
+fi
+
+# Add specific findings if any
+if [[ -s "$INSIGHTS_FILE" ]]; then
+    cat >> "$OUTPUT_DIR/analysis-report.html" <<'EOF'
+        <div class="tip">
+            <strong>🔍 Key Findings:</strong>
+            <ul>
+EOF
+    cat "$INSIGHTS_FILE" >> "$OUTPUT_DIR/analysis-report.html"
+    cat >> "$OUTPUT_DIR/analysis-report.html" <<'EOF'
             </ul>
         </div>
+EOF
+fi
 
+# Add warnings if any
+if [[ -s "$WARNINGS_FILE" ]]; then
+    cat >> "$OUTPUT_DIR/analysis-report.html" <<'EOF'
         <div class="warning">
-            <strong>⚠️ Common Issues in Kafka/Connect:</strong>
+            <strong>⚠️ Items to Review:</strong>
             <ul>
-                <li><strong>Kafka Buffers</strong> - Producer/consumer buffers are normal, but watch for growth</li>
-                <li><strong>Connect Tasks</strong> - Many connector task instances may indicate tasks not being cleaned up</li>
-                <li><strong>Schema Registry Cache</strong> - Normal to have schemas cached, but watch the size</li>
-                <li><strong>Metrics</strong> - JMX metrics can accumulate, check if retention is configured</li>
+EOF
+    cat "$WARNINGS_FILE" >> "$OUTPUT_DIR/analysis-report.html"
+    cat >> "$OUTPUT_DIR/analysis-report.html" <<'EOF'
+            </ul>
+        </div>
+EOF
+fi
+
+# If nothing found, show all clear message
+if [[ ! -s "$SUSPECT_FILE" && ! -s "$INSIGHTS_FILE" && ! -s "$WARNINGS_FILE" ]]; then
+    cat >> "$OUTPUT_DIR/analysis-report.html" <<'EOF'
+        <div class="tip">
+            <strong>✅ Heap looks healthy</strong>
+            <p>No unusual patterns detected in the top memory consumers. Memory distribution appears normal for the application type.</p>
+        </div>
+EOF
+fi
+
+# Add general tips based on what's in the heap
+cat >> "$OUTPUT_DIR/analysis-report.html" <<'EOF'
+        <div class="tip">
+            <strong>💡 General Recommendations:</strong>
+            <ul>
+                <li>Compare this heap dump with previous dumps to identify growth trends</li>
+                <li>Use <code>playground debug thread-dump</code> to correlate memory usage with thread activity</li>
+                <li>For deeper analysis, open this .hprof file in Eclipse MAT or VisualVM</li>
+                <li>Monitor heap usage over time to detect slow memory leaks</li>
             </ul>
         </div>
     </div>
+EOF
+
+# Cleanup temp files
+rm -f "$INSIGHTS_FILE" "$WARNINGS_FILE" "$SUSPECT_FILE"
+
+cat >> "$OUTPUT_DIR/analysis-report.html" <<'EOF'
 
     <div class="section">
         <h2>🛠️ Next Steps</h2>
