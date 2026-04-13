@@ -87,3 +87,4 @@ connect-migration-utility-discovery-output
 ._aws_credentials_with_assuming_iam_role
 certs-create.sh
 connector-plugin-sourcecode
+heap-analysis
