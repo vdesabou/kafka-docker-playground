@@ -79,15 +79,12 @@ set -e
 # https://<account_name>.<region_id>.snowflakecomputing.com:443
 SNOWFLAKE_URL="https://$SNOWFLAKE_ACCOUNT_NAME.snowflakecomputing.com"
 
-# Fully managed connectors use <locator>.<region>.<cloud> format (e.g. abc123.us-east-1.aws)
-# SnowSQL expects <locator>.<region> without the cloud suffix
-SNOWSQL_ACCOUNT_NAME=$(echo "$SNOWFLAKE_ACCOUNT_NAME" | sed 's/\.\(aws\|azure\|gcp\)$//')
 
 S3_BUCKET_NAME=${S3_BUCKET_NAME:-playground-iceberg-${username}}
 
 # Get Snowflake AWS account ID dynamically by querying DESC STORAGE INTEGRATION
 log "Fetching Snowflake AWS account ID..."
-STORAGE_AWS_IAM_USER_ARN=$(docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWSQL_ACCOUNT_NAME << 'EOF' 2>/dev/null | grep -oE 'arn:aws:iam::[0-9]{12}:user/[^ ]*' | head -1
+STORAGE_AWS_IAM_USER_ARN=$(docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << 'EOF' 2>/dev/null | grep -oE 'arn:aws:iam::[0-9]{12}:user/[^ ]*' | head -1
 CREATE STORAGE INTEGRATION temp_get_iam
   TYPE = EXTERNAL_STAGE
   STORAGE_PROVIDER = 'S3'
@@ -242,13 +239,13 @@ RSA_PRIVATE_KEY=$(grep -v "BEGIN ENCRYPTED PRIVATE KEY" snowflake_key.p8 | grep 
 cd -
 
 log "Create a Snowflake DB"
-docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWSQL_ACCOUNT_NAME << EOF
+docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
 DROP DATABASE IF EXISTS $PLAYGROUND_DB;
 CREATE OR REPLACE DATABASE $PLAYGROUND_DB COMMENT = 'Database for Docker Playground';
 EOF
 
 log "Create a Snowflake ROLE"
-docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWSQL_ACCOUNT_NAME << EOF
+docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
 USE ROLE SECURITYADMIN;
 DROP ROLE IF EXISTS $PLAYGROUND_CONNECTOR_ROLE;
 CREATE ROLE $PLAYGROUND_CONNECTOR_ROLE;
@@ -264,7 +261,7 @@ GRANT ROLE $PLAYGROUND_CONNECTOR_ROLE TO ROLE ACCOUNTADMIN;
 EOF
 
 log "Create a Snowflake WAREHOUSE (for admin purpose as KafkaConnect is Serverless)"
-docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWSQL_ACCOUNT_NAME << EOF
+docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
 USE ROLE SYSADMIN;
 CREATE OR REPLACE WAREHOUSE $PLAYGROUND_WAREHOUSE
   WAREHOUSE_SIZE = 'XSMALL'
@@ -279,7 +276,7 @@ GRANT USAGE ON WAREHOUSE $PLAYGROUND_WAREHOUSE TO ROLE $PLAYGROUND_CONNECTOR_ROL
 EOF
 
 log "Create a Snowflake USER"
-docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWSQL_ACCOUNT_NAME << EOF
+docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
 USE ROLE USERADMIN;
 DROP USER IF EXISTS $PLAYGROUND_USER;
 CREATE USER $PLAYGROUND_USER
@@ -296,7 +293,7 @@ GRANT ROLE $PLAYGROUND_CONNECTOR_ROLE TO USER $PLAYGROUND_USER;
 EOF
 
 log "Grant Iceberg-specific permissions for the connector role"
-docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWSQL_ACCOUNT_NAME << EOF
+docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
 USE ROLE SECURITYADMIN;
 GRANT CREATE ICEBERG TABLE ON SCHEMA $PLAYGROUND_DB.PUBLIC TO ROLE $PLAYGROUND_CONNECTOR_ROLE;
 GRANT MODIFY ON SCHEMA $PLAYGROUND_DB.PUBLIC TO ROLE $PLAYGROUND_CONNECTOR_ROLE;
@@ -307,7 +304,7 @@ log "Creating Snowflake S3 storage integration, external volume and Iceberg tabl
 STORAGE_INTEGRATION_NAME="PG_S3_INTEGRATION_${uppercase_username}${TAG}"
 STORAGE_INTEGRATION_NAME=${STORAGE_INTEGRATION_NAME//[-._]/}
 
-docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWSQL_ACCOUNT_NAME << EOF
+docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
 USE ROLE ACCOUNTADMIN;
 
 -- Create S3 Storage Integration for Iceberg
@@ -425,7 +422,7 @@ wait_for_ccloud_connector_up $connector_name 180
 playground connector show-lag --max-wait 120 --connector $connector_name
 
 log "Confirm that the messages were delivered to the Snowflake Iceberg table (logged as $PLAYGROUND_USER user)"
-docker run --quiet --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $PLAYGROUND_USER -a $SNOWSQL_ACCOUNT_NAME > /tmp/result.log  2>&1 <<-EOF
+docker run --quiet --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME > /tmp/result.log  2>&1 <<-EOF
 USE ROLE $PLAYGROUND_CONNECTOR_ROLE;
 USE DATABASE $PLAYGROUND_DB;
 USE SCHEMA PUBLIC;

@@ -54,10 +54,6 @@ set -e
 # https://<account_name>.<region_id>.snowflakecomputing.com:443
 SNOWFLAKE_URL="https://$SNOWFLAKE_ACCOUNT_NAME.snowflakecomputing.com"
 
-# Fully managed connectors use <locator>.<region>.<cloud> format (e.g. abc123.us-east-1.aws)
-# SnowSQL expects <locator>.<region> without the cloud suffix
-SNOWSQL_ACCOUNT_NAME=$(echo "$SNOWFLAKE_ACCOUNT_NAME" | sed 's/\.\(aws\|azure\|gcp\)$//')
-
 cd ../../ccloud/fm-snowflake-sink
 # using v1 PBE-SHA1-RC4-128, see https://community.snowflake.com/s/article/Private-key-provided-is-invalid-or-not-supported-rsa-key-p8--data-isn-t-an-object-ID
 # Create encrypted Private key - keep this safe, do not share!
@@ -70,13 +66,13 @@ RSA_PRIVATE_KEY=$(grep -v "BEGIN ENCRYPTED PRIVATE KEY" snowflake_key.p8 | grep 
 cd -
 
 log "Create a Snowflake DB"
-docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWSQL_ACCOUNT_NAME << EOF
+docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
 DROP DATABASE IF EXISTS $PLAYGROUND_DB;
 CREATE OR REPLACE DATABASE $PLAYGROUND_DB COMMENT = 'Database for Docker Playground';
 EOF
 
 log "Create a Snowflake ROLE"
-docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWSQL_ACCOUNT_NAME << EOF
+docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
 USE ROLE SECURITYADMIN;
 DROP ROLE IF EXISTS $PLAYGROUND_CONNECTOR_ROLE;
 CREATE ROLE $PLAYGROUND_CONNECTOR_ROLE;
@@ -92,7 +88,7 @@ GRANT ROLE $PLAYGROUND_CONNECTOR_ROLE TO ROLE ACCOUNTADMIN;
 EOF
 
 log "Create a Snowflake WAREHOUSE (for admin purpose as KafkaConnect is Serverless)"
-docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWSQL_ACCOUNT_NAME << EOF
+docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
 USE ROLE SYSADMIN;
 CREATE OR REPLACE WAREHOUSE $PLAYGROUND_WAREHOUSE
   WAREHOUSE_SIZE = 'XSMALL'
@@ -107,7 +103,7 @@ GRANT USAGE ON WAREHOUSE $PLAYGROUND_WAREHOUSE TO ROLE $PLAYGROUND_CONNECTOR_ROL
 EOF
 
 log "Create a Snowflake USER"
-docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWSQL_ACCOUNT_NAME << EOF
+docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
 USE ROLE USERADMIN;
 DROP USER IF EXISTS $PLAYGROUND_USER;
 CREATE USER $PLAYGROUND_USER
@@ -124,7 +120,7 @@ GRANT ROLE $PLAYGROUND_CONNECTOR_ROLE TO USER $PLAYGROUND_USER;
 EOF
 
 log "Grant Iceberg-specific permissions for the connector role"
-docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWSQL_ACCOUNT_NAME << EOF
+docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
 USE ROLE SECURITYADMIN;
 GRANT CREATE ICEBERG TABLE ON SCHEMA $PLAYGROUND_DB.PUBLIC TO ROLE $PLAYGROUND_CONNECTOR_ROLE;
 GRANT MODIFY ON SCHEMA $PLAYGROUND_DB.PUBLIC TO ROLE $PLAYGROUND_CONNECTOR_ROLE;
@@ -132,7 +128,7 @@ GRANT ALL ON FUTURE ICEBERG TABLES IN SCHEMA $PLAYGROUND_DB.PUBLIC TO ROLE $PLAY
 EOF
 
 log "Creating Iceberg table using Snowflake internal managed storage"
-docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWSQL_ACCOUNT_NAME << EOF
+docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
 USE ROLE ACCOUNTADMIN;
 USE DATABASE $PLAYGROUND_DB;
 USE SCHEMA PUBLIC;
@@ -220,7 +216,7 @@ wait_for_ccloud_connector_up $connector_name 180
 playground connector show-lag --max-wait 120 --connector $connector_name
 
 log "Confirm that the messages were delivered to the Snowflake Iceberg table (logged as $PLAYGROUND_USER user)"
-docker run --quiet --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $PLAYGROUND_USER -a $SNOWSQL_ACCOUNT_NAME > /tmp/result.log  2>&1 <<-EOF
+docker run --quiet --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME > /tmp/result.log  2>&1 <<-EOF
 USE ROLE $PLAYGROUND_CONNECTOR_ROLE;
 USE DATABASE $PLAYGROUND_DB;
 USE SCHEMA PUBLIC;
