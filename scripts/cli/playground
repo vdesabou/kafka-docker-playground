@@ -4474,7 +4474,7 @@ playground_debug_heap_analyze_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (required)")"
-    printf "    📁 Path to the .hprof heap dump file to analyze\n"
+    printf "    🔖 HPROF heap dump file to analyze\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n            use <option+enter> to use the value you typed manually\n"
     echo
 
     # :flag.usage
@@ -14339,6 +14339,31 @@ validate_file_exists_and_avro() {
   fi
 }
 
+# src/lib/validations/validate_file_exists_and_hprof.sh
+validate_file_exists_and_hprof() {
+  file="$1"
+
+  real_file=$file
+  if [[ $file == *"@"* ]]
+  then
+    real_file=$(echo "$file" | cut -d "@" -f 2)
+  fi
+
+  if [[ -f "$real_file" ]]; then
+    return 0
+  else
+    logerror "<$real_file> does not correspond to the path of an existing file, please make sure to use absolute full path or correct relative path !"
+    return
+  fi
+
+  if [[ "$real_file" == *.hprof ]]; then
+    return 0
+  else
+    logerror "<$real_file> is not an hprof file. Please provide a file with .hprof extension."
+    return
+  fi
+}
+
 # src/lib/validations/validate_file_exists_and_parquet.sh
 validate_file_exists_and_parquet() {
   file="$1"
@@ -23128,6 +23153,11 @@ playground_debug_heap_analyze_command() {
   report_type="${args[--report-type]}"
 
   set +e
+
+  if [[ $heap_file == *"@"* ]]
+  then
+    heap_file=$(echo "$heap_file" | cut -d "@" -f 2)
+  fi
 
   # Check if heap dump file exists
   if [[ ! -f "$heap_file" ]]; then
@@ -42468,6 +42498,16 @@ playground_debug_heap_analyze_parse_requirements() {
   # :command.default_assignments
   [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="./heap-analysis"
   [[ -n ${args['--report-type']:-} ]] || args['--report-type']="all"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--file'] ]]; then
+    validation_output="$(validate_file_exists_and_hprof "${args['--file']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
 
   # :command.whitelist_filter
   if [[ ${args['--report-type']:-} ]] && [[ ! ${args['--report-type']:-} =~ ^(all|leaks|overview|top-components)$ ]]; then

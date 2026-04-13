@@ -1608,7 +1608,7 @@
                 "-f"
               ],
               "argument": "FILE",
-              "description": "📁 Path to the .hprof heap dump file to analyze\n\nRequired: ✓ Yes\n"
+              "description": "🔖 HPROF heap dump file to analyze\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n        use <option+enter> to use the value you typed manually\n\nRequired: ✓ Yes\n"
             },
             {
               "names": [

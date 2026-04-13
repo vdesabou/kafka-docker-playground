@@ -4,6 +4,11 @@ report_type="${args[--report-type]}"
 
 set +e
 
+if [[ $heap_file == *"@"* ]]
+then
+  heap_file=$(echo "$heap_file" | cut -d "@" -f 2)
+fi
+
 # Check if heap dump file exists
 if [[ ! -f "$heap_file" ]]; then
     logerror "❌ Heap dump file not found: $heap_file"
