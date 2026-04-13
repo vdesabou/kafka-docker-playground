@@ -329,7 +329,7 @@ services:
       - schema-registry
     ports:
       - "5205:5005"
-      - "8283:8283"
+      - "8283:8083"
       - "10022:10022"
     profiles:
       - "connect_nodes"
@@ -339,7 +339,7 @@ services:
     environment:
       KAFKA_JMX_PORT: 10022
       KAFKA_JMX_HOSTNAME: localhost
-      CONNECT_LISTENERS: http://:8283
+      CONNECT_LISTENERS: http://:8083
       CONNECT_BOOTSTRAP_SERVERS: 'broker:9092'
       CONNECT_REST_ADVERTISED_HOST_NAME: connect2
       CONNECT_GROUP_ID: "connect-cluster"
@@ -407,7 +407,7 @@ services:
       - schema-registry
     ports:
       - "5305:5005"
-      - "8383:8383"
+      - "8383:8083"
       - "10032:10032"
     profiles:
       - "connect_nodes"
@@ -417,7 +417,7 @@ services:
     environment:
       KAFKA_JMX_PORT: 10032
       KAFKA_JMX_HOSTNAME: localhost
-      CONNECT_LISTENERS: http://:8383
+      CONNECT_LISTENERS: http://:8083
       CONNECT_BOOTSTRAP_SERVERS: 'broker:9092'
       CONNECT_REST_ADVERTISED_HOST_NAME: connect3
       CONNECT_GROUP_ID: "connect-cluster"
