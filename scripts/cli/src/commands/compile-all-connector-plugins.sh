@@ -34,7 +34,7 @@ while read -r line && [ $stop != 1 ]; do
 
     # Extract the first column using "|" as a delimiter
     # Pipe to 'xargs' to trim any leading/trailing whitespace from the result
-    connector_plugin=$(echo "$line" | cut -d "|" -f 1 | xargs)
+    connector_plugin=$(echo "$line" | cut -d "|" -f 1 | sed -E 's/^[^[:space:]]+[[:space:]]+//' | xargs)
 
     if [[ -n "$confluent_only" ]]
     then

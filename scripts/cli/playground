@@ -9038,13 +9038,13 @@ function get_plugin_list() {
 
   case "${type}" in
     "fm")
-        res=$(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | grep -v "CONFLUENT EMPLOYEE VERSION" | cut -d "|" -f 1 | grep "^confluentinc/" | grep -v "-" | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔌" --header="select connector plugin" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+        res=$(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | grep -v "CONFLUENT EMPLOYEE VERSION" | cut -d "|" -f 1 | grep "^confluentinc/" | grep -v "-" | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔌" --header="select connector plugin" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$(echo $res | cut -d ' ' -f 2)"
     ;;
     "onprem")
-        res=$(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | grep -v "CONFLUENT EMPLOYEE VERSION" |cut -d "|" -f 1 | grep "-" | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔌" --header="select connector plugin" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+        res=$(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | grep -v "CONFLUENT EMPLOYEE VERSION" |cut -d "|" -f 1 | grep "-" | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔌" --header="select connector plugin" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$(echo $res | cut -d ' ' -f 2)"
     ;;
     *)
-        res=$(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | grep -v "CONFLUENT EMPLOYEE VERSION" |cut -d "|" -f 1 | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔌" --header="select connector plugin" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+        res=$(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | grep -v "CONFLUENT EMPLOYEE VERSION" |cut -d "|" -f 1 | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔌" --header="select connector plugin" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$(echo $res | cut -d ' ' -f 2)"
     ;;
   esac
 }
@@ -14643,7 +14643,7 @@ playground_compile_all_connector_plugins_command() {
 
       # Extract the first column using "|" as a delimiter
       # Pipe to 'xargs' to trim any leading/trailing whitespace from the result
-      connector_plugin=$(echo "$line" | cut -d "|" -f 1 | xargs)
+      connector_plugin=$(echo "$line" | cut -d "|" -f 1 | sed -E 's/^[^[:space:]]+[[:space:]]+//' | xargs)
 
       if [[ -n "$confluent_only" ]]
       then
@@ -14752,6 +14752,24 @@ playground_generate_connector_plugin_list_command() {
       cat $tmp_dir/confluent-plugin-sourcecode-mapping-list.txt >> $tmp_file2
       cat $tmp_file2 | sort | uniq > $tmp_file
   fi
+
+  awk -F'|' '
+  NF == 0 { next }
+  {
+      plugin=$1
+      if (plugin ~ /^confluentinc\//) {
+          if (plugin !~ /-/) {
+              prefix="🤖"
+          } else {
+              prefix="🔗"
+          }
+      } else {
+          prefix="👽"
+      }
+      print prefix " " $0
+  }
+  ' $tmp_file > $tmp_file2
+  mv $tmp_file2 $tmp_file
 
   cp $tmp_file $root_folder/scripts/cli/confluent-hub-plugin-list.txt
 }
@@ -27024,7 +27042,7 @@ playground_connector_plugin_display_last_updated_command() {
       log "🆕 Listing last updated connector plugins (within $days days) for all vendors"
   fi
 
-  for plugin in $(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | grep -v "CONFLUENT EMPLOYEE VERSION" | cut -d "|" -f 1)
+  for plugin in $(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | grep -v "CONFLUENT EMPLOYEE VERSION" | cut -d "|" -f 1 | sed -E 's/^[^[:space:]]+[[:space:]]+//')
   do
       if [[ -n "$vendor" && ! "$plugin" =~ $vendor ]]
       then
@@ -27576,7 +27594,15 @@ playground_connector_plugin_sourcecode_command() {
       exit 1
   fi
 
-  output=$(grep "^$connector_plugin|" $root_folder/scripts/cli/confluent-hub-plugin-list.txt)
+  output=$(awk -F'|' -v plugin="$connector_plugin" '
+  {
+      current=$1
+      sub(/^[^[:space:]]+[[:space:]]+/, "", current)
+      if (current == plugin) {
+          print $0
+          exit
+      }
+  }' $root_folder/scripts/cli/confluent-hub-plugin-list.txt)
   ret=$?
   set -e
   if [ $ret -ne 0 ]

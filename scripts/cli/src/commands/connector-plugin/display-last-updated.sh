@@ -20,7 +20,7 @@ else
     log "🆕 Listing last updated connector plugins (within $days days) for all vendors"
 fi
 
-for plugin in $(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | grep -v "CONFLUENT EMPLOYEE VERSION" | cut -d "|" -f 1)
+for plugin in $(cat $root_folder/scripts/cli/confluent-hub-plugin-list.txt | grep -v "CONFLUENT EMPLOYEE VERSION" | cut -d "|" -f 1 | sed -E 's/^[^[:space:]]+[[:space:]]+//')
 do
     if [[ -n "$vendor" && ! "$plugin" =~ $vendor ]]
     then

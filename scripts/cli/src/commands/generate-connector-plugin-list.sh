@@ -25,4 +25,22 @@ then
     cat $tmp_file2 | sort | uniq > $tmp_file
 fi
 
+awk -F'|' '
+NF == 0 { next }
+{
+    plugin=$1
+    if (plugin ~ /^confluentinc\//) {
+        if (plugin !~ /-/) {
+            prefix="🤖"
+        } else {
+            prefix="🔗"
+        }
+    } else {
+        prefix="👽"
+    }
+    print prefix " " $0
+}
+' $tmp_file > $tmp_file2
+mv $tmp_file2 $tmp_file
+
 cp $tmp_file $root_folder/scripts/cli/confluent-hub-plugin-list.txt

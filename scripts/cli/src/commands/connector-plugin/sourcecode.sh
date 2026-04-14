@@ -533,7 +533,15 @@ else
     exit 1
 fi
 
-output=$(grep "^$connector_plugin|" $root_folder/scripts/cli/confluent-hub-plugin-list.txt)
+output=$(awk -F'|' -v plugin="$connector_plugin" '
+{
+    current=$1
+    sub(/^[^[:space:]]+[[:space:]]+/, "", current)
+    if (current == plugin) {
+        print $0
+        exit
+    }
+}' $root_folder/scripts/cli/confluent-hub-plugin-list.txt)
 ret=$?
 set -e
 if [ $ret -ne 0 ]
