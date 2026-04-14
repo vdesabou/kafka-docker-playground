@@ -79,24 +79,24 @@ function get_latest_version_from_confluent_hub () {
     fi
 }
 
-function check_if_call_maven_login()
+function check_if_call_dev_login()
 {
     if [ ! -z "$GITHUB_RUN_NUMBER" ]
     then
         # running with github actions, continue
         return
     fi
-    if [[ -n "$skip_maven_login_check" ]]
+    if [[ -n "$skip_dev_login_check" ]]
     then
         return
     fi
-    log "🎓 make sure you have executed <maven-login> command in the last 12 hours"
+    log "🎓 make sure you have executed <dev-login> command in the last 12 hours"
     echo ""
-    read -p "🛂 execute maven-login (y/n)?" choice
+    read -p "🛂 execute dev-login (y/n)?" choice
     case "$choice" in
-    y|Y ) source $HOME/.cc-dotfiles/caas.sh && code_artifact::maven_login -f;;
+    y|Y ) source $HOME/.cc-dotfiles/caas.sh && dev-login -f;;
     n|N ) ;;
-    * ) logwarn "invalid response <$choice>! Please enter y or n."; check_if_call_maven_login;;
+    * ) logwarn "invalid response <$choice>! Please enter y or n."; check_if_call_dev_login;;
     esac
 }
 
@@ -356,14 +356,14 @@ function compile () {
         then
             if [ ! -d "$HOME/.cc-dotfiles" ]
             then
-                logerror "❌ you're a Confluent employee, but maven-login is not installed (directory $HOME/.cc-dotfiles does not exist), please follow:"
+                logerror "❌ you're a Confluent employee, but dev-login is not installed (directory $HOME/.cc-dotfiles does not exist), please follow:"
                 echo "🔗 Maven FAQ https://confluentinc.atlassian.net/wiki/spaces/TOOLS/pages/2930704487/Maven+FAQ#How-do-I-get-access-locally%3F"
                 exit 1
             fi
 
-            # check_if_call_maven_login
-            log "🛂 execute maven-login"
-            source $HOME/.cc-dotfiles/caas.sh && code_artifact::maven_login -f;
+            # check_if_call_dev_login
+            log "🛂 execute dev-login"
+            source $HOME/.cc-dotfiles/caas.sh && dev-login -f;
 
             mvn_settings_file="/root/.m2/settings.xml"
         fi
@@ -761,7 +761,7 @@ then
         then
             sourcecode_url="$original_sourcecode_url/tree/$maybe_tag_prefix$connector_tag2$maybe_tag_suffix"
         fi
-        skip_maven_login_check=1
+        skip_dev_login_check=1
         compile "$connector_tag2"
     fi
 else
