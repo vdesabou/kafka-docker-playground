@@ -16,6 +16,7 @@
     "confluent.azure.multi.tenant.app.client.id": "STRING",
     "credentials.provider.class": "STRING",
     "customer.azure.tenant.id": "STRING",
+    "exactly.once.support": "requested",
     "k8s.namespace": "STRING",
     "k8s.service.account.name": "STRING",
     "k8s.token.expiration.seconds": "600",
@@ -25,3 +26,5 @@
     "provider.integration.max.retries": "5",
     "provider.integration.retry.delay.millis": "2000",
     "resource.crn": "STRING",
+    "transaction.boundary": "poll",
+    "transaction.boundary.interval.ms": "",
