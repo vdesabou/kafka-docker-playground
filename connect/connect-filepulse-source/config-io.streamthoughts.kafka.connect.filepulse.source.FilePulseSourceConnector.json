@@ -1,5 +1,6 @@
     "allow.tasks.reconfiguration.after.timeout.ms": "9223372036854775807",
     "connect.schema.keep.leading.underscores.on.record.name": "false",
+    "exactly.once.support": "requested",
     "filters": "LIST",
     "fs.cleanup.policy.class": "",
     "fs.cleanup.policy.triggered.on": "COMPLETED",
@@ -12,3 +13,5 @@
     "state.initial.read.timeout.ms": "300000",
     "task.partitioner.class": "io.streamthoughts.kafka.connect.filepulse.source.DefaultTaskPartitioner",
     "tasks.file.processing.order.by": "LAST_MODIFIED",
+    "transaction.boundary": "poll",
+    "transaction.boundary.interval.ms": "",
