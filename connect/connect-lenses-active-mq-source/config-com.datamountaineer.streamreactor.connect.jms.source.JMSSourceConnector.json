@@ -17,3 +17,6 @@
     "connect.jms.url": "",
     "connect.jms.username": "",
     "connect.progress.enabled": "false",
+    "exactly.once.support": "requested",
+    "transaction.boundary": "poll",
+    "transaction.boundary.interval.ms": "",
