@@ -1,4 +1,34 @@
 ==========================
+Exactly Once Support
+==========================
+🔘 exactly.once.support
+
+Permitted values are requested, required. If set to "required", forces a preflight check for the connector to ensure that it can provide exactly-once semantics with the given configuration. Some connectors may be capable of providing exactly-once semantics but not signal to Connect that they support this; in that case, documentation for the connector should be consulted carefully before creating it, and the value for this property should be set to "requested". Additionally, if the value is set to "required" but the worker that performs preflight validation does not have exactly-once support enabled for source connectors, requests to create or validate the connector will fail.
+
+	 - Type: STRING
+	 - Default: requested
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transaction.boundary
+
+Permitted values are: poll, interval, connector. If set to 'poll', a new producer transaction will be started and committed for every batch of records that each task from this connector provides to Connect. If set to 'connector', relies on connector-defined transaction boundaries; note that not all connectors are capable of defining their own transaction boundaries, and in that case, attempts to instantiate a connector with this value will fail. Finally, if set to 'interval', commits transactions only after a user-defined time interval has passed.
+
+	 - Type: STRING
+	 - Default: poll
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transaction.boundary.interval.ms
+
+If 'transaction.boundary' is set to 'interval', determines the interval for producer transaction commits by connector tasks. If unset, defaults to the value of the worker-level 'offset.flush.interval.ms' property. It has no effect if a different transaction.boundary is specified.
+
+	 - Type: LONG
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
 Firebase
 ==========================
 🔘 gcp.firebase.database.reference
