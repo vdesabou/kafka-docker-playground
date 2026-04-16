@@ -1,3 +1,4 @@
+    "exactly.once.support": "requested",
     "kafka.topic": "mqtt",
     "max.retry.time.ms": "30000",
     "mqtt.clean.session.enabled": "true",
@@ -17,3 +18,5 @@
     "records.buffer.queue.full.timeout": "60000",
     "records.buffer.queue.max.batch.size": "4096",
     "records.buffer.queue.size": "50000",
+    "transaction.boundary": "poll",
+    "transaction.boundary.interval.ms": "",
