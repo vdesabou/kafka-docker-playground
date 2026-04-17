@@ -3852,7 +3852,7 @@ commands:
       playground connector-plugin display-last-updated --days 7
   - name: sourcecode
     help: |
-      🧑‍💻 Open source code url in your browser
+      🧑‍💻 Open source code url in your browser (or in your editor when used with --open)
 
       You can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
       
@@ -3912,6 +3912,10 @@ commands:
         short: -v
         needs: [--compile]
         help: 🐞 Show output of compilation.
+      - long: --open
+        short: -o
+        help: |- 
+          🔖 Checkout the code and open with text editor set with playground config editor <editor> (default is code)
     examples: |
 
       # will open latest version from hub source code
@@ -3934,6 +3938,9 @@ commands:
 
       # if you're a confluent employee (make sure to set your aws credentials and follow Maven FAQ), it will also work on proprietary connectors and fully managed connectors 
       playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-oracle-xstream-cdc-source --compile --connector-tag "1.2.0" --compile-verbose
+
+      # will open repository in your editor
+      playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-hdfs --open
 
 - name: connector
   expose: always

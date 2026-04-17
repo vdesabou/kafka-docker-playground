@@ -3257,7 +3257,7 @@ subcommands:
             
       - name: sourcecode
         description: | 
-          🧑‍💻 Open source code url in your browser
+          🧑‍💻 Open source code url in your browser (or in your editor when used with --open)
             
             You can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
             
@@ -3324,6 +3324,13 @@ subcommands:
           argument: ""
           description: | 
             🐞 Show output of compilation.
+            
+        - names:
+          - --open
+          - -o
+          argument: ""
+          description: | 
+            🔖 Checkout the code and open with text editor set with playground config editor <editor> (default is code)
             
   - name: connector
     description: | 

@@ -5,7 +5,7 @@ compile="${args[--compile]}"
 compile_jdk_version="${args[--compile-jdk-version]}"
 verbose="${args[--compile-verbose]}"
 forced_url="${args[--forced-url]}"
-
+open="${args[--open]}"
 
 function get_version_from_cc_docker_connect_cache_versions_env () {
     arg_version="$1"
@@ -152,13 +152,13 @@ function compile () {
 
     if [[ "$sourcecode_url" != *"github.com"* ]]
     then
-        logerror "❌ --compile flag does not work when sourcecode is not hosted on github"
+        logerror "❌ --compile or --open flag does not work when sourcecode is not hosted on github"
         exit 1
     fi
 
     if [[ $(type -f git 2>&1) =~ "not found" ]]
     then
-        logerror "❌ --compile flag is set but git command is not installed"
+        logerror "❌ --compile or --open flag is set but git command is not installed"
         exit 1
     fi
 
@@ -251,121 +251,123 @@ function compile () {
             repo_folder="${repo_folder}/${repo_name%-private}"
         fi
     fi
-
-    if [ ! -f "${repo_folder}/pom.xml" ]
+    if [[ -n "$compile" ]]
     then
-        logerror "❌ there is no pom.xml file in ${repo_folder}. Only maven projects can be compiled for now."
-        exit 1
-    fi
+        if [ ! -f "${repo_folder}/pom.xml" ]
+        then
+            logerror "❌ there is no pom.xml file in ${repo_folder}. Only maven projects can be compiled for now."
+            exit 1
+        fi
 
-    # --- Determine compile_jdk_version from pom.xml if not explicitly provided ---
-    # This looks first for maven-compiler-plugin <release> or <source>/<target> in the plugin
-    # and then for properties maven.compiler.release / maven.compiler.source / maven.compiler.target.
-    # It also resolves simple property references like ${java.version} defined in the same pom.
-    if [[ ! -n "$compile_jdk_version" ]]
-    then
-        log "🤎 --compile-jdk-version was not set, attempting to detect maven compiler version from pom.xml..."
-        pom_file="${repo_folder}/pom.xml"
+        # --- Determine compile_jdk_version from pom.xml if not explicitly provided ---
+        # This looks first for maven-compiler-plugin <release> or <source>/<target> in the plugin
+        # and then for properties maven.compiler.release / maven.compiler.source / maven.compiler.target.
+        # It also resolves simple property references like ${java.version} defined in the same pom.
+        if [[ ! -n "$compile_jdk_version" ]]
+        then
+            log "🤎 --compile-jdk-version was not set, attempting to detect maven compiler version from pom.xml..."
+            pom_file="${repo_folder}/pom.xml"
 
-        # helper: resolve a single-level ${prop} reference from pom.xml
-        resolve_prop() {
-            val="$1"
-            if [[ "$val" =~ \$\{([^}]+)\} ]]; then
-                pname="${BASH_REMATCH[1]}"
-                # look for property in pom.xml
-                pval=$(sed -n "s:.*<${pname}>\(.*\)</${pname}>.*:\1:p" "$pom_file" | head -n1)
-                if [ -n "$pval" ]; then
-                    echo "$pval"
-                    return
+            # helper: resolve a single-level ${prop} reference from pom.xml
+            resolve_prop() {
+                val="$1"
+                if [[ "$val" =~ \$\{([^}]+)\} ]]; then
+                    pname="${BASH_REMATCH[1]}"
+                    # look for property in pom.xml
+                    pval=$(sed -n "s:.*<${pname}>\(.*\)</${pname}>.*:\1:p" "$pom_file" | head -n1)
+                    if [ -n "$pval" ]; then
+                        echo "$pval"
+                        return
+                    fi
                 fi
-            fi
-            echo "$val"
-        }
+                echo "$val"
+            }
 
-        # 1) properties
-        prop_release=$(sed -n 's:.*<maven.compiler.release>\(.*\)</maven.compiler.release>.*:\1:p' "$pom_file" | head -n1)
-        prop_source=$(sed -n 's:.*<maven.compiler.source>\(.*\)</maven.compiler.source>.*:\1:p' "$pom_file" | head -n1)
-        prop_target=$(sed -n 's:.*<maven.compiler.target>\(.*\)</maven.compiler.target>.*:\1:p' "$pom_file" | head -n1)
-        prop_debezium_source=$(sed -n 's:.*<debezium.java.source>\(.*\)</debezium.java.source>.*:\1:p' "$pom_file" | head -n1)
+            # 1) properties
+            prop_release=$(sed -n 's:.*<maven.compiler.release>\(.*\)</maven.compiler.release>.*:\1:p' "$pom_file" | head -n1)
+            prop_source=$(sed -n 's:.*<maven.compiler.source>\(.*\)</maven.compiler.source>.*:\1:p' "$pom_file" | head -n1)
+            prop_target=$(sed -n 's:.*<maven.compiler.target>\(.*\)</maven.compiler.target>.*:\1:p' "$pom_file" | head -n1)
+            prop_debezium_source=$(sed -n 's:.*<debezium.java.source>\(.*\)</debezium.java.source>.*:\1:p' "$pom_file" | head -n1)
 
-        # 2) plugin configuration (search the plugin block)
-        plugin_block=$(sed -n '/<artifactId>maven-compiler-plugin<\/artifactId>/,/<\/plugin>/p' "$pom_file" 2>/dev/null || true)
-        plugin_release=$(echo "$plugin_block" | sed -n 's:.*<release>\(.*\)</release>.*:\1:p' | head -n1)
-        plugin_source=$(echo "$plugin_block" | sed -n 's:.*<source>\(.*\)</source>.*:\1:p' | head -n1)
-        plugin_target=$(echo "$plugin_block" | sed -n 's:.*<target>\(.*\)</target>.*:\1:p' | head -n1)
+            # 2) plugin configuration (search the plugin block)
+            plugin_block=$(sed -n '/<artifactId>maven-compiler-plugin<\/artifactId>/,/<\/plugin>/p' "$pom_file" 2>/dev/null || true)
+            plugin_release=$(echo "$plugin_block" | sed -n 's:.*<release>\(.*\)</release>.*:\1:p' | head -n1)
+            plugin_source=$(echo "$plugin_block" | sed -n 's:.*<source>\(.*\)</source>.*:\1:p' | head -n1)
+            plugin_target=$(echo "$plugin_block" | sed -n 's:.*<target>\(.*\)</target>.*:\1:p' | head -n1)
 
-        # order of precedence: plugin <release> > properties release > plugin <source> > properties source > plugin <target> > properties target
+            # order of precedence: plugin <release> > properties release > plugin <source> > properties source > plugin <target> > properties target
 
-        # pick the first non-empty among the collected candidates
-        chosen=""
-        for c in "$prop_debezium_source" "$plugin_release" "$prop_release" "$plugin_source" "$prop_source" "$plugin_target" "$prop_target"; do
-            if [ -n "$c" ]; then
-                chosen="$c"
-                break
-            fi
-        done
-
-        if [ -n "$chosen" ]; then
-            # resolve ${...}
-            chosen=$(resolve_prop "$chosen")
-
-            # normalize common formats: 1.8 -> 8, 17.0.1 -> 17
-            if [[ "$chosen" =~ ^1\.([0-9]+)$ ]]; then
-                chosen="${BASH_REMATCH[1]}"
-            elif [[ "$chosen" =~ ^([0-9]+) ]]; then
-                chosen="${BASH_REMATCH[1]}"
-            fi
+            # pick the first non-empty among the collected candidates
+            chosen=""
+            for c in "$prop_debezium_source" "$plugin_release" "$prop_release" "$plugin_source" "$prop_source" "$plugin_target" "$prop_target"; do
+                if [ -n "$c" ]; then
+                    chosen="$c"
+                    break
+                fi
+            done
 
             if [ -n "$chosen" ]; then
-                compile_jdk_version="$chosen"
-                if [ "$chosen" == "8" ]
+                # resolve ${...}
+                chosen=$(resolve_prop "$chosen")
+
+                # normalize common formats: 1.8 -> 8, 17.0.1 -> 17
+                if [[ "$chosen" =~ ^1\.([0-9]+)$ ]]; then
+                    chosen="${BASH_REMATCH[1]}"
+                elif [[ "$chosen" =~ ^([0-9]+) ]]; then
+                    chosen="${BASH_REMATCH[1]}"
+                fi
+
+                if [ -n "$chosen" ]; then
+                    compile_jdk_version="$chosen"
+                    if [ "$chosen" == "8" ]
+                    then
+                        compile_jdk_version=11
+                        log "⚠️  detected maven compiler version '$chosen' from pom.xml, but 8 is too old, forcing --compile-jdk-version to $compile_jdk_version"
+                    elif [ "$chosen" == "12" ]
+                    then
+                        compile_jdk_version=11
+                        log "⚠️  detected maven compiler version '$chosen' from pom.xml, but 12 is not supported, forcing --compile-jdk-version to $compile_jdk_version"
+                    elif [ "$chosen" == "\${java.version}" ]
+                    then
+                        compile_jdk_version=11
+                        log "⚠️  detected maven compiler version '$chosen' from pom.xml, but it is not valid, forcing --compile-jdk-version to $compile_jdk_version"
+                    else
+                        log "✨ detected maven compiler version '$chosen' from pom.xml, using --compile-jdk-version $compile_jdk_version"
+                    fi
+                fi
+            fi
+
+            if [ -z "$compile_jdk_version" ]
+            then
+                if [[ "${repo_name}" == *"kafka-connect-salesforce" ]]
                 then
-                    compile_jdk_version=11
-                    log "⚠️  detected maven compiler version '$chosen' from pom.xml, but 8 is too old, forcing --compile-jdk-version to $compile_jdk_version"
-                elif [ "$chosen" == "12" ]
-                then
-                    compile_jdk_version=11
-                    log "⚠️  detected maven compiler version '$chosen' from pom.xml, but 12 is not supported, forcing --compile-jdk-version to $compile_jdk_version"
-                elif [ "$chosen" == "\${java.version}" ]
-                then
-                    compile_jdk_version=11
-                    log "⚠️  detected maven compiler version '$chosen' from pom.xml, but it is not valid, forcing --compile-jdk-version to $compile_jdk_version"
+                    compile_jdk_version=17
+                    log "⚠️  kafka-connect-salesforce requires Jdk 17, forcing --compile-jdk-version to $compile_jdk_version"
                 else
-                    log "✨ detected maven compiler version '$chosen' from pom.xml, using --compile-jdk-version $compile_jdk_version"
+                    compile_jdk_version=11
+                    log "🤷‍♂️ could not detect maven compiler version in pom.xml, defaulting to --compile-jdk-version $compile_jdk_version"
                 fi
             fi
         fi
 
-        if [ -z "$compile_jdk_version" ]
+        mvn_settings_file="/tmp/settings.xml"
+        if [[ "$sourcecode_url" == *"confluentinc"* ]]
         then
-            if [[ "${repo_name}" == *"kafka-connect-salesforce" ]]
+            if [ $is_confluent_employee -eq 1 ]
             then
-                compile_jdk_version=17
-                log "⚠️  kafka-connect-salesforce requires Jdk 17, forcing --compile-jdk-version to $compile_jdk_version"
-            else
-                compile_jdk_version=11
-                log "🤷‍♂️ could not detect maven compiler version in pom.xml, defaulting to --compile-jdk-version $compile_jdk_version"
+                if [ ! -d "$HOME/.cc-dotfiles" ]
+                then
+                    logerror "❌ you're a Confluent employee, but dev-login is not installed (directory $HOME/.cc-dotfiles does not exist), please follow:"
+                    echo "🔗 Maven FAQ https://confluentinc.atlassian.net/wiki/spaces/TOOLS/pages/2930704487/Maven+FAQ#How-do-I-get-access-locally%3F"
+                    exit 1
+                fi
+
+                # check_if_call_dev_login
+                log "🛂 execute dev-login"
+                source $HOME/.cc-dotfiles/caas.sh && dev-login -f;
+
+                mvn_settings_file="/root/.m2/settings.xml"
             fi
-        fi
-    fi
-
-    mvn_settings_file="/tmp/settings.xml"
-    if [[ "$sourcecode_url" == *"confluentinc"* ]]
-    then
-        if [ $is_confluent_employee -eq 1 ]
-        then
-            if [ ! -d "$HOME/.cc-dotfiles" ]
-            then
-                logerror "❌ you're a Confluent employee, but dev-login is not installed (directory $HOME/.cc-dotfiles does not exist), please follow:"
-                echo "🔗 Maven FAQ https://confluentinc.atlassian.net/wiki/spaces/TOOLS/pages/2930704487/Maven+FAQ#How-do-I-get-access-locally%3F"
-                exit 1
-            fi
-
-            # check_if_call_dev_login
-            log "🛂 execute dev-login"
-            source $HOME/.cc-dotfiles/caas.sh && dev-login -f;
-
-            mvn_settings_file="/root/.m2/settings.xml"
         fi
     fi
 
@@ -374,6 +376,11 @@ function compile () {
     open_file_with_editor "${repo_folder}"
     # echo ""
     # check_if_ready_to_continue
+
+    if [[ -n "$open" ]]
+    then
+        return
+    fi
 
     # Display each zip file
     found=0
@@ -746,7 +753,7 @@ else
     fi
 fi
 
-if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]] || [[ -n "$compile" ]]
+if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]] || [[ -n "$compile" ]] || [[ -n "$open" ]]
 then
     log "🧑‍💻🌐 sourcecode for plugin $connector_plugin$additional_text is available at:"
     echo "$sourcecode_url"
@@ -757,7 +764,7 @@ fi
 
 if [ "$comparison_mode_versions" != "" ]
 then
-    if [[ -n "$compile" ]]
+    if [[ -n "$compile" ]] || [[ -n "$open" ]]
     then
         if [ "$connector_tag1" != "latest" ] && [[ "$original_sourcecode_url" == *"github.com"* ]]
         then
@@ -778,7 +785,7 @@ else
     #     sourcecode_url="$sourcecode_url/tree/$maybe_tag_prefix$connector_tag$maybe_tag_suffix"
     # fi
 
-    if [[ -n "$compile" ]]
+    if [[ -n "$compile" ]] || [[ -n "$open" ]]
     then
         compile "$connector_tag"
     fi

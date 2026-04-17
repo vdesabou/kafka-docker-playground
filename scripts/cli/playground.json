@@ -2826,7 +2826,7 @@
         },
         {
           "name": "sourcecode",
-          "description": "🧑‍💻 Open source code url in your browser\n  \n  You can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode\n  \n  🏗️ Compile code and generate zip file(s) by providing --compile flag\n  \n",
+          "description": "🧑‍💻 Open source code url in your browser (or in your editor when used with --open)\n  \n  You can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode\n  \n  🏗️ Compile code and generate zip file(s) by providing --compile flag\n  \n",
           "usage": "playground connector-plugin sourcecode [OPTIONS]",
           "options": [
             {
@@ -2878,6 +2878,14 @@
               ],
               "argument": "",
               "description": "🐞 Show output of compilation.\n"
+            },
+            {
+              "names": [
+                "--open",
+                "-o"
+              ],
+              "argument": "",
+              "description": "🔖 Checkout the code and open with text editor set with playground config editor <editor> (default is code)\n"
             }
           ]
         }
