@@ -3934,7 +3934,7 @@ commands:
       playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-hdfs --connector-tag " " --connector-tag " "
 
       # compile 
-      playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-jdbc
+      playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-jdbc --compile
 
       # if you're a confluent employee (make sure to set your aws credentials and follow Maven FAQ), it will also work on proprietary connectors and fully managed connectors 
       playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-oracle-xstream-cdc-source --compile --connector-tag "1.2.0" --compile-verbose
