@@ -214,6 +214,24 @@ Determines whether the connector honours CSFLE rules or not
 ==========================
 Object 1 configuration
 ==========================
+🔘 salesforce.object1.enable.custom.query
+
+Enable custom query for SObject1.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 salesforce.object1.custom.query.fields
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Comma separated list of fields to be fetched for SObject1. Must include Id and the configured offset field.
+	 - Required: MEDIUM
+
 🔘 salesforce.object1
 
 
@@ -232,11 +250,29 @@ Object 1 configuration
 	 - Importance: Specify the topic name to write the data to for Object 1.
 	 - Required: HIGH
 
+🔘 salesforce.object1.custom.query.where
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: WHERE conditions to be applied in the custom query (without the 'WHERE' keyword). Must include an initial time bound to define the starting point for data fetch. Example: 'CreatedDate > YYYY-MM-DDTHH:mm:ss AND Status = Active'. Note: Do not include conditions on the offset field (e.g., LastModifiedDate) as the connector automatically manages incremental bounds.
+	 - Required: MEDIUM
+
+🔘 salesforce.object1.offset.field.name
+
+Offset field to use for incremental bounds. Must be a date or datetime field (e.g., SystemModstamp, LastModifiedDate). The field should have monotonically increasing values as the connector uses it to track progress and avoid duplicate reads.
+
+	 - Type: STRING
+	 - Default: LastModifiedDate
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 salesforce.object1.since
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: STRING
 	 - Importance: CreatedDate after which the records should be pulled for SObject1. Note that the time is in UTC and has required format: yyyy-MM-dd.
 	 - Required: MEDIUM
@@ -250,9 +286,36 @@ If true, the connector will also fetch deleted records using queryAll operation 
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 salesforce.object1.skip.epoch.conversion.fields
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma-separated list of date/datetime fields that should retain their original ISO 8601 string format instead of being converted to epoch. Example: LastModifiedDate,CreatedDate. Note: Adding or removing fields will cause schema changes. Ensure your Schema Registry compatibility settings allow the resulting schema evolution for affected fields.
+	 - Required: LOW
+
 ==========================
 Object 2 configuration
 ==========================
+🔘 salesforce.object2.enable.custom.query
+
+Enable custom query for SObject2.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 salesforce.object2.custom.query.fields
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Comma separated list of fields to be fetched for SObject2. Must include Id and the configured offset field.
+	 - Required: MEDIUM
+
 🔘 salesforce.object2
 
 
@@ -270,6 +333,24 @@ Object 2 configuration
 	 - Default: STRING
 	 - Importance: Specify the topic name to write the data to for Object 2.
 	 - Required: HIGH
+
+🔘 salesforce.object2.custom.query.where
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: WHERE conditions to be applied in the custom query (without the 'WHERE' keyword). Must include an initial time bound to define the starting point for data fetch. Example: 'CreatedDate > YYYY-MM-DDTHH:mm:ss AND Status = Active'. Note: Do not include conditions on the offset field (e.g., LastModifiedDate) as the connector automatically manages incremental bounds.
+	 - Required: MEDIUM
+
+🔘 salesforce.object2.offset.field.name
+
+Offset field to use for incremental bounds. Must be a date or datetime field (e.g., SystemModstamp, LastModifiedDate). The field should have monotonically increasing values as the connector uses it to track progress and avoid duplicate reads.
+
+	 - Type: STRING
+	 - Default: LastModifiedDate
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.object2.since
 
@@ -289,9 +370,36 @@ If true, the connector will also fetch deleted records using queryAll operation 
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 salesforce.object2.skip.epoch.conversion.fields
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma-separated list of date/datetime fields that should retain their original ISO 8601 string format instead of being converted to epoch. Example: LastModifiedDate,CreatedDate. Note: Adding or removing fields will cause schema changes. Ensure your Schema Registry compatibility settings allow the resulting schema evolution for affected fields.
+	 - Required: LOW
+
 ==========================
 Object 3 configuration
 ==========================
+🔘 salesforce.object3.enable.custom.query
+
+Enable custom query for SObject3.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 salesforce.object3.custom.query.fields
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Comma separated list of fields to be fetched for SObject3. Must include Id and the configured offset field.
+	 - Required: MEDIUM
+
 🔘 salesforce.object3
 
 
@@ -309,6 +417,24 @@ Object 3 configuration
 	 - Default: STRING
 	 - Importance: Specify the topic name to write the data to for Object 3.
 	 - Required: HIGH
+
+🔘 salesforce.object3.custom.query.where
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: WHERE conditions to be applied in the custom query (without the 'WHERE' keyword). Must include an initial time bound to define the starting point for data fetch. Example: 'CreatedDate > YYYY-MM-DDTHH:mm:ss AND Status = Active'. Note: Do not include conditions on the offset field (e.g., LastModifiedDate) as the connector automatically manages incremental bounds.
+	 - Required: MEDIUM
+
+🔘 salesforce.object3.offset.field.name
+
+Offset field to use for incremental bounds. Must be a date or datetime field (e.g., SystemModstamp, LastModifiedDate). The field should have monotonically increasing values as the connector uses it to track progress and avoid duplicate reads.
+
+	 - Type: STRING
+	 - Default: LastModifiedDate
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.object3.since
 
@@ -328,9 +454,36 @@ If true, the connector will also fetch deleted records using queryAll operation 
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 salesforce.object3.skip.epoch.conversion.fields
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma-separated list of date/datetime fields that should retain their original ISO 8601 string format instead of being converted to epoch. Example: LastModifiedDate,CreatedDate. Note: Adding or removing fields will cause schema changes. Ensure your Schema Registry compatibility settings allow the resulting schema evolution for affected fields.
+	 - Required: LOW
+
 ==========================
 Object 4 configuration
 ==========================
+🔘 salesforce.object4.enable.custom.query
+
+Enable custom query for SObject4.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 salesforce.object4.custom.query.fields
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Comma separated list of fields to be fetched for SObject4. Must include Id and the configured offset field.
+	 - Required: MEDIUM
+
 🔘 salesforce.object4
 
 
@@ -348,6 +501,24 @@ Object 4 configuration
 	 - Default: STRING
 	 - Importance: Specify the topic name to write the data to for Object 4.
 	 - Required: HIGH
+
+🔘 salesforce.object4.custom.query.where
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: WHERE conditions to be applied in the custom query (without the 'WHERE' keyword). Must include an initial time bound to define the starting point for data fetch. Example: 'CreatedDate > YYYY-MM-DDTHH:mm:ss AND Status = Active'. Note: Do not include conditions on the offset field (e.g., LastModifiedDate) as the connector automatically manages incremental bounds.
+	 - Required: MEDIUM
+
+🔘 salesforce.object4.offset.field.name
+
+Offset field to use for incremental bounds. Must be a date or datetime field (e.g., SystemModstamp, LastModifiedDate). The field should have monotonically increasing values as the connector uses it to track progress and avoid duplicate reads.
+
+	 - Type: STRING
+	 - Default: LastModifiedDate
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 salesforce.object4.since
 
@@ -367,9 +538,36 @@ If true, the connector will also fetch deleted records using queryAll operation 
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 salesforce.object4.skip.epoch.conversion.fields
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma-separated list of date/datetime fields that should retain their original ISO 8601 string format instead of being converted to epoch. Example: LastModifiedDate,CreatedDate. Note: Adding or removing fields will cause schema changes. Ensure your Schema Registry compatibility settings allow the resulting schema evolution for affected fields.
+	 - Required: LOW
+
 ==========================
 Object 5 configuration
 ==========================
+🔘 salesforce.object5.enable.custom.query
+
+Enable custom query for SObject5.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 salesforce.object5.custom.query.fields
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Comma separated list of fields to be fetched for SObject5. Must include Id and the configured offset field.
+	 - Required: MEDIUM
+
 🔘 salesforce.object5
 
 
@@ -388,6 +586,24 @@ Object 5 configuration
 	 - Importance: Specify the topic name to write the data to for Object 5.
 	 - Required: HIGH
 
+🔘 salesforce.object5.custom.query.where
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: WHERE conditions to be applied in the custom query (without the 'WHERE' keyword). Must include an initial time bound to define the starting point for data fetch. Example: 'CreatedDate > YYYY-MM-DDTHH:mm:ss AND Status = Active'. Note: Do not include conditions on the offset field (e.g., LastModifiedDate) as the connector automatically manages incremental bounds.
+	 - Required: MEDIUM
+
+🔘 salesforce.object5.offset.field.name
+
+Offset field to use for incremental bounds. Must be a date or datetime field (e.g., SystemModstamp, LastModifiedDate). The field should have monotonically increasing values as the connector uses it to track progress and avoid duplicate reads.
+
+	 - Type: STRING
+	 - Default: LastModifiedDate
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 salesforce.object5.since
 
 
@@ -405,6 +621,15 @@ If true, the connector will also fetch deleted records using queryAll operation 
 	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 salesforce.object5.skip.epoch.conversion.fields
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Comma-separated list of date/datetime fields that should retain their original ISO 8601 string format instead of being converted to epoch. Example: LastModifiedDate,CreatedDate. Note: Adding or removing fields will cause schema changes. Ensure your Schema Registry compatibility settings allow the resulting schema evolution for affected fields.
+	 - Required: LOW
 
 ==========================
 Connection details
