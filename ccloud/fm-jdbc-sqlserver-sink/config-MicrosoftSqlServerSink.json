@@ -1,3 +1,4 @@
+    "authentication.method": "Password",
     "auto.create": "false",
     "auto.evolve": "false",
     "auto.restart.on.user.error": "true",
@@ -35,6 +36,7 @@
     "name": "STRING",
     "pk.fields": "LIST",
     "pk.mode": "STRING",
+    "provider.integration.id": "STRING",
     "quote.sql.identifiers": "ALWAYS",
     "schema.context.name": "default",
     "ssl.mode": "prefer",
