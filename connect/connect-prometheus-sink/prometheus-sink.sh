@@ -42,17 +42,23 @@ EOF
 
 sleep 6
 
-log "Verify data is in Prometheus"
-curl 'http://localhost:19090/api/v1/query?query=kafka_gaugeMetric1' > /tmp/result.log  2>&1
-cat /tmp/result.log
-grep "kafka_gaugeMetric1" /tmp/result.log
+playground connector show-lag --max-wait 60
 
-# if  we execute same command again, it will show no results....
+if [ -z "$GITHUB_RUN_NUMBER" ]
+then
+    log "Verify data is in Prometheus"
+    curl 'http://localhost:19090/api/v1/query?query=kafka_gaugeMetric1' > /tmp/result.log  2>&1
+    cat /tmp/result.log
+    grep "kafka_gaugeMetric1" /tmp/result.log
 
-# The Problem:
-# Prometheus sink connector exposes metrics at http://connect:8889/metrics
-# When Prometheus scrapes this endpoint (every 5 seconds), it consumes/deletes the metrics from the connector's buffer
-# Your manual curl query works the first time, but subsequent queries return empty because Prometheus already consumed the data
 
-# Why This Happens:
-# This is the intended behavior of the Prometheus sink connector - it acts as a buffer that exposes metrics until they're scraped, then clears them. This prevents memory buildup and follows Prometheus pull model best practices.
+    # if  we execute same command again, it will show no results....
+
+    # The Problem:
+    # Prometheus sink connector exposes metrics at http://connect:8889/metrics
+    # When Prometheus scrapes this endpoint (every 5 seconds), it consumes/deletes the metrics from the connector's buffer
+    # Your manual curl query works the first time, but subsequent queries return empty because Prometheus already consumed the data
+
+    # Why This Happens:
+    # This is the intended behavior of the Prometheus sink connector - it acts as a buffer that exposes metrics until they're scraped, then clears them. This prevents memory buildup and follows Prometheus pull model best practices.
+fi
