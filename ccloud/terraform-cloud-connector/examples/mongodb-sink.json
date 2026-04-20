@@ -1,0 +1,12 @@
+{
+  "topics": "orders",
+  "input.data.format": "AVRO",
+  "connection.host": "your-mongodb-host",
+  "connection.user": "your-username",
+  "connection.password": "your-password",
+  "database": "mydb",
+  "tasks.max": "1",
+  "max.num.retries": "3",
+  "retries.defer.timeout": "5000",
+  "max.batch.size": "0"
+}

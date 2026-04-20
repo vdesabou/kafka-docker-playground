@@ -1,0 +1,8 @@
+{
+  "kafka.topic": "pageviews",
+  "quickstart": "PAGEVIEWS",
+  "output.data.format": "AVRO",
+  "tasks.max": "1",
+  "max.interval": "1000",
+  "iterations": "10000000"
+}

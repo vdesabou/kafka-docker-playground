@@ -1,0 +1,86 @@
+# Example terraform.tfvars for multiple connectors
+# Copy this to terraform.tfvars and customize
+
+confluent_cloud_api_key    = "your-cloud-api-key"
+confluent_cloud_api_secret = "your-cloud-api-secret"
+environment_name           = "multi-connector-env"
+cluster_name               = "multi-connector-cluster"
+cloud_provider             = "AWS"
+cloud_region               = "us-east-1"
+
+# Multiple connectors configuration
+connector_configs = [
+  # Datagen source - generates pageviews
+  {
+    name             = "datagen-pageviews"
+    connector_class  = "DATAGEN"
+    kafka_api_key    = "your-cloud-api-key"
+    kafka_api_secret = "your-cloud-api-secret"
+    config = {
+      "kafka.topic"        = "pageviews"
+      "quickstart"         = "PAGEVIEWS"
+      "output.data.format" = "AVRO"
+      "tasks.max"          = "1"
+      "max.interval"       = "1000"
+      "iterations"         = "10000000"
+    }
+  },
+
+  # Datagen source - generates users
+  {
+    name             = "datagen-users"
+    connector_class  = "DATAGEN"
+    kafka_api_key    = "your-cloud-api-key"
+    kafka_api_secret = "your-cloud-api-secret"
+    config = {
+      "kafka.topic"        = "users"
+      "quickstart"         = "USERS"
+      "output.data.format" = "AVRO"
+      "tasks.max"          = "1"
+      "max.interval"       = "1000"
+      "iterations"         = "10000000"
+    }
+  },
+
+  # S3 sink - archives pageviews
+  {
+    name             = "s3-sink-pageviews"
+    connector_class  = "S3_SINK"
+    kafka_api_key    = "your-cloud-api-key"
+    kafka_api_secret = "your-cloud-api-secret"
+    config = {
+      "topics"                 = "pageviews"
+      "topics.dir"             = "pageviews-archive"
+      "aws.access.key.id"      = "your-aws-key"
+      "aws.secret.access.key"  = "your-aws-secret"
+      "s3.bucket.name"         = "your-bucket-name"
+      "s3.region"              = "us-east-1"
+      "input.data.format"      = "AVRO"
+      "output.data.format"     = "JSON"
+      "time.interval"          = "HOURLY"
+      "flush.size"             = "1000"
+      "schema.compatibility"   = "NONE"
+      "tasks.max"              = "1"
+    }
+  },
+
+  # HTTP sink - sends events to webhook
+  {
+    name             = "http-sink-events"
+    connector_class  = "HTTP_SINK"
+    kafka_api_key    = "your-cloud-api-key"
+    kafka_api_secret = "your-cloud-api-secret"
+    config = {
+      "topics"            = "pageviews"
+      "input.data.format" = "JSON"
+      "http.api.url"      = "https://webhook.site/your-webhook-id"
+      "request.method"    = "POST"
+      "headers"           = "Content-Type:application/json"
+      "auth.type"         = "NONE"
+      "tasks.max"         = "1"
+      "batch.max.size"    = "10"
+      "max.retries"       = "3"
+      "retry.backoff.ms"  = "3000"
+    }
+  }
+]

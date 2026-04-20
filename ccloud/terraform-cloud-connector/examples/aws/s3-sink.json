@@ -1,0 +1,6 @@
+{
+  "_comment": "Terraform example for S3_SINK",
+  "_connector_type": "sink",
+  "_source": "Generated from kafka-docker-playground",
+  "_customize": "Replace placeholder values with your actual configuration"
+}
