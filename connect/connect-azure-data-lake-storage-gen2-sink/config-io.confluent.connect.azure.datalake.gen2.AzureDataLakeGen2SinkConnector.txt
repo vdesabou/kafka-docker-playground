@@ -242,6 +242,15 @@ null
 	 - Importance: LOW
 	 - Required: false
 
+🔘 rotate.file.on.partition.change
+
+
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 Partitioner
 ==========================
