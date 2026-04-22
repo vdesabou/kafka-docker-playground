@@ -41,6 +41,11 @@ playground topic consume --topic MyKafkaTopicName --min-expected-messages 1 --ti
 
 sleep 5
 
+log "Stopping the connector to force unacknowledged messages to be redelivered"
+playground connector stop --connector active-mq-source
+
+sleep 5
+
 log "Asserting that ActiveMQ queue DEV.QUEUE.1 is empty after connector processing"
 log "This tests that commitRecord API properly deletes messages from external system"
 QUEUE_SIZE=$(curl -s -u admin:admin "http://localhost:8161/admin/xml/queues.jsp" | grep -A 5 "DEV.QUEUE.1" | grep "size" | sed 's/.*size=\"\([0-9]*\)\".*/\1/')
