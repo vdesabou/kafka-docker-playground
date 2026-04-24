@@ -132,7 +132,7 @@ The password to use when connecting to IBM MQ.
 
 🔘 disable.mqcsp.authentication
 
-Whether to disable MQCSP authentication in the connector. By default, the connector uses MQCSP authentication, which is the recommended secure authentication method. Disabling MQCSP will make the connector use legacy authentication mode. **WARNING: The legacy authentication mode is inherently insecure and should only be used when absolutely necessary. When MQCSP is disabled on non-SSL/TLS connections, credentials are transmitted in clear text, exposing them to potential interception and unauthorized access. It is strongly recommended to use MQCSP authentication (default) or, if legacy mode is required, configure a secure connection using SSL/TLS with an appropriate cipher suite.**
+Whether to disable MQCSP authentication in the connector. By default, connector uses MQCSP authentication. Disabling it will make the connector use a legacy mode of authentication. The legacy mode is not a secure mode and hence, MQCSP mode of authentication will be allowed to be disabled only on connectors using a secure connection (SSL/TLS) through use of a cipher suite, otherwise this will be ignored and the connector will continue to use MQCSP authentication. 
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -312,7 +312,7 @@ The maximum number of messages per task that can be received from JMS brokers an
 The maximum amount of time each task can build a batch. The batch is closed and sent to Kafka if not enough messages are read during the time allotted. This helps limit connector lag when the JMS queue/topic has a lower throughput.
 
 	 - Type: INT
-	 - Default: -1
+	 - Default: 60000
 	 - Importance: LOW
 	 - Required: false
 
