@@ -19,6 +19,13 @@ help:
 	@echo "  make format            Format Terraform files"
 	@echo "  make clean             Clean Terraform artifacts"
 	@echo ""
+	@echo "🚀 Zero-Config Automation (NEW!):"
+	@echo "  make bootstrap            Complete automated setup (recommended for first time)"
+	@echo "  make wizard               Interactive wizard for guided setup"
+	@echo "  make quick-datagen        Quick launch: Datagen only"
+	@echo "  make quick-pipeline       Quick launch: Complete pipeline"
+	@echo "  make setup                Setup only (install dependencies)"
+	@echo ""
 	@echo "Quick Start Examples:"
 	@echo "  make datagen              Create cluster with Datagen connector"
 	@echo "  make s3-sink              Create cluster with S3 sink connector"
@@ -115,3 +122,28 @@ install-deps:
 		sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main" && \
 		sudo apt-get update && sudo apt-get install terraform)
 	@echo "✅ Dependencies installed"
+
+# Zero-Config Automation Scripts
+bootstrap:
+	@echo "🚀 Running complete automated setup..."
+	@./bootstrap.sh
+
+wizard:
+	@echo "🔧 Starting interactive wizard..."
+	@./wizard.sh
+
+quick-datagen:
+	@echo "⚡ Quick launching Datagen..."
+	@./quick-launch.sh datagen
+
+quick-pipeline:
+	@echo "⚡ Quick launching complete pipeline..."
+	@./quick-launch.sh pipeline
+
+quick-demo:
+	@echo "⚡ Quick launching full demo..."
+	@./quick-launch.sh demo
+
+setup:
+	@echo "🛠️  Running setup (dependencies and configuration)..."
+	@./setup.sh

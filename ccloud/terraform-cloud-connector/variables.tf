@@ -66,3 +66,9 @@ variable "connector_config_file" {
   type        = string
   default     = ""
 }
+
+variable "existing_cluster_id" {
+  description = "ID of existing Kafka cluster (for connector-only deployments)"
+  type        = string
+  default     = ""
+}

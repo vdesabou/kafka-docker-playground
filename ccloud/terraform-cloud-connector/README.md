@@ -1,6 +1,49 @@
 # Terraform Cloud Connector Tool
 
+**🎯 Interactive Deployment - Just answer a few questions!**
+
+```bash
+cd ccloud/terraform-cloud-connector
+./deploy-connector.sh
+```
+
+**OR using playground:**
+
+```bash
+playground run -f ccloud/terraform-cloud-connector/deploy-connector.sh
+```
+
+**The script will ask you:**
+1. 🔑 **Confluent Cloud API credentials** (saved for reuse)
+2. 📦 **Environment** - Use existing or create new?
+3. 🖥️ **Cluster** - Use existing or create new?
+4. 🔌 **Connector type** - DatagenSource (PAGEVIEWS, ORDERS, USERS, CLICKSTREAM)
+5. ✅ **Review and deploy** - One command!
+
+**Zero manual configuration required!**
+
+---
+
+**🚀 Or use the Zero-Config Installation - Get running in ONE command!**
+
 A Terraform-based tool for provisioning Confluent Cloud clusters (lkc-*) and fully managed connectors (lcc-*) in the Kafka Docker Playground.
+
+## ⚡ Ultra Quick Start (30 seconds)
+
+```bash
+cd ccloud/terraform-cloud-connector
+./bootstrap.sh   # That's it! No manual setup needed.
+```
+
+The script automatically:
+- ✅ Installs all dependencies (Terraform, jq, CLI tools)
+- ✅ Configures your credentials (interactive prompts)
+- ✅ Deploys your first cluster with Datagen
+- ✅ Shows you exactly what was created
+
+**For complete zero-config documentation, see [ZERO_CONFIG_INSTALL.md](ZERO_CONFIG_INSTALL.md)**
+
+---
 
 ## 🎯 Overview
 
@@ -10,8 +53,9 @@ This tool allows you to:
 - ✅ Manage infrastructure as code with versioning
 - ✅ Integrate seamlessly with the Kafka Docker Playground ecosystem
 - ✅ Support multiple cloud providers (AWS, GCP, Azure)
+- ✅ **NEW: Zero-config automation scripts** - No manual setup!
 
-## 📋 Prerequisites
+## 📋 Prerequisites (Auto-Installed!)
 
 1. **Terraform** (>= 1.0)
    ```bash

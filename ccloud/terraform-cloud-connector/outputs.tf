@@ -1,6 +1,6 @@
 output "environment_id" {
   description = "Confluent Cloud Environment ID"
-  value       = confluent_environment.playground_env.id
+  value       = local.environment_id
 }
 
 output "cluster_id" {
@@ -39,7 +39,7 @@ output "connector_details" {
   description = "Details for running connectors"
   value = {
     cluster_id         = confluent_kafka_cluster.playground_cluster.id
-    environment_id     = confluent_environment.playground_env.id
+    environment_id     = local.environment_id
     service_account_id = confluent_service_account.connector_service_account.id
     bootstrap_endpoint = confluent_kafka_cluster.playground_cluster.bootstrap_endpoint
     rest_endpoint      = confluent_kafka_cluster.playground_cluster.rest_endpoint

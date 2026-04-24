@@ -1,0 +1,81 @@
+SIMPLE TESTING - All Connectors
+================================
+
+EASIEST WAY (Recommended):
+--------------------------
+playground run -f ccloud/terraform-cloud-connector/playground-auto-datagen.sh
+→ Enter Confluent Cloud credentials when prompted
+→ Wait 2-3 minutes
+→ Done! Cluster with test data running
+
+
+TEST SPECIFIC CONNECTOR:
+------------------------
+# AWS S3
+playground run -f ccloud/terraform-cloud-connector/playground-auto-s3-sink.sh
+
+# PostgreSQL
+playground run -f ccloud/terraform-cloud-connector/playground-auto-postgres-source.sh
+
+# MongoDB
+playground run -f ccloud/terraform-cloud-connector/playground-auto-mongodb-sink.sh
+
+# BigQuery
+playground run -f ccloud/terraform-cloud-connector/playground-auto-bigquery-sink.sh
+
+# HTTP Sink
+playground run -f ccloud/terraform-cloud-connector/playground-auto-http-sink.sh
+
+
+ANY CONNECTOR (Universal):
+--------------------------
+playground run -f ccloud/terraform-cloud-connector/playground-auto-connector.sh -- --connector TYPE
+
+Examples:
+playground run -f ccloud/terraform-cloud-connector/playground-auto-connector.sh -- --connector REDIS_SINK
+playground run -f ccloud/terraform-cloud-connector/playground-auto-connector.sh -- --connector SNOWFLAKE_SINK
+
+
+LIST ALL CONNECTORS:
+--------------------
+playground run -f ccloud/terraform-cloud-connector/playground-list-connectors.sh
+
+
+INTERACTIVE WIZARD:
+-------------------
+playground run -f ccloud/terraform-cloud-connector/playground-auto-wizard.sh
+
+
+COMPLETE PIPELINE:
+------------------
+playground run -f ccloud/terraform-cloud-connector/playground-auto-pipeline.sh
+
+
+WHAT HAPPENS:
+-------------
+✅ Auto-installs Terraform (if needed)
+✅ Prompts for credentials (saved for next time)
+✅ Deploys cluster + connector
+✅ Verifies everything works
+✅ Shows you what was created
+✅ Prompts before cleanup
+
+
+TIME REQUIRED:
+--------------
+- Setup (first time): 30 seconds
+- Deployment: 2-3 minutes
+- Total: 3-4 minutes
+
+
+CREDENTIALS NEEDED:
+-------------------
+- Confluent Cloud: API Key + Secret (required)
+- AWS: Access Key + Secret (for AWS connectors)
+- GCP: Project ID + Service Account Key (for GCP connectors)
+- Azure: Storage Account + Key (for Azure connectors)
+- Database: Host + User + Password (for database connectors)
+
+
+ZERO MANUAL CONFIGURATION!
+All scripts are fully automated.

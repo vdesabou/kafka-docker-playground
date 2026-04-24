@@ -17,20 +17,23 @@ resource "confluent_connector" "cloud_connectors" {
   for_each = { for idx, connector in var.connector_configs : connector.name => connector }
 
   environment {
-    id = confluent_environment.playground_env.id
+    id = local.environment_id
   }
 
   kafka_cluster {
     id = confluent_kafka_cluster.playground_cluster.id
   }
 
-  config_sensitive = merge(
+  config_sensitive = {
+    "kafka.api.key"    = confluent_api_key.connector_api_key.id
+    "kafka.api.secret" = confluent_api_key.connector_api_key.secret
+  }
+
+  config_nonsensitive = merge(
     {
       "connector.class"    = each.value.connector_class
       "name"               = each.value.name
       "kafka.auth.mode"    = "KAFKA_API_KEY"
-      "kafka.api.key"      = confluent_api_key.connector_api_key.id
-      "kafka.api.secret"   = confluent_api_key.connector_api_key.secret
     },
     each.value.config
   )
