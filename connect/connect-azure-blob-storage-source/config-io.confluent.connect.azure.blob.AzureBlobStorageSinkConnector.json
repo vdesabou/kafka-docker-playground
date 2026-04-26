@@ -37,6 +37,7 @@
     "partitioner.max.open.files": "-1",
     "path.format": "STRING",
     "retry.backoff.ms": "5000",
+    "rotate.file.on.partition.change": "true",
     "rotate.interval.ms": "-1",
     "rotate.schedule.interval.ms": "-1",
     "schema.compatibility": "NONE",
