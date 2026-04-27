@@ -140,7 +140,9 @@ playground topic produce -t test_table --nb-messages 3 << 'EOF'
 }
 EOF
 
-log "Creating Snowflake Sink connector"
+if [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "3.9.99"
+then
+    log "Creating Snowflake Sink connector with Iceberg integration and with connector version below v4"
 playground connector create-or-update --connector snowflake-sink  << EOF
 {
      "connector.class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",
@@ -162,7 +164,38 @@ playground connector create-or-update --connector snowflake-sink  << EOF
      "value.converter.schema.registry.url": "http://schema-registry:8081"
 }
 EOF
+else
+    log "Creating Snowflake Sink connector with Iceberg integration and with connector version v4+ (see https://docs.snowflake.com/en/user-guide/kafka-connector/migrate-v3-to-v4)"
+    log "snowpipe streaming is used by default for v4+ connector"
+playground connector create-or-update --connector snowflake-sink  << EOF
+{
+    "connector.class": "com.snowflake.kafka.connector.SnowflakeStreamingSinkConnector",
+    "topics": "test_table",
+    "tasks.max": "1",
+    "snowflake.url.name": "$SNOWFLAKE_URL",
+    "snowflake.user.name": "$PLAYGROUND_USER",
+    
+    "snowflake.private.key": "\${file:/data:private.key}",
+    "snowflake.private.key.passphrase": "confluent",
+    "snowflake.database.name": "$PLAYGROUND_DB",
+    "snowflake.schema.name":"PUBLIC",
 
+    "jvm.proxy.host": "squid",
+    "jvm.proxy.port": "3128",
+
+    "snowflake.streaming.iceberg.enabled": "true",
+
+    "snowflake.role.name": "$PLAYGROUND_CONNECTOR_ROLE",
+    "snowflake.streaming.validate.compatibility.with.classic": "false",
+
+    "buffer.count.records": "3",
+    "buffer.flush.time" : "10",
+    "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://schema-registry:8081"
+}
+EOF
+fi
 
 sleep 120
 
