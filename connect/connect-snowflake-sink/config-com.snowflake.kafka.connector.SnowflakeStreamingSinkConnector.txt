@@ -1,0 +1,381 @@
+==========================
+ERRORS
+==========================
+🔘 errors.tolerance
+
+Behavior for tolerating errors during Sink connector's operation. 'NONE' is set as default and denotes that it will be fail fast. i.e any error will result in an immediate task failure. 'ALL'  skips over problematic records.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.log.enable
+
+If true, write/log each error along with details of the failed operation and record properties to the Connect log. Default is 'false', so that only errors that are not tolerated are reported.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.deadletterqueue.topic.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Whether to output conversion errors to the dead letter queue By default messages are not sent to the dead letter queue. Requires property `errors.tolerance=all`.
+	 - Required: LOW
+
+==========================
+Snowflake Login Info
+==========================
+🔘 snowflake.url.name
+
+Snowflake account url
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 snowflake.user.name
+
+Snowflake user name
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 snowflake.private.key
+
+Private key for Snowflake user
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 snowflake.private.key.passphrase
+
+Passphrase of private key if encrypted
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.database.name
+
+Snowflake database name
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 snowflake.schema.name
+
+Snowflake database schema name
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 snowflake.role.name
+
+Snowflake role: snowflake.role.name
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Proxy Info
+==========================
+🔘 jvm.proxy.host
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: JVM option: https.proxyHost
+	 - Required: LOW
+
+🔘 jvm.proxy.port
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: JVM option: https.proxyPort
+	 - Required: LOW
+
+🔘 jvm.nonProxy.hosts
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: JVM option: http.nonProxyHosts
+	 - Required: LOW
+
+🔘 jvm.proxy.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: JVM proxy username
+	 - Required: LOW
+
+🔘 jvm.proxy.password
+
+JVM proxy password
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Snowflake Metadata Flags
+==========================
+🔘 snowflake.metadata.all
+
+Flag to control whether there is metadata collected. If set to false, all metadata will be dropped
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.metadata.createtime
+
+Flag to control whether createtime is collected in snowflake metadata
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.metadata.topic
+
+Flag to control whether kafka topic name is collected in snowflake metadata
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.metadata.offset.and.partition
+
+Flag to control whether kafka partition and offset are collected in snowflake metadata
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.streaming.metadata.connectorPushTime
+
+Flag to control whether ConnectorPushTime is collected in snowflake metadata for Snowpipe Streaming
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connector Config
+==========================
+🔘 snowflake.streaming.validate.compatibility.with.classic
+
+When true (default), the connector validates that all settings required for KC v3 backward compatibility are configured. Set to false to use v4-optimized defaults without compatibility checks.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 snowflake.topic2table.map
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Map of topics to tables (optional). Format : comma-separated tuples, e.g. <topic-1>:<table-1>,<topic-2>:<table-2>,... 
+	 - Required: LOW
+
+🔘 snowflake.validation
+
+Data validation mode. 'client_side' enables client-side data validation and schema evolution before sending to Snowflake. 'server_side' defers validation and schema evolution to the backend for maximum throughput; requires that error logging is enabled on the target table.
+
+	 - Type: STRING
+	 - Default: server_side
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 snowflake.streaming.classic.offset.migration
+
+Controls offset migration from KC v3 (Snowpipe Streaming Classic) channels. 'skip' (default): do not consult Classic channels. 'best_effort': migrate the offset if the Classic channel exists, otherwise fall through to the Kafka consumer group offset. 'strict': migrate the offset if the Classic channel exists, fail if it does not.
+
+	 - Type: STRING
+	 - Default: skip
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 snowflake.streaming.classic.offset.migration.include.connector.name
+
+Whether the KC v3 connector included the connector name in its channel names. Set to true if the v3 connector had 'snowflake.streaming.channel.name.include.connector.name=true'. Only relevant when offset migration is not 'skip'.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 behavior.on.null.values
+
+How to handle records with a null value (i.e. Kafka tombstone records). Valid options are 'DEFAULT' and 'IGNORE'.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 jmx
+
+Whether to enable JMX MBeans for custom SF metrics
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Connector Config
+==========================
+🔘 snowflake.streaming.client.provider.override.map
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Map of Key value pairs representing Streaming Client Properties to Override. These are optional and recommended to use ONLY after consulting Snowflake Support. Format : comma-separated tuples, e.g.: key1:value1,key2:value2
+	 - Required: LOW
+
+🔘 enable.mdc.logging
+
+Enable MDC context to prepend log messages. Note that this is only available after Apache Kafka 2.3
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 enable.task.fail.on.authorization.errors
+
+If set to true the Connector will fail its tasks when authorization error from Snowflake occurred
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Connector Config
+==========================
+🔘 snowflake.compatibility.enable.autogenerated.table.name.sanitization
+
+When enabled, auto-generated table names are sanitized (special characters replaced) and uppercased for v3 compatibility. When disabled, topic names are passed through as-is. Use topic2table.map with quoted identifiers for special characters when disabled.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.compatibility.enable.column.identifier.normalization
+
+When enabled, column identifiers are normalized to uppercase for v3 compatibility.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.enable.schematization
+
+When true (default), records are schematized into individual columns. When false, records are wrapped into legacy RECORD_CONTENT and RECORD_METADATA VARIANT columns for backward compatibility with KC v3.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snowflake.cache.table.exists
+
+Enable caching for Snowflake table existence checks to reduce database queries
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.cache.table.exists.expire.ms
+
+Cache expiration time in milliseconds for table existence checks. Must be a positive number.
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.cache.pipe.exists
+
+Enable caching for pipe existence checks to reduce database queries
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.cache.pipe.exists.expire.ms
+
+Cache expiration time in milliseconds for pipe existence checks. Must be a positive number.
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
