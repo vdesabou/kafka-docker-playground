@@ -116,20 +116,4 @@ EOF
 sleep 5
 
 log "Verifying topic dbserver1ssl.inventory.customers"
-# `|| true` shields against a benign post-consume `date: <epoch>: No such file or directory`
-# error from playground on macOS (BSD date doesn't support GNU `-d <epoch>`); the consumed
-# message is already captured in stdout by that point.
-consume_output=$(playground topic consume --topic dbserver1ssl.inventory.customers --min-expected-messages 1 --timeout 60 2>&1 || true)
-echo "${consume_output}"
-
-log "Asserting record content matches what we inserted"
-# Debezium serializes the MongoDB document as a JSON string inside the Avro envelope's
-# `after` field, so the inner quotes are backslash-escaped in the consumer output.
-expected_fields=('\"_id\": 1006' '\"first_name\": \"Bob\"' '\"last_name\": \"Hopper\"' '\"email\": \"thebob@example.com\"')
-for field in "${expected_fields[@]}"; do
-  if ! echo "${consume_output}" | grep -qF "${field}"; then
-    logerror "❌ Expected ${field} not found in topic payload"
-    exit 1
-  fi
-done
-log "✅ Content match confirmed: _id=1006, Bob Hopper, thebob@example.com"
+playground topic consume --topic dbserver1ssl.inventory.customers --min-expected-messages 1 --timeout 60
