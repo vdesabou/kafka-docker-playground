@@ -119,7 +119,28 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.proxy.yml"
 
 log "Sending messages to topic test_table"
-playground topic produce -t test_table --nb-messages 3 << 'EOF'
+playground topic produce -t test_table --nb-messages 2 << 'EOF'
+{
+  "fields": [
+    {
+      "name": "u_name",
+      "type": "string"
+    },
+    {
+      "name": "u_price",
+      "type": "float"
+    },
+    {
+      "name": "u_quantity",
+      "type": "int"
+    }
+  ],
+  "name": "myrecord",
+  "type": "record"
+}
+EOF
+
+playground topic produce -t test_table --nb-messages 1 --forced-value '{"u_name":"Jordane","u_price":0.6532583,"u_quantity":3}' << 'EOF'
 {
   "fields": [
     {
@@ -199,20 +220,36 @@ playground connector create-or-update --connector snowflake-sink  << EOF
 EOF
 fi
 
-sleep 120
-
 log "Confirm that the messages were delivered to the Snowflake table (logged as $PLAYGROUND_USER user)"
-docker run --quiet --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME > /tmp/result.log  2>&1 <<-EOF
+set +e
+max_attempts=${SNOWFLAKE_CHECK_MAX_ATTEMPTS:-24}
+sleep_seconds=${SNOWFLAKE_CHECK_SLEEP_SECONDS:-5}
+attempt=1
+found=0
+
+while [ $attempt -le $max_attempts ]; do
+  log "Checking Snowflake table for rows (attempt $attempt/$max_attempts)"
+  docker run --quiet --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME > /tmp/result.log 2>&1 <<-EOF
 USE ROLE $PLAYGROUND_CONNECTOR_ROLE;
 USE DATABASE $PLAYGROUND_DB;
 USE SCHEMA PUBLIC;
 USE WAREHOUSE $PLAYGROUND_WAREHOUSE;
 SELECT * FROM $PLAYGROUND_DB.PUBLIC.TEST_TABLE;
 EOF
-cat /tmp/result.log
-grep -i "u_name" /tmp/result.log
+  cat /tmp/result.log
 
-# docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-snowflake-sink --describe
+  if grep -qi "Jordane" /tmp/result.log; then
+    found=1
+    break
+  fi
 
-# docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-snowflake-sink --to-earliest --topic test_table --reset-offsets --dry-run
-# docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-snowflake-sink --to-earliest --topic test_table --reset-offsets --execute
+  attempt=$((attempt + 1))
+  if [ $attempt -le $max_attempts ]; then
+    sleep $sleep_seconds
+  fi
+done
+
+if [ $found -ne 1 ]; then
+  logerror "Timed out waiting for rows in $PLAYGROUND_DB.PUBLIC.TEST_TABLE after $max_attempts attempts"
+  exit 1
+fi
