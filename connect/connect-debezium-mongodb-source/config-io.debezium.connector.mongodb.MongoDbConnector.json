@@ -30,6 +30,8 @@
     "mongodb.socket.timeout.ms": "0",
     "mongodb.ssl.enabled": "false",
     "mongodb.ssl.invalid.hostname.allowed": "false",
+    "mongodb.ssl.truststore": "",
+    "mongodb.ssl.truststore.password": "",
     "mongodb.user": "",
     "notification.enabled.channels": "",
     "notification.sink.topic.name": "",
