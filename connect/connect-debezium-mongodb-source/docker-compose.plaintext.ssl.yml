@@ -1,0 +1,31 @@
+---
+services:
+
+  mongodb:
+    image: mongo:latest
+    hostname: mongodb
+    container_name: mongodb
+    ports:
+      - 27017:27017
+    volumes:
+      - ${MONGODB_SSL_CERTS_DIR:?MONGODB_SSL_CERTS_DIR must be set (run debezium-mongodb-source-ssl.sh, do not invoke docker compose directly)}:/etc/ssl/mongo:ro
+    entrypoint:
+      - /usr/bin/mongod
+      - --bind_ip_all
+      - --replSet
+      - debezium
+      - --tlsMode
+      - requireTLS
+      - --tlsCertificateKeyFile
+      - /etc/ssl/mongo/mongo-server.pem
+      - --tlsCAFile
+      - /etc/ssl/mongo/mongo-ca.crt
+      - --tlsAllowConnectionsWithoutCertificates
+
+  connect:
+    depends_on:
+      - mongodb
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/debezium-debezium-connector-mongodb
+    volumes:
+      - ${MONGODB_SSL_CERTS_DIR:?MONGODB_SSL_CERTS_DIR must be set (run debezium-mongodb-source-ssl.sh, do not invoke docker compose directly)}:/etc/ssl/mongo:ro
