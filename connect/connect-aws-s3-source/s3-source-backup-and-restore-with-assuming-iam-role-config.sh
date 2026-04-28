@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if ! version_gt $CONNECTOR_TAG "2.5.0"; then
+if [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "2.5.0"; then
     logwarn "this is available since version 2.5.1 only"
     exit 1
 fi
