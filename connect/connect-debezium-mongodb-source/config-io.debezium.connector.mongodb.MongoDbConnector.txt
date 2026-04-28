@@ -148,24 +148,6 @@ Whether invalid host names are allowed when using SSL. If true the connection wi
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 mongodb.ssl.truststore
-
-Path to the truststore file containing certificate authority certificates for validating MongoDB server certificates
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 mongodb.ssl.truststore.password
-
-Password for accessing the truststore file
-
-	 - Type: PASSWORD
-	 - Default: null
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 cursor.max.await.time.ms
 
 The maximum processing time in milliseconds to wait for the oplog cursor to process a single poll request
