@@ -579,7 +579,7 @@ Additional Configs
 ==========================
 🔘 behavior.on.null.values
 
-Specify how the connector should handle tombstone records. A tombstone record is defined as a record where the entire value field is null
+Specify how the connector should handle tombstone records. A tombstone record is defined as a record where the entire value field is null.
 
 	 - Type: STRING
 	 - Default: IGNORE
