@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if ! version_gt $CONNECTOR_TAG "1.9.9"; then
+if [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "1.9.9"; then
     # skipped
     logwarn "skipped as it requires connector version 2.0.0"
     exit 111
