@@ -15,7 +15,7 @@ then
         log "🌩️ ccloud environment is used, using mcp-confluent server (https://github.com/confluentinc/mcp-confluent) to interact with confluent cloud"
         gemini mcp remove mcp-kafka > /dev/null 2>&1 || true
         gemini mcp remove mcp-ccloud > /dev/null 2>&1 || true
-        gemini mcp add --trust mcp-ccloud npx "-y" "@confluentinc/mcp-confluent@latest" --registry=https://registry.npmjs.org -- "-e" "$root_folder/.ccloud/.env"
+        gemini mcp add --trust mcp-ccloud npx "-y" "--registry=https://registry.npmjs.org" "@confluentinc/mcp-confluent@latest" -- "-e" "$root_folder/.ccloud/.env"
     else
         logerror "❌ .ccloud/.env file is not present!"
         exit 1
@@ -40,7 +40,7 @@ BOOTSTRAP_SERVERS=localhost:29092
 SCHEMA_REGISTRY_ENDPOINT=http://localhost:8081
 EOF
 
-        gemini mcp add --trust mcp-kafka npx "-y" "@confluentinc/mcp-confluent@latest" --registry=https://registry.npmjs.org -- "-e" "$tmp_dir/.env"
+        gemini mcp add --trust mcp-kafka npx "-y" "--registry=https://registry.npmjs.org" "@confluentinc/mcp-confluent@latest" -- "-e" "$tmp_dir/.env"
     else
         logwarn "🔐 $environment environment is used, using mcp-confluent server (https://github.com/confluentinc/mcp-confluent) to interact with the cluster will not be used, only works with plaintext for now"
     fi
