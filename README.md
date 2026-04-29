@@ -20,7 +20,6 @@ Check out [kafka-docker-playground.io](https://kafka-docker-playground.io/) to l
 - 🧠 Easily run commands with playground [CLI](https://kafka-docker-playground.io/#/cli)
 - 🎓 Learn how the playground [works](https://kafka-docker-playground.io/#/how-it-works)
 - 👷‍♂️ Build your own examples or reproduction models with [reusables](https://kafka-docker-playground.io/#/reusables) section
-- 📱 Work directly in your browser using [Gitpod.io](https://kafka-docker-playground.io/#/how-to-use?id=🪄-gitpodio)
 - ✨ Work remotely with VS Code using [playground ec2](https://kafka-docker-playground.io/#/playground%20ec2) CLI command
 - 🤖 Automated testing using Github Actions [CI](https://kafka-docker-playground.io/#/how-it-works?id=🤖-how-ci-works)
 - 👾 And even more [playgrounds](https://kafka-docker-playground.io/#/content?id=👾-other-playgrounds)...

@@ -1781,7 +1781,6 @@ function arm64_support() {
     then
       echo "❌🖥️ this example is not working with ARM64 !"
       echo "❌🖥️ it is highly recommended to use 'playground ec2 command' to run the example on ubuntu ec2 instance"
-      echo "❌🖥️ you can also use gitpod"
       return
     fi
 
