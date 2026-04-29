@@ -10,8 +10,6 @@
     "jvm.proxy.password": "[hidden]",
     "jvm.proxy.port": "STRING",
     "jvm.proxy.username": "STRING",
-    "key.converter.converter.encoding": "UTF-8",
-    "key.converter.converter.type": "",
     "snowflake.cache.pipe.exists": "true",
     "snowflake.cache.pipe.exists.expire.ms": "300000",
     "snowflake.cache.table.exists": "true",
