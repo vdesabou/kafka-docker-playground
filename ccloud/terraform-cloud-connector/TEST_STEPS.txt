@@ -1,0 +1,56 @@
+SIMPLE TEST STEPS - Terraform Cloud Connector Tool
+==================================================
+
+OPTION 1: FASTEST (Recommended)
+--------------------------------
+cd ccloud/terraform-cloud-connector
+./bootstrap.sh
+→ Choose option 1 (Quick Start)
+→ Enter your Confluent Cloud credentials when prompted
+→ Wait 2-3 minutes
+→ Done! Cluster is running
+
+Verify:
+  make status    # Should show RUNNING
+  make outputs   # Should show cluster details
+
+Clean up:
+  make destroy
+
+
+OPTION 2: INTERACTIVE WIZARD
+-----------------------------
+cd ccloud/terraform-cloud-connector
+./wizard.sh
+→ Answer 4 questions
+→ Review configuration
+→ Confirm deployment
+→ Done!
+
+Clean up:
+  make destroy
+
+
+OPTION 3: ONE-LINER
+-------------------
+cd ccloud/terraform-cloud-connector
+./quick-launch.sh datagen
+
+Clean up:
+  make destroy
+
+
+OPTION 4: MAKEFILE
+------------------
+cd ccloud/terraform-cloud-connector
+make bootstrap     # Full automation
+make quick-datagen # Quick test
+
+Clean up:
+  make destroy
+
+
+THAT'S IT!
+----------
+Zero manual configuration required!
+

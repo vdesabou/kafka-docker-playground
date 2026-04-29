@@ -1,0 +1,12 @@
+{
+  "database.hostname": "your-postgres-host",
+  "database.port": "5432",
+  "database.user": "your-username",
+  "database.password": "your-password",
+  "database.dbname": "postgres",
+  "database.server.name": "pg-server",
+  "table.include.list": "public.customers",
+  "output.data.format": "AVRO",
+  "tasks.max": "1",
+  "after.state.only": "true"
+}

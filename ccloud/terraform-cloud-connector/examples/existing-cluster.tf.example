@@ -1,0 +1,71 @@
+# Example: Using existing Confluent Cloud cluster
+#
+# This shows how to import an existing cluster and add connectors to it
+# Rename this file to existing-cluster.tf to use it
+
+# Data source for existing environment
+data "confluent_environment" "existing_env" {
+  id = "env-xxxxx"  # Replace with your environment ID
+}
+
+# Data source for existing Kafka cluster
+data "confluent_kafka_cluster" "existing_cluster" {
+  id = "lkc-xxxxx"  # Replace with your cluster ID (lkc-*)
+  environment {
+    id = data.confluent_environment.existing_env.id
+  }
+}
+
+# Data source for existing service account
+data "confluent_service_account" "existing_sa" {
+  id = "sa-xxxxx"  # Replace with your service account ID
+}
+
+# Create API key for the existing service account
+resource "confluent_api_key" "existing_cluster_key" {
+  display_name = "terraform-connector-key"
+  description  = "API Key for Terraform-managed connectors"
+
+  owner {
+    id          = data.confluent_service_account.existing_sa.id
+    api_version = data.confluent_service_account.existing_sa.api_version
+    kind        = data.confluent_service_account.existing_sa.kind
+  }
+
+  managed_resource {
+    id          = data.confluent_kafka_cluster.existing_cluster.id
+    api_version = data.confluent_kafka_cluster.existing_cluster.api_version
+    kind        = data.confluent_kafka_cluster.existing_cluster.kind
+
+    environment {
+      id = data.confluent_environment.existing_env.id
+    }
+  }
+}
+
+# Add connector to existing cluster
+resource "confluent_connector" "datagen_on_existing" {
+  environment {
+    id = data.confluent_environment.existing_env.id
+  }
+
+  kafka_cluster {
+    id = data.confluent_kafka_cluster.existing_cluster.id
+  }
+
+  config_sensitive = {
+    "connector.class"  = "DATAGEN"
+    "name"             = "datagen-terraform"
+    "kafka.auth.mode"  = "KAFKA_API_KEY"
+    "kafka.api.key"    = confluent_api_key.existing_cluster_key.id
+    "kafka.api.secret" = confluent_api_key.existing_cluster_key.secret
+    "kafka.topic"      = "pageviews"
+    "quickstart"       = "PAGEVIEWS"
+    "output.data.format" = "AVRO"
+    "tasks.max"        = "1"
+  }
+}
+
+output "existing_cluster_connector_id" {
+  value = confluent_connector.datagen_on_existing.id
+}

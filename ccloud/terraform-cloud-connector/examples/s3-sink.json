@@ -1,0 +1,14 @@
+{
+  "topics": "s3_topic",
+  "topics.dir": "topics",
+  "aws.access.key.id": "${AWS_ACCESS_KEY_ID}",
+  "aws.secret.access.key": "${AWS_SECRET_ACCESS_KEY}",
+  "s3.bucket.name": "your-bucket-name",
+  "s3.region": "us-east-1",
+  "input.data.format": "AVRO",
+  "output.data.format": "AVRO",
+  "time.interval": "HOURLY",
+  "flush.size": "1000",
+  "schema.compatibility": "NONE",
+  "tasks.max": "1"
+}
