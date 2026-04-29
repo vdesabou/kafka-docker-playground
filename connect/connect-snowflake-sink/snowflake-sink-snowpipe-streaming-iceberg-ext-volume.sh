@@ -332,6 +332,13 @@ then
      STORAGE_INTEGRATION_NAME="PG_S3_INTEGRATION_${uppercase_username}${TAG}"
      STORAGE_INTEGRATION_NAME=${STORAGE_INTEGRATION_NAME//[-._]/}
 
+    if [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "3.9.99"
+    then
+        RECORCD_METADATA_DDL="record_metadata OBJECT()"
+    else
+        RECORCD_METADATA_DDL="RECORD_METADATA VARIANT"
+    fi
+
      docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
 USE ROLE ACCOUNTADMIN;
 
@@ -363,7 +370,7 @@ DROP TABLE IF EXISTS TEST_TABLE;
 -- Create the Iceberg table with record_metadata as base column
 -- Matches exactly what the Snowflake Kafka connector Iceberg docs require
 CREATE ICEBERG TABLE TEST_TABLE (
-  record_metadata OBJECT()
+  $RECORCD_METADATA_DDL
 )
 EXTERNAL_VOLUME = 'iceberg_volume'
 CATALOG = 'SNOWFLAKE'

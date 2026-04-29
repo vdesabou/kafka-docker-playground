@@ -122,6 +122,13 @@ GRANT MODIFY ON SCHEMA $PLAYGROUND_DB.PUBLIC TO ROLE $PLAYGROUND_CONNECTOR_ROLE;
 GRANT ALL ON FUTURE ICEBERG TABLES IN SCHEMA $PLAYGROUND_DB.PUBLIC TO ROLE $PLAYGROUND_CONNECTOR_ROLE;
 EOF
 
+if [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "3.9.99"
+then
+    RECORCD_METADATA_DDL="record_metadata OBJECT()"
+else
+    RECORCD_METADATA_DDL="RECORD_METADATA VARIANT"
+fi
+
 log "Creating Iceberg table using Snowflake internal managed storage"
 docker run --quiet --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
 USE ROLE ACCOUNTADMIN;
@@ -137,7 +144,7 @@ DROP TABLE IF EXISTS TEST_TABLE;
 -- Must be created as ACCOUNTADMIN since the connector role may not have
 -- access to the managed storage volume.
 CREATE ICEBERG TABLE TEST_TABLE (
-  record_metadata OBJECT()
+  $RECORCD_METADATA_DDL
 )
 CATALOG = 'SNOWFLAKE';
 
