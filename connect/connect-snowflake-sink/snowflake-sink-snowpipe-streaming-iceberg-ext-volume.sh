@@ -445,12 +445,8 @@ playground connector create-or-update --connector snowflake-sink  << EOF
      "snowflake.role.name": "$PLAYGROUND_CONNECTOR_ROLE",
      "snowflake.enable.schematization": "true",
      "snowflake.streaming.iceberg.enabled": "true",
-     "schema.registry.url": "http://schema-registry:8081",
      "buffer.count.records": "3",
-     "buffer.flush.time": "10",
-     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-     "value.converter": "io.confluent.connect.avro.AvroConverter",
-     "value.converter.schema.registry.url": "http://schema-registry:8081"
+     "buffer.flush.time": "10"
 }
 EOF
 else
@@ -477,10 +473,7 @@ playground connector create-or-update --connector snowflake-sink  << EOF
     "snowflake.compatibility.enable.column.identifier.normalization": "true",
     
     "buffer.count.records": "3",
-    "buffer.flush.time" : "10",
-    "key.converter":"org.apache.kafka.connect.storage.StringConverter",
-    "value.converter": "io.confluent.connect.avro.AvroConverter",
-    "value.converter.schema.registry.url": "http://schema-registry:8081"
+    "buffer.flush.time" : "10"
 }
 EOF
 fi
