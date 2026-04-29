@@ -1,26 +1,19 @@
 ---
 services:
-
   mongodb:
-    image: mongo:latest
+    # https://jira.mongodb.org/browse/SERVER-72839
+    image: mongo:7.0.5
     hostname: mongodb
     container_name: mongodb
     ports:
       - 27017:27017
     volumes:
-      - ${MONGODB_SSL_CERTS_DIR:?MONGODB_SSL_CERTS_DIR must be set (run debezium-mongodb-source-ssl.sh, do not invoke docker compose directly)}:/etc/ssl/mongo:ro
-    entrypoint:
-      - /usr/bin/mongod
-      - --bind_ip_all
-      - --replSet
-      - debezium
-      - --tlsMode
-      - requireTLS
-      - --tlsCertificateKeyFile
-      - /etc/ssl/mongo/mongo-server.pem
-      - --tlsCAFile
-      - /etc/ssl/mongo/mongo-ca.crt
-      - --tlsAllowConnectionsWithoutCertificates
+      - ../../connect/connect-debezium-mongodb-source/ssl/mongo.pem:/tmp/mongo.pem
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: debezium
+      MONGO_INITDB_ROOT_PASSWORD: dbz
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "debezium","--tlsMode", "requireTLS","--tlsCertificateKeyFile", "/tmp/mongo.pem", "--tlsCertificateKeyFilePassword", "confluent"]
+
 
   connect:
     depends_on:
@@ -28,4 +21,4 @@ services:
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/debezium-debezium-connector-mongodb
     volumes:
-      - ${MONGODB_SSL_CERTS_DIR:?MONGODB_SSL_CERTS_DIR must be set (run debezium-mongodb-source-ssl.sh, do not invoke docker compose directly)}:/etc/ssl/mongo:ro
+        - ../../connect/connect-debezium-mongodb-source/ssl/truststore.jks:/tmp/truststore.jks
