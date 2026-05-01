@@ -94,6 +94,15 @@ Which topics do you want to get data from?
 	 - Importance: Identifies the topic name or a comma-separated list of topic names.
 	 - Required: HIGH
 
+🔘 errors.deadletterqueue.topic.name
+
+The name of the topic to be used as the dead letter queue (DLQ) for messages that result in an error when processed by this sink connector, or its transformations or converters. Defaults to 'dlq-${connector}' if not set. The DLQ topic will be created automatically if it does not exist. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: dlq-${connector}
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 How should we connect to your Azure Cosmos DB?
 ==========================
@@ -179,18 +188,6 @@ Number of tasks for this connector
 	 - Required: HIGH
 
 ==========================
-Auto-restart policy
-==========================
-🔘 auto.restart.on.user.error
-
-Enable connector to automatically restart on user-actionable errors.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: MEDIUM
-	 - Required: false
-
-==========================
 Additional Configs
 ==========================
 🔘 value.converter.decimal.format
@@ -247,6 +244,15 @@ Set the subject reference name strategy for value. Valid entries are DefaultRefe
 	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 	 - Required: LOW
 
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: all
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.connect.meta.data
 
 
@@ -291,6 +297,18 @@ The class name of the schema ID deserializer for keys. This is used to deseriali
 	 - Default: INT
 	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 	 - Required: LOW
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Egress allowlist

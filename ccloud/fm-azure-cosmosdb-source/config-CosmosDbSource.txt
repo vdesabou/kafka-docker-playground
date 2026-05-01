@@ -203,18 +203,6 @@ Number of tasks for this connector
 	 - Required: HIGH
 
 ==========================
-Auto-restart policy
-==========================
-🔘 auto.restart.on.user.error
-
-Enable connector to automatically restart on user-actionable errors.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: MEDIUM
-	 - Required: false
-
-==========================
 Additional Configs
 ==========================
 🔘 value.converter.decimal.format
@@ -223,6 +211,15 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 
 	 - Type: STRING
 	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
 	 - Importance: LOW
 	 - Required: false
 
@@ -241,6 +238,24 @@ Set the subject reference name strategy for value. Valid entries are DefaultRefe
 
 	 - Type: STRING
 	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values. Input messages must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: none
 	 - Importance: LOW
 	 - Required: false
 
@@ -271,6 +286,15 @@ How to construct the subject name for key schema registration.
 	 - Importance: LOW
 	 - Required: false
 
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.value.schema.id.serializer
 
 The class name of the schema ID serializer for values. This is used to serialize schema IDs in the message headers.
@@ -278,6 +302,18 @@ The class name of the schema ID serializer for values. This is used to serialize
 	 - Type: STRING
 	 - Default: io.confluent.kafka.serializers.schema.id.PrefixSchemaIdSerializer
 	 - Importance: LOW
+	 - Required: false
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
 	 - Required: false
 
 ==========================
