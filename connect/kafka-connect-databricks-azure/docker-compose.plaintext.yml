@@ -1,0 +1,6 @@
+---
+services:
+
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/amitninja-kafka-connect-databricks-azure
