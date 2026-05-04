@@ -1,0 +1,20 @@
+[2024-01-15T10:00:01.123+0000][1.123s] GC(0) Pause Young (Normal) (G1 Evacuation Pause) 256M->128M(1024M) 8.234ms
+[2024-01-15T10:00:03.456+0000][3.456s] GC(1) Pause Young (Normal) (G1 Evacuation Pause) 384M->192M(1024M) 12.567ms
+[2024-01-15T10:00:06.789+0000][6.789s] GC(2) Pause Young (Concurrent Start) (G1 Humongous Allocation) 512M->256M(1024M) 22.100ms
+[2024-01-15T10:00:10.000+0000][10.000s] GC(3) Pause Young (Normal) (G1 Evacuation Pause) 460M->230M(1024M) 18.450ms
+[2024-01-15T10:00:14.500+0000][14.500s] GC(4) Pause Young (Normal) (G1 Evacuation Pause) 490M->245M(1024M) 25.300ms
+[2024-01-15T10:00:19.800+0000][19.800s] GC(5) Pause Remark 700M->680M(1024M) 35.200ms
+[2024-01-15T10:00:24.100+0000][24.100s] GC(6) Pause Cleanup 680M->670M(1024M) 5.100ms
+[2024-01-15T10:00:30.000+0000][30.000s] GC(7) Pause Young (Normal) (G1 Evacuation Pause) 750M->200M(1024M) 45.780ms
+[2024-01-15T10:00:36.200+0000][36.200s] GC(8) Pause Young (Normal) (G1 Evacuation Pause) 400M->210M(1024M) 14.200ms
+[2024-01-15T10:00:42.500+0000][42.500s] GC(9) Pause Young (Normal) (G1 Evacuation Pause) 450M->215M(1024M) 16.700ms
+[2024-01-15T10:00:50.000+0000][50.000s] GC(10) Pause Young (Normal) (G1 Evacuation Pause) 500M->220M(1024M) 19.400ms
+[2024-01-15T10:00:60.000+0000][60.000s] GC(11) Pause Young (Concurrent Start) (G1 Evacuation Pause) 800M->400M(1024M) 155.670ms
+[2024-01-15T10:01:10.000+0000][70.000s] GC(12) Pause Full (G1 Compaction Pause) 900M->450M(1024M) 820.450ms
+[2024-01-15T10:01:25.000+0000][85.000s] GC(13) Pause Young (Normal) (G1 Evacuation Pause) 600M->300M(1024M) 28.900ms
+[2024-01-15T10:01:40.000+0000][100.000s] GC(14) Pause Young (Normal) (G1 Evacuation Pause) 650M->320M(1024M) 31.200ms
+[2024-01-15T10:01:55.000+0000][115.000s] GC(15) Pause Young (Normal) (G1 Evacuation Pause) 680M->340M(1024M) 33.600ms
+[2024-01-15T10:02:10.000+0000][130.000s] GC(16) Pause Young (Normal) (G1 Evacuation Pause) 720M->360M(1024M) 38.900ms
+[2024-01-15T10:02:30.000+0000][150.000s] GC(17) Pause Young (Normal) (G1 Evacuation Pause) 780M->390M(1024M) 52.300ms
+[2024-01-15T10:02:55.000+0000][175.000s] GC(18) Pause Young (Concurrent Start) (G1 Evacuation Pause) 900M->450M(1024M) 310.100ms
+[2024-01-15T10:03:20.000+0000][200.000s] GC(19) Pause Young (Normal) (G1 Evacuation Pause) 550M->275M(1024M) 27.500ms

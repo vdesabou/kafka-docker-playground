@@ -1,0 +1,173 @@
+[0.001s][info][gc,init] Heap Region Size: 4M
+[0.001s][info][gc,init] Version: 17.0.9+9 (release)
+[0.001s][info][gc     ] Using G1
+[0.001s][info][gc,init] Heap Min Capacity: 512M
+[0.001s][info][gc,init] Heap Initial Capacity: 1G
+[0.001s][info][gc,init] Heap Max Capacity: 4G
+[0.001s][info][gc,init] Pre-touch: disabled
+[0.001s][info][gc,metaspace] CDS archive(s) not mapped
+[0.001s][info][gc,metaspace] Compressed class space size: 1072693248 bytes, used: 0 bytes
+[0.001s][info][gc,metaspace] Initial class space: 0 bytes
+[2.345s][info][gc,start    ] GC(0) Pause Young (Normal) (G1 Evacuation Pause)
+[2.345s][info][gc,task     ] GC(0) Using 8 workers of 8 for evacuation
+[2.348s][info][gc          ] GC(0) Pause Young (Normal) (G1 Evacuation Pause) 256M->128M(1024M) 13.452ms
+[2.348s][info][gc,cpu      ] GC(0) User=0.09s Sys=0.00s Real=0.01s
+[5.123s][info][gc,start    ] GC(1) Pause Young (Normal) (G1 Evacuation Pause)
+[5.123s][info][gc,task     ] GC(1) Using 8 workers of 8 for evacuation
+[5.127s][info][gc          ] GC(1) Pause Young (Normal) (G1 Evacuation Pause) 384M->192M(1024M) 18.234ms
+[5.127s][info][gc,cpu      ] GC(1) User=0.13s Sys=0.00s Real=0.02s
+[8.456s][info][gc,start    ] GC(2) Pause Young (Normal) (G1 Evacuation Pause)
+[8.456s][info][gc,task     ] GC(2) Using 8 workers of 8 for evacuation
+[8.461s][info][gc          ] GC(2) Pause Young (Normal) (G1 Evacuation Pause) 512M->256M(1024M) 22.567ms
+[8.461s][info][gc,cpu      ] GC(2) User=0.17s Sys=0.00s Real=0.02s
+[12.789s][info][gc,start   ] GC(3) Pause Young (Concurrent Start) (G1 Evacuation Pause)
+[12.789s][info][gc,task    ] GC(3) Using 8 workers of 8 for evacuation
+[12.794s][info][gc         ] GC(3) Pause Young (Concurrent Start) (G1 Evacuation Pause) 640M->320M(1024M) 28.901ms
+[12.794s][info][gc,cpu     ] GC(3) User=0.20s Sys=0.00s Real=0.03s
+[12.794s][info][gc         ] GC(3) Concurrent Mark Cycle
+[12.794s][info][gc,marking ] GC(3) Concurrent Clear Claimed Marks
+[12.794s][info][gc,marking ] GC(3) Concurrent Clear Claimed Marks 0.043ms
+[12.795s][info][gc,marking ] GC(3) Concurrent Scan Root Regions
+[12.812s][info][gc,marking ] GC(3) Concurrent Scan Root Regions 16.912ms
+[12.812s][info][gc,marking ] GC(3) Concurrent Mark (17.900s)
+[14.234s][info][gc,marking ] GC(3) Concurrent Mark (17.900s, 18.456s) 1421.789ms
+[14.234s][info][gc,start   ] GC(3) Pause Remark
+[14.238s][info][gc         ] GC(3) Pause Remark 654M->601M(1024M) 45.123ms
+[14.238s][info][gc,cpu     ] GC(3) User=0.28s Sys=0.00s Real=0.05s
+[14.238s][info][gc,marking ] GC(3) Concurrent Mark From Roots
+[14.256s][info][gc,marking ] GC(3) Concurrent Mark From Roots 17.901ms
+[14.256s][info][gc,marking ] GC(3) Concurrent Preclean
+[14.261s][info][gc,marking ] GC(3) Concurrent Preclean 4.567ms
+[14.261s][info][gc,start   ] GC(3) Pause Cleanup
+[14.263s][info][gc         ] GC(3) Pause Cleanup 601M->601M(1024M) 2.345ms
+[14.263s][info][gc,cpu     ] GC(3) User=0.02s Sys=0.00s Real=0.00s
+[14.263s][info][gc,marking ] GC(3) Concurrent Cleanup for Next Mark
+[14.278s][info][gc,marking ] GC(3) Concurrent Cleanup for Next Mark 14.789ms
+[17.012s][info][gc,start   ] GC(4) Pause Young (Prepare Mixed) (G1 Evacuation Pause)
+[17.012s][info][gc,task    ] GC(4) Using 8 workers of 8 for evacuation
+[17.017s][info][gc         ] GC(4) Pause Young (Prepare Mixed) (G1 Evacuation Pause) 720M->350M(1024M) 35.678ms
+[17.017s][info][gc,cpu     ] GC(4) User=0.23s Sys=0.00s Real=0.04s
+[19.345s][info][gc,start   ] GC(5) Pause Mixed (G1 Evacuation Pause)
+[19.345s][info][gc,task    ] GC(5) Using 8 workers of 8 for evacuation
+[19.350s][info][gc         ] GC(5) Pause Mixed (G1 Evacuation Pause) 560M->280M(1024M) 31.234ms
+[19.350s][info][gc,cpu     ] GC(5) User=0.21s Sys=0.00s Real=0.03s
+[21.678s][info][gc,start   ] GC(6) Pause Mixed (G1 Evacuation Pause)
+[21.678s][info][gc,task    ] GC(6) Using 8 workers of 8 for evacuation
+[21.684s][info][gc         ] GC(6) Pause Mixed (G1 Evacuation Pause) 490M->240M(1024M) 28.456ms
+[21.684s][info][gc,cpu     ] GC(6) User=0.19s Sys=0.00s Real=0.03s
+[24.012s][info][gc,start   ] GC(7) Pause Young (Normal) (G1 Evacuation Pause)
+[24.012s][info][gc,task    ] GC(7) Using 8 workers of 8 for evacuation
+[24.016s][info][gc         ] GC(7) Pause Young (Normal) (G1 Evacuation Pause) 448M->224M(1024M) 24.789ms
+[24.016s][info][gc,cpu     ] GC(7) User=0.17s Sys=0.00s Real=0.02s
+[27.345s][info][gc,start   ] GC(8) Pause Young (Normal) (G1 Evacuation Pause)
+[27.345s][info][gc,task    ] GC(8) Using 8 workers of 8 for evacuation
+[27.351s][info][gc         ] GC(8) Pause Young (Normal) (G1 Evacuation Pause) 512M->256M(1024M) 31.456ms
+[27.351s][info][gc,cpu     ] GC(8) User=0.21s Sys=0.00s Real=0.03s
+[31.234s][info][gc,start   ] GC(9) Pause Young (Concurrent Start) (Metadata GC Threshold)
+[31.234s][info][gc,task    ] GC(9) Using 8 workers of 8 for evacuation
+[31.240s][info][gc         ] GC(9) Pause Young (Concurrent Start) (Metadata GC Threshold) 620M->310M(1024M) 38.901ms
+[31.240s][info][gc,cpu     ] GC(9) User=0.26s Sys=0.00s Real=0.04s
+[31.240s][info][gc         ] GC(9) Concurrent Mark Cycle
+[31.240s][info][gc,marking ] GC(9) Concurrent Mark (31.240s)
+[33.456s][info][gc,marking ] GC(9) Concurrent Mark (31.240s, 33.456s) 2215.789ms
+[33.456s][info][gc,start   ] GC(9) Pause Remark
+[33.462s][info][gc         ] GC(9) Pause Remark 670M->598M(1024M) 56.789ms
+[33.462s][info][gc,cpu     ] GC(9) User=0.31s Sys=0.00s Real=0.06s
+[33.462s][info][gc,start   ] GC(9) Pause Cleanup
+[33.465s][info][gc         ] GC(9) Pause Cleanup 598M->598M(1024M) 3.456ms
+[33.465s][info][gc,cpu     ] GC(9) User=0.02s Sys=0.00s Real=0.00s
+[36.012s][info][gc,start   ] GC(10) Pause Young (Prepare Mixed) (G1 Evacuation Pause)
+[36.012s][info][gc,task    ] GC(10) Using 8 workers of 8 for evacuation
+[36.018s][info][gc         ] GC(10) Pause Young (Prepare Mixed) (G1 Evacuation Pause) 790M->395M(1024M) 42.345ms
+[36.018s][info][gc,cpu     ] GC(10) User=0.29s Sys=0.00s Real=0.04s
+[38.345s][info][gc,start   ] GC(11) Pause Mixed (G1 Evacuation Pause)
+[38.345s][info][gc,task    ] GC(11) Using 8 workers of 8 for evacuation
+[38.353s][info][gc         ] GC(11) Pause Mixed (G1 Evacuation Pause) 610M->300M(1024M) 35.234ms
+[38.353s][info][gc,cpu     ] GC(11) User=0.24s Sys=0.00s Real=0.04s
+[41.678s][info][gc,start   ] GC(12) Pause Young (Normal) (G1 Evacuation Pause)
+[41.678s][info][gc,task    ] GC(12) Using 8 workers of 8 for evacuation
+[41.685s][info][gc         ] GC(12) Pause Young (Normal) (G1 Evacuation Pause) 550M->275M(1024M) 33.456ms
+[41.685s][info][gc,cpu     ] GC(12) User=0.22s Sys=0.00s Real=0.03s
+[45.012s][info][gc,start   ] GC(13) Pause Young (Normal) (G1 Evacuation Pause)
+[45.012s][info][gc,task    ] GC(13) Using 8 workers of 8 for evacuation
+[45.020s][info][gc         ] GC(13) Pause Young (Normal) (G1 Evacuation Pause) 620M->310M(1024M) 45.678ms
+[45.020s][info][gc,cpu     ] GC(13) User=0.30s Sys=0.00s Real=0.05s
+[49.456s][info][gc,start   ] GC(14) Pause Young (Normal) (G1 Evacuation Pause)
+[49.456s][info][gc,task    ] GC(14) Using 8 workers of 8 for evacuation
+[49.465s][info][gc         ] GC(14) Pause Young (Normal) (G1 Evacuation Pause) 680M->340M(1024M) 52.345ms
+[49.465s][info][gc,cpu     ] GC(14) User=0.34s Sys=0.00s Real=0.05s
+[54.012s][info][gc,start   ] GC(15) Pause Young (Concurrent Start) (G1 Evacuation Pause)
+[54.012s][info][gc,task    ] GC(15) Using 8 workers of 8 for evacuation
+[54.022s][info][gc         ] GC(15) Pause Young (Concurrent Start) (G1 Evacuation Pause) 750M->375M(1024M) 62.789ms
+[54.022s][info][gc,cpu     ] GC(15) User=0.41s Sys=0.00s Real=0.06s
+[54.022s][info][gc         ] GC(15) Concurrent Mark Cycle
+[54.022s][info][gc,marking ] GC(15) Concurrent Mark (54.022s)
+[56.789s][info][gc,marking ] GC(15) Concurrent Mark (54.022s, 56.789s) 2766.901ms
+[56.789s][info][gc,start   ] GC(15) Pause Remark
+[56.797s][info][gc         ] GC(15) Pause Remark 710M->631M(1024M) 78.901ms
+[56.797s][info][gc,cpu     ] GC(15) User=0.45s Sys=0.00s Real=0.08s
+[56.797s][info][gc,start   ] GC(15) Pause Cleanup
+[56.800s][info][gc         ] GC(15) Pause Cleanup 631M->631M(1024M) 4.567ms
+[56.800s][info][gc,cpu     ] GC(15) User=0.03s Sys=0.00s Real=0.00s
+[59.123s][info][gc,start   ] GC(16) Pause Young (Prepare Mixed) (G1 Evacuation Pause)
+[59.123s][info][gc,task    ] GC(16) Using 8 workers of 8 for evacuation
+[59.135s][info][gc         ] GC(16) Pause Young (Prepare Mixed) (G1 Evacuation Pause) 850M->480M(1024M) 89.456ms
+[59.135s][info][gc,cpu     ] GC(16) User=0.58s Sys=0.01s Real=0.09s
+[61.789s][info][gc,start   ] GC(17) Pause Mixed (G1 Evacuation Pause)
+[61.789s][info][gc,task    ] GC(17) Using 8 workers of 8 for evacuation
+[61.800s][info][gc         ] GC(17) Pause Mixed (G1 Evacuation Pause) 700M->380M(1024M) 67.234ms
+[61.800s][info][gc,cpu     ] GC(17) User=0.44s Sys=0.01s Real=0.07s
+[64.012s][info][gc,start   ] GC(18) Pause Mixed (G1 Evacuation Pause)
+[64.012s][info][gc,task    ] GC(18) Using 8 workers of 8 for evacuation
+[64.025s][info][gc         ] GC(18) Pause Mixed (G1 Evacuation Pause) 630M->320M(1024M) 58.123ms
+[64.025s][info][gc,cpu     ] GC(18) User=0.39s Sys=0.00s Real=0.06s
+[67.345s][info][gc,start   ] GC(19) Pause Young (Normal) (G1 Evacuation Pause)
+[67.345s][info][gc,task    ] GC(19) Using 8 workers of 8 for evacuation
+[67.358s][info][gc         ] GC(19) Pause Young (Normal) (G1 Evacuation Pause) 570M->285M(1024M) 72.456ms
+[67.358s][info][gc,cpu     ] GC(19) User=0.47s Sys=0.00s Real=0.07s
+[71.012s][info][gc,start   ] GC(20) Pause Young (Normal) (G1 Evacuation Pause)
+[71.012s][info][gc,task    ] GC(20) Using 8 workers of 8 for evacuation
+[71.027s][info][gc         ] GC(20) Pause Young (Normal) (G1 Evacuation Pause) 640M->335M(1024M) 85.234ms
+[71.027s][info][gc,cpu     ] GC(20) User=0.54s Sys=0.01s Real=0.09s
+[75.678s][info][gc,start   ] GC(21) Pause Young (Normal) (G1 Evacuation Pause)
+[75.678s][info][gc,task    ] GC(21) Using 8 workers of 8 for evacuation
+[75.695s][info][gc         ] GC(21) Pause Young (Normal) (G1 Evacuation Pause) 720M->380M(1024M) 98.456ms
+[75.695s][info][gc,cpu     ] GC(21) User=0.62s Sys=0.01s Real=0.10s
+[80.012s][info][gc,start   ] GC(22) Pause Young (Concurrent Start) (G1 Evacuation Pause)
+[80.012s][info][gc,task    ] GC(22) Using 8 workers of 8 for evacuation
+[80.032s][info][gc         ] GC(22) Pause Young (Concurrent Start) (G1 Evacuation Pause) 810M->440M(1024M) 118.901ms
+[80.032s][info][gc,cpu     ] GC(22) User=0.74s Sys=0.01s Real=0.12s
+[80.032s][info][gc         ] GC(22) Concurrent Mark Cycle
+[80.032s][info][gc,marking ] GC(22) Concurrent Mark (80.032s)
+[80.032s][info][gc,heap    ] GC(22) Humongous regions: 18->0
+[83.456s][info][gc,marking ] GC(22) Concurrent Mark (80.032s, 83.456s) 3424.789ms
+[83.456s][info][gc,start   ] GC(22) Pause Remark
+[83.471s][info][gc         ] GC(22) Pause Remark 780M->695M(1024M) 112.345ms
+[83.471s][info][gc,cpu     ] GC(22) User=0.68s Sys=0.01s Real=0.11s
+[83.471s][info][gc,start   ] GC(22) Pause Cleanup
+[83.474s][info][gc         ] GC(22) Pause Cleanup 695M->695M(1024M) 5.678ms
+[83.474s][info][gc,cpu     ] GC(22) User=0.04s Sys=0.00s Real=0.01s
+[86.012s][info][gc,start   ] GC(23) Pause Young (Prepare Mixed) (G1 Evacuation Pause)
+[86.012s][info][gc,task    ] GC(23) Using 8 workers of 8 for evacuation
+[86.034s][info][gc         ] GC(23) Pause Young (Prepare Mixed) (G1 Evacuation Pause) 900M->500M(1024M) 145.678ms
+[86.034s][info][gc,cpu     ] GC(23) User=0.91s Sys=0.01s Real=0.15s
+[89.345s][info][gc,start   ] GC(24) Pause Full (Allocation Failure)
+[89.345s][info][gc,task    ] GC(24) Using 8 workers of 8 for full compaction
+[89.891s][info][gc         ] GC(24) Pause Full (Allocation Failure) 960M->512M(1024M) 546.234ms
+[89.891s][info][gc,cpu     ] GC(24) User=2.34s Sys=0.03s Real=0.55s
+[92.012s][info][gc,start   ] GC(25) Pause Young (Normal) (G1 Evacuation Pause)
+[92.012s][info][gc,task    ] GC(25) Using 8 workers of 8 for evacuation
+[92.025s][info][gc         ] GC(25) Pause Young (Normal) (G1 Evacuation Pause) 620M->310M(1024M) 62.456ms
+[92.025s][info][gc,cpu     ] GC(25) User=0.40s Sys=0.01s Real=0.06s
+[95.678s][info][gc,start   ] GC(26) Pause Young (Normal) (G1 Evacuation Pause)
+[95.678s][info][gc,task    ] GC(26) Using 8 workers of 8 for evacuation
+[95.693s][info][gc         ] GC(26) Pause Young (Normal) (G1 Evacuation Pause) 660M->330M(1024M) 72.234ms
+[95.693s][info][gc,cpu     ] GC(26) User=0.46s Sys=0.01s Real=0.07s
+[99.012s][info][gc,start   ] GC(27) Pause Young (Normal) (G1 Evacuation Pause)
+[99.012s][info][gc,task    ] GC(27) Using 8 workers of 8 for evacuation
+[99.029s][info][gc         ] GC(27) Pause Young (Normal) (G1 Evacuation Pause) 700M->360M(1024M) 82.345ms
+[99.029s][info][gc,cpu     ] GC(27) User=0.52s Sys=0.01s Real=0.08s
+[103.456s][info][gc,start  ] GC(28) Pause Young (Normal) (Ergonomics)
+[103.456s][info][gc,task   ] GC(28) Using 8 workers of 8 for evacuation
+[103.475s][info][gc        ] GC(28) Pause Young (Normal) (Ergonomics) 750M->385M(1024M) 91.234ms
+[103.475s][info][gc,cpu    ] GC(28) User=0.58s Sys=0.01s Real=0.09s

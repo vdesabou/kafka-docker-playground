@@ -1,0 +1,34 @@
+[0.001s][info][gc] Using Shenandoah
+[0.001s][info][gc,init] Version: 17.0.9+9 (release)
+[1.100s][info][gc,start    ] GC(0) Concurrent reset
+[1.200s][info][gc,stats    ] GC(0) Pause Init Mark (process weakrefs) 0.523ms
+[1.201s][info][gc          ] GC(0) Concurrent marking (process weakrefs) 256M->200M(512M) 45.123ms
+[1.246s][info][gc,stats    ] GC(0) Pause Final Mark (process weakrefs) 1.234ms
+[1.247s][info][gc          ] GC(0) Concurrent evacuation 200M->160M(512M) 8.123ms
+[1.255s][info][gc,stats    ] GC(0) Pause Init Update Refs 0.045ms
+[1.256s][info][gc          ] GC(0) Concurrent update references 160M->155M(512M) 6.234ms
+[1.262s][info][gc,stats    ] GC(0) Pause Final Update Refs 1.123ms
+[3.400s][info][gc,start    ] GC(1) Concurrent reset
+[3.500s][info][gc,stats    ] GC(1) Pause Init Mark 0.612ms
+[3.501s][info][gc          ] GC(1) Concurrent marking 300M->240M(512M) 52.456ms
+[3.553s][info][gc,stats    ] GC(1) Pause Final Mark 1.567ms
+[3.554s][info][gc          ] GC(1) Concurrent evacuation 240M->190M(512M) 9.234ms
+[3.563s][info][gc,stats    ] GC(1) Pause Init Update Refs 0.067ms
+[3.564s][info][gc          ] GC(1) Concurrent update references 190M->185M(512M) 7.123ms
+[3.571s][info][gc,stats    ] GC(1) Pause Final Update Refs 1.456ms
+[6.800s][info][gc,start    ] GC(2) Concurrent reset
+[6.900s][info][gc,stats    ] GC(2) Pause Init Mark (process weakrefs) 0.734ms
+[6.901s][info][gc          ] GC(2) Concurrent marking 380M->300M(512M) 63.789ms
+[6.964s][info][gc,stats    ] GC(2) Pause Final Mark (process weakrefs) 2.123ms
+[6.965s][info][gc          ] GC(2) Concurrent evacuation 300M->240M(512M) 11.456ms
+[6.976s][info][gc,stats    ] GC(2) Pause Init Update Refs 0.089ms
+[6.977s][info][gc          ] GC(2) Concurrent update references 240M->235M(512M) 8.567ms
+[6.985s][info][gc,stats    ] GC(2) Pause Final Update Refs 1.789ms
+[10.500s][info][gc,start   ] GC(3) Concurrent reset
+[10.600s][info][gc,stats   ] GC(3) Pause Init Mark 0.456ms
+[10.601s][info][gc         ] GC(3) Concurrent marking 450M->380M(512M) 75.234ms
+[10.676s][info][gc,stats   ] GC(3) Pause Final Mark 1.890ms
+[10.677s][info][gc         ] GC(3) Concurrent evacuation 380M->310M(512M) 13.456ms
+[10.690s][info][gc,stats   ] GC(3) Pause Init Update Refs 0.112ms
+[10.691s][info][gc         ] GC(3) Concurrent update references 310M->305M(512M) 9.678ms
+[10.700s][info][gc,stats   ] GC(3) Pause Final Update Refs 2.234ms

@@ -121,6 +121,7 @@ playground_usage() {
   printf "  %s   🎯 Take a java thread dump\n" "$(green "debug thread-dump")                         "
   printf "  %s   👻 Take a heap dump\n" "$(green "debug heap-dump")                           "
   printf "  %s   🔬 Analyze a heap dump file using Eclipse MAT (Memory Analyzer Tool)\n" "$(green "debug heap-analyze")                        "
+  printf "  %s   📈 Analyze JVM Garbage Collection logs\n" "$(green "debug gc-analyze")                          "
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "debug tcp-dump")                            "
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "debug block-traffic")                       "
   printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "debug java-debug")                          "
@@ -4183,6 +4184,7 @@ playground_debug_usage() {
   printf "  %s   🎯 Take a java thread dump\n" "$(green "thread-dump")             "
   printf "  %s   👻 Take a heap dump\n" "$(green "heap-dump")               "
   printf "  %s   🔬 Analyze a heap dump file using Eclipse MAT (Memory Analyzer Tool)\n" "$(green "heap-analyze")            "
+  printf "  %s   📈 Analyze JVM Garbage Collection logs\n" "$(green "gc-analyze")              "
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "tcp-dump")                "
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "block-traffic")           "
   printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "java-debug")              "
@@ -4500,6 +4502,76 @@ playground_debug_heap_analyze_usage() {
     printf "  playground debug heap-analyze --file heap-dump-connect-2026-04-08.hprof\n"
     printf "  playground debug heap-analyze -f heap-dump-broker.hprof --output-dir\n  ./analysis\n"
     printf "  playground debug heap-analyze -f heap-dump-connect.hprof --report-type leaks\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_debug_gc_analyze_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground debug gc-analyze\n\n"
+    printf "  📈 Analyze JVM Garbage Collection logs\n  \n  📊 Parses GC logs from a local file or running container and generates a\n  detailed analysis with pause time statistics, heap trends, GC cause breakdown,\n  and concrete tuning recommendations.\n  \n  🔖 Supports JDK 7–21+ and all major collectors: G1GC, CMS, ZGC, Generational\n  ZGC, Shenandoah, ParallelGC, SerialGC\n  \n  🔖 Use --html to generate a self-contained HTML dashboard with interactive\n  Chart.js charts\n\n"
+  else
+    printf "playground debug gc-analyze - 📈 Analyze JVM Garbage Collection logs\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground debug gc-analyze [OPTIONS]\n"
+  printf "  playground debug gc-analyze --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file, -f FILE")"
+    printf "    🗒️  GC log file to analyze\n    \n    ❕ Provide either --file or --container, not both\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n            use <option+enter> to use the value you typed manually\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
+    printf "    🐳 Container name to extract GC log from\n    \n    ❕ Provide either --file or --container, not both\n    \n    🔖 The GC log path is auto-detected from the container's Java process flags.\n         Falls back to searching common log locations (/tmp, /var/log, /opt).\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
+    printf "    📂 Output directory for the HTML report (default: ./gc-analysis-output)\n"
+    printf "    %s\n" "Default: ./gc-analysis-output"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--html")"
+    printf "    🌐 Generate a self-contained HTML report with interactive charts\n    \n    📊 Report includes: pause timeline, heap evolution, pause distribution,\n       GC type breakdown, KPI cards, detected JVM parameters, tuning flags,\n       and color-coded recommendations\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🗂️  Output raw JSON stats (skips text report and HTML)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--top-pauses TOP_PAUSES")"
+    printf "    📊 Number of longest pauses to display in the report (default: 10)\n"
+    printf "    %s\n" "Default: 10"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground debug gc-analyze --file gc.log\n"
+    printf "  playground debug gc-analyze --file /var/log/kafka/kafkaServer-gc.log --html\n"
+    printf "  playground debug gc-analyze --container broker\n"
+    printf "  playground debug gc-analyze --container connect --html --output-dir\n  ./gc-reports\n"
+    printf "  playground debug gc-analyze -f kafkaServer-gc.log --json\n"
+    printf "  playground debug gc-analyze -f kafkaServer-gc.log --html --top-pauses 20\n"
     echo
 
   fi
@@ -14367,6 +14439,24 @@ validate_file_exists_and_hprof() {
   fi
 }
 
+# src/lib/validations/validate_file_exists_and_log.sh
+validate_file_exists_and_log() {
+  file="$1"
+
+  real_file=$file
+  if [[ $file == *"@"* ]]
+  then
+    real_file=$(echo "$file" | cut -d "@" -f 2)
+  fi
+
+  if [[ -f "$real_file" ]]; then
+    return 0
+  else
+    logerror "<$real_file> does not correspond to an existing file, please make sure to use absolute full path or correct relative path !"
+    return
+  fi
+}
+
 # src/lib/validations/validate_file_exists_and_parquet.sh
 validate_file_exists_and_parquet() {
   file="$1"
@@ -23302,6 +23392,150 @@ EOF
 
   log ""
   log "📄 Summary: $output_dir_abs/analysis-summary.txt"
+
+}
+
+# :command.function
+playground_debug_gc_analyze_command() {
+
+  # src/commands/debug/gc-analyze.sh
+  gc_file="${args[--file]}"
+  container="${args[--container]}"
+  output_dir="${args[--output-dir]}"
+  html="${args[--html]}"
+  json_out="${args[--json]}"
+  top_pauses="${args[--top-pauses]}"
+
+  set +e
+
+  # ── Validate input: need --file OR --container ─────────────────────────────
+  if [[ -z "$gc_file" && -z "$container" ]]; then
+      logerror "❌ Must provide either --file <gc-log-file> or --container <name>"
+      log ""
+      log "Examples:"
+      log "  playground debug gc-analyze --file kafkaServer-gc.log"
+      log "  playground debug gc-analyze --container broker"
+      exit 1
+  fi
+
+  if [[ -n "$gc_file" && -n "$container" ]]; then
+      logerror "❌ Provide either --file or --container, not both"
+      exit 1
+  fi
+
+  # ── Locate the analyzer script ─────────────────────────────────────────────
+  analyzer="$root_folder/gc-analysis/gc_log_analyzer.py"
+  if [[ ! -f "$analyzer" ]]; then
+      logerror "❌ GC analyzer not found at: $analyzer"
+      logerror "   Make sure gc-analysis/gc_log_analyzer.py exists in the playground root"
+      exit 1
+  fi
+
+  # ── Check Python3 ──────────────────────────────────────────────────────────
+  if ! command -v python3 &>/dev/null; then
+      logerror "❌ python3 is required but not found on PATH"
+      exit 1
+  fi
+
+  # ── Container mode: find and extract the GC log ───────────────────────────
+  if [[ -n "$container" ]]; then
+      log "🐳 Looking for GC log in container: $container"
+
+      # 1. Try to read the GC log path from -Xlog:gc*:file=<path> (JDK 9+)
+      gc_log_path=$(docker exec "$container" sh -c \
+          "ps aux 2>/dev/null | grep -oP '(?<=-Xlog:gc\*:file=)[^:]+' | head -1" 2>/dev/null)
+
+      # 2. Try legacy -Xloggc:<path> flag (JDK 8)
+      if [[ -z "$gc_log_path" ]]; then
+          gc_log_path=$(docker exec "$container" sh -c \
+              "ps aux 2>/dev/null | grep -oP '(?<=-Xloggc:)\S+' | head -1" 2>/dev/null)
+      fi
+
+      # 3. Try -Xlog:gc:file=<path> (simpler unified log variant)
+      if [[ -z "$gc_log_path" ]]; then
+          gc_log_path=$(docker exec "$container" sh -c \
+              "ps aux 2>/dev/null | grep -oP '(?<=-Xlog:gc:file=)[^:]+' | head -1" 2>/dev/null)
+      fi
+
+      # 4. Fallback: search common locations
+      if [[ -z "$gc_log_path" ]]; then
+          log "🔍 No -Xlog/Xloggc flag found, searching common log locations..."
+          gc_log_path=$(docker exec "$container" sh -c \
+              "find /tmp /var/log /opt /var/log/kafka /etc/kafka 2>/dev/null \
+               \( -name '*gc*.log' -o -name 'kafkaServer-gc.log' -o -name 'zookeeper-gc.log' \
+                  -o -name 'connect-gc.log' -o -name 'schema-registry-gc.log' \) \
+               -type f | head -1" 2>/dev/null)
+      fi
+
+      if [[ -z "$gc_log_path" ]]; then
+          logerror "❌ Could not locate a GC log in container '$container'"
+          log ""
+          log "💡 To enable GC logging, add these JVM flags:"
+          log "   JDK 9+: -Xlog:gc*:file=/tmp/gc.log:time,uptime,level,tags:filecount=5,filesize=20m"
+          log "   JDK 8:  -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/tmp/gc.log"
+          log ""
+          log "   For Kafka, set in KAFKA_JVM_PERFORMANCE_OPTS or KAFKA_HEAP_OPTS"
+          exit 1
+      fi
+
+      log "📄 Found GC log: $gc_log_path"
+
+      tmp_gc_file="/tmp/gc-log-${container}-$(date '+%Y%m%d-%H%M%S').log"
+      if ! docker cp "${container}:${gc_log_path}" "$tmp_gc_file" 2>/dev/null; then
+          logerror "❌ Failed to copy GC log from container '$container'"
+          exit 1
+      fi
+
+      log "✅ GC log copied to: $tmp_gc_file"
+      gc_file="$tmp_gc_file"
+  fi
+
+  # Handle fzf @path trick
+  if [[ $gc_file == *"@"* ]]; then
+      gc_file=$(echo "$gc_file" | cut -d "@" -f 2)
+  fi
+
+  log "📈 Analyzing GC log: $gc_file"
+  log ""
+
+  # ── JSON mode: print and exit ──────────────────────────────────────────────
+  if [[ -n "$json_out" ]]; then
+      python3 "$analyzer" "$gc_file" --json --top-pauses "$top_pauses"
+      exit $?
+  fi
+
+  # ── Text analysis ──────────────────────────────────────────────────────────
+  python3 "$analyzer" "$gc_file" --top-pauses "$top_pauses"
+  text_exit=$?
+
+  # ── HTML report ────────────────────────────────────────────────────────────
+  if [[ -n "$html" && $text_exit -eq 0 ]]; then
+      mkdir -p "$output_dir"
+      output_dir_abs=$(cd "$output_dir" && pwd)
+
+      basename_noext=$(basename "$gc_file" .log)
+      html_out="${output_dir_abs}/${basename_noext}-gc-report.html"
+
+      log ""
+      log "🌐 Generating HTML report..."
+      python3 "$analyzer" "$gc_file" --html-out "$html_out" --top-pauses "$top_pauses" > /dev/null 2>&1
+      html_exit=$?
+
+      if [[ $html_exit -eq 0 && -f "$html_out" ]]; then
+          log "✅ HTML report saved: $html_out"
+          log ""
+          if command -v open &>/dev/null; then
+              log "🌐 Opening report in browser..."
+              open "$html_out"
+          else
+              log "🔗 Open in browser: file://$html_out"
+          fi
+      else
+          logwarn "⚠️  HTML report generation failed"
+      fi
+  fi
+
+  exit $text_exit
 
 }
 
@@ -41938,6 +42172,13 @@ playground_debug_parse_requirements() {
       shift $#
       ;;
 
+    gc-analyze)
+      action="gc-analyze"
+      shift
+      playground_debug_gc_analyze_parse_requirements "$@"
+      shift $#
+      ;;
+
     tcp-dump)
       action="tcp-dump"
       shift
@@ -42562,6 +42803,147 @@ playground_debug_heap_analyze_parse_requirements() {
   if [[ ${args['--report-type']:-} ]] && [[ ! ${args['--report-type']:-} =~ ^(all|leaks|overview|top-components)$ ]]; then
     printf "%s\n" "--report-type must be one of: all, leaks, overview, top-components" >&2
     exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_debug_gc_analyze_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_debug_gc_analyze_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="debug gc-analyze"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --file | -f)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --container | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--container']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--container requires an argument: --container, -c CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --output-dir | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir, -o OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --html)
+
+        # :flag.case_no_arg
+        args['--html']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --top-pauses)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--top-pauses']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--top-pauses requires an argument: --top-pauses TOP_PAUSES" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="./gc-analysis-output"
+  [[ -n ${args['--top-pauses']:-} ]] || args['--top-pauses']="10"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--file'] ]]; then
+    validation_output="$(validate_file_exists_and_log "${args['--file']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--top-pauses'] ]]; then
+    validation_output="$(validate_integer "${args['--top-pauses']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--top-pauses TOP_PAUSES" "$validation_output" >&2
+      exit 1
+    fi
   fi
 
 }
@@ -51347,6 +51729,7 @@ run() {
     "debug thread-dump") playground_debug_thread_dump_command ;;
     "debug heap-dump") playground_debug_heap_dump_command ;;
     "debug heap-analyze") playground_debug_heap_analyze_command ;;
+    "debug gc-analyze") playground_debug_gc_analyze_command ;;
     "debug tcp-dump") playground_debug_tcp_dump_command ;;
     "debug block-traffic") playground_debug_block_traffic_command ;;
     "debug java-debug") playground_debug_java_debug_command ;;

@@ -1,0 +1,27 @@
+[0.001s][info][gc] Using The Z Garbage Collector
+[0.001s][info][gc,init] Version: 11.0.21+9 (release)
+[1.123s][info][gc,start    ] GC(0) Garbage Collection (Allocation Rate)
+[1.124s][info][gc,phases   ] GC(0) Pause Mark Start 0.234ms
+[1.800s][info][gc,phases   ] GC(0) Pause Mark End 0.123ms
+[2.100s][info][gc,phases   ] GC(0) Pause Relocate Start 0.098ms
+[2.345s][info][gc          ] GC(0) Garbage Collection (Allocation Rate) 256M(25%)->128M(12%)
+[4.234s][info][gc,start    ] GC(1) Garbage Collection (Allocation Rate)
+[4.235s][info][gc,phases   ] GC(1) Pause Mark Start 0.198ms
+[5.100s][info][gc,phases   ] GC(1) Pause Mark End 0.145ms
+[5.400s][info][gc,phases   ] GC(1) Pause Relocate Start 0.089ms
+[5.678s][info][gc          ] GC(1) Garbage Collection (Allocation Rate) 320M(31%)->160M(15%)
+[8.456s][info][gc,start    ] GC(2) Garbage Collection (Allocation Rate)
+[8.457s][info][gc,phases   ] GC(2) Pause Mark Start 0.312ms
+[9.500s][info][gc,phases   ] GC(2) Pause Mark End 0.198ms
+[9.800s][info][gc,phases   ] GC(2) Pause Relocate Start 0.112ms
+[10.100s][info][gc         ] GC(2) Garbage Collection (Allocation Rate) 400M(39%)->200M(19%)
+[13.789s][info][gc,start   ] GC(3) Garbage Collection (Allocation Rate)
+[13.790s][info][gc,phases  ] GC(3) Pause Mark Start 0.289ms
+[15.000s][info][gc,phases  ] GC(3) Pause Mark End 0.167ms
+[15.300s][info][gc,phases  ] GC(3) Pause Relocate Start 0.101ms
+[15.567s][info][gc         ] GC(3) Garbage Collection (Allocation Rate) 450M(44%)->220M(21%)
+[20.234s][info][gc,start   ] GC(4) Garbage Collection (Warmup)
+[20.235s][info][gc,phases  ] GC(4) Pause Mark Start 0.445ms
+[21.500s][info][gc,phases  ] GC(4) Pause Mark End 0.234ms
+[21.800s][info][gc,phases  ] GC(4) Pause Relocate Start 0.178ms
+[22.100s][info][gc         ] GC(4) Garbage Collection (Warmup) 500M(48%)->250M(24%)
