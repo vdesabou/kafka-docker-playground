@@ -1,0 +1,28 @@
+[0.001s][info][gc] Using The Z Garbage Collector
+[0.001s][info][gc,init] Version: 21.0.3+9 (release)
+[0.001s][info][gc,init] Generational ZGC enabled (-XX:+ZGenerational)
+[1.234s][info][gc,start    ] GC(0) Garbage Collection (Allocation Rate) (Minor) 512M(25%)
+[1.235s][info][gc,phases   ] GC(0) Pause Mark Start (Minor) 0.156ms
+[1.900s][info][gc,phases   ] GC(0) Pause Mark End (Minor) 0.089ms
+[2.100s][info][gc,phases   ] GC(0) Pause Relocate Start (Minor) 0.067ms
+[2.300s][info][gc          ] GC(0) Garbage Collection (Allocation Rate) (Minor) 512M(25%)->256M(12%)
+[4.567s][info][gc,start    ] GC(1) Garbage Collection (Allocation Rate) (Minor) 640M(31%)
+[4.568s][info][gc,phases   ] GC(1) Pause Mark Start (Minor) 0.134ms
+[5.300s][info][gc,phases   ] GC(1) Pause Mark End (Minor) 0.078ms
+[5.500s][info][gc,phases   ] GC(1) Pause Relocate Start (Minor) 0.056ms
+[5.700s][info][gc          ] GC(1) Garbage Collection (Allocation Rate) (Minor) 640M(31%)->320M(15%)
+[8.900s][info][gc,start    ] GC(2) Garbage Collection (Allocation Rate) (Minor) 700M(34%)
+[8.901s][info][gc,phases   ] GC(2) Pause Mark Start (Minor) 0.145ms
+[9.700s][info][gc,phases   ] GC(2) Pause Mark End (Minor) 0.092ms
+[9.900s][info][gc,phases   ] GC(2) Pause Relocate Start (Minor) 0.071ms
+[10.100s][info][gc         ] GC(2) Garbage Collection (Allocation Rate) (Minor) 700M(34%)->350M(17%)
+[14.234s][info][gc,start   ] GC(3) Garbage Collection (Proactive) (Major) 1200M(58%)
+[14.235s][info][gc,phases  ] GC(3) Pause Mark Start (Major) 0.234ms
+[16.500s][info][gc,phases  ] GC(3) Pause Mark End (Major) 0.156ms
+[16.900s][info][gc,phases  ] GC(3) Pause Relocate Start (Major) 0.112ms
+[17.200s][info][gc         ] GC(3) Garbage Collection (Proactive) (Major) 1200M(58%)->600M(29%)
+[20.567s][info][gc,start   ] GC(4) Garbage Collection (Allocation Rate) (Minor) 800M(39%)
+[20.568s][info][gc,phases  ] GC(4) Pause Mark Start (Minor) 0.123ms
+[21.300s][info][gc,phases  ] GC(4) Pause Mark End (Minor) 0.067ms
+[21.500s][info][gc,phases  ] GC(4) Pause Relocate Start (Minor) 0.045ms
+[21.700s][info][gc         ] GC(4) Garbage Collection (Allocation Rate) (Minor) 800M(39%)->400M(19%)

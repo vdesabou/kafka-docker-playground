@@ -1,0 +1,7 @@
+# override root *.log rule — sample logs are intentional source files
+!*.log
+!samples/*.log
+
+# generated outputs
+samples/*.html
+gc-analysis-output/

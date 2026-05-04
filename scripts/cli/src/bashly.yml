@@ -2218,6 +2218,77 @@ commands:
     - playground debug heap-analyze -f heap-dump-broker.hprof --output-dir ./analysis
     - playground debug heap-analyze -f heap-dump-connect.hprof --report-type leaks
 
+  - name: gc-analyze
+    help: |-
+      📈 Analyze JVM Garbage Collection logs
+
+      📊 Parses GC logs from a local file or running container and generates a detailed analysis with pause time statistics, heap trends, GC cause breakdown, and concrete tuning recommendations.
+
+      🔖 Supports JDK 7–21+ and all major collectors: G1GC, CMS, ZGC, Generational ZGC, Shenandoah, ParallelGC, SerialGC
+
+      🔖 Use --html to generate a self-contained HTML dashboard with interactive Chart.js charts
+    flags:
+      - long: --file
+        short: -f
+        required: false
+        arg: file
+        validate: file_exists_and_log
+        completions:
+          - $(playground get-specific-file-extension "$cur" --extension "log")
+        help: |-
+          🗒️  GC log file to analyze
+
+          ❕ Provide either --file or --container, not both
+
+          🎓 Tip: use <tab> completion to trigger fzf completion
+                  use <option+enter> to use the value you typed manually
+      - long: --container
+        short: -c
+        required: false
+        arg: container
+        completions:
+          - $(docker ps --format '{{.Names}}')
+        help: |-
+          🐳 Container name to extract GC log from
+
+          ❕ Provide either --file or --container, not both
+
+          🔖 The GC log path is auto-detected from the container's Java process flags.
+               Falls back to searching common log locations (/tmp, /var/log, /opt).
+      - long: --output-dir
+        short: -o
+        arg: output_dir
+        required: false
+        default: "./gc-analysis-output"
+        help: |-
+          📂 Output directory for the HTML report (default: ./gc-analysis-output)
+      - long: --html
+        required: false
+        help: |-
+          🌐 Generate a self-contained HTML report with interactive charts
+
+          📊 Report includes: pause timeline, heap evolution, pause distribution,
+             GC type breakdown, KPI cards, detected JVM parameters, tuning flags,
+             and color-coded recommendations
+      - long: --json
+        required: false
+        help: |-
+          🗂️  Output raw JSON stats (skips text report and HTML)
+      - long: --top-pauses
+        arg: top_pauses
+        required: false
+        default: "10"
+        validate: integer
+        help: |-
+          📊 Number of longest pauses to display in the report (default: 10)
+    examples:
+    - playground debug gc-analyze --file gc.log
+    - playground debug gc-analyze --file /var/log/kafka/kafkaServer-gc.log --html
+    - playground debug gc-analyze --container broker
+    - playground debug gc-analyze --container connect --html --output-dir ./gc-reports
+    - playground debug gc-analyze -f kafkaServer-gc.log --json
+    - playground debug gc-analyze -f kafkaServer-gc.log --html --top-pauses 20
+
   - name: tcp-dump
     help: |-
       🕵️‍♂️ Take a tcp dump (sniffing network)
