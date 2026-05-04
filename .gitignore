@@ -88,3 +88,4 @@ connect-migration-utility-discovery-output
 certs-create.sh
 connector-plugin-sourcecode
 heap-analysis
+gc-analysis-output
