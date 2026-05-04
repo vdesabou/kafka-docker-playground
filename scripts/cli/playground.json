@@ -1629,6 +1629,58 @@
           ]
         },
         {
+          "name": "gc-analyze",
+          "description": "📈 Analyze JVM Garbage Collection logs\n  \n  📊 Parses GC logs from a local file or running container and generates a detailed analysis with pause time statistics, heap trends, GC cause breakdown, and concrete tuning recommendations.\n  \n  🔖 Supports JDK 7–21+ and all major collectors: G1GC, CMS, ZGC, Generational ZGC, Shenandoah, ParallelGC, SerialGC\n  \n  🔖 Use --html to generate a self-contained HTML dashboard with interactive Chart.js charts\n",
+          "usage": "playground debug gc-analyze [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--file",
+                "-f"
+              ],
+              "argument": "FILE",
+              "description": "🗒️  GC log file to analyze\n\n❕ Provide either --file or --container, not both\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n        use <option+enter> to use the value you typed manually\n"
+            },
+            {
+              "names": [
+                "--container",
+                "-c"
+              ],
+              "argument": "CONTAINER",
+              "description": "🐳 Container name to extract GC log from\n\n❕ Provide either --file or --container, not both\n\n🔖 The GC log path is auto-detected from the container's Java process flags.\n     Falls back to searching common log locations (/tmp, /var/log, /opt).\n"
+            },
+            {
+              "names": [
+                "--output-dir",
+                "-o"
+              ],
+              "argument": "./gc-analysis-output",
+              "description": "📂 Output directory for the HTML report (default: ./gc-analysis-output)\n\nDefault value: ./gc-analysis-output\n"
+            },
+            {
+              "names": [
+                "--html"
+              ],
+              "argument": "",
+              "description": "🌐 Generate a self-contained HTML report with interactive charts\n\n📊 Report includes: pause timeline, heap evolution, pause distribution,\n   GC type breakdown, KPI cards, detected JVM parameters, tuning flags,\n   and color-coded recommendations\n"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🗂️  Output raw JSON stats (skips text report and HTML)\n"
+            },
+            {
+              "names": [
+                "--top-pauses"
+              ],
+              "argument": 10,
+              "description": "📊 Number of longest pauses to display in the report (default: 10)\n\nDefault value: 10\n"
+            }
+          ]
+        },
+        {
           "name": "tcp-dump",
           "description": "🕵️‍♂️ Take a tcp dump (sniffing network)\n",
           "usage": "playground debug tcp-dump [OPTIONS]",
