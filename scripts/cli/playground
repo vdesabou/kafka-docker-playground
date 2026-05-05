@@ -23008,9 +23008,11 @@ playground_tools_certs_create_command() {
 
   get_connect_image
   new_open_ssl=0
-  if version_gt $CP_CONNECT_TAG "7.7.99"
-  then
+  # Replace the version_gt logic with a direct binary check
+  if docker run --rm ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} openssl version | grep -q "OpenSSL 3"; then
       new_open_ssl=1
+  else
+      new_open_ssl=0
   fi
   mkdir -p "${output_folder}"
   cd "${output_folder}"
