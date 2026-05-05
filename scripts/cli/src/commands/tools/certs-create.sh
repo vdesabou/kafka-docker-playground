@@ -25,6 +25,16 @@ then
 fi
 mkdir -p "${output_folder}"
 cd "${output_folder}"
+rm -f *.crt
+rm -f *.csr
+rm -f *_creds
+rm -f *.jks
+rm -f *.srl
+rm -f *.key
+rm -f *.req
+rm -f *.pem
+rm -f *.der
+rm -f *.p12
 cp $root_folder/scripts/cli/src/ssl/certs-create.sh .
 maybe_create_image
 log "🔐 Generate keys and certificates in folder ${output_folder}"
