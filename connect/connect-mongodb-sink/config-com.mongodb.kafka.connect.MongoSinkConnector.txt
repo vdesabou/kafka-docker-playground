@@ -520,6 +520,15 @@ Change Data Capture
 	 - Importance: The class name of the CDC handler to use for processing
 	 - Required: LOW
 
+🔘 change.data.capture.handler.remove.null.values
+
+When true and a CDC handler is configured, fields with null values are removed from the resulting write model document before it is sent to MongoDB. For replace operations the replacement document is cleaned recursively. For update operations, null entries inside $set are removed; $unset is preserved. For delete and other operations this setting has no effect. This is the CDC-pipeline analogue of NullFieldValueRemover, which only applies to the non-CDC write path.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 Time series
 ==========================

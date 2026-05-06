@@ -1,5 +1,6 @@
     "bulk.write.ordered": "true",
     "change.data.capture.handler": "STRING",
+    "change.data.capture.handler.remove.null.values": "false",
     "collection": "STRING",
     "connection.ssl.keystore": "STRING",
     "connection.ssl.keystorePassword": "[hidden]",
