@@ -136,23 +136,17 @@ then
 fi
 
 # https://github.com/confluentinc/common-docker/pull/743 and https://github.com/adoptium/adoptium-support/issues/1285
-set +e
-playground container exec --root --command "sed -i "s/packages\.adoptium\.net/adoptium\.jfrog\.io/g" /etc/yum.repos.d/adoptium.repo"
-set -e
-playground container exec --root --command "microdnf -y install libaio"
-
-if [ "$(uname -m)" = "arm64" ]
-then
-     :
-else
-     if version_gt $TAG_BASE "7.9.9"
-     then
-          playground container exec --root --command "microdnf -y install libnsl2"
-          playground container exec --root --command "ln -s /usr/lib64/libnsl.so.3 /usr/lib64/libnsl.so.1"
-     else
-          playground container exec --root --command "ln -s /usr/lib64/libnsl.so.2 /usr/lib64/libnsl.so.1"
-     fi
-fi
+mkdir -p /tmp/xstream-libs
+docker run --rm -v /tmp/xstream-libs:/out --entrypoint sh redhat/ubi9-minimal:latest -c '
+  microdnf -y install libaio libnsl2 && \
+  cp -P /usr/lib64/libaio.so.* /usr/lib64/libnsl.so.* /usr/lib64/libtirpc.so.* \
+        /usr/lib64/libgssapi_krb5.so.* /usr/lib64/libkrb5.so.* /usr/lib64/libk5crypto.so.* \
+        /usr/lib64/libkrb5support.so.* /usr/lib64/libcom_err.so.* \
+        /usr/lib64/libkeyutils.so.* /out/
+'
+docker cp /tmp/xstream-libs/. connect:/usr/lib64/
+rm -rf /tmp/xstream-libs
+playground container exec --root --command "ldconfig && ln -sf /usr/lib64/libnsl.so.3 /usr/lib64/libnsl.so.1"
 
 playground container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 600
 log "Oracle DB has started!"
