@@ -184,13 +184,11 @@ playground connector create-or-update --connector $connector_name2 << EOF
      "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN_ACCOUNT2",
      "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY_ACCOUNT2",
      "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2",
-     "salesforce.use.custom.id.field" : "true",
-     "salesforce.custom.id.field.name" : "CustomId__c",
 
      "salesforce.ignore.fields" : "CleanStatus",
      "salesforce.ignore.reference.fields" : "true",
      "salesforce.object.override.event.type": "true",
-     "salesforce.sink.object.operation": "upsert",
+     "salesforce.sink.object.operation": "insert",
      "input.data.format": "AVRO",
      "tasks.max": "1"
 }
