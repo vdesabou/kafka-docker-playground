@@ -285,7 +285,7 @@ USER root
 COPY --from=pm / /
 RUN ldconfig
 EOF
-      docker build -t ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $pm_tmp_dir
+      docker buildx build --builder default --load -t ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $pm_tmp_dir
       rm -rf $pm_tmp_dir
     fi
   fi
