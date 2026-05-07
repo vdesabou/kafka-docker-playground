@@ -471,7 +471,7 @@ How to handle records with null values, e.g Kafka tombstone records. Valid optio
 
 🔘 subject.name.strategy
 
-Strategy used for deriving subject name from topic and record schema name.
+(DEPRECATED) Strategy used for deriving subject name from topic and record schema name. Use ``value.converter.value.subject.name.strategy`` instead, which can be added as "Additional Properties" available when configuring through the UI.
 
 	 - Type: STRING
 	 - Default: TopicNameStrategy
