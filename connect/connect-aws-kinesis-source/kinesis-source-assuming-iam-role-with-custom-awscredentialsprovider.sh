@@ -105,7 +105,6 @@ playground connector create-or-update --connector kinesis-source  << EOF
     "kinesis.stream": "$KINESIS_STREAM_NAME",
     "kinesis.region": "$AWS_REGION",
     "kinesis.credentials.provider.class": "com.github.vdesabou.AwsAssumeRoleCredentialsProvider",
-    "_comment": "The following sts parameters are not used when using v2 of the connector",
     "kinesis.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
     "kinesis.credentials.provider.sts.role.session.name": "session-name",
     "kinesis.credentials.provider.sts.role.external.id": "123",

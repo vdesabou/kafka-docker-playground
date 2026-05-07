@@ -98,7 +98,6 @@ playground connector create-or-update --connector s3-sink  << EOF
     "s3.part.size": 5242880,
     "flush.size": "3",
     "s3.credentials.provider.class": "com.github.vdesabou.AwsAssumeRoleCredentialsProvider",
-    "_comment": "The following sts parameters are not used when using v11+ of the connector",
     "s3.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
     "s3.credentials.provider.sts.role.session.name": "session-name",
     "s3.credentials.provider.sts.role.external.id": "123",

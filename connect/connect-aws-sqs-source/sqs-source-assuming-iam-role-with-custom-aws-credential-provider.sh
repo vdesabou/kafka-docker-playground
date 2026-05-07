@@ -104,7 +104,6 @@ playground connector create-or-update --connector sqs-source  << EOF
     "kafka.topic": "test-sqs-source",
     "sqs.url": "$QUEUE_URL",
     "sqs.credentials.provider.class": "com.github.vdesabou.AwsAssumeRoleCredentialsProvider",
-    "_comment": "The following sts parameters are not used when using v2 of the connector",
     "sqs.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
     "sqs.credentials.provider.sts.role.session.name": "session-name",
     "sqs.credentials.provider.sts.role.external.id": "123",

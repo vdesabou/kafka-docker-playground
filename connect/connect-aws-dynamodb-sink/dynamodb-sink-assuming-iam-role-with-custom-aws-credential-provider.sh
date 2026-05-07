@@ -144,7 +144,6 @@ playground connector create-or-update --connector dynamodb-sink  << EOF
     "aws.dynamodb.region": "$AWS_REGION",
     "aws.dynamodb.endpoint": "$DYNAMODB_ENDPOINT",
     "aws.dynamodb.credentials.provider.class": "com.github.vdesabou.AwsAssumeRoleCredentialsProvider",
-    "_comment": "The following sts parameters are not used when using v2 of the connector",
     "aws.dynamodb.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
     "aws.dynamodb.credentials.provider.sts.role.session.name": "session-name",
     "aws.dynamodb.credentials.provider.sts.role.external.id": "123",
