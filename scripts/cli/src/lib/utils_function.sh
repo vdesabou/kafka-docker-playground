@@ -269,6 +269,26 @@ function maybe_create_image()
     return
   fi
   set +e
+    if version_gt $TAG_BASE "8.2.99"
+  then
+    docker run --quiet --rm ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} type microdnf > /dev/null 2>&1
+    if [ $? != 0 ]
+    then
+      log "🛠️ Restoring ubi minimal into ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}"
+      pm_tmp_dir=$(mktemp -d -t pg-pm-XXXXXXXXXX)
+      cat << EOF > $pm_tmp_dir/Dockerfile
+FROM redhat/ubi9-minimal:latest AS pm
+RUN rm -f /etc/passwd /etc/group /etc/shadow /etc/gshadow /etc/subuid /etc/subgid
+
+FROM ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
+USER root
+COPY --from=pm / /
+RUN ldconfig
+EOF
+      DOCKER_BUILDKIT=0 docker build -t ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $pm_tmp_dir
+      rm -rf $pm_tmp_dir
+    fi
+  fi
   log "🧰 Checking if Docker image ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} contains additional tools"
   log "⏳ it can take a while if image is downloaded for the first time"
   docker run --quiet --rm ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} type unzip > /dev/null 2>&1
