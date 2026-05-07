@@ -4,6 +4,7 @@ gcp/europe-west1
 aws/ca-west-1
 aws/ca-central-1
 aws/af-south-1
+gcp/us-east5
 gcp/us-south1
 gcp/me-central2
 gcp/asia-south2
@@ -75,9 +76,11 @@ azure/southeastasia
 aws/eu-south-2
 azure/spaincentral
 aws/eu-north-1
+gcp/europe-north2
 aws/ap-southeast-2
 gcp/australia-southeast1
 aws/sa-east-1
+aws/ap-east-2
 gcp/asia-east1
 aws/il-central-1
 gcp/me-west1
