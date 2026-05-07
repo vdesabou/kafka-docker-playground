@@ -296,8 +296,15 @@ do
           cat ${gh_msg_file} >> ${gh_msg_file_final}
           log "GH issue with title $title already exist, adding comment..."
           issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
-          gh issue comment ${issue_number} --body-file "$gh_msg_file_final"
-          gh issue edit ${issue_number} --add-label "CI failing 🔥" --remove-label "new 🆕"
+
+            gh issue view ${issue_number} --json labels 2>/dev/null | grep "CI ignore ⏭️" > /dev/null 2>&1
+            if [ $? == 0 ]
+            then
+                log "🐛 Skipping as test has an opened GH issue (${issue_number} $title) with label 'CI ignore ⏭️'"
+            else
+                gh issue comment ${issue_number} --body-file "$gh_msg_file_final"
+                gh issue edit ${issue_number} --add-label "CI failing 🔥" --remove-label "new 🆕"
+            fi
         fi
         gh_issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
       fi
