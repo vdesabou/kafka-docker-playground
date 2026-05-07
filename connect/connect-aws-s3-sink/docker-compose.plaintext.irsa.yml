@@ -17,3 +17,8 @@ services:
       # AWS_STS_ROLE_ARN: $AWS_STS_ROLE_ARN
       # AWS_STS_SESSION_NAME: "kafka-connect-session"
       # AWS_STS_EXTERNAL_ID: "123"
+
+      # It can also be passed as connector config
+      # "s3.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
+      # "s3.credentials.provider.sts.role.session.name": "session-name",
+      # "s3.credentials.provider.sts.role.external.id": "123"

@@ -91,6 +91,9 @@ playground connector create-or-update --connector s3-sink  << EOF
     "s3.part.size": 5242880,
     "flush.size": "3",
     "s3.credentials.provider.class": "com.github.vdesabou.AwsAssumeRoleIrsaCredentialsProvider",
+    "s3.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
+    "s3.credentials.provider.sts.role.session.name": "session-name",
+    "s3.credentials.provider.sts.role.external.id": "123"
     "storage.class": "io.confluent.connect.s3.storage.S3Storage",
     "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
     "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
