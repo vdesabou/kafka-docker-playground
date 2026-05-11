@@ -10,15 +10,6 @@ Password of the Couchbase user.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.bucket
-
-This property is required unless using the experimental AnalyticsSinkHandler.
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Name of the Couchbase bucket to use.
-	 - Required: HIGH
-
 🔘 couchbase.username
 
 Name of the Couchbase user to authenticate as.
@@ -27,6 +18,15 @@ Name of the Couchbase user to authenticate as.
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: true
+
+🔘 couchbase.bucket
+
+This property is required unless using the experimental AnalyticsSinkHandler.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of the Couchbase bucket to use.
+	 - Required: HIGH
 
 🔘 couchbase.seed.nodes
 
@@ -217,21 +217,21 @@ Document expiration time specified as an integer followed by a time unit (s = se
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 couchbase.retry.timeout
-
-Retry failed writes to Couchbase until this deadline is reached. If time runs out, the connector terminates.
-
-	 - Type: STRING
-	 - Default: 0
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.default.collection
 
 Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
 
 	 - Type: STRING
 	 - Default: _default._default
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.retry.timeout
+
+Retry failed writes to Couchbase until this deadline is reached. If time runs out, the connector terminates.
+
+	 - Type: STRING
+	 - Default: 0
 	 - Importance: MEDIUM
 	 - Required: false
 
