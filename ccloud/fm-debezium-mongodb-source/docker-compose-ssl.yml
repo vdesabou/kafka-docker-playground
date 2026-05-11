@@ -1,0 +1,38 @@
+---
+services:
+
+  mongodb:
+    # https://jira.mongodb.org/browse/SERVER-72839
+    image: mongo:7.0.5
+    hostname: mongodb
+    container_name: mongodb
+    ports:
+      - 27017:27017
+    volumes:
+      - ../../ccloud/fm-debezium-mongodb-source/ssl/mongo.pem:/tmp/mongo.pem
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: debezium
+      MONGO_INITDB_ROOT_PASSWORD: dbz
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "debezium","--tlsMode", "requireTLS","--tlsCertificateKeyFile", "/tmp/mongo.pem", "--tlsCertificateKeyFilePassword", "confluent"]
+      
+
+  # https://ngrok.com/docs/using-ngrok-with/docker/
+  ngrok:
+    image: ngrok/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4040:4040
+    restart: unless-stopped
+    links:
+      - mongodb
+    command:
+      - "start"
+      - "--all"
+      - "--log=stdout"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fm-debezium-mongodb-source/ngrok.yml:/etc/ngrok.yml
+    environment:
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN
