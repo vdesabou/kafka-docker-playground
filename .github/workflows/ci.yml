@@ -143,7 +143,7 @@ jobs:
 
                       # requiring ngrok
                       "🚀2️⃣ ccloud/fm-neo4j-sink ccloud/fm-influxdb2-sink ccloud/fm-influxdb3-sink ccloud/fm-influxdb2-source ccloud/fm-jdbc-oracle19-source ccloud/fm-jdbc-oracle19-sink ccloud/fm-cdc-oracle19-source ccloud/fm-cdc-xstream-oracle19-source ccloud/fm-rabbitmq-source ccloud/fm-zendesk-source ccloud/fm-splunk-sink ccloud/fm-rabbitmq-sink ccloud/fm-jdbc-mysql-sink ccloud/fm-sftp-source ccloud/fm-http-sink ccloud/fm-http-v2-sink ccloud/fm-http-source ccloud/fm-http-v2-source",
-                      "🚀3️⃣ ccloud/fm-solace-sink ccloud/fm-solace-source ccloud/fm-opensearch-sink ccloud/fm-sftp-sink ccloud/fm-redis-sink ccloud/fm-redis-kafka-sink ccloud/fm-redis-kafka-source ccloud/fm-active-mq-source ccloud/fm-clickhouse-sink ccloud/fm-debezium-mariadb-source ccloud/fm-mongodb-source ccloud/fm-mongodb-sink"
+                      "🚀3️⃣ ccloud/fm-solace-sink ccloud/fm-solace-source ccloud/fm-opensearch-sink ccloud/fm-sftp-sink ccloud/fm-redis-sink ccloud/fm-redis-kafka-sink ccloud/fm-redis-kafka-source ccloud/fm-active-mq-source ccloud/fm-clickhouse-sink ccloud/fm-debezium-mariadb-source ccloud/fm-debezium-mongodb-source ccloud/fm-mongodb-source ccloud/fm-mongodb-sink"
                     ]
     steps:
 

@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  mongodb:
+    addr: mongodb:27017
+    proto: tcp
