@@ -121,6 +121,7 @@ playground_usage() {
   printf "  %s   🎯 Take a java thread dump\n" "$(green "debug thread-dump")                         "
   printf "  %s   👻 Take a heap dump\n" "$(green "debug heap-dump")                           "
   printf "  %s   🔬 Analyze a heap dump file using Eclipse MAT (Memory Analyzer Tool)\n" "$(green "debug heap-analyze")                        "
+  printf "  %s   📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n" "$(green "debug cfk-bundle-analyze")                  "
   printf "  %s   📈 Analyze JVM Garbage Collection logs\n" "$(green "debug gc-analyze")                          "
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "debug tcp-dump")                            "
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "debug block-traffic")                       "
@@ -4184,6 +4185,7 @@ playground_debug_usage() {
   printf "  %s   🎯 Take a java thread dump\n" "$(green "thread-dump")             "
   printf "  %s   👻 Take a heap dump\n" "$(green "heap-dump")               "
   printf "  %s   🔬 Analyze a heap dump file using Eclipse MAT (Memory Analyzer Tool)\n" "$(green "heap-analyze")            "
+  printf "  %s   📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n" "$(green "cfk-bundle-analyze")      "
   printf "  %s   📈 Analyze JVM Garbage Collection logs\n" "$(green "gc-analyze")              "
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "tcp-dump")                "
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "block-traffic")           "
@@ -4502,6 +4504,82 @@ playground_debug_heap_analyze_usage() {
     printf "  playground debug heap-analyze --file heap-dump-connect-2026-04-08.hprof\n"
     printf "  playground debug heap-analyze -f heap-dump-broker.hprof --output-dir\n  ./analysis\n"
     printf "  playground debug heap-analyze -f heap-dump-connect.hprof --report-type leaks\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_debug_cfk_bundle_analyze_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground debug cfk-bundle-analyze\n\n"
+    printf "  📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n  \n  🔍 Scans pod describes, events, component CRs, and logs for ~30 issue\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling, …) and prints concrete remediation steps per category.\n  \n  🔒 Sanitization (IPs / hostnames / emails / secrets) is ON by default — pass\n  --no-sanitize only for internal/test bundles.\n  \n  🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.\n  \n  🔖 Use --json to emit machine-readable output for downstream tooling.\n\n"
+  else
+    printf "playground debug cfk-bundle-analyze - 📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground debug cfk-bundle-analyze [OPTIONS]\n"
+  printf "  playground debug cfk-bundle-analyze --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--bundle, -b PATH (required)")"
+    printf "    🗂️  Path to the CFK support bundle (directory or .tar/.tar.gz/.tgz/.zip)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📄 Emit machine-readable JSON (includes per-issue recommendation) instead of\n    the text report\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-sanitize")"
+    printf "    ⚠️  Disable sanitization of IPs, hostnames, emails, and credentials.\n    \n    🚫 NEVER use this for customer bundles. Internal/test bundles only.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--severity LEVEL")"
+    printf "    🎚️  Filter issues by minimum severity (critical | high | medium | low)\n"
+    printf "    %s\n" "Allowed: critical, high, medium, low"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--top N")"
+    printf "    🔢 Max number of issues to display per category in text mode (default: 5)\n"
+    printf "    %s\n" "Default: 5"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--html")"
+    printf "    🌐 Generate a self-contained HTML report and open it in the default browser\n    \n    ❕ No external CDN/network needed — single offline-viewable file you can\n    share.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir DIR")"
+    printf "    📁 Directory for the HTML report (default: ./cfk-reports). Only used with\n    --html.\n"
+    printf "    %s\n" "Default: ./cfk-reports"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground debug cfk-bundle-analyze --bundle ./customer-bundle.tar.gz\n"
+    printf "  playground debug cfk-bundle-analyze --bundle ./extracted-bundle/\n"
+    printf "  playground debug cfk-bundle-analyze --bundle ./bundle.zip --severity high\n"
+    printf "  playground debug cfk-bundle-analyze --bundle ./bundle.tar.gz --json >\n  report.json\n"
+    printf "  playground debug cfk-bundle-analyze -b ./bundle.tgz --html\n"
+    printf "  playground debug cfk-bundle-analyze -b ./bundle.tgz --html --output-dir\n  ./reports\n"
     echo
 
   fi
@@ -23436,6 +23514,133 @@ EOF
 }
 
 # :command.function
+playground_debug_cfk_bundle_analyze_command() {
+
+  # src/commands/debug/cfk-bundle-analyze.sh
+  bundle="${args[--bundle]}"
+  json_out="${args[--json]}"
+  no_sanitize="${args[--no-sanitize]}"
+  severity="${args[--severity]}"
+  top="${args[--top]}"
+  html="${args[--html]}"
+  output_dir="${args[--output-dir]}"
+
+  set +e
+
+  # ── Validate input ─────────────────────────────────────────────────────────
+  if [[ -z "$bundle" ]]; then
+      logerror "❌ Must provide --bundle <path-to-cfk-support-bundle>"
+      log ""
+      log "Examples:"
+      log "  playground debug cfk-bundle-analyze --bundle ./customer-bundle.tar.gz"
+      log "  playground debug cfk-bundle-analyze --bundle ./extracted-bundle/"
+      log "  playground debug cfk-bundle-analyze --bundle ./bundle.zip --json > report.json"
+      exit 1
+  fi
+
+  # Handle fzf @path trick (mirrors gc-analyze convention)
+  if [[ "$bundle" == *"@"* ]]; then
+      bundle=$(echo "$bundle" | cut -d "@" -f 2)
+  fi
+
+  if [[ ! -e "$bundle" ]]; then
+      logerror "❌ Bundle path does not exist: $bundle"
+      exit 1
+  fi
+
+  # ── Locate the analyzer CLI ────────────────────────────────────────────────
+  analyzer_cli="$root_folder/cfk-analysis/analyzer_cli.py"
+  if [[ ! -f "$analyzer_cli" ]]; then
+      logerror "❌ CFK analyzer CLI not found at: $analyzer_cli"
+      logerror "   Make sure cfk-analysis/analyzer_cli.py exists in the playground root"
+      logerror "   (symlink cfk-bundle-analyzer/ as cfk-analysis/ in the playground root)"
+      exit 1
+  fi
+
+  # ── Check Python3 ──────────────────────────────────────────────────────────
+  if ! command -v python3 &>/dev/null; then
+      logerror "❌ python3 is required but not found on PATH"
+      exit 1
+  fi
+
+  # ── Build CLI args ─────────────────────────────────────────────────────────
+  cli_args=("$bundle")
+
+  if [[ -n "$json_out" ]]; then
+      cli_args+=(--json)
+  fi
+
+  if [[ -n "$no_sanitize" ]]; then
+      cli_args+=(--no-sanitize)
+      logwarn "⚠️  Sanitization DISABLED. Do not share this output for customer bundles."
+  fi
+
+  if [[ -n "$severity" ]]; then
+      cli_args+=(--severity "$severity")
+  fi
+
+  if [[ -n "$top" ]]; then
+      cli_args+=(--top "$top")
+  fi
+
+  # ── HTML output target ─────────────────────────────────────────────────────
+  html_out=""
+  if [[ -n "$html" ]]; then
+      : "${output_dir:=./cfk-reports}"
+      mkdir -p "$output_dir"
+      output_dir_abs=$(cd "$output_dir" && pwd)
+
+      bundle_basename=$(basename "$bundle")
+      # strip common archive suffixes for a clean filename
+      bundle_basename="${bundle_basename%.tar.gz}"
+      bundle_basename="${bundle_basename%.tgz}"
+      bundle_basename="${bundle_basename%.tar}"
+      bundle_basename="${bundle_basename%.zip}"
+
+      html_out="${output_dir_abs}/${bundle_basename}-cfk-report-$(date '+%Y%m%d-%H%M%S').html"
+      cli_args+=(--html-out "$html_out")
+  fi
+
+  # ── Run the analyzer ───────────────────────────────────────────────────────
+  if [[ -z "$json_out" ]]; then
+      log "🔬 Analyzing CFK bundle: $bundle"
+      log ""
+  fi
+
+  python3 "$analyzer_cli" "${cli_args[@]}"
+  exit_code=$?
+
+  # ── Open HTML report in browser ────────────────────────────────────────────
+  if [[ -n "$html" && -f "$html_out" ]]; then
+      log ""
+      log "🌐 HTML report saved: $html_out"
+      if command -v open &>/dev/null; then
+          log "🌐 Opening report in browser..."
+          open "$html_out"
+      elif command -v xdg-open &>/dev/null; then
+          log "🌐 Opening report in browser..."
+          xdg-open "$html_out" >/dev/null 2>&1 &
+      else
+          log "🔗 Open in browser: file://$html_out"
+      fi
+  fi
+
+  if [[ -z "$json_out" ]]; then
+      log ""
+      case $exit_code in
+          0) log "✅ Analysis complete — no critical or high-severity issues found." ;;
+          1) logwarn "⚠️  Analysis complete — high-severity issues found. Review the report above." ;;
+          2) logerror "❌ Analysis complete — CRITICAL issues found. Act on the recommendations above." ;;
+          64) logerror "❌ Analysis failed — invalid bundle path or format." ;;
+          *) logerror "❌ Analyzer exited with code $exit_code." ;;
+      esac
+  fi
+
+  exit $exit_code
+
+}
+
+# :command.function
 playground_debug_gc_analyze_command() {
 
   # src/commands/debug/gc-analyze.sh
@@ -42212,6 +42417,13 @@ playground_debug_parse_requirements() {
       shift $#
       ;;
 
+    cfk-bundle-analyze)
+      action="cfk-bundle-analyze"
+      shift
+      playground_debug_cfk_bundle_analyze_parse_requirements "$@"
+      shift $#
+      ;;
+
     gc-analyze)
       action="gc-analyze"
       shift
@@ -42842,6 +43054,158 @@ playground_debug_heap_analyze_parse_requirements() {
   # :command.whitelist_filter
   if [[ ${args['--report-type']:-} ]] && [[ ! ${args['--report-type']:-} =~ ^(all|leaks|overview|top-components)$ ]]; then
     printf "%s\n" "--report-type must be one of: all, leaks, overview, top-components" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_debug_cfk_bundle_analyze_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_debug_cfk_bundle_analyze_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="debug cfk-bundle-analyze"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --bundle | -b)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--bundle']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--bundle requires an argument: --bundle, -b PATH" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --no-sanitize)
+
+        # :flag.case_no_arg
+        args['--no-sanitize']=1
+        shift
+        ;;
+
+      # :flag.case
+      --severity)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--severity']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--severity requires an argument: --severity LEVEL" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --top)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--top']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--top requires an argument: --top N" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --html)
+
+        # :flag.case_no_arg
+        args['--html']=1
+        shift
+        ;;
+
+      # :flag.case
+      --output-dir)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--bundle']+x} ]]; then
+    printf "missing required flag: --bundle, -b PATH\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--top']:-} ]] || args['--top']="5"
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="./cfk-reports"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--top'] ]]; then
+    validation_output="$(validate_integer "${args['--top']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--top N" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--severity']:-} ]] && [[ ! ${args['--severity']:-} =~ ^(critical|high|medium|low)$ ]]; then
+    printf "%s\n" "--severity must be one of: critical, high, medium, low" >&2
     exit 1
   fi
 
@@ -51769,6 +52133,7 @@ run() {
     "debug thread-dump") playground_debug_thread_dump_command ;;
     "debug heap-dump") playground_debug_heap_dump_command ;;
     "debug heap-analyze") playground_debug_heap_analyze_command ;;
+    "debug cfk-bundle-analyze") playground_debug_cfk_bundle_analyze_command ;;
     "debug gc-analyze") playground_debug_gc_analyze_command ;;
     "debug tcp-dump") playground_debug_tcp_dump_command ;;
     "debug block-traffic") playground_debug_block_traffic_command ;;

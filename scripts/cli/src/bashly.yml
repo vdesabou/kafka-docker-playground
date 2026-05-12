@@ -2218,6 +2218,67 @@ commands:
     - playground debug heap-analyze -f heap-dump-broker.hprof --output-dir ./analysis
     - playground debug heap-analyze -f heap-dump-connect.hprof --report-type leaks
 
+  - name: cfk-bundle-analyze
+    help: |-
+      📦 Analyze a Confluent for Kubernetes (CFK) support bundle
+
+      🔍 Scans pod describes, events, component CRs, and logs for ~30 issue categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication, storage, scheduling, …) and prints concrete remediation steps per category.
+
+      🔒 Sanitization (IPs / hostnames / emails / secrets) is ON by default — pass --no-sanitize only for internal/test bundles.
+
+      🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.
+
+      🔖 Use --json to emit machine-readable output for downstream tooling.
+    flags:
+      - long: --bundle
+        short: -b
+        required: true
+        arg: path
+        help: |-
+          🗂️  Path to the CFK support bundle (directory or .tar/.tar.gz/.tgz/.zip)
+      - long: --json
+        required: false
+        help: |-
+          📄 Emit machine-readable JSON (includes per-issue recommendation) instead of the text report
+      - long: --no-sanitize
+        required: false
+        help: |-
+          ⚠️  Disable sanitization of IPs, hostnames, emails, and credentials.
+
+          🚫 NEVER use this for customer bundles. Internal/test bundles only.
+      - long: --severity
+        required: false
+        arg: level
+        allowed: [critical, high, medium, low]
+        help: |-
+          🎚️  Filter issues by minimum severity (critical | high | medium | low)
+      - long: --top
+        required: false
+        arg: n
+        default: "5"
+        validate: integer
+        help: |-
+          🔢 Max number of issues to display per category in text mode (default: 5)
+      - long: --html
+        required: false
+        help: |-
+          🌐 Generate a self-contained HTML report and open it in the default browser
+
+          ❕ No external CDN/network needed — single offline-viewable file you can share.
+      - long: --output-dir
+        required: false
+        arg: dir
+        default: "./cfk-reports"
+        help: |-
+          📁 Directory for the HTML report (default: ./cfk-reports). Only used with --html.
+    examples:
+    - playground debug cfk-bundle-analyze --bundle ./customer-bundle.tar.gz
+    - playground debug cfk-bundle-analyze --bundle ./extracted-bundle/
+    - playground debug cfk-bundle-analyze --bundle ./bundle.zip --severity high
+    - playground debug cfk-bundle-analyze --bundle ./bundle.tar.gz --json > report.json
+    - playground debug cfk-bundle-analyze -b ./bundle.tgz --html
+    - playground debug cfk-bundle-analyze -b ./bundle.tgz --html --output-dir ./reports
+
   - name: gc-analyze
     help: |-
       📈 Analyze JVM Garbage Collection logs
