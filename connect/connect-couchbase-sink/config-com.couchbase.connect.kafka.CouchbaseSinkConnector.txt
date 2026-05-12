@@ -154,6 +154,15 @@ The connector writes metrics to the log at this interval.
 ==========================
 Sink Behavior
 ==========================
+🔘 couchbase.default.collection
+
+Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
+
+	 - Type: STRING
+	 - Default: _default._default
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.topic.to.collection
 
 Topic and collection are joined by an equals sign. Map entries are delimited by commas.
@@ -214,15 +223,6 @@ Document expiration time specified as an integer followed by a time unit (s = se
 
 	 - Type: STRING
 	 - Default: 0
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.default.collection
-
-Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
-
-	 - Type: STRING
-	 - Default: _default._default
 	 - Importance: MEDIUM
 	 - Required: false
 
