@@ -72,6 +72,7 @@ db2 update dbm cfg using SSL_SVR_STASH /database/config/db2inst1/server.sth
 db2 update dbm cfg using SSL_SVCENAME 50002
 db2 update dbm cfg using SSL_VERSIONS TLSv12
 db2 update dbm cfg using SSL_SVR_LABEL myLabel
+db2 update dbm cfg using SSL_CIPHERSPECS TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 db2set -i db2inst1 DB2COMM=SSL,TCPIP
 db2stop force
 db2start
@@ -88,7 +89,7 @@ EOF
 #  SSL server stash file                   (SSL_SVR_STASH) = /database/config/db2inst1/server.sth
 #  SSL server certificate label            (SSL_SVR_LABEL) = myLabel
 #  SSL service name                         (SSL_SVCENAME) = 50002
-#  SSL cipher specs                      (SSL_CIPHERSPECS) = 
+#  SSL cipher specs                      (SSL_CIPHERSPECS) = TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 #  SSL versions                             (SSL_VERSIONS) = TLSv12
 #  SSL client keydb file                  (SSL_CLNT_KEYDB) = 
 #  SSL client stash file                  (SSL_CLNT_STASH) = 
