@@ -27,7 +27,7 @@ N.B: IBM DB2 Console is reachable at [https://localhost:9443/ibmmq/console/login
 
 ```yml
   ibmdb2:
-    image: ibmcom/db2:11.5.6.0
+    image: icr.io/db2_community/db2:11.5.9.0
     hostname: ibmdb2
     container_name: ibmdb2
     privileged: true
