@@ -14,10 +14,10 @@ bootstrap_ccloud_environment
 
 
 set +e
-playground topic delete --topic pg-LOGS
+playground topic delete --topic pg-CUSTOMERS
 set -e
 
-playground topic create --topic pg-LOGS
+playground topic create --topic pg-CUSTOMERS
 
 docker compose build
 docker compose down -v --remove-orphans
@@ -56,25 +56,39 @@ done
 docker exec -i ibmdb2 bash << EOF
 su - db2inst1
 db2 connect to sample user db2inst1 using passw0rd
-db2 -x "CREATE TABLE LOGS(ID INT GENERATED ALWAYS AS IDENTITY NOT NULL,MESSAGE VARCHAR(255) NOT NULL,CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(ID));"
+db2 -x "CREATE TABLE CUSTOMERS(ID INT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1) NOT NULL,FIRST_NAME VARCHAR(50),LAST_NAME VARCHAR(50),EMAIL VARCHAR(50),GENDER VARCHAR(50),CLUB_STATUS VARCHAR(20),COMMENTS VARCHAR(90),CREATE_TS TIMESTAMP NOT NULL DEFAULT CURRENT TIMESTAMP,UPDATE_TS TIMESTAMP NOT NULL DEFAULT CURRENT TIMESTAMP,PRIMARY KEY(ID))"
+db2 -x "CREATE TRIGGER T_CUSTOMERS_UPDATE_TS NO CASCADE BEFORE UPDATE ON CUSTOMERS REFERENCING NEW AS N FOR EACH ROW MODE DB2SQL SET N.UPDATE_TS = CURRENT TIMESTAMP"
 EOF
 
 docker exec -i ibmdb2 bash << EOF
 su - db2inst1
 db2 connect to sample user db2inst1 using passw0rd
-db2 describe table LOGS
+db2 describe table CUSTOMERS
 EOF
 
 # Column name                     schema    Data type name      Length     Scale Nulls
 # ------------------------------- --------- ------------------- ---------- ----- ------
 # ID                              SYSIBM    INTEGER                      4     0 No    
-# MESSAGE                         SYSIBM    VARCHAR                    255     0 No    
-# CREATED_AT                      SYSIBM    TIMESTAMP                   10     6 Yes   
+# FIRST_NAME                      SYSIBM    VARCHAR                     50     0 Yes   
+# LAST_NAME                       SYSIBM    VARCHAR                     50     0 Yes   
+# EMAIL                           SYSIBM    VARCHAR                     50     0 Yes   
+# GENDER                          SYSIBM    VARCHAR                     50     0 Yes   
+# CLUB_STATUS                     SYSIBM    VARCHAR                     20     0 Yes   
+# COMMENTS                        SYSIBM    VARCHAR                     90     0 Yes   
+# CREATE_TS                       SYSIBM    TIMESTAMP                   10     6 No    
+# UPDATE_TS                       SYSIBM    TIMESTAMP                   10     6 No   
 
 docker exec -i ibmdb2 bash << EOF
 su - db2inst1
 db2 connect to sample user db2inst1 using passw0rd
-db2 -x "INSERT INTO logs(MESSAGE) VALUES('Testing timestamp');"
+db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Rica', 'Blaisdell', 'rblaisdell0@rambler.ru', 'Female', 'bronze', 'Universal optimal hierarchy')"
+db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Ruthie', 'Brockherst', 'rbrockherst1@ow.ly', 'Female', 'platinum', 'Reverse-engineered tangible interface')"
+db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Mariejeanne', 'Cocci', 'mcocci2@techcrunch.com', 'Female', 'bronze', 'Multi-tiered bandwidth-monitored capability')"
+db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Hashim', 'Rumke', 'hrumke3@sohu.com', 'Male', 'platinum', 'Self-enabling 24/7 firmware')"
+db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach')"
+db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Robinet', 'Leheude', 'rleheude5@reddit.com', 'Female', 'platinum', 'Virtual upward-trending definition')"
+db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Fay', 'Huc', 'fhuc6@quantcast.com', 'Female', 'bronze', 'Operative composite capacity')"
+db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Patti', 'Rosten', 'prosten7@ihg.com', 'Female', 'silver', 'Integrated bandwidth-monitored instruction set')"
 EOF
 
 connector_name="IbmDb2Source_$USER"
@@ -96,10 +110,15 @@ playground connector create-or-update --connector $connector_name << EOF
     "connection.user": "db2inst1",
     "connection.password": "passw0rd",
     "db.name": "sample",
-    "mode": "timestamp",
-    "timestamp.column.name": "CREATED_AT",
-    "query": "SELECT ID, CREATED_AT, TRIM(MESSAGE) AS MESSAGE_TRIMMED FROM LOGS",
-    "topic.prefix": "pg-LOGS",
+    "mode": "timestamp+incrementing",
+    "_incrementing.column.name": "ID",
+    "_timestamp.column.name": "UPDATE_TS",
+
+    "timestamp.columns.mapping": ".*\\\\.CUSTOMERS.*:[UPDATE_TS]",
+    "incrementing.column.mapping": ".*\\\\.CUSTOMERS.*:ID",
+    
+    "table.whitelist": "CUSTOMERS",
+    "topic.prefix": "pg-",
     "tasks.max": "1"
 }
 EOF
@@ -108,8 +127,8 @@ wait_for_ccloud_connector_up $connector_name 180
 
 sleep 15
 
-log "Verifying topic pg-LOGS"
-playground topic consume --topic pg-LOGS --min-expected-messages 1 --timeout 60
+log "Verifying topic pg-CUSTOMERS"
+playground topic consume --topic pg-CUSTOMERS --min-expected-messages 8 --timeout 60
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
