@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  ibmdb2:
+    addr: ibmdb2:25010
+    proto: tcp
