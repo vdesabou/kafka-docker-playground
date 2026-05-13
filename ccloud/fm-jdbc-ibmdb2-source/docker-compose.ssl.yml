@@ -31,6 +31,6 @@ services:
       - "--config"
       - "/etc/ngrok.yml"
     volumes:
-      - ../../ccloud/fm-jdbc-ibmdb2-source/ngrok.yml:/etc/ngrok.yml
+      - ../../ccloud/fm-jdbc-ibmdb2-source/ngrok.ssl.yml:/etc/ngrok.yml
     environment:
       NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN
