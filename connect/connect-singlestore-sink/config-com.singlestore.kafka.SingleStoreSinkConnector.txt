@@ -78,7 +78,16 @@ Data Mapping
 ==========================
 🔘 fields.whitelist
 
-Specify fields to be inserted to the database. By default all keys will be used; value of this property is the comma separated list with names of the columns`)
+Specify fields to be inserted to the database. By default all keys will be used; value of this property is a comma-separated list of field names. If set together with "fields.blacklist", the whitelist is applied first and blacklisted names are then removed.
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 fields.blacklist
+
+Specify top-level record fields to exclude from inserts (comma-separated list of field names). If "fields.whitelist" is set, only whitelisted fields are considered, then blacklisted names are removed.
 
 	 - Type: LIST
 	 - Default: null

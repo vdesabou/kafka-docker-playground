@@ -4,6 +4,7 @@
     "connection.dmlEndpoints": "",
     "connection.password": "",
     "connection.user": "root",
+    "fields.blacklist": "",
     "fields.whitelist": "",
     "max.retries": "10",
     "params.<value>": "",
