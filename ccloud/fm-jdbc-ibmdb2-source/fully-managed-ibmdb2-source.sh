@@ -55,14 +55,14 @@ done
 
 docker exec -i ibmdb2 bash << EOF
 su - db2inst1
-db2 connect to sample user db2inst1 using passw0rd
+db2 connect to testdb user db2inst1 using passw0rd
 db2 -x "CREATE TABLE CUSTOMERS(ID INT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1) NOT NULL,FIRST_NAME VARCHAR(50),LAST_NAME VARCHAR(50),EMAIL VARCHAR(50),GENDER VARCHAR(50),CLUB_STATUS VARCHAR(20),COMMENTS VARCHAR(90),CREATE_TS TIMESTAMP NOT NULL DEFAULT CURRENT TIMESTAMP,UPDATE_TS TIMESTAMP NOT NULL DEFAULT CURRENT TIMESTAMP,PRIMARY KEY(ID))"
 db2 -x "CREATE TRIGGER T_CUSTOMERS_UPDATE_TS NO CASCADE BEFORE UPDATE ON CUSTOMERS REFERENCING NEW AS N FOR EACH ROW MODE DB2SQL SET N.UPDATE_TS = CURRENT TIMESTAMP"
 EOF
 
 docker exec -i ibmdb2 bash << EOF
 su - db2inst1
-db2 connect to sample user db2inst1 using passw0rd
+db2 connect to testdb user db2inst1 using passw0rd
 db2 describe table CUSTOMERS
 EOF
 
@@ -80,7 +80,7 @@ EOF
 
 docker exec -i ibmdb2 bash << EOF
 su - db2inst1
-db2 connect to sample user db2inst1 using passw0rd
+db2 connect to testdb user db2inst1 using passw0rd
 db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Rica', 'Blaisdell', 'rblaisdell0@rambler.ru', 'Female', 'bronze', 'Universal optimal hierarchy')"
 db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Ruthie', 'Brockherst', 'rbrockherst1@ow.ly', 'Female', 'platinum', 'Reverse-engineered tangible interface')"
 db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Mariejeanne', 'Cocci', 'mcocci2@techcrunch.com', 'Female', 'bronze', 'Multi-tiered bandwidth-monitored capability')"
@@ -109,26 +109,31 @@ playground connector create-or-update --connector $connector_name << EOF
     "connection.port": "$NGROK_PORT",
     "connection.user": "db2inst1",
     "connection.password": "passw0rd",
-    "db.name": "sample",
+    "db.name": "testdb",
     "mode": "timestamp+incrementing",
-    "_incrementing.column.name": "ID",
-    "_timestamp.column.name": "UPDATE_TS",
+    "schema.pattern": "DB2INST1",
 
-    "timestamp.columns.mapping": ".*\\\\.CUSTOMERS.*:[UPDATE_TS]",
-    "incrementing.column.mapping": ".*\\\\.CUSTOMERS.*:ID",
+    "timestamp.columns.mapping": ".*:[UPDATE_TS]",
+    "incrementing.column.mapping": ".*:ID",
     
-    "table.whitelist": "CUSTOMERS",
     "topic.prefix": "pg-",
     "tasks.max": "1"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
+sleep 5
 
-sleep 15
+docker exec -i ibmdb2 bash << EOF
+su - db2inst1
+db2 connect to testdb user db2inst1 using passw0rd
+db2 -x "INSERT INTO CUSTOMERS (FIRST_NAME, LAST_NAME, EMAIL, GENDER, CLUB_STATUS, COMMENTS) VALUES ('Romy', 'Mitchell', 'rmitchell0@rambler.db', 'Female', 'bronze', 'new inserted record')"
+EOF
+
+sleep 5
 
 log "Verifying topic pg-CUSTOMERS"
-playground topic consume --topic pg-CUSTOMERS --min-expected-messages 8 --timeout 60
+playground topic consume --topic pg-CUSTOMERS --min-expected-messages 9 --timeout 60
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
