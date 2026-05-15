@@ -291,8 +291,6 @@ commands:
 
 - name: bashly-reload
   private: true
-  dependencies:
-    bashly: visit https://bashly.dannyb.co/installation/ to install
 
 - name: state
   private: true

@@ -34996,21 +34996,6 @@ playground_bashly_reload_parse_requirements() {
     esac
   done
 
-  # :command.dependencies_filter
-  missing_deps=
-  # :dependency.filter
-  if ! command -v bashly >/dev/null 2>&1; then
-    printf "missing dependency: bashly\n" >&2
-    printf "%s\n\n" "visit https://bashly.dannyb.co/installation/ to install" >&2
-    missing_deps=1
-  else
-    deps['bashly']="$(command -v bashly | head -n1)"
-  fi
-
-  if [[ -n $missing_deps ]]; then
-    exit 1
-  fi
-
   # :command.command_filter
   action="bashly-reload"
 
