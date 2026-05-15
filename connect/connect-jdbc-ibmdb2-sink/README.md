@@ -55,7 +55,7 @@ $ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
-               "connection.url":"jdbc:db2://ibmdb2:50002/sample",
+               "connection.url":"jdbc:db2://ibmdb2:50000/sample",
                "connection.user":"db2inst1",
                "connection.password":"passw0rd",
                "topics": "ORDERS",
