@@ -37,15 +37,6 @@ The underlying storage layer. The default value will work with Azure Data Lake S
 	 - Importance: LOW
 	 - Required: false
 
-🔘 store.url
-
-Domain for accessing blob data in your Azure Data Lake Storage account. The default endpoint for Azure Data Lake Storage is ``storage-account-name``.dfs.core.windows.net.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: LOW
-	 - Required: false
-
 ==========================
 Connector
 ==========================
@@ -324,6 +315,18 @@ The record field to be used as timestamp by the timestamp extractor.
 	 - Type: STRING
 	 - Default: timestamp
 	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Storage
+==========================
+🔘 store.url
+
+Domain for accessing blob data in your Azure Data Lake Storage account. The default endpoint for Azure Data Lake Storage is ``storage-account-name``.dfs.core.windows.net.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
 	 - Required: false
 
 ==========================
