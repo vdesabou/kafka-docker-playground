@@ -56,8 +56,6 @@ AZURE_SUBSCRIPTION_ID=$(az account show | jq -r '.id')
 
 AZURE_TENANT_ID=$(az account show | jq -r '.tenantId')
 AZURE_APP_NAME=${AZURE_NAME}-fmla-v2-app
-AZURE_CLIENT_ID=""
-AZURE_CLIENT_SECRET=""
 AZURE_LOGS_INGESTION_ENDPOINT=""
 AZURE_DCR_RESOURCE_ID=""
 AZURE_DCR_IMMUTABLE_ID=""
@@ -128,22 +126,35 @@ log "Resolving Logs Ingestion endpoint from DCR"
 AZURE_LOGS_INGESTION_ENDPOINT=$(az resource show --ids "$AZURE_DCR_RESOURCE_ID" --api-version 2023-03-11 --query 'properties.endpoints.logsIngestion' -o tsv)
 AZURE_LOGS_INGESTION_ENDPOINT=${AZURE_LOGS_INGESTION_ENDPOINT%/}
 
-log "Creating Entra app/service principal $AZURE_APP_NAME"
-AZURE_CLIENT_ID=$(az ad app create --display-name "$AZURE_APP_NAME" --query appId -o tsv)
-az ad sp create --id "$AZURE_CLIENT_ID" > /dev/null
-AZURE_CLIENT_SECRET=$(az ad app credential reset --id "$AZURE_CLIENT_ID" --append --query password -o tsv)
+if [ -z "$GITHUB_RUN_NUMBER" ]; then
+    # LOCAL LOGIC: Create if not exists
+    log "Creating Entra app/service principal $AZURE_APP_NAME"
+    AZURE_LOGS_CLIENT_ID=$(az ad app create --display-name "$AZURE_APP_NAME" --query appId -o tsv)
+    az ad sp create --id "$AZURE_LOGS_CLIENT_ID" > /dev/null
+    AZURE_LOGS_CLIENT_SECRET=$(az ad app credential reset --id "$AZURE_LOGS_CLIENT_ID" --append --query password -o tsv)
+    AZURE_LOGS_SP_OBJECT_ID=$(az ad sp show --id "$AZURE_LOGS_CLIENT_ID" --query id -o tsv)
+else
+    # CI LOGIC: Use the secrets passed from GitHub
+    # AZURE_LOGS_CLIENT_ID=$(az ad app create --display-name "pgrunner-fm-azure-log-analytics-v2-sink" --query appId -o tsv)
+    # az ad sp create --id "$AZURE_LOGS_CLIENT_ID"
+    # AZURE_LOGS_CLIENT_SECRET=$(az ad app credential reset --id "$AZ_CLIENT_ID" --append --query password -o tsv)
+    # AZURE_LOGS_SP_OBJECT_ID=$(az ad sp show --id "$AZURE_LOGS_CLIENT_ID" --query id -o tsv)
+    log "🚀 GitHub Action detected: Using pre-created Service Principal"
+    # Ensure these variables are mapped in your workflow .yml file
+    if [ -z "$AZURE_LOGS_CLIENT_ID" ] || [ -z "$AZURE_LOGS_CLIENT_SECRET" ] || [ -z "$AZURE_LOGS_SP_OBJECT_ID" ]; then
+        echo "Error: Pre-created SP credentials not found in environment variables."
+        exit 1
+    fi
+fi
 
-AZURE_SP_OBJECT_ID=$(az ad sp show --id "$AZURE_CLIENT_ID" --query id -o tsv)
-log "Assigning Monitoring Metrics Publisher role on DCR"
-set +e
+log "Assigning Monitoring Metrics Publisher role..."
 az role assignment create \
-    --assignee-object-id "$AZURE_SP_OBJECT_ID" \
+    --assignee-object-id "$AZURE_LOGS_SP_OBJECT_ID" \
     --assignee-principal-type ServicePrincipal \
     --role "Monitoring Metrics Publisher" \
-    --scope "$AZURE_DCR_RESOURCE_ID" > /dev/null 2>&1
-set -e
+    --scope "$AZURE_DCR_RESOURCE_ID"
 
-if [ -z "$AZURE_TENANT_ID" ] || [ -z "$AZURE_CLIENT_ID" ] || [ -z "$AZURE_CLIENT_SECRET" ] || [ -z "$AZURE_LOGS_INGESTION_ENDPOINT" ] || [ -z "$AZURE_DCR_IMMUTABLE_ID" ]
+if [ -z "$AZURE_TENANT_ID" ] || [ -z "$AZURE_LOGS_CLIENT_ID" ] || [ -z "$AZURE_LOGS_CLIENT_SECRET" ] || [ -z "$AZURE_LOGS_INGESTION_ENDPOINT" ] || [ -z "$AZURE_DCR_IMMUTABLE_ID" ]
 then
     log "Missing required Azure Logs Ingestion settings"
     log "Automatic provisioning failed for tenant/client credentials, ingestion endpoint or DCR immutable ID"
@@ -207,8 +218,8 @@ playground connector create-or-update --connector $connector_name << EOF
     "input.data.format" : "AVRO",
 
     "azure.tenant.id": "$AZURE_TENANT_ID",
-    "azure.client.id": "$AZURE_CLIENT_ID",
-    "azure.client.secret": "$AZURE_CLIENT_SECRET",
+    "azure.client.id": "$AZURE_LOGS_CLIENT_ID",
+    "azure.client.secret": "$AZURE_LOGS_CLIENT_SECRET",
     "azure.logs.ingestion.endpoint": "$AZURE_LOGS_INGESTION_ENDPOINT",
     "topic.to.table.map": "log_analytics_topic:$AZURE_TARGET_TABLE",
     "table.to.dcr.map": "$AZURE_TARGET_TABLE:$AZURE_DCR_IMMUTABLE_ID",
