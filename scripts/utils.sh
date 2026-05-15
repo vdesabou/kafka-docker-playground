@@ -3,8 +3,8 @@ source ${DIR_UTILS}/../scripts/cli/src/lib/utils_function.sh
 
 function install_connector_with_retry {
   local install_command="$1"
-  local max_retries=${CONNECTOR_INSTALL_MAX_RETRIES:-3}
-  local retry_delay_seconds=${CONNECTOR_INSTALL_RETRY_DELAY_SECONDS:-5}
+  local max_retries=${CONNECTOR_INSTALL_MAX_RETRIES:-5}
+  local retry_delay_seconds=${CONNECTOR_INSTALL_RETRY_DELAY_SECONDS:-10}
   local attempt=1
 
   while [ "$attempt" -le "$max_retries" ]
