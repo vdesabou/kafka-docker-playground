@@ -134,7 +134,7 @@ playground connector create-or-update --connector ibmdb2-sink  << EOF
 {
   "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
   "tasks.max": "1",
-  "connection.url":"jdbc:db2://ibmdb2:25010/sample",
+  "connection.url":"jdbc:db2://ibmdb2:50002/sample",
   "connection.user":"db2inst1",
   "connection.password":"passw0rd",
   "topics": "ORDERS",
