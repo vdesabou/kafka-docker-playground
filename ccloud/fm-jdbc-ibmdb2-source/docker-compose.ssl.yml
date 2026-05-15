@@ -1,0 +1,36 @@
+---
+services:
+
+  ibmdb2:
+    image: icr.io/db2_community/db2:11.5.9.0
+    platform: linux/amd64
+    hostname: ibmdb2
+    container_name: ibmdb2
+    privileged: true
+    environment:
+      LICENSE: accept
+      DB2INST1_PASSWORD: passw0rd
+      DBNAME: testdb
+      ARCHIVE_LOGS: "false"
+      SAMPLEDB: "false"
+
+  # https://ngrok.com/docs/using-ngrok-with/docker/
+  ngrok:
+    image: ngrok/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4040:4040
+    restart: unless-stopped
+    links:
+      - ibmdb2
+    command:
+      - "start"
+      - "--all"
+      - "--log=stdout"
+      - "--config"
+      - "/etc/ngrok.yml"
+    volumes:
+      - ../../ccloud/fm-jdbc-ibmdb2-source/ngrok.ssl.yml:/etc/ngrok.yml
+    environment:
+      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN
