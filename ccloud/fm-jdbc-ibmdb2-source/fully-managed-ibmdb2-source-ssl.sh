@@ -19,9 +19,9 @@ set -e
 
 playground topic create --topic pg-CUSTOMERS
 
-docker compose -f docker-compose.ssl.yml build
-docker compose -f docker-compose.ssl.yml down -v --remove-orphans
-docker compose -f docker-compose.ssl.yml up -d --quiet-pull
+docker compose -f docker-compose.yml build
+docker compose -f docker-compose.yml down -v --remove-orphans
+docker compose -f docker-compose.yml up -d --quiet-pull
 
 playground container logs --container ibmdb2 --wait-for-log "Setup has completed" --max-wait 600
 log "ibmdb2 DB has started!"
