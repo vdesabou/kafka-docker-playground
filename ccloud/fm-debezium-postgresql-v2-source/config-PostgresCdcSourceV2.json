@@ -8,6 +8,7 @@
     "connector.class": "STRING",
     "connector.egress.whitelist": "STRING",
     "csfle.enabled": "false",
+    "database.aws.region": "STRING",
     "database.dbname": "STRING",
     "database.hostname": "STRING",
     "database.password": "PASSWORD",

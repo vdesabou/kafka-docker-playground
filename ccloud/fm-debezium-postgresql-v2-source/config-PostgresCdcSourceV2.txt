@@ -72,7 +72,7 @@ Authentication method
 ==========================
 🔘 authentication.method
 
-Select how you want to authenticate with the database. Valid options are ``Google service account impersonation`` and ``Password``.
+Select how you want to authenticate with the database. Valid options are ``IAM Roles``, ``Google service account impersonation``, and ``Password``.
 
 	 - Type: STRING
 	 - Default: Password
@@ -130,6 +130,15 @@ Secret manager configuration
 ==========================
 How should we connect to your database?
 ==========================
+🔘 database.aws.region
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The AWS region of the PostgreSQL database server for RDS/Aurora.
+	 - Required: HIGH
+
 🔘 database.hostname
 
 
