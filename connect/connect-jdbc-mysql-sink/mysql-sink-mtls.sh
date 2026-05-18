@@ -81,7 +81,7 @@ playground connector create-or-update --connector mysql-mtls-sink  << EOF
 {
   "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
   "tasks.max": "1",
-  "connection.url": "jdbc:mysql://mysql:3306/db?user=usermtls&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1,TLSv1.1,TLSv1.2,TLSv1.3",
+  "connection.url": "jdbc:mysql://mysql:3306/db?user=usermtls&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1,TLSv1.1,TLSv1.2,TLSv1.3&trustCertificateKeyStoreUrl=file:///etc/kafka/secrets/truststore.jks&trustCertificateKeyStorePassword=mypassword&clientCertificateKeyStoreUrl=file:///etc/kafka/secrets/keystore.jks&clientCertificateKeyStorePassword=mypassword",
   "topics": "orders",
   "auto.create": "true"
 }
