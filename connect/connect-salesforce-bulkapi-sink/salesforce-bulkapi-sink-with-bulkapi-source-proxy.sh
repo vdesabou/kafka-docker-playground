@@ -167,7 +167,7 @@ EOF
 
 
 
-sleep 10
+sleep 30
 
 log "Verify topic success-responses"
 playground topic consume --topic success-responses --min-expected-messages 1 --timeout 60
