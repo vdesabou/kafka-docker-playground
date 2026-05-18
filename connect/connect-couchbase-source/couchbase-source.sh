@@ -12,6 +12,20 @@ docker exec couchbase bash -c "/opt/couchbase/bin/couchbase-cli cluster-init --c
 log "Install Couchbase bucket example travel-sample"
 curl -X POST -u Administrator:password http://localhost:8091/sampleBuckets/install -d '["travel-sample"]'
 
+log "Waiting for travel-sample bucket to be ready"
+MAX_WAIT=120
+ELAPSED=0
+until curl -s -u Administrator:password http://localhost:8091/pools/default/buckets/travel-sample | grep -q '"name":"travel-sample"'; do
+  if [ $ELAPSED -ge $MAX_WAIT ]; then
+    logerror "travel-sample bucket did not become ready within ${MAX_WAIT}s"
+    exit 1
+  fi
+  sleep 5
+  ELAPSED=$((ELAPSED + 5))
+  log "Still waiting for travel-sample bucket... (${ELAPSED}s elapsed)"
+done
+log "travel-sample bucket is ready"
+
 log "Creating Couchbase Source connector"
 playground connector create-or-update --connector couchbase-source  << EOF
 {
@@ -19,7 +33,7 @@ playground connector create-or-update --connector couchbase-source  << EOF
      "tasks.max": "2",
      "couchbase.topic": "test-travel-sample",
      "couchbase.seed.nodes": "couchbase",
-     "couchbase.bootstrap.timeout": "2000ms",
+     "couchbase.bootstrap.timeout": "30s",
      "couchbase.bucket": "travel-sample",
      "couchbase.username": "Administrator",
      "couchbase.password": "password",
