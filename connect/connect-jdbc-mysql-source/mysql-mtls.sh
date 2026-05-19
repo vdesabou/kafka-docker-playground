@@ -124,7 +124,7 @@ playground connector create-or-update --connector mysql-mtls-source  << EOF
 {
   "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
   "tasks.max":"1",
-  "connection.url": "jdbc:mysql://mysql:3306/db?user=usermtls&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1,TLSv1.1,TLSv1.2,TLSv1.3&trustCertificateKeyStoreUrl=file:///etc/kafka/secrets/truststore.jks&trustCertificateKeyStorePassword=mypassword&clientCertificateKeyStoreUrl=file:///etc/kafka/secrets/keystore.jks&clientCertificateKeyStorePassword=mypassword",
+  "connection.url": "jdbc:mysql://mysql:3306/mydb?user=usermtls&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1,TLSv1.1,TLSv1.2,TLSv1.3&trustCertificateKeyStoreUrl=file:///etc/kafka/secrets/truststore.jks&trustCertificateKeyStorePassword=mypassword&clientCertificateKeyStoreUrl=file:///etc/kafka/secrets/keystore.jks&clientCertificateKeyStorePassword=mypassword",
   "table.whitelist":"team",
   "mode":"timestamp+incrementing",
   "timestamp.column.name":"last_modified",
