@@ -36643,15 +36643,6 @@ playground_ai_parse_requirements() {
     deps['gemini']="$(command -v gemini | head -n1)"
   fi
 
-  # :dependency.filter
-  if ! command -v kafka-mcp-server >/dev/null 2>&1; then
-    printf "missing dependency: kafka-mcp-server\n" >&2
-    printf "%s\n\n" "visit https://docs.tuannvm.com/kafka-mcp-server#installation to install" >&2
-    missing_deps=1
-  else
-    deps['kafka-mcp-server']="$(command -v kafka-mcp-server | head -n1)"
-  fi
-
   if [[ -n $missing_deps ]]; then
     exit 1
   fi
