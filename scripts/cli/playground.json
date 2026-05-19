@@ -1629,6 +1629,68 @@
           ]
         },
         {
+          "name": "cfk-bundle-analyze",
+          "description": "📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n  \n  🔍 Scans pod describes, events, component CRs, and logs for ~30 issue categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication, storage, scheduling, …) and prints concrete remediation steps per category.\n  \n  🔒 Sanitization (IPs / hostnames / emails / secrets) is ON by default — pass --no-sanitize only for internal/test bundles.\n  \n  🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.\n  \n  🔖 Use --json to emit machine-readable output for downstream tooling.\n",
+          "usage": "playground debug cfk-bundle-analyze [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--bundle",
+                "-b"
+              ],
+              "argument": "PATH",
+              "description": "🗂️  Path to the CFK support bundle (directory or .tar/.tar.gz/.tgz/.zip)\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "📄 Emit machine-readable JSON (includes per-issue recommendation) instead of the text report\n"
+            },
+            {
+              "names": [
+                "--no-sanitize"
+              ],
+              "argument": "",
+              "description": "⚠️  Disable sanitization of IPs, hostnames, emails, and credentials.\n\n🚫 NEVER use this for customer bundles. Internal/test bundles only.\n"
+            },
+            {
+              "names": [
+                "--severity"
+              ],
+              "argument": [
+                "critical",
+                "high",
+                "medium",
+                "low"
+              ],
+              "description": "🎚️  Filter issues by minimum severity (critical | high | medium | low)\n\nAllowed values: critical, high, medium, low\n"
+            },
+            {
+              "names": [
+                "--top"
+              ],
+              "argument": 5,
+              "description": "🔢 Max number of issues to display per category in text mode (default: 5)\n\nDefault value: 5\n"
+            },
+            {
+              "names": [
+                "--html"
+              ],
+              "argument": "",
+              "description": "🌐 Generate a self-contained HTML report and open it in the default browser\n\n❕ No external CDN/network needed — single offline-viewable file you can share.\n"
+            },
+            {
+              "names": [
+                "--output-dir"
+              ],
+              "argument": "./cfk-reports",
+              "description": "📁 Directory for the HTML report (default: ./cfk-reports). Only used with --html.\n\nDefault value: ./cfk-reports\n"
+            }
+          ]
+        },
+        {
           "name": "gc-analyze",
           "description": "📈 Analyze JVM Garbage Collection logs\n  \n  📊 Parses GC logs from a local file or running container and generates a detailed analysis with pause time statistics, heap trends, GC cause breakdown, and concrete tuning recommendations.\n  \n  🔖 Supports JDK 7–21+ and all major collectors: G1GC, CMS, ZGC, Generational ZGC, Shenandoah, ParallelGC, SerialGC\n  \n  🔖 Use --html to generate a self-contained HTML dashboard with interactive Chart.js charts\n",
           "usage": "playground debug gc-analyze [OPTIONS]",

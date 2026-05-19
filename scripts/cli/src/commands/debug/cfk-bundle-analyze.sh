@@ -38,11 +38,10 @@ if [[ ! -f "$analyzer_cli" ]]; then
     exit 1
 fi
 
-# ── Check Python3 ──────────────────────────────────────────────────────────
-if ! command -v python3 &>/dev/null; then
-    logerror "❌ python3 is required but not found on PATH"
-    exit 1
-fi
+analyzer_dir="$root_folder/cfk-analysis"
+
+bundle_abs=$(cd "$(dirname "$bundle")" && pwd)/$(basename "$bundle")
+bundle_container="/tmp/input/$(basename "$bundle")"
 
 # ── Build CLI args ─────────────────────────────────────────────────────────
 cli_args=("$bundle")
@@ -66,6 +65,7 @@ fi
 
 # ── HTML output target ─────────────────────────────────────────────────────
 html_out=""
+html_out_container=""
 if [[ -n "$html" ]]; then
     : "${output_dir:=./cfk-reports}"
     mkdir -p "$output_dir"
@@ -79,7 +79,8 @@ if [[ -n "$html" ]]; then
     bundle_basename="${bundle_basename%.zip}"
 
     html_out="${output_dir_abs}/${bundle_basename}-cfk-report-$(date '+%Y%m%d-%H%M%S').html"
-    cli_args+=(--html-out "$html_out")
+    html_out_container="/tmp/output/$(basename "$html_out")"
+    cli_args+=(--html-out "$html_out_container")
 fi
 
 # ── Run the analyzer ───────────────────────────────────────────────────────
@@ -88,7 +89,23 @@ if [[ -z "$json_out" ]]; then
     log ""
 fi
 
-python3 "$analyzer_cli" "${cli_args[@]}"
+docker_args=(
+    -i
+    --rm
+    -v "$analyzer_dir:/tmp/cfk-analysis:ro"
+    -v "$bundle_abs:$bundle_container:ro"
+)
+
+if [[ -n "$html_out" ]]; then
+    docker_args+=( -v "$output_dir_abs:/tmp/output" )
+fi
+
+container_cli_args=("$bundle_container")
+if [[ ${#cli_args[@]} -gt 1 ]]; then
+    container_cli_args+=("${cli_args[@]:1}")
+fi
+
+docker run "${docker_args[@]}" python:3.7-slim sh -lc 'pip install -q -r /tmp/cfk-analysis/requirements.txt && python /tmp/cfk-analysis/analyzer_cli.py "$@"' sh "${container_cli_args[@]}"
 exit_code=$?
 
 # ── Open HTML report in browser ────────────────────────────────────────────

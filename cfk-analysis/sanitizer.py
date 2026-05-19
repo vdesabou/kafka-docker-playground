@@ -5,7 +5,7 @@ Redacts sensitive information from analysis results
 
 import re
 from collections import defaultdict
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple
 
 
 class DataSanitizer:
@@ -202,7 +202,7 @@ class DataSanitizer:
         }
 
 
-def sanitize_for_sharing(results: Dict[str, Any]) -> tuple[Dict[str, Any], Dict[str, int]]:
+def sanitize_for_sharing(results: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, int]]:
     """
     Convenience function to sanitize results for sharing
     Returns: (sanitized_results, redaction_summary)

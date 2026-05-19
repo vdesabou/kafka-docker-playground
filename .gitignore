@@ -89,3 +89,4 @@ certs-create.sh
 connector-plugin-sourcecode
 heap-analysis
 gc-analysis-output
+cfk-reports

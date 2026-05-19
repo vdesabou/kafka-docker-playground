@@ -1887,6 +1887,74 @@ subcommands:
             
             Allowed values: all, leaks, overview, top-components
             
+      - name: cfk-bundle-analyze
+        description: | 
+          📦 Analyze a Confluent for Kubernetes (CFK) support bundle
+            
+            🔍 Scans pod describes, events, component CRs, and logs for ~30 issue categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication, storage, scheduling, …) and prints concrete remediation steps per category.
+            
+            🔒 Sanitization (IPs / hostnames / emails / secrets) is ON by default — pass --no-sanitize only for internal/test bundles.
+            
+            🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.
+            
+            🔖 Use --json to emit machine-readable output for downstream tooling.
+        usage: playground debug cfk-bundle-analyze [OPTIONS]
+        options:
+        - names:
+          - --bundle
+          - -b
+          argument: PATH
+          description: | 
+            🗂️  Path to the CFK support bundle (directory or .tar/.tar.gz/.tgz/.zip)
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --json
+          argument: ""
+          description: | 
+            📄 Emit machine-readable JSON (includes per-issue recommendation) instead of the text report
+            
+        - names:
+          - --no-sanitize
+          argument: ""
+          description: | 
+            ⚠️  Disable sanitization of IPs, hostnames, emails, and credentials.
+            
+            🚫 NEVER use this for customer bundles. Internal/test bundles only.
+            
+        - names:
+          - --severity
+          argument: [critical, high, medium, low]
+          description: | 
+            🎚️  Filter issues by minimum severity (critical | high | medium | low)
+            
+            Allowed values: critical, high, medium, low
+            
+        - names:
+          - --top
+          argument: 5
+          description: | 
+            🔢 Max number of issues to display per category in text mode (default: 5)
+            
+            Default value: 5
+            
+        - names:
+          - --html
+          argument: ""
+          description: | 
+            🌐 Generate a self-contained HTML report and open it in the default browser
+            
+            ❕ No external CDN/network needed — single offline-viewable file you can share.
+            
+        - names:
+          - --output-dir
+          argument: ./cfk-reports
+          description: | 
+            📁 Directory for the HTML report (default: ./cfk-reports). Only used with --html.
+            
+            Default value: ./cfk-reports
+            
       - name: gc-analyze
         description: | 
           📈 Analyze JVM Garbage Collection logs
