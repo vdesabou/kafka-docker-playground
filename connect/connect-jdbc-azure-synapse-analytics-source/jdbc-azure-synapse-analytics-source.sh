@@ -11,16 +11,6 @@ then
      exit 111
 fi
 
-cd ../../connect/connect-jdbc-azure-synapse-analytics-source
-if [ ! -f ${PWD}/sqljdbc_12.2/enu/mssql-jdbc-12.2.0.jre11.jar ]
-then
-     log "Downloading Microsoft JDBC driver mssql-jdbc-12.2.0.jre11.jar"
-     curl -k -L https://go.microsoft.com/fwlink/?linkid=2222954 -o sqljdbc_12.2.0.0_enu.tar.gz
-     tar xvfz sqljdbc_12.2.0.0_enu.tar.gz
-     rm -f sqljdbc_12.2.0.0_enu.tar.gz
-fi
-cd -
-
 login_and_maybe_set_azure_subscription
 
 AZURE_NAME=pg${USER}wh${GITHUB_RUN_NUMBER}${TAG_BASE}
@@ -97,13 +87,6 @@ sed -e "s|:AZURE_SQL_URL:|$AZURE_SQL_URL|g" \
     -e "s|:AZURE_DATA_WAREHOUSE_NAME:|$AZURE_DATA_WAREHOUSE_NAME|g" \
     ../../connect/connect-jdbc-azure-synapse-analytics-source/data.template > ../../connect/connect-jdbc-azure-synapse-analytics-source/data
 
-
-cd ../../connect/connect-jdbc-azure-synapse-analytics-source
-
-# Copy JAR files to confluent-hub
-mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/
-cp ../../connect/connect-jdbc-azure-synapse-analytics-source/sqljdbc_12.2/enu/mssql-jdbc-12.2.0.jre11.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/mssql-jdbc-12.2.0.jre11.jar
-cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
