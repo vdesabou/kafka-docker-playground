@@ -13,6 +13,7 @@
     "consumer.override.auto.offset.reset": "STRING",
     "consumer.override.isolation.level": "STRING",
     "db.timezone": "UTC",
+    "errors.deadletterqueue.topic.name": "dlq-${connector}",
     "errors.tolerance": "all",
     "header.converter": "STRING",
     "input.data.format": "STRING",

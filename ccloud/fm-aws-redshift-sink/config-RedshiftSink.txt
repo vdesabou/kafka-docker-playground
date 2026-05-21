@@ -133,6 +133,15 @@ Which topics do you want to get data from?
 	 - Importance: Identifies the topic name or a comma-separated list of topic names.
 	 - Required: HIGH
 
+🔘 errors.deadletterqueue.topic.name
+
+The name of the topic to be used as the dead letter queue (DLQ) for messages that result in an error when processed by this sink connector, or its transformations or converters. Defaults to 'dlq-${connector}' if not set. The DLQ topic will be created automatically if it does not exist. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: dlq-${connector}
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 How should we connect to your Redshift?
 ==========================
