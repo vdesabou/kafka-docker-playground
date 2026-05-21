@@ -5,6 +5,7 @@
     "header.converter": "STRING",
     "jira.api.token": "PASSWORD",
     "jira.lookback.ms": "0",
+    "jira.max.results": "100",
     "jira.resources": "LIST",
     "jira.since": "STRING",
     "jira.url": "STRING",

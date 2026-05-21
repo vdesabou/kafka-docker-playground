@@ -151,6 +151,15 @@ The number of milliseconds to look back when querying for issues. This creates a
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 jira.max.results
+
+Maximum number of issues or users returned per API page. Higher values reduce API call count but can increase memory pressure. The users endpoint enforces a hard server-side cap of 1000 regardless of this setting.
+
+	 - Type: INT
+	 - Default: 100
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 Connection details
 ==========================
