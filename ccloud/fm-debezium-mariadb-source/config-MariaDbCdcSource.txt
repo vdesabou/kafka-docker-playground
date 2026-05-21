@@ -382,6 +382,15 @@ Controls how frequently the connector sends heartbeat messages to a Kafka topic.
 	 - Importance: LOW
 	 - Required: false
 
+🔘 snapshot.select.statement.overrides.data.map
+
+Note that you must escape double quotes (``"``) in table or schema names. Use a single backslash (``\"``) in the UI and three backslashes (``\\"``) in the CLI.
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: A JSON object that maps fully-qualified table identifiers (``schemaName.tableName`` or ``databaseName.tableName``) to custom SELECT statements. The connector uses these statements during snapshots instead of the default SELECT * query. Use this property for large append-only tables to resume a snapshot from a specific point if a previous attempt was interrupted. These values are sensitive and are masked in the configuration. 
+	 - Required: MEDIUM
+
 🔘 connect.timeout.ms
 
 A positive integer value that specifies the maximum time in milliseconds that the connector waits to establish a connection to the MariaDB database server before the connection request times out.
@@ -868,7 +877,7 @@ Specify the strategy used for watermarking during an incremental snapshot: 'INSE
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The name of the Kafka topic that the connector monitors for ad hoc signals. Note that you can currently send signal messages to this topic via the Confluent CLI.
+	 - Importance: The name of the Kafka topic that the connector monitors for ad hoc signals. Note that you can currently send signal messages to this topic via the Confluent CLI. Note that `signal.kafka.topic` must have exactly 1 partition as the connector's signal consumer reads only from `partition-0`. Any signal messages routed to other partitions are silently ignored in a multi-partition topic.
 	 - Required: LOW
 
 🔘 value.converter.latest.compatibility.strict

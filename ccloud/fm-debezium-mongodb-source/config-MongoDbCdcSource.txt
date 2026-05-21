@@ -370,7 +370,7 @@ Signal Configs
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Set the name of the Kafka topic the connector monitors for ad-hoc signals through the Confluent Cloud CLI.
+	 - Importance: Set the name of the Kafka topic the connector monitors for ad-hoc signals through the Confluent Cloud CLI. Note that `signal.kafka.topic` must have exactly 1 partition as the connector's signal consumer reads only from `partition-0`. Any signal messages routed to other partitions are silently ignored in a multi-partition topic.
 	 - Required: LOW
 
 ==========================

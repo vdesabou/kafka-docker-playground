@@ -74,6 +74,7 @@
     "snapshot.lock.timeout.ms": "10000",
     "snapshot.locking.mode": "minimal",
     "snapshot.mode": "initial",
+    "snapshot.select.statement.overrides.data.map": "PASSWORD",
     "sr.service.account.id": "STRING",
     "streaming.delay.ms": "60000",
     "table.exclude.list": "LIST",
