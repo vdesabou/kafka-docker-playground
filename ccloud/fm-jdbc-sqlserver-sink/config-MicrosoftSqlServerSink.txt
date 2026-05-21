@@ -49,7 +49,7 @@ Input messages
 
 	 - Type: true
 	 - Default: STRING
-	 - Importance: Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, or PROTOBUF. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+	 - Importance: Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, JSON, or STRING. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF. JSON and STRING formats do not require Schema Registry. When `JSON` is selected, `value.converter.schemas.enable` must be set to `true`.
 	 - Required: HIGH
 
 🔘 input.key.format
@@ -58,12 +58,12 @@ Input messages
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Sets the input Kafka record key format. This need to be set to a proper format if using pk.mode=record_key. Valid entries are AVRO, JSON_SR, PROTOBUF, STRING. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+	 - Importance: Sets the input Kafka record key format. This need to be set to a proper format if using pk.mode=record_key. Valid entries are AVRO, JSON_SR, PROTOBUF, JSON, or STRING. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF. JSON and STRING formats do not require Schema Registry. When `pk.mode` is set to `record_key` and `JSON` is selected, the record key must include an inline schema.
 	 - Required: HIGH
 
 🔘 delete.enabled
 
-Whether to treat null record values as deletes. Requires pk.mode to be record_key.
+Whether to treat null record values as deletes. Requires `pk.mode` to be `record_key`.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -204,7 +204,7 @@ How should we connect to your database?
 
 🔘 ssl.mode
 
-What SSL mode should we use to connect to your database. `prefer` allows for the connection to not be encrypted and `require` allows for the connection to be encrypted but does not do certificate validation on the server. `verify-ca` and `verify-full` require a file containing SSL CA certificate to be provided. The server's certificate will be verified to be signed by one of these authorities.`verify-ca` will verify that the server certificate is issued by a trusted CA. `verify-full` will verify that the server certificate is issued by a trusted CA and that the server hostname matches that in the certificate. Client authentication is not performed.
+What SSL mode should we use to connect to your database. ``prefer`` allows for the connection to not be encrypted and ``require`` allows for the connection to be encrypted but does not do certificate validation on the server. ``verify-ca`` and ``verify-full`` require a file containing SSL CA certificate to be provided. The server's certificate will be verified to be signed by one of these authorities.``verify-ca`` will verify that the server certificate is issued by a trusted CA. ``verify-full`` will verify that the server certificate is issued by a trusted CA and that the server hostname matches that in the certificate. Client authentication is not performed.
 
 	 - Type: STRING
 	 - Default: prefer
@@ -265,7 +265,7 @@ The comma-separated types of database tables to which the sink connector can wri
 
 	 - Type: false
 	 - Default: LIST
-	 - Importance: List of comma-separated record value field names. If empty, all fields from the record value are utilized, otherwise used to filter to the desired fields.
+	 - Importance: List of comma-separated record value field names. If empty, all fields from the record value are utilized, otherwise used to filter to the desired fields. Not applicable when `input.data.format` is set to `STRING`.
 	 - Required: MEDIUM
 
 🔘 timestamp.fields.list
@@ -274,8 +274,17 @@ The comma-separated types of database tables to which the sink connector can wri
 
 	 - Type: false
 	 - Default: LIST
-	 - Importance: List of comma-separated record value timestamp field names that should be converted to timestamps. These fields will be converted based on precision mode specified in Timestamp Precision Mode. The timestamp fields included here should be Long or String type and nested fields are not supported.
+	 - Importance: List of comma-separated record value timestamp field names that should be converted to timestamps. These fields will be converted based on precision mode specified in Timestamp Precision Mode. The timestamp fields included here should be Long or String type and nested fields are not supported. Not applicable when `input.data.format` is set to `STRING`.
 	 - Required: MEDIUM
+
+🔘 string.output.value.column.name
+
+Name of the destination table column to use when the Kafka record value written using StringConverter is sinked to the DB table (Input Kafka record value format = STRING). The raw string value is written into this single column. If the destination table is being auto-created, the column is created with this name; if the table already exists and the column is missing, the column is added via ALTER when 'auto.evolve' is true. Note: in databases that treat quoted identifiers as case-sensitive (e.g. PostgreSQL), make sure the column name in the existing table exactly matches this value (including case). Defaults to 'record_value'.
+
+	 - Type: STRING
+	 - Default: record_value
+	 - Importance: LOW
+	 - Required: false
 
 🔘 db.timezone
 
@@ -288,7 +297,7 @@ Name of the JDBC timezone used in the connector when querying with time-based cr
 
 🔘 timestamp.precision.mode
 
-Convert the Timestamp with precision. If set to microseconds the timestamp will be converted to microsecond precision. If set to nanoseconds the timestamp will be converted to nanoseconds precision.
+Convert the Timestamp with precision. If set to microseconds the timestamp will be converted to microsecond precision. If set to nanoseconds the timestamp will be converted to nanoseconds precision. Not applicable when `input.data.format` is set to `STRING`.
 
 	 - Type: STRING
 	 - Default: microseconds
@@ -412,6 +421,15 @@ Number of tasks for this connector
 ==========================
 Additional Configs
 ==========================
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.value.schema.id.deserializer
 
 The class name of the schema ID deserializer for values. This is used to deserialize schema IDs from the message headers.
@@ -474,6 +492,15 @@ Set the subject reference name strategy for value. Valid entries are DefaultRefe
 	 - Default: INT
 	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 	 - Required: LOW
+
+🔘 value.converter.schemas.enable
+
+Must be set to `true` when `input.data.format` is `JSON`. Plain JSON without an inline schema is not supported. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.generate.struct.for.nulls
 

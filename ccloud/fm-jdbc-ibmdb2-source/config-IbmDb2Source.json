@@ -39,7 +39,6 @@
     "table.include.list": "LIST",
     "table.types": "TABLE",
     "tasks.max": "INT",
-    "timestamp.column.name": "LIST",
     "timestamp.columns.mapping": "LIST",
     "timestamp.delay.interval.ms": "0",
     "timestamp.granularity": "CONNECT_LOGICAL",

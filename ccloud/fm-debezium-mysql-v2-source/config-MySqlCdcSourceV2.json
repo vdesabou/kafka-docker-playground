@@ -83,6 +83,7 @@
     "snapshot.lock.timeout.ms": "10000",
     "snapshot.locking.mode": "minimal",
     "snapshot.mode": "initial",
+    "snapshot.select.statement.overrides.data.map": "PASSWORD",
     "snapshot.tables.order.by.row.count": "disabled",
     "sr.service.account.id": "STRING",
     "streaming.delay.ms": "60000",

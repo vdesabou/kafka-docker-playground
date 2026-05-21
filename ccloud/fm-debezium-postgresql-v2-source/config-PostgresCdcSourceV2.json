@@ -86,6 +86,7 @@
     "snapshot.isolation.mode": "serializable",
     "snapshot.lock.timeout.ms": "10000",
     "snapshot.mode": "initial",
+    "snapshot.select.statement.overrides.data.map": "PASSWORD",
     "sr.service.account.id": "STRING",
     "status.update.interval.ms": "10000",
     "streaming.delay.ms": "60000",

@@ -162,7 +162,7 @@ How should we connect to your database?
 
 🔘 ssl.mode
 
-What SSL mode should we use to connect to your database. `prefer` allows for the connection to not be encrypted and `require` allows for the connection to be encrypted but does not do certificate validation on the server. `verify-ca` and `verify-full` require a file containing SSL CA certificate to be provided. The server's certificate will be verified to be signed by one of these authorities.`verify-ca` will verify that the server certificate is issued by a trusted CA. `verify-full` will verify that the server certificate is issued by a trusted CA and that the server hostname matches that in the certificate. Client authentication is not performed.
+What SSL mode should we use to connect to your database. ``prefer`` allows for the connection to not be encrypted and ``require`` allows for the connection to be encrypted but does not do certificate validation on the server. ``verify-ca`` and ``verify-full`` require a file containing SSL CA certificate to be provided. The server's certificate will be verified to be signed by one of these authorities.``verify-ca`` will verify that the server certificate is issued by a trusted CA. ``verify-full`` will verify that the server certificate is issued by a trusted CA and that the server hostname matches that in the certificate. Client authentication is not performed.
 
 	 - Type: STRING
 	 - Default: prefer
@@ -280,7 +280,7 @@ Mode
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The mode for updating a table each time it is polled. BULK: perform a bulk load of the entire table each time it is polled. TIMESTAMP: use a timestamp (or timestamp-like) column to detect new and modified rows. This assumes the column is updated with each write, and that values are monotonically incrementing, but not necessarily unique. INCREMENTING: use a strictly incrementing column on each table to detect only new rows. Note that this will not detect modifications or deletions of existing rows. TIMESTAMP AND INCREMENTING: use two columns, a timestamp column that detects new and modified rows and a strictly incrementing column which provides a globally unique ID for updates so each row can be assigned a unique stream offset.
+	 - Importance: The mode for updating a table each time it is polled. ``BULK``: perform a bulk load of the entire table each time it is polled. ``TIMESTAMP``: use a timestamp (or timestamp-like) column to detect new and modified rows. This assumes the column is updated with each write, and that values are monotonically incrementing, but not necessarily unique. ``INCREMENTING``: use a strictly incrementing column on each table to detect only new rows. Note that this will not detect modifications or deletions of existing rows. ``TIMESTAMP AND INCREMENTING``: use two columns, a timestamp column that detects new and modified rows and a strictly incrementing column which provides a globally unique ID for updates so each row can be assigned a unique stream offset.
 	 - Required: MEDIUM
 
 🔘 timestamp.columns.mapping
@@ -330,7 +330,7 @@ When to quote table names, column names, and other identifiers in SQL statements
 
 🔘 transaction.isolation.mode
 
-Isolation level determines how transaction integrity is visible to other users and systems. `DEFAULT`: This is the default isolation level configured at the Database Server. `READ_UNCOMMITTED`: This is the lowest isolation level. At this level, one transaction may see dirty reads (that is, not-yet-committed changes made by other transactions). `READ_COMMITTED`: This level guarantees that any data read is already committed at the moment it is read. `REPEATABLE_READ`: In addition to the guarantees of the `READ_COMMITTED` level, this option also guarantees that any data read cannot change, if the transaction reads the same data again. However, phantom reads are possible. `SERIALIZABLE`: This is the highest isolation level. In addition to everything `REPEATABLE_READ` guarantees, it also eliminates phantom reads.
+Isolation level determines how transaction integrity is visible to other users and systems. ``DEFAULT``: This is the default isolation level configured at the Database Server. ``READ_UNCOMMITTED``: This is the lowest isolation level. At this level, one transaction may see dirty reads (that is, not-yet-committed changes made by other transactions). ``READ_COMMITTED``: This level guarantees that any data read is already committed at the moment it is read. ``REPEATABLE_READ``: In addition to the guarantees of the ``READ_COMMITTED`` level, this option also guarantees that any data read cannot change, if the transaction reads the same data again. However, phantom reads are possible. ``SERIALIZABLE``: This is the highest isolation level. In addition to everything ``REPEATABLE_READ`` guarantees, it also eliminates phantom reads.
 
 	 - Type: STRING
 	 - Default: DEFAULT
@@ -343,12 +343,12 @@ Isolation level determines how transaction integrity is visible to other users a
 
 	 - Type: false
 	 - Default: LONG
-	 - Importance: The epoch timestamp used for initial queries that use timestamp criteria. The value -1 sets the initial timestamp to the current time. If not specified, the connector retrieves all data. Once the connector has managed to successfully record a source offset, this property has no effect even if changed to a different value later on.
+	 - Importance: The epoch timestamp used for initial queries that use timestamp criteria. The value ``-1`` sets the initial timestamp to the current time. If not specified, the connector retrieves all data. Once the connector has managed to successfully record a source offset, this property has no effect even if changed to a different value later on.
 	 - Required: MEDIUM
 
 🔘 date.calendar.system
 
-The time elapsed from epoch populated in the end table topic for DATE or TIMESTAMP type columns can have two different values based upon the Calendar used to interpret it. If LEGACY is used, it will use the hybrid Gregorian/Julian calendar which was the default in the older java date time APIs. However, if 'PROLEPTIC_GREGORIAN' is used, then it will use the proleptic gregorian calendar which extends the Gregorian rules backward indefinitely and does not apply the 1582 cutover. This matches the behavior of modern Java date/time APIs (java.time). This is defaulted to LEGACY for backward compatibility. Changing this configuration on an existing connector might lead to a drift in the kafka topic record values.
+The time elapsed from epoch populated in the end table topic for DATE or TIMESTAMP type columns can have two different values based upon the Calendar used to interpret it. If ``LEGACY`` is used, it will use the hybrid Gregorian/Julian calendar which was the default in the older java date time APIs. However, if ``PROLEPTIC_GREGORIAN`` is used, then it will use the proleptic gregorian calendar which extends the Gregorian rules backward indefinitely and does not apply the 1582 cutover. This matches the behavior of modern Java date/time APIs (java.time). This is defaulted to LEGACY for backward compatibility. Changing this configuration on an existing connector might lead to a drift in the kafka topic record values.
 
 	 - Type: STRING
 	 - Default: LEGACY
@@ -390,7 +390,7 @@ Output messages
 ==========================
 🔘 output.data.format
 
-Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, JSON, or STRING. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
 
 	 - Type: STRING
 	 - Default: JSON
@@ -459,7 +459,7 @@ Set the subject reference name strategy for value. Valid entries are DefaultRefe
 
 🔘 value.converter.schemas.enable
 
-Include schemas within each of the serialized values. Input messages must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Converter.
+When `true`, the JsonConverter writes each record to Kafka as a `{schema, payload}` envelope so downstream consumers can interpret the value with its schema. When `false`, only the payload (plain JSON) is written. Applicable for JSON Converter.
 
 	 - Type: BOOLEAN
 	 - Default: false
