@@ -172,6 +172,15 @@ If specified, Hadoop config files in this directory will be loaded
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 iceberg.coordinator-executor-keep-alive-timeout-ms
+
+config to control coordinator executor keep alive time
+
+	 - Type: LONG
+	 - Default: 120000
+	 - Importance: LOW
+	 - Required: false
+
 🔘 key.converter.converter.type
 
 How this converter will be used.
