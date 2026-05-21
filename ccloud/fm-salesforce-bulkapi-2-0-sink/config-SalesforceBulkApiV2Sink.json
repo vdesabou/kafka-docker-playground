@@ -32,6 +32,7 @@
     "salesforce.jwt.keystore.file": "PASSWORD",
     "salesforce.jwt.keystore.password": "PASSWORD",
     "salesforce.object.num": "1",
+    "salesforce.object.type": "STANDARD_OR_CUSTOM_OBJECT",
     "salesforce.object1": "STRING",
     "salesforce.object1.custom.id.field.name": "STRING",
     "salesforce.object1.ignore.fields": "LIST",

@@ -205,6 +205,15 @@ The URL of the Salesforce endpoint to use. When using 'CLIENT_CREDENTIALS' grant
 	 - Importance: Salesforce JWT keystore file which contains the private key.
 	 - Required: MEDIUM
 
+🔘 salesforce.object.type
+
+Select Salesforce Object type to process. 'STANDARD_OR_CUSTOM_OBJECT' for regular SObjects, 'BIG_OBJECT' for Big Objects (only supports insert operation).
+
+	 - Type: STRING
+	 - Default: STANDARD_OR_CUSTOM_OBJECT
+	 - Importance: HIGH
+	 - Required: true
+
 🔘 salesforce.jwt.keystore.password
 
 
