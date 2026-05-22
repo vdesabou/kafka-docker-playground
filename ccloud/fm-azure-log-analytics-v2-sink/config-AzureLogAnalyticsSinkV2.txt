@@ -63,7 +63,7 @@ Input messages
 ==========================
 🔘 input.data.format
 
-Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, JSON, or BYTES. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, JSON, BYTES, or STRING. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
 
 	 - Type: STRING
 	 - Default: JSON_SR
