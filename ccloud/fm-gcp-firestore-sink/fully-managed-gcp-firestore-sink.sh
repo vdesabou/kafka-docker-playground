@@ -291,9 +291,20 @@ wait_for_ccloud_connector_up $connector_name 180
 
 sleep 60
 
-log "Verify Firestore database connectivity"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud firestore databases ping --database $GCP_FIRESTORE_DATABASE --project $GCP_PROJECT
-log "Connector is running. Verify documents in collection kafka_products from the Firestore MongoDB-compatible UI/API"
+log "Querying collection kafka_products from Firestore MongoDB-compatible endpoint"
+docker run --rm -i mongo:7 mongosh "mongodb://$GCP_FIRESTORE_CONNECTION_HOST/$GCP_FIRESTORE_DATABASE?loadBalanced=true&authMechanism=SCRAM-SHA-256&tls=true&retryWrites=false" \
+  --username "$GCP_FIRESTORE_CONNECTION_USER" \
+  --password "$GCP_FIRESTORE_CONNECTION_PASSWORD" << 'EOF'
+db.kafka_products.find().pretty();
+EOF
+
+docker run --rm -i mongo:7 mongosh "mongodb://$GCP_FIRESTORE_CONNECTION_HOST/$GCP_FIRESTORE_DATABASE?loadBalanced=true&authMechanism=SCRAM-SHA-256&tls=true&retryWrites=false" \
+  --username "$GCP_FIRESTORE_CONNECTION_USER" \
+  --password "$GCP_FIRESTORE_CONNECTION_PASSWORD" << EOF > output.txt
+db.kafka_products.find().pretty();
+EOF
+grep "notebooks" output.txt
+rm output.txt
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
