@@ -188,7 +188,7 @@ fi
 log "Granting Firestore read/write IAM role to principal $GCP_FIRESTORE_CONNECTION_PRINCIPAL"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud projects add-iam-policy-binding $GCP_PROJECT \
   --member="$GCP_FIRESTORE_CONNECTION_PRINCIPAL" \
-  --role="roles/datastore.user"
+  --role="roles/datastore.user" > /dev/null 2>&1
 
 GCP_FIRESTORE_IAM_PROPAGATION_WAIT_SECONDS=${GCP_FIRESTORE_IAM_PROPAGATION_WAIT_SECONDS:-60}
 log "Waiting ${GCP_FIRESTORE_IAM_PROPAGATION_WAIT_SECONDS}s for IAM propagation"
