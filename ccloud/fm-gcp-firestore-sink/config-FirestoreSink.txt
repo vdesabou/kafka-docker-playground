@@ -1,0 +1,813 @@
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Input messages
+==========================
+🔘 input.data.format
+
+Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF or JSON. You must have Confluent Cloud Schema Registry configured to use a schema-based message format (for example, AVRO, JSON_SR, and PROTOBUF).
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 input.key.format
+
+Sets the input Kafka record key format. Valid entries are AVRO, BYTES, JSON, JSON_SR, PROTOBUF, or STRING.
+
+	 - Type: STRING
+	 - Default: STRING
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Write strategies
+==========================
+🔘 write.strategy
+
+The class that specifies the write model to use for bulk writes.
+
+	 - Type: STRING
+	 - Default: DefaultWriteModelStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.batch.size
+
+The maximum number of sink records to batch together for processing. ``0`` means no limit.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 bulk.write.ordered
+
+Whether bulk writes are ordered.
+
+	 - Type: STRING
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rate.limiting.timeout
+
+How long to wait, in milliseconds, before sending the next batch if rate limit is enabled. ``0`` means no rate limit.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 rate.limiting.every.n
+
+How many batches of records to send before applying rate limit. ``0`` means no rate limit.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 delete.on.null.values
+
+Whether the connector deletes documents when the value is null.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 delete.write.strategy
+
+The class that handles how to build the delete write models for the sink documents.
+
+	 - Type: STRING
+	 - Default: DeleteOneDefaultStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 topic.override.map
+
+A JSON map to override sink connector properties for specific topics. Use the map as ``{"<topicName>.<property>": "<value>"}``. For example, ``{"orders.collection": "orders_collection", "orders.database": "orders_db"}`` routes the **orders** topic to the *orders_collection* in the *orders_db* database. 
+
+	 - Type: STRING
+	 - Default: {}
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+ID strategies
+==========================
+🔘 doc.id.strategy
+
+The strategy to use for generating a unique document ID.
+
+	 - Type: STRING
+	 - Default: BsonOidStrategy
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 doc.id.strategy.overwrite.existing
+
+Whether the connector overwrites existing values in the ``_id`` field when the strategy defined in ``doc.id.strategy`` is applied.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.projection.type
+
+When using the ``PartialKeyStrategy``, this allows custom key fields to be projected for the ID strategy. Use either ``allowlist`` or ``blocklist``.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.projection.list
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: When using the ``PartialKeyStrategy``, this allows custom key fields to be projected for the ID strategy. Provide a comma-separated list of field names for key projection.
+	 - Required: LOW
+
+🔘 value.projection.type
+
+When using the ``PartialValueStrategy``, this allows custom value fields to be projected for the ID strategy. Use either ``allowlist`` or ``blocklist``.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.projection.list
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: When using the ``PartialValueStrategy``, this allows custom value fields to be projected for the ID strategy. Provide a comma-separated list of field names for value projection.
+	 - Required: LOW
+
+==========================
+CSFLE
+==========================
+🔘 csfle.enabled
+
+Determines whether the connector honours CSFLE rules or not
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sr.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
+	 - Required: HIGH
+
+🔘 csfle.onFailure
+
+Configures the behavior for decryption failures. If set to ERROR, the connector will behave as configured for error behaviour. If set to NONE, the connector will ignore the decryption failure and proceed to write the data in its encrypted form.
+
+	 - Type: STRING
+	 - Default: ERROR
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode, whenever possible.
+
+	 - Type: STRING
+	 - Default: ${connect.regional.connector}
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+==========================
+Which topics do you want to get data from?
+==========================
+🔘 topics.regex
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A regular expression that matches the names of the topics to consume from. This is useful when you want to consume from multiple topics that match a certain pattern without having to list them all individually.
+	 - Required: LOW
+
+🔘 topics
+
+
+
+	 - Type: true
+	 - Default: LIST
+	 - Importance: Identifies the topic name or a comma-separated list of topic names.
+	 - Required: HIGH
+
+🔘 errors.deadletterqueue.topic.name
+
+The name of the topic to be used as the dead letter queue (DLQ) for messages that result in an error when processed by this sink connector, or its transformations or converters. Defaults to 'dlq-${connector}' if not set. The DLQ topic will be created automatically if it does not exist. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: dlq-${connector}
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Firestore connection
+==========================
+🔘 connection.host
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The host name and port of the Firestore MongoDB-compatible endpoint. The expected format is ``hostname:port``.
+	 - Required: HIGH
+
+🔘 connection.user
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The name of the connection user connecting to the Firestore database.
+	 - Required: HIGH
+
+🔘 connection.password
+
+
+
+	 - Type: true
+	 - Default: PASSWORD
+	 - Importance: The password for the connection user connecting to the Firestore database.
+	 - Required: HIGH
+
+🔘 database
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The name of the Firestore database to connect to.
+	 - Required: HIGH
+
+🔘 collection
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Firestore collection name used to store events from Kafka topics.
+	 - Required: MEDIUM
+
+🔘 connection.tls.enabled
+
+Specify whether to use Transport Layer Security (TLS) to connect to the Firestore database.
+
+	 - Type: STRING
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Namespace mapping
+==========================
+🔘 namespace.mapper.class
+
+The class that determines the database and collection to write to.
+
+	 - Type: STRING
+	 - Default: DefaultNamespaceMapper
+	 - Importance: LOW
+	 - Required: false
+
+🔘 namespace.mapper.key.database.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The field in the key to use for the database name when using ``FieldPathNamespaceMapper``.
+	 - Required: LOW
+
+🔘 namespace.mapper.key.collection.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The field in the key to use for the collection name when using ``FieldPathNamespaceMapper``.
+	 - Required: LOW
+
+🔘 namespace.mapper.value.database.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The field in the value to use for the database name when using ``FieldPathNamespaceMapper``.
+	 - Required: LOW
+
+🔘 namespace.mapper.value.collection.field
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The field in the value to use for the collection name when using ``FieldPathNamespaceMapper``.
+	 - Required: LOW
+
+🔘 namespace.mapper.error.if.invalid
+
+Whether to throw an error if the namespace mapping is invalid.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Error handling
+==========================
+🔘 firestore.errors.tolerance
+
+The error tolerance level. Use ``none`` to fail on errors, or ``all`` to skip errors.
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Consumer configuration
+==========================
+🔘 max.poll.interval.ms
+
+The maximum delay between subsequent consume requests to Kafka. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 300000 milliseconds (5 minutes).
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.poll.records
+
+The maximum number of records to consume from Kafka in a single request. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 500 records.
+
+	 - Type: LONG
+	 - Default: 500
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.value.schema.id.deserializer
+
+The class name of the schema ID deserializer for values. This is used to deserialize schema IDs from the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.flatten.unions
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 header.converter
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
+	 - Required: LOW
+
+🔘 value.converter.optional.for.proto2
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether proto2 optionals are supported. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 consumer.override.isolation.level
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Controls how to read messages written transactionally. If set to read_committed, consumer.poll() will only return transactional messages which have been committed. If set to read_uncommitted (the default), consumer.poll() will return all messages, even transactional messages which have been aborted. Non-transactional messages will be returned unconditionally in either mode.  More details: https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#isolation-level
+	 - Required: LOW
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.use.schema.id
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
+
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values. Input messages must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.generate.struct.for.nulls
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: all
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.wrapper.for.nullables
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 key.converter.key.schema.id.deserializer
+
+The class name of the schema ID deserializer for keys. This is used to deserialize schema IDs from the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.generate.index.for.unions
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.wrapper.for.raw.primitives
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.object.additional.properties
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
+	 - Required: LOW
+
+🔘 key.converter.use.schema.guid
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
+
+🔘 value.converter.int.for.enums
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to represent enums as integers. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.allow.optional.map.keys
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.latest.compatibility.strict
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Verify latest subject version is backward compatible when `use.latest.version` is `true`.
+	 - Required: LOW
+
+🔘 value.converter.use.schema.guid
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
+
+🔘 key.converter.schemas.enable
+
+Include schemas within each of the serialized keys. Input message keys must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Key Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.optional.for.nullables
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.auto.register.schemas
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Specify if the Serializer should attempt to register the Schema.
+	 - Required: LOW
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.use.latest.version
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Use latest version of schema in subject for serialization when auto.register.schemas is false.
+	 - Required: LOW
+
+🔘 key.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Key Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.enhanced.avro.schema.support
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.flatten.singleton.unions
+
+Whether to flatten singleton unions. Applicable for Avro and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.use.optional.for.nonrequired
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
+	 - Required: LOW
+
+🔘 value.converter.enhanced.protobuf.schema.support
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.scrub.invalid.names
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
+	 - Required: LOW
+
+🔘 consumer.override.auto.offset.reset
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Defines the behavior of the consumer when there is no committed position (which occurs when the group is first initialized) or when an offset is out of range. You can choose either to reset the position to the “earliest” offset (the default) or the “latest” offset. You can also select “none” if you would rather set the initial offset yourself and you are willing to handle out of range errors manually. More details: https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#auto-offset-reset
+	 - Required: LOW
+
+🔘 key.converter.use.schema.id
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Egress allowlist
+==========================
+🔘 connector.egress.whitelist
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
+	 - Required: HIGH
+
