@@ -45,7 +45,7 @@ Class for the 'timescaledb' transformation.
 Version of the 'timescaledb' transformation.
 
 	 - Type: STRING
-	 - Default: 3.2.6-1
+	 - Default: 3.2.6-2
 	 - Importance: HIGH
 	 - Required: false
 

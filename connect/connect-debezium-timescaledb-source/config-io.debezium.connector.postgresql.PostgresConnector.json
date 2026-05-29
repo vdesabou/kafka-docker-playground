@@ -115,7 +115,7 @@
     "transaction.boundary.interval.ms": "",
     "transaction.metadata.factory": "io.debezium.pipeline.txmetadata.DefaultTransactionMetadataFactory",
     "transforms.timescaledb.negate": "false",
-    "transforms.timescaledb.plugin.version": "3.2.6-1",
+    "transforms.timescaledb.plugin.version": "3.2.6-2",
     "transforms.timescaledb.predicate": "",
     "transforms.timescaledb.schema.list": "_timescaledb_internal",
     "transforms.timescaledb.target.topic.prefix": "timescaledb",
