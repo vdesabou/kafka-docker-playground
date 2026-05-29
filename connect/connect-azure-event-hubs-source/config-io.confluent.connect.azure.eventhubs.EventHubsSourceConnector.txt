@@ -198,7 +198,7 @@ The amount of time to wait (backoff) before the first retry.
 
 🔘 azure.eventhubs.poll.timeout.ms
 
-Timeout in milliseconds for waiting for Event Hub partition receive operations to complete. If a receive operation times out, the connector will retry by closing and recreating receivers using the configured retry settings (max retries and initial backoff). This prevents indefinite blocking when Azure Event Hub service is unresponsive or network issues occur.
+Maximum time in milliseconds to wait for a single partition's receive operation to complete during a poll. Acts as a safety guard against hung receivers: if the deadline is exceeded the poll throws a RetriableException and Kafka Connect retries. Normal polls complete in well under 1000 ms per partition (the hardcoded per-partition idle wait), so the default of 3600000 ms (1 hour) effectively means no cap in practice.
 
 	 - Type: LONG
 	 - Default: 3600000
