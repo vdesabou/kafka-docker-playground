@@ -154,15 +154,6 @@ The connector writes metrics to the log at this interval.
 ==========================
 Sink Behavior
 ==========================
-🔘 couchbase.default.collection
-
-Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
-
-	 - Type: STRING
-	 - Default: _default._default
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.topic.to.collection
 
 Topic and collection are joined by an equals sign. Map entries are delimited by commas.
@@ -196,6 +187,15 @@ Overrides the `couchbase.sink.handler` property.
 
 	 - Type: STRING
 	 - Default: DOCUMENT
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.default.collection
+
+Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
+
+	 - Type: STRING
+	 - Default: _default._default
 	 - Importance: MEDIUM
 	 - Required: false
 
