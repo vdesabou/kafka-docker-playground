@@ -23,6 +23,7 @@
     "quote.sql.identifiers": "ALWAYS",
     "replace.null.with.default": "true",
     "retry.backoff.ms": "3000",
+    "string.output.value.column.name": "record_value",
     "table.name.format": "${topic}",
     "table.types": "TABLE",
     "timestamp.fields.list": "LIST",
