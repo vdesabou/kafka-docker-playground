@@ -196,6 +196,15 @@ Conversion of time since epoch value in kafka topic record to DATE or TIMESTAMP 
 	 - Importance: LOW
 	 - Required: false
 
+🔘 string.output.value.column.name
+
+When the Kafka record value uses the String schema (e.g. records produced with StringConverter), the connector writes the value into a single column with this name. If the destination table is being auto-created, the column is created with this name. If the table already exists and the column is missing, the column is added via ALTER when 'auto.evolve' is true; otherwise the connector fails with the standard auto-evolution-disabled error. Defaults to 'record_value'.
+
+	 - Type: STRING
+	 - Default: record_value
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 DDL Support
 ==========================
