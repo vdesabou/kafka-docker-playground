@@ -67,7 +67,13 @@ services:
       JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
       CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
 
-      
+      # centralized license is needed with CP 8.1+
+      # https://docs.confluent.io/platform/current/connect/license.html#centralized-license-in-the-kconnect-long-worker
+      CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
+      CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: SASL_SSL
+      CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
+      CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: PLAIN
+
   control-center:
     image: ${CP_CONTROL_CENTER_IMAGE}:${CP_CONTROL_CENTER_TAG}
     hostname: control-center
