@@ -1,0 +1,85 @@
+# Example MCP Confluent Server configuration.
+#
+# Generate `config.yaml` from this template with:
+#   npx @confluentinc/mcp-confluent --init-config
+#
+# Every `:VAR}` and `:VAR:-default}` placeholder is resolved from the process
+# environment at startup, so secrets can stay in your shell or `.env` file
+# rather than the YAML itself. Plain literal values are also fine when you do
+# not need interpolation.
+#
+# Each sub-block under `connections.<name>` is independently optional; remove
+# the ones you do not need. At least one of `kafka`, `schema_registry`,
+# `confluent_cloud`, `flink`, `tableflow`, or `telemetry` must remain.
+
+# --- Server ---
+# MCP server transport, authentication, and logging settings.
+# All fields are optional — omit the entire block to use the defaults shown.
+# When using --config, these replace the corresponding environment variables:
+#   LOG_LEVEL, HTTP_PORT, HTTP_HOST, HTTP_MCP_ENDPOINT_PATH,
+#   SSE_MCP_ENDPOINT_PATH, SSE_MCP_MESSAGE_ENDPOINT_PATH,
+#   MCP_API_KEY, MCP_AUTH_DISABLED, MCP_ALLOWED_HOSTS, DO_NOT_TRACK.
+# server.transports replaces the --transport CLI flag (the two are mutually
+# exclusive; omit --transport and declare transports here instead).
+# Exception: Env var DO_NOT_TRACK is always honored as a floor — if set in the
+# environment, telemetry is disabled regardless of do_not_track below.
+server:
+  # Transports to start. One or more of: stdio, http, sse. Defaults to [stdio].
+  # (Use server.transports instead of --transport when using --config.)
+  transports: [stdio]
+
+  # Logging verbosity. One of: trace, debug, info, warn, error, fatal.
+  log_level: "info"
+
+  # Opt out of anonymous usage analytics.
+  # (DO_NOT_TRACK=true in the environment always wins; this field lets you opt
+  # out in YAML without needing the env var.)
+  # do_not_track: true
+
+connections:
+  # Connection name is freeform. Today exactly one connection is read at
+  # runtime; multi-connection support is the focus of the next release, and
+  # this plural structure is here so that landing it does not require any
+  # schema changes on your side.
+  default:
+    type: direct
+
+    # --- Kafka ---
+    # `bootstrap_servers` is required for any Kafka client (admin, producer,
+    # consumer). `rest_endpoint` + `cluster_id` + `env_id` are required for
+    # Kafka admin REST operations against Confluent Cloud (topics, configs,
+    # ACLs).
+    kafka:
+      bootstrap_servers: ":BOOTSTRAP_SERVERS:"
+      auth:
+        type: api_key
+        key: ":KAFKA_API_KEY:"
+        secret: ":KAFKA_API_SECRET:"
+      rest_endpoint: ":KAFKA_REST_ENDPOINT:"
+      cluster_id: ":KAFKA_CLUSTER_ID:"
+      env_id: ":KAFKA_ENV_ID:"
+      # Optional pass-through librdkafka properties. Must NOT include
+      # `bootstrap.servers`, `sasl.username`, or `sasl.password` — use the
+      # named fields above for those (the schema rejects them here).
+      # extra_properties:
+      #   socket.timeout.ms: "30000"
+      #   debug: "broker,topic"
+
+    # --- Schema Registry ---
+    schema_registry:
+      endpoint: ":SCHEMA_REGISTRY_ENDPOINT:"
+      auth:
+        type: api_key
+        key: ":SCHEMA_REGISTRY_API_KEY:"
+        secret: ":SCHEMA_REGISTRY_API_SECRET:"
+
+    # --- Confluent Cloud control plane ---
+    # Required for tools that hit the Confluent Cloud REST API (environments,
+    # service accounts, connectors, billing, etc.). `endpoint` defaults to
+    # https://api.confluent.cloud when omitted.
+    confluent_cloud:
+      endpoint: ":CONFLUENT_CLOUD_REST_ENDPOINT:"
+      auth:
+        type: api_key
+        key: ":CONFLUENT_CLOUD_API_KEY:"
+        secret: ":CONFLUENT_CLOUD_API_SECRET:"

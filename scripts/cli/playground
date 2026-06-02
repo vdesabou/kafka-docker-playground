@@ -1862,7 +1862,7 @@ playground_config_check_and_update_repo_version_usage() {
 playground_ai_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground ai\n\n"
-    printf "  🧞‍♂️  AI\n  \n  It is using Gemini CI (https://google-gemini.github.io/gemini-cli/) in\n  interactive mode.\n  \n  MCP servers are available:\n  \n  1. mcp-playground-cli - \n  \n    Tools:\n    - playground_command_help:\n        Get detailed help for playground commands\n    - playground_command_suggest:\n        Get command suggestions and completions for the Kafka Docker Playground\n  CLI\n    - playground_command_validate:\n        Validate a complete playground command and suggest corrections\n  \n  2. mcp-server - Confluent MCP Server\n  (https://github.com/confluentinc/mcp-confluent)\n  \n    Tools:\n    - list-topics: List all topics in the Kafka cluster.\n    - create-topics: Create one or more Kafka topics.\n    - delete-topics: Delete topics by name.\n    - produce-message: Produce records to a Kafka topic (supports Schema\n  Registry).\n    - consume-messages: Consume messages from one or more Kafka topics (supports\n  Schema Registry).\n    - list-schemas: List all schemas in the Schema Registry.\n    - delete-schema: Delete a schema subject or a specific version from the\n  Schema Registry.\n  \n  3. mcp-ccloud - Confluent MCP Server\n  (https://github.com/confluentinc/mcp-confluent)\n  \n    Tools:\n      Environment & Cluster Management\n      - list-environments: Get all environments in Confluent Cloud.\n      - read-environment: Get details of a specific environment.\n      - list-clusters: Get all clusters in a Confluent Cloud environment.\n  \n      Topic Management\n      - list-topics: List all topics in a Kafka cluster.\n      - create-topics: Create one or more Kafka topics.\n      - delete-topics: Delete topics by name.\n      - search-topics-by-name: Search for topics matching a name.\n      - get-topic-config: Retrieve configuration details for a topic.\n      - alter-topic-config: Update topic configuration (SET/DELETE).\n  \n      Messaging\n      - produce-message: Produce records to a topic (supports Schema Registry\n  serialization).\n      - consume-messages: Consume and deserialize messages from one or more\n  topics.\n  \n      Schema Registry\n      - list-schemas: List schemas (latest or all versions).\n      - delete-schema: Delete a schema subject or specific version.\n      - list-tags: Retrieve all tag definitions.\n      - create-topic-tags: Create new tag definitions.\n      - delete-tag: Delete a tag definition.\n      - add-tags-to-topic: Assign tags to Kafka topics.\n      - remove-tag-from-entity: Remove tags from entities.\n      - search-topics-by-tag: List topics with a specific tag.\n  \n      Connector Management\n      - list-connectors: List active connectors in a cluster.\n      - read-connector: Get detailed information about a connector.\n      - create-connector: Create a new Managed or Custom connector.\n      - delete-connector: Delete an existing connector.\n  \n      Metrics & Billing\n      - list-available-metrics: Discover valid metric names and filter fields.\n      - query-metrics: Query metrics from the Telemetry API (Kafka, Flink,\n  Connect, SR).\n      - list-billing-costs: Retrieve billing cost data for an organization.\n\n"
+    printf "  🧞‍♂️  AI\n  \n  It is using Claude Code (https://code.claude.com/docs/en/quickstart) in\n  interactive mode.\n  \n  MCP servers are available:\n  \n  1. mcp-playground-cli - \n  \n    Tools:\n    - playground_command_help:\n        Get detailed help for playground commands\n    - playground_command_suggest:\n        Get command suggestions and completions for the Kafka Docker Playground\n  CLI\n    - playground_command_validate:\n        Validate a complete playground command and suggest corrections\n  \n  2. mcp-server - Confluent MCP Server (see\n  http://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html#quick-start\n  and https://github.com/confluentinc/mcp-confluent)\n  \n    Tools:\n    - list-topics: List all topics in the Kafka cluster.\n    - create-topics: Create one or more Kafka topics.\n    - delete-topics: Delete topics by name.\n    - produce-message: Produce records to a Kafka topic (supports Schema\n  Registry).\n    - consume-messages: Consume messages from one or more Kafka topics (supports\n  Schema Registry).\n    - list-schemas: List all schemas in the Schema Registry.\n    - delete-schema: Delete a schema subject or a specific version from the\n  Schema Registry.\n  \n  3. mcp-ccloud - Confluent MCP Server (see\n  http://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html#quick-start\n  and https://github.com/confluentinc/mcp-confluent)\n  \n    Tools:\n      Environment & Cluster Management\n      - list-environments: Get all environments in Confluent Cloud.\n      - read-environment: Get details of a specific environment.\n      - list-clusters: Get all clusters in a Confluent Cloud environment.\n  \n      Topic Management\n      - list-topics: List all topics in a Kafka cluster.\n      - create-topics: Create one or more Kafka topics.\n      - delete-topics: Delete topics by name.\n      - search-topics-by-name: Search for topics matching a name.\n      - get-topic-config: Retrieve configuration details for a topic.\n      - alter-topic-config: Update topic configuration (SET/DELETE).\n  \n      Messaging\n      - produce-message: Produce records to a topic (supports Schema Registry\n  serialization).\n      - consume-messages: Consume and deserialize messages from one or more\n  topics.\n  \n      Schema Registry\n      - list-schemas: List schemas (latest or all versions).\n      - delete-schema: Delete a schema subject or specific version.\n      - list-tags: Retrieve all tag definitions.\n      - create-topic-tags: Create new tag definitions.\n      - delete-tag: Delete a tag definition.\n      - add-tags-to-topic: Assign tags to Kafka topics.\n      - remove-tag-from-entity: Remove tags from entities.\n      - search-topics-by-tag: List topics with a specific tag.\n  \n      Connector Management\n      - list-connectors: List active connectors in a cluster.\n      - read-connector: Get detailed information about a connector.\n      - create-connector: Create a new Managed or Custom connector.\n      - delete-connector: Delete an existing connector.\n  \n      Metrics & Billing\n      - list-available-metrics: Discover valid metric names and filter fields.\n      - query-metrics: Query metrics from the Telemetry API (Kafka, Flink,\n  Connect, SR).\n      - list-billing-costs: Retrieve billing cost data for an organization.\n\n"
   else
     printf "playground ai - 🧞‍♂️  AI\n\n"
   fi
@@ -13815,10 +13815,10 @@ export KSQLDB_BASIC_AUTH_USER_INFO="$KSQLDB_BASIC_AUTH_USER_INFO"
 EOF
   chmod $PERM $ENV_CONFIG
 
-  # GEMINI CLI
-  GEMINI_MCP_CONFLUENT_CONFIG=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/.env
-  echo "$GEMINI_MCP_CONFLUENT_CONFIG"
-  rm -f $GEMINI_MCP_CONFLUENT_CONFIG
+  # CLAUDE CLI
+  CLAUDE_MCP_CONFLUENT_CONFIG=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/.env
+  echo "$CLAUDE_MCP_CONFLUENT_CONFIG"
+  rm -f $CLAUDE_MCP_CONFLUENT_CONFIG
 
   SCHEMA_REGISTRY_API_KEY=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | awk -F: '{print $1}')
   SCHEMA_REGISTRY_API_SECRET=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | awk -F: '{print $2}')
@@ -13836,7 +13836,7 @@ EOF
     logwarn "Set it with Cloud API secret, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys"
   fi
 
-  cat <<EOF >> $GEMINI_MCP_CONFLUENT_CONFIG
+  cat <<EOF >> $CLAUDE_MCP_CONFLUENT_CONFIG
 # .env file
 BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS"
 KAFKA_API_KEY="$CLOUD_KEY"
@@ -13861,7 +13861,7 @@ SCHEMA_REGISTRY_API_KEY="$SCHEMA_REGISTRY_API_KEY"
 SCHEMA_REGISTRY_API_SECRET="$SCHEMA_REGISTRY_API_SECRET"
 SCHEMA_REGISTRY_ENDPOINT="$SCHEMA_REGISTRY_URL"
 EOF
-  chmod $PERM $GEMINI_MCP_CONFLUENT_CONFIG
+  chmod $PERM $CLAUDE_MCP_CONFLUENT_CONFIG
 
   return 0
 }
@@ -16104,48 +16104,57 @@ playground_ai_command() {
 
   set +e
   docker pull vdesabou/mcp-playground-server:latest > /dev/null 2>&1
-  set +e
+  set -e
 
   if [[ "$environment" == "ccloud" ]]
   then
       if [ -f .ccloud/.env ]
       then
           log "🌩️ ccloud environment is used, using mcp-confluent server (https://github.com/confluentinc/mcp-confluent) to interact with confluent cloud"
-          gemini mcp remove mcp-kafka > /dev/null 2>&1 || true
-          gemini mcp remove mcp-ccloud > /dev/null 2>&1 || true
-          gemini mcp add --trust mcp-ccloud npx "-y" "--registry=https://registry.npmjs.org" "@confluentinc/mcp-confluent@latest" -- "-e" "$root_folder/.ccloud/.env"
+          claude mcp remove mcp-kafka > /dev/null 2>&1 || true
+          claude mcp remove mcp-ccloud > /dev/null 2>&1 || true
+          cd $root_folder > /dev/null
+          source .ccloud/.env
+          # generate data file for externalizing secrets
+          sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
+              -e "s|:KAFKA_API_KEY:|$KAFKA_API_KEY|g" \
+              -e "s|:KAFKA_API_SECRET:|$KAFKA_API_SECRET|g" \
+              -e "s|:KAFKA_REST_ENDPOINT:|$KAFKA_REST_ENDPOINT|g" \
+              -e "s|:KAFKA_CLUSTER_ID:|$KAFKA_CLUSTER_ID|g" \
+              -e "s|:KAFKA_ENV_ID:|$KAFKA_ENV_ID|g" \
+              -e "s|:SCHEMA_REGISTRY_ENDPOINT:|$SCHEMA_REGISTRY_ENDPOINT|g" \
+              -e "s|:SCHEMA_REGISTRY_API_KEY:|$SCHEMA_REGISTRY_API_KEY|g" \
+              -e "s|:SCHEMA_REGISTRY_API_SECRET:|$SCHEMA_REGISTRY_API_SECRET|g" \
+              -e "s|:CONFLUENT_CLOUD_REST_ENDPOINT:|$CONFLUENT_CLOUD_REST_ENDPOINT|g" \
+              -e "s|:CONFLUENT_CLOUD_API_KEY:|$CONFLUENT_CLOUD_API_KEY|g" \
+              -e "s|:CONFLUENT_CLOUD_API_SECRET:|$CONFLUENT_CLOUD_API_SECRET|g" \
+              $root_folder/scripts/cli/src/mcp-confluent-config-ccloud-template.yaml > $root_folder/config.yaml
+
+          claude mcp add mcp-ccloud -- npx -y @confluentinc/mcp-confluent --config ./config.yaml
+          cd - > /dev/null
       else
           logerror "❌ .ccloud/.env file is not present!"
           exit 1
       fi
   else
-      # https://github.com/google-gemini/gemini-cli/issues/9766
-      gemini mcp remove mcp-ccloud > /dev/null 2>&1 || true
+      claude mcp remove mcp-ccloud > /dev/null 2>&1 || true
 
       if [[ "$environment" == "plaintext" ]]
       then
           log "📭 plaintext environment is used, using mcp-confluent server (https://github.com/confluentinc/mcp-confluent) to interact with the cluster"
-          gemini mcp remove mcp-kafka > /dev/null 2>&1 || true
-          tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-          if [ -z "$PG_VERBOSE_MODE" ]
-          then
-              trap 'rm -rf $tmp_dir' EXIT
-          else
-              log "🐛📂 not deleting tmp dir $tmp_dir"
-          fi
-      cat << EOF > $tmp_dir/.env
-BOOTSTRAP_SERVERS=localhost:29092
-SCHEMA_REGISTRY_ENDPOINT=http://localhost:8081
-EOF
+          claude mcp remove mcp-kafka > /dev/null 2>&1 || true
+          cd $root_folder > /dev/null
+          cp $root_folder/scripts/cli/src/mcp-confluent-config-local.yaml config.yaml
+          claude mcp add mcp-kafka -- npx -y @confluentinc/mcp-confluent --config ./config.yaml
 
-          gemini mcp add --trust mcp-kafka npx "-y" "--registry=https://registry.npmjs.org" "@confluentinc/mcp-confluent@latest" -- "-e" "$tmp_dir/.env"
+          cd - > /dev/null
       else
           logwarn "🔐 $environment environment is used, using mcp-confluent server (https://github.com/confluentinc/mcp-confluent) to interact with the cluster will not be used, only works with plaintext for now"
       fi
   fi
 
-  log "🧞‍♂️ calling gemini cli: gemini ${other_args[*]}"
-  gemini "${other_args[*]}"
+  log "🧞‍♂️ calling claude cli: claude ${other_args[*]}"
+  claude "${other_args[*]}"
 }
 
 # :command.function
@@ -36635,12 +36644,12 @@ playground_ai_parse_requirements() {
   # :command.dependencies_filter
   missing_deps=
   # :dependency.filter
-  if ! command -v gemini >/dev/null 2>&1; then
-    printf "missing dependency: gemini\n" >&2
-    printf "%s\n\n" "visit https://github.com/google-gemini/gemini-cli/tree/main?tab=readme-ov-file#-installation to install" >&2
+  if ! command -v claude >/dev/null 2>&1; then
+    printf "missing dependency: claude\n" >&2
+    printf "%s\n\n" "visit https://code.claude.com/docs/en/quickstart to install" >&2
     missing_deps=1
   else
-    deps['gemini']="$(command -v gemini | head -n1)"
+    deps['claude']="$(command -v claude | head -n1)"
   fi
 
   if [[ -n $missing_deps ]]; then

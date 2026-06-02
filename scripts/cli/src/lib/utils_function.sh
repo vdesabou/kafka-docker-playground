@@ -3446,11 +3446,11 @@ EOF
   chmod $PERM $ENV_CONFIG
 
   ################################################################################
-  # GEMINI CLI
+  # CLAUDE CLI
   ################################################################################
-  GEMINI_MCP_CONFLUENT_CONFIG=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/.env
-  echo "$GEMINI_MCP_CONFLUENT_CONFIG"
-  rm -f $GEMINI_MCP_CONFLUENT_CONFIG
+  CLAUDE_MCP_CONFLUENT_CONFIG=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/.env
+  echo "$CLAUDE_MCP_CONFLUENT_CONFIG"
+  rm -f $CLAUDE_MCP_CONFLUENT_CONFIG
 
   SCHEMA_REGISTRY_API_KEY=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | awk -F: '{print $1}')
   SCHEMA_REGISTRY_API_SECRET=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | awk -F: '{print $2}')
@@ -3468,7 +3468,7 @@ EOF
     logwarn "Set it with Cloud API secret, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys"
   fi
 
-  cat <<EOF >> $GEMINI_MCP_CONFLUENT_CONFIG
+  cat <<EOF >> $CLAUDE_MCP_CONFLUENT_CONFIG
 # .env file
 BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS"
 KAFKA_API_KEY="$CLOUD_KEY"
@@ -3493,7 +3493,7 @@ SCHEMA_REGISTRY_API_KEY="$SCHEMA_REGISTRY_API_KEY"
 SCHEMA_REGISTRY_API_SECRET="$SCHEMA_REGISTRY_API_SECRET"
 SCHEMA_REGISTRY_ENDPOINT="$SCHEMA_REGISTRY_URL"
 EOF
-  chmod $PERM $GEMINI_MCP_CONFLUENT_CONFIG
+  chmod $PERM $CLAUDE_MCP_CONFLUENT_CONFIG
 
   return 0
 }
