@@ -25473,6 +25473,18 @@ playground_topic_consume_command() {
     found=0
     first_record=1
     is_base64=0
+    has_key_schema_id=0
+    has_value_schema_id=0
+    value_field_index=6
+    if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
+    then
+      has_key_schema_id=1
+      value_field_index=7
+    fi
+    if [ "$value_type" == "avro" ] || [ "$value_type" == "protobuf" ] || [ "$value_type" == "json-schema" ]
+    then
+      has_value_schema_id=1
+    fi
     export LC_ALL=C
     # Loop through each line in the named pipe
     while read -r line
@@ -25493,7 +25505,17 @@ playground_topic_consume_command() {
 
         if [ $first_record -eq 1 ]
         then
-          payload=$(echo "$line" | cut -d "|" -f 6)
+          payload_section=${line#*|*|*|*|*|}
+          if [ $has_key_schema_id -eq 1 ]
+          then
+            payload_section=${payload_section#*|}
+          fi
+          if [ $has_value_schema_id -eq 1 ]
+          then
+            payload=${payload_section%|*}
+          else
+            payload=$payload_section
+          fi
 
           if [ ${#payload} -lt 1000 ]
           then
@@ -25522,8 +25544,8 @@ playground_topic_consume_command() {
         then
           base64=$(echo "$payload" | tr -d '"' | base64 -d 2>/dev/null)
           if [ -n "$base64" ]; then
-            line_with_date=$(awk -v new_value="$base64" -v l="$line_with_date" 'BEGIN{FS=OFS="|"} {
-              split(l,a,"|"); a[6]=new_value;
+            line_with_date=$(awk -v new_value="$base64" -v l="$line_with_date" -v idx="$value_field_index" 'BEGIN{FS=OFS="|"} {
+              split(l,a,"|"); a[idx]=new_value;
               for(i=1;i<=length(a);i++){printf i==length(a)?a[i]"\n":a[i]"|"}
             }')
           fi
@@ -25592,15 +25614,24 @@ playground_topic_consume_command() {
 
         if [[ -n "$timestamp_field" ]]
         then
-          payload_field=${line#*|*|*|*|*|}
-          payload=${payload_field%%|*}
+          payload_section=${line#*|*|*|*|*|}
+          if [ $has_key_schema_id -eq 1 ]
+          then
+            payload_section=${payload_section#*|}
+          fi
+          if [ $has_value_schema_id -eq 1 ]
+          then
+            payload=${payload_section%|*}
+          else
+            payload=$payload_section
+          fi
           # JSON is invalid
           if ! echo "$payload" | jq -e .  > /dev/null 2>&1
           then
               logerror "--plot-latencies-timestamp-field is set but value content is not in json representation"
               exit 1
           else
-            timestamp_source=$(echo "$payload" | jq -r .${timestamp_field})
+            timestamp_source=$(echo "$payload" | jq -r ".${timestamp_field}.long? // .${timestamp_field}")
             echo "$readable_date,$timestamp_ms,$timestamp_source" >> $latency_csv
           fi
         fi
