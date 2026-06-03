@@ -26,7 +26,7 @@ jobs:
       # issues need to be closed to generate release notes
       - name: Close issues
         id: close_issues
-        uses: lee-dohm/close-matching-issues@v2
+        uses: lee-dohm/close-matching-issues@v2.1.0
         with:
           query: "milestone:${{ github.event.milestone.title }}"
           token: ${{ secrets.GITHUB_TOKEN }}
