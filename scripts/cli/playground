@@ -16110,12 +16110,12 @@ playground_ai_command() {
   then
       if [ -f .ccloud/.env ]
       then
-          log "🌩️ ccloud environment is used, using mcp-confluent server (https://github.com/confluentinc/mcp-confluent) to interact with confluent cloud"
+          log "🌩️ ccloud environment is used, using mcp-confluent server (https://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html) to interact with confluent cloud"
           claude mcp remove mcp-kafka > /dev/null 2>&1 || true
           claude mcp remove mcp-ccloud > /dev/null 2>&1 || true
           cd $root_folder > /dev/null
           source .ccloud/.env
-          # generate data file for externalizing secrets
+          # generate data file for mcp-confluent
           sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
               -e "s|:KAFKA_API_KEY:|$KAFKA_API_KEY|g" \
               -e "s|:KAFKA_API_SECRET:|$KAFKA_API_SECRET|g" \
@@ -16141,7 +16141,7 @@ playground_ai_command() {
 
       if [[ "$environment" == "plaintext" ]]
       then
-          log "📭 plaintext environment is used, using mcp-confluent server (https://github.com/confluentinc/mcp-confluent) to interact with the cluster"
+          log "📭 plaintext environment is used, using mcp-confluent server (https://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html) to interact with the cluster"
           claude mcp remove mcp-kafka > /dev/null 2>&1 || true
           cd $root_folder > /dev/null
           cp $root_folder/scripts/cli/src/mcp-confluent-config-local.yaml config.yaml
@@ -16149,9 +16149,11 @@ playground_ai_command() {
 
           cd - > /dev/null
       else
-          logwarn "🔐 $environment environment is used, using mcp-confluent server (https://github.com/confluentinc/mcp-confluent) to interact with the cluster will not be used, only works with plaintext for now"
+          logwarn "🔐 $environment environment is used, using mcp-confluent server (https://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html) to interact with the cluster will not be used, only works with plaintext for now"
       fi
   fi
+
+  log "consider using confluent agent skills (see https://docs.confluent.io/cloud/current/ai/ai-tools/agent-skills.html)"
 
   log "🧞‍♂️ calling claude cli: claude ${other_args[*]}"
   claude "${other_args[*]}"
