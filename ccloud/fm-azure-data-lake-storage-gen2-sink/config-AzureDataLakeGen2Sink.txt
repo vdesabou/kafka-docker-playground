@@ -225,7 +225,7 @@ Destination
 
 🔘 topics.dir
 
-Top-level directory where ingested data is stored. The `topics.dir` entry should not start with `/`.
+The top-level directory where data is written. Do not start the ``topics.dir`` entry with a forward slash (``/``). This value can be a container name or a path to a directory, for example, ``containername/subpath``.
 
 	 - Type: STRING
 	 - Default: topics
