@@ -237,7 +237,7 @@ Controls whether the generated Kafka record should contain only the state of the
 
 🔘 tombstones.on.delete
 
-Controls whether a tombstone event should be generated after a delete event. 
+Controls whether a delete event is followed by a tombstone event. The following values are possible: 
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -327,7 +327,7 @@ To match the name of a table, Debezium applies the regular expression that you s
 
 🔘 event.processing.failure.handling.mode
 
-Specifies how the connector should react to exceptions during processing of events. Possible settings are: `fail`, `skip`, and `warn`. 
+Specifies how the connector should react to exceptions during processing of events. Possible settings are ``fail``, ``skip``, and ``warn``. 
 
 	 - Type: STRING
 	 - Default: fail
@@ -345,7 +345,7 @@ To match the name of a column, Debezium applies the regular expression that you 
 
 🔘 schema.name.adjustment.mode
 
-Specifies how schema names should be adjusted for compatibility with the message converter used by the connector. Possible settings are: `none`, `avro`, and `avro_unicode`. 
+Specifies how schema names should be adjusted for compatibility with the message converter used by the connector. The following values are possible:
 
 	 - Type: STRING
 	 - Default: none
@@ -354,7 +354,7 @@ Specifies how schema names should be adjusted for compatibility with the message
 
 🔘 field.name.adjustment.mode
 
-Specifies how field names should be adjusted for compatibility with the message converter used by the connector. Possible settings are: `none`, `avro`, and `avro_unicode`. 
+Specifies how field names should be adjusted for compatibility with the message converter used by the connector. The following values are possible: 
 
 	 - Type: STRING
 	 - Default: none
@@ -432,7 +432,7 @@ How should we handle data types?
 ==========================
 🔘 decimal.handling.mode
 
-Specifies how the connector should handle values for `DECIMAL` and `NUMERIC` columns. Possible settings are: `precise`, `double`, and `string`. 
+Specifies how the connector should handle DECIMAL and NUMERIC columns. You can set one of the following options: 
 
 	 - Type: STRING
 	 - Default: precise
