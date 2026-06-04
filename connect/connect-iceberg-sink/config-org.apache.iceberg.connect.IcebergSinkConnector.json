@@ -5,7 +5,6 @@
     "iceberg.control.commit.timeout-ms": "30000",
     "iceberg.control.group-id-prefix": "cg-control-",
     "iceberg.control.topic": "control-iceberg",
-    "iceberg.coordinator-executor-keep-alive-timeout-ms": "120000",
     "iceberg.coordinator.transactional.prefix": "",
     "iceberg.hadoop-conf-dir": "",
     "iceberg.tables": "",
