@@ -165,7 +165,7 @@ How should we connect to Salesforce?
 ==========================
 🔘 salesforce.grant.type
 
-Salesforce grant type. Valid options are 'PASSWORD', 'CLIENT_CREDENTIALS' and 'JWT_BEARER'.
+OAuth grant type the connector uses for Salesforce authentication: PASSWORD, CLIENT_CREDENTIALS, or JWT_BEARER
 
 	 - Type: STRING
 	 - Default: PASSWORD
@@ -174,7 +174,7 @@ Salesforce grant type. Valid options are 'PASSWORD', 'CLIENT_CREDENTIALS' and 'J
 
 🔘 salesforce.instance
 
-The URL of the Salesforce endpoint to use. When using 'CLIENT_CREDENTIALS' grant type, provide your Salesforce domain URL. The default is https://login.salesforce.com, which directs the connector to use the endpoint specified in the authentication response.
+Salesforce endpoint URL the connector uses for API requests. For CLIENT_CREDENTIALS, use your Salesforce domain URL. Defaults to https://login.salesforce.com.
 
 	 - Type: STRING
 	 - Default: https://login.salesforce.com
@@ -187,7 +187,7 @@ The URL of the Salesforce endpoint to use. When using 'CLIENT_CREDENTIALS' grant
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The Salesforce username the connector should use.
+	 - Importance: Salesforce username for connector authentication
 	 - Required: HIGH
 
 🔘 salesforce.password
@@ -196,7 +196,7 @@ The URL of the Salesforce endpoint to use. When using 'CLIENT_CREDENTIALS' grant
 
 	 - Type: false
 	 - Default: PASSWORD
-	 - Importance: The Salesforce password the connector should use.
+	 - Importance: Salesforce account password for connector authentication
 	 - Required: HIGH
 
 🔘 salesforce.password.token
@@ -205,7 +205,7 @@ The URL of the Salesforce endpoint to use. When using 'CLIENT_CREDENTIALS' grant
 
 	 - Type: false
 	 - Default: PASSWORD
-	 - Importance: The Salesforce security token associated with the username.
+	 - Importance: Security token associated with the Salesforce username
 	 - Required: HIGH
 
 🔘 salesforce.consumer.key
@@ -214,7 +214,7 @@ The URL of the Salesforce endpoint to use. When using 'CLIENT_CREDENTIALS' grant
 
 	 - Type: true
 	 - Default: PASSWORD
-	 - Importance: The client id(consumer key) for the Salesforce Connected app.
+	 - Importance: Client ID (consumer key) for the Salesforce connected app
 	 - Required: HIGH
 
 🔘 salesforce.consumer.secret
@@ -223,7 +223,7 @@ The URL of the Salesforce endpoint to use. When using 'CLIENT_CREDENTIALS' grant
 
 	 - Type: false
 	 - Default: PASSWORD
-	 - Importance: The client secret(consumer secret) for the Salesforce Connected app.
+	 - Importance: Client secret (consumer secret) for the Salesforce connected app
 	 - Required: MEDIUM
 
 🔘 salesforce.jwt.keystore.file
@@ -232,7 +232,7 @@ The URL of the Salesforce endpoint to use. When using 'CLIENT_CREDENTIALS' grant
 
 	 - Type: false
 	 - Default: PASSWORD
-	 - Importance: Salesforce JWT keystore file which contains the private key.
+	 - Importance: Keystore file that stores the private key for JWT authentication
 	 - Required: MEDIUM
 
 🔘 salesforce.jwt.keystore.password
@@ -241,7 +241,7 @@ The URL of the Salesforce endpoint to use. When using 'CLIENT_CREDENTIALS' grant
 
 	 - Type: false
 	 - Default: PASSWORD
-	 - Importance: Password used to access JWT keystore file.
+	 - Importance: Password that unlocks the JWT keystore file
 	 - Required: MEDIUM
 
 🔘 salesforce.object.num
@@ -726,7 +726,7 @@ Error handling behavior config for any API errors.
 
 🔘 request.max.retries.time.ms
 
-In case of error when making a request to Salesforce, the connector will retry until this time (in ms) elapses. The default value is 30000 (30 seconds). Minimum value is 1 sec
+Maximum time in milliseconds until the connector stops retrying failed Salesforce requests. Default is 30000 and minimum is 1000.
 
 	 - Type: LONG
 	 - Default: 30000
