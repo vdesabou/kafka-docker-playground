@@ -1,0 +1,357 @@
+==========================
+Connection
+==========================
+🔘 errors.tolerance
+
+Should we tolerate exceptions? default: none
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 hostname
+
+hostname
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 port
+
+port
+
+	 - Type: INT
+	 - Default: 8443
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 database
+
+database
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: LOW
+	 - Required: false
+
+🔘 username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: username
+	 - Required: LOW
+
+🔘 password
+
+password
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+🔘 ssl
+
+enabled SSL. default: false
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 jdbcConnectionProperties
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Clickhouse JDBC connection properties. default: empty
+	 - Required: LOW
+
+🔘 timeoutSeconds
+
+clickhouse driver timeout in sec
+
+	 - Type: INT
+	 - Default: 30
+	 - Importance: LOW
+	 - Required: false
+
+🔘 retryCount
+
+clickhouse driver retry 
+
+	 - Type: INT
+	 - Default: 3
+	 - Importance: LOW
+	 - Required: false
+
+🔘 tableRefreshInterval
+
+table refresh interval in sec, default: 0
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 exactlyOnce
+
+enable exactly once semantics. default: false
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 suppressTableExistenceException
+
+suppress table existence exception. default: false
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 clickhouseSettings
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma-separated list of ClickHouse settings to be appended to the JDBC URL
+	 - Required: LOW
+
+🔘 topic2TableMap
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: A comma-separated list of topic=table mappings
+	 - Required: LOW
+
+🔘 customInsertFormat
+
+enable custom insert format only for org.apache.kafka.connect.storage.StringConverter. default: false
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 insertFormat
+
+Set insert format when using org.apache.kafka.connect.storage.StringConverter
+
+	 - Type: STRING
+	 - Default: none
+	 - Importance: LOW
+	 - Required: false
+
+🔘 proxyType
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: What type of proxy to use. Default: none
+	 - Required: LOW
+
+🔘 proxyHost
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: If we're using a proxy, what is the host?
+	 - Required: LOW
+
+🔘 proxyPort
+
+If we're using a proxy, what is the port?
+
+	 - Type: INT
+	 - Default: -1
+	 - Importance: LOW
+	 - Required: false
+
+🔘 zkPath
+
+This is the zookeeper path for the state store
+
+	 - Type: STRING
+	 - Default: /kafka-connect
+	 - Importance: LOW
+	 - Required: false
+
+🔘 zkDatabase
+
+This is the database for the state store
+
+	 - Type: STRING
+	 - Default: connect_state
+	 - Importance: LOW
+	 - Required: false
+
+🔘 enableDbTopicSplit
+
+enable database topic split from topic name. default: false
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 dbTopicSplitChar
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Database topic split character. Default: none
+	 - Required: LOW
+
+🔘 keeperOnCluster
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Which cluster keeper is on. Only needed for self-hosted clusters using exactly-once. Default: ''
+	 - Required: LOW
+
+🔘 bypassRowBinary
+
+Bypass RowBinary format, sometimes needed with data gaps. default: false
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 dateTimeFormats
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Date time formats for parsing date time fields (e.g. 'someDateField=yyyy-MM-dd HH:mm:ss.SSSSSSSSS'). default: ''
+	 - Required: LOW
+
+🔘 client_version
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Client version
+	 - Required: LOW
+
+🔘 tolerateStateMismatch
+
+Tolerate state mismatch. default: false
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 bypassSchemaValidation
+
+Bypass schema validation. default: false
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 bypassFieldCleanup
+
+Bypass field cleanup. default: false
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 ignorePartitionsWhenBatching
+
+Ignore partitions when batching. Flag ignored when exactlyOnce=true. default: false
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 bufferCount
+
+Number of records to buffer before flushing to ClickHouse. 0 means no buffering (default). When enabled, records from multiple poll() calls are accumulated and flushed as a single large batch.
+
+	 - Type: INT
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 bufferFlushTime
+
+Maximum time in milliseconds to buffer records before flushing, regardless of buffer count. 0 means no time-based flushing (default). Only effective when bufferCount > 0.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 reportInsertedOffsets
+
+Report only successfully inserted offsets in preCommit. default: false
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 ssl_socket_sni
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Override the SNI hostname sent in the client handshake. When set, the client will explicitly include the specified name as the server_name extension in the TLS ClientHello.This is useful to avoid handshake failure when routing TLS traffic through a proxy, where the proxy hostname and the server hostname may differ. Default: ''
+	 - Required: LOW
+
+==========================
+DDL
+==========================
+🔘 auto.evolve
+
+Whether to automatically add columns to the destination table when a record contains fields not present in the table. default: false
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 auto.evolve.ddl.refresh.retries
+
+Number of retries when waiting for DDL changes to propagate after schema evolution. default: 3
+
+	 - Type: INT
+	 - Default: 3
+	 - Importance: LOW
+	 - Required: false
+
+🔘 auto.evolve.struct.to.json
+
+Whether to map Connect STRUCT fields to ClickHouse JSON columns during schema evolution. default: false
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
