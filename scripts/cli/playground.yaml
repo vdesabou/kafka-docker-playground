@@ -1411,6 +1411,58 @@ subcommands:
             
             Allowed values: AVRO, JSON, PROTOBUF
             
+      - name: set-alias
+        description: | 
+          🔯 Set a subject alias (see https://docs.confluent.io/platform/8.2/schema-registry/fundamentals/index.html#subject-aliases)
+            
+            CP 7.4.1 or higher is required to have this feature
+        usage: playground schema set-alias [OPTIONS]
+        options:
+        - names:
+          - --subject
+          argument: SUBJECT
+          description: | 
+            📛 Subject name
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --alias
+          argument: ALIAS
+          description: | 
+            🔯 Alias name
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+      - name: get-alias
+        description: | 
+          🔯 Get subject alias
+            
+            CP 7.4.1 or higher is required to have this feature
+        usage: playground schema get-alias [OPTIONS]
+        options:
+        - names:
+          - --alias
+          argument: ALIAS
+          description: | 
+            🔯 Alias name
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
   - name: tcp-proxy
     description: | 
         🏚 Zazkia TCP Proxy commands

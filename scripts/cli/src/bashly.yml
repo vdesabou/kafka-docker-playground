@@ -1813,6 +1813,49 @@ commands:
 
         playground schema derive-schema --payload '{"sport": "Football"}' --schema-type PROTOBUF
 
+  - name: set-alias
+    filters:
+    - not_mdc_environment
+    - schema_registry_running
+    group: Schema
+    help: |-
+      🔯 Set a subject alias (see https://docs.confluent.io/platform/8.2/schema-registry/fundamentals/index.html#subject-aliases)
+
+      CP 7.4.1 or higher is required to have this feature
+    flags:
+    - long: --subject
+      required: true
+      arg: subject
+      completions:
+        - $(playground get-subject-list)
+      help: |-
+        📛 Subject name
+    - long: --alias
+      required: true
+      arg: alias
+      help: |-
+        🔯 Alias name
+    - *verbose
+
+  - name: get-alias
+    filters:
+    - not_mdc_environment
+    - schema_registry_running
+    group: Schema
+    help: |-
+      🔯 Get subject alias
+
+      CP 7.4.1 or higher is required to have this feature
+    flags:
+    - long: --alias
+      required: true
+      arg: alias
+      completions:
+        - $(playground get-subject-list)
+      help: |-
+        🔯 Alias name
+    - *verbose
+
 - name: tcp-proxy
   expose: always
   group: TCP Proxy

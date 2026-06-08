@@ -1183,6 +1183,57 @@
               "description": "🧩 Schema Registry schema \"type\":\n\n- AVRO\n- JSON (json schema)\n- PROTOBUF\n\nDefault is AVRO\n\nDefault value: AVRO\n\nAllowed values: AVRO, JSON, PROTOBUF\n"
             }
           ]
+        },
+        {
+          "name": "set-alias",
+          "description": "🔯 Set a subject alias (see https://docs.confluent.io/platform/8.2/schema-registry/fundamentals/index.html#subject-aliases)\n  \n  CP 7.4.1 or higher is required to have this feature\n",
+          "usage": "playground schema set-alias [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--subject"
+              ],
+              "argument": "SUBJECT",
+              "description": "📛 Subject name\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--alias"
+              ],
+              "argument": "ALIAS",
+              "description": "🔯 Alias name\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        },
+        {
+          "name": "get-alias",
+          "description": "🔯 Get subject alias\n  \n  CP 7.4.1 or higher is required to have this feature\n",
+          "usage": "playground schema get-alias [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--alias"
+              ],
+              "argument": "ALIAS",
+              "description": "🔯 Alias name\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
         }
       ]
     },
