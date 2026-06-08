@@ -40,7 +40,7 @@ playground container restart --container schema-registry
 sleep 5
 
 log "Set alias for subject avro-topic with alias dlq-value"
-playground schema set-alias --subject avro-topic --alias dlq-value
+playground schema set-alias --subject avro-topic-value --alias dlq-value
 
 
 log "Creating DLQ FileStream Sink connector, reading from DLQ topic using alias and writing to a file"
