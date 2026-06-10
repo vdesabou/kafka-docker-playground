@@ -56,12 +56,23 @@ fi
 
 log "Creating local functions project with HTTP trigger"
 # https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-first-azure-function-azure-cli?pivots=programming-language-javascript&tabs=bash%2Cbrowser
-docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node20-core-tools bash -c "func init LocalFunctionProj --javascript && cd LocalFunctionProj && func new --name HttpExample --template \"HTTP trigger\" --authlevel \"anonymous\""
+docker run --platform linux/amd64 -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node22 bash -c "npm install -g azure-functions-core-tools@4 --unsafe-perm && func init LocalFunctionProj --javascript && cd LocalFunctionProj && func new --name HttpExample --template \"HTTP trigger\" --authlevel \"anonymous\""
 
 log "Creating functions app $AZURE_FUNCTIONS_NAME"
-az functionapp create --consumption-plan-location $AZURE_REGION --name $AZURE_FUNCTIONS_NAME --resource-group $AZURE_RESOURCE_GROUP --runtime node --storage-account $AZURE_STORAGE_NAME --runtime-version 22 --functions-version 4 --tags owner_email=$AZ_USER cflt_managed_by=user cflt_managed_id="$USER" --disable-app-insights true
+az functionapp create --consumption-plan-location "$AZURE_REGION" --name "$AZURE_FUNCTIONS_NAME" --resource-group "$AZURE_RESOURCE_GROUP" --runtime node --storage-account "$AZURE_STORAGE_NAME" --runtime-version 22 --functions-version 4 --tags owner_email="$AZ_USER" cflt_managed_by=user cflt_managed_id="$USER" --disable-app-insights true
 
-log "Publishing functions app, it will take a while"
+# Check if the function app was created successfully
+if [ $? -eq 0 ]
+then
+    log "Azure Function App created successfully."
+else
+    logerror "❌ Failed to create Azure Function App."
+    exit 1
+fi
+
+sleep 10
+
+log "Publishing functions app $AZURE_FUNCTIONS_NAME, it will take a while"
 max_attempts="10"
 sleep_interval="60"
 attempt_num=1
@@ -86,8 +97,8 @@ attempt_num=1
 until docker run \
     --platform linux/amd64 \
     -v "$PWD/LocalFunctionProj:/LocalFunctionProj" \
-    mcr.microsoft.com/azure-functions/node:4-node20-core-tools \
-    bash -c "cd LocalFunctionProj && func azure functionapp publish \"$AZURE_FUNCTIONS_NAME\" --access-token $TOKEN"
+    mcr.microsoft.com/azure-functions/node:4-node22 \
+    bash -c "cd LocalFunctionProj && npm install -g azure-functions-core-tools@4 --unsafe-perm && npm install && func azure functionapp publish \"$AZURE_FUNCTIONS_NAME\" --access-token $TOKEN"
 do
     if (( attempt_num == max_attempts )); then
         logerror "❌ Failed after $attempt_num attempts."
@@ -105,7 +116,7 @@ attempt_num=1
 
 until [ ! -z "$FUNCTIONS_URL" ]
 do
-    output=$(docker run --platform linux/amd64 -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node20-core-tools bash -c "cd LocalFunctionProj && func azure functionapp list-functions \"$AZURE_FUNCTIONS_NAME\" --show-keys --access-token $TOKEN")
+    output=$(docker run --platform linux/amd64 -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node22 bash -c "cd LocalFunctionProj && npm install -g azure-functions-core-tools@4 --unsafe-perm && npm install && func azure functionapp list-functions \"$AZURE_FUNCTIONS_NAME\" --show-keys --access-token \"$TOKEN\"")
 
     FUNCTIONS_URL=$(echo "$output" | grep "Invoke url" | grep -Eo 'https://[^ >]+' | head -1)
 
