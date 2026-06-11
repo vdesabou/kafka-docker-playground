@@ -1588,6 +1588,9 @@ commands:
           Example: --metadata-property "metadata1=value" --metadata-property "metadata2=value"
         required: false
         repeatable: true
+      - long: --normalize
+        help: |-
+          🫧 Add ?normalize=true at the end of the request to normalize the schema. The default is false.
 
     examples: |
       playground schema register --subject test-protobuf << 'EOF'

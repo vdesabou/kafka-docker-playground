@@ -3254,6 +3254,11 @@ playground_schema_register_usage() {
     printf "    🟡 Add metadata properties to schema contract\n    \n    See docs:\n    https://docs.confluent.io/platform/current/schema-registry/fundamentals/data-contracts.html#metadata-properties\n    \n    🎓 Tip: you can pass multiple properties by specifying --metadata-property\n    multiple times\n    \n    Example: --metadata-property \"metadata1=value\" --metadata-property\n    \"metadata2=value\"\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--normalize")"
+    printf "    🫧 Add ?normalize=true at the end of the request to normalize the schema. The\n    default is false.\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -14478,7 +14483,7 @@ EOF
       fi
   fi
 
-  if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+  if [[ "$TAG" == *ubi8 ]] || [[ "$TAG" == *ubi9 ]] || version_gt $TAG_BASE "5.9.0"
   then
       export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
   else
@@ -22056,6 +22061,7 @@ playground_schema_register_command() {
   subject="${args[--subject]}"
   schema="${args[--schema]}"
   id="${args[--id]}"
+  normalize="${args[--normalize]}"
   verbose="${args[--verbose]}"
 
   eval "metadata_property=(${args[--metadata-property]})"
@@ -22254,13 +22260,20 @@ playground_schema_register_command() {
   #     exit 1
   # fi
 
-  log "⏺️ Registering schema to subject ${subject}"
+  maybe_normalize=""
+  if [[ -n "$normalize" ]]
+  then
+      maybe_normalize="?normalize=true"
+      log "⏺️ Registering schema to subject ${subject} with normalization"
+  else
+      log "⏺️ Registering schema to subject ${subject}"
+  fi
   #url encode subject
   subject=$(urlencode "${subject}")
   if [[ -n "$verbose" ]]
   then
       log "🐞 curl command used"
-      echo "curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" --header 'Content-Type: application/vnd.schemaregistry.v1+json' --data "$json_new""
+      echo "curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions${maybe_normalize}" --header 'Content-Type: application/vnd.schemaregistry.v1+json' --data "$json_new""
   fi
   curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" --header 'Content-Type: application/vnd.schemaregistry.v1+json' --data "$json_new" | jq .
 
@@ -40261,6 +40274,14 @@ playground_schema_register_parse_requirements() {
           printf "%s\n" "--metadata-property requires an argument: --metadata-property METADATA-PROPERTY" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --normalize)
+
+        # :flag.case_no_arg
+        args['--normalize']=1
+        shift
         ;;
 
       -?*)

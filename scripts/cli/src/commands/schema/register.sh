@@ -1,6 +1,7 @@
 subject="${args[--subject]}"
 schema="${args[--schema]}"
 id="${args[--id]}"
+normalize="${args[--normalize]}"
 verbose="${args[--verbose]}"
 
 eval "metadata_property=(${args[--metadata-property]})"
@@ -195,12 +196,19 @@ fi
 #     exit 1
 # fi
 
-log "⏺️ Registering schema to subject ${subject}"
+maybe_normalize=""
+if [[ -n "$normalize" ]]
+then
+    maybe_normalize="?normalize=true"
+    log "⏺️ Registering schema to subject ${subject} with normalization"
+else
+    log "⏺️ Registering schema to subject ${subject}"
+fi
 #url encode subject
 subject=$(urlencode "${subject}")
 if [[ -n "$verbose" ]]
 then
     log "🐞 curl command used"
-    echo "curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" --header 'Content-Type: application/vnd.schemaregistry.v1+json' --data "$json_new""
+    echo "curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions${maybe_normalize}" --header 'Content-Type: application/vnd.schemaregistry.v1+json' --data "$json_new""
 fi
 curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" --header 'Content-Type: application/vnd.schemaregistry.v1+json' --data "$json_new" | jq .

@@ -1198,6 +1198,12 @@ subcommands:
             
             Repeatable: ✓ Yes
             
+        - names:
+          - --normalize
+          argument: ""
+          description: | 
+            🫧 Add ?normalize=true at the end of the request to normalize the schema. The default is false.
+            
       - name: get-compatibility
         description: | 
           🛡️ Get subject-level compatibility
