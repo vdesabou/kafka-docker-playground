@@ -1,6 +1,7 @@
 containers="${args[--container]}"
 open="${args[--open]}"
 log="${args[--wait-for-log]}"
+grep="${args[--grep]}"
 max_wait="${args[--max-wait]}"
 
 # Convert space-separated string to array
@@ -21,6 +22,14 @@ do
 	elif [[ -n "$log" ]]
 	then
 		wait_for_log "$log" "$container" "$max_wait"
+	elif [[ -n "$grep" ]]
+	then
+		if [ ${#container_array[@]} -gt 1 ]; then
+			# For multiple containers, filter and prefix each stream in parallel.
+			docker container logs --tail=200 -f "$container" 2>&1 | grep --line-buffered "$grep" | sed "s/^/[$container] /" &
+		else
+			docker container logs --tail=200 -f "$container" 2>&1 | grep --line-buffered "$grep"
+		fi
 	else 
 		# For multiple containers, run docker logs in parallel in background
 		if [ ${#container_array[@]} -gt 1 ]; then

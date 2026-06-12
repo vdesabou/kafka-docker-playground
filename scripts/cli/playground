@@ -5378,20 +5378,27 @@ playground_container_logs_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
     printf "    🔖 Save output to a file and open with text editor set with playground config\n    editor <editor> (default is code)\n"
-    printf "    %s\n" "Conflicts: --wait-for-log"
+    printf "    %s\n" "Conflicts: --wait-for-log, --grep"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--wait-for-log, -w LOG")"
     printf "    😴 Wait until log appears\n"
-    printf "    %s\n" "Conflicts: --open"
+    printf "    %s\n" "Conflicts: --open, --grep"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--max-wait, -m MAX_WAIT")"
     printf "    ⏳ Max time in seconds to wait when using --wait-for-log (default 600s)\n"
     printf "    %s\n" "Default: 600"
-    printf "    %s\n" "Conflicts: --open"
+    printf "    %s\n" "Conflicts: --open, --grep"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--grep GREP")"
+    printf "    🎯 Grep pattern to filter logs\n"
+    printf "    %s\n" "Default: "
+    printf "    %s\n" "Conflicts: --open, --wait-for-log"
     echo
 
     # :command.usage_fixed_flags
@@ -5408,6 +5415,7 @@ playground_container_logs_usage() {
     printf "  playground container logs --container schema-registry --container\n  ksqldb-server --open\n"
     printf "  playground container logs -c broker -c connect -c schema-registry\n"
     printf "  playground container logs -c connect -c broker --wait-for-log \"ERROR\"\n  --max-wait 120\n"
+    printf "  playground container logs --container connect --grep \"ERROR\"\n"
     echo
 
   fi
@@ -7481,7 +7489,7 @@ playground_connector_display_metrics_api_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
     printf "    🔖 Save output to a file and open with text editor set with playground config\n    editor <editor> (default is code)\n"
-    printf "    %s\n" "Conflicts: --wait-for-log"
+    printf "    %s\n" "Conflicts: --wait-for-log, --grep"
     echo
 
     # :flag.usage
@@ -7692,13 +7700,13 @@ playground_connector_logs_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
     printf "    🔖 Save output to a file and open with text editor set with playground config\n    editor <editor> (default is code)\n"
-    printf "    %s\n" "Conflicts: --wait-for-log"
+    printf "    %s\n" "Conflicts: --wait-for-log, --grep"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--wait-for-log, -w LOG")"
     printf "    😴 Wait until log appears\n"
-    printf "    %s\n" "Conflicts: --open"
+    printf "    %s\n" "Conflicts: --open, --grep"
     echo
 
     # :flag.usage
@@ -24696,6 +24704,7 @@ playground_container_logs_command() {
   containers="${args[--container]}"
   open="${args[--open]}"
   log="${args[--wait-for-log]}"
+  grep="${args[--grep]}"
   max_wait="${args[--max-wait]}"
 
   # Convert space-separated string to array
@@ -24716,6 +24725,14 @@ playground_container_logs_command() {
   	elif [[ -n "$log" ]]
   	then
   		wait_for_log "$log" "$container" "$max_wait"
+  	elif [[ -n "$grep" ]]
+  	then
+  		if [ ${#container_array[@]} -gt 1 ]; then
+  			# For multiple containers, filter and prefix each stream in parallel.
+  			docker container logs --tail=200 -f "$container" 2>&1 | grep --line-buffered "$grep" | sed "s/^/[$container] /" &
+  		else
+  			docker container logs --tail=200 -f "$container" 2>&1 | grep --line-buffered "$grep"
+  		fi
   	else
 
   		# For multiple containers, run docker logs in parallel in background
@@ -45386,10 +45403,12 @@ playground_container_logs_parse_requirements() {
       # :flag.case
       --open | -o)
         # :flag.conflicts
-        if [[ -n "${args['--wait-for-log']:-}" ]]; then
-          printf "conflicting options: %s cannot be used with %s\n" "$key" "--wait-for-log" >&2
-          exit 1
-        fi
+        for conflict in --wait-for-log --grep; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
 
         # :flag.case_no_arg
         args['--open']=1
@@ -45399,10 +45418,12 @@ playground_container_logs_parse_requirements() {
       # :flag.case
       --wait-for-log | -w)
         # :flag.conflicts
-        if [[ -n "${args['--open']:-}" ]]; then
-          printf "conflicting options: %s cannot be used with %s\n" "$key" "--open" >&2
-          exit 1
-        fi
+        for conflict in --open --grep; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
@@ -45418,10 +45439,12 @@ playground_container_logs_parse_requirements() {
       # :flag.case
       --max-wait | -m)
         # :flag.conflicts
-        if [[ -n "${args['--open']:-}" ]]; then
-          printf "conflicting options: %s cannot be used with %s\n" "$key" "--open" >&2
-          exit 1
-        fi
+        for conflict in --open --grep; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
@@ -45430,6 +45453,27 @@ playground_container_logs_parse_requirements() {
           shift
         else
           printf "%s\n" "--max-wait requires an argument: --max-wait, -m MAX_WAIT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --grep)
+        # :flag.conflicts
+        for conflict in --open --wait-for-log; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--grep']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--grep requires an argument: --grep GREP" >&2
           exit 1
         fi
         ;;
@@ -45453,6 +45497,7 @@ playground_container_logs_parse_requirements() {
   # :command.default_assignments
   [[ -n ${args['--container']:-} ]] || args['--container']="connect"
   [[ -n ${args['--max-wait']:-} ]] || args['--max-wait']="600"
+  [[ -n ${args['--grep']:-} ]] || args['--grep']=""
 
   # :command.validations
   # :flag.validations
@@ -50402,10 +50447,12 @@ playground_connector_display_metrics_api_parse_requirements() {
       # :flag.case
       --open | -o)
         # :flag.conflicts
-        if [[ -n "${args['--wait-for-log']:-}" ]]; then
-          printf "conflicting options: %s cannot be used with %s\n" "$key" "--wait-for-log" >&2
-          exit 1
-        fi
+        for conflict in --wait-for-log --grep; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
 
         # :flag.case_no_arg
         args['--open']=1
@@ -50832,10 +50879,12 @@ playground_connector_logs_parse_requirements() {
       # :flag.case
       --open | -o)
         # :flag.conflicts
-        if [[ -n "${args['--wait-for-log']:-}" ]]; then
-          printf "conflicting options: %s cannot be used with %s\n" "$key" "--wait-for-log" >&2
-          exit 1
-        fi
+        for conflict in --wait-for-log --grep; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
 
         # :flag.case_no_arg
         args['--open']=1
@@ -50845,10 +50894,12 @@ playground_connector_logs_parse_requirements() {
       # :flag.case
       --wait-for-log | -w)
         # :flag.conflicts
-        if [[ -n "${args['--open']:-}" ]]; then
-          printf "conflicting options: %s cannot be used with %s\n" "$key" "--open" >&2
-          exit 1
-        fi
+        for conflict in --open --grep; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then

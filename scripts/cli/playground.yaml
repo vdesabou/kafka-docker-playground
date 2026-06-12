@@ -2487,7 +2487,7 @@ subcommands:
           description: | 
             🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
             
-            Conflicts with: --wait-for-log
+            Conflicts with: --wait-for-log, --grep
             
         - names:
           - --wait-for-log
@@ -2496,7 +2496,7 @@ subcommands:
           description: | 
             😴 Wait until log appears
             
-            Conflicts with: --open
+            Conflicts with: --open, --grep
             
         - names:
           - --max-wait
@@ -2507,7 +2507,17 @@ subcommands:
             
             Default value: 600
             
-            Conflicts with: --open
+            Conflicts with: --open, --grep
+            
+        - names:
+          - --grep
+          argument: 
+          description: | 
+            🎯 Grep pattern to filter logs
+            
+            Default value: 
+            
+            Conflicts with: --open, --wait-for-log
             
       - name: display-error-all-containers
         description: | 
@@ -3938,7 +3948,7 @@ subcommands:
           description: | 
             🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
             
-            Conflicts with: --wait-for-log
+            Conflicts with: --wait-for-log, --grep
             
         - names:
           - --verbose
@@ -4060,7 +4070,7 @@ subcommands:
           description: | 
             🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
             
-            Conflicts with: --wait-for-log
+            Conflicts with: --wait-for-log, --grep
             
         - names:
           - --wait-for-log
@@ -4069,7 +4079,7 @@ subcommands:
           description: | 
             😴 Wait until log appears
             
-            Conflicts with: --open
+            Conflicts with: --open, --grep
             
         - names:
           - --verbose

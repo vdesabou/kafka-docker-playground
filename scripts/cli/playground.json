@@ -2153,7 +2153,7 @@
                 "-o"
               ],
               "argument": "",
-              "description": "🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)\n\nConflicts with: --wait-for-log\n"
+              "description": "🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)\n\nConflicts with: --wait-for-log, --grep\n"
             },
             {
               "names": [
@@ -2161,7 +2161,7 @@
                 "-w"
               ],
               "argument": "LOG",
-              "description": "😴 Wait until log appears\n\nConflicts with: --open\n"
+              "description": "😴 Wait until log appears\n\nConflicts with: --open, --grep\n"
             },
             {
               "names": [
@@ -2169,7 +2169,14 @@
                 "-m"
               ],
               "argument": 600,
-              "description": "⏳ Max time in seconds to wait when using --wait-for-log (default 600s)\n\nDefault value: 600\n\nConflicts with: --open\n"
+              "description": "⏳ Max time in seconds to wait when using --wait-for-log (default 600s)\n\nDefault value: 600\n\nConflicts with: --open, --grep\n"
+            },
+            {
+              "names": [
+                "--grep"
+              ],
+              "argument": null,
+              "description": "🎯 Grep pattern to filter logs\n\nDefault value: \n\nConflicts with: --open, --wait-for-log\n"
             }
           ]
         },
@@ -3503,7 +3510,7 @@
                 "-o"
               ],
               "argument": "",
-              "description": "🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)\n\nConflicts with: --wait-for-log\n"
+              "description": "🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)\n\nConflicts with: --wait-for-log, --grep\n"
             },
             {
               "names": [
@@ -3635,7 +3642,7 @@
                 "-o"
               ],
               "argument": "",
-              "description": "🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)\n\nConflicts with: --wait-for-log\n"
+              "description": "🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)\n\nConflicts with: --wait-for-log, --grep\n"
             },
             {
               "names": [
@@ -3643,7 +3650,7 @@
                 "-w"
               ],
               "argument": "LOG",
-              "description": "😴 Wait until log appears\n\nConflicts with: --open\n"
+              "description": "😴 Wait until log appears\n\nConflicts with: --open, --grep\n"
             },
             {
               "names": [

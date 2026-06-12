@@ -2701,7 +2701,7 @@ commands:
         short: -o
         help: |- 
           🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
-        conflicts: [--wait-for-log]
+        conflicts: [--wait-for-log, --grep]
       - &logswaitforlog
         long: --wait-for-log
         short: -w
@@ -2709,7 +2709,7 @@ commands:
         validate: not_empty
         help: |- 
           😴 Wait until log appears
-        conflicts: [--open]
+        conflicts: [--open, --grep]
       - &logsmaxwait
         long: --max-wait
         short: -m
@@ -2718,8 +2718,15 @@ commands:
         default: "600"
         help: |- 
           ⏳ Max time in seconds to wait when using --wait-for-log (default 600s)
-        conflicts: [--open]
+        conflicts: [--open, --grep]
+      - long: --grep
+        arg: grep
+        required: false
+        default: ""
+        help: |-
+          🎯 Grep pattern to filter logs
 
+        conflicts: [--open, --wait-for-log]
       examples:
       - playground container logs --container connect
       - playground container logs -c connect --open
@@ -2728,6 +2735,7 @@ commands:
       - playground container logs --container schema-registry --container ksqldb-server --open
       - playground container logs -c broker -c connect -c schema-registry
       - playground container logs -c connect -c broker --wait-for-log "ERROR" --max-wait 120
+      - playground container logs --container connect --grep "ERROR"
 
     - name: display-error-all-containers
       group: Container

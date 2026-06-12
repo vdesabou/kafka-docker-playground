@@ -1443,7 +1443,7 @@ _playground_completions() {
       ;;
 
     *'container logs'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help --max-wait --open --wait-for-log -c -h -m -o -w")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --grep --help --max-wait --open --wait-for-log -c -h -m -o -w")" -- "$cur")
       ;;
 
     *'topic delete'*'-t')
