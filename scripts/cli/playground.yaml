@@ -1758,6 +1758,29 @@ subcommands:
             
             Required: ✓ Yes
             
+      - name: redos-check
+        description: | 
+          🪖 Check topics.regex for ReDos vulnerabilities using recheck (https://github.com/makenowjust-labs/recheck)
+        usage: playground tools redos-check [OPTIONS]
+        options:
+        - names:
+          - --topic-regex
+          argument: REGEX
+          description: | 
+            🔣 Topic regex to test
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --timeout
+          argument: 1
+          description: | 
+            Max number of seconds to wait for ReDos check.
+            
+            Default is 1 second
+            
+            Default value: 1
+            
   - name: debug
     description: | 
         🐞 Debug commands

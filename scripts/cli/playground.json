@@ -1536,6 +1536,27 @@
               "description": "📁 Folder where certificates are created\n\nRequired: ✓ Yes\n"
             }
           ]
+        },
+        {
+          "name": "redos-check",
+          "description": "🪖 Check topics.regex for ReDos vulnerabilities using recheck (https://github.com/makenowjust-labs/recheck)\n",
+          "usage": "playground tools redos-check [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--topic-regex"
+              ],
+              "argument": "REGEX",
+              "description": "🔣 Topic regex to test\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--timeout"
+              ],
+              "argument": 1,
+              "description": "Max number of seconds to wait for ReDos check.\n\nDefault is 1 second\n\nDefault value: 1\n"
+            }
+          ]
         }
       ]
     },

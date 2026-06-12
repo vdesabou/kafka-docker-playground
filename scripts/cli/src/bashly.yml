@@ -2106,6 +2106,25 @@ commands:
       help: |-
         📁 Folder where certificates are created
 
+  - name: redos-check
+    help: |-
+      🪖 Check topics.regex for ReDos vulnerabilities using recheck (https://github.com/makenowjust-labs/recheck)
+    flags:
+      - long: --topic-regex
+        arg: regex
+        required: true
+        help: |-
+          🔣 Topic regex to test
+      - long: --timeout
+        arg: timeout
+        validate: integer
+        required: false
+        default: "1"
+        help: |-
+          Max number of seconds to wait for ReDos check.
+
+          Default is 1 second
+
 - name: debug
   expose: always
   group: Debug
