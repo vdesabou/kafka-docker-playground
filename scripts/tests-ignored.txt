@@ -45,3 +45,4 @@ s3-sink-irsa.sh
 # too flaky, not sure why
 salesforce-bulkapi-sink-with-pushtopics-source-proxy.sh
 salesforce-bulkapi-sink-with-bulkapi-source-proxy.sh
+salesforce-bulkapi-sink-with-bulkapi-source.sh
