@@ -658,15 +658,6 @@ Setting this flag true, would mandate the presence of `iat` (Issued At) claim in
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 src.kafka.sasl.oauthbearer.assertion.claim.exp.minutes
-
-The (Optional) expiration time for the client assertion in minutesThe default value is 5 minutes
-
-	 - Type: INT
-	 - Default: 5
-	 - Importance: LOW
-	 - Required: false
-
 🔘 src.kafka.sasl.oauthbearer.assertion.file
 
 <p>File that contains a <em>pre-generated</em> JWT assertion.</p><p>The underlying implementation caches the file contents to avoid the performance hit of loading the file on each access. The caching mechanism will detect whenthe file changes to allow for the file to be reloaded on modifications. This allows for &quot;live&quot; assertion rotation without restarting the Kafka client.</p><p>The file contains the assertion in the serialized, three part JWT format:</p><ol><li>The <em>header</em> section is a base 64-encoded JWT header that contains values like ``alg`` (Algorithm), ``typ`` (Type, always the literal value ``JWT``), etc.</li><li>The <em>payload</em> section includes the base 64-encoded set of JWT claims, such as ``aud`` (Audience), ``iss`` (Issuer), ``sub`` (Subject), etc.</li><li>The <em>signature</em> section is the concatenated <em>header</em> and <em>payload</em> sections that was signed using a private key</li></ol><p>See <a href="https://datatracker.ietf.org/doc/html/rfc7519">RFC 7519</a> and <a href="https://datatracker.ietf.org/doc/html/rfc7515">RFC 7515</a> for more details on the JWT and JWS formats.</p><p><em>Note</em>: If a value for ``sasl.oauthbearer.assertion.file`` is provided, all other ``sasl.oauthbearer.assertion.*`` configurations are ignored.</p>
@@ -674,15 +665,6 @@ The (Optional) expiration time for the client assertion in minutesThe default va
 	 - Type: STRING
 	 - Default: null
 	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 src.kafka.sasl.oauthbearer.assertion.claim.nbf.include
-
-The (optional) setting for specifying whether to include "not before" (nbf) claim or notIf set to true, nbf claim with (current time - 1 minute) will be included in the client assertion
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
 	 - Required: false
 
 🔘 src.kafka.sasl.oauthbearer.assertion.private.key.file
@@ -710,6 +692,51 @@ The (optional) setting for specifying whether to include "not before" (nbf) clai
 	 - Type: STRING
 	 - Default: null
 	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 src.kafka.sasl.oauthbearer.aws.iam.webidentitytoken.audience
+
+The audience configured by the IAM policy and used as the audience claim in the JWT.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 src.kafka.sasl.oauthbearer.aws.iam.webidentitytoken.duration.seconds
+
+Optional configuration for length of time that the returned JWT is valid. The default is 5 minutes, and the value can range from 1 minute to 1 hour
+
+	 - Type: INT
+	 - Default: 300
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 src.kafka.sasl.oauthbearer.aws.iam.webidentitytoken.region
+
+Optional configuration to get AWS region
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 src.kafka.sasl.oauthbearer.aws.iam.webidentitytoken.signing.algorithm
+
+Supported algorithms: RS256 and ES384
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 src.kafka.sasl.oauthbearer.aws.iam.webidentitytoken.tags
+
+Optional: zero or more comma delimited key-value pairs parsed as tags (for example "key1=value1,key2=value2")
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
 	 - Required: false
 
 🔘 src.kafka.ssl.protocol
@@ -1291,15 +1318,6 @@ Setting this flag true, would mandate the presence of `iat` (Issued At) claim in
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 dest.kafka.sasl.oauthbearer.assertion.claim.exp.minutes
-
-The (Optional) expiration time for the client assertion in minutesThe default value is 5 minutes
-
-	 - Type: INT
-	 - Default: 5
-	 - Importance: LOW
-	 - Required: false
-
 🔘 dest.kafka.sasl.oauthbearer.assertion.file
 
 <p>File that contains a <em>pre-generated</em> JWT assertion.</p><p>The underlying implementation caches the file contents to avoid the performance hit of loading the file on each access. The caching mechanism will detect whenthe file changes to allow for the file to be reloaded on modifications. This allows for &quot;live&quot; assertion rotation without restarting the Kafka client.</p><p>The file contains the assertion in the serialized, three part JWT format:</p><ol><li>The <em>header</em> section is a base 64-encoded JWT header that contains values like ``alg`` (Algorithm), ``typ`` (Type, always the literal value ``JWT``), etc.</li><li>The <em>payload</em> section includes the base 64-encoded set of JWT claims, such as ``aud`` (Audience), ``iss`` (Issuer), ``sub`` (Subject), etc.</li><li>The <em>signature</em> section is the concatenated <em>header</em> and <em>payload</em> sections that was signed using a private key</li></ol><p>See <a href="https://datatracker.ietf.org/doc/html/rfc7519">RFC 7519</a> and <a href="https://datatracker.ietf.org/doc/html/rfc7515">RFC 7515</a> for more details on the JWT and JWS formats.</p><p><em>Note</em>: If a value for ``sasl.oauthbearer.assertion.file`` is provided, all other ``sasl.oauthbearer.assertion.*`` configurations are ignored.</p>
@@ -1307,15 +1325,6 @@ The (Optional) expiration time for the client assertion in minutesThe default va
 	 - Type: STRING
 	 - Default: null
 	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 dest.kafka.sasl.oauthbearer.assertion.claim.nbf.include
-
-The (optional) setting for specifying whether to include "not before" (nbf) claim or notIf set to true, nbf claim with (current time - 1 minute) will be included in the client assertion
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
 	 - Required: false
 
 🔘 dest.kafka.sasl.oauthbearer.assertion.private.key.file
@@ -1343,6 +1352,51 @@ The (optional) setting for specifying whether to include "not before" (nbf) clai
 	 - Type: STRING
 	 - Default: null
 	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 dest.kafka.sasl.oauthbearer.aws.iam.webidentitytoken.audience
+
+The audience configured by the IAM policy and used as the audience claim in the JWT.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 dest.kafka.sasl.oauthbearer.aws.iam.webidentitytoken.duration.seconds
+
+Optional configuration for length of time that the returned JWT is valid. The default is 5 minutes, and the value can range from 1 minute to 1 hour
+
+	 - Type: INT
+	 - Default: 300
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 dest.kafka.sasl.oauthbearer.aws.iam.webidentitytoken.region
+
+Optional configuration to get AWS region
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 dest.kafka.sasl.oauthbearer.aws.iam.webidentitytoken.signing.algorithm
+
+Supported algorithms: RS256 and ES384
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 dest.kafka.sasl.oauthbearer.aws.iam.webidentitytoken.tags
+
+Optional: zero or more comma delimited key-value pairs parsed as tags (for example "key1=value1,key2=value2")
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
 	 - Required: false
 
 🔘 dest.kafka.ssl.protocol
