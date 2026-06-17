@@ -142,6 +142,15 @@ Enable SSL connection to ClickHouse
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 ssl.socket.sni
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Overrides the SNI hostname sent during the TLS handshake. This property is required only when ClickHouse sits behind a proxy or load balancer whose certificate uses a different hostname than the connection URL. For typical setups, leave this property empty.
+	 - Required: LOW
+
 🔘 username
 
 ClickHouse database username
@@ -216,6 +225,33 @@ Allows disabling use of RowBinary and RowBinaryWithDefaults for Schema-based dat
 	 - Default: STRING
 	 - Importance: Date time formats for parsing DateTime64 schema fields, separated by ; (e.g. someDateField=yyyy-MM-dd HH:mm:ss.SSSSSSSSS;someOtherDateField=yyyy-MM-dd HH:mm:ss)
 	 - Required: MEDIUM
+
+🔘 auto.evolve
+
+Automatically issues an ALTER TABLE ADD COLUMN IF NOT EXISTS statement when a record contains a field that does not exist as a column in the target table. This feature requires the connector's ClickHouse user to have ALTER privileges.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 auto.evolve.struct.to.json
+
+Acts as a companion to ``auto.evolve`` property. When a new field is a nested object, this property decides whether the connector stores the new column as a single JSON column (``true``) or flattens it into multiple columns (``false``). This property has no effect unless you enable ``auto.evolve`` property.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 auto.evolve.ddl.refresh.retries
+
+Specifies the number of times the connector retries fetching the updated table description while waiting for a column added by an ``auto.evolve``-issued ALTER TABLE statement to become visible. This has no effect unless you enable ``auto.evolve`` property.
+
+	 - Type: INT
+	 - Default: 3
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 CSFLE
@@ -310,6 +346,24 @@ Allows the connector to drop records "earlier" than the current offset stored AF
 
 	 - Type: BOOLEAN
 	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 report.inserted.offsets
+
+When set to ``true``, the connector reports only the offsets of successfully inserted records back to Kafka during a commit, rather than reporting all received offsets. This setting prevents a silent data-loss path that can occur during partition rebalances.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 errors.retry.timeout
+
+Specifies the retry budget, in milliseconds, for failed record inserts. After this elapses, the connector routes a failing record to the dead-letter queue (DLQ), if configured, or fails the task. The connector logs a WARN message if you set this value below 10 seconds.
+
+	 - Type: INT
+	 - Default: 30000
 	 - Importance: MEDIUM
 	 - Required: false
 
