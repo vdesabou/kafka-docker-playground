@@ -111,7 +111,7 @@
     "transaction.boundary.interval.ms": "",
     "transaction.metadata.factory": "io.debezium.pipeline.txmetadata.DefaultTransactionMetadataFactory",
     "transforms.RemoveDots.negate": "false",
-    "transforms.RemoveDots.plugin.version": "8.2.1-ce",
+    "transforms.RemoveDots.plugin.version": "8.3.0-ce",
     "transforms.RemoveDots.predicate": "",
     "transforms.RemoveDots.regex": "",
     "transforms.RemoveDots.replacement": "",

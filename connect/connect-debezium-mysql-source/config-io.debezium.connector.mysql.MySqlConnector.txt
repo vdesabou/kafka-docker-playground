@@ -45,7 +45,7 @@ Class for the 'RemoveDots' transformation.
 Version of the 'RemoveDots' transformation.
 
 	 - Type: STRING
-	 - Default: 8.2.1-ce
+	 - Default: 8.3.0-ce
 	 - Importance: HIGH
 	 - Required: false
 

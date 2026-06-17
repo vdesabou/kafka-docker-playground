@@ -45,7 +45,7 @@ Class for the 'addTopicSuffix' transformation.
 Version of the 'addTopicSuffix' transformation.
 
 	 - Type: STRING
-	 - Default: 8.2.1-ce
+	 - Default: 8.3.0-ce
 	 - Importance: HIGH
 	 - Required: false
 
