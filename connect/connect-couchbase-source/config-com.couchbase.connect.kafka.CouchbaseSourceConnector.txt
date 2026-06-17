@@ -67,15 +67,6 @@ Addresses of Couchbase Server nodes, delimited by commas.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.network
-
-The network selection strategy for connecting to a Couchbase Server cluster that advertises alternate addresses.
-
-	 - Type: STRING
-	 - Default: auto
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.bootstrap.timeout
 
 On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
@@ -85,18 +76,18 @@ On startup, the connector will wait this long for a Couchbase connection to be e
 	 - Importance: MEDIUM
 	 - Required: false
 
-==========================
-Security
-==========================
-🔘 couchbase.trust.store.password
+🔘 couchbase.network
 
-Password for accessing the trust store.
+The network selection strategy for connecting to a Couchbase Server cluster that advertises alternate addresses.
 
-	 - Type: PASSWORD
-	 - Default: [hidden]
+	 - Type: STRING
+	 - Default: auto
 	 - Importance: MEDIUM
 	 - Required: false
 
+==========================
+Security
+==========================
 🔘 couchbase.enable.tls
 
 Use secure connection to Couchbase Server.
@@ -145,6 +136,15 @@ If you supply a value for this config property, the `couchbase.username` and `co
 🔘 couchbase.client.certificate.password
 
 Password for accessing the client certificate.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.trust.store.password
+
+Password for accessing the trust store.
 
 	 - Type: PASSWORD
 	 - Default: [hidden]
