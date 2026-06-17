@@ -988,6 +988,33 @@ The OAuth/OIDC provider URL from which the provider's <a href="https://datatrack
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 redo.log.consumer.sasl.oauthbearer.aws.iam.webidentitytoken.audience
+
+The audience configured by the IAM policy and used as the audience claim in the JWT.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.sasl.oauthbearer.aws.iam.webidentitytoken.duration.seconds
+
+Optional configuration for length of time that the returned JWT is valid. The default is 5 minutes, and the value can range from 1 minute to 1 hour
+
+	 - Type: INT
+	 - Default: 300
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 redo.log.consumer.sasl.oauthbearer.aws.iam.webidentitytoken.signing.algorithm
+
+Supported algorithms: RS256 and ES384
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 redo.log.consumer.share.acknowledgement.mode
 
 Controls the acknowledgement mode for a share consumer. If set to <code>implicit</code>, the acknowledgement mode of the consumer is implicit and it must not use <code>org.apache.kafka.clients.consumer.ShareConsumer.acknowledge()</code> to acknowledge delivery of records. Instead, delivery is acknowledged implicitly on the next call to poll or commit. If set to <code>explicit</code>, the acknowledgement mode of the consumer is explicit and it must use <code>org.apache.kafka.clients.consumer.ShareConsumer.acknowledge()</code> to acknowledge delivery of records.
