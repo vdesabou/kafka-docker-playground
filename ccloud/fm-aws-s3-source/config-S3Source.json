@@ -19,6 +19,7 @@
     "directory.delim": "/",
     "errors.tolerance": "none",
     "file.discovery.starting.timestamp": "0",
+    "file.metadata.headers.enable": "false",
     "format.bytearray.separator": "STRING",
     "format.json.schema.enable": "false",
     "header.converter": "STRING",

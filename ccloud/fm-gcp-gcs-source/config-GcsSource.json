@@ -8,6 +8,7 @@
     "directory.delim": "/",
     "errors.tolerance": "none",
     "file.discovery.starting.timestamp": "0",
+    "file.metadata.headers.enable": "false",
     "format.bytearray.separator": "STRING",
     "gcs.bucket.name": "STRING",
     "gcs.credentials.json": "PASSWORD",
