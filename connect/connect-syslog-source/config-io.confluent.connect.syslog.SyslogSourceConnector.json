@@ -5,7 +5,7 @@
     "cef.timestamp.mode": "header",
     "cef.timestamp.mode.extension_field.key": "STRING",
     "exactly.once.support": "requested",
-    "netty.event.group.type": "EPOLL",
+    "netty.event.group.type": "NIO",
     "netty.trace.addresses": "LIST",
     "netty.trace.enabled": "false",
     "netty.worker.threads": "16",
