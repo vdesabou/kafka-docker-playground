@@ -40,15 +40,6 @@ Password of the Couchbase user.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.username
-
-Name of the Couchbase user to authenticate as.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
 🔘 couchbase.bucket
 
 This property is required unless using the experimental AnalyticsSinkHandler.
@@ -57,6 +48,15 @@ This property is required unless using the experimental AnalyticsSinkHandler.
 	 - Default: STRING
 	 - Importance: Name of the Couchbase bucket to use.
 	 - Required: HIGH
+
+🔘 couchbase.username
+
+Name of the Couchbase user to authenticate as.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 couchbase.seed.nodes
 
@@ -88,6 +88,15 @@ On startup, the connector will wait this long for a Couchbase connection to be e
 ==========================
 Security
 ==========================
+🔘 couchbase.trust.store.password
+
+Password for accessing the trust store.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.enable.tls
 
 Use secure connection to Couchbase Server.
@@ -142,15 +151,6 @@ Password for accessing the client certificate.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 couchbase.trust.store.password
-
-Password for accessing the trust store.
-
-	 - Type: PASSWORD
-	 - Default: [hidden]
-	 - Importance: MEDIUM
-	 - Required: false
-
 ==========================
 Logging
 ==========================
@@ -184,15 +184,6 @@ The connector writes metrics to the log at this interval.
 ==========================
 Source Behavior
 ==========================
-🔘 couchbase.batch.size.max
-
-When the Kafka Connect framework polls the connector for new records, the connector returns no more than this many records at a time.
-
-	 - Type: INT
-	 - Default: 2000
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.scope
 
 If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket.
@@ -201,6 +192,15 @@ If you specify neither "couchbase.scope" nor "couchbase.collections", the connec
 	 - Default: STRING
 	 - Importance: If you wish to stream from all collections within a scope, specify the scope name here.
 	 - Required: MEDIUM
+
+🔘 couchbase.batch.size.max
+
+When the Kafka Connect framework polls the connector for new records, the connector returns no more than this many records at a time.
+
+	 - Type: INT
+	 - Default: 2000
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 couchbase.collection.to.topic
 
