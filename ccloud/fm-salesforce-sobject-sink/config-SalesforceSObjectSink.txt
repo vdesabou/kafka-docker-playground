@@ -742,6 +742,15 @@ Error handling behavior config for null records
 	 - Importance: LOW
 	 - Required: false
 
+🔘 ignore.null.fields
+
+Whether null field values are ignored (not sent) in records written to Salesforce. When true, null fields are omitted and Salesforce retains the existing value; when false, null fields are sent and clear the corresponding field in Salesforce. Defaults to false.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 Consumer configuration
 ==========================
