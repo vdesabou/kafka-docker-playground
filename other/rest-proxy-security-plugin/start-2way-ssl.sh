@@ -4,6 +4,29 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+set +e
+if version_gt $TAG_BASE "8.2.99"
+then
+    docker run --quiet --rm ${CP_REST_PROXY_IMAGE}:${CP_REST_PROXY_TAG} type microdnf > /dev/null 2>&1
+    if [ $? != 0 ]
+    then
+      log "🛠️ Restoring ubi minimal into ${CP_REST_PROXY_IMAGE}:${CP_REST_PROXY_TAG}"
+      pm_tmp_dir=$(mktemp -d -t pg-pm-XXXXXXXXXX)
+      cat << EOF > $pm_tmp_dir/Dockerfile
+FROM redhat/ubi9-minimal:latest AS pm
+RUN rm -f /etc/passwd /etc/group /etc/shadow /etc/gshadow /etc/subuid /etc/subgid
+
+FROM ${CP_REST_PROXY_IMAGE}:${CP_REST_PROXY_TAG}
+USER root
+COPY --from=pm / /
+RUN ldconfig
+USER appuser
+EOF
+      DOCKER_BUILDKIT=0 docker build -t ${CP_REST_PROXY_IMAGE}:${CP_REST_PROXY_TAG} $pm_tmp_dir
+      rm -rf $pm_tmp_dir
+    fi
+fi
+set -e
 
 playground start-environment --environment 2way-ssl --docker-compose-override-file "${PWD}/docker-compose.2way-ssl.yml"
 
