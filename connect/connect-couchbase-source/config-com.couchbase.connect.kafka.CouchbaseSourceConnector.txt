@@ -67,21 +67,21 @@ Addresses of Couchbase Server nodes, delimited by commas.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.bootstrap.timeout
-
-On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
-
-	 - Type: STRING
-	 - Default: 30s
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.network
 
 The network selection strategy for connecting to a Couchbase Server cluster that advertises alternate addresses.
 
 	 - Type: STRING
 	 - Default: auto
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.bootstrap.timeout
+
+On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
+
+	 - Type: STRING
+	 - Default: 30s
 	 - Importance: MEDIUM
 	 - Required: false
 
