@@ -10,6 +10,31 @@ if ! version_gt $TAG_BASE "5.3.99"; then
     head -n -1 replication-us.properties > /tmp/temp.properties ; mv /tmp/temp.properties replication-us.properties
 fi
 
+set +e
+if version_gt $TAG_BASE "8.2.99"
+then
+    docker run --quiet --rm confluentinc/cp-enterprise-replicator-executable:${TAG} type microdnf > /dev/null 2>&1
+    if [ $? != 0 ]
+    then
+      log "🛠️ Restoring ubi minimal into confluentinc/cp-enterprise-replicator-executable:${TAG}"
+      pm_tmp_dir=$(mktemp -d -t pg-pm-XXXXXXXXXX)
+      cat << EOF > $pm_tmp_dir/Dockerfile
+FROM redhat/ubi9-minimal:latest AS pm
+RUN rm -f /etc/passwd /etc/group /etc/shadow /etc/gshadow /etc/subuid /etc/subgid
+
+FROM confluentinc/cp-enterprise-replicator-executable:${TAG}
+USER root
+COPY --from=pm / /
+RUN ldconfig
+USER appuser
+EOF
+      DOCKER_BUILDKIT=0 docker build -t confluentinc/cp-enterprise-replicator-executable:${TAG} $pm_tmp_dir
+      rm -rf $pm_tmp_dir
+    fi
+fi
+set -e
+
+
 playground start-environment --environment mdc-kerberos --docker-compose-override-file "${PWD}/docker-compose.mdc-kerberos.replicator.yml"
 
 log "Sending sales in Europe cluster"
