@@ -509,43 +509,52 @@ fi
             if [ ${#payload} -lt $max_characters ]
             then
                 if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]; then
-                    # Use printf to safely pipe 8MB data to awk
-                    printf '%s\n' "$line_with_date" | awk 'BEGIN{FS=OFS="|"} {$4="Headers:"$4; $5="Key:"$5; $6="KeySchemaId:"$6; $7="Value:"$7; $8="ValueSchemaId:"$8} 1'
+                  # Use printf to safely pipe 8MB data to awk
+                  printf '%s\n' "$line_with_date" | awk -v hasv="$has_value_schema_id" 'BEGIN{FS=OFS="|"} {
+                    $4="Headers:"$4; $5="Key:"$5; $6="KeySchemaId:"$6; $7="Value:"$7;
+                    if (hasv == 1) {
+                      $8="ValueSchemaId:"$8
+                    }
+                    print
+                  }'
                 else
-                    # Use printf to safely pipe 8MB data to awk
-                    printf '%s\n' "$line_with_date" | awk 'BEGIN{FS=OFS="|"} {$4="Headers:"$4; $5="Key:"$5; $6="Value:"$6; $7="ValueSchemaId:"$7} 1'
+                  # Use printf to safely pipe 8MB data to awk
+                  printf '%s\n' "$line_with_date" | awk 'BEGIN{FS=OFS="|"} {$4="Headers:"$4; $5="Key:"$5; $6="Value:"$6} 1'
                 fi
             else
                 if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]; then
-                    printf '%s\n' "$line_with_date" | awk -v max="$max_characters" 'BEGIN{FS=OFS="|"} {
-                        # 1. Label the fields
-                        $4="Headers:"$4; $5="Key:"$5; $6="KeySchemaId:"$6; $7="Value:"$7; $8="ValueSchemaId:"$8
+                  printf '%s\n' "$line_with_date" | awk -v max="$max_characters" -v hasv="$has_value_schema_id" 'BEGIN{FS=OFS="|"} {
+                    # 1. Label the fields
+                    $4="Headers:"$4; $5="Key:"$5; $6="KeySchemaId:"$6; $7="Value:"$7
+                    if (hasv == 1) {
+                      $8="ValueSchemaId:"$8
+                    }
                         
-                        # 2. Reconstruct record implicit by field modification
-                        len = length($0)
+                    # 2. Reconstruct record implicit by field modification
+                    len = length($0)
                         
-                        # 3. Truncate if necessary
-                        if (len > max) {
-                            print substr($0, 1, max) "...<truncated, only showing first " max " characters, out of " len ">..."
-                        } else {
-                            print $0
-                        }
-                    }'
+                    # 3. Truncate if necessary
+                    if (len > max) {
+                      print substr($0, 1, max) "...<truncated, only showing first " max " characters, out of " len ">..."
+                    } else {
+                      print $0
+                    }
+                  }'
                 else
-                    printf '%s\n' "$line_with_date" | awk -v max="$max_characters" 'BEGIN{FS=OFS="|"} {
-                        # 1. Label the fields
-                        $4="Headers:"$4; $5="Key:"$5; $6="Value:"$6; $7="ValueSchemaId:"$7
+                  printf '%s\n' "$line_with_date" | awk -v max="$max_characters" 'BEGIN{FS=OFS="|"} {
+                    # 1. Label the fields
+                    $4="Headers:"$4; $5="Key:"$5; $6="Value:"$6
                         
-                        # 2. Reconstruct record implicit by field modification
-                        len = length($0)
+                    # 2. Reconstruct record implicit by field modification
+                    len = length($0)
                         
-                        # 3. Truncate if necessary
-                        if (len > max) {
-                            print substr($0, 1, max) "...<truncated, only showing first " max " characters, out of " len ">..."
-                        } else {
-                            print $0
-                        }
-                    }'
+                    # 3. Truncate if necessary
+                    if (len > max) {
+                      print substr($0, 1, max) "...<truncated, only showing first " max " characters, out of " len ">..."
+                    } else {
+                      print $0
+                    }
+                  }'
                 fi
             fi
         fi
@@ -581,6 +590,12 @@ fi
     then
       continue
     elif [[ $line =~ "SLF4J" ]]
+    then
+      continue
+    elif [[ "$line" == *"WARNING:"* ]]
+    then
+      continue
+    elif [[ "$line" == *"Set group.protocol=consumer to try it out"* ]]
     then
       continue
     else
