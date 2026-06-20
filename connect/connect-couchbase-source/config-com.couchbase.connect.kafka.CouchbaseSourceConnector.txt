@@ -58,6 +58,15 @@ This property is required unless using the experimental AnalyticsSinkHandler.
 	 - Importance: Name of the Couchbase bucket to use.
 	 - Required: HIGH
 
+🔘 couchbase.bootstrap.timeout
+
+On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
+
+	 - Type: STRING
+	 - Default: 30s
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.seed.nodes
 
 Addresses of Couchbase Server nodes, delimited by commas.
@@ -76,27 +85,9 @@ The network selection strategy for connecting to a Couchbase Server cluster that
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 couchbase.bootstrap.timeout
-
-On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
-
-	 - Type: STRING
-	 - Default: 30s
-	 - Importance: MEDIUM
-	 - Required: false
-
 ==========================
 Security
 ==========================
-🔘 couchbase.trust.store.password
-
-Password for accessing the trust store.
-
-	 - Type: PASSWORD
-	 - Default: [hidden]
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.enable.tls
 
 Use secure connection to Couchbase Server.
@@ -145,6 +136,15 @@ If you supply a value for this config property, the `couchbase.username` and `co
 🔘 couchbase.client.certificate.password
 
 Password for accessing the client certificate.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.trust.store.password
+
+Password for accessing the trust store.
 
 	 - Type: PASSWORD
 	 - Default: [hidden]
@@ -292,15 +292,6 @@ A document passes the jsonpath filter if the expression matches something in the
 	 - Importance: If you wish to filter the documents being sent, in addition to or instead of using a custom Filter class, this is applied before the couchbase.event.filter or the couchbase.source.handler
 	 - Required: MEDIUM
 
-🔘 couchbase.collections
-
-If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket.
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: If you wish to stream from specific collections, specify the qualified collection names here, separated by commas. A qualified name is the name of the scope followed by a dot (.) and then the name of the collection. For example: "tenant-foo.invoices".
-	 - Required: MEDIUM
-
 🔘 couchbase.topic
 
 Name of the Kafka topic to publish data to.
@@ -317,6 +308,15 @@ Name of the Kafka topic to publish data to.
 	 - Type: false
 	 - Default: LIST
 	 - Importance: Comma-delimited list of Couchbase metadata headers to add to records. Recognized values:
+	 - Required: MEDIUM
+
+🔘 couchbase.collections
+
+If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket.
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: If you wish to stream from specific collections, specify the qualified collection names here, separated by commas. A qualified name is the name of the scope followed by a dot (.) and then the name of the collection. For example: "tenant-foo.invoices".
 	 - Required: MEDIUM
 
 ==========================
