@@ -13,6 +13,12 @@ fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ha-kerberos.yml"
 
+if version_gt $TAG_BASE "8.2.99"
+then
+    log "Downgrade JDK to 17 for HDFS2 connector, see https://github.com/vdesabou/kafka-docker-playground/issues/7862"
+    playground container change-jdk --container connect --version 17
+fi
+
 log "Wait 80 seconds while hadoop is installing"
 sleep 80
 
