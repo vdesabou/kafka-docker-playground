@@ -499,7 +499,7 @@ _playground_completions() {
       ;;
 
     *'container change-jdk'*'--version')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "8 11 17 21 22")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "8 11 17 21 22 25")" -- "$cur")
       ;;
 
     *'connector snippets'*'--converter')

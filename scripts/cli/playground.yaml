@@ -2575,13 +2575,13 @@ subcommands:
             
         - names:
           - --version
-          argument: [8, 11, 17, 21, 22]
+          argument: [8, 11, 17, 21, 22, 25]
           description: | 
             🤎 JDK version to use
             
             Required: ✓ Yes
             
-            Allowed values: 8, 11, 17, 21, 22
+            Allowed values: 8, 11, 17, 21, 22, 25
             
       - name: exec
         description: | 

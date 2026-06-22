@@ -2789,6 +2789,7 @@ commands:
           - "17"
           - "21"
           - "22"
+          - "25"
         help: |-
           🤎 JDK version to use
 

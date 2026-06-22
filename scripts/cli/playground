@@ -5517,7 +5517,7 @@ playground_container_change_jdk_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--version VERSION (required)")"
     printf "    🤎 JDK version to use\n"
-    printf "    %s\n" "Allowed: 8, 11, 17, 21, 22"
+    printf "    %s\n" "Allowed: 8, 11, 17, 21, 22, 25"
     echo
 
     # :command.usage_fixed_flags
@@ -45763,8 +45763,8 @@ playground_container_change_jdk_parse_requirements() {
   [[ -n ${args['--container']:-} ]] || args['--container']="connect"
 
   # :command.whitelist_filter
-  if [[ ${args['--version']:-} ]] && [[ ! ${args['--version']:-} =~ ^(8|11|17|21|22)$ ]]; then
-    printf "%s\n" "--version must be one of: 8, 11, 17, 21, 22" >&2
+  if [[ ${args['--version']:-} ]] && [[ ! ${args['--version']:-} =~ ^(8|11|17|21|22|25)$ ]]; then
+    printf "%s\n" "--version must be one of: 8, 11, 17, 21, 22, 25" >&2
     exit 1
   fi
 
