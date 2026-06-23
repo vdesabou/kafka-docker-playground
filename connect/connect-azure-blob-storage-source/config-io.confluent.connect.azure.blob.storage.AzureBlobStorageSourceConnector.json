@@ -35,6 +35,7 @@
     "directory.delim": "/",
     "exactly.once.support": "requested",
     "file.discovery.starting.timestamp": "0",
+    "file.metadata.headers.enable": "false",
     "format.bytearray.extension": ".bin",
     "format.bytearray.separator": "STRING",
     "format.class": "",
