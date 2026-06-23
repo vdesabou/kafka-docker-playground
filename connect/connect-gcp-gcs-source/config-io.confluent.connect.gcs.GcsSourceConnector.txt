@@ -449,12 +449,33 @@ The contents of the JSON service key file. If empty, credentials are read from t
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 bucket.scan.parallel.enabled
+
+Enable parallel bucket scanning. When true, scans top-level folders concurrently using a thread pool with ``bucket.scan.executor.threads`` threads. When false, uses sequential scanning with a single thread scanning all of the files in the bucket.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 null
 ==========================
 🔘 local.storage
 
 
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Headers
+==========================
+🔘 file.metadata.headers.enable
+
+When true, the connector emits four Kafka record headers per record describing the source file (name, full path, last-modified timestamp, size). Headers with missing underlying values are omitted. This feature is only active in GENERIC mode; setting it to true in RESTORE_BACKUP mode (the default) has no effect. Default is false.
 
 	 - Type: BOOLEAN
 	 - Default: false
