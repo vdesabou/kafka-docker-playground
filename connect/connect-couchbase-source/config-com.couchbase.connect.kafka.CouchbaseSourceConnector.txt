@@ -58,6 +58,15 @@ Name of the Couchbase user to authenticate as.
 	 - Importance: HIGH
 	 - Required: true
 
+🔘 couchbase.bootstrap.timeout
+
+On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
+
+	 - Type: STRING
+	 - Default: 30s
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.seed.nodes
 
 Addresses of Couchbase Server nodes, delimited by commas.
@@ -73,15 +82,6 @@ The network selection strategy for connecting to a Couchbase Server cluster that
 
 	 - Type: STRING
 	 - Default: auto
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.bootstrap.timeout
-
-On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
-
-	 - Type: STRING
-	 - Default: 30s
 	 - Importance: MEDIUM
 	 - Required: false
 
