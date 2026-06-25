@@ -5,7 +5,7 @@ metadata:
   name: kraftcontroller
   namespace: confluent
 spec:
-  replicas: 3
+  replicas: 1
   dataVolumeCapacity: 10Gi
   image:
     application: ${CP_SERVER_IMAGE}:${CP_SERVER_TAG}
@@ -56,15 +56,6 @@ spec:
   image:
     application: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     init: ${CP_INIT_IMAGE}:${CP_INIT_TAG}
-  build:
-    type: onDemand
-    onDemand:
-      plugins:
-        locationType: confluentHub
-        confluentHub:
-          - name: kafka-connect-http
-            owner: confluentinc
-            version: ${HTTP_CONNECTOR_VERSION}
   dependencies:
     kafka:
       bootstrapEndpoint: kafka:9071
