@@ -20,12 +20,6 @@ fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-if version_gt $TAG_BASE "8.2.99"
-then
-    log "Downgrade JDK to 17 for HDFS3 connector, see https://github.com/vdesabou/kafka-docker-playground/issues/7862"
-    playground container change-jdk --container connect --version 17
-fi
-
 sleep 10
 
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.

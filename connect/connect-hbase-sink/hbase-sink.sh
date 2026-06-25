@@ -14,12 +14,6 @@ fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-if version_gt $TAG_BASE "8.2.99"
-then
-    log "Downgrade JDK to 17 for HBase connector, see https://github.com/vdesabou/kafka-docker-playground/issues/7862"
-    playground container change-jdk --container connect --version 17
-fi
-
 log "Sending messages to topic hbase-test"
 playground topic produce -t hbase-test --nb-messages 3 --key "key1" << 'EOF'
 value%g
