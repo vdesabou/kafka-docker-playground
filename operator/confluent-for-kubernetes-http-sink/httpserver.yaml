@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpserver
+  namespace: confluent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: httpserver
+  template:
+    metadata:
+      labels:
+        app: httpserver
+    spec:
+      containers:
+      - name: httpserver
+        image: local/httpserver-cfk:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 9006
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpserver
+  namespace: confluent
+spec:
+  selector:
+    app: httpserver
+  ports:
+  - name: http
+    port: 9006
+    targetPort: 9006

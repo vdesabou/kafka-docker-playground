@@ -1,0 +1,26 @@
+apiVersion: platform.confluent.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: http-messages
+  namespace: confluent
+spec:
+  replicas: 1
+  partitionCount: 1
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: success-responses
+  namespace: confluent
+spec:
+  replicas: 1
+  partitionCount: 1
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: error-responses
+  namespace: confluent
+spec:
+  replicas: 1
+  partitionCount: 1
