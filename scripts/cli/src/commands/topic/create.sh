@@ -35,6 +35,36 @@ then
         fi
         get_connect_image
         docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-topics --create --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --partitions $nb_partitions ${other_args[*]}
+    elif [[ "$environment" == "cfk" ]]
+    then
+        if [[ -z "$nb_partitions" ]]
+        then
+            nb_partitions=1
+        fi
+        if [[ -n "$verbose" ]]
+        then
+            log "🐞 CLI command used"
+            echo "kubectl -n confluent apply -f - << EOF"
+            echo "apiVersion: platform.confluent.io/v1beta1"
+            echo "kind: KafkaTopic"
+            echo "metadata:"
+            echo "  name: $topic"
+            echo "  namespace: confluent"
+            echo "spec:"
+            echo "  replicas: 1"
+            echo "  partitionCount: $nb_partitions"
+            echo "EOF"
+        fi
+        kubectl -n confluent apply -f - << EOF
+apiVersion: platform.confluent.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: $topic
+  namespace: confluent
+spec:
+  replicas: 1
+  partitionCount: $nb_partitions
+EOF
     else
         if [[ -n "$verbose" ]]
         then

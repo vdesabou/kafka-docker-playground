@@ -2,6 +2,13 @@ containers="${args[--container]}"
 restore_original_values="${args[--restore-original-values]}"
 mount_jscissors_files="${args[--mount-jscissors-files]}"
 
+get_environment_used
+if [[ "$environment" == "cfk" ]]
+then
+    logerror "❌ set-environment-variables is not supported in cfk mode"
+    exit 1
+fi
+
 # Convert space-separated string to array
 IFS=' ' read -ra container_array <<< "$containers"
 
@@ -53,8 +60,9 @@ EOF
     # Generate environment variables for each container
     for container in "${container_array[@]}"
     do
+                resolved_container=$(resolve_container_name_for_environment "$container")
         cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
-  $container:
+    $resolved_container:
     environment:
       DUMMY: $RANDOM
 EOF

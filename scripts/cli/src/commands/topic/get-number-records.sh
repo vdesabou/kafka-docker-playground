@@ -24,7 +24,7 @@ items=($topic)
 # Cache broker tag and container (non-ccloud) once
 cached_tag=""
 cached_broker_container=""
-if [[ "$environment" != "ccloud" ]]; then
+if [[ "$environment" != "ccloud" ]] && [[ "$environment" != "cfk" ]]; then
     cached_tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
     if [ -z "$cached_tag" ]; then
         logerror "Could not find current CP version from docker ps"
@@ -32,6 +32,23 @@ if [[ "$environment" != "ccloud" ]]; then
     fi
     get_broker_container
     cached_broker_container="$broker_container"
+fi
+
+# Cache cfk tag once
+cached_cfk_tag=""
+if [[ "$environment" == "cfk" ]]; then
+    if [ -n "$CP_CONNECT_TAG" ]; then
+        cached_cfk_tag="$CP_CONNECT_TAG"
+    elif [ -n "$TAG" ]; then
+        cached_cfk_tag="$TAG"
+    else
+        cached_cfk_tag=$(kubectl -n confluent get pod "$container" -o jsonpath='{.spec.containers[?(@.name=="connect")].image}' 2>/dev/null | awk -F':' '{print $NF}')
+    fi
+
+    if [ -z "$cached_cfk_tag" ]; then
+        logwarn "Could not determine CFK tag version, defaulting to latest GetOffsetShell class/flags"
+        cached_cfk_tag="99.99.99"
+    fi
 fi
 
 # Optimization: Prepare CCloud Kcat container once
@@ -87,6 +104,21 @@ do
             echo "$offsets" | awk '{s+=$1+1} END {print s}'
         fi
 
+    elif [[ "$environment" == "cfk" ]]
+    then
+        cfk_class_name="kafka.tools.GetOffsetShell"
+        if version_gt "$cached_cfk_tag" "7.6.9"
+        then
+            cfk_class_name="org.apache.kafka.tools.GetOffsetShell"
+        fi
+
+        cfk_parameter_for_list_broker="--bootstrap-server"
+        if ! version_gt "$cached_cfk_tag" "5.3.99"
+        then
+            cfk_parameter_for_list_broker="--broker-list"
+        fi
+
+        kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server --topic $topic --time -1 2>/dev/null | awk -F: '{sum += \$3} END {print sum+0}'"
     else
         # --- ON-PREM / LOCAL LOGIC ---
         tag="$cached_tag"

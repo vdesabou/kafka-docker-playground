@@ -66,30 +66,51 @@ else
     consumer_config_name="--consumer.config"
 fi
 
-get_broker_container
-bootstrap_server="$broker_container:9092"
-get_connect_container
-container=$connect_container
 sr_url_cli="http://schema-registry:8081"
 security=""
-if [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
+if [[ "$environment" == "cfk" ]]
 then
+  bootstrap_server="kafka:9071"
+  container="connect-0"
+  sr_url_cli="http://schemaregistry:8081"
+elif [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
+then
+  get_broker_container
+  bootstrap_server="$broker_container:9092"
+  get_connect_container
+  container=$connect_container
     container="client"
     security="$consumer_config_name /etc/kafka/consumer.properties"
 
     docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
 elif [[ "$environment" == *"ssl"* ]]
 then
+  get_broker_container
+  bootstrap_server="$broker_container:9092"
+  get_connect_container
+  container=$connect_container
     sr_url_cli="https://schema-registry:8081"
     security="$property_name schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks $property_name schema.registry.ssl.truststore.password=confluent $property_name schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks $property_name schema.registry.ssl.keystore.password=confluent $consumer_config_name /etc/kafka/secrets/client_without_interceptors.config"
 elif [[ "$environment" == "rbac-sasl-plain" ]]
 then
+  get_broker_container
+  bootstrap_server="$broker_container:9092"
+  get_connect_container
+  container=$connect_container
     security="$property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli $consumer_config_name /etc/kafka/secrets/client_without_interceptors.config"
 elif [[ "$environment" == "ldap-authorizer-sasl-plain" ]]
 then
+  get_broker_container
+  bootstrap_server="$broker_container:9092"
+  get_connect_container
+  container=$connect_container
     security="--group test-consumer-group $consumer_config_name /service/kafka/users/client.properties"
 elif [[ "$environment" == "sasl-plain" ]] || [[ "$environment" == "sasl-scram" ]] || [[ "$environment" == "ldap-sasl-plain" ]]
 then
+  get_broker_container
+  bootstrap_server="$broker_container:9092"
+  get_connect_container
+  container=$connect_container
     security="$consumer_config_name /tmp/client.properties" 
 elif [[ "$environment" == "ccloud" ]]
 then
@@ -108,7 +129,26 @@ then
       logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
       exit 1
   fi
+else
+  get_broker_container
+  bootstrap_server="$broker_container:9092"
+  get_connect_container
+  container=$connect_container
 fi
+
+run_local_consumer() {
+  if [[ "$environment" == "cfk" ]]
+  then
+    kubectl -n confluent exec "$container" -- "$@"
+  else
+    docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e KAFKA_DEBUG="" "$container" "$@"
+  fi
+}
+
+get_topic_message_count() {
+  local topic_name="$1"
+  playground topic get-number-records -t "$topic_name" | tail -1
+}
 
 if [[ -n "$timeout" ]] && [ "$timeout" != "60" ]
 then
@@ -351,7 +391,7 @@ fi
                 log "🐞 CLI command used to consume data"
                 echo "kafka-$value_type-console-consumer -bootstrap-server $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic  $property_name print.schema.ids=true $property_name schema.id.separator=\"|\" $property_name print.partition=true $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator=\"|\" --skip-message-on-error --isolation-level $isolation_level $security $nottailing1"
               fi
-              docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e KAFKA_DEBUG="" $container $nottailing2 kafka-$value_type-console-consumer -bootstrap-server $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic  $property_name print.schema.ids=true $property_name schema.id.separator="|" $property_name print.partition=true $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator="|" --skip-message-on-error --isolation-level $isolation_level $security $nottailing1 > "$fifo_path" 2>&1 &
+              run_local_consumer $nottailing2 kafka-$value_type-console-consumer -bootstrap-server $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic  $property_name print.schema.ids=true $property_name schema.id.separator="|" $property_name print.partition=true $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator="|" --skip-message-on-error --isolation-level $isolation_level $security $nottailing1 > "$fifo_path" 2>&1 &
             fi
         else
             if [[ "$environment" == "ccloud" ]]
@@ -369,7 +409,7 @@ fi
                 log "🐞 CLI command used to consume data"
                 echo "kafka-$value_type-console-consumer --bootstrap-server $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $property_name print.partition=true  $property_name print.schema.ids=true $property_name schema.id.separator=\"|\" $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator=\"|\" $property_name key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error --isolation-level $isolation_level $security $nottailing1"
               fi
-              docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e KAFKA_DEBUG="" $container $nottailing2  kafka-$value_type-console-consumer --bootstrap-server $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $property_name print.partition=true  $property_name print.schema.ids=true $property_name schema.id.separator="|" $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator="|" $property_name key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error --isolation-level $isolation_level $security $nottailing1 > "$fifo_path" 2>&1 &
+              run_local_consumer $nottailing2  kafka-$value_type-console-consumer --bootstrap-server $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $property_name print.partition=true  $property_name print.schema.ids=true $property_name schema.id.separator="|" $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator="|" $property_name key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error --isolation-level $isolation_level $security $nottailing1 > "$fifo_path" 2>&1 &
             fi
         fi
         ;;
@@ -389,7 +429,7 @@ fi
           log "🐞 CLI command used to consume data"
           echo "kafka-console-consumer --bootstrap-server $bootstrap_server --topic $topic $property_name print.partition=true $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator=\"|\" --isolation-level $isolation_level $security $nottailing1"
         fi
-        docker exec -e KAFKA_DEBUG="" $container $nottailing2 kafka-console-consumer --bootstrap-server $bootstrap_server --topic $topic $property_name print.partition=true $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator="|" --isolation-level $isolation_level $security $nottailing1 > "$fifo_path" 2>&1  &
+        run_local_consumer $nottailing2 kafka-console-consumer --bootstrap-server $bootstrap_server --topic $topic $property_name print.partition=true $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator="|" --isolation-level $isolation_level $security $nottailing1 > "$fifo_path" 2>&1  &
       fi
     ;;
   esac

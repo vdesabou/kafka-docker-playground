@@ -14,11 +14,16 @@ else
         echo "kafka-console-consumer --bootstrap-server $bootstrap_server --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security"
     fi
 
-	tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
-	if [ $? != 0 ] || [ "$tag" == "" ]
+	if [[ "$environment" == "cfk" ]]
 	then
-		logerror "Could not find current CP version from docker ps"
-		exit 1
+		tag="8.3.0"
+	else
+		tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
+		if [ $? != 0 ] || [ "$tag" == "" ]
+		then
+			logerror "Could not find current CP version from docker ps"
+			exit 1
+		fi
 	fi
 
 	formatter="kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter"
@@ -26,5 +31,10 @@ else
 		formatter="org.apache.kafka.tools.consumer.OffsetsMessageFormatter"
 	fi
 
-    docker exec -i $container kafka-console-consumer --bootstrap-server $bootstrap_server --topic __consumer_offsets --from-beginning --formatter "$formatter" $security | grep -v "_confluent-controlcenter"
+	if [[ "$environment" == "cfk" ]]
+	then
+		kubectl -n confluent exec -i $container -- kafka-console-consumer --bootstrap-server $bootstrap_server --topic __consumer_offsets --from-beginning --formatter "$formatter" $security | grep -v "_confluent-controlcenter"
+	else
+		docker exec -i $container kafka-console-consumer --bootstrap-server $bootstrap_server --topic __consumer_offsets --from-beginning --formatter "$formatter" $security | grep -v "_confluent-controlcenter"
+	fi
 fi

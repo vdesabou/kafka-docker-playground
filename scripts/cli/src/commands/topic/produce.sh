@@ -157,30 +157,51 @@ else
     producer_config_name="--producer.config"
 fi
 
-get_broker_container
-bootstrap_server="$broker_container:9092"
-get_connect_container
-container=$connect_container
 sr_url_cli="http://schema-registry:8081"
 security=""
-if [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
+if [[ "$environment" == "cfk" ]]
 then
+    bootstrap_server="kafka:9071"
+    container="connect-0"
+    sr_url_cli="http://schemaregistry:8081"
+elif [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
+then
+    get_broker_container
+    bootstrap_server="$broker_container:9092"
+    get_connect_container
+    container=$connect_container
     container="client"
     security="$producer_config_name /etc/kafka/producer.properties"
 
     docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
 elif [[ "$environment" == *"ssl"* ]]
 then
+    get_broker_container
+    bootstrap_server="$broker_container:9092"
+    get_connect_container
+    container=$connect_container
     sr_url_cli="https://schema-registry:8081"
     security="$property_name schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks $property_name schema.registry.ssl.truststore.password=confluent $property_name schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks $property_name schema.registry.ssl.keystore.password=confluent $producer_config_name /etc/kafka/secrets/client_without_interceptors.config"
 elif [[ "$environment" == "rbac-sasl-plain" ]]
 then
+    get_broker_container
+    bootstrap_server="$broker_container:9092"
+    get_connect_container
+    container=$connect_container
     security="$property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli $producer_config_name /etc/kafka/secrets/client_without_interceptors.config"
 elif [[ "$environment" == "ldap-authorizer-sasl-plain" ]]
 then
+    get_broker_container
+    bootstrap_server="$broker_container:9092"
+    get_connect_container
+    container=$connect_container
     security="$producer_config_name /service/kafka/users/client.properties"
 elif [[ "$environment" == "sasl-plain" ]] || [[ "$environment" == "sasl-scram" ]] || [[ "$environment" == "ldap-sasl-plain" ]]
 then
+    get_broker_container
+    bootstrap_server="$broker_container:9092"
+    get_connect_container
+    container=$connect_container
     security="$producer_config_name /tmp/client.properties"
 elif [[ "$environment" == "ccloud" ]]
 then
@@ -199,6 +220,11 @@ then
         logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
         exit 1
     fi
+else
+    get_broker_container
+    bootstrap_server="$broker_container:9092"
+    get_connect_container
+    container=$connect_container
 fi
 
 if [[ -n "$delete_topic" ]]
@@ -1132,6 +1158,24 @@ function handle_signal {
 # Set the signal handler
 trap handle_signal SIGINT
 
+run_local_console_producer() {
+    if [[ "$environment" == "cfk" ]]
+    then
+        kubectl -n confluent exec -i connect-0 -- kafka-console-producer "$@"
+    else
+        docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer "$@"
+    fi
+}
+
+print_local_console_producer_command() {
+    if [[ "$environment" == "cfk" ]]
+    then
+        echo "cat /tmp/verbose_input_file.txt | kubectl -n confluent exec -i connect-0 -- kafka-console-producer $*"
+    else
+        echo "cat /tmp/verbose_input_file.txt | docker exec -e KAFKA_DEBUG=\"\" -i $container kafka-console-producer $*"
+    fi
+}
+
 nb_messages_sent=0
 nb_messages_to_send=0
 stop=0
@@ -1224,16 +1268,16 @@ do
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator=\"|\" $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\""
+                            print_local_console_producer_command "$parameter_for_list_broker" "$bootstrap_server" "--topic" "$topic" $security $producer_properties $compression $tombstone "$property_name" "parse.key=true" "$property_name" "key.separator=|" "$property_name" "parse.headers=true" "$property_name" "headers.delimiter=|" "$property_name" "headers.separator=," "$property_name" "headers.key.separator=:"
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator="|" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":"
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_console_producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator="|" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":"
                     else
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator=\"|\""
+                            print_local_console_producer_command "$parameter_for_list_broker" "$bootstrap_server" "--topic" "$topic" $security $producer_properties $compression $tombstone "$property_name" "parse.key=true" "$property_name" "key.separator=|"
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator="|"
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_console_producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator="|"
                     fi
                 else
                     if [[ -n "$headers" ]]
@@ -1241,16 +1285,16 @@ do
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\""
+                            print_local_console_producer_command "$parameter_for_list_broker" "$bootstrap_server" "--topic" "$topic" $security $producer_properties $compression $tombstone "$property_name" "parse.headers=true" "$property_name" "headers.delimiter=|" "$property_name" "headers.separator=," "$property_name" "headers.key.separator=:"
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":"
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_console_producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":"
                     else
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone"
+                            print_local_console_producer_command "$parameter_for_list_broker" "$bootstrap_server" "--topic" "$topic" $security $producer_properties $compression $tombstone
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_console_producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone
                     fi
                 fi
             fi

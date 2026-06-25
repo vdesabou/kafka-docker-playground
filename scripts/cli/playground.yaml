@@ -419,6 +419,7 @@ subcommands:
         
         - plaintext
         - ccloud
+        - cfk
         - 2way-ssl
         - kerberos
         - ldap-authorizer-sasl-plain
@@ -434,7 +435,7 @@ subcommands:
         
         Default value: plaintext
         
-        Allowed values: ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain
+        Allowed values: ccloud, cfk, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain
         
     - names:
       - --file

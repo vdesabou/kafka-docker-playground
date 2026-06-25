@@ -2,6 +2,66 @@ function get_environment_used() {
   environment=$(playground state get run.environment)
 }
 
+function resolve_container_name_for_environment() {
+  local requested_name="$1"
+  local mapped_name=""
+  local prefixed_pod=""
+
+  if [[ -z "$environment" ]]
+  then
+    get_environment_used
+  fi
+
+  if [[ "$environment" != "cfk" ]]
+  then
+    echo "$requested_name"
+    return
+  fi
+
+  # Allow direct pod names first.
+  if kubectl -n confluent get pod "$requested_name" >/dev/null 2>&1
+  then
+    echo "$requested_name"
+    return
+  fi
+
+  # Most CFK components are statefulsets ending with -0.
+  if kubectl -n confluent get pod "${requested_name}-0" >/dev/null 2>&1
+  then
+    echo "${requested_name}-0"
+    return
+  fi
+
+  # Try common deployment/statefulset prefix match.
+  prefixed_pod=$(kubectl -n confluent get pods -o name 2>/dev/null | sed 's#pod/##' | grep "^${requested_name}-" | head -1)
+  if [[ -n "$prefixed_pod" ]]
+  then
+    echo "$prefixed_pod"
+    return
+  fi
+
+  # Map common docker-style component names to CFK pod names.
+  case "$requested_name" in
+    connect)
+      mapped_name="connect-0"
+      ;;
+    broker|kafka)
+      mapped_name="kafka-0"
+      ;;
+    schema-registry|schemaregistry)
+      mapped_name="schemaregistry-0"
+      ;;
+    control-center|controlcenter)
+      mapped_name="controlcenter-0"
+      ;;
+    *)
+      mapped_name="$requested_name"
+      ;;
+  esac
+
+  echo "$mapped_name"
+}
+
 function is_container_running() {
   container_name=$1
   docker inspect -f '{{.State.Running}}' "$container_name" 2>/dev/null | grep -q "true"
@@ -359,6 +419,12 @@ function get_sr_url_and_security() {
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
       sr_security="-u superUser:superUser"
+    elif [[ "$environment" == "cfk" ]]
+    then
+        # CFK Schema Registry is exposed as a Kubernetes service.
+        # Commands executed from the local machine should use a local port-forward.
+        sr_url="http://localhost:8081"
+        sr_security=""
   elif [[ "$environment" == "ccloud" ]]
   then
     if [[ ! -n "$root_folder" ]]
@@ -394,6 +460,14 @@ function get_broker_container() {
 function get_security_broker() {
   config_file_name="$1"
   get_environment_used
+
+  if [[ "$environment" == "cfk" ]]
+  then
+      container="connect-0"
+      bootstrap_server="kafka:9071"
+      security=""
+      return
+  fi
 
   get_broker_container
   container="$broker_container"

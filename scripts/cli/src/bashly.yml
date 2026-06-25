@@ -53,6 +53,10 @@ commands:
   help: Return some completion for docker ports
   private: true
 
+- name: get-container-list
+  help: Return some completion for container/pod list
+  private: true
+
 - name: get-connector-list
   help: Return some completion for connector list
   private: true
@@ -745,12 +749,13 @@ commands:
     required: false
     default: "plaintext"
     arg: environment
-    allowed: [ccloud, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain]
+    allowed: [ccloud, cfk, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain]
     help: |-
       🔐 The environment to start when running a connector example 
       
       - plaintext
       - ccloud
+      - cfk
       - 2way-ssl
       - kerberos
       - ldap-authorizer-sasl-plain
@@ -1089,6 +1094,7 @@ commands:
 
     - ccloud
     - 2way-ssl
+    - cfk
     - kerberos
     - ldap-authorizer-sasl-plain
     - ldap-sasl-plain
@@ -1109,12 +1115,13 @@ commands:
       required: false
       default: "plaintext"
       arg: environment
-      allowed: [ccloud, 2way-ssl, kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
+      allowed: [ccloud, 2way-ssl, cfk, kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
       help: |-
         🔐 The environment to start . 
         
         - ccloud
         - 2way-ssl
+        - cfk
         - kerberos
         - ldap-authorizer-sasl-plain
         - ldap-sasl-plain
@@ -1876,7 +1883,7 @@ commands:
         arg: hostname
         required: true
         completions:
-          - $(docker ps --format '{{.Names}}')
+          - $(playground get-container-list)
         help: |-
           Hostname used by the tcp proxy to forward request
       - long: --port
@@ -2146,7 +2153,7 @@ commands:
         arg: container
         repeatable: true
         completions:
-          - $(docker ps --format '{{.Names}}')
+          - $(playground get-container-list)
         help: |-
           🐳 Container name
 
@@ -2370,7 +2377,7 @@ commands:
         required: false
         arg: container
         completions:
-          - $(docker ps --format '{{.Names}}')
+          - $(playground get-container-list)
         help: |-
           🐳 Container name to extract GC log from
 
