@@ -631,6 +631,7 @@ wait-until-pods-ready "900" "10" "confluent"
 
 CONTROL_CENTER_PF_PID=""
 SCHEMA_REGISTRY_PF_PID=""
+CONNECT_PF_PID=""
 cleanup() {
   if [ -n "$CONNECTOR_ZIP_SERVER_PID" ]
   then
@@ -656,6 +657,10 @@ cleanup() {
   then
     kill "$SCHEMA_REGISTRY_PF_PID" >/dev/null 2>&1 || true
   fi
+  if [ -n "$CONNECT_PF_PID" ]
+  then
+    kill "$CONNECT_PF_PID" >/dev/null 2>&1 || true
+  fi
 }
 trap cleanup EXIT
 
@@ -664,7 +669,8 @@ kubectl -n confluent port-forward service/controlcenter 9021:9021 >/tmp/control-
 CONTROL_CENTER_PF_PID=$!
 kubectl -n confluent port-forward service/schemaregistry 8081:8081 >/tmp/schema-registry-port-forward.log 2>&1 &
 SCHEMA_REGISTRY_PF_PID=$!
-
+kubectl -n confluent port-forward service/connect 8083:8083 >/tmp/connect-port-forward.log 2>&1 &
+CONNECT_PF_PID=$!
 
 log "Control Center is reachable at http://127.0.0.1:9021"
 

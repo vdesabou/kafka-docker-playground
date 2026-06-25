@@ -53,6 +53,12 @@ then
     environment="plaintext"
 fi
 
+is_cfk=0
+if [[ "$environment" == "cfk" ]]
+then
+    is_cfk=1
+fi
+
 if [ "$json" = "-" ]
 then
     # stdin
@@ -112,24 +118,35 @@ then
 fi
 
 is_create=1
-set +e
-connectors=$(playground get-connector-list)
-ret=$?
-if [ $ret -ne 0 ]
+if [[ "$is_cfk" -eq 1 ]] && [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
 then
-    logerror "❌ Failed to get list of connectors"
-    playground get-connector-list
-    exit 1
-fi
-set -e
-items=($connectors)
-for con in ${items[@]}
-do
-    if [[ "$con" == "$connector" ]]
+    set +e
+    kubectl -n confluent get connector "$connector" > /dev/null 2>&1
+    if [[ $? -eq 0 ]]
     then
         is_create=0
     fi
-done
+    set -e
+else
+    set +e
+    connectors=$(playground get-connector-list)
+    ret=$?
+    if [ $ret -ne 0 ]
+    then
+        logerror "❌ Failed to get list of connectors"
+        playground get-connector-list
+        exit 1
+    fi
+    set -e
+    items=($connectors)
+    for con in ${items[@]}
+    do
+        if [[ "$con" == "$connector" ]]
+        then
+            is_create=0
+        fi
+    done
+fi
 
 if [[ -n "$validate" ]]
 then
@@ -141,6 +158,17 @@ then
     then
         get_ccloud_connect
         handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate"
+    elif [[ "$is_cfk" -eq 1 ]]
+    then
+        if [[ "$connector_class" == "null" ]] || [[ -z "$connector_class" ]]
+        then
+            logerror "❌ connector.class is required"
+            exit 1
+        fi
+        logwarn "⚠️ --validate with CFK currently performs basic checks only (no Connect REST validation endpoint)"
+        log "✅ Basic CFK validation passed"
+        set -e
+        validate=skipped
     else
         get_connect_url_and_security
         if [[ -n "$skip_automatic_connector_config" ]]
@@ -156,6 +184,10 @@ then
         handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$new_json_file $connect_url/connector-plugins/$connector_class/config/validate"
     fi
     set -e
+    if [[ "$validate" == "skipped" ]]
+    then
+        :
+    else
     if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
     then
         set +e
@@ -192,6 +224,7 @@ then
         exit 1
     else
         log "✅ $connector_type connector config is valid !"
+    fi
     fi
 fi
 
@@ -251,7 +284,58 @@ else
         add_connector_config_based_on_environment "$environment" "$json_content"
     fi
 
-    if [[ -n "$initial_state" ]]
+    if [[ "$is_cfk" -eq 1 ]]
+    then
+        if [[ -n "$initial_state" ]]
+        then
+            logerror "❌ --initial-state is not supported with CFK Connector CRD"
+            exit 1
+        fi
+
+        # CFK does not use docker broker aliases; normalize common broker endpoint references.
+        json_content=$(echo "$json_content" | jq 'with_entries(if (.value|type) == "string" then .value |= gsub("broker:9092"; "kafka:9071") else . end)')
+
+        connector_cr_file=$tmp_dir/connector-cr.yaml
+        connector_class=$(echo "$json_content" | jq -r '."connector.class"')
+        if [[ "$connector_class" == "null" ]] || [[ -z "$connector_class" ]]
+        then
+            logerror "❌ connector.class is required"
+            exit 1
+        fi
+
+        task_max=$(echo "$json_content" | jq -r '."tasks.max" // "1"')
+        configs_yaml=$(echo "$json_content" | jq -r 'del(."connector.class", ."tasks.max", .name) | to_entries[]? | "    \(.key): \(.value|tostring|@json)"')
+
+        {
+            echo "apiVersion: platform.confluent.io/v1beta1"
+            echo "kind: Connector"
+            echo "metadata:"
+            echo "  name: $connector"
+            echo "  namespace: confluent"
+            echo "spec:"
+            echo "  class: $connector_class"
+            echo "  taskMax: $task_max"
+            echo "  connectClusterRef:"
+            echo "    name: connect"
+            if [[ -n "$configs_yaml" ]]
+            then
+                echo "  configs:"
+                echo "$configs_yaml"
+            else
+                echo "  configs: {}"
+            fi
+        } > "$connector_cr_file"
+
+        log "📄 Generated Connector CRD manifest used for apply:"
+        sed 's/^/    /' "$connector_cr_file"
+        if [[ -n "$verbose" ]]
+        then
+            log "🐞 CLI command used"
+        fi
+        echo "kubectl -n confluent apply -f $connector_cr_file"
+
+        kubectl -n confluent apply -f "$connector_cr_file"
+    elif [[ -n "$initial_state" ]]
     then
         log "🪵 creating $connector_type connector $connector with --initial-state: $initial_state" 
         # add mandatory name field
@@ -317,6 +401,17 @@ then
 else
     log "✅ $connector_type connector $connector was successfully updated"
 fi
+
+if [[ "$is_cfk" -eq 1 ]] && [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
+then
+    kubectl -n confluent get connector "$connector" -o yaml
+    if [[ -n "$wait_for_zero_lag" ]]
+    then
+        logwarn "⏭️ --wait-for-zero-lag is not supported with CFK Connector CRD path"
+    fi
+    exit 0
+fi
+
 if [ -z "$GITHUB_RUN_NUMBER" ]
 then
     playground connector show-config --connector "$connector" --no-clipboard

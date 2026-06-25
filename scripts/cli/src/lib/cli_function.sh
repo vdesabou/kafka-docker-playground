@@ -90,6 +90,14 @@ function is_multiple_connect_workers_running() {
 function get_connect_url_and_security() {
   get_environment_used
 
+  if [[ "$environment" == "cfk" ]]
+  then
+      # CFK Connect is typically accessed through a local port-forward.
+      connect_url="http://localhost:8083"
+      security=""
+      return
+  fi
+
   connect_port="8083"
 
   if ! is_container_running "connect" && ! is_container_running "connect-us"

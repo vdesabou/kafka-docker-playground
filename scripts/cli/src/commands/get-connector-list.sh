@@ -1,4 +1,25 @@
 connector_type=$(playground state get run.connector_type)
+environment=$(playground state get run.environment_before_switch)
+if [ "$environment" = "" ]
+then
+    environment=$(playground state get run.environment)
+fi
+
+if [ "$environment" = "cfk" ] && [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
+then
+    set +e
+    connectors=$(kubectl -n confluent get connectors.platform.confluent.io -o custom-columns=NAME:.metadata.name --no-headers 2>/dev/null)
+    rc=$?
+    set -e
+
+    if [ $rc -ne 0 ]
+    then
+        exit 0
+    fi
+
+    echo "$connectors" | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
+    exit 0
+fi
 
 if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
 then
