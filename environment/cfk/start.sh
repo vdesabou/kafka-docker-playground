@@ -31,6 +31,311 @@ export CP_SCHEMA_REGISTRY_IMAGE CP_SCHEMA_REGISTRY_TAG
 export CP_CONTROL_CENTER_IMAGE CP_CONTROL_CENTER_TAG
 export CP_INIT_IMAGE CP_INIT_TAG
 
+function log_generated_yaml_file() {
+  local label="$1"
+  local file_path="$2"
+
+  if [[ -z "$file_path" ]] || [[ ! -s "$file_path" ]]
+  then
+    return
+  fi
+
+  log "$label"
+  sed 's/^/    /' "$file_path"
+}
+
+function generate_extra_pods_from_compose_override() {
+  local compose_file="$1"
+  local output_file="$2"
+  local compose_dir=""
+  local tmp_services_file
+  local service_name=""
+  local pod_name=""
+  local container_name=""
+  local image=""
+  local build_context=""
+  local build_context_abs=""
+  local auto_image=""
+  local env_list=""
+  local ports_list=""
+  local env_items=()
+  local port_items=()
+  local env_item=""
+  local port_item=""
+  local env_key=""
+  local env_value=""
+  local escaped_value=""
+  local container_port=""
+
+  if [[ ! -f "$compose_file" ]]
+  then
+    return 1
+  fi
+
+  compose_dir="$(cd "$(dirname "$compose_file")" && pwd)"
+
+  tmp_services_file=$(mktemp)
+
+  awk '
+    function trim(s) { gsub(/^[[:space:]]+|[[:space:]]+$/, "", s); return s }
+    function unquote(s) { gsub(/^"|"$/, "", s); gsub(/^\047|\047$/, "", s); return s }
+    function flush_record() {
+      if (service != "" && (image != "" || build_context != "") && service != "connect") {
+        env_joined=""
+        for (i = 1; i <= env_count; i++) {
+          env_joined = env_joined (i > 1 ? ";" : "") envs[i]
+        }
+        ports_joined=""
+        for (i = 1; i <= ports_count; i++) {
+          ports_joined = ports_joined (i > 1 ? ";" : "") ports[i]
+        }
+        print service "|" image "|" build_context "|" env_joined "|" ports_joined
+      }
+      service=""
+      image=""
+      build_context=""
+      section=""
+      env_count=0
+      ports_count=0
+      delete envs
+      delete ports
+    }
+
+    BEGIN { in_services=0; service=""; image=""; build_context=""; section=""; env_count=0; ports_count=0 }
+    /^services:[[:space:]]*$/ { in_services=1; next }
+    {
+      if (in_services == 1 && $0 ~ /^[^[:space:]]/) {
+        flush_record()
+        in_services=0
+      }
+      if (in_services == 0) {
+        next
+      }
+      if ($0 ~ /^  [A-Za-z0-9_.-]+:[[:space:]]*$/) {
+        flush_record()
+        service=$1
+        sub(/:$/, "", service)
+        next
+      }
+
+      if (service == "") {
+        next
+      }
+
+      if ($0 ~ /^    image:[[:space:]]*/) {
+        image=$0
+        sub(/^    image:[[:space:]]*/, "", image)
+        image=trim(unquote(image))
+        section=""
+        next
+      }
+      if ($0 ~ /^    build:[[:space:]]*$/) {
+        section="build"
+        next
+      }
+      if ($0 ~ /^    build:[[:space:]]*[^[:space:]].*$/) {
+        build_context=$0
+        sub(/^    build:[[:space:]]*/, "", build_context)
+        build_context=trim(unquote(build_context))
+        section=""
+        next
+      }
+      if ($0 ~ /^    environment:[[:space:]]*$/) {
+        section="environment"
+        next
+      }
+      if ($0 ~ /^    ports:[[:space:]]*$/) {
+        section="ports"
+        next
+      }
+      if ($0 ~ /^    [A-Za-z0-9_.-]+:[[:space:]]*$/) {
+        section=""
+      }
+
+      if (section == "build") {
+        if ($0 ~ /^      context:[[:space:]]*/) {
+          bc=$0
+          sub(/^      context:[[:space:]]*/, "", bc)
+          build_context=trim(unquote(bc))
+          next
+        }
+      }
+
+      if (section == "environment") {
+        if ($0 ~ /^      -[[:space:]]*/) {
+          entry=$0
+          sub(/^      -[[:space:]]*/, "", entry)
+          entry=trim(unquote(entry))
+          if (entry != "") {
+            envs[++env_count]=entry
+          }
+          next
+        }
+        if ($0 ~ /^      [A-Za-z_][A-Za-z0-9_]*:[[:space:]]*/) {
+          kv=$0
+          sub(/^      /, "", kv)
+          key=kv
+          sub(/:.*/, "", key)
+          val=kv
+          sub(/^[^:]+:[[:space:]]*/, "", val)
+          val=trim(unquote(val))
+          envs[++env_count]=key "=" val
+          next
+        }
+      }
+
+      if (section == "ports") {
+        if ($0 ~ /^      -[[:space:]]*/) {
+          p=$0
+          sub(/^      -[[:space:]]*/, "", p)
+          p=trim(unquote(p))
+          if (p != "") {
+            ports[++ports_count]=p
+          }
+          next
+        }
+      }
+    }
+    END { flush_record() }
+  ' "$compose_file" > "$tmp_services_file"
+
+  parse_compose_container_port() {
+    local raw_port="$1"
+    raw_port=$(echo "$raw_port" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
+    raw_port="${raw_port%%/*}"
+    if [[ "$raw_port" == *":"* ]]
+    then
+      raw_port="${raw_port##*:}"
+    fi
+    if [[ "$raw_port" == *"-"* ]]
+    then
+      raw_port="${raw_port%%-*}"
+    fi
+    if [[ "$raw_port" =~ ^[0-9]+$ ]]
+    then
+      echo "$raw_port"
+    fi
+  }
+
+  : > "$output_file"
+  while IFS='|' read -r service_name image build_context env_list ports_list
+  do
+    if [[ -z "$service_name" ]]
+    then
+      continue
+    fi
+
+    # Connect is managed by CFK Connect CR.
+    if [[ "$service_name" == "connect" ]]
+    then
+      continue
+    fi
+
+    pod_name=$(echo "$service_name" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9.-]+/-/g' | sed -E 's/^-+//;s/-+$//')
+    container_name="${pod_name}"
+
+    if [[ -n "$image" ]]
+    then
+      image=$(echo "$image" | envsubst)
+    elif [[ -n "$build_context" ]]
+    then
+      build_context=$(echo "$build_context" | envsubst)
+      if [[ "$build_context" = /* ]]
+      then
+        build_context_abs="$build_context"
+      else
+        build_context_abs="$compose_dir/$build_context"
+      fi
+
+      if [[ ! -d "$build_context_abs" ]]
+      then
+        logwarn "⚠️ Build context $build_context_abs for service $service_name does not exist, skipping pod"
+        continue
+      fi
+
+      auto_image="local/${pod_name}-cfk:latest"
+      log "🧱 Building image $auto_image for service $service_name from $build_context_abs"
+      docker build -t "$auto_image" "$build_context_abs"
+      image="$auto_image"
+    else
+      continue
+    fi
+
+    cat >> "$output_file" << EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ${pod_name}
+  namespace: confluent
+spec:
+  containers:
+    - name: ${container_name}
+      image: ${image}
+      imagePullPolicy: IfNotPresent
+EOF
+
+    if [[ -n "$env_list" ]]
+    then
+      echo "      env:" >> "$output_file"
+      IFS=';' read -r -a env_items <<< "$env_list"
+      for env_item in "${env_items[@]}"
+      do
+        if [[ -z "$env_item" ]]
+        then
+          continue
+        fi
+
+        if [[ "$env_item" == *"="* ]]
+        then
+          env_key="${env_item%%=*}"
+          env_value="${env_item#*=}"
+        else
+          env_key="$env_item"
+          env_value="${!env_key}"
+        fi
+
+        env_key=$(echo "$env_key" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
+        escaped_value=$(printf '%s' "$env_value" | sed 's/\\/\\\\/g; s/"/\\"/g')
+        if [[ -n "$env_key" ]]
+        then
+          {
+            echo "        - name: ${env_key}"
+            echo "          value: \"${escaped_value}\""
+          } >> "$output_file"
+        fi
+      done
+    fi
+
+    if [[ -n "$ports_list" ]]
+    then
+      IFS=';' read -r -a port_items <<< "$ports_list"
+      has_any_port=0
+      for port_item in "${port_items[@]}"
+      do
+        container_port=$(parse_compose_container_port "$port_item")
+        if [[ -n "$container_port" ]]
+        then
+          if [[ "$has_any_port" -eq 0 ]]
+          then
+            echo "      ports:" >> "$output_file"
+            has_any_port=1
+          fi
+          echo "        - containerPort: ${container_port}" >> "$output_file"
+        fi
+      done
+    fi
+  done < "$tmp_services_file"
+
+  rm -f "$tmp_services_file"
+
+  if [[ -s "$output_file" ]]
+  then
+    return 0
+  fi
+
+  return 1
+}
+
 function generate_connect_build_patch_from_compose() {
   local compose_file="$1"
   local output_file="$2"
@@ -178,6 +483,7 @@ CONNECTOR_ZIP_CHECKSUM=""
 CONNECTOR_ZIP_PLUGIN_NAME=""
 CONNECTOR_ZIP_HTTP_DIR=""
 CONNECTOR_ZIP_SERVER_PID=""
+EXTRA_PODS_FILE=""
 
 if [[ -n "$CONNECTOR_ZIP" ]]
 then
@@ -222,6 +528,7 @@ then
   if generate_connect_build_patch_from_compose "${DOCKER_COMPOSE_FILE_OVERRIDE}" "${CONNECT_BUILD_PATCH_FILE}" "$CONNECTOR_ZIP_URL" "$CONNECTOR_ZIP_CHECKSUM" "$CONNECTOR_ZIP_PLUGIN_NAME"
   then
     log "🔌 CFK Connect build plugins will be patched dynamically"
+    log_generated_yaml_file "Dynamic Connect build patch generated:" "${CONNECT_BUILD_PATCH_FILE}"
   else
     rm -f "${CONNECT_BUILD_PATCH_FILE}"
     CONNECT_BUILD_PATCH_FILE=""
@@ -233,6 +540,8 @@ then
   then
     rm -f "${CONNECT_BUILD_PATCH_FILE}"
     CONNECT_BUILD_PATCH_FILE=""
+  else
+    log_generated_yaml_file "Dynamic Connect build patch generated:" "${CONNECT_BUILD_PATCH_FILE}"
   fi
 fi
 
@@ -257,6 +566,18 @@ eval $(minikube docker-env)
 # Build/patch CP images in minikube daemon so CFK pods can use them.
 maybe_create_image
 
+if [[ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]]
+then
+  EXTRA_PODS_FILE=$(mktemp)
+  if ! generate_extra_pods_from_compose_override "${DOCKER_COMPOSE_FILE_OVERRIDE}" "${EXTRA_PODS_FILE}"
+  then
+    rm -f "${EXTRA_PODS_FILE}"
+    EXTRA_PODS_FILE=""
+  else
+    log_generated_yaml_file "Dynamic extra pods manifest generated:" "${EXTRA_PODS_FILE}"
+  fi
+fi
+
 log "Create namespace"
 kubectl create namespace confluent || true
 kubectl config set-context --current --namespace=confluent
@@ -274,6 +595,12 @@ helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes
 
 log "Deploy Confluent Platform"
 envsubst '${CP_SERVER_IMAGE} ${CP_SERVER_TAG} ${CP_CONNECT_IMAGE} ${CP_CONNECT_TAG} ${CP_SCHEMA_REGISTRY_IMAGE} ${CP_SCHEMA_REGISTRY_TAG} ${CP_CONTROL_CENTER_IMAGE} ${CP_CONTROL_CENTER_TAG} ${CP_INIT_IMAGE} ${CP_INIT_TAG}' < "${DIR}/confluent-platform.yaml" | kubectl apply -f -
+
+if [[ -n "$EXTRA_PODS_FILE" ]] && [[ -s "$EXTRA_PODS_FILE" ]]
+then
+  log "Deploy extra pods from DOCKER_COMPOSE_FILE_OVERRIDE (excluding connect)"
+  kubectl -n confluent apply -f "$EXTRA_PODS_FILE"
+fi
 
 if [[ -n "$CONNECT_BUILD_PATCH_FILE" ]] && [[ -s "$CONNECT_BUILD_PATCH_FILE" ]]
 then
@@ -316,6 +643,10 @@ cleanup() {
   if [ -n "$CONNECT_BUILD_PATCH_FILE" ]
   then
     rm -f "$CONNECT_BUILD_PATCH_FILE" >/dev/null 2>&1 || true
+  fi
+  if [ -n "$EXTRA_PODS_FILE" ]
+  then
+    rm -f "$EXTRA_PODS_FILE" >/dev/null 2>&1 || true
   fi
   if [ -n "$CONTROL_CENTER_PF_PID" ]
   then
