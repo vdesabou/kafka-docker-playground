@@ -6,6 +6,7 @@ MAX_RETRIES=5
 RETRY_INTERVAL=2
 
 connector_type=$(playground state get run.connector_type)
+environment=$(playground state get run.environment)
 
 if [[ ! -n "$connector" ]]
 then
@@ -52,6 +53,13 @@ do
     set +e
     maybe_id=""
     
+    if [[ "$environment" == "cfk" ]]
+    then
+        # Display kubectl get connector output
+        log "☸️ kubectl -n confluent get connector $connector"
+        kubectl -n confluent get connector "$connector" 2>/dev/null || true
+        echo ""
+    fi
     # --- CLOUD / CUSTOM BLOCK ---
     if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
     then

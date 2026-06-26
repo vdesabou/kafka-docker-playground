@@ -3833,63 +3833,6 @@ function handle_onprem_connect_rest_api () {
       logerror "❌ curl request failed with error code $ret!"
       return 1
   fi
-
-  maybe_display_cfk_connector_crd_result "$curl_request"
-}
-
-function maybe_display_cfk_connector_crd_result () {
-  local curl_request="$1"
-  local connector_name=""
-  local connector_endpoint=""
-
-  # Explicitly excluded by user request.
-  if [[ "$0" == *"create-or-update.sh"* ]]
-  then
-    return
-  fi
-
-  get_environment_used
-  if [[ "$environment" != "cfk" ]]
-  then
-    return
-  fi
-
-  # Only apply to connector REST endpoints.
-  if [[ "$curl_request" != *"/connectors"* ]]
-  then
-    return
-  fi
-
-  connector_endpoint=$(echo "$curl_request" | sed -nE 's#.*(/connectors[^" ]*).*#\1#p' | head -1)
-
-  # /connectors list endpoint (including query parameters)
-  if [[ "$connector_endpoint" == "/connectors" ]] || [[ "$connector_endpoint" == "/connectors?"* ]]
-  then
-    log "📋 CFK Connector CRD list"
-    kubectl -n confluent get connectors 2>/dev/null || true
-    return
-  fi
-
-  connector_name=$(echo "$connector_endpoint" | sed -nE 's#^/connectors/([^/?]+).*#\1#p' | head -1)
-  if [[ -z "$connector_name" ]]
-  then
-    return
-  fi
-
-  set +e
-  if [[ "$connector_endpoint" == *"/config"* ]]
-  then
-    log "📋 CFK Connector CRD configs for $connector_name"
-    kubectl -n confluent get connector "$connector_name" -o jsonpath='{.spec.configs}' 2>/dev/null | jq . 2>/dev/null || kubectl -n confluent get connector "$connector_name" -o yaml 2>/dev/null || true
-  elif [[ "$connector_endpoint" == *"/status"* ]]
-  then
-    log "📋 CFK Connector CRD status for $connector_name"
-    kubectl -n confluent get connector "$connector_name" -o yaml 2>/dev/null || true
-  else
-    log "📋 CFK Connector CRD state for $connector_name"
-    kubectl -n confluent get connector "$connector_name" -o yaml 2>/dev/null || true
-  fi
-  set -e
 }
 
 function display_ngrok_warning () {

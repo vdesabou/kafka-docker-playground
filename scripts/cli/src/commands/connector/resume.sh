@@ -2,6 +2,7 @@ connector="${args[--connector]}"
 verbose="${args[--verbose]}"
 
 connector_type=$(playground state get run.connector_type)
+environment=$(playground state get run.environment)
 
 if [[ ! -n "$connector" ]]
 then
@@ -26,6 +27,10 @@ do
     then
         get_ccloud_connect
         handle_ccloud_connect_rest_api "curl -s --request PUT \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/resume\" --header \"authorization: Basic $authorization\""
+    elif [[ "$environment" == "cfk" ]]
+    then
+        log "☸️ kubectl annotate connector $connector -n confluent platform.confluent.io/resume-connector=true --overwrite"
+        kubectl annotate connector "$connector" -n confluent platform.confluent.io/resume-connector="true" --overwrite >/dev/null
     else
         get_connect_url_and_security
         handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/resume\""

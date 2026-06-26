@@ -14432,63 +14432,6 @@ function handle_onprem_connect_rest_api () {
       logerror "❌ curl request failed with error code $ret!"
       return 1
   fi
-
-  maybe_display_cfk_connector_crd_result "$curl_request"
-}
-
-function maybe_display_cfk_connector_crd_result () {
-  local curl_request="$1"
-  local connector_name=""
-  local connector_endpoint=""
-
-  # Explicitly excluded by user request.
-  if [[ "$0" == *"create-or-update.sh"* ]]
-  then
-    return
-  fi
-
-  get_environment_used
-  if [[ "$environment" != "cfk" ]]
-  then
-    return
-  fi
-
-  # Only apply to connector REST endpoints.
-  if [[ "$curl_request" != *"/connectors"* ]]
-  then
-    return
-  fi
-
-  connector_endpoint=$(echo "$curl_request" | sed -nE 's#.*(/connectors[^" ]*).*#\1#p' | head -1)
-
-  # /connectors list endpoint (including query parameters)
-  if [[ "$connector_endpoint" == "/connectors" ]] || [[ "$connector_endpoint" == "/connectors?"* ]]
-  then
-    log "📋 CFK Connector CRD list"
-    kubectl -n confluent get connectors 2>/dev/null || true
-    return
-  fi
-
-  connector_name=$(echo "$connector_endpoint" | sed -nE 's#^/connectors/([^/?]+).*#\1#p' | head -1)
-  if [[ -z "$connector_name" ]]
-  then
-    return
-  fi
-
-  set +e
-  if [[ "$connector_endpoint" == *"/config"* ]]
-  then
-    log "📋 CFK Connector CRD configs for $connector_name"
-    kubectl -n confluent get connector "$connector_name" -o jsonpath='{.spec.configs}' 2>/dev/null | jq . 2>/dev/null || kubectl -n confluent get connector "$connector_name" -o yaml 2>/dev/null || true
-  elif [[ "$connector_endpoint" == *"/status"* ]]
-  then
-    log "📋 CFK Connector CRD status for $connector_name"
-    kubectl -n confluent get connector "$connector_name" -o yaml 2>/dev/null || true
-  else
-    log "📋 CFK Connector CRD state for $connector_name"
-    kubectl -n confluent get connector "$connector_name" -o yaml 2>/dev/null || true
-  fi
-  set -e
 }
 
 function display_ngrok_warning () {
@@ -29370,6 +29313,7 @@ playground_connector_status_command() {
   RETRY_INTERVAL=2
 
   connector_type=$(playground state get run.connector_type)
+  environment=$(playground state get run.environment)
 
   if [[ ! -n "$connector" ]]
   then
@@ -29416,6 +29360,13 @@ playground_connector_status_command() {
       set +e
       maybe_id=""
 
+      if [[ "$environment" == "cfk" ]]
+      then
+          # Display kubectl get connector output
+          log "☸️ kubectl -n confluent get connector $connector"
+          kubectl -n confluent get connector "$connector" 2>/dev/null || true
+          echo ""
+      fi
       # --- CLOUD / CUSTOM BLOCK ---
       if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
       then
@@ -30317,6 +30268,7 @@ playground_connector_plugins_command() {
   verbose="${args[--verbose]}"
 
   connector_type=$(playground state get run.connector_type)
+  environment=$(playground state get run.environment)
 
   log "🎨 Displaying all connector plugins installed"
   if [[ -n "$all" ]]
@@ -30326,6 +30278,10 @@ playground_connector_plugins_command() {
       then
           logerror "❌ --all is set but not supported with $connector_type connector"
           exit 1
+      elif [[ "$environment" == "cfk" ]]
+      then
+          log "☸️ kubectl -n confluent get connect connect -o json"
+          curl_output=$(kubectl -n confluent get connect connect -o json 2>/dev/null | jq -c '.status.connectorPlugins // []')
       else
           get_connect_url_and_security
           handle_onprem_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"$connect_url/connector-plugins?connectorsOnly=false\""
@@ -30338,6 +30294,10 @@ playground_connector_plugins_command() {
       then
           get_ccloud_connect
           handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins\" --header \"authorization: Basic $authorization\""
+      elif [[ "$environment" == "cfk" ]]
+      then
+          log "☸️ kubectl -n confluent get connect connect -o json"
+          curl_output=$(kubectl -n confluent get connect connect -o json 2>/dev/null | jq -c '.status.connectorPlugins // []')
       else
           get_connect_url_and_security
           handle_onprem_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"$connect_url/connector-plugins\""
@@ -30356,6 +30316,7 @@ playground_connector_pause_command() {
   verbose="${args[--verbose]}"
 
   connector_type=$(playground state get run.connector_type)
+  environment=$(playground state get run.environment)
 
   if [[ ! -n "$connector" ]]
   then
@@ -30380,6 +30341,10 @@ playground_connector_pause_command() {
       then
           get_ccloud_connect
           handle_ccloud_connect_rest_api "curl -s --request PUT \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/pause\" --header \"authorization: Basic $authorization\""
+      elif [[ "$environment" == "cfk" ]]
+      then
+          log "☸️ kubectl annotate connector $connector -n confluent platform.confluent.io/pause-connector=true --overwrite"
+          kubectl annotate connector "$connector" -n confluent platform.confluent.io/pause-connector="true" --overwrite >/dev/null
       else
           get_connect_url_and_security
           handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/pause\""
@@ -30660,6 +30625,7 @@ playground_connector_restart_command() {
   task_id="${args[--task-id]}"
 
   connector_type=$(playground state get run.connector_type)
+  environment=$(playground state get run.environment)
 
   if [[ ! -n "$connector" ]]
   then
@@ -30698,6 +30664,15 @@ playground_connector_restart_command() {
               handle_ccloud_connect_rest_api "curl -s --request POST \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/tasks/$task_id/restart\" --header \"authorization: Basic $authorization\""
           else
               handle_ccloud_connect_rest_api "curl -s --request POST \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/restart\" --header \"authorization: Basic $authorization\""
+          fi
+      elif [[ "$environment" == "cfk" ]]
+      then
+          if [[ -n "$task_id" ]]; then
+              log "☸️ kubectl annotate connector $connector -n confluent platform.confluent.io/restart-task=$task_id --overwrite"
+              kubectl annotate connector "$connector" -n confluent platform.confluent.io/restart-task="$task_id" --overwrite >/dev/null
+          else
+              log "☸️ kubectl annotate connector $connector -n confluent platform.confluent.io/restart-connector=true --overwrite"
+              kubectl annotate connector "$connector" -n confluent platform.confluent.io/restart-connector="true" --overwrite >/dev/null
           fi
       else
               tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
@@ -30751,11 +30726,17 @@ playground_connector_stop_command() {
   verbose="${args[--verbose]}"
 
   connector_type=$(playground state get run.connector_type)
+  environment=$(playground state get run.environment)
 
   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
       log "connector stop command is not available with $connector_type connector"
       exit 0
+  fi
+
+  if [[ "$environment" == "cfk" ]]
+  then
+      log "ℹ️ CFK does not expose a dedicated stop endpoint; using REST API to stop the connector"
   fi
 
   if [[ ! -n "$connector" ]]
@@ -30768,16 +30749,19 @@ playground_connector_stop_command() {
       fi
   fi
 
-  tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
-  if [ $? != 0 ] || [ "$tag" == "" ]
+  if [[ "$environment" != "cfk" ]]
   then
-      logerror "❌ could not find current CP version from docker ps"
-      exit 1
-  fi
+      tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
+      if [ $? != 0 ] || [ "$tag" == "" ]
+      then
+          logerror "❌ could not find current CP version from docker ps"
+          exit 1
+      fi
 
-  if ! version_gt $tag "7.4.99"; then
-      logerror "❌ stop connector is available since CP 7.5 only"
-      exit 1
+      if ! version_gt $tag "7.4.99"; then
+          logerror "❌ stop connector is available since CP 7.5 only"
+          exit 1
+      fi
   fi
 
   items=($connector)
@@ -30807,6 +30791,7 @@ playground_connector_resume_command() {
   verbose="${args[--verbose]}"
 
   connector_type=$(playground state get run.connector_type)
+  environment=$(playground state get run.environment)
 
   if [[ ! -n "$connector" ]]
   then
@@ -30831,6 +30816,10 @@ playground_connector_resume_command() {
       then
           get_ccloud_connect
           handle_ccloud_connect_rest_api "curl -s --request PUT \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/resume\" --header \"authorization: Basic $authorization\""
+      elif [[ "$environment" == "cfk" ]]
+      then
+          log "☸️ kubectl annotate connector $connector -n confluent platform.confluent.io/resume-connector=true --overwrite"
+          kubectl annotate connector "$connector" -n confluent platform.confluent.io/resume-connector="true" --overwrite >/dev/null
       else
           get_connect_url_and_security
           handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/resume\""
@@ -30851,6 +30840,7 @@ playground_connector_delete_command() {
   connector="${args[--connector]}"
 
   connector_type=$(playground state get run.connector_type)
+  environment=$(playground state get run.environment)
 
   if [[ ! -n "$connector" ]]
   then
@@ -30876,6 +30866,10 @@ playground_connector_delete_command() {
       then
           get_ccloud_connect
           handle_ccloud_connect_rest_api "curl -s --request DELETE \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector\" --header \"authorization: Basic $authorization\""
+      elif [[ "$environment" == "cfk" ]]
+      then
+          log "☸️ kubectl -n confluent delete connector $connector --ignore-not-found=true"
+          kubectl -n confluent delete connector "$connector" --ignore-not-found=true >/dev/null
       else
           get_connect_url_and_security
           handle_onprem_connect_rest_api "curl $security -s -X DELETE \"$connect_url/connectors/$connector\""
@@ -31218,6 +31212,7 @@ playground_connector_show_config_command() {
   no_clipboard="${args[--no-clipboard]}"
 
   connector_type=$(playground state get run.connector_type)
+  environment=$(playground state get run.environment)
 
   if [[ ! -n "$connector" ]]
   then
@@ -31237,6 +31232,19 @@ playground_connector_show_config_command() {
   fi
   for connector in "${items[@]}"
   do
+      if [[ "$environment" == "cfk" ]]
+      then
+          log "🧰 Current config for $connector_type connector $connector (using CFK Connector CR)"
+          log "☸️ kubectl -n confluent get connector $connector -o json"
+          curl_output=$(kubectl -n confluent get connector "$connector" -o json 2>/dev/null | jq -c '.spec.configs // {}')
+          if [[ -z "$curl_output" ]] || [[ "$curl_output" == "null" ]]
+          then
+              logerror "❌ Could not get config from CFK Connector CR $connector"
+              exit 1
+          fi
+          echo "$curl_output" | jq .
+      fi
+
       if [ -f "/tmp/config-$connector" ] && [ -z "$GITHUB_RUN_NUMBER" ] && [[ ! -n "$force_rest_endpoint" ]]
       then
           log "🧰 Current config for $connector_type connector $connector"
@@ -33423,6 +33431,7 @@ playground_connector_update_command() {
           file=$tmp_dir/connector-cr-$connector.yaml
 
           set +e
+          log "☸️ kubectl -n confluent get connector $connector -o json"
           connector_json=$(kubectl -n confluent get connector "$connector" -o json 2>/dev/null)
           if [ $? -ne 0 ] || [[ -z "$connector_json" ]]
           then
@@ -33458,6 +33467,7 @@ playground_connector_update_command() {
 
           log "✨ Update the CFK Connector CR as needed, save and close the file to continue"
           playground open --file "${file}" --wait
+          log "☸️ kubectl -n confluent apply -f $file"
           kubectl -n confluent apply -f "$file"
           log "✅ CFK Connector CR $connector was updated"
       else

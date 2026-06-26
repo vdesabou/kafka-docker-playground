@@ -3,6 +3,7 @@ verbose="${args[--verbose]}"
 task_id="${args[--task-id]}"
 
 connector_type=$(playground state get run.connector_type)
+environment=$(playground state get run.environment)
 
 if [[ ! -n "$connector" ]]
 then
@@ -41,6 +42,15 @@ do
             handle_ccloud_connect_rest_api "curl -s --request POST \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/tasks/$task_id/restart\" --header \"authorization: Basic $authorization\""
         else
             handle_ccloud_connect_rest_api "curl -s --request POST \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/restart\" --header \"authorization: Basic $authorization\""
+        fi
+    elif [[ "$environment" == "cfk" ]]
+    then
+        if [[ -n "$task_id" ]]; then
+            log "☸️ kubectl annotate connector $connector -n confluent platform.confluent.io/restart-task=$task_id --overwrite"
+            kubectl annotate connector "$connector" -n confluent platform.confluent.io/restart-task="$task_id" --overwrite >/dev/null
+        else
+            log "☸️ kubectl annotate connector $connector -n confluent platform.confluent.io/restart-connector=true --overwrite"
+            kubectl annotate connector "$connector" -n confluent platform.confluent.io/restart-connector="true" --overwrite >/dev/null
         fi
     else
             tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')

@@ -4,6 +4,7 @@ verbose="${args[--verbose]}"
 no_clipboard="${args[--no-clipboard]}"
 
 connector_type=$(playground state get run.connector_type)
+environment=$(playground state get run.environment)
 
 if [[ ! -n "$connector" ]]
 then
@@ -23,6 +24,19 @@ then
 fi
 for connector in "${items[@]}"
 do
+    if [[ "$environment" == "cfk" ]]
+    then
+        log "🧰 Current config for $connector_type connector $connector (using CFK Connector CR)"
+        log "☸️ kubectl -n confluent get connector $connector -o json"
+        curl_output=$(kubectl -n confluent get connector "$connector" -o json 2>/dev/null | jq -c '.spec.configs // {}')
+        if [[ -z "$curl_output" ]] || [[ "$curl_output" == "null" ]]
+        then
+            logerror "❌ Could not get config from CFK Connector CR $connector"
+            exit 1
+        fi
+        echo "$curl_output" | jq .
+    fi
+
     if [ -f "/tmp/config-$connector" ] && [ -z "$GITHUB_RUN_NUMBER" ] && [[ ! -n "$force_rest_endpoint" ]]
     then
         log "🧰 Current config for $connector_type connector $connector"

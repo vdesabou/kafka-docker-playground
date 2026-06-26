@@ -41,6 +41,7 @@ do
         file=$tmp_dir/connector-cr-$connector.yaml
 
         set +e
+        log "☸️ kubectl -n confluent get connector $connector -o json"
         connector_json=$(kubectl -n confluent get connector "$connector" -o json 2>/dev/null)
         if [ $? -ne 0 ] || [[ -z "$connector_json" ]]
         then
@@ -76,6 +77,7 @@ do
 
         log "✨ Update the CFK Connector CR as needed, save and close the file to continue"
         playground open --file "${file}" --wait
+        log "☸️ kubectl -n confluent apply -f $file"
         kubectl -n confluent apply -f "$file"
         log "✅ CFK Connector CR $connector was updated"
     else
