@@ -9527,7 +9527,6 @@ function filter_oracle_running() {
 }
 
 function filter_connect_running() {
-    set -x
   get_connect_url_and_security
 
   curl $security -s "${connect_url}" > /dev/null 2>&1
