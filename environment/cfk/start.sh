@@ -13,6 +13,7 @@ verify_installed "kubectl"
 verify_installed "minikube"
 verify_installed "helm"
 verify_installed "envsubst"
+verify_installed "zip"
 
 : "${CP_SERVER_IMAGE:=confluentinc/cp-server}"
 : "${CP_SERVER_TAG:=8.3.0}"
@@ -399,14 +400,24 @@ function generate_connect_build_patch_from_compose() {
   local connector_zip_url="$3"
   local connector_zip_checksum="$4"
   local connector_zip_plugin_name="$5"
+  local connector_zip_http_dir="$6"
   local raw_paths=""
   local tmp_plugins_file
   local tmp_plugins_unique_file
+  local tmp_confluent_hub_plugins_file
+  local tmp_url_plugins_file
   local plugin_path=""
   local plugin_id=""
   local owner=""
   local name=""
   local version_value=""
+  local local_plugin_dir=""
+  local local_plugin_has_manifest=0
+  local local_plugin_root=""
+  local local_plugin_effective_dir=""
+  local local_zip_path=""
+  local local_zip_checksum=""
+  local local_zip_url=""
   local has_confluent_hub_plugins=0
   local has_url_plugins=0
   local plugin_index=0
@@ -415,6 +426,13 @@ function generate_connect_build_patch_from_compose() {
 
   tmp_plugins_file=$(mktemp)
   tmp_plugins_unique_file=$(mktemp)
+  tmp_confluent_hub_plugins_file=$(mktemp)
+  tmp_url_plugins_file=$(mktemp)
+
+  if [[ -n "$CONNECTOR_TAG" ]]
+  then
+    IFS=',' read -r -a my_array_connector_tag <<< "$CONNECTOR_TAG"
+  fi
 
   if [[ -f "$compose_file" ]]
   then
@@ -446,7 +464,7 @@ function generate_connect_build_patch_from_compose() {
           continue
         fi
 
-        echo "$owner|$name" >> "$tmp_plugins_file"
+        echo "$owner|$name|$plugin_id" >> "$tmp_plugins_file"
       done
     done < <(grep -E 'CONNECT_PLUGIN_PATH[[:space:]]*:' "$compose_file" 2>/dev/null)
   fi
@@ -454,37 +472,7 @@ function generate_connect_build_patch_from_compose() {
   if [[ -s "$tmp_plugins_file" ]]
   then
     awk '!seen[$0]++' "$tmp_plugins_file" > "$tmp_plugins_unique_file"
-    has_confluent_hub_plugins=1
-  fi
-
-  if [[ -n "$connector_zip_url" ]] && [[ -n "$connector_zip_checksum" ]]
-  then
-    has_url_plugins=1
-  fi
-
-  if [[ "$has_confluent_hub_plugins" -ne 1 ]] && [[ "$has_url_plugins" -ne 1 ]]
-  then
-    rm -f "$tmp_plugins_file" "$tmp_plugins_unique_file"
-    return 1
-  fi
-
-  if [[ -n "$CONNECTOR_TAG" ]]
-  then
-    IFS=',' read -r -a my_array_connector_tag <<< "$CONNECTOR_TAG"
-  fi
-
-  cat > "$output_file" << EOF
-spec:
-  build:
-    type: onDemand
-    onDemand:
-      plugins:
-EOF
-
-  if [[ "$has_confluent_hub_plugins" -eq 1 ]]
-  then
-    echo "        confluentHub:" >> "$output_file"
-    while IFS='|' read -r owner name
+    while IFS='|' read -r owner name plugin_id
     do
       if [[ -n "$CONNECTOR_TAG" ]]
       then
@@ -499,31 +487,133 @@ EOF
         logwarn "⚠️ CONNECTOR_TAG is not set, using plugin version latest for $owner/$name"
       fi
 
-      {
-        printf '          - name: %s\n' "$name"
-        printf '            owner: %s\n' "$owner"
-        printf '            version: %s\n' "$version_value"
-      } >> "$output_file"
+      local_plugin_dir="${DIR}/../../confluent-hub/${plugin_id}"
+      if [[ -n "$connector_zip_http_dir" ]] && [[ -d "$local_plugin_dir" ]] && [[ -n "$(find "$local_plugin_dir" -type f -print -quit 2>/dev/null)" ]]
+      then
+        local_plugin_effective_dir="$local_plugin_dir"
+        local_plugin_has_manifest=0
+        if [[ -f "$local_plugin_dir/manifest.json" ]]
+        then
+          local_plugin_has_manifest=1
+        fi
+
+        if [[ "$local_plugin_has_manifest" -ne 1 ]]
+        then
+          local_plugin_root=$(mktemp -d)
+          log "🔧 Local override for $plugin_id is partial, installing base $owner/$name:$version_value before packaging"
+          if ! docker run -u0 -i --rm -v "$local_plugin_root:/usr/share/confluent-hub-components" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c "confluent-hub install --no-prompt $owner/$name:$version_value && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components"
+          then
+            logwarn "⚠️ Could not prepare base plugin for local override $plugin_id, falling back to Confluent Hub install"
+            rm -rf "$local_plugin_root"
+            echo "$owner|$name|$version_value" >> "$tmp_confluent_hub_plugins_file"
+            has_confluent_hub_plugins=1
+            ((plugin_index=plugin_index+1))
+            continue
+          fi
+
+          if [[ ! -d "$local_plugin_root/$plugin_id" ]]
+          then
+            logwarn "⚠️ Base plugin directory $plugin_id was not created, falling back to Confluent Hub install"
+            rm -rf "$local_plugin_root"
+            echo "$owner|$name|$version_value" >> "$tmp_confluent_hub_plugins_file"
+            has_confluent_hub_plugins=1
+            ((plugin_index=plugin_index+1))
+            continue
+          fi
+
+          cp -R "$local_plugin_dir/." "$local_plugin_root/$plugin_id/"
+          local_plugin_effective_dir="$local_plugin_root/$plugin_id"
+        fi
+
+        local_zip_path="$connector_zip_http_dir/${plugin_id}.zip"
+        rm -f "$local_zip_path"
+        (
+          cd "$(dirname "$local_plugin_effective_dir")"
+          zip -qr "$local_zip_path" "$(basename "$local_plugin_effective_dir")"
+        )
+        local_zip_checksum=$(shasum -a 512 "$local_zip_path" | awk '{print $1}')
+        local_zip_url="http://host.minikube.internal:18080/${plugin_id}.zip"
+        echo "${plugin_id}|${local_zip_url}|${local_zip_checksum}" >> "$tmp_url_plugins_file"
+        has_url_plugins=1
+        log "🔌 Using local plugin override for $plugin_id in CFK build"
+
+        if [[ -n "$local_plugin_root" ]] && [[ -d "$local_plugin_root" ]]
+        then
+          rm -rf "$local_plugin_root"
+        fi
+        local_plugin_root=""
+      else
+        echo "$owner|$name|$version_value" >> "$tmp_confluent_hub_plugins_file"
+        has_confluent_hub_plugins=1
+      fi
 
       ((plugin_index=plugin_index+1))
     done < "$tmp_plugins_unique_file"
   fi
 
-  if [[ "$has_url_plugins" -eq 1 ]]
+  if [[ -n "$connector_zip_url" ]] && [[ -n "$connector_zip_checksum" ]]
   then
-    if [[ -z "$connector_zip_plugin_name" ]]
-    then
-      connector_zip_plugin_name="custom-zip-plugin"
-    fi
-    {
-      echo "        url:"
-      printf '          - name: %s\n' "$connector_zip_plugin_name"
-      printf '            archivePath: %s\n' "$connector_zip_url"
-      printf '            checksum: %s\n' "$connector_zip_checksum"
-    } >> "$output_file"
+    has_url_plugins=1
   fi
 
-  rm -f "$tmp_plugins_file" "$tmp_plugins_unique_file"
+  if [[ "$has_confluent_hub_plugins" -ne 1 ]] && [[ "$has_url_plugins" -ne 1 ]]
+  then
+    rm -f "$tmp_plugins_file" "$tmp_plugins_unique_file" "$tmp_confluent_hub_plugins_file" "$tmp_url_plugins_file"
+    return 1
+  fi
+
+  cat > "$output_file" << EOF
+spec:
+  build:
+    type: onDemand
+    onDemand:
+      plugins:
+EOF
+
+  if [[ "$has_confluent_hub_plugins" -eq 1 ]]
+  then
+    echo "        confluentHub:" >> "$output_file"
+    while IFS='|' read -r owner name version_value
+    do
+      {
+        printf '          - name: %s\n' "$name"
+        printf '            owner: %s\n' "$owner"
+        printf '            version: %s\n' "$version_value"
+      } >> "$output_file"
+    done < "$tmp_confluent_hub_plugins_file"
+  fi
+
+  if [[ "$has_url_plugins" -eq 1 ]]
+  then
+    echo "        url:" >> "$output_file"
+
+    if [[ -n "$connector_zip_url" ]] && [[ -n "$connector_zip_checksum" ]]
+    then
+      if [[ -z "$connector_zip_plugin_name" ]]
+      then
+        connector_zip_plugin_name="custom-zip-plugin"
+      fi
+      {
+        printf '          - name: %s\n' "$connector_zip_plugin_name"
+        printf '            archivePath: %s\n' "$connector_zip_url"
+        printf '            checksum: %s\n' "$connector_zip_checksum"
+      } >> "$output_file"
+    fi
+
+    if [[ -s "$tmp_url_plugins_file" ]]
+    then
+      while IFS='|' read -r plugin_id local_zip_url local_zip_checksum
+      do
+        {
+          printf '          - name: %s\n' "$plugin_id"
+          printf '            archivePath: %s\n' "$local_zip_url"
+          printf '            checksum: %s\n' "$local_zip_checksum"
+        } >> "$output_file"
+      done < "$tmp_url_plugins_file"
+    fi
+  fi
+
+  rm -f "$tmp_plugins_file" "$tmp_plugins_unique_file" "$tmp_confluent_hub_plugins_file" "$tmp_url_plugins_file"
   return 0
 }
 
@@ -581,8 +671,12 @@ fi
 
 if [[ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]]
 then
+  if [[ -z "$CONNECTOR_ZIP_HTTP_DIR" ]]
+  then
+    CONNECTOR_ZIP_HTTP_DIR=$(mktemp -d)
+  fi
   CONNECT_BUILD_PATCH_FILE=$(mktemp)
-  if generate_connect_build_patch_from_compose "${DOCKER_COMPOSE_FILE_OVERRIDE}" "${CONNECT_BUILD_PATCH_FILE}" "$CONNECTOR_ZIP_URL" "$CONNECTOR_ZIP_CHECKSUM" "$CONNECTOR_ZIP_PLUGIN_NAME"
+  if generate_connect_build_patch_from_compose "${DOCKER_COMPOSE_FILE_OVERRIDE}" "${CONNECT_BUILD_PATCH_FILE}" "$CONNECTOR_ZIP_URL" "$CONNECTOR_ZIP_CHECKSUM" "$CONNECTOR_ZIP_PLUGIN_NAME" "$CONNECTOR_ZIP_HTTP_DIR"
   then
     log "🔌 CFK Connect build plugins will be patched dynamically"
     log_generated_yaml_file "Dynamic Connect build patch generated:" "${CONNECT_BUILD_PATCH_FILE}"
@@ -592,8 +686,12 @@ then
   fi
 elif [[ -n "$CONNECTOR_ZIP_URL" ]] && [[ -n "$CONNECTOR_ZIP_CHECKSUM" ]]
 then
+  if [[ -z "$CONNECTOR_ZIP_HTTP_DIR" ]]
+  then
+    CONNECTOR_ZIP_HTTP_DIR=$(mktemp -d)
+  fi
   CONNECT_BUILD_PATCH_FILE=$(mktemp)
-  if ! generate_connect_build_patch_from_compose "" "${CONNECT_BUILD_PATCH_FILE}" "$CONNECTOR_ZIP_URL" "$CONNECTOR_ZIP_CHECKSUM" "$CONNECTOR_ZIP_PLUGIN_NAME"
+  if ! generate_connect_build_patch_from_compose "" "${CONNECT_BUILD_PATCH_FILE}" "$CONNECTOR_ZIP_URL" "$CONNECTOR_ZIP_CHECKSUM" "$CONNECTOR_ZIP_PLUGIN_NAME" "$CONNECTOR_ZIP_HTTP_DIR"
   then
     rm -f "${CONNECT_BUILD_PATCH_FILE}"
     CONNECT_BUILD_PATCH_FILE=""
@@ -610,7 +708,7 @@ set -e
 log "Start minikube"
 minikube start --cpus=8 --disk-size='50gb' --memory=16384
 
-if [[ -n "$CONNECTOR_ZIP_HTTP_DIR" ]]
+if [[ -n "$CONNECTOR_ZIP_HTTP_DIR" ]] && [[ -n "$(find "$CONNECTOR_ZIP_HTTP_DIR" -maxdepth 1 -name '*.zip' -print -quit 2>/dev/null)" ]]
 then
   log "Serve local CONNECTOR_ZIP for CFK on-demand plugin download"
   python3 -m http.server 18080 --directory "$CONNECTOR_ZIP_HTTP_DIR" >/tmp/cfk-connector-zip-http.log 2>&1 &
