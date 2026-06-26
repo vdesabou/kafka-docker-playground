@@ -45,6 +45,46 @@ function log_generated_yaml_file() {
   sed 's/^/    /' "$file_path"
 }
 
+function run_with_timeout() {
+  local timeout_seconds="$1"
+  shift
+
+  if command -v gtimeout >/dev/null 2>&1
+  then
+    gtimeout "$timeout_seconds" "$@"
+    return $?
+  fi
+
+  if command -v timeout >/dev/null 2>&1
+  then
+    timeout "$timeout_seconds" "$@"
+    return $?
+  fi
+
+  "$@" &
+  local cmd_pid=$!
+  local started_at=$SECONDS
+
+  while kill -0 "$cmd_pid" >/dev/null 2>&1
+  do
+    if (( SECONDS - started_at >= timeout_seconds ))
+    then
+      # Stop direct child and likely descendants when coreutils timeout is unavailable.
+      pkill -TERM -P "$cmd_pid" >/dev/null 2>&1 || true
+      kill -TERM "$cmd_pid" >/dev/null 2>&1 || true
+      sleep 2
+      pkill -KILL -P "$cmd_pid" >/dev/null 2>&1 || true
+      kill -KILL "$cmd_pid" >/dev/null 2>&1 || true
+      wait "$cmd_pid" >/dev/null 2>&1 || true
+      return 124
+    fi
+    sleep 1
+  done
+
+  wait "$cmd_pid"
+  return $?
+}
+
 function generate_extra_pods_from_compose_override() {
   local compose_file="$1"
   local output_file="$2"
@@ -72,6 +112,14 @@ function generate_extra_pods_from_compose_override() {
   local has_any_port=0
   local service_port_index=0
   local parsed_ports=()
+  local host_image_exists=1
+  local load_ret=1
+  local save_ret=1
+  local image_load_timeout_seconds=0
+  local image_size_bytes=0
+  local image_size_gb=0
+  local tmp_image_tar=""
+  local image_load_log=""
 
   if [[ ! -f "$compose_file" ]]
   then
@@ -265,10 +313,75 @@ function generate_extra_pods_from_compose_override() {
           image_pull_policy="Never"
         else
           log "📦 Attempting to load local image $image into minikube for service $service_name"
-          if minikube image load "$image" >/dev/null 2>&1
+          set +e
+          # minikube image load must use host docker daemon (not minikube DOCKER_HOST).
+          eval "$(minikube docker-env -u)" >/dev/null 2>&1
+          docker image inspect "$image" >/dev/null 2>&1
+          host_image_exists=$?
+          if [[ "$host_image_exists" -eq 0 ]]
+          then
+            image_load_log="/tmp/minikube-image-load-${pod_name}.log"
+            : > "$image_load_log"
+
+            # Derive a practical timeout from image size unless explicitly set.
+            image_size_bytes=$(docker image inspect "$image" --format '{{.Size}}' 2>/dev/null)
+            if [[ ! "$image_size_bytes" =~ ^[0-9]+$ ]]
+            then
+              image_size_bytes=0
+            fi
+            image_size_gb=$(((image_size_bytes + 1073741823) / 1073741824))
+
+            if [[ -n "$MINIKUBE_IMAGE_LOAD_TIMEOUT_SECONDS" ]]
+            then
+              image_load_timeout_seconds="$MINIKUBE_IMAGE_LOAD_TIMEOUT_SECONDS"
+            else
+              # 120s base + 180s per GiB, capped at 1h.
+              image_load_timeout_seconds=$((120 + (image_size_gb * 180)))
+              if (( image_load_timeout_seconds > 3600 ))
+              then
+                image_load_timeout_seconds=3600
+              fi
+            fi
+
+            log "📦 Loading image $image into minikube (size ~${image_size_gb}GiB, timeout: ${image_load_timeout_seconds}s)"
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] source image: $image" >> "$image_load_log"
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] estimated size GiB: $image_size_gb" >> "$image_load_log"
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] timeout seconds: $image_load_timeout_seconds" >> "$image_load_log"
+
+            tmp_image_tar=$(mktemp "/tmp/${pod_name}-image-XXXXXX.tar")
+            run_with_timeout "$image_load_timeout_seconds" docker save -o "$tmp_image_tar" "$image" >> "$image_load_log" 2>&1
+            save_ret=$?
+
+            if [[ "$save_ret" -eq 0 ]]
+            then
+              eval "$(minikube docker-env)" >/dev/null 2>&1
+              run_with_timeout "$image_load_timeout_seconds" docker load -i "$tmp_image_tar" >> "$image_load_log" 2>&1
+              load_ret=$?
+              eval "$(minikube docker-env -u)" >/dev/null 2>&1
+            else
+              load_ret="$save_ret"
+            fi
+
+            rm -f "$tmp_image_tar" >/dev/null 2>&1 || true
+          else
+            load_ret=1
+          fi
+          eval "$(minikube docker-env)" >/dev/null 2>&1
+          set -e
+
+          if [[ "$load_ret" -eq 0 ]]
           then
             image_pull_policy="Never"
             log "✅ Loaded image $image into minikube"
+          elif [[ "$load_ret" -eq 124 ]]
+          then
+            logwarn "⚠️ Timed out after ${image_load_timeout_seconds}s while loading image $image into minikube"
+            logwarn "⚠️ See /tmp/minikube-image-load-${pod_name}.log for details; Kubernetes may attempt registry pull"
+          elif [[ "$host_image_exists" -ne 0 ]]
+          then
+            logwarn "⚠️ Image $image was not found in host docker daemon; Kubernetes may attempt registry pull"
+          else
+            logwarn "⚠️ Failed to load image $image into minikube (see /tmp/minikube-image-load-${pod_name}.log)"
           fi
         fi
       fi
@@ -647,13 +760,134 @@ EXTRA_PODS_FILE=""
 
 function reset_cfk_namespace_state() {
   local namespace="confluent"
+  local reset_mode="${CFK_NAMESPACE_RESET_MODE:-namespace}"
   local pv_list=""
   local pv_name=""
+  local namespace_exists=1
+  local namespace_phase=""
+  local resource_name=""
+  local force_finalize_file=""
+  local wait_attempt=0
 
-  log "🧹 Reset Kubernetes namespace $namespace for a clean run"
-  kubectl delete namespace "$namespace" --ignore-not-found=true --wait=true --timeout=300s
+  log "🧹 Reset Kubernetes namespace $namespace for a clean run (mode: $reset_mode)"
 
-  # Some storage classes keep PVs after namespace deletion; remove them to avoid data leakage across runs.
+  set +e
+  kubectl get namespace "$namespace" >/dev/null 2>&1
+  namespace_exists=$?
+  set -e
+
+  if [[ "$namespace_exists" -ne 0 ]]
+  then
+    kubectl create namespace "$namespace" >/dev/null
+    kubectl config set-context --current --namespace="$namespace" >/dev/null
+    return
+  fi
+
+  namespace_phase=$(kubectl get namespace "$namespace" -o jsonpath='{.status.phase}' 2>/dev/null || true)
+  if [[ "$namespace_phase" == "Terminating" ]]
+  then
+    logwarn "⚠️ Namespace $namespace is stuck terminating; force-clearing finalizers"
+
+    set +e
+
+    # Strip finalizers from all namespaced resources
+    local all_resource_type=""
+    local all_resource_name=""
+    while IFS= read -r all_resource_type
+    do
+      if [[ -z "$all_resource_type" ]]; then continue; fi
+      while IFS= read -r all_resource_name
+      do
+        if [[ -z "$all_resource_name" ]]; then continue; fi
+        kubectl -n "$namespace" patch "$all_resource_type" "$all_resource_name" \
+          --type=merge -p '{"metadata":{"finalizers":[]}}' >/dev/null 2>&1 || true
+      done < <(kubectl -n "$namespace" get "$all_resource_type" \
+          -o jsonpath='{range .items[?(@.metadata.finalizers)]}{.metadata.name}{"\n"}{end}' 2>/dev/null)
+    done < <(kubectl api-resources --namespaced=true -o name 2>/dev/null)
+
+    # Strip namespace-level finalizers via the finalize API
+    local force_finalize_file
+    force_finalize_file=$(mktemp)
+    if kubectl get namespace "$namespace" -o json > "$force_finalize_file" 2>/dev/null
+    then
+      sed -E 's/"finalizers"[[:space:]]*:[[:space:]]*\[[^]]*\]/"finalizers": []/g' "$force_finalize_file" > "${force_finalize_file}.patched"
+      kubectl replace --raw "/api/v1/namespaces/${namespace}/finalize" -f "${force_finalize_file}.patched" >/dev/null 2>&1 || true
+      rm -f "$force_finalize_file" "${force_finalize_file}.patched"
+    fi
+
+    # Wait briefly for namespace to delete (should be quick now that finalizers are gone)
+    for wait_attempt in {1..10}
+    do
+      kubectl get namespace "$namespace" >/dev/null 2>&1
+      namespace_exists=$?
+      if [[ "$namespace_exists" -ne 0 ]]; then break; fi
+      sleep 1
+    done
+    set -e
+
+    set +e
+    kubectl get namespace "$namespace" >/dev/null 2>&1
+    namespace_exists=$?
+    set -e
+
+    if [[ "$namespace_exists" -eq 0 ]]
+    then
+      logerror "❌ Namespace $namespace still exists after finalizer stripping"
+      exit 1
+    fi
+
+    log "✅ Namespace $namespace recovered (finalizers cleared, namespace deleted)"
+    kubectl create namespace "$namespace" >/dev/null
+    kubectl config set-context --current --namespace="$namespace" >/dev/null
+    return
+  fi
+
+  if [[ "$reset_mode" == "namespace" ]]
+  then
+    log "🔁 Hard reset requested: force-deleting namespace $namespace"
+    
+    set +e
+    
+    # Strip finalizers via the Kubernetes finalize API (fastest way to bypass Terminating state)
+    local ns_json_file
+    ns_json_file=$(mktemp)
+    if kubectl get namespace "$namespace" -o json > "$ns_json_file" 2>/dev/null
+    then
+      log "  Stripping finalizers..."
+      sed -E 's/"finalizers"[[:space:]]*:[[:space:]]*\[[^]]*\]/"finalizers": []/g' "$ns_json_file" > "${ns_json_file}.patched"
+      kubectl replace --raw "/api/v1/namespaces/${namespace}/finalize" -f "${ns_json_file}.patched" >/dev/null 2>&1 || true
+      rm -f "$ns_json_file" "${ns_json_file}.patched"
+    fi
+    
+    # Now delete the namespace (should succeed quickly since finalizers are gone)
+    kubectl delete namespace "$namespace" --ignore-not-found=true --wait=true --timeout=60s >/dev/null 2>&1 || true
+    
+    set -e
+    
+    # Recreate clean namespace
+    kubectl create namespace "$namespace" >/dev/null
+    kubectl config set-context --current --namespace="$namespace" >/dev/null
+    return
+  fi
+
+  # Fast reset: keep namespace, remove operator release and namespaced resources.
+  set +e
+  helm -n "$namespace" uninstall confluent-operator >/dev/null 2>&1 || true
+
+  kubectl -n "$namespace" delete \
+    pods,services,deployments,statefulsets,daemonsets,replicasets,jobs,cronjobs,ingresses,networkpolicies,configmaps,secrets,serviceaccounts,roles,rolebindings,persistentvolumeclaims \
+    --all --ignore-not-found=true >/dev/null 2>&1 || true
+
+  while IFS= read -r resource_name
+  do
+    if [[ -n "$resource_name" ]]
+    then
+      kubectl -n "$namespace" delete "$resource_name" --all --ignore-not-found=true >/dev/null 2>&1 || true
+    fi
+  done < <(kubectl api-resources --api-group=platform.confluent.io --namespaced -o name 2>/dev/null)
+  set -e
+
+  # Some storage classes keep PVs after PVC deletion; remove them to avoid data leakage across runs.
   pv_list=$(kubectl get pv -o jsonpath='{range .items[?(@.spec.claimRef.namespace=="confluent")]}{.metadata.name}{"\n"}{end}' 2>/dev/null || true)
   if [[ -n "$pv_list" ]]
   then
@@ -667,7 +901,6 @@ function reset_cfk_namespace_state() {
     done <<< "$pv_list"
   fi
 
-  kubectl create namespace "$namespace" >/dev/null
   kubectl config set-context --current --namespace="$namespace" >/dev/null
 }
 
@@ -740,7 +973,15 @@ then
 fi
 
 log "Start or reuse minikube"
-minikube start --cpus=8 --disk-size='50gb' --memory=16384
+minikube_status_output="$(minikube status --profile=minikube 2>/dev/null || true)"
+if echo "$minikube_status_output" | grep -q "host: Running" && \
+   echo "$minikube_status_output" | grep -q "kubelet: Running" && \
+   echo "$minikube_status_output" | grep -q "apiserver: Running"
+then
+  log "✅ Minikube is already running, skipping start"
+else
+  minikube start --cpus=8 --disk-size='50gb' --memory=16384
+fi
 
 if [[ -n "$CONNECTOR_ZIP_HTTP_DIR" ]] && [[ -n "$(find "$CONNECTOR_ZIP_HTTP_DIR" -maxdepth 1 -name '*.zip' -print -quit 2>/dev/null)" ]]
 then
@@ -769,13 +1010,12 @@ fi
 
 reset_cfk_namespace_state
 
-set +e
-helm repo remove confluentinc
-set -e
-
 log "Add the Confluent for Kubernetes Helm repository"
-helm repo add confluentinc https://packages.confluent.io/helm
-helm repo update
+if ! helm repo list | awk 'NR>1 {print $1}' | grep -qx "confluentinc"
+then
+  helm repo add confluentinc https://packages.confluent.io/helm
+fi
+helm repo update confluentinc
 
 log "Install Confluent for Kubernetes"
 helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes
@@ -810,6 +1050,12 @@ then
     exit 1
   fi
   set -e
+
+  # The Connect CR may have already scheduled a pod before the build patch was
+  # processed.  Force-delete connect-0 so CFK recreates it from the updated
+  # spec, which now includes the on-demand build init container.
+  log "🔄 Restarting connect-0 to ensure on-demand build spec takes effect"
+  kubectl -n confluent delete pod connect-0 --ignore-not-found=true >/dev/null 2>&1 || true
 fi
 
 wait_container_ready
