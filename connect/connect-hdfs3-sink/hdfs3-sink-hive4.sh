@@ -25,7 +25,7 @@ playground connector create-or-update --connector hdfs3-sink  << EOF
 {
     "connector.class": "io.confluent.connect.hdfs3.Hdfs3SinkConnector",
     "tasks.max": "1",
-    "topics": "test_hdfs",
+    "topics": "hdfs-topic",
     "store.url": "hdfs://namenode:9000",
     "flush.size": "3",
     "hadoop.conf.dir": "/etc/hadoop/",
@@ -46,8 +46,8 @@ playground connector create-or-update --connector hdfs3-sink  << EOF
 }
 EOF
 
-log "Sending messages to topic test_hdfs"
-playground topic produce -t test_hdfs --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+log "Sending messages to topic hdfs-topic"
+playground topic produce -t hdfs-topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -62,14 +62,14 @@ EOF
 
 sleep 10
 
-log "Listing content of /topics/test_hdfs/partition=0 in HDFS"
-playground container exec --container namenode --command "bash -c \"/opt/hadoop/bin/hdfs dfs -ls /topics/test_hdfs/partition=0\""
+log "Listing content of /topics/hdfs-topic/partition=0 in HDFS"
+playground container exec --container namenode --command "bash -c \"/opt/hadoop/bin/hdfs dfs -ls /topics/hdfs-topic/partition=0\""
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-playground container exec --container namenode --command "bash -c \"/opt/hadoop/bin/hadoop fs -copyToLocal /topics/test_hdfs/partition=0/test_hdfs+0+0000000000+0000000002.avro /tmp\""
-docker cp namenode:/tmp/test_hdfs+0+0000000000+0000000002.avro /tmp/
+playground container exec --container namenode --command "bash -c \"/opt/hadoop/bin/hadoop fs -copyToLocal /topics/hdfs-topic/partition=0/hdfs-topic+0+0000000000+0000000002.avro /tmp\""
+docker cp namenode:/tmp/hdfs-topic+0+0000000000+0000000002.avro /tmp/
 
-playground  tools read-avro-file --file /tmp/test_hdfs+0+0000000000+0000000002.avro
+playground  tools read-avro-file --file /tmp/hdfs-topic+0+0000000000+0000000002.avro
 
 
 sleep 60
@@ -85,26 +85,26 @@ SHOW DATABASES;
 -- Switch to testhive database
 USE testhive;
 
--- Check if test_hdfs table exists
+-- Check if hdfs-topic table exists
 SHOW TABLES;
 
 -- Show the table structure
-SHOW CREATE TABLE test_hdfs;
+SHOW CREATE TABLE hdfs-topic;
 
 -- Describe the table schema
-DESCRIBE test_hdfs;
+DESCRIBE hdfs-topic;
 
 -- Count total records
-SELECT COUNT(*) as total_records FROM test_hdfs;
+SELECT COUNT(*) as total_records FROM hdfs-topic;
 
 -- Show sample data
-SELECT * FROM test_hdfs LIMIT 10;
+SELECT * FROM hdfs-topic LIMIT 10;
 
 -- Show data grouped by partition
-SELECT partition, COUNT(*) as record_count FROM test_hdfs GROUP BY partition;
+SELECT partition, COUNT(*) as record_count FROM hdfs-topic GROUP BY partition;
 
 -- Show the location of the table
-SHOW TBLPROPERTIES test_hdfs;
+SHOW TBLPROPERTIES hdfs-topic;
 
 !quit
 EOF
@@ -119,7 +119,7 @@ else
     log "❌ ERROR: Data not found in Hive table"
 fi
 
-if grep -q "test_hdfs" /tmp/result.log; then
+if grep -q "hdfs-topic" /tmp/result.log; then
     log "✅ SUCCESS: Hive table created successfully"
 else
     log "❌ ERROR: Hive table not found"

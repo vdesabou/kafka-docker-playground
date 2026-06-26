@@ -28,7 +28,7 @@ playground connector create-or-update --connector hdfs-sink  << EOF
 {
   "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
   "tasks.max":"1",
-  "topics":"test_hdfs",
+  "topics":"hdfs-topic",
   "store.url":"hdfs://namenode:8020",
   "flush.size":"3",
   "hadoop.conf.dir":"/etc/hadoop/",
@@ -50,8 +50,8 @@ playground connector create-or-update --connector hdfs-sink  << EOF
 EOF
 
 
-log "Sending messages to topic test_hdfs"
-playground topic produce -t test_hdfs --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+log "Sending messages to topic hdfs-topic"
+playground topic produce -t hdfs-topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -66,22 +66,22 @@ EOF
 
 sleep 10
 
-log "Listing content of /topics/test_hdfs in HDFS"
-playground container exec --container namenode --command "bash -c \"/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/test_hdfs\""
+log "Listing content of /topics/hdfs-topic in HDFS"
+playground container exec --container namenode --command "bash -c \"/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/hdfs-topic\""
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-playground container exec --container namenode --command "bash -c \"/opt/hadoop-2.7.4/bin/hadoop fs -copyToLocal /topics/test_hdfs/f1=value1/test_hdfs+0+0000000000+0000000000.avro /tmp\""
-docker cp namenode:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
+playground container exec --container namenode --command "bash -c \"/opt/hadoop-2.7.4/bin/hadoop fs -copyToLocal /topics/hdfs-topic/f1=value1/hdfs-topic+0+0000000000+0000000000.avro /tmp\""
+docker cp namenode:/tmp/hdfs-topic+0+0000000000+0000000000.avro /tmp/
 
-playground  tools read-avro-file --file /tmp/test_hdfs+0+0000000000+0000000000.avro
+playground  tools read-avro-file --file /tmp/hdfs-topic+0+0000000000+0000000000.avro
 
 log "Check data with beeline"
 playground container exec --container hive-server --command "beeline > /tmp/result.log  2>&1" <<-EOF
 !connect jdbc:hive2://hive-server:10000/testhive
 hive
 hive
-show create table test_hdfs;
-select * from test_hdfs;
+show create table hdfs-topic;
+select * from hdfs-topic;
 EOF
 cat /tmp/result.log
 grep "value1" /tmp/result.log

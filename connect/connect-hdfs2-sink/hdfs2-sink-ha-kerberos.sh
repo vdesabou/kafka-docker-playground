@@ -47,7 +47,7 @@ playground connector create-or-update --connector hdfs2-sink-ha-kerberos  << EOF
 {
   "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
   "tasks.max":"1",
-  "topics":"test_hdfs",
+  "topics":"hdfs-topic",
   "store.url":"hdfs://sh",
   "flush.size":"3",
   "hadoop.conf.dir":"/opt/hadoop/etc/hadoop/",
@@ -66,8 +66,8 @@ playground connector create-or-update --connector hdfs2-sink-ha-kerberos  << EOF
 EOF
 
 
-log "Sending messages to topic test_hdfs"
-playground topic produce -t test_hdfs --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+log "Sending messages to topic hdfs-topic"
+playground topic produce -t hdfs-topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -82,11 +82,11 @@ EOF
 
 sleep 10
 
-log "Listing content of /topics/test_hdfs/partition=0 in HDFS"
-playground container exec --container namenode1 --command "bash -c \"kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hdfs dfs -ls /topics/test_hdfs/partition=0\""
+log "Listing content of /topics/hdfs-topic/partition=0 in HDFS"
+playground container exec --container namenode1 --command "bash -c \"kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hdfs dfs -ls /topics/hdfs-topic/partition=0\""
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-playground container exec --container namenode1 --command "bash -c \"kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hadoop fs -copyToLocal /topics/test_hdfs/partition=0/test_hdfs+0+0000000000+0000000002.avro /tmp\""
-docker cp namenode1:/tmp/test_hdfs+0+0000000000+0000000002.avro /tmp/
+playground container exec --container namenode1 --command "bash -c \"kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hadoop fs -copyToLocal /topics/hdfs-topic/partition=0/hdfs-topic+0+0000000000+0000000002.avro /tmp\""
+docker cp namenode1:/tmp/hdfs-topic+0+0000000000+0000000002.avro /tmp/
 
-playground  tools read-avro-file --file /tmp/test_hdfs+0+0000000000+0000000002.avro
+playground  tools read-avro-file --file /tmp/hdfs-topic+0+0000000000+0000000002.avro
