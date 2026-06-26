@@ -1244,10 +1244,41 @@ function start_port_forward() {
   return 0
 }
 
+function start_port_forward_with_retry() {
+  local service="$1"
+  local local_port="$2"
+  local remote_port="$3"
+  local log_file="$4"
+  local description="$5"
+  local max_wait_seconds="${6:-120}"
+  local waited=0
+  local wait_interval=2
+  local pf_pid=""
+
+  while [[ "$waited" -lt "$max_wait_seconds" ]]
+  do
+    if kubectl -n confluent get service "$service" >/dev/null 2>&1
+    then
+      pf_pid=$(start_port_forward "$service" "$local_port" "$remote_port" "$log_file" "$description")
+      if [[ -n "$pf_pid" ]]
+      then
+        echo "$pf_pid"
+        return 0
+      fi
+    fi
+
+    sleep "$wait_interval"
+    waited=$(( waited + wait_interval ))
+  done
+
+  logwarn "⚠️ Timed out after ${max_wait_seconds}s starting port-forward for $description"
+  return 1
+}
+
 log "Port-forward controlcenter, schema-registry, and connect"
-CONTROL_CENTER_PF_PID=$(start_port_forward "controlcenter" "9021" "9021" "/tmp/control-center-port-forward.log" "Control Center") || true
-SCHEMA_REGISTRY_PF_PID=$(start_port_forward "schemaregistry" "8081" "8081" "/tmp/schema-registry-port-forward.log" "Schema Registry") || true
-CONNECT_PF_PID=$(start_port_forward "connect" "8083" "8083" "/tmp/connect-port-forward.log" "Connect") || true
+CONTROL_CENTER_PF_PID=$(start_port_forward_with_retry "controlcenter" "9021" "9021" "/tmp/control-center-port-forward.log" "Control Center" "120") || true
+SCHEMA_REGISTRY_PF_PID=$(start_port_forward_with_retry "schemaregistry" "8081" "8081" "/tmp/schema-registry-port-forward.log" "Schema Registry" "120") || true
+CONNECT_PF_PID=$(start_port_forward_with_retry "connect" "8083" "8083" "/tmp/connect-port-forward.log" "Connect" "120") || true
 
 if [[ -z "$CONTROL_CENTER_PF_PID" ]] || [[ -z "$SCHEMA_REGISTRY_PF_PID" ]] || [[ -z "$CONNECT_PF_PID" ]]
 then
