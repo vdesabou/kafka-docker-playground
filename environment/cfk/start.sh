@@ -491,6 +491,14 @@ EOF
       has_any_port=1
     fi
 
+    # Hadoop NameNode examples often omit explicit port mapping in compose overrides.
+    # Create a Service with common NameNode ports so hostname "namenode" resolves.
+    if [[ "$has_any_port" -eq 0 ]] && [[ "$pod_name" == "namenode" ]]
+    then
+      parsed_ports=("8020" "9000" "50070" "9870")
+      has_any_port=1
+    fi
+
     if [[ "$has_any_port" -eq 1 ]]
     then
       echo "---" >> "$output_file"
