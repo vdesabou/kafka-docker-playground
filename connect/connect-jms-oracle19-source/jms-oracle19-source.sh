@@ -28,7 +28,7 @@ playground container logs --container oracle --wait-for-log "DATABASE IS READY T
 log "Oracle DB has started!"
 
 log "Setting up Oracle Database Prerequisites"
-docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+playground container exec --container oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
      CONNECT sys/Admin123 AS SYSDBA
      CREATE USER C##MYUSER IDENTIFIED BY mypassword DEFAULT TABLESPACE USERS;
      ALTER USER C##MYUSER QUOTA UNLIMITED ON USERS;
@@ -79,7 +79,7 @@ wait_container_ready
 
 # https://github.com/monodot/oracle-aq-demo
 log "Grant all permissions to C##MYUSER"
-docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+playground container exec --container oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
 CONNECT sys/Admin123 AS SYSDBA
 
 GRANT EXECUTE ON SYS.DBMS_AQ to C##MYUSER;
@@ -96,7 +96,7 @@ GRANT EXECUTE ON dbms_aqin TO C##MYUSER;
 EOF
 
 log "Create JMS QUEUE called PLAYGROUND"
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
+playground container exec --container oracle --command "sqlplus C\\#\\#MYUSER/mypassword@//localhost:1521/ORCLCDB" << EOF
 
 EXEC dbms_aqadm.create_queue_table('PLAYGROUNDTABLE', 'SYS.AQ\$_JMS_TEXT_MESSAGE')
 EXEC dbms_aqadm.create_queue('PLAYGROUND','PLAYGROUNDTABLE')
@@ -126,7 +126,7 @@ END;
 EOF
 
 log "Check Queues"
-docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+playground container exec --container oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
 CONNECT sys/Admin123 AS SYSDBA
 
 

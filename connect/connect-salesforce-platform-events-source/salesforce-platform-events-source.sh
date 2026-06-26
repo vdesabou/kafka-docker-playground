@@ -79,10 +79,10 @@ EOF
 sleep 5
 
 log "Login with sfdx CLI"
-docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
+playground container exec --container sfdx-cli --command "sh -c \"sfdx sfpowerkit:auth:login -u \\\"$SALESFORCE_USERNAME\\\" -p \\\"$SALESFORCE_PASSWORD\\\" -r \\\"$SALESFORCE_INSTANCE\\\" -s \\\"$SALESFORCE_SECURITY_TOKEN\\\"\""
 
 log "Send Platform Events"
-docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" -f \"/tmp/event.apex\""
+playground container exec --container sfdx-cli --command "sh -c \"sfdx apex run --target-org \\\"$SALESFORCE_USERNAME\\\" -f \\\"/tmp/event.apex\\\"\""
 
 sleep 10
 

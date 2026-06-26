@@ -54,7 +54,7 @@ cd -
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssl.yml"
 
 log "Verify TLS is active on IBM MQ: it should display SSLCIPH(ANY_TLS12)"
-docker exec -i ibmmq runmqsc QM1 << EOF
+playground container exec --container ibmmq --command "runmqsc QM1" << EOF
 DISPLAY CHANNEL(DEV.APP.SVRCONN)
 EOF
 

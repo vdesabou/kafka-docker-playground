@@ -62,7 +62,7 @@ playground topic produce -t sink-messages --nb-messages 10 << 'EOF'
 EOF
 
 log "Create connector-quickstart queue in the default Message VPN using CLI"
-docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd"
+playground container exec --container solace --command "bash -c \"/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd\""
 
 log "Creating Solace sink connector"
 playground connector create-or-update --connector jms-solace-sink  << EOF
@@ -88,6 +88,6 @@ EOF
 sleep 10
 
 log "Confirm the messages were delivered to the connector-quickstart queue in the default Message VPN using CLI"
-docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/show_queue_cmd" > /tmp/result.log  2>&1
+playground container exec --container solace --command "bash -c \"/usr/sw/loads/currentload/bin/cli -A -s cliscripts/show_queue_cmd\" > /tmp/result.log  2>&1"
 cat /tmp/result.log
 grep "10       0.00" /tmp/result.log

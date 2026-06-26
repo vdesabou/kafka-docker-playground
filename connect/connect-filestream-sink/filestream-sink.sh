@@ -49,4 +49,4 @@ EOF
 sleep 5
 
 log "Verify we have received the data in file"
-docker exec connect cat /tmp/output.json
+playground container exec --container connect --command "cat /tmp/output.json"

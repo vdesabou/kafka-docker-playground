@@ -17,12 +17,12 @@ then
     SALESFORCE_INSTANCE=${SALESFORCE_INSTANCE:-"https://login.salesforce.com"}
 
     log "Login with sfdx CLI on the account #2"
-    docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
+    playground container exec --container sfdx-cli --command "sh -c \"sfdx sfpowerkit:auth:login -u \\\"$SALESFORCE_USERNAME\\\" -p \\\"$SALESFORCE_PASSWORD\\\" -r \\\"$SALESFORCE_INSTANCE\\\" -s \\\"$SALESFORCE_SECURITY_TOKEN\\\"\""
 
     log "Bulk delete leads"
-    docker exec sfdx-cli sh -c "sfdx data:query --target-org \"$SALESFORCE_USERNAME\" -q \"SELECT Id FROM Lead\" --result-format csv" > /tmp/out.csv
+    playground container exec --container sfdx-cli --command "sh -c \"sfdx data:query --target-org \\\"$SALESFORCE_USERNAME\\\" -q \\\"SELECT Id FROM Lead\\\" --result-format csv\" > /tmp/out.csv"
     docker cp /tmp/out.csv sfdx-cli:/tmp/out.csv
-    docker exec  sfdx-cli sh -c "sfdx force:data:bulk:delete --target-org \"$SALESFORCE_USERNAME\" -s Lead -f /tmp/out.csv"
+    playground container exec --container sfdx-cli --command "sh -c \"sfdx force:data:bulk:delete --target-org \\\"$SALESFORCE_USERNAME\\\" -s Lead -f /tmp/out.csv\""
 fi
 
 stop_all "$DIR"

@@ -58,6 +58,6 @@ EOF
 sleep 10
 
 log "Verify that order is in InfluxDB"
-docker exec influxdb influx -database orders -execute 'select * from orders' > /tmp/result.log  2>&1
+playground container exec --container influxdb --command "influx -database orders -execute 'select * from orders' > /tmp/result.log  2>&1"
 cat /tmp/result.log
 grep "product" /tmp/result.log

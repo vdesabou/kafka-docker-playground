@@ -105,7 +105,7 @@ playground topic consume --topic test-result --min-expected-messages 3 --timeout
 playground topic consume --topic test-error --min-expected-messages 0 --timeout 60
 
 log "Confirm that the messages were delivered to the ServiceNow table"
-docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" connect bash -c "export HTTP_PROXY=nginx-proxy:8888 && export HTTPS_PROXY=nginx-proxy:8888 && \
+playground container exec --container connect --command "bash -c \"export HTTP_PROXY=nginx-proxy:8888 && export HTTPS_PROXY=nginx-proxy:8888 && \\"
    curl -X GET \
     \"${SERVICENOW_URL}/api/now/table/u_test_table\" \
     --user admin:\"$SERVICENOW_PASSWORD\" \

@@ -22,8 +22,8 @@ log "SPLUNK has started!"
 log "Splunk UI is accessible at http://127.0.0.1:8000 (admin/password)"
 
 # log "Setting minfreemb to 1Gb (by default 5Gb)"
-# docker exec splunk bash -c 'sudo /opt/splunk/bin/splunk set minfreemb 1000 -auth "admin:password"'
-# docker exec splunk bash -c 'sudo /opt/splunk/bin/splunk restart'
+# playground container exec splunk bash -c 'sudo /opt/splunk/bin/splunk set minfreemb 1000 -auth "admin:password"'
+# playground container exec splunk bash -c 'sudo /opt/splunk/bin/splunk restart'
 # sleep 60
 
 log "Sending messages to topic splunk-qs"
@@ -57,11 +57,11 @@ log "Sleeping 80 seconds"
 sleep 80
 
 log "Verify data is in splunk"
-docker exec splunk bash -c 'sudo /opt/splunk/bin/splunk search "sourcetype=\"kafka\" | table cust_id" -auth "admin:password"' > /tmp/result.log  2>&1
+playground container exec --container splunk --command "bash -c 'sudo /opt/splunk/bin/splunk search \"sourcetype=\\\"kafka\\\" | table cust_id\" -auth \"admin:password\"' > /tmp/result.log  2>&1"
 cat /tmp/result.log
 grep '000013934' /tmp/result.log
 # requires fix for https://github.com/splunk/kafka-connect-splunk/issues/444
 #log "Verify data is in splunk"
-#docker exec splunk bash -c 'sudo /opt/splunk/bin/splunk search "sourcetype=\"kafka\" | table cust_id" -auth "admin:password"' > /tmp/result.log  2>&1
+#playground container exec splunk bash -c 'sudo /opt/splunk/bin/splunk search "sourcetype=\"kafka\" | table cust_id" -auth "admin:password"' > /tmp/result.log  2>&1
 #cat /tmp/result.log
 #grep '000013936' /tmp/result.log

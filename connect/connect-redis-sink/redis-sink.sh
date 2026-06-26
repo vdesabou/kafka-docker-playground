@@ -36,7 +36,7 @@ EOF
 sleep 10
 
 log "Verify data is in Redis"
-docker exec -i redis redis-cli COMMAND GETKEYS "MSET" "key1" "value1" "key2" "value2" "key3" "value3"
-docker exec -i redis redis-cli COMMAND GETKEYS "MSET" "__kafka.offset.users.0" "{\"topic\":\"users\",\"partition\":0,\"offset\":2}" > /tmp/result.log  2>&1
+playground container exec --container redis --command "redis-cli COMMAND GETKEYS \"MSET\" \"key1\" \"value1\" \"key2\" \"value2\" \"key3\" \"value3\""
+playground container exec --container redis --command "redis-cli COMMAND GETKEYS \"MSET\" \"__kafka.offset.users.0\" \"{\\\"topic\\\":\\\"users\\\",\\\"partition\\\":0,\\\"offset\\\":2}\" > /tmp/result.log  2>&1"
 cat /tmp/result.log
 grep "__kafka.offset.users.0" /tmp/result.log

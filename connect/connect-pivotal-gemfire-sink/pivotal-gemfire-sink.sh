@@ -34,11 +34,11 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Starting up locator"
-docker exec -i pivotal-gemfire sh /opt/pivotal/workdir/startLocator.sh
+playground container exec --container pivotal-gemfire --command "sh /opt/pivotal/workdir/startLocator.sh"
 log "Starting up server1"
-docker exec -i pivotal-gemfire sh /opt/pivotal/workdir/startServer1.sh
+playground container exec --container pivotal-gemfire --command "sh /opt/pivotal/workdir/startServer1.sh"
 log "Starting up server2"
-docker exec -i pivotal-gemfire sh /opt/pivotal/workdir/startServer2.sh
+playground container exec --container pivotal-gemfire --command "sh /opt/pivotal/workdir/startServer2.sh"
 
 sleep 8
 
@@ -75,7 +75,7 @@ EOF
 sleep 5
 
 log "Check messages received in Pivotal Gemfire"
-docker exec -i pivotal-gemfire gfsh  > /tmp/result.log  2>&1 <<-EOF
+playground container exec --container pivotal-gemfire --command "gfsh  > /tmp/result.log  2>&1" <<-EOF
 connect --locator=localhost[10334]
 query --query="select * from /exampleRegion"
 EOF

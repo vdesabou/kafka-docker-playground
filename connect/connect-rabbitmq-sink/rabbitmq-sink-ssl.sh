@@ -25,9 +25,9 @@ playground container restart --container rabbitmq
 sleep 10
 
 log "Create RabbitMQ exchange, queue and binding"
-docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare exchange name=exchange1 type=direct
-docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare queue name=queue1 durable=true
-docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare binding source=exchange1 destination=queue1 routing_key=rkey1
+playground container exec --container rabbitmq --command "rabbitmqadmin -u myuser -p mypassword -V / declare exchange name=exchange1 type=direct"
+playground container exec --container rabbitmq --command "rabbitmqadmin -u myuser -p mypassword -V / declare queue name=queue1 durable=true"
+playground container exec --container rabbitmq --command "rabbitmqadmin -u myuser -p mypassword -V / declare binding source=exchange1 destination=queue1 routing_key=rkey1"
 
 
 log "Sending messages to topic rabbitmq-messages"
@@ -65,6 +65,6 @@ EOF
 sleep 5
 
 log "Check messages received in RabbitMQ"
-docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword get queue=queue1 count=10 > /tmp/result.log  2>&1
+playground container exec --container rabbitmq --command "rabbitmqadmin -u myuser -p mypassword get queue=queue1 count=10 > /tmp/result.log  2>&1"
 cat /tmp/result.log
 grep "rkey1" /tmp/result.log

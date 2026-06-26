@@ -37,7 +37,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 
-docker exec -i databricks-sql-cli-container bash -c "python databricks_sql_cli.py" <<EOF
+playground container exec --container databricks-sql-cli-container --command "bash -c \"python databricks_sql_cli.py\"" <<EOF
 create or replace table CUSTOMERS ( id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, first_name VARCHAR(50), last_name VARCHAR(50), email VARCHAR(50), gender VARCHAR(50), club_status VARCHAR(20), comments VARCHAR(90), create_ts timestamp DEFAULT CURRENT_TIMESTAMP , update_ts timestamp DEFAULT CURRENT_TIMESTAMP ) TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported');
 
 insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Rica', 'Blaisdell', 'rblaisdell0@rambler.ru', 'Female', 'bronze', 'Universal optimal hierarchy');

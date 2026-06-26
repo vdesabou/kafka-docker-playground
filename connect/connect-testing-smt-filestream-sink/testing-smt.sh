@@ -82,7 +82,7 @@ EOF
 sleep 5
 
 log "Verify we have received the data in file"
-docker exec connect cat /tmp/output.json
+playground container exec --container connect --command "cat /tmp/output.json"
 
 # Struct{payload=Struct{count=1,first_name=Mateo,last_name=Karolann,address=Oscar,topic_name=filestream,partition_id=0,offset_value=0,group_name=my group,kafka_datetime=Fri Mar 27 14:09:22 GMT 2026}}
 

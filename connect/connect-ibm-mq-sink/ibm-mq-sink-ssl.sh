@@ -55,7 +55,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssl.yml"
 
 log "Verify TLS is active on IBM MQ: it should display SSLCIPH(ANY_TLS12)"
-docker exec -i ibmmq runmqsc QM1 << EOF
+playground container exec --container ibmmq --command "runmqsc QM1" << EOF
 DISPLAY CHANNEL(DEV.APP.SVRCONN)
 EOF
 
@@ -92,7 +92,7 @@ EOF
 sleep 10
 
 log "Verify message received in DEV.QUEUE.1 queue"
-docker exec ibmmq bash -c "/opt/mqm/samp/bin/amqsbcg DEV.QUEUE.1" > /tmp/result.log  2>&1
+playground container exec --container ibmmq --command "bash -c \"/opt/mqm/samp/bin/amqsbcg DEV.QUEUE.1\" > /tmp/result.log  2>&1"
 cat /tmp/result.log
 grep "my message" /tmp/result.log
 

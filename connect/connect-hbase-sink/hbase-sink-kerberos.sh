@@ -18,7 +18,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.kerberos.yml"
 
 log "Add connect kerberos principal"
-docker exec -i kerberos kadmin.local << EOF
+playground container exec --container kerberos --command "kadmin.local" << EOF
 addprinc -randkey connect/connect.kerberos-demo.local@KERBEROS.SERVER
 modprinc -maxrenewlife 11days +allow_renewable connect/connect.kerberos-demo.local@KERBEROS.SERVER
 modprinc -maxrenewlife 11days krbtgt/KERBEROS.SERVER
@@ -32,7 +32,7 @@ docker cp kerberos:/connect.keytab .
 docker cp connect.keytab connect:/tmp/connect.keytab
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
-     docker exec -u 0 connect chown appuser:appuser /tmp/connect.keytab
+     playground container exec --container connect --root --command "chown appuser:appuser /tmp/connect.keytab"
 fi
 
 log "Creating HBase sink connector"
@@ -69,7 +69,7 @@ EOF
 sleep 10
 
 log "Verify data is in HBase:"
-docker exec -i hbase bash -c "kinit -kt /opt/keytabs/hbase.keytab hbase/hbase.kerberos-demo.local && hbase shell -Djava.security.auth.login.config=/opt/hbase-2.2.3/conf/hbase-client.jaas -Dsun.security.krb5.debug=true" > /tmp/result.log  2>&1 <<-EOF
+playground container exec --container hbase --command "bash -c \"kinit -kt /opt/keytabs/hbase.keytab hbase/hbase.kerberos-demo.local && hbase shell -Djava.security.auth.login.config=/opt/hbase-2.2.3/conf/hbase-client.jaas -Dsun.security.krb5.debug=true\" > /tmp/result.log  2>&1" <<-EOF
 scan 'example_table'
 EOF
 cat /tmp/result.log

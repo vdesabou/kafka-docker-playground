@@ -40,7 +40,7 @@ playground container logs --container oracle --wait-for-log "Grant succeeded." -
 log "Oracle DB has started!"
 
 log "create table"
-docker exec -i oracle bash -c "ORACLE_SID=XE;export ORACLE_SID;export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe;/u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE" << EOF
+playground container exec --container oracle --command "bash -c \"ORACLE_SID=XE;export ORACLE_SID;export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe;/u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE\"" << EOF
 create table CUSTOMERS (
         id NUMBER(10) NOT NULL PRIMARY KEY,
         first_name VARCHAR(50),
@@ -127,26 +127,26 @@ log "Waiting 10s for connector to read existing data"
 sleep 10
 
 log "Insert 2 customers in CUSTOMERS table"
-docker exec -i oracle bash -c "export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe && /u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE" << EOF
+playground container exec --container oracle --command "bash -c \"export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe && /u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE\"" << EOF
      insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Frantz', 'Kafka', 'fkafka@confluent.io', 'Male', 'bronze', 'Evil is whatever distracts');
      insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Gregor', 'Samsa', 'gsamsa@confluent.io', 'Male', 'platinium', 'How about if I sleep a little bit longer and forget all this nonsense');
      exit;
 EOF
 
 log "Update CUSTOMERS with email=fkafka@confluent.io"
-docker exec -i oracle bash -c "export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe && /u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE" << EOF
+playground container exec --container oracle --command "bash -c \"export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe && /u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE\"" << EOF
      update CUSTOMERS set club_status = 'gold' where email = 'fkafka@confluent.io';
      exit;
 EOF
 
 log "Deleting CUSTOMERS with email=fkafka@confluent.io"
-docker exec -i oracle bash -c "export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe && /u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE" << EOF
+playground container exec --container oracle --command "bash -c \"export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe && /u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE\"" << EOF
      delete from CUSTOMERS where email = 'fkafka@confluent.io';
      exit;
 EOF
 
 log "Altering CUSTOMERS table with an optional column"
-docker exec -i oracle bash -c "export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe && /u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE" << EOF
+playground container exec --container oracle --command "bash -c \"export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe && /u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE\"" << EOF
      alter table CUSTOMERS add (
           country VARCHAR(50)
      );
@@ -154,7 +154,7 @@ docker exec -i oracle bash -c "export ORACLE_HOME=/u01/app/oracle/product/11.2.0
 EOF
 
 log "Populating CUSTOMERS table after altering the structure"
-docker exec -i oracle bash -c "export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe && /u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE" << EOF
+playground container exec --container oracle --command "bash -c \"export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe && /u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE\"" << EOF
      insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, country) values ('Josef', 'K', 'jk@confluent.io', 'Male', 'bronze', 'How is it even possible for someone to be guilty', 'Poland');
      update CUSTOMERS set club_status = 'silver' where email = 'gsamsa@confluent.io';
      update CUSTOMERS set club_status = 'gold' where email = 'gsamsa@confluent.io';
@@ -176,5 +176,5 @@ if [ ! -z "$SQL_DATAGEN" ]
 then
      DURATION=10
      log "Injecting data for $DURATION minutes"
-     docker exec sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username MYUSER --password password --sidOrServerName sid --sidOrServerNameVal XE --maxPoolSize 10 --durationTimeMin $DURATION"
+     playground container exec --container sql-datagen --command "bash -c \"java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username MYUSER --password password --sidOrServerName sid --sidOrServerNameVal XE --maxPoolSize 10 --durationTimeMin $DURATION\""
 fi

@@ -50,14 +50,14 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.eos.yml"
 
 log "Setup IBM MQ for EOS: topic and permissions"
-docker exec -i ibmmq runmqsc QM1 << EOF
+playground container exec --container ibmmq --command "runmqsc QM1" << EOF
 DEFINE TOPIC('MY.MQ.STATE.TOPIC') TOPICSTR('ibm-mq-source-state-topic')
 EOF
 
-docker exec -u 0 ibmmq setmqaut -m QM1 -t topic -n MY.MQ.STATE.TOPIC -p app +sub +pub +dsp
-docker exec -u 0 ibmmq setmqaut -m QM1 -t q -n SYSTEM.DEFAULT.MODEL.QUEUE -p app +get +dsp +inq
+playground container exec --container ibmmq --root --command "setmqaut -m QM1 -t topic -n MY.MQ.STATE.TOPIC -p app +sub +pub +dsp"
+playground container exec --container ibmmq --root --command "setmqaut -m QM1 -t q -n SYSTEM.DEFAULT.MODEL.QUEUE -p app +get +dsp +inq"
 
-docker exec -i ibmmq runmqsc QM1 << EOF
+playground container exec --container ibmmq --command "runmqsc QM1" << EOF
 REFRESH SECURITY TYPE(AUTHSERV)
 EOF
 

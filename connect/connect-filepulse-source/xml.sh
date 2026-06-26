@@ -31,7 +31,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Generating data"
-docker exec -i connect bash << EOFCONNECT
+playground container exec --container connect --command "bash" << EOFCONNECT
 mkdir -p /tmp/kafka-connect/examples/
 cat <<EOF > /tmp/kafka-connect/examples/playlists.xml
 <?xml version="1.0" encoding="UTF-8"?>

@@ -25,7 +25,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Check logs"
-docker exec -i appdynamics-metrics bash -c "cat /opt/appdynamics/machine-agent/logs/machine-agent.log"
+playground container exec --container appdynamics-metrics --command "bash -c \"cat /opt/appdynamics/machine-agent/logs/machine-agent.log\""
 
 log "Sending messages to topic appdynamics-metrics-topic"
 playground topic produce -t appdynamics-metrics-topic << 'EOF'

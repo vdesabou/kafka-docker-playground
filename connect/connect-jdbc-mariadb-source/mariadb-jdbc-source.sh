@@ -30,7 +30,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Create table"
-docker exec -i mariadb mariadb --user=root --password=password db << EOF
+playground container exec --container mariadb --command "mariadb --user=root --password=password db" << EOF
 USE db;
 
 CREATE TABLE team (
@@ -57,7 +57,7 @@ select * from team;
 EOF
 
 log "Adding an element to the table"
-docker exec -i mariadb mariadb --user=root --password=password db << EOF
+playground container exec --container mariadb --command "mariadb --user=root --password=password db" << EOF
 USE db;
 
 INSERT INTO team (
@@ -72,7 +72,7 @@ INSERT INTO team (
 EOF
 
 log "Show content of team table:"
-docker exec mariadb bash -c "mariadb --user=user --password=password db -e 'select * from team;'"
+playground container exec --container mariadb --command "bash -c \"mariadb --user=user --password=password db -e 'select * from team;'\""
 
 log "Creating MariaDB source connector"
 playground connector create-or-update --connector mariadb-source  << EOF

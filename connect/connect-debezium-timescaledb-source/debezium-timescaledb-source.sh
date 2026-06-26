@@ -65,12 +65,12 @@ EOF
 sleep 5
 
 log "Adding an element to the table"
-docker exec -e PGOPTIONS="--search_path=public" -i timescaledb psql -U postgres -d postgres << EOF
+playground container exec --container timescaledb --command "psql -U postgres -d postgres" << EOF
 INSERT INTO conditions VALUES (now(), 'Prague', 30, 50);
 EOF
 
 log "Show content of conditions table:"
-docker exec -e PGOPTIONS="--search_path=public" -i timescaledb psql -U postgres -d postgres << EOF
+playground container exec --container timescaledb --command "psql -U postgres -d postgres" << EOF
 SELECT * FROM conditions;
 EOF
 

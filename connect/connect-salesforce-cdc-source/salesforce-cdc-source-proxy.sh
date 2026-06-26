@@ -55,7 +55,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 DOMAIN=$(echo $SALESFORCE_INSTANCE | cut -d "/" -f 3)
 IP=$(nslookup $DOMAIN | grep Address | grep -v "#" | cut -d " " -f 2 | tail -1)
 log "Blocking $DOMAIN IP $IP to make sure proxy is used"
-docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
+playground container exec --container connect --root --command "bash -c \"iptables -A INPUT -p tcp -s $IP -j DROP\""
 
 log "Creating Salesforce CDC Source connector"
 playground connector create-or-update --connector salesforce-cdc-source  << EOF
@@ -89,10 +89,10 @@ EOF
 sleep 5
 
 log "Login with sfdx CLI"
-docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
+playground container exec --container sfdx-cli --command "sh -c \"sfdx sfpowerkit:auth:login -u \\\"$SALESFORCE_USERNAME\\\" -p \\\"$SALESFORCE_PASSWORD\\\" -r \\\"$SALESFORCE_INSTANCE\\\" -s \\\"$SALESFORCE_SECURITY_TOKEN\\\"\""
 
 log "Add a Contact to Salesforce"
-docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Contact -v \"FirstName='John_$RANDOM' LastName='Doe_$RANDOM'\""
+playground container exec --container sfdx-cli --command "sh -c \"sfdx data:create:record  --target-org \\\"$SALESFORCE_USERNAME\\\" -s Contact -v \\\"FirstName='John_$RANDOM' LastName='Doe_$RANDOM'\\\"\""
 
 sleep 10
 

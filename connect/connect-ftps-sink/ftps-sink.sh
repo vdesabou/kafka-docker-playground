@@ -73,7 +73,7 @@ EOF
 sleep 10
 
 log "Listing content of /home/vsftpd/bob/test_ftps_sink/partition\=0/"
-docker exec ftps-server bash -c "ls /home/vsftpd/bob/test_ftps_sink/partition\=0/"
+playground container exec --container ftps-server --command "bash -c \"ls /home/vsftpd/bob/test_ftps_sink/partition\\=0/\""
 
 docker cp ftps-server:/home/vsftpd/bob/test_ftps_sink/partition\=0/test_ftps_sink+0+0000000000.avro /tmp/
 

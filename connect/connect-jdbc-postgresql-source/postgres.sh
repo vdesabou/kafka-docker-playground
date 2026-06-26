@@ -37,7 +37,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Create CUSTOMERS table:"
-docker exec -i postgres psql -U myuser -d postgres << EOF
+playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
 create table CUSTOMERS (
         id SERIAL PRIMARY KEY,
         first_name VARCHAR(50),
@@ -87,17 +87,17 @@ insert into CUSTOMERS (first_name, last_name, email, gender, club_status, commen
 EOF
 
 log "Show content of CUSTOMERS table:"
-docker exec -i postgres psql -U myuser -d postgres << EOF
+playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
 SELECT * FROM CUSTOMERS;
 EOF
 
 log "Adding an element to the table"
-docker exec -i postgres psql -U myuser -d postgres << EOF
+playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
 insert into customers (first_name, last_name, email, gender, comments) values ('Bernardo', 'Dudman', 'bdudmanb@lulu.com', 'Male', 'Robust bandwidth-monitored budgetary management');
 EOF
 
 log "Show content of CUSTOMERS table:"
-docker exec -i postgres psql -U myuser -d postgres << EOF
+playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
 SELECT * FROM CUSTOMERS;
 EOF
 
@@ -129,5 +129,5 @@ if [ ! -z "$SQL_DATAGEN" ]
 then
      DURATION=10
      log "Injecting data for $DURATION minutes"
-     docker exec sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --connectionUrl 'jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false' --maxPoolSize 10 --durationTimeMin $DURATION"
+     playground container exec --container sql-datagen --command "bash -c \"java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --connectionUrl 'jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false' --maxPoolSize 10 --durationTimeMin $DURATION\""
 fi

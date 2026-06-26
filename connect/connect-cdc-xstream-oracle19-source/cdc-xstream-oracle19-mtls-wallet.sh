@@ -76,42 +76,42 @@ log "Setting up SSL on oracle server..."
 # https://www.oracle.com/technetwork/topics/wp-oracle-jdbc-thin-ssl-130128.pdf
 log "Create a wallet for the test CA"
 
-docker exec oracle bash -c "orapki wallet create -wallet /tmp/root -pwd WalletPasswd123"
+playground container exec --container oracle --command "bash -c \"orapki wallet create -wallet /tmp/root -pwd WalletPasswd123\""
 # Add a self-signed certificate to the wallet
-docker exec oracle bash -c "orapki wallet add -wallet /tmp/root -dn CN=root_test,C=US -keysize 2048 -self_signed -validity 3650 -pwd WalletPasswd123"
+playground container exec --container oracle --command "bash -c \"orapki wallet add -wallet /tmp/root -dn CN=root_test,C=US -keysize 2048 -self_signed -validity 3650 -pwd WalletPasswd123\""
 # Export the certificate
-docker exec oracle bash -c "orapki wallet export -wallet /tmp/root -dn CN=root_test,C=US -cert /tmp/root/b64certificate.txt -pwd WalletPasswd123"
+playground container exec --container oracle --command "bash -c \"orapki wallet export -wallet /tmp/root -dn CN=root_test,C=US -cert /tmp/root/b64certificate.txt -pwd WalletPasswd123\""
 
 log "Create a wallet for the Oracle server"
 
 # Create an empty wallet with auto login enabled
-docker exec oracle bash -c "orapki wallet create -wallet /tmp/server -pwd WalletPasswd123 -auto_login"
+playground container exec --container oracle --command "bash -c \"orapki wallet create -wallet /tmp/server -pwd WalletPasswd123 -auto_login\""
 # Add a user In the wallet (a new pair of private/public keys is created)
-docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -dn CN=server,C=US -pwd WalletPasswd123 -keysize 2048"
+playground container exec --container oracle --command "bash -c \"orapki wallet add -wallet /tmp/server -dn CN=server,C=US -pwd WalletPasswd123 -keysize 2048\""
 # Export the certificate request to a file
-docker exec oracle bash -c "orapki wallet export -wallet /tmp/server -dn CN=server,C=US -pwd WalletPasswd123 -request /tmp/server/creq.txt"
+playground container exec --container oracle --command "bash -c \"orapki wallet export -wallet /tmp/server -dn CN=server,C=US -pwd WalletPasswd123 -request /tmp/server/creq.txt\""
 # Using the test CA, sign the certificate request
-docker exec oracle bash -c "orapki cert create -wallet /tmp/root -request /tmp/server/creq.txt -cert /tmp/server/cert.txt -validity 3650 -pwd WalletPasswd123"
+playground container exec --container oracle --command "bash -c \"orapki cert create -wallet /tmp/root -request /tmp/server/creq.txt -cert /tmp/server/cert.txt -validity 3650 -pwd WalletPasswd123\""
 log "You now have the following files under the /tmp/server directory"
-docker exec oracle ls /tmp/server
+playground container exec --container oracle --command "ls /tmp/server"
 # View the signed certificate:
-docker exec oracle bash -c "orapki cert display -cert /tmp/server/cert.txt -complete"
+playground container exec --container oracle --command "bash -c \"orapki cert display -cert /tmp/server/cert.txt -complete\""
 # Add the test CA's trusted certificate to the wallet
-docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -trusted_cert -cert /tmp/root/b64certificate.txt -pwd WalletPasswd123"
+playground container exec --container oracle --command "bash -c \"orapki wallet add -wallet /tmp/server -trusted_cert -cert /tmp/root/b64certificate.txt -pwd WalletPasswd123\""
 # add the user certificate to the wallet:
-docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -user_cert -cert /tmp/server/cert.txt -pwd WalletPasswd123"
+playground container exec --container oracle --command "bash -c \"orapki wallet add -wallet /tmp/server -user_cert -cert /tmp/server/cert.txt -pwd WalletPasswd123\""
 
 # client (connect)
-docker exec oracle bash -c "orapki wallet create -wallet /tmp/client -pwd WalletPasswd123 -auto_login"
-docker exec oracle bash -c "orapki wallet add -wallet /tmp/client -dn CN=connect,C=US -pwd WalletPasswd123 -keysize 2048"
-docker exec oracle bash -c "orapki wallet export -wallet /tmp/client -dn CN=connect,C=US -pwd WalletPasswd123  -request /tmp/client/creq.txt"
-docker exec oracle bash -c "orapki cert create -wallet /tmp/root -request /tmp/client/creq.txt -cert /tmp/client/cert.txt -validity 3650 -pwd WalletPasswd123"
+playground container exec --container oracle --command "bash -c \"orapki wallet create -wallet /tmp/client -pwd WalletPasswd123 -auto_login\""
+playground container exec --container oracle --command "bash -c \"orapki wallet add -wallet /tmp/client -dn CN=connect,C=US -pwd WalletPasswd123 -keysize 2048\""
+playground container exec --container oracle --command "bash -c \"orapki wallet export -wallet /tmp/client -dn CN=connect,C=US -pwd WalletPasswd123  -request /tmp/client/creq.txt\""
+playground container exec --container oracle --command "bash -c \"orapki cert create -wallet /tmp/root -request /tmp/client/creq.txt -cert /tmp/client/cert.txt -validity 3650 -pwd WalletPasswd123\""
 # View the signed certificate:
-docker exec oracle bash -c "orapki cert display -cert /tmp/client/cert.txt -complete"
+playground container exec --container oracle --command "bash -c \"orapki cert display -cert /tmp/client/cert.txt -complete\""
 # Add the test CA's trusted certificate to the wallet
-docker exec oracle bash -c "orapki wallet add -wallet /tmp/client -trusted_cert -cert /tmp/root/b64certificate.txt -pwd WalletPasswd123"
+playground container exec --container oracle --command "bash -c \"orapki wallet add -wallet /tmp/client -trusted_cert -cert /tmp/root/b64certificate.txt -pwd WalletPasswd123\""
 # add the user certificate to the wallet:
-docker exec oracle bash -c "orapki wallet add -wallet /tmp/client -user_cert -cert /tmp/client/cert.txt -pwd WalletPasswd123"
+playground container exec --container oracle --command "bash -c \"orapki wallet add -wallet /tmp/client -user_cert -cert /tmp/client/cert.txt -pwd WalletPasswd123\""
 
 
 
@@ -122,7 +122,7 @@ docker cp ${PWD}/mtls/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sql
 docker cp ${PWD}/mtls/tnsnames.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
 
 
-docker exec -i oracle lsnrctl << EOF
+playground container exec --container oracle --command "lsnrctl" << EOF
 reload
 stop
 start
@@ -173,7 +173,7 @@ playground container logs --container oracle --wait-for-log "DATABASE IS READY T
 log "Oracle DB has started!"
 
 log "Enable Oracle XStream"
-docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+playground container exec --container oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
      CONNECT sys/Admin123 AS SYSDBA
 
      ALTER SYSTEM SET enable_goldengate_replication=TRUE SCOPE=BOTH;
@@ -182,7 +182,7 @@ docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nol
 EOF
 
 log "Configure ARCHIVELOG mode"
-docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+playground container exec --container oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
      SHUTDOWN IMMEDIATE;
      STARTUP MOUNT;
      ALTER DATABASE ARCHIVELOG;
@@ -191,7 +191,7 @@ EOF
 
 
 log "Configure supplemental logging"
-docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+playground container exec --container oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
      CONNECT sys/Admin123 AS SYSDBA
 
      ALTER SESSION SET CONTAINER = CDB\$ROOT;
@@ -200,7 +200,7 @@ docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nol
 EOF
 
 
-docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+playground container exec --container oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
      CONNECT sys/Admin123 AS SYSDBA
 
      -- Create tablespace for XStream admin in CDB
@@ -212,7 +212,7 @@ docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nol
      SIZE 25M REUSE AUTOEXTEND ON MAXSIZE UNLIMITED;
 EOF
 
-docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+playground container exec --container oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
      CONNECT sys/Admin123 AS SYSDBA
      alter session set container=ORCLPDB1;
 
@@ -226,7 +226,7 @@ docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nol
 EOF
 
 log "Create a new common user for the XStream administrator"
-docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+playground container exec --container oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
      CONNECT sys/Admin123 AS SYSDBA
 
      CREATE USER c##cfltadmin IDENTIFIED BY password
@@ -248,7 +248,7 @@ docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nol
 EOF
 
 log "Create a new common user for the XStream connect user"
-docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+playground container exec --container oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
      CONNECT sys/Admin123 AS SYSDBA
 
      CREATE USER c##cfltuser IDENTIFIED BY password
@@ -269,7 +269,7 @@ docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nol
 EOF
 
 log "Creating XStream Out"
-docker exec -i oracle sqlplus c\#\#cfltadmin/password@//localhost:1521/ORCLCDB << EOF
+playground container exec --container oracle --command "sqlplus c\\#\\#cfltadmin/password@//localhost:1521/ORCLCDB" << EOF
 
 DECLARE
      tables  DBMS_UTILITY.UNCL_ARRAY;
@@ -285,7 +285,7 @@ END;
 /
 EOF
 
-docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+playground container exec --container oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
      CONNECT sys/Admin123 AS SYSDBA
 BEGIN
      DBMS_XSTREAM_ADM.ALTER_OUTBOUND(
@@ -296,7 +296,7 @@ END;
 EOF
 
 log "Create CUSTOMERS table and inserting initial data"
-docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB << EOF
+playground container exec --container oracle --command "sqlplus c\\#\\#cfltuser/password@//localhost:1521/ORCLCDB" << EOF
 
      create table CUSTOMERS (
           id NUMBER(10) GENERATED BY DEFAULT ON NULL AS IDENTITY (START WITH 42) NOT NULL PRIMARY KEY,
@@ -363,20 +363,20 @@ log "sleeping some time to capture post initial snapshot records"
 sleep 10
 
 log "Insert 2 customers in CUSTOMERS table"
-docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB << EOF
+playground container exec --container oracle --command "sqlplus c\\#\\#cfltuser/password@//localhost:1521/ORCLCDB" << EOF
      insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Frantz', 'Kafka', 'fkafka@confluent.io', 'Male', 'bronze', 'Evil is whatever distracts');
      insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Gregor', 'Samsa', 'gsamsa@confluent.io', 'Male', 'platinium', 'How about if I sleep a little bit longer and forget all this nonsense');
      exit;
 EOF
 
 log "Update CUSTOMERS with email=fkafka@confluent.io"
-docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB << EOF
+playground container exec --container oracle --command "sqlplus c\\#\\#cfltuser/password@//localhost:1521/ORCLCDB" << EOF
      update CUSTOMERS set club_status = 'gold' where email = 'fkafka@confluent.io';
      exit;
 EOF
 
 log "Deleting CUSTOMERS with email=fkafka@confluent.io"
-docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB << EOF
+playground container exec --container oracle --command "sqlplus c\\#\\#cfltuser/password@//localhost:1521/ORCLCDB" << EOF
      delete from CUSTOMERS where email = 'fkafka@confluent.io';
      exit;
 EOF
@@ -384,7 +384,7 @@ EOF
 sleep 10
 
 log "Altering CUSTOMERS table with an optional column"
-docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB << EOF
+playground container exec --container oracle --command "sqlplus c\\#\\#cfltuser/password@//localhost:1521/ORCLCDB" << EOF
      alter table CUSTOMERS add (country VARCHAR(50));
      exit;
 EOF
@@ -392,7 +392,7 @@ EOF
 sleep 1
 
 log "Populating CUSTOMERS table after altering the structure"
-docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB << EOF
+playground container exec --container oracle --command "sqlplus c\\#\\#cfltuser/password@//localhost:1521/ORCLCDB" << EOF
      insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, country) values ('Josef', 'K', 'jk@confluent.io', 'Male', 'bronze', 'How is it even possible for someone to be guilty', 'Poland');
      update CUSTOMERS set club_status = 'silver' where email = 'gsamsa@confluent.io';
      update CUSTOMERS set club_status = 'gold' where email = 'gsamsa@confluent.io';
@@ -408,7 +408,7 @@ if [ ! -z "$SQL_DATAGEN" ]
 then
      DURATION=10
      log "Injecting data for $DURATION minutes"
-     docker exec sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username c##cfltuser --password password --sidOrServerName sid --sidOrServerNameVal ORCLCDB --maxPoolSize 10 --durationTimeMin $DURATION"
+     playground container exec --container sql-datagen --command "bash -c \"java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username c##cfltuser --password password --sidOrServerName sid --sidOrServerNameVal ORCLCDB --maxPoolSize 10 --durationTimeMin $DURATION\""
 fi
 
 log "⚙️ You can use <playground connector oracle-cdc-xstream generate-report> to generate oracle cdc xstream connector diagnostics report"

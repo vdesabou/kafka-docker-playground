@@ -60,24 +60,24 @@ log "Installing Mapr Client"
 
 # RHEL
 # required deps for mapr-client
-docker exec -i --privileged --user root connect  bash -c "chmod a+rw /etc/yum.repos.d/maprtech.repo"
-docker exec -i --privileged --user root connect  bash -c "rpm -i https://buildlogs.centos.org/c7.00.02/mtools/20140529191653/4.0.18-5.el7.x86_64/mtools-4.0.18-5.el7.x86_64.rpm"
-docker exec -i --privileged --user root connect  bash -c "rpm -i https://downloads.storagecraft.com/_xafe/public/OneSystem/repo/el7/os/syslinux-4.05-15.el7.x86_64.rpm"
+playground container exec --container connect --root --command "bash -c \"chmod a+rw /etc/yum.repos.d/maprtech.repo\""
+playground container exec --container connect --root --command "bash -c \"rpm -i https://buildlogs.centos.org/c7.00.02/mtools/20140529191653/4.0.18-5.el7.x86_64/mtools-4.0.18-5.el7.x86_64.rpm\""
+playground container exec --container connect --root --command "bash -c \"rpm -i https://downloads.storagecraft.com/_xafe/public/OneSystem/repo/el7/os/syslinux-4.05-15.el7.x86_64.rpm\""
 
-docker exec -i --privileged --user root connect  bash -c "yum -y install --disablerepo='Confluent*' --disablerepo='mapr*' jre-1.8.0-openjdk hostname findutils net-tools"
+playground container exec --container connect --root --command "bash -c \"yum -y install --disablerepo='Confluent*' --disablerepo='mapr*' jre-1.8.0-openjdk hostname findutils net-tools\""
 
-docker exec -i --privileged --user root connect  bash -c "wget --user=$HPE_MAPR_EMAIL --password=$HPE_MAPR_TOKEN -O mapr-pubkey.gpg https://package.ezmeral.hpe.com/releases/pub/maprgpg.key && rpm --import mapr-pubkey.gpg && yum -y update --disablerepo='Confluent*' && yum -y install mapr-client"
+playground container exec --container connect --root --command "bash -c \"wget --user=$HPE_MAPR_EMAIL --password=$HPE_MAPR_TOKEN -O mapr-pubkey.gpg https://package.ezmeral.hpe.com/releases/pub/maprgpg.key && rpm --import mapr-pubkey.gpg && yum -y update --disablerepo='Confluent*' && yum -y install mapr-client\""
 
 CONNECT_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' connect)
 MAPR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mapr)
 
 log "Login with maprlogin on mapr side (mapr)"
-docker exec -i mapr bash -c "maprlogin password -user mapr" << EOF
+playground container exec --container mapr --command "bash -c \"maprlogin password -user mapr\"" << EOF
 mapr
 EOF
 
 log "Create table /mapr/maprdemo.mapr.io/maprtopic"
-docker exec -i mapr bash -c "mapr dbshell" << EOF
+playground container exec --container mapr --command "bash -c \"mapr dbshell\"" << EOF
 create /mapr/maprdemo.mapr.io/maprtopic
 EOF
 
@@ -85,26 +85,26 @@ sleep 60
 
 log "Configure Mapr Client"
 # Mapr sink is failing with CP 6.0 UBI8 #91
-docker exec -i --privileged --user root connect bash -c "ln -sf /usr/lib/jvm/jre-1.8.0-openjdk /usr/lib/jvm/java-8-openjdk"
+playground container exec --container connect --root --command "bash -c \"ln -sf /usr/lib/jvm/jre-1.8.0-openjdk /usr/lib/jvm/java-8-openjdk\""
 set +e
-docker exec -i --privileged --user root connect bash -c "alternatives --remove java /usr/lib/jvm/zulu11/bin/java"
+playground container exec --container connect --root --command "bash -c \"alternatives --remove java /usr/lib/jvm/zulu11/bin/java\""
 # with 7.3.3
-docker exec -i --privileged --user root connect bash -c "alternatives --remove java /usr/lib/jvm/java-11-zulu-openjdk/bin/java"
+playground container exec --container connect --root --command "bash -c \"alternatives --remove java /usr/lib/jvm/java-11-zulu-openjdk/bin/java\""
 set -e
-docker exec -i --privileged --user root connect bash -c "chown -R appuser:appuser /opt/mapr"
+playground container exec --container connect --root --command "bash -c \"chown -R appuser:appuser /opt/mapr\""
 set +e
 log "It will fail the first time for some reasons.."
-docker exec -i --privileged --user root connect bash -c "/opt/mapr/server/configure.sh -secure -N maprdemo.mapr.io -c -C $MAPR_IP -u appuser -g appuser"
-docker exec -i --privileged --user root connect bash -c "rm -rf /opt/mapr/conf && cp -R /opt/mapr/conf.new /opt/mapr/conf"
+playground container exec --container connect --root --command "bash -c \"/opt/mapr/server/configure.sh -secure -N maprdemo.mapr.io -c -C $MAPR_IP -u appuser -g appuser\""
+playground container exec --container connect --root --command "bash -c \"rm -rf /opt/mapr/conf && cp -R /opt/mapr/conf.new /opt/mapr/conf\""
 set -e
-docker exec -i --privileged --user root connect bash -c "/opt/mapr/server/configure.sh -secure -N maprdemo.mapr.io -c -C $MAPR_IP -u appuser -g appuser"
+playground container exec --container connect --root --command "bash -c \"/opt/mapr/server/configure.sh -secure -N maprdemo.mapr.io -c -C $MAPR_IP -u appuser -g appuser\""
 
 docker cp mapr:/opt/mapr/conf/ssl_truststore /tmp/ssl_truststore
 docker cp /tmp/ssl_truststore connect:/opt/mapr/conf/ssl_truststore
-docker exec -i --privileged --user root connect bash -c "chown -R appuser:appuser /opt/mapr"
+playground container exec --container connect --root --command "bash -c \"chown -R appuser:appuser /opt/mapr\""
 
 log "Login with maprlogin on client side (connect)"
-docker exec -i connect bash -c "maprlogin password -user mapr" << EOF
+playground container exec --container connect --command "bash -c \"maprlogin password -user mapr\"" << EOF
 mapr
 EOF
 
@@ -132,7 +132,7 @@ sleep 70
 log "Mapper UI MCS is running at https://127.0.0.1:8443 (mapr/map)"
 
 log "Verify data is in Mapr"
-docker exec -i mapr bash -c "mapr dbshell" > /tmp/result.log  2>&1 <<-EOF
+playground container exec --container mapr --command "bash -c \"mapr dbshell\" > /tmp/result.log  2>&1" <<-EOF
 find /mapr/maprdemo.mapr.io/maprtopic
 EOF
 cat /tmp/result.log

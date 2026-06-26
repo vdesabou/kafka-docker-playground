@@ -43,7 +43,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Create table"
-docker exec -i mysql mysql --user=root --password=password --database=mydb << EOF
+playground container exec --container mysql --command "mysql --user=root --password=password --database=mydb" << EOF
 USE mydb;
 
 CREATE TABLE team (
@@ -70,7 +70,7 @@ select * from team;
 EOF
 
 log "Adding an element to the table"
-docker exec -i mysql mysql --user=root --password=password --database=mydb << EOF
+playground container exec --container mysql --command "mysql --user=root --password=password --database=mydb" << EOF
 USE mydb;
 
 INSERT INTO team (
@@ -125,6 +125,6 @@ if [ ! -z "$SQL_DATAGEN" ]
 then
      DURATION=10
      log "Injecting data for $DURATION minutes"
-     docker exec sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --connectionUrl 'jdbc:mysql://mysql:3306/mydb?user=debezium&password=dbz&useSSL=false&allowPublicKeyRetrieval=true' --maxPoolSize 10 --durationTimeMin $DURATION"
+     playground container exec --container sql-datagen --command "bash -c \"java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --connectionUrl 'jdbc:mysql://mysql:3306/mydb?user=debezium&password=dbz&useSSL=false&allowPublicKeyRetrieval=true' --maxPoolSize 10 --durationTimeMin $DURATION\""
 fi
 

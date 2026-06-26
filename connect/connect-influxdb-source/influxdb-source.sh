@@ -15,11 +15,11 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating testdb database and inserting into coin table"
-docker exec -i influxdb bash -c "influx -execute 'create database testdb'"
-docker exec -i influxdb bash -c "influx -execute 'INSERT coin,id=1 value=100' -database testdb"
+playground container exec --container influxdb --command "bash -c \"influx -execute 'create database testdb'\""
+playground container exec --container influxdb --command "bash -c \"influx -execute 'INSERT coin,id=1 value=100' -database testdb\""
 
 log "Verifying data in testdb"
-docker exec -i influxdb bash -c "influx -execute 'SELECT * from coin' -database testdb"
+playground container exec --container influxdb --command "bash -c \"influx -execute 'SELECT * from coin' -database testdb\""
 
 log "Creating InfluxDB source connector"
 playground connector create-or-update --connector influxdb-source  << EOF

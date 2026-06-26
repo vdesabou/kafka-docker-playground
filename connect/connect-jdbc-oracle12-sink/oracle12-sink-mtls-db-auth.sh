@@ -24,7 +24,7 @@ docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_
 playground container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 900
 log "Oracle DB has started!"
 log "Setting up Oracle Database Prerequisites"
-docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+playground container exec --container oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
      CONNECT sys/Admin123 AS SYSDBA
      CREATE USER  C##MYUSER IDENTIFIED BY mypassword;
      GRANT CONNECT TO  C##MYUSER;
@@ -40,30 +40,30 @@ log "Setting up SSL on oracle server..."
 # https://www.oracle.com/technetwork/topics/wp-oracle-jdbc-thin-ssl-130128.pdf
 log "Create a wallet for the test CA"
 
-docker exec oracle bash -c "orapki wallet create -wallet /tmp/root -pwd WalletPasswd123"
+playground container exec --container oracle --command "bash -c \"orapki wallet create -wallet /tmp/root -pwd WalletPasswd123\""
 # Add a self-signed certificate to the wallet
-docker exec oracle bash -c "orapki wallet add -wallet /tmp/root -dn CN=root_test,C=US -keysize 2048 -self_signed -validity 3650 -pwd WalletPasswd123"
+playground container exec --container oracle --command "bash -c \"orapki wallet add -wallet /tmp/root -dn CN=root_test,C=US -keysize 2048 -self_signed -validity 3650 -pwd WalletPasswd123\""
 # Export the certificate
-docker exec oracle bash -c "orapki wallet export -wallet /tmp/root -dn CN=root_test,C=US -cert /tmp/root/b64certificate.txt -pwd WalletPasswd123"
+playground container exec --container oracle --command "bash -c \"orapki wallet export -wallet /tmp/root -dn CN=root_test,C=US -cert /tmp/root/b64certificate.txt -pwd WalletPasswd123\""
 
 log "Create a wallet for the Oracle server"
 
 # Create an empty wallet with auto login enabled
-docker exec oracle bash -c "orapki wallet create -wallet /tmp/server -pwd WalletPasswd123 -auto_login"
+playground container exec --container oracle --command "bash -c \"orapki wallet create -wallet /tmp/server -pwd WalletPasswd123 -auto_login\""
 # Add a user In the wallet (a new pair of private/public keys is created)
-docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -dn CN=server,C=US -pwd WalletPasswd123 -keysize 2048"
+playground container exec --container oracle --command "bash -c \"orapki wallet add -wallet /tmp/server -dn CN=server,C=US -pwd WalletPasswd123 -keysize 2048\""
 # Export the certificate request to a file
-docker exec oracle bash -c "orapki wallet export -wallet /tmp/server -dn CN=server,C=US -pwd WalletPasswd123 -request /tmp/server/creq.txt"
+playground container exec --container oracle --command "bash -c \"orapki wallet export -wallet /tmp/server -dn CN=server,C=US -pwd WalletPasswd123 -request /tmp/server/creq.txt\""
 # Using the test CA, sign the certificate request
-docker exec oracle bash -c "orapki cert create -wallet /tmp/root -request /tmp/server/creq.txt -cert /tmp/server/cert.txt -validity 3650 -pwd WalletPasswd123"
+playground container exec --container oracle --command "bash -c \"orapki cert create -wallet /tmp/root -request /tmp/server/creq.txt -cert /tmp/server/cert.txt -validity 3650 -pwd WalletPasswd123\""
 log "You now have the following files under the /tmp/server directory"
-docker exec oracle ls /tmp/server
+playground container exec --container oracle --command "ls /tmp/server"
 # View the signed certificate:
-docker exec oracle bash -c "orapki cert display -cert /tmp/server/cert.txt -complete"
+playground container exec --container oracle --command "bash -c \"orapki cert display -cert /tmp/server/cert.txt -complete\""
 # Add the test CA's trusted certificate to the wallet
-docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -trusted_cert -cert /tmp/root/b64certificate.txt -pwd WalletPasswd123"
+playground container exec --container oracle --command "bash -c \"orapki wallet add -wallet /tmp/server -trusted_cert -cert /tmp/root/b64certificate.txt -pwd WalletPasswd123\""
 # add the user certificate to the wallet:
-docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -user_cert -cert /tmp/server/cert.txt -pwd WalletPasswd123"
+playground container exec --container oracle --command "bash -c \"orapki wallet add -wallet /tmp/server -user_cert -cert /tmp/server/cert.txt -pwd WalletPasswd123\""
 
 cd ${DIR}/mtls
 if [[ "$OSTYPE" == "darwin"* ]]
@@ -83,7 +83,7 @@ docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keyto
 docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -certreq -alias testclient -file /tmp/csr.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
 # Sign the client certificate using the test CA (root)
 docker cp csr.txt oracle:/tmp/csr.txt
-docker exec oracle bash -c "orapki cert create -wallet /tmp/root -request /tmp/csr.txt -cert /tmp/cert.txt -validity 3650 -pwd WalletPasswd123"
+playground container exec --container oracle --command "bash -c \"orapki cert create -wallet /tmp/root -request /tmp/csr.txt -cert /tmp/cert.txt -validity 3650 -pwd WalletPasswd123\""
 # import the test CA's certificate:
 docker cp oracle:/tmp/root/b64certificate.txt b64certificate.txt
 if [[ "$OSTYPE" == "darwin"* ]]
@@ -119,7 +119,7 @@ docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keyto
 cd ${DIR}
 
 log "Alter user 'C##MYUSER' in order to be identified as 'CN=connect,C=US'"
-docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLCDB as sysdba <<- EOF
+playground container exec --container oracle --command "sqlplus sys/Admin123@//localhost:1521/ORCLCDB as sysdba" <<- EOF
 	ALTER USER C##MYUSER IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
 	exit;
 EOF
@@ -129,7 +129,7 @@ docker cp ${PWD}/mtls/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/l
 docker cp ${PWD}/mtls/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
 docker cp ${PWD}/mtls/tnsnames.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
 
-docker exec -i oracle lsnrctl << EOF
+playground container exec --container oracle --command "lsnrctl" << EOF
 reload
 stop
 start
@@ -220,13 +220,13 @@ EOF
 sleep 10
 
 log "Alter user 'C##MYUSER' in order to be identified as by password (in order to use sqlplus)"
-docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLCDB as sysdba <<- EOF
+playground container exec --container oracle --command "sqlplus sys/Admin123@//localhost:1521/ORCLCDB as sysdba" <<- EOF
 	ALTER USER C##MYUSER IDENTIFIED BY mypassword;
 	exit;
 EOF
 
 log "Show content of ORDERS table:"
-docker exec oracle bash -c "echo 'select * from ORDERS;' | sqlplus C##MYUSER/mypassword@//localhost:1521/ORCLCDB" > /tmp/result.log  2>&1
+playground container exec --container oracle --command "bash -c \"echo 'select * from ORDERS;' | sqlplus C##MYUSER/mypassword@//localhost:1521/ORCLCDB\" > /tmp/result.log  2>&1"
 cat /tmp/result.log
 grep "foo" /tmp/result.log
 

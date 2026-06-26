@@ -96,8 +96,8 @@ sleep 5
 
 
 log "Describing the orders table in DB 'db':"
-docker exec mariadb bash -c "mariadb --user=user --password=password db -e 'describe orders;'"
+playground container exec --container mariadb --command "bash -c \"mariadb --user=user --password=password db -e 'describe orders;'\""
 
 log "Show content of orders table:"
-docker exec mariadb bash -c "mariadb --user=user --password=password db -e 'select * from orders;'"
+playground container exec --container mariadb --command "bash -c \"mariadb --user=user --password=password db -e 'select * from orders;'\""
 

@@ -94,7 +94,7 @@ EOF
 sleep 5
 
 log "Sending one message in JMS queue myQueue"
-docker exec jms-sender bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlthint3client.jar:/jms-sender-1.0.0.jar" com.sample.jms.toolkit.JMSSender'
+playground container exec --container jms-sender --command "bash -c 'java -cp \"/tmp/weblogic.jar:/tmp/wlthint3client.jar:/jms-sender-1.0.0.jar\" com.sample.jms.toolkit.JMSSender'"
 
 sleep 5
 
@@ -104,7 +104,7 @@ playground topic consume --topic from-weblogic-messages --min-expected-messages 
 sleep 5
 
 log "Asserting that WebLogic JMS queue is empty after connector processing"
-if docker exec jms-sender bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlthint3client.jar:/jms-sender-1.0.0.jar" com.sample.jms.toolkit.JMSSender check'; then
+if playground container exec --container jms-sender --command "bash -c 'java -cp \"/tmp/weblogic.jar:/tmp/wlthint3client.jar:/jms-sender-1.0.0.jar\" com.sample.jms.toolkit.JMSSender check'"; then
     log "✅ SUCCESS: WebLogic JMS queue is empty - message was successfully consumed and deleted"
 else
     log "❌ FAILURE: Messages still remain in WebLogic JMS queue - message was not deleted"

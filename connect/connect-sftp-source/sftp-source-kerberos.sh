@@ -16,7 +16,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 # following https://www.confluent.io/blog/containerized-testing-with-kerberos-and-ssh/
 log "Add kerberos principals"
-docker exec -i kdc-server kadmin.local << EOF
+playground container exec --container kdc-server --command "kadmin.local" << EOF
 addprinc -randkey host/ssh-server.kerberos-demo.local@EXAMPLE.COM
 ktadd -k /sshserver.keytab host/ssh-server.kerberos-demo.local@EXAMPLE.COM
 addprinc -randkey sshuser@EXAMPLE.COM
@@ -29,21 +29,21 @@ docker cp kdc-server:/sshuser.keytab .
 docker cp sshuser.keytab connect:/tmp/sshuser.keytab
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
-     docker exec -u 0 connect chown appuser:appuser /tmp/sshuser.keytab
+     playground container exec --container connect --root --command "chown appuser:appuser /tmp/sshuser.keytab"
 fi
 
 log "Copy sshserver.keytab to ssh server /etc/krb5.keytab"
 docker cp kdc-server:/sshserver.keytab .
 docker cp sshserver.keytab ssh-server:/etc/krb5.keytab
-docker exec -u 0 ssh-server chown root:root /etc/krb5.keytab
+playground container exec --container ssh-server --root --command "chown root:root /etc/krb5.keytab"
 
 log "Add sshuser"
-docker exec -i ssh-server adduser sshuser --gecos "First Last,RoomNumber,WorkPhone,HomePhone" << EOF
+playground container exec --container ssh-server --command "adduser sshuser --gecos \"First Last,RoomNumber,WorkPhone,HomePhone\"" << EOF
 confluent
 confluent
 EOF
 
-docker exec ssh-server bash -c "
+playground container exec --container ssh-server --command "bash -c \""
 mkdir -p /home/sshuser/upload/input
 mkdir -p /home/sshuser/upload/error
 mkdir -p /home/sshuser/upload/finished
@@ -52,9 +52,9 @@ chown -R sshuser /home/sshuser/upload
 "
 
 # FIXTHIS: it is required to do kinit manually
-docker exec connect kinit sshuser -k -t /tmp/sshuser.keytab
+playground container exec --container connect --command "kinit sshuser -k -t /tmp/sshuser.keytab"
 # if required to troubleshoot
-# docker exec -i --privileged --user root connect bash -c "yum update -y && yum install openssh-clients -y"
+# playground container exec -i --privileged --user root connect bash -c "yum update -y && yum install openssh-clients -y"
 
 echo $'id,first_name,last_name,email,gender,ip_address,last_login,account_balance,country,favorite_color\n1,Salmon,Baitman,sbaitman0@feedburner.com,Male,120.181.75.98,2015-03-01T06:01:15Z,17462.66,IT,#f09bc0\n2,Debby,Brea,dbrea1@icio.us,Female,153.239.187.49,2018-10-21T12:27:12Z,14693.49,CZ,#73893a' > csv-sftp-source.csv
 docker cp csv-sftp-source.csv ssh-server:/home/sshuser/upload/input/

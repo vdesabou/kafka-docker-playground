@@ -40,7 +40,7 @@ EOF
 sleep 10
 
 log "Verify data is in HBase:"
-docker exec -i hbase hbase shell > /tmp/result.log  2>&1 <<-EOF
+playground container exec --container hbase --command "hbase shell > /tmp/result.log  2>&1" <<-EOF
 scan 'example_table'
 EOF
 cat /tmp/result.log

@@ -40,11 +40,11 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 sleep 30
 
 log "Create table in hive"
-docker exec -i hive-server /opt/hive/bin/beeline -u jdbc:hive2://localhost:10000 << EOF
+playground container exec --container hive-server --command "/opt/hive/bin/beeline -u jdbc:hive2://localhost:10000" << EOF
 CREATE TABLE pokes (foo INT, bar STRING);
 EOF
 
-docker exec -i hive-server /opt/hive/bin/beeline -u jdbc:hive2://localhost:10000 << EOF
+playground container exec --container hive-server --command "/opt/hive/bin/beeline -u jdbc:hive2://localhost:10000" << EOF
 show databases
 EOF
 

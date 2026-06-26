@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 singlestore-wait-start() {
   log "Waiting for SingleStore to start..."
   while true; do
-      if docker exec singlestore memsql -u root -proot -e "select 1" >/dev/null 2>/dev/null; then
+    if playground container exec --container singlestore --command "memsql -u root -proot -e \"select 1\"" >/dev/null 2>/dev/null; then
           break
       fi
       log "."
@@ -39,7 +39,7 @@ docker start singlestore
 singlestore-wait-start
 
 log "Creating 'test' SingleStore database..."
-docker exec singlestore memsql -u root -proot -e "create database if not exists test;"
+playground container exec --container singlestore --command "memsql -u root -proot -e \"create database if not exists test;\""
 
 log "Sending messages to topic mytable"
 playground topic produce -t mytable --nb-messages 3 --forced-value '{"f1":"value%g"}' << 'EOF'
@@ -71,7 +71,7 @@ EOF
 sleep 10
 
 log "Check data is in Singlestore"
-docker exec -i singlestore memsql -u root -proot > /tmp/result.log  2>&1 <<-EOF
+playground container exec --container singlestore --command "memsql -u root -proot > /tmp/result.log  2>&1" <<-EOF
 use test;
 show tables;
 select * from mytable;

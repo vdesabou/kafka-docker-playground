@@ -55,7 +55,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 
 log "Sending EMS messages m1 m2 m3 m4 m5 in queue connector-quickstart"
-docker exec tibco-ems bash -c '
+playground container exec --container tibco-ems --command "bash -c '"
 cd /opt/tibco/ems/8.5/samples/java
 export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib
 CLASSPATH=${TIBEMS_JAVA}/jms-2.0.jar:${CLASSPATH}

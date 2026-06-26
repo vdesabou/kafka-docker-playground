@@ -47,7 +47,7 @@ then
   log "You can open the jupyter lab at http://localhost:8888/lab/tree/notebooks and use the sample notebook in notebooks/iceberg.ipynb to query the table"
 
   log "Verify data is in Iceberg"
-  docker exec -i spark-iceberg spark-sql << EOF
+  playground container exec --container spark-iceberg --command "spark-sql" << EOF
 SELECT *
 FROM orders.payments
 LIMIT 10;

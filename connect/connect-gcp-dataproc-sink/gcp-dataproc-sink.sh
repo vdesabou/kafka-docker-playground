@@ -120,10 +120,10 @@ sleep 10
 #         ... 29 more
 
 # log "Listing content of /topics/test_hdfs in HDFS"
-# docker exec hadoop bash -c "/usr/local/hadoop/bin/hdfs dfs -ls /topics/test_hdfs"
+# playground container exec hadoop bash -c "/usr/local/hadoop/bin/hdfs dfs -ls /topics/test_hdfs"
 
 # log "Getting one of the avro files locally and displaying content with avro-tools"
-# docker exec hadoop bash -c "/usr/local/hadoop/bin/hadoop fs -copyToLocal /topics/test_hdfs/f1=value1/test_hdfs+0+0000000000+0000000000.avro /tmp"
+# playground container exec hadoop bash -c "/usr/local/hadoop/bin/hadoop fs -copyToLocal /topics/test_hdfs/f1=value1/test_hdfs+0+0000000000+0000000000.avro /tmp"
 # docker cp hadoop:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
 
 

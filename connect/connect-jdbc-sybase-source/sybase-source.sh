@@ -16,7 +16,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 
 log "Create the table and insert data."
-docker exec -i sybase /sybase/isql -S -Usa -Ppassword << EOF
+playground container exec --container sybase --command "/sybase/isql -S -Usa -Ppassword" << EOF
 CREATE DATABASE testDB
 GO
 USE testDB
@@ -51,7 +51,7 @@ EOF
 sleep 5
 
 log "insert another record"
-docker exec -i sybase /sybase/isql -S -Usa -Ppassword << EOF
+playground container exec --container sybase --command "/sybase/isql -S -Usa -Ppassword" << EOF
 USE testDB
 GO
 INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@office.com')

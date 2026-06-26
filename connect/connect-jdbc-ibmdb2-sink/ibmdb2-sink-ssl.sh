@@ -29,7 +29,7 @@ then
 else
   log "🚀 ksqldb is enabled"
   log "🔧 You can use ksqlDB with CLI using:"
-  log "docker exec -i ksqldb-cli ksql http://ksqldb-server:8088"
+  log "playground container exec -i ksqldb-cli ksql http://ksqldb-server:8088"
   profile_ksqldb_command="--profile ksqldb"
 fi
 
@@ -61,7 +61,7 @@ log "ibmdb2 DB has started!"
 log "Enable SSL on DB2"
 # https://stackoverflow.com/questions/63024640/db2-in-docker-container-problem-with-autostart-of-ssl-configuration-after-resta
 # https://medium.datadriveninvestor.com/configuring-secure-sockets-layer-ssl-for-db2-server-and-client-3b317a033d71
-docker exec -i ibmdb2 bash << EOF
+playground container exec --container ibmdb2 --command "bash" << EOF
 su - db2inst1
 gsk8capicmd_64 -keydb -create -db "server.kdb" -pw "confluent" -stash
 gsk8capicmd_64 -cert -create -db "server.kdb" -pw "confluent" -label "myLabel" -dn "CN=ibmdb2" -size 2048 -sigalg SHA256_WITH_RSA
@@ -78,7 +78,7 @@ db2start
 EOF
 
 log "verifying DB2 SSL config"
-docker exec -i ibmdb2 bash << EOF
+playground container exec --container ibmdb2 --command "bash" << EOF
 su - db2inst1
 gsk8capicmd_64 -cert -list -db "server.kdb" -stashed
 db2 get dbm cfg|grep SSL
@@ -196,7 +196,7 @@ EOF
 sleep 15
 
 log "Check data is in IBM DB2"
-docker exec -i ibmdb2 bash << EOF > /tmp/result.log
+playground container exec --container ibmdb2 --command "bash << EOF > /tmp/result.log"
 su - db2inst1
 db2 connect to sample user db2inst1 using passw0rd
 db2 select ID,PRODUCT,QUANTITY,PRICE from ORDERS

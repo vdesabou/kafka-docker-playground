@@ -21,7 +21,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Create Partitioned CUSTOMERS table:"
-docker exec -i postgres psql -U myuser -d postgres << EOF
+playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
 create table CUSTOMERS (
         id INT ,
         first_name VARCHAR(50),
@@ -77,23 +77,23 @@ insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, co
 EOF
 
 log "Create a Publication with publish_via_partition_root = true:"
-docker exec -i postgres psql -U myuser -d postgres << EOF
+playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
 CREATE PUBLICATION "debezium_partition" FOR ALL TABLES WITH (publish_via_partition_root = true);
 EOF
 
 
 log "Show content of CUSTOMERS table:"
-docker exec -i postgres psql -U myuser -d postgres << EOF
+playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
 SELECT * FROM CUSTOMERS;
 EOF
 
 log "Adding an element to the table"
-docker exec -i postgres psql -U myuser -d postgres << EOF
+playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
 insert into customers (id, first_name, last_name, email, gender, comments,create_ts) values (21, 'Sheryl', 'Paradise', 'sparadiseg@nifty.com', 'Female', 'Business-focused multi-state functionalities','2022-04-02 00:00:00+00');
 EOF
 
 log "Show content of CUSTOMERS table:"
-docker exec -i postgres psql -U myuser -d postgres << EOF
+playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
 SELECT * FROM CUSTOMERS;
 EOF
 
@@ -136,7 +136,7 @@ EOF
 sleep 5
 
 log "Adding more elements to the table"
-docker exec -i postgres psql -U myuser -d postgres << EOF
+playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
 insert into customers (id, first_name, last_name, email, gender, comments,create_ts) values (22, 'Josiah', 'Rook', 'jrookj@europa.eu', 'Male', 'Cross-group 24/7 application','2022-03-02 00:00:00+00');
 insert into customers (id, first_name, last_name, email, gender, comments,create_ts) values (23, 'Rica', 'Tollerton', 'rtollerton9@furl.net', 'Male', 'Robust bandwidth-monitored budgetary management','2022-02-02 00:00:00+00');
 update customers set email = 'rtollerton9@icio.us' where id = 23;

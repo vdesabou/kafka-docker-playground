@@ -97,4 +97,4 @@ EOF
 sleep 5
 
 log "Check the message has been received in destination queue"
-timeout 60 docker exec jms-receiver bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlthint3client.jar:/jms-receiver-1.0.0.jar" com.sample.jms.toolkit.JMSReceiver'
+timeout 60 playground container exec --container jms-receiver --command "bash -c 'java -cp \"/tmp/weblogic.jar:/tmp/wlthint3client.jar:/jms-receiver-1.0.0.jar\" com.sample.jms.toolkit.JMSReceiver'"

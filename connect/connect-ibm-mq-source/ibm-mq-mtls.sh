@@ -56,19 +56,19 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 
 log "Set the channel authentication to required so that both the server and client will need to provide a trusted certificate"
-docker exec -i ibmmq runmqsc QM1 << EOF
+playground container exec --container ibmmq --command "runmqsc QM1" << EOF
 ALTER CHANNEL(DEV.APP.SVRCONN) CHLTYPE(SVRCONN) SSLCAUTH(REQUIRED)
 EXIT
 EOF
 
 log "Force our queue manager to pick up these changes"
-docker exec -i ibmmq runmqsc QM1 << EOF
+playground container exec --container ibmmq --command "runmqsc QM1" << EOF
 REFRESH SECURITY(*) TYPE(SSL)
 EXIT
 EOF
 
 log "Verify TLS is active on IBM MQ: it should display SSLCIPH(ANY_TLS12) and SSLCAUTH(REQUIRED)"
-docker exec -i ibmmq runmqsc QM1 << EOF
+playground container exec --container ibmmq --command "runmqsc QM1" << EOF
 DISPLAY CHANNEL(DEV.APP.SVRCONN)
 EOF
 

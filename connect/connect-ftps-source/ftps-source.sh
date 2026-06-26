@@ -26,7 +26,7 @@ fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-docker exec ftps-server bash -c "
+playground container exec --container ftps-server --command "bash -c \""
 mkdir -p /home/vsftpd/bob/input
 mkdir -p /home/vsftpd/bob/error
 mkdir -p /home/vsftpd/bob/finished

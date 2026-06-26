@@ -40,10 +40,10 @@ log "Copy the splunk-s2s-test.log file to the Splunk UF Docker container"
 docker cp splunk-s2s-test.log splunk-uf:/opt/splunkforwarder/splunk-s2s-test.log
 
 log "Configure the UF to monitor the splunk-s2s-test.log file"
-docker exec -i splunk-uf sudo ./bin/splunk add monitor -source /opt/splunkforwarder/splunk-s2s-test.log -auth admin:password
+playground container exec --container splunk-uf --command "sudo ./bin/splunk add monitor -source /opt/splunkforwarder/splunk-s2s-test.log -auth admin:password"
 
 log "Configure the UF to connect to Splunk S2S Source connector"
-docker exec -i splunk-uf sudo ./bin/splunk add forward-server connect:9997
+playground container exec --container splunk-uf --command "sudo ./bin/splunk add forward-server connect:9997"
 
 sleep 30
 

@@ -62,7 +62,7 @@ EOF
 sleep 10
 
 log "Verify data is in OmniSci"
-docker exec -i omnisci /omnisci/bin/omnisql -p HyperInteractive > /tmp/result.log  2>&1 <<-EOF
+playground container exec --container omnisci --command "/omnisci/bin/omnisql -p HyperInteractive > /tmp/result.log  2>&1" <<-EOF
 select * from orders;
 EOF
 cat /tmp/result.log

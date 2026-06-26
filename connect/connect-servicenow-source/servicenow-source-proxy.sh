@@ -50,14 +50,14 @@ export HTTPS_PROXY=127.0.0.1:8888
 log "Verify forward proxy is working correctly"
 curl --compressed -H 'Accept-Encoding: gzip' -H 'Content-Type: application/json' -H 'User-Agent: Google-HTTP-Java-Client/1.30.0 (gzip)' -v ${SERVICENOW_URL}api/now/table/incident?sysparm_limit=1 -u "admin:$SERVICENOW_PASSWORD" | jq .
 
-docker exec -e SERVICENOW_URL=$SERVICENOW_URL -e SERVICENOW_PASSWORD=$SERVICENOW_PASSWORD connect bash -c "export HTTP_PROXY=nginx-proxy:8888 && export HTTPS_PROXY=nginx-proxy:8888 && curl --compressed -H 'Accept-Encoding: gzip' -H 'User-Agent: Google-HTTP-Java-Client/1.30.0 (gzip)' -v ${SERVICENOW_URL}api/now/table/incident?sysparm_limit=1 -u \"admin:$SERVICENOW_PASSWORD\""
+playground container exec --container connect --command "bash -c \"export HTTP_PROXY=nginx-proxy:8888 && export HTTPS_PROXY=nginx-proxy:8888 && curl --compressed -H 'Accept-Encoding: gzip' -H 'User-Agent: Google-HTTP-Java-Client/1.30.0 (gzip)' -v ${SERVICENOW_URL}api/now/table/incident?sysparm_limit=1 -u \\\"admin:$SERVICENOW_PASSWORD\\\"\""
 
 # block
 # echo "$SERVICENOW_URL" | cut -d "/" -f3
 # ip=$(dig +short $(echo "$SERVICENOW_URL" | cut -d "/" -f3))
 # log "Blocking serviceNow instance IP address $ip on connect, to make sure proxy is used"
-# docker exec -i --privileged --user root connect bash -c "iptables -A INPUT -s $ip -j REJECT"
-# docker exec -i --privileged --user root connect bash -c "iptables -L -n -v"
+# playground container exec -i --privileged --user root connect bash -c "iptables -A INPUT -s $ip -j REJECT"
+# playground container exec -i --privileged --user root connect bash -c "iptables -L -n -v"
 
 curl --request PUT \
   --url http://localhost:8083/admin/loggers/io.confluent.connect.servicenow \
@@ -94,7 +94,7 @@ EOF
 sleep 10
 
 log "Create one record to ServiceNow using proxy"
-docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" connect bash -c "export HTTP_PROXY=nginx-proxy:8888 && export HTTPS_PROXY=nginx-proxy:8888 && \
+playground container exec --container connect --command "bash -c \"export HTTP_PROXY=nginx-proxy:8888 && export HTTPS_PROXY=nginx-proxy:8888 && \\"
    curl -X POST \
     \"${SERVICENOW_URL}api/now/table/incident\" \
     --user admin:\"$SERVICENOW_PASSWORD\" \
@@ -109,13 +109,13 @@ log "Verify we have received the data in topic-servicenow topic"
 playground topic consume --topic topic-servicenow --min-expected-messages 1 --max-messages 3 --timeout 60
 
 log "starting tcpdump"
-docker exec -d --privileged --user root connect bash -c 'tcpdump -w /tmp/tcpdump.pcap -i eth0 -s 0 port 8888'
+playground container exec --container -d --command "--privileged --user root connect bash -c 'tcpdump -w /tmp/tcpdump.pcap -i eth0 -s 0 port 8888'"
 
 # echo "$SERVICENOW_URL" | cut -d "/" -f3
 # ip=$(dig +short $(echo "$SERVICENOW_URL" | cut -d "/" -f3))
 # log "Blocking serviceNow response on nginx-proxy"
-# docker exec -i --privileged --user root nginx-proxy bash -c "apt-get update -y && apt-get install iptables -y"
-# docker exec -i --privileged --user root nginx-proxy bash -c "iptables -A INPUT -p tcp -s $ip -j DROP"
+# playground container exec -i --privileged --user root nginx-proxy bash -c "apt-get update -y && apt-get install iptables -y"
+# playground container exec -i --privileged --user root nginx-proxy bash -c "iptables -A INPUT -p tcp -s $ip -j DROP"
 
 
 # [2021-09-30 09:01:29,490] ERROR [servicenow-source|task-0] WorkerSourceTask{id=servicenow-source-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:184)

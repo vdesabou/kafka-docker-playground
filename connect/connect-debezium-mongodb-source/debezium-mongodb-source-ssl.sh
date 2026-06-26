@@ -64,12 +64,12 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 # https://www.mongodb.com/docs/manual/tutorial/configure-ssl-clients/
 log "Initialize MongoDB replica set"
-docker exec -i mongodb mongosh --tls --tlsCertificateKeyFile /tmp/mongo.pem --tlsCertificateKeyFilePassword --tlsAllowInvalidCertificates confluent --eval 'rs.initiate({_id: "debezium", members:[{_id: 0, host: "mongodb:27017"}]})'
+playground container exec --container mongodb --command "mongosh --tls --tlsCertificateKeyFile /tmp/mongo.pem --tlsCertificateKeyFilePassword --tlsAllowInvalidCertificates confluent --eval 'rs.initiate({_id: \"debezium\", members:[{_id: 0, host: \"mongodb:27017\"}]})'"
 
 sleep 5
 
 log "Create a user profile"
-docker exec -i mongodb mongosh --tls --tlsCertificateKeyFile /tmp/mongo.pem --tlsCertificateKeyFilePassword --tlsAllowInvalidCertificates confluent << EOF
+playground container exec --container mongodb --command "mongosh --tls --tlsCertificateKeyFile /tmp/mongo.pem --tlsCertificateKeyFilePassword --tlsAllowInvalidCertificates confluent" << EOF
 use admin
 db.createUser(
 {
@@ -84,7 +84,7 @@ EOF
 sleep 2
 
 log "Insert a record"
-docker exec -i mongodb mongosh --tls --tlsCertificateKeyFile /tmp/mongo.pem --tlsCertificateKeyFilePassword --tlsAllowInvalidCertificates confluent << EOF
+playground container exec --container mongodb --command "mongosh --tls --tlsCertificateKeyFile /tmp/mongo.pem --tlsCertificateKeyFilePassword --tlsAllowInvalidCertificates confluent" << EOF
 use inventory
 db.customers.insert([
 { _id : 1006, first_name : 'Bob', last_name : 'Hopper', email : 'thebob@example.com' }
@@ -92,7 +92,7 @@ db.customers.insert([
 EOF
 
 log "View record"
-docker exec -i mongodb mongosh --tls --tlsCertificateKeyFile /tmp/mongo.pem --tlsCertificateKeyFilePassword --tlsAllowInvalidCertificates confluent << EOF
+playground container exec --container mongodb --command "mongosh --tls --tlsCertificateKeyFile /tmp/mongo.pem --tlsCertificateKeyFilePassword --tlsAllowInvalidCertificates confluent" << EOF
 use inventory
 db.customers.find().pretty();
 EOF

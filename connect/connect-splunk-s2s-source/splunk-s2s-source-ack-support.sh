@@ -42,8 +42,8 @@ EOF
 sleep 5
 
 log "Enabling ack support in splunk forwarder and restarting."
-docker exec splunk-uf bash -c "echo -e '[tcpout]\ndefaultGroup = default-autolb-group\n\n[tcpout:default-autolb-group]\nserver = indexer1:9997\nuseACK = true' > /opt/splunkforwarder/etc/system/local/outputs.conf"
-docker exec -i splunk-uf bash -c "./bin/splunk restart --answer-yes --no-prompt && \
+playground container exec --container splunk-uf --command "bash -c \"echo -e '[tcpout]\\ndefaultGroup = default-autolb-group\\n\\n[tcpout:default-autolb-group]\\nserver = indexer1:9997\\nuseACK = true' > /opt/splunkforwarder/etc/system/local/outputs.conf\""
+playground container exec --container splunk-uf --command "bash -c \"./bin/splunk restart --answer-yes --no-prompt && \\"
   echo 'Waiting for Splunk UF to start...' && \
   until ./bin/splunk status | grep -q 'splunkd is running'; do
   sleep 2
@@ -51,13 +51,13 @@ docker exec -i splunk-uf bash -c "./bin/splunk restart --answer-yes --no-prompt 
 
 sleep 30
 
-docker exec -i splunk-uf bash -c "echo '' > /opt/splunkforwarder/splunk-s2s-test.log"
+playground container exec --container splunk-uf --command "bash -c \"echo '' > /opt/splunkforwarder/splunk-s2s-test.log\""
 
 log "Configure the UF to monitor the splunk-s2s-test.log file"
-docker exec -i splunk-uf sudo ./bin/splunk add monitor -source /opt/splunkforwarder/splunk-s2s-test.log -auth admin:password
+playground container exec --container splunk-uf --command "sudo ./bin/splunk add monitor -source /opt/splunkforwarder/splunk-s2s-test.log -auth admin:password"
 
 log "Configure the UF to connect to Splunk S2S Source connector"
-docker exec -i splunk-uf sudo ./bin/splunk add forward-server connect:9997
+playground container exec --container splunk-uf --command "sudo ./bin/splunk add forward-server connect:9997"
 
 sleep 20
 
@@ -65,9 +65,9 @@ sleep 20
 # -------------------------------------------------------
 # 2️⃣  Produce Simulated Splunk Events
 # -------------------------------------------------------
-docker exec -i splunk-uf bash -c "echo 'test event 1' > /opt/splunkforwarder/splunk-s2s-test.log"
-docker exec -i splunk-uf bash -c "echo 'test event 2' >> /opt/splunkforwarder/splunk-s2s-test.log"
-docker exec -i splunk-uf bash -c "echo 'test event 3' >> /opt/splunkforwarder/splunk-s2s-test.log"
+playground container exec --container splunk-uf --command "bash -c \"echo 'test event 1' > /opt/splunkforwarder/splunk-s2s-test.log\""
+playground container exec --container splunk-uf --command "bash -c \"echo 'test event 2' >> /opt/splunkforwarder/splunk-s2s-test.log\""
+playground container exec --container splunk-uf --command "bash -c \"echo 'test event 3' >> /opt/splunkforwarder/splunk-s2s-test.log\""
 # -------------------------------------------------------
 # 3️⃣  Verify Kafka Records
 # -------------------------------------------------------

@@ -32,7 +32,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 sleep 30
 
 log "Create Database test in kudu"
-docker exec -i kudu impala-shell -i localhost:21000 -l -u kudu --ldap_password_cmd="echo -n secret" --auth_creds_ok_in_clear << EOF
+playground container exec --container kudu --command "impala-shell -i localhost:21000 -l -u kudu --ldap_password_cmd=\"echo -n secret\" --auth_creds_ok_in_clear" << EOF
 CREATE DATABASE test;
 EOF
 
@@ -118,7 +118,7 @@ EOF
 sleep 15
 
 log "Verify data is in kudu orders table"
-docker exec -i kudu impala-shell -i localhost:21000 -l -u kudu --ldap_password_cmd="echo -n secret" --auth_creds_ok_in_clear > /tmp/result.log  2>&1 <<-EOF
+playground container exec --container kudu --command "impala-shell -i localhost:21000 -l -u kudu --ldap_password_cmd=\"echo -n secret\" --auth_creds_ok_in_clear > /tmp/result.log  2>&1" <<-EOF
 USE test;
 SELECT * from orders;
 EOF

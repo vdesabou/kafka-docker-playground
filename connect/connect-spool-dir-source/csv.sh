@@ -15,7 +15,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Generate data"
-docker exec -i connect bash -c 'mkdir -p /tmp/data/input/ && mkdir -p /tmp/data/error/ && mkdir -p /tmp/data/finished/ && curl -k "https://api.mockaroo.com/api/58605010?count=1000&key=25fd9c80" > /tmp/data/input/csv-spooldir-source.csv'
+playground container exec --container connect --command "bash -c 'mkdir -p /tmp/data/input/ && mkdir -p /tmp/data/error/ && mkdir -p /tmp/data/finished/ && curl -k \"https://api.mockaroo.com/api/58605010?count=1000&key=25fd9c80\" > /tmp/data/input/csv-spooldir-source.csv'"
 
 log "Creating CSV Spool Dir Source connector"
 playground connector create-or-update --connector spool-dir  << EOF

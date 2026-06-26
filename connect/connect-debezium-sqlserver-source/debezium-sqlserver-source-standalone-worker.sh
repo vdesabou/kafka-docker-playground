@@ -24,7 +24,7 @@ fi
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.standalone-worker.yml" --wait-for-control-center
 
 log "Create table"
-docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
+playground container exec --container sqlserver --command "/opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password!" << EOF
 -- Create the test database
 CREATE DATABASE testDB;
 GO
@@ -51,12 +51,12 @@ GO
 EOF
 
 log "Creating Debezium SQL Server source standalone connector"
-docker exec -d connect bash -c 'connect-standalone /tmp/worker.properties /tmp/connector.properties > /tmp/standalone.log 2>&1'
+playground container exec --container -d --command "connect bash -c 'connect-standalone /tmp/worker.properties /tmp/connector.properties > /tmp/standalone.log 2>&1'"
 
 log "Sleeping 60 seconds to let the standalone connector doing the work"
 sleep 60
 
-docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
+playground container exec --container sqlserver --command "/opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password!" << EOF
 USE testDB;
 INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@office.com');
 GO

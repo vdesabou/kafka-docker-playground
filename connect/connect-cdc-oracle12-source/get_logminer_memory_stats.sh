@@ -3,7 +3,7 @@
 
 echo "Memory Stats"
 
-docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+playground container exec --container oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
 CONNECT sys/Admin123 AS SYSDBA
 
 drop table tab1 purge;

@@ -51,13 +51,13 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 log "Setup IBM MQ for EOS: queue KAFKA.OFFSETS.QUEUE"
 # Create offset queue for EOS with exclusive mode enabled
-docker exec -i ibmmq runmqsc QM1 << EOF
+playground container exec --container ibmmq --command "runmqsc QM1" << EOF
 DEFINE QLOCAL(KAFKA.OFFSETS.QUEUE) DEFPSIST(YES) DEFSOPT(EXCL)
 END
 EOF
 
 # Set appropriate permissions for the connector user to read, write and browse the offsets queue
-docker exec -i ibmmq runmqsc QM1 << EOF
+playground container exec --container ibmmq --command "runmqsc QM1" << EOF
 SET AUTHREC OBJTYPE(QUEUE) PROFILE('KAFKA.OFFSETS.QUEUE') PRINCIPAL('app') AUTHADD(GET,PUT,BROWSE,DSP,INQ)
 END
 EOF
@@ -96,7 +96,7 @@ EOF
 sleep 10
 
 log "Verify message received in DEV.QUEUE.1 queue"
-docker exec ibmmq bash -c "/opt/mqm/samp/bin/amqsbcg DEV.QUEUE.1" > /tmp/result.log  2>&1
+playground container exec --container ibmmq --command "bash -c \"/opt/mqm/samp/bin/amqsbcg DEV.QUEUE.1\" > /tmp/result.log  2>&1"
 cat /tmp/result.log
 grep "my message" /tmp/result.log
 

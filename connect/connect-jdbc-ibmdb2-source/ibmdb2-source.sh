@@ -29,7 +29,7 @@ then
 else
   log "🚀 ksqldb is enabled"
   log "🔧 You can use ksqlDB with CLI using:"
-  log "docker exec -i ksqldb-cli ksql http://ksqldb-server:8088"
+  log "playground container exec -i ksqldb-cli ksql http://ksqldb-server:8088"
   profile_ksqldb_command="--profile ksqldb"
 fi
 
@@ -82,7 +82,7 @@ cd -
 
 # sample DB is used https://www.ibm.com/docs/en/db2/11.5?topic=samples-sample-database
 log "List tables"
-docker exec -i ibmdb2 bash << EOF
+playground container exec --container ibmdb2 --command "bash" << EOF
 su - db2inst1
 db2 connect to sample user db2inst1 using passw0rd
 db2 LIST TABLES

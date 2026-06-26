@@ -17,10 +17,10 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 sleep 5
 
 log "Send message to RabbitMQ in myqueue"
-docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
+playground container exec --container rabbitmq_producer --command "bash -c \"python /producer.py myqueue 5\""
 
 # Get the number of messages remaining in the queue
-num_messages=$(docker exec rabbitmq rabbitmqctl -q -p "/" list_queues name messages | awk -v q="myqueue" '$1==q{print $2}')
+num_messages=$(playground container exec --container rabbitmq --command "rabbitmqctl -q -p \"/\" list_queues name messages" | awk -v q="myqueue" '$1==q{print $2}')
 log "Number of messages in myqueue before connector processing: $num_messages"
 
 log "Creating RabbitMQ Source connector"
@@ -48,7 +48,7 @@ log "Asserting that RabbitMQ queue is empty after connector processing"
 QUEUE_NAME="myqueue"
 VHOST="/"
 # Get the number of messages remaining in the queue
-num_messages=$(docker exec rabbitmq rabbitmqctl -q -p "$VHOST" list_queues name messages | awk -v q="$QUEUE_NAME" '$1==q{print $2}')
+num_messages=$(playground container exec --container rabbitmq --command "rabbitmqctl -q -p \"$VHOST\" list_queues name messages" | awk -v q="$QUEUE_NAME" '$1==q{print $2}')
 
 if [ -z "$num_messages" ]; then
 logerror "failed to inspect queue $QUEUE_NAME in vhost $VHOST"
@@ -63,4 +63,4 @@ fi
 log "verified queue $QUEUE_NAME is empty - all messages were successfully consumed and deleted"
 
 #log "Consume messages in RabbitMQ"
-#docker exec -i rabbitmq_consumer bash -c "python /consumer.py myqueue"
+#playground container exec -i rabbitmq_consumer bash -c "python /consumer.py myqueue"

@@ -21,7 +21,7 @@ openssl rsa -in ssh_host_rsa_key -outform pem -passin pass:mypassword > ssh_host
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssh-pem-file.yml"
 
-docker exec sftp-server bash -c "
+playground container exec --container sftp-server --command "bash -c \""
 mkdir -p /chroot/home/foo/upload/input
 mkdir -p /chroot/home/foo/upload/error
 mkdir -p /chroot/home/foo/upload/finished

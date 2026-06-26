@@ -55,14 +55,15 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending EMS messages m1 m2 m3 m4 m5 in queue connector-quickstart"
-docker exec tibco-ems bash -c '
+playground container exec --container tibco-ems --command "bash" << 'EOF'
 cd /opt/tibco/ems/8.5/samples/java
 export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib
 CLASSPATH=${TIBEMS_JAVA}/jms-2.0.jar:${CLASSPATH}
 CLASSPATH=.:${TIBEMS_JAVA}/tibjms.jar:${TIBEMS_JAVA}/tibjmsadmin.jar:${CLASSPATH}
 export CLASSPATH
 javac *.java
-java tibjmsMsgProducer -user admin -queue connector-quickstart m1 m2 m3 m4 m5'
+java tibjmsMsgProducer -user admin -queue connector-quickstart m1 m2 m3 m4 m5
+EOF
 
 
 log "Creating JMS TIBCO source connector"
@@ -95,14 +96,15 @@ log "This tests that commitRecord API properly deletes messages from external sy
 
 # Try to consume one message with a short timeout - if queue is empty, consumer will timeout
 set +e
-CONSUMER_OUTPUT=$(docker exec tibco-ems bash -c '
+CONSUMER_OUTPUT=$(playground container exec --container tibco-ems --command "bash" << 'EOF'
 cd /opt/tibco/ems/8.5/samples/java
 export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib
 CLASSPATH=${TIBEMS_JAVA}/jms-2.0.jar:${CLASSPATH}
 CLASSPATH=.:${TIBEMS_JAVA}/tibjms.jar:${TIBEMS_JAVA}/tibjmsadmin.jar:${CLASSPATH}
 export CLASSPATH
 timeout 5 java tibjmsMsgConsumer -user admin -queue connector-quickstart 2>&1 || true
-')
+EOF
+)
 set -e
 
 # Check if any messages were consumed

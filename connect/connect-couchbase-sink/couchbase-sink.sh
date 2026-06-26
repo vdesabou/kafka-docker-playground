@@ -22,12 +22,12 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Couchbase cluster"
-docker exec couchbase bash -c "/opt/couchbase/bin/couchbase-cli cluster-init --cluster-username Administrator --cluster-password password --services=data,index,query"
+playground container exec --container couchbase --command "bash -c \"/opt/couchbase/bin/couchbase-cli cluster-init --cluster-username Administrator --cluster-password password --services=data,index,query\""
 log "Creating Couchbase bucket travel-data"
-docker exec couchbase bash -c "/opt/couchbase/bin/couchbase-cli bucket-create --cluster localhost:8091 --username Administrator --password password --bucket travel-data --bucket-type couchbase --bucket-ramsize 100"
+playground container exec --container couchbase --command "bash -c \"/opt/couchbase/bin/couchbase-cli bucket-create --cluster localhost:8091 --username Administrator --password password --bucket travel-data --bucket-type couchbase --bucket-ramsize 100\""
 
 log "Sending messages to topic couchbase-sink-example"
-docker exec json-producer bash -c "java -jar json-producer-1.0.0-SNAPSHOT-jar-with-dependencies.jar"
+playground container exec --container json-producer --command "bash -c \"java -jar json-producer-1.0.0-SNAPSHOT-jar-with-dependencies.jar\""
 
 log "Creating Couchbase sink connector"
 playground connector create-or-update --connector couchbase-sink  << EOF
@@ -52,6 +52,6 @@ EOF
 sleep 10
 
 log "Verify data is in Couchbase"
-docker exec couchbase bash -c "cbc cat CDG -U couchbase://localhost/travel-data -u Administrator -P password" > /tmp/result.log  2>&1
+playground container exec --container couchbase --command "bash -c \"cbc cat CDG -U couchbase://localhost/travel-data -u Administrator -P password\" > /tmp/result.log  2>&1"
 cat /tmp/result.log
 grep "airport" /tmp/result.log

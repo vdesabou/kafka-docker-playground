@@ -66,7 +66,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.jtds-ssl.yml"
 
 log "Create table"
-docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
+playground container exec --container sqlserver --command "/opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password!" << EOF
 -- Create the test database
 CREATE DATABASE testDB;
 GO
@@ -111,7 +111,7 @@ EOF
 
 sleep 5
 
-docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
+playground container exec --container sqlserver --command "/opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password!" << EOF
 USE testDB;
 INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@office.com');
 GO

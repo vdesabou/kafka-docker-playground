@@ -124,7 +124,7 @@ EOF
 
 IP=$(nslookup spanner.googleapis.com | grep Address | grep -v "#" | cut -d " " -f 2)
 log "Blocking spanner.googleapis.com IP $IP to make sure proxy is used"
-docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
+playground container exec --container connect --root --command "bash -c \"iptables -A INPUT -p tcp -s $IP -j DROP\""
 
 log "Creating GCP Spanner Sink connector"
 playground connector create-or-update --connector gcp-spanner-sink  << EOF

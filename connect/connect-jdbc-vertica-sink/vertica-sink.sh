@@ -36,7 +36,7 @@ playground container logs --container vertica --wait-for-log "Vertica is now run
 log "VERTICA has started!"
 
 log "Create the table and insert data."
-docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
+playground container exec --container vertica --command "/opt/vertica/bin/vsql -hlocalhost -Udbadmin" << EOF
 CREATE SCHEMA docker.docker;
 create table docker.mytable(f1 varchar(20));
 EOF
@@ -71,7 +71,7 @@ EOF
 sleep 10
 
 log "Check data is in Vertica"
-docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin > /tmp/result.log  2>&1 <<-EOF
+playground container exec --container vertica --command "/opt/vertica/bin/vsql -hlocalhost -Udbadmin > /tmp/result.log  2>&1" <<-EOF
 select * from docker.mytable;
 EOF
 cat /tmp/result.log

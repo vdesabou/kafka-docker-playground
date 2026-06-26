@@ -82,7 +82,7 @@ EOF
 sleep 5
 
 log "Show content of orders table:"
-docker exec -i sybase /sybase/isql -S -Usa -Ppassword > /tmp/result.log  2>&1 <<-EOF
+playground container exec --container sybase --command "/sybase/isql -S -Usa -Ppassword > /tmp/result.log  2>&1" <<-EOF
 select * from orders
 GO
 EOF

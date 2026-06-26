@@ -39,7 +39,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 # need to pre-create otherwise getting ConnectException: null (INT32) type doesn't have a mapping to the SQL database column type
 log "Pre-creating the table to avoid the 'ConnectException: null (INT32) type doesn't have a mapping to the SQL database column type error' "
-docker exec -i databricks-sql-cli-container bash -c "python databricks_sql_cli.py" <<EOF
+playground container exec --container databricks-sql-cli-container --command "bash -c \"python databricks_sql_cli.py\"" <<EOF
 CREATE OR REPLACE TABLE orders ( id INT, product STRING, quantity INT, price FLOAT )TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported');
 exit
 EOF
@@ -113,7 +113,7 @@ EOF
 sleep 60
 
 log "Verifying topic databricks-customers"
-docker exec -i databricks-sql-cli-container bash -c "python databricks_sql_cli.py" <<EOF
+playground container exec --container databricks-sql-cli-container --command "bash -c \"python databricks_sql_cli.py\"" <<EOF
 select count(*) from orders;
 exit
 EOF

@@ -22,7 +22,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 
 log "Create teams table"
-docker exec -i mysql mysql --user=root --password=password --database=mydb << EOF
+playground container exec --container mysql --command "mysql --user=root --password=password --database=mydb" << EOF
 USE mydb;
 
 CREATE TABLE team (
@@ -49,7 +49,7 @@ select * from team;
 EOF
 
 log "Adding an element to the table"
-docker exec -i mysql mysql --user=root --password=password --database=mydb << EOF
+playground container exec --container mysql --command "mysql --user=root --password=password --database=mydb" << EOF
 USE mydb;
 
 INSERT INTO team (
@@ -64,7 +64,7 @@ INSERT INTO team (
 EOF
 
 log "Create customers table"
-docker exec -i mysql mysql --user=root --password=password --database=mydb << EOF
+playground container exec --container mysql --command "mysql --user=root --password=password --database=mydb" << EOF
 USE mydb;
 CREATE TABLE customers (
   id            INT          NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -137,7 +137,7 @@ log "Verifying topic server1_mydb_team"
 playground topic consume --topic server1_mydb_team --min-expected-messages 2 --timeout 60
 
 log "Show content of customer table:"
-docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from customers'"
+playground container exec --container mysql --command "bash -c \"mysql --user=root --password=password --database=mydb -e 'select * from customers'\""
 
 log "Adding customers table to the connector"
 playground connector create-or-update --connector debezium-mysql-source  << EOF
@@ -177,7 +177,7 @@ playground connector create-or-update --connector debezium-mysql-source  << EOF
 EOF
 
 log "insert a record in customers"
-docker exec -i mysql mysql --user=root --password=password --database=mydb << EOF
+playground container exec --container mysql --command "mysql --user=root --password=password --database=mydb" << EOF
 INSERT INTO customers (
   name,
   email,

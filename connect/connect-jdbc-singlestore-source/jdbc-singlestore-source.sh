@@ -14,7 +14,7 @@ fi
 singlestore-wait-start() {
   log "Waiting for SingleStore to start..."
   while true; do
-      if docker exec singlestore memsql -u root -proot -e "select 1" >/dev/null 2>/dev/null; then
+    if playground container exec --container singlestore --command "memsql -u root -proot -e \"select 1\"" >/dev/null 2>/dev/null; then
           break
       fi
       log "."
@@ -47,50 +47,53 @@ docker start singlestore
 singlestore-wait-start
 
 log "Creating 'db' SingleStore database and table 'application'"
-docker exec singlestore memsql -u root -proot -e "
-CREATE DATABASE IF NOT EXISTS db;  \
-USE db; \
-CREATE TABLE IF NOT EXISTS application ( \
-  id            INT          NOT NULL PRIMARY KEY AUTO_INCREMENT, \
-  name          VARCHAR(255) NOT NULL, \
-  team_email    VARCHAR(255) NOT NULL, \
-  last_modified DATETIME     NOT NULL \
-); \
-INSERT INTO application ( \
-  id, \
-  name, \
-  team_email, \
-  last_modified \
-) VALUES ( \
-  1, \
-  'kafka', \
-  'kafka@apache.org', \
-  NOW() \
-);"
+playground container exec --container singlestore --command "memsql -u root -proot" << EOF
+CREATE DATABASE IF NOT EXISTS db;
+USE db;
+CREATE TABLE IF NOT EXISTS application (
+  id            INT          NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  name          VARCHAR(255) NOT NULL,
+  team_email    VARCHAR(255) NOT NULL,
+  last_modified DATETIME     NOT NULL
+);
+INSERT INTO application (
+  id,
+  name,
+  team_email,
+  last_modified
+) VALUES (
+  1,
+  'kafka',
+  'kafka@apache.org',
+  NOW()
+);
+EOF
 
 
 log "Describing the application table in DB 'db':"
-docker exec singlestore memsql -u root -proot -e "USE db;describe application"
+playground container exec --container singlestore --command "memsql -u root -proot -e \"USE db;describe application\""
 
 log "Show content of application table:"
-docker exec singlestore memsql -u root -proot -e "USE db;select * from application"
+playground container exec --container singlestore --command "memsql -u root -proot -e \"USE db;select * from application\""
 
 log "Adding an element to the table"
-docker exec singlestore memsql -u root -proot -e "USE db;
-INSERT INTO application (   \
-  id,   \
-  name, \
-  team_email,   \
-  last_modified \
-) VALUES (  \
-  2,    \
-  'another',  \
-  'another@apache.org',   \
-  NOW() \
-); "
+playground container exec --container singlestore --command "memsql -u root -proot" << EOF
+USE db;
+INSERT INTO application (
+  id,
+  name,
+  team_email,
+  last_modified
+) VALUES (
+  2,
+  'another',
+  'another@apache.org',
+  NOW()
+);
+EOF
 
 log "Show content of application table:"
-docker exec singlestore memsql -u root -proot -e "USE db;select * from application"
+playground container exec --container singlestore --command "memsql -u root -proot -e \"USE db;select * from application\""
 
 
 log "Creating JDBC Singlestore source connector"

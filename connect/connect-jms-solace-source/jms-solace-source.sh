@@ -57,7 +57,7 @@ wait_for_solace
 log "Solace UI is accessible at http://127.0.0.1:8080 (admin/admin)"
 
 log "Create the queue connector-quickstart in the default Message VPN using CLI"
-docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd"
+playground container exec --container solace --command "bash -c \"/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd\""
 
 # Setting message.timestamp.type=LogAppendTime otherwise we have CreateTime:0
 playground topic create --topic source-messages --nb-partitions 1

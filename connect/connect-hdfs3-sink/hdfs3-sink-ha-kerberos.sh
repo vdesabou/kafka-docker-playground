@@ -18,15 +18,15 @@ log "Wait 80 seconds while hadoop is installing"
 sleep 80
 
 log "namenode1 becomes primary"
-docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local;hdfs haadmin -transitionToActive nn1"
+playground container exec --container namenode1 --command "bash -c \"kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local;hdfs haadmin -transitionToActive nn1\""
 
 sleep 10
 
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
-docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hdfs dfs -chmod 777  /"
+playground container exec --container namenode1 --command "bash -c \"kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hdfs dfs -chmod 777  /\""
 
 log "Add connect kerberos principal"
-docker exec -i krb5 kadmin.local << EOF
+playground container exec --container krb5 --command "kadmin.local" << EOF
 addprinc -randkey connect/connect.kerberos-demo.local@EXAMPLE.COM
 modprinc -maxrenewlife 11days +allow_renewable connect/connect.kerberos-demo.local@EXAMPLE.COM
 modprinc -maxrenewlife 11days krbtgt/EXAMPLE.COM
@@ -40,7 +40,7 @@ docker cp krb5:/connect.keytab .
 docker cp connect.keytab connect:/tmp/connect.keytab
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
-     docker exec -u 0 connect chown appuser:appuser /tmp/connect.keytab
+     playground container exec --container connect --root --command "chown appuser:appuser /tmp/connect.keytab"
 fi
 
 log "Creating HDFS Sink connector"
@@ -86,10 +86,10 @@ EOF
 sleep 10
 
 log "Listing content of /topics/test_hdfs/partition=0 in HDFS"
-docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hdfs dfs -ls /topics/test_hdfs/partition=0"
+playground container exec --container namenode1 --command "bash -c \"kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hdfs dfs -ls /topics/test_hdfs/partition=0\""
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hadoop fs -copyToLocal /topics/test_hdfs/partition=0/test_hdfs+0+0000000000+0000000002.avro /tmp"
+playground container exec --container namenode1 --command "bash -c \"kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hadoop fs -copyToLocal /topics/test_hdfs/partition=0/test_hdfs+0+0000000000+0000000002.avro /tmp\""
 docker cp namenode1:/tmp/test_hdfs+0+0000000000+0000000002.avro /tmp/
 
 playground  tools read-avro-file --file /tmp/test_hdfs+0+0000000000+0000000002.avro

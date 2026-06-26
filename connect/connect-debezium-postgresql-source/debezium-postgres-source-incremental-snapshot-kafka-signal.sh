@@ -22,7 +22,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 
 log "Create customers table:"
-docker exec -i postgres psql -U myuser -d postgres << EOF
+playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
 create table customers (
         id INT PRIMARY KEY,
         first_name VARCHAR(50),
@@ -72,7 +72,7 @@ insert into customers (id, first_name, last_name, email, gender, club_status, co
 EOF
 
 log "Create customers2 table:"
-docker exec -i postgres psql -U myuser -d postgres << EOF
+playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
 create table customers2 (
         id INT PRIMARY KEY,
         first_name VARCHAR(50),
@@ -122,22 +122,22 @@ insert into customers2 (id, first_name, last_name, email, gender, club_status, c
 EOF
 
 log "Creating a signaling data collection"
-docker exec -i postgres psql -U myuser -d postgres << EOF
+playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
 CREATE TABLE debezium_signal (id VARCHAR(100) PRIMARY KEY, type VARCHAR(100) NOT NULL, data VARCHAR(2048) NULL);
 EOF
 
 log "Show content of customers table:"
-docker exec -i postgres psql -U myuser -d postgres << EOF
+playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
 SELECT * FROM customers;
 EOF
 
 log "Show content of customers2 table:"
-docker exec -i postgres psql -U myuser -d postgres << EOF
+playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
 SELECT * FROM customers2;
 EOF
 
 log "Show content of debezium_signal table:"
-docker exec -i postgres psql -U myuser -d postgres << EOF
+playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
 SELECT * FROM debezium_signal;
 EOF
 
@@ -221,7 +221,7 @@ EOF
 sleep 10
 
 log "insert a record in customers2"
-docker exec -i postgres psql -U myuser -d postgres << EOF
+playground container exec --container postgres --command "psql -U myuser -d postgres" << EOF
 insert into customers2 (id, first_name, last_name, email, gender, club_status, comments) values (21, 'Anselma2', 'Rook2', 'arook2j@europa.eu', 'Female2', 'gold2', 'Cross-group 24/7 application');
 EOF
 

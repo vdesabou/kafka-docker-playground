@@ -57,9 +57,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating an access token"
-ACCESS_TOKEN=$(docker exec connect \
-   curl -s -X GET \
-    "${MARKETO_ENDPOINT_URL}/identity/oauth/token?grant_type=client_credentials&client_id=$MARKETO_CLIENT_ID&client_secret=$MARKETO_CLIENT_SECRET" | jq -r .access_token)
+ACCESS_TOKEN=$(playground container exec --container connect --command "curl -s -X GET \"${MARKETO_ENDPOINT_URL}/identity/oauth/token?grant_type=client_credentials&client_id=$MARKETO_CLIENT_ID&client_secret=$MARKETO_CLIENT_SECRET\" | jq -r .access_token")
 
 log "Create 3 leads to Marketo"
 for((i=0;i<3;i++))
@@ -68,13 +66,7 @@ do
      LEAD_LASTNAME="Doe_$RANDOM_${i}"
 
      log "Lead: $LEAD_FIRSTNAME $LEAD_LASTNAME"
-     docker exec connect \
-     curl -s -X POST \
-     "${MARKETO_ENDPOINT_URL}/rest/v1/leads.json?access_token=$ACCESS_TOKEN" \
-     -H 'Accept: application/json' \
-     -H 'Content-Type: application/json' \
-     -H 'cache-control: no-cache' \
-     -d "{ \"action\":\"createOrUpdate\", \"lookupField\":\"email\", \"input\":[ { \"lastName\":\"$LEAD_LASTNAME\", \"firstName\":\"$LEAD_FIRSTNAME\", \"middleName\":null, \"email\":\"$LEAD_FIRSTNAME.$LEAD_LASTNAME@email.com\" } ]}"
+     playground container exec --container connect --command "curl -s -X POST \"${MARKETO_ENDPOINT_URL}/rest/v1/leads.json?access_token=$ACCESS_TOKEN\" -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{ \"action\":\"createOrUpdate\", \"lookupField\":\"email\", \"input\":[ { \"lastName\":\"$LEAD_LASTNAME\", \"firstName\":\"$LEAD_FIRSTNAME\", \"middleName\":null, \"email\":\"$LEAD_FIRSTNAME.$LEAD_LASTNAME@email.com\" } ]}'"
 done
 
 if [[ "$OSTYPE" == "darwin"* ]]

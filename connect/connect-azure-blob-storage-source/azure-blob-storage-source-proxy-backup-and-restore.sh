@@ -75,7 +75,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 DOMAIN="$AZURE_CONTAINER_NAME.blob.core.windows.net"
 IP=$(nslookup $DOMAIN | grep Address | grep -v "#" | cut -d " " -f 2 | tail -1)
 log "Blocking $DOMAIN IP $IP to make sure proxy is used"
-docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
+playground container exec --container connect --root --command "bash -c \"iptables -A INPUT -p tcp -s $IP -j DROP\""
 
 log "Creating Azure Blob Storage Sink connector"
 playground connector create-or-update --connector azure-blob-sink  << EOF
