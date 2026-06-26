@@ -9527,6 +9527,7 @@ function filter_oracle_running() {
 }
 
 function filter_connect_running() {
+    set -x
   get_connect_url_and_security
 
   curl $security -s "${connect_url}" > /dev/null 2>&1
@@ -11820,8 +11821,38 @@ function wait_container_ready() {
   start_time=$SECONDS
 
   CONNECT_CONTAINER=${1:-"connect"}
-  CONTROL_CENTER_CONTAINER=${1:-"control-center"}
+  CONTROL_CENTER_CONTAINER=${2:-"control-center"}
   MAX_WAIT=300
+
+  if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+  then
+    if [ ! -z $WAIT_FOR_CONTROL_CENTER ]
+    then
+      CFK_POD_NAME="controlcenter-0"
+    elif [[ $CONNECT_CONTAINER == connect* ]]
+    then
+      CFK_POD_NAME="connect-0"
+    else
+      CFK_POD_NAME="$CONNECT_CONTAINER"
+    fi
+
+    log "⌛ Waiting up to $MAX_WAIT seconds for CFK pod ${CFK_POD_NAME} to start"
+    set +e
+    kubectl -n confluent wait --for=condition=Ready "pod/${CFK_POD_NAME}" --timeout="${MAX_WAIT}s" > /dev/null 2>&1
+    if [[ $? -ne 0 ]]
+    then
+      logwarn "Could not confirm readiness for pod ${CFK_POD_NAME}, listing current pods in namespace confluent"
+      kubectl -n confluent get pods || true
+      logerror "CFK pod ${CFK_POD_NAME} did not become ready in ${MAX_WAIT} seconds"
+      exit 1
+    fi
+    set -e
+
+    # Calculate elapsed time
+    elapsed_time=$(( SECONDS - start_time ))
+    log "🚦 CFK pod ${CFK_POD_NAME} is ready! (took $elapsed_time seconds)"
+    return
+  fi
 
   if [ ! -z $WAIT_FOR_CONTROL_CENTER ]
   then

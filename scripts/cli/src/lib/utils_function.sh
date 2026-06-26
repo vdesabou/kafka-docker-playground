@@ -1187,8 +1187,53 @@ function wait_container_ready() {
   start_time=$SECONDS
   
   CONNECT_CONTAINER=${1:-"connect"}
-  CONTROL_CENTER_CONTAINER=${1:-"control-center"}
+  CONTROL_CENTER_CONTAINER=${2:-"control-center"}
   MAX_WAIT=300
+
+  if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+  then
+    if [ ! -z $WAIT_FOR_CONTROL_CENTER ]
+    then
+      CFK_POD_NAME="controlcenter-0"
+    elif [[ $CONNECT_CONTAINER == connect* ]]
+    then
+      CFK_POD_NAME="connect-0"
+    else
+      CFK_POD_NAME="$CONNECT_CONTAINER"
+    fi
+
+    log "⌛ Waiting up to $MAX_WAIT seconds for CFK pod ${CFK_POD_NAME} to start"
+    set +e
+    CFK_WAIT_INTERVAL=5
+    CFK_CUR_WAIT=0
+    while true
+    do
+      if kubectl -n confluent get pod "${CFK_POD_NAME}" > /dev/null 2>&1
+      then
+        kubectl -n confluent wait --for=condition=Ready "pod/${CFK_POD_NAME}" --timeout="${CFK_WAIT_INTERVAL}s" > /dev/null 2>&1
+        if [[ $? -eq 0 ]]
+        then
+          break
+        fi
+      fi
+
+      CFK_CUR_WAIT=$(( CFK_CUR_WAIT + CFK_WAIT_INTERVAL ))
+      if [[ "$CFK_CUR_WAIT" -ge "$MAX_WAIT" ]]
+      then
+        logwarn "Could not confirm readiness for pod ${CFK_POD_NAME}, listing current pods in namespace confluent"
+        kubectl -n confluent get pods || true
+        logerror "CFK pod ${CFK_POD_NAME} did not become ready in ${MAX_WAIT} seconds"
+        exit 1
+      fi
+      sleep "$CFK_WAIT_INTERVAL"
+    done
+    set -e
+
+    # Calculate elapsed time
+    elapsed_time=$(( SECONDS - start_time ))
+    log "🚦 CFK pod ${CFK_POD_NAME} is ready! (took $elapsed_time seconds)"
+    return
+  fi
 
   if [ ! -z $WAIT_FOR_CONTROL_CENTER ]
   then
