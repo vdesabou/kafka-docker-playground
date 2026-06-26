@@ -462,11 +462,11 @@ EOF
       done
     fi
 
+    has_any_port=0
+    parsed_ports=()
     if [[ -n "$ports_list" ]]
     then
       IFS=';' read -r -a port_items <<< "$ports_list"
-      has_any_port=0
-      parsed_ports=()
       for port_item in "${port_items[@]}"
       do
         container_port=$(parse_compose_container_port "$port_item")
@@ -481,11 +481,20 @@ EOF
           echo "        - containerPort: ${container_port}" >> "$output_file"
         fi
       done
+    fi
 
-      if [[ "$has_any_port" -eq 1 ]]
-      then
-        echo "---" >> "$output_file"
-        cat >> "$output_file" << EOF
+    # MySQL examples often omit explicit port mapping in compose overrides.
+    # Create a Service on 3306 so hostname "mysql" resolves from Connect in CFK.
+    if [[ "$has_any_port" -eq 0 ]] && [[ "$pod_name" == "mysql" ]]
+    then
+      parsed_ports=("3306")
+      has_any_port=1
+    fi
+
+    if [[ "$has_any_port" -eq 1 ]]
+    then
+      echo "---" >> "$output_file"
+      cat >> "$output_file" << EOF
 apiVersion: v1
 kind: Service
 metadata:
@@ -496,17 +505,16 @@ spec:
     app: ${pod_name}
   ports:
 EOF
-        service_port_index=1
-        for container_port in "${parsed_ports[@]}"
-        do
-          {
-            echo "    - name: port-${service_port_index}"
-            echo "      port: ${container_port}"
-            echo "      targetPort: ${container_port}"
-          } >> "$output_file"
-          ((service_port_index=service_port_index+1))
-        done
-      fi
+      service_port_index=1
+      for container_port in "${parsed_ports[@]}"
+      do
+        {
+          echo "    - name: port-${service_port_index}"
+          echo "      port: ${container_port}"
+          echo "      targetPort: ${container_port}"
+        } >> "$output_file"
+        ((service_port_index=service_port_index+1))
+      done
     fi
   done < "$tmp_services_file"
 
