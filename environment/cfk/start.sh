@@ -845,25 +845,82 @@ function reset_cfk_namespace_state() {
   if [[ "$reset_mode" == "namespace" ]]
   then
     log "🔁 Hard reset requested: force-deleting namespace $namespace"
-    
+
     set +e
-    
-    # Strip finalizers via the Kubernetes finalize API (fastest way to bypass Terminating state)
+
+    # Kick off a regular delete (may hang if finalizers present, that's fine — we fix it next)
+    kubectl delete namespace "$namespace" --ignore-not-found=true --wait=false >/dev/null 2>&1 || true
+
+    # Repeatedly clear finalizers from all namespaced resources + namespace itself.
+    # This mirrors manual recovery commands and is resilient to CFK resources reappearing.
     local ns_json_file
-    ns_json_file=$(mktemp)
-    if kubectl get namespace "$namespace" -o json > "$ns_json_file" 2>/dev/null
-    then
-      log "  Stripping finalizers..."
-      sed -E 's/"finalizers"[[:space:]]*:[[:space:]]*\[[^]]*\]/"finalizers": []/g' "$ns_json_file" > "${ns_json_file}.patched"
-      kubectl replace --raw "/api/v1/namespaces/${namespace}/finalize" -f "${ns_json_file}.patched" >/dev/null 2>&1 || true
-      rm -f "$ns_json_file" "${ns_json_file}.patched"
-    fi
-    
-    # Now delete the namespace (should succeed quickly since finalizers are gone)
-    kubectl delete namespace "$namespace" --ignore-not-found=true --wait=true --timeout=60s >/dev/null 2>&1 || true
-    
+    local all_resource_type=""
+    local all_resource_name=""
+    local cfk_resource_type=""
+    local clear_pass=0
+    for clear_pass in {1..4}
+    do
+      log "  Stripping resource finalizers (pass ${clear_pass}/4)..."
+
+      # Generic pass over every namespaced resource type.
+      while IFS= read -r all_resource_type
+      do
+        if [[ -z "$all_resource_type" ]]; then continue; fi
+        while IFS= read -r all_resource_name
+        do
+          if [[ -z "$all_resource_name" ]]; then continue; fi
+          kubectl -n "$namespace" patch "$all_resource_type" "$all_resource_name" \
+            --type=merge -p '{"metadata":{"finalizers":[]}}' >/dev/null 2>&1 || true
+        done < <(kubectl -n "$namespace" get "$all_resource_type" --no-headers 2>/dev/null | awk '{print $1}')
+      done < <(kubectl api-resources --verbs=list --namespaced=true -o name 2>/dev/null)
+
+      # Explicit CFK pass (same intent as the manual command shared by user).
+      while IFS= read -r cfk_resource_type
+      do
+        if [[ -z "$cfk_resource_type" ]]; then continue; fi
+        while IFS= read -r all_resource_name
+        do
+          if [[ -z "$all_resource_name" ]]; then continue; fi
+          kubectl -n "$namespace" patch "$cfk_resource_type" "$all_resource_name" \
+            --type=merge -p '{"metadata":{"finalizers":[]}}' >/dev/null 2>&1 || true
+        done < <(kubectl -n "$namespace" get "$cfk_resource_type" --no-headers 2>/dev/null | awk '{print $1}')
+      done < <(kubectl api-resources --api-group=platform.confluent.io --verbs=list --namespaced=true -o name 2>/dev/null)
+
+      # Namespace-level finalize call.
+      ns_json_file=$(mktemp)
+      if kubectl get namespace "$namespace" -o json > "$ns_json_file" 2>/dev/null
+      then
+        sed -E 's/"finalizers"[[:space:]]*:[[:space:]]*\[[^]]*\]/"finalizers": []/g' "$ns_json_file" > "${ns_json_file}.patched"
+        kubectl replace --raw "/api/v1/namespaces/${namespace}/finalize" -f "${ns_json_file}.patched" >/dev/null 2>&1 || true
+      fi
+      rm -f "$ns_json_file" "${ns_json_file}.patched" >/dev/null 2>&1 || true
+
+      kubectl get namespace "$namespace" >/dev/null 2>&1
+      if [[ "$?" -ne 0 ]]
+      then
+        break
+      fi
+      sleep 2
+    done
+
+    # Wait for the namespace to fully disappear
+    local ns_wait=0
+    while kubectl get namespace "$namespace" >/dev/null 2>&1
+    do
+      ns_wait=$(( ns_wait + 1 ))
+      if [[ "$ns_wait" -ge 120 ]]; then
+        logerror "❌ Namespace $namespace still exists after 120s"
+        logerror "❌ Remaining namespace details (status + finalizers):"
+        kubectl get namespace "$namespace" -o yaml | sed -n '1,160p' || true
+        logerror "❌ Remaining CFK resources in namespace (if any):"
+        kubectl -n "$namespace" get $(kubectl api-resources --api-group=platform.confluent.io --verbs=list --namespaced=true -o name 2>/dev/null | tr '\n' ',' | sed 's/,$//') 2>/dev/null || true
+        exit 1
+      fi
+      sleep 1
+    done
+
     set -e
-    
+
     # Recreate clean namespace
     kubectl create namespace "$namespace" >/dev/null
     kubectl config set-context --current --namespace="$namespace" >/dev/null
@@ -986,8 +1043,36 @@ fi
 if [[ -n "$CONNECTOR_ZIP_HTTP_DIR" ]] && [[ -n "$(find "$CONNECTOR_ZIP_HTTP_DIR" -maxdepth 1 -name '*.zip' -print -quit 2>/dev/null)" ]]
 then
   log "Serve local CONNECTOR_ZIP for CFK on-demand plugin download"
+
+  # Avoid stale listeners from previous runs serving the wrong directory on 18080.
+  set +e
+  lsof -i ":18080" 2>/dev/null | awk 'NR>1 {print $2}' | xargs kill -9 2>/dev/null || true
+  set -e
+
   python3 -m http.server 18080 --directory "$CONNECTOR_ZIP_HTTP_DIR" >/tmp/cfk-connector-zip-http.log 2>&1 &
   CONNECTOR_ZIP_SERVER_PID=$!
+
+  # Fail fast if server did not start or expected zip is not served.
+  sleep 1
+  if ! kill -0 "$CONNECTOR_ZIP_SERVER_PID" >/dev/null 2>&1
+  then
+    logerror "❌ Could not start local CONNECTOR_ZIP HTTP server on port 18080"
+    cat /tmp/cfk-connector-zip-http.log | tail -30 || true
+    exit 1
+  fi
+
+  local_served_zip=$(find "$CONNECTOR_ZIP_HTTP_DIR" -maxdepth 1 -name '*.zip' -print -quit 2>/dev/null)
+  if [[ -n "$local_served_zip" ]]
+  then
+    local_served_zip_name=$(basename "$local_served_zip")
+    if ! curl -fsS "http://127.0.0.1:18080/${local_served_zip_name}" >/dev/null 2>&1
+    then
+      logerror "❌ Local CONNECTOR_ZIP HTTP server is up but ${local_served_zip_name} is not downloadable"
+      cat /tmp/cfk-connector-zip-http.log | tail -30 || true
+      exit 1
+    fi
+    log "✅ Local plugin archive is served at http://host.minikube.internal:18080/${local_served_zip_name}"
+  fi
 fi
 
 log "Build images in minikube docker daemon"
@@ -1060,6 +1145,39 @@ fi
 
 wait_container_ready
 
+# When an on-demand build patch is applied, the Connect pod becomes Kubernetes-ready
+# while CFK is still downloading and installing plugins asynchronously.
+# Wait until the Connect CR's appState reaches "Running" to ensure plugins are loaded.
+if [[ -n "$CONNECT_BUILD_PATCH_FILE" ]]
+then
+  log "⏳ Waiting for Connect on-demand build plugins to appear via REST API..."
+  set +e
+  connect_build_wait_max=300
+  connect_build_cur_wait=0
+  connect_build_interval=10
+  while true
+  do
+    connect_plugin_count=$(kubectl -n confluent exec connect-0 -- curl -s http://localhost:8083/connector-plugins 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d))" 2>/dev/null || echo "0")
+    if [[ "$connect_plugin_count" =~ ^[0-9]+$ ]] && [[ "$connect_plugin_count" -gt 3 ]]
+    then
+      log "✅ Connect REST API reports $connect_plugin_count connector plugins (on-demand build complete)"
+      break
+    fi
+    connect_build_cur_wait=$(( connect_build_cur_wait + connect_build_interval ))
+    if [[ "$connect_build_cur_wait" -ge "$connect_build_wait_max" ]]
+    then
+      logwarn "⚠️ Only $connect_plugin_count plugins visible after ${connect_build_wait_max}s — on-demand build may have failed"
+      log "  Init container logs:"
+      kubectl -n confluent logs connect-0 -c config-init-container 2>/dev/null | tail -30 || true
+      log "  Connect CR status:"
+      kubectl -n confluent get connect connect -o jsonpath='{.status}' 2>/dev/null | python3 -m json.tool 2>/dev/null || true
+      break
+    fi
+    log "  ⌛ Connect REST API plugins=${connect_plugin_count} (waiting for >3), elapsed: ${connect_build_cur_wait}/${connect_build_wait_max}s"
+    sleep "$connect_build_interval"
+  done
+  set -e
+fi
 
 CONTROL_CENTER_PF_PID=""
 SCHEMA_REGISTRY_PF_PID=""
