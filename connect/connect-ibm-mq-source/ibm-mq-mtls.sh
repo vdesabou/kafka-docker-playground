@@ -104,6 +104,7 @@ log "Sending messages to DEV.QUEUE.1 JMS queue:"
 playground container exec --container ibmmq --command "/opt/mqm/samp/bin/amqsput DEV.QUEUE.1" << EOF
 Message 1
 Message 2
+
 EOF
 
 sleep 5

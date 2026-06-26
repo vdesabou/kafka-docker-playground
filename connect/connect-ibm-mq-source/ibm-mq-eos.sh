@@ -94,8 +94,8 @@ log "Sending messages to DEV.QUEUE.1 JMS queue:"
 playground container exec --container ibmmq --command "/opt/mqm/samp/bin/amqsput DEV.QUEUE.1" << EOF
 Message 1
 Message 2
-EOF
 
+EOF
 sleep 5
 
 log "Verify we have received the data in MyKafkaTopicName topic using --isolation-level read_committed"
