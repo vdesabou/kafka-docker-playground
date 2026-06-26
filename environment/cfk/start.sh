@@ -53,9 +53,11 @@ function generate_extra_pods_from_compose_override() {
   local pod_name=""
   local container_name=""
   local image=""
+  local platform=""
   local build_context=""
   local build_context_abs=""
   local auto_image=""
+  local image_pull_policy="IfNotPresent"
   local env_list=""
   local ports_list=""
   local env_items=()
@@ -92,10 +94,11 @@ function generate_extra_pods_from_compose_override() {
         for (i = 1; i <= ports_count; i++) {
           ports_joined = ports_joined (i > 1 ? ";" : "") ports[i]
         }
-        print service "|" image "|" build_context "|" env_joined "|" ports_joined
+        print service "|" image "|" build_context "|" platform "|" env_joined "|" ports_joined
       }
       service=""
       image=""
+      platform=""
       build_context=""
       section=""
       env_count=0
@@ -104,7 +107,7 @@ function generate_extra_pods_from_compose_override() {
       delete ports
     }
 
-    BEGIN { in_services=0; service=""; image=""; build_context=""; section=""; env_count=0; ports_count=0 }
+    BEGIN { in_services=0; service=""; image=""; platform=""; build_context=""; section=""; env_count=0; ports_count=0 }
     /^services:[[:space:]]*$/ { in_services=1; next }
     {
       if (in_services == 1 && $0 ~ /^[^[:space:]]/) {
@@ -129,6 +132,13 @@ function generate_extra_pods_from_compose_override() {
         image=$0
         sub(/^    image:[[:space:]]*/, "", image)
         image=trim(unquote(image))
+        section=""
+        next
+      }
+      if ($0 ~ /^    platform:[[:space:]]*/) {
+        platform=$0
+        sub(/^    platform:[[:space:]]*/, "", platform)
+        platform=trim(unquote(platform))
         section=""
         next
       }
@@ -221,7 +231,7 @@ function generate_extra_pods_from_compose_override() {
   }
 
   : > "$output_file"
-  while IFS='|' read -r service_name image build_context env_list ports_list
+  while IFS='|' read -r service_name image build_context platform env_list ports_list
   do
     if [[ -z "$service_name" ]]
     then
@@ -237,9 +247,17 @@ function generate_extra_pods_from_compose_override() {
     pod_name=$(echo "$service_name" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9.-]+/-/g' | sed -E 's/^-+//;s/-+$//')
     container_name="${pod_name}"
 
+    image_pull_policy="IfNotPresent"
+
     if [[ -n "$image" ]]
     then
       image=$(echo "$image" | envsubst)
+      if [[ -n "$platform" ]]
+      then
+        log "📦 Pulling image $image for platform $platform for service $service_name"
+        docker pull --platform "$platform" "$image"
+        image_pull_policy="Never"
+      fi
     elif [[ -n "$build_context" ]]
     then
       build_context=$(echo "$build_context" | envsubst)
@@ -260,6 +278,7 @@ function generate_extra_pods_from_compose_override() {
       log "🧱 Building image $auto_image for service $service_name from $build_context_abs"
       docker build -t "$auto_image" "$build_context_abs"
       image="$auto_image"
+      image_pull_policy="Never"
     else
       continue
     fi
@@ -281,7 +300,7 @@ spec:
   containers:
     - name: ${container_name}
       image: ${image}
-      imagePullPolicy: IfNotPresent
+      imagePullPolicy: ${image_pull_policy}
 EOF
 
     if [[ -n "$env_list" ]]
