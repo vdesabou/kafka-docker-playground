@@ -11837,14 +11837,29 @@ function wait_container_ready() {
 
     log "⌛ Waiting up to $MAX_WAIT seconds for CFK pod ${CFK_POD_NAME} to start"
     set +e
-    kubectl -n confluent wait --for=condition=Ready "pod/${CFK_POD_NAME}" --timeout="${MAX_WAIT}s" > /dev/null 2>&1
-    if [[ $? -ne 0 ]]
-    then
-      logwarn "Could not confirm readiness for pod ${CFK_POD_NAME}, listing current pods in namespace confluent"
-      kubectl -n confluent get pods || true
-      logerror "CFK pod ${CFK_POD_NAME} did not become ready in ${MAX_WAIT} seconds"
-      exit 1
-    fi
+    CFK_WAIT_INTERVAL=5
+    CFK_CUR_WAIT=0
+    while true
+    do
+      if kubectl -n confluent get pod "${CFK_POD_NAME}" > /dev/null 2>&1
+      then
+        kubectl -n confluent wait --for=condition=Ready "pod/${CFK_POD_NAME}" --timeout="${CFK_WAIT_INTERVAL}s" > /dev/null 2>&1
+        if [[ $? -eq 0 ]]
+        then
+          break
+        fi
+      fi
+
+      CFK_CUR_WAIT=$(( CFK_CUR_WAIT + CFK_WAIT_INTERVAL ))
+      if [[ "$CFK_CUR_WAIT" -ge "$MAX_WAIT" ]]
+      then
+        logwarn "Could not confirm readiness for pod ${CFK_POD_NAME}, listing current pods in namespace confluent"
+        kubectl -n confluent get pods || true
+        logerror "CFK pod ${CFK_POD_NAME} did not become ready in ${MAX_WAIT} seconds"
+        exit 1
+      fi
+      sleep "$CFK_WAIT_INTERVAL"
+    done
     set -e
 
     # Calculate elapsed time
@@ -25173,14 +25188,14 @@ playground_container_exec_command() {
   			logwarn "👑 --root flag is ignored in cfk mode"
   		fi
   		log "🪄 Executing command in pod $resolved_container with $shell"
-  		kubectl -n confluent exec "$resolved_container" -- "$shell" -c "$command"
+  		kubectl -n confluent exec -i "$resolved_container" -- "$shell" -c "$command"
   	elif [[ -n "$root" ]]
   	then
   	log "🪄👑 Executing command as root in container $container with $shell"
-  	docker exec --privileged --user root $resolved_container $shell -c "$command"
+  	docker exec -i --privileged --user root $resolved_container $shell -c "$command"
   	else
   	log "🪄 Executing command in container $container with $shell"
-  	docker exec $resolved_container $shell -c "$command"
+  	docker exec -i $resolved_container $shell -c "$command"
   	fi
   done
 }
