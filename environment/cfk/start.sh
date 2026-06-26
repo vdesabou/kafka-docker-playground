@@ -754,4 +754,50 @@ then
   log "🔌 Connect REST API is reachable at http://127.0.0.1:8083"
 fi
 
+
+# Port-forward extra pod Services (parsed directly from EXTRA_PODS_FILE, not from cluster)
+if [[ -n "$EXTRA_PODS_FILE" ]] && [[ -s "$EXTRA_PODS_FILE" ]]
+then
+  log "🔀 Port-forwarding extra pod services"
+  in_service_block=0
+  current_svc_name=""
+  set +e
+  while IFS= read -r yaml_line
+  do
+    # Entering a Service block
+    if [[ "$yaml_line" =~ ^kind:[[:space:]]*Service ]]
+    then
+      in_service_block=1
+      current_svc_name=""
+      continue
+    fi
+    # Leaving a Service block (new document)
+    if [[ "$yaml_line" == "---" ]]
+    then
+      in_service_block=0
+      current_svc_name=""
+      continue
+    fi
+    if [[ "$in_service_block" -eq 0 ]]
+    then
+      continue
+    fi
+    # Capture service name
+    if [[ -z "$current_svc_name" ]] && [[ "$yaml_line" =~ ^[[:space:]]*name:[[:space:]]*([a-z0-9-]+) ]]
+    then
+      current_svc_name="${BASH_REMATCH[1]}"
+      continue
+    fi
+    # Forward each port listed under spec.ports
+    if [[ -n "$current_svc_name" ]] && [[ "$yaml_line" =~ ^[[:space:]]*port:[[:space:]]*([0-9]+) ]]
+    then
+      svc_port="${BASH_REMATCH[1]}"
+      start_port_forward "$current_svc_name" "$svc_port" "$svc_port" \
+        "/tmp/${current_svc_name}-${svc_port}-port-forward.log" "$current_svc_name" > /dev/null || true
+      log "🔌 Extra service ${current_svc_name} is reachable at http://127.0.0.1:${svc_port}"
+    fi
+  done < "$EXTRA_PODS_FILE"
+  set -e
+fi
+
 playground state set run.environment "cfk"
