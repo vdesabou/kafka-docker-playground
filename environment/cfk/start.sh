@@ -526,7 +526,7 @@ function generate_connect_build_patch_from_compose() {
   local connector_zip_url="$3"
   local connector_zip_checksum="$4"
   local connector_zip_plugin_name="$5"
-  local connector_zip_http_dir="$6"
+  local connector_zip_dir="$6"
   local raw_paths=""
   local tmp_plugins_file
   local tmp_plugins_unique_file
@@ -614,7 +614,7 @@ function generate_connect_build_patch_from_compose() {
       fi
 
       local_plugin_dir="${DIR}/../../confluent-hub/${plugin_id}"
-      if [[ -n "$connector_zip_http_dir" ]] && [[ -d "$local_plugin_dir" ]] && [[ -n "$(find "$local_plugin_dir" -type f -print -quit 2>/dev/null)" ]]
+      if [[ -n "$connector_zip_dir" ]] && [[ -d "$local_plugin_dir" ]] && [[ -n "$(find "$local_plugin_dir" -type f -print -quit 2>/dev/null)" ]]
       then
         local_plugin_effective_dir="$local_plugin_dir"
         local_plugin_has_manifest=0
@@ -651,7 +651,7 @@ function generate_connect_build_patch_from_compose() {
           local_plugin_effective_dir="$local_plugin_root/$plugin_id"
         fi
 
-        local_zip_path="$connector_zip_http_dir/${plugin_id}.zip"
+        local_zip_path="$connector_zip_dir/${plugin_id}.zip"
         rm -f "$local_zip_path"
         (
           cd "$(dirname "$local_plugin_effective_dir")"
@@ -754,7 +754,7 @@ CONNECT_BUILD_PATCH_FILE=""
 CONNECTOR_ZIP_URL=""
 CONNECTOR_ZIP_CHECKSUM=""
 CONNECTOR_ZIP_PLUGIN_NAME=""
-CONNECTOR_ZIP_HTTP_DIR=""
+CONNECTOR_ZIP_DIR=""
 CONNECTOR_ZIP_SERVER_PID=""
 EXTRA_PODS_FILE=""
 
@@ -984,9 +984,9 @@ then
       exit 1
     fi
     verify_installed "python3"
-    CONNECTOR_ZIP_HTTP_DIR=$(mktemp -d)
+    CONNECTOR_ZIP_DIR=$(mktemp -d)
     connector_zip_basename=$(basename "$CONNECTOR_ZIP")
-    cp "$CONNECTOR_ZIP" "$CONNECTOR_ZIP_HTTP_DIR/$connector_zip_basename"
+    cp "$CONNECTOR_ZIP" "$CONNECTOR_ZIP_DIR/$connector_zip_basename"
     CONNECTOR_ZIP_URL="http://host.minikube.internal:18080/$connector_zip_basename"
     CONNECTOR_ZIP_CHECKSUM=$(shasum -a 512 "$CONNECTOR_ZIP" | awk '{print $1}')
     CONNECTOR_ZIP_PLUGIN_NAME="${connector_zip_basename%.zip}"
@@ -1000,12 +1000,12 @@ fi
 
 if [[ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]]
 then
-  if [[ -z "$CONNECTOR_ZIP_HTTP_DIR" ]]
+  if [[ -z "$CONNECTOR_ZIP_DIR" ]]
   then
-    CONNECTOR_ZIP_HTTP_DIR=$(mktemp -d)
+    CONNECTOR_ZIP_DIR=$(mktemp -d)
   fi
   CONNECT_BUILD_PATCH_FILE=$(mktemp)
-  if generate_connect_build_patch_from_compose "${DOCKER_COMPOSE_FILE_OVERRIDE}" "${CONNECT_BUILD_PATCH_FILE}" "$CONNECTOR_ZIP_URL" "$CONNECTOR_ZIP_CHECKSUM" "$CONNECTOR_ZIP_PLUGIN_NAME" "$CONNECTOR_ZIP_HTTP_DIR"
+  if generate_connect_build_patch_from_compose "${DOCKER_COMPOSE_FILE_OVERRIDE}" "${CONNECT_BUILD_PATCH_FILE}" "$CONNECTOR_ZIP_URL" "$CONNECTOR_ZIP_CHECKSUM" "$CONNECTOR_ZIP_PLUGIN_NAME" "$CONNECTOR_ZIP_DIR"
   then
     log "🔌 CFK Connect build plugins will be patched dynamically"
     log_generated_yaml_file "Dynamic Connect build patch generated:" "${CONNECT_BUILD_PATCH_FILE}"
@@ -1015,12 +1015,12 @@ then
   fi
 elif [[ -n "$CONNECTOR_ZIP_URL" ]] && [[ -n "$CONNECTOR_ZIP_CHECKSUM" ]]
 then
-  if [[ -z "$CONNECTOR_ZIP_HTTP_DIR" ]]
+  if [[ -z "$CONNECTOR_ZIP_DIR" ]]
   then
-    CONNECTOR_ZIP_HTTP_DIR=$(mktemp -d)
+    CONNECTOR_ZIP_DIR=$(mktemp -d)
   fi
   CONNECT_BUILD_PATCH_FILE=$(mktemp)
-  if ! generate_connect_build_patch_from_compose "" "${CONNECT_BUILD_PATCH_FILE}" "$CONNECTOR_ZIP_URL" "$CONNECTOR_ZIP_CHECKSUM" "$CONNECTOR_ZIP_PLUGIN_NAME" "$CONNECTOR_ZIP_HTTP_DIR"
+  if ! generate_connect_build_patch_from_compose "" "${CONNECT_BUILD_PATCH_FILE}" "$CONNECTOR_ZIP_URL" "$CONNECTOR_ZIP_CHECKSUM" "$CONNECTOR_ZIP_PLUGIN_NAME" "$CONNECTOR_ZIP_DIR"
   then
     rm -f "${CONNECT_BUILD_PATCH_FILE}"
     CONNECT_BUILD_PATCH_FILE=""
@@ -1040,7 +1040,7 @@ else
   minikube start --cpus=8 --disk-size='50gb' --memory=16384
 fi
 
-if [[ -n "$CONNECTOR_ZIP_HTTP_DIR" ]] && [[ -n "$(find "$CONNECTOR_ZIP_HTTP_DIR" -maxdepth 1 -name '*.zip' -print -quit 2>/dev/null)" ]]
+if [[ -n "$CONNECTOR_ZIP_DIR" ]] && [[ -n "$(find "$CONNECTOR_ZIP_DIR" -maxdepth 1 -name '*.zip' -print -quit 2>/dev/null)" ]]
 then
   log "Serve local CONNECTOR_ZIP for CFK on-demand plugin download"
 
@@ -1049,7 +1049,7 @@ then
   lsof -i ":18080" 2>/dev/null | awk 'NR>1 {print $2}' | xargs kill -9 2>/dev/null || true
   set -e
 
-  python3 -m http.server 18080 --directory "$CONNECTOR_ZIP_HTTP_DIR" >/tmp/cfk-connector-zip-http.log 2>&1 &
+  python3 -m http.server 18080 --directory "$CONNECTOR_ZIP_DIR" >/tmp/cfk-connector-zip-http.log 2>&1 &
   CONNECTOR_ZIP_SERVER_PID=$!
 
   # Fail fast if server did not start or expected zip is not served.
@@ -1061,7 +1061,7 @@ then
     exit 1
   fi
 
-  local_served_zip=$(find "$CONNECTOR_ZIP_HTTP_DIR" -maxdepth 1 -name '*.zip' -print -quit 2>/dev/null)
+  local_served_zip=$(find "$CONNECTOR_ZIP_DIR" -maxdepth 1 -name '*.zip' -print -quit 2>/dev/null)
   if [[ -n "$local_served_zip" ]]
   then
     local_served_zip_name=$(basename "$local_served_zip")
@@ -1187,9 +1187,9 @@ cleanup() {
   then
     kill "$CONNECTOR_ZIP_SERVER_PID" >/dev/null 2>&1 || true
   fi
-  if [ -n "$CONNECTOR_ZIP_HTTP_DIR" ]
+  if [ -n "$CONNECTOR_ZIP_DIR" ]
   then
-    rm -rf "$CONNECTOR_ZIP_HTTP_DIR" >/dev/null 2>&1 || true
+    rm -rf "$CONNECTOR_ZIP_DIR" >/dev/null 2>&1 || true
   fi
   if [ -n "$CONNECT_BUILD_PATCH_FILE" ]
   then
