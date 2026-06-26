@@ -686,29 +686,72 @@ cleanup() {
   then
     rm -f "$EXTRA_PODS_FILE" >/dev/null 2>&1 || true
   fi
-  if [ -n "$CONTROL_CENTER_PF_PID" ]
-  then
-    kill "$CONTROL_CENTER_PF_PID" >/dev/null 2>&1 || true
-  fi
-  if [ -n "$SCHEMA_REGISTRY_PF_PID" ]
-  then
-    kill "$SCHEMA_REGISTRY_PF_PID" >/dev/null 2>&1 || true
-  fi
-  if [ -n "$CONNECT_PF_PID" ]
-  then
-    kill "$CONNECT_PF_PID" >/dev/null 2>&1 || true
-  fi
 }
 trap cleanup EXIT
 
-log "Port-forward controlcenter and schema-registry"
-kubectl -n confluent port-forward service/controlcenter 9021:9021 >/tmp/control-center-port-forward.log 2>&1 &
-CONTROL_CENTER_PF_PID=$!
-kubectl -n confluent port-forward service/schemaregistry 8081:8081 >/tmp/schema-registry-port-forward.log 2>&1 &
-SCHEMA_REGISTRY_PF_PID=$!
-kubectl -n confluent port-forward service/connect 8083:8083 >/tmp/connect-port-forward.log 2>&1 &
-CONNECT_PF_PID=$!
+function start_port_forward() {
+  local service="$1"
+  local local_port="$2"
+  local remote_port="$3"
+  local log_file="$4"
+  local description="$5"
 
-log "Control Center is reachable at http://127.0.0.1:9021"
+  log "🔀 Starting port-forward for $description (local:$local_port -> service $service:$remote_port)"
+
+  # Kill any existing port-forward processes listening on the local port
+  set +e
+  lsof -i ":${local_port}" 2>/dev/null | grep -i kubectl | awk '{print $2}' | xargs kill -9 2>/dev/null || true
+  set -e
+
+  sleep 1
+
+  # Start the port-forward
+  kubectl -n confluent port-forward "service/${service}" "${local_port}:${remote_port}" >"${log_file}" 2>&1 &
+  local pf_pid=$!
+
+  # Give the port-forward a moment to start and check if it succeeded
+  sleep 2
+
+  if ! kill -0 "$pf_pid" 2>/dev/null
+  then
+    logwarn "⚠️ Port-forward for $description (port $local_port) failed to start"
+    cat "${log_file}" | head -10 | while read -r line; do logwarn "  $line"; done
+    return 1
+  fi
+
+  # Check the log for any errors
+  if grep -i "error\|unable\|failed" "${log_file}" > /dev/null 2>&1
+  then
+    logwarn "⚠️ Port-forward for $description may have encountered an error"
+    cat "${log_file}" | head -10 | while read -r line; do logwarn "  $line"; done
+    return 1
+  fi
+
+  echo "$pf_pid"
+  return 0
+}
+
+log "Port-forward controlcenter, schema-registry, and connect"
+CONTROL_CENTER_PF_PID=$(start_port_forward "controlcenter" "9021" "9021" "/tmp/control-center-port-forward.log" "Control Center") || true
+SCHEMA_REGISTRY_PF_PID=$(start_port_forward "schemaregistry" "8081" "8081" "/tmp/schema-registry-port-forward.log" "Schema Registry") || true
+CONNECT_PF_PID=$(start_port_forward "connect" "8083" "8083" "/tmp/connect-port-forward.log" "Connect") || true
+
+if [[ -z "$CONTROL_CENTER_PF_PID" ]] || [[ -z "$SCHEMA_REGISTRY_PF_PID" ]] || [[ -z "$CONNECT_PF_PID" ]]
+then
+  logwarn "⚠️ Some port-forwards may not be available; check logs in /tmp/control-center-port-forward.log, /tmp/schema-registry-port-forward.log, /tmp/connect-port-forward.log"
+fi
+
+if [[ -n "$CONTROL_CENTER_PF_PID" ]]
+then
+  log "💠 Control Center is reachable at http://127.0.0.1:9021"
+fi
+if [[ -n "$SCHEMA_REGISTRY_PF_PID" ]]
+then
+  log "🗂️ Schema Registry is reachable at http://127.0.0.1:8081"
+fi
+if [[ -n "$CONNECT_PF_PID" ]]
+then
+  log "🔌 Connect REST API is reachable at http://127.0.0.1:8083"
+fi
 
 playground state set run.environment "cfk"
