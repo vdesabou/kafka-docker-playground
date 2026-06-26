@@ -258,6 +258,19 @@ function generate_extra_pods_from_compose_override() {
         log "📦 Pulling image $image for platform $platform for service $service_name"
         docker pull --platform "$platform" "$image"
         image_pull_policy="Never"
+      else
+        # If the image is already local (or can be loaded from host), avoid registry pulls.
+        if docker image inspect "$image" >/dev/null 2>&1
+        then
+          image_pull_policy="Never"
+        else
+          log "📦 Attempting to load local image $image into minikube for service $service_name"
+          if minikube image load "$image" >/dev/null 2>&1
+          then
+            image_pull_policy="Never"
+            log "✅ Loaded image $image into minikube"
+          fi
+        fi
       fi
     elif [[ -n "$build_context" ]]
     then
@@ -632,6 +645,32 @@ CONNECTOR_ZIP_HTTP_DIR=""
 CONNECTOR_ZIP_SERVER_PID=""
 EXTRA_PODS_FILE=""
 
+function reset_cfk_namespace_state() {
+  local namespace="confluent"
+  local pv_list=""
+  local pv_name=""
+
+  log "🧹 Reset Kubernetes namespace $namespace for a clean run"
+  kubectl delete namespace "$namespace" --ignore-not-found=true --wait=true --timeout=300s
+
+  # Some storage classes keep PVs after namespace deletion; remove them to avoid data leakage across runs.
+  pv_list=$(kubectl get pv -o jsonpath='{range .items[?(@.spec.claimRef.namespace=="confluent")]}{.metadata.name}{"\n"}{end}' 2>/dev/null || true)
+  if [[ -n "$pv_list" ]]
+  then
+    while IFS= read -r pv_name
+    do
+      if [[ -n "$pv_name" ]]
+      then
+        log "🗑 Deleting retained PV $pv_name"
+        kubectl delete pv "$pv_name" --ignore-not-found=true >/dev/null 2>&1 || true
+      fi
+    done <<< "$pv_list"
+  fi
+
+  kubectl create namespace "$namespace" >/dev/null
+  kubectl config set-context --current --namespace="$namespace" >/dev/null
+}
+
 if [[ -n "$CONNECTOR_ZIP" ]]
 then
   if [[ "$CONNECTOR_ZIP" =~ ^https?:// ]]
@@ -700,12 +739,7 @@ then
   fi
 fi
 
-set +e
-log "Stop minikube if required"
-minikube delete
-set -e
-
-log "Start minikube"
+log "Start or reuse minikube"
 minikube start --cpus=8 --disk-size='50gb' --memory=16384
 
 if [[ -n "$CONNECTOR_ZIP_HTTP_DIR" ]] && [[ -n "$(find "$CONNECTOR_ZIP_HTTP_DIR" -maxdepth 1 -name '*.zip' -print -quit 2>/dev/null)" ]]
@@ -733,9 +767,7 @@ then
   fi
 fi
 
-log "Create namespace"
-kubectl create namespace confluent || true
-kubectl config set-context --current --namespace=confluent
+reset_cfk_namespace_state
 
 set +e
 helm repo remove confluentinc
