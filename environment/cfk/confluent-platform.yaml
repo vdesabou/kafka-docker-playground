@@ -57,6 +57,11 @@ spec:
   image:
     application: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     init: ${CP_INIT_IMAGE}:${CP_INIT_TAG}
+  podTemplate:
+    podSecurityContext:
+      fsGroup: 1000
+      runAsUser: 1000
+      runAsNonRoot: true
   dependencies:
     kafka:
       bootstrapEndpoint: kafka:9071
