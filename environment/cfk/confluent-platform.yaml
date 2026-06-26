@@ -45,6 +45,7 @@ spec:
       - confluent.balancer.topic.replication.factor=1
       - confluent.metrics.reporter.topic.replicas=1
       - confluent.security.event.logger.exporter.kafka.topic.replicas=1
+      - auto.create.topics.enable=true
 ---
 apiVersion: platform.confluent.io/v1beta1
 kind: Connect
