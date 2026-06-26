@@ -97,7 +97,7 @@ if [ ! -z "$SQL_DATAGEN" ]
 then
      DURATION=1
      log "Injecting data for $DURATION minutes"
-     playground container exec --container sql-datagen --command "bash -c \"java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --connectionUrl 'jdbc:mysql://mysql:3306/mydb?user=user&password=password&useSSL=false' --maxPoolSize 10 --durationTimeMin $DURATION\""
+     playground container exec --container sql-datagen --command "bash -c \"java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --connectionUrl 'jdbc:mysql://mysql:3306/mydb?user=user&password=password&useSSL=false&allowPublicKeyRetrieval=true' --maxPoolSize 10 --durationTimeMin $DURATION\""
 fi
 
 log "Show content of team table:"
@@ -108,7 +108,7 @@ playground connector create-or-update --connector mysql-source << EOF
 {
      "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
      "tasks.max":"1",
-     "connection.url":"jdbc:mysql://mysql:3306/mydb?user=user&password=password&useSSL=false",
+     "connection.url":"jdbc:mysql://mysql:3306/mydb?user=user&password=password&useSSL=false&allowPublicKeyRetrieval=true",
      "table.whitelist":"team",
      "mode":"timestamp+incrementing",
      "timestamp.column.name":"last_modified",

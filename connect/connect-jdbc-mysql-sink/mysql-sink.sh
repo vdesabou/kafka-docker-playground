@@ -34,7 +34,7 @@ playground connector create-or-update --connector mysql-sink  << EOF
 {
      "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
      "tasks.max": "1",
-     "connection.url": "jdbc:mysql://mysql:3306/db?user=user&password=password&useSSL=false",
+     "connection.url": "jdbc:mysql://mysql:3306/db?user=user&password=password&useSSL=false&allowPublicKeyRetrieval=true",
      "topics": "orders",
      "auto.create": "true"
 }
