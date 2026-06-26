@@ -66,6 +66,9 @@ function generate_extra_pods_from_compose_override() {
   local env_value=""
   local escaped_value=""
   local container_port=""
+  local has_any_port=0
+  local service_port_index=0
+  local parsed_ports=()
 
   if [[ ! -f "$compose_file" ]]
   then
@@ -261,12 +264,19 @@ function generate_extra_pods_from_compose_override() {
       continue
     fi
 
+    if [[ -s "$output_file" ]]
+    then
+      echo "---" >> "$output_file"
+    fi
+
     cat >> "$output_file" << EOF
 apiVersion: v1
 kind: Pod
 metadata:
   name: ${pod_name}
   namespace: confluent
+  labels:
+    app: ${pod_name}
 spec:
   containers:
     - name: ${container_name}
@@ -310,6 +320,7 @@ EOF
     then
       IFS=';' read -r -a port_items <<< "$ports_list"
       has_any_port=0
+      parsed_ports=()
       for port_item in "${port_items[@]}"
       do
         container_port=$(parse_compose_container_port "$port_item")
@@ -320,9 +331,36 @@ EOF
             echo "      ports:" >> "$output_file"
             has_any_port=1
           fi
+          parsed_ports+=("$container_port")
           echo "        - containerPort: ${container_port}" >> "$output_file"
         fi
       done
+
+      if [[ "$has_any_port" -eq 1 ]]
+      then
+        echo "---" >> "$output_file"
+        cat >> "$output_file" << EOF
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${pod_name}
+  namespace: confluent
+spec:
+  selector:
+    app: ${pod_name}
+  ports:
+EOF
+        service_port_index=1
+        for container_port in "${parsed_ports[@]}"
+        do
+          {
+            echo "    - name: port-${service_port_index}"
+            echo "      port: ${container_port}"
+            echo "      targetPort: ${container_port}"
+          } >> "$output_file"
+          ((service_port_index=service_port_index+1))
+        done
+      fi
     fi
   done < "$tmp_services_file"
 
@@ -625,8 +663,7 @@ then
   set -e
 fi
 
-log "⌛ Waiting up to 900 seconds for all pods in namespace confluent to start"
-wait-until-pods-ready "900" "10" "confluent"
+wait_container_ready
 
 
 CONTROL_CENTER_PF_PID=""
