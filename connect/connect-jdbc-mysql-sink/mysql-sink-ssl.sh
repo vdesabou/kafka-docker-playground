@@ -146,7 +146,7 @@ log "Describing the orders table in DB 'db':"
 playground container exec --container mysql --command "bash -c \"mysql --user=userssl --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=db -e 'describe orders'\""
 
 log "Show content of orders table:"
-playground container exec --container mysql --command "bash -c \"mysql --user=userssl --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=db -e 'select * from orders'\" > /tmp/result.log  2>&1"
+playground container exec --container mysql --command "bash -c \"mysql --user=userssl --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=db -e 'select * from orders'\"" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "foo" /tmp/result.log
 

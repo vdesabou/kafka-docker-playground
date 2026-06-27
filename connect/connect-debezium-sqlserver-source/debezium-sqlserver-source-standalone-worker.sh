@@ -51,7 +51,7 @@ GO
 EOF
 
 log "Creating Debezium SQL Server source standalone connector"
-playground container exec --container -d --command "connect bash -c 'connect-standalone /tmp/worker.properties /tmp/connector.properties > /tmp/standalone.log 2>&1'"
+playground container exec --container -d --command "connect bash -c 'connect-standalone /tmp/worker.properties /tmp/connector.properties'" > /tmp/standalone.log 2>&1
 
 log "Sleeping 60 seconds to let the standalone connector doing the work"
 sleep 60

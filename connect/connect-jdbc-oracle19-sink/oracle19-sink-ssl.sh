@@ -192,7 +192,7 @@ sleep 10
 
 
 log "Show content of ORDERS table:"
-playground container exec --container oracle --command "bash -c \"echo 'select * from ORDERS;' | sqlplus C##MYUSER/mypassword@//localhost:1521/ORCLCDB\" > /tmp/result.log  2>&1"
+playground container exec --container oracle --command "bash -c \"echo 'select * from ORDERS;' | sqlplus C##MYUSER/mypassword@//localhost:1521/ORCLCDB\"" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "foo" /tmp/result.log
 

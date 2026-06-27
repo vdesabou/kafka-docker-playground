@@ -52,6 +52,6 @@ EOF
 sleep 10
 
 log "Verify data is in Couchbase"
-playground container exec --container couchbase --command "bash -c \"cbc cat CDG -U couchbase://localhost/travel-data -u Administrator -P password\" > /tmp/result.log  2>&1"
+playground container exec --container couchbase --command "bash -c \"cbc cat CDG -U couchbase://localhost/travel-data -u Administrator -P password\"" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "airport" /tmp/result.log

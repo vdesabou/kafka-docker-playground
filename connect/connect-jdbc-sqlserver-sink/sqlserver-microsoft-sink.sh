@@ -83,7 +83,7 @@ EOF
 sleep 5
 
 log "Show content of orders table:"
-playground container exec --container sqlserver --command "/opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! > /tmp/result.log  2>&1" <<-EOF
+playground container exec --container sqlserver --command "/opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password!" > /tmp/result.log  2>&1 <<-EOF
 select * from orders
 GO
 EOF

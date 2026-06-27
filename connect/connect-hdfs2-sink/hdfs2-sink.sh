@@ -67,7 +67,7 @@ docker cp namenode:/tmp/hdfs-topic+0+0000000000+0000000002.avro /tmp/
 playground  tools read-avro-file --file /tmp/hdfs-topic+0+0000000000+0000000002.avro
 
 log "Check data with beeline"
-playground container exec --container hive-server --command "beeline > /tmp/result.log  2>&1" <<-EOF
+playground container exec --container hive-server --command "beeline" > /tmp/result.log  2>&1 <<-EOF
 !connect jdbc:hive2://hive-server:10000/testhive
 hive
 hive

@@ -150,7 +150,7 @@ EOF
 sleep 10
 
 log "Check table PLAYGROUNDTABLE"
-playground container exec --container oracle --command "sqlplus C\\#\\#MYUSER/mypassword@//localhost:1521/ORCLCDB > /tmp/result.log  2>&1" <<-EOF
+playground container exec --container oracle --command "sqlplus C\\#\\#MYUSER/mypassword@//localhost:1521/ORCLCDB" > /tmp/result.log  2>&1 <<-EOF
 
 select * from PLAYGROUNDTABLE;
 

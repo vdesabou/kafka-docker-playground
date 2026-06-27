@@ -71,7 +71,7 @@ EOF
 sleep 10
 
 log "Check data is in Singlestore"
-playground container exec --container singlestore --command "memsql -u root -proot > /tmp/result.log  2>&1" <<-EOF
+playground container exec --container singlestore --command "memsql -u root -proot" > /tmp/result.log  2>&1 <<-EOF
 use test;
 show tables;
 select * from mytable;

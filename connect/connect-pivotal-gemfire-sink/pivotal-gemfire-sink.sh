@@ -75,7 +75,7 @@ EOF
 sleep 5
 
 log "Check messages received in Pivotal Gemfire"
-playground container exec --container pivotal-gemfire --command "gfsh  > /tmp/result.log  2>&1" <<-EOF
+playground container exec --container pivotal-gemfire --command "gfsh" > /tmp/result.log  2>&1 <<-EOF
 connect --locator=localhost[10334]
 query --query="select * from /exampleRegion"
 EOF

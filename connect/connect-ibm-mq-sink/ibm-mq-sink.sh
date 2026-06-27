@@ -78,7 +78,7 @@ EOF
 sleep 10
 
 log "Verify message received in DEV.QUEUE.1 queue"
-playground container exec --container ibmmq --command "bash -c \"/opt/mqm/samp/bin/amqsbcg DEV.QUEUE.1\" > /tmp/result.log  2>&1"
+playground container exec --container ibmmq --command "bash -c \"/opt/mqm/samp/bin/amqsbcg DEV.QUEUE.1\"" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "my message" /tmp/result.log
 

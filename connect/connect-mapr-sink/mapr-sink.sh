@@ -132,7 +132,7 @@ sleep 70
 log "Mapper UI MCS is running at https://127.0.0.1:8443 (mapr/map)"
 
 log "Verify data is in Mapr"
-playground container exec --container mapr --command "bash -c \"mapr dbshell\" > /tmp/result.log  2>&1" <<-EOF
+playground container exec --container mapr --command "bash -c \"mapr dbshell\"" > /tmp/result.log  2>&1 <<-EOF
 find /mapr/maprdemo.mapr.io/maprtopic
 EOF
 cat /tmp/result.log

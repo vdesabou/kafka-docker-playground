@@ -57,7 +57,7 @@ log "Sleeping 80 seconds"
 sleep 80
 
 log "Verify data is in splunk"
-playground container exec --container splunk --command "bash -c 'sudo /opt/splunk/bin/splunk search \"sourcetype=\\\"kafka\\\" | table cust_id\" -auth \"admin:password\"' > /tmp/result.log  2>&1"
+playground container exec --container splunk --command "bash -c 'sudo /opt/splunk/bin/splunk search \"sourcetype=\\\"kafka\\\" | table cust_id\" -auth \"admin:password\"'" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep '000013934' /tmp/result.log
 # requires fix for https://github.com/splunk/kafka-connect-splunk/issues/444

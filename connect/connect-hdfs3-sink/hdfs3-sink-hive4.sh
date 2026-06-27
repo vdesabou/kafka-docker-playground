@@ -74,7 +74,7 @@ playground  tools read-avro-file --file /tmp/hdfs-topic+0+0000000000+0000000002.
 
 sleep 60
 log "Check data with beeline - comprehensive verification"
-playground container exec --container hive-server --command "beeline > /tmp/result.log  2>&1" <<-EOF
+playground container exec --container hive-server --command "beeline" > /tmp/result.log  2>&1 <<-EOF
 !connect jdbc:hive2://hive-server:10000
 hive
 hive

@@ -83,7 +83,7 @@ if ! version_gt $CONNECTOR_TAG "1.9.99"
 then
   sleep 60
   log "Check data with beeline"
-  playground container exec --container hive-server --command "beeline > /tmp/result.log  2>&1" <<-EOF
+  playground container exec --container hive-server --command "beeline" > /tmp/result.log  2>&1 <<-EOF
 !connect jdbc:hive2://hive-server:10000/testhive
 hive
 hive

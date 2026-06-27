@@ -119,7 +119,7 @@ EOF
 sleep 10
 
 log "Verify data from Azure Cosmos DB"
-playground container exec --container azure-cosmos-client --command "bash -c \"python /get-data.py\" > /tmp/result.log  2>&1"
+playground container exec --container azure-cosmos-client --command "bash -c \"python /get-data.py\"" > /tmp/result.log  2>&1
 
 cat /tmp/result.log
 grep "Marriott" /tmp/result.log
