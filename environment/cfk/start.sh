@@ -101,12 +101,15 @@ function generate_extra_pods_from_compose_override() {
   local image_pull_policy="IfNotPresent"
   local env_list=""
   local ports_list=""
+  local entrypoint_list=""
   local command_list=""
   local env_items=()
   local port_items=()
+  local entrypoint_items=()
   local command_items=()
   local env_item=""
   local port_item=""
+  local entrypoint_item=""
   local command_item=""
   local env_key=""
   local env_value=""
@@ -137,6 +140,26 @@ function generate_extra_pods_from_compose_override() {
   awk '
     function trim(s) { gsub(/^[[:space:]]+|[[:space:]]+$/, "", s); return s }
     function unquote(s) { gsub(/^"|"$/, "", s); gsub(/^\047|\047$/, "", s); return s }
+    function append_list_items(raw, target) {
+      local_raw = trim(raw)
+      if (local_raw ~ /^\[.*\]$/) {
+        sub(/^\[/, "", local_raw)
+        sub(/\]$/, "", local_raw)
+        count = split(local_raw, parts, /,[[:space:]]*/)
+        for (i = 1; i <= count; i++) {
+          item = trim(unquote(parts[i]))
+          if (item != "") {
+            if (target == "command") {
+              commands[++command_count] = item
+            } else if (target == "entrypoint") {
+              entrypoints[++entrypoint_count] = item
+            }
+          }
+        }
+        return 1
+      }
+      return 0
+    }
     function flush_record() {
       if (service != "" && (image != "" || build_context != "") && service != "connect") {
         env_joined=""
@@ -147,11 +170,15 @@ function generate_extra_pods_from_compose_override() {
         for (i = 1; i <= ports_count; i++) {
           ports_joined = ports_joined (i > 1 ? ";" : "") ports[i]
         }
+        entrypoint_joined=""
+        for (i = 1; i <= entrypoint_count; i++) {
+          entrypoint_joined = entrypoint_joined (i > 1 ? ";" : "") entrypoints[i]
+        }
         command_joined=""
         for (i = 1; i <= command_count; i++) {
           command_joined = command_joined (i > 1 ? ";" : "") commands[i]
         }
-        print service "|" image "|" build_context "|" platform "|" env_joined "|" ports_joined "|" command_joined
+        print service "|" image "|" build_context "|" platform "|" env_joined "|" ports_joined "|" entrypoint_joined "|" command_joined
       }
       service=""
       image=""
@@ -160,13 +187,15 @@ function generate_extra_pods_from_compose_override() {
       section=""
       env_count=0
       ports_count=0
+      entrypoint_count=0
       command_count=0
       delete envs
       delete ports
+      delete entrypoints
       delete commands
     }
 
-    BEGIN { in_services=0; service=""; image=""; platform=""; build_context=""; section=""; env_count=0; ports_count=0; command_count=0 }
+    BEGIN { in_services=0; service=""; image=""; platform=""; build_context=""; section=""; env_count=0; ports_count=0; entrypoint_count=0; command_count=0 }
     /^services:[[:space:]]*$/ { in_services=1; next }
     {
       if (in_services == 1 && $0 ~ /^[^[:space:]]/) {
@@ -220,6 +249,22 @@ function generate_extra_pods_from_compose_override() {
         section="ports"
         next
       }
+      if ($0 ~ /^    entrypoint:[[:space:]]*$/) {
+        section="entrypoint"
+        next
+      }
+      if ($0 ~ /^    entrypoint:[[:space:]]*[^[:space:]].*$/) {
+        ep=$0
+        sub(/^    entrypoint:[[:space:]]*/, "", ep)
+        ep=trim(ep)
+        if (ep != "") {
+          if (!append_list_items(ep, "entrypoint")) {
+            entrypoints[++entrypoint_count]=trim(unquote(ep))
+          }
+        }
+        section=""
+        next
+      }
       if ($0 ~ /^    command:[[:space:]]*$/) {
         section="command"
         next
@@ -227,9 +272,11 @@ function generate_extra_pods_from_compose_override() {
       if ($0 ~ /^    command:[[:space:]]*[^[:space:]].*$/) {
         cmd=$0
         sub(/^    command:[[:space:]]*/, "", cmd)
-        cmd=trim(unquote(cmd))
+        cmd=trim(cmd)
         if (cmd != "") {
-          commands[++command_count]=cmd
+          if (!append_list_items(cmd, "command")) {
+            commands[++command_count]=trim(unquote(cmd))
+          }
         }
         section=""
         next
@@ -282,6 +329,18 @@ function generate_extra_pods_from_compose_override() {
         }
       }
 
+      if (section == "entrypoint") {
+        if ($0 ~ /^      -[[:space:]]*/) {
+          e=$0
+          sub(/^      -[[:space:]]*/, "", e)
+          e=trim(unquote(e))
+          if (e != "") {
+            entrypoints[++entrypoint_count]=e
+          }
+          next
+        }
+      }
+
       if (section == "command") {
         if ($0 ~ /^      -[[:space:]]*/) {
           c=$0
@@ -316,7 +375,7 @@ function generate_extra_pods_from_compose_override() {
   }
 
   : > "$output_file"
-  while IFS='|' read -r service_name image build_context platform env_list ports_list command_list
+  while IFS='|' read -r service_name image build_context platform env_list ports_list entrypoint_list command_list
   do
     if [[ -z "$service_name" ]]
     then
@@ -509,6 +568,21 @@ EOF
           continue
         fi
         escaped_command=$(printf '%s' "$command_item" | sed 's/\\/\\\\/g; s/"/\\"/g')
+        echo "        - \"${escaped_command}\"" >> "$output_file"
+      done
+    fi
+
+    if [[ -n "$entrypoint_list" ]]
+    then
+      echo "      command:" >> "$output_file"
+      IFS=';' read -r -a entrypoint_items <<< "$entrypoint_list"
+      for entrypoint_item in "${entrypoint_items[@]}"
+      do
+        if [[ -z "$entrypoint_item" ]]
+        then
+          continue
+        fi
+        escaped_command=$(printf '%s' "$entrypoint_item" | sed 's/\\/\\\\/g; s/"/\\"/g')
         echo "        - \"${escaped_command}\"" >> "$output_file"
       done
     fi
