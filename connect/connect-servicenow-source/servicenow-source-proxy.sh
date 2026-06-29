@@ -72,36 +72,38 @@ TODAY=$(date -u '+%Y-%m-%d')
 log "Creating ServiceNow Source connector"
 playground connector create-or-update --connector servicenow-source  << EOF
 {
-               "connector.class": "io.confluent.connect.servicenow.ServiceNowSourceConnector",
-               "kafka.topic": "topic-servicenow",
-               "proxy.url": "nginx-proxy:8888",
-               "servicenow.url": "$SERVICENOW_URL",
-               "tasks.max": "1",
-               "servicenow.table": "incident",
-               "servicenow.user": "admin",
-               "servicenow.password": "$SERVICENOW_PASSWORD",
-               "servicenow.since": "$TODAY",
-               "retry.max.times": "3",
-               "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-               "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+    "connector.class": "io.confluent.connect.servicenow.ServiceNowSourceConnector",
+    "kafka.topic": "topic-servicenow",
+    "proxy.url": "nginx-proxy:8888",
+    "servicenow.url": "$SERVICENOW_URL",
+    "tasks.max": "1",
+    "servicenow.table": "incident",
+    "servicenow.user": "admin",
+    "servicenow.password": "$SERVICENOW_PASSWORD",
+    "servicenow.since": "$TODAY",
+    "retry.max.times": "3",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
+}
 EOF
 
 
 sleep 10
 
 log "Create one record to ServiceNow using proxy"
-playground container exec --container connect --command "bash -c \"export HTTP_PROXY=nginx-proxy:8888 && export HTTPS_PROXY=nginx-proxy:8888 && \\"
-   curl -X POST \
-    \"${SERVICENOW_URL}api/now/table/incident\" \
-    --user admin:\"$SERVICENOW_PASSWORD\" \
-    -H 'Accept: application/json' \
-    -H 'Content-Type: application/json' \
-    -H 'cache-control: no-cache' \
-    -d '{\"short_description\": \"This is test\"}'"
+playground container exec --container connect --command "bash" << EOF
+export HTTP_PROXY=nginx-proxy:8888 && export HTTPS_PROXY=nginx-proxy:8888
+curl -X POST \
+\"${SERVICENOW_URL}api/now/table/incident\" \
+--user admin:\"$SERVICENOW_PASSWORD\" \
+-H 'Accept: application/json' \
+-H 'Content-Type: application/json' \
+-H 'cache-control: no-cache' \
+-d '{\"short_description\": \"This is test\"}'
+EOF
 
 sleep 5
 
