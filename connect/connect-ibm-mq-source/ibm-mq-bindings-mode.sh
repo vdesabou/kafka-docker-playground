@@ -64,7 +64,7 @@ function wait_for_connect_to_start () {
 }
 
 log "Run connect worker manually"
-playground container exec --container connect --command "/usr/bin/env -u KAFKA_DEBUG -u JAVA_DEBUG_OPTS KAFKA_OPTS='-Dcom.ibm.mq.jmqi.threadWaitTimeout=1 -Djava.library.path=/opt/mqm/java/lib64 -XX:-UseContainerSupport' /mnt/confluent/bin/connect-distributed /mnt/confluent/config/connect-distributed.properties&" > /tmp/out.txt 2>&1
+playground container exec --container connect --command "/usr/bin/env -u KAFKA_DEBUG -u JAVA_DEBUG_OPTS KAFKA_OPTS='-Dcom.ibm.mq.jmqi.threadWaitTimeout=1 -Djava.library.path=/opt/mqm/java/lib64 -XX:-UseContainerSupport' /mnt/confluent/bin/connect-distributed /mnt/confluent/config/connect-distributed.properties" > /tmp/out.txt 2>&1 &
 
 wait_for_connect_to_start
 
