@@ -55,32 +55,24 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending EMS messages m1 m2 m3 m4 m5 in queue connector-quickstart"
-playground container exec --container tibco-ems --command "bash" << 'EOF'
-cd /opt/tibco/ems/8.5/samples/java
-export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib
-CLASSPATH=${TIBEMS_JAVA}/jms-2.0.jar:${CLASSPATH}
-CLASSPATH=.:${TIBEMS_JAVA}/tibjms.jar:${TIBEMS_JAVA}/tibjmsadmin.jar:${CLASSPATH}
-export CLASSPATH
-javac *.java
-java tibjmsMsgProducer -user admin -queue connector-quickstart m1 m2 m3 m4 m5
-EOF
+playground container exec --container tibco-ems --command "bash -c 'cd /opt/tibco/ems/8.5/samples/java;export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib;CLASSPATH=${TIBEMS_JAVA}/jms-2.0.jar:${CLASSPATH};CLASSPATH=.:${TIBEMS_JAVA}/tibjms.jar:${TIBEMS_JAVA}/tibjmsadmin.jar:${CLASSPATH};export CLASSPATH;javac *.java;java tibjmsMsgProducer -user admin -queue connector-quickstart m1 m2 m3 m4 m5'"
 
 
 log "Creating JMS TIBCO source connector"
 playground connector create-or-update --connector jms-tibco-source  << EOF
 {
-     "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
-     "tasks.max": "1",
-     "kafka.topic": "from-tibco-messages",
-     "java.naming.factory.initial": "com.tibco.tibjms.naming.TibjmsInitialContextFactory",
-     "java.naming.provider.url": "tibjmsnaming://tibco-ems:7222",
-     "jms.destination.type": "queue",
-     "jms.destination.name": "connector-quickstart",
-     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-     "confluent.license": "",
-     "confluent.topic.bootstrap.servers": "broker:9092",
-     "confluent.topic.replication.factor": "1"
+    "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
+    "tasks.max": "1",
+    "kafka.topic": "from-tibco-messages",
+    "java.naming.factory.initial": "com.tibco.tibjms.naming.TibjmsInitialContextFactory",
+    "java.naming.provider.url": "tibjmsnaming://tibco-ems:7222",
+    "jms.destination.type": "queue",
+    "jms.destination.name": "connector-quickstart",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
 }
 EOF
 

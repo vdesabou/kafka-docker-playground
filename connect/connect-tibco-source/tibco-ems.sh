@@ -55,32 +55,25 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 
 log "Sending EMS messages m1 m2 m3 m4 m5 in queue connector-quickstart"
-playground container exec --container tibco-ems --command "bash -c '"
-cd /opt/tibco/ems/8.5/samples/java
-export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib
-CLASSPATH=${TIBEMS_JAVA}/jms-2.0.jar:${CLASSPATH}
-CLASSPATH=.:${TIBEMS_JAVA}/tibjms.jar:${TIBEMS_JAVA}/tibjmsadmin.jar:${CLASSPATH}
-export CLASSPATH
-javac *.java
-java tibjmsMsgProducer -user admin -queue connector-quickstart m1 m2 m3 m4 m5'
+playground container exec --container tibco-ems --command "bash -c 'cd /opt/tibco/ems/8.5/samples/java;export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib;CLASSPATH=${TIBEMS_JAVA}/jms-2.0.jar:${CLASSPATH};CLASSPATH=.:${TIBEMS_JAVA}/tibjms.jar:${TIBEMS_JAVA}/tibjmsadmin.jar:${CLASSPATH};export CLASSPATH;javac *.java;java tibjmsMsgProducer -user admin -queue connector-quickstart m1 m2 m3 m4 m5'"
 
 
 log "Creating TIBCO EMS source connector"
 playground connector create-or-update --connector tibco-ems-source  << EOF
 {
-               "connector.class": "io.confluent.connect.tibco.TibcoSourceConnector",
-                    "tasks.max": "1",
-                    "kafka.topic": "from-tibco-messages",
-                    "tibco.url": "tcp://tibco-ems:7222",
-                    "tibco.username": "admin",
-                    "tibco.password": "",
-                    "jms.destination.type": "queue",
-                    "jms.destination.name": "connector-quickstart",
-                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+    "connector.class": "io.confluent.connect.tibco.TibcoSourceConnector",
+    "tasks.max": "1",
+    "kafka.topic": "from-tibco-messages",
+    "tibco.url": "tcp://tibco-ems:7222",
+    "tibco.username": "admin",
+    "tibco.password": "",
+    "jms.destination.type": "queue",
+    "jms.destination.name": "connector-quickstart",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 5
