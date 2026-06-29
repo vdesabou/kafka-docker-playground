@@ -16,7 +16,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 
 log "Getting value for cassandra.local.datacenter (2.0.x only), see https://docs.confluent.io/kafka-connect-cassandra/current/index.html#upgrading-to-version-2-0-x"
-DATACENTER=$(playground container exec --container cassandra --command "cqlsh -e 'SELECT data_center FROM system.local;'" | head -4 | tail -1 | tr -d ' ')
+DATACENTER=$(playground container exec --container cassandra --command "cqlsh -e 'SELECT data_center FROM system.local;'" | head -5 | tail -1 | tr -d ' ')
 
 log "Sending messages to topic topic1"
 playground topic produce -t topic1 --nb-messages 10 --forced-value '{"f1": "value1"}' << 'EOF'
