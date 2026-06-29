@@ -145,7 +145,7 @@ function generate_extra_pods_from_compose_override() {
       if (local_raw ~ /^\[.*\]$/) {
         sub(/^\[/, "", local_raw)
         sub(/\]$/, "", local_raw)
-        count = split(local_raw, parts, /,[[:space:]]*/)
+        count = split(local_raw, parts, ", ")
         for (i = 1; i <= count; i++) {
           item = trim(unquote(parts[i]))
           if (item != "") {
@@ -567,8 +567,9 @@ EOF
         then
           continue
         fi
-        escaped_command=$(printf '%s' "$command_item" | sed 's/\\/\\\\/g; s/"/\\"/g')
-        echo "        - \"${escaped_command}\"" >> "$output_file"
+        # Remove leading/trailing quotes from YAML array items if present
+        clean_item=$(echo "$command_item" | sed -e 's/^[[:space:]]*"//; s/"[[:space:]]*$//')
+        echo "        - $clean_item" >> "$output_file"
       done
     fi
 
@@ -582,8 +583,9 @@ EOF
         then
           continue
         fi
-        escaped_command=$(printf '%s' "$entrypoint_item" | sed 's/\\/\\\\/g; s/"/\\"/g')
-        echo "        - \"${escaped_command}\"" >> "$output_file"
+        # Remove leading/trailing quotes from YAML array items if present
+        clean_item=$(echo "$entrypoint_item" | sed -e 's/^[[:space:]]*"//; s/"[[:space:]]*$//')
+        echo "        - $clean_item" >> "$output_file"
       done
     fi
 
