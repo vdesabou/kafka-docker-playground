@@ -105,12 +105,14 @@ playground topic consume --topic test-result --min-expected-messages 3 --timeout
 playground topic consume --topic test-error --min-expected-messages 0 --timeout 60
 
 log "Confirm that the messages were delivered to the ServiceNow table"
-playground container exec --container connect --command "bash -c \"export HTTP_PROXY=nginx-proxy:8888 && export HTTPS_PROXY=nginx-proxy:8888 && \\"
-   curl -X GET \
-    \"${SERVICENOW_URL}/api/now/table/u_test_table\" \
-    --user admin:\"$SERVICENOW_PASSWORD\" \
-    -H 'Accept: application/json' \
-    -H 'Content-Type: application/json' \
-    -H 'cache-control: no-cache'" | jq . > /tmp/result.log  2>&1
+playground container exec --container connect --command "bash" << EOF > /tmp/result.log 2>&1
+export HTTP_PROXY=nginx-proxy:8888 && export HTTPS_PROXY=nginx-proxy:8888
+curl -X GET \
+\"${SERVICENOW_URL}/api/now/table/u_test_table\" \
+--user admin:\"$SERVICENOW_PASSWORD\" \
+-H 'Accept: application/json' \
+-H 'Content-Type: application/json' \
+    -H 'cache-control: no-cache' | jq . 
+EOF
 cat /tmp/result.log
 grep -i "u_name" /tmp/result.log
