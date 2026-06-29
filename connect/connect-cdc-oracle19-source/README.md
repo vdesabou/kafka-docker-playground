@@ -345,13 +345,13 @@ $ keytool -genkey -alias testclient -dname 'CN=connect,C=US' -storepass 'welcome
 # Generate a CSR (Certificate Signing Request):
 $ keytool -certreq -alias testclient -file /tmp/csr.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
 # Sign the client certificate using the test CA (root)
-docker cp csr.txt oracle:/tmp/csr.txt
+playground container cp --source csr.txt --destination oracle:/tmp/csr.txt
 docker exec oracle bash -c "orapki cert create -wallet /tmp/root -request /tmp/csr.txt -cert /tmp/cert.txt -validity 3650 -pwd WalletPasswd123"
 # import the test CA's certificate:
-docker cp oracle:/tmp/root/b64certificate.txt b64certificate.txt
+playground container cp --source oracle:/tmp/root/b64certificate.txt --destination b64certificate.txt
 $ keytool -import -v -noprompt -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
 # Import the signed certificate
-docker cp oracle:/tmp/cert.txt cert.txt
+playground container cp --source oracle:/tmp/cert.txt --destination cert.txt
 $ keytool -import -v -alias testclient -file /tmp/cert.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
 log "Displaying keystore"
 $ keytool -list -keystore /tmp/keystore.jks -storepass 'welcome123' -v

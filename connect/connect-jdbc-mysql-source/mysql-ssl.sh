@@ -39,9 +39,9 @@ log "Getting certs from mysql container and transform them to JKS"
 mkdir -p ${PWD}/security/
 rm -rf ${PWD}/security/*
 # https://dev.mysql.com/doc/connector-j/5.1/en/connector-j-reference-using-ssl.html
-docker cp mysql:/var/lib/mysql/ca.pem ${PWD}/security/
-docker cp mysql:/var/lib/mysql/client-key.pem ${PWD}/security/
-docker cp mysql:/var/lib/mysql/client-cert.pem ${PWD}/security/
+playground container cp --source mysql:/var/lib/mysql/ca.pem --destination ${PWD}/security/
+playground container cp --source mysql:/var/lib/mysql/client-key.pem --destination ${PWD}/security/
+playground container cp --source mysql:/var/lib/mysql/client-cert.pem --destination ${PWD}/security/
 
 log "Creating JKS from pem files"
 cd ${PWD}/security/

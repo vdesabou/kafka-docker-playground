@@ -37,7 +37,7 @@ echo "log event 2" >> splunk-s2s-test.log
 echo "log event 3" >> splunk-s2s-test.log
 
 log "Copy the splunk-s2s-test.log file to the Splunk UF Docker container"
-docker cp splunk-s2s-test.log splunk-uf:/opt/splunkforwarder/splunk-s2s-test.log
+playground container cp --source splunk-s2s-test.log --destination splunk-uf:/opt/splunkforwarder/splunk-s2s-test.log
 
 log "Configure the UF to monitor the splunk-s2s-test.log file"
 playground container exec --container splunk-uf --command "sudo ./bin/splunk add monitor -source /opt/splunkforwarder/splunk-s2s-test.log -auth admin:password"

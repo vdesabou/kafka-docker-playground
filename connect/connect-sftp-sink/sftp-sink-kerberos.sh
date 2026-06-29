@@ -25,16 +25,16 @@ listprincs
 EOF
 
 log "Copy sshuser.keytab to connect container /tmp/sshuser.keytab"
-docker cp kdc-server:/sshuser.keytab .
-docker cp sshuser.keytab connect:/tmp/sshuser.keytab
+playground container cp --source kdc-server:/sshuser.keytab --destination .
+playground container cp --source sshuser.keytab --destination connect:/tmp/sshuser.keytab
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
      playground container exec --container connect --root --command "chown appuser:appuser /tmp/sshuser.keytab"
 fi
 
 log "Copy sshserver.keytab to ssh server /etc/krb5.keytab"
-docker cp kdc-server:/sshserver.keytab .
-docker cp sshserver.keytab ssh-server:/etc/krb5.keytab
+playground container cp --source kdc-server:/sshserver.keytab --destination .
+playground container cp --source sshserver.keytab --destination ssh-server:/etc/krb5.keytab
 playground container exec --container ssh-server --root --command "chown root:root /etc/krb5.keytab"
 
 log "Add sshuser"
@@ -94,6 +94,6 @@ sleep 10
 log "Listing content of ./upload/topics/test_sftp_sink/partition\=0/"
 playground container exec --container ssh-server --command "ls /home/sshuser/upload/topics/test_sftp_sink/partition\\=0/"
 
-docker cp ssh-server:/home/sshuser/upload/topics/test_sftp_sink/partition\=0/test_sftp_sink+0+0000000000.avro /tmp/
+playground container cp --source ssh-server:/home/sshuser/upload/topics/test_sftp_sink/partition\=0/test_sftp_sink+0+0000000000.avro --destination /tmp/
 
 playground  tools read-avro-file --file /tmp/test_sftp_sink+0+0000000000.avro

@@ -28,8 +28,8 @@ listprincs
 EOF
 
 log "Copy connect.keytab to connect container /tmp/sshuser.keytab"
-docker cp kerberos:/connect.keytab .
-docker cp connect.keytab connect:/tmp/connect.keytab
+playground container cp --source kerberos:/connect.keytab --destination .
+playground container cp --source connect.keytab --destination connect:/tmp/connect.keytab
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
      playground container exec --container connect --root --command "chown appuser:appuser /tmp/connect.keytab"

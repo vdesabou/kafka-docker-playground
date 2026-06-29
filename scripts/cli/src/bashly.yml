@@ -2841,6 +2841,30 @@ commands:
       - playground exec --container schema-registry --container ksqldb-server --command "free -h"
       - playground exec -c connect -c broker -d "netstat -tuln" --root
 
+    - name: cp
+      group: Container
+      help: |-
+        🪄 Copy files between local filesystem and container
+
+      flags:
+      - long: --source
+        required: true
+        validate: not_empty
+        arg: source
+        help: |-
+          📥 Source path (local path or container:path)
+
+      - long: --destination
+        required: true
+        validate: not_empty
+        arg: destination
+        help: |-
+          📤 Destination path (local path or container:path)
+
+      examples:
+      - playground container cp --source ./file.txt --destination connect:/tmp/file.txt
+      - playground container cp --source connect:/tmp/file.txt --destination ./file.txt
+
     - name: restart
       group: Container
       help: |-

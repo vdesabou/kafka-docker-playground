@@ -2275,6 +2275,27 @@
           ]
         },
         {
+          "name": "cp",
+          "description": "🪄 Copy files between local filesystem and container\n",
+          "usage": "playground container cp [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--source"
+              ],
+              "argument": "SOURCE",
+              "description": "📥 Source path (local path or container:path)\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--destination"
+              ],
+              "argument": "DESTINATION",
+              "description": "📤 Destination path (local path or container:path)\n\nRequired: ✓ Yes\n"
+            }
+          ]
+        },
+        {
           "name": "restart",
           "description": "🔁 Restart a container\n",
           "usage": "playground container restart [OPTIONS]",

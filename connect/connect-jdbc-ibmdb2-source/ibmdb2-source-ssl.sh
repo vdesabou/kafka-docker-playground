@@ -41,7 +41,7 @@ docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_
 cd ../../connect/connect-jdbc-ibmdb2-source
 rm -f db2jcc4.jar
 log "Getting db2jcc4.jar"
-docker cp ibmdb2:/opt/ibm/db2/V11.5/java/db2jcc4.jar db2jcc4.jar
+playground container cp --source ibmdb2:/opt/ibm/db2/V11.5/java/db2jcc4.jar --destination db2jcc4.jar
 if [[ "$OSTYPE" == "darwin"* ]]
 then
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
@@ -98,7 +98,7 @@ mkdir -p ${PWD}/security/
 rm -rf ${PWD}/security/*
 
 cd ${PWD}/security/
-docker cp ibmdb2:/database/config/db2inst1/server.arm .
+playground container cp --source ibmdb2:/database/config/db2inst1/server.arm --destination .
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then

@@ -38,11 +38,11 @@ cd ../../connect/connect-jms-oracle19-sink
 
 if [ ! -f aqapi.jar ]
 then
-     docker cp oracle:/opt/oracle/product/19c/dbhome_1/rdbms/jlib/aqapi.jar aqapi.jar
+     playground container cp --source oracle:/opt/oracle/product/19c/dbhome_1/rdbms/jlib/aqapi.jar --destination aqapi.jar
 fi
 if [ ! -f ojdbc8.jar ]
 then
-     docker cp oracle:/opt/oracle/product/19c/dbhome_1/jdbc/lib/ojdbc8.jar ojdbc8.jar
+     playground container cp --source oracle:/opt/oracle/product/19c/dbhome_1/jdbc/lib/ojdbc8.jar --destination ojdbc8.jar
 fi
 if [ ! -f jta-1.1.jar ]
 then

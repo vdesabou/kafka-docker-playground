@@ -117,9 +117,9 @@ playground container exec --container oracle --command "bash -c \"orapki wallet 
 
 
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
-docker cp ${PWD}/mtls/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
-docker cp ${PWD}/mtls/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
-docker cp ${PWD}/mtls/tnsnames.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
+playground container cp --source ${PWD}/mtls/listener.ora --destination oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
+playground container cp --source ${PWD}/mtls/sqlnet.ora --destination oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
+playground container cp --source ${PWD}/mtls/tnsnames.ora --destination oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
 
 
 playground container exec --container oracle --command "lsnrctl" << EOF
@@ -146,8 +146,8 @@ then
 fi
 
 log "🔏 copy cwallet.sso to connect container"
-docker cp oracle:/tmp/client/cwallet.sso /tmp
-docker cp /tmp/cwallet.sso connect:/tmp/cwallet.sso
+playground container cp --source oracle:/tmp/client/cwallet.sso --destination /tmp
+playground container cp --source /tmp/cwallet.sso --destination connect:/tmp/cwallet.sso
 playground container exec --root --command "chown appuser /tmp/cwallet.sso"
 
 # https://github.com/confluentinc/common-docker/pull/743 and https://github.com/adoptium/adoptium-support/issues/1285

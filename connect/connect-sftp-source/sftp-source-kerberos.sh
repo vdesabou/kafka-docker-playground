@@ -25,16 +25,16 @@ listprincs
 EOF
 
 log "Copy sshuser.keytab to connect container /tmp/sshuser.keytab"
-docker cp kdc-server:/sshuser.keytab .
-docker cp sshuser.keytab connect:/tmp/sshuser.keytab
+playground container cp --source kdc-server:/sshuser.keytab --destination .
+playground container cp --source sshuser.keytab --destination connect:/tmp/sshuser.keytab
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
      playground container exec --container connect --root --command "chown appuser:appuser /tmp/sshuser.keytab"
 fi
 
 log "Copy sshserver.keytab to ssh server /etc/krb5.keytab"
-docker cp kdc-server:/sshserver.keytab .
-docker cp sshserver.keytab ssh-server:/etc/krb5.keytab
+playground container cp --source kdc-server:/sshserver.keytab --destination .
+playground container cp --source sshserver.keytab --destination ssh-server:/etc/krb5.keytab
 playground container exec --container ssh-server --root --command "chown root:root /etc/krb5.keytab"
 
 log "Add sshuser"
@@ -57,7 +57,7 @@ playground container exec --container connect --command "kinit sshuser -k -t /tm
 # playground container exec -i --privileged --user root connect bash -c "yum update -y && yum install openssh-clients -y"
 
 echo $'id,first_name,last_name,email,gender,ip_address,last_login,account_balance,country,favorite_color\n1,Salmon,Baitman,sbaitman0@feedburner.com,Male,120.181.75.98,2015-03-01T06:01:15Z,17462.66,IT,#f09bc0\n2,Debby,Brea,dbrea1@icio.us,Female,153.239.187.49,2018-10-21T12:27:12Z,14693.49,CZ,#73893a' > csv-sftp-source.csv
-docker cp csv-sftp-source.csv ssh-server:/home/sshuser/upload/input/
+playground container cp --source csv-sftp-source.csv --destination ssh-server:/home/sshuser/upload/input/
 rm -f csv-sftp-source.csv
 
 log "Creating CSV SFTP Source connector"

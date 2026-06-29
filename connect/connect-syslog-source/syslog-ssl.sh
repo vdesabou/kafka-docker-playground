@@ -15,8 +15,8 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Copying certs to container"
-docker cp example.key.pem connect:/
-docker cp example.crt.pem connect:/
+playground container cp --source example.key.pem --destination connect:/
+playground container cp --source example.crt.pem --destination connect:/
 
 log "Creating Syslog Source connector"
 playground connector create-or-update --connector syslog-source  << EOF

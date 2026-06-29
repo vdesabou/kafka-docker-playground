@@ -36,8 +36,8 @@ listprincs
 EOF
 
 log "Copy connect.keytab to connect container /tmp/sshuser.keytab"
-docker cp krb5:/connect.keytab .
-docker cp connect.keytab connect:/tmp/connect.keytab
+playground container cp --source krb5:/connect.keytab --destination .
+playground container cp --source connect.keytab --destination connect:/tmp/connect.keytab
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
      playground container exec --container connect --root --command "chown appuser:appuser /tmp/connect.keytab"
@@ -90,6 +90,6 @@ playground container exec --container namenode1 --command "kinit -kt /opt/hadoop
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
 playground container exec --container namenode1 --command "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hadoop fs -copyToLocal /topics/hdfs-topic/partition=0/hdfs-topic+0+0000000000+0000000002.avro /tmp"
-docker cp namenode1:/tmp/hdfs-topic+0+0000000000+0000000002.avro /tmp/
+playground container cp --source namenode1:/tmp/hdfs-topic+0+0000000000+0000000002.avro --destination /tmp/
 
 playground  tools read-avro-file --file /tmp/hdfs-topic+0+0000000000+0000000002.avro

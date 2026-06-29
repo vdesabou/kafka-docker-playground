@@ -99,8 +99,8 @@ playground container exec --container connect --root --command "bash -c \"rm -rf
 set -e
 playground container exec --container connect --root --command "bash -c \"/opt/mapr/server/configure.sh -secure -N maprdemo.mapr.io -c -C $MAPR_IP -u appuser -g appuser\""
 
-docker cp mapr:/opt/mapr/conf/ssl_truststore /tmp/ssl_truststore
-docker cp /tmp/ssl_truststore connect:/opt/mapr/conf/ssl_truststore
+playground container cp --source mapr:/opt/mapr/conf/ssl_truststore --destination /tmp/ssl_truststore
+playground container cp --source /tmp/ssl_truststore --destination connect:/opt/mapr/conf/ssl_truststore
 playground container exec --container connect --root --command "bash -c \"chown -R appuser:appuser /opt/mapr\""
 
 log "Login with maprlogin on client side (connect)"

@@ -147,10 +147,10 @@ docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keyto
 # Generate a CSR (Certificate Signing Request):
 docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -certreq -alias testclient -file /tmp/csr.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
 # Sign the client certificate using the test CA (root)
-docker cp csr.txt oracle:/tmp/csr.txt
+playground container cp --source csr.txt --destination oracle:/tmp/csr.txt
 playground container exec --container oracle --command "bash -c \"orapki cert create -wallet /tmp/root -request /tmp/csr.txt -cert /tmp/cert.txt -validity 3650 -pwd WalletPasswd123\""
 # import the test CA's certificate:
-docker cp oracle:/tmp/root/b64certificate.txt b64certificate.txt
+playground container cp --source oracle:/tmp/root/b64certificate.txt --destination b64certificate.txt
 if [[ "$OSTYPE" == "darwin"* ]]
 then
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
@@ -161,7 +161,7 @@ else
 fi
 docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -import -v -noprompt -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
 # Import the signed certificate
-docker cp oracle:/tmp/cert.txt cert.txt
+playground container cp --source oracle:/tmp/cert.txt --destination cert.txt
 if [[ "$OSTYPE" == "darwin"* ]]
 then
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
@@ -184,9 +184,9 @@ docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keyto
 cd ${DIR}
 
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
-docker cp ${PWD}/mtls/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
-docker cp ${PWD}/mtls/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
-docker cp ${PWD}/mtls/tnsnames.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
+playground container cp --source ${PWD}/mtls/listener.ora --destination oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
+playground container cp --source ${PWD}/mtls/sqlnet.ora --destination oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
+playground container cp --source ${PWD}/mtls/tnsnames.ora --destination oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
 
 playground container exec --container oracle --command "lsnrctl" << EOF
 reload

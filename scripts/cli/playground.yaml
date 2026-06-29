@@ -2626,6 +2626,27 @@ subcommands:
             
             Allowed values: bash, sh, ksh, zsh
             
+      - name: cp
+        description: | 
+          🪄 Copy files between local filesystem and container
+        usage: playground container cp [OPTIONS]
+        options:
+        - names:
+          - --source
+          argument: SOURCE
+          description: | 
+            📥 Source path (local path or container:path)
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --destination
+          argument: DESTINATION
+          description: | 
+            📤 Destination path (local path or container:path)
+            
+            Required: ✓ Yes
+            
       - name: restart
         description: | 
           🔁 Restart a container

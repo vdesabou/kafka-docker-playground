@@ -24,7 +24,7 @@ EOF
 
 echo $'id\tfirst_name\tlast_name\temail\tgender\tip_address\tlast_login\taccount_balance\tcountry\tfavorite_color\n1\tPadraig\tOxshott\tpoxshott0@dion.ne.jp\tMale\t47.243.121.95\t2016-06-24T22:43:42Z\t15274.22\tJP\t#06708f\n2\tEdi\tOrrah\teorrah1@cafepress.com\tFemale\t158.229.234.101\t2017-03-01T17:52:47Z\t12947.6\tCN\t#5f2aa2' > tsv-sftp-source.tsv
 
-docker cp tsv-sftp-source.tsv sftp-server:/chroot/home/foo/upload/input/
+playground container cp --source tsv-sftp-source.tsv --destination sftp-server:/chroot/home/foo/upload/input/
 rm -f tsv-sftp-source.tsv
 
 log "Creating TSV SFTP Source connector"

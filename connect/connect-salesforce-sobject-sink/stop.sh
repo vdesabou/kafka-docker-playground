@@ -21,7 +21,7 @@ then
 
     log "Bulk delete leads"
     playground container exec --container sfdx-cli --command "sfdx data:query --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -q \"SELECT Id FROM Lead\" --result-format csv" --shell sh > /tmp/out.csv
-    docker cp /tmp/out.csv sfdx-cli:/tmp/out.csv
+    playground container cp --source /tmp/out.csv --destination sfdx-cli:/tmp/out.csv
     playground container exec --container sfdx-cli --command "sfdx force:data:bulk:delete --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -s Lead -f /tmp/out.csv" --shell sh
 fi
 

@@ -124,7 +124,7 @@ sleep 10
 
 # log "Getting one of the avro files locally and displaying content with avro-tools"
 # playground container exec hadoop bash -c "/usr/local/hadoop/bin/hadoop fs -copyToLocal /topics/hdfs-topic/f1=value1/hdfs-topic+0+0000000000+0000000000.avro /tmp"
-# docker cp hadoop:/tmp/hdfs-topic+0+0000000000+0000000000.avro /tmp/
+# playground container cp --source hadoop:/tmp/hdfs-topic+0+0000000000+0000000000.avro --destination /tmp/
 
 
 playground  tools read-avro-file --file /tmp/hdfs-topic+0+0000000000+0000000000.avro

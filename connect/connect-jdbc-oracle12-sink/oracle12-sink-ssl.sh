@@ -77,7 +77,7 @@ else
 fi
 log "Create a JKS truststore"
 rm -f truststore.jks
-docker cp oracle:/tmp/root/b64certificate.txt b64certificate.txt
+playground container cp --source oracle:/tmp/root/b64certificate.txt --destination b64certificate.txt
 if [[ "$OSTYPE" == "darwin"* ]]
 then
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
@@ -94,9 +94,9 @@ docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keyto
 cd ${DIR}
 
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
-docker cp ${PWD}/ssl/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
-docker cp ${PWD}/ssl/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
-docker cp ${PWD}/ssl/tnsnames.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
+playground container cp --source ${PWD}/ssl/listener.ora --destination oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
+playground container cp --source ${PWD}/ssl/sqlnet.ora --destination oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
+playground container cp --source ${PWD}/ssl/tnsnames.ora --destination oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
 
 playground container exec --container oracle --command "lsnrctl" << EOF
 reload

@@ -45,7 +45,7 @@ echo "log event 3" >> splunk-s2s-test.log
 Copy the splunk-s2s-test.log file to the Splunk UF Docker container:
 
 ```bash
-docker cp splunk-s2s-test.log splunk-uf:/opt/splunkforwarder/splunk-s2s-test.log
+playground container cp --source splunk-s2s-test.log --destination splunk-uf:/opt/splunkforwarder/splunk-s2s-test.log
 ```
 
 Configure the UF to monitor the splunk-s2s-test.log file:

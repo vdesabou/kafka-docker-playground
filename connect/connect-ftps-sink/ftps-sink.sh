@@ -75,6 +75,6 @@ sleep 10
 log "Listing content of /home/vsftpd/bob/test_ftps_sink/partition\=0/"
 playground container exec --container ftps-server --command "bash -c \"ls /home/vsftpd/bob/test_ftps_sink/partition\\=0/\""
 
-docker cp ftps-server:/home/vsftpd/bob/test_ftps_sink/partition\=0/test_ftps_sink+0+0000000000.avro /tmp/
+playground container cp --source ftps-server:/home/vsftpd/bob/test_ftps_sink/partition\=0/test_ftps_sink+0+0000000000.avro --destination /tmp/
 
 playground  tools read-avro-file --file /tmp/test_ftps_sink+0+0000000000.avro

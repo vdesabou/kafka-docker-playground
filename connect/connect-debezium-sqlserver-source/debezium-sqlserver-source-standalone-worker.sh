@@ -66,4 +66,4 @@ log "Verifying topic server1.testDB.dbo.customers"
 playground topic consume --topic server1.testDB.dbo.customers --min-expected-messages 5 --timeout 60
 
 log "Copying standalone logs to /tmp/standalone.log"
-docker cp connect:/tmp/standalone.log /tmp/standalone.log
+playground container cp --source connect:/tmp/standalone.log --destination /tmp/standalone.log

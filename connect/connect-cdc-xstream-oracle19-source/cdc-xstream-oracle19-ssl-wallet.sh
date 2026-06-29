@@ -102,9 +102,9 @@ playground container exec --container oracle --command "bash -c \"orapki wallet 
 playground container exec --container oracle --command "bash -c \"orapki wallet add -wallet /tmp/server -user_cert -cert /tmp/server/cert.txt -pwd WalletPasswd123\""
 
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
-docker cp ${PWD}/ssl/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
-docker cp ${PWD}/ssl/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
-docker cp ${PWD}/ssl/tnsnames.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
+playground container cp --source ${PWD}/ssl/listener.ora --destination oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
+playground container cp --source ${PWD}/ssl/sqlnet.ora --destination oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
+playground container cp --source ${PWD}/ssl/tnsnames.ora --destination oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
 
 playground container exec --container oracle --command "lsnrctl" << EOF
 reload
@@ -125,8 +125,8 @@ log "✨ If you modify a docker-compose file and want to re-create the container
 wait_container_ready
 
 log "🔏 copy cwallet.sso to connect container"
-docker cp oracle:/tmp/server/cwallet.sso /tmp
-docker cp /tmp/cwallet.sso connect:/tmp/cwallet.sso
+playground container cp --source oracle:/tmp/server/cwallet.sso --destination /tmp
+playground container cp --source /tmp/cwallet.sso --destination connect:/tmp/cwallet.sso
 playground container exec --root --command "chown appuser /tmp/cwallet.sso"
 
 if ! (version_gt $CP_CONNECT_TAG "7.6.99")
