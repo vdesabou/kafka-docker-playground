@@ -43,13 +43,7 @@ confluent
 confluent
 EOF
 
-playground container exec --container ssh-server --command "bash -c \""
-mkdir -p /home/sshuser/upload/input
-mkdir -p /home/sshuser/upload/error
-mkdir -p /home/sshuser/upload/finished
-
-chown -R sshuser /home/sshuser/upload
-"
+playground container exec --container ssh-server --command "mkdir -p /home/sshuser/upload/input;mkdir -p /home/sshuser/upload/error;mkdir -p /home/sshuser/upload/finished;chown -R sshuser /home/sshuser/upload"
 
 # FIXTHIS: it is required to do kinit manually
 playground container exec --container connect --command "kinit sshuser -k -t /tmp/sshuser.keytab"
@@ -59,25 +53,25 @@ playground container exec --container connect --command "kinit sshuser -k -t /tm
 log "Creating SFTP Sink connector"
 playground connector create-or-update --connector sftp-sink-kerberos  << EOF
 {
-               "topics": "test_sftp_sink",
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.sftp.SftpSinkConnector",
-               "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
-               "schema.generator.class": "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator",
-               "flush.size": "3",
-               "schema.compatibility": "NONE",
-               "format.class": "io.confluent.connect.sftp.sink.format.avro.AvroFormat",
-               "storage.class": "io.confluent.connect.sftp.sink.storage.SftpSinkStorage",
-               "sftp.username":"sshuser",
-               "kerberos.keytab.path": "/tmp/sshuser.keytab",
-               "kerberos.user.principal": "sshuser",
-               "sftp.host":"ssh-server",
-               "sftp.port":"22",
-               "sftp.working.dir": "/home/sshuser/upload",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+    "topics": "test_sftp_sink",
+    "tasks.max": "1",
+    "connector.class": "io.confluent.connect.sftp.SftpSinkConnector",
+    "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
+    "schema.generator.class": "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator",
+    "flush.size": "3",
+    "schema.compatibility": "NONE",
+    "format.class": "io.confluent.connect.sftp.sink.format.avro.AvroFormat",
+    "storage.class": "io.confluent.connect.sftp.sink.storage.SftpSinkStorage",
+    "sftp.username":"sshuser",
+    "kerberos.keytab.path": "/tmp/sshuser.keytab",
+    "kerberos.user.principal": "sshuser",
+    "sftp.host":"ssh-server",
+    "sftp.port":"22",
+    "sftp.working.dir": "/home/sshuser/upload",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
+}
 EOF
 
 
@@ -98,7 +92,7 @@ EOF
 sleep 10
 
 log "Listing content of ./upload/topics/test_sftp_sink/partition\=0/"
-playground container exec --container ssh-server --command "bash -c \"ls /home/sshuser/upload/topics/test_sftp_sink/partition\\=0/\""
+playground container exec --container ssh-server --command "ls /home/sshuser/upload/topics/test_sftp_sink/partition\\=0/"
 
 docker cp ssh-server:/home/sshuser/upload/topics/test_sftp_sink/partition\=0/test_sftp_sink+0+0000000000.avro /tmp/
 
