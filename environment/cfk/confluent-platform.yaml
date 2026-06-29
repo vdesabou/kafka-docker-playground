@@ -66,12 +66,35 @@ spec:
     kafka:
       bootstrapEndpoint: kafka:9071
   configOverrides:
+    log4j2:
+      Configuration:
+        Loggers:
+          Logger:
+            - name: org.apache.kafka.connect.runtime.rest.RestServer
+              level: ERROR
+              additivity: false
+              AppenderRef:
+                - ref: stdout
+            - name: org.reflections
+              level: ERROR
+              additivity: false
+              AppenderRef:
+                - ref: stdout
     server:
       - offset.storage.replication.factor=1
       - status.storage.replication.factor=1
       - config.storage.replication.factor=1
       - confluent.topic.replication.factor=1
       - plugin.path=/usr/share/confluent-hub-components,/mnt/plugins
+
+      - confluent.topic.bootstrap.servers=kafka:9071
+      - confluent.topic.replication.factor=1
+      - producer.enable.metrics.push=true
+
+      - key.converter=org.apache.kafka.connect.storage.StringConverter
+      - value.converter=io.confluent.connect.avro.AvroConverter
+      - value.converter.schemas.enable=false
+      - value.converter.schema.registry.url=http://schemaregistry:8081
 ---
 apiVersion: platform.confluent.io/v1beta1
 kind: SchemaRegistry
