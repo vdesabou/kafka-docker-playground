@@ -10,6 +10,8 @@ services:
       - POSTGRES_USER=myuser
       - POSTGRES_PASSWORD=mypassword
       - POSTGRES_DB=postgres
+    ports:
+      - "5432:5432"
     volumes:
      - ../../connect/connect-debezium-postgresql-source/mtls/my-postgres.conf:/etc/postgresql/postgresql.conf
      - ../../connect/connect-debezium-postgresql-source/mtls/pg_hba.conf:/etc/postgresql/pg_hba.conf
