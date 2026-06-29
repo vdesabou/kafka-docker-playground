@@ -1167,12 +1167,36 @@ run_local_console_producer() {
     fi
 }
 
+run_local_schema_console_producer() {
+    local schema_type="$1"
+    shift
+
+    if [[ "$environment" == "cfk" ]]
+    then
+        kubectl -n confluent exec -i connect-0 -- kafka-${schema_type}-console-producer "$@"
+    else
+        docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-${schema_type}-console-producer "$@"
+    fi
+}
+
 print_local_console_producer_command() {
     if [[ "$environment" == "cfk" ]]
     then
         echo "cat /tmp/verbose_input_file.txt | kubectl -n confluent exec -i connect-0 -- kafka-console-producer $*"
     else
         echo "cat /tmp/verbose_input_file.txt | docker exec -e KAFKA_DEBUG=\"\" -i $container kafka-console-producer $*"
+    fi
+}
+
+print_local_schema_console_producer_command() {
+    local schema_type="$1"
+    shift
+
+    if [[ "$environment" == "cfk" ]]
+    then
+        echo "cat /tmp/verbose_input_file.txt | kubectl -n confluent exec -i connect-0 -- kafka-${schema_type}-console-producer $*"
+    else
+        echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-${schema_type}-console-producer $*"
     fi
 }
 
@@ -1392,7 +1416,12 @@ do
                 fi
             else
                 # 🧠 remove SLF4J traces from topic produce #6254
-                playground --output-level ERROR container exec --command "rm -f /usr/share/java/schema-registry/slf4j-reload4j-1.7.36.jar > /dev/null 2>&1" --root
+                if [[ "$environment" == "cfk" ]]
+                then
+                    playground --output-level ERROR container exec --command "rm -f /usr/share/java/schema-registry/slf4j-reload4j-1.7.36.jar > /dev/null 2>&1"
+                else
+                    playground --output-level ERROR container exec --command "rm -f /usr/share/java/schema-registry/slf4j-reload4j-1.7.36.jar > /dev/null 2>&1" --root
+                fi
                 if [ -f $key_schema_file ]
                 then
                     playground container cp --source $key_schema_file --destination $container:/tmp/key_schema_file > /dev/null 2>&1
@@ -1410,18 +1439,18 @@ do
                             if [[ -n "$verbose" ]]
                             then
                                 log "🐞 CLI command used to produce data"
-                                echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-$key_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.schema.file=\"/tmp/key_schema_file\" $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                                print_local_schema_console_producer_command "$key_schema_type" "$parameter_for_list_broker" "$bootstrap_server" "$property_name" "schema.registry.url=$sr_url_cli" "--topic" "$topic" $security "$property_name" "value.schema.file=/tmp/value_schema_file" "$property_name" "parse.key=true" "$property_name" "key.separator=|" "$property_name" "key.schema.file=/tmp/key_schema_file" "$property_name" "parse.headers=true" "$property_name" "headers.delimiter=|" "$property_name" "headers.separator=," "$property_name" "headers.key.separator=:" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                             fi
 
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-$key_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.schema.file="/tmp/key_schema_file" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_schema_console_producer "$key_schema_type" $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.schema.file="/tmp/key_schema_file" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                         else
                             if [[ -n "$verbose" ]]
                             then
                                 log "🐞 CLI command used to produce data"
-                                echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                                print_local_schema_console_producer_command "$value_schema_type" "$parameter_for_list_broker" "$bootstrap_server" "$property_name" "schema.registry.url=$sr_url_cli" "--topic" "$topic" $security "$property_name" "value.schema.file=/tmp/value_schema_file" "$property_name" "parse.key=true" "$property_name" "key.separator=|" "$property_name" "key.serializer=org.apache.kafka.common.serialization.StringSerializer" "$property_name" "parse.headers=true" "$property_name" "headers.delimiter=|" "$property_name" "headers.separator=," "$property_name" "headers.key.separator=:" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                             fi
 
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_schema_console_producer "$value_schema_type" $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                         fi
                     else
                         if [ "$key_schema_type" = "avro" ] || [ "$key_schema_type" = "protobuf" ] || [ "$key_schema_type" = "json-schema" ]
@@ -1429,16 +1458,16 @@ do
                             if [[ -n "$verbose" ]]
                             then
                                 log "🐞 CLI command used to produce data"
-                                echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-$key_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.schema.file=\"/tmp/key_schema_file\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                                print_local_schema_console_producer_command "$key_schema_type" "$parameter_for_list_broker" "$bootstrap_server" "$property_name" "schema.registry.url=$sr_url_cli" "--topic" "$topic" $security "$property_name" "value.schema.file=/tmp/value_schema_file" "$property_name" "parse.key=true" "$property_name" "key.separator=|" "$property_name" "key.schema.file=/tmp/key_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                             fi
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-$key_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.schema.file="/tmp/key_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_schema_console_producer "$key_schema_type" $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.schema.file="/tmp/key_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                         else
                             if [[ -n "$verbose" ]]
                             then
                                 log "🐞 CLI command used to produce data"
-                                echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                                print_local_schema_console_producer_command "$value_schema_type" "$parameter_for_list_broker" "$bootstrap_server" "$property_name" "schema.registry.url=$sr_url_cli" "--topic" "$topic" $security "$property_name" "value.schema.file=/tmp/value_schema_file" "$property_name" "parse.key=true" "$property_name" "key.separator=|" "$property_name" "key.serializer=org.apache.kafka.common.serialization.StringSerializer" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                             fi
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_schema_console_producer "$value_schema_type" $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                         fi
                     fi
                 else
@@ -1447,16 +1476,16 @@ do
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-$key_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                            print_local_schema_console_producer_command "$value_schema_type" "$parameter_for_list_broker" "$bootstrap_server" "$property_name" "schema.registry.url=$sr_url_cli" "--topic" "$topic" $security "$property_name" "value.schema.file=/tmp/value_schema_file" "$property_name" "parse.headers=true" "$property_name" "headers.delimiter=|" "$property_name" "headers.separator=," "$property_name" "headers.key.separator=:" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_schema_console_producer "$value_schema_type" $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                     else
                         if [[ -n "$verbose" ]]
                         then
                             log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                            print_local_schema_console_producer_command "$value_schema_type" "$parameter_for_list_broker" "$bootstrap_server" "$property_name" "schema.registry.url=$sr_url_cli" "--topic" "$topic" $security "$property_name" "value.schema.file=/tmp/value_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                         fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-$value_schema_type-console-producer $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_schema_console_producer "$value_schema_type" $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                     fi
                 fi
             fi
