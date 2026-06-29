@@ -293,7 +293,7 @@ else
         fi
 
         # CFK does not use docker broker aliases; normalize common broker endpoint references.
-        json_content=$(echo "$json_content" | jq 'with_entries(if (.value|type) == "string" then .value |= gsub("broker:9092"; "kafka:9071") else . end)')
+        json_content=$(echo "$json_content" | jq 'with_entries(if (.value | type) == "string" then .value = (.value | gsub("broker:9092"; "kafka:9071") | gsub("schema-registry"; "schemaregistry")) else . end)')
 
         connector_cr_file=$tmp_dir/connector-cr.yaml
         connector_class=$(echo "$json_content" | jq -r '."connector.class"')
