@@ -93,7 +93,7 @@ playground container exec --container -d --command "--privileged --user root con
 
 
 log "Login with sfdx CLI"
-playground container exec --container sfdx-cli --command "sh -c \"sfdx sfpowerkit:auth:login -u \\\"$SALESFORCE_USERNAME\\\" -p \\\"$SALESFORCE_PASSWORD\\\" -r \\\"$SALESFORCE_INSTANCE\\\" -s \\\"$SALESFORCE_SECURITY_TOKEN\\\"\""
+playground container exec --container sfdx-cli --command "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\"" --shell sh
 
 log "Send Platform Events"
 playground container exec --container sfdx-cli --command "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" -f \"/tmp/event.apex\"" --shell sh

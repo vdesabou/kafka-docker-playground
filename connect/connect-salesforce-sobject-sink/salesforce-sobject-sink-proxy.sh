@@ -102,17 +102,17 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 # the Salesforce PushTopic source connector is used to get data into Kafka and the Salesforce SObject sink connector is used to export data from Kafka to Salesforce
 
 log "Login with sfdx CLI"
-playground container exec --container sfdx-cli --command "sh -c \"sfdx sfpowerkit:auth:login -u \\\"$SALESFORCE_USERNAME\\\" -p \\\"$SALESFORCE_PASSWORD\\\" -r \\\"$SALESFORCE_INSTANCE\\\" -s \\\"$SALESFORCE_SECURITY_TOKEN\\\"\""
+playground container exec --container sfdx-cli --command "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\"" --shell sh
 
 log "Delete $PUSH_TOPICS_NAME, if required"
 set +e
-playground container exec --container sfdx-cli --command "sh -c \"sfdx apex run --target-org \\\"$SALESFORCE_USERNAME\\\"\"" << EOF
+playground container exec --container sfdx-cli --command "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" --shell sh << EOF
 List<PushTopic> pts = [SELECT Id FROM PushTopic WHERE Name = '$PUSH_TOPICS_NAME'];
 Database.delete(pts);
 EOF
 set -e
 log "Create $PUSH_TOPICS_NAME"
-playground container exec --container sfdx-cli --command "sh -c \"sfdx apex run --target-org \\\"$SALESFORCE_USERNAME\\\" -f \\\"/tmp/MyLeadPushTopics.apex\\\"\""
+playground container exec --container sfdx-cli --command "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" -f \"/tmp/MyLeadPushTopics.apex\"" --shell sh
 
 DOMAIN=$(echo $SALESFORCE_INSTANCE | cut -d "/" -f 3)
 IP=$(nslookup $DOMAIN | grep Address | grep -v "#" | cut -d " " -f 2 | tail -1)
@@ -155,7 +155,7 @@ sleep 5
 LEAD_FIRSTNAME=John_$RANDOM
 LEAD_LASTNAME=Doe_$RANDOM
 log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
-playground container exec --container sfdx-cli --command "sh -c \"sfdx data:create:record  --target-org \\\"$SALESFORCE_USERNAME\\\" -s Lead -v \\\"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\\\"\""
+playground container exec --container sfdx-cli --command "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\"" --shell sh
 
 sleep 30
 
@@ -206,9 +206,9 @@ playground topic consume --topic success-responses --min-expected-messages 1 --t
 playground topic consume --topic error-responses --min-expected-messages 0 --timeout 60
 
 log "Login with sfdx CLI on the account #2"
-playground container exec --container sfdx-cli --command "sh -c \"sfdx sfpowerkit:auth:login -u \\\"$SALESFORCE_USERNAME_ACCOUNT2\\\" -p \\\"$SALESFORCE_PASSWORD_ACCOUNT2\\\" -r \\\"$SALESFORCE_INSTANCE_ACCOUNT2\\\" -s \\\"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\\\"\""
+playground container exec --container sfdx-cli --command "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\"" --shell sh
 
 log "Get the Lead created on account #2"
-playground container exec --container sfdx-cli --command "sh -c \"sfdx data:record:get --target-org \\\"$SALESFORCE_USERNAME_ACCOUNT2\\\" -s Lead -w \\\"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\\\"\"" > /tmp/result.log  2>&1
+playground container exec --container sfdx-cli --command "sfdx data:record:get --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -s Lead -w \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\"" --shell sh > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "$LEAD_FIRSTNAME" /tmp/result.log

@@ -89,10 +89,10 @@ EOF
 sleep 5
 
 log "Login with sfdx CLI"
-playground container exec --container sfdx-cli --command "sh -c \"sfdx sfpowerkit:auth:login -u \\\"$SALESFORCE_USERNAME\\\" -p \\\"$SALESFORCE_PASSWORD\\\" -r \\\"$SALESFORCE_INSTANCE\\\" -s \\\"$SALESFORCE_SECURITY_TOKEN\\\"\""
+playground container exec --container sfdx-cli --command "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\"" --shell sh
 
 log "Add a Contact to Salesforce"
-playground container exec --container sfdx-cli --command "sh -c \"sfdx data:create:record  --target-org \\\"$SALESFORCE_USERNAME\\\" -s Contact -v \\\"FirstName='John_$RANDOM' LastName='Doe_$RANDOM'\\\"\""
+playground container exec --container sfdx-cli --command "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Contact -v \"FirstName='John_$RANDOM' LastName='Doe_$RANDOM'\"" --shell sh
 
 sleep 10
 
