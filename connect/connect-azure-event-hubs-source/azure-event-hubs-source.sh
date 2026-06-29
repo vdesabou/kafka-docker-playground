@@ -109,7 +109,7 @@ EOF
 sleep 5
 
 log "Inject data in Event Hubs, using simple-send java program"
-playground container exec --container simple-send --command "bash -c \"AZURE_EVENT_HUBS_NAME=$AZURE_EVENT_HUBS_NAME AZURE_EVENT_CONNECTION_STRING=$AZURE_EVENT_CONNECTION_STRING java -jar simplesend-1.0.0-jar-with-dependencies.jar\""
+playground container exec --container simple-send --command "export AZURE_EVENT_HUBS_NAME=\"$AZURE_EVENT_HUBS_NAME\"; export AZURE_EVENT_CONNECTION_STRING=\"$AZURE_EVENT_CONNECTION_STRING\"; java -jar simplesend-1.0.0-jar-with-dependencies.jar"
 
 sleep 5
 
