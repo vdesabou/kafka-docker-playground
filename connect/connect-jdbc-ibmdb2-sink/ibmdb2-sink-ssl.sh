@@ -196,11 +196,10 @@ EOF
 sleep 15
 
 log "Check data is in IBM DB2"
-playground container exec --container ibmdb2 --command "bash << EOF" > /tmp/result.log
+playground container exec --container ibmdb2 --command "bash" > /tmp/result.log << EOF
 su - db2inst1
 db2 connect to sample user db2inst1 using passw0rd
 db2 select ID,PRODUCT,QUANTITY,PRICE from ORDERS
 EOF
 cat /tmp/result.log
 grep "foo" /tmp/result.log
-
