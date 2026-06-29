@@ -14,7 +14,7 @@ fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-playground container exec --container sftp-server --command "bash" < EOF
+playground container exec --container sftp-server --command "bash" << EOF
 mkdir -p /chroot/home/foo/upload/input
 mkdir -p /chroot/home/foo/upload/error
 mkdir -p /chroot/home/foo/upload/finished
