@@ -36,7 +36,7 @@ EOF
 sleep 5
 
 log "Send message to MQTT in my-mqtt-topic topic"
-playground container exec --container mosquitto --command "sh -c 'mosquitto_pub -h localhost -p 1883 -u \"myuser\" -P \"mypassword\" -t \"my-mqtt-topic\" -m \"sample-msg-1\"'"
+playground container exec --container mosquitto --command "mosquitto_pub -h localhost -p 1883 -u \"myuser\" -P \"mypassword\" -t \"my-mqtt-topic\" -m \"sample-msg-1\"" --shell sh
 
 sleep 5
 

@@ -46,7 +46,7 @@ EOF
 sleep 5
 
 log "Send message to MQTT in my-mqtt-topic topic"
-playground container exec --container mosquitto --command "sh -c 'mosquitto_pub -h localhost -p 8883 -u \"myuser\" -P \"mypassword\" -t \"my-mqtt-topic\" -m \"sample-msg-1\" --cafile /tmp/ca.crt --key /tmp/server.key --cert /tmp/server.crt'"
+playground container exec --container mosquitto --command "mosquitto_pub -h localhost -p 8883 -u \"myuser\" -P \"mypassword\" -t \"my-mqtt-topic\" -m \"sample-msg-1\" --cafile /tmp/ca.crt --key /tmp/server.key --cert /tmp/server.crt" --shell sh
 
 sleep 5
 
