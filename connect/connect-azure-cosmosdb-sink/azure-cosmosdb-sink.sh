@@ -119,8 +119,7 @@ EOF
 sleep 10
 
 log "Verify data from Azure Cosmos DB"
-playground container exec --container azure-cosmos-client --command "bash -c \"python /get-data.py\"" > /tmp/result.log  2>&1
-
+playground container exec --container azure-cosmos-client --command "bash -c \"AZURE_COSMOSDB_DB_ENDPOINT_URI=$AZURE_COSMOSDB_DB_ENDPOINT_URI AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY=$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY AZURE_COSMOSDB_DB_NAME=$AZURE_COSMOSDB_DB_NAME AZURE_COSMOSDB_CONTAINER_NAME=$AZURE_COSMOSDB_CONTAINER_NAME python /get-data.py\"" > /tmp/result.log 2>&1
 cat /tmp/result.log
 grep "Marriott" /tmp/result.log
 grep "HolidayInn" /tmp/result.log
