@@ -418,6 +418,15 @@ Specifies which signaling channels are enabled for the connector. Supported valu
 	 - Importance: Specifies the name of the Kafka topic that the connector monitors for signals. The topic must have a single partition to ensure signal ordering is preserved.
 	 - Required: MEDIUM
 
+🔘 outbound.server.attach.position.mode
+
+Specifies the position the connector passes when attaching to the XStream outbound server. Select one of the following options:
+
+	 - Type: STRING
+	 - Default: connector_managed
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 How should we handle data types?
 ==========================

@@ -32,6 +32,7 @@
     "lob.oversize.handling.mode": "fail",
     "lob.oversize.threshold": "-1",
     "name": "STRING",
+    "outbound.server.attach.position.mode": "connector_managed",
     "output.data.format": "AVRO",
     "output.key.format": "AVRO",
     "producer.override.compression.type": "STRING",
