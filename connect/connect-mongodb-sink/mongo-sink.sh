@@ -97,7 +97,7 @@ use inventory
 db.customers.find().pretty();
 EOF
 
-playground container exec --container mongodb --command "mongosh << EOF > output.txt"
+playground container exec --container mongodb --command "mongosh" << EOF > output.txt
 use inventory
 db.customers.find().pretty();
 EOF

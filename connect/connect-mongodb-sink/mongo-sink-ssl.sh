@@ -156,7 +156,7 @@ use inventory
 db.customers.find().pretty();
 EOF
 
-playground container exec --container mongodb --command "mongosh --tls --tlsCertificateKeyFile /tmp/mongo.pem --tlsCertificateKeyFilePassword --tlsAllowInvalidCertificates confluent << EOF > output.txt"
+playground container exec --container mongodb --command "mongosh --tls --tlsCertificateKeyFile /tmp/mongo.pem --tlsCertificateKeyFilePassword --tlsAllowInvalidCertificates confluent" << EOF > output.txt
 use inventory
 db.customers.find().pretty();
 EOF
