@@ -71,4 +71,4 @@ EOF
 sleep 10
 
 log "Listing content of ./upload/topics/test_sftp_sink/partition\=0/"
-playground container exec --container sftp-server --command "bash -c \"ls /home/foo/upload/topics/test_sftp_sink/partition\\=0/\""
+playground container exec --container sftp-server --command "ls /home/foo/upload/topics/test_sftp_sink/partition\\=0/"
