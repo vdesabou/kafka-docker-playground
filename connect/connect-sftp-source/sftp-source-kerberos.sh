@@ -43,13 +43,13 @@ confluent
 confluent
 EOF
 
-playground container exec --container ssh-server --command "bash -c \""
-mkdir -p /home/sshuser/upload/input
-mkdir -p /home/sshuser/upload/error
-mkdir -p /home/sshuser/upload/finished
+playground container exec --container sftp-server --command "bash" < EOF
+mkdir -p /chroot/home/foo/upload/input
+mkdir -p /chroot/home/foo/upload/error
+mkdir -p /chroot/home/foo/upload/finished
 
-chown -R sshuser /home/sshuser/upload
-"
+chown -R foo /chroot/home/foo/upload
+EOF
 
 # FIXTHIS: it is required to do kinit manually
 playground container exec --container connect --command "kinit sshuser -k -t /tmp/sshuser.keytab"

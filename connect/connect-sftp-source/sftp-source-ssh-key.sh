@@ -27,13 +27,13 @@ log "RSA_PRIVATE_KEY=$RSA_PRIVATE_KEY"
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssh-key.yml"
 
-playground container exec --container sftp-server --command "bash -c \""
+playground container exec --container sftp-server --command "bash" < EOF
 mkdir -p /chroot/home/foo/upload/input
 mkdir -p /chroot/home/foo/upload/error
 mkdir -p /chroot/home/foo/upload/finished
 
 chown -R foo /chroot/home/foo/upload
-"
+EOF
 
 echo $'id,first_name,last_name,email,gender,ip_address,last_login,account_balance,country,favorite_color\n1,Salmon,Baitman,sbaitman0@feedburner.com,Male,120.181.75.98,2015-03-01T06:01:15Z,17462.66,IT,#f09bc0\n2,Debby,Brea,dbrea1@icio.us,Female,153.239.187.49,2018-10-21T12:27:12Z,14693.49,CZ,#73893a' > csv-sftp-source.csv
 docker cp csv-sftp-source.csv sftp-server:/chroot/home/foo/upload/input/
