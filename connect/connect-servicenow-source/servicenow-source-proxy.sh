@@ -94,16 +94,11 @@ EOF
 sleep 10
 
 log "Create one record to ServiceNow using proxy"
-playground container exec --container connect --command "bash" << EOF
+playground container exec --container connect --command "bash" << EOF > /tmp/result.log 2>&1
 export HTTP_PROXY=nginx-proxy:8888 && export HTTPS_PROXY=nginx-proxy:8888
-curl -X POST \
-\"${SERVICENOW_URL}api/now/table/incident\" \
---user admin:\"$SERVICENOW_PASSWORD\" \
--H 'Accept: application/json' \
--H 'Content-Type: application/json' \
--H 'cache-control: no-cache' \
--d '{\"short_description\": \"This is test\"}'
+curl -X POST "${SERVICENOW_URL}/api/now/table/incident" --user admin:\"$SERVICENOW_PASSWORD\" -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{\"short_description\": \"This is test\"}'
 EOF
+cat /tmp/result.log
 
 sleep 5
 
