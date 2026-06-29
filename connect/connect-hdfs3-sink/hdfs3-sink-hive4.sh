@@ -18,7 +18,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 sleep 10
 
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
-playground container exec --container namenode --command "bash -c \"/opt/hadoop/bin/hdfs dfs -chmod 777  /\""
+playground container exec --container namenode --command "/opt/hadoop-3.1.3/bin/hdfs dfs -chmod 777  /"
 
 log "Creating HDFS Sink connector with Hive integration"
 playground connector create-or-update --connector hdfs3-sink  << EOF
@@ -63,10 +63,10 @@ EOF
 sleep 10
 
 log "Listing content of /topics/hdfs-topic/partition=0 in HDFS"
-playground container exec --container namenode --command "bash -c \"/opt/hadoop/bin/hdfs dfs -ls /topics/hdfs-topic/partition=0\""
+playground container exec --container namenode --command "/opt/hadoop/bin/hdfs dfs -ls /topics/hdfs-topic/partition=0"
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-playground container exec --container namenode --command "bash -c \"/opt/hadoop/bin/hadoop fs -copyToLocal /topics/hdfs-topic/partition=0/hdfs-topic+0+0000000000+0000000002.avro /tmp\""
+playground container exec --container namenode --command "/opt/hadoop/bin/hadoop fs -copyToLocal /topics/hdfs-topic/partition=0/hdfs-topic+0+0000000000+0000000002.avro /tmp"
 docker cp namenode:/tmp/hdfs-topic+0+0000000000+0000000002.avro /tmp/
 
 playground  tools read-avro-file --file /tmp/hdfs-topic+0+0000000000+0000000002.avro

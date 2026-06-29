@@ -21,7 +21,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
-playground container exec --container namenode --command "bash -c \"/opt/hadoop-2.7.4/bin/hdfs dfs -chmod 777  /\""
+playground container exec --container namenode --command "/opt/hadoop-2.7.4/bin/hdfs dfs -chmod 777  /"
 
 log "Creating HDFS Sink connector"
 playground connector create-or-update --connector hdfs-sink  << EOF
@@ -67,10 +67,10 @@ EOF
 sleep 10
 
 log "Listing content of /topics/hdfs-topic in HDFS"
-playground container exec --container namenode --command "bash -c \"/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/hdfs-topic\""
+playground container exec --container namenode --command "/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/hdfs-topic"
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-playground container exec --container namenode --command "bash -c \"/opt/hadoop-2.7.4/bin/hadoop fs -copyToLocal /topics/hdfs-topic/f1=value1/hdfs-topic+0+0000000000+0000000000.avro /tmp\""
+playground container exec --container namenode --command "/opt/hadoop-2.7.4/bin/hadoop fs -copyToLocal /topics/hdfs-topic/f1=value1/hdfs-topic+0+0000000000+0000000000.avro /tmp"
 docker cp namenode:/tmp/hdfs-topic+0+0000000000+0000000000.avro /tmp/
 
 playground  tools read-avro-file --file /tmp/hdfs-topic+0+0000000000+0000000000.avro

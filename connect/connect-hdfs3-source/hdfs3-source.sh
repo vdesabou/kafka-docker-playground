@@ -23,7 +23,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 sleep 10
 
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
-playground container exec --container namenode --command "bash -c \"/opt/hadoop-3.1.3/bin/hdfs dfs -chmod 777  /\""
+playground container exec --container namenode --command "/opt/hadoop-3.1.3/bin/hdfs dfs -chmod 777  /"
 
 
 log "Creating HDFS Sink connector with Hive integration"
@@ -70,10 +70,10 @@ EOF
 sleep 10
 
 log "Listing content of /topics/hdfs-topic in HDFS"
-playground container exec --container namenode --command "bash -c \"/opt/hadoop-3.1.3/bin/hdfs dfs -ls /topics/hdfs-topic\""
+playground container exec --container namenode --command "/opt/hadoop-3.1.3/bin/hdfs dfs -ls /topics/hdfs-topic"
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-playground container exec --container namenode --command "bash -c \"/opt/hadoop-3.1.3/bin/hadoop fs -copyToLocal /topics/hdfs-topic/f1=value1/hdfs-topic+0+0000000000+0000000000.avro /tmp\""
+playground container exec --container namenode --command "/opt/hadoop-3.1.3/bin/hadoop fs -copyToLocal /topics/hdfs-topic/f1=value1/hdfs-topic+0+0000000000+0000000000.avro /tmp"
 docker cp namenode:/tmp/hdfs-topic+0+0000000000+0000000000.avro /tmp/
 
 playground  tools read-avro-file --file /tmp/hdfs-topic+0+0000000000+0000000000.avro
@@ -99,19 +99,19 @@ fi
 log "Creating HDFS Source connector"
 playground connector create-or-update --connector hdfs3-source  << EOF
 {
-          "connector.class":"io.confluent.connect.hdfs3.Hdfs3SourceConnector",
-          "tasks.max":"1",
-          "hdfs.url":"hdfs://namenode:9000",
-          "hadoop.conf.dir":"/etc/hadoop/",
-          "hadoop.home":"/opt/hadoop-3.1.3/share/hadoop/common",
-          "format.class" : "io.confluent.connect.hdfs3.format.avro.AvroFormat",
-          "confluent.topic.bootstrap.servers": "broker:9092",
-          "confluent.topic.replication.factor": "1",
-          "transforms" : "AddPrefix",
-          "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
-          "transforms.AddPrefix.regex" : ".*",
-          "transforms.AddPrefix.replacement" : "copy_of_\$0"
-          }
+    "connector.class":"io.confluent.connect.hdfs3.Hdfs3SourceConnector",
+    "tasks.max":"1",
+    "hdfs.url":"hdfs://namenode:9000",
+    "hadoop.conf.dir":"/etc/hadoop/",
+    "hadoop.home":"/opt/hadoop-3.1.3/share/hadoop/common",
+    "format.class" : "io.confluent.connect.hdfs3.format.avro.AvroFormat",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1",
+    "transforms" : "AddPrefix",
+    "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
+    "transforms.AddPrefix.regex" : ".*",
+    "transforms.AddPrefix.replacement" : "copy_of_\$0"
+}
 EOF
 
 sleep 10
