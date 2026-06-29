@@ -66,7 +66,7 @@ mkdir -p ${PWD}/security/
 rm -rf ${PWD}/security/*
 
 cd ${PWD}/security/
-docker cp ibmdb2:/database/config/db2inst1/server.arm .
+playground container cp --source ibmdb2:/database/config/db2inst1/server.arm --destination .
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then

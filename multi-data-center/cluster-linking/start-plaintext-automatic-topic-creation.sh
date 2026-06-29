@@ -21,8 +21,8 @@ log "Verify we have received the data in source cluster using consumer group id 
 docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --topic demo --from-beginning --max-messages 5 --consumer-property group.id=my-consumer-group"
 
 log "Create the cluster link on the destination cluster (with metadata.max.age.ms=5 seconds + consumer.offset.sync.enable=true + consumer.offset.sync.ms=3000 + consumer.offset.sync.json set to all consumer groups + auto.create.mirror.topics.enable=true + automatic-topic-creation-filters.json  set to all the topics prefixed by 'demo' )"
-docker cp consumer.offset.sync.json broker-europe:/tmp/consumer.offset.sync.json
-docker cp automatic-topic-creation-filters.json broker-europe:/tmp/automatic-topic-creation-filters.json
+playground container cp --source consumer.offset.sync.json --destination broker-europe:/tmp/consumer.offset.sync.json
+playground container cp --source automatic-topic-creation-filters.json --destination broker-europe:/tmp/automatic-topic-creation-filters.json
 docker exec broker-europe kafka-cluster-links --bootstrap-server broker-europe:9092 --create --link demo-link --config bootstrap.servers=broker-us:9092,metadata.max.age.ms=5000,consumer.offset.sync.enable=true,consumer.offset.sync.ms=3000,auto.create.mirror.topics.enable=true --consumer-group-filters-json-file /tmp/consumer.offset.sync.json --topic-filters-json-file /tmp/automatic-topic-creation-filters.json
 
 log "Wait for the demo topic to be automatically created"
@@ -64,7 +64,7 @@ echo "consumer.offset.group.filters={\"groupFilters\": [ \
     \"filterType\": \"EXCLUDE\" \
   } \
 ]}" > newFilters.properties
-docker cp newFilters.properties broker-europe:/tmp/newFilters.properties
+playground container cp --source newFilters.properties --destination broker-europe:/tmp/newFilters.properties
 docker exec broker-europe kafka-configs --bootstrap-server broker-europe:9092 --alter --cluster-link demo-link --add-config-file /tmp/newFilters.properties
 
 sleep 6

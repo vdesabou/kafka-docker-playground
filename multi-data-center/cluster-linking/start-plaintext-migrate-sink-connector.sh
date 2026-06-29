@@ -16,7 +16,7 @@ log "Create topic demo"
 docker exec broker-europe kafka-topics --create --topic demo --bootstrap-server broker-us:9092 --replication-factor 1 --partitions 1
 
 log "Create the cluster link on the destination cluster (with metadata.max.age.ms=5 seconds + consumer.offset.sync.enable=true + consumer.offset.sync.ms=3000 + consumer.offset.sync.json set to all consumer groups)"
-docker cp consumer.offset.sync.json broker-europe:/tmp/consumer.offset.sync.json
+playground container cp --source consumer.offset.sync.json --destination broker-europe:/tmp/consumer.offset.sync.json
 docker exec broker-europe kafka-cluster-links --bootstrap-server broker-europe:9092 --create --link demo-link --config bootstrap.servers=broker-us:9092,metadata.max.age.ms=5000,consumer.offset.sync.enable=true,consumer.offset.sync.ms=3000 --consumer-group-filters-json-file /tmp/consumer.offset.sync.json
 
 log "Initialize the topic mirror for topic demo"

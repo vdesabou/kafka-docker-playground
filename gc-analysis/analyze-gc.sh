@@ -35,7 +35,7 @@ if [[ -n "$CONTAINER" ]]; then
   TMP=$(mktemp /tmp/gc-XXXXXX.log)
   trap "rm -f $TMP" EXIT
   echo "Copying GC log from container '$CONTAINER':$GC_PATH ..."
-  docker cp "$CONTAINER:$GC_PATH" "$TMP"
+  playground container cp --source "$CONTAINER:$GC_PATH" --destination "$TMP"
   FILES=("$TMP")
 fi
 

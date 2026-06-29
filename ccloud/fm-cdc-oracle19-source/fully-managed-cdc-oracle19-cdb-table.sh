@@ -93,7 +93,7 @@ then
 fi
 
 log "Running oracle-readiness.sql, see https://docs.confluent.io/cloud/current/connectors/cc-oracle-cdc-source/oracle-cdc-setup-includes/prereqs-validation.html#automated-readiness-check"
-docker cp oracle-readiness.sql oracle:/oracle-readiness.sql
+playground container cp --source oracle-readiness.sql --destination oracle:/oracle-readiness.sql
 docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
      CONNECT sys/Admin123 AS SYSDBA
      @/oracle-readiness.sql C##MYUSER ''

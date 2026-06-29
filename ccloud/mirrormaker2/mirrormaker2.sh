@@ -34,7 +34,7 @@ playground topic create --topic sales_A
 set -e
 
 log "Start MirrorMaker2 (logs are in mirrormaker.log):"
-docker cp ${DIR}/connect-mirror-maker.properties connect:/tmp/connect-mirror-maker.properties
+playground container cp --source ${DIR}/connect-mirror-maker.properties --destination connect:/tmp/connect-mirror-maker.properties
 docker exec -i connect /usr/bin/connect-mirror-maker /tmp/connect-mirror-maker.properties > mirrormaker.log 2>&1 &
 
 log "sleeping 30 seconds"

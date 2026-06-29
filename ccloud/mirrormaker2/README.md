@@ -19,7 +19,7 @@ $ just use <playground run> command and search for mirrormaker2.sh in this folde
 Start MirrorMaker2 (logs are in mirrormaker.log):
 
 ```bash
-docker cp ${DIR}/connect-mirror-maker.properties connect:/tmp/connect-mirror-maker.properties
+playground container cp --source ${DIR}/connect-mirror-maker.properties --destination connect:/tmp/connect-mirror-maker.properties
 docker exec -i connect /usr/bin/connect-mirror-maker /tmp/connect-mirror-maker.properties > mirrormaker.log 2>&1 &
 ```
 

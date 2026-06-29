@@ -179,7 +179,7 @@ then
 fi
 
 log "Running orclcdc_readiness.sql, see https://docs.confluent.io/cloud/current/connectors/cc-oracle-xstream-cdc-source/prereqs-validation.html#validate-prerequisites-completion"
-docker cp orclcdc_readiness.sql oracle:/orclcdc_readiness.sql
+playground container cp --source orclcdc_readiness.sql --destination oracle:/orclcdc_readiness.sql
 docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
      CONNECT sys/Admin123 AS SYSDBA
      @/orclcdc_readiness.sql C##CFLTADMIN C##CFLTUSER XOUT ''

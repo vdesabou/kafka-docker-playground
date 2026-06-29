@@ -78,5 +78,5 @@ Processed a total of 10 messages
 Copying mirrormaker logs to `/tmp/mirrormaker.log`
 
 ```bash
-$ docker cp connect-us:/tmp/mirrormaker.log /tmp/mirrormaker.log
+$ playground container cp --source connect-us:/tmp/mirrormaker.log --destination /tmp/mirrormaker.log
 ```

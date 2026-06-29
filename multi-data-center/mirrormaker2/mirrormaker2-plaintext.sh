@@ -38,4 +38,4 @@ log "Verify we have received the data in topic EUROPE.sales_EUROPE topics in the
 timeout 60 docker container exec broker-us kafka-console-consumer --bootstrap-server broker-us:9092 --topic "EUROPE.sales_EUROPE" --from-beginning --max-messages 10
 
 log "Copying mirrormaker logs to /tmp/mirrormaker.log"
-docker cp connect-us:/tmp/mirrormaker.log /tmp/mirrormaker.log
+playground container cp --source connect-us:/tmp/mirrormaker.log --destination /tmp/mirrormaker.log

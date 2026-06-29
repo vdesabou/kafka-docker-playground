@@ -104,9 +104,9 @@ docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -trusted_cert 
 docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -user_cert -cert /tmp/server/cert.txt -pwd WalletPasswd123"
 
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
-docker cp ${PWD}/ssl/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
-docker cp ${PWD}/ssl/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
-docker cp ${PWD}/ssl/tnsnames.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
+playground container cp --source ${PWD}/ssl/listener.ora --destination oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
+playground container cp --source ${PWD}/ssl/sqlnet.ora --destination oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
+playground container cp --source ${PWD}/ssl/tnsnames.ora --destination oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
 
 docker exec -i oracle lsnrctl << EOF
 reload
@@ -312,7 +312,7 @@ set -e
 
 
 log "🔏 copy cwallet.sso to /tmp"
-docker cp oracle:/tmp/server/cwallet.sso /tmp
+playground container cp --source oracle:/tmp/server/cwallet.sso --destination /tmp
 base64_cwallet=$(cat /tmp/cwallet.sso | base64 | tr -d '\n')
 
 log "Creating fully managed connector"

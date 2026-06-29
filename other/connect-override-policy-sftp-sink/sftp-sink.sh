@@ -78,6 +78,6 @@ sleep 10
 log "Listing content of ./upload/topics/test_sftp_sink/partition\=0/"
 docker exec sftp-server bash -c "ls /home/foo/upload/topics/test_sftp_sink/partition\=0/"
 
-docker cp sftp-server:/home/foo/upload/topics/test_sftp_sink/partition\=0/test_sftp_sink+0+0000000000.avro /tmp/
+playground container cp --source sftp-server:/home/foo/upload/topics/test_sftp_sink/partition\=0/test_sftp_sink+0+0000000000.avro --destination /tmp/
 
 playground  tools read-avro-file --file /tmp/test_sftp_sink+0+0000000000.avro
