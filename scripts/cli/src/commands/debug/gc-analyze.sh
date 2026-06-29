@@ -80,7 +80,7 @@ if [[ -n "$container" ]]; then
     log "📄 Found GC log: $gc_log_path"
 
     tmp_gc_file="/tmp/gc-log-${container}-$(date '+%Y%m%d-%H%M%S').log"
-    if ! docker cp "${container}:${gc_log_path}" "$tmp_gc_file" 2>/dev/null; then
+    if ! playground container cp --source "${container}:${gc_log_path}" --destination "$tmp_gc_file" 2>/dev/null; then
         logerror "❌ Failed to copy GC log from container '$container'"
         exit 1
     fi

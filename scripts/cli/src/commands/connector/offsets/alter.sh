@@ -196,7 +196,7 @@ do
                     grep -v '^$' "$file" > $tmp_dir/tmp && mv $tmp_dir/tmp "$file"
                     grep -v 'current-offset' "$file" > $tmp_dir/tmp && mv $tmp_dir/tmp "$file"
 
-                    docker cp $file $container:/tmp/offsets.csv > /dev/null 2>&1
+                    playground container cp --source $file --destination $container:/tmp/offsets.csv > /dev/null 2>&1
                     docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector $security --reset-offsets --from-file /tmp/offsets.csv --execute
 
                     if version_gt $tag "7.4.99"

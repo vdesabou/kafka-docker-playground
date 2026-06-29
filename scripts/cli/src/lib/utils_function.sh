@@ -1333,7 +1333,7 @@ function get_jmx_metrics() {
   * ) logerror "invalid container $container! it should be one of zookeeper, broker, schema-registry, connect, connect2 or connect3";exit 1;;
   esac
 
-  docker cp $JMXTERM_UBER_JAR $container:$JMXTERM_UBER_JAR
+  playground container cp --source $JMXTERM_UBER_JAR --destination $container:$JMXTERM_UBER_JAR
   if [ "$domains" = "ALL" ]
   then
 

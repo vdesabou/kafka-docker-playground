@@ -35,7 +35,7 @@ do
             fi
             set -e
 
-            docker cp ${root_folder}/scripts/cli/all.jfc ${container}:/tmp/all.jfc > /dev/null 2>&1
+            playground container cp --source ${root_folder}/scripts/cli/all.jfc --destination ${container}:/tmp/all.jfc > /dev/null 2>&1
             docker exec ${container} jcmd 1 JFR.start name=dump1 filename=/tmp/${filename} settings=/tmp/all.jfc
             if [ $? -eq 0 ]
             then
@@ -59,7 +59,7 @@ do
             then
                 log "🛩️ flight recorder is available at ${filename}"
                 log "use JDK Mission Control JMC (https://jdk.java.net/jmc/) to open it"
-                docker cp ${container}:/tmp/${filename} ${filename}
+                playground container cp --source ${container}:/tmp/${filename} --destination ${filename}
             else
                 logerror "❌ Failed to stop flight recorder"
             fi

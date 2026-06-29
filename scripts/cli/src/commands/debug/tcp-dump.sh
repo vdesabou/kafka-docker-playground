@@ -67,7 +67,7 @@ do
 		docker exec --privileged --user root ${container} bash -c "killall tcpdump" > /dev/null 2>&1
 		set -e
 		log "🌶️ tcp dump is available at ${filename}"
-		docker cp ${container}:/tmp/${filename} ${filename}
+		playground container cp --source ${container}:/tmp/${filename} --destination ${filename}
 		if [[ $(type -f wireshark 2>&1) =~ "not found" ]]
 		then
 			logwarn "🦈 wireshark is not installed, grab it at https://www.wireshark.org/"

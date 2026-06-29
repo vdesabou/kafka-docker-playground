@@ -970,7 +970,7 @@ EOF
     for connector_path in ${connector_paths//,/ }
     do
       echo "log \"📂 Copying custom jar to connector folder $connector_path/lib/\"" >> $tmp_dir/build_custom_docker_cp_smt
-      echo "docker cp $repro_dir/$custom_smt_name/target/MyCustomSMT-1.0.0-SNAPSHOT-jar-with-dependencies.jar connect:$connector_path/lib/" >> $tmp_dir/build_custom_docker_cp_smt
+      echo "playground container cp --source $repro_dir/$custom_smt_name/target/MyCustomSMT-1.0.0-SNAPSHOT-jar-with-dependencies.jar --destination connect:$connector_path/lib/" >> $tmp_dir/build_custom_docker_cp_smt
     done
     echo "log \"♻️ Restart connect worker to load\"" >> $tmp_dir/build_custom_docker_cp_smt
     echo "playground container restart --container connect" >> $tmp_dir/build_custom_docker_cp_smt

@@ -55,7 +55,7 @@ do
         if [ $? -eq 0 ]
         then
             log "👻 heap dump is available at ${filename}"
-            docker cp ${container}:/tmp/${filename} ${filename}
+            playground container cp --source ${container}:/tmp/${filename} --destination ${filename}
         else
             logerror "❌ Failed to take heap dump"
         fi

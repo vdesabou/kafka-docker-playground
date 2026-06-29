@@ -926,9 +926,9 @@ then
     fi
     set -e
 
-    docker cp ${root_folder}/scripts/cli/src/schema-validator/target/schema-validator-1.0.0-jar-with-dependencies.jar connect:/tmp/schema-validator-1.0.0-jar-with-dependencies.jar > /dev/null 2>&1
-    docker cp $value_schema_file connect:/tmp/schema > /dev/null 2>&1
-    docker cp $output_value_file connect:/tmp/message.json > /dev/null 2>&1
+    playground container cp --source ${root_folder}/scripts/cli/src/schema-validator/target/schema-validator-1.0.0-jar-with-dependencies.jar --destination connect:/tmp/schema-validator-1.0.0-jar-with-dependencies.jar > /dev/null 2>&1
+    playground container cp --source $value_schema_file --destination connect:/tmp/schema > /dev/null 2>&1
+    playground container cp --source $output_value_file --destination connect:/tmp/message.json > /dev/null 2>&1
     env_list=""
     for conf in "${validate_config[@]}"
     do
@@ -1395,11 +1395,11 @@ do
                 playground --output-level ERROR container exec --command "rm -f /usr/share/java/schema-registry/slf4j-reload4j-1.7.36.jar > /dev/null 2>&1" --root
                 if [ -f $key_schema_file ]
                 then
-                    docker cp $key_schema_file $container:/tmp/key_schema_file > /dev/null 2>&1
+                    playground container cp --source $key_schema_file --destination $container:/tmp/key_schema_file > /dev/null 2>&1
                 fi
                 if [ -f $value_schema_file ]
                 then
-                    docker cp $value_schema_file $container:/tmp/value_schema_file > /dev/null 2>&1
+                    playground container cp --source $value_schema_file --destination $container:/tmp/value_schema_file > /dev/null 2>&1
                 fi
                 if [[ -n "$key" ]]
                 then

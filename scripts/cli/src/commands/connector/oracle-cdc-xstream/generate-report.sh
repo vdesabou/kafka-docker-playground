@@ -12,7 +12,7 @@ if [ ! -f orclcdc_diag.sql ]
 then
     wget -q https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/_downloads/6d672a473a3153a88f9c67de5e0b558f/orclcdc_diag.sql
 fi
-docker cp orclcdc_diag.sql oracle:/orclcdc_diag.sql > /dev/null 2>&1
+playground container cp --source orclcdc_diag.sql --destination oracle:/orclcdc_diag.sql > /dev/null 2>&1
 docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
      CONNECT sys/Admin123 AS SYSDBA
      @/orclcdc_diag.sql C##CFLTADMIN C##CFLTUSER XOUT ''
@@ -20,7 +20,7 @@ END;
 /
 EOF
 playground container exec --container oracle --command "mv /home/oracle/orclcdc_diag_*.html /home/oracle/orclcdc_diag.html"
-docker cp oracle:/home/oracle/orclcdc_diag.html /tmp/ > /dev/null 2>&1
+playground container cp --source oracle:/home/oracle/orclcdc_diag.html --destination /tmp/ > /dev/null 2>&1
 if [ -f /tmp/orclcdc_diag.html ]
 then
     log "⚙️ oracle cdc xstream connector diagnostics report is available at /tmp/orclcdc_diag.html"

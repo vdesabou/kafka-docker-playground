@@ -48,5 +48,5 @@ do
 	bundle_file=$(cat $tmp_dir/result.log | grep "Diagnostics output has been zipped and written to" | cut -d ":" -f 4 | sed 's/ //g')
 	bundle_file_filename=$(basename -- "$bundle_file")
 	log "⛑️ diagnostics bundle is available at ${bundle_file_filename}"
-	docker cp ${container}:${bundle_file} ${bundle_file_filename}
+	playground container cp --source ${container}:${bundle_file} --destination ${bundle_file_filename}
 done
