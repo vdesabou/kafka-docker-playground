@@ -55,7 +55,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 
 log "Sending EMS messages m1 m2 m3 m4 m5 in queue connector-quickstart"
-playground container exec --container tibco-ems --command "bash -c 'cd /opt/tibco/ems/8.5/samples/java;export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib;CLASSPATH=${TIBEMS_JAVA}/jms-2.0.jar:${CLASSPATH};CLASSPATH=.:${TIBEMS_JAVA}/tibjms.jar:${TIBEMS_JAVA}/tibjmsadmin.jar:${CLASSPATH};export CLASSPATH;javac *.java;java tibjmsMsgProducer -user admin -queue connector-quickstart m1 m2 m3 m4 m5'"
+playground container exec --container tibco-ems --command "cd /opt/tibco/ems/8.5/samples/java; export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib; export CLASSPATH=\${TIBEMS_JAVA}/jms-2.0.jar:.:\${TIBEMS_JAVA}/tibjms.jar:\${TIBEMS_JAVA}/tibjmsadmin.jar:\${CLASSPATH}; javac tibjmsMsgProducer.java; java tibjmsMsgProducer -user admin -queue connector-quickstart m1 m2 m3 m4 m5"
 
 
 log "Creating TIBCO EMS source connector"
