@@ -275,7 +275,7 @@ then
     DCF=${DCF#*/}
     docker_compose_file="${test_file_directory}/${DCF}"
   fi
-  if [ -f "$docker_compose_file" ]
+  if [[ "${PLAYGROUND_ENVIRONMENT:-$environment}" != "cfk" ]] && [ -f "$docker_compose_file" ]
   then
     cp "$docker_compose_file" /tmp/playground-backup-docker-compose.yml
     yq -i '.services.connect2 = .services.connect' /tmp/playground-backup-docker-compose.yml
@@ -1117,7 +1117,7 @@ then
       # determining the docker-compose file from from test_file
       docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
       docker_compose_file="${test_file_directory}/${docker_compose_file}"
-      if [ -f $docker_compose_file ]
+      if [[ "${PLAYGROUND_ENVIRONMENT:-$environment}" != "cfk" ]] && [ -f $docker_compose_file ]
       then
         cp $docker_compose_file /tmp/playground-backup-docker-compose.yml
         yq -i '.services.connect2 = .services.connect' /tmp/playground-backup-docker-compose.yml
@@ -1131,7 +1131,7 @@ then
       array_flag_list=("${array_flag_list[@]/"--enable-multiple-connect-workers"}")
       unset ENABLE_CONNECT_NODES
       interactive_enable_connect=""
-      if [ -f /tmp/playground-backup-docker-compose.yml ]
+      if [[ "${PLAYGROUND_ENVIRONMENT:-$environment}" != "cfk" ]] && [ -f /tmp/playground-backup-docker-compose.yml ]
       then
         mv /tmp/playground-backup-docker-compose.yml $docker_compose_file
       fi
@@ -1613,7 +1613,7 @@ function cleanup {
   set +e
   if [[ -n "$enable_multiple_connect_workers" ]]
   then
-    if [ -f /tmp/playground-backup-docker-compose.yml ]
+    if [[ "${PLAYGROUND_ENVIRONMENT:-$environment}" != "cfk" ]] && [ -f /tmp/playground-backup-docker-compose.yml ]
     then
       mv /tmp/playground-backup-docker-compose.yml $docker_compose_file
     fi
