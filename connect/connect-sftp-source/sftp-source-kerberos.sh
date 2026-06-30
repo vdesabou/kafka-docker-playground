@@ -44,11 +44,11 @@ confluent
 EOF
 
 playground container exec --container ssh-server --command "bash" << EOF
-mkdir -p /chroot/home/foo/upload/input
-mkdir -p /chroot/home/foo/upload/error
-mkdir -p /chroot/home/foo/upload/finished
+mkdir -p /home/sshuser/upload/input
+mkdir -p /home/sshuser/upload/error
+mkdir -p /home/sshuser/upload/finished
 
-chown -R foo /chroot/home/foo/upload
+chown -R sshuser /home/sshuser/upload
 EOF
 
 # FIXTHIS: it is required to do kinit manually
