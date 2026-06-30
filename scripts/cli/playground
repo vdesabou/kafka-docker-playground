@@ -8666,8 +8666,19 @@ function get_connect_url_and_security() {
 
   if [[ "$environment" == "cfk" ]]
   then
-      # CFK Connect is typically accessed through a local port-forward.
-      connect_url="http://localhost:8083"
+      # CFK Connect is typically accessed through local port-forwards.
+      # Prefer 8083, then fall back to 8283/8383 for multi-worker setups.
+      connect_port="8083"
+      for candidate_port in 8083 8283 8383
+      do
+        if curl -s "http://localhost:${candidate_port}" > /dev/null 2>&1
+        then
+          connect_port="$candidate_port"
+          break
+        fi
+      done
+
+      connect_url="http://localhost:$connect_port"
       security=""
       return
   fi
@@ -29793,12 +29804,21 @@ playground_connector_status_command() {
       log "✨ --connector flag was not provided, applying command to all connectors"
   fi
 
+  multiple_connect_workers_running=false
   if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
   then
       :
   else
-      if is_multiple_connect_workers_running
+      if [[ "$environment" == "cfk" ]]
       then
+          cfk_connect_workers_count=$(kubectl -n confluent get pods -o name 2>/dev/null | sed 's#pod/##' | grep -E '^connect-[0-9]+$' | wc -l | tr -d '[:space:]')
+          if [[ -n "$cfk_connect_workers_count" ]] && ((cfk_connect_workers_count > 1))
+          then
+              multiple_connect_workers_running=true
+          fi
+      elif is_multiple_connect_workers_running
+      then
+          multiple_connect_workers_running=true
           missing_connect_workers=""
           for worker in connect connect2 connect3
           do
@@ -29811,7 +29831,10 @@ playground_connector_status_command() {
           then
               logwarn "⚠️ Connect workers not running:${missing_connect_workers}"
           fi
+      fi
 
+      if [[ "$multiple_connect_workers_running" == true ]] && [[ "$environment" != "cfk" ]]
+      then
           leader_name=$(playground --output-level WARN connector display-leader-name)
           leader_name=$(echo "$leader_name" | tr -d '[:space:]')
       fi
@@ -29926,9 +29949,9 @@ playground_connector_status_command() {
           status_display="$status"
           tasks=$(echo "$curl_output" | jq -r '.tasks[] | "\(.id):\(.state)"' | tr '\n' ',' | sed 's/,$/\n/')
 
-          if is_multiple_connect_workers_running
+          if [[ "$multiple_connect_workers_running" == true ]]
           then
-              connector_worker_id=$(echo "$curl_output" | jq -r '.connector.worker_id // empty' | sed 's/:8083$//' | sed 's/:8283$//' | sed 's/:8383$//')
+              connector_worker_id=$(echo "$curl_output" | jq -r '.connector.worker_id // empty' | sed 's/:8083$//' | sed 's/:8283$//' | sed 's/:8383$//' | sed -E 's/\..*$//')
               if [ -n "$connector_worker_id" ]
               then
                   status_display="$status[$connector_worker_id]"
@@ -29938,7 +29961,7 @@ playground_connector_status_command() {
                   fi
               fi
 
-              tasks=$(echo "$curl_output" | jq -r '.tasks[] | "\(.id):\(.state)[\(.worker_id)]"' | tr '\n' ',' | sed 's/,$/\n/' | sed 's/:8083//g' | sed 's/:8283//g' | sed 's/:8383//g')
+              tasks=$(echo "$curl_output" | jq -r '.tasks[] | "\(.id):\(.state)[\(.worker_id)]"' | tr '\n' ',' | sed 's/,$/\n/' | sed 's/:8083//g' | sed 's/:8283//g' | sed 's/:8383//g' | sed -E 's/\[([a-zA-Z0-9-]+)\.[^]]*\]/[\1]/g')
               if [ -n "$leader_name" ]
               then
                   tasks=$(echo "$tasks" | sed "s/\[$leader_name\]/[$leader_name 👑]/g")

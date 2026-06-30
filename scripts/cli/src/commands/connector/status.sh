@@ -25,12 +25,21 @@ then
     log "✨ --connector flag was not provided, applying command to all connectors"
 fi
 
+multiple_connect_workers_running=false
 if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
 then
     :
 else
-    if is_multiple_connect_workers_running
+    if [[ "$environment" == "cfk" ]]
     then
+        cfk_connect_workers_count=$(kubectl -n confluent get pods -o name 2>/dev/null | sed 's#pod/##' | grep -E '^connect-[0-9]+$' | wc -l | tr -d '[:space:]')
+        if [[ -n "$cfk_connect_workers_count" ]] && ((cfk_connect_workers_count > 1))
+        then
+            multiple_connect_workers_running=true
+        fi
+    elif is_multiple_connect_workers_running
+    then
+        multiple_connect_workers_running=true
         missing_connect_workers=""
         for worker in connect connect2 connect3
         do
@@ -43,7 +52,10 @@ else
         then
             logwarn "⚠️ Connect workers not running:${missing_connect_workers}"
         fi
+    fi
 
+    if [[ "$multiple_connect_workers_running" == true ]] && [[ "$environment" != "cfk" ]]
+    then
         leader_name=$(playground --output-level WARN connector display-leader-name)
         leader_name=$(echo "$leader_name" | tr -d '[:space:]')
     fi
@@ -158,9 +170,9 @@ do
         status_display="$status"
         tasks=$(echo "$curl_output" | jq -r '.tasks[] | "\(.id):\(.state)"' | tr '\n' ',' | sed 's/,$/\n/')
 
-        if is_multiple_connect_workers_running
+        if [[ "$multiple_connect_workers_running" == true ]]
         then
-            connector_worker_id=$(echo "$curl_output" | jq -r '.connector.worker_id // empty' | sed 's/:8083$//' | sed 's/:8283$//' | sed 's/:8383$//')
+            connector_worker_id=$(echo "$curl_output" | jq -r '.connector.worker_id // empty' | sed 's/:8083$//' | sed 's/:8283$//' | sed 's/:8383$//' | sed -E 's/\..*$//')
             if [ -n "$connector_worker_id" ]
             then
                 status_display="$status[$connector_worker_id]"
@@ -170,7 +182,7 @@ do
                 fi
             fi
             
-            tasks=$(echo "$curl_output" | jq -r '.tasks[] | "\(.id):\(.state)[\(.worker_id)]"' | tr '\n' ',' | sed 's/,$/\n/' | sed 's/:8083//g' | sed 's/:8283//g' | sed 's/:8383//g')
+            tasks=$(echo "$curl_output" | jq -r '.tasks[] | "\(.id):\(.state)[\(.worker_id)]"' | tr '\n' ',' | sed 's/,$/\n/' | sed 's/:8083//g' | sed 's/:8283//g' | sed 's/:8383//g' | sed -E 's/\[([a-zA-Z0-9-]+)\.[^]]*\]/[\1]/g')
             if [ -n "$leader_name" ]
             then
                 tasks=$(echo "$tasks" | sed "s/\[$leader_name\]/[$leader_name 👑]/g")

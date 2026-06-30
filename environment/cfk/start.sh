@@ -1570,6 +1570,8 @@ fi
 CONTROL_CENTER_PF_PID=""
 SCHEMA_REGISTRY_PF_PID=""
 CONNECT_PF_PID=""
+CONNECT2_PF_PID=""
+CONNECT3_PF_PID=""
 KSQLDB_PF_PID=""
 REST_PROXY_PF_PID=""
 cleanup() {
@@ -1679,6 +1681,11 @@ else
 fi
 SCHEMA_REGISTRY_PF_PID=$(start_port_forward_with_retry "schemaregistry" "8081" "8081" "/tmp/schema-registry-port-forward.log" "Schema Registry" "120") || true
 CONNECT_PF_PID=$(start_port_forward_with_retry "connect" "8083" "8083" "/tmp/connect-port-forward.log" "Connect" "120") || true
+if [[ -n "$ENABLE_CONNECT_NODES" ]]
+then
+  CONNECT2_PF_PID=$(start_port_forward_with_retry "connect" "8283" "8083" "/tmp/connect2-port-forward.log" "Connect (alt 8283)" "120") || true
+  CONNECT3_PF_PID=$(start_port_forward_with_retry "connect" "8383" "8083" "/tmp/connect3-port-forward.log" "Connect (alt 8383)" "120") || true
+fi
 
 if [[ -n "$ENABLE_KSQLDB" ]]
 then
@@ -1705,6 +1712,15 @@ fi
 if [[ -z "$SCHEMA_REGISTRY_PF_PID" ]] || [[ -z "$CONNECT_PF_PID" ]]
 then
   port_forward_missing=1
+fi
+
+if [[ -n "$ENABLE_CONNECT_NODES" ]]
+then
+  port_forward_logs="$port_forward_logs, /tmp/connect2-port-forward.log, /tmp/connect3-port-forward.log"
+  if [[ -z "$CONNECT2_PF_PID" ]] || [[ -z "$CONNECT3_PF_PID" ]]
+  then
+    port_forward_missing=1
+  fi
 fi
 
 if [[ -n "$ENABLE_KSQLDB" ]]
@@ -1741,6 +1757,14 @@ fi
 if [[ -n "$CONNECT_PF_PID" ]]
 then
   log "🔌 Connect REST API is reachable at http://127.0.0.1:8083"
+fi
+if [[ -n "$CONNECT2_PF_PID" ]]
+then
+  log "🔌 Connect REST API is reachable at http://127.0.0.1:8283"
+fi
+if [[ -n "$CONNECT3_PF_PID" ]]
+then
+  log "🔌 Connect REST API is reachable at http://127.0.0.1:8383"
 fi
 if [[ -n "$KSQLDB_PF_PID" ]]
 then

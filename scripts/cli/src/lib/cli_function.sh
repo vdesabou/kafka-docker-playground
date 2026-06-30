@@ -92,8 +92,19 @@ function get_connect_url_and_security() {
 
   if [[ "$environment" == "cfk" ]]
   then
-      # CFK Connect is typically accessed through a local port-forward.
-      connect_url="http://localhost:8083"
+      # CFK Connect is typically accessed through local port-forwards.
+      # Prefer 8083, then fall back to 8283/8383 for multi-worker setups.
+      connect_port="8083"
+      for candidate_port in 8083 8283 8383
+      do
+        if curl -s "http://localhost:${candidate_port}" > /dev/null 2>&1
+        then
+          connect_port="$candidate_port"
+          break
+        fi
+      done
+
+      connect_url="http://localhost:$connect_port"
       security=""
       return
   fi
