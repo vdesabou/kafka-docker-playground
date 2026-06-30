@@ -83,13 +83,14 @@ sleep 5
 
 
 log "Verify we have received the data in connector-quickstart EMS queue"
-playground container exec --container tibco-ems --command "bash -c '"
+playground container exec --container tibco-ems --command "bash" << EOF > /tmp/result.log  2>&1
 cd /opt/tibco/ems/8.5/samples/java
 export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib
-CLASSPATH=${TIBEMS_JAVA}/jms-2.0.jar:${CLASSPATH}
-CLASSPATH=.:${TIBEMS_JAVA}/tibjms.jar:${TIBEMS_JAVA}/tibjmsadmin.jar:${CLASSPATH}
+CLASSPATH=\${TIBEMS_JAVA}/jms-2.0.jar:\${CLASSPATH}
+CLASSPATH=.:\${TIBEMS_JAVA}/tibjms.jar:\${TIBEMS_JAVA}/tibjmsadmin.jar:\${CLASSPATH}
 export CLASSPATH
 javac *.java
-java tibjmsMsgConsumer -user admin -queue connector-quickstart -nbmessages 10 -timeout 10000' > /tmp/result.log  2>&1
+java tibjmsMsgConsumer -user admin -queue connector-quickstart -nbmessages 10 -timeout 10000
+EOF
 cat /tmp/result.log
 grep "Text=" /tmp/result.log
