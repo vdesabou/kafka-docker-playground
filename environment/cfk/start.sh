@@ -28,7 +28,7 @@ verify_installed "zip"
 : "${CP_CONTROL_CENTER_IMAGE:=confluentinc/cp-enterprise-control-center-next-gen}"
 : "${CP_CONTROL_CENTER_TAG:=latest}"
 : "${CP_INIT_IMAGE:=confluentinc/confluent-init-container}"
-: "${CP_INIT_TAG:=3.0.0}"
+: "${CP_INIT_TAG:=3.3.0}"
 
 export CP_SERVER_IMAGE CP_SERVER_TAG
 export CP_CONNECT_IMAGE CP_CONNECT_TAG
