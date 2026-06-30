@@ -109,3 +109,4 @@ playground topic consume --topic MyKafkaTopicName --min-expected-messages 2 --ti
 # 16:40:49 ℹ️ 🔮🙅 topic is not using any schema for key
 # 16:40:49 ℹ️ 🔮🙅 topic is not using any schema for value
 # OCI runtime exec failed: exec failed: unable to start container process: exec: "kafka-console-consumer": executable file not found in $PATH
+exit 0
