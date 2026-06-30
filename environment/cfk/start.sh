@@ -1650,16 +1650,21 @@ function start_port_forward_with_retry() {
   local waited=0
   local wait_interval=2
   local pf_pid=""
+  local endpoint_count=""
 
   while [[ "$waited" -lt "$max_wait_seconds" ]]
   do
     if kubectl -n confluent get service "$service" >/dev/null 2>&1
     then
-      pf_pid=$(start_port_forward "$service" "$local_port" "$remote_port" "$log_file" "$description")
-      if [[ -n "$pf_pid" ]]
+      endpoint_count=$(kubectl -n confluent get endpoints "$service" -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null | wc -w | tr -d '[:space:]')
+      if [[ -n "$endpoint_count" ]] && [[ "$endpoint_count" -gt 0 ]]
       then
-        echo "$pf_pid"
-        return 0
+        pf_pid=$(start_port_forward "$service" "$local_port" "$remote_port" "$log_file" "$description")
+        if [[ -n "$pf_pid" ]]
+        then
+          echo "$pf_pid"
+          return 0
+        fi
       fi
     fi
 
