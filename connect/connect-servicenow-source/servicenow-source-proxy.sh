@@ -105,9 +105,6 @@ sleep 5
 log "Verify we have received the data in topic-servicenow topic"
 playground topic consume --topic topic-servicenow --min-expected-messages 1 --max-messages 3 --timeout 60
 
-log "starting tcpdump"
-playground container exec --container -d --command "--privileged --user root connect bash -c 'tcpdump -w /tmp/tcpdump.pcap -i eth0 -s 0 port 8888'"
-
 # echo "$SERVICENOW_URL" | cut -d "/" -f3
 # ip=$(dig +short $(echo "$SERVICENOW_URL" | cut -d "/" -f3))
 # log "Blocking serviceNow response on nginx-proxy"
