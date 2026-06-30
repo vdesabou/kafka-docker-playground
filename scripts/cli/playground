@@ -11549,6 +11549,9 @@ function determine_kraft_mode() {
 }
 
 function set_profiles() {
+  local nb_connect_services_value="${nb_connect_services:-0}"
+  local docker_compose_file_override="${DOCKER_COMPOSE_FILE_OVERRIDE:-}"
+
   # https://docs.docker.com/compose/profiles/
   profile_zookeeper_command=""
   if [ -z "$ENABLE_ZOOKEEPER" ]
@@ -11681,20 +11684,20 @@ function set_profiles() {
   if [ -z "$ENABLE_CONNECT_NODES" ]
   then
     playground state del flags.ENABLE_CONNECT_NODES
-  elif [ ${nb_connect_services} -gt 1 ]
+  elif [[ "$nb_connect_services_value" =~ ^[0-9]+$ ]] && [ "$nb_connect_services_value" -gt 1 ]
   then
     log "🥉 Multiple Connect nodes mode is enabled, connect2 and connect 3 containers will be started"
     profile_connect_nodes_command="--profile connect_nodes"
     export CONNECT_NODES_PROFILES="connect_nodes"
     playground state set flags.ENABLE_CONNECT_NODES 1
   else
-    if [ ! -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
+    if [ -z "$docker_compose_file_override" ] || [ ! -f "$docker_compose_file_override" ]
     then
       log "🥉 Multiple connect nodes mode is enabled, connect2 and connect 3 containers will be started"
       profile_connect_nodes_command="--profile connect_nodes"
       playground state set flags.ENABLE_CONNECT_NODES 1
     else
-      logerror "🛑 Could not find connect2 and connect3 in ${DOCKER_COMPOSE_FILE_OVERRIDE}. Update the yaml files to contain the connect2 && connect3 in ${DOCKER_COMPOSE_FILE_OVERRIDE}"
+      logerror "🛑 Could not find connect2 and connect3 in ${docker_compose_file_override}. Update the yaml files to contain the connect2 && connect3 in ${docker_compose_file_override}"
       exit 1
     fi
   fi
