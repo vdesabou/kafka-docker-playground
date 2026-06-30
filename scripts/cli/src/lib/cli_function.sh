@@ -1895,9 +1895,10 @@ function json_to_terraform_connector() {
     local config=$(echo "$json_content" | jq 'del(."connector.class")')
 
     # Separate sensitive and non-sensitive configs
-    # Sensitive keywords: password, secret, key, token, credentials, auth, credential
-    local config_sensitive=$(echo "$config" | jq 'with_entries(select(.key | test("password|secret|key|token|credentials|auth|credential|sasl\.jaas"; "i")))')
-    local config_nonsensitive=$(echo "$config" | jq 'with_entries(select(.key | test("password|secret|key|token|credentials|auth|credential|sasl\.jaas"; "i") | not))')
+    # Sensitive field patterns: password, secret, token, credentials, sasl.jaas, api_key, etc.
+    # Also matches dot-notation fields ending with .key, .secret, .token, .password (e.g., kafka.api.key, aws.secret.access.key)
+    local config_sensitive=$(echo "$config" | jq 'with_entries(select(.key | test("password|secret|token|credentials|credential|sasl\\.jaas|api_key|access_key|private_key|secret_key|auth_token|bearer_token|aws_secret|aws_access|azure_key|gcp_key|\\.key$|\\.secret$|\\.token$|\\.password$"; "i")))')
+    local config_nonsensitive=$(echo "$config" | jq 'with_entries(select(.key | test("password|secret|token|credentials|credential|sasl\\.jaas|api_key|access_key|private_key|secret_key|auth_token|bearer_token|aws_secret|aws_access|azure_key|gcp_key|\\.key$|\\.secret$|\\.token$|\\.password$"; "i") | not))')
 
     # Create Terraform configuration
     cat > "$output_file" << EOF
