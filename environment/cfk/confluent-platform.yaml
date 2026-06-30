@@ -7,6 +7,7 @@ metadata:
 spec:
   replicas: 1
   dataVolumeCapacity: 10Gi
+  metrics: {}
   image:
     application: ${CP_SERVER_IMAGE}:${CP_SERVER_TAG}
     init: ${CP_INIT_IMAGE}:${CP_INIT_TAG}
@@ -25,6 +26,7 @@ metadata:
   namespace: confluent
 spec:
   replicas: 1
+  metrics: {}
   image:
     application: ${CP_SERVER_IMAGE}:${CP_SERVER_TAG}
     init: ${CP_INIT_IMAGE}:${CP_INIT_TAG}
@@ -54,6 +56,7 @@ metadata:
   namespace: confluent
 spec:
   replicas: 1
+  metrics: {}
   image:
     application: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
     init: ${CP_INIT_IMAGE}:${CP_INIT_TAG}
@@ -103,6 +106,7 @@ metadata:
   namespace: confluent
 spec:
   replicas: 1
+  metrics: {}
   image:
     application: ${CP_SCHEMA_REGISTRY_IMAGE}:${CP_SCHEMA_REGISTRY_TAG}
     init: ${CP_INIT_IMAGE}:${CP_INIT_TAG}
@@ -115,6 +119,7 @@ metadata:
 spec:
   replicas: 1
   internalTopicReplicatorFactor: 1
+  metrics: {}
   image:
     application: ${CP_CONTROL_CENTER_IMAGE}:${CP_CONTROL_CENTER_TAG}
     init: ${CP_INIT_IMAGE}:${CP_INIT_TAG}

@@ -12212,6 +12212,15 @@ function wait_container_ready() {
 }
 
 function display_jmx_info() {
+  if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+  then
+    log "📊 CFK JMX metrics endpoints are available inside each pod:"
+    log "    - JMX      : 7203"
+    log "    - Jolokia  : 7777"
+    log "    - Prometheus exporter : 7778"
+    return
+  fi
+
   if [ -z "$ENABLE_JMX_GRAFANA" ]
   then
     log "📊 JMX metrics are available locally on those ports:"
@@ -12250,6 +12259,34 @@ function get_jmx_metrics() {
   container="$1"
   domains="$2"
   open="$3"
+  get_environment_used
+
+  target_container="$container"
+  jmx_disabled_hint="See https://docs.confluent.io/operator/current/co-monitor-cp.html#jmx-metrics"
+  jmx_exec() {
+    local args="$1"
+    if [[ "$environment" == "cfk" ]]
+    then
+      kubectl -n confluent exec -i "$target_container" -- java -jar "$JMXTERM_UBER_JAR" -l "localhost:$port" -n $args
+    else
+      docker exec -i "$container" java -jar "$JMXTERM_UBER_JAR" -l "localhost:$port" -n $args
+    fi
+  }
+
+  if [[ "$environment" == "cfk" ]]
+  then
+    case "$container" in
+      connect2)
+        target_container="connect-1"
+      ;;
+      connect3)
+        target_container="connect-2"
+      ;;
+      *)
+        target_container=$(resolve_container_name_for_environment "$container")
+      ;;
+    esac
+  fi
   if [ "$domains" = "" ]
   then
     # non existing domain: all domains will be in output !
@@ -12279,37 +12316,62 @@ function get_jmx_metrics() {
   connect3 )
     port=10032
   ;;
+  connect-[0-9]* )
+    port=10002
+  ;;
   n|N ) ;;
-  * ) logerror "invalid container $container! it should be one of zookeeper, broker, schema-registry, connect, connect2 or connect3";exit 1;;
+  * ) logerror "invalid container $container! it should be one of zookeeper, broker, schema-registry, connect, connect2, connect3 or connect-<n>";exit 1;;
   esac
 
-  playground container cp --source $JMXTERM_UBER_JAR --destination $container:$JMXTERM_UBER_JAR
+  if [[ "$environment" == "cfk" ]]
+  then
+    # CFK JMX defaults to 7203 on each component pod.
+    port=7203
+  fi
+
+  playground container cp --source $JMXTERM_UBER_JAR --destination $target_container:$JMXTERM_UBER_JAR
   if [ "$domains" = "ALL" ]
   then
 
 log "This is the list of domains for container $container"
-docker exec -i $container java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n -v silent << EOF
+if ! jmx_exec "-v silent" << EOF
 domains
 exit
 EOF
+then
+  logwarn "JMX endpoint is unavailable for $container. JMX may be disabled. $jmx_disabled_hint"
+  return 0
+fi
   fi
 
 for domain in `echo $domains`
 do
-docker exec -i $container java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n -v silent > /tmp/beans.log << EOF
+if ! jmx_exec "-v silent" > /tmp/beans.log << EOF
 domain $domain
 beans
 exit
 EOF
+then
+  logwarn "JMX endpoint is unavailable for $container (domain: $domain). JMX may be disabled. $jmx_disabled_hint"
+  return 0
+fi
   while read line; do echo "get *"  -b $line; done < /tmp/beans.log >> /tmp/commands
 
   if [[ -n "$open" ]]
   then
     echo "####### domain $domain ########" >> /tmp/jmx_metrics.log
-    docker exec -i $container java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n < /tmp/commands >> /tmp/jmx_metrics.log 2>&1
+    if ! jmx_exec "" < /tmp/commands >> /tmp/jmx_metrics.log 2>&1
+    then
+      logwarn "JMX endpoint is unavailable for $container (domain: $domain). JMX may be disabled. $jmx_disabled_hint"
+      return 0
+    fi
   else
     echo "####### domain $domain ########"
-    docker exec -i $container java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n < /tmp/commands 2>&1
+    if ! jmx_exec "" < /tmp/commands 2>&1
+    then
+      logwarn "JMX endpoint is unavailable for $container (domain: $domain). JMX may be disabled. $jmx_disabled_hint"
+      return 0
+    fi
   fi
 done
 
@@ -25087,10 +25149,10 @@ playground_get_jmx_metrics_command() {
   for container in "${container_array[@]}"
   do
   	case "${container}" in
-  	zookeeper|broker|schema-registry|connect|connect2|connect3|controller)
+  	zookeeper|broker|schema-registry|connect|connect2|connect3|controller|connect-[0-9]*)
   	;;
   	*)
-  		logerror "❌ container name not valid ! Should be one of zookeeper, controller, broker, schema-registry, connect, connect2 or connect3"
+  		logerror "❌ container name not valid ! Should be one of zookeeper, controller, broker, schema-registry, connect, connect2, connect3 or connect-<n>"
   		exit 1
   	;;
   	esac

@@ -10,10 +10,10 @@ IFS=' ' read -ra container_array <<< "$containers"
 for container in "${container_array[@]}"
 do
 	case "${container}" in
-	zookeeper|broker|schema-registry|connect|connect2|connect3|controller)
+	zookeeper|broker|schema-registry|connect|connect2|connect3|controller|connect-[0-9]*)
 	;;
 	*)
-		logerror "❌ container name not valid ! Should be one of zookeeper, controller, broker, schema-registry, connect, connect2 or connect3"
+		logerror "❌ container name not valid ! Should be one of zookeeper, controller, broker, schema-registry, connect, connect2, connect3 or connect-<n>"
 		exit 1
 	;;
 	esac
