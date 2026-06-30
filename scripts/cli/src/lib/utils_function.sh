@@ -3506,15 +3506,15 @@ EOF
   SCHEMA_REGISTRY_API_SECRET=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | awk -F: '{print $2}')
   KAFKA_REST_ENDPOINT=$(confluent kafka cluster describe $CLUSTER -o json | jq -r ".rest_endpoint")
 
-  if [ -z $CLOUD_API_KEY ]
+  if [ -z $CONFLUENT_CLOUD_API_KEY ]
   then
-    logwarn "❌ environment variable CLOUD_API_KEY should be set to use MCP confluent server for Confluent Cloud"
+    logwarn "❌ environment variable CONFLUENT_CLOUD_API_KEY should be set to use MCP confluent server for Confluent Cloud"
     logwarn "Set it with Cloud API key, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys"
   fi
 
-  if [ -z $CLOUD_API_SECRET ]
+  if [ -z $CONFLUENT_CLOUD_API_SECRET ]
   then
-    logwarn "❌ environment variable CLOUD_API_SECRET should be set to use MCP confluent server for Confluent Cloud"
+    logwarn "❌ environment variable CONFLUENT_CLOUD_API_SECRET should be set to use MCP confluent server for Confluent Cloud"
     logwarn "Set it with Cloud API secret, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys"
   fi
 
@@ -3536,8 +3536,8 @@ KAFKA_ENV_ID="$ENVIRONMENT"
 # FLINK_COMPUTE_POOL_ID="lfcp-..."
 # TABLEFLOW_API_KEY=""
 # TABLEFLOW_API_SECRET=""
-CONFLUENT_CLOUD_API_KEY="$CLOUD_API_KEY"
-CONFLUENT_CLOUD_API_SECRET="$CLOUD_API_SECRET"
+CONFLUENT_CLOUD_API_KEY="$CONFLUENT_CLOUD_API_KEY"
+CONFLUENT_CLOUD_API_SECRET="$CONFLUENT_CLOUD_API_SECRET"
 CONFLUENT_CLOUD_REST_ENDPOINT="https://api.confluent.cloud"
 SCHEMA_REGISTRY_API_KEY="$SCHEMA_REGISTRY_API_KEY"
 SCHEMA_REGISTRY_API_SECRET="$SCHEMA_REGISTRY_API_SECRET"

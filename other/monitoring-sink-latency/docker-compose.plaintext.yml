@@ -67,8 +67,8 @@ services:
       CONNECT_TOPIC_CREATION_ENABLE: 'true'
       # CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
       # CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'true'
-      # CONNECT_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
-      # CONNECT_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
+      # CONNECT_CONFLUENT_TELEMETRY_API_KEY: 'CONFLUENT_CLOUD_API_KEY'
+      # CONNECT_CONFLUENT_TELEMETRY_API_SECRET: 'CONFLUENT_CLOUD_API_SECRET'
       KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml
 
   connect-with-put-latency:
@@ -113,8 +113,8 @@ services:
       CONNECT_TOPIC_CREATION_ENABLE: 'true'
       # CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
       # CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'true'
-      # CONNECT_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
-      # CONNECT_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
+      # CONNECT_CONFLUENT_TELEMETRY_API_KEY: 'CONFLUENT_CLOUD_API_KEY'
+      # CONNECT_CONFLUENT_TELEMETRY_API_SECRET: 'CONFLUENT_CLOUD_API_SECRET'
       KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml
 
   http-service-basic-auth:

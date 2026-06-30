@@ -78,8 +78,8 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           AWS_REGION: ${{ vars.AWS_REGION}}
-          CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY}}
-          CLOUD_API_SECRET: ${{ secrets.CLOUD_API_SECRET}}
+          CONFLUENT_CLOUD_API_KEY: ${{ secrets.CONFLUENT_CLOUD_API_KEY}}
+          CONFLUENT_CLOUD_API_SECRET: ${{ secrets.CONFLUENT_CLOUD_API_SECRET}}
           SALESFORCE_USERNAME: ${{ secrets.SALESFORCE_USERNAME}}
           SALESFORCE_PASSWORD: ${{ secrets.SALESFORCE_PASSWORD}}
           SALESFORCE_CONSUMER_KEY: ${{ secrets.SALESFORCE_CONSUMER_KEY}}
@@ -331,8 +331,8 @@ jobs:
           GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
           HPE_MAPR_EMAIL: ${{ secrets.HPE_MAPR_EMAIL}}
           HPE_MAPR_TOKEN: ${{ secrets.HPE_MAPR_TOKEN}}
-          CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY}}
-          CLOUD_API_SECRET: ${{ secrets.CLOUD_API_SECRET}}
+          CONFLUENT_CLOUD_API_KEY: ${{ secrets.CONFLUENT_CLOUD_API_KEY}}
+          CONFLUENT_CLOUD_API_SECRET: ${{ secrets.CONFLUENT_CLOUD_API_SECRET}}
           MONGODB_ATLAS_HOST: ${{ secrets.MONGODB_ATLAS_HOST}}
           MONGODB_ATLAS_USER: ${{ secrets.MONGODB_ATLAS_USER}}
           MONGODB_ATLAS_PASSWORD: ${{ secrets.MONGODB_ATLAS_PASSWORD}}
@@ -590,8 +590,8 @@ jobs:
           GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
           HPE_MAPR_EMAIL: ${{ secrets.HPE_MAPR_EMAIL}}
           HPE_MAPR_TOKEN: ${{ secrets.HPE_MAPR_TOKEN}}
-          CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY}}
-          CLOUD_API_SECRET: ${{ secrets.CLOUD_API_SECRET}}
+          CONFLUENT_CLOUD_API_KEY: ${{ secrets.CONFLUENT_CLOUD_API_KEY}}
+          CONFLUENT_CLOUD_API_SECRET: ${{ secrets.CONFLUENT_CLOUD_API_SECRET}}
           MONGODB_ATLAS_HOST: ${{ secrets.MONGODB_ATLAS_HOST}}
           MONGODB_ATLAS_USER: ${{ secrets.MONGODB_ATLAS_USER}}
           MONGODB_ATLAS_PASSWORD: ${{ secrets.MONGODB_ATLAS_PASSWORD}}
@@ -736,8 +736,8 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           AWS_REGION: ${{ vars.AWS_REGION}}
-          CLOUD_API_KEY: ${{ secrets.CLOUD_API_KEY}}
-          CLOUD_API_SECRET: ${{ secrets.CLOUD_API_SECRET}}
+          CONFLUENT_CLOUD_API_KEY: ${{ secrets.CONFLUENT_CLOUD_API_KEY}}
+          CONFLUENT_CLOUD_API_SECRET: ${{ secrets.CONFLUENT_CLOUD_API_SECRET}}
           SALESFORCE_USERNAME: ${{ secrets.SALESFORCE_USERNAME}}
           SALESFORCE_PASSWORD: ${{ secrets.SALESFORCE_PASSWORD}}
           SALESFORCE_CONSUMER_KEY: ${{ secrets.SALESFORCE_CONSUMER_KEY}}

@@ -8,8 +8,8 @@ scrape_configs:
         - api.telemetry.confluent.cloud
     scheme: https
     basic_auth:
-      username: $CLOUD_API_KEY
-      password: $CLOUD_API_SECRET
+      username: $CONFLUENT_CLOUD_API_KEY
+      password: $CONFLUENT_CLOUD_API_SECRET
     metrics_path: /v2/metrics/cloud/export
     # params:
     #   resource.kafka.id: [${CCLOUD_KAFKA_LKC_IDS}]

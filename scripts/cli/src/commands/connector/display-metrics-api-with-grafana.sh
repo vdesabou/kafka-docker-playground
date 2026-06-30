@@ -110,14 +110,14 @@ then
     kafka_ids_csv=$(build_quoted_csv "$kafka_cluster_id")
     sr_ids_csv=$(build_quoted_csv "$sr_cluster_id")
 
-    escaped_cloud_api_key=$(escape_sed_replacement "$CLOUD_API_KEY")
-    escaped_cloud_api_secret=$(escape_sed_replacement "$CLOUD_API_SECRET")
+    escaped_cloud_api_key=$(escape_sed_replacement "$CONFLUENT_CLOUD_API_KEY")
+    escaped_cloud_api_secret=$(escape_sed_replacement "$CONFLUENT_CLOUD_API_SECRET")
     escaped_kafka_ids_csv=$(escape_sed_replacement "$kafka_ids_csv")
     escaped_connector_ids_csv=$(escape_sed_replacement "$connector_ids_csv")
     escaped_sr_ids_csv=$(escape_sed_replacement "$sr_ids_csv")
 
-    sed -e "s|\$CLOUD_API_KEY|$escaped_cloud_api_key|g" \
-        -e "s|\$CLOUD_API_SECRET|$escaped_cloud_api_secret|g" \
+    sed -e "s|\$CONFLUENT_CLOUD_API_KEY|$escaped_cloud_api_key|g" \
+        -e "s|\$CONFLUENT_CLOUD_API_SECRET|$escaped_cloud_api_secret|g" \
         -e "s|\${CCLOUD_KAFKA_LKC_IDS}|$escaped_kafka_ids_csv|g" \
         -e "s|\${CCLOUD_CONNECT_LCC_IDS}|$escaped_connector_ids_csv|g" \
         -e "s|\${CCLOUD_SR_LSRC_IDS}|$escaped_sr_ids_csv|g" \
