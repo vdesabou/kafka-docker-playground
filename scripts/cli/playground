@@ -11684,6 +11684,11 @@ function set_profiles() {
   if [ -z "$ENABLE_CONNECT_NODES" ]
   then
     playground state del flags.ENABLE_CONNECT_NODES
+  elif [ -n "$PLAYGROUND_CFK_MODE" ]
+  then
+    # CFK mode scales Connect via Kubernetes replicas, not docker-compose profiles.
+    log "🥉 Multiple Connect nodes mode is enabled for CFK"
+    playground state set flags.ENABLE_CONNECT_NODES 1
   elif [[ "$nb_connect_services_value" =~ ^[0-9]+$ ]] && [ "$nb_connect_services_value" -gt 1 ]
   then
     log "🥉 Multiple Connect nodes mode is enabled, connect2 and connect 3 containers will be started"

@@ -21,6 +21,10 @@ verify_installed "zip"
 : "${CP_CONNECT_TAG:=8.3.0}"
 : "${CP_SCHEMA_REGISTRY_IMAGE:=confluentinc/cp-schema-registry}"
 : "${CP_SCHEMA_REGISTRY_TAG:=8.3.0}"
+: "${CP_KSQL_IMAGE:=confluentinc/cp-ksqldb-server}"
+: "${CP_KSQL_TAG:=8.3.0}"
+: "${CP_REST_PROXY_IMAGE:=confluentinc/cp-kafka-rest}"
+: "${CP_REST_PROXY_TAG:=8.3.0}"
 : "${CP_CONTROL_CENTER_IMAGE:=confluentinc/cp-enterprise-control-center-next-gen}"
 : "${CP_CONTROL_CENTER_TAG:=latest}"
 : "${CP_INIT_IMAGE:=confluentinc/confluent-init-container}"
@@ -29,6 +33,8 @@ verify_installed "zip"
 export CP_SERVER_IMAGE CP_SERVER_TAG
 export CP_CONNECT_IMAGE CP_CONNECT_TAG
 export CP_SCHEMA_REGISTRY_IMAGE CP_SCHEMA_REGISTRY_TAG
+export CP_KSQL_IMAGE CP_KSQL_TAG
+export CP_REST_PROXY_IMAGE CP_REST_PROXY_TAG
 export CP_CONTROL_CENTER_IMAGE CP_CONTROL_CENTER_TAG
 export CP_INIT_IMAGE CP_INIT_TAG
 
@@ -886,12 +892,244 @@ EOF
   return 0
 }
 
+function build_cfk_manifest() {
+  local output_file="$1"
+  local rendered_file
+  local base_manifest_file
+  local include_control_center=0
+  local include_ksqldb=0
+  local include_restproxy=0
+  local kafka_replicas=1
+  local connect_replicas=1
+
+  rendered_file=$(mktemp)
+  base_manifest_file=$(mktemp)
+
+  envsubst '${CP_SERVER_IMAGE} ${CP_SERVER_TAG} ${CP_CONNECT_IMAGE} ${CP_CONNECT_TAG} ${CP_SCHEMA_REGISTRY_IMAGE} ${CP_SCHEMA_REGISTRY_TAG} ${CP_CONTROL_CENTER_IMAGE} ${CP_CONTROL_CENTER_TAG} ${CP_INIT_IMAGE} ${CP_INIT_TAG}' < "${DIR}/confluent-platform.yaml" > "$rendered_file"
+
+  if [[ -n "$ENABLE_CONTROL_CENTER" ]]
+  then
+    include_control_center=1
+  else
+    log "🛑 Control Center is disabled for CFK deployment"
+  fi
+
+  if [[ -n "$ENABLE_KSQLDB" ]]
+  then
+    include_ksqldb=1
+    log "🚀 ksqlDB is enabled for CFK deployment"
+  fi
+
+  if [[ -n "$ENABLE_RESTPROXY" ]]
+  then
+    include_restproxy=1
+    log "📲 REST Proxy is enabled for CFK deployment"
+  fi
+
+  if [[ -n "$ENABLE_KAFKA_NODES" ]]
+  then
+    kafka_replicas=3
+    log "3️⃣  Kafka replicas set to 3 for CFK deployment"
+  fi
+
+  if [[ -n "$ENABLE_CONNECT_NODES" ]]
+  then
+    connect_replicas=3
+    log "🥉 Connect replicas set to 3 for CFK deployment"
+  fi
+
+  # Filter ControlCenter and patch Kafka/Connect replicas based on set_profiles options.
+  awk -v include_control_center="$include_control_center" -v kafka_replicas="$kafka_replicas" -v connect_replicas="$connect_replicas" '
+    function emit_doc(d) {
+      if (d ~ /^[[:space:]]*$/) {
+        return
+      }
+
+      if (d ~ /kind:[[:space:]]*ControlCenter([[:space:]]|$)/ && include_control_center != 1) {
+        return
+      }
+
+      if (d ~ /kind:[[:space:]]*Kafka([[:space:]]|$)/) {
+        sub(/replicas:[[:space:]]*[0-9]+/, "replicas: " kafka_replicas, d)
+      }
+
+      if (d ~ /kind:[[:space:]]*Connect([[:space:]]|$)/) {
+        sub(/replicas:[[:space:]]*[0-9]+/, "replicas: " connect_replicas, d)
+      }
+
+      if (emitted_docs > 0) {
+        print "---"
+      }
+      printf "%s", d
+      emitted_docs++
+    }
+
+    BEGIN {
+      doc = ""
+      emitted_docs = 0
+    }
+
+    /^---[[:space:]]*$/ {
+      emit_doc(doc)
+      doc = ""
+      next
+    }
+
+    {
+      doc = doc $0 "\n"
+    }
+
+    END {
+      emit_doc(doc)
+    }
+  ' "$rendered_file" > "$base_manifest_file"
+
+  cp "$base_manifest_file" "$output_file"
+
+  if [[ "$include_ksqldb" -eq 1 ]]
+  then
+    cat >> "$output_file" << EOF
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ksqldb-server
+  namespace: confluent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ksqldb-server
+  template:
+    metadata:
+      labels:
+        app: ksqldb-server
+    spec:
+      containers:
+        - name: ksqldb-server
+          image: ${CP_KSQL_IMAGE}:${CP_KSQL_TAG}
+          ports:
+            - containerPort: 8088
+          env:
+            - name: KSQL_BOOTSTRAP_SERVERS
+              value: "kafka:9071"
+            - name: KSQL_LISTENERS
+              value: "http://0.0.0.0:8088"
+            - name: KSQL_KSQL_SERVICE_ID
+              value: "playground_"
+            - name: KSQL_SCHEMA_REGISTRY_URL
+              value: "http://schemaregistry:8081"
+            - name: KSQL_KSQL_LOGGING_PROCESSING_TOPIC_REPLICATION_FACTOR
+              value: "1"
+            - name: KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE
+              value: "true"
+            - name: KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE
+              value: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ksqldb-server
+  namespace: confluent
+spec:
+  selector:
+    app: ksqldb-server
+  ports:
+    - name: ksqldb
+      port: 8088
+      targetPort: 8088
+EOF
+  fi
+
+  if [[ "$include_restproxy" -eq 1 ]]
+  then
+    cat >> "$output_file" << EOF
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: restproxy
+  namespace: confluent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: restproxy
+  template:
+    metadata:
+      labels:
+        app: restproxy
+    spec:
+      containers:
+        - name: restproxy
+          image: ${CP_REST_PROXY_IMAGE}:${CP_REST_PROXY_TAG}
+          ports:
+            - containerPort: 8082
+          env:
+            - name: KAFKA_REST_BOOTSTRAP_SERVERS
+              value: "kafka:9071"
+            - name: KAFKA_REST_LISTENERS
+              value: "http://0.0.0.0:8082"
+            - name: KAFKA_REST_HOST_NAME
+              value: "restproxy"
+            - name: KAFKA_REST_SCHEMA_REGISTRY_URL
+              value: "http://schemaregistry:8081"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: restproxy
+  namespace: confluent
+spec:
+  selector:
+    app: restproxy
+  ports:
+    - name: restproxy
+      port: 8082
+      targetPort: 8082
+EOF
+  fi
+
+  rm -f "$base_manifest_file"
+  rm -f "$rendered_file"
+}
+
+function log_unsupported_cfk_profile_options() {
+  if [[ -n "$ENABLE_ZOOKEEPER" ]]
+  then
+    logwarn "⚠️ ENABLE_ZOOKEEPER is ignored in CFK mode (CFK deployment is KRaft-only)"
+  fi
+
+  if [[ -n "$ENABLE_JMX_GRAFANA" ]]
+  then
+    logwarn "⚠️ ENABLE_JMX_GRAFANA is not implemented in environment/cfk/start.sh"
+  fi
+
+  if [[ -n "$ENABLE_KCAT" ]]
+  then
+    logwarn "⚠️ ENABLE_KCAT is not implemented in environment/cfk/start.sh"
+  fi
+
+  if [[ -n "$ENABLE_CONDUKTOR" ]]
+  then
+    logwarn "⚠️ ENABLE_CONDUKTOR is not implemented in environment/cfk/start.sh"
+  fi
+
+  if [[ -n "$ENABLE_FLINK" ]]
+  then
+    logwarn "⚠️ ENABLE_FLINK is not implemented in environment/cfk/start.sh"
+  fi
+
+}
+
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
   check_arm64_support "${DIR}" "${DOCKER_COMPOSE_FILE_OVERRIDE}"
 fi
+export PLAYGROUND_CFK_MODE=1
 set_profiles
+log_unsupported_cfk_profile_options
 
 CONNECT_BUILD_PATCH_FILE=""
 CONNECTOR_ZIP_URL=""
@@ -900,6 +1138,7 @@ CONNECTOR_ZIP_PLUGIN_NAME=""
 CONNECTOR_ZIP_DIR=""
 CONNECTOR_ZIP_SERVER_PID=""
 EXTRA_PODS_FILE=""
+CFK_MANIFEST_FILE=""
 
 function reset_cfk_namespace_state() {
   local namespace="confluent"
@@ -1249,7 +1488,13 @@ log "Install Confluent for Kubernetes"
 helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes
 
 log "Deploy Confluent Platform"
-envsubst '${CP_SERVER_IMAGE} ${CP_SERVER_TAG} ${CP_CONNECT_IMAGE} ${CP_CONNECT_TAG} ${CP_SCHEMA_REGISTRY_IMAGE} ${CP_SCHEMA_REGISTRY_TAG} ${CP_CONTROL_CENTER_IMAGE} ${CP_CONTROL_CENTER_TAG} ${CP_INIT_IMAGE} ${CP_INIT_TAG}' < "${DIR}/confluent-platform.yaml" | kubectl apply -f -
+CFK_MANIFEST_FILE=$(mktemp)
+build_cfk_manifest "$CFK_MANIFEST_FILE"
+if [[ -z "$GITHUB_RUN_NUMBER" ]]
+then
+  log_generated_yaml_file "📋 Generated CFK manifest:" "$CFK_MANIFEST_FILE"
+fi
+kubectl apply -f "$CFK_MANIFEST_FILE"
 
 if [[ -n "$EXTRA_PODS_FILE" ]] && [[ -s "$EXTRA_PODS_FILE" ]]
 then
@@ -1325,6 +1570,8 @@ fi
 CONTROL_CENTER_PF_PID=""
 SCHEMA_REGISTRY_PF_PID=""
 CONNECT_PF_PID=""
+KSQLDB_PF_PID=""
+REST_PROXY_PF_PID=""
 cleanup() {
   if [ -n "$CONNECTOR_ZIP_SERVER_PID" ]
   then
@@ -1341,6 +1588,10 @@ cleanup() {
   if [ -n "$EXTRA_PODS_FILE" ]
   then
     rm -f "$EXTRA_PODS_FILE" >/dev/null 2>&1 || true
+  fi
+  if [ -n "$CFK_MANIFEST_FILE" ]
+  then
+    rm -f "$CFK_MANIFEST_FILE" >/dev/null 2>&1 || true
   fi
 }
 trap cleanup EXIT
@@ -1418,14 +1669,65 @@ function start_port_forward_with_retry() {
   return 1
 }
 
-log "Port-forward controlcenter, schema-registry, and connect"
-CONTROL_CENTER_PF_PID=$(start_port_forward_with_retry "controlcenter" "9021" "9021" "/tmp/control-center-port-forward.log" "Control Center" "120") || true
+if [[ -n "$ENABLE_CONTROL_CENTER" ]]
+then
+  log "Port-forward controlcenter, schema-registry, and connect"
+  CONTROL_CENTER_PF_PID=$(start_port_forward_with_retry "controlcenter" "9021" "9021" "/tmp/control-center-port-forward.log" "Control Center" "120") || true
+else
+  log "Port-forward schema-registry and connect (controlcenter disabled)"
+  CONTROL_CENTER_PF_PID=""
+fi
 SCHEMA_REGISTRY_PF_PID=$(start_port_forward_with_retry "schemaregistry" "8081" "8081" "/tmp/schema-registry-port-forward.log" "Schema Registry" "120") || true
 CONNECT_PF_PID=$(start_port_forward_with_retry "connect" "8083" "8083" "/tmp/connect-port-forward.log" "Connect" "120") || true
 
-if [[ -z "$CONTROL_CENTER_PF_PID" ]] || [[ -z "$SCHEMA_REGISTRY_PF_PID" ]] || [[ -z "$CONNECT_PF_PID" ]]
+if [[ -n "$ENABLE_KSQLDB" ]]
 then
-  logwarn "⚠️ Some port-forwards may not be available; check logs in /tmp/control-center-port-forward.log, /tmp/schema-registry-port-forward.log, /tmp/connect-port-forward.log"
+  KSQLDB_PF_PID=$(start_port_forward_with_retry "ksqldb-server" "8088" "8088" "/tmp/ksqldb-port-forward.log" "ksqlDB" "120") || true
+fi
+
+if [[ -n "$ENABLE_RESTPROXY" ]]
+then
+  REST_PROXY_PF_PID=$(start_port_forward_with_retry "restproxy" "8082" "8082" "/tmp/restproxy-port-forward.log" "REST Proxy" "120") || true
+fi
+
+port_forward_logs="/tmp/schema-registry-port-forward.log, /tmp/connect-port-forward.log"
+port_forward_missing=0
+
+if [[ -n "$ENABLE_CONTROL_CENTER" ]]
+then
+  port_forward_logs="$port_forward_logs, /tmp/control-center-port-forward.log"
+  if [[ -z "$CONTROL_CENTER_PF_PID" ]]
+  then
+    port_forward_missing=1
+  fi
+fi
+
+if [[ -z "$SCHEMA_REGISTRY_PF_PID" ]] || [[ -z "$CONNECT_PF_PID" ]]
+then
+  port_forward_missing=1
+fi
+
+if [[ -n "$ENABLE_KSQLDB" ]]
+then
+  port_forward_logs="$port_forward_logs, /tmp/ksqldb-port-forward.log"
+  if [[ -z "$KSQLDB_PF_PID" ]]
+  then
+    port_forward_missing=1
+  fi
+fi
+
+if [[ -n "$ENABLE_RESTPROXY" ]]
+then
+  port_forward_logs="$port_forward_logs, /tmp/restproxy-port-forward.log"
+  if [[ -z "$REST_PROXY_PF_PID" ]]
+  then
+    port_forward_missing=1
+  fi
+fi
+
+if [[ "$port_forward_missing" -eq 1 ]]
+then
+  logwarn "⚠️ Some port-forwards may not be available; check logs in ${port_forward_logs}"
 fi
 
 if [[ -n "$CONTROL_CENTER_PF_PID" ]]
@@ -1439,6 +1741,14 @@ fi
 if [[ -n "$CONNECT_PF_PID" ]]
 then
   log "🔌 Connect REST API is reachable at http://127.0.0.1:8083"
+fi
+if [[ -n "$KSQLDB_PF_PID" ]]
+then
+  log "🚀 ksqlDB is reachable at http://127.0.0.1:8088"
+fi
+if [[ -n "$REST_PROXY_PF_PID" ]]
+then
+  log "📲 REST Proxy is reachable at http://127.0.0.1:8082"
 fi
 
 
