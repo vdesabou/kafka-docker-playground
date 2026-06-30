@@ -61,32 +61,33 @@ EOF
 log "Creating TIBCO EMS sink connector"
 playground connector create-or-update --connector tibco-ems-sink  << EOF
 {
-               "connector.class": "io.confluent.connect.jms.TibcoSinkConnector",
-                    "tasks.max": "1",
-                    "topics": "sink-messages",
-                    "tibco.url": "tcp://tibco-ems:7222",
-                    "tibco.username": "admin",
-                    "tibco.password": "",
-                    "jms.destination.type": "queue",
-                    "jms.destination.name": "connector-quickstart",
-                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+    "connector.class": "io.confluent.connect.jms.TibcoSinkConnector",
+    "tasks.max": "1",
+    "topics": "sink-messages",
+    "tibco.url": "tcp://tibco-ems:7222",
+    "tibco.username": "admin",
+    "tibco.password": "",
+    "jms.destination.type": "queue",
+    "jms.destination.name": "connector-quickstart",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 5
 
 
 log "Verify we have received the data in connector-quickstart EMS queue"
-playground container exec --container tibco-ems --command "bash -c '"
+playground container exec --container tibco-ems --command "bash" << EOF > /tmp/result.log  2>&1
 cd /opt/tibco/ems/8.5/samples/java
 export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib
-CLASSPATH=${TIBEMS_JAVA}/jms-2.0.jar:${CLASSPATH}
-CLASSPATH=.:${TIBEMS_JAVA}/tibjms.jar:${TIBEMS_JAVA}/tibjmsadmin.jar:${CLASSPATH}
+CLASSPATH=\${TIBEMS_JAVA}/jms-2.0.jar:\${CLASSPATH}
+CLASSPATH=.:\${TIBEMS_JAVA}/tibjms.jar:\${TIBEMS_JAVA}/tibjmsadmin.jar:\${CLASSPATH}
 export CLASSPATH
 javac *.java
-java tibjmsMsgConsumer -user admin -queue connector-quickstart -nbmessages 10 -timeout 10000' > /tmp/result.log  2>&1
+java tibjmsMsgConsumer -user admin -queue connector-quickstart -nbmessages 10 -timeout 10000
+EOF
 cat /tmp/result.log
 grep "Text=" /tmp/result.log
