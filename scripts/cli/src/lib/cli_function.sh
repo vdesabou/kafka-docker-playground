@@ -392,21 +392,21 @@ function get_ccloud_connect() {
   environment=$(grep "ENVIRONMENT ID" $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta | cut -d " " -f 4)
   cluster=$(grep "KAFKA CLUSTER ID" $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta | cut -d " " -f 5)
 
-  if [ -z $CLOUD_API_KEY ]
+  if [ -z $CONFLUENT_CLOUD_API_KEY ]
   then
-    logerror "❌ environment variable CLOUD_API_KEY should be set to use $CONNECTOR_TYPE_FULLY_MANAGED or $CONNECTOR_TYPE_CUSTOM connector"
+    logerror "❌ environment variable CONFLUENT_CLOUD_API_KEY should be set to use $CONNECTOR_TYPE_FULLY_MANAGED or $CONNECTOR_TYPE_CUSTOM connector"
     logerror "Set it with Cloud API key, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys"
     exit 1
   fi
 
-  if [ -z $CLOUD_API_SECRET ]
+  if [ -z $CONFLUENT_CLOUD_API_SECRET ]
   then
-    logerror "❌ environment variable CLOUD_API_SECRET should be set to use $CONNECTOR_TYPE_FULLY_MANAGED or $CONNECTOR_TYPE_CUSTOM connector"
+    logerror "❌ environment variable CONFLUENT_CLOUD_API_SECRET should be set to use $CONNECTOR_TYPE_FULLY_MANAGED or $CONNECTOR_TYPE_CUSTOM connector"
     logerror "Set it with Cloud API secret, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys"
     exit 1
   fi
   
-  authorization=$(echo -n "$CLOUD_API_KEY:$CLOUD_API_SECRET" | base64)
+  authorization=$(echo -n "$CONFLUENT_CLOUD_API_KEY:$CONFLUENT_CLOUD_API_SECRET" | base64)
 }
 
 function get_sr_url_and_security() {
@@ -1628,7 +1628,7 @@ function cleanup_confluent_cloud_resources () {
   #     key=$(echo $(_jq '.key'))
   #     resource_type=$(echo $(_jq '.resource_type'))
 
-  #     if [[ $resource_type = cloud ]] && [[ "$key" != "$CLOUD_API_KEY" ]]
+  #     if [[ $resource_type = cloud ]] && [[ "$key" != "$CONFLUENT_CLOUD_API_KEY" ]]
   #     then
   #       log "deleting cloud api key $key"
   #       confluent api-key delete $key --force
@@ -1876,4 +1876,233 @@ function arm64_support() {
     echo "✅🖥️ this example should work natively with ARM64"
   fi
   set -e
+}
+
+
+# Convert JSON connector config to Terraform HCL format
+# This function generates a Terraform configuration for a Confluent Cloud connector
+function json_to_terraform_connector() {
+    local connector_name="$1"
+    local json_content="$2"
+    local output_file="$3"
+    local environment_id="$4"
+    local cluster_id="$5"
+
+    # Extract connector.class from JSON
+    local connector_class=$(echo "$json_content" | jq -r '."connector.class"')
+
+    # Remove connector.class from config_nonsensitive as it's a top-level attribute
+    local config_nonsensitive=$(echo "$json_content" | jq 'del(."connector.class")')
+
+    # Create Terraform configuration
+    cat > "$output_file" << EOF
+terraform {
+  required_providers {
+    confluent = {
+      source  = "confluentinc/confluent"
+      version = "~> 2.0"
+    }
+  }
+}
+
+provider "confluent" {
+  # Uses CONFLUENT_CLOUD_API_KEY and CONFLUENT_CLOUD_API_SECRET env vars
+}
+
+resource "confluent_connector" "${connector_name}" {
+  environment {
+    id = "${environment_id}"
+  }
+
+  kafka_cluster {
+    id = "${cluster_id}"
+  }
+
+  config_nonsensitive = {
+    "connector.class" = "${connector_class}"
+EOF
+
+    # Add all other config parameters from JSON
+    echo "$config_nonsensitive" | jq -r 'to_entries[] | "    \"\(.key)\" = \"\(.value)\""' >> "$output_file"
+
+    cat >> "$output_file" << 'EOF'
+  }
+
+  config_sensitive = {}
+
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+
+output "connector_id" {
+  value = confluent_connector.${connector_name}.id
+}
+
+output "connector_status" {
+  value = confluent_connector.${connector_name}.status
+}
+EOF
+
+    # Replace ${connector_name} in output with actual connector name
+    sed -i.bak "s/\${connector_name}/${connector_name}/g" "$output_file"
+    rm -f "${output_file}.bak"
+}
+
+# Deploy connector using Terraform
+function deploy_connector_with_terraform() {
+    local connector_name="$1"
+    local json_content="$2"
+    local environment_id="$3"
+    local cluster_id="$4"
+    local terraform_base_dir=""
+    local terraform_dir=""
+
+    get_kafka_docker_playground_dir
+
+    terraform_base_dir="$KAFKA_DOCKER_PLAYGROUND_DIR/.terraform-playground"
+    mkdir -p "$terraform_base_dir"
+    terraform_dir=$(mktemp -d "$terraform_base_dir/${connector_name}-XXXXXXXXXX")
+    log "📂 Terraform directory: $terraform_dir"
+
+    local tf_file="${terraform_dir}/connector.tf"
+
+    log "🏗️ Generating Terraform configuration for connector $connector_name"
+    json_to_terraform_connector "$connector_name" "$json_content" "$tf_file" "$environment_id" "$cluster_id"
+
+    if [ -z "$GITHUB_RUN_NUMBER" ]
+    then
+      log "📄 Generated Terraform configuration:"
+      sed 's/^/    /' "$tf_file"
+    fi
+
+    # Initialize Terraform
+    log "🔧 Initializing Terraform..."
+    if [[ -n "$verbose" ]]
+    then
+        log "🐞 CLI command used"
+        echo "cd $terraform_dir && terraform init -no-color" >&2
+    fi
+    if ! (cd "$terraform_dir" && terraform init -no-color > /tmp/terraform-init.log 2>&1)
+    then
+        logerror "❌ Terraform init failed. See /tmp/terraform-init.log for details"
+        cat /tmp/terraform-init.log
+        exit 1
+    fi
+
+    # Validate Terraform configuration
+    log "✅ Validating Terraform configuration..."
+    if [[ -n "$verbose" ]]
+    then
+        log "🐞 CLI command used"
+        echo "cd $terraform_dir && terraform validate -no-color" >&2
+    fi
+    if ! (cd "$terraform_dir" && terraform validate -no-color > /tmp/terraform-validate.log 2>&1)
+    then
+        logerror "❌ Terraform validation failed. See /tmp/terraform-validate.log for details"
+        cat /tmp/terraform-validate.log
+        exit 1
+    fi
+
+    # Plan Terraform changes
+    log "📋 Planning Terraform changes..."
+    if [[ -n "$verbose" ]]
+    then
+        log "🐞 CLI command used"
+        echo "cd $terraform_dir && terraform plan -no-color -out=tfplan" >&2
+    fi
+    if ! (cd "$terraform_dir" && terraform plan -no-color -out=tfplan > /tmp/terraform-plan.log 2>&1)
+    then
+        logerror "❌ Terraform plan failed. See /tmp/terraform-plan.log for details"
+        cat /tmp/terraform-plan.log
+        exit 1
+    fi
+
+    # Show plan summary
+    if [ -z "$GITHUB_RUN_NUMBER" ]
+    then
+        log "📊 Terraform plan summary:"
+        if [[ -n "$verbose" ]]
+        then
+            log "🐞 CLI command used"
+            echo "cd $terraform_dir && terraform show -no-color tfplan" >&2
+        fi
+        (cd "$terraform_dir" && terraform show -no-color tfplan | grep -A 10 "Plan:")
+    fi
+
+    # Apply Terraform changes
+    log "🚀 Applying Terraform configuration..."
+    if [[ -n "$verbose" ]]
+    then
+        log "🐞 CLI command used"
+        echo "cd $terraform_dir && terraform apply -no-color -auto-approve tfplan" >&2
+    fi
+    if ! (cd "$terraform_dir" && terraform apply -no-color -auto-approve tfplan > /tmp/terraform-apply.log 2>&1)
+    then
+        logerror "❌ Terraform apply failed. See /tmp/terraform-apply.log for details"
+        cat /tmp/terraform-apply.log
+        exit 1
+    fi
+
+    # Get outputs
+    if [[ -n "$verbose" ]]
+    then
+        log "🐞 CLI command used"
+        echo "cd $terraform_dir && terraform output -raw connector_id" >&2
+    fi
+    local connector_id=$(cd "$terraform_dir" && terraform output -raw connector_id 2>/dev/null)
+    if [[ -n "$verbose" ]]
+    then
+        log "🐞 CLI command used"
+        echo "cd $terraform_dir && terraform output -raw connector_status" >&2
+    fi
+    local connector_status=$(cd "$terraform_dir" && terraform output -raw connector_status 2>/dev/null)
+
+    log "✅ Terraform deployment completed successfully"
+    if [[ -n "$connector_id" ]]
+    then
+        log "📌 Connector ID: $connector_id"
+    fi
+    if [[ -n "$connector_status" ]]
+    then
+        log "📊 Connector Status: $connector_status"
+    fi
+
+    # Save terraform state path for future operations
+    playground state set terraform.state_dir "$terraform_dir"
+    playground state set terraform.connector.$connector_name "$terraform_dir"
+
+    # Return path via global variable to avoid stdout capture swallowing log output
+    TERRAFORM_DEPLOY_DIR="$terraform_dir"
+}
+
+# Check if Terraform is installed
+function check_terraform_installed() {
+    if ! command -v terraform &> /dev/null
+    then
+        logerror "❌ Terraform is not installed. Please install Terraform first:"
+        logerror "   https://developer.hashicorp.com/terraform/downloads"
+        exit 1
+    fi
+
+    local tf_version=$(terraform version -json 2>/dev/null | jq -r '.terraform_version')
+    if [[ -z "$tf_version" ]]
+    then
+        tf_version=$(terraform version | head -1 | awk '{print $2}' | sed 's/v//')
+    fi
+
+    log "✅ Terraform version: $tf_version"
+}
+
+# Check if required Confluent Cloud environment variables are set
+function check_confluent_cloud_terraform_env() {
+    if [[ -z "$CONFLUENT_CLOUD_API_KEY" ]] || [[ -z "$CONFLUENT_CLOUD_API_SECRET" ]]
+    then
+        logerror "❌ Confluent Cloud API credentials not found"
+        logerror "   Please set CONFLUENT_CLOUD_API_KEY and CONFLUENT_CLOUD_API_SECRET environment variables"
+        logerror "   You can create Cloud API keys at: https://confluent.cloud/settings/api-keys"
+        exit 1
+    fi
+
+    log "✅ Confluent Cloud API credentials found"
 }

@@ -3835,6 +3835,13 @@
                 "STOPPED"
               ],
               "description": "🪵 Create connector with specific status (https://cwiki.apache.org/confluence/display/KAFKA/KIP-980%3A+Allow+creating+connectors+in+a+stopped+state)\n\nOnly available if CP > 7.7\n\n⚠️ not available for ccloud connectors\n\nAllowed values: RUNNING, PAUSED, STOPPED\n"
+            },
+            {
+              "names": [
+                "--terraform"
+              ],
+              "argument": "",
+              "description": "🏗️ Deploy connector using Terraform instead of REST API\n\nDynamically converts JSON connector config to Terraform HCL and deploys using terraform apply\n\n⚠️ Only available for Confluent Cloud connectors\n"
             }
           ]
         },

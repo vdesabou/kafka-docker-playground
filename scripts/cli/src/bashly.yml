@@ -4678,7 +4678,7 @@ commands:
 
     - long: --initial-state
       arg: initial-state
-      allowed: 
+      allowed:
         - RUNNING
         - PAUSED
         - STOPPED
@@ -4689,6 +4689,15 @@ commands:
         Only available if CP > 7.7
 
         ⚠️ not available for ccloud connectors
+
+    - long: --terraform
+      required: false
+      help: |-
+        🏗️ Deploy connector using Terraform instead of REST API
+
+        Dynamically converts JSON connector config to Terraform HCL and deploys using terraform apply
+
+        ⚠️ Only available for Confluent Cloud connectors
 
     examples: |
       playground connector create-or-update -c filestream-sink << EOF

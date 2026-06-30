@@ -9,18 +9,53 @@ verbose="${args[--verbose]}"
 no_clipboard="${args[--no-clipboard]}"
 offsets=${args[--offsets]}
 initial_state=${args[--initial-state]}
+use_terraform=${args[--terraform]}
 
 connector_type=$(playground state get run.connector_type)
 
+# Validate terraform flag compatibility
+if [[ -n "$use_terraform" ]]
+then
+    if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
+    then
+        logerror "❌ --terraform is only supported with Confluent Cloud connectors (fully-managed or custom)"
+        exit 1
+    fi
+
+    if [[ -n "$level" ]]
+    then
+        logerror "❌ --level is not supported with --terraform"
+        exit 1
+    fi
+
+    if [[ -n "$package" ]]
+    then
+        logerror "❌ --package is not supported with --terraform"
+        exit 1
+    fi
+
+    if [[ -n "$offsets" ]]
+    then
+        logerror "❌ --offsets is not supported with --terraform"
+        exit 1
+    fi
+
+    if [[ -n "$initial_state" ]]
+    then
+        logerror "❌ --initial-state is not supported with --terraform"
+        exit 1
+    fi
+fi
+
 if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
 then
-    if [[ -n "$level" ]]
+    if [[ -n "$level" ]] && [[ -z "$use_terraform" ]]
     then
         logerror "❌ --level is set but not supported with $connector_type connector"
         exit 1
     fi
 
-    if [[ -n "$package" ]]
+    if [[ -n "$package" ]] && [[ -z "$use_terraform" ]]
     then
         logerror "❌ --package is set but not supported with $connector_type connector"
         exit 1
@@ -226,6 +261,41 @@ then
         log "✅ $connector_type connector config is valid !"
     fi
     fi
+fi
+
+# Handle Terraform deployment if --terraform flag is set
+if [[ -n "$use_terraform" ]]
+then
+    log "🏗️ Using Terraform to deploy connector $connector"
+
+    # Check prerequisites
+    check_terraform_installed
+    check_confluent_cloud_terraform_env
+
+    # Get Confluent Cloud environment and cluster details
+    get_ccloud_connect
+
+    # Deploy using Terraform
+    deploy_connector_with_terraform "$connector" "$json_content" "$environment" "$cluster"
+    terraform_dir="$TERRAFORM_DEPLOY_DIR"
+
+    log "✅ Connector $connector successfully deployed using Terraform"
+    log "📂 Terraform state saved in: $terraform_dir"
+
+    # Show connector status
+    if [ -z "$GITHUB_RUN_NUMBER" ]
+    then
+        playground connector show-config --connector "$connector" --no-clipboard
+    fi
+
+    playground connector status --connector $connector
+
+    if [[ -n "$wait_for_zero_lag" ]]
+    then
+        playground connector show-lag --connector $connector
+    fi
+
+    exit 0
 fi
 
 if [ $is_create == 1 ]

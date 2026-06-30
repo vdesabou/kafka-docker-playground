@@ -92,3 +92,4 @@ gc-analysis-output
 cfk-reports
 config.yaml
 .claude
+.terraform-playground
