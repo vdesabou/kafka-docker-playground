@@ -10496,8 +10496,13 @@ function json_to_terraform_connector() {
     # Extract connector.class from JSON
     local connector_class=$(echo "$json_content" | jq -r '."connector.class"')
 
-    # Remove connector.class from config_nonsensitive as it's a top-level attribute
-    local config_nonsensitive=$(echo "$json_content" | jq 'del(."connector.class")')
+    # Remove connector.class from config
+    local config=$(echo "$json_content" | jq 'del(."connector.class")')
+
+    # Separate sensitive and non-sensitive configs
+    # Sensitive keywords: password, secret, key, token, credentials, auth, credential
+    local config_sensitive=$(echo "$config" | jq 'with_entries(select(.key | test("password|secret|key|token|credentials|auth|credential|sasl\.jaas"; "i")))')
+    local config_nonsensitive=$(echo "$config" | jq 'with_entries(select(.key | test("password|secret|key|token|credentials|auth|credential|sasl\.jaas"; "i") | not))')
 
     # Create Terraform configuration
     cat > "$output_file" << EOF
@@ -10527,13 +10532,29 @@ resource "confluent_connector" "${connector_name}" {
     "connector.class" = "${connector_class}"
 EOF
 
-    # Add all other config parameters from JSON
+    # Add non-sensitive config parameters from JSON
     echo "$config_nonsensitive" | jq -r 'to_entries[] | "    \"\(.key)\" = \"\(.value)\""' >> "$output_file"
 
-    cat >> "$output_file" << 'EOF'
+    # Add sensitive config parameters
+    if [ "$(echo "$config_sensitive" | jq 'length')""%" != "0%" ]; then
+        cat >> "$output_file" << 'EOF'
+  }
+
+  config_sensitive = {
+EOF
+        echo "$config_sensitive" | jq -r 'to_entries[] | "    \"\(.key)\" = \"\(.value)\""' >> "$output_file"
+        cat >> "$output_file" << 'EOF'
+  }
+EOF
+    else
+        cat >> "$output_file" << 'EOF'
   }
 
   config_sensitive = {}
+EOF
+    fi
+
+    cat >> "$output_file" << 'EOF'
 
   lifecycle {
     prevent_destroy = false
