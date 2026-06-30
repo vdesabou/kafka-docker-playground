@@ -13,8 +13,12 @@ import java.util.UUID;
 
 public class SimpleSend {
 
-    private static final String connectionString = System.getenv("AZURE_EVENT_CONNECTION_STRING");
-    private static final String eventHubName = System.getenv("AZURE_EVENT_HUBS_NAME");
+    private static final String connectionString = System.getProperty("AZURE_EVENT_CONNECTION_STRING") != null 
+        ? System.getProperty("AZURE_EVENT_CONNECTION_STRING") 
+        : System.getenv("AZURE_EVENT_CONNECTION_STRING");
+    private static final String eventHubName = System.getProperty("AZURE_EVENT_HUBS_NAME") != null 
+        ? System.getProperty("AZURE_EVENT_HUBS_NAME") 
+        : System.getenv("AZURE_EVENT_HUBS_NAME");
 
     public static void main(String[] args) {
         publishEvents();
