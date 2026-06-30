@@ -2652,6 +2652,7 @@ commands:
 
 - name: container
   expose: always
+  alias: pod
   group: Container
   help: |-
     🐳 Container commands
