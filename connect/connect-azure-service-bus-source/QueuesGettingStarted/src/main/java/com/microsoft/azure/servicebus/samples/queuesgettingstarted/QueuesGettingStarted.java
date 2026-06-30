@@ -38,7 +38,9 @@ public class QueuesGettingStarted {
 
     public void run(String connectionString) throws Exception {
 
-        String queueName = System.getenv("AZURE_SERVICE_BUS_QUEUE_NAME");
+        String queueName = System.getProperty("AZURE_SERVICE_BUS_QUEUE_NAME") != null 
+            ? System.getProperty("AZURE_SERVICE_BUS_QUEUE_NAME") 
+            : System.getenv("AZURE_SERVICE_BUS_QUEUE_NAME");
         
         // Create a ServiceBusProcessorClient for receiving messages
         ServiceBusProcessorClient processorClient = new ServiceBusClientBuilder()
@@ -150,13 +152,20 @@ public class QueuesGettingStarted {
 
             String connectionString = null;
 
-            // parse connection string from command line
-            Options options = new Options();
-            options.addOption(new Option("c", true, "Connection string"));
-            CommandLineParser clp = new DefaultParser();
-            CommandLine cl = clp.parse(options, args);
-            if (cl.getOptionValue("c") != null) {
-                connectionString = cl.getOptionValue("c");
+            // First try system property, then environment variable, then command line
+            if (System.getProperty("SB_SAMPLES_CONNECTIONSTRING") != null) {
+                connectionString = System.getProperty("SB_SAMPLES_CONNECTIONSTRING");
+            } else if (System.getenv(SB_SAMPLES_CONNECTIONSTRING) != null) {
+                connectionString = System.getenv(SB_SAMPLES_CONNECTIONSTRING);
+            } else {
+                // parse connection string from command line
+                Options options = new Options();
+                options.addOption(new Option("c", true, "Connection string"));
+                CommandLineParser clp = new DefaultParser();
+                CommandLine cl = clp.parse(options, args);
+                if (cl.getOptionValue("c") != null) {
+                    connectionString = cl.getOptionValue("c");
+                }
             }
 
             // get overrides from the environment

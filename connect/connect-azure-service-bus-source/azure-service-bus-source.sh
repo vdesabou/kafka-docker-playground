@@ -108,7 +108,7 @@ sleep 5
 
 log "Inject data in Service Bus, using QueuesGettingStarted java program"
 SB_SAMPLES_CONNECTIONSTRING="Endpoint=sb://$AZURE_SERVICE_BUS_NAMESPACE.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=$AZURE_SAS_KEY"
-playground container exec --container simple-send --command "bash -c \"SB_SAMPLES_CONNECTIONSTRING=$SB_SAMPLES_CONNECTIONSTRING AZURE_SERVICE_BUS_QUEUE_NAME=$AZURE_SERVICE_BUS_QUEUE_NAME java -jar queuesgettingstarted-1.0.0-jar-with-dependencies.jar\""
+playground container exec --container simple-send --command "java -DSB_SAMPLES_CONNECTIONSTRING=\"$SB_SAMPLES_CONNECTIONSTRING\" -DAZURE_SERVICE_BUS_QUEUE_NAME=\"$AZURE_SERVICE_BUS_QUEUE_NAME\" -jar queuesgettingstarted-1.0.0-jar-with-dependencies.jar"
 
 sleep 15
 
