@@ -43,7 +43,7 @@ confluent
 confluent
 EOF
 
-playground container exec --container sftp-server --command "bash" << EOF
+playground container exec --container ssh-server --command "bash" << EOF
 mkdir -p /chroot/home/foo/upload/input
 mkdir -p /chroot/home/foo/upload/error
 mkdir -p /chroot/home/foo/upload/finished
