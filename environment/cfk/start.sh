@@ -10,10 +10,12 @@ check_and_update_playground_version
 
 verify_docker_and_memory
 verify_installed "kubectl"
-verify_installed "minikube"
+verify_installed "k3d"
 verify_installed "helm"
 verify_installed "envsubst"
 verify_installed "zip"
+
+: "${K3D_CLUSTER_NAME:=playground-cfk}"
 
 : "${CP_SERVER_IMAGE:=confluentinc/cp-server}"
 : "${CP_SERVER_TAG:=8.3.0}"
@@ -89,6 +91,67 @@ function run_with_timeout() {
 
   wait "$cmd_pid"
   return $?
+}
+
+function import_image_into_k3d() {
+  local image="$1"
+  local image_alias="$2"
+  local timeout_seconds="${K3D_IMAGE_IMPORT_TIMEOUT_SECONDS:-600}"
+  local import_log=""
+  local import_ret=1
+
+  if [[ -z "$image_alias" ]]
+  then
+    image_alias="$(echo "$image" | tr '/:.' '_')"
+  fi
+
+  if ! docker image inspect "$image" >/dev/null 2>&1
+  then
+    return 1
+  fi
+
+  import_log="/tmp/k3d-image-import-${image_alias}.log"
+  : > "$import_log"
+  log "📦 Importing image $image into k3d cluster $K3D_CLUSTER_NAME"
+
+  set +e
+  run_with_timeout "$timeout_seconds" k3d image import --cluster "$K3D_CLUSTER_NAME" "$image" >> "$import_log" 2>&1
+  import_ret=$?
+  set -e
+
+  if [[ "$import_ret" -eq 0 ]]
+  then
+    log "✅ Imported image $image into k3d"
+    return 0
+  fi
+
+  if [[ "$import_ret" -eq 124 ]]
+  then
+    logwarn "⚠️ Timed out after ${timeout_seconds}s while importing image $image into k3d"
+  else
+    logwarn "⚠️ Failed to import image $image into k3d"
+  fi
+  logwarn "⚠️ See $import_log for details"
+  return 1
+}
+
+function wait_for_kubernetes_apiserver() {
+  local max_wait_seconds="${1:-120}"
+  local waited=0
+  local wait_interval=2
+
+  while [[ "$waited" -lt "$max_wait_seconds" ]]
+  do
+    if kubectl --request-timeout=5s get --raw='/readyz' >/dev/null 2>&1
+    then
+      return 0
+    fi
+
+    sleep "$wait_interval"
+    waited=$(( waited + wait_interval ))
+  done
+
+  return 1
 }
 
 function generate_extra_pods_from_compose_override() {
@@ -408,82 +471,30 @@ function generate_extra_pods_from_compose_override() {
         docker pull --platform "$platform" "$image"
         image_pull_policy="Never"
       else
-        # If the image is already local (or can be loaded from host), avoid registry pulls.
+        # If the image is local, import it into k3d and force local usage.
+        # Otherwise keep IfNotPresent so Kubernetes can pull it from registry.
+        host_image_exists=1
         if docker image inspect "$image" >/dev/null 2>&1
         then
-          image_pull_policy="Never"
-        else
-          log "📦 Attempting to load local image $image into minikube for service $service_name"
-          set +e
-          # minikube image load must use host docker daemon (not minikube DOCKER_HOST).
-          eval "$(minikube docker-env -u)" >/dev/null 2>&1
-          docker image inspect "$image" >/dev/null 2>&1
-          host_image_exists=$?
-          if [[ "$host_image_exists" -eq 0 ]]
+          host_image_exists=0
+          if import_image_into_k3d "$image" "$pod_name"
           then
-            image_load_log="/tmp/minikube-image-load-${pod_name}.log"
-            : > "$image_load_log"
-
-            # Derive a practical timeout from image size unless explicitly set.
-            image_size_bytes=$(docker image inspect "$image" --format '{{.Size}}' 2>/dev/null)
-            if [[ ! "$image_size_bytes" =~ ^[0-9]+$ ]]
-            then
-              image_size_bytes=0
-            fi
-            image_size_gb=$(((image_size_bytes + 1073741823) / 1073741824))
-
-            if [[ -n "$MINIKUBE_IMAGE_LOAD_TIMEOUT_SECONDS" ]]
-            then
-              image_load_timeout_seconds="$MINIKUBE_IMAGE_LOAD_TIMEOUT_SECONDS"
-            else
-              # 120s base + 180s per GiB, capped at 1h.
-              image_load_timeout_seconds=$((120 + (image_size_gb * 180)))
-              if (( image_load_timeout_seconds > 3600 ))
-              then
-                image_load_timeout_seconds=3600
-              fi
-            fi
-
-            log "📦 Loading image $image into minikube (size ~${image_size_gb}GiB, timeout: ${image_load_timeout_seconds}s)"
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] source image: $image" >> "$image_load_log"
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] estimated size GiB: $image_size_gb" >> "$image_load_log"
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] timeout seconds: $image_load_timeout_seconds" >> "$image_load_log"
-
-            tmp_image_tar=$(mktemp "/tmp/${pod_name}-image-XXXXXX.tar")
-            run_with_timeout "$image_load_timeout_seconds" docker save -o "$tmp_image_tar" "$image" >> "$image_load_log" 2>&1
-            save_ret=$?
-
-            if [[ "$save_ret" -eq 0 ]]
-            then
-              eval "$(minikube docker-env)" >/dev/null 2>&1
-              run_with_timeout "$image_load_timeout_seconds" docker load -i "$tmp_image_tar" >> "$image_load_log" 2>&1
-              load_ret=$?
-              eval "$(minikube docker-env -u)" >/dev/null 2>&1
-            else
-              load_ret="$save_ret"
-            fi
-
-            rm -f "$tmp_image_tar" >/dev/null 2>&1 || true
+            load_ret=0
           else
             load_ret=1
           fi
-          eval "$(minikube docker-env)" >/dev/null 2>&1
-          set -e
+        else
+          load_ret=1
+        fi
 
-          if [[ "$load_ret" -eq 0 ]]
-          then
-            image_pull_policy="Never"
-            log "✅ Loaded image $image into minikube"
-          elif [[ "$load_ret" -eq 124 ]]
-          then
-            logwarn "⚠️ Timed out after ${image_load_timeout_seconds}s while loading image $image into minikube"
-            logwarn "⚠️ See /tmp/minikube-image-load-${pod_name}.log for details; Kubernetes may attempt registry pull"
-          elif [[ "$host_image_exists" -ne 0 ]]
-          then
-            logwarn "⚠️ Image $image was not found in host docker daemon; Kubernetes may attempt registry pull"
-          else
-            logwarn "⚠️ Failed to load image $image into minikube (see /tmp/minikube-image-load-${pod_name}.log)"
-          fi
+        if [[ "$load_ret" -eq 0 ]]
+        then
+          image_pull_policy="Never"
+        elif [[ "$host_image_exists" -ne 0 ]]
+        then
+          logwarn "⚠️ Image $image was not found in host docker daemon; Kubernetes may attempt registry pull"
+        else
+          logwarn "⚠️ Could not import local image $image into k3d; Kubernetes may attempt registry pull"
         fi
       fi
     elif [[ -n "$build_context" ]]
@@ -505,6 +516,13 @@ function generate_extra_pods_from_compose_override() {
       auto_image="local/${pod_name}-cfk:latest"
       log "🧱 Building image $auto_image for service $service_name from $build_context_abs"
       docker build -t "$auto_image" "$build_context_abs"
+
+      if ! import_image_into_k3d "$auto_image" "$pod_name"
+      then
+        logerror "❌ Could not import built image $auto_image into k3d"
+        exit 1
+      fi
+
       image="$auto_image"
       image_pull_policy="Never"
     else
@@ -807,7 +825,7 @@ function generate_connect_build_patch_from_compose() {
           zip -qr "$local_zip_path" "$(basename "$local_plugin_effective_dir")"
         )
         local_zip_checksum=$(shasum -a 512 "$local_zip_path" | awk '{print $1}')
-        local_zip_url="http://host.minikube.internal:18080/${plugin_id}.zip"
+        local_zip_url="http://host.k3d.internal:18080/${plugin_id}.zip"
         echo "${plugin_id}|${local_zip_url}|${local_zip_checksum}" >> "$tmp_url_plugins_file"
         has_url_plugins=1
         log "🔌 Using local plugin override for $plugin_id in CFK build"
@@ -1369,7 +1387,7 @@ then
     CONNECTOR_ZIP_DIR=$(mktemp -d)
     connector_zip_basename=$(basename "$CONNECTOR_ZIP")
     cp "$CONNECTOR_ZIP" "$CONNECTOR_ZIP_DIR/$connector_zip_basename"
-    CONNECTOR_ZIP_URL="http://host.minikube.internal:18080/$connector_zip_basename"
+    CONNECTOR_ZIP_URL="http://host.k3d.internal:18080/$connector_zip_basename"
     CONNECTOR_ZIP_CHECKSUM=$(shasum -a 512 "$CONNECTOR_ZIP" | awk '{print $1}')
     CONNECTOR_ZIP_PLUGIN_NAME="${connector_zip_basename%.zip}"
   fi
@@ -1411,15 +1429,22 @@ then
   fi
 fi
 
-log "Start or reuse minikube"
-minikube_status_output="$(minikube status --profile=minikube 2>/dev/null || true)"
-if echo "$minikube_status_output" | grep -q "host: Running" && \
-   echo "$minikube_status_output" | grep -q "kubelet: Running" && \
-   echo "$minikube_status_output" | grep -q "apiserver: Running"
+log "Start or reuse k3d (k3s)"
+if k3d cluster list 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$K3D_CLUSTER_NAME"
 then
-  log "✅ Minikube is already running, skipping start"
+  log "✅ k3d cluster $K3D_CLUSTER_NAME already exists, ensuring it is running"
+  k3d cluster start "$K3D_CLUSTER_NAME" >/dev/null 2>&1 || true
 else
-  minikube start --cpus=8 --disk-size='50gb' --memory=16384
+  log "🚀 Creating k3d cluster $K3D_CLUSTER_NAME"
+  k3d cluster create "$K3D_CLUSTER_NAME" --servers 1 --agents 0 --wait
+fi
+
+kubectl config use-context "k3d-${K3D_CLUSTER_NAME}" >/dev/null
+
+if ! wait_for_kubernetes_apiserver "120"
+then
+  logerror "❌ Kubernetes API server did not become ready within 120s"
+  exit 1
 fi
 
 if [[ -n "$CONNECTOR_ZIP_DIR" ]] && [[ -n "$(find "$CONNECTOR_ZIP_DIR" -maxdepth 1 -name '*.zip' -print -quit 2>/dev/null)" ]]
@@ -1453,15 +1478,40 @@ then
       cat /tmp/cfk-connector-zip-http.log | tail -30 || true
       exit 1
     fi
-    log "✅ Local plugin archive is served at http://host.minikube.internal:18080/${local_served_zip_name}"
+    log "✅ Local plugin archive is served at http://host.k3d.internal:18080/${local_served_zip_name}"
   fi
 fi
 
-log "Build images in minikube docker daemon"
-eval $(minikube docker-env)
-
-# Build/patch CP images in minikube daemon so CFK pods can use them.
+log "Build/patch CP images in host docker daemon"
+# Build/patch CP images locally, then import them into k3d.
 maybe_create_image
+
+for base_image in \
+  "${CP_SERVER_IMAGE}:${CP_SERVER_TAG}" \
+  "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" \
+  "${CP_SCHEMA_REGISTRY_IMAGE}:${CP_SCHEMA_REGISTRY_TAG}" \
+  "${CP_INIT_IMAGE}:${CP_INIT_TAG}"
+do
+  if docker image inspect "$base_image" >/dev/null 2>&1
+  then
+    import_image_into_k3d "$base_image" "$(echo "$base_image" | tr '/:.' '_')" || true
+  fi
+done
+
+if [[ -n "$ENABLE_CONTROL_CENTER" ]] && docker image inspect "${CP_CONTROL_CENTER_IMAGE}:${CP_CONTROL_CENTER_TAG}" >/dev/null 2>&1
+then
+  import_image_into_k3d "${CP_CONTROL_CENTER_IMAGE}:${CP_CONTROL_CENTER_TAG}" "control-center" || true
+fi
+
+if [[ -n "$ENABLE_KSQLDB" ]] && docker image inspect "${CP_KSQL_IMAGE}:${CP_KSQL_TAG}" >/dev/null 2>&1
+then
+  import_image_into_k3d "${CP_KSQL_IMAGE}:${CP_KSQL_TAG}" "ksqldb" || true
+fi
+
+if [[ -n "$ENABLE_RESTPROXY" ]] && docker image inspect "${CP_REST_PROXY_IMAGE}:${CP_REST_PROXY_TAG}" >/dev/null 2>&1
+then
+  import_image_into_k3d "${CP_REST_PROXY_IMAGE}:${CP_REST_PROXY_TAG}" "restproxy" || true
+fi
 
 if [[ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]]
 then
