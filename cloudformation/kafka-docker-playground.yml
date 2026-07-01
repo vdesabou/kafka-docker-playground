@@ -1,11 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
-  kafka-docker-playground using Ubuntu 20 EC2 instance.
+  kafka-docker-playground using Ubuntu 22.04 EC2 instance.
 Parameters:
-  LatestUbuntuFocalAMI:
-    # https://ubuntu.com/server/docs/cloud-images/amazon-ec2
+  LatestUbuntuJammyAMI:
+    # Changed from 'focal' to 'jammy' (Ubuntu 22.04 LTS)
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-    Default: "/aws/service/canonical/ubuntu/server/focal/stable/current/amd64/hvm/ebs-gp2/ami-id"
+    Default: "/aws/service/canonical/ubuntu/server/jammy/stable/current/amd64/hvm/ebs-gp2/ami-id"
   KeyName:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
     Type: 'AWS::EC2::KeyPair::KeyName'
@@ -208,6 +208,7 @@ Resources:
               curl: []
               gnupg: []
               lsb-release: []
+              python3-pip: []
               php-mysql: []
               zip: []
               zsh: []
@@ -251,7 +252,7 @@ Resources:
             07_clone_repo:
               command: !Sub "sudo /tmp/clone.sh > /home/${LinuxUserName}/output.log 2>&1"
     Properties:
-      ImageId: !Ref LatestUbuntuFocalAMI
+      ImageId: !Ref LatestUbuntuJammyAMI
       InstanceType:
         Ref: InstanceType
       Tags:
@@ -284,9 +285,19 @@ Resources:
           sudo groupadd docker
           sudo usermod -aG docker ${LinuxUserName}
           apt-get update -y
+          apt-get install -y python3-pip
           mkdir -p /opt/aws/bin
-          wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
-          python3 -m easy_install --script-dir /opt/aws/bin aws-cfn-bootstrap-py3-latest.tar.gz
+          wget -O /tmp/aws-cfn-bootstrap-py3-latest.tar.gz https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+          python3 -m pip install --no-cache-dir --upgrade /tmp/aws-cfn-bootstrap-py3-latest.tar.gz
+          for cfn_bin in /usr/local/bin/cfn-* /usr/bin/cfn-*; do
+            if [ -x "$cfn_bin" ]; then
+              install -m 0755 "$cfn_bin" /opt/aws/bin/
+            fi
+          done
+          if [ ! -x /opt/aws/bin/cfn-init ] || [ ! -x /opt/aws/bin/cfn-signal ]; then
+            echo "cfn-init/cfn-signal binaries were not installed" >&2
+            exit 1
+          fi
           /opt/aws/bin/cfn-init -v \
             --stack ${AWS::StackName} \
             --resource AWSInstance \
