@@ -1340,6 +1340,9 @@ function get_jmx_metrics() {
       connect3)
         target_container="connect-2"
       ;;
+      connect|connect-[0-9]*|broker|schema-registry|controller|zookeeper)
+        target_container="$container"
+      ;;
       *)
         target_container=$(resolve_container_name_for_environment "$container")
       ;;
