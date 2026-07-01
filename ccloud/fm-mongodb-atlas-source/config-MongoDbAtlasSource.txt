@@ -139,6 +139,15 @@ Choose an authentication mechanism for MongoDB. Use SCRAM-SHA-256 for username/p
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 secret.manager.enabled
+
+Fetch sensitive configuration values from a secret manager.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 connection.host
 
 
@@ -209,6 +218,36 @@ Choose an authentication mechanism for MongoDB. Use SCRAM-SHA-256 for username/p
 	 - Type: false
 	 - Default: STRING
 	 - Importance: MongoDB database name.
+	 - Required: HIGH
+
+==========================
+Secret manager configuration
+==========================
+🔘 secret.manager
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the secret manager to use for retrieving sensitive data.
+	 - Required: HIGH
+
+🔘 secret.manager.managed.configs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Select the configurations to fetch their values from the secret manager.
+	 - Required: HIGH
+
+🔘 secret.manager.provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing provider integration that has access to your secret manager.
 	 - Required: HIGH
 
 ==========================
