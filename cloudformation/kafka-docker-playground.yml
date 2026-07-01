@@ -202,6 +202,8 @@ Resources:
                       chmod +x kubectl
                       sudo mv kubectl /usr/local/bin/kubectl
 
+                      curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4 | bash
+                      
                       EOF
               mode: '000744'
               owner: !Ref LinuxUserName
