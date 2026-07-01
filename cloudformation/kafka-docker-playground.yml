@@ -196,6 +196,8 @@ Resources:
 
                       git clone https://github.com/agkozak/zsh-z ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-z
 
+                      curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+
                       EOF
               mode: '000744'
               owner: !Ref LinuxUserName
