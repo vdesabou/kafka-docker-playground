@@ -198,6 +198,10 @@ Resources:
 
                       curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
+                      curl -fsSL -o kubectl "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                      chmod +x kubectl
+                      sudo mv kubectl /usr/local/bin/kubectl
+
                       EOF
               mode: '000744'
               owner: !Ref LinuxUserName
