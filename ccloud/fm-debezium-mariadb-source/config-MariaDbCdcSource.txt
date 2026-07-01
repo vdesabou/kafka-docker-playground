@@ -212,6 +212,48 @@ The name of the topic for the database schema history. A new topic with provided
 	 - Required: false
 
 ==========================
+How should we configure the topic(s)?
+==========================
+🔘 topic.creation.topic_prefix_match.partitions
+
+Number of partitions for Kafka topics auto-created by the connector for topics whose name starts with ``topic.prefix.``. Kafka preserves message ordering only within a partition. The connector keys each change event by the changed record's primary key, and Kafka routes all events with the same key to the same partition - so events sharing a key stay in order, while events with different keys may be spread across partitions and lose their relative order. Tables that have no primary key produce unkeyed events, which Kafka distributes across all partitions, so any value above 1 removes ordering guarantees for those tables entirely. Keep this at 1 (the default) if you need all change events in a topic delivered in strict order.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 topic.creation.topic_prefix_match.cleanup.policy
+
+Cleanup policy applied to Kafka topics auto-created by the connector for topics whose name starts with ``topic.prefix.``. ``compact`` retains only the latest value per key (typical for change-data-capture topics); ``delete`` ages records out based on retention settings.
+
+	 - Type: STRING
+	 - Default: delete
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Storage
+==========================
+🔘 topic.creation.topic_prefix_match.retention.ms
+
+Time-based retention, in milliseconds, applied to Kafka topics auto-created by the connector for topics whose name starts with ``topic.prefix.``. Use ``-1`` for infinite retention.
+
+	 - Type: LONG
+	 - Default: 604800000
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 topic.creation.topic_prefix_match.retention.bytes
+
+Size-based retention, in bytes, applied to Kafka topics auto-created by the connector for topics whose name starts with ``topic.prefix.``. Use ``-1`` for unlimited size.
+
+	 - Type: LONG
+	 - Default: -1
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
 CSFLE
 ==========================
 🔘 csfle.enabled
@@ -585,7 +627,7 @@ Additional Configs
 
 🔘 topic.heartbeat.prefix
 
-Specifies the prefix of the heartbeat topic to which the connector sends heartbeat messages. The topic name has this pattern: ``<topic.heartbeat.prefix>.<topic.prefix>``. Defaults to ``__debezium-heartbeat-{{.logicalClusterId}}``.
+Specifies the prefix of the heartbeat topic to which the connector sends heartbeat messages. The topic name has this pattern: ``<topic.heartbeat.prefix>.<topic.prefix>``. Defaults to ``__debezium-heartbeat-{{.logicalClusterId}}``. By default the heartbeat topic does not start with your topic prefix, so it is created with a single partition. If you change this prefix so that the heartbeat topic name starts with your topic prefix followed by a period, it instead uses the same partition, retention, and cleanup settings as your other topics with that prefix. Keep the default unless you have a specific reason to change it.
 
 	 - Type: STRING
 	 - Default: __debezium-heartbeat-{{.logicalClusterId}}
@@ -760,7 +802,7 @@ When set to true, this property ensures that the corresponding record in Kafka i
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The name of the topic for the notifications. This is required in case ``sink`` is in the list of enabled channels.
+	 - Importance: The name of the topic for the notifications. This is required in case ``sink`` is in the list of enabled channels. If you set this name so that it starts with your topic prefix followed by a period, the topic uses the same partition, retention, and cleanup settings as your other topics with that prefix; otherwise it is created with a single partition.
 	 - Required: LOW
 
 🔘 value.converter.generate.index.for.unions
@@ -963,7 +1005,7 @@ Determines how to construct the subject name under which the value schema is reg
 
 🔘 provide.transaction.metadata
 
-Determines whether the connector generates events with transaction boundaries and enriches change event envelopes with transaction metadata.
+Determines whether the connector generates events with transaction boundaries and enriches change event envelopes with transaction metadata. When enabled, the connector creates a dedicated transaction metadata topic. Its name starts with your topic prefix, so it uses the same partition, retention, and cleanup settings as your other topics with that prefix.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -1044,7 +1086,7 @@ Controls whether the connector writes watermarks to the signal data collection t
 
 🔘 topic.transaction
 
-Controls the name of the topic to which the connector sends transaction metadata messages. The final transaction topic name has this pattern: ``<topic.prefix>.<topic.transaction>``. Defaults to ``{{.logicalClusterId}}.transaction``.
+Controls the name of the topic to which the connector sends transaction metadata messages. The final transaction topic name has this pattern: ``<topic.prefix>.<topic.transaction>``. Defaults to ``{{.logicalClusterId}}.transaction``. Because this topic's name always starts with your topic prefix, it uses the same partition, retention, and cleanup settings as your other topics with that prefix.
 
 	 - Type: STRING
 	 - Default: {{.logicalClusterId}}.transaction
