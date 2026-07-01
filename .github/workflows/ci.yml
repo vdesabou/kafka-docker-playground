@@ -208,6 +208,17 @@ jobs:
 
           df -h
 
+      - name: Install k3d and kubectl
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+
+          curl -fsSL -o kubectl "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/kubectl
+
+          k3d version
+          kubectl version --client
+
       - name: "Install confluent CLI"
         run: |
             curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
@@ -466,6 +477,17 @@ jobs:
           echo "some packages purged"
 
           df -h
+
+      - name: Install k3d and kubectl
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+
+          curl -fsSL -o kubectl "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/kubectl
+
+          k3d version
+          kubectl version --client
 
       - name: "Install confluent CLI"
         run: |
