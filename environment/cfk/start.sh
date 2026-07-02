@@ -561,7 +561,11 @@ function generate_extra_pods_from_compose_override() {
         for (i = 1; i <= volumes_count; i++) {
           volumes_joined = volumes_joined (i > 1 ? ";" : "") volumes[i]
         }
-        print service "|" image "|" build_context "|" platform "|" env_joined "|" ports_joined "|" entrypoint_joined "|" command_joined "|" volumes_joined
+        profiles_joined=""
+        for (i = 1; i <= profiles_count; i++) {
+          profiles_joined = profiles_joined (i > 1 ? ";" : "") prof[i]
+        }
+        print service "|" image "|" build_context "|" platform "|" env_joined "|" ports_joined "|" entrypoint_joined "|" command_joined "|" volumes_joined "|" profiles_joined
       }
       service=""
       image=""
@@ -573,14 +577,16 @@ function generate_extra_pods_from_compose_override() {
       entrypoint_count=0
       command_count=0
       volumes_count=0
+      profiles_count=0
       delete envs
       delete ports
       delete entrypoints
       delete commands
       delete volumes
+      delete prof
     }
 
-    BEGIN { in_services=0; service=""; image=""; platform=""; build_context=""; section=""; env_count=0; ports_count=0; entrypoint_count=0; command_count=0; volumes_count=0 }
+    BEGIN { in_services=0; service=""; image=""; platform=""; build_context=""; section=""; env_count=0; ports_count=0; entrypoint_count=0; command_count=0; volumes_count=0; profiles_count=0 }
     /^services:[[:space:]]*$/ { in_services=1; next }
     {
       if (in_services == 1 && $0 ~ /^[^[:space:]]/) {
@@ -652,6 +658,10 @@ function generate_extra_pods_from_compose_override() {
           }
         }
         section=""
+        next
+      }
+      if ($0 ~ /^    profiles:[[:space:]]*$/) {
+        section="profiles"
         next
       }
       if ($0 ~ /^    command:[[:space:]]*$/) {
@@ -753,6 +763,18 @@ function generate_extra_pods_from_compose_override() {
           next
         }
       }
+
+      if (section == "profiles") {
+        if ($0 ~ /^      -[[:space:]]*/) {
+          pr=$0
+          sub(/^      -[[:space:]]*/, "", pr)
+          pr=trim(unquote(pr))
+          if (pr != "") {
+            prof[++profiles_count]=pr
+          }
+          next
+        }
+      }
     }
     END { flush_record() }
   ' "$compose_file" > "$tmp_services_file"
@@ -776,7 +798,7 @@ function generate_extra_pods_from_compose_override() {
   }
 
   : > "$output_file"
-  while IFS='|' read -r service_name image build_context platform env_list ports_list entrypoint_list command_list volumes_list
+  while IFS='|' read -r service_name image build_context platform env_list ports_list entrypoint_list command_list volumes_list profiles_list
   do
     if [[ -z "$service_name" ]]
     then
@@ -787,6 +809,30 @@ function generate_extra_pods_from_compose_override() {
     if [[ "$service_name" == "connect" ]]
     then
       continue
+    fi
+
+    # Respect docker-compose profiles: skip services that declare profiles unless the
+    # corresponding env var (profile name uppercased, hyphens→underscores) is non-empty.
+    if [[ -n "$profiles_list" ]]
+    then
+      local profile_matched=0
+      local profile_item=""
+      local profile_env_var=""
+      IFS=';' read -r -a _profile_items <<< "$profiles_list"
+      for profile_item in "${_profile_items[@]}"
+      do
+        profile_env_var=$(echo "$profile_item" | tr '[:lower:]-' '[:upper:]_')
+        if [[ -n "${!profile_env_var:-}" ]]
+        then
+          profile_matched=1
+          break
+        fi
+      done
+      if [[ "$profile_matched" -eq 0 ]]
+      then
+        log "⏭️  Skipping service $service_name (profiles: $profiles_list) — no matching active env var"
+        continue
+      fi
     fi
 
     pod_name=$(echo "$service_name" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9.-]+/-/g' | sed -E 's/^-+//;s/-+$//')
