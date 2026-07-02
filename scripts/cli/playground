@@ -140,7 +140,7 @@ playground_usage() {
   printf "  %s   🖥️  Get ip address of running containers\n" "$(green "container get-ip-addresses")                "
   printf "  %s   💀 Kill all containers and prune all volumes\n" "$(green "container kill-all")                        "
   printf "  %s   🕵️  Tail and follow container logs\n" "$(green "container logs")                            "
-  printf "  %s   🔥 Display all ERROR/FATAL logs in all containers. Useful for quick troubleshooting\n" "$(green "container display-error-all-containers")    "
+  printf "  %s   🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick troubleshooting\n" "$(green "container display-error-all")               "
   printf "  %s   🛬 SSH into container\n" "$(green "container ssh")                             "
   printf "  %s   🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)\n" "$(green "container change-jdk")                      "
   printf "  %s   🪄 Execute command in a container\n" "$(green "container exec")                            "
@@ -5232,7 +5232,7 @@ playground_container_usage() {
   printf "  %s   🖥️  Get ip address of running containers\n" "$(green "get-ip-addresses")               "
   printf "  %s   💀 Kill all containers and prune all volumes\n" "$(green "kill-all")                       "
   printf "  %s   🕵️  Tail and follow container logs\n" "$(green "logs")                           "
-  printf "  %s   🔥 Display all ERROR/FATAL logs in all containers. Useful for quick troubleshooting\n" "$(green "display-error-all-containers")   "
+  printf "  %s   🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick troubleshooting\n" "$(green "display-error-all")              "
   printf "  %s   🛬 SSH into container\n" "$(green "ssh")                            "
   printf "  %s   🤎 Change java JDK version using Azul JDK (https://www.azul.com/downloads/#downloads-table-zulu)\n" "$(green "change-jdk")                     "
   printf "  %s   🪄 Execute command in a container\n" "$(green "exec")                           "
@@ -5448,12 +5448,12 @@ playground_container_logs_usage() {
 }
 
 # :command.usage
-playground_container_display_error_all_containers_usage() {
-  printf "playground container display-error-all-containers - 🔥 Display all ERROR/FATAL logs in all containers. Useful for quick troubleshooting\n\n"
+playground_container_display_error_all_usage() {
+  printf "playground container display-error-all - 🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick troubleshooting\n\n"
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground container display-error-all-containers\n"
-  printf "  playground container display-error-all-containers --help | -h\n"
+  printf "  playground container display-error-all\n"
+  printf "  playground container display-error-all --help | -h\n"
   echo
 
   # :command.long_usage
@@ -19571,7 +19571,7 @@ playground_run_command() {
     if [[ $test_file != *"fully-managed"* ]]
     then
       log "🧑‍🚒 you can troubleshoot the issue by running:"
-      echo "playground container display-error-all-containers"
+      echo "playground container display-error-all"
       log "🧑‍🚒 open full logs with '<playground container logs --open --container <container>', example:"
       echo "playground container logs --open --container connect"
     fi
@@ -25439,9 +25439,9 @@ playground_container_logs_command() {
 }
 
 # :command.function
-playground_container_display_error_all_containers_command() {
+playground_container_display_error_all_command() {
 
-  # src/commands/container/display-error-all-containers.sh
+  # src/commands/container/display-error-all.sh
   get_environment_used
 
   set +e
@@ -46569,10 +46569,10 @@ playground_container_parse_requirements() {
       shift $#
       ;;
 
-    display-error-all-containers)
-      action="display-error-all-containers"
+    display-error-all)
+      action="display-error-all"
       shift
-      playground_container_display_error_all_containers_parse_requirements "$@"
+      playground_container_display_error_all_parse_requirements "$@"
       shift $#
       ;;
 
@@ -47066,7 +47066,7 @@ playground_container_logs_parse_requirements() {
 }
 
 # :command.parse_requirements
-playground_container_display_error_all_containers_parse_requirements() {
+playground_container_display_error_all_parse_requirements() {
   local key
 
   # :command.fixed_flags_filter
@@ -47075,7 +47075,7 @@ playground_container_display_error_all_containers_parse_requirements() {
     case "$key" in
       --help | -h)
         long_usage=yes
-        playground_container_display_error_all_containers_usage
+        playground_container_display_error_all_usage
         exit
         ;;
 
@@ -47087,7 +47087,7 @@ playground_container_display_error_all_containers_parse_requirements() {
   done
 
   # :command.command_filter
-  action="container display-error-all-containers"
+  action="container display-error-all"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -54485,7 +54485,7 @@ run() {
     "container get-ip-addresses") playground_container_get_ip_addresses_command ;;
     "container kill-all") playground_container_kill_all_command ;;
     "container logs") playground_container_logs_command ;;
-    "container display-error-all-containers") playground_container_display_error_all_containers_command ;;
+    "container display-error-all") playground_container_display_error_all_command ;;
     "container ssh") playground_container_ssh_command ;;
     "container change-jdk") playground_container_change_jdk_command ;;
     "container exec") playground_container_exec_command ;;

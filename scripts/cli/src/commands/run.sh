@@ -1745,7 +1745,7 @@ else
   if [[ $test_file != *"fully-managed"* ]]
   then
     log "🧑‍🚒 you can troubleshoot the issue by running:"
-    echo "playground container display-error-all-containers"
+    echo "playground container display-error-all"
     log "🧑‍🚒 open full logs with '<playground container logs --open --container <container>', example:"
     echo "playground container logs --open --container connect"
   fi

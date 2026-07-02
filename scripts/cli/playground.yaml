@@ -2520,10 +2520,10 @@ subcommands:
             
             Conflicts with: --open, --wait-for-log
             
-      - name: display-error-all-containers
+      - name: display-error-all
         description: | 
-          🔥 Display all ERROR/FATAL logs in all containers. Useful for quick troubleshooting
-        usage: playground container display-error-all-containers
+          🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick troubleshooting
+        usage: playground container display-error-all
         options: []
       - name: ssh
         description: | 

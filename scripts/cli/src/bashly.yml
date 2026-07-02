@@ -2745,10 +2745,10 @@ commands:
       - playground container logs -c connect -c broker --wait-for-log "ERROR" --max-wait 120
       - playground container logs --container connect --grep "ERROR"
 
-    - name: display-error-all-containers
+    - name: display-error-all
       group: Container
       help: |-
-        🔥 Display all ERROR/FATAL logs in all containers. Useful for quick troubleshooting
+        🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick troubleshooting
 
     - name: ssh
       group: Container

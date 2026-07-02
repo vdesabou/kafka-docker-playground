@@ -2181,9 +2181,9 @@
           ]
         },
         {
-          "name": "display-error-all-containers",
-          "description": "🔥 Display all ERROR/FATAL logs in all containers. Useful for quick troubleshooting\n",
-          "usage": "playground container display-error-all-containers",
+          "name": "display-error-all",
+          "description": "🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick troubleshooting\n",
+          "usage": "playground container display-error-all",
           "options": []
         },
         {
