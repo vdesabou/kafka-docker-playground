@@ -18,7 +18,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 sleep 10
 
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
-playground container exec --container namenode --command "/opt/hadoop-3.1.3/bin/hdfs dfs -chmod 777  /"
+playground container exec --container namenode --command "/opt/hadoop/bin/hdfs dfs -chmod 777  /"
 
 log "Creating HDFS Sink connector with Hive integration"
 playground connector create-or-update --connector hdfs3-sink  << EOF
