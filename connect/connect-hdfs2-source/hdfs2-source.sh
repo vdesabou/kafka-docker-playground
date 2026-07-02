@@ -89,21 +89,21 @@ grep "value1" /tmp/result.log
 log "Creating HDFS Source connector"
 playground connector create-or-update --connector hdfs2-source  << EOF
 {
-          "connector.class":"io.confluent.connect.hdfs2.Hdfs2SourceConnector",
-          "tasks.max":"1",
-          "store.url":"hdfs://namenode:8020",
-          "hadoop.conf.dir":"/etc/hadoop/",
-          "format.class" : "io.confluent.connect.hdfs2.format.avro.AvroFormat",
-          "confluent.topic.bootstrap.servers": "broker:9092",
-          "confluent.topic.replication.factor": "1",
-          "transforms" : "AddPrefix",
-          "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
-          "transforms.AddPrefix.regex" : ".*",
-          "transforms.AddPrefix.replacement" : "copy_of_\$0"
-          }
+    "connector.class":"io.confluent.connect.hdfs2.Hdfs2SourceConnector",
+    "tasks.max":"1",
+    "store.url":"hdfs://namenode:8020",
+    "hadoop.conf.dir":"/etc/hadoop/",
+    "format.class" : "io.confluent.connect.hdfs2.format.avro.AvroFormat",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1",
+    "transforms" : "AddPrefix",
+    "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
+    "transforms.AddPrefix.regex" : ".*",
+    "transforms.AddPrefix.replacement" : "copy-of-\$0"
+}
 EOF
 
 sleep 10
 
-log "Verifying topic copy_of_test_hdfs"
-playground topic consume --topic copy_of_test_hdfs --min-expected-messages 9 --timeout 60
+log "Verifying topic copy-of-test-hdfs"
+playground topic consume --topic copy-of-test-hdfs --min-expected-messages 9 --timeout 60

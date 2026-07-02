@@ -110,11 +110,11 @@ playground connector create-or-update --connector hdfs3-source  << EOF
     "transforms" : "AddPrefix",
     "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
     "transforms.AddPrefix.regex" : ".*",
-    "transforms.AddPrefix.replacement" : "copy_of_\$0"
+    "transforms.AddPrefix.replacement" : "copy-of-\$0"
 }
 EOF
 
 sleep 10
 
-log "Verifying topic copy_of_test_hdfs"
-playground topic consume --topic copy_of_test_hdfs --min-expected-messages 9 --timeout 60
+log "Verifying topic copy-of-test-hdfs"
+playground topic consume --topic copy-of-test-hdfs --min-expected-messages 9 --timeout 60
