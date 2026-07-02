@@ -436,6 +436,45 @@ The identifier for the API key used in authentication. The format depends on the
 	 - Importance: The password to be used for proxy authentication.
 	 - Required: MEDIUM
 
+🔘 secret.manager.enabled
+
+Fetch sensitive configuration values from a secret manager.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Secret manager configuration
+==========================
+🔘 secret.manager
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the secret manager to use for retrieving sensitive data.
+	 - Required: HIGH
+
+🔘 secret.manager.managed.configs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Select the configurations to fetch their values from the secret manager.
+	 - Required: HIGH
+
+🔘 secret.manager.provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing provider integration that has access to your secret manager.
+	 - Required: HIGH
+
 ==========================
 APIs
 ==========================
@@ -837,7 +876,7 @@ This config indicates how offsets are computed and how requests are generated. I
 
 🔘 api1.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -855,7 +894,7 @@ Whether to enable GZip compression on HTTP responses. Valid options are ``true``
 
 🔘 api1.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -1191,7 +1230,7 @@ The time in milliseconds to wait for a request response from the server
 
 🔘 api2.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -1218,7 +1257,7 @@ This config indicates how offsets are computed and how requests are generated. I
 
 🔘 api2.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -1563,7 +1602,7 @@ This config indicates how offsets are computed and how requests are generated. I
 
 🔘 api3.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -1581,7 +1620,7 @@ Whether to enable GZip compression on HTTP responses. Valid options are ``true``
 
 🔘 api3.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -1917,7 +1956,7 @@ The time in milliseconds to wait for a request response from the server
 
 🔘 api4.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -1944,7 +1983,7 @@ This config indicates how offsets are computed and how requests are generated. I
 
 🔘 api4.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -2280,7 +2319,7 @@ The time in milliseconds to wait for a request response from the server
 
 🔘 api5.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -2298,7 +2337,7 @@ This config indicates how offsets are computed and how requests are generated. I
 
 🔘 api5.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -2652,7 +2691,7 @@ This config indicates how offsets are computed and how requests are generated. I
 
 🔘 api6.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -2670,7 +2709,7 @@ Whether to enable GZip compression on HTTP responses. Valid options are ``true``
 
 🔘 api6.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -3006,7 +3045,7 @@ The time in milliseconds to wait for a request response from the server
 
 🔘 api7.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -3024,7 +3063,7 @@ This config indicates how offsets are computed and how requests are generated. I
 
 🔘 api7.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -3369,7 +3408,7 @@ The time in milliseconds to wait for a request response from the server
 
 🔘 api8.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -3396,7 +3435,7 @@ This config indicates how offsets are computed and how requests are generated. I
 
 🔘 api8.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -3741,7 +3780,7 @@ This config indicates how offsets are computed and how requests are generated. I
 
 🔘 api9.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -3759,7 +3798,7 @@ Whether to enable GZip compression on HTTP responses. Valid options are ``true``
 
 🔘 api9.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -4095,7 +4134,7 @@ The time in milliseconds to wait for a request response from the server
 
 🔘 api10.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -4113,7 +4152,7 @@ This config indicates how offsets are computed and how requests are generated. I
 
 🔘 api10.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -4458,7 +4497,7 @@ The time in milliseconds to wait for a request response from the server
 
 🔘 api11.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -4485,7 +4524,7 @@ This config indicates how offsets are computed and how requests are generated. I
 
 🔘 api11.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -4830,7 +4869,7 @@ This config indicates how offsets are computed and how requests are generated. I
 
 🔘 api12.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -4839,7 +4878,7 @@ Whether to enable GZip compression on HTTP responses. Valid options are ``true``
 
 🔘 api12.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -5184,7 +5223,7 @@ The time in milliseconds to wait for a request response from the server
 
 🔘 api13.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -5211,7 +5250,7 @@ This config indicates how offsets are computed and how requests are generated. I
 
 🔘 api13.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -5547,7 +5586,7 @@ The time in milliseconds to wait for a request response from the server
 
 🔘 api14.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -5565,7 +5604,7 @@ This config indicates how offsets are computed and how requests are generated. I
 
 🔘 api14.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -5919,7 +5958,7 @@ This config indicates how offsets are computed and how requests are generated. I
 
 🔘 api15.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -5937,7 +5976,7 @@ Whether to enable GZip compression on HTTP responses. Valid options are ``true``
 
 🔘 api15.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
