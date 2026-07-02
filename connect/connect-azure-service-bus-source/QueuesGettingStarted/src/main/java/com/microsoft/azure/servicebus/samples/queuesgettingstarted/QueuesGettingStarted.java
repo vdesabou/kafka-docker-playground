@@ -149,6 +149,8 @@ public class QueuesGettingStarted {
 
     public static int runApp(String[] args, Function<String, Integer> run) {
         try {
+            Options options = new Options();
+            options.addOption(new Option("c", true, "Connection string"));
 
             String connectionString = null;
 
@@ -159,8 +161,6 @@ public class QueuesGettingStarted {
                 connectionString = System.getenv(SB_SAMPLES_CONNECTIONSTRING);
             } else {
                 // parse connection string from command line
-                Options options = new Options();
-                options.addOption(new Option("c", true, "Connection string"));
                 CommandLineParser clp = new DefaultParser();
                 CommandLine cl = clp.parse(options, args);
                 if (cl.getOptionValue("c") != null) {
