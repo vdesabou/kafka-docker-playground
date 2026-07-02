@@ -217,7 +217,7 @@ What SSL mode should we use to connect to your database. ``prefer`` allows for t
 
 	 - Type: false
 	 - Default: PASSWORD
-	 - Importance: The binary trust store file that contains the server's CA certificate. Only required if you use verify-ca or verify-full ssl mode. The connector supports files in JKS format. For REST API usage, you must base64-encode the binary trust store file and prefix it with ``data:text/plain;base64,``. For example, first, encode the file ``base64_truststore=<span>(cat /path/to/truststore.jks | base64)`` and then use ``data:text/plain;base64,</span>base64_truststore`` as the value.
+	 - Importance: The binary trust store file that contains the server's CA certificate. Only required if you use verify-ca or verify-full ssl mode. The connector supports files in JKS format. For REST API usage, you must base64-encode the binary trust store file and prefix it with ``data:text/plain;base64,``. For example, first, encode the file ``base64_truststore=$(cat /path/to/truststore.jks | base64)`` and then use ``data:text/plain;base64,$base64_truststore`` as the value.
 	 - Required: LOW
 
 🔘 ssl.truststorepassword

@@ -142,6 +142,15 @@ How Confluent Cloud authenticates with Azure. Allowed values - ``Password`` and 
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 secret.manager.enabled
+
+Fetch sensitive configuration values from a secret manager.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
 ==========================
 Azure credentials
 ==========================
@@ -155,13 +164,43 @@ Azure credentials
 	 - Required: HIGH
 
 ==========================
+Secret manager configuration
+==========================
+🔘 secret.manager
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the secret manager to use for retrieving sensitive data.
+	 - Required: HIGH
+
+🔘 secret.manager.managed.configs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Select the configurations to fetch their values from the secret manager.
+	 - Required: HIGH
+
+🔘 secret.manager.provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing provider integration that has access to your secret manager.
+	 - Required: HIGH
+
+==========================
 How should we connect to your database?
 ==========================
 🔘 connection.host
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: STRING
 	 - Importance: Depending on the service environment, certain network access limitations may exist. Make sure the connector can reach your service. Do not include jdbc:xxxx:// in the connection hostname property (e.g. database-1.abc234ec2.us-west.rds.amazonaws.com).
 	 - Required: HIGH
@@ -170,7 +209,7 @@ How should we connect to your database?
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: INT
 	 - Importance: JDBC connection port.
 	 - Required: HIGH
@@ -209,7 +248,7 @@ What SSL mode should we use to connect to your database. ``prefer`` allows for t
 	 - Type: STRING
 	 - Default: prefer
 	 - Importance: HIGH
-	 - Required: true
+	 - Required: false
 
 🔘 ssl.truststorefile
 
@@ -217,7 +256,7 @@ What SSL mode should we use to connect to your database. ``prefer`` allows for t
 
 	 - Type: false
 	 - Default: PASSWORD
-	 - Importance: The binary trust store file that contains the server's CA certificate. Only required if you use verify-ca or verify-full ssl mode. The connector supports files in JKS format. For REST API usage, you must base64-encode the binary trust store file and prefix it with ``data:text/plain;base64,``. For example, first, encode the file ``base64_truststore=<span>(cat /path/to/truststore.jks | base64)`` and then use ``data:text/plain;base64,</span>base64_truststore`` as the value.
+	 - Importance: The binary trust store file that contains the server's CA certificate. Only required if you use verify-ca or verify-full ssl mode. The connector supports files in JKS format. For REST API usage, you must base64-encode the binary trust store file and prefix it with ``data:text/plain;base64,``. For example, first, encode the file ``base64_truststore=$(cat /path/to/truststore.jks | base64)`` and then use ``data:text/plain;base64,$base64_truststore`` as the value.
 	 - Required: LOW
 
 🔘 ssl.truststorepassword

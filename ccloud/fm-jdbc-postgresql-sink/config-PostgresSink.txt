@@ -142,6 +142,15 @@ How Confluent Cloud authenticates with Azure or GCP. Allowed values - ``Password
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 secret.manager.enabled
+
+Fetch sensitive configuration values from a secret manager.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 provider.integration.id
 
 
@@ -152,13 +161,43 @@ How Confluent Cloud authenticates with Azure or GCP. Allowed values - ``Password
 	 - Required: HIGH
 
 ==========================
+Secret manager configuration
+==========================
+🔘 secret.manager
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the secret manager to use for retrieving sensitive data.
+	 - Required: HIGH
+
+🔘 secret.manager.managed.configs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Select the configurations to fetch their values from the secret manager.
+	 - Required: HIGH
+
+🔘 secret.manager.provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing provider integration that has access to your secret manager.
+	 - Required: HIGH
+
+==========================
 How should we connect to your database?
 ==========================
 🔘 connection.host
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: STRING
 	 - Importance: Depending on the service environment, certain network access limitations may exist. Make sure the connector can reach your service. Do not include jdbc:xxxx:// in the connection hostname property (e.g. database-1.abc234ec2.us-west.rds.amazonaws.com).
 	 - Required: HIGH
@@ -167,7 +206,7 @@ How should we connect to your database?
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: INT
 	 - Importance: JDBC connection port.
 	 - Required: HIGH
@@ -194,7 +233,7 @@ How should we connect to your database?
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: STRING
 	 - Importance: JDBC database name.
 	 - Required: HIGH
@@ -206,7 +245,7 @@ What SSL mode should we use to connect to your database. ``prefer`` allows for t
 	 - Type: STRING
 	 - Default: prefer
 	 - Importance: HIGH
-	 - Required: true
+	 - Required: false
 
 🔘 ssl.rootcertfile
 
@@ -214,7 +253,25 @@ What SSL mode should we use to connect to your database. ``prefer`` allows for t
 
 	 - Type: false
 	 - Default: PASSWORD
-	 - Importance: The server root cert file used for certificate validation. Only required if using `verify-ca` or `verify-full` ssl mode.
+	 - Importance: The server root cert file used for certificate validation. Only required if using `verify-ca` or `verify-full` ssl mode. Must be a PEM encoded X509v3 certificate
+	 - Required: LOW
+
+🔘 ssl.clientcertfile
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The client certificate file used for mutual TLS authentication. Required when the database server requires client certificate authentication. Must be a PEM encoded X509v3 certificate
+	 - Required: LOW
+
+🔘 ssl.clientkeyfile
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The client private key file used for mutual TLS authentication. Required when the database server requires client certificate authentication. Must be in PKCS-8 DER format.
 	 - Required: LOW
 
 ==========================
