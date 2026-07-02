@@ -488,6 +488,8 @@ jobs:
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/kubectl
 
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4 | bash
+
           k3d version
           kubectl version --client
 
@@ -626,6 +628,7 @@ jobs:
           CLICKHOUSE_CLOUD_USERNAME: ${{ secrets.CLICKHOUSE_CLOUD_USERNAME}}
           CLICKHOUSE_CLOUD_PASSWORD: ${{ secrets.CLICKHOUSE_CLOUD_PASSWORD}}
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+          PLAYGROUND_ENVIRONMENT: "cfk"
           
       - name: Commit connector config file if changed
         if: always()
