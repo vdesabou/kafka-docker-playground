@@ -295,6 +295,18 @@ Number of tasks for this connector
 	 - Required: HIGH
 
 ==========================
+Headers
+==========================
+🔘 file.metadata.headers.enable
+
+When enabled, each produced Kafka record carries headers describing the source file: ``file.name``, ``file.path``, ``file.last.modified`` (TIMESTAMP), and ``file.size`` (LONG). Consumers that don't read these headers are unaffected. Headers whose underlying metadata is unavailable from Azure Blob Storage are omitted. Supported ``header.converter`` values are ``SimpleHeaderConverter`` (default), ``StringConverter``, and ``JsonConverter``.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+==========================
 Additional Configs
 ==========================
 🔘 value.converter.replace.null.with.default
