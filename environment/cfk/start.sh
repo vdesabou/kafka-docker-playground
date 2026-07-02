@@ -100,6 +100,7 @@ function run_with_timeout() {
 function import_image_into_k3d() {
   local image="$1"
   local image_alias="$2"
+  local force_import="${3:-0}"
   local timeout_seconds="${K3D_IMAGE_IMPORT_TIMEOUT_SECONDS:-600}"
   local import_log=""
   local import_ret=1
@@ -116,7 +117,7 @@ function import_image_into_k3d() {
   fi
 
   k3d_server_node="k3d-${K3D_CLUSTER_NAME}-server-0"
-  if k3d node list 2>/dev/null | awk '{print $1}' | grep -qx "$k3d_server_node"
+  if [[ "$force_import" -ne 1 ]] && k3d node list 2>/dev/null | awk '{print $1}' | grep -qx "$k3d_server_node"
   then
     if k3d node exec "$k3d_server_node" -- sh -c "ctr -n k8s.io images list -q 2>/dev/null | grep -Fx -- \"$image\" >/dev/null || ctr -n k8s.io images list -q 2>/dev/null | grep -Fx -- \"docker.io/$image\" >/dev/null" >/dev/null 2>&1
     then
@@ -506,6 +507,7 @@ function generate_extra_pods_from_compose_override() {
   local file_size_bytes=0
   local bake_tmp_dir=""
   local bake_filename=""
+  local deferred_import=0
 
   if [[ ! -f "$compose_file" ]]
   then
@@ -839,6 +841,7 @@ function generate_extra_pods_from_compose_override() {
     container_name="${pod_name}"
 
     image_pull_policy="IfNotPresent"
+    deferred_import=0
     volume_names=()
     volume_secret_names=()
     volume_mount_paths=()
@@ -898,15 +901,10 @@ function generate_extra_pods_from_compose_override() {
       auto_image="local/${pod_name}-cfk:latest"
       log "🧱 Building image $auto_image for service $service_name from $build_context_abs"
       docker build -t "$auto_image" "$build_context_abs"
-
-      if ! import_image_into_k3d "$auto_image" "$pod_name"
-      then
-        logerror "❌ Could not import built image $auto_image into k3d"
-        exit 1
-      fi
-
       image="$auto_image"
       image_pull_policy="Never"
+      # Defer k3d import until after all large-file baking for this service
+      deferred_import=1
     else
       continue
     fi
@@ -956,10 +954,7 @@ function generate_extra_pods_from_compose_override() {
           if docker build -t "$image" "${bake_tmp_dir}" > /tmp/docker-bake-${pod_name}.log 2>&1
           then
             log "✅ Baked $bake_filename into image $image at $target_path"
-            if ! import_image_into_k3d "$image" "$pod_name"
-            then
-              logwarn "⚠️ Could not re-import extended image $image into k3d; pod may not start correctly"
-            fi
+            deferred_import=1
           else
             logwarn "⚠️ Could not bake $source_abs into image $image (see /tmp/docker-bake-${pod_name}.log); volume mount will be skipped"
           fi
@@ -978,6 +973,17 @@ function generate_extra_pods_from_compose_override() {
         volume_mount_paths+=("$target_path")
         volume_secret_keys+=("$secret_key")
       done
+    fi
+
+    # Import the final (possibly baked) image into k3d once, after all volume processing.
+    # This ensures k3d always receives the image with all files already baked in.
+    if [[ "$deferred_import" -eq 1 ]]
+    then
+      if ! import_image_into_k3d "$image" "$pod_name" 1
+      then
+        logerror "❌ Could not import image $image into k3d for service $service_name"
+        exit 1
+      fi
     fi
 
     if [[ -s "$output_file" ]]
