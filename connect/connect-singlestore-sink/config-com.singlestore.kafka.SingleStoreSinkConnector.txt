@@ -73,6 +73,15 @@ Specify additional keys to add to tables created by the connector; value of this
 	 - Importance: LOW
 	 - Required: false
 
+🔘 custom.metric.tags
+
+The custom metric tags will accept key-value pairs to customize the MBean object name which should be appended the end of regular name, each key would represent a tag for the MBean object name, and the corresponding value would be the value of that tag the key is. For example: k1=v1,k2=v2
+
+	 - Type: LIST
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 Data Mapping
 ==========================
