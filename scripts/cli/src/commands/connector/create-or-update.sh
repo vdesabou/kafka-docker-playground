@@ -396,8 +396,11 @@ else
             fi
         } > "$connector_cr_file"
 
-        log "📄 Generated Connector CRD manifest used for apply:"
-        sed 's/^/    /' "$connector_cr_file"
+        if [ -z "$GITHUB_RUN_NUMBER" ]
+        then
+            log "📄 Generated Connector CRD manifest used for apply:"
+            sed 's/^/    /' "$connector_cr_file"
+        fi
         if [[ -n "$verbose" ]]
         then
             log "🐞 CLI command used"
