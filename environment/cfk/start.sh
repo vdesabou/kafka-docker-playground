@@ -180,6 +180,261 @@ registries:
 EOF
 }
 
+function sanitize_k8s_name() {
+  local raw_name="$1"
+
+  echo "$raw_name" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9.-]+/-/g; s/^-+//; s/-+$//'
+}
+
+function sanitize_secret_key() {
+  local raw_key="$1"
+
+  echo "$raw_key" | sed -E 's/[^A-Za-z0-9._-]+/_/g'
+}
+
+function append_secret_manifest_from_file() {
+  local output_file="$1"
+  local secret_name="$2"
+  local source_file="$3"
+  local secret_key="$4"
+  local encoded=""
+
+  encoded=$(base64 < "$source_file" | tr -d '\n')
+
+  if [[ -s "$output_file" ]]
+  then
+    echo "---" >> "$output_file"
+  fi
+
+  cat >> "$output_file" << EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ${secret_name}
+  namespace: confluent
+type: Opaque
+data:
+  ${secret_key}: ${encoded}
+EOF
+}
+
+function parse_compose_file_volume_mount() {
+  local raw_volume="$1"
+  local source_path=""
+  local target_path=""
+
+  raw_volume=$(echo "$raw_volume" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g' | sed -E 's/^["\x27]//; s/["\x27]$//')
+  if [[ "$raw_volume" != *":"* ]]
+  then
+    return 1
+  fi
+
+  source_path="${raw_volume%%:*}"
+  target_path="${raw_volume#*:}"
+  target_path="${target_path%%:*}"
+
+  if [[ -z "$source_path" ]] || [[ -z "$target_path" ]]
+  then
+    return 1
+  fi
+
+  if [[ "$source_path" != /* ]] && [[ "$source_path" != .* ]]
+  then
+    return 1
+  fi
+
+  printf '%s|%s\n' "$source_path" "$target_path"
+}
+
+function collect_service_volume_mounts_from_compose() {
+  local compose_file="$1"
+  local output_file="$2"
+
+  awk '
+    function trim(s) { gsub(/^[[:space:]]+|[[:space:]]+$/, "", s); return s }
+    function unquote(s) { gsub(/^"|"$/, "", s); gsub(/^\047|\047$/, "", s); return s }
+    BEGIN { in_services=0; service=""; section="" }
+    /^services:[[:space:]]*$/ { in_services=1; next }
+    {
+      if (in_services == 1 && $0 ~ /^[^[:space:]]/) {
+        in_services=0
+      }
+      if (in_services == 0) {
+        next
+      }
+      if ($0 ~ /^  [A-Za-z0-9_.-]+:[[:space:]]*$/) {
+        service=$1
+        sub(/:$/, "", service)
+        section=""
+        next
+      }
+      if (service == "") {
+        next
+      }
+      if ($0 ~ /^    volumes:[[:space:]]*$/) {
+        section="volumes"
+        next
+      }
+      if ($0 ~ /^    [A-Za-z0-9_.-]+:[[:space:]]*$/) {
+        section=""
+      }
+      if (section == "volumes" && $0 ~ /^[[:space:]]*-[[:space:]]*/) {
+        value=$0
+        sub(/^[[:space:]]*-[[:space:]]*/, "", value)
+        value=trim(unquote(value))
+        if (value != "") {
+          print service "|" value
+        }
+      }
+    }
+  ' "$compose_file" > "$output_file"
+}
+
+function generate_connect_mounted_volumes_from_compose() {
+  local compose_file="$1"
+  local resources_file="$2"
+  local patch_file="$3"
+  local compose_dir=""
+  local tmp_mounts_file=""
+  local service_name=""
+  local raw_volume=""
+  local parsed_volume=""
+  local source_path=""
+  local target_path=""
+  local source_abs=""
+  local volume_index=0
+  local volume_name=""
+  local secret_name=""
+  local secret_key=""
+  local has_mounts=0
+
+  if [[ ! -f "$compose_file" ]]
+  then
+    return 1
+  fi
+
+  compose_dir="$(cd "$(dirname "$compose_file")" && pwd)"
+  tmp_mounts_file=$(mktemp)
+  collect_service_volume_mounts_from_compose "$compose_file" "$tmp_mounts_file"
+
+  : > "$resources_file"
+  : > "$patch_file"
+
+  while IFS='|' read -r service_name raw_volume
+  do
+    if [[ "$service_name" != "connect" ]]
+    then
+      continue
+    fi
+
+    if ! parsed_volume=$(parse_compose_file_volume_mount "$raw_volume")
+    then
+      continue
+    fi
+
+    source_path="${parsed_volume%%|*}"
+    target_path="${parsed_volume#*|}"
+    source_path=$(echo "$source_path" | envsubst)
+    target_path=$(echo "$target_path" | envsubst)
+
+    if [[ "$source_path" = /* ]]
+    then
+      source_abs="$source_path"
+    else
+      source_abs="$compose_dir/$source_path"
+    fi
+
+    if [[ ! -f "$source_abs" ]]
+    then
+      if [[ -e "$source_abs" ]]
+      then
+        logwarn "⚠️ Compose volume source $source_abs for connect is not a file, skipping"
+      fi
+      continue
+    fi
+
+    volume_index=$((volume_index + 1))
+    volume_name="compose-file-${volume_index}"
+    secret_name="$(sanitize_k8s_name "connect-${volume_name}")"
+    secret_key="$(sanitize_secret_key "$(basename "$target_path")")"
+    append_secret_manifest_from_file "$resources_file" "$secret_name" "$source_abs" "$secret_key"
+
+    if [[ "$has_mounts" -eq 0 ]]
+    then
+      cat > "$patch_file" << EOF
+spec:
+  mountedVolumes:
+    volumes:
+EOF
+      has_mounts=1
+    fi
+
+    cat >> "$patch_file" << EOF
+      - name: ${volume_name}
+        secret:
+          secretName: ${secret_name}
+EOF
+  done < "$tmp_mounts_file"
+
+  if [[ "$has_mounts" -eq 1 ]]
+  then
+    cat >> "$patch_file" << EOF
+    volumeMounts:
+EOF
+
+    volume_index=0
+    while IFS='|' read -r service_name raw_volume
+    do
+      if [[ "$service_name" != "connect" ]]
+      then
+        continue
+      fi
+
+      if ! parsed_volume=$(parse_compose_file_volume_mount "$raw_volume")
+      then
+        continue
+      fi
+
+      source_path="${parsed_volume%%|*}"
+      target_path="${parsed_volume#*|}"
+      source_path=$(echo "$source_path" | envsubst)
+
+      if [[ "$source_path" = /* ]]
+      then
+        source_abs="$source_path"
+      else
+        source_abs="$compose_dir/$source_path"
+      fi
+
+      if [[ ! -f "$source_abs" ]]
+      then
+        continue
+      fi
+
+      volume_index=$((volume_index + 1))
+      volume_name="compose-file-${volume_index}"
+      secret_key="$(sanitize_secret_key "$(basename "$target_path")")"
+
+      cat >> "$patch_file" << EOF
+      - name: ${volume_name}
+        mountPath: ${target_path}
+        subPath: ${secret_key}
+        readOnly: true
+EOF
+    done < "$tmp_mounts_file"
+  fi
+
+  rm -f "$tmp_mounts_file"
+
+  if [[ "$has_mounts" -eq 1 ]]
+  then
+    return 0
+  fi
+
+  rm -f "$resources_file" "$patch_file"
+  return 1
+}
+
 function generate_extra_pods_from_compose_override() {
   local compose_file="$1"
   local output_file="$2"
@@ -198,14 +453,17 @@ function generate_extra_pods_from_compose_override() {
   local ports_list=""
   local entrypoint_list=""
   local command_list=""
+  local volumes_list=""
   local env_items=()
   local port_items=()
   local entrypoint_items=()
   local command_items=()
+  local volume_items=()
   local env_item=""
   local port_item=""
   local entrypoint_item=""
   local command_item=""
+  local volume_item=""
   local env_key=""
   local env_value=""
   local escaped_value=""
@@ -222,6 +480,18 @@ function generate_extra_pods_from_compose_override() {
   local image_size_gb=0
   local tmp_image_tar=""
   local image_load_log=""
+  local parsed_volume=""
+  local source_path=""
+  local source_abs=""
+  local target_path=""
+  local volume_index=0
+  local volume_name=""
+  local secret_name=""
+  local secret_key=""
+  local volume_names=()
+  local volume_secret_names=()
+  local volume_mount_paths=()
+  local volume_secret_keys=()
 
   if [[ ! -f "$compose_file" ]]
   then
@@ -273,7 +543,11 @@ function generate_extra_pods_from_compose_override() {
         for (i = 1; i <= command_count; i++) {
           command_joined = command_joined (i > 1 ? ";" : "") commands[i]
         }
-        print service "|" image "|" build_context "|" platform "|" env_joined "|" ports_joined "|" entrypoint_joined "|" command_joined
+        volumes_joined=""
+        for (i = 1; i <= volumes_count; i++) {
+          volumes_joined = volumes_joined (i > 1 ? ";" : "") volumes[i]
+        }
+        print service "|" image "|" build_context "|" platform "|" env_joined "|" ports_joined "|" entrypoint_joined "|" command_joined "|" volumes_joined
       }
       service=""
       image=""
@@ -284,13 +558,15 @@ function generate_extra_pods_from_compose_override() {
       ports_count=0
       entrypoint_count=0
       command_count=0
+      volumes_count=0
       delete envs
       delete ports
       delete entrypoints
       delete commands
+      delete volumes
     }
 
-    BEGIN { in_services=0; service=""; image=""; platform=""; build_context=""; section=""; env_count=0; ports_count=0; entrypoint_count=0; command_count=0 }
+    BEGIN { in_services=0; service=""; image=""; platform=""; build_context=""; section=""; env_count=0; ports_count=0; entrypoint_count=0; command_count=0; volumes_count=0 }
     /^services:[[:space:]]*$/ { in_services=1; next }
     {
       if (in_services == 1 && $0 ~ /^[^[:space:]]/) {
@@ -342,6 +618,10 @@ function generate_extra_pods_from_compose_override() {
       }
       if ($0 ~ /^    ports:[[:space:]]*$/) {
         section="ports"
+        next
+      }
+      if ($0 ~ /^    volumes:[[:space:]]*$/) {
+        section="volumes"
         next
       }
       if ($0 ~ /^    entrypoint:[[:space:]]*$/) {
@@ -424,6 +704,18 @@ function generate_extra_pods_from_compose_override() {
         }
       }
 
+      if (section == "volumes") {
+        if ($0 ~ /^      -[[:space:]]*/) {
+          v=$0
+          sub(/^      -[[:space:]]*/, "", v)
+          v=trim(unquote(v))
+          if (v != "") {
+            volumes[++volumes_count]=v
+          }
+          next
+        }
+      }
+
       if (section == "entrypoint") {
         if ($0 ~ /^      -[[:space:]]*/) {
           e=$0
@@ -470,7 +762,7 @@ function generate_extra_pods_from_compose_override() {
   }
 
   : > "$output_file"
-  while IFS='|' read -r service_name image build_context platform env_list ports_list entrypoint_list command_list
+  while IFS='|' read -r service_name image build_context platform env_list ports_list entrypoint_list command_list volumes_list
   do
     if [[ -z "$service_name" ]]
     then
@@ -487,6 +779,10 @@ function generate_extra_pods_from_compose_override() {
     container_name="${pod_name}"
 
     image_pull_policy="IfNotPresent"
+    volume_names=()
+    volume_secret_names=()
+    volume_mount_paths=()
+    volume_secret_keys=()
 
     if [[ -n "$image" ]]
     then
@@ -555,6 +851,50 @@ function generate_extra_pods_from_compose_override() {
       continue
     fi
 
+    if [[ -n "$volumes_list" ]]
+    then
+      volume_index=0
+      IFS=';' read -r -a volume_items <<< "$volumes_list"
+      for volume_item in "${volume_items[@]}"
+      do
+        if ! parsed_volume=$(parse_compose_file_volume_mount "$volume_item")
+        then
+          continue
+        fi
+
+        source_path="${parsed_volume%%|*}"
+        target_path="${parsed_volume#*|}"
+        source_path=$(echo "$source_path" | envsubst)
+        target_path=$(echo "$target_path" | envsubst)
+
+        if [[ "$source_path" = /* ]]
+        then
+          source_abs="$source_path"
+        else
+          source_abs="$compose_dir/$source_path"
+        fi
+
+        if [[ ! -f "$source_abs" ]]
+        then
+          if [[ -e "$source_abs" ]]
+          then
+            logwarn "⚠️ Compose volume source $source_abs for service $service_name is not a file, skipping"
+          fi
+          continue
+        fi
+
+        volume_index=$((volume_index + 1))
+        volume_name="compose-file-${volume_index}"
+        secret_name="$(sanitize_k8s_name "${pod_name}-${volume_name}")"
+        secret_key="$(sanitize_secret_key "$(basename "$target_path")")"
+        append_secret_manifest_from_file "$output_file" "$secret_name" "$source_abs" "$secret_key"
+        volume_names+=("$volume_name")
+        volume_secret_names+=("$secret_name")
+        volume_mount_paths+=("$target_path")
+        volume_secret_keys+=("$secret_key")
+      done
+    fi
+
     if [[ -s "$output_file" ]]
     then
       echo "---" >> "$output_file"
@@ -574,6 +914,20 @@ spec:
       image: ${image}
       imagePullPolicy: ${image_pull_policy}
 EOF
+
+    if [[ "${#volume_names[@]}" -gt 0 ]]
+    then
+      echo "      volumeMounts:" >> "$output_file"
+      for volume_index in "${!volume_names[@]}"
+      do
+        cat >> "$output_file" << EOF
+        - name: ${volume_names[$volume_index]}
+          mountPath: ${volume_mount_paths[$volume_index]}
+          subPath: ${volume_secret_keys[$volume_index]}
+          readOnly: true
+EOF
+      done
+    fi
 
     if [[ -n "$env_list" ]]
     then
@@ -674,6 +1028,19 @@ EOF
     then
       parsed_ports=("8020" "9000" "50070" "9870")
       has_any_port=1
+    fi
+
+    if [[ "${#volume_names[@]}" -gt 0 ]]
+    then
+      echo "  volumes:" >> "$output_file"
+      for volume_index in "${!volume_names[@]}"
+      do
+        cat >> "$output_file" << EOF
+    - name: ${volume_names[$volume_index]}
+      secret:
+        secretName: ${volume_secret_names[$volume_index]}
+EOF
+      done
     fi
 
     if [[ "$has_any_port" -eq 1 ]]
@@ -1184,6 +1551,8 @@ CONNECTOR_ZIP_SERVER_PID=""
 EXTRA_PODS_FILE=""
 CFK_MANIFEST_FILE=""
 K3D_CONFIG_FILE=""
+CONNECT_MOUNT_RESOURCES_FILE=""
+CONNECT_MOUNT_PATCH_FILE=""
 
 function reset_cfk_namespace_state() {
   local namespace="confluent"
@@ -1550,6 +1919,17 @@ fi
 
 if [[ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]]
 then
+  CONNECT_MOUNT_RESOURCES_FILE=$(mktemp)
+  CONNECT_MOUNT_PATCH_FILE=$(mktemp)
+  if ! generate_connect_mounted_volumes_from_compose "${DOCKER_COMPOSE_FILE_OVERRIDE}" "${CONNECT_MOUNT_RESOURCES_FILE}" "${CONNECT_MOUNT_PATCH_FILE}"
+  then
+    rm -f "${CONNECT_MOUNT_RESOURCES_FILE}" "${CONNECT_MOUNT_PATCH_FILE}"
+    CONNECT_MOUNT_RESOURCES_FILE=""
+    CONNECT_MOUNT_PATCH_FILE=""
+  else
+    log_generated_yaml_file "Dynamic Connect mounted volumes patch generated:" "${CONNECT_MOUNT_PATCH_FILE}"
+  fi
+
   EXTRA_PODS_FILE=$(mktemp)
   if ! generate_extra_pods_from_compose_override "${DOCKER_COMPOSE_FILE_OVERRIDE}" "${EXTRA_PODS_FILE}"
   then
@@ -1581,10 +1961,40 @@ then
 fi
 kubectl apply -f "$CFK_MANIFEST_FILE"
 
+if [[ -n "$CONNECT_MOUNT_RESOURCES_FILE" ]] && [[ -s "$CONNECT_MOUNT_RESOURCES_FILE" ]]
+then
+  log "Deploy file-backed Secrets from DOCKER_COMPOSE_FILE_OVERRIDE for Connect mounts"
+  kubectl -n confluent apply -f "$CONNECT_MOUNT_RESOURCES_FILE"
+fi
+
 if [[ -n "$EXTRA_PODS_FILE" ]] && [[ -s "$EXTRA_PODS_FILE" ]]
 then
   log "Deploy extra pods from DOCKER_COMPOSE_FILE_OVERRIDE (excluding connect)"
   kubectl -n confluent apply -f "$EXTRA_PODS_FILE"
+fi
+
+patched_connect_spec=0
+
+if [[ -n "$CONNECT_MOUNT_PATCH_FILE" ]] && [[ -s "$CONNECT_MOUNT_PATCH_FILE" ]]
+then
+  log "Patch Connect mounted volumes from compose file mounts"
+  set +e
+  for _ in {1..30}
+  do
+    kubectl -n confluent patch connect connect --type merge --patch-file "$CONNECT_MOUNT_PATCH_FILE" > /dev/null 2>&1
+    if [[ $? -eq 0 ]]
+    then
+      patched_connect_spec=1
+      break
+    fi
+    sleep 2
+  done
+  if [[ "$patched_connect_spec" -ne 1 ]]
+  then
+    logerror "❌ Could not patch connect/connect mounted volumes in CFK"
+    exit 1
+  fi
+  set -e
 fi
 
 if [[ -n "$CONNECT_BUILD_PATCH_FILE" ]] && [[ -s "$CONNECT_BUILD_PATCH_FILE" ]]
@@ -1608,11 +2018,14 @@ then
     exit 1
   fi
   set -e
+  patched_connect_spec=1
+fi
 
-  # The Connect CR may have already scheduled a pod before the build patch was
-  # processed.  Force-delete connect-0 so CFK recreates it from the updated
-  # spec, which now includes the on-demand build init container.
-  log "🔄 Restarting connect-0 to ensure on-demand build spec takes effect"
+if [[ "$patched_connect_spec" -eq 1 ]]
+then
+  # The Connect CR may have already scheduled a pod before the patches were
+  # processed. Force-delete connect-0 so CFK recreates it from the updated spec.
+  log "🔄 Restarting connect-0 to ensure patched Connect spec takes effect"
   kubectl -n confluent delete pod connect-0 --ignore-not-found=true >/dev/null 2>&1 || true
 fi
 
@@ -1679,6 +2092,14 @@ cleanup() {
   if [ -n "$CFK_MANIFEST_FILE" ]
   then
     rm -f "$CFK_MANIFEST_FILE" >/dev/null 2>&1 || true
+  fi
+  if [ -n "$CONNECT_MOUNT_RESOURCES_FILE" ]
+  then
+    rm -f "$CONNECT_MOUNT_RESOURCES_FILE" >/dev/null 2>&1 || true
+  fi
+  if [ -n "$CONNECT_MOUNT_PATCH_FILE" ]
+  then
+    rm -f "$CONNECT_MOUNT_PATCH_FILE" >/dev/null 2>&1 || true
   fi
   if [ -n "$K3D_CONFIG_FILE" ]
   then
