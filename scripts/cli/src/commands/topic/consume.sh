@@ -150,6 +150,49 @@ get_topic_message_count() {
   playground topic get-number-records -t "$topic_name" | tail -1
 }
 
+TOPIC_NOT_FOUND_RETRY_SECONDS=30
+
+get_topic_message_count_with_retry() {
+  local topic_name="$1"
+  local retry_seconds="$2"
+  local start_time=""
+  local current_time=""
+  local elapsed_time=""
+  local nb_messages=""
+
+  if [[ -z "$retry_seconds" ]]
+  then
+    retry_seconds=0
+  fi
+
+  start_time=$(date +%s)
+  while true
+  do
+    nb_messages=$(get_topic_message_count "$topic_name")
+
+    if [[ $nb_messages =~ ^[0-9]+$ ]]
+    then
+      echo "$nb_messages"
+      return 0
+    fi
+
+    if [[ "$nb_messages" == *"does not exist"* ]]
+    then
+      current_time=$(date +%s)
+      elapsed_time=$((current_time - start_time))
+      if [ $elapsed_time -lt $retry_seconds ]
+      then
+        logwarn "❌ topic $topic_name does not exist, retrying in 1 second (elapsed time: $elapsed_time seconds), waiting max for $retry_seconds seconds" >&2
+        sleep 1
+        continue
+      fi
+    fi
+
+    echo "$nb_messages"
+    return 0
+  done
+}
+
 if [[ -n "$timeout" ]] && [ "$timeout" != "60" ]
 then
   if [[ ! -n "$min_expected_messages" ]] || [ "$min_expected_messages" == "0" ]
@@ -205,15 +248,29 @@ do
     if [[ -n "$min_expected_messages" ]] && [ "$min_expected_messages" != "0" ]
     then 
       start_time=$(date +%s)
+      topic_missing_start_time=""
 
       while true; do
         nb_messages=$(playground topic get-number-records -t $topic | tail -1)
         
         if [[ ! $nb_messages =~ ^[0-9]+$ ]]
         then
-          echo $nb_messages | grep "does not exist" > /dev/null 2>&1
-          if [ $? == 0 ]
+          if [[ "$nb_messages" == *"does not exist"* ]]
           then
+            if [[ -z "$topic_missing_start_time" ]]
+            then
+              topic_missing_start_time=$(date +%s)
+            fi
+
+            current_time=$(date +%s)
+            topic_missing_elapsed=$((current_time - topic_missing_start_time))
+            if [ $topic_missing_elapsed -lt $TOPIC_NOT_FOUND_RETRY_SECONDS ]
+            then
+              logwarn "❌ topic $topic does not exist, retrying in 1 second (elapsed time: $topic_missing_elapsed seconds), waiting max for $TOPIC_NOT_FOUND_RETRY_SECONDS seconds" >&2
+              sleep 1
+              continue
+            fi
+
             logwarn "❌ topic $topic does not exist !"
           else
             logwarn "❌ problem while getting number of messages: $nb_messages"
@@ -238,7 +295,7 @@ do
         sleep 1
       done
     else
-      nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+      nb_messages=$(get_topic_message_count_with_retry "$topic" "$TOPIC_NOT_FOUND_RETRY_SECONDS")
 
       if [[ ! $nb_messages =~ ^[0-9]+$ ]]
       then
