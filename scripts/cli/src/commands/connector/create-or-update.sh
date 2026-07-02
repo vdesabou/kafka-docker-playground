@@ -477,7 +477,10 @@ fi
 
 if [[ "$is_cfk" -eq 1 ]] && [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
 then
-    kubectl -n confluent get connector "$connector" -o yaml
+    if [ -z "$GITHUB_RUN_NUMBER" ]
+    then
+        kubectl -n confluent get connector "$connector" -o yaml
+    fi
     if [[ -n "$wait_for_zero_lag" ]]
     then
         logwarn "⏭️ --wait-for-zero-lag is not supported with CFK Connector CRD path"
