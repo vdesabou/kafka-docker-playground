@@ -103,6 +103,7 @@ function import_image_into_k3d() {
   local timeout_seconds="${K3D_IMAGE_IMPORT_TIMEOUT_SECONDS:-600}"
   local import_log=""
   local import_ret=1
+  local k3d_server_node=""
 
   if [[ -z "$image_alias" ]]
   then
@@ -112,6 +113,16 @@ function import_image_into_k3d() {
   if ! docker image inspect "$image" >/dev/null 2>&1
   then
     return 1
+  fi
+
+  k3d_server_node="k3d-${K3D_CLUSTER_NAME}-server-0"
+  if k3d node list 2>/dev/null | awk '{print $1}' | grep -qx "$k3d_server_node"
+  then
+    if k3d node exec "$k3d_server_node" -- sh -c "ctr -n k8s.io images list -q 2>/dev/null | grep -Fx -- \"$image\" >/dev/null || ctr -n k8s.io images list -q 2>/dev/null | grep -Fx -- \"docker.io/$image\" >/dev/null" >/dev/null 2>&1
+    then
+      log "⏭️ Image $image already present in k3d cluster $K3D_CLUSTER_NAME, skipping import"
+      return 0
+    fi
   fi
 
   import_log="/tmp/k3d-image-import-${image_alias}.log"
@@ -492,6 +503,9 @@ function generate_extra_pods_from_compose_override() {
   local volume_secret_names=()
   local volume_mount_paths=()
   local volume_secret_keys=()
+  local file_size_bytes=0
+  local bake_tmp_dir=""
+  local bake_filename=""
 
   if [[ ! -f "$compose_file" ]]
   then
@@ -880,6 +894,31 @@ function generate_extra_pods_from_compose_override() {
           then
             logwarn "⚠️ Compose volume source $source_abs for service $service_name is not a file, skipping"
           fi
+          continue
+        fi
+
+        # K8s API server rejects objects > 3 MB. A 1 MB raw file base64-encodes to ~1.33 MB,
+        # leaving comfortable headroom. Files larger than 1 MB are baked into the image instead.
+        file_size_bytes=$(wc -c < "$source_abs" 2>/dev/null || echo 0)
+        if [[ "$file_size_bytes" -gt 1048576 ]]
+        then
+          log "📦 Volume file $source_abs is $(( file_size_bytes / 1024 ))KB — too large for a Kubernetes Secret; baking into image $image instead"
+          bake_tmp_dir=$(mktemp -d)
+          bake_filename="$(basename "$source_abs")"
+          cp "$source_abs" "${bake_tmp_dir}/"
+          printf 'FROM %s\nCOPY %s %s\n' "$image" "$bake_filename" "$target_path" > "${bake_tmp_dir}/Dockerfile"
+          if docker build -t "$image" "${bake_tmp_dir}" > /tmp/docker-bake-${pod_name}.log 2>&1
+          then
+            log "✅ Baked $bake_filename into image $image at $target_path"
+            if ! import_image_into_k3d "$image" "$pod_name"
+            then
+              logwarn "⚠️ Could not re-import extended image $image into k3d; pod may not start correctly"
+            fi
+          else
+            logwarn "⚠️ Could not bake $source_abs into image $image (see /tmp/docker-bake-${pod_name}.log); volume mount will be skipped"
+          fi
+          rm -rf "${bake_tmp_dir}"
+          # File is now in the image; skip Secret creation and volume mount
           continue
         fi
 
