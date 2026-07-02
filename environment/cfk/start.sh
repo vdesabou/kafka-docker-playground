@@ -16,6 +16,10 @@ verify_installed "envsubst"
 verify_installed "zip"
 
 : "${K3D_CLUSTER_NAME:=playground-cfk}"
+: "${K3D_REGISTRY_CACHE_ENABLED:=0}"
+: "${K3D_REGISTRY_CACHE_NAME:=playground-registry}"
+: "${K3D_REGISTRY_CACHE_PORT:=5111}"
+: "${K3D_REGISTRY_CACHE_IMAGE:=ligfx/k3d-registry-dockerd:latest}"
 
 : "${CP_SERVER_IMAGE:=confluentinc/cp-server}"
 : "${CP_SERVER_TAG:=8.3.0}"
@@ -152,6 +156,28 @@ function wait_for_kubernetes_apiserver() {
   done
 
   return 1
+}
+
+function generate_k3d_config_with_registry_cache() {
+  local output_file="$1"
+
+  cat > "$output_file" << EOF
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: ${K3D_CLUSTER_NAME}
+servers: 1
+agents: 0
+registries:
+  create:
+    name: ${K3D_REGISTRY_CACHE_NAME}
+    hostPort: "${K3D_REGISTRY_CACHE_PORT}"
+    image: ${K3D_REGISTRY_CACHE_IMAGE}
+    proxy:
+      remoteURL: "*"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+EOF
 }
 
 function generate_extra_pods_from_compose_override() {
@@ -1157,6 +1183,7 @@ CONNECTOR_ZIP_DIR=""
 CONNECTOR_ZIP_SERVER_PID=""
 EXTRA_PODS_FILE=""
 CFK_MANIFEST_FILE=""
+K3D_CONFIG_FILE=""
 
 function reset_cfk_namespace_state() {
   local namespace="confluent"
@@ -1436,7 +1463,15 @@ then
   k3d cluster start "$K3D_CLUSTER_NAME" >/dev/null 2>&1 || true
 else
   log "🚀 Creating k3d cluster $K3D_CLUSTER_NAME"
-  k3d cluster create "$K3D_CLUSTER_NAME" --servers 1 --agents 0 --wait
+  if [[ "$K3D_REGISTRY_CACHE_ENABLED" == "1" ]]
+  then
+    K3D_CONFIG_FILE=$(mktemp)
+    generate_k3d_config_with_registry_cache "$K3D_CONFIG_FILE"
+    log "🗂️ Using registry cache for k3d cluster creation (${K3D_REGISTRY_CACHE_NAME}:${K3D_REGISTRY_CACHE_PORT})"
+    k3d cluster create --config "$K3D_CONFIG_FILE" --wait
+  else
+    k3d cluster create "$K3D_CLUSTER_NAME" --servers 1 --agents 0 --wait
+  fi
 fi
 
 kubectl config use-context "k3d-${K3D_CLUSTER_NAME}" >/dev/null
@@ -1644,6 +1679,10 @@ cleanup() {
   if [ -n "$CFK_MANIFEST_FILE" ]
   then
     rm -f "$CFK_MANIFEST_FILE" >/dev/null 2>&1 || true
+  fi
+  if [ -n "$K3D_CONFIG_FILE" ]
+  then
+    rm -f "$K3D_CONFIG_FILE" >/dev/null 2>&1 || true
   fi
 }
 trap cleanup EXIT
