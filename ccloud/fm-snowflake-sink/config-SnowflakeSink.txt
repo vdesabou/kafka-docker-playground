@@ -499,6 +499,42 @@ If set to true, each connector task can consume from up to 2x topic partitions d
 	 - Importance: LOW
 	 - Required: false
 
+🔘 snowflake.streaming.enable.handling.infinity.values
+
+Whether to enable correct handling for infinity and negative infinity values in float/double fields when using Snowpipe Streaming. When enabled, infinity values will be correctly ingested as 'Inf' or '-Inf'. When disabled, infinity values will be treated as 'NaN' for backward compatibility. This configuration is only applicable when snowflake.ingestion.method is set to SNOWPIPE_STREAMING.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 enable.streaming.channel.offset.migration
+
+This config is used to enable/disable streaming channel offset migration logic.
+
+	 - Type: STRING
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.streaming.channel.name.include.connector.name
+
+If enabled, the Snowflake Streaming channel names are prefixed with the connector name. This config enables/disables usage of channel names that were used solely in Kafka Connector versions 2.1.0 and 2.1.1 and is intended for users that previously used these versions and did not update the connector since. IMPORTANT: Enabling this config in any other case will result in data duplication. Cannot be used together with `enable.streaming.channel.offset.migration=true`. This configuration is only applicable when snowflake.ingestion.method is set to SNOWPIPE_STREAMING.
+
+	 - Type: STRING
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.streaming.max.client.lag
+
+Decides how often the buffer in the Ingest SDK will be flushed. The default value is 30 seconds. Setting this value too low may degrade performance, while setting it too high may increase latency. This configuration is only applicable when snowflake.ingestion.method is set to SNOWPIPE_STREAMING.
+
+	 - Type: INT
+	 - Default: 30
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 Error handling
 ==========================
