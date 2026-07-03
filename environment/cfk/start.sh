@@ -125,6 +125,44 @@ function import_image_into_k3d() {
   local image_repo_first_segment=""
   local normalized_image=""
 
+  normalize_image_ref_for_k8s() {
+    local raw_image="$1"
+    local image_name_no_tag=""
+    local image_repo_part=""
+    local image_repo_first_segment=""
+
+    if [[ "$raw_image" == *@* ]] || [[ "${raw_image##*/}" == *:* ]]
+    then
+      :
+    else
+      raw_image="${raw_image}:latest"
+    fi
+
+    image_name_no_tag="${raw_image%%@*}"
+    image_name_no_tag="${image_name_no_tag%%:*}"
+    image_repo_part="${image_name_no_tag%%/*}"
+    image_repo_first_segment="$image_repo_part"
+
+    if [[ "$raw_image" != */* ]]
+    then
+      echo "docker.io/library/$raw_image"
+      return
+    fi
+
+    if [[ "$image_repo_first_segment" != *.* ]] && [[ "$image_repo_first_segment" != *:* ]] && [[ "$image_repo_first_segment" != "localhost" ]]
+    then
+      echo "docker.io/$raw_image"
+      return
+    fi
+
+    echo "$raw_image"
+  }
+
+  image_present_in_k3d_node() {
+    local image_ref="$1"
+    docker exec "$k3d_server_node" sh -lc "ctr -n k8s.io images list -q 2>/dev/null | grep -Fx -- \"$image_ref\" >/dev/null || k3s ctr images list -q 2>/dev/null | grep -Fx -- \"$image_ref\" >/dev/null" >/dev/null 2>&1
+  }
+
   import_image_into_server_node_direct() {
     local image_to_import="$1"
     local server_node="$2"
@@ -144,6 +182,8 @@ function import_image_into_k3d() {
     image_to_import="${image_to_import}:latest"
   fi
 
+  normalized_image="$(normalize_image_ref_for_k8s "$image_to_import")"
+
   if ! docker image inspect "$image_to_import" >/dev/null 2>&1
   then
     return 1
@@ -152,24 +192,7 @@ function import_image_into_k3d() {
   k3d_server_node="k3d-${K3D_CLUSTER_NAME}-server-0"
   if [[ "$force_import" -ne 1 ]] && docker ps --format '{{.Names}}' | grep -qx "$k3d_server_node"
   then
-    image_name_no_tag="${image_to_import%%@*}"
-    image_name_no_tag="${image_name_no_tag%%:*}"
-    image_repo_part="${image_name_no_tag%%/*}"
-    image_repo_first_segment="$image_repo_part"
-    normalized_image="$image_to_import"
-
-    # Align with Kubernetes default image normalization rules.
-    # - no slash: docker.io/library/<image>
-    # - one slash and no explicit registry host: docker.io/<image>
-    if [[ "$image_to_import" != */* ]]
-    then
-      normalized_image="docker.io/library/$image_to_import"
-    elif [[ "$image_repo_first_segment" != *.* ]] && [[ "$image_repo_first_segment" != *:* ]] && [[ "$image_repo_first_segment" != "localhost" ]]
-    then
-      normalized_image="docker.io/$image_to_import"
-    fi
-
-    if docker exec "$k3d_server_node" sh -lc "ctr -n k8s.io images list -q 2>/dev/null | grep -Fx -- \"$normalized_image\" >/dev/null || k3s ctr images list -q 2>/dev/null | grep -Fx -- \"$normalized_image\" >/dev/null" >/dev/null 2>&1
+    if image_present_in_k3d_node "$normalized_image"
     then
       log "⏭️ Image $normalized_image already present in k3d cluster $K3D_CLUSTER_NAME, skipping import"
       return 0
@@ -187,8 +210,14 @@ function import_image_into_k3d() {
 
   if [[ "$import_ret" -eq 0 ]]
   then
-    log "✅ Imported image $image_to_import into k3d"
-    return 0
+    if image_present_in_k3d_node "$normalized_image" || image_present_in_k3d_node "$image_to_import"
+    then
+      log "✅ Imported image $image_to_import into k3d"
+      return 0
+    fi
+
+    logwarn "⚠️ k3d import reported success but image '$normalized_image' is not present in node runtime"
+    import_ret=1
   fi
 
   logwarn "⚠️ Retrying image import using direct server-node stream (fallback mode)"
@@ -199,8 +228,14 @@ function import_image_into_k3d() {
 
   if [[ "$import_ret" -eq 0 ]]
   then
-    log "✅ Imported image $image_to_import into k3d via fallback mode"
-    return 0
+    if image_present_in_k3d_node "$normalized_image" || image_present_in_k3d_node "$image_to_import"
+    then
+      log "✅ Imported image $image_to_import into k3d via fallback mode"
+      return 0
+    fi
+
+    logwarn "⚠️ Fallback import reported success but image '$normalized_image' is not present in node runtime"
+    import_ret=1
   fi
 
   if [[ "$import_ret" -eq 124 ]]
@@ -968,7 +1003,13 @@ function generate_extra_pods_from_compose_override() {
       then
         log "📦 Pulling image $image for platform $platform for service $service_name"
         docker pull --platform "$platform" "$image"
-        image_pull_policy="Never"
+        if import_image_into_k3d "$image" "$pod_name"
+        then
+          image_pull_policy="Never"
+        else
+          image_pull_policy="IfNotPresent"
+          logwarn "⚠️ Could not import platform image $image into k3d; using imagePullPolicy=IfNotPresent"
+        fi
       else
         # If the image is local, import it into k3d and force local usage.
         # Otherwise keep IfNotPresent so Kubernetes can pull it from registry.
