@@ -58,6 +58,9 @@ export CP_REST_PROXY_IMAGE CP_REST_PROXY_TAG
 export CP_CONTROL_CENTER_IMAGE CP_CONTROL_CENTER_TAG
 export CP_INIT_IMAGE CP_INIT_TAG
 
+: "${CFK_TMPFS_DEFAULT_SIZE_LIMIT:=256Mi}"
+: "${CFK_TMPFS_SHM_SIZE_LIMIT:=1Gi}"
+
 function log_generated_yaml_file() {
   local label="$1"
   local file_path="$2"
@@ -614,7 +617,7 @@ function generate_extra_pods_from_compose_override() {
   local run_as_user=""
   local run_as_group=""
   local run_as_non_root=""
-  local user_value=""
+  local tmpfs_list=""
   local env_list=""
   local ports_list=""
   local entrypoint_list=""
@@ -658,6 +661,15 @@ function generate_extra_pods_from_compose_override() {
   local volume_secret_names=()
   local volume_mount_paths=()
   local volume_secret_keys=()
+  local tmpfs_items=()
+  local tmpfs_item=""
+  local tmpfs_path=""
+  local tmpfs_index=0
+  local tmpfs_volume_name=""
+  local tmpfs_size_limit=""
+  local tmpfs_volume_names=()
+  local tmpfs_mount_paths=()
+  local tmpfs_size_limits=()
   local file_size_bytes=0
   local bake_tmp_dir=""
   local bake_filename=""
@@ -688,6 +700,8 @@ function generate_extra_pods_from_compose_override() {
               commands[++command_count] = item
             } else if (target == "entrypoint") {
               entrypoints[++entrypoint_count] = item
+            } else if (target == "tmpfs") {
+              tmpfs[++tmpfs_count] = item
             }
           }
         }
@@ -717,11 +731,15 @@ function generate_extra_pods_from_compose_override() {
         for (i = 1; i <= volumes_count; i++) {
           volumes_joined = volumes_joined (i > 1 ? ";" : "") volumes[i]
         }
+        tmpfs_joined=""
+        for (i = 1; i <= tmpfs_count; i++) {
+          tmpfs_joined = tmpfs_joined (i > 1 ? ";" : "") tmpfs[i]
+        }
         profiles_joined=""
         for (i = 1; i <= profiles_count; i++) {
           profiles_joined = profiles_joined (i > 1 ? ";" : "") prof[i]
         }
-        print service "|" image "|" build_context "|" platform "|" user_value "|" env_joined "|" ports_joined "|" entrypoint_joined "|" command_joined "|" volumes_joined "|" profiles_joined
+        print service "|" image "|" build_context "|" platform "|" user_value "|" tmpfs_joined "|" env_joined "|" ports_joined "|" entrypoint_joined "|" command_joined "|" volumes_joined "|" profiles_joined
       }
       service=""
       image=""
@@ -734,16 +752,18 @@ function generate_extra_pods_from_compose_override() {
       entrypoint_count=0
       command_count=0
       volumes_count=0
+      tmpfs_count=0
       profiles_count=0
       delete envs
       delete ports
       delete entrypoints
       delete commands
       delete volumes
+      delete tmpfs
       delete prof
     }
 
-    BEGIN { in_services=0; service=""; image=""; platform=""; user_value=""; build_context=""; section=""; env_count=0; ports_count=0; entrypoint_count=0; command_count=0; volumes_count=0; profiles_count=0 }
+    BEGIN { in_services=0; service=""; image=""; platform=""; user_value=""; build_context=""; section=""; env_count=0; ports_count=0; entrypoint_count=0; command_count=0; volumes_count=0; tmpfs_count=0; profiles_count=0 }
     /^services:[[:space:]]*$/ { in_services=1; next }
     {
       if (in_services == 1 && $0 ~ /^[^[:space:]]/) {
@@ -806,6 +826,22 @@ function generate_extra_pods_from_compose_override() {
       }
       if ($0 ~ /^    volumes:[[:space:]]*$/) {
         section="volumes"
+        next
+      }
+      if ($0 ~ /^    tmpfs:[[:space:]]*$/) {
+        section="tmpfs"
+        next
+      }
+      if ($0 ~ /^    tmpfs:[[:space:]]*[^[:space:]].*$/) {
+        tf=$0
+        sub(/^    tmpfs:[[:space:]]*/, "", tf)
+        tf=trim(tf)
+        if (tf != "") {
+          if (!append_list_items(tf, "tmpfs")) {
+            tmpfs[++tmpfs_count]=trim(unquote(tf))
+          }
+        }
+        section=""
         next
       }
       if ($0 ~ /^    entrypoint:[[:space:]]*$/) {
@@ -904,6 +940,18 @@ function generate_extra_pods_from_compose_override() {
         }
       }
 
+      if (section == "tmpfs") {
+        if ($0 ~ /^      -[[:space:]]*/) {
+          t=$0
+          sub(/^      -[[:space:]]*/, "", t)
+          t=trim(unquote(t))
+          if (t != "") {
+            tmpfs[++tmpfs_count]=t
+          }
+          next
+        }
+      }
+
       if (section == "entrypoint") {
         if ($0 ~ /^      -[[:space:]]*/) {
           e=$0
@@ -962,7 +1010,7 @@ function generate_extra_pods_from_compose_override() {
   }
 
   : > "$output_file"
-  while IFS='|' read -r service_name image build_context platform compose_user env_list ports_list entrypoint_list command_list volumes_list profiles_list
+  while IFS='|' read -r service_name image build_context platform compose_user tmpfs_list env_list ports_list entrypoint_list command_list volumes_list profiles_list
   do
     if [[ -z "$service_name" ]]
     then
@@ -1011,6 +1059,9 @@ function generate_extra_pods_from_compose_override() {
     volume_secret_names=()
     volume_mount_paths=()
     volume_secret_keys=()
+    tmpfs_volume_names=()
+    tmpfs_mount_paths=()
+    tmpfs_size_limits=()
 
     if [[ -n "$image" ]]
     then
@@ -1146,6 +1197,41 @@ function generate_extra_pods_from_compose_override() {
       done
     fi
 
+    if [[ -n "$tmpfs_list" ]]
+    then
+      tmpfs_index=0
+      IFS=';' read -r -a tmpfs_items <<< "$tmpfs_list"
+      for tmpfs_item in "${tmpfs_items[@]}"
+      do
+        tmpfs_item=$(echo "$tmpfs_item" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
+        if [[ -z "$tmpfs_item" ]]
+        then
+          continue
+        fi
+
+        tmpfs_path="${tmpfs_item%%:*}"
+        tmpfs_path=$(echo "$tmpfs_path" | envsubst)
+        tmpfs_path=$(echo "$tmpfs_path" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
+        if [[ -z "$tmpfs_path" ]]
+        then
+          continue
+        fi
+
+        if [[ "$tmpfs_path" == "/dev/shm" ]]
+        then
+          tmpfs_size_limit="${CFK_TMPFS_SHM_SIZE_LIMIT}"
+        else
+          tmpfs_size_limit="${CFK_TMPFS_DEFAULT_SIZE_LIMIT}"
+        fi
+
+        tmpfs_index=$((tmpfs_index + 1))
+        tmpfs_volume_name="compose-tmpfs-${tmpfs_index}"
+        tmpfs_volume_names+=("$tmpfs_volume_name")
+        tmpfs_mount_paths+=("$tmpfs_path")
+        tmpfs_size_limits+=("$tmpfs_size_limit")
+      done
+    fi
+
     # Import the final (possibly baked) image into k3d once, after all volume processing.
     # This ensures k3d always receives the image with all files already baked in.
     if [[ "$deferred_import" -eq 1 ]]
@@ -1214,9 +1300,16 @@ EOF
       fi
     fi
 
-    if [[ "${#volume_names[@]}" -gt 0 ]]
+    if [[ "${#volume_names[@]}" -gt 0 ]] || [[ "${#tmpfs_volume_names[@]}" -gt 0 ]]
     then
       echo "      volumeMounts:" >> "$output_file"
+      for tmpfs_index in "${!tmpfs_volume_names[@]}"
+      do
+        cat >> "$output_file" << EOF
+        - name: ${tmpfs_volume_names[$tmpfs_index]}
+          mountPath: ${tmpfs_mount_paths[$tmpfs_index]}
+EOF
+      done
       for volume_index in "${!volume_names[@]}"
       do
         cat >> "$output_file" << EOF
@@ -1329,9 +1422,18 @@ EOF
       has_any_port=1
     fi
 
-    if [[ "${#volume_names[@]}" -gt 0 ]]
+    if [[ "${#volume_names[@]}" -gt 0 ]] || [[ "${#tmpfs_volume_names[@]}" -gt 0 ]]
     then
       echo "  volumes:" >> "$output_file"
+      for tmpfs_index in "${!tmpfs_volume_names[@]}"
+      do
+        cat >> "$output_file" << EOF
+    - name: ${tmpfs_volume_names[$tmpfs_index]}
+      emptyDir:
+        medium: Memory
+        sizeLimit: ${tmpfs_size_limits[$tmpfs_index]}
+EOF
+      done
       for volume_index in "${!volume_names[@]}"
       do
         cat >> "$output_file" << EOF
