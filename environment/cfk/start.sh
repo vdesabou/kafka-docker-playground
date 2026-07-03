@@ -610,6 +610,11 @@ function generate_extra_pods_from_compose_override() {
   local build_context_abs=""
   local auto_image=""
   local image_pull_policy="IfNotPresent"
+  local compose_user=""
+  local run_as_user=""
+  local run_as_group=""
+  local run_as_non_root=""
+  local user_value=""
   local env_list=""
   local ports_list=""
   local entrypoint_list=""
@@ -716,11 +721,12 @@ function generate_extra_pods_from_compose_override() {
         for (i = 1; i <= profiles_count; i++) {
           profiles_joined = profiles_joined (i > 1 ? ";" : "") prof[i]
         }
-        print service "|" image "|" build_context "|" platform "|" env_joined "|" ports_joined "|" entrypoint_joined "|" command_joined "|" volumes_joined "|" profiles_joined
+        print service "|" image "|" build_context "|" platform "|" user_value "|" env_joined "|" ports_joined "|" entrypoint_joined "|" command_joined "|" volumes_joined "|" profiles_joined
       }
       service=""
       image=""
       platform=""
+      user_value=""
       build_context=""
       section=""
       env_count=0
@@ -737,7 +743,7 @@ function generate_extra_pods_from_compose_override() {
       delete prof
     }
 
-    BEGIN { in_services=0; service=""; image=""; platform=""; build_context=""; section=""; env_count=0; ports_count=0; entrypoint_count=0; command_count=0; volumes_count=0; profiles_count=0 }
+    BEGIN { in_services=0; service=""; image=""; platform=""; user_value=""; build_context=""; section=""; env_count=0; ports_count=0; entrypoint_count=0; command_count=0; volumes_count=0; profiles_count=0 }
     /^services:[[:space:]]*$/ { in_services=1; next }
     {
       if (in_services == 1 && $0 ~ /^[^[:space:]]/) {
@@ -769,6 +775,13 @@ function generate_extra_pods_from_compose_override() {
         platform=$0
         sub(/^    platform:[[:space:]]*/, "", platform)
         platform=trim(unquote(platform))
+        section=""
+        next
+      }
+      if ($0 ~ /^    user:[[:space:]]*/) {
+        user_value=$0
+        sub(/^    user:[[:space:]]*/, "", user_value)
+        user_value=trim(unquote(user_value))
         section=""
         next
       }
@@ -949,7 +962,7 @@ function generate_extra_pods_from_compose_override() {
   }
 
   : > "$output_file"
-  while IFS='|' read -r service_name image build_context platform env_list ports_list entrypoint_list command_list volumes_list profiles_list
+  while IFS='|' read -r service_name image build_context platform compose_user env_list ports_list entrypoint_list command_list volumes_list profiles_list
   do
     if [[ -z "$service_name" ]]
     then
@@ -990,6 +1003,9 @@ function generate_extra_pods_from_compose_override() {
     container_name="${pod_name}"
 
     image_pull_policy="IfNotPresent"
+    run_as_user=""
+    run_as_group=""
+    run_as_non_root=""
     deferred_import=0
     volume_names=()
     volume_secret_names=()
@@ -1160,6 +1176,43 @@ spec:
       image: ${image}
       imagePullPolicy: ${image_pull_policy}
 EOF
+
+    if [[ -n "$compose_user" ]]
+    then
+      compose_user=$(echo "$compose_user" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
+      if [[ "$compose_user" == "root" ]] || [[ "$compose_user" == "0" ]] || [[ "$compose_user" == "0:0" ]]
+      then
+        run_as_user="0"
+        run_as_group="0"
+        run_as_non_root="false"
+      elif [[ "$compose_user" =~ ^([0-9]+):([0-9]+)$ ]]
+      then
+        run_as_user="${BASH_REMATCH[1]}"
+        run_as_group="${BASH_REMATCH[2]}"
+      elif [[ "$compose_user" =~ ^[0-9]+$ ]]
+      then
+        run_as_user="$compose_user"
+      else
+        logwarn "⚠️ Unsupported compose user value '$compose_user' for service $service_name; skipping securityContext mapping"
+      fi
+
+      if [[ -n "$run_as_user" ]] || [[ -n "$run_as_group" ]] || [[ -n "$run_as_non_root" ]]
+      then
+        echo "      securityContext:" >> "$output_file"
+        if [[ -n "$run_as_user" ]]
+        then
+          echo "        runAsUser: ${run_as_user}" >> "$output_file"
+        fi
+        if [[ -n "$run_as_group" ]]
+        then
+          echo "        runAsGroup: ${run_as_group}" >> "$output_file"
+        fi
+        if [[ -n "$run_as_non_root" ]]
+        then
+          echo "        runAsNonRoot: ${run_as_non_root}" >> "$output_file"
+        fi
+      fi
+    fi
 
     if [[ "${#volume_names[@]}" -gt 0 ]]
     then
