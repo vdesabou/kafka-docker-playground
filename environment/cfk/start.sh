@@ -119,6 +119,19 @@ function import_image_into_k3d() {
   local import_log=""
   local import_ret=1
   local k3d_server_node=""
+  local image_name_no_tag=""
+  local image_repo_part=""
+  local image_repo_first_segment=""
+  local normalized_image=""
+
+  import_image_into_server_node_direct() {
+    local image_to_import="$1"
+    local server_node="$2"
+
+    # Fallback path for very large images when k3d tools-container import gets OOM-killed.
+    # Stream straight into the server node's containerd to avoid the intermediate tools container.
+    docker save "$image_to_import" | docker exec -i "$server_node" sh -lc 'ctr -n k8s.io images import - || k3s ctr images import -'
+  }
 
   if [[ -z "$image_alias" ]]
   then
@@ -133,9 +146,26 @@ function import_image_into_k3d() {
   k3d_server_node="k3d-${K3D_CLUSTER_NAME}-server-0"
   if [[ "$force_import" -ne 1 ]] && k3d node list 2>/dev/null | awk '{print $1}' | grep -qx "$k3d_server_node"
   then
-    if k3d node exec "$k3d_server_node" -- sh -c "ctr -n k8s.io images list -q 2>/dev/null | grep -Fx -- \"$image\" >/dev/null || ctr -n k8s.io images list -q 2>/dev/null | grep -Fx -- \"docker.io/$image\" >/dev/null" >/dev/null 2>&1
+    image_name_no_tag="${image%%@*}"
+    image_name_no_tag="${image_name_no_tag%%:*}"
+    image_repo_part="${image_name_no_tag%%/*}"
+    image_repo_first_segment="$image_repo_part"
+    normalized_image="$image"
+
+    # Align with Kubernetes default image normalization rules.
+    # - no slash: docker.io/library/<image>
+    # - one slash and no explicit registry host: docker.io/<image>
+    if [[ "$image" != */* ]]
     then
-      log "⏭️ Image $image already present in k3d cluster $K3D_CLUSTER_NAME, skipping import"
+      normalized_image="docker.io/library/$image"
+    elif [[ "$image_repo_first_segment" != *.* ]] && [[ "$image_repo_first_segment" != *:* ]] && [[ "$image_repo_first_segment" != "localhost" ]]
+    then
+      normalized_image="docker.io/$image"
+    fi
+
+    if k3d node exec "$k3d_server_node" -- sh -c "ctr -n k8s.io images list -q 2>/dev/null | grep -Fx -- \"$normalized_image\" >/dev/null" >/dev/null 2>&1
+    then
+      log "⏭️ Image $normalized_image already present in k3d cluster $K3D_CLUSTER_NAME, skipping import"
       return 0
     fi
   fi
@@ -152,6 +182,18 @@ function import_image_into_k3d() {
   if [[ "$import_ret" -eq 0 ]]
   then
     log "✅ Imported image $image into k3d"
+    return 0
+  fi
+
+  logwarn "⚠️ Retrying image import using direct server-node stream (fallback mode)"
+  set +e
+  import_image_into_server_node_direct "$image" "$k3d_server_node" >> "$import_log" 2>&1
+  import_ret=$?
+  set -e
+
+  if [[ "$import_ret" -eq 0 ]]
+  then
+    log "✅ Imported image $image into k3d via fallback mode"
     return 0
   fi
 
@@ -1967,6 +2009,7 @@ then
 
   python3 -m http.server 18080 --directory "$CONNECTOR_ZIP_DIR" >/tmp/cfk-connector-zip-http.log 2>&1 &
   CONNECTOR_ZIP_SERVER_PID=$!
+  disown "$CONNECTOR_ZIP_SERVER_PID" 2>/dev/null || true
 
   # Fail fast if server did not start or expected zip is not served.
   sleep 1
@@ -2148,10 +2191,22 @@ then
   connect_build_interval=10
   while true
   do
-    connect_plugin_count=$(kubectl -n confluent exec connect-0 -- curl -s http://localhost:8083/connector-plugins 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d))" 2>/dev/null || echo "0")
+    connect_plugin_count_rest=$(kubectl -n confluent exec connect-0 -- curl -fsS --max-time 5 http://localhost:8083/connector-plugins 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d))" 2>/dev/null)
+    connect_plugin_count_status=$(kubectl -n confluent get connect connect -o jsonpath='{.status.connectorPlugins[*].class}' 2>/dev/null | awk '{print NF}')
+    connect_plugin_count="0"
+    connect_plugin_count_source="rest"
+    if [[ "$connect_plugin_count_rest" =~ ^[0-9]+$ ]]
+    then
+      connect_plugin_count="$connect_plugin_count_rest"
+    fi
+    if [[ "$connect_plugin_count" -eq 0 ]] && [[ "$connect_plugin_count_status" =~ ^[0-9]+$ ]] && [[ "$connect_plugin_count_status" -gt 0 ]]
+    then
+      connect_plugin_count="$connect_plugin_count_status"
+      connect_plugin_count_source="status"
+    fi
     if [[ "$connect_plugin_count" =~ ^[0-9]+$ ]] && [[ "$connect_plugin_count" -gt 3 ]]
     then
-      log "✅ Connect REST API reports $connect_plugin_count connector plugins (on-demand build complete)"
+      log "✅ Connect reports $connect_plugin_count connector plugins via $connect_plugin_count_source (on-demand build complete)"
       break
     fi
     connect_build_cur_wait=$(( connect_build_cur_wait + connect_build_interval ))
@@ -2164,7 +2219,7 @@ then
       kubectl -n confluent get connect connect -o jsonpath='{.status}' 2>/dev/null | python3 -m json.tool 2>/dev/null || true
       break
     fi
-    log "  ⌛ Connect REST API plugins=${connect_plugin_count} (waiting for >3), elapsed: ${connect_build_cur_wait}/${connect_build_wait_max}s"
+    log "  ⌛ Connect plugins=${connect_plugin_count} via ${connect_plugin_count_source} (waiting for >3), elapsed: ${connect_build_cur_wait}/${connect_build_wait_max}s"
     sleep "$connect_build_interval"
   done
   set -e
