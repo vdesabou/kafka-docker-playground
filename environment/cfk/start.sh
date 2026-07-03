@@ -113,6 +113,7 @@ function run_with_timeout() {
 
 function import_image_into_k3d() {
   local image="$1"
+  local image_to_import="$image"
   local image_alias="$2"
   local force_import="${3:-0}"
   local timeout_seconds="${K3D_IMAGE_IMPORT_TIMEOUT_SECONDS:-600}"
@@ -138,32 +139,37 @@ function import_image_into_k3d() {
     image_alias="$(echo "$image" | tr '/:.' '_')"
   fi
 
-  if ! docker image inspect "$image" >/dev/null 2>&1
+  if [[ "$image_to_import" != *@* ]] && [[ "${image_to_import##*/}" != *:* ]]
+  then
+    image_to_import="${image_to_import}:latest"
+  fi
+
+  if ! docker image inspect "$image_to_import" >/dev/null 2>&1
   then
     return 1
   fi
 
   k3d_server_node="k3d-${K3D_CLUSTER_NAME}-server-0"
-  if [[ "$force_import" -ne 1 ]] && k3d node list 2>/dev/null | awk '{print $1}' | grep -qx "$k3d_server_node"
+  if [[ "$force_import" -ne 1 ]] && docker ps --format '{{.Names}}' | grep -qx "$k3d_server_node"
   then
-    image_name_no_tag="${image%%@*}"
+    image_name_no_tag="${image_to_import%%@*}"
     image_name_no_tag="${image_name_no_tag%%:*}"
     image_repo_part="${image_name_no_tag%%/*}"
     image_repo_first_segment="$image_repo_part"
-    normalized_image="$image"
+    normalized_image="$image_to_import"
 
     # Align with Kubernetes default image normalization rules.
     # - no slash: docker.io/library/<image>
     # - one slash and no explicit registry host: docker.io/<image>
-    if [[ "$image" != */* ]]
+    if [[ "$image_to_import" != */* ]]
     then
-      normalized_image="docker.io/library/$image"
+      normalized_image="docker.io/library/$image_to_import"
     elif [[ "$image_repo_first_segment" != *.* ]] && [[ "$image_repo_first_segment" != *:* ]] && [[ "$image_repo_first_segment" != "localhost" ]]
     then
-      normalized_image="docker.io/$image"
+      normalized_image="docker.io/$image_to_import"
     fi
 
-    if k3d node exec "$k3d_server_node" -- sh -c "ctr -n k8s.io images list -q 2>/dev/null | grep -Fx -- \"$normalized_image\" >/dev/null" >/dev/null 2>&1
+    if docker exec "$k3d_server_node" sh -lc "ctr -n k8s.io images list -q 2>/dev/null | grep -Fx -- \"$normalized_image\" >/dev/null || k3s ctr images list -q 2>/dev/null | grep -Fx -- \"$normalized_image\" >/dev/null" >/dev/null 2>&1
     then
       log "⏭️ Image $normalized_image already present in k3d cluster $K3D_CLUSTER_NAME, skipping import"
       return 0
@@ -172,36 +178,36 @@ function import_image_into_k3d() {
 
   import_log="/tmp/k3d-image-import-${image_alias}.log"
   : > "$import_log"
-  log "📦 Importing image $image into k3d cluster $K3D_CLUSTER_NAME"
+  log "📦 Importing image $image_to_import into k3d cluster $K3D_CLUSTER_NAME"
 
   set +e
-  run_with_timeout "$timeout_seconds" k3d image import --cluster "$K3D_CLUSTER_NAME" "$image" >> "$import_log" 2>&1
+  run_with_timeout "$timeout_seconds" k3d image import --cluster "$K3D_CLUSTER_NAME" "$image_to_import" >> "$import_log" 2>&1
   import_ret=$?
   set -e
 
   if [[ "$import_ret" -eq 0 ]]
   then
-    log "✅ Imported image $image into k3d"
+    log "✅ Imported image $image_to_import into k3d"
     return 0
   fi
 
   logwarn "⚠️ Retrying image import using direct server-node stream (fallback mode)"
   set +e
-  import_image_into_server_node_direct "$image" "$k3d_server_node" >> "$import_log" 2>&1
+  import_image_into_server_node_direct "$image_to_import" "$k3d_server_node" >> "$import_log" 2>&1
   import_ret=$?
   set -e
 
   if [[ "$import_ret" -eq 0 ]]
   then
-    log "✅ Imported image $image into k3d via fallback mode"
+    log "✅ Imported image $image_to_import into k3d via fallback mode"
     return 0
   fi
 
   if [[ "$import_ret" -eq 124 ]]
   then
-    logwarn "⚠️ Timed out after ${timeout_seconds}s while importing image $image into k3d"
+    logwarn "⚠️ Timed out after ${timeout_seconds}s while importing image $image_to_import into k3d"
   else
-    logwarn "⚠️ Failed to import image $image into k3d"
+    logwarn "⚠️ Failed to import image $image_to_import into k3d"
   fi
   logwarn "⚠️ See $import_log for details"
   return 1
@@ -370,10 +376,12 @@ function generate_connect_mounted_volumes_from_compose() {
   local source_path=""
   local target_path=""
   local source_abs=""
+  local source_file=""
   local volume_index=0
   local volume_name=""
   local secret_name=""
   local secret_key=""
+  local target_file_path=""
   local has_mounts=0
 
   if [[ ! -f "$compose_file" ]]
@@ -412,36 +420,78 @@ function generate_connect_mounted_volumes_from_compose() {
       source_abs="$compose_dir/$source_path"
     fi
 
-    if [[ ! -f "$source_abs" ]]
+    if [[ -f "$source_abs" ]]
     then
-      if [[ -e "$source_abs" ]]
+      volume_index=$((volume_index + 1))
+      volume_name="compose-file-${volume_index}"
+      secret_name="$(sanitize_k8s_name "connect-${volume_name}")"
+      secret_key="$(sanitize_secret_key "$(basename "$target_path")")"
+      append_secret_manifest_from_file "$resources_file" "$secret_name" "$source_abs" "$secret_key"
+
+      if [[ "$has_mounts" -eq 0 ]]
       then
-        logwarn "⚠️ Compose volume source $source_abs for connect is not a file, skipping"
-      fi
-      continue
-    fi
-
-    volume_index=$((volume_index + 1))
-    volume_name="compose-file-${volume_index}"
-    secret_name="$(sanitize_k8s_name "connect-${volume_name}")"
-    secret_key="$(sanitize_secret_key "$(basename "$target_path")")"
-    append_secret_manifest_from_file "$resources_file" "$secret_name" "$source_abs" "$secret_key"
-
-    if [[ "$has_mounts" -eq 0 ]]
-    then
-      cat > "$patch_file" << EOF
+        cat > "$patch_file" << EOF
 spec:
   mountedVolumes:
     volumes:
 EOF
-      has_mounts=1
-    fi
+        has_mounts=1
+      fi
 
-    cat >> "$patch_file" << EOF
+      cat >> "$patch_file" << EOF
       - name: ${volume_name}
         secret:
           secretName: ${secret_name}
 EOF
+    elif [[ -d "$source_abs" ]]
+    then
+      volume_index=$((volume_index + 1))
+      volume_name="compose-file-${volume_index}"
+      secret_name="$(sanitize_k8s_name "connect-${volume_name}")"
+
+      if [[ -s "$resources_file" ]]
+      then
+        echo "---" >> "$resources_file"
+      fi
+
+      {
+        echo "apiVersion: v1"
+        echo "kind: Secret"
+        echo "metadata:"
+        echo "  name: ${secret_name}"
+        echo "  namespace: confluent"
+        echo "type: Opaque"
+        echo "data:"
+      } >> "$resources_file"
+
+      while IFS= read -r source_file
+      do
+        secret_key="$(sanitize_secret_key "$(basename "$source_file")")"
+        printf "  %s: %s\n" "$secret_key" "$(base64 < "$source_file" | tr -d '\n')" >> "$resources_file"
+      done < <(find "$source_abs" -type f | sort)
+
+      if [[ "$has_mounts" -eq 0 ]]
+      then
+        cat > "$patch_file" << EOF
+spec:
+  mountedVolumes:
+    volumes:
+EOF
+        has_mounts=1
+      fi
+
+      cat >> "$patch_file" << EOF
+      - name: ${volume_name}
+        secret:
+          secretName: ${secret_name}
+EOF
+    else
+      if [[ -e "$source_abs" ]]
+      then
+        logwarn "⚠️ Compose volume source $source_abs for connect is neither file nor directory, skipping"
+      fi
+      continue
+    fi
   done < "$tmp_mounts_file"
 
   if [[ "$has_mounts" -eq 1 ]]
@@ -474,21 +524,29 @@ EOF
         source_abs="$compose_dir/$source_path"
       fi
 
-      if [[ ! -f "$source_abs" ]]
+      if [[ -f "$source_abs" ]]
       then
-        continue
-      fi
+        volume_index=$((volume_index + 1))
+        volume_name="compose-file-${volume_index}"
+        secret_key="$(sanitize_secret_key "$(basename "$target_path")")"
 
-      volume_index=$((volume_index + 1))
-      volume_name="compose-file-${volume_index}"
-      secret_key="$(sanitize_secret_key "$(basename "$target_path")")"
-
-      cat >> "$patch_file" << EOF
+        cat >> "$patch_file" << EOF
       - name: ${volume_name}
         mountPath: ${target_path}
         subPath: ${secret_key}
         readOnly: true
 EOF
+      elif [[ -d "$source_abs" ]]
+      then
+        volume_index=$((volume_index + 1))
+        volume_name="compose-file-${volume_index}"
+
+        cat >> "$patch_file" << EOF
+      - name: ${volume_name}
+        mountPath: ${target_path}
+        readOnly: true
+EOF
+      fi
     done < "$tmp_mounts_file"
   fi
 
@@ -2112,7 +2170,8 @@ kubectl apply -f "$CFK_MANIFEST_FILE"
 if [[ -n "$CONNECT_MOUNT_RESOURCES_FILE" ]] && [[ -s "$CONNECT_MOUNT_RESOURCES_FILE" ]]
 then
   log "Deploy file-backed Secrets from DOCKER_COMPOSE_FILE_OVERRIDE for Connect mounts"
-  kubectl -n confluent apply -f "$CONNECT_MOUNT_RESOURCES_FILE"
+  # Use server-side apply to avoid storing large last-applied annotations on Secrets.
+  kubectl -n confluent apply --server-side --force-conflicts -f "$CONNECT_MOUNT_RESOURCES_FILE"
 fi
 
 if [[ -n "$EXTRA_PODS_FILE" ]] && [[ -s "$EXTRA_PODS_FILE" ]]
@@ -2126,10 +2185,12 @@ patched_connect_spec=0
 if [[ -n "$CONNECT_MOUNT_PATCH_FILE" ]] && [[ -s "$CONNECT_MOUNT_PATCH_FILE" ]]
 then
   log "Patch Connect mounted volumes from compose file mounts"
+  connect_mount_patch_error_log="/tmp/cfk-connect-mount-patch.error.log"
+  : > "$connect_mount_patch_error_log"
   set +e
   for _ in {1..30}
   do
-    kubectl -n confluent patch connect connect --type merge --patch-file "$CONNECT_MOUNT_PATCH_FILE" > /dev/null 2>&1
+    kubectl -n confluent patch connect connect --type merge --patch-file "$CONNECT_MOUNT_PATCH_FILE" > /dev/null 2> "$connect_mount_patch_error_log"
     if [[ $? -eq 0 ]]
     then
       patched_connect_spec=1
@@ -2140,6 +2201,11 @@ then
   if [[ "$patched_connect_spec" -ne 1 ]]
   then
     logerror "❌ Could not patch connect/connect mounted volumes in CFK"
+    if [[ -s "$connect_mount_patch_error_log" ]]
+    then
+      logerror "Patch error details:"
+      sed 's/^/  /' "$connect_mount_patch_error_log"
+    fi
     exit 1
   fi
   set -e
