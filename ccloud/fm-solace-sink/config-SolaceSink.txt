@@ -40,6 +40,15 @@ Which topics do you want to get data from?
 	 - Importance: Identifies the topic name or a comma-separated list of topic names.
 	 - Required: HIGH
 
+🔘 errors.deadletterqueue.topic.name
+
+The name of the topic to be used as the dead letter queue (DLQ) for messages that result in an error when processed by this sink connector, or its transformations or converters. Defaults to 'dlq-${connector}' if not set. The DLQ topic will be created automatically if it does not exist. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: dlq-${connector}
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 Schema Config
 ==========================
@@ -101,6 +110,57 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 	 - Type: false
 	 - Default: PASSWORD
 	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+==========================
+Authentication method
+==========================
+🔘 authentication.method
+
+Authentication scheme for Solace. Currently only `Password` is supported.
+
+	 - Type: STRING
+	 - Default: Password
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 secret.manager.enabled
+
+Fetch sensitive configuration values from a secret manager.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Secret manager configuration
+==========================
+🔘 secret.manager
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the secret manager to use for retrieving sensitive data.
+	 - Required: HIGH
+
+🔘 secret.manager.managed.configs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Select the configurations to fetch their values from the secret manager.
+	 - Required: HIGH
+
+🔘 secret.manager.provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing provider integration that has access to your secret manager.
 	 - Required: HIGH
 
 ==========================
@@ -171,6 +231,63 @@ Application description on the message broker for the data connection.
 	 - Default: Kafka Connect
 	 - Importance: LOW
 	 - Required: false
+
+==========================
+Solace Proxy Connection
+==========================
+🔘 solace.proxy.enabled
+
+Whether to enable proxy for connecting to the Solace broker. Proxy is only supported on dedicated Kafka clusters. When true, solace.proxy.host must also be set.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.proxy.host
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Proxy server hostname or IP address for connecting to Solace broker. Required when solace.proxy.enabled is true. Note: Proxy settings affect all Solace connectors in the same dedicated cluster.
+	 - Required: MEDIUM
+
+🔘 solace.proxy.type
+
+Type of proxy server. Valid values are 'http' or 'socks5'. Defaults to 'http'.
+
+	 - Type: STRING
+	 - Default: http
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.proxy.port
+
+Proxy server port number. Defaults to 3128.
+
+	 - Type: INT
+	 - Default: 3128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 solace.proxy.username
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Username for proxy authentication. If specified, solace.proxy.password must also be set.
+	 - Required: MEDIUM
+
+🔘 solace.proxy.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password for proxy authentication. Required if solace.proxy.username is set.
+	 - Required: MEDIUM
 
 ==========================
 Solace secure connection
@@ -323,20 +440,125 @@ Number of tasks for this connector
 	 - Required: HIGH
 
 ==========================
-Auto-restart policy
-==========================
-🔘 auto.restart.on.user.error
-
-Enable connector to automatically restart on user-actionable errors.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: MEDIUM
-	 - Required: false
-
-==========================
 Additional Configs
 ==========================
+🔘 value.converter.value.schema.id.deserializer
+
+The class name of the schema ID deserializer for values. This is used to deserialize schema IDs from the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.flatten.unions
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 header.converter
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
+	 - Required: LOW
+
+🔘 value.converter.optional.for.proto2
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether proto2 optionals are supported. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 consumer.override.isolation.level
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Controls how to read messages written transactionally. If set to read_committed, consumer.poll() will only return transactional messages which have been committed. If set to read_uncommitted (the default), consumer.poll() will return all messages, even transactional messages which have been aborted. Non-transactional messages will be returned unconditionally in either mode.  More details: https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#isolation-level
+	 - Required: LOW
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.use.schema.id
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
+
+🔘 value.converter.generate.struct.for.nulls
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: all
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.wrapper.for.nullables
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 key.converter.key.schema.id.deserializer
+
+The class name of the schema ID deserializer for keys. This is used to deserialize schema IDs from the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.generate.index.for.unions
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.wrapper.for.raw.primitives
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
+	 - Required: LOW
+
 🔘 value.converter.decimal.format
 
 Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
@@ -382,15 +604,6 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 	 - Importance: Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
 	 - Required: LOW
 
-🔘 value.converter.value.schema.id.deserializer
-
-The class name of the schema ID deserializer for values. This is used to deserialize schema IDs from the message headers.
-
-	 - Type: STRING
-	 - Default: io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer
-	 - Importance: LOW
-	 - Required: false
-
 🔘 value.converter.latest.compatibility.strict
 
 
@@ -409,42 +622,6 @@ The class name of the schema ID deserializer for values. This is used to deseria
 	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 	 - Required: LOW
 
-🔘 value.converter.flatten.unions
-
-
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
-	 - Required: LOW
-
-🔘 header.converter
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
-	 - Required: LOW
-
-🔘 value.converter.optional.for.proto2
-
-
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether proto2 optionals are supported. Applicable for Protobuf Converters.
-	 - Required: LOW
-
-🔘 consumer.override.isolation.level
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Controls how to read messages written transactionally. If set to read_committed, consumer.poll() will only return transactional messages which have been committed. If set to read_uncommitted (the default), consumer.poll() will return all messages, even transactional messages which have been aborted. Non-transactional messages will be returned unconditionally in either mode.  More details: https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#isolation-level
-	 - Required: LOW
-
 🔘 value.converter.optional.for.nullables
 
 
@@ -452,33 +629,6 @@ The class name of the schema ID deserializer for values. This is used to deseria
 	 - Type: false
 	 - Default: BOOLEAN
 	 - Importance: Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
-	 - Required: LOW
-
-🔘 value.converter.reference.subject.name.strategy
-
-Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
-
-	 - Type: STRING
-	 - Default: DefaultReferenceSubjectNameStrategy
-	 - Importance: LOW
-	 - Required: false
-
-🔘 value.converter.use.schema.id
-
-
-
-	 - Type: false
-	 - Default: INT
-	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
-	 - Required: LOW
-
-🔘 value.converter.generate.struct.for.nulls
-
-
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
 	 - Required: LOW
 
 🔘 value.converter.auto.register.schemas
@@ -553,15 +703,6 @@ Whether to flatten singleton unions. Applicable for Avro and JSON_SR Converters.
 	 - Importance: Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
 	 - Required: LOW
 
-🔘 value.converter.wrapper.for.nullables
-
-
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
-	 - Required: LOW
-
 🔘 value.converter.enhanced.protobuf.schema.support
 
 
@@ -569,24 +710,6 @@ Whether to flatten singleton unions. Applicable for Avro and JSON_SR Converters.
 	 - Type: false
 	 - Default: BOOLEAN
 	 - Importance: Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
-	 - Required: LOW
-
-🔘 key.converter.key.schema.id.deserializer
-
-The class name of the schema ID deserializer for keys. This is used to deserialize schema IDs from the message headers.
-
-	 - Type: STRING
-	 - Default: io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer
-	 - Importance: LOW
-	 - Required: false
-
-🔘 value.converter.generate.index.for.unions
-
-
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
 	 - Required: LOW
 
 🔘 consumer.override.auto.offset.reset
@@ -607,14 +730,17 @@ The class name of the schema ID deserializer for keys. This is used to deseriali
 	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 	 - Required: LOW
 
-🔘 value.converter.wrapper.for.raw.primitives
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
 
+Enable connector to automatically restart on user-actionable errors.
 
-
-	 - Type: false
-	 - Default: BOOLEAN
-	 - Importance: Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
-	 - Required: LOW
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Egress allowlist
