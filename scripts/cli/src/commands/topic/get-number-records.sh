@@ -118,7 +118,13 @@ do
             cfk_parameter_for_list_broker="--broker-list"
         fi
 
-        kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server --topic $topic --time -1 2>/dev/null | awk -F: '{sum += \$3} END {print sum+0}'"
+        offsets=$(kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server --topic $topic --time -1 2>/dev/null")
+        if [ -z "$offsets" ]
+        then
+            echo "0"
+        else
+            echo "$offsets" | awk -F: '{sum += $3} END {print sum+0}'
+        fi
     else
         # --- ON-PREM / LOCAL LOGIC ---
         tag="$cached_tag"
