@@ -297,7 +297,7 @@ function parse_compose_file_volume_mount() {
   local source_path=""
   local target_path=""
 
-  raw_volume=$(echo "$raw_volume" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g' | sed -E 's/^["\x27]//; s/["\x27]$//')
+  raw_volume=$(echo "$raw_volume" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g' | sed -E "s/^[\"']//; s/[\"']$//")
   if [[ "$raw_volume" != *":"* ]]
   then
     return 1
@@ -1327,10 +1327,12 @@ function generate_connect_build_patch_from_compose() {
 
   if [[ -f "$compose_file" ]]
   then
-    while IFS= read -r raw_paths
+    while IFS=: read -r compose_line raw_paths
     do
       raw_paths=$(echo "$raw_paths" | sed -E 's/.*CONNECT_PLUGIN_PATH[[:space:]]*:[[:space:]]*//')
-      raw_paths=$(echo "$raw_paths" | sed -E 's/["\x27]//g' | sed -E 's/[[:space:]]+#.*$//')
+      raw_paths=$(echo "$raw_paths" | sed -E "s/[\"']//g" | sed -E 's/[[:space:]]+#.*$//')
+      log "🔎 CONNECT_PLUGIN_PATH source: ${compose_file}:${compose_line}"
+      log "🔎 CONNECT_PLUGIN_PATH tokens from compose: $raw_paths"
 
       IFS=',' read -r -a plugin_paths <<< "$raw_paths"
       for plugin_path in "${plugin_paths[@]}"
@@ -1352,12 +1354,15 @@ function generate_connect_build_patch_from_compose() {
         name="${plugin_id#*-}"
         if [[ -z "$owner" ]] || [[ -z "$name" ]] || [[ "$owner" == "$plugin_id" ]]
         then
+          logwarn "⚠️ Ignoring CONNECT_PLUGIN_PATH token '$plugin_path' because owner/name could not be derived"
           continue
         fi
 
+        log "🔎 Derived plugin tuple from CONNECT_PLUGIN_PATH: owner=$owner name=$name plugin_id=$plugin_id"
+
         echo "$owner|$name|$plugin_id" >> "$tmp_plugins_file"
       done
-    done < <(grep -E 'CONNECT_PLUGIN_PATH[[:space:]]*:' "$compose_file" 2>/dev/null)
+    done < <(grep -En 'CONNECT_PLUGIN_PATH[[:space:]]*:' "$compose_file" 2>/dev/null)
   fi
 
   if [[ -s "$tmp_plugins_file" ]]
@@ -1365,6 +1370,7 @@ function generate_connect_build_patch_from_compose() {
     awk '!seen[$0]++' "$tmp_plugins_file" > "$tmp_plugins_unique_file"
     while IFS='|' read -r owner name plugin_id
     do
+      log "🔎 Selected plugin for CFK build: owner=$owner name=$name plugin_id=$plugin_id"
       if [[ -n "$CONNECTOR_TAG" ]]
       then
         version_value="${my_array_connector_tag[$plugin_index]}"
