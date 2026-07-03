@@ -22,6 +22,13 @@ then
   SHASUM_BIN="/usr/bin/shasum"
 fi
 
+function checksum_sha512() {
+  local file_path="$1"
+
+  env -u PERL5LIB -u PERL_LOCAL_LIB_ROOT -u PERL_MB_OPT -u PERL_MM_OPT -u PERL5OPT \
+    "$SHASUM_BIN" -a 512 "$file_path" | awk '{print $1}'
+}
+
 : "${K3D_CLUSTER_NAME:=playground-cfk}"
 : "${K3D_REGISTRY_CACHE_ENABLED:=0}"
 : "${K3D_REGISTRY_CACHE_NAME:=playground-registry}"
@@ -1315,7 +1322,7 @@ function generate_connect_build_patch_from_compose() {
           cd "$(dirname "$local_plugin_effective_dir")"
           zip -qr "$local_zip_path" "$(basename "$local_plugin_effective_dir")"
         )
-        local_zip_checksum=$($SHASUM_BIN -a 512 "$local_zip_path" | awk '{print $1}')
+        local_zip_checksum=$(checksum_sha512 "$local_zip_path")
         local_zip_url="http://host.k3d.internal:18080/${plugin_id}.zip"
         echo "${plugin_id}|${local_zip_url}|${local_zip_checksum}" >> "$tmp_url_plugins_file"
         has_url_plugins=1
@@ -1867,7 +1874,7 @@ then
       exit 1
     fi
     CONNECTOR_ZIP_URL="$CONNECTOR_ZIP"
-    CONNECTOR_ZIP_CHECKSUM=$($SHASUM_BIN -a 512 "$tmp_connector_zip_download" | awk '{print $1}')
+    CONNECTOR_ZIP_CHECKSUM=$(checksum_sha512 "$tmp_connector_zip_download")
     rm -f "$tmp_connector_zip_download"
     CONNECTOR_ZIP_PLUGIN_NAME=$(basename "$CONNECTOR_ZIP")
     CONNECTOR_ZIP_PLUGIN_NAME="${CONNECTOR_ZIP_PLUGIN_NAME%.zip}"
@@ -1882,7 +1889,7 @@ then
     connector_zip_basename=$(basename "$CONNECTOR_ZIP")
     cp "$CONNECTOR_ZIP" "$CONNECTOR_ZIP_DIR/$connector_zip_basename"
     CONNECTOR_ZIP_URL="http://host.k3d.internal:18080/$connector_zip_basename"
-    CONNECTOR_ZIP_CHECKSUM=$($SHASUM_BIN -a 512 "$CONNECTOR_ZIP" | awk '{print $1}')
+    CONNECTOR_ZIP_CHECKSUM=$(checksum_sha512 "$CONNECTOR_ZIP")
     CONNECTOR_ZIP_PLUGIN_NAME="${connector_zip_basename%.zip}"
   fi
 
