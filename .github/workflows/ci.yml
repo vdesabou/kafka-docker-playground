@@ -14,6 +14,10 @@ on:
         description: 'test(s) to run (example connect/connect-jms-weblogic-sink connect/connect-http-sink)'
         required: false
         default: ''
+      playground_environment:
+        description: 'override PLAYGROUND_ENVIRONMENT (example cfk, ccloud, plaintext)'
+        required: false
+        default: ''
 
 jobs:
   pre-build:
@@ -245,6 +249,9 @@ jobs:
       - name: Build and Test
         run: |
           export PATH=$PATH:$GITHUB_WORKSPACE/scripts/cli
+          if [ -n "${{ github.event.inputs.playground_environment }}" ]; then
+            export PLAYGROUND_ENVIRONMENT="${{ github.event.inputs.playground_environment }}"
+          fi
           bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
@@ -517,6 +524,9 @@ jobs:
       - name: Build and Test
         run: |
           export PATH=$PATH:$GITHUB_WORKSPACE/scripts/cli
+          if [ -n "${{ github.event.inputs.playground_environment }}" ]; then
+            export PLAYGROUND_ENVIRONMENT="${{ github.event.inputs.playground_environment }}"
+          fi
           bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
@@ -628,7 +638,6 @@ jobs:
           CLICKHOUSE_CLOUD_USERNAME: ${{ secrets.CLICKHOUSE_CLOUD_USERNAME}}
           CLICKHOUSE_CLOUD_PASSWORD: ${{ secrets.CLICKHOUSE_CLOUD_PASSWORD}}
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
-          PLAYGROUND_ENVIRONMENT: "cfk"
           
       - name: Commit connector config file if changed
         if: always()
