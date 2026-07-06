@@ -116,5 +116,5 @@ EOF
 
 sleep 10
 
-log "Verifying topic copy-of-test-hdfs"
-playground topic consume --topic copy-of-test-hdfs --min-expected-messages 9 --timeout 60
+log "Verifying topic copy-of-hdfs-topic"
+playground topic consume --topic copy-of-hdfs-topic --min-expected-messages 9 --timeout 60
