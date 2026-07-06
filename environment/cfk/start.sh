@@ -285,7 +285,11 @@ function verify_build_archive_urls_reachable_from_cluster() {
     return 0
   fi
 
-  mapfile -t archive_urls < <(awk '/archivePath:[[:space:]]*/ {print $2}' "$patch_file" | sed -E 's/^["\'"'"']|["\'"'"']$//g' | awk '!seen[$0]++')
+  archive_urls=()
+  while IFS= read -r archive_url
+  do
+    archive_urls+=("$archive_url")
+  done < <(awk '/archivePath:[[:space:]]*/ {print $2}' "$patch_file" | sed -E 's/^["\'"'"']|["\'"'"']$//g' | awk '!seen[$0]++')
   if [[ "${#archive_urls[@]}" -eq 0 ]]
   then
     return 0
@@ -761,7 +765,7 @@ function generate_extra_pods_from_compose_override() {
       if (local_raw ~ /^\[.*\]$/) {
         sub(/^\[/, "", local_raw)
         sub(/\]$/, "", local_raw)
-        count = split(local_raw, parts, ", ")
+        count = split(local_raw, parts, ",")
         for (i = 1; i <= count; i++) {
           item = trim(unquote(parts[i]))
           if (item != "") {
