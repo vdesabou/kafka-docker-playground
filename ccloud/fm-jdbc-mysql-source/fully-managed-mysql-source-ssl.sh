@@ -153,7 +153,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "incrementing.column.name":"id",
   "topic.prefix":"mysql-",
   "tasks.max": "1",
-  "ssl.mode": "verify-ca",
+  "ssl.mode": "require",
   "ssl.truststorefile": "data:text/plain;base64,$base64_truststore",
   "ssl.truststorepassword": "mypassword"
 }
