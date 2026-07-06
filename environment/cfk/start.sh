@@ -60,7 +60,7 @@ export CP_INIT_IMAGE CP_INIT_TAG
 
 : "${CFK_TMPFS_DEFAULT_SIZE_LIMIT:=256Mi}"
 : "${CFK_TMPFS_SHM_SIZE_LIMIT:=1Gi}"
-: "${CFK_CONNECTOR_ARCHIVE_HOST:=host.docker.internal}"
+: "${CFK_CONNECTOR_ARCHIVE_HOST:=}"
 
 function log_generated_yaml_file() {
   local label="$1"
@@ -250,6 +250,44 @@ function import_image_into_k3d() {
   fi
   logwarn "⚠️ See $import_log for details"
   return 1
+}
+
+function resolve_cfk_connector_archive_host() {
+  local k3d_server_node="k3d-${K3D_CLUSTER_NAME}-server-0"
+  local k3d_network_name="k3d-${K3D_CLUSTER_NAME}"
+  local host_os=""
+  local gateway_ip=""
+
+  if [[ -n "$CFK_CONNECTOR_ARCHIVE_HOST" ]]
+  then
+    log "🌐 Using configured CFK connector archive host ${CFK_CONNECTOR_ARCHIVE_HOST}"
+    return 0
+  fi
+
+  host_os=$(uname -s 2>/dev/null || echo "")
+  if [[ "$host_os" == "Darwin" ]]
+  then
+    # Docker Desktop on macOS exposes the host reliably via host.docker.internal.
+    CFK_CONNECTOR_ARCHIVE_HOST="host.docker.internal"
+    log "🌐 Using Docker Desktop host alias ${CFK_CONNECTOR_ARCHIVE_HOST} for CFK connector archives"
+    return 0
+  fi
+
+  gateway_ip=$(docker inspect "$k3d_server_node" --format '{{range .NetworkSettings.Networks}}{{.Gateway}}{{end}}' 2>/dev/null | tr -d '[:space:]')
+  if [[ ! "$gateway_ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]
+  then
+    gateway_ip=$(docker network inspect "$k3d_network_name" --format '{{range .IPAM.Config}}{{.Gateway}}{{end}}' 2>/dev/null | tr -d '[:space:]')
+  fi
+  if [[ -n "$gateway_ip" ]]
+  then
+    CFK_CONNECTOR_ARCHIVE_HOST="$gateway_ip"
+    log "🌐 Using k3d gateway ${CFK_CONNECTOR_ARCHIVE_HOST} for CFK connector archives"
+    return 0
+  fi
+
+  CFK_CONNECTOR_ARCHIVE_HOST="host.k3d.internal"
+  logwarn "⚠️ Could not determine k3d gateway IP, falling back to ${CFK_CONNECTOR_ARCHIVE_HOST}"
+  return 0
 }
 
 function wait_for_kubernetes_apiserver() {
@@ -2279,7 +2317,6 @@ then
     CONNECTOR_ZIP_DIR=$(mktemp -d)
     connector_zip_basename=$(basename "$CONNECTOR_ZIP")
     cp "$CONNECTOR_ZIP" "$CONNECTOR_ZIP_DIR/$connector_zip_basename"
-    CONNECTOR_ZIP_URL="http://${CFK_CONNECTOR_ARCHIVE_HOST}:18080/$connector_zip_basename"
     CONNECTOR_ZIP_CHECKSUM=$(checksum_sha512 "$CONNECTOR_ZIP")
     CONNECTOR_ZIP_PLUGIN_NAME="${connector_zip_basename%.zip}"
   fi
@@ -2296,6 +2333,53 @@ then
   then
     CONNECTOR_ZIP_DIR=$(mktemp -d)
   fi
+fi
+
+log "Start or reuse k3d (k3s)"
+if k3d cluster list 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$K3D_CLUSTER_NAME"
+then
+  log "✅ k3d cluster $K3D_CLUSTER_NAME already exists, ensuring it is running"
+  k3d cluster start "$K3D_CLUSTER_NAME" >/dev/null 2>&1 || true
+else
+  log "🚀 Creating k3d cluster $K3D_CLUSTER_NAME"
+  if [[ "$K3D_REGISTRY_CACHE_ENABLED" == "1" ]]
+  then
+    K3D_CONFIG_FILE=$(mktemp)
+    generate_k3d_config_with_registry_cache "$K3D_CONFIG_FILE"
+    log "🗂️ Using registry cache for k3d cluster creation (${K3D_REGISTRY_CACHE_NAME}:${K3D_REGISTRY_CACHE_PORT})"
+    k3d cluster create --config "$K3D_CONFIG_FILE" --wait
+  else
+    k3d cluster create "$K3D_CLUSTER_NAME" --servers 1 --agents 0 --wait
+  fi
+fi
+
+kubectl config use-context "k3d-${K3D_CLUSTER_NAME}" >/dev/null
+
+if ! wait_for_kubernetes_apiserver "120"
+then
+  logerror "❌ Kubernetes API server did not become ready within 120s"
+  exit 1
+fi
+
+set +e
+resolve_cfk_connector_archive_host
+set -e
+if [[ -n "$CONNECTOR_ZIP_DIR" ]] && [[ -z "$CONNECTOR_ZIP_URL" ]]
+then
+  connector_zip_basename=""
+  while IFS= read -r connector_zip_path
+  do
+    connector_zip_basename=$(basename "$connector_zip_path")
+    break
+  done < <(find "$CONNECTOR_ZIP_DIR" -maxdepth 1 -name '*.zip' 2>/dev/null)
+  if [[ -n "$connector_zip_basename" ]]
+  then
+    CONNECTOR_ZIP_URL="http://${CFK_CONNECTOR_ARCHIVE_HOST}:18080/$connector_zip_basename"
+  fi
+fi
+
+if [[ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]]
+then
   CONNECT_BUILD_PATCH_FILE=$(mktemp)
   if generate_connect_build_patch_from_compose "${DOCKER_COMPOSE_FILE_OVERRIDE}" "${CONNECT_BUILD_PATCH_FILE}" "$CONNECTOR_ZIP_URL" "$CONNECTOR_ZIP_CHECKSUM" "$CONNECTOR_ZIP_PLUGIN_NAME" "$CONNECTOR_ZIP_DIR"
   then
@@ -2333,32 +2417,6 @@ then
     fi
     log_generated_yaml_file "Dynamic Connect build patch generated:" "${CONNECT_BUILD_PATCH_FILE}"
   fi
-fi
-
-log "Start or reuse k3d (k3s)"
-if k3d cluster list 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$K3D_CLUSTER_NAME"
-then
-  log "✅ k3d cluster $K3D_CLUSTER_NAME already exists, ensuring it is running"
-  k3d cluster start "$K3D_CLUSTER_NAME" >/dev/null 2>&1 || true
-else
-  log "🚀 Creating k3d cluster $K3D_CLUSTER_NAME"
-  if [[ "$K3D_REGISTRY_CACHE_ENABLED" == "1" ]]
-  then
-    K3D_CONFIG_FILE=$(mktemp)
-    generate_k3d_config_with_registry_cache "$K3D_CONFIG_FILE"
-    log "🗂️ Using registry cache for k3d cluster creation (${K3D_REGISTRY_CACHE_NAME}:${K3D_REGISTRY_CACHE_PORT})"
-    k3d cluster create --config "$K3D_CONFIG_FILE" --wait
-  else
-    k3d cluster create "$K3D_CLUSTER_NAME" --servers 1 --agents 0 --wait
-  fi
-fi
-
-kubectl config use-context "k3d-${K3D_CLUSTER_NAME}" >/dev/null
-
-if ! wait_for_kubernetes_apiserver "120"
-then
-  logerror "❌ Kubernetes API server did not become ready within 120s"
-  exit 1
 fi
 
 if [[ -n "$CONNECTOR_ZIP_DIR" ]] && [[ -n "$(find "$CONNECTOR_ZIP_DIR" -maxdepth 1 -name '*.zip' -print -quit 2>/dev/null)" ]]
