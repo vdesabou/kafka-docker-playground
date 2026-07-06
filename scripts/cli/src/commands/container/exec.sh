@@ -18,7 +18,12 @@ do
 			logwarn "👑 --root flag is ignored in cfk mode"
 		fi
 		log "🪄 Executing command in pod $resolved_container with $shell"
-		kubectl -n confluent exec -i "$resolved_container" -- "$shell" -c "$command"
+		if [[ -t 0 ]]
+		then
+			kubectl -n confluent exec "$resolved_container" -- "$shell" -c "$command"
+		else
+			kubectl -n confluent exec -i "$resolved_container" -- "$shell" -c "$command"
+		fi
 	elif [[ -n "$root" ]]
 	then
 	log "🪄👑 Executing command as root in container $container with $shell"
