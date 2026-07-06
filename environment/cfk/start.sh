@@ -60,6 +60,7 @@ export CP_INIT_IMAGE CP_INIT_TAG
 
 : "${CFK_TMPFS_DEFAULT_SIZE_LIMIT:=256Mi}"
 : "${CFK_TMPFS_SHM_SIZE_LIMIT:=1Gi}"
+: "${CFK_CONNECTOR_ARCHIVE_HOST:=host.docker.internal}"
 
 function log_generated_yaml_file() {
   local label="$1"
@@ -268,6 +269,74 @@ function wait_for_kubernetes_apiserver() {
   done
 
   return 1
+}
+
+function verify_build_archive_urls_reachable_from_cluster() {
+  local patch_file="$1"
+  local archive_urls=()
+  local archive_url=""
+  local probe_pod=""
+  local phase=""
+  local attempt=0
+  local all_ok=1
+
+  if [[ -z "$patch_file" ]] || [[ ! -s "$patch_file" ]]
+  then
+    return 0
+  fi
+
+  mapfile -t archive_urls < <(awk '/archivePath:[[:space:]]*/ {print $2}' "$patch_file" | sed -E 's/^["\'"'"']|["\'"'"']$//g' | awk '!seen[$0]++')
+  if [[ "${#archive_urls[@]}" -eq 0 ]]
+  then
+    return 0
+  fi
+
+  for archive_url in "${archive_urls[@]}"
+  do
+    probe_pod="cfk-archive-url-check-$(date +%s)-$RANDOM"
+    log "🔎 Verifying in-cluster access to plugin archive URL: $archive_url"
+
+    set +e
+    kubectl -n confluent run "$probe_pod" --restart=Never --image=curlimages/curl:8.9.1 --command -- sh -lc "curl -fsS --max-time 10 '$archive_url' >/dev/null"
+    if [[ $? -ne 0 ]]
+    then
+      set -e
+      logerror "❌ Could not create URL probe pod for archive URL validation"
+      return 1
+    fi
+
+    phase=""
+    for attempt in {1..20}
+    do
+      phase=$(kubectl -n confluent get pod "$probe_pod" -o jsonpath='{.status.phase}' 2>/dev/null)
+      if [[ "$phase" == "Succeeded" ]] || [[ "$phase" == "Failed" ]]
+      then
+        break
+      fi
+      sleep 1
+    done
+
+    if [[ "$phase" != "Succeeded" ]]
+    then
+      all_ok=0
+      logerror "❌ Archive URL is not reachable from cluster: $archive_url"
+      log "  Probe pod logs:"
+      kubectl -n confluent logs "$probe_pod" --tail=80 2>/dev/null || true
+      log "  Hint: override host with CFK_CONNECTOR_ARCHIVE_HOST (current: ${CFK_CONNECTOR_ARCHIVE_HOST})"
+    else
+      log "✅ Archive URL is reachable from cluster: $archive_url"
+    fi
+
+    kubectl -n confluent delete pod "$probe_pod" --ignore-not-found=true >/dev/null 2>&1 || true
+    set -e
+  done
+
+  if [[ "$all_ok" -ne 1 ]]
+  then
+    return 1
+  fi
+
+  return 0
 }
 
 function generate_k3d_config_with_registry_cache() {
@@ -1625,7 +1694,7 @@ function generate_connect_build_patch_from_compose() {
           zip -qr "$local_zip_path" "$(basename "$local_plugin_effective_dir")"
         )
         local_zip_checksum=$(checksum_sha512 "$local_zip_path")
-        local_zip_url="http://host.k3d.internal:18080/${plugin_id}.zip"
+        local_zip_url="http://${CFK_CONNECTOR_ARCHIVE_HOST}:18080/${plugin_id}.zip"
         echo "${plugin_id}|${local_zip_url}|${local_zip_checksum}" >> "$tmp_url_plugins_file"
         has_url_plugins=1
         log "🔌 Using local plugin override for $plugin_id in CFK build"
@@ -1950,6 +2019,8 @@ set_profiles
 log_unsupported_cfk_profile_options
 
 CONNECT_BUILD_PATCH_FILE=""
+CONNECT_BUILD_EXPECTED_PLUGIN_NAMES=""
+CONNECT_BUILD_PATCH_CHECKSUM=""
 CONNECTOR_ZIP_URL=""
 CONNECTOR_ZIP_CHECKSUM=""
 CONNECTOR_ZIP_PLUGIN_NAME=""
@@ -2190,7 +2261,7 @@ then
     CONNECTOR_ZIP_DIR=$(mktemp -d)
     connector_zip_basename=$(basename "$CONNECTOR_ZIP")
     cp "$CONNECTOR_ZIP" "$CONNECTOR_ZIP_DIR/$connector_zip_basename"
-    CONNECTOR_ZIP_URL="http://host.k3d.internal:18080/$connector_zip_basename"
+    CONNECTOR_ZIP_URL="http://${CFK_CONNECTOR_ARCHIVE_HOST}:18080/$connector_zip_basename"
     CONNECTOR_ZIP_CHECKSUM=$(checksum_sha512 "$CONNECTOR_ZIP")
     CONNECTOR_ZIP_PLUGIN_NAME="${connector_zip_basename%.zip}"
   fi
@@ -2210,7 +2281,14 @@ then
   CONNECT_BUILD_PATCH_FILE=$(mktemp)
   if generate_connect_build_patch_from_compose "${DOCKER_COMPOSE_FILE_OVERRIDE}" "${CONNECT_BUILD_PATCH_FILE}" "$CONNECTOR_ZIP_URL" "$CONNECTOR_ZIP_CHECKSUM" "$CONNECTOR_ZIP_PLUGIN_NAME" "$CONNECTOR_ZIP_DIR"
   then
+    CONNECT_BUILD_PATCH_CHECKSUM=$(checksum_sha512 "${CONNECT_BUILD_PATCH_FILE}")
+    CONNECT_BUILD_EXPECTED_PLUGIN_NAMES=$(awk '/^[[:space:]]*- name:[[:space:]]*/ {print $3}' "${CONNECT_BUILD_PATCH_FILE}" | paste -sd ',' -)
     log "🔌 CFK Connect build plugins will be patched dynamically"
+    log "🔎 Connect build patch checksum (sha512): ${CONNECT_BUILD_PATCH_CHECKSUM}"
+    if [[ -n "$CONNECT_BUILD_EXPECTED_PLUGIN_NAMES" ]]
+    then
+      log "🔎 Expected plugin names from build patch: ${CONNECT_BUILD_EXPECTED_PLUGIN_NAMES}"
+    fi
     log_generated_yaml_file "Dynamic Connect build patch generated:" "${CONNECT_BUILD_PATCH_FILE}"
   else
     rm -f "${CONNECT_BUILD_PATCH_FILE}"
@@ -2228,6 +2306,13 @@ then
     rm -f "${CONNECT_BUILD_PATCH_FILE}"
     CONNECT_BUILD_PATCH_FILE=""
   else
+    CONNECT_BUILD_PATCH_CHECKSUM=$(checksum_sha512 "${CONNECT_BUILD_PATCH_FILE}")
+    CONNECT_BUILD_EXPECTED_PLUGIN_NAMES=$(awk '/^[[:space:]]*- name:[[:space:]]*/ {print $3}' "${CONNECT_BUILD_PATCH_FILE}" | paste -sd ',' -)
+    log "🔎 Connect build patch checksum (sha512): ${CONNECT_BUILD_PATCH_CHECKSUM}"
+    if [[ -n "$CONNECT_BUILD_EXPECTED_PLUGIN_NAMES" ]]
+    then
+      log "🔎 Expected plugin names from build patch: ${CONNECT_BUILD_EXPECTED_PLUGIN_NAMES}"
+    fi
     log_generated_yaml_file "Dynamic Connect build patch generated:" "${CONNECT_BUILD_PATCH_FILE}"
   fi
 fi
@@ -2290,7 +2375,7 @@ then
       cat /tmp/cfk-connector-zip-http.log | tail -30 || true
       exit 1
     fi
-    log "✅ Local plugin archive is served at http://host.k3d.internal:18080/${local_served_zip_name}"
+    log "✅ Local plugin archive is served at http://${CFK_CONNECTOR_ARCHIVE_HOST}:18080/${local_served_zip_name}"
   fi
 fi
 
@@ -2415,6 +2500,12 @@ fi
 
 if [[ -n "$CONNECT_BUILD_PATCH_FILE" ]] && [[ -s "$CONNECT_BUILD_PATCH_FILE" ]]
 then
+  if ! verify_build_archive_urls_reachable_from_cluster "$CONNECT_BUILD_PATCH_FILE"
+  then
+    logerror "❌ Aborting: Connect build archive URLs are not reachable from cluster"
+    exit 1
+  fi
+
   log "Patch Connect build plugins from CONNECT_PLUGIN_PATH"
   patched_connect_build=0
   set +e
@@ -2457,9 +2548,20 @@ then
   connect_build_wait_max=300
   connect_build_cur_wait=0
   connect_build_interval=10
+  connect_plugins_json=""
+  connect_plugin_classes_rest=""
+  connect_expected_plugin_total=0
+  connect_expected_plugin_match=0
+  connect_expected_plugin_array=()
+  if [[ -n "$CONNECT_BUILD_EXPECTED_PLUGIN_NAMES" ]]
+  then
+    IFS=',' read -r -a connect_expected_plugin_array <<< "$CONNECT_BUILD_EXPECTED_PLUGIN_NAMES"
+  fi
   while true
   do
-    connect_plugin_count_rest=$(kubectl -n confluent exec connect-0 -- curl -fsS --max-time 5 http://localhost:8083/connector-plugins 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d))" 2>/dev/null)
+    connect_plugins_json=$(kubectl -n confluent exec connect-0 -- curl -fsS --max-time 5 http://localhost:8083/connector-plugins 2>/dev/null)
+    connect_plugin_count_rest=$(printf '%s' "$connect_plugins_json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d))" 2>/dev/null)
+    connect_plugin_classes_rest=$(printf '%s' "$connect_plugins_json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(' '.join(sorted({x.get('class','') for x in d if isinstance(x,dict) and x.get('class')})))" 2>/dev/null)
     connect_plugin_count_status=$(kubectl -n confluent get connect connect -o jsonpath='{.status.connectorPlugins[*].class}' 2>/dev/null | awk '{print NF}')
     connect_plugin_count="0"
     connect_plugin_count_source="rest"
@@ -2472,22 +2574,92 @@ then
       connect_plugin_count="$connect_plugin_count_status"
       connect_plugin_count_source="status"
     fi
+
+    connect_expected_plugin_total=0
+    connect_expected_plugin_match=0
+    if [[ -n "$connect_plugin_classes_rest" ]] && [[ "${#connect_expected_plugin_array[@]}" -gt 0 ]]
+    then
+      plugin_classes_lc=$(echo "$connect_plugin_classes_rest" | tr '[:upper:]' '[:lower:]')
+      for expected_plugin_name in "${connect_expected_plugin_array[@]}"
+      do
+        expected_plugin_name=$(echo "$expected_plugin_name" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
+        if [[ -z "$expected_plugin_name" ]]
+        then
+          continue
+        fi
+        connect_expected_plugin_total=$((connect_expected_plugin_total + 1))
+
+        expected_matched=0
+        expected_plugin_lc=$(echo "$expected_plugin_name" | tr '[:upper:]' '[:lower:]')
+        if echo "$plugin_classes_lc" | grep -q "$expected_plugin_lc"
+        then
+          expected_matched=1
+        else
+          for token in $(echo "$expected_plugin_lc" | tr -cs 'a-z0-9' '\n')
+          do
+            if [[ ${#token} -lt 4 ]] || [[ "$token" == "kafka" ]] || [[ "$token" == "connect" ]] || [[ "$token" == "confluentinc" ]] || [[ "$token" == "plugin" ]] || [[ "$token" == "source" ]] || [[ "$token" == "sink" ]]
+            then
+              continue
+            fi
+            if echo "$plugin_classes_lc" | grep -q "$token"
+            then
+              expected_matched=1
+              break
+            fi
+          done
+        fi
+
+        if [[ "$expected_matched" -eq 1 ]]
+        then
+          connect_expected_plugin_match=$((connect_expected_plugin_match + 1))
+        fi
+      done
+    fi
+
     if [[ "$connect_plugin_count" =~ ^[0-9]+$ ]] && [[ "$connect_plugin_count" -gt 3 ]]
     then
+      if [[ "$connect_expected_plugin_total" -gt 0 ]] && [[ "$connect_expected_plugin_match" -eq 0 ]]
+      then
+        log "  ⌛ Connect has >3 plugins but none match expected build plugin names yet (${connect_expected_plugin_match}/${connect_expected_plugin_total})"
+      else
       log "✅ Connect reports $connect_plugin_count connector plugins via $connect_plugin_count_source (on-demand build complete)"
       break
+      fi
     fi
     connect_build_cur_wait=$(( connect_build_cur_wait + connect_build_interval ))
     if [[ "$connect_build_cur_wait" -ge "$connect_build_wait_max" ]]
     then
-      logwarn "⚠️ Only $connect_plugin_count plugins visible after ${connect_build_wait_max}s — on-demand build may have failed"
+      logerror "❌ Only $connect_plugin_count plugins visible after ${connect_build_wait_max}s — on-demand build failed"
+      if [[ -n "$CONNECT_BUILD_PATCH_CHECKSUM" ]]
+      then
+        log "  Connect build patch checksum (sha512): ${CONNECT_BUILD_PATCH_CHECKSUM}"
+      fi
+      if [[ -n "$CONNECT_BUILD_EXPECTED_PLUGIN_NAMES" ]]
+      then
+        log "  Expected plugin names from patch: ${CONNECT_BUILD_EXPECTED_PLUGIN_NAMES}"
+      fi
+      log "  Connect plugin classes from REST (if reachable):"
+      kubectl -n confluent exec connect-0 -- curl -fsS --max-time 5 http://localhost:8083/connector-plugins 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print('\n'.join(sorted({x.get('class','') for x in d if isinstance(x,dict) and x.get('class')})))" 2>/dev/null || true
       log "  Init container logs:"
       kubectl -n confluent logs connect-0 -c config-init-container 2>/dev/null | tail -30 || true
+      log "  Connect container logs (tail 200):"
+      kubectl -n confluent logs connect-0 -c connect --tail=200 2>/dev/null || true
+      log "  Connect CR build spec:"
+      kubectl -n confluent get connect connect -o json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps(d.get('spec',{}).get('build',{}), indent=2))" 2>/dev/null || true
       log "  Connect CR status:"
       kubectl -n confluent get connect connect -o jsonpath='{.status}' 2>/dev/null | python3 -m json.tool 2>/dev/null || true
-      break
+      log "  Connect CR events:"
+      kubectl -n confluent describe connect connect 2>/dev/null | sed -n '/Events:/,$p' | tail -80 || true
+      log "  Namespace events (tail 80):"
+      kubectl -n confluent get events --sort-by='.lastTimestamp' 2>/dev/null | tail -80 || true
+      exit 1
     fi
-    log "  ⌛ Connect plugins=${connect_plugin_count} via ${connect_plugin_count_source} (waiting for >3), elapsed: ${connect_build_cur_wait}/${connect_build_wait_max}s"
+    if [[ "$connect_expected_plugin_total" -gt 0 ]]
+    then
+      log "  ⌛ Connect plugins=${connect_plugin_count} via ${connect_plugin_count_source}, expected-plugin-match=${connect_expected_plugin_match}/${connect_expected_plugin_total}, elapsed: ${connect_build_cur_wait}/${connect_build_wait_max}s"
+    else
+      log "  ⌛ Connect plugins=${connect_plugin_count} via ${connect_plugin_count_source} (waiting for >3), elapsed: ${connect_build_cur_wait}/${connect_build_wait_max}s"
+    fi
     sleep "$connect_build_interval"
   done
   set -e
