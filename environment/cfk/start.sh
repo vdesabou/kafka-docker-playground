@@ -1491,6 +1491,20 @@ EOF
       has_any_port=1
     fi
 
+    # Solace source examples rely on SMF over 55555, which may be omitted from
+    # compose overrides because host exposure is not required in Docker mode.
+    # Ensure the in-cluster Service still exposes 55555 so Connect can reach Solace.
+    if [[ "$pod_name" == "solace" ]] && [[ ! " ${parsed_ports[*]} " =~ " 55555 " ]]
+    then
+      if [[ "$has_any_port" -eq 0 ]]
+      then
+        echo "      ports:" >> "$output_file"
+        has_any_port=1
+      fi
+      parsed_ports+=("55555")
+      echo "        - containerPort: 55555" >> "$output_file"
+    fi
+
     if [[ "${#volume_names[@]}" -gt 0 ]] || [[ "${#tmpfs_volume_names[@]}" -gt 0 ]]
     then
       echo "  volumes:" >> "$output_file"
