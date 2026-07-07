@@ -18,7 +18,7 @@ log "Generate data"
 playground --output-level WARN container exec --container connect --command "mkdir -p /tmp/data/input/ && mkdir -p /tmp/data/error/ && mkdir -p /tmp/data/finished/ && curl -k \"https://api.mockaroo.com/api/b10f7e90?count=1000&key=25fd9c80\" > /tmp/data/input/tsv-spooldir-source.tsv"
 
 log "Creating TSV Spool Dir Source connector"
-playground connector create-or-update --connector TsvSpoolDir  << EOF
+playground connector create-or-update --connector spool-dir  << EOF
 {
      "tasks.max": "1",
      "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirCsvSourceConnector",
