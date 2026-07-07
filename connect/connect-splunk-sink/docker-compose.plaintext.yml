@@ -7,6 +7,7 @@ services:
     platform: linux/amd64
     ports:
       - 8000:8000
+      - 8088:8088
     volumes:
       - ../../connect/connect-splunk-sink/default.yml:/tmp/defaults/default.yml
     environment:
