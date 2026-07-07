@@ -2,7 +2,8 @@
 services:
 
   mapr:
-    image: maprtech/dev-sandbox-container:6.1.0_6.0.0_ubuntu16 # https://mapr.com/docs/60/MapRContainerDevelopers/RunMapRContainerDevelopers.html
+    # https://mapr.com/docs/60/MapRContainerDevelopers/RunMapRContainerDevelopers.html
+    image: maprtech/dev-sandbox-container:6.1.0_6.0.0_ubuntu16
     hostname: maprdemo
     container_name: mapr
     privileged: true

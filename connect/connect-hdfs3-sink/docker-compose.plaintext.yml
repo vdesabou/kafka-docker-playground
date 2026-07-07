@@ -56,7 +56,8 @@ services:
   hive-server:
     hostname: hive-server
     container_name: hive-server
-    image: vdesabou/hive:3.1.2-postgresql-metastore # https://github.com/vdesabou/docker-hive
+    # https://github.com/vdesabou/docker-hive
+    image: vdesabou/hive:3.1.2-postgresql-metastore
     env_file:
       - ../../connect/connect-hdfs3-sink/hadoop-hive.env
     environment:
@@ -66,7 +67,8 @@ services:
   hive-metastore:
     hostname: hive-metastore
     container_name: hive-metastore
-    image: vdesabou/hive:3.1.2-postgresql-metastore # https://github.com/vdesabou/docker-hive
+    # https://github.com/vdesabou/docker-hive
+    image: vdesabou/hive:3.1.2-postgresql-metastore
     env_file:
       - ../../connect/connect-hdfs3-sink/hadoop-hive.env
     command: /opt/hive/bin/hive --service metastore

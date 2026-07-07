@@ -1,7 +1,8 @@
 ---
 services:
   couchbase:
-    image: couchbase # https://hub.docker.com/_/couchbase
+    # https://hub.docker.com/_/couchbase
+    image: couchbase 
     hostname: couchbase
     container_name: couchbase
     ports:

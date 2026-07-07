@@ -1,7 +1,8 @@
 ---
 services:
   hbase:
-    image: daunnc/hbase:2.2.4 # https://github.com/pomadchin/hbase-docker
+    # https://github.com/pomadchin/hbase-docker
+    image: daunnc/hbase:2.2.4
     hostname: hbase
     container_name: hbase
 
