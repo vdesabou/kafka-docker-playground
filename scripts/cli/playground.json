@@ -2123,6 +2123,21 @@
           ]
         },
         {
+          "name": "update",
+          "description": "✍️ Edit and apply runtime container/pod definition\n  \n  Opens the current docker-compose (non-CFK) or Kubernetes resource YAML (CFK)\n  for the target container/pod in your configured editor and applies changes\n  when you save and close the file.\n",
+          "usage": "playground container update [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--container",
+                "-c"
+              ],
+              "argument": "connect",
+              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+            }
+          ]
+        },
+        {
           "name": "get-ip-addresses",
           "description": "🖥️  Get ip address of running containers\n",
           "usage": "playground container get-ip-addresses",

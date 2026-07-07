@@ -2685,6 +2685,21 @@ commands:
 
           By default, the current version is used
 
+    - name: update
+      group: Container
+      help: |-
+        ✍️ Edit and apply runtime container/pod definition
+
+        Opens the current docker-compose (non-CFK) or Kubernetes resource YAML (CFK)
+        for the target container/pod in your configured editor and applies changes
+        when you save and close the file.
+      flags:
+      - *container
+      examples:
+      - playground container update --container connect
+      - playground container update -c splunk
+      - playground container update --container connect --container broker
+
     - name: get-ip-addresses
       group: Container
       help: |-
