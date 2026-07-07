@@ -1754,6 +1754,124 @@ EOF
   return 1
 }
 
+function collect_connect_ports_from_compose() {
+  local compose_file="$1"
+  local output_file="$2"
+
+  if [[ ! -f "$compose_file" ]]
+  then
+    return 1
+  fi
+
+  awk '
+    function trim(s) { gsub(/^[[:space:]]+|[[:space:]]+$/, "", s); return s }
+    function unquote(s) { gsub(/^"|"$/, "", s); gsub(/^\047|\047$/, "", s); return s }
+
+    BEGIN { in_services=0; service=""; section="" }
+    /^services:[[:space:]]*$/ { in_services=1; next }
+
+    {
+      if (in_services == 1 && $0 ~ /^[^[:space:]]/) {
+        in_services=0
+      }
+      if (in_services == 0) {
+        next
+      }
+
+      if ($0 ~ /^  [A-Za-z0-9_.-]+:[[:space:]]*$/) {
+        service=$1
+        sub(/:$/, "", service)
+        section=""
+        next
+      }
+
+      if (service != "connect") {
+        next
+      }
+
+      if ($0 ~ /^    ports:[[:space:]]*$/) {
+        section="ports"
+        next
+      }
+
+      if ($0 ~ /^    [A-Za-z0-9_.-]+:[[:space:]]*$/) {
+        section=""
+      }
+
+      if (section == "ports" && $0 ~ /^[[:space:]]*-[[:space:]]*/) {
+        value=$0
+        sub(/^[[:space:]]*-[[:space:]]*/, "", value)
+        value=trim(unquote(value))
+        if (value != "") {
+          print value
+        }
+      }
+    }
+  ' "$compose_file" > "$output_file"
+
+  if [[ -s "$output_file" ]]
+  then
+    return 0
+  fi
+
+  rm -f "$output_file"
+  return 1
+}
+
+function parse_compose_connect_port_mapping() {
+  local raw_port="$1"
+  local protocol="tcp"
+  local local_port=""
+  local target_port=""
+  local IFS=':'
+  local parts=()
+  local count=0
+
+  raw_port=$(echo "$raw_port" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
+  raw_port=$(echo "$raw_port" | sed -E "s/^'|'$//g; s/^\"|\"$//g")
+
+  if [[ "$raw_port" == */* ]]
+  then
+    protocol=$(echo "$raw_port" | awk -F'/' '{print tolower($NF)}')
+    raw_port="${raw_port%%/*}"
+  fi
+
+  read -r -a parts <<< "$raw_port"
+  count=${#parts[@]}
+
+  if [[ "$count" -ge 2 ]]
+  then
+    local_port="${parts[$((count-2))]}"
+    target_port="${parts[$((count-1))]}"
+  elif [[ "$count" -eq 1 ]]
+  then
+    local_port="${parts[0]}"
+    target_port="${parts[0]}"
+  else
+    return 1
+  fi
+
+  local_port="${local_port##*:}"
+  target_port="${target_port##*:}"
+
+  if [[ "$local_port" == *-* ]]
+  then
+    local_port="${local_port%%-*}"
+  fi
+  if [[ "$target_port" == *-* ]]
+  then
+    target_port="${target_port%%-*}"
+  fi
+
+  if [[ ! "$local_port" =~ ^[0-9]+$ ]] || [[ ! "$target_port" =~ ^[0-9]+$ ]]
+  then
+    return 1
+  fi
+
+  echo "${local_port}|${target_port}|${protocol}"
+  return 0
+}
+
 function generate_connect_build_patch_from_compose() {
   local compose_file="$1"
   local output_file="$2"
@@ -3048,6 +3166,78 @@ function start_port_forward_with_retry() {
   return 1
 }
 
+function start_pod_port_forward() {
+  local pod_name="$1"
+  local local_port="$2"
+  local remote_port="$3"
+  local log_file="$4"
+  local description="$5"
+
+  log "🔀 Starting port-forward for $description (local:$local_port -> pod $pod_name:$remote_port)"
+
+  set +e
+  lsof -i ":${local_port}" 2>/dev/null | grep -i kubectl | awk '{print $2}' | xargs kill -9 2>/dev/null || true
+  set -e
+
+  sleep 1
+
+  kubectl -n confluent port-forward "pod/${pod_name}" "${local_port}:${remote_port}" >"${log_file}" 2>&1 &
+  local pf_pid=$!
+
+  sleep 2
+
+  if ! kill -0 "$pf_pid" 2>/dev/null
+  then
+    logwarn "⚠️ Port-forward for $description (port $local_port) failed to start"
+    cat "${log_file}" | head -10 | while read -r line; do logwarn "  $line"; done
+    return 1
+  fi
+
+  if grep -i "error\|unable\|failed" "${log_file}" > /dev/null 2>&1
+  then
+    logwarn "⚠️ Port-forward for $description may have encountered an error"
+    cat "${log_file}" | head -10 | while read -r line; do logwarn "  $line"; done
+    return 1
+  fi
+
+  echo "$pf_pid"
+  return 0
+}
+
+function start_pod_port_forward_with_retry() {
+  local pod_name="$1"
+  local local_port="$2"
+  local remote_port="$3"
+  local log_file="$4"
+  local description="$5"
+  local max_wait_seconds="${6:-120}"
+  local waited=0
+  local wait_interval=2
+  local pf_pid=""
+
+  while [[ "$waited" -lt "$max_wait_seconds" ]]
+  do
+    if kubectl -n confluent get pod "$pod_name" >/dev/null 2>&1
+    then
+      if [[ "$(kubectl -n confluent get pod "$pod_name" -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null)" == "True" ]]
+      then
+        pf_pid=$(start_pod_port_forward "$pod_name" "$local_port" "$remote_port" "$log_file" "$description")
+        if [[ -n "$pf_pid" ]]
+        then
+          echo "$pf_pid"
+          return 0
+        fi
+      fi
+    fi
+
+    sleep "$wait_interval"
+    waited=$(( waited + wait_interval ))
+  done
+
+  logwarn "⚠️ Timed out after ${max_wait_seconds}s starting port-forward for $description"
+  return 1
+}
+
 if [[ -n "$ENABLE_CONTROL_CENTER" ]]
 then
   log "Port-forward controlcenter, schema-registry, and connect"
@@ -3150,6 +3340,47 @@ fi
 if [[ -n "$REST_PROXY_PF_PID" ]]
 then
   log "📲 REST Proxy is reachable at http://127.0.0.1:8082"
+fi
+
+# Port-forward connect service ports declared in compose override (for listeners like syslog.port)
+if [[ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]]
+then
+  CONNECT_PORTS_FILE=$(mktemp)
+  if collect_connect_ports_from_compose "${DOCKER_COMPOSE_FILE_OVERRIDE}" "${CONNECT_PORTS_FILE}"
+  then
+    log "🔀 Port-forwarding connect ports from compose override"
+    set +e
+    while IFS= read -r raw_connect_port
+    do
+      parsed_connect_port=$(parse_compose_connect_port_mapping "$raw_connect_port")
+      if [[ $? -ne 0 ]] || [[ -z "$parsed_connect_port" ]]
+      then
+        logwarn "⚠️ Could not parse connect port mapping '$raw_connect_port' from compose override"
+        continue
+      fi
+
+      connect_local_port="${parsed_connect_port%%|*}"
+      connect_target_and_proto="${parsed_connect_port#*|}"
+      connect_target_port="${connect_target_and_proto%%|*}"
+      connect_protocol="${connect_target_and_proto##*|}"
+
+      if [[ "$connect_protocol" != "tcp" ]]
+      then
+        logwarn "⚠️ Skipping connect port mapping '$raw_connect_port' (protocol ${connect_protocol} is not supported by kubectl port-forward)"
+        continue
+      fi
+
+      if [[ "$connect_target_port" == "8083" ]]
+      then
+        continue
+      fi
+
+      start_pod_port_forward_with_retry "connect-0" "$connect_local_port" "$connect_target_port" "/tmp/connect-${connect_local_port}-port-forward.log" "Connect listener ${connect_local_port}->${connect_target_port}" "120" > /dev/null || true
+      log "🔌 Connect listener is reachable at tcp://127.0.0.1:${connect_local_port}"
+    done < "$CONNECT_PORTS_FILE"
+    set -e
+  fi
+  rm -f "$CONNECT_PORTS_FILE" >/dev/null 2>&1 || true
 fi
 
 
