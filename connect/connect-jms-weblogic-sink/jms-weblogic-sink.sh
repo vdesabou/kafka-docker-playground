@@ -68,6 +68,32 @@ cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
+log "Waiting for WebLogic endpoint to become reachable"
+MAX_WAIT_SECONDS=300
+WAIT_INTERVAL=5
+CURRENT_WAIT=0
+while true
+do
+     set +e
+     playground --output-level ERROR container exec --container weblogic-jms --command "curl -sf http://localhost:7001/weblogic/ready > /dev/null" --shell sh
+     READY_STATUS=$?
+     set -e
+     if [ $READY_STATUS -eq 0 ]
+     then
+          log "✅ WebLogic is ready"
+          break
+     fi
+
+     CURRENT_WAIT=$((CURRENT_WAIT + WAIT_INTERVAL))
+     if [ $CURRENT_WAIT -ge $MAX_WAIT_SECONDS ]
+     then
+          logerror "❌ WebLogic did not become ready within ${MAX_WAIT_SECONDS}s"
+          exit 1
+     fi
+
+     log "⌛ WebLogic not ready yet, waiting... (${CURRENT_WAIT}/${MAX_WAIT_SECONDS}s)"
+     sleep $WAIT_INTERVAL
+done
 
 log "Sending messages to topic sink-messages"
 playground topic produce --topic sink-messages --nb-messages 1 << 'EOF'
