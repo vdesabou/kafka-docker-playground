@@ -24135,13 +24135,13 @@ playground_debug_generate_diagnostics_command() {
   		exit 1
   	fi
 
-  	docker exec $container curl -L https://packages.confluent.io/tools/diagnostics-bundle/diagnostics-bundle-1.0.4.jar -o /tmp/diagnostics-bundle-1.0.4.jar > /dev/null 2>&1
+  	playground --output-level ERROR container exec --container "$container" --command "curl -L https://packages.confluent.io/tools/diagnostics-bundle/diagnostics-bundle-1.0.4.jar -o /tmp/diagnostics-bundle-1.0.4.jar" > /dev/null 2>&1
 
   	fifo_path="$tmp_dir/collect_fifo"
   	mkfifo "$fifo_path"
 
   	set +e
-  	docker exec $container java -jar /tmp/diagnostics-bundle-1.0.4.jar collect > "$fifo_path" 2>&1 &
+  	playground --output-level ERROR container exec --container "$container" --command "java -jar /tmp/diagnostics-bundle-1.0.4.jar collect" > "$fifo_path" 2>&1 &
 
   	# Loop through each line in the named pipe
   	while read -r line
@@ -24179,13 +24179,13 @@ playground_debug_thread_dump_command() {
       filename="/tmp/thread-dump-$container-$(date '+%Y-%m-%d-%H-%M-%S').log"
 
       set +e
-      docker exec $container type jstack > /dev/null 2>&1
+      playground --output-level ERROR container exec --container "$container" --command "type jstack" > /dev/null 2>&1
       if [ $? != 0 ]
       then
           logwarn "jstack is not installed on container $container, attempting to install jdk 17"
           playground container change-jdk --version 17
 
-          docker exec $container type jstack > /dev/null 2>&1
+          playground --output-level ERROR container exec --container "$container" --command "type jstack" > /dev/null 2>&1
           if [ $? != 0 ]
           then
               logerror "❌ jstack could not be installed on container $container"
@@ -24194,7 +24194,7 @@ playground_debug_thread_dump_command() {
       fi
       set -e
       log "🎯 Taking thread dump on container ${container} for pid 1"
-      docker exec $container jstack 1 > "$filename" 2>&1
+      playground --output-level ERROR container exec --container "$container" --command "jstack 1" > "$filename" 2>&1
       if [ $? -eq 0 ]
       then
           playground open --file "${filename}"
@@ -24220,13 +24220,13 @@ playground_debug_heap_dump_command() {
 
   for container in "${container_array[@]}"
   do
-      docker exec $container type jmap > /dev/null 2>&1
+      playground --output-level ERROR container exec --container "$container" --command "type jmap" > /dev/null 2>&1
       if [ $? != 0 ]
       then
           logwarn "jmap is not installed on container $container, attempting to install jdk 17"
           playground container change-jdk --version 17
 
-          docker exec $container type jmap > /dev/null 2>&1
+          playground --output-level ERROR container exec --container "$container" --command "type jmap" > /dev/null 2>&1
           if [ $? != 0 ]
           then
               logerror "❌ jmap could not be installed on container $container"
@@ -24241,10 +24241,10 @@ playground_debug_heap_dump_command() {
           if [[ -n "$live" ]]
           then
               log "📊 Taking histo (with live option) heap dump on container ${container}"
-              docker exec $container jmap -histo:live 1 > /tmp/${filename}
+              playground --output-level ERROR container exec --container "$container" --command "jmap -histo:live 1" > /tmp/${filename}
           else
               log "📊 Taking histo (without live option) heap dump on container ${container}"
-              docker exec $container jmap -histo 1 > /tmp/${filename}
+              playground --output-level ERROR container exec --container "$container" --command "jmap -histo 1" > /tmp/${filename}
           fi
           if [ $? -eq 0 ]
           then
@@ -24258,10 +24258,10 @@ playground_debug_heap_dump_command() {
           if [[ -n "$live" ]]
           then
               log "🎯 Taking heap dump (with live option) on container ${container}"
-              docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
+              playground --output-level ERROR container exec --container "$container" --command "jmap -dump:live,format=b,file=/tmp/${filename} 1"
           else
               log "🎯 Taking heap dump (without live option) on container ${container}"
-              docker exec $container jmap -dump:format=b,file=/tmp/${filename} 1
+              playground --output-level ERROR container exec --container "$container" --command "jmap -dump:format=b,file=/tmp/${filename} 1"
           fi
           if [ $? -eq 0 ]
           then
@@ -24593,29 +24593,22 @@ playground_debug_gc_analyze_command() {
       log "🐳 Looking for GC log in container: $container"
 
       # 1. Try to read the GC log path from -Xlog:gc*:file=<path> (JDK 9+)
-      gc_log_path=$(docker exec "$container" sh -c \
-          "ps aux 2>/dev/null | grep -oP '(?<=-Xlog:gc\*:file=)[^:]+' | head -1" 2>/dev/null)
+      gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "sh -c \"ps aux 2>/dev/null | grep -oP '(?<=-Xlog:gc\\*:file=)[^:]+' | head -1\"" 2>/dev/null)
 
       # 2. Try legacy -Xloggc:<path> flag (JDK 8)
       if [[ -z "$gc_log_path" ]]; then
-          gc_log_path=$(docker exec "$container" sh -c \
-              "ps aux 2>/dev/null | grep -oP '(?<=-Xloggc:)\S+' | head -1" 2>/dev/null)
+          gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "sh -c \"ps aux 2>/dev/null | grep -oP '(?<=-Xloggc:)\\S+' | head -1\"" 2>/dev/null)
       fi
 
       # 3. Try -Xlog:gc:file=<path> (simpler unified log variant)
       if [[ -z "$gc_log_path" ]]; then
-          gc_log_path=$(docker exec "$container" sh -c \
-              "ps aux 2>/dev/null | grep -oP '(?<=-Xlog:gc:file=)[^:]+' | head -1" 2>/dev/null)
+          gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "sh -c \"ps aux 2>/dev/null | grep -oP '(?<=-Xlog:gc:file=)[^:]+' | head -1\"" 2>/dev/null)
       fi
 
       # 4. Fallback: search common locations
       if [[ -z "$gc_log_path" ]]; then
           log "🔍 No -Xlog/Xloggc flag found, searching common log locations..."
-          gc_log_path=$(docker exec "$container" sh -c \
-              "find /tmp /var/log /opt /var/log/kafka /etc/kafka 2>/dev/null \
-               \( -name '*gc*.log' -o -name 'kafkaServer-gc.log' -o -name 'zookeeper-gc.log' \
-                  -o -name 'connect-gc.log' -o -name 'schema-registry-gc.log' \) \
-               -type f | head -1" 2>/dev/null)
+            gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "sh -c \"find /tmp /var/log /opt /var/log/kafka /etc/kafka 2>/dev/null \\\n+             \\\( -name '*gc*.log' -o -name 'kafkaServer-gc.log' -o -name 'zookeeper-gc.log' \\\n+                -o -name 'connect-gc.log' -o -name 'schema-registry-gc.log' \\\) \\\n+             -type f | head -1\"" 2>/dev/null)
       fi
 
       if [[ -z "$gc_log_path" ]]; then
@@ -24705,7 +24698,7 @@ playground_debug_tcp_dump_command() {
   for container in "${container_array[@]}"
   do
   	set +e
-  	docker exec $container type tcpdump > /dev/null 2>&1
+  	playground --output-level ERROR container exec --container "$container" --command "type tcpdump" > /dev/null 2>&1
   	if [ $? != 0 ]
   	then
 
@@ -24733,7 +24726,7 @@ playground_debug_tcp_dump_command() {
   	echo "using apt-get" >> $output_install_log
   	docker exec --privileged --user root $container bash -c "apt-get update && echo tcpdump | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*" >> $output_install_log 2>&1
   	fi
-  	docker exec $container type tcpdump > /dev/null 2>&1
+  	playground --output-level ERROR container exec --container "$container" --command "type tcpdump" > /dev/null 2>&1
   	if [ $? != 0 ]
   	then
   		logerror "❌ tcpdump could not be installed, see output below"
@@ -24795,7 +24788,7 @@ playground_debug_block_traffic_command() {
   install_iptables_if_needed() {
       local container=$1
       set +e
-      docker exec $container type iptables > /dev/null 2>&1
+      playground --output-level ERROR container exec --container "$container" --command "type iptables" > /dev/null 2>&1
       if [ $? != 0 ]
       then
           tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
@@ -24812,7 +24805,7 @@ playground_debug_block_traffic_command() {
             docker exec --privileged --user root $container bash -c "apt-get update && echo iptables | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*"
           fi
       fi
-      docker exec $container type iptables > /dev/null 2>&1
+      playground --output-level ERROR container exec --container "$container" --command "type iptables" > /dev/null 2>&1
       if [ $? != 0 ]
       then
           logerror "❌ iptables could not be installed on container $container"
@@ -25014,13 +25007,13 @@ playground_debug_flight_recorder_command() {
       filename="flight-recorder-$container-$(date '+%Y-%m-%d-%H-%M-%S').jfr"
 
       set +e
-      docker exec $container type jcmd > /dev/null 2>&1
+      playground --output-level ERROR container exec --container "$container" --command "type jcmd" > /dev/null 2>&1
       if [ $? != 0 ]
       then
           logwarn "jcmd is not installed on container $container, attempting to install jdk 17"
           playground container change-jdk --version 17
 
-          docker exec $container type jcmd > /dev/null 2>&1
+          playground --output-level ERROR container exec --container "$container" --command "type jcmd" > /dev/null 2>&1
           if [ $? != 0 ]
           then
               logerror "❌ jcmd could not be installed on container $container"
@@ -25031,7 +25024,7 @@ playground_debug_flight_recorder_command() {
       case "${action}" in
           start)
               set +e
-              output=$(docker exec ${container} jcmd 1 JFR.check)
+              output=$(playground --output-level ERROR container exec --container "${container}" --command "jcmd 1 JFR.check")
               echo "$output" | grep "running" | grep "dump1"
               if [ $? -eq 0 ]
               then
@@ -25041,7 +25034,7 @@ playground_debug_flight_recorder_command() {
               set -e
 
               playground container cp --source ${root_folder}/scripts/cli/all.jfc --destination ${container}:/tmp/all.jfc > /dev/null 2>&1
-              docker exec ${container} jcmd 1 JFR.start name=dump1 filename=/tmp/${filename} settings=/tmp/all.jfc
+              playground --output-level ERROR container exec --container "${container}" --command "jcmd 1 JFR.start name=dump1 filename=/tmp/${filename} settings=/tmp/all.jfc"
               if [ $? -eq 0 ]
               then
                   log "🛩️ flight recorder is now started"
@@ -25051,7 +25044,7 @@ playground_debug_flight_recorder_command() {
           ;;
           stop)
               set +e
-              output=$(docker exec ${container} jcmd 1 JFR.check)
+              output=$(playground --output-level ERROR container exec --container "${container}" --command "jcmd 1 JFR.check")
               echo "$output" | grep "running" | grep "dump1"
               if [ $? -ne 0 ]
               then
@@ -25059,7 +25052,7 @@ playground_debug_flight_recorder_command() {
                   exit 1
               fi
               set -e
-              docker exec ${container} jcmd 1 JFR.stop name=dump1 filename=/tmp/${filename}
+              playground --output-level ERROR container exec --container "${container}" --command "jcmd 1 JFR.stop name=dump1 filename=/tmp/${filename}"
               if [ $? -eq 0 ]
               then
                   log "🛩️ flight recorder is available at ${filename}"
@@ -30430,8 +30423,7 @@ playground_connector_offsets_get_command() {
                       continue
                   fi
               else
-                  docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security
-
+                  playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security"
               fi
           fi
       fi
@@ -30577,7 +30569,7 @@ playground_connector_offsets_reset_command() {
               fi
               playground connector offsets get --connector $connector
           else
-              docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security | grep -v PARTITION
+              playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security" | grep -v PARTITION
 
               if version_gt $tag "7.4.99"
               then
@@ -30587,7 +30579,7 @@ playground_connector_offsets_reset_command() {
                   playground connector delete --connector $connector
               fi
 
-              docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector $security --to-earliest --reset-offsets --all-topics --execute
+              playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector $security --to-earliest --reset-offsets --all-topics --execute"
 
               if version_gt $tag "7.4.99"
               then
@@ -30790,7 +30782,7 @@ playground_connector_offsets_alter_command() {
                       fi
 
                       echo "topic,partition,current-offset" > $file
-                      docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector $security --export --reset-offsets --to-current --all-topics --dry-run >> $file
+                      playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector $security --export --reset-offsets --to-current --all-topics --dry-run" >> $file
 
                       log "✨ Update the connector offsets as per your needs, save and close the file to continue"
                       playground open --file "${file}" --wait
@@ -30800,7 +30792,7 @@ playground_connector_offsets_alter_command() {
                       grep -v 'current-offset' "$file" > $tmp_dir/tmp && mv $tmp_dir/tmp "$file"
 
                       playground container cp --source $file --destination $container:/tmp/offsets.csv > /dev/null 2>&1
-                      docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector $security --reset-offsets --from-file /tmp/offsets.csv --execute
+                      playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector $security --reset-offsets --from-file /tmp/offsets.csv --execute"
 
                       if version_gt $tag "7.4.99"
                       then
@@ -31725,7 +31717,7 @@ playground_connector_show_lag_command() {
         fi
         docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe | grep -v PARTITION | sed '/^$/d' &> $lag_output
       else
-        docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d' &> $lag_output
+        playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security" | grep -v PARTITION | sed '/^$/d' &> $lag_output
       fi
 
       if grep -q "Warning" $lag_output
