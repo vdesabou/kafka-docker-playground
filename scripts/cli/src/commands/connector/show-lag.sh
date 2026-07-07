@@ -219,7 +219,7 @@ do
       fi
       docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group $consumer_group --describe | grep -v PARTITION | sed '/^$/d' &> $lag_output
     else
-      docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security | grep -v PARTITION | sed '/^$/d' &> $lag_output
+      playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security" | grep -v PARTITION | sed '/^$/d' &> $lag_output
     fi
 
     if grep -q "Warning" $lag_output
