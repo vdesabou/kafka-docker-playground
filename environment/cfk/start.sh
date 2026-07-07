@@ -710,6 +710,154 @@ EOF
   return 1
 }
 
+function generate_connect_env_patch_from_compose() {
+  local compose_file="$1"
+  local patch_file="$2"
+  local tmp_env_file=""
+  local env_key=""
+  local env_value=""
+  local env_mode=""
+  local escaped_value=""
+  local has_env=0
+
+  if [[ ! -f "$compose_file" ]]
+  then
+    return 1
+  fi
+
+  tmp_env_file=$(mktemp)
+
+  awk '
+    function trim(s) { gsub(/^[[:space:]]+|[[:space:]]+$/, "", s); return s }
+    function unquote(s) { gsub(/^"|"$/, "", s); gsub(/^\047|\047$/, "", s); return s }
+
+    BEGIN {
+      in_services=0
+      service=""
+      section=""
+    }
+
+    /^services:[[:space:]]*$/ {
+      in_services=1
+      next
+    }
+
+    {
+      if (in_services == 1 && $0 ~ /^[^[:space:]]/) {
+        in_services=0
+      }
+      if (in_services == 0) {
+        next
+      }
+
+      if ($0 ~ /^  [A-Za-z0-9_.-]+:[[:space:]]*$/) {
+        service=$1
+        sub(/:$/, "", service)
+        section=""
+        next
+      }
+
+      if (service != "connect") {
+        next
+      }
+
+      if ($0 ~ /^    environment:[[:space:]]*$/) {
+        section="environment"
+        next
+      }
+
+      if ($0 ~ /^    [A-Za-z0-9_.-]+:[[:space:]]*$/) {
+        section=""
+      }
+
+      if (section == "environment" && $0 ~ /^      -[[:space:]]*/) {
+        entry=$0
+        sub(/^      -[[:space:]]*/, "", entry)
+        entry=trim(unquote(entry))
+        if (entry == "") {
+          next
+        }
+
+        if (index(entry, "=") > 0) {
+          key=entry
+          sub(/=.*/, "", key)
+          value=entry
+          sub(/^[^=]*=/, "", value)
+          key=trim(key)
+          value=trim(unquote(value))
+          if (key != "") {
+            print key "|" value "|literal"
+          }
+        } else {
+          key=trim(entry)
+          if (key != "") {
+            print key "||from_env"
+          }
+        }
+        next
+      }
+
+      if (section == "environment" && $0 ~ /^      [A-Za-z_][A-Za-z0-9_]*:[[:space:]]*/) {
+        kv=$0
+        sub(/^      /, "", kv)
+        key=kv
+        sub(/:.*/, "", key)
+        value=kv
+        sub(/^[^:]+:[[:space:]]*/, "", value)
+        key=trim(key)
+        value=trim(unquote(value))
+        if (key != "") {
+          print key "|" value "|literal"
+        }
+        next
+      }
+    }
+  ' "$compose_file" > "$tmp_env_file"
+
+  : > "$patch_file"
+
+  while IFS='|' read -r env_key env_value env_mode
+  do
+    if [[ -z "$env_key" ]]
+    then
+      continue
+    fi
+
+    if [[ "$env_mode" == "from_env" ]]
+    then
+      env_value="${!env_key}"
+    fi
+
+    env_value=$(echo "$env_value" | envsubst)
+    escaped_value=$(printf '%s' "$env_value" | sed 's/\\/\\\\/g; s/"/\\"/g')
+
+    if [[ "$has_env" -eq 0 ]]
+    then
+      cat > "$patch_file" << EOF
+spec:
+  podTemplate:
+    envVars:
+EOF
+      has_env=1
+    fi
+
+    cat >> "$patch_file" << EOF
+      - name: ${env_key}
+        value: "${escaped_value}"
+EOF
+  done < "$tmp_env_file"
+
+  rm -f "$tmp_env_file"
+
+  if [[ "$has_env" -eq 1 ]]
+  then
+    return 0
+  fi
+
+  rm -f "$patch_file"
+  return 1
+}
+
 function generate_extra_pods_from_compose_override() {
   local compose_file="$1"
   local output_file="$2"
@@ -2087,6 +2235,7 @@ CFK_MANIFEST_FILE=""
 K3D_CONFIG_FILE=""
 CONNECT_MOUNT_RESOURCES_FILE=""
 CONNECT_MOUNT_PATCH_FILE=""
+CONNECT_ENV_PATCH_FILE=""
 
 function reset_cfk_namespace_state() {
   local namespace="confluent"
@@ -2499,6 +2648,15 @@ then
     log_generated_yaml_file "Dynamic Connect mounted volumes patch generated:" "${CONNECT_MOUNT_PATCH_FILE}"
   fi
 
+  CONNECT_ENV_PATCH_FILE=$(mktemp)
+  if ! generate_connect_env_patch_from_compose "${DOCKER_COMPOSE_FILE_OVERRIDE}" "${CONNECT_ENV_PATCH_FILE}"
+  then
+    rm -f "${CONNECT_ENV_PATCH_FILE}"
+    CONNECT_ENV_PATCH_FILE=""
+  else
+    log_generated_yaml_file "Dynamic Connect environment patch generated:" "${CONNECT_ENV_PATCH_FILE}"
+  fi
+
   EXTRA_PODS_FILE=$(mktemp)
   if ! generate_extra_pods_from_compose_override "${DOCKER_COMPOSE_FILE_OVERRIDE}" "${EXTRA_PODS_FILE}"
   then
@@ -2572,6 +2730,30 @@ then
     exit 1
   fi
   set -e
+fi
+
+if [[ -n "$CONNECT_ENV_PATCH_FILE" ]] && [[ -s "$CONNECT_ENV_PATCH_FILE" ]]
+then
+  log "Patch Connect environment variables from compose override"
+  patched_connect_env=0
+  set +e
+  for _ in {1..30}
+  do
+    kubectl -n confluent patch connect connect --type merge --patch-file "$CONNECT_ENV_PATCH_FILE" > /dev/null 2>&1
+    if [[ $? -eq 0 ]]
+    then
+      patched_connect_env=1
+      break
+    fi
+    sleep 2
+  done
+  if [[ "$patched_connect_env" -ne 1 ]]
+  then
+    logerror "❌ Could not patch connect/connect environment variables in CFK"
+    exit 1
+  fi
+  set -e
+  patched_connect_spec=1
 fi
 
 if [[ -n "$CONNECT_BUILD_PATCH_FILE" ]] && [[ -s "$CONNECT_BUILD_PATCH_FILE" ]]
@@ -2776,6 +2958,10 @@ cleanup() {
   if [ -n "$CONNECT_MOUNT_PATCH_FILE" ]
   then
     rm -f "$CONNECT_MOUNT_PATCH_FILE" >/dev/null 2>&1 || true
+  fi
+  if [ -n "$CONNECT_ENV_PATCH_FILE" ]
+  then
+    rm -f "$CONNECT_ENV_PATCH_FILE" >/dev/null 2>&1 || true
   fi
   if [ -n "$K3D_CONFIG_FILE" ]
   then
