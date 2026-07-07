@@ -6,6 +6,6 @@ services:
     image: vdesabou/sfdx-cli:latest
     hostname: sfdx-cli
     container_name: sfdx-cli
-    command: "sleep infinity"
+    entrypoint: ["sh", "-c", "sleep infinity"]
     volumes:
     - ../../ccloud/fm-salesforce-pushtopics-source/MyLeadPushTopics.apex:/tmp/MyLeadPushTopics.apex
