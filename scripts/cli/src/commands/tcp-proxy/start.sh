@@ -65,6 +65,49 @@ EOF
 
 echo "$docker_command" > /tmp/playground-command-zazkia
 sed -i -E -e "s|up -d --quiet-pull|-f /tmp/docker-compose.override.zazkia.yml up -d --quiet-pull|g" /tmp/playground-command-zazkia
+
+zazkia_compose_command=$(cat /tmp/playground-command-zazkia)
+cat << EOF > /tmp/playground-command-zazkia
+#!/usr/bin/env bash
+set -e
+
+tmp_log=/tmp/playground-command-zazkia.log
+tmp_retry_log=/tmp/playground-command-zazkia-retry.log
+compose_command='$zazkia_compose_command'
+
+set +e
+eval "\$compose_command" > "\$tmp_log" 2>&1
+exit_code=\$?
+set -e
+
+if [ \$exit_code -ne 0 ] && grep -q "incorrect label com.docker.compose.network" "\$tmp_log"
+then
+  stale_network=\$(grep -Eo 'network [^ ]+ was found but has incorrect label' "\$tmp_log" | awk '{print \$2}' | head -1)
+  if [ ! -z "\$stale_network" ]
+  then
+    echo "docker compose network label mismatch detected for \$stale_network, removing and retrying"
+    docker network rm "\$stale_network" > /dev/null 2>&1 || true
+  fi
+
+  set +e
+  eval "\$compose_command" > "\$tmp_retry_log" 2>&1
+  retry_exit_code=\$?
+  set -e
+
+  if [ \$retry_exit_code -ne 0 ]
+  then
+    cat "\$tmp_log"
+    cat "\$tmp_retry_log"
+    exit \$retry_exit_code
+  fi
+elif [ \$exit_code -ne 0 ]
+then
+  cat "\$tmp_log"
+  exit \$exit_code
+fi
+EOF
+chmod +x /tmp/playground-command-zazkia
+
 log "💫 adding container zazkia listening on port 49998"
 bash /tmp/playground-command-zazkia
 
