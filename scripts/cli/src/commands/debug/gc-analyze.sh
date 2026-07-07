@@ -41,29 +41,22 @@ if [[ -n "$container" ]]; then
     log "🐳 Looking for GC log in container: $container"
 
     # 1. Try to read the GC log path from -Xlog:gc*:file=<path> (JDK 9+)
-    gc_log_path=$(docker exec "$container" sh -c \
-        "ps aux 2>/dev/null | grep -oP '(?<=-Xlog:gc\*:file=)[^:]+' | head -1" 2>/dev/null)
+    gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "sh -c \"ps aux 2>/dev/null | grep -oP '(?<=-Xlog:gc\\*:file=)[^:]+' | head -1\"" 2>/dev/null)
 
     # 2. Try legacy -Xloggc:<path> flag (JDK 8)
     if [[ -z "$gc_log_path" ]]; then
-        gc_log_path=$(docker exec "$container" sh -c \
-            "ps aux 2>/dev/null | grep -oP '(?<=-Xloggc:)\S+' | head -1" 2>/dev/null)
+        gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "sh -c \"ps aux 2>/dev/null | grep -oP '(?<=-Xloggc:)\\S+' | head -1\"" 2>/dev/null)
     fi
 
     # 3. Try -Xlog:gc:file=<path> (simpler unified log variant)
     if [[ -z "$gc_log_path" ]]; then
-        gc_log_path=$(docker exec "$container" sh -c \
-            "ps aux 2>/dev/null | grep -oP '(?<=-Xlog:gc:file=)[^:]+' | head -1" 2>/dev/null)
+        gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "sh -c \"ps aux 2>/dev/null | grep -oP '(?<=-Xlog:gc:file=)[^:]+' | head -1\"" 2>/dev/null)
     fi
 
     # 4. Fallback: search common locations
     if [[ -z "$gc_log_path" ]]; then
         log "🔍 No -Xlog/Xloggc flag found, searching common log locations..."
-        gc_log_path=$(docker exec "$container" sh -c \
-            "find /tmp /var/log /opt /var/log/kafka /etc/kafka 2>/dev/null \
-             \( -name '*gc*.log' -o -name 'kafkaServer-gc.log' -o -name 'zookeeper-gc.log' \
-                -o -name 'connect-gc.log' -o -name 'schema-registry-gc.log' \) \
-             -type f | head -1" 2>/dev/null)
+          gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "sh -c \"find /tmp /var/log /opt /var/log/kafka /etc/kafka 2>/dev/null \\\n+             \\\( -name '*gc*.log' -o -name 'kafkaServer-gc.log' -o -name 'zookeeper-gc.log' \\\n+                -o -name 'connect-gc.log' -o -name 'schema-registry-gc.log' \\\) \\\n+             -type f | head -1\"" 2>/dev/null)
     fi
 
     if [[ -z "$gc_log_path" ]]; then

@@ -9,7 +9,7 @@ IFS=' ' read -ra container_array <<< "$containers"
 for container in "${container_array[@]}"
 do
 	set +e
-	docker exec $container type tcpdump > /dev/null 2>&1
+	playground --output-level ERROR container exec --container "$container" --command "type tcpdump" > /dev/null 2>&1
 	if [ $? != 0 ]
 	then
 
@@ -37,7 +37,7 @@ do
 	echo "using apt-get" >> $output_install_log
 	docker exec --privileged --user root $container bash -c "apt-get update && echo tcpdump | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*" >> $output_install_log 2>&1
 	fi
-	docker exec $container type tcpdump > /dev/null 2>&1
+	playground --output-level ERROR container exec --container "$container" --command "type tcpdump" > /dev/null 2>&1
 	if [ $? != 0 ]
 	then
 		logerror "❌ tcpdump could not be installed, see output below"

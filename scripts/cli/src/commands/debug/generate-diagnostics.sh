@@ -22,13 +22,13 @@ do
 		exit 1
 	fi
 
-	docker exec $container curl -L https://packages.confluent.io/tools/diagnostics-bundle/diagnostics-bundle-1.0.4.jar -o /tmp/diagnostics-bundle-1.0.4.jar > /dev/null 2>&1
+	playground --output-level ERROR container exec --container "$container" --command "curl -L https://packages.confluent.io/tools/diagnostics-bundle/diagnostics-bundle-1.0.4.jar -o /tmp/diagnostics-bundle-1.0.4.jar" > /dev/null 2>&1
 
 	fifo_path="$tmp_dir/collect_fifo"
 	mkfifo "$fifo_path"
 
 	set +e
-	docker exec $container java -jar /tmp/diagnostics-bundle-1.0.4.jar collect > "$fifo_path" 2>&1 &
+	playground --output-level ERROR container exec --container "$container" --command "java -jar /tmp/diagnostics-bundle-1.0.4.jar collect" > "$fifo_path" 2>&1 &
 
 	# Loop through each line in the named pipe
 	while read -r line

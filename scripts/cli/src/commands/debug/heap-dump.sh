@@ -9,13 +9,13 @@ IFS=' ' read -ra container_array <<< "$containers"
 
 for container in "${container_array[@]}"
 do
-    docker exec $container type jmap > /dev/null 2>&1
+    playground --output-level ERROR container exec --container "$container" --command "type jmap" > /dev/null 2>&1
     if [ $? != 0 ]
     then
         logwarn "jmap is not installed on container $container, attempting to install jdk 17"
         playground container change-jdk --version 17
 
-        docker exec $container type jmap > /dev/null 2>&1
+        playground --output-level ERROR container exec --container "$container" --command "type jmap" > /dev/null 2>&1
         if [ $? != 0 ]
         then
             logerror "❌ jmap could not be installed on container $container"
@@ -30,10 +30,10 @@ do
         if [[ -n "$live" ]]
         then
             log "📊 Taking histo (with live option) heap dump on container ${container}"
-            docker exec $container jmap -histo:live 1 > /tmp/${filename}
+            playground --output-level ERROR container exec --container "$container" --command "jmap -histo:live 1" > /tmp/${filename}
         else
             log "📊 Taking histo (without live option) heap dump on container ${container}"
-            docker exec $container jmap -histo 1 > /tmp/${filename}
+            playground --output-level ERROR container exec --container "$container" --command "jmap -histo 1" > /tmp/${filename}
         fi
         if [ $? -eq 0 ]
         then
@@ -47,10 +47,10 @@ do
         if [[ -n "$live" ]]
         then
             log "🎯 Taking heap dump (with live option) on container ${container}"
-            docker exec $container jmap -dump:live,format=b,file=/tmp/${filename} 1
+            playground --output-level ERROR container exec --container "$container" --command "jmap -dump:live,format=b,file=/tmp/${filename} 1"
         else
             log "🎯 Taking heap dump (without live option) on container ${container}"
-            docker exec $container jmap -dump:format=b,file=/tmp/${filename} 1
+            playground --output-level ERROR container exec --container "$container" --command "jmap -dump:format=b,file=/tmp/${filename} 1"
         fi
         if [ $? -eq 0 ]
         then

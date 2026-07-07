@@ -10,7 +10,7 @@ IFS=' ' read -ra container_array <<< "$containers"
 install_iptables_if_needed() {
     local container=$1
     set +e
-    docker exec $container type iptables > /dev/null 2>&1
+    playground --output-level ERROR container exec --container "$container" --command "type iptables" > /dev/null 2>&1
     if [ $? != 0 ]
     then
         tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
@@ -27,7 +27,7 @@ install_iptables_if_needed() {
           docker exec --privileged --user root $container bash -c "apt-get update && echo iptables | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*"
         fi
     fi
-    docker exec $container type iptables > /dev/null 2>&1
+    playground --output-level ERROR container exec --container "$container" --command "type iptables" > /dev/null 2>&1
     if [ $? != 0 ]
     then
         logerror "❌ iptables could not be installed on container $container"
