@@ -68,6 +68,33 @@ cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
+log "Waiting for WebLogic endpoint to become reachable"
+MAX_WAIT_SECONDS=300
+WAIT_INTERVAL=5
+CURRENT_WAIT=0
+while true
+do
+     set +e
+     playground --output-level ERROR container exec --container weblogic-jms --command "curl -sf http://localhost:7001/weblogic/ready > /dev/null" --shell sh
+     READY_STATUS=$?
+     set -e
+     if [ $READY_STATUS -eq 0 ]
+     then
+          log "✅ WebLogic is ready"
+          break
+     fi
+
+     CURRENT_WAIT=$((CURRENT_WAIT + WAIT_INTERVAL))
+     if [ $CURRENT_WAIT -ge $MAX_WAIT_SECONDS ]
+     then
+          logerror "❌ WebLogic did not become ready within ${MAX_WAIT_SECONDS}s"
+          exit 1
+     fi
+
+     log "⌛ WebLogic not ready yet, waiting... (${CURRENT_WAIT}/${MAX_WAIT_SECONDS}s)"
+     sleep $WAIT_INTERVAL
+done
+
 
 log "Creating JMS weblogic source connector"
 playground connector create-or-update --connector weblogic-source  << EOF
@@ -93,8 +120,13 @@ EOF
 
 sleep 5
 
+log "Copying JMSSender artifacts to jms-sender container"
+playground container cp --source "${DIR}/jms-sender/lib/weblogic.jar" --destination jms-sender:/tmp/weblogic.jar
+playground container cp --source "${DIR}/jms-sender/lib/wlthint3client.jar" --destination jms-sender:/tmp/wlthint3client.jar
+playground container cp --source "${DIR}/jms-sender/target/jms-sender-1.0.0.jar" --destination jms-sender:/tmp/jms-sender-1.0.0.jar
+
 log "Sending one message in JMS queue myQueue"
-playground container exec --container jms-sender --command "bash -c 'java -cp \"/tmp/weblogic.jar:/tmp/wlthint3client.jar:/jms-sender-1.0.0.jar\" com.sample.jms.toolkit.JMSSender'"
+playground container exec --container jms-sender --command "bash -c 'java -cp \"/tmp/weblogic.jar:/tmp/wlthint3client.jar:/tmp/jms-sender-1.0.0.jar\" com.sample.jms.toolkit.JMSSender'"
 
 sleep 5
 
@@ -104,7 +136,7 @@ playground topic consume --topic from-weblogic-messages --min-expected-messages 
 sleep 5
 
 log "Asserting that WebLogic JMS queue is empty after connector processing"
-if playground container exec --container jms-sender --command "bash -c 'java -cp \"/tmp/weblogic.jar:/tmp/wlthint3client.jar:/jms-sender-1.0.0.jar\" com.sample.jms.toolkit.JMSSender check'"; then
+if playground container exec --container jms-sender --command "bash -c 'java -cp \"/tmp/weblogic.jar:/tmp/wlthint3client.jar:/tmp/jms-sender-1.0.0.jar\" com.sample.jms.toolkit.JMSSender check'"; then
     log "✅ SUCCESS: WebLogic JMS queue is empty - message was successfully consumed and deleted"
 else
     log "❌ FAILURE: Messages still remain in WebLogic JMS queue - message was not deleted"
