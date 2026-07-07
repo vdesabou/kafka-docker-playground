@@ -2,7 +2,8 @@
 services:
 
   sfdx-cli:
-    image: vdesabou/sfdx-cli:latest # forked from salestrip/sfdx-cli to add plugin sfpowerkit
+    # forked from salestrip/sfdx-cli to add plugin sfpowerkit
+    image: vdesabou/sfdx-cli:latest
     hostname: sfdx-cli
     container_name: sfdx-cli
     command: "sleep infinity"
