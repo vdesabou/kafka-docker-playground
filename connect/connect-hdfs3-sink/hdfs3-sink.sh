@@ -87,8 +87,9 @@ then
 !connect jdbc:hive2://hive-server:10000/testhive
 hive
 hive
-show create table hdfs-topic;
-select * from hdfs-topic;
+-- the connector sanitizes the topic name when creating the hive table: hdfs-topic -> hdfs_topic
+show create table hdfs_topic;
+select * from hdfs_topic;
 EOF
   cat /tmp/result.log
   grep "value1" /tmp/result.log
