@@ -117,7 +117,7 @@ do
                     continue
                 fi
             else
-                docker exec $container kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security 
+                playground --output-level ERROR container exec --container "$container" --command "kafka-consumer-groups --bootstrap-server $bootstrap_server --group connect-$connector --describe $security"
             fi
         fi
     fi
