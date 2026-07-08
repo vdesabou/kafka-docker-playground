@@ -38,6 +38,7 @@ aws dynamodb create-table \
     --key-schema AttributeName=first_name,KeyType=HASH AttributeName=last_name,KeyType=RANGE \
     --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
     --endpoint-url https://dynamodb.$AWS_REGION.amazonaws.com \
+    --region $AWS_REGION \
     --tags Key=cflt_managed_by,Value=user Key=cflt_managed_id,Value="$USER"
 
 log "Waiting for table to be created"
