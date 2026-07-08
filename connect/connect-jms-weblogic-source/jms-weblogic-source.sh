@@ -120,10 +120,14 @@ EOF
 
 sleep 5
 
-log "Copying JMSSender artifacts to jms-sender container"
-playground container cp --source "${DIR}/jms-sender/lib/weblogic.jar" --destination jms-sender:/tmp/weblogic.jar
-playground container cp --source "${DIR}/jms-sender/lib/wlthint3client.jar" --destination jms-sender:/tmp/wlthint3client.jar
-playground container cp --source "${DIR}/jms-sender/target/jms-sender-1.0.0.jar" --destination jms-sender:/tmp/jms-sender-1.0.0.jar
+get_environment_used
+if [[ "$environment" == "cfk" ]]
+then
+    log "Copying JMSSender artifacts to jms-sender container"
+    playground container cp --source "${DIR}/jms-sender/lib/weblogic.jar" --destination jms-sender:/tmp/weblogic.jar
+    playground container cp --source "${DIR}/jms-sender/lib/wlthint3client.jar" --destination jms-sender:/tmp/wlthint3client.jar
+    playground container cp --source "${DIR}/jms-sender/target/jms-sender-1.0.0.jar" --destination jms-sender:/tmp/jms-sender-1.0.0.jar
+fi
 
 log "Sending one message in JMS queue myQueue"
 playground container exec --container jms-sender --command "bash -c 'java -cp \"/tmp/weblogic.jar:/tmp/wlthint3client.jar:/tmp/jms-sender-1.0.0.jar\" com.sample.jms.toolkit.JMSSender'"

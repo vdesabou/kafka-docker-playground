@@ -122,10 +122,14 @@ EOF
      
 sleep 5
 
-log "Copying JMSReceiver artifacts to jms-receiver container"
-playground container cp --source "${DIR}/jms-receiver/lib/weblogic.jar" --destination jms-receiver:/tmp/weblogic.jar
-playground container cp --source "${DIR}/jms-receiver/lib/wlthint3client.jar" --destination jms-receiver:/tmp/wlthint3client.jar
-playground container cp --source "${DIR}/jms-receiver/target/jms-receiver-1.0.0.jar" --destination jms-receiver:/tmp/jms-receiver-1.0.0.jar
+get_environment_used
+if [[ "$environment" == "cfk" ]]
+then
+    log "Copying JMSReceiver artifacts to jms-receiver container"
+    playground container cp --source "${DIR}/jms-receiver/lib/weblogic.jar" --destination jms-receiver:/tmp/weblogic.jar
+    playground container cp --source "${DIR}/jms-receiver/lib/wlthint3client.jar" --destination jms-receiver:/tmp/wlthint3client.jar
+    playground container cp --source "${DIR}/jms-receiver/target/jms-receiver-1.0.0.jar" --destination jms-receiver:/tmp/jms-receiver-1.0.0.jar
+fi
 
 log "Check the message has been received in destination queue"
 JMS_RECEIVER_COMMAND='java -cp /tmp/weblogic.jar:/tmp/wlthint3client.jar:/tmp/jms-receiver-1.0.0.jar com.sample.jms.toolkit.JMSReceiver'
