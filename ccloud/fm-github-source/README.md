@@ -25,6 +25,18 @@ Generate new token with `repo` and `user` selected:
 
 ![Github api token](Screenshot4.png)
 
+Set environment variable `CONNECTOR_GITHUB_ACCESS_TOKEN` with your personal access token:
+
+```bash
+export CONNECTOR_GITHUB_ACCESS_TOKEN=<your_personal_access_token>
+```
+
+Also set environment variable `CONNECTOR_GITHUB_REPOSITORIES` with the repositories you want to monitor **which are in your github org**, for example:
+
+```bash
+export CONNECTOR_GITHUB_REPOSITORIES=confluentinc/examples,confluentinc/kafka-connect-github
+```
+
 ## Prerequisites
 
 See [here](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)

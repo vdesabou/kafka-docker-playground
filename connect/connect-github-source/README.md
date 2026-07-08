@@ -25,6 +25,18 @@ Generate new token with `repo` and `user` selected:
 
 ![Github api token](Screenshot4.png)
 
+Set environment variable `CONNECTOR_GITHUB_ACCESS_TOKEN` with your personal access token:
+
+```bash
+export CONNECTOR_GITHUB_ACCESS_TOKEN=<your_personal_access_token>
+```
+
+Also set environment variable `CONNECTOR_GITHUB_REPOSITORIES` with the repositories you want to monitor **which are in your github org**, for example:
+
+```bash
+export CONNECTOR_GITHUB_REPOSITORIES=confluentinc/examples,confluentinc/kafka-connect-github
+```
+
 ## How to run
 
 Simply run:
@@ -32,47 +44,3 @@ Simply run:
 ```
 $ just use <playground run> command and search for github-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> .sh in this folder
 ```
-
-Note: you can also export these values as environment variable
-
-## Details of what the script is doing
-
-
-Creating Github Source connector
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-                    "connector.class": "io.confluent.connect.github.GithubSourceConnector",
-                    "topic.name.pattern":"github-topic-${entityName}",
-                    "tasks.max": "1",
-                    "github.service.url":"https://api.github.com",
-                    "github.repositories":"apache/kafka",
-                    "github.tables":"stargazers",
-                    "github.since":"2019-01-01",
-                    "github.access.token": "$CONNECTOR_GITHUB_ACCESS_TOKEN",
-                    "key.converter": "io.confluent.connect.avro.AvroConverter",
-                    "key.converter.schema.registry.url":"http://schema-registry:8081",
-                    "value.converter": "io.confluent.connect.avro.AvroConverter",
-                    "value.converter.schema.registry.url":"http://schema-registry:8081",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/github-source/config | jq
-```
-
-Verify we have received the data in `github-topic-stargazers` topic
-
-```
-playground topic consume --topic github-topic-stargazers --min-expected-messages 1 --timeout 60
-```
-
-Results:
-
-```json
-{"id":{"string":"apache/kafka_STARGAZERS_1310"},"sha":null}     {"type":{"string":"STARGAZERS"},"createdAt":null,"data":{"data":{"login":{"string":"dyokomizo"},"id":{"int":1310},"node_id":{"string":"MDQ6VXNlcjEzMTA="},"avatar_url":{"string":"https://avatars3.githubusercontent.com/u/1310?v=4"},"gravatar_id":{"string":""},"url":{"string":"https://api.github.com/users/dyokomizo"},"html_url":{"string":"https://github.com/dyokomizo"},"followers_url":{"string":"https://api.github.com/users/dyokomizo/followers"},"following_url":{"string":"https://api.github.com/users/dyokomizo/following{/other_user}"},"gists_url":{"string":"https://api.github.com/users/dyokomizo/gists{/gist_id}"},"starred_url":{"string":"https://api.github.com/users/dyokomizo/starred{/owner}{/repo}"},"subscriptions_url":{"string":"https://api.github.com/users/dyokomizo/subscriptions"},"organizations_url":{"string":"https://api.github.com/users/dyokomizo/orgs"},"repos_url":{"string":"https://api.github.com/users/dyokomizo/repos"},"events_url":{"string":"https://api.github.com/users/dyokomizo/events{/privacy}"},"received_events_url":{"string":"https://api.github.com/users/dyokomizo/received_events"},"type":{"string":"User"},"site_admin":{"boolean":false}}},"id":{"string":"1310"}}
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

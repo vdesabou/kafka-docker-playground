@@ -5,6 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 CONNECTOR_GITHUB_ACCESS_TOKEN=${CONNECTOR_GITHUB_ACCESS_TOKEN:-$1}
+CONNECTOR_GITHUB_REPOSITORIES=${CONNECTOR_GITHUB_REPOSITORIES:-"confluentinc/kafka-connect-datagen"}
 
 if [ -z "$CONNECTOR_GITHUB_ACCESS_TOKEN" ]
 then
@@ -35,7 +36,7 @@ playground connector create-or-update --connector $connector_name << EOF
     "kafka.api.key": "$CLOUD_KEY",
     "kafka.api.secret": "$CLOUD_SECRET",
     "github.service.url":"https://api.github.com",
-    "github.repositories":"confluentinc/kafka-connect-datagen",
+    "github.repositories":"$CONNECTOR_GITHUB_REPOSITORIES",
     "github.resources":"stargazers",
     "github.since":"2019-01-01",
     "github.access.token": "$CONNECTOR_GITHUB_ACCESS_TOKEN",

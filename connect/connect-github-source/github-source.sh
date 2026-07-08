@@ -12,6 +12,7 @@ then
 fi
 
 CONNECTOR_GITHUB_ACCESS_TOKEN=${CONNECTOR_GITHUB_ACCESS_TOKEN:-$1}
+CONNECTOR_GITHUB_REPOSITORIES=${CONNECTOR_GITHUB_REPOSITORIES:-"confluentinc/kafka-connect-datagen"}
 
 if [ -z "$CONNECTOR_GITHUB_ACCESS_TOKEN" ]
 then
@@ -30,7 +31,7 @@ then
      "topic.name.pattern":"github-topic-\${resourceName}",
      "tasks.max": "1",
      "github.service.url":"https://api.github.com",
-     "github.repositories":"confluentinc/kafka-connect-datagen",
+     "github.repositories":"$CONNECTOR_GITHUB_REPOSITORIES",
      "github.resources":"stargazers",
      "github.since":"2019-01-01",
      "github.access.token": "$CONNECTOR_GITHUB_ACCESS_TOKEN",
@@ -53,7 +54,7 @@ else
      "topic.name.pattern":"github-topic-\${entityName}",
      "tasks.max": "1",
      "github.service.url":"https://api.github.com",
-     "github.repositories":"confluentinc/kafka-connect-datagen",
+     "github.repositories":"$CONNECTOR_GITHUB_REPOSITORIES",
      "github.tables":"stargazers",
      "github.since":"2019-01-01",
      "github.access.token": "$CONNECTOR_GITHUB_ACCESS_TOKEN",
