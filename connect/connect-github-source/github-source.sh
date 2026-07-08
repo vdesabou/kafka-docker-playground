@@ -22,7 +22,7 @@ fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-if version_gt $CONNECTOR_TAG "1.9.9"
+if version_gt "${CONNECTOR_TAG:-9.9.9}" "1.9.9"
 then
      playground connector create-or-update --connector github-source  << EOF
 {
@@ -30,7 +30,7 @@ then
      "topic.name.pattern":"github-topic-\${resourceName}",
      "tasks.max": "1",
      "github.service.url":"https://api.github.com",
-     "github.repositories":"apache/kafka",
+     "github.repositories":"confluentinc/kafka-connect-datagen",
      "github.resources":"stargazers",
      "github.since":"2019-01-01",
      "github.access.token": "$CONNECTOR_GITHUB_ACCESS_TOKEN",
@@ -53,7 +53,7 @@ else
      "topic.name.pattern":"github-topic-\${entityName}",
      "tasks.max": "1",
      "github.service.url":"https://api.github.com",
-     "github.repositories":"apache/kafka",
+     "github.repositories":"confluentinc/kafka-connect-datagen",
      "github.tables":"stargazers",
      "github.since":"2019-01-01",
      "github.access.token": "$CONNECTOR_GITHUB_ACCESS_TOKEN",

@@ -29,19 +29,19 @@ set -e
 log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
-     "connector.class": "GithubSource",
-     "name": "$connector_name",
-     "kafka.auth.mode": "KAFKA_API_KEY",
-     "kafka.api.key": "$CLOUD_KEY",
-     "kafka.api.secret": "$CLOUD_SECRET",
-     "github.service.url":"https://api.github.com",
-     "github.repositories":"apache/kafka",
-     "github.resources":"stargazers",
-     "github.since":"2019-01-01",
-     "github.access.token": "$CONNECTOR_GITHUB_ACCESS_TOKEN",
-     "topic.name.pattern":"github-topic-\${resourceName}",
-     "output.data.format": "AVRO",
-     "tasks.max" : "1"
+    "connector.class": "GithubSource",
+    "name": "$connector_name",
+    "kafka.auth.mode": "KAFKA_API_KEY",
+    "kafka.api.key": "$CLOUD_KEY",
+    "kafka.api.secret": "$CLOUD_SECRET",
+    "github.service.url":"https://api.github.com",
+    "github.repositories":"confluentinc/kafka-connect-datagen",
+    "github.resources":"stargazers",
+    "github.since":"2019-01-01",
+    "github.access.token": "$CONNECTOR_GITHUB_ACCESS_TOKEN",
+    "topic.name.pattern":"github-topic-\${resourceName}",
+    "output.data.format": "AVRO",
+    "tasks.max" : "1"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 180
