@@ -48,15 +48,23 @@ az sql server create \
 	
 if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then
-    # running with CI
-    # connect-azure-synapse-analytics-sink is failing #131
-    # allow applications from Azure IP addresses to connect to your Azure Database for MySQL server, provide the IP address 0.0.0.0 as the Start IP and End IP
     az sql server firewall-rule create \
     --name $AZURE_FIREWALL_RULL_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
     --server $AZURE_SQL_NAME \
     --start-ip-address 0.0.0.0 \
     --end-ip-address 0.0.0.0
+
+    # 0.0.0.0/0.0.0.0 only allows Azure-hosted callers through (e.g. GitHub Actions
+    # runners) - CI runners hosted outside Azure (e.g. Semaphore on AWS) also need
+    # their actual public IP whitelisted
+    MY_IP=$(curl -s https://ipinfo.io/ip)
+    az sql server firewall-rule create \
+    --name ${AZURE_FIREWALL_RULL_NAME}-runner \
+    --resource-group $AZURE_RESOURCE_GROUP \
+    --server $AZURE_SQL_NAME \
+    --start-ip-address $MY_IP \
+    --end-ip-address $MY_IP
 else
     log "Enable a server-level firewall rule"
     MY_IP=$(curl https://ipinfo.io/ip)
