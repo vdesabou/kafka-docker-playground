@@ -4,28 +4,14 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-# Need to create the machine agent docker image https://github.com/Appdynamics/docker-machine-agent/blob/master/Dockerfile
-
-if [ ! -f ${DIR}/docker-appdynamics-metrics/machine-agent.zip ]
-then
-     logerror "❌ ${DIR}/docker-appdynamics-metrics/ does not contain file machine-agent.zip"
-     exit 1
-fi
-
-if test -z "$(docker images -q appdynamics-metrics:latest)"
-then
-     log "Building appdynamics-metrics docker image..it can take a while..."
-     OLDDIR=$PWD
-     cd ${DIR}/docker-appdynamics-metrics
-     docker build -t appdynamics-metrics:latest .
-     cd ${OLDDIR}
-fi
+# A real AppDynamics machine agent requires an AppDynamics account + Controller
+# before it opens its HTTP metric listener, so it cannot run self-contained in
+# CI. Instead we run a small mock of the listener (docker-appdynamics-metrics/
+# mock-machine-agent.py) that accepts POST /api/v1/metrics and returns HTTP 204,
+# which is exactly the contract the connector (AppDClient) relies on.
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
-
-log "Check logs"
-playground container exec --container appdynamics-metrics --command "bash -c \"cat /opt/appdynamics/machine-agent/logs/machine-agent.log\""
 
 log "Sending messages to topic appdynamics-metrics-topic"
 playground topic produce -t appdynamics-metrics-topic << 'EOF'
@@ -41,7 +27,11 @@ playground topic produce -t appdynamics-metrics-topic << 'EOF'
         "fields": [
           {
             "name": "aggregatorType",
-            "type": "string"
+            "type": {
+              "type": "enum",
+              "name": "aggregatorTypeEnum",
+              "symbols": ["SUM", "AVERAGE", "OBSERVATION"]
+            }
           }
         ],
         "name": "dimensions",
@@ -74,7 +64,7 @@ playground connector create-or-update --connector appdynamics-metrics-sink  << E
      "tasks.max": "1",
      "topics": "appdynamics-metrics-topic",
      "machine.agent.host": "http://appdynamics-metrics",
-     "machine.agent.port": "8090",
+     "machine.agent.port": "8293",
      "key.converter": "io.confluent.connect.avro.AvroConverter",
      "key.converter.schema.registry.url":"http://schema-registry:8081",
      "value.converter": "io.confluent.connect.avro.AvroConverter",
@@ -91,5 +81,8 @@ EOF
 sleep 5
 
 
-log "Verify we have received the data in AMPS_Orders topic"
-playground topic consume --topic AMPS_Orders --min-expected-messages 2 --timeout 60
+log "Verify the connector delivered metrics to the (mock) machine agent HTTP listener"
+# The mock logs every POST it receives. A metrics payload contains "metricName",
+# which proves the connector extracted the records and delivered them (getting
+# HTTP 204); the periodic empty "[]" heartbeat posts do not contain "metricName".
+playground container logs --container appdynamics-metrics --wait-for-log "metricName" --max-wait 60

@@ -1,24 +1,21 @@
 ---
 services:
+  # Mock of the AppDynamics machine agent HTTP metric listener.
+  # A real machine agent needs an AppDynamics account + Controller before it
+  # opens its listener, so it cannot run self-contained in CI. This stub only
+  # reproduces the listener contract the connector relies on: it accepts
+  # POST /api/v1/metrics and returns HTTP 204. See mock-machine-agent.py.
   appdynamics-metrics:
-    image: appdynamics-metrics:latest
+    image: python:3-alpine
     hostname: appdynamics-metrics
     container_name: appdynamics-metrics
-    environment:
-      # https://docs.appdynamics.com/display/PRO45/Standalone+Machine+Agent+Configuration+Properties
-      - APPD_HOST=appdynamics-metrics
-      - APPD_PORT=8090
-      - APPD_ACCESS_KEY=165e65645-95c1-40e3-9576-6a1424de9625
-      - APPD_SSL_ENABLED=false
-      - APPD_METRIC_HTTP_LISTENER_ENABLED=true
-      - APPD_METRIC_HTTP_LISTENER_HOST=appdynamics-metrics
-      - APPD_METRIC_HTTP_LISTENER_PORT=8293
     volumes:
-      - /:/hostroot:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-    ports:
-      - '8090:8090'
-      - '8293:8293'
+      - ../../connect/connect-appdynamics-metrics-sink/docker-appdynamics-metrics/mock-machine-agent.py:/mock.py:ro
+    command: ["python", "/mock.py"]
+    # No host port mapping: the connector reaches the mock over the compose
+    # network (appdynamics-metrics:8293) and the test verifies via container
+    # logs, so nothing needs the port on the host. Not publishing it avoids
+    # host-port collisions when tests run in parallel.
 
   connect:
     depends_on:
