@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 CONNECTOR_GITHUB_ACCESS_TOKEN=${CONNECTOR_GITHUB_ACCESS_TOKEN:-$1}
-CONNECTOR_GITHUB_REPOSITORIES=${CONNECTOR_GITHUB_REPOSITORIES:-"apache/kafka"}
+CONNECTOR_GITHUB_REPOSITORIES=${CONNECTOR_GITHUB_REPOSITORIES:-"vdesabou/kafka-docker-playground"}
 
 if [ -z "$CONNECTOR_GITHUB_ACCESS_TOKEN" ]
 then
@@ -16,9 +16,9 @@ fi
 bootstrap_ccloud_environment
 
 set +e
-playground topic delete --topic github-topic-commits
+playground topic delete --topic github-topic-stargazers
 sleep 3
-playground topic create --topic github-topic-commits --nb-partitions 1
+playground topic create --topic github-topic-stargazers --nb-partitions 1
 set -e
 
 
@@ -37,7 +37,7 @@ playground connector create-or-update --connector $connector_name << EOF
     "kafka.api.secret": "$CLOUD_SECRET",
     "github.service.url":"https://api.github.com",
     "github.repositories":"$CONNECTOR_GITHUB_REPOSITORIES",
-    "github.resources":"commits",
+    "github.resources":"stargazers",
     "github.since":"2019-01-01",
     "github.access.token": "$CONNECTOR_GITHUB_ACCESS_TOKEN",
     "topic.name.pattern":"github-topic-\${resourceName}",
@@ -49,5 +49,5 @@ wait_for_ccloud_connector_up $connector_name 180
 
 sleep 10
 
-log "Verify we have received the data in github-topic-commits topic"
-playground topic consume --topic github-topic-commits --min-expected-messages 1 --timeout 60
+log "Verify we have received the data in github-topic-stargazers topic"
+playground topic consume --topic github-topic-stargazers --min-expected-messages 1 --timeout 60
