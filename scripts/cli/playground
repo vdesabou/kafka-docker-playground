@@ -24261,27 +24261,27 @@ playground_debug_thread_dump_command() {
   get_environment_used
 
   get_cfk_target_container_name() {
-    local requested_name="$1"
-    case "$requested_name" in
-      connect|connect2|connect3|connect-us|connect-europe)
-        echo "connect"
-        ;;
-      broker|kafka)
-        echo "kafka"
-        ;;
-      schema-registry|schemaregistry)
-        echo "schemaregistry"
-        ;;
-      control-center|controlcenter)
-        echo "controlcenter"
-        ;;
-      ksqldb-server|ksqldb)
-        echo "ksqldb"
-        ;;
-      *)
-        echo "$requested_name"
-        ;;
-    esac
+      local requested_name="$1"
+      case "$requested_name" in
+          connect|connect2|connect3|connect-us|connect-europe)
+              echo "connect"
+              ;;
+          broker|kafka)
+              echo "kafka"
+              ;;
+          schema-registry|schemaregistry)
+              echo "schemaregistry"
+              ;;
+          control-center|controlcenter)
+              echo "controlcenter"
+              ;;
+          ksqldb-server|ksqldb)
+              echo "ksqldb"
+              ;;
+          *)
+              echo "$requested_name"
+              ;;
+      esac
   }
 
   # Convert space-separated string to array
@@ -24289,54 +24289,54 @@ playground_debug_thread_dump_command() {
 
   for container in "${container_array[@]}"
   do
-    resolved_container=$(resolve_container_name_for_environment "$container")
-    target_container_name=$(get_cfk_target_container_name "$container")
+      resolved_container=$(resolve_container_name_for_environment "$container")
+      target_container_name=$(get_cfk_target_container_name "$container")
       filename="/tmp/thread-dump-$container-$(date '+%Y-%m-%d-%H-%M-%S').log"
 
       set +e
-    playground --output-level ERROR container exec --container "$resolved_container" --command "type jstack" > /dev/null 2>&1
+      playground --output-level ERROR container exec --container "$resolved_container" --command "type jstack" > /dev/null 2>&1
       if [ $? != 0 ]
       then
-      if [[ "$environment" == "cfk" ]]
-      then
-        logwarn "jstack is not available on pod $resolved_container, attaching debug container $debug_image"
-          debug_stderr=$(mktemp -t pg-debug-XXXXXXXXXX)
-          kubectl -n confluent debug "$resolved_container" --image="$debug_image" --target="$target_container_name" --profile=sysadmin -- bash -lc 'set -e; TARGET_PID=""; for p in /proc/[0-9]*; do if grep -aq "java" "$p/cmdline" 2>/dev/null; then TARGET_PID="${p#/proc/}"; break; fi; done; [ -n "$TARGET_PID" ] || TARGET_PID=1; TARGET_ROOT="/proc/${TARGET_PID}/root"; mkdir -p "${TARGET_ROOT}/tmp/jdk-tools/bin"; JSTACK_BIN="$(command -v jstack)"; JDK_HOME="$(cd "$(dirname "$JSTACK_BIN")/.." && pwd)"; cp "$JSTACK_BIN" "${TARGET_ROOT}/tmp/jdk-tools/bin/"; rm -rf "${TARGET_ROOT}/tmp/jdk-tools/lib"; cp -r "$JDK_HOME/lib" "${TARGET_ROOT}/tmp/jdk-tools/"' > /dev/null 2>"$debug_stderr"
-        if [ $? != 0 ]
-        then
-          logerror "❌ could not prepare jstack tools in pod $resolved_container"
-            cat "$debug_stderr"
-            rm -f "$debug_stderr"
-          exit 1
-        fi
-          rm -f "$debug_stderr"
-
-          playground --output-level ERROR container exec --container "$resolved_container" --command "test -x /tmp/jdk-tools/bin/jstack" > /dev/null 2>&1
-          if [ $? != 0 ]
+          if [[ "$environment" == "cfk" ]]
           then
-            logerror "❌ jstack tool copy completed but /tmp/jdk-tools/bin/jstack is missing in pod $resolved_container"
-            exit 1
-          fi
-      else
-        logwarn "jstack is not installed on container $container, attempting to install jdk 17"
-        playground container change-jdk --version 17
+              logwarn "jstack is not available on pod $resolved_container, attaching debug container $debug_image"
+              debug_stderr=$(mktemp -t pg-debug-XXXXXXXXXX)
+              kubectl -n confluent debug "$resolved_container" --image="$debug_image" --target="$target_container_name" --profile=sysadmin -- bash -lc 'set -e; TARGET_PID=""; for p in /proc/[0-9]*; do if grep -aq "java" "$p/cmdline" 2>/dev/null; then TARGET_PID="${p#/proc/}"; break; fi; done; [ -n "$TARGET_PID" ] || TARGET_PID=1; TARGET_ROOT="/proc/${TARGET_PID}/root"; mkdir -p "${TARGET_ROOT}/tmp/jdk-tools/bin"; JSTACK_BIN="$(command -v jstack)"; JDK_HOME="$(cd "$(dirname "$JSTACK_BIN")/.." && pwd)"; cp "$JSTACK_BIN" "${TARGET_ROOT}/tmp/jdk-tools/bin/"; rm -rf "${TARGET_ROOT}/tmp/jdk-tools/lib"; cp -r "$JDK_HOME/lib" "${TARGET_ROOT}/tmp/jdk-tools/"' > /dev/null 2>"$debug_stderr"
+              if [ $? != 0 ]
+              then
+                  logerror "❌ could not prepare jstack tools in pod $resolved_container"
+                  cat "$debug_stderr"
+                  rm -f "$debug_stderr"
+                  exit 1
+              fi
+              rm -f "$debug_stderr"
 
-        playground --output-level ERROR container exec --container "$resolved_container" --command "type jstack" > /dev/null 2>&1
-        if [ $? != 0 ]
-        then
-          logerror "❌ jstack could not be installed on container $container"
-          exit 1
-        fi
-      fi
+              playground --output-level ERROR container exec --container "$resolved_container" --command "test -x /tmp/jdk-tools/bin/jstack" > /dev/null 2>&1
+              if [ $? != 0 ]
+              then
+                  logerror "❌ jstack tool copy completed but /tmp/jdk-tools/bin/jstack is missing in pod $resolved_container"
+                  exit 1
+              fi
+          else
+              logwarn "jstack is not installed on container $container, attempting to install jdk 17"
+              playground container change-jdk --version 17
+
+              playground --output-level ERROR container exec --container "$resolved_container" --command "type jstack" > /dev/null 2>&1
+              if [ $? != 0 ]
+              then
+                  logerror "❌ jstack could not be installed on container $container"
+                  exit 1
+              fi
+          fi
       fi
       set -e
       log "🎯 Taking thread dump on container ${container} for pid 1"
-    if [[ "$environment" == "cfk" ]]
-    then
-      kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jstack 1" > "$filename" 2>&1
-    else
-      playground --output-level ERROR container exec --container "$resolved_container" --command "jstack 1" > "$filename" 2>&1
-    fi
+      if [[ "$environment" == "cfk" ]]
+      then
+          kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jstack 1" > "$filename" 2>&1
+      else
+          playground --output-level ERROR container exec --container "$resolved_container" --command "jstack 1" > "$filename" 2>&1
+      fi
       if [ $? -eq 0 ]
       then
           playground open --file "${filename}"
@@ -24359,27 +24359,27 @@ playground_debug_heap_dump_command() {
   get_environment_used
 
   get_cfk_target_container_name() {
-    local requested_name="$1"
-    case "$requested_name" in
-      connect|connect2|connect3|connect-us|connect-europe)
-        echo "connect"
-        ;;
-      broker|kafka)
-        echo "kafka"
-        ;;
-      schema-registry|schemaregistry)
-        echo "schemaregistry"
-        ;;
-      control-center|controlcenter)
-        echo "controlcenter"
-        ;;
-      ksqldb-server|ksqldb)
-        echo "ksqldb"
-        ;;
-      *)
-        echo "$requested_name"
-        ;;
-    esac
+      local requested_name="$1"
+      case "$requested_name" in
+          connect|connect2|connect3|connect-us|connect-europe)
+              echo "connect"
+              ;;
+          broker|kafka)
+              echo "kafka"
+              ;;
+          schema-registry|schemaregistry)
+              echo "schemaregistry"
+              ;;
+          control-center|controlcenter)
+              echo "controlcenter"
+              ;;
+          ksqldb-server|ksqldb)
+              echo "ksqldb"
+              ;;
+          *)
+              echo "$requested_name"
+              ;;
+      esac
   }
 
   set +e
@@ -24389,43 +24389,43 @@ playground_debug_heap_dump_command() {
 
   for container in "${container_array[@]}"
   do
-    resolved_container=$(resolve_container_name_for_environment "$container")
-    target_container_name=$(get_cfk_target_container_name "$container")
+      resolved_container=$(resolve_container_name_for_environment "$container")
+      target_container_name=$(get_cfk_target_container_name "$container")
 
-    playground --output-level ERROR container exec --container "$resolved_container" --command "type jmap" > /dev/null 2>&1
+      playground --output-level ERROR container exec --container "$resolved_container" --command "type jmap" > /dev/null 2>&1
       if [ $? != 0 ]
       then
-      if [[ "$environment" == "cfk" ]]
-      then
-        logwarn "jmap is not available on pod $resolved_container, attaching debug container $debug_image"
-          debug_stderr=$(mktemp -t pg-debug-XXXXXXXXXX)
-          kubectl -n confluent debug "$resolved_container" --image="$debug_image" --target="$target_container_name" --profile=sysadmin -- bash -lc 'set -e; TARGET_PID=""; for p in /proc/[0-9]*; do if grep -aq "java" "$p/cmdline" 2>/dev/null; then TARGET_PID="${p#/proc/}"; break; fi; done; [ -n "$TARGET_PID" ] || TARGET_PID=1; TARGET_ROOT="/proc/${TARGET_PID}/root"; mkdir -p "${TARGET_ROOT}/tmp/jdk-tools/bin"; JMAP_BIN="$(command -v jmap)"; JDK_HOME="$(cd "$(dirname "$JMAP_BIN")/.." && pwd)"; cp "$JMAP_BIN" "${TARGET_ROOT}/tmp/jdk-tools/bin/"; rm -rf "${TARGET_ROOT}/tmp/jdk-tools/lib"; cp -r "$JDK_HOME/lib" "${TARGET_ROOT}/tmp/jdk-tools/"' > /dev/null 2>"$debug_stderr"
-        if [ $? != 0 ]
-        then
-          logerror "❌ could not prepare jmap tools in pod $resolved_container"
-            cat "$debug_stderr"
-            rm -f "$debug_stderr"
-          exit 1
-        fi
-          rm -f "$debug_stderr"
-
-          playground --output-level ERROR container exec --container "$resolved_container" --command "test -x /tmp/jdk-tools/bin/jmap" > /dev/null 2>&1
-          if [ $? != 0 ]
+          if [[ "$environment" == "cfk" ]]
           then
-            logerror "❌ jmap tool copy completed but /tmp/jdk-tools/bin/jmap is missing in pod $resolved_container"
-            exit 1
-          fi
-      else
-        logwarn "jmap is not installed on container $container, attempting to install jdk 17"
-        playground container change-jdk --version 17
+              logwarn "jmap is not available on pod $resolved_container, attaching debug container $debug_image"
+              debug_stderr=$(mktemp -t pg-debug-XXXXXXXXXX)
+              kubectl -n confluent debug "$resolved_container" --image="$debug_image" --target="$target_container_name" --profile=sysadmin -- bash -lc 'set -e; TARGET_PID=""; for p in /proc/[0-9]*; do if grep -aq "java" "$p/cmdline" 2>/dev/null; then TARGET_PID="${p#/proc/}"; break; fi; done; [ -n "$TARGET_PID" ] || TARGET_PID=1; TARGET_ROOT="/proc/${TARGET_PID}/root"; mkdir -p "${TARGET_ROOT}/tmp/jdk-tools/bin"; JMAP_BIN="$(command -v jmap)"; JDK_HOME="$(cd "$(dirname "$JMAP_BIN")/.." && pwd)"; cp "$JMAP_BIN" "${TARGET_ROOT}/tmp/jdk-tools/bin/"; rm -rf "${TARGET_ROOT}/tmp/jdk-tools/lib"; cp -r "$JDK_HOME/lib" "${TARGET_ROOT}/tmp/jdk-tools/"' > /dev/null 2>"$debug_stderr"
+              if [ $? != 0 ]
+              then
+                  logerror "❌ could not prepare jmap tools in pod $resolved_container"
+                  cat "$debug_stderr"
+                  rm -f "$debug_stderr"
+                  exit 1
+              fi
+              rm -f "$debug_stderr"
 
-        playground --output-level ERROR container exec --container "$resolved_container" --command "type jmap" > /dev/null 2>&1
-        if [ $? != 0 ]
-        then
-          logerror "❌ jmap could not be installed on container $container"
-          exit 1
-        fi
-      fi
+              playground --output-level ERROR container exec --container "$resolved_container" --command "test -x /tmp/jdk-tools/bin/jmap" > /dev/null 2>&1
+              if [ $? != 0 ]
+              then
+                  logerror "❌ jmap tool copy completed but /tmp/jdk-tools/bin/jmap is missing in pod $resolved_container"
+                  exit 1
+              fi
+          else
+              logwarn "jmap is not installed on container $container, attempting to install jdk 17"
+              playground container change-jdk --version 17
+
+              playground --output-level ERROR container exec --container "$resolved_container" --command "type jmap" > /dev/null 2>&1
+              if [ $? != 0 ]
+              then
+                  logerror "❌ jmap could not be installed on container $container"
+                  exit 1
+              fi
+          fi
       fi
 
       if [[ -n "$histo" ]]
@@ -24435,20 +24435,20 @@ playground_debug_heap_dump_command() {
           if [[ -n "$live" ]]
           then
               log "📊 Taking histo (with live option) heap dump on container ${container}"
-        if [[ "$environment" == "cfk" ]]
-        then
-          kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -histo:live 1" > /tmp/${filename}
-        else
-          playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -histo:live 1" > /tmp/${filename}
-        fi
+              if [[ "$environment" == "cfk" ]]
+              then
+                  kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -histo:live 1" > /tmp/${filename}
+              else
+                  playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -histo:live 1" > /tmp/${filename}
+              fi
           else
               log "📊 Taking histo (without live option) heap dump on container ${container}"
-        if [[ "$environment" == "cfk" ]]
-        then
-          kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -histo 1" > /tmp/${filename}
-        else
-          playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -histo 1" > /tmp/${filename}
-        fi
+              if [[ "$environment" == "cfk" ]]
+              then
+                  kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -histo 1" > /tmp/${filename}
+              else
+                  playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -histo 1" > /tmp/${filename}
+              fi
           fi
           if [ $? -eq 0 ]
           then
@@ -24464,17 +24464,17 @@ playground_debug_heap_dump_command() {
               log "🎯 Taking heap dump (with live option) on container ${container}"
               if [[ "$environment" == "cfk" ]]
               then
-                kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -dump:live,format=b,file=/tmp/${filename} 1"
+                  kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -dump:live,format=b,file=/tmp/${filename} 1"
               else
-                playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -dump:live,format=b,file=/tmp/${filename} 1"
+                  playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -dump:live,format=b,file=/tmp/${filename} 1"
               fi
           else
               log "🎯 Taking heap dump (without live option) on container ${container}"
               if [[ "$environment" == "cfk" ]]
               then
-                kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -dump:format=b,file=/tmp/${filename} 1"
+                  kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -dump:format=b,file=/tmp/${filename} 1"
               else
-                playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -dump:format=b,file=/tmp/${filename} 1"
+                  playground --output-level ERROR container exec --container "$resolved_container" --command "jmap -dump:format=b,file=/tmp/${filename} 1"
               fi
           fi
           if [ $? -eq 0 ]
@@ -25940,10 +25940,111 @@ playground_container_change_jdk_command() {
       resolved_container=$(resolve_container_name_for_environment "$container")
       if [[ "$environment" == "cfk" ]]
       then
-        logerror "❌ change-jdk is not supported in cfk mode: pod user is not root and --root is ignored"
-        logerror "Use a custom image with the required JDK or set pod security context to run as root"
-        exit 1
+          if [[ ! "$resolved_container" =~ ^connect(-[0-9]+)?$ ]]
+          then
+              logerror "❌ persistent change-jdk in cfk mode currently supports Connect pods only (got: $resolved_container)"
+              exit 1
+          fi
+
+          current_image=$(kubectl -n confluent get connect connect -o jsonpath='{.spec.image.application}' 2>/dev/null)
+          if [[ -z "$current_image" ]]
+          then
+              logerror "❌ could not read current Connect image from Connect CR"
+              exit 1
+          fi
+
+          local_image="playground-connect-zulu${version}:$(date '+%Y%m%d%H%M%S')"
+          build_dir=$(mktemp -d -t pg-jdk-build-XXXXXXXXXX)
+
+          log "🏗️ Building persistent CFK Connect image with JDK ${version} from ${current_image}"
+          cat << EOF > "$build_dir/Dockerfile"
+FROM ${current_image}
+USER root
+RUN if command -v microdnf >/dev/null 2>&1; then microdnf -y install yum; fi \
+ && yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm \
+ && yum -y install zulu${version}-jdk \
+ && java_candidate=\$(update-alternatives --display java 2>/dev/null | awk '/java-${version}-zulu-openjdk/ && /priority/ {print \$1; exit}') \
+ && if [ -z "\$java_candidate" ]; then echo "Could not resolve java alternative for zulu${version}" >&2; exit 1; fi \
+ && update-alternatives --set java "\$java_candidate" \
+ && javac_candidate=\$(update-alternatives --display javac 2>/dev/null | awk '/java-${version}-zulu-openjdk/ && /priority/ {print \$1; exit}') \
+ && if [ -n "\$javac_candidate" ]; then update-alternatives --set javac "\$javac_candidate"; fi \
+ && yum clean all \
+ && rm -rf /var/cache/yum
+USER 1000
+EOF
+
+          if ! docker build -t "$local_image" "$build_dir" > /tmp/pg-change-jdk-build.log 2>&1
+          then
+              logerror "❌ failed to build persistent Connect image $local_image"
+              cat /tmp/pg-change-jdk-build.log
+              rm -rf "$build_dir"
+              exit 1
+          fi
+          rm -rf "$build_dir"
+
+          current_context=$(kubectl config current-context 2>/dev/null)
+          if command -v minikube >/dev/null 2>&1 && [[ "$current_context" == "minikube" ]]
+          then
+              log "📦 Loading image $local_image into minikube"
+              if ! minikube image load "$local_image" > /tmp/pg-change-jdk-minikube-load.log 2>&1
+              then
+                  logerror "❌ failed to load image $local_image into minikube"
+                  cat /tmp/pg-change-jdk-minikube-load.log
+                  exit 1
+              fi
+          elif command -v k3d >/dev/null 2>&1 && [[ "$current_context" == k3d-* ]]
+          then
+              k3d_cluster_name=${current_context#k3d-}
+              log "📦 Importing image $local_image into k3d cluster $k3d_cluster_name"
+              if ! k3d image import "$local_image" --cluster "$k3d_cluster_name" > /tmp/pg-change-jdk-k3d-import.log 2>&1
+              then
+                  logerror "❌ failed to import image $local_image into k3d cluster $k3d_cluster_name"
+                  cat /tmp/pg-change-jdk-k3d-import.log
+                  exit 1
+              fi
+          else
+              logwarn "⚠️ Not running on minikube/k3d context; ensure cluster nodes can pull image $local_image"
+          fi
+
+          log "☸️ Patching Connect CR to use image $local_image"
+          patch_stderr=$(mktemp -t pg-cfk-patch-XXXXXXXXXX)
+          kubectl -n confluent patch connect connect --type merge -p "{\"spec\":{\"image\":{\"application\":\"$local_image\"}}}" > /dev/null 2>"$patch_stderr"
+          if [ $? -ne 0 ]
+          then
+              logerror "❌ failed to patch Connect CR image"
+              cat "$patch_stderr"
+              rm -f "$patch_stderr"
+              exit 1
+          fi
+          rm -f "$patch_stderr"
+
+          log "⌛ Waiting for pod $resolved_container to run image $local_image and be ready"
+          rollout_deadline=$((SECONDS + 600))
+          while true
+          do
+              pod_image=$(kubectl -n confluent get pod "$resolved_container" -o jsonpath='{.spec.containers[?(@.name=="connect")].image}' 2>/dev/null)
+              pod_ready=$(kubectl -n confluent get pod "$resolved_container" -o jsonpath='{.status.containerStatuses[?(@.name=="connect")].ready}' 2>/dev/null)
+
+              if [[ "$pod_image" == "$local_image" && "$pod_ready" == "true" ]]
+              then
+                  break
+              fi
+
+              if (( SECONDS >= rollout_deadline ))
+              then
+                  logerror "❌ timed out waiting for pod $resolved_container to roll out image $local_image"
+                  logerror "Current connect image: ${pod_image:-unknown}, ready: ${pod_ready:-unknown}"
+                  kubectl -n confluent get pod "$resolved_container" -o wide || true
+                  exit 1
+              fi
+
+              sleep 5
+          done
+
+          playground container exec --container "${resolved_container}" --command "java -version"
+          continue
       fi
+
       set +e
       # for 8.x install yum
       playground container exec --container "${resolved_container}" --root --command "microdnf -y install yum" > /dev/null 2>&1
@@ -25959,11 +26060,18 @@ playground_container_change_jdk_command() {
           else
               logerror "could not find java ${version} in alternatives list"
           fi
-          playground container restart --container "${resolved_container}"
+          if [[ "$environment" == "cfk" ]]
+          then
+              logwarn "CFK mode: skipping pod restart because in-pod package changes are not persistent across restart"
+              logwarn "Use a custom image to persist JDK ${version} after pod recreation"
+              playground container exec --container "${resolved_container}" --command "java -version"
+          else
+              playground container restart --container "${resolved_container}"
 
-          sleep 5
+              sleep 5
 
-          playground container exec --container "${resolved_container}" --command "java -version"
+              playground container exec --container "${resolved_container}" --command "java -version"
+          fi
       else
           logerror "❌ failed to install Azul JDK ${version}"
       fi
@@ -25981,24 +26089,232 @@ playground_container_exec_command() {
 
   get_environment_used
 
+  declare -A cfk_root_patch_done_map
+  declare -A cfk_root_original_user_map
+  declare -A cfk_root_original_nonroot_map
+  declare -A cfk_root_restore_needed_map
+
+  restore_cfk_appuser_for_resource() {
+  	local resource_kind=$1
+  	local resource_name=$2
+  	local resolved_container=$3
+  	local key="$resource_kind/$resource_name"
+  	local original_user="${cfk_root_original_user_map[$key]}"
+  	local original_nonroot="${cfk_root_original_nonroot_map[$key]}"
+  	local patch_payload
+
+  	if [[ "${cfk_root_restore_needed_map[$key]}" != "1" ]]
+  	then
+  		return
+  	fi
+
+  	# If values were not explicitly set before patching, default back to appuser semantics.
+  	if [[ "$original_user" == "__MISSING__" || -z "$original_user" ]]
+  	then
+  		original_user="1000"
+  	fi
+  	if [[ "$original_nonroot" == "__MISSING__" || -z "$original_nonroot" ]]
+  	then
+  		original_nonroot="true"
+  	fi
+
+  	patch_payload=$(printf '{"spec":{"podTemplate":{"podSecurityContext":{"runAsUser":%s,"runAsNonRoot":%s}}}}' "$original_user" "$original_nonroot")
+  	log "↩️ Restoring $resource_kind/$resource_name to appuser-like security context (runAsUser=$original_user, runAsNonRoot=$original_nonroot)"
+  	patch_stderr=$(mktemp -t pg-cfk-patch-XXXXXXXXXX)
+  	kubectl -n confluent patch "$resource_kind" "$resource_name" --type merge -p "$patch_payload" > /dev/null 2>"$patch_stderr"
+  	if [ $? -ne 0 ]
+  	then
+  		logerror "❌ failed to restore $resource_kind/$resource_name security context after root execution"
+  		cat "$patch_stderr"
+  		rm -f "$patch_stderr"
+  		exit 1
+  	fi
+  	rm -f "$patch_stderr"
+
+  	log "⌛ Waiting for pod $resolved_container to be ready after restore patch"
+  	if ! kubectl -n confluent wait --for=condition=Ready "pod/$resolved_container" --timeout=300s > /dev/null 2>&1
+  	then
+  		logerror "❌ pod $resolved_container did not become ready after restore patch"
+  		kubectl -n confluent get pods
+  		exit 1
+  	fi
+
+  	unset 'cfk_root_restore_needed_map[$key]'
+  	unset 'cfk_root_patch_done_map[$key]'
+  }
+
+  get_cfk_resource_for_pod() {
+  	local resolved_container=$1
+  	local pod_type
+  	local owner_name
+  	local resource_kind=""
+
+  	pod_type=$(kubectl -n confluent get pod "$resolved_container" -o jsonpath='{.metadata.labels.platform\.confluent\.io/type}' 2>/dev/null)
+  	if [[ -z "$pod_type" ]]
+  	then
+  		pod_type=$(kubectl -n confluent get pod "$resolved_container" -o jsonpath='{.metadata.labels.type}' 2>/dev/null)
+  	fi
+
+  	owner_name=$(kubectl -n confluent get pod "$resolved_container" -o jsonpath='{.metadata.ownerReferences[0].name}' 2>/dev/null)
+  	if [[ -z "$owner_name" ]]
+  	then
+  		owner_name="$resolved_container"
+  	fi
+
+  	case "$pod_type" in
+  		connect)
+  			resource_kind="connect"
+  			;;
+  		kafka)
+  			resource_kind="kafka"
+  			;;
+  		schemaregistry)
+  			resource_kind="schemaregistry"
+  			;;
+  		controlcenter)
+  			resource_kind="controlcenter"
+  			;;
+  		ksqldb)
+  			resource_kind="ksqldb"
+  			;;
+  		zookeeper)
+  			resource_kind="zookeeper"
+  			;;
+  		*)
+  			resource_kind=""
+  			;;
+  	esac
+
+  	echo "$resource_kind:$owner_name"
+  }
+
+  ensure_cfk_root_for_container() {
+  	local container=$1
+  	local resolved_container=$2
+  	local resource_kind
+  	local resource_name
+  	local resource_ref
+
+  	if [[ "$environment" != "cfk" ]]
+  	then
+  		return
+  	fi
+
+  	local container_uid
+  	container_uid=$(playground --output-level ERROR container exec --container "$resolved_container" --command "id -u" 2>/dev/null || true)
+  	if [[ "$container_uid" == "0" ]]
+  	then
+  		return
+  	fi
+
+  	resource_ref=$(get_cfk_resource_for_pod "$resolved_container")
+  	resource_kind=${resource_ref%%:*}
+  	resource_name=${resource_ref#*:}
+
+  	if [[ -z "$resource_kind" || -z "$resource_name" ]]
+  	then
+  		logerror "❌ automatic root patch is not supported for pod $resolved_container"
+  		logerror "Could not resolve CFK component type from pod labels"
+  		exit 1
+  	fi
+
+  	if [[ "${cfk_root_patch_done_map[$resource_kind/$resource_name]}" != "1" ]]
+  	then
+  		key="$resource_kind/$resource_name"
+  		original_run_as_user=$(kubectl -n confluent get "$resource_kind" "$resource_name" -o jsonpath='{.spec.podTemplate.podSecurityContext.runAsUser}' 2>/dev/null)
+  		original_run_as_non_root=$(kubectl -n confluent get "$resource_kind" "$resource_name" -o jsonpath='{.spec.podTemplate.podSecurityContext.runAsNonRoot}' 2>/dev/null)
+  		if [[ -z "$original_run_as_user" ]]
+  		then
+  			original_run_as_user="__MISSING__"
+  		fi
+  		if [[ -z "$original_run_as_non_root" ]]
+  		then
+  			original_run_as_non_root="__MISSING__"
+  		fi
+  		cfk_root_original_user_map[$key]="$original_run_as_user"
+  		cfk_root_original_nonroot_map[$key]="$original_run_as_non_root"
+
+  		logwarn "☸️ Pod $resolved_container is running as uid ${container_uid:-unknown}; patching $resource_kind/$resource_name to run as root"
+  		patch_stderr=$(mktemp -t pg-cfk-patch-XXXXXXXXXX)
+  		kubectl -n confluent patch "$resource_kind" "$resource_name" --type merge -p '{"spec":{"podTemplate":{"podSecurityContext":{"runAsUser":0,"runAsNonRoot":false}}}}' > /dev/null 2>"$patch_stderr"
+  		if [ $? -ne 0 ]
+  		then
+  			logerror "❌ failed to patch $resource_kind/$resource_name for root execution"
+  			cat "$patch_stderr"
+  			rm -f "$patch_stderr"
+  			exit 1
+  		fi
+  		rm -f "$patch_stderr"
+  		cfk_root_patch_done_map[$resource_kind/$resource_name]="1"
+  		cfk_root_restore_needed_map[$resource_kind/$resource_name]="1"
+  	fi
+
+  	log "⌛ Waiting for pod $resolved_container to be ready after $resource_kind/$resource_name patch"
+  	if ! kubectl -n confluent wait --for=condition=Ready "pod/$resolved_container" --timeout=300s > /dev/null 2>&1
+  	then
+  		logerror "❌ pod $resolved_container did not become ready after $resource_kind/$resource_name patch"
+  		kubectl -n confluent get pods
+  		exit 1
+  	fi
+
+  	uid_deadline=$((SECONDS + 120))
+  	while true
+  	do
+  		container_uid=$(playground --output-level ERROR container exec --container "$resolved_container" --command "id -u" 2>/dev/null || true)
+  		if [[ "$container_uid" == "0" ]]
+  		then
+  			break
+  		fi
+
+  		if (( SECONDS >= uid_deadline ))
+  		then
+  			logerror "❌ pod $resolved_container is still not running as root after $resource_kind/$resource_name patch (uid: ${container_uid:-unknown})"
+  			exit 1
+  		fi
+
+  		sleep 2
+  	done
+  }
+
   # Convert space-separated string to array
   IFS=' ' read -ra container_array <<< "$containers"
 
   for container in "${container_array[@]}"
   do
   	resolved_container=$(resolve_container_name_for_environment "$container")
+  	root_resource_kind=""
+  	root_resource_name=""
   	if [[ "$environment" == "cfk" ]]
   	then
   		if [[ -n "$root" ]]
   		then
-  			logwarn "👑 --root flag is ignored in cfk mode"
+  			ensure_cfk_root_for_container "$container" "$resolved_container"
+  			resource_ref=$(get_cfk_resource_for_pod "$resolved_container")
+  			root_resource_kind=${resource_ref%%:*}
+  			root_resource_name=${resource_ref#*:}
+  			log "🪄👑 Executing command as root in pod $resolved_container with $shell"
   		fi
-  		log "🪄 Executing command in pod $resolved_container with $shell"
+  		if [[ -z "$root" ]]
+  		then
+  			log "🪄 Executing command in pod $resolved_container with $shell"
+  		fi
   		if [[ -t 0 ]]
   		then
   			kubectl -n confluent exec "$resolved_container" -- "$shell" -c "$command"
+  			exec_exit_code=$?
   		else
   			kubectl -n confluent exec -i "$resolved_container" -- "$shell" -c "$command"
+  			exec_exit_code=$?
+  		fi
+
+  		if [[ -n "$root" && -n "$root_resource_kind" && -n "$root_resource_name" ]]
+  		then
+  			restore_cfk_appuser_for_resource "$root_resource_kind" "$root_resource_name" "$resolved_container"
+  		fi
+
+  		if [[ $exec_exit_code -ne 0 ]]
+  		then
+  			exit $exec_exit_code
   		fi
   	elif [[ -n "$root" ]]
   	then
@@ -26359,7 +26675,7 @@ EOF
       log "💫 xstream test detected, re-installing libraries..."
       # https://github.com/confluentinc/common-docker/pull/743 and https://github.com/adoptium/adoptium-support/issues/1285
       set +e
-      playground container exec --root --command "sed -i "s/packages\.adoptium\.net/adoptium\.jfrog\.io/g" /etc/yum.repos.d/adoptium.repo"
+      playground container exec --root --command 'sed -i "s/packages\.adoptium\.net/adoptium\.jfrog\.io/g" /etc/yum.repos.d/adoptium.repo'
       playground container exec --root --command "microdnf -y install libaio"
 
       if [ "$(uname -m)" = "arm64" ]
