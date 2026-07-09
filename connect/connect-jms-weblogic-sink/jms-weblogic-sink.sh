@@ -122,8 +122,7 @@ EOF
      
 sleep 5
 
-get_environment_used
-if [[ "$environment" == "cfk" ]]
+if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
 then
     log "Copying JMSReceiver artifacts to jms-receiver container"
     playground container cp --source "${DIR}/jms-receiver/lib/weblogic.jar" --destination jms-receiver:/tmp/weblogic.jar
