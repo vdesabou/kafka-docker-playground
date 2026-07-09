@@ -111,7 +111,7 @@ then
     log "💫 xstream test detected, re-installing libraries..."
     # https://github.com/confluentinc/common-docker/pull/743 and https://github.com/adoptium/adoptium-support/issues/1285
     set +e
-    playground container exec --root --command "sed -i "s/packages\.adoptium\.net/adoptium\.jfrog\.io/g" /etc/yum.repos.d/adoptium.repo"
+    playground container exec --root --command 'sed -i "s/packages\.adoptium\.net/adoptium\.jfrog\.io/g" /etc/yum.repos.d/adoptium.repo'
     playground container exec --root --command "microdnf -y install libaio"
 
     if [ "$(uname -m)" = "arm64" ]
