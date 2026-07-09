@@ -2,7 +2,7 @@
 # This is provided for illustration purposes only, for full details
 # please consult the product documentation: https://docs.appdynamics.com/
 
-FROM ubuntu:14.04
+FROM ubuntu:22.04
 
 # Install required packages
 RUN apt-get update && \
