@@ -12,7 +12,7 @@ then
 fi
 
 CONNECTOR_GITHUB_ACCESS_TOKEN=${CONNECTOR_GITHUB_ACCESS_TOKEN:-$1}
-CONNECTOR_GITHUB_REPOSITORIES=${CONNECTOR_GITHUB_REPOSITORIES:-"confluentinc/kafka-connect-datagen"}
+CONNECTOR_GITHUB_REPOSITORIES=${CONNECTOR_GITHUB_REPOSITORIES:-"apache/kafka"}
 
 if [ -z "$CONNECTOR_GITHUB_ACCESS_TOKEN" ]
 then
@@ -32,7 +32,7 @@ then
      "tasks.max": "1",
      "github.service.url":"https://api.github.com",
      "github.repositories":"$CONNECTOR_GITHUB_REPOSITORIES",
-     "github.resources":"stargazers",
+     "github.resources":"commits",
      "github.since":"2019-01-01",
      "github.access.token": "$CONNECTOR_GITHUB_ACCESS_TOKEN",
      "key.converter": "io.confluent.connect.avro.AvroConverter",
@@ -55,7 +55,7 @@ else
      "tasks.max": "1",
      "github.service.url":"https://api.github.com",
      "github.repositories":"$CONNECTOR_GITHUB_REPOSITORIES",
-     "github.tables":"stargazers",
+     "github.tables":"commits",
      "github.since":"2019-01-01",
      "github.access.token": "$CONNECTOR_GITHUB_ACCESS_TOKEN",
      "key.converter": "io.confluent.connect.avro.AvroConverter",
@@ -74,5 +74,5 @@ fi
 
 sleep 10
 
-log "Verify we have received the data in github-topic-stargazers topic"
-playground topic consume --topic github-topic-stargazers --min-expected-messages 1 --timeout 60
+log "Verify we have received the data in github-topic-commits topic"
+playground topic consume --topic github-topic-commits --min-expected-messages 1 --timeout 60
