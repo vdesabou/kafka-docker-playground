@@ -2083,7 +2083,7 @@ commands:
     help: |-
       🔐 Generate keys and certificates used for SSL
     flags:
-    - long: --containe
+    - long: --container
       short: -c
       alias: [--pod, -p]
       arg: container
