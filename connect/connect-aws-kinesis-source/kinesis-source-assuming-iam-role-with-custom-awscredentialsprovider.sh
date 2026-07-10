@@ -94,14 +94,14 @@ log "Insert records in Kinesis stream"
 # The example shows that a record containing partition key 123 and data "test-message-1" is inserted into kafka_docker_playground.
 aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --data test-message-1 --region $AWS_REGION
 
-playground topic create --topic kinesis_topic
+playground topic create --topic kinesis-topic
 
 log "Creating Kinesis Source connector"
 playground connector create-or-update --connector kinesis-source  << EOF
 {
     "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",
     "tasks.max": "1",
-    "kafka.topic": "kinesis_topic",
+    "kafka.topic": "kinesis-topic",
     "kinesis.stream": "$KINESIS_STREAM_NAME",
     "kinesis.region": "$AWS_REGION",
     "kinesis.credentials.provider.class": "com.github.vdesabou.AwsAssumeRoleCredentialsProvider",
@@ -116,5 +116,5 @@ playground connector create-or-update --connector kinesis-source  << EOF
 }
 EOF
 
-log "Verify we have received the data in kinesis_topic topic"
-playground topic consume --topic kinesis_topic --min-expected-messages 1 --timeout 60
+log "Verify we have received the data in kinesis-topic topic"
+playground topic consume --topic kinesis-topic --min-expected-messages 1 --timeout 60

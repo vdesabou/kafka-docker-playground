@@ -9,9 +9,9 @@ handle_aws_credentials
 bootstrap_ccloud_environment "aws" "$AWS_REGION"
 
 set +e
-playground topic delete --topic kinesis_topic
+playground topic delete --topic kinesis-topic
 sleep 3
-playground topic create --topic kinesis_topic --nb-partitions 1
+playground topic create --topic kinesis-topic --nb-partitions 1
 set -e
 
 KINESIS_STREAM_NAME=pg${USER}fm${GITHUB_RUN_NUMBER}${TAG_BASE}
@@ -55,7 +55,7 @@ playground connector create-or-update --connector $connector_name << EOF
     "kafka.auth.mode": "KAFKA_API_KEY",
     "kafka.api.key": "$CLOUD_KEY",
     "kafka.api.secret": "$CLOUD_SECRET",
-    "kafka.topic": "kinesis_topic",
+    "kafka.topic": "kinesis-topic",
     "kinesis.stream": "$KINESIS_STREAM_NAME",
     "kinesis.region": "$AWS_REGION",
     "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
@@ -67,8 +67,8 @@ wait_for_ccloud_connector_up $connector_name 180
 
 sleep 10
 
-log "Verify we have received the data in kinesis_topic topic"
-playground topic consume --topic kinesis_topic --min-expected-messages 1 --timeout 60
+log "Verify we have received the data in kinesis-topic topic"
+playground topic consume --topic kinesis-topic --min-expected-messages 1 --timeout 60
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue

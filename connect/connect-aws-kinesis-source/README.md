@@ -65,7 +65,7 @@ playground connector create-or-update --connector kinesis-source  << EOF
 {
         "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",
                "tasks.max": "1",
-               "kafka.topic": "kinesis_topic",
+               "kafka.topic": "kinesis-topic",
                "kinesis.stream": "$KINESIS_STREAM_NAME",
                "confluent.license": "",
                "name": "kinesis-source",
@@ -75,10 +75,10 @@ playground connector create-or-update --connector kinesis-source  << EOF
 EOF
 ```
 
-Verify we have received the data in kinesis_topic topic:
+Verify we have received the data in kinesis-topic topic:
 
 ```
-playground topic consume --topic kinesis_topic --min-expected-messages 1 --timeout 60
+playground topic consume --topic kinesis-topic --min-expected-messages 1 --timeout 60
 ```
 
 Delete your stream and clean up resources to avoid incurring any unintended charges:

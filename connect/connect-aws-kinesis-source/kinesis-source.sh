@@ -49,14 +49,14 @@ sleep 60
 log "Insert records in Kinesis stream".
 aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --data test-message-1 --region $AWS_REGION
 
-playground topic create --topic kinesis_topic
+playground topic create --topic kinesis-topic
 
 log "Creating Kinesis Source connector"
 playground connector create-or-update --connector kinesis-source  << EOF
 {
     "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",
     "tasks.max": "1",
-    "kafka.topic": "kinesis_topic",
+    "kafka.topic": "kinesis-topic",
     "kinesis.stream": "$KINESIS_STREAM_NAME",
     "kinesis.region": "$AWS_REGION",
     "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
@@ -67,5 +67,5 @@ playground connector create-or-update --connector kinesis-source  << EOF
 }
 EOF
 
-log "Verify we have received the data in kinesis_topic topic"
-playground topic consume --topic kinesis_topic --min-expected-messages 1 --timeout 60
+log "Verify we have received the data in kinesis-topic topic"
+playground topic consume --topic kinesis-topic --min-expected-messages 1 --timeout 60
