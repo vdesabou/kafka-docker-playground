@@ -658,6 +658,22 @@ else
             # ls -1 | sort
             # cd - > /dev/null 2>&1
 
+            # For large connectors (many bundled jars), the install container can exit 0
+            # before the bind-mounted files are actually visible on the host. Wait for
+            # manifest.json to appear before reading it.
+            manifest_wait_path="${DIR_UTILS}/../confluent-hub/${connector_path}/manifest.json"
+            manifest_wait_attempts=0
+            while [ ! -f "$manifest_wait_path" ] && [ "$manifest_wait_attempts" -lt 30 ]
+            do
+              sleep 2
+              manifest_wait_attempts=$((manifest_wait_attempts+1))
+            done
+            if [ ! -f "$manifest_wait_path" ]
+            then
+              logerror "❌ $manifest_wait_path did not appear within 60s after confluent-hub install reported success"
+              exit 1
+            fi
+
             version=$(cat ${DIR_UTILS}/../confluent-hub/${connector_path}/manifest.json | jq -r '.version')
             release_date=$(cat ${DIR_UTILS}/../confluent-hub/${connector_path}/manifest.json | jq -r '.release_date')
             documentation_url=$(cat ${DIR_UTILS}/../confluent-hub/${connector_path}/manifest.json | jq -r '.documentation_url')
