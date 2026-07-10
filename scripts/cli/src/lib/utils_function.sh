@@ -2045,7 +2045,7 @@ function bootstrap_ccloud_environment () {
       fi
     fi
 
-    if [[ $test_file == *"fm-gcp"* ]] || ( [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-gcp"* ]] )
+    if [[ $test_file == *"fm-gcp"* ]] || [[ $test_file == *"fm-debezium-gcp"* ]] || ( [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-gcp"* ]] )
     then
       if [ ! -z "$GCP_CLUSTER_NAME" ]
       then
