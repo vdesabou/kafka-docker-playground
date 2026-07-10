@@ -9,7 +9,7 @@ services:
       MARIADB_DATABASE: db
       MARIADB_USER: user
       MARIADB_PASSWORD: password
-      MARIADB_ROOT_HOST: 172.%  # Allow docker containers to connect to mariadb
+      MARIADB_ROOT_HOST: 172.%
 
   connect:
     depends_on:
