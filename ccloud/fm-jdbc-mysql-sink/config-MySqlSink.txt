@@ -142,6 +142,15 @@ How Confluent Cloud authenticates with Azure or GCP. Allowed values - ``Password
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 secret.manager.enabled
+
+Fetch sensitive configuration values from a secret manager.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 provider.integration.id
 
 
@@ -152,13 +161,43 @@ How Confluent Cloud authenticates with Azure or GCP. Allowed values - ``Password
 	 - Required: HIGH
 
 ==========================
+Secret manager configuration
+==========================
+🔘 secret.manager
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the secret manager to use for retrieving sensitive data.
+	 - Required: HIGH
+
+🔘 secret.manager.managed.configs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Select the configurations to fetch their values from the secret manager.
+	 - Required: HIGH
+
+🔘 secret.manager.provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing provider integration that has access to your secret manager.
+	 - Required: HIGH
+
+==========================
 How should we connect to your database?
 ==========================
 🔘 connection.host
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: STRING
 	 - Importance: Depending on the service environment, certain network access limitations may exist. Make sure the connector can reach your service. Do not include jdbc:xxxx:// in the connection hostname property (e.g. database-1.abc234ec2.us-west.rds.amazonaws.com).
 	 - Required: HIGH
@@ -167,7 +206,7 @@ How should we connect to your database?
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: INT
 	 - Importance: JDBC connection port.
 	 - Required: HIGH
@@ -194,7 +233,7 @@ How should we connect to your database?
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: STRING
 	 - Importance: JDBC database name.
 	 - Required: HIGH
@@ -206,7 +245,7 @@ What SSL mode should we use to connect to your database. ``prefer`` allows for t
 	 - Type: STRING
 	 - Default: prefer
 	 - Importance: HIGH
-	 - Required: true
+	 - Required: false
 
 🔘 ssl.truststorefile
 
@@ -214,7 +253,7 @@ What SSL mode should we use to connect to your database. ``prefer`` allows for t
 
 	 - Type: false
 	 - Default: PASSWORD
-	 - Importance: The binary trust store file that contains the server's CA certificate. Only required if you use verify-ca or verify-full ssl mode. The connector supports files in JKS format. For REST API usage, you must base64-encode the binary trust store file and prefix it with ``data:text/plain;base64,``. For example, first, encode the file ``base64_truststore=<span>(cat /path/to/truststore.jks | base64)`` and then use ``data:text/plain;base64,</span>base64_truststore`` as the value.
+	 - Importance: The binary trust store file that contains the server's CA certificate. Only required if you use `verify-ca` or `verify-full` ssl mode. The connector supports files in `JKS` and `PKCS12` format. For REST API usage, you must base64-encode the binary file and add the appropriate prefix: use ``data:text/plain;base64,`` for JKS files and ``data:application/x-pkcs12;base64,`` for PKCS12 files. For example, run ``base64_truststore=$(cat /path/to/truststore.jks | base64)`` and then use ``data:text/plain;base64,${base64_truststore}`` as the value.
 	 - Required: LOW
 
 🔘 ssl.truststorepassword
@@ -223,7 +262,43 @@ What SSL mode should we use to connect to your database. ``prefer`` allows for t
 
 	 - Type: false
 	 - Default: PASSWORD
-	 - Importance: The trust store password containing server CA certificate. Only required if using `verify-ca` or `verify-full` ssl mode.
+	 - Importance: The trust store password for the server CA trust store. Only required if using `verify-ca` or `verify-full` ssl mode.
+	 - Required: LOW
+
+🔘 ssl.truststoretype
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The key store type for trusted root certificates. Only required if using `verify-ca` or `verify-full` ssl mode. The connector supports files in `JKS` and `PKCS12` format.
+	 - Required: LOW
+
+🔘 ssl.clientstorefile
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The binary key store file that contains the client's certificate, used for mutual TLS authentication. The connector supports files in `JKS` and `PKCS12` format. For REST API usage, you must base64-encode the binary file and add the appropriate prefix: use ``data:text/plain;base64,`` for JKS files and ``data:application/x-pkcs12;base64,`` for PKCS12 files. For example, run ``base64_clientstore=$(cat /path/to/keystore.jks | base64)`` and then use ``data:text/plain;base64,${base64_clientstore}`` as the value.
+	 - Required: LOW
+
+🔘 ssl.clientstorepassword
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The key store password for the client certificate key store.
+	 - Required: LOW
+
+🔘 ssl.clientstoretype
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The key store type for client certificate. The connector supports files in `JKS` and `PKCS12` format.
 	 - Required: LOW
 
 ==========================
