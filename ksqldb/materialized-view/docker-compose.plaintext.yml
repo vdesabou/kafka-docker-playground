@@ -12,7 +12,7 @@ services:
       MYSQL_DATABASE: db
       MYSQL_USER: user
       MYSQL_PASSWORD: password
-      MYSQL_ROOT_HOST: 172.%  # Allow docker containers to connect to mysql
+      MYSQL_ROOT_HOST: 172.%
 
   connect:
     volumes:
