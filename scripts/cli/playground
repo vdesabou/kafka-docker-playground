@@ -8711,20 +8711,48 @@ function get_connect_url_and_security() {
 
   if [[ "$environment" == "cfk" ]]
   then
-      # CFK Connect is typically accessed through local port-forwards.
-      # Prefer 8083, then fall back to 8283/8383 for multi-worker setups.
+      # CFK Connect is accessed through local port-forwards.
+      # Prefer existing forwards first, then auto-start one on 8083 if needed.
       connect_port="8083"
+      connect_reachable=0
       for candidate_port in 8083 8283 8383
       do
         if curl -s "http://localhost:${candidate_port}" > /dev/null 2>&1
         then
           connect_port="$candidate_port"
+          connect_reachable=1
           break
         fi
       done
 
+      if [[ "$connect_reachable" != "1" ]]
+      then
+        cfk_pf_running=$(ps -axo command= | grep -E '[k]ubectl( |.* )-n confluent( |.* )port-forward (svc/)?connect ' | head -1)
+        if [[ -z "$cfk_pf_running" ]]
+        then
+          log "🔀 Starting CFK port-forward for Connect on localhost:8083"
+          kubectl -n confluent port-forward svc/connect 8083:8083 > /tmp/playground-cfk-connect-port-forward.log 2>&1 &
+        fi
+
+        for _ in 1 2 3 4 5
+        do
+          if curl -s "http://localhost:8083" > /dev/null 2>&1
+          then
+            connect_reachable=1
+            connect_port="8083"
+            break
+          fi
+          sleep 1
+        done
+      fi
+
       connect_url="http://localhost:$connect_port"
       security=""
+
+      if [[ "$connect_reachable" != "1" ]]
+      then
+        logwarn "⚠️ Could not reach CFK Connect REST API on localhost (tried 8083/8283/8383)"
+      fi
       return
   fi
 
