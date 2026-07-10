@@ -62,6 +62,17 @@ export CP_INIT_IMAGE CP_INIT_TAG
 : "${CFK_TMPFS_SHM_SIZE_LIMIT:=1Gi}"
 : "${CFK_CONNECTOR_ARCHIVE_HOST:=}"
 
+: "${CFK_CONNECT_PLUGIN_PATH:=}"
+if [[ -n "${CONNECT_PLUGIN_PATH+x}" ]]
+then
+  CFK_CONNECT_PLUGIN_PATH="${CONNECT_PLUGIN_PATH}"
+fi
+if [[ -z "$CFK_CONNECT_PLUGIN_PATH" ]]
+then
+  CFK_CONNECT_PLUGIN_PATH="/usr/share/confluent-hub-components,/mnt/plugins"
+fi
+export CFK_CONNECT_PLUGIN_PATH
+
 function log_generated_yaml_file() {
   local label="$1"
   local file_path="$2"
@@ -829,6 +840,14 @@ function generate_connect_env_patch_from_compose() {
     fi
 
     env_value=$(echo "$env_value" | envsubst)
+
+    if [[ "$env_key" == "CONNECT_PLUGIN_PATH" ]]
+    then
+      CFK_CONNECT_PLUGIN_PATH="$env_value"
+      export CFK_CONNECT_PLUGIN_PATH
+      log "🔎 Effective CFK plugin.path source set from CONNECT_PLUGIN_PATH: ${CFK_CONNECT_PLUGIN_PATH}"
+    fi
+
     escaped_value=$(printf '%s' "$env_value" | sed 's/\\/\\\\/g; s/"/\\"/g')
 
     if [[ "$has_env" -eq 0 ]]
@@ -2114,7 +2133,7 @@ function build_cfk_manifest() {
   rendered_file=$(mktemp)
   base_manifest_file=$(mktemp)
 
-  envsubst '${CP_SERVER_IMAGE} ${CP_SERVER_TAG} ${CP_CONNECT_IMAGE} ${CP_CONNECT_TAG} ${CP_SCHEMA_REGISTRY_IMAGE} ${CP_SCHEMA_REGISTRY_TAG} ${CP_CONTROL_CENTER_IMAGE} ${CP_CONTROL_CENTER_TAG} ${CP_INIT_IMAGE} ${CP_INIT_TAG}' < "${DIR}/confluent-platform.yaml" > "$rendered_file"
+  envsubst '${CP_SERVER_IMAGE} ${CP_SERVER_TAG} ${CP_CONNECT_IMAGE} ${CP_CONNECT_TAG} ${CP_SCHEMA_REGISTRY_IMAGE} ${CP_SCHEMA_REGISTRY_TAG} ${CP_CONTROL_CENTER_IMAGE} ${CP_CONTROL_CENTER_TAG} ${CP_INIT_IMAGE} ${CP_INIT_TAG} ${CFK_CONNECT_PLUGIN_PATH}' < "${DIR}/confluent-platform.yaml" > "$rendered_file"
 
   if [[ -n "$ENABLE_CONTROL_CENTER" ]]
   then
