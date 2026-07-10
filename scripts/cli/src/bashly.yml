@@ -2083,7 +2083,9 @@ commands:
     help: |-
       🔐 Generate keys and certificates used for SSL
     flags:
-    - long: --container
+    - long: --containe
+      short: -c
+      alias: [--pod, -p]
       arg: container
       help: |-
         🐳 container name
@@ -2148,6 +2150,7 @@ commands:
       - &container
         long: --container
         short: -c
+        alias: [--pod, -p]
         required: false
         default: "connect"
         arg: container
@@ -2374,6 +2377,7 @@ commands:
                   use <option+enter> to use the value you typed manually
       - long: --container
         short: -c
+        alias: [--pod, -p]
         required: false
         arg: container
         completions:
