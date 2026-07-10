@@ -8,6 +8,8 @@ eval "methods=(${args[--method]})"
 
 action="${args[--action]}"
 
+get_environment_used
+
 # Convert space-separated string to array
 IFS=' ' read -ra container_array <<< "$containers"
 
@@ -39,7 +41,14 @@ do
         scissors_file=$(playground --output-level WARN container logs --container "${container}" --wait-for-log "Core Logger" | tail -1 | cut -d " " -f 4)
 
         log "✂️ jscissors file is available ${scissors_file}"
-        playground open --file "${scissors_file}"
+        if [[ "$environment" == "cfk" ]]
+        then
+            local_scissors_file="/tmp/jscissors-${container}-$(date '+%Y-%m-%d-%H-%M-%S').log"
+            playground --output-level WARN container cp --source "${container}:${scissors_file}" --destination "${local_scissors_file}"
+            playground open --file "${local_scissors_file}"
+        else
+            playground open --file "${scissors_file}"
+        fi
     else
         playground container set-environment-variables --container "${container}" --restore-original-values
     fi

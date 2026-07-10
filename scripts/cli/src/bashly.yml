@@ -2088,7 +2088,7 @@ commands:
       alias: [--pod, -p]
       arg: container
       help: |-
-        🐳 container name
+        🐳 container name (or pod name when cfk environment is used)
 
         🎓 Tip: you can pass multiple containers by specifying --container multiple times
       required: false
@@ -2158,7 +2158,7 @@ commands:
         completions:
           - $(playground get-container-list)
         help: |-
-          🐳 Container name
+          🐳 container name (or pod name when cfk environment is used)
 
           🎓 Tip: you can pass multiple containers by specifying --container multiple times
       - long: --skip-vs-code-config-display
@@ -2383,7 +2383,7 @@ commands:
         completions:
           - $(playground get-container-list)
         help: |-
-          🐳 Container name to extract GC log from
+          🐳 Container name (or pod name when cfk environment is used) to extract GC log from
 
           ❕ Provide either --file or --container, not both
 

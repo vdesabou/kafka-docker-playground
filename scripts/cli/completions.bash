@@ -4,1892 +4,5169 @@
 # completely (https://github.com/bashly-framework/completely)
 # Modifying it manually is not recommended
 
-_playground_completions_filter() {
-  local words="$1"
-  local cur=${COMP_WORDS[COMP_CWORD]}
-  local result=()
+_playground_completions_node_flag_state() {
+  case "$1:$2" in
+    0:--output-level|0:-o) return 2 ;;
+    0:--help|0:-h) return 0 ;;
+    0:--version|0:-v) return 0 ;;
+    0:--vvv|0:-v) return 0 ;;
+    1:--output-level|1:-o) return 2 ;;
+    1:--vvv|1:-v) return 0 ;;
+    1:--help|1:-h) return 0 ;;
+    2:--output-level|2:-o) return 2 ;;
+    2:--vvv|2:-v) return 0 ;;
+    2:--help|2:-h) return 0 ;;
+    3:--output-level|3:-o) return 2 ;;
+    3:--vvv|3:-v) return 0 ;;
+    3:--help|3:-h) return 0 ;;
+    4:--output-level|4:-o) return 2 ;;
+    4:--vvv|4:-v) return 0 ;;
+    4:--help|4:-h) return 0 ;;
+    5:--output-level|5:-o) return 2 ;;
+    5:--vvv|5:-v) return 0 ;;
+    5:--help|5:-h) return 0 ;;
+    6:--output-level|6:-o) return 2 ;;
+    6:--vvv|6:-v) return 0 ;;
+    6:--help|6:-h) return 0 ;;
+    7:--output-level|7:-o) return 2 ;;
+    7:--vvv|7:-v) return 0 ;;
+    7:--help|7:-h) return 0 ;;
+    8:--output-level|8:-o) return 2 ;;
+    8:--vvv|8:-v) return 0 ;;
+    8:--help|8:-h) return 0 ;;
+    9:--output-level|9:-o) return 2 ;;
+    9:--vvv|9:-v) return 0 ;;
+    9:--help|9:-h) return 0 ;;
+    10:--output-level|10:-o) return 2 ;;
+    10:--vvv|10:-v) return 0 ;;
+    10:--help|10:-h) return 0 ;;
+    11:--output-level|11:-o) return 2 ;;
+    11:--vvv|11:-v) return 0 ;;
+    11:--help|11:-h) return 0 ;;
+    12:--output-level|12:-o) return 2 ;;
+    12:--vvv|12:-v) return 0 ;;
+    12:--help|12:-h) return 0 ;;
+    13:--output-level|13:-o) return 2 ;;
+    13:--vvv|13:-v) return 0 ;;
+    13:--help|13:-h) return 0 ;;
+    14:--output-level|14:-o) return 2 ;;
+    14:--vvv|14:-v) return 0 ;;
+    14:--help|14:-h) return 0 ;;
+    15:--output-level|15:-o) return 2 ;;
+    15:--vvv|15:-v) return 0 ;;
+    15:--help|15:-h) return 0 ;;
+    16:--output-level|16:-o) return 2 ;;
+    16:--vvv|16:-v) return 0 ;;
+    16:--help|16:-h) return 0 ;;
+    17:--output-level|17:-o) return 2 ;;
+    17:--vvv|17:-v) return 0 ;;
+    17:--help|17:-h) return 0 ;;
+    18:--output-level|18:-o) return 2 ;;
+    18:--vvv|18:-v) return 0 ;;
+    18:--help|18:-h) return 0 ;;
+    19:--output-level|19:-o) return 2 ;;
+    19:--start-date) return 2 ;;
+    19:--end-date) return 2 ;;
+    19:--vvv|19:-v) return 0 ;;
+    19:--help|19:-h) return 0 ;;
+    20:--output-level|20:-o) return 2 ;;
+    20:--vvv|20:-v) return 0 ;;
+    20:--help|20:-h) return 0 ;;
+    20:--detailed) return 0 ;;
+    21:--output-level|21:-o) return 2 ;;
+    21:--vvv|21:-v) return 0 ;;
+    21:--help|21:-h) return 0 ;;
+    22:--output-level|22:-o) return 2 ;;
+    22:--vvv|22:-v) return 0 ;;
+    22:--help|22:-h) return 0 ;;
+    23:--output-level|23:-o) return 2 ;;
+    23:--start-date) return 2 ;;
+    23:--end-date) return 2 ;;
+    23:--vvv|23:-v) return 0 ;;
+    23:--help|23:-h) return 0 ;;
+    24:--output-level|24:-o) return 2 ;;
+    24:--vvv|24:-v) return 0 ;;
+    24:--help|24:-h) return 0 ;;
+    24:--detailed) return 0 ;;
+    25:--output-level|25:-o) return 2 ;;
+    25:--start-date) return 2 ;;
+    25:--end-date) return 2 ;;
+    25:--vvv|25:-v) return 0 ;;
+    25:--help|25:-h) return 0 ;;
+    26:--output-level|26:-o) return 2 ;;
+    26:--vvv|26:-v) return 0 ;;
+    26:--help|26:-h) return 0 ;;
+    26:--detailed) return 0 ;;
+    27:--output-level|27:-o) return 2 ;;
+    27:--environment) return 2 ;;
+    27:--file|27:-f) return 2 ;;
+    27:--tag) return 2 ;;
+    27:--connect-tag) return 2 ;;
+    27:--connector-tag) return 2 ;;
+    27:--connector-zip) return 2 ;;
+    27:--connector-jar) return 2 ;;
+    27:--cluster-cloud) return 2 ;;
+    27:--cluster-type) return 2 ;;
+    27:--cluster-region) return 2 ;;
+    27:--cluster-environment) return 2 ;;
+    27:--cluster-name) return 2 ;;
+    27:--cluster-creds) return 2 ;;
+    27:--cluster-schema-registry-creds) return 2 ;;
+    27:--vvv|27:-v) return 0 ;;
+    27:--help|27:-h) return 0 ;;
+    27:--open|27:-o) return 0 ;;
+    27:--enable-ksqldb) return 0 ;;
+    27:--enable-rest-proxy) return 0 ;;
+    27:--enable-control-center) return 0 ;;
+    27:--enable-flink) return 0 ;;
+    27:--enable-conduktor) return 0 ;;
+    27:--enable-multiple-brokers) return 0 ;;
+    27:--enable-multiple-connect-workers) return 0 ;;
+    27:--enable-jmx-grafana) return 0 ;;
+    27:--enable-kcat) return 0 ;;
+    27:--enable-sql-datagen) return 0 ;;
+    28:--output-level|28:-o) return 2 ;;
+    28:--vvv|28:-v) return 0 ;;
+    28:--help|28:-h) return 0 ;;
+    29:--output-level|29:-o) return 2 ;;
+    29:--vvv|29:-v) return 0 ;;
+    29:--help|29:-h) return 0 ;;
+    30:--output-level|30:-o) return 2 ;;
+    30:--vvv|30:-v) return 0 ;;
+    30:--help|30:-h) return 0 ;;
+    31:--output-level|31:-o) return 2 ;;
+    31:--vvv|31:-v) return 0 ;;
+    31:--help|31:-h) return 0 ;;
+    32:--output-level|32:-o) return 2 ;;
+    32:--vvv|32:-v) return 0 ;;
+    32:--help|32:-h) return 0 ;;
+    33:--output-level|33:-o) return 2 ;;
+    33:--tag) return 2 ;;
+    33:--connect-tag) return 2 ;;
+    33:--connector-tag) return 2 ;;
+    33:--connector-zip) return 2 ;;
+    33:--connector-jar) return 2 ;;
+    33:--vvv|33:-v) return 0 ;;
+    33:--help|33:-h) return 0 ;;
+    34:--output-level|34:-o) return 2 ;;
+    34:--file|34:-f) return 2 ;;
+    34:--vvv|34:-v) return 0 ;;
+    34:--help|34:-h) return 0 ;;
+    34:--open-docker-compose) return 0 ;;
+    35:--output-level|35:-o) return 2 ;;
+    35:--vvv|35:-v) return 0 ;;
+    35:--help|35:-h) return 0 ;;
+    36:--output-level|36:-o) return 2 ;;
+    36:--vvv|36:-v) return 0 ;;
+    36:--help|36:-h) return 0 ;;
+    37:--output-level|37:-o) return 2 ;;
+    37:--version) return 2 ;;
+    37:--vvv|37:-v) return 0 ;;
+    37:--help|37:-h) return 0 ;;
+    38:--output-level|38:-o) return 2 ;;
+    38:--version) return 2 ;;
+    38:--vvv|38:-v) return 0 ;;
+    38:--help|38:-h) return 0 ;;
+    39:--output-level|39:-o) return 2 ;;
+    39:--vvv|39:-v) return 0 ;;
+    39:--help|39:-h) return 0 ;;
+    40:--output-level|40:-o) return 2 ;;
+    40:--vvv|40:-v) return 0 ;;
+    40:--help|40:-h) return 0 ;;
+    40:--only-show-url) return 0 ;;
+    41:--output-level|41:-o) return 2 ;;
+    41:--vvv|41:-v) return 0 ;;
+    41:--help|41:-h) return 0 ;;
+    41:--only-show-url) return 0 ;;
+    42:--output-level|42:-o) return 2 ;;
+    42:--resource) return 2 ;;
+    42:--vvv|42:-v) return 0 ;;
+    42:--help|42:-h) return 0 ;;
+    42:--force) return 0 ;;
+    43:--output-level|43:-o) return 2 ;;
+    43:--vvv|43:-v) return 0 ;;
+    43:--help|43:-h) return 0 ;;
+    44:--output-level|44:-o) return 2 ;;
+    44:--vvv|44:-v) return 0 ;;
+    44:--help|44:-h) return 0 ;;
+    44:--all) return 0 ;;
+    45:--output-level|45:-o) return 2 ;;
+    45:--file|45:-f) return 2 ;;
+    45:--vvv|45:-v) return 0 ;;
+    45:--help|45:-h) return 0 ;;
+    46:--output-level|46:-o) return 2 ;;
+    46:--file|46:-f) return 2 ;;
+    46:--description|46:-d) return 2 ;;
+    46:--connector-plugin) return 2 ;;
+    46:--pipeline) return 2 ;;
+    46:--vvv|46:-v) return 0 ;;
+    46:--help|46:-h) return 0 ;;
+    46:--custom-smt) return 0 ;;
+    47:--output-level|47:-o) return 2 ;;
+    47:--vvv|47:-v) return 0 ;;
+    47:--help|47:-h) return 0 ;;
+    48:--output-level|48:-o) return 2 ;;
+    48:--vvv|48:-v) return 0 ;;
+    48:--help|48:-h) return 0 ;;
+    49:--output-level|49:-o) return 2 ;;
+    49:--subject) return 2 ;;
+    49:--id) return 2 ;;
+    49:--vvv|49:-v) return 0 ;;
+    49:--help|49:-h) return 0 ;;
+    49:--verbose|49:-v) return 0 ;;
+    49:--deleted) return 0 ;;
+    50:--output-level|50:-o) return 2 ;;
+    50:--subject) return 2 ;;
+    50:--schema) return 2 ;;
+    50:--id) return 2 ;;
+    50:--metadata-property) return 2 ;;
+    50:--vvv|50:-v) return 0 ;;
+    50:--help|50:-h) return 0 ;;
+    50:--verbose|50:-v) return 0 ;;
+    50:--normalize) return 0 ;;
+    51:--output-level|51:-o) return 2 ;;
+    51:--subject) return 2 ;;
+    51:--vvv|51:-v) return 0 ;;
+    51:--help|51:-h) return 0 ;;
+    51:--verbose|51:-v) return 0 ;;
+    52:--output-level|52:-o) return 2 ;;
+    52:--subject) return 2 ;;
+    52:--compatibility) return 2 ;;
+    52:--vvv|52:-v) return 0 ;;
+    52:--help|52:-h) return 0 ;;
+    52:--verbose|52:-v) return 0 ;;
+    53:--output-level|53:-o) return 2 ;;
+    53:--subject) return 2 ;;
+    53:--vvv|53:-v) return 0 ;;
+    53:--help|53:-h) return 0 ;;
+    53:--verbose|53:-v) return 0 ;;
+    54:--output-level|54:-o) return 2 ;;
+    54:--subject) return 2 ;;
+    54:--mode) return 2 ;;
+    54:--vvv|54:-v) return 0 ;;
+    54:--help|54:-h) return 0 ;;
+    54:--verbose|54:-v) return 0 ;;
+    55:--output-level|55:-o) return 2 ;;
+    55:--value) return 2 ;;
+    55:--vvv|55:-v) return 0 ;;
+    55:--help|55:-h) return 0 ;;
+    55:--verbose|55:-v) return 0 ;;
+    56:--output-level|56:-o) return 2 ;;
+    56:--value) return 2 ;;
+    56:--vvv|56:-v) return 0 ;;
+    56:--help|56:-h) return 0 ;;
+    56:--verbose|56:-v) return 0 ;;
+    57:--output-level|57:-o) return 2 ;;
+    57:--subject) return 2 ;;
+    57:--version) return 2 ;;
+    57:--vvv|57:-v) return 0 ;;
+    57:--help|57:-h) return 0 ;;
+    57:--permanent) return 0 ;;
+    57:--verbose|57:-v) return 0 ;;
+    58:--output-level|58:-o) return 2 ;;
+    58:--payload) return 2 ;;
+    58:--schema-type) return 2 ;;
+    58:--vvv|58:-v) return 0 ;;
+    58:--help|58:-h) return 0 ;;
+    59:--output-level|59:-o) return 2 ;;
+    59:--subject) return 2 ;;
+    59:--alias) return 2 ;;
+    59:--vvv|59:-v) return 0 ;;
+    59:--help|59:-h) return 0 ;;
+    59:--verbose|59:-v) return 0 ;;
+    60:--output-level|60:-o) return 2 ;;
+    60:--alias) return 2 ;;
+    60:--vvv|60:-v) return 0 ;;
+    60:--help|60:-h) return 0 ;;
+    60:--verbose|60:-v) return 0 ;;
+    61:--output-level|61:-o) return 2 ;;
+    61:--vvv|61:-v) return 0 ;;
+    61:--help|61:-h) return 0 ;;
+    62:--output-level|62:-o) return 2 ;;
+    62:--hostname) return 2 ;;
+    62:--port) return 2 ;;
+    62:--throttle-service-response) return 2 ;;
+    62:--delay-service-response) return 2 ;;
+    62:--break-service-response) return 2 ;;
+    62:--vvv|62:-v) return 0 ;;
+    62:--help|62:-h) return 0 ;;
+    62:--service-response-corrupt) return 0 ;;
+    62:--skip-automatic-connector-config) return 0 ;;
+    63:--output-level|63:-o) return 2 ;;
+    63:--connection-id) return 2 ;;
+    63:--vvv|63:-v) return 0 ;;
+    63:--help|63:-h) return 0 ;;
+    64:--output-level|64:-o) return 2 ;;
+    64:--delay-service-response) return 2 ;;
+    64:--connection-id) return 2 ;;
+    64:--vvv|64:-v) return 0 ;;
+    64:--help|64:-h) return 0 ;;
+    65:--output-level|65:-o) return 2 ;;
+    65:--break-service-response) return 2 ;;
+    65:--connection-id) return 2 ;;
+    65:--vvv|65:-v) return 0 ;;
+    65:--help|65:-h) return 0 ;;
+    66:--output-level|66:-o) return 2 ;;
+    66:--connection-id) return 2 ;;
+    66:--vvv|66:-v) return 0 ;;
+    66:--help|66:-h) return 0 ;;
+    67:--output-level|67:-o) return 2 ;;
+    67:--vvv|67:-v) return 0 ;;
+    67:--help|67:-h) return 0 ;;
+    68:--output-level|68:-o) return 2 ;;
+    68:--vvv|68:-v) return 0 ;;
+    68:--help|68:-h) return 0 ;;
+    69:--output-level|69:-o) return 2 ;;
+    69:--connection-id) return 2 ;;
+    69:--vvv|69:-v) return 0 ;;
+    69:--help|69:-h) return 0 ;;
+    70:--output-level|70:-o) return 2 ;;
+    70:--connection-id) return 2 ;;
+    70:--vvv|70:-v) return 0 ;;
+    70:--help|70:-h) return 0 ;;
+    71:--output-level|71:-o) return 2 ;;
+    71:--connection-id) return 2 ;;
+    71:--vvv|71:-v) return 0 ;;
+    71:--help|71:-h) return 0 ;;
+    72:--output-level|72:-o) return 2 ;;
+    72:--connection-id) return 2 ;;
+    72:--vvv|72:-v) return 0 ;;
+    72:--help|72:-h) return 0 ;;
+    73:--output-level|73:-o) return 2 ;;
+    73:--vvv|73:-v) return 0 ;;
+    73:--help|73:-h) return 0 ;;
+    74:--output-level|74:-o) return 2 ;;
+    74:--vvv|74:-v) return 0 ;;
+    74:--help|74:-h) return 0 ;;
+    75:--output-level|75:-o) return 2 ;;
+    75:--vvv|75:-v) return 0 ;;
+    75:--help|75:-h) return 0 ;;
+    76:--output-level|76:-o) return 2 ;;
+    76:--file|76:-f) return 2 ;;
+    76:--vvv|76:-v) return 0 ;;
+    76:--help|76:-h) return 0 ;;
+    77:--output-level|77:-o) return 2 ;;
+    77:--file|77:-f) return 2 ;;
+    77:--vvv|77:-v) return 0 ;;
+    77:--help|77:-h) return 0 ;;
+    78:--output-level|78:-o) return 2 ;;
+    78:--container|78:-c|78:--pod|78:-p) return 2 ;;
+    78:--output-folder) return 2 ;;
+    78:--vvv|78:-v) return 0 ;;
+    78:--help|78:-h) return 0 ;;
+    78:--verbose|78:-v) return 0 ;;
+    79:--output-level|79:-o) return 2 ;;
+    79:--topic-regex) return 2 ;;
+    79:--timeout) return 2 ;;
+    79:--vvv|79:-v) return 0 ;;
+    79:--help|79:-h) return 0 ;;
+    80:--output-level|80:-o) return 2 ;;
+    80:--vvv|80:-v) return 0 ;;
+    80:--help|80:-h) return 0 ;;
+    81:--output-level|81:-o) return 2 ;;
+    81:--container|81:-c|81:--pod|81:-p) return 2 ;;
+    81:--vvv|81:-v) return 0 ;;
+    81:--help|81:-h) return 0 ;;
+    82:--output-level|82:-o) return 2 ;;
+    82:--container|82:-c|82:--pod|82:-p) return 2 ;;
+    82:--vvv|82:-v) return 0 ;;
+    82:--help|82:-h) return 0 ;;
+    83:--output-level|83:-o) return 2 ;;
+    83:--uri) return 2 ;;
+    83:--vvv|83:-v) return 0 ;;
+    83:--help|83:-h) return 0 ;;
+    84:--output-level|84:-o) return 2 ;;
+    84:--container|84:-c|84:--pod|84:-p) return 2 ;;
+    84:--vvv|84:-v) return 0 ;;
+    84:--help|84:-h) return 0 ;;
+    85:--output-level|85:-o) return 2 ;;
+    85:--container|85:-c|85:--pod|85:-p) return 2 ;;
+    85:--vvv|85:-v) return 0 ;;
+    85:--help|85:-h) return 0 ;;
+    86:--output-level|86:-o) return 2 ;;
+    86:--container|86:-c|86:--pod|86:-p) return 2 ;;
+    86:--vvv|86:-v) return 0 ;;
+    86:--help|86:-h) return 0 ;;
+    86:--live) return 0 ;;
+    86:--histo) return 0 ;;
+    87:--output-level|87:-o) return 2 ;;
+    87:--file|87:-f) return 2 ;;
+    87:--output-dir|87:-o) return 2 ;;
+    87:--report-type|87:-r) return 2 ;;
+    87:--vvv|87:-v) return 0 ;;
+    87:--help|87:-h) return 0 ;;
+    88:--output-level|88:-o) return 2 ;;
+    88:--bundle|88:-b) return 2 ;;
+    88:--severity) return 2 ;;
+    88:--top) return 2 ;;
+    88:--output-dir) return 2 ;;
+    88:--vvv|88:-v) return 0 ;;
+    88:--help|88:-h) return 0 ;;
+    88:--json) return 0 ;;
+    88:--no-sanitize) return 0 ;;
+    88:--html) return 0 ;;
+    89:--output-level|89:-o) return 2 ;;
+    89:--file|89:-f) return 2 ;;
+    89:--container|89:-c|89:--pod|89:-p) return 2 ;;
+    89:--output-dir|89:-o) return 2 ;;
+    89:--top-pauses) return 2 ;;
+    89:--vvv|89:-v) return 0 ;;
+    89:--help|89:-h) return 0 ;;
+    89:--html) return 0 ;;
+    89:--json) return 0 ;;
+    90:--output-level|90:-o) return 2 ;;
+    90:--container|90:-c|90:--pod|90:-p) return 2 ;;
+    90:--port) return 2 ;;
+    90:--duration) return 2 ;;
+    90:--vvv|90:-v) return 0 ;;
+    90:--help|90:-h) return 0 ;;
+    91:--output-level|91:-o) return 2 ;;
+    91:--container|91:-c|91:--pod|91:-p) return 2 ;;
+    91:--destination) return 2 ;;
+    91:--port) return 2 ;;
+    91:--action) return 2 ;;
+    91:--vvv|91:-v) return 0 ;;
+    91:--help|91:-h) return 0 ;;
+    92:--output-level|92:-o) return 2 ;;
+    92:--container|92:-c|92:--pod|92:-p) return 2 ;;
+    92:--type) return 2 ;;
+    92:--action) return 2 ;;
+    92:--vvv|92:-v) return 0 ;;
+    92:--help|92:-h) return 0 ;;
+    93:--output-level|93:-o) return 2 ;;
+    93:--container|93:-c|93:--pod|93:-p) return 2 ;;
+    93:--operation) return 2 ;;
+    93:--class) return 2 ;;
+    93:--method) return 2 ;;
+    93:--action) return 2 ;;
+    93:--vvv|93:-v) return 0 ;;
+    93:--help|93:-h) return 0 ;;
+    94:--output-level|94:-o) return 2 ;;
+    94:--container|94:-c|94:--pod|94:-p) return 2 ;;
+    94:--action) return 2 ;;
+    94:--vvv|94:-v) return 0 ;;
+    94:--help|94:-h) return 0 ;;
+    95:--output-level|95:-o) return 2 ;;
+    95:--vvv|95:-v) return 0 ;;
+    95:--help|95:-h) return 0 ;;
+    96:--output-level|96:-o) return 2 ;;
+    96:--package|96:-p) return 2 ;;
+    96:--vvv|96:-v) return 0 ;;
+    96:--help|96:-h) return 0 ;;
+    97:--output-level|97:-o) return 2 ;;
+    97:--package|97:-p) return 2 ;;
+    97:--level|97:-l) return 2 ;;
+    97:--vvv|97:-v) return 0 ;;
+    97:--help|97:-h) return 0 ;;
+    98:--output-level|98:-o) return 2 ;;
+    98:--container|98:-c|98:--pod|98:-p) return 2 ;;
+    98:--domain|98:-d) return 2 ;;
+    98:--vvv|98:-v) return 0 ;;
+    98:--help|98:-h) return 0 ;;
+    98:--open|98:-o) return 0 ;;
+    99:--output-level|99:-o) return 2 ;;
+    99:--vvv|99:-v) return 0 ;;
+    99:--help|99:-h) return 0 ;;
+    100:--output-level|100:-o) return 2 ;;
+    100:--container|100:-c|100:--pod|100:-p) return 2 ;;
+    100:--vvv|100:-v) return 0 ;;
+    100:--help|100:-h) return 0 ;;
+    101:--output-level|101:-o) return 2 ;;
+    101:--vvv|101:-v) return 0 ;;
+    101:--help|101:-h) return 0 ;;
+    101:--ignore-current-versions) return 0 ;;
+    102:--output-level|102:-o) return 2 ;;
+    102:--container|102:-c|102:--pod|102:-p) return 2 ;;
+    102:--vvv|102:-v) return 0 ;;
+    102:--help|102:-h) return 0 ;;
+    103:--output-level|103:-o) return 2 ;;
+    103:--vvv|103:-v) return 0 ;;
+    103:--help|103:-h) return 0 ;;
+    104:--output-level|104:-o) return 2 ;;
+    104:--vvv|104:-v) return 0 ;;
+    104:--help|104:-h) return 0 ;;
+    105:--output-level|105:-o) return 2 ;;
+    105:--container|105:-c|105:--pod|105:-p) return 2 ;;
+    105:--wait-for-log|105:-w) return 2 ;;
+    105:--max-wait|105:-m) return 2 ;;
+    105:--grep) return 2 ;;
+    105:--vvv|105:-v) return 0 ;;
+    105:--help|105:-h) return 0 ;;
+    105:--open|105:-o) return 0 ;;
+    106:--output-level|106:-o) return 2 ;;
+    106:--vvv|106:-v) return 0 ;;
+    106:--help|106:-h) return 0 ;;
+    107:--output-level|107:-o) return 2 ;;
+    107:--container|107:-c|107:--pod|107:-p) return 2 ;;
+    107:--shell|107:-s) return 2 ;;
+    107:--vvv|107:-v) return 0 ;;
+    107:--help|107:-h) return 0 ;;
+    108:--output-level|108:-o) return 2 ;;
+    108:--container|108:-c|108:--pod|108:-p) return 2 ;;
+    108:--version) return 2 ;;
+    108:--vvv|108:-v) return 0 ;;
+    108:--help|108:-h) return 0 ;;
+    109:--output-level|109:-o) return 2 ;;
+    109:--container|109:-c|109:--pod|109:-p) return 2 ;;
+    109:--command) return 2 ;;
+    109:--shell) return 2 ;;
+    109:--vvv|109:-v) return 0 ;;
+    109:--help|109:-h) return 0 ;;
+    109:--root) return 0 ;;
+    110:--output-level|110:-o) return 2 ;;
+    110:--source) return 2 ;;
+    110:--destination) return 2 ;;
+    110:--vvv|110:-v) return 0 ;;
+    110:--help|110:-h) return 0 ;;
+    111:--output-level|111:-o) return 2 ;;
+    111:--container|111:-c|111:--pod|111:-p) return 2 ;;
+    111:--vvv|111:-v) return 0 ;;
+    111:--help|111:-h) return 0 ;;
+    112:--output-level|112:-o) return 2 ;;
+    112:--container|112:-c|112:--pod|112:-p) return 2 ;;
+    112:--vvv|112:-v) return 0 ;;
+    112:--help|112:-h) return 0 ;;
+    113:--output-level|113:-o) return 2 ;;
+    113:--container|113:-c|113:--pod|113:-p) return 2 ;;
+    113:--vvv|113:-v) return 0 ;;
+    113:--help|113:-h) return 0 ;;
+    114:--output-level|114:-o) return 2 ;;
+    114:--container|114:-c|114:--pod|114:-p) return 2 ;;
+    114:--vvv|114:-v) return 0 ;;
+    114:--help|114:-h) return 0 ;;
+    115:--output-level|115:-o) return 2 ;;
+    115:--container|115:-c|115:--pod|115:-p) return 2 ;;
+    115:--env) return 2 ;;
+    115:--vvv|115:-v) return 0 ;;
+    115:--help|115:-h) return 0 ;;
+    115:--restore-original-values) return 0 ;;
+    116:--output-level|116:-o) return 2 ;;
+    116:--vvv|116:-v) return 0 ;;
+    116:--help|116:-h) return 0 ;;
+    117:--output-level|117:-o) return 2 ;;
+    117:--topic|117:-t) return 2 ;;
+    117:--vvv|117:-v) return 0 ;;
+    117:--help|117:-h) return 0 ;;
+    118:--output-level|118:-o) return 2 ;;
+    118:--vvv|118:-v) return 0 ;;
+    118:--help|118:-h) return 0 ;;
+    118:--verbose|118:-v) return 0 ;;
+    119:--output-level|119:-o) return 2 ;;
+    119:--vvv|119:-v) return 0 ;;
+    119:--help|119:-h) return 0 ;;
+    119:--show-internal) return 0 ;;
+    120:--output-level|120:-o) return 2 ;;
+    120:--topic|120:-t) return 2 ;;
+    120:--vvv|120:-v) return 0 ;;
+    120:--help|120:-h) return 0 ;;
+    120:--verbose|120:-v) return 0 ;;
+    121:--output-level|121:-o) return 2 ;;
+    121:--topic|121:-t) return 2 ;;
+    121:--compatibility) return 2 ;;
+    121:--vvv|121:-v) return 0 ;;
+    121:--help|121:-h) return 0 ;;
+    121:--verbose|121:-v) return 0 ;;
+    122:--output-level|122:-o) return 2 ;;
+    122:--topic|122:-t) return 2 ;;
+    122:--max-messages) return 2 ;;
+    122:--min-expected-messages) return 2 ;;
+    122:--grep) return 2 ;;
+    122:--timeout) return 2 ;;
+    122:--plot-latencies-timestamp-field) return 2 ;;
+    122:--key-subject) return 2 ;;
+    122:--value-subject) return 2 ;;
+    122:--max-characters) return 2 ;;
+    122:--isolation-level) return 2 ;;
+    122:--vvv|122:-v) return 0 ;;
+    122:--help|122:-h) return 0 ;;
+    122:--verbose|122:-v) return 0 ;;
+    122:--tail) return 0 ;;
+    122:--open|122:-o) return 0 ;;
+    123:--output-level|123:-o) return 2 ;;
+    123:--key) return 2 ;;
+    123:--value) return 2 ;;
+    123:--topic|123:-t) return 2 ;;
+    123:--nb-messages) return 2 ;;
+    123:--max-nb-messages-per-batch) return 2 ;;
+    123:--max-nb-messages-to-generate) return 2 ;;
+    123:--sleep-time-between-batch) return 2 ;;
+    123:--nb-partitions) return 2 ;;
+    123:--compression-codec) return 2 ;;
+    123:--compatibility) return 2 ;;
+    123:--key-subject-name-strategy) return 2 ;;
+    123:--value-subject-name-strategy) return 2 ;;
+    123:--headers) return 2 ;;
+    123:--forced-key) return 2 ;;
+    123:--forced-value) return 2 ;;
+    123:--derive-key-schema-as) return 2 ;;
+    123:--derive-value-schema-as) return 2 ;;
+    123:--validate-config) return 2 ;;
+    123:--producer-property) return 2 ;;
+    123:--record-size) return 2 ;;
+    123:--vvv|123:-v) return 0 ;;
+    123:--help|123:-h) return 0 ;;
+    123:--verbose|123:-v) return 0 ;;
+    123:--generate-only) return 0 ;;
+    123:--tombstone) return 0 ;;
+    123:--schema-id-in-header) return 0 ;;
+    123:--validate) return 0 ;;
+    123:--no-null) return 0 ;;
+    123:--consume) return 0 ;;
+    123:--delete-topic) return 0 ;;
+    124:--output-level|124:-o) return 2 ;;
+    124:--topic|124:-t) return 2 ;;
+    124:--nb-partitions) return 2 ;;
+    124:--vvv|124:-v) return 0 ;;
+    124:--help|124:-h) return 0 ;;
+    124:--verbose|124:-v) return 0 ;;
+    125:--output-level|125:-o) return 2 ;;
+    125:--topic|125:-t) return 2 ;;
+    125:--vvv|125:-v) return 0 ;;
+    125:--help|125:-h) return 0 ;;
+    125:--verbose|125:-v) return 0 ;;
+    125:--skip-delete-schema) return 0 ;;
+    126:--output-level|126:-o) return 2 ;;
+    126:--topic|126:-t) return 2 ;;
+    126:--vvv|126:-v) return 0 ;;
+    126:--help|126:-h) return 0 ;;
+    126:--verbose|126:-v) return 0 ;;
+    127:--output-level|127:-o) return 2 ;;
+    127:--vvv|127:-v) return 0 ;;
+    127:--help|127:-h) return 0 ;;
+    128:--output-level|128:-o) return 2 ;;
+    128:--connector-plugin|128:-c) return 2 ;;
+    128:--connector-tag) return 2 ;;
+    128:--class) return 2 ;;
+    128:--vvv|128:-v) return 0 ;;
+    128:--help|128:-h) return 0 ;;
+    129:--output-level|129:-o) return 2 ;;
+    129:--connector-plugin|129:-c) return 2 ;;
+    129:--last) return 2 ;;
+    129:--vvv|129:-v) return 0 ;;
+    129:--help|129:-h) return 0 ;;
+    129:--force-refresh) return 0 ;;
+    130:--output-level|130:-o) return 2 ;;
+    130:--days) return 2 ;;
+    130:--vendor) return 2 ;;
+    130:--vvv|130:-v) return 0 ;;
+    130:--help|130:-h) return 0 ;;
+    131:--output-level|131:-o) return 2 ;;
+    131:--connector-plugin|131:-c) return 2 ;;
+    131:--connector-tag) return 2 ;;
+    131:--compile-jdk-version) return 2 ;;
+    131:--vvv|131:-v) return 0 ;;
+    131:--help|131:-h) return 0 ;;
+    131:--only-show-url) return 0 ;;
+    131:--compile) return 0 ;;
+    131:--compile-verbose|131:-v) return 0 ;;
+    131:--open|131:-o) return 0 ;;
+    132:--output-level|132:-o) return 2 ;;
+    132:--vvv|132:-v) return 0 ;;
+    132:--help|132:-h) return 0 ;;
+    133:--output-level|133:-o) return 2 ;;
+    133:--connector|133:-c) return 2 ;;
+    133:--vvv|133:-v) return 0 ;;
+    133:--help|133:-h) return 0 ;;
+    133:--verbose|133:-v) return 0 ;;
+    134:--output-level|134:-o) return 2 ;;
+    134:--vvv|134:-v) return 0 ;;
+    134:--help|134:-h) return 0 ;;
+    135:--output-level|135:-o) return 2 ;;
+    135:--vvv|135:-v) return 0 ;;
+    135:--help|135:-h) return 0 ;;
+    136:--output-level|136:-o) return 2 ;;
+    136:--vvv|136:-v) return 0 ;;
+    136:--help|136:-h) return 0 ;;
+    137:--output-level|137:-o) return 2 ;;
+    137:--vvv|137:-v) return 0 ;;
+    137:--help|137:-h) return 0 ;;
+    138:--output-level|138:-o) return 2 ;;
+    138:--connector|138:-c) return 2 ;;
+    138:--vvv|138:-v) return 0 ;;
+    138:--help|138:-h) return 0 ;;
+    138:--verbose|138:-v) return 0 ;;
+    139:--output-level|139:-o) return 2 ;;
+    139:--connector|139:-c) return 2 ;;
+    139:--vvv|139:-v) return 0 ;;
+    139:--help|139:-h) return 0 ;;
+    139:--verbose|139:-v) return 0 ;;
+    140:--output-level|140:-o) return 2 ;;
+    140:--connector|140:-c) return 2 ;;
+    140:--vvv|140:-v) return 0 ;;
+    140:--help|140:-h) return 0 ;;
+    140:--verbose|140:-v) return 0 ;;
+    141:--output-level|141:-o) return 2 ;;
+    141:--connector|141:-c) return 2 ;;
+    141:--vvv|141:-v) return 0 ;;
+    141:--help|141:-h) return 0 ;;
+    141:--verbose|141:-v) return 0 ;;
+    142:--output-level|142:-o) return 2 ;;
+    142:--vvv|142:-v) return 0 ;;
+    142:--help|142:-h) return 0 ;;
+    142:--verbose|142:-v) return 0 ;;
+    142:--all) return 0 ;;
+    143:--output-level|143:-o) return 2 ;;
+    143:--connector|143:-c) return 2 ;;
+    143:--vvv|143:-v) return 0 ;;
+    143:--help|143:-h) return 0 ;;
+    143:--verbose|143:-v) return 0 ;;
+    144:--output-level|144:-o) return 2 ;;
+    144:--vvv|144:-v) return 0 ;;
+    144:--help|144:-h) return 0 ;;
+    145:--output-level|145:-o) return 2 ;;
+    145:--connector-tag) return 2 ;;
+    145:--vvv|145:-v) return 0 ;;
+    145:--help|145:-h) return 0 ;;
+    145:--only-show-url) return 0 ;;
+    146:--output-level|146:-o) return 2 ;;
+    146:--vvv|146:-v) return 0 ;;
+    146:--help|146:-h) return 0 ;;
+    147:--output-level|147:-o) return 2 ;;
+    147:--vvv|147:-v) return 0 ;;
+    147:--help|147:-h) return 0 ;;
+    148:--output-level|148:-o) return 2 ;;
+    148:--connector|148:-c) return 2 ;;
+    148:--task-id|148:-t) return 2 ;;
+    148:--vvv|148:-v) return 0 ;;
+    148:--help|148:-h) return 0 ;;
+    148:--verbose|148:-v) return 0 ;;
+    149:--output-level|149:-o) return 2 ;;
+    149:--connector|149:-c) return 2 ;;
+    149:--vvv|149:-v) return 0 ;;
+    149:--help|149:-h) return 0 ;;
+    149:--verbose|149:-v) return 0 ;;
+    150:--output-level|150:-o) return 2 ;;
+    150:--connector|150:-c) return 2 ;;
+    150:--vvv|150:-v) return 0 ;;
+    150:--help|150:-h) return 0 ;;
+    150:--verbose|150:-v) return 0 ;;
+    151:--output-level|151:-o) return 2 ;;
+    151:--connector|151:-c) return 2 ;;
+    151:--vvv|151:-v) return 0 ;;
+    151:--help|151:-h) return 0 ;;
+    151:--verbose|151:-v) return 0 ;;
+    152:--output-level|152:-o) return 2 ;;
+    152:--connector|152:-c) return 2 ;;
+    152:--interval) return 2 ;;
+    152:--max-wait) return 2 ;;
+    152:--vvv|152:-v) return 0 ;;
+    152:--help|152:-h) return 0 ;;
+    152:--verbose|152:-v) return 0 ;;
+    153:--output-level|153:-o) return 2 ;;
+    153:--connector|153:-c) return 2 ;;
+    153:--vvv|153:-v) return 0 ;;
+    153:--help|153:-h) return 0 ;;
+    153:--verbose|153:-v) return 0 ;;
+    153:--force-rest-endpoint) return 0 ;;
+    154:--output-level|154:-o) return 2 ;;
+    154:--connector|154:-c) return 2 ;;
+    154:--vvv|154:-v) return 0 ;;
+    154:--help|154:-h) return 0 ;;
+    154:--verbose|154:-v) return 0 ;;
+    154:--open|154:-o) return 0 ;;
+    154:--force-refresh) return 0 ;;
+    154:--only-show-json) return 0 ;;
+    155:--output-level|155:-o) return 2 ;;
+    155:--connector|155:-c) return 2 ;;
+    155:--vvv|155:-v) return 0 ;;
+    155:--help|155:-h) return 0 ;;
+    155:--open|155:-o) return 0 ;;
+    155:--verbose|155:-v) return 0 ;;
+    156:--output-level|156:-o) return 2 ;;
+    156:--connector|156:-c) return 2 ;;
+    156:--vvv|156:-v) return 0 ;;
+    156:--help|156:-h) return 0 ;;
+    157:--output-level|157:-o) return 2 ;;
+    157:--connector|157:-c) return 2 ;;
+    157:--vvv|157:-v) return 0 ;;
+    157:--help|157:-h) return 0 ;;
+    158:--output-level|158:-o) return 2 ;;
+    158:--converter) return 2 ;;
+    158:--vvv|158:-v) return 0 ;;
+    158:--help|158:-h) return 0 ;;
+    158:--dlq) return 0 ;;
+    159:--output-level|159:-o) return 2 ;;
+    159:--vvv|159:-v) return 0 ;;
+    159:--help|159:-h) return 0 ;;
+    159:--only-show-url) return 0 ;;
+    160:--output-level|160:-o) return 2 ;;
+    160:--connector|160:-c) return 2 ;;
+    160:--level|160:-l) return 2 ;;
+    160:--vvv|160:-v) return 0 ;;
+    160:--help|160:-h) return 0 ;;
+    161:--output-level|161:-o) return 2 ;;
+    161:--connector|161:-c) return 2 ;;
+    161:--wait-for-log|161:-w) return 2 ;;
+    161:--vvv|161:-v) return 0 ;;
+    161:--help|161:-h) return 0 ;;
+    161:--open|161:-o) return 0 ;;
+    161:--verbose|161:-v) return 0 ;;
+    162:--output-level|162:-o) return 2 ;;
+    162:--connector|162:-c) return 2 ;;
+    162:--browser) return 2 ;;
+    162:--vvv|162:-v) return 0 ;;
+    162:--help|162:-h) return 0 ;;
+    163:--output-level|163:-o) return 2 ;;
+    163:--vvv|163:-v) return 0 ;;
+    163:--help|163:-h) return 0 ;;
+    164:--output-level|164:-o) return 2 ;;
+    164:--connector|164:-c) return 2 ;;
+    164:--connector-plugin) return 2 ;;
+    164:--vvv|164:-v) return 0 ;;
+    164:--help|164:-h) return 0 ;;
+    164:--verbose|164:-v) return 0 ;;
+    165:--output-level|165:-o) return 2 ;;
+    165:--vvv|165:-v) return 0 ;;
+    165:--help|165:-h) return 0 ;;
+    166:--output-level|166:-o) return 2 ;;
+    166:--vvv|166:-v) return 0 ;;
+    166:--help|166:-h) return 0 ;;
+    166:--verbose|166:-v) return 0 ;;
+    167:--output-level|167:-o) return 2 ;;
+    167:--migration-mode) return 2 ;;
+    167:--sensitive-property) return 2 ;;
+    167:--vvv|167:-v) return 0 ;;
+    167:--help|167:-h) return 0 ;;
+    168:--output-level|168:-o) return 2 ;;
+    168:--connector|168:-c) return 2 ;;
+    168:--level|168:-l) return 2 ;;
+    168:--package|168:-p) return 2 ;;
+    168:--offsets) return 2 ;;
+    168:--initial-state) return 2 ;;
+    168:--vvv|168:-v) return 0 ;;
+    168:--help|168:-h) return 0 ;;
+    168:--verbose|168:-v) return 0 ;;
+    168:--wait-for-zero-lag) return 0 ;;
+    168:--validate) return 0 ;;
+    168:--skip-automatic-connector-config) return 0 ;;
+    168:--terraform) return 0 ;;
+    169:--output-level|169:-o) return 2 ;;
+    169:--connector|169:-c) return 2 ;;
+    169:--vvv|169:-v) return 0 ;;
+    169:--help|169:-h) return 0 ;;
+    170:--output-level|170:-o) return 2 ;;
+    170:--vvv|170:-v) return 0 ;;
+    170:--help|170:-h) return 0 ;;
+    171:--output-level|171:-o) return 2 ;;
+    171:--instance-type) return 2 ;;
+    171:--size) return 2 ;;
+    171:--suffix) return 2 ;;
+    171:--vvv|171:-v) return 0 ;;
+    171:--help|171:-h) return 0 ;;
+    172:--output-level|172:-o) return 2 ;;
+    172:--instance|172:-i) return 2 ;;
+    172:--vvv|172:-v) return 0 ;;
+    172:--help|172:-h) return 0 ;;
+    173:--output-level|173:-o) return 2 ;;
+    173:--instance|173:-i) return 2 ;;
+    173:--vvv|173:-v) return 0 ;;
+    173:--help|173:-h) return 0 ;;
+    173:--enable-sync-repro-folder) return 0 ;;
+    174:--output-level|174:-o) return 2 ;;
+    174:--vvv|174:-v) return 0 ;;
+    174:--help|174:-h) return 0 ;;
+    175:--output-level|175:-o) return 2 ;;
+    175:--instance|175:-i) return 2 ;;
+    175:--vvv|175:-v) return 0 ;;
+    175:--help|175:-h) return 0 ;;
+    176:--output-level|176:-o) return 2 ;;
+    176:--instance|176:-i) return 2 ;;
+    176:--vvv|176:-v) return 0 ;;
+    176:--help|176:-h) return 0 ;;
+    177:--output-level|177:-o) return 2 ;;
+    177:--vvv|177:-v) return 0 ;;
+    177:--help|177:-h) return 0 ;;
+    178:--output-level|178:-o) return 2 ;;
+    178:--instance|178:-i) return 2 ;;
+    178:--vvv|178:-v) return 0 ;;
+    178:--help|178:-h) return 0 ;;
+    179:--output-level|179:-o) return 2 ;;
+    179:--instance|179:-i) return 2 ;;
+    179:--vvv|179:-v) return 0 ;;
+    179:--help|179:-h) return 0 ;;
+  esac
 
-  # words the user already typed (excluding the command itself)
-  local used=()
-  if ((COMP_CWORD > 1)); then
-    used=("${COMP_WORDS[@]:1:$((COMP_CWORD - 1))}")
-  fi
+  return 1
+}
 
-  if [[ "${cur:0:1}" == "-" ]]; then
-    # Completing an option: offer everything (including options)
-    echo "$words"
-
-  else
-    # Completing a non-option: offer only non-options,
-    # and don't re-offer ones already used earlier in the line.
-    for word in $words; do
-      [[ "${word:0:1}" == "-" ]] && continue
-
-      local seen=0
-      for u in "${used[@]}"; do
-        if [[ "$u" == "$word" ]]; then
-          seen=1
-          break
-        fi
-      done
-      ((!seen)) && result+=("$word")
+_playground_completions_option_seen() {
+  local completed_option option_name
+  for completed_option in "${completed_options[@]}"; do
+    for option_name in "$@"; do
+      [[ "$completed_option" == "$option_name" ]] && return 0
     done
+  done
 
-    echo "${result[*]}"
-  fi
+  return 1
+}
+
+_playground_completions_resolve_node() {
+  node_id=0
+  node_word_count=0
+  positional_index=0
+
+  local word
+  for word in "${non_options[@]}"; do
+    case "$node_id:$word" in
+      0:help)
+        node_id=1
+        node_word_count=1
+        ;;
+      0:status)
+        node_id=2
+        node_word_count=1
+        ;;
+      0:config)
+        node_id=3
+        node_word_count=1
+        ;;
+      0:ai)
+        node_id=15
+        node_word_count=1
+        ;;
+      0:cloud-resources)
+        node_id=16
+        node_word_count=1
+        ;;
+      0:ccloud-costs)
+        node_id=25
+        node_word_count=1
+        ;;
+      0:ccloud-costs-history)
+        node_id=26
+        node_word_count=1
+        ;;
+      0:run)
+        node_id=27
+        node_word_count=1
+        ;;
+      0:re-run)
+        node_id=28
+        node_word_count=1
+        ;;
+      0:get-ci-result)
+        node_id=29
+        node_word_count=1
+        ;;
+      0:history)
+        node_id=30
+        node_word_count=1
+        ;;
+      0:switch-ccloud)
+        node_id=31
+        node_word_count=1
+        ;;
+      0:switch-back)
+        node_id=32
+        node_word_count=1
+        ;;
+      0:update-version)
+        node_id=33
+        node_word_count=1
+        ;;
+      0:open)
+        node_id=34
+        node_word_count=1
+        ;;
+      0:stop)
+        node_id=35
+        node_word_count=1
+        ;;
+      0:remove-all-docker-images)
+        node_id=36
+        node_word_count=1
+        ;;
+      0:remove-cp-docker-images)
+        node_id=37
+        node_word_count=1
+        ;;
+      0:refresh-cp-docker-images)
+        node_id=38
+        node_word_count=1
+        ;;
+      0:cleanup-cloud-details)
+        node_id=39
+        node_word_count=1
+        ;;
+      0:open-docs)
+        node_id=40
+        node_word_count=1
+        ;;
+      0:open-changelog)
+        node_id=41
+        node_word_count=1
+        ;;
+      0:cleanup-cloud-resources)
+        node_id=42
+        node_word_count=1
+        ;;
+      0:repro)
+        node_id=43
+        node_word_count=1
+        ;;
+      0:get-docker-compose)
+        node_id=47
+        node_word_count=1
+        ;;
+      0:schema)
+        node_id=48
+        node_word_count=1
+        ;;
+      0:tcp-proxy)
+        node_id=61
+        node_word_count=1
+        ;;
+      0:tools)
+        node_id=74
+        node_word_count=1
+        ;;
+      0:debug)
+        node_id=80
+        node_word_count=1
+        ;;
+      0:get-jmx-metrics)
+        node_id=98
+        node_word_count=1
+        ;;
+      0:container)
+        node_id=99
+        node_word_count=1
+        ;;
+      0:pod)
+        node_id=99
+        node_word_count=1
+        ;;
+      0:topic)
+        node_id=116
+        node_word_count=1
+        ;;
+      0:connector-plugin)
+        node_id=127
+        node_word_count=1
+        ;;
+      0:connector)
+        node_id=132
+        node_word_count=1
+        ;;
+      0:ec2)
+        node_id=170
+        node_word_count=1
+        ;;
+      3:editor)
+        node_id=4
+        node_word_count=2
+        ;;
+      3:folder_zip_or_jar)
+        node_id=5
+        node_word_count=2
+        ;;
+      3:clipboard)
+        node_id=6
+        node_word_count=2
+        ;;
+      3:open-ccloud-connector-in-browser)
+        node_id=7
+        node_word_count=2
+        ;;
+      3:open-grafana-in-browser)
+        node_id=10
+        node_word_count=2
+        ;;
+      3:container-kill-all-before-run)
+        node_id=13
+        node_word_count=2
+        ;;
+      3:check-and-update-repo-version)
+        node_id=14
+        node_word_count=2
+        ;;
+      7:automatically)
+        node_id=8
+        node_word_count=3
+        ;;
+      7:browser)
+        node_id=9
+        node_word_count=3
+        ;;
+      10:automatically)
+        node_id=11
+        node_word_count=3
+        ;;
+      10:browser)
+        node_id=12
+        node_word_count=3
+        ;;
+      16:aws)
+        node_id=17
+        node_word_count=2
+        ;;
+      16:azure)
+        node_id=21
+        node_word_count=2
+        ;;
+      17:list)
+        node_id=18
+        node_word_count=3
+        ;;
+      17:costs)
+        node_id=19
+        node_word_count=3
+        ;;
+      17:costs-history)
+        node_id=20
+        node_word_count=3
+        ;;
+      21:list)
+        node_id=22
+        node_word_count=3
+        ;;
+      21:costs)
+        node_id=23
+        node_word_count=3
+        ;;
+      21:costs-history)
+        node_id=24
+        node_word_count=3
+        ;;
+      43:export)
+        node_id=44
+        node_word_count=2
+        ;;
+      43:import)
+        node_id=45
+        node_word_count=2
+        ;;
+      43:bootstrap)
+        node_id=46
+        node_word_count=2
+        ;;
+      48:get)
+        node_id=49
+        node_word_count=2
+        ;;
+      48:register)
+        node_id=50
+        node_word_count=2
+        ;;
+      48:get-compatibility)
+        node_id=51
+        node_word_count=2
+        ;;
+      48:set-compatibility)
+        node_id=52
+        node_word_count=2
+        ;;
+      48:get-mode)
+        node_id=53
+        node_word_count=2
+        ;;
+      48:set-mode)
+        node_id=54
+        node_word_count=2
+        ;;
+      48:set-normalize)
+        node_id=55
+        node_word_count=2
+        ;;
+      48:validate-new-schemas)
+        node_id=56
+        node_word_count=2
+        ;;
+      48:delete)
+        node_id=57
+        node_word_count=2
+        ;;
+      48:derive-schema)
+        node_id=58
+        node_word_count=2
+        ;;
+      48:set-alias)
+        node_id=59
+        node_word_count=2
+        ;;
+      48:get-alias)
+        node_id=60
+        node_word_count=2
+        ;;
+      61:start)
+        node_id=62
+        node_word_count=2
+        ;;
+      61:get-connections)
+        node_id=63
+        node_word_count=2
+        ;;
+      61:delay)
+        node_id=64
+        node_word_count=2
+        ;;
+      61:break)
+        node_id=65
+        node_word_count=2
+        ;;
+      61:close-connection)
+        node_id=66
+        node_word_count=2
+        ;;
+      61:close-all-connection-with-error)
+        node_id=67
+        node_word_count=2
+        ;;
+      61:toggle-accept-connections)
+        node_id=68
+        node_word_count=2
+        ;;
+      61:toggle-reads-client)
+        node_id=69
+        node_word_count=2
+        ;;
+      61:toggle-reads-service)
+        node_id=70
+        node_word_count=2
+        ;;
+      61:toggle-writes-client)
+        node_id=71
+        node_word_count=2
+        ;;
+      61:toggle-writes-service)
+        node_id=72
+        node_word_count=2
+        ;;
+      61:open-ui)
+        node_id=73
+        node_word_count=2
+        ;;
+      74:install-vscode-extension)
+        node_id=75
+        node_word_count=2
+        ;;
+      74:read-avro-file)
+        node_id=76
+        node_word_count=2
+        ;;
+      74:read-parquet-file)
+        node_id=77
+        node_word_count=2
+        ;;
+      74:certs-create)
+        node_id=78
+        node_word_count=2
+        ;;
+      74:redos-check)
+        node_id=79
+        node_word_count=2
+        ;;
+      80:enable-remote-debugging)
+        node_id=81
+        node_word_count=2
+        ;;
+      80:disable-remote-debugging)
+        node_id=82
+        node_word_count=2
+        ;;
+      80:testssl)
+        node_id=83
+        node_word_count=2
+        ;;
+      80:generate-diagnostics)
+        node_id=84
+        node_word_count=2
+        ;;
+      80:thread-dump)
+        node_id=85
+        node_word_count=2
+        ;;
+      80:heap-dump)
+        node_id=86
+        node_word_count=2
+        ;;
+      80:heap-analyze)
+        node_id=87
+        node_word_count=2
+        ;;
+      80:cfk-bundle-analyze)
+        node_id=88
+        node_word_count=2
+        ;;
+      80:gc-analyze)
+        node_id=89
+        node_word_count=2
+        ;;
+      80:tcp-dump)
+        node_id=90
+        node_word_count=2
+        ;;
+      80:block-traffic)
+        node_id=91
+        node_word_count=2
+        ;;
+      80:java-debug)
+        node_id=92
+        node_word_count=2
+        ;;
+      80:jscissors)
+        node_id=93
+        node_word_count=2
+        ;;
+      80:flight-recorder)
+        node_id=94
+        node_word_count=2
+        ;;
+      80:log-level)
+        node_id=95
+        node_word_count=2
+        ;;
+      95:get)
+        node_id=96
+        node_word_count=3
+        ;;
+      95:set)
+        node_id=97
+        node_word_count=3
+        ;;
+      99:get-properties)
+        node_id=100
+        node_word_count=2
+        ;;
+      99:recreate)
+        node_id=101
+        node_word_count=2
+        ;;
+      99:update)
+        node_id=102
+        node_word_count=2
+        ;;
+      99:get-ip-addresses)
+        node_id=103
+        node_word_count=2
+        ;;
+      99:kill-all)
+        node_id=104
+        node_word_count=2
+        ;;
+      99:logs)
+        node_id=105
+        node_word_count=2
+        ;;
+      99:display-error-all)
+        node_id=106
+        node_word_count=2
+        ;;
+      99:ssh)
+        node_id=107
+        node_word_count=2
+        ;;
+      99:change-jdk)
+        node_id=108
+        node_word_count=2
+        ;;
+      99:exec)
+        node_id=109
+        node_word_count=2
+        ;;
+      99:cp)
+        node_id=110
+        node_word_count=2
+        ;;
+      99:restart)
+        node_id=111
+        node_word_count=2
+        ;;
+      99:pause)
+        node_id=112
+        node_word_count=2
+        ;;
+      99:resume)
+        node_id=113
+        node_word_count=2
+        ;;
+      99:unpause)
+        node_id=113
+        node_word_count=2
+        ;;
+      99:kill)
+        node_id=114
+        node_word_count=2
+        ;;
+      99:set-environment-variables)
+        node_id=115
+        node_word_count=2
+        ;;
+      116:get-number-records)
+        node_id=117
+        node_word_count=2
+        ;;
+      116:display-consumer-offsets)
+        node_id=118
+        node_word_count=2
+        ;;
+      116:list)
+        node_id=119
+        node_word_count=2
+        ;;
+      116:describe)
+        node_id=120
+        node_word_count=2
+        ;;
+      116:set-schema-compatibility)
+        node_id=121
+        node_word_count=2
+        ;;
+      116:consume)
+        node_id=122
+        node_word_count=2
+        ;;
+      116:produce)
+        node_id=123
+        node_word_count=2
+        ;;
+      116:create)
+        node_id=124
+        node_word_count=2
+        ;;
+      116:delete)
+        node_id=125
+        node_word_count=2
+        ;;
+      116:alter)
+        node_id=126
+        node_word_count=2
+        ;;
+      127:search-jar)
+        node_id=128
+        node_word_count=2
+        ;;
+      127:versions)
+        node_id=129
+        node_word_count=2
+        ;;
+      127:display-last-updated)
+        node_id=130
+        node_word_count=2
+        ;;
+      127:sourcecode)
+        node_id=131
+        node_word_count=2
+        ;;
+      132:status)
+        node_id=133
+        node_word_count=2
+        ;;
+      132:oracle-cdc-xstream)
+        node_id=134
+        node_word_count=2
+        ;;
+      132:offsets)
+        node_id=137
+        node_word_count=2
+        ;;
+      132:plugins)
+        node_id=142
+        node_word_count=2
+        ;;
+      132:pause)
+        node_id=143
+        node_word_count=2
+        ;;
+      132:versions)
+        node_id=144
+        node_word_count=2
+        ;;
+      132:sourcecode)
+        node_id=145
+        node_word_count=2
+        ;;
+      132:enable-remote-debugging)
+        node_id=146
+        node_word_count=2
+        ;;
+      132:disable-remote-debugging)
+        node_id=147
+        node_word_count=2
+        ;;
+      132:restart)
+        node_id=148
+        node_word_count=2
+        ;;
+      132:stop)
+        node_id=149
+        node_word_count=2
+        ;;
+      132:resume)
+        node_id=150
+        node_word_count=2
+        ;;
+      132:unpause)
+        node_id=150
+        node_word_count=2
+        ;;
+      132:delete)
+        node_id=151
+        node_word_count=2
+        ;;
+      132:show-lag)
+        node_id=152
+        node_word_count=2
+        ;;
+      132:show-config)
+        node_id=153
+        node_word_count=2
+        ;;
+      132:show-config-parameters)
+        node_id=154
+        node_word_count=2
+        ;;
+      132:display-metrics-api)
+        node_id=155
+        node_word_count=2
+        ;;
+      132:display-metrics-api-with-grafana)
+        node_id=156
+        node_word_count=2
+        ;;
+      132:select-config)
+        node_id=157
+        node_word_count=2
+        ;;
+      132:snippets)
+        node_id=158
+        node_word_count=2
+        ;;
+      132:open-docs)
+        node_id=159
+        node_word_count=2
+        ;;
+      132:log-level)
+        node_id=160
+        node_word_count=2
+        ;;
+      132:logs)
+        node_id=161
+        node_word_count=2
+        ;;
+      132:open-ccloud-connector-in-browser)
+        node_id=162
+        node_word_count=2
+        ;;
+      132:display-leader-name)
+        node_id=163
+        node_word_count=2
+        ;;
+      132:translate)
+        node_id=164
+        node_word_count=2
+        ;;
+      132:connect-migration-utility)
+        node_id=165
+        node_word_count=2
+        ;;
+      132:create-or-update)
+        node_id=168
+        node_word_count=2
+        ;;
+      132:update)
+        node_id=169
+        node_word_count=2
+        ;;
+      134:generate-report)
+        node_id=135
+        node_word_count=3
+        ;;
+      134:debug)
+        node_id=136
+        node_word_count=3
+        ;;
+      137:get)
+        node_id=138
+        node_word_count=3
+        ;;
+      137:reset)
+        node_id=139
+        node_word_count=3
+        ;;
+      137:alter)
+        node_id=140
+        node_word_count=3
+        ;;
+      137:get-offsets-request-status)
+        node_id=141
+        node_word_count=3
+        ;;
+      165:discovery)
+        node_id=166
+        node_word_count=3
+        ;;
+      165:migrate)
+        node_id=167
+        node_word_count=3
+        ;;
+      170:create)
+        node_id=171
+        node_word_count=2
+        ;;
+      170:delete)
+        node_id=172
+        node_word_count=2
+        ;;
+      170:open)
+        node_id=173
+        node_word_count=2
+        ;;
+      170:list)
+        node_id=174
+        node_word_count=2
+        ;;
+      170:stop)
+        node_id=175
+        node_word_count=2
+        ;;
+      170:start)
+        node_id=176
+        node_word_count=2
+        ;;
+      170:sync-repro-folder)
+        node_id=177
+        node_word_count=2
+        ;;
+      177:local-to-ec2)
+        node_id=178
+        node_word_count=3
+        ;;
+      177:ec2-to-local)
+        node_id=179
+        node_word_count=3
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  positional_index=$((${#non_options[@]} - node_word_count))
 }
 
 _playground_completions() {
   local cur=${COMP_WORDS[COMP_CWORD]}
-  local compwords=()
+  local prev=
   if ((COMP_CWORD > 0)); then
-    compwords=("${COMP_WORDS[@]:1:$((COMP_CWORD - 1))}")
+    prev=${COMP_WORDS[$((COMP_CWORD - 1))]}
   fi
-  local compline="${compwords[*]}"
+
+  local completed=()
+  if ((COMP_CWORD > 1)); then
+    completed=("${COMP_WORDS[@]:1:$((COMP_CWORD - 1))}")
+  fi
+
+  local non_options=()
+  local completed_options=()
+  local node_id=
+  local node_word_count=-1
+  local positional_index=0
+  local invalid_completion=0
+  local flag_state=0
+  _playground_completions_resolve_node
+
+  local skip_next=0
+  for word in "${completed[@]}"; do
+    if ((skip_next)); then
+      skip_next=0
+      continue
+    fi
+
+    if [[ "${word:0:1}" == "-" ]]; then
+      _playground_completions_node_flag_state "$node_id" "$word"
+      flag_state=$?
+      if (( flag_state == 1 )); then
+        invalid_completion=1
+        break
+      fi
+
+      completed_options+=("$word")
+      if (( flag_state == 2 )); then
+        skip_next=1
+      fi
+      continue
+    fi
+
+    non_options+=("$word")
+    _playground_completions_resolve_node
+  done
 
   COMPREPLY=()
+  (( invalid_completion )) && return
 
-  case "$compline" in
-    *'connector connect-migration-utility migrate'*'--migration-mode')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "stop_create_latest_offset create create_latest_offset")" -- "$cur")
+  case "$node_id:$prev" in
+    0:--output-level|0:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector offsets get-offsets-request-status'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
-      ;;
-
-    *'connector display-metrics-api-with-grafana'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
-      ;;
-
-    *'connector open-ccloud-connector-in-browser'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
-      ;;
-
-    *'config open-ccloud-connector-in-browser automatically'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
-      ;;
-
-    *'connector-plugin sourcecode'*'--compile-jdk-version')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "8 11 17 21 25")" -- "$cur")
-      ;;
-
-    *'config open-ccloud-connector-in-browser browser'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
-      ;;
-
-    *'container set-environment-variables'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
-      ;;
-
-    *'connector offsets get-offsets-request-status'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
-      ;;
-
-    *'tcp-proxy toggle-writes-service'*'--connection-id')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-zazkia-connection-list)")" -- "$cur")
-      ;;
-
-    *'connector-plugin search-jar'*'--connector-plugin')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-plugin "$cur" "onprem")")" -- "$cur")
-      ;;
-
-    *'connector connect-migration-utility discovery'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --verbose -h -v")" -- "$cur")
-      ;;
-
-    *'tcp-proxy toggle-reads-service'*'--connection-id')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-zazkia-connection-list)")" -- "$cur")
-      ;;
-
-    *'tcp-proxy toggle-writes-client'*'--connection-id')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-zazkia-connection-list)")" -- "$cur")
-      ;;
-
-    *'topic set-schema-compatibility'*'--compatibility')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "BACKWARD BACKWARD_TRANSITIVE FORWARD FORWARD_TRANSITIVE FULL FULL_TRANSITIVE NONE")" -- "$cur")
-      ;;
-
-    *'connector-plugin sourcecode'*'--connector-plugin')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-plugin "$cur" "all")")" -- "$cur")
-      ;;
-
-    *'connector display-metrics-api-with-grafana'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
-      ;;
-
-    *'connector offsets get-offsets-request-status'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur")
-      ;;
-
-    *'tcp-proxy toggle-reads-client'*'--connection-id')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-zazkia-connection-list)")" -- "$cur")
-      ;;
-
-    *'config open-grafana-in-browser automatically'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
-      ;;
-
-    *'connector open-ccloud-connector-in-browser'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
-      ;;
-
-    *'connector oracle-cdc-xstream generate-report'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
-      ;;
-
-    *'ec2 sync-repro-folder local-to-ec2'*'--instance')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-ec2-instance-list $cur)")" -- "$cur")
-      ;;
-
-    *'ec2 sync-repro-folder ec2-to-local'*'--instance')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-ec2-instance-list $cur)")" -- "$cur")
-      ;;
-
-    *'connector connect-migration-utility migrate'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --migration-mode --sensitive-property -h")" -- "$cur")
-      ;;
-
-    *'connector-plugin versions'*'--connector-plugin')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-plugin "$cur" "onprem")")" -- "$cur")
-      ;;
-
-    *'connector show-config-parameters'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
-      ;;
-
-    *'topic produce'*'--value-subject-name-strategy')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "TopicNameStrategy RecordNameStrategy TopicRecordNameStrategy")" -- "$cur")
-      ;;
-
-    *'connector display-metrics-api-with-grafana'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help -c -h")" -- "$cur")
-      ;;
-
-    *'connector open-ccloud-connector-in-browser'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--browser --connector --help -c -h")" -- "$cur")
-      ;;
-
-    *'connector sourcecode'*'--compile-jdk-version')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "8 11 17 21 25")" -- "$cur")
-      ;;
-
-    *'tcp-proxy close-connection'*'--connection-id')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-zazkia-connection-list)")" -- "$cur")
-      ;;
-
-    *'connector create-or-update'*'--initial-state')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "RUNNING PAUSED STOPPED")" -- "$cur")
-      ;;
-
-    *'tcp-proxy close-all-connection-with-error'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
-      ;;
-
-    *'debug disable-remote-debugging'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
-      ;;
-
-    *'topic produce'*'--key-subject-name-strategy')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "TopicNameStrategy RecordNameStrategy TopicRecordNameStrategy")" -- "$cur")
-      ;;
-
-    *'debug enable-remote-debugging'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
-      ;;
-
-    *'connector display-metrics-api'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
-      ;;
-
-    *'pod set-environment-variables'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
-      ;;
-
-    *'tcp-proxy get-connections'*'--connection-id')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-zazkia-connection-list)")" -- "$cur")
-      ;;
-
-    *'schema set-compatibility'*'--compatibility')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "BACKWARD BACKWARD_TRANSITIVE FORWARD FORWARD_TRANSITIVE FULL FULL_TRANSITIVE NONE")" -- "$cur")
-      ;;
-
-    *'config open-ccloud-connector-in-browser'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h automatically browser")" -- "$cur")
-      ;;
-
-    *'config open-grafana-in-browser browser'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
-      ;;
-
-    *'topic produce'*'--derive-value-schema-as')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "AVRO JSON PROTOBUF")" -- "$cur")
-      ;;
-
-    *'connector create-or-update'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
-      ;;
-
-    *'debug generate-diagnostics'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
-      ;;
-
-    *'connector-plugin display-last-updated'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--days --help --vendor -h")" -- "$cur")
-      ;;
-
-    *'topic set-schema-compatibility'*'--topic')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur")
-      ;;
-
-    *'container set-environment-variables'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
-      ;;
-
-    *'connector translate'*'--connector-plugin')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-plugin "$cur" "fm")")" -- "$cur")
-      ;;
-
-    *'ec2 sync-repro-folder local-to-ec2'*'-i')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-ec2-instance-list $cur)")" -- "$cur")
-      ;;
-
-    *'config container-kill-all-before-run'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
-      ;;
-
-    *'ec2 sync-repro-folder ec2-to-local'*'-i')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-ec2-instance-list $cur)")" -- "$cur")
-      ;;
-
-    *'config check-and-update-repo-version'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    1:--output-level|1:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'topic produce'*'--derive-key-schema-as')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "AVRO JSON PROTOBUF")" -- "$cur")
+    2:--output-level|2:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'tcp-proxy toggle-accept-connections'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    3:--output-level|3:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'cloud-resources azure costs-history'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--detailed --help -h")" -- "$cur")
+    4:--output-level|4:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector connect-migration-utility'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h discovery migrate")" -- "$cur")
+    5:--output-level|5:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container get-properties'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    6:--output-level|6:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container set-environment-variables'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --env --help --restore-original-values -c -h")" -- "$cur")
+    7:--output-level|7:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector offsets reset'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    8:--output-level|8:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector offsets alter'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    9:--output-level|9:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector select-config'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    10:--output-level|10:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug cfk-bundle-analyze'*'--severity')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "critical high medium low")" -- "$cur")
+    11:--output-level|11:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'schema validate-new-schemas'*'--value')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "true false")" -- "$cur")
+    12:--output-level|12:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector show-config-parameters'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    13:--output-level|13:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector oracle-cdc-xstream debug'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    14:--output-level|14:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector disable-remote-debugging'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    15:--output-level|15:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'ec2 sync-repro-folder ec2-to-local'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --instance -h -i")" -- "$cur")
+    16:--output-level|16:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'ec2 sync-repro-folder local-to-ec2'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --instance -h -i")" -- "$cur")
+    17:--output-level|17:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector enable-remote-debugging'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    18:--output-level|18:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'schema set-compatibility'*'--subject')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur")
+    19:--output-level|19:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'schema get-compatibility'*'--subject')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur")
+    19:--start-date)
+      return
       ;;
-
-    *'schema derive-schema'*'--schema-type')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "AVRO JSON PROTOBUF")" -- "$cur")
+    19:--end-date)
+      return
       ;;
-
-    *'connector create-or-update'*'--level')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "INFO WARN DEBUG TRACE")" -- "$cur")
+    20:--output-level|20:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'cleanup-cloud-resources'*'--resource')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "aws gcp azure ccloud salesforce")" -- "$cur")
+    21:--output-level|21:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'cloud-resources aws costs-history'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--detailed --help -h")" -- "$cur")
+    22:--output-level|22:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'refresh-cp-docker-images'*'--version')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(docker image ls | grep confluentinc | grep -v "<none>" | awk '{print $2}' | sort | uniq)")" -- "$cur")
+    23:--output-level|23:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'repro bootstrap'*'--connector-plugin')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-plugin "$cur" "onprem")")" -- "$cur")
+    23:--start-date)
+      return
       ;;
-
-    *'debug flight-recorder'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    23:--end-date)
+      return
       ;;
-
-    *'connector show-config-parameters'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --force-refresh --help --only-show-json --open --verbose -c -h -o -v")" -- "$cur")
+    24:--output-level|24:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector show-config'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    25:--output-level|25:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'remove-cp-docker-images'*'--version')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(docker image ls | grep confluentinc | grep -v "<none>" | awk '{print $2}' | sort | uniq)")" -- "$cur")
+    25:--start-date)
+      return
       ;;
-
-    *'connector offsets get'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    25:--end-date)
+      return
       ;;
-
-    *'topic set-schema-compatibility'*'-t')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur")
+    26:--output-level|26:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug disable-remote-debugging'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    27:--output-level|27:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'topic produce'*'--compression-codec')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "gzip snappy lz4 zstd")" -- "$cur")
+    27:--environment)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "ccloud cfk plaintext sasl-ssl sasl-plain 2way-ssl sasl-scram kerberos ssl_kerberos ldap-authorizer-sasl-plain ldap-sasl-plain rbac-sasl-plain" -- "$cur")
+      return
       ;;
-
-    *'debug enable-remote-debugging'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    27:--file|27:-f)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-examples-list-with-fzf \"$cur\")" -- "$cur")
+      return
       ;;
-
-    *'topic get-number-records'*'--topic')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur")
+    27:--tag)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-tag-list \"$cur\")" -- "$cur")
+      return
       ;;
-
-    *'pod set-environment-variables'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    27:--connect-tag)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-tag-list \"$cur\" --connect-only)" -- "$cur")
+      return
       ;;
-
-    *'debug heap-analyze'*'--report-type')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "all leaks overview top-components")" -- "$cur")
+    27:--connector-tag)
+      return
       ;;
-
-    *'container change-jdk'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    27:--connector-zip)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zip-or-jar-with-fzf --type zip \"$cur\")" -- "$cur")
+      return
       ;;
-
-    *'tcp-proxy toggle-writes-service'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connection-id --help -h")" -- "$cur")
+    27:--connector-jar)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zip-or-jar-with-fzf --type jar \"$cur\")" -- "$cur")
+      return
       ;;
-
-    *'connector display-metrics-api'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    27:--cluster-cloud)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "aws gcp azure" -- "$cur")
+      return
       ;;
-
-    *'connector log-level'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    27:--cluster-type)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "basic standard dedicated" -- "$cur")
+      return
       ;;
-
-    *'tools install-vscode-extension'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    27:--cluster-region)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-kafka-region-list \"$cur\")" -- "$cur")
+      return
       ;;
-
-    *'debug block-traffic'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    27:--cluster-environment)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-ccloud-environment-list \"$cur\")" -- "$cur")
+      return
       ;;
-
-    *'debug disable-remote-debugging'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur")
+    27:--cluster-name)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-ccloud-cluster-list \"$cur\")" -- "$cur")
+      return
       ;;
-
-    *'tcp-proxy delay'*'--connection-id')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-zazkia-connection-list)")" -- "$cur")
+    27:--cluster-creds)
+      return
       ;;
-
-    *'tcp-proxy break'*'--connection-id')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-zazkia-connection-list)")" -- "$cur")
+    27:--cluster-schema-registry-creds)
+      return
       ;;
-
-    *'tcp-proxy toggle-writes-client'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connection-id --help -h")" -- "$cur")
+    28:--output-level|28:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'topic display-consumer-offsets'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --verbose -h -v")" -- "$cur")
+    29:--output-level|29:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'topic set-schema-compatibility'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--compatibility --help --topic --verbose -h -t -v")" -- "$cur")
+    30:--output-level|30:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'topic consume'*'--isolation-level')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "read_uncommitted read_committed")" -- "$cur")
+    31:--output-level|31:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'topic produce'*'--validate-config')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "scrub.invalid.names=true enhanced.avro.schema.support=true connect.meta.data=false object.additional.properties=false use.optional.for.nonrequired=true ignore.default.for.nullables=true generalized.sum.type.support=true enhanced.protobuf.schema.support=true generate.index.for.unions=false int.for.enums=true optional.for.nullables=true generate.struct.for.nulls=true wrapper.for.nullables=true wrapper.for.raw.primitives=false")" -- "$cur")
+    32:--output-level|32:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'tcp-proxy toggle-reads-service'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connection-id --help -h")" -- "$cur")
+    33:--output-level|33:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'config open-grafana-in-browser'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h automatically browser")" -- "$cur")
+    33:--tag)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-tag-list \"$cur\")" -- "$cur")
+      return
       ;;
-
-    *'connector translate'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    33:--connect-tag)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-tag-list \"$cur\" --connect-only)" -- "$cur")
+      return
       ;;
-
-    *'update-version'*'--connector-jar')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type jar "$cur")")" -- "$cur")
+    33:--connector-tag)
+      return
       ;;
-
-    *'update-version'*'--connector-zip')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type zip "$cur")")" -- "$cur")
+    33:--connector-zip)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zip-or-jar-with-fzf --type zip \"$cur\")" -- "$cur")
+      return
       ;;
-
-    *'tcp-proxy toggle-reads-client'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connection-id --help -h")" -- "$cur")
+    33:--connector-jar)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zip-or-jar-with-fzf --type jar \"$cur\")" -- "$cur")
+      return
       ;;
-
-    *'connector snippets'*'--converter')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "avro protobuf json-schema json json-schema-enabled string bytearray")" -- "$cur")
+    34:--output-level|34:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'tools read-parquet-file'*'--file')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-specific-file-extension "$cur" --extension "parquet")")" -- "$cur")
+    34:--file|34:-f)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-any-file-with-fzf \"$cur\")" -- "$cur")
+      return
       ;;
-
-    *'debug enable-remote-debugging'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur")
+    35:--output-level|35:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug flight-recorder'*'--action')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "start stop")" -- "$cur")
+    36:--output-level|36:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'pod get-properties'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    37:--output-level|37:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector display-metrics-api'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help --open --verbose -c -h -o -v")" -- "$cur")
+    37:--version)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(docker image ls | grep confluentinc | grep -v \"<none>\" | awk '{print $2}' | sort | uniq)" -- "$cur")
+      return
       ;;
-
-    *'connector show-lag'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    38:--output-level|38:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container change-jdk'*'--version')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "8 11 17 21 22 25")" -- "$cur")
+    38:--version)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(docker image ls | grep confluentinc | grep -v \"<none>\" | awk '{print $2}' | sort | uniq)" -- "$cur")
+      return
       ;;
-
-    *'pod set-environment-variables'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --env --help --restore-original-values -c -h")" -- "$cur")
+    39:--output-level|39:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector-plugin search-jar'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-plugin "$cur" "onprem")")" -- "$cur")
+    40:--output-level|40:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector-plugin sourcecode'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-plugin "$cur" "all")")" -- "$cur")
+    41:--output-level|41:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector display-leader-name'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    42:--output-level|42:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector create-or-update'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    42:--resource)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "aws gcp azure ccloud salesforce" -- "$cur")
+      return
       ;;
-
-    *'debug generate-diagnostics'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    43:--output-level|43:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug thread-dump'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    44:--output-level|44:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector create-or-update'*'-l')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "INFO WARN DEBUG TRACE")" -- "$cur")
+    45:--output-level|45:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector unpause'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    45:--file|45:-f)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-playground-repro-export-with-fzf \"$cur\")" -- "$cur")
+      return
       ;;
-
-    *'container restart'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    46:--output-level|46:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector restart'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    46:--file|46:-f)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-examples-list-with-fzf --without-repro \"$cur\")" -- "$cur")
+      return
       ;;
-
-    *'container unpause'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    46:--description|46:-d)
+      return
       ;;
-
-    *'connector oracle-cdc-xstream'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h debug generate-report")" -- "$cur")
+    46:--connector-plugin)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-plugin \"$cur\" \"onprem\")" -- "$cur")
+      return
       ;;
-
-    *'topic consume'*'--value-subject')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur")
+    46:--pipeline)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-examples-list-with-fzf --without-repro --sink-only \"$cur\")" -- "$cur")
+      return
       ;;
-
-    *'topic produce'*'--compatibility')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "BACKWARD BACKWARD_TRANSITIVE FORWARD FORWARD_TRANSITIVE FULL FULL_TRANSITIVE NONE")" -- "$cur")
+    47:--output-level|47:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector status'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    48:--output-level|48:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector-plugin sourcecode'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--compile --compile-jdk-version --compile-verbose --connector-plugin --connector-tag --help --only-show-url --open -c -h -o -v")" -- "$cur")
+    49:--output-level|49:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector-plugin versions'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-plugin "$cur" "onprem")")" -- "$cur")
+    49:--subject)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-subject-list)" -- "$cur")
+      return
       ;;
-
-    *'debug gc-analyze'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    49:--id)
+      return
       ;;
-
-    *'debug block-traffic'*'--action')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "start stop")" -- "$cur")
+    50:--output-level|50:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug java-debug'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    50:--subject)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-subject-list)" -- "$cur")
+      return
       ;;
-
-    *'schema validate-new-schemas'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --value --verbose -h -v")" -- "$cur")
+    50:--schema)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-predefined-schemas \"$cur\")" -- "$cur")
+      return
       ;;
-
-    *'schema set-normalize'*'--value')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "true false")" -- "$cur")
+    50:--id)
+      return
       ;;
-
-    *'container update'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    50:--metadata-property)
+      return
       ;;
-
-    *'container display-error-all'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    51:--output-level|51:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector delete'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    51:--subject)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-subject-list)" -- "$cur")
+      return
       ;;
-
-    *'connector-plugin search-jar'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--class --connector-plugin --connector-tag --help -c -h")" -- "$cur")
+    52:--output-level|52:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector resume'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    52:--subject)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-subject-list)" -- "$cur")
+      return
       ;;
-
-    *'container resume'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    52:--compatibility)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "BACKWARD BACKWARD_TRANSITIVE FORWARD FORWARD_TRANSITIVE FULL FULL_TRANSITIVE NONE" -- "$cur")
+      return
       ;;
-
-    *'cloud-resources azure costs'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--end-date --help --start-date -h")" -- "$cur")
+    53:--output-level|53:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector update'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    53:--subject)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-subject-list)" -- "$cur")
+      return
       ;;
-
-    *'update-version'*'--connect-tag')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-tag-list "$cur" --connect-only)")" -- "$cur")
+    54:--output-level|54:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug jscissors'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    54:--subject)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-subject-list)" -- "$cur")
+      return
       ;;
-
-    *'debug jscissors'*'--operation')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "VALUES RETURN_VALUE THREADS HEAP STACK EXCEPTION_HEAP DELAY")" -- "$cur")
+    54:--mode)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "IMPORT READONLY READWRITE" -- "$cur")
+      return
       ;;
-
-    *'connector log-level'*'--level')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "INFO WARN DEBUG TRACE")" -- "$cur")
+    55:--output-level|55:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug log-level set'*'--level')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "INFO WARN DEBUG TRACE")" -- "$cur")
+    55:--value)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "true false" -- "$cur")
+      return
       ;;
-
-    *'container pause'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    56:--output-level|56:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'get-jmx-metrics'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    56:--value)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "true false" -- "$cur")
+      return
       ;;
-
-    *'container get-properties'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    57:--output-level|57:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector pause'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    57:--subject)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-subject-list)" -- "$cur")
+      return
       ;;
-
-    *'tcp-proxy close-connection'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connection-id --help -h")" -- "$cur")
+    57:--version)
+      return
       ;;
-
-    *'topic consume'*'--key-subject')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur")
+    58:--output-level|58:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container get-ip-addresses'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    58:--payload)
+      return
       ;;
-
-    *'debug generate-diagnostics'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur")
+    58:--schema-type)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "AVRO JSON PROTOBUF" -- "$cur")
+      return
       ;;
-
-    *'debug heap-dump'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    59:--output-level|59:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'topic get-number-records'*'-t')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur")
+    59:--subject)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-subject-list)" -- "$cur")
+      return
       ;;
-
-    *'connector create-or-update'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help --initial-state --level --offsets --package --skip-automatic-connector-config --terraform --validate --verbose --wait-for-zero-lag -c -h -l -p -v")" -- "$cur")
+    59:--alias)
+      return
       ;;
-
-    *'tools read-avro-file'*'--file')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-specific-file-extension "$cur" --extension "avro")")" -- "$cur")
+    60:--output-level|60:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'cloud-resources azure list'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    60:--alias)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-subject-list)" -- "$cur")
+      return
       ;;
-
-    *'tcp-proxy start'*'--hostname')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    61:--output-level|61:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector stop'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    62:--output-level|62:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container kill'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    62:--hostname)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'connector offsets reset'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    62:--port)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-docker-ports)" -- "$cur")
+      return
       ;;
-
-    *'tcp-proxy get-connections'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connection-id --help -h")" -- "$cur")
+    62:--throttle-service-response)
+      return
       ;;
-
-    *'repro bootstrap'*'--pipeline')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-examples-list-with-fzf --without-repro --sink-only "$cur")")" -- "$cur")
+    62:--delay-service-response)
+      return
       ;;
-
-    *'cloud-resources aws costs'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--end-date --help --start-date -h")" -- "$cur")
+    62:--break-service-response)
+      return
       ;;
-
-    *'container logs'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    63:--output-level|63:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'ec2 create'*'--instance-type')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "c1.medium c1.xlarge c3.2xlarge c3.4xlarge c3.8xlarge c3.large c3.xlarge c4.2xlarge c4.4xlarge c4.large c4.xlarge m1.large m1.medium m1.small m1.xlarge m2.2xlarge m2.4xlarge m2.xlarge m3.2xlarge m3.large m3.medium m3.xlarge m4.10xlarge m4.2xlarge m4.4xlarge m4.large m4.xlarge t1.micro t2.large t2.medium t2.micro t2.nano t2.small t3.2xlarge")" -- "$cur")
+    63:--connection-id)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zazkia-connection-list)" -- "$cur")
+      return
       ;;
-
-    *'connector logs'*'--connector')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    64:--output-level|64:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'tools read-parquet-file'*'-f')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-specific-file-extension "$cur" --extension "parquet")")" -- "$cur")
+    64:--delay-service-response)
+      return
       ;;
-
-    *'pod change-jdk'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    64:--connection-id)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zazkia-connection-list)" -- "$cur")
+      return
       ;;
-
-    *'container exec'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    65:--output-level|65:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector offsets alter'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    65:--break-service-response)
+      return
       ;;
-
-    *'connector select-config'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    65:--connection-id)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zazkia-connection-list)" -- "$cur")
+      return
       ;;
-
-    *'connector-plugin versions'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector-plugin --force-refresh --help --last -c -h")" -- "$cur")
+    66:--output-level|66:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug block-traffic'*'--port')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-docker-ports)")" -- "$cur")
+    66:--connection-id)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zazkia-connection-list)" -- "$cur")
+      return
       ;;
-
-    *'repro bootstrap'*'--producer')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "none avro avro-with-key protobuf protobuf-with-key json-schema json-schema-with-key")" -- "$cur")
+    67:--output-level|67:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug tcp-dump'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    68:--output-level|68:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'schema set-alias'*'--subject')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur")
+    69:--output-level|69:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container get-properties'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur")
+    69:--connection-id)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zazkia-connection-list)" -- "$cur")
+      return
       ;;
-
-    *'refresh-cp-docker-images'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --version -h")" -- "$cur")
+    70:--output-level|70:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'config folder_zip_or_jar'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    70:--connection-id)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zazkia-connection-list)" -- "$cur")
+      return
       ;;
-
-    *'schema set-mode'*'--subject')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur")
+    71:--output-level|71:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug cfk-bundle-analyze'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--bundle --help --html --json --no-sanitize --output-dir --severity --top -b -h")" -- "$cur")
+    71:--connection-id)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zazkia-connection-list)" -- "$cur")
+      return
       ;;
-
-    *'container ssh'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    72:--output-level|72:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'schema set-compatibility'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--compatibility --help --subject --verbose -h -v")" -- "$cur")
+    72:--connection-id)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zazkia-connection-list)" -- "$cur")
+      return
       ;;
-
-    *'schema get-compatibility'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --subject --verbose -h -v")" -- "$cur")
+    73:--output-level|73:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug heap-analyze'*'--file')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-specific-file-extension "$cur" --extension "hprof")")" -- "$cur")
+    74:--output-level|74:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'schema register'*'--subject')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur")
+    75:--output-level|75:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'schema get-mode'*'--subject')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur")
+    76:--output-level|76:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'remove-all-docker-images'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    76:--file|76:-f)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-specific-file-extension \"$cur\" --extension \"avro\")" -- "$cur")
+      return
       ;;
-
-    *'topic get-number-records'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --topic -h -t")" -- "$cur")
+    77:--output-level|77:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug java-debug'*'--action')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "enable disable")" -- "$cur")
+    77:--file|77:-f)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-specific-file-extension \"$cur\" --extension \"parquet\")" -- "$cur")
+      return
       ;;
-
-    *'cloud-resources aws list'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    78:--output-level|78:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'run'*'--cluster-environment')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-ccloud-environment-list "$cur")")" -- "$cur")
+    78:--container|78:-c|78:--pod|78:-p)
+      return
       ;;
-
-    *'topic produce'*'--reference')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-predefined-schemas "$cur")")" -- "$cur")
+    78:--output-folder)
+      return
       ;;
-
-    *'connector offsets reset'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur")
+    79:--output-level|79:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'cleanup-cloud-resources'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--force --help --resource -h")" -- "$cur")
+    79:--topic-regex)
+      return
       ;;
-
-    *'debug flight-recorder'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    79:--timeout)
+      return
       ;;
-
-    *'schema get-alias'*'--alias')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur")
+    80:--output-level|80:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug jscissors'*'--action')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "enable disable")" -- "$cur")
+    81:--output-level|81:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector offsets alter'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur")
+    81:--container|81:-c|81:--pod|81:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'connector show-config'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    82:--output-level|82:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'tools read-parquet-file'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--file --help -f -h")" -- "$cur")
+    82:--container|82:-c|82:--pod|82:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'connector select-config'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help -c -h")" -- "$cur")
+    83:--output-level|83:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'remove-cp-docker-images'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --version -h")" -- "$cur")
+    83:--uri)
+      return
       ;;
-
-    *'connector offsets get'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    84:--output-level|84:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'schema register'*'--schema')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-predefined-schemas "$cur")")" -- "$cur")
+    84:--container|84:-c|84:--pod|84:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'pod change-jdk'*'--version')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "8 11 17 21 22 25")" -- "$cur")
+    85:--output-level|85:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'tools read-avro-file'*'-f')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-specific-file-extension "$cur" --extension "avro")")" -- "$cur")
+    85:--container|85:-c|85:--pod|85:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'pod unpause'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    86:--output-level|86:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container change-jdk'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    86:--container|86:-c|86:--pod|86:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'debug java-debug'*'--type')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "ssl_all ssl_handshake class_loading kerberos")" -- "$cur")
+    87:--output-level|87:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'schema delete'*'--subject')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur")
+    87:--file|87:-f)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-specific-file-extension \"$cur\" --extension \"hprof\")" -- "$cur")
+      return
       ;;
-
-    *'pod restart'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    87:--output-dir|87:-o)
+      return
       ;;
-
-    *'debug gc-analyze'*'--file')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-specific-file-extension "$cur" --extension "log")")" -- "$cur")
+    87:--report-type|87:-r)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "all leaks overview top-components" -- "$cur")
+      return
       ;;
-
-    *'debug block-traffic'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    88:--output-level|88:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'pod resume'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    88:--bundle|88:-b)
+      return
       ;;
-
-    *'connector log-level'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    88:--severity)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "critical high medium low" -- "$cur")
+      return
       ;;
-
-    *'repro bootstrap'*'--file')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-examples-list-with-fzf --without-repro "$cur")")" -- "$cur")
+    88:--top)
+      return
       ;;
-
-    *'connector translate'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    88:--output-dir)
+      return
       ;;
-
-    *'ec2 sync-repro-folder'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h ec2-to-local local-to-ec2")" -- "$cur")
+    89:--output-level|89:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'pod update'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    89:--file|89:-f)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-specific-file-extension \"$cur\" --extension \"log\")" -- "$cur")
+      return
       ;;
-
-    *'container exec'*'--shell')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "bash sh ksh zsh")" -- "$cur")
+    89:--container|89:-c|89:--pod|89:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'topic describe'*'--topic')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur")
+    89:--output-dir|89:-o)
+      return
       ;;
-
-    *'debug flight-recorder'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--action --container --help -c -h")" -- "$cur")
+    89:--top-pauses)
+      return
       ;;
-
-    *'debug log-level set'*'-l')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "INFO WARN DEBUG TRACE")" -- "$cur")
+    90:--output-level|90:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector log-level'*'-l')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "INFO WARN DEBUG TRACE")" -- "$cur")
+    90:--container|90:-c|90:--pod|90:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'cleanup-cloud-details'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    90:--port)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-docker-ports)" -- "$cur")
+      return
       ;;
-
-    *'tcp-proxy start'*'--port')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-docker-ports)")" -- "$cur")
+    90:--duration)
+      return
       ;;
-
-    *'pod display-error-all'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    91:--output-level|91:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector show-config'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --force-rest-endpoint --help --verbose -c -h -v")" -- "$cur")
+    91:--container|91:-c|91:--pod|91:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'cloud-resources azure'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h costs costs-history list")" -- "$cur")
+    91:--destination)
+      return
       ;;
-
-    *'schema set-mode'*'--mode')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "IMPORT READONLY READWRITE")" -- "$cur")
+    91:--port)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-docker-ports)" -- "$cur")
+      return
       ;;
-
-    *'connector offsets get'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur")
+    91:--action)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "start stop" -- "$cur")
+      return
       ;;
-
-    *'ec2 delete'*'--instance')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-ec2-cloudformation-list $cur)")" -- "$cur")
+    92:--output-level|92:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'pod pause'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    92:--container|92:-c|92:--pod|92:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'connector sourcecode'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector-tag --help --only-show-url -h")" -- "$cur")
+    92:--type)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "ssl_all ssl_handshake class_loading kerberos" -- "$cur")
+      return
       ;;
-
-    *'tools read-avro-file'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--file --help -f -h")" -- "$cur")
+    92:--action)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "enable disable" -- "$cur")
+      return
       ;;
-
-    *'debug heap-analyze'*'-f')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-specific-file-extension "$cur" --extension "hprof")")" -- "$cur")
+    93:--output-level|93:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'schema derive-schema'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --payload --schema-type -h")" -- "$cur")
+    93:--container|93:-c|93:--pod|93:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'debug heap-analyze'*'-r')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "all leaks overview top-components")" -- "$cur")
+    93:--operation)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "VALUES RETURN_VALUE THREADS HEAP STACK EXCEPTION_HEAP DELAY" -- "$cur")
+      return
       ;;
-
-    *'debug tcp-dump'*'--port')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-docker-ports)")" -- "$cur")
+    93:--class)
+      return
       ;;
-
-    *'pod get-properties'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    93:--method)
+      return
       ;;
-
-    *'schema set-normalize'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --value --verbose -h -v")" -- "$cur")
+    93:--action)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "enable disable" -- "$cur")
+      return
       ;;
-
-    *'topic produce'*'--topic')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur")
+    94:--output-level|94:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'topic produce'*'--value')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-predefined-schemas "$cur")")" -- "$cur")
+    94:--container|94:-c|94:--pod|94:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'pod get-ip-addresses'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    94:--action)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "start stop" -- "$cur")
+      return
       ;;
-
-    *'topic consume'*'--topic')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur")
+    95:--output-level|95:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector show-lag'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    96:--output-level|96:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container ssh'*'--shell')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "bash sh ksh zsh")" -- "$cur")
+    96:--package|96:-p)
+      return
       ;;
-
-    *'ccloud-costs-history'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--detailed --help -h")" -- "$cur")
+    97:--output-level|97:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container change-jdk'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help --version -c -h")" -- "$cur")
+    97:--package|97:-p)
+      return
       ;;
-
-    *'pod kill'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    97:--level|97:-l)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN DEBUG TRACE" -- "$cur")
+      return
       ;;
-
-    *'connector log-level'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help --level -c -h -l")" -- "$cur")
+    98:--output-level|98:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'cloud-resources aws'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h costs costs-history list")" -- "$cur")
+    98:--container|98:-c|98:--pod|98:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'topic delete'*'--topic')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur")
+    98:--domain|98:-d)
+      return
       ;;
-
-    *'connector open-docs'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --only-show-url -h")" -- "$cur")
+    99:--output-level|99:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'ec2 start'*'--instance')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-ec2-instance-list $cur)")" -- "$cur")
+    100:--output-level|100:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'schema get'*'--subject')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-subject-list)")" -- "$cur")
+    100:--container|100:-c|100:--pod|100:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'container unpause'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    101:--output-level|101:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector translate'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --connector-plugin --help --verbose -c -h -v")" -- "$cur")
+    102:--output-level|102:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector unpause'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    102:--container|102:-c|102:--pod|102:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'pod exec'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    103:--output-level|103:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug block-traffic'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--action --container --destination --help --port -c -h")" -- "$cur")
+    104:--output-level|104:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'update-version'*'--tag')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-tag-list "$cur")")" -- "$cur")
+    105:--output-level|105:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug log-level get'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --package -h -p")" -- "$cur")
+    105:--container|105:-c|105:--pod|105:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'container restart'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    105:--wait-for-log|105:-w)
+      return
       ;;
-
-    *'connector restart'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    105:--max-wait|105:-m)
+      return
       ;;
-
-    *'debug log-level set'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --level --package -h -l -p")" -- "$cur")
+    105:--grep)
+      return
       ;;
-
-    *'pod logs'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    106:--output-level|106:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug thread-dump'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    107:--output-level|107:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'run'*'--cluster-region')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-kafka-region-list "$cur")")" -- "$cur")
+    107:--container|107:-c|107:--pod|107:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'connector show-lag'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help --interval --max-wait --verbose -c -h -v")" -- "$cur")
+    107:--shell|107:-s)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "bash sh ksh zsh" -- "$cur")
+      return
       ;;
-
-    *'connector delete'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    108:--output-level|108:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'run'*'--cluster-cloud')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "aws gcp azure")" -- "$cur")
+    108:--container|108:-c|108:--pod|108:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'container update'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    108:--version)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "8 11 17 21 22 25" -- "$cur")
+      return
       ;;
-
-    *'pod ssh'*'--container')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    109:--output-level|109:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'ec2 open'*'--instance')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-ec2-instance-list $cur)")" -- "$cur")
+    109:--container|109:-c|109:--pod|109:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'tools certs-create'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help --output-folder --verbose -h -v")" -- "$cur")
+    109:--command)
+      return
       ;;
-
-    *'container kill-all'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    109:--shell)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "bash sh ksh zsh" -- "$cur")
+      return
       ;;
-
-    *'run'*'--connector-jar')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type jar "$cur")")" -- "$cur")
+    110:--output-level|110:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'ec2 stop'*'--instance')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-ec2-instance-list $cur)")" -- "$cur")
+    110:--source)
+      return
       ;;
-
-    *'topic produce'*'--key')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-predefined-schemas "$cur")")" -- "$cur")
+    110:--destination)
+      return
       ;;
-
-    *'pod get-properties'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur")
+    111:--output-level|111:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container resume'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    111:--container|111:-c|111:--pod|111:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'repro import'*'--file')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-playground-repro-export-with-fzf "$cur")")" -- "$cur")
+    112:--output-level|112:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'run'*'--connector-zip')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-zip-or-jar-with-fzf --type zip "$cur")")" -- "$cur")
+    112:--container|112:-c|112:--pod|112:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'connector status'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    113:--output-level|113:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector versions'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    113:--container|113:-c|113:--pod|113:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'get-docker-compose'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    114:--output-level|114:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container recreate'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --ignore-current-versions -h")" -- "$cur")
+    114:--container|114:-c|114:--pod|114:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'debug heap-analyze'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--file --help --output-dir --report-type -f -h -o -r")" -- "$cur")
+    115:--output-level|115:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug gc-analyze'*'-f')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-specific-file-extension "$cur" --extension "log")")" -- "$cur")
+    115:--container|115:-c|115:--pod|115:-p)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-container-list)" -- "$cur")
+      return
       ;;
-
-    *'debug gc-analyze'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    115:--env)
+      return
       ;;
-
-    *'connector update'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    116:--output-level|116:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'topic alter'*'--topic')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur")
+    117:--output-level|117:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector resume'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    117:--topic|117:-t)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-topic-list)" -- "$cur")
+      return
       ;;
-
-    *'debug java-debug'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    118:--output-level|118:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector snippets'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--converter --dlq --help -h")" -- "$cur")
+    119:--output-level|119:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'run'*'--cluster-type')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "basic standard dedicated")" -- "$cur")
+    120:--output-level|120:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'get-jmx-metrics'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    120:--topic|120:-t)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-topic-list)" -- "$cur")
+      return
       ;;
-
-    *'repro bootstrap'*'-p')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "none avro avro-with-key protobuf protobuf-with-key json-schema json-schema-with-key")" -- "$cur")
+    121:--output-level|121:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'run'*'--cluster-name')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-ccloud-cluster-list "$cur")")" -- "$cur")
+    121:--topic|121:-t)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-topic-list)" -- "$cur")
+      return
       ;;
-
-    *'debug jscissors'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    121:--compatibility)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "BACKWARD BACKWARD_TRANSITIVE FORWARD FORWARD_TRANSITIVE FULL FULL_TRANSITIVE NONE" -- "$cur")
+      return
       ;;
-
-    *'repro bootstrap'*'-f')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-examples-list-with-fzf --without-repro "$cur")")" -- "$cur")
+    122:--output-level|122:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug heap-dump'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    122:--topic|122:-t)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-topic-list)" -- "$cur")
+      return
       ;;
-
-    *'connector offsets'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h alter get get-offsets-request-status reset")" -- "$cur")
+    122:--max-messages)
+      return
       ;;
-
-    *'debug thread-dump'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur")
+    122:--min-expected-messages)
+      return
       ;;
-
-    *'connector plugins'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--all --help --verbose -h -v")" -- "$cur")
+    122:--grep)
+      return
       ;;
-
-    *'container restart'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur")
+    122:--timeout)
+      return
       ;;
-
-    *'connector pause'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    122:--plot-latencies-timestamp-field)
+      return
       ;;
-
-    *'connector restart'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help --task-id --verbose -c -h -t -v")" -- "$cur")
+    122:--key-subject)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-subject-list)" -- "$cur")
+      return
       ;;
-
-    *'connector unpause'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur")
+    122:--value-subject)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-subject-list)" -- "$cur")
+      return
       ;;
-
-    *'container pause'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    122:--max-characters)
+      return
       ;;
-
-    *'tools redos-check'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --timeout --topic-regex -h")" -- "$cur")
+    122:--isolation-level)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "read_uncommitted read_committed" -- "$cur")
+      return
       ;;
-
-    *'tcp-proxy open-ui'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    123:--output-level|123:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container unpause'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur")
+    123:--key)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-predefined-schemas \"$cur\")" -- "$cur")
+      return
       ;;
-
-    *'schema set-alias'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--alias --help --subject --verbose -h -v")" -- "$cur")
+    123:--value)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-predefined-schemas \"$cur\")" -- "$cur")
+      return
       ;;
-
-    *'connector status'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur")
+    123:--topic|123:-t)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-topic-list)" -- "$cur")
+      return
       ;;
-
-    *'run'*'--connect-tag')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-tag-list "$cur" --connect-only)")" -- "$cur")
+    123:--nb-messages)
+      return
       ;;
-
-    *'container resume'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur")
+    123:--max-nb-messages-per-batch)
+      return
       ;;
-
-    *'container kill'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    123:--max-nb-messages-to-generate)
+      return
       ;;
-
-    *'debug gc-analyze'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --file --help --html --json --output-dir --top-pauses -c -f -h -o")" -- "$cur")
+    123:--sleep-time-between-batch)
+      return
       ;;
-
-    *'config clipboard'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    123:--nb-partitions)
+      return
       ;;
-
-    *'debug tcp-dump'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    123:--compression-codec)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "gzip snappy lz4 zstd" -- "$cur")
+      return
       ;;
-
-    *'connector stop'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    123:--compatibility)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "BACKWARD BACKWARD_TRANSITIVE FORWARD FORWARD_TRANSITIVE FULL FULL_TRANSITIVE NONE" -- "$cur")
+      return
       ;;
-
-    *'connector resume'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur")
+    123:--key-subject-name-strategy)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "TopicNameStrategy RecordNameStrategy TopicRecordNameStrategy" -- "$cur")
+      return
       ;;
-
-    *'schema get-alias'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--alias --help --verbose -h -v")" -- "$cur")
+    123:--value-subject-name-strategy)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "TopicNameStrategy RecordNameStrategy TopicRecordNameStrategy" -- "$cur")
+      return
       ;;
-
-    *'connector-plugin'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h display-last-updated search-jar sourcecode versions")" -- "$cur")
+    123:--headers)
+      return
       ;;
-
-    *'debug java-debug'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--action --container --help --type -c -h")" -- "$cur")
+    123:--forced-key)
+      return
       ;;
-
-    *'run'*'--environment')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "ccloud cfk plaintext sasl-ssl sasl-plain 2way-ssl sasl-scram kerberos ssl_kerberos ldap-authorizer-sasl-plain ldap-sasl-plain rbac-sasl-plain")" -- "$cur")
+    123:--forced-value)
+      return
       ;;
-
-    *'container exec'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    123:--derive-key-schema-as)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "AVRO JSON PROTOBUF" -- "$cur")
+      return
       ;;
-
-    *'connector update'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help -c -h")" -- "$cur")
+    123:--derive-value-schema-as)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "AVRO JSON PROTOBUF" -- "$cur")
+      return
       ;;
-
-    *'pod change-jdk'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    123:--validate-config)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "scrub.invalid.names=true enhanced.avro.schema.support=true connect.meta.data=false object.additional.properties=false use.optional.for.nonrequired=true ignore.default.for.nullables=true generalized.sum.type.support=true enhanced.protobuf.schema.support=true generate.index.for.unions=false int.for.enums=true optional.for.nullables=true generate.struct.for.nulls=true wrapper.for.nullables=true wrapper.for.raw.primitives=false" -- "$cur")
+      return
       ;;
-
-    *'connector delete'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur")
+    123:--producer-property)
+      return
       ;;
-
-    *'topic describe'*'-t')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur")
+    123:--record-size)
+      return
       ;;
-
-    *'connector logs'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-connector-list)")" -- "$cur")
+    124:--output-level|124:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container logs'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    124:--topic|124:-t)
+      return
       ;;
-
-    *'container update'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur")
+    124:--nb-partitions)
+      return
       ;;
-
-    *'connector pause'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur")
+    125:--output-level|125:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container pause'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur")
+    125:--topic|125:-t)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-topic-list)" -- "$cur")
+      return
       ;;
-
-    *'schema get-mode'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --subject --verbose -h -v")" -- "$cur")
+    126:--output-level|126:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container ssh'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    126:--topic|126:-t)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-topic-list)" -- "$cur")
+      return
       ;;
-
-    *'get-jmx-metrics'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --domain --help --open -c -d -h -o")" -- "$cur")
+    127:--output-level|127:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug log-level'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h get set")" -- "$cur")
+    128:--output-level|128:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'pod exec'*'--shell')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "bash sh ksh zsh")" -- "$cur")
+    128:--connector-plugin|128:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-plugin \"$cur\" \"onprem\")" -- "$cur")
+      return
       ;;
-
-    *'debug jscissors'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--action --class --container --help --method --operation -c -h")" -- "$cur")
+    128:--connector-tag)
+      return
       ;;
-
-    *'repro bootstrap'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector-plugin --custom-smt --description --file --help --pipeline -d -f -h")" -- "$cur")
+    128:--class)
+      return
       ;;
-
-    *'debug heap-dump'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help --histo --live -c -h")" -- "$cur")
+    129:--output-level|129:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container ssh'*'-s')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "bash sh ksh zsh")" -- "$cur")
+    129:--connector-plugin|129:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-plugin \"$cur\" \"onprem\")" -- "$cur")
+      return
       ;;
-
-    *'schema set-mode'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --mode --subject --verbose -h -v")" -- "$cur")
+    129:--last)
+      return
       ;;
-
-    *'topic consume'*'-t')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur")
+    130:--output-level|130:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'topic produce'*'-t')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur")
+    130:--days)
+      return
       ;;
-
-    *'tcp-proxy break'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--break-service-response --connection-id --help -h")" -- "$cur")
+    130:--vendor)
+      return
       ;;
-
-    *'tcp-proxy delay'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connection-id --delay-service-response --help -h")" -- "$cur")
+    131:--output-level|131:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'schema register'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --id --metadata-property --normalize --schema --subject --verbose -h -v")" -- "$cur")
+    131:--connector-plugin|131:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-plugin \"$cur\" \"all\")" -- "$cur")
+      return
       ;;
-
-    *'tcp-proxy start'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--break-service-response --delay-service-response --help --hostname --port --service-response-corrupt --skip-automatic-connector-config --throttle-service-response -h")" -- "$cur")
+    131:--connector-tag)
+      return
       ;;
-
-    *'cloud-resources'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h aws azure")" -- "$cur")
+    131:--compile-jdk-version)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "8 11 17 21 25" -- "$cur")
+      return
       ;;
-
-    *'container exec'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--command --container --help --root --shell -c -h")" -- "$cur")
+    132:--output-level|132:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'pod change-jdk'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help --version -c -h")" -- "$cur")
+    133:--output-level|133:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'repro import'*'-f')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-playground-repro-export-with-fzf "$cur")")" -- "$cur")
+    133:--connector|133:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'connector stop'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help --verbose -c -h -v")" -- "$cur")
+    134:--output-level|134:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'pod ssh'*'--shell')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "bash sh ksh zsh")" -- "$cur")
+    135:--output-level|135:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container logs'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --grep --help --max-wait --open --wait-for-log -c -h -m -o -w")" -- "$cur")
+    136:--output-level|136:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector logs'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connector --help --open --verbose --wait-for-log -c -h -o -v -w")" -- "$cur")
+    137:--output-level|137:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'update-version'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--connect-tag --connector-jar --connector-tag --connector-zip --help --tag -h")" -- "$cur")
+    138:--output-level|138:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container kill'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur")
+    138:--connector|138:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'debug tcp-dump'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --duration --help --port -c -h")" -- "$cur")
+    139:--output-level|139:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'topic describe'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --topic --verbose -h -t -v")" -- "$cur")
+    139:--connector|139:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'topic delete'*'-t')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur")
+    140:--output-level|140:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'open-changelog'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --only-show-url -h")" -- "$cur")
+    140:--connector|140:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'switch-ccloud'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    141:--output-level|141:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container ssh'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help --shell -c -h -s")" -- "$cur")
+    141:--connector|141:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'debug testssl'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --uri -h")" -- "$cur")
+    142:--output-level|142:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'config editor'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    143:--output-level|143:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'schema delete'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --permanent --subject --verbose --version -h -v")" -- "$cur")
+    143:--connector|143:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'topic alter'*'-t')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-topic-list)")" -- "$cur")
+    144:--output-level|144:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'topic produce'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--compatibility --compression-codec --consume --delete-topic --derive-key-schema-as --derive-value-schema-as --forced-key --forced-value --generate-only --headers --help --key --key-subject-name-strategy --max-nb-messages-per-batch --max-nb-messages-to-generate --nb-messages --nb-partitions --no-null --producer-property --record-size --schema-id-in-header --sleep-time-between-batch --tombstone --topic --validate --validate-config --value --value-subject-name-strategy --verbose -h -t -v")" -- "$cur")
+    145:--output-level|145:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'topic consume'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--grep --help --isolation-level --key-subject --max-characters --max-messages --min-expected-messages --open --plot-latencies-timestamp-field --tail --timeout --topic --value-subject --verbose -h -o -t -v")" -- "$cur")
+    145:--connector-tag)
+      return
       ;;
-
-    *'--output-level')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "INFO WARN ERROR")" -- "$cur")
+    146:--output-level|146:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'pod unpause'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    147:--output-level|147:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'get-ci-result'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    148:--output-level|148:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'pod restart'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    148:--connector|148:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'topic delete'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --skip-delete-schema --topic --verbose -h -t -v")" -- "$cur")
+    148:--task-id|148:-t)
+      return
       ;;
-
-    *'topic create'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --nb-partitions --topic --verbose -h -t -v")" -- "$cur")
+    149:--output-level|149:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container cp'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--destination --help --source -h")" -- "$cur")
+    149:--connector|149:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'repro export'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--all --help -h")" -- "$cur")
+    150:--output-level|150:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'ccloud-costs'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--end-date --help --start-date -h")" -- "$cur")
+    150:--connector|150:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'pod resume'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    151:--output-level|151:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'pod recreate'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --ignore-current-versions -h")" -- "$cur")
+    151:--connector|151:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'repro import'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--file --help -f -h")" -- "$cur")
+    152:--output-level|152:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'pod update'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    152:--connector|152:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'pod kill-all'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    152:--interval)
+      return
       ;;
-
-    *'ec2 delete'*'-i')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-ec2-cloudformation-list $cur)")" -- "$cur")
+    152:--max-wait)
+      return
       ;;
-
-    *'pod unpause'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur")
+    153:--output-level|153:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'switch-back'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    153:--connector|153:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'pod restart'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur")
+    154:--output-level|154:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'ec2 start'*'-i')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-ec2-instance-list $cur)")" -- "$cur")
+    154:--connector|154:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'pod pause'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    155:--output-level|155:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'topic alter'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --topic --verbose -h -t -v")" -- "$cur")
+    155:--connector|155:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'schema get'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--deleted --help --id --subject --verbose -h -v")" -- "$cur")
+    156:--output-level|156:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'open'*'--file')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-any-file-with-fzf "$cur")")" -- "$cur")
+    156:--connector|156:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'ec2 stop'*'-i')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-ec2-instance-list $cur)")" -- "$cur")
+    157:--output-level|157:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'pod update'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur")
+    157:--connector|157:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'pod logs'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    158:--output-level|158:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'ec2 create'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --instance-type --size --suffix -h")" -- "$cur")
+    158:--converter)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "avro protobuf json-schema json json-schema-enabled string bytearray" -- "$cur")
+      return
       ;;
-
-    *'pod exec'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    159:--output-level|159:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'ec2 delete'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --instance -h -i")" -- "$cur")
+    160:--output-level|160:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'pod resume'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur")
+    160:--connector|160:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'pod kill'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    160:--level|160:-l)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN DEBUG TRACE" -- "$cur")
+      return
       ;;
-
-    *'topic list'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --show-internal -h")" -- "$cur")
+    161:--output-level|161:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'ec2 open'*'-i')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-ec2-instance-list $cur)")" -- "$cur")
+    161:--connector|161:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'run'*'--file')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-examples-list-with-fzf "$cur")")" -- "$cur")
+    161:--wait-for-log|161:-w)
+      return
       ;;
-
-    *'ec2 start'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --instance -h -i")" -- "$cur")
+    162:--output-level|162:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'connector'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h connect-migration-utility create-or-update delete disable-remote-debugging display-leader-name display-metrics-api display-metrics-api-with-grafana enable-remote-debugging log-level logs offsets open-ccloud-connector-in-browser open-docs oracle-cdc-xstream pause plugins restart resume select-config show-config show-config-parameters show-lag snippets sourcecode status stop translate unpause update versions")" -- "$cur")
+    162:--connector|162:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'pod pause'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur")
+    162:--browser)
+      return
       ;;
-
-    *'pod ssh'*'-s')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "bash sh ksh zsh")" -- "$cur")
+    163:--output-level|163:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'pod ssh'*'-c')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-container-list)")" -- "$cur")
+    164:--output-level|164:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'container'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h change-jdk cp display-error-all exec get-ip-addresses get-properties kill kill-all logs pause recreate restart resume set-environment-variables ssh unpause update")" -- "$cur")
+    164:--connector|164:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'open-docs'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --only-show-url -h")" -- "$cur")
+    164:--connector-plugin)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-plugin \"$cur\" \"fm\")" -- "$cur")
+      return
       ;;
-
-    *'tcp-proxy'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h break close-all-connection-with-error close-connection delay get-connections open-ui start toggle-accept-connections toggle-reads-client toggle-reads-service toggle-writes-client toggle-writes-service")" -- "$cur")
+    165:--output-level|165:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'pod kill'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help -c -h")" -- "$cur")
+    166:--output-level|166:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'ec2 open'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--enable-sync-repro-folder --help --instance -h -i")" -- "$cur")
+    167:--output-level|167:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'ec2 list'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    167:--migration-mode)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "stop_create_latest_offset create create_latest_offset" -- "$cur")
+      return
       ;;
-
-    *'pod exec'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--command --container --help --root --shell -c -h")" -- "$cur")
+    167:--sensitive-property)
+      return
       ;;
-
-    *'ec2 stop'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --instance -h -i")" -- "$cur")
+    168:--output-level|168:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'run'*'--tag')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-tag-list "$cur")")" -- "$cur")
+    168:--connector|168:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'pod logs'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --grep --help --max-wait --open --wait-for-log -c -h -m -o -w")" -- "$cur")
+    168:--level|168:-l)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN DEBUG TRACE" -- "$cur")
+      return
       ;;
-
-    *'pod ssh'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--container --help --shell -c -h -s")" -- "$cur")
+    168:--package|168:-p)
+      return
       ;;
-
-    *'history'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    168:--offsets)
+      return
       ;;
-
-    *'re-run'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    168:--initial-state)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "RUNNING PAUSED STOPPED" -- "$cur")
+      return
       ;;
-
-    *'open'*'-f')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-any-file-with-fzf "$cur")")" -- "$cur")
+    169:--output-level|169:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'pod cp'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--destination --help --source -h")" -- "$cur")
+    169:--connector|169:-c)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-list)" -- "$cur")
+      return
       ;;
-
-    *'schema'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h delete derive-schema get get-alias get-compatibility get-mode register set-alias set-compatibility set-mode set-normalize validate-new-schemas")" -- "$cur")
+    170:--output-level|170:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'status'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    171:--output-level|171:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'config'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h check-and-update-repo-version clipboard container-kill-all-before-run editor folder_zip_or_jar open-ccloud-connector-in-browser open-grafana-in-browser")" -- "$cur")
+    171:--instance-type)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "c1.medium c1.xlarge c3.2xlarge c3.4xlarge c3.8xlarge c3.large c3.xlarge c4.2xlarge c4.4xlarge c4.large c4.xlarge m1.large m1.medium m1.small m1.xlarge m2.2xlarge m2.4xlarge m2.xlarge m3.2xlarge m3.large m3.medium m3.xlarge m4.10xlarge m4.2xlarge m4.4xlarge m4.large m4.xlarge t1.micro t2.large t2.medium t2.micro t2.nano t2.small t3.2xlarge" -- "$cur")
+      return
       ;;
-
-    *'run'*'-f')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "$(playground get-examples-list-with-fzf "$cur")")" -- "$cur")
+    171:--size)
+      return
       ;;
-
-    *'repro'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h bootstrap export import")" -- "$cur")
+    171:--suffix)
+      return
       ;;
-
-    *'tools'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h certs-create install-vscode-extension read-avro-file read-parquet-file redos-check")" -- "$cur")
+    172:--output-level|172:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'debug'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h block-traffic cfk-bundle-analyze disable-remote-debugging enable-remote-debugging flight-recorder gc-analyze generate-diagnostics heap-analyze heap-dump java-debug jscissors log-level tcp-dump testssl thread-dump")" -- "$cur")
+    172:--instance|172:-i)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-ec2-cloudformation-list $cur)" -- "$cur")
+      return
       ;;
-
-    *'topic'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h alter consume create delete describe display-consumer-offsets get-number-records list produce set-schema-compatibility")" -- "$cur")
+    173:--output-level|173:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'open'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--file --help --open-docker-compose -f -h")" -- "$cur")
+    173:--instance|173:-i)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-ec2-instance-list $cur)" -- "$cur")
+      return
       ;;
-
-    *'stop'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    174:--output-level|174:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'help'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    175:--output-level|175:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'run'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--cluster-cloud --cluster-creds --cluster-environment --cluster-name --cluster-region --cluster-schema-registry-creds --cluster-type --connect-tag --connector-jar --connector-tag --connector-zip --enable-conduktor --enable-control-center --enable-flink --enable-jmx-grafana --enable-kcat --enable-ksqldb --enable-multiple-brokers --enable-multiple-connect-workers --enable-rest-proxy --enable-sql-datagen --environment --file --help --open --tag -f -h -o")" -- "$cur")
+    175:--instance|175:-i)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-ec2-instance-list $cur)" -- "$cur")
+      return
       ;;
-
-    *'ec2'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h create delete list open start stop sync-repro-folder")" -- "$cur")
+    176:--output-level|176:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'pod'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h change-jdk cp display-error-all exec get-ip-addresses get-properties kill kill-all logs pause recreate restart resume set-environment-variables ssh unpause update")" -- "$cur")
+    176:--instance|176:-i)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-ec2-instance-list $cur)" -- "$cur")
+      return
       ;;
-
-    *'ai'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur")
+    177:--output-level|177:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *'-o')
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "INFO WARN ERROR")" -- "$cur")
+    178:--output-level|178:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
       ;;
-
-    *)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_playground_completions_filter "--help --output-level --version --vvv -h -o -v ai ccloud-costs ccloud-costs-history cleanup-cloud-details cleanup-cloud-resources cloud-resources config connector connector-plugin container debug ec2 get-ci-result get-docker-compose get-jmx-metrics help history open open-changelog open-docs pod re-run refresh-cp-docker-images remove-all-docker-images remove-cp-docker-images repro run schema status stop switch-back switch-ccloud tcp-proxy tools topic update-version")" -- "$cur")
+    178:--instance|178:-i)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-ec2-instance-list $cur)" -- "$cur")
+      return
+      ;;
+    179:--output-level|179:-o)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "INFO WARN ERROR" -- "$cur")
+      return
+      ;;
+    179:--instance|179:-i)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-ec2-instance-list $cur)" -- "$cur")
+      return
+      ;;
+  esac
+
+  if [[ "${cur:0:1}" != "-" ]] && (( positional_index == 0 )); then
+    case "$node_id" in
+      0)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "help status config ai cloud-resources ccloud-costs ccloud-costs-history run re-run get-ci-result history switch-ccloud switch-back update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cleanup-cloud-resources repro get-docker-compose schema tcp-proxy tools debug get-jmx-metrics container pod topic connector-plugin connector ec2" -- "$cur")
+        return
+        ;;
+      3)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "editor folder_zip_or_jar clipboard open-ccloud-connector-in-browser open-grafana-in-browser container-kill-all-before-run check-and-update-repo-version" -- "$cur")
+        return
+        ;;
+      7)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "automatically browser" -- "$cur")
+        return
+        ;;
+      10)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "automatically browser" -- "$cur")
+        return
+        ;;
+      16)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "aws azure" -- "$cur")
+        return
+        ;;
+      17)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "list costs costs-history" -- "$cur")
+        return
+        ;;
+      21)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "list costs costs-history" -- "$cur")
+        return
+        ;;
+      43)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "export import bootstrap" -- "$cur")
+        return
+        ;;
+      48)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "get register get-compatibility set-compatibility get-mode set-mode set-normalize validate-new-schemas delete derive-schema set-alias get-alias" -- "$cur")
+        return
+        ;;
+      61)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "start get-connections delay break close-connection close-all-connection-with-error toggle-accept-connections toggle-reads-client toggle-reads-service toggle-writes-client toggle-writes-service open-ui" -- "$cur")
+        return
+        ;;
+      74)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "install-vscode-extension read-avro-file read-parquet-file certs-create redos-check" -- "$cur")
+        return
+        ;;
+      80)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "enable-remote-debugging disable-remote-debugging testssl generate-diagnostics thread-dump heap-dump heap-analyze cfk-bundle-analyze gc-analyze tcp-dump block-traffic java-debug jscissors flight-recorder log-level" -- "$cur")
+        return
+        ;;
+      95)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "get set" -- "$cur")
+        return
+        ;;
+      99)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "get-properties recreate update get-ip-addresses kill-all logs display-error-all ssh change-jdk exec cp restart pause resume unpause kill set-environment-variables" -- "$cur")
+        return
+        ;;
+      116)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "get-number-records display-consumer-offsets list describe set-schema-compatibility consume produce create delete alter" -- "$cur")
+        return
+        ;;
+      127)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "search-jar versions display-last-updated sourcecode" -- "$cur")
+        return
+        ;;
+      132)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "status oracle-cdc-xstream offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart stop resume unpause delete show-lag show-config show-config-parameters display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update" -- "$cur")
+        return
+        ;;
+      134)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "generate-report debug" -- "$cur")
+        return
+        ;;
+      137)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "get reset alter get-offsets-request-status" -- "$cur")
+        return
+        ;;
+      165)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "discovery migrate" -- "$cur")
+        return
+        ;;
+      170)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "create delete open list stop start sync-repro-folder" -- "$cur")
+        return
+        ;;
+      177)
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "local-to-ec2 ec2-to-local" -- "$cur")
+        return
+        ;;
+    esac
+  fi
+
+  if [[ "${cur:0:1}" == "-" ]]; then
+    case "$node_id" in
+      0)
+        local words=()
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--version" "-v" || words+=("--version" "-v")
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      1)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      2)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      3)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      4)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      5)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      6)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      7)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      8)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      9)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      10)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      11)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      12)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      13)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      14)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      15)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      16)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      17)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      18)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      19)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--start-date" || words+=("--start-date")
+        _playground_completions_option_seen "--end-date" || words+=("--end-date")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      20)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--detailed" || words+=("--detailed")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      21)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      22)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      23)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--start-date" || words+=("--start-date")
+        _playground_completions_option_seen "--end-date" || words+=("--end-date")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      24)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--detailed" || words+=("--detailed")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      25)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--start-date" || words+=("--start-date")
+        _playground_completions_option_seen "--end-date" || words+=("--end-date")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      26)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--detailed" || words+=("--detailed")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      27)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--environment" || words+=("--environment")
+        _playground_completions_option_seen "--file" "-f" || words+=("--file" "-f")
+        _playground_completions_option_seen "--open" "-o" || words+=("--open" "-o")
+        _playground_completions_option_seen "--tag" || words+=("--tag")
+        _playground_completions_option_seen "--connect-tag" || words+=("--connect-tag")
+        _playground_completions_option_seen "--connector-tag" || words+=("--connector-tag")
+        _playground_completions_option_seen "--connector-zip" || words+=("--connector-zip")
+        _playground_completions_option_seen "--connector-jar" || words+=("--connector-jar")
+        _playground_completions_option_seen "--enable-ksqldb" || words+=("--enable-ksqldb")
+        _playground_completions_option_seen "--enable-rest-proxy" || words+=("--enable-rest-proxy")
+        _playground_completions_option_seen "--enable-control-center" || words+=("--enable-control-center")
+        _playground_completions_option_seen "--enable-flink" || words+=("--enable-flink")
+        _playground_completions_option_seen "--enable-conduktor" || words+=("--enable-conduktor")
+        _playground_completions_option_seen "--enable-multiple-brokers" || words+=("--enable-multiple-brokers")
+        _playground_completions_option_seen "--enable-multiple-connect-workers" || words+=("--enable-multiple-connect-workers")
+        _playground_completions_option_seen "--enable-jmx-grafana" || words+=("--enable-jmx-grafana")
+        _playground_completions_option_seen "--enable-kcat" || words+=("--enable-kcat")
+        _playground_completions_option_seen "--enable-sql-datagen" || words+=("--enable-sql-datagen")
+        _playground_completions_option_seen "--cluster-cloud" || words+=("--cluster-cloud")
+        _playground_completions_option_seen "--cluster-type" || words+=("--cluster-type")
+        _playground_completions_option_seen "--cluster-region" || words+=("--cluster-region")
+        _playground_completions_option_seen "--cluster-environment" || words+=("--cluster-environment")
+        _playground_completions_option_seen "--cluster-name" || words+=("--cluster-name")
+        _playground_completions_option_seen "--cluster-creds" || words+=("--cluster-creds")
+        _playground_completions_option_seen "--cluster-schema-registry-creds" || words+=("--cluster-schema-registry-creds")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      28)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      29)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      30)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      31)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      32)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      33)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--tag" || words+=("--tag")
+        _playground_completions_option_seen "--connect-tag" || words+=("--connect-tag")
+        _playground_completions_option_seen "--connector-tag" || words+=("--connector-tag")
+        _playground_completions_option_seen "--connector-zip" || words+=("--connector-zip")
+        _playground_completions_option_seen "--connector-jar" || words+=("--connector-jar")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      34)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--file" "-f" || words+=("--file" "-f")
+        _playground_completions_option_seen "--open-docker-compose" || words+=("--open-docker-compose")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      35)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      36)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      37)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--version" || words+=("--version")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      38)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--version" || words+=("--version")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      39)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      40)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--only-show-url" || words+=("--only-show-url")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      41)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--only-show-url" || words+=("--only-show-url")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      42)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--force" || words+=("--force")
+        words+=("--resource")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      43)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      44)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--all" || words+=("--all")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      45)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--file" "-f" || words+=("--file" "-f")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      46)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--file" "-f" || words+=("--file" "-f")
+        _playground_completions_option_seen "--description" "-d" || words+=("--description" "-d")
+        _playground_completions_option_seen "--custom-smt" || words+=("--custom-smt")
+        words+=("--connector-plugin")
+        words+=("--pipeline")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      47)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      48)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      49)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--subject" || words+=("--subject")
+        _playground_completions_option_seen "--id" || words+=("--id")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--deleted" || words+=("--deleted")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      50)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--subject" || words+=("--subject")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--schema" || words+=("--schema")
+        _playground_completions_option_seen "--id" || words+=("--id")
+        words+=("--metadata-property")
+        _playground_completions_option_seen "--normalize" || words+=("--normalize")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      51)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--subject" || words+=("--subject")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      52)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--subject" || words+=("--subject")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--compatibility" || words+=("--compatibility")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      53)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--subject" || words+=("--subject")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      54)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--subject" || words+=("--subject")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--mode" || words+=("--mode")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      55)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--value" || words+=("--value")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      56)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--value" || words+=("--value")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      57)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--subject" || words+=("--subject")
+        _playground_completions_option_seen "--version" || words+=("--version")
+        _playground_completions_option_seen "--permanent" || words+=("--permanent")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      58)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--payload" || words+=("--payload")
+        _playground_completions_option_seen "--schema-type" || words+=("--schema-type")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      59)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--subject" || words+=("--subject")
+        _playground_completions_option_seen "--alias" || words+=("--alias")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      60)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--alias" || words+=("--alias")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      61)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      62)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--hostname" || words+=("--hostname")
+        _playground_completions_option_seen "--port" || words+=("--port")
+        _playground_completions_option_seen "--throttle-service-response" || words+=("--throttle-service-response")
+        _playground_completions_option_seen "--delay-service-response" || words+=("--delay-service-response")
+        _playground_completions_option_seen "--break-service-response" || words+=("--break-service-response")
+        _playground_completions_option_seen "--service-response-corrupt" || words+=("--service-response-corrupt")
+        _playground_completions_option_seen "--skip-automatic-connector-config" || words+=("--skip-automatic-connector-config")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      63)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--connection-id" || words+=("--connection-id")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      64)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--delay-service-response" || words+=("--delay-service-response")
+        _playground_completions_option_seen "--connection-id" || words+=("--connection-id")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      65)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--break-service-response" || words+=("--break-service-response")
+        _playground_completions_option_seen "--connection-id" || words+=("--connection-id")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      66)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--connection-id" || words+=("--connection-id")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      67)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      68)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      69)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--connection-id" || words+=("--connection-id")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      70)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--connection-id" || words+=("--connection-id")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      71)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--connection-id" || words+=("--connection-id")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      72)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--connection-id" || words+=("--connection-id")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      73)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      74)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      75)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      76)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--file" "-f" || words+=("--file" "-f")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      77)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--file" "-f" || words+=("--file" "-f")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      78)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--output-folder" || words+=("--output-folder")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      79)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--topic-regex" || words+=("--topic-regex")
+        _playground_completions_option_seen "--timeout" || words+=("--timeout")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      80)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      81)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      82)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      83)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--uri" || words+=("--uri")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      84)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      85)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      86)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        _playground_completions_option_seen "--live" || words+=("--live")
+        _playground_completions_option_seen "--histo" || words+=("--histo")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      87)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--file" "-f" || words+=("--file" "-f")
+        _playground_completions_option_seen "--output-dir" "-o" || words+=("--output-dir" "-o")
+        _playground_completions_option_seen "--report-type" "-r" || words+=("--report-type" "-r")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      88)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--bundle" "-b" || words+=("--bundle" "-b")
+        _playground_completions_option_seen "--json" || words+=("--json")
+        _playground_completions_option_seen "--no-sanitize" || words+=("--no-sanitize")
+        _playground_completions_option_seen "--severity" || words+=("--severity")
+        _playground_completions_option_seen "--top" || words+=("--top")
+        _playground_completions_option_seen "--html" || words+=("--html")
+        _playground_completions_option_seen "--output-dir" || words+=("--output-dir")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      89)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--file" "-f" || words+=("--file" "-f")
+        _playground_completions_option_seen "--container" "-c" "--pod" "-p" || words+=("--container" "-c" "--pod" "-p")
+        _playground_completions_option_seen "--output-dir" "-o" || words+=("--output-dir" "-o")
+        _playground_completions_option_seen "--html" || words+=("--html")
+        _playground_completions_option_seen "--json" || words+=("--json")
+        _playground_completions_option_seen "--top-pauses" || words+=("--top-pauses")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      90)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        _playground_completions_option_seen "--port" || words+=("--port")
+        _playground_completions_option_seen "--duration" || words+=("--duration")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      91)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        _playground_completions_option_seen "--destination" || words+=("--destination")
+        _playground_completions_option_seen "--port" || words+=("--port")
+        _playground_completions_option_seen "--action" || words+=("--action")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      92)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        _playground_completions_option_seen "--type" || words+=("--type")
+        _playground_completions_option_seen "--action" || words+=("--action")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      93)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        words+=("--operation")
+        _playground_completions_option_seen "--class" || words+=("--class")
+        words+=("--method")
+        _playground_completions_option_seen "--action" || words+=("--action")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      94)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        _playground_completions_option_seen "--action" || words+=("--action")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      95)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      96)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--package" "-p" || words+=("--package" "-p")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      97)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--package" "-p" || words+=("--package" "-p")
+        _playground_completions_option_seen "--level" "-l" || words+=("--level" "-l")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      98)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        _playground_completions_option_seen "--open" "-o" || words+=("--open" "-o")
+        _playground_completions_option_seen "--domain" "-d" || words+=("--domain" "-d")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      99)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      100)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      101)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--ignore-current-versions" || words+=("--ignore-current-versions")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      102)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      103)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      104)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      105)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        _playground_completions_option_seen "--open" "-o" || words+=("--open" "-o")
+        _playground_completions_option_seen "--wait-for-log" "-w" || words+=("--wait-for-log" "-w")
+        _playground_completions_option_seen "--max-wait" "-m" || words+=("--max-wait" "-m")
+        _playground_completions_option_seen "--grep" || words+=("--grep")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      106)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      107)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        _playground_completions_option_seen "--shell" "-s" || words+=("--shell" "-s")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      108)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        _playground_completions_option_seen "--version" || words+=("--version")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      109)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        _playground_completions_option_seen "--command" || words+=("--command")
+        _playground_completions_option_seen "--root" || words+=("--root")
+        _playground_completions_option_seen "--shell" || words+=("--shell")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      110)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--source" || words+=("--source")
+        _playground_completions_option_seen "--destination" || words+=("--destination")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      111)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      112)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      113)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      114)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      115)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        words+=("--container" "-c" "--pod" "-p")
+        words+=("--env")
+        _playground_completions_option_seen "--restore-original-values" || words+=("--restore-original-values")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      116)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      117)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--topic" "-t" || words+=("--topic" "-t")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      118)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      119)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--show-internal" || words+=("--show-internal")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      120)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--topic" "-t" || words+=("--topic" "-t")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      121)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--topic" "-t" || words+=("--topic" "-t")
+        _playground_completions_option_seen "--compatibility" || words+=("--compatibility")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      122)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--topic" "-t" || words+=("--topic" "-t")
+        _playground_completions_option_seen "--max-messages" || words+=("--max-messages")
+        _playground_completions_option_seen "--min-expected-messages" || words+=("--min-expected-messages")
+        _playground_completions_option_seen "--grep" || words+=("--grep")
+        _playground_completions_option_seen "--timeout" || words+=("--timeout")
+        _playground_completions_option_seen "--tail" || words+=("--tail")
+        _playground_completions_option_seen "--plot-latencies-timestamp-field" || words+=("--plot-latencies-timestamp-field")
+        _playground_completions_option_seen "--key-subject" || words+=("--key-subject")
+        _playground_completions_option_seen "--value-subject" || words+=("--value-subject")
+        _playground_completions_option_seen "--max-characters" || words+=("--max-characters")
+        _playground_completions_option_seen "--open" "-o" || words+=("--open" "-o")
+        _playground_completions_option_seen "--isolation-level" || words+=("--isolation-level")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      123)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--key" || words+=("--key")
+        _playground_completions_option_seen "--value" || words+=("--value")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--topic" "-t" || words+=("--topic" "-t")
+        _playground_completions_option_seen "--nb-messages" || words+=("--nb-messages")
+        _playground_completions_option_seen "--max-nb-messages-per-batch" || words+=("--max-nb-messages-per-batch")
+        _playground_completions_option_seen "--max-nb-messages-to-generate" || words+=("--max-nb-messages-to-generate")
+        _playground_completions_option_seen "--sleep-time-between-batch" || words+=("--sleep-time-between-batch")
+        _playground_completions_option_seen "--nb-partitions" || words+=("--nb-partitions")
+        _playground_completions_option_seen "--compression-codec" || words+=("--compression-codec")
+        _playground_completions_option_seen "--compatibility" || words+=("--compatibility")
+        _playground_completions_option_seen "--key-subject-name-strategy" || words+=("--key-subject-name-strategy")
+        _playground_completions_option_seen "--value-subject-name-strategy" || words+=("--value-subject-name-strategy")
+        _playground_completions_option_seen "--headers" || words+=("--headers")
+        _playground_completions_option_seen "--forced-key" || words+=("--forced-key")
+        _playground_completions_option_seen "--forced-value" || words+=("--forced-value")
+        _playground_completions_option_seen "--generate-only" || words+=("--generate-only")
+        _playground_completions_option_seen "--tombstone" || words+=("--tombstone")
+        _playground_completions_option_seen "--schema-id-in-header" || words+=("--schema-id-in-header")
+        _playground_completions_option_seen "--validate" || words+=("--validate")
+        _playground_completions_option_seen "--derive-key-schema-as" || words+=("--derive-key-schema-as")
+        _playground_completions_option_seen "--derive-value-schema-as" || words+=("--derive-value-schema-as")
+        _playground_completions_option_seen "--no-null" || words+=("--no-null")
+        _playground_completions_option_seen "--consume" || words+=("--consume")
+        _playground_completions_option_seen "--delete-topic" || words+=("--delete-topic")
+        words+=("--validate-config")
+        words+=("--producer-property")
+        _playground_completions_option_seen "--record-size" || words+=("--record-size")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      124)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--topic" "-t" || words+=("--topic" "-t")
+        _playground_completions_option_seen "--nb-partitions" || words+=("--nb-partitions")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      125)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--topic" "-t" || words+=("--topic" "-t")
+        _playground_completions_option_seen "--skip-delete-schema" || words+=("--skip-delete-schema")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      126)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--topic" "-t" || words+=("--topic" "-t")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      127)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      128)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--connector-plugin" "-c" || words+=("--connector-plugin" "-c")
+        _playground_completions_option_seen "--connector-tag" || words+=("--connector-tag")
+        _playground_completions_option_seen "--class" || words+=("--class")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      129)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--connector-plugin" "-c" || words+=("--connector-plugin" "-c")
+        _playground_completions_option_seen "--force-refresh" || words+=("--force-refresh")
+        _playground_completions_option_seen "--last" || words+=("--last")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      130)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--days" || words+=("--days")
+        _playground_completions_option_seen "--vendor" || words+=("--vendor")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      131)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--connector-plugin" "-c" || words+=("--connector-plugin" "-c")
+        _playground_completions_option_seen "--only-show-url" || words+=("--only-show-url")
+        words+=("--connector-tag")
+        _playground_completions_option_seen "--compile" || words+=("--compile")
+        _playground_completions_option_seen "--compile-jdk-version" || words+=("--compile-jdk-version")
+        _playground_completions_option_seen "--compile-verbose" "-v" || words+=("--compile-verbose" "-v")
+        _playground_completions_option_seen "--open" "-o" || words+=("--open" "-o")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      132)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      133)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      134)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      135)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      136)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      137)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      138)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      139)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      140)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      141)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      142)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--all" || words+=("--all")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      143)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      144)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      145)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--only-show-url" || words+=("--only-show-url")
+        words+=("--connector-tag")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      146)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      147)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      148)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        _playground_completions_option_seen "--task-id" "-t" || words+=("--task-id" "-t")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      149)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      150)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      151)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      152)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        _playground_completions_option_seen "--interval" || words+=("--interval")
+        _playground_completions_option_seen "--max-wait" || words+=("--max-wait")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      153)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        _playground_completions_option_seen "--force-rest-endpoint" || words+=("--force-rest-endpoint")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      154)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        _playground_completions_option_seen "--open" "-o" || words+=("--open" "-o")
+        _playground_completions_option_seen "--force-refresh" || words+=("--force-refresh")
+        _playground_completions_option_seen "--only-show-json" || words+=("--only-show-json")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      155)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        _playground_completions_option_seen "--open" "-o" || words+=("--open" "-o")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      156)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      157)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      158)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--converter" || words+=("--converter")
+        _playground_completions_option_seen "--dlq" || words+=("--dlq")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      159)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--only-show-url" || words+=("--only-show-url")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      160)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        _playground_completions_option_seen "--level" "-l" || words+=("--level" "-l")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      161)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        _playground_completions_option_seen "--open" "-o" || words+=("--open" "-o")
+        _playground_completions_option_seen "--wait-for-log" "-w" || words+=("--wait-for-log" "-w")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      162)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        _playground_completions_option_seen "--browser" || words+=("--browser")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      163)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      164)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--connector-plugin" || words+=("--connector-plugin")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      165)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      166)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      167)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--migration-mode" || words+=("--migration-mode")
+        words+=("--sensitive-property")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      168)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--verbose" "-v" || words+=("--verbose" "-v")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        _playground_completions_option_seen "--level" "-l" || words+=("--level" "-l")
+        _playground_completions_option_seen "--package" "-p" || words+=("--package" "-p")
+        _playground_completions_option_seen "--wait-for-zero-lag" || words+=("--wait-for-zero-lag")
+        _playground_completions_option_seen "--validate" || words+=("--validate")
+        _playground_completions_option_seen "--skip-automatic-connector-config" || words+=("--skip-automatic-connector-config")
+        _playground_completions_option_seen "--offsets" || words+=("--offsets")
+        _playground_completions_option_seen "--initial-state" || words+=("--initial-state")
+        _playground_completions_option_seen "--terraform" || words+=("--terraform")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      169)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--connector" "-c" || words+=("--connector" "-c")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      170)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      171)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--instance-type" || words+=("--instance-type")
+        _playground_completions_option_seen "--size" || words+=("--size")
+        _playground_completions_option_seen "--suffix" || words+=("--suffix")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      172)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--instance" "-i" || words+=("--instance" "-i")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      173)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--instance" "-i" || words+=("--instance" "-i")
+        _playground_completions_option_seen "--enable-sync-repro-folder" || words+=("--enable-sync-repro-folder")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      174)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      175)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--instance" "-i" || words+=("--instance" "-i")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      176)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--instance" "-i" || words+=("--instance" "-i")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      177)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      178)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--instance" "-i" || words+=("--instance" "-i")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+      179)
+        local words=()
+        _playground_completions_option_seen "--vvv" "-v" || words+=("--vvv" "-v")
+        _playground_completions_option_seen "--output-level" "-o" || words+=("--output-level" "-o")
+        _playground_completions_option_seen "--help" "-h" || words+=("--help" "-h")
+        _playground_completions_option_seen "--instance" "-i" || words+=("--instance" "-i")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
+        return
+        ;;
+    esac
+  fi
+
+  if [[ "$node_id" == "5" ]] && (( positional_index >= 0 )); then
+    return
+  fi
+
+  case "$node_id:$positional_index" in
+    1:0)
+      return
+      ;;
+    4:0)
+      return
+      ;;
+    6:0)
+      return
+      ;;
+    8:0)
+      return
+      ;;
+    9:0)
+      return
+      ;;
+    11:0)
+      return
+      ;;
+    12:0)
+      return
+      ;;
+    13:0)
+      return
+      ;;
+    14:0)
+      return
+      ;;
+    168:0)
+      return
       ;;
-
   esac
 } &&
   complete -F _playground_completions playground

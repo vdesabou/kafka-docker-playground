@@ -1501,7 +1501,8 @@
           "options": [
             {
               "names": [
-                "--container"
+                "--container",
+                "-c"
               ],
               "argument": [
                 "broker",
@@ -1518,7 +1519,7 @@
                 "ksqldb-server",
                 "conduktor"
               ],
-              "description": "🐳 container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: [\"broker\", \"broker2\", \"broker3\", \"client\", \"schema-registry\", \"restproxy\", \"connect\", \"connect2\", \"connect3\", \"control-center\", \"clientrestproxy\", \"ksqldb-server\", \"conduktor\"]\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: [\"broker\", \"broker2\", \"broker3\", \"client\", \"schema-registry\", \"restproxy\", \"connect\", \"connect2\", \"connect3\", \"control-center\", \"clientrestproxy\", \"ksqldb-server\", \"conduktor\"]\n"
             },
             {
               "names": [
@@ -1577,7 +1578,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -1599,7 +1600,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             }
           ]
         },
@@ -1628,7 +1629,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             }
           ]
         },
@@ -1643,7 +1644,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             }
           ]
         },
@@ -1658,7 +1659,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -1788,7 +1789,7 @@
                 "-c"
               ],
               "argument": "CONTAINER",
-              "description": "🐳 Container name to extract GC log from\n\n❕ Provide either --file or --container, not both\n\n🔖 The GC log path is auto-detected from the container's Java process flags.\n     Falls back to searching common log locations (/tmp, /var/log, /opt).\n"
+              "description": "🐳 Container name (or pod name when cfk environment is used) to extract GC log from\n\n❕ Provide either --file or --container, not both\n\n🔖 The GC log path is auto-detected from the container's Java process flags.\n     Falls back to searching common log locations (/tmp, /var/log, /opt).\n"
             },
             {
               "names": [
@@ -1832,7 +1833,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -1861,7 +1862,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -1900,7 +1901,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -1934,7 +1935,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -1982,7 +1983,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -2066,7 +2067,7 @@
             "-c"
           ],
           "argument": "connect",
-          "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+          "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
         },
         {
           "names": [
@@ -2104,7 +2105,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             }
           ]
         },
@@ -2133,7 +2134,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             }
           ]
         },
@@ -2160,7 +2161,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -2212,7 +2213,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -2235,7 +2236,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -2264,7 +2265,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
@@ -2321,7 +2322,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             }
           ]
         },
@@ -2336,7 +2337,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             }
           ]
         },
@@ -2351,7 +2352,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             }
           ]
         },
@@ -2366,7 +2367,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             }
           ]
         },
@@ -2381,7 +2382,7 @@
                 "-c"
               ],
               "argument": "connect",
-              "description": "🐳 Container name\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
+              "description": "🐳 container name (or pod name when cfk environment is used)\n\n🎓 Tip: you can pass multiple containers by specifying --container multiple times\n\nRepeatable: ✓ Yes\n\nDefault value: connect\n"
             },
             {
               "names": [
