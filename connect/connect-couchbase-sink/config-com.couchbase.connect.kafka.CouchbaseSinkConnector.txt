@@ -10,6 +10,15 @@ Password of the Couchbase user.
 	 - Importance: HIGH
 	 - Required: true
 
+🔘 couchbase.bucket
+
+This property is required unless using the experimental AnalyticsSinkHandler.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of the Couchbase bucket to use.
+	 - Required: HIGH
+
 🔘 couchbase.username
 
 Name of the Couchbase user to authenticate as.
@@ -19,14 +28,14 @@ Name of the Couchbase user to authenticate as.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.bucket
+🔘 couchbase.bootstrap.timeout
 
-This property is required unless using the experimental AnalyticsSinkHandler.
+On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Name of the Couchbase bucket to use.
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: 30s
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 couchbase.seed.nodes
 
@@ -43,15 +52,6 @@ The network selection strategy for connecting to a Couchbase Server cluster that
 
 	 - Type: STRING
 	 - Default: auto
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.bootstrap.timeout
-
-On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
-
-	 - Type: STRING
-	 - Default: 30s
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -124,6 +124,15 @@ Password for accessing the trust store.
 ==========================
 Logging
 ==========================
+🔘 couchbase.metrics.interval
+
+The connector writes metrics to the log at this interval.
+
+	 - Type: STRING
+	 - Default: 10m
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.log.redaction
 
 Determines which kinds of sensitive log messages from the Couchbase connector will be tagged for later redaction by the Couchbase log redaction tool. NONE = no tagging; PARTIAL = user data is tagged; FULL = user, meta, and system data is tagged.
@@ -139,15 +148,6 @@ If true, document lifecycle milestones will be logged at INFO level instead of D
 
 	 - Type: BOOLEAN
 	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.metrics.interval
-
-The connector writes metrics to the log at this interval.
-
-	 - Type: STRING
-	 - Default: 10m
 	 - Importance: MEDIUM
 	 - Required: false
 
