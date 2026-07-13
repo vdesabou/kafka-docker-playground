@@ -58,7 +58,7 @@ services:
     entrypoint: >
       /bin/sh -c "
         /usr/bin/mc alias set myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY;
-        while ! /usr/bin/mc cp myminio/mybucket/topics/minio_topic/partition\=0/minio_topic+0+0000000000.avro /tmp/; do
+        while ! /usr/bin/mc cp myminio/mybucket/topics/minio-topic/partition\=0/minio-topic+0+0000000000.avro /tmp/; do
           sleep 5
         done
         exit 0;

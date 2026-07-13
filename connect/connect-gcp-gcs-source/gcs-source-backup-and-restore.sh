@@ -63,7 +63,7 @@ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storag
 
 log "Removing existing objects in GCS, if applicable"
 set +e
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storage rm gs://$GCS_BUCKET_NAME/topics/gcs_topic/** --recursive
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storage rm gs://$GCS_BUCKET_NAME/topics/gcs-topic/** --recursive
 set -e
 
 
@@ -71,8 +71,8 @@ set -e
 ## SINK
 ##########################
 
-log "Sending messages to topic gcs_topic"
-playground topic produce -t gcs_topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+log "Sending messages to topic gcs-topic"
+playground topic produce -t gcs-topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -91,7 +91,7 @@ playground connector create-or-update --connector GCSSinkConnector  << EOF
 {
   "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
   "tasks.max" : "1",
-  "topics" : "gcs_topic",
+  "topics" : "gcs-topic",
   "gcs.bucket.name" : "$GCS_BUCKET_NAME",
   "gcs.part.size": "5242880",
   "flush.size": "3",
@@ -111,12 +111,12 @@ EOF
 sleep 10
 
 log "Listing objects of in GCS"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storage ls gs://$GCS_BUCKET_NAME/topics/gcs_topic/partition=0/
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storage ls gs://$GCS_BUCKET_NAME/topics/gcs-topic/partition=0/
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-docker run -i --volumes-from gcloud-config -v /tmp:/tmp/ google/cloud-sdk:latest gcloud storage cp gs://$GCS_BUCKET_NAME/topics/gcs_topic/partition=0/gcs_topic+0+0000000000.avro /tmp/gcs_topic+0+0000000000.avro
+docker run -i --volumes-from gcloud-config -v /tmp:/tmp/ google/cloud-sdk:latest gcloud storage cp gs://$GCS_BUCKET_NAME/topics/gcs-topic/partition=0/gcs-topic+0+0000000000.avro /tmp/gcs-topic+0+0000000000.avro
 
-playground  tools read-avro-file --file /tmp/gcs_topic+0+0000000000.avro
+playground  tools read-avro-file --file /tmp/gcs-topic+0+0000000000.avro
 
 docker rm -f gcloud-config
 
@@ -142,5 +142,5 @@ EOF
 
 sleep 10
 
-log "Verify messages are in topic copy_of_gcs_topic"
-playground topic consume --topic copy_of_gcs_topic --min-expected-messages 9 --timeout 60
+log "Verify messages are in topic copy_of_gcs-topic"
+playground topic consume --topic copy_of_gcs-topic --min-expected-messages 9 --timeout 60

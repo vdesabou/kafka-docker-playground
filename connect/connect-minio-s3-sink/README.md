@@ -28,7 +28,7 @@ $ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.s3.S3SinkConnector",
                "tasks.max": "1",
-               "topics": "minio_topic",
+               "topics": "minio-topic",
                "s3.bucket.name": "mybucket",
                "s3.part.size": 5242880,
                "store.url": "http://minio:9000",
@@ -42,10 +42,10 @@ $ curl -X PUT \
      http://localhost:8083/connectors/minio-sink/config | jq .
 ```
 
-Messages are sent to `minio_topic` topic using:
+Messages are sent to `minio-topic` topic using:
 
 ```bash
-$ playground topic produce -t minio_topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+$ playground topic produce -t minio-topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -73,9 +73,9 @@ $ docker container logs --tail=4 list-buckets
 
 ```
 Added `myminio` successfully.
-[2020-02-05 12:41:28 UTC]    213B topics/minio_topic/partition=0/minio_topic+0+0000000000.avro
-[2020-02-05 12:41:28 UTC]    213B topics/minio_topic/partition=0/minio_topic+0+0000000003.avro
-[2020-02-05 12:41:28 UTC]    213B topics/minio_topic/partition=0/minio_topic+0+0000000006.avro
+[2020-02-05 12:41:28 UTC]    213B topics/minio-topic/partition=0/minio-topic+0+0000000000.avro
+[2020-02-05 12:41:28 UTC]    213B topics/minio-topic/partition=0/minio-topic+0+0000000003.avro
+[2020-02-05 12:41:28 UTC]    213B topics/minio-topic/partition=0/minio-topic+0+0000000006.avro
 ```
 
 Getting one of the avro files locally and displaying content with avro-tools:
@@ -83,7 +83,7 @@ Getting one of the avro files locally and displaying content with avro-tools:
 ```bash
 $ docker container restart copy-files
 $ docker container logs --tail=3 copy-files
-$ playground  tools read-avro-file --file /tmp/minio_topic+0+0000000000.avro
+$ playground  tools read-avro-file --file /tmp/minio-topic+0+0000000000.avro
 ```
 
 ```json

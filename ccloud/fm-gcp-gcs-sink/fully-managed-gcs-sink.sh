@@ -34,9 +34,9 @@ GCS_BUCKET_REGION=${1:-europe-west2}
 bootstrap_ccloud_environment "gcp" "$GCS_BUCKET_REGION"
 
 set +e
-playground topic delete --topic gcs_topic
+playground topic delete --topic gcs-topic
 sleep 3
-playground topic create --topic gcs_topic --nb-partitions 1
+playground topic create --topic gcs-topic --nb-partitions 1
 set -e
 
 log "Doing gcloud authentication"
@@ -55,11 +55,11 @@ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storag
 
 log "Removing existing objects in GCS, if applicable"
 set +e
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storage rm gs://$GCS_BUCKET_NAME/topics/gcs_topic/** --recursive
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storage rm gs://$GCS_BUCKET_NAME/topics/gcs-topic/** --recursive
 set -e
 
-log "Sending messages to topic gcs_topic"
-playground topic produce -t gcs_topic --nb-messages 1000 --forced-value '{"f1":"value%g"}' << 'EOF'
+log "Sending messages to topic gcs-topic"
+playground topic produce -t gcs-topic --nb-messages 1000 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -85,7 +85,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "kafka.auth.mode": "KAFKA_API_KEY",
   "kafka.api.key": "$CLOUD_KEY",
   "kafka.api.secret": "$CLOUD_SECRET",
-  "topics": "gcs_topic",
+  "topics": "gcs-topic",
   "gcs.credentials.config" : "$GCP_KEYFILE_CONTENT",
   "gcs.bucket.name" : "$GCS_BUCKET_NAME",
   "input.data.format" : "AVRO",
@@ -101,12 +101,12 @@ wait_for_ccloud_connector_up $connector_name 180
 sleep 10
 
 log "Listing objects of in GCS"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storage ls gs://$GCS_BUCKET_NAME/topics/gcs_topic/** --recursive
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storage ls gs://$GCS_BUCKET_NAME/topics/gcs-topic/** --recursive
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-docker run -i --volumes-from gcloud-config -v /tmp:/tmp/ google/cloud-sdk:latest gcloud storage cp gs://$GCS_BUCKET_NAME/topics/gcs_topic/*/*/*/*/gcs_topic+0+0000000000.avro /tmp/gcs_topic+0+0000000000.avro
+docker run -i --volumes-from gcloud-config -v /tmp:/tmp/ google/cloud-sdk:latest gcloud storage cp gs://$GCS_BUCKET_NAME/topics/gcs-topic/*/*/*/*/gcs-topic+0+0000000000.avro /tmp/gcs-topic+0+0000000000.avro
 
-playground  tools read-avro-file --file /tmp/gcs_topic+0+0000000000.avro
+playground  tools read-avro-file --file /tmp/gcs-topic+0+0000000000.avro
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue

@@ -71,10 +71,10 @@ $ curl -X PUT \
      http://localhost:8083/connectors/s3-source/config | jq .
 ```
 
-Verifying topic `copy_of_s3_topic`
+Verifying topic `copy_of_s3-topic`
 
 ```bash
-playground topic consume --topic copy_of_s3_topic --min-expected-messages 9 --timeout 60
+playground topic consume --topic copy_of_s3-topic --min-expected-messages 9 --timeout 60
 ```
 
 Results:

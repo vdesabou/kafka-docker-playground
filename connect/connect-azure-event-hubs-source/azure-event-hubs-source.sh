@@ -90,7 +90,7 @@ log "Creating Azure Event Hubs Source connector"
 playground connector create-or-update --connector azure-event-hubs-source  << EOF
 {
     "connector.class": "io.confluent.connect.azure.eventhubs.EventHubsSourceConnector",
-    "kafka.topic": "event_hub_topic",
+    "kafka.topic": "event-hub-topic",
     "tasks.max": "1",
     "max.events": "1",
     "azure.eventhubs.sas.keyname": "RootManageSharedAccessKey",
@@ -113,5 +113,5 @@ playground container exec --container simple-send --command "nohup java -DAZURE_
 
 sleep 5
 
-log "Verifying topic event_hub_topic"
-playground topic consume --topic event_hub_topic --min-expected-messages 2 --timeout 60
+log "Verifying topic event-hub-topic"
+playground topic consume --topic event-hub-topic --min-expected-messages 2 --timeout 60

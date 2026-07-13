@@ -125,7 +125,7 @@ playground connector create-or-update --connector azure-datalake-gen2-sink  << E
 {
     "connector.class": "io.confluent.connect.azure.datalake.gen2.AzureDataLakeGen2SinkConnector",
     "tasks.max": "1",
-    "topics": "datalake_topic",
+    "topics": "datalake-topic",
     "flush.size": "3",
     "azure.datalake.gen2.client.id": "\${file:/data:AZURE_DATALAKE_CLIENT_ID}",
     "azure.datalake.gen2.client.key": "\${file:/data:AZURE_DATALAKE_CLIENT_PASSWORD}",
@@ -139,7 +139,7 @@ playground connector create-or-update --connector azure-datalake-gen2-sink  << E
 EOF
 
 
-playground topic produce -t datalake_topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+playground topic produce -t datalake-topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -158,6 +158,6 @@ log "Listing ${AZURE_DATALAKE_ACCOUNT_NAME} in Azure Data Lake"
 az storage fs file list --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}" --file-system topics
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-az storage blob download  --container-name topics --name datalake_topic/partition=0/datalake_topic+0+0000000000.avro --file /tmp/datalake_topic+0+0000000000.avro --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}"
+az storage blob download  --container-name topics --name datalake-topic/partition=0/datalake-topic+0+0000000000.avro --file /tmp/datalake-topic+0+0000000000.avro --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}"
 
-playground  tools read-avro-file --file /tmp/datalake_topic+0+0000000000.avro
+playground  tools read-avro-file --file /tmp/datalake-topic+0+0000000000.avro

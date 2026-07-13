@@ -18,9 +18,9 @@ handle_aws_credentials
 bootstrap_ccloud_environment "aws" "$AWS_REGION"
 
 set +e
-playground topic delete --topic s3_topic
+playground topic delete --topic s3-topic
 sleep 3
-playground topic create --topic s3_topic --nb-partitions 1
+playground topic create --topic s3-topic --nb-partitions 1
 set -e
 
 AWS_BUCKET_NAME=pg-bucket-${USER}
@@ -43,13 +43,13 @@ set +e
 aws s3 rm s3://$AWS_BUCKET_NAME/$TAG --recursive --region $AWS_REGION
 set -e
 
-log "Creating s3_topic topic in Confluent Cloud (auto.create.topics.enable=false)"
+log "Creating s3-topic topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
-playground topic create --topic s3_topic
+playground topic create --topic s3-topic
 set -e
 
-log "Sending messages to topic s3_topic"
-playground topic produce -t s3_topic --nb-messages 1000 --forced-value '{"f1":"value%g"}' << 'EOF'
+log "Sending messages to topic s3-topic"
+playground topic produce -t s3-topic --nb-messages 1000 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -75,7 +75,7 @@ playground connector create-or-update --connector $connector_name << EOF
     "kafka.auth.mode": "KAFKA_API_KEY",
     "kafka.api.key": "$CLOUD_KEY",
     "kafka.api.secret": "$CLOUD_SECRET",
-    "topics": "s3_topic",
+    "topics": "s3-topic",
     "topics.dir": "$TAG",
     "authentication.method":"IAM Roles",
     "provider.integration.id":"$S3_PROVIDER_INTEGRATION_ID",
@@ -97,11 +97,11 @@ sleep 10
 # aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-aws s3 cp --only-show-errors --recursive s3://$AWS_BUCKET_NAME/$TAG/s3_topic /tmp/s3_topic
+aws s3 cp --only-show-errors --recursive s3://$AWS_BUCKET_NAME/$TAG/s3-topic /tmp/s3-topic
 
-cp /tmp/s3_topic/*/*/*/*/s3_topic+0+0000000000.avro /tmp/s3_topic+0+0000000000.avro
+cp /tmp/s3-topic/*/*/*/*/s3-topic+0+0000000000.avro /tmp/s3-topic+0+0000000000.avro
 
-playground  tools read-avro-file --file /tmp/s3_topic+0+0000000000.avro | grep value999
+playground  tools read-avro-file --file /tmp/s3-topic+0+0000000000.avro | grep value999
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue

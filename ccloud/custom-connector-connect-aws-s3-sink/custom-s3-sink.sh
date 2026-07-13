@@ -108,13 +108,13 @@ set +e
 aws s3 rm s3://$AWS_BUCKET_NAME/$TAG --recursive --region $AWS_REGION
 set -e
 
-log "Creating s3_topic topic in Confluent Cloud (auto.create.topics.enable=false)"
+log "Creating s3-topic topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
-playground topic create --topic s3_topic
+playground topic create --topic s3-topic
 set -e
 
-log "Sending messages to topic s3_topic"
-playground topic produce -t s3_topic --nb-messages 9 --forced-value '{"f1":"value%g"}' << 'EOF'
+log "Sending messages to topic s3-topic"
+playground topic produce -t s3-topic --nb-messages 9 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -127,7 +127,7 @@ playground topic produce -t s3_topic --nb-messages 9 --forced-value '{"f1":"valu
 }
 EOF
 
-playground topic produce -t s3_topic --nb-messages 9 << 'EOF'
+playground topic produce -t s3-topic --nb-messages 9 << 'EOF'
 this is bad record
 EOF
 
@@ -150,7 +150,7 @@ playground connector create-or-update --connector $connector_name << EOF
     "kafka.api.secret": "$CLOUD_SECRET",
     "name": "$connector_name",
     "tasks.max": "1",
-    "topics": "s3_topic",
+    "topics": "s3-topic",
     "s3.region": "$AWS_REGION",
     "s3.bucket.name": "$AWS_BUCKET_NAME",
     "topics.dir": "$TAG",
@@ -182,7 +182,7 @@ sleep 10
 # aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/$TAG/s3_topic/partition=0/s3_topic+0+0000000000.avro s3_topic+0+0000000000.avro
+aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/$TAG/s3-topic/partition=0/s3-topic+0+0000000000.avro s3-topic+0+0000000000.avro
 
-playground tools read-avro-file --file $PWD/s3_topic+0+0000000000.avro
-rm -f s3_topic+0+0000000000.avro
+playground tools read-avro-file --file $PWD/s3-topic+0+0000000000.avro
+rm -f s3-topic+0+0000000000.avro

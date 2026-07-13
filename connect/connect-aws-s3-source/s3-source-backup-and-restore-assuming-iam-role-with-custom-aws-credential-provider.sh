@@ -92,7 +92,7 @@ playground connector create-or-update --connector s3-sink  << EOF
 {
     "connector.class": "io.confluent.connect.s3.S3SinkConnector",
     "tasks.max": "1",
-    "topics": "s3_topic",
+    "topics": "s3-topic",
     "s3.region": "$AWS_REGION",
     "s3.bucket.name": "$AWS_BUCKET_NAME",
     "topics.dir": "$TAG",
@@ -115,8 +115,8 @@ playground connector create-or-update --connector s3-sink  << EOF
 EOF
 
 
-log "Sending messages to topic s3_topic"
-playground topic produce -t s3_topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+log "Sending messages to topic s3-topic"
+playground topic produce -t s3-topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -135,10 +135,10 @@ sleep 10
 # aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/$TAG/s3_topic/partition=0/s3_topic+0+0000000000.avro s3_topic+0+0000000000.avro
+aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/$TAG/s3-topic/partition=0/s3-topic+0+0000000000.avro s3-topic+0+0000000000.avro
 
-playground tools read-avro-file --file $PWD/s3_topic+0+0000000000.avro
-rm -f s3_topic+0+0000000000.avro
+playground tools read-avro-file --file $PWD/s3-topic+0+0000000000.avro
+rm -f s3-topic+0+0000000000.avro
 
 log "Creating Backup and Restore S3 Source connector with bucket name <$AWS_BUCKET_NAME>"
 playground connector create-or-update --connector s3-source  << EOF
@@ -261,5 +261,5 @@ EOF
 
 sleep 10
 
-log "Verifying topic copy_of_s3_topic"
-playground topic consume --topic copy_of_s3_topic --min-expected-messages 9 --timeout 60
+log "Verifying topic copy_of_s3-topic"
+playground topic consume --topic copy_of_s3-topic --min-expected-messages 9 --timeout 60

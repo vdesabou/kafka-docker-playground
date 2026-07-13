@@ -54,9 +54,9 @@ az storage container create \
 bootstrap_ccloud_environment "azure" "$AZURE_REGION"
 
 set +e
-playground topic delete --topic blob_topic
+playground topic delete --topic blob-topic
 sleep 3
-playground topic create --topic blob_topic --nb-partitions 1
+playground topic create --topic blob-topic --nb-partitions 1
 set -e
 
 connector_name="AzureBlobSink_$USER"
@@ -72,7 +72,7 @@ playground connector create-or-update --connector $connector_name << EOF
     "kafka.auth.mode": "KAFKA_API_KEY",
     "kafka.api.key": "$CLOUD_KEY",
     "kafka.api.secret": "$CLOUD_SECRET",
-    "topics": "blob_topic",
+    "topics": "blob-topic",
     "azblob.account.name": "$AZURE_ACCOUNT_NAME",
     "azblob.account.key": "$AZURE_ACCOUNT_KEY",
     "azblob.container.name": "$AZURE_CONTAINER_NAME",
@@ -85,8 +85,8 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-log "Sending messages to topic blob_topic"
-playground topic produce -t blob_topic --nb-messages 1000 << 'EOF'
+log "Sending messages to topic blob-topic"
+playground topic produce -t blob-topic --nb-messages 1000 << 'EOF'
 {
     "type": "record",
     "namespace": "com.github.vdesabou",
@@ -125,9 +125,9 @@ playground connector show-lag --connector $connector_name
 # az storage fs file list --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" -f "${AZURE_CONTAINER_NAME}" --output table
 
 # log "Getting one of the avro files locally and displaying content with avro-tools"
-# az storage blob download --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --name topics/blob_topic/year=2024/month=04/day=04/hour=08/blob_topic+0+0000000000.avro --file /tmp/blob_topic+0+0000000000.avro
+# az storage blob download --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --name topics/blob-topic/year=2024/month=04/day=04/hour=08/blob-topic+0+0000000000.avro --file /tmp/blob-topic+0+0000000000.avro
 
-# playground  tools read-avro-file --file /tmp/blob_topic+0+0000000000.avro
+# playground  tools read-avro-file --file /tmp/blob-topic+0+0000000000.avro
 
 
 log "Do you want to delete the fully managed connector $connector_name ?"

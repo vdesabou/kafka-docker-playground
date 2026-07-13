@@ -65,7 +65,7 @@ $ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.s3.S3SinkConnector",
                "tasks.max": "1",
-               "topics": "s3_topic",
+               "topics": "s3-topic",
                "s3.region": "$AWS_REGION",
                "s3.bucket.name": "$AWS_BUCKET_NAME",
                "s3.part.size": "52428801",
@@ -77,10 +77,10 @@ $ curl -X PUT \
      http://localhost:8083/connectors/s3-sink/config | jq .
 ```
 
-Messages are sent to `s3_topic` topic using:
+Messages are sent to `s3-topic` topic using:
 
 ```
-$ playground topic produce -t s3_topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+$ playground topic produce -t s3-topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -106,7 +106,7 @@ Results:
 {
     "Contents": [
         {
-            "Key": "topics/s3_topic/partition=0/s3_topic+0+0000000000.avro",
+            "Key": "topics/s3-topic/partition=0/s3-topic+0+0000000000.avro",
             "LastModified": "2020-09-09T10:00:02.000Z",
             "ETag": "\"e3df080e778bf44ddef575a8b9157f7f-1\"",
             "Size": 213,
@@ -117,7 +117,7 @@ Results:
             }
         },
         {
-            "Key": "topics/s3_topic/partition=0/s3_topic+0+0000000003.avro",
+            "Key": "topics/s3-topic/partition=0/s3-topic+0+0000000003.avro",
             "LastModified": "2020-09-09T10:00:03.000Z",
             "ETag": "\"5d5d23e9b245019ceeacb9e579fe1091-1\"",
             "Size": 213,
@@ -128,7 +128,7 @@ Results:
             }
         },
         {
-            "Key": "topics/s3_topic/partition=0/s3_topic+0+0000000006.avro",
+            "Key": "topics/s3-topic/partition=0/s3-topic+0+0000000006.avro",
             "LastModified": "2020-09-09T10:00:04.000Z",
             "ETag": "\"3dceb80cbe9e6eb01b3a63395ef8c18a-1\"",
             "Size": 213,

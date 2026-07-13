@@ -42,8 +42,8 @@ playground container exec --container pivotal-gemfire --command "sh /opt/pivotal
 
 sleep 8
 
-log "Sending messages to topic input_topic"
-playground topic produce -t input_topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+log "Sending messages to topic input-topic"
+playground topic produce -t input-topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -61,7 +61,7 @@ playground connector create-or-update --connector pivotal-gemfire-sink  << EOF
 {
   "connector.class": "io.confluent.connect.pivotal.gemfire.PivotalGemfireSinkConnector",
   "tasks.max": "1",
-  "topics": "input_topic",
+  "topics": "input-topic",
   "gemfire.locator.host":"pivotal-gemfire",
   "gemfire.locator.port":"10334",
   "gemfire.username":"",

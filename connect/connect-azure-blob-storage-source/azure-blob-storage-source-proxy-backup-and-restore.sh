@@ -82,7 +82,7 @@ playground connector create-or-update --connector azure-blob-sink  << EOF
 {
     "connector.class": "io.confluent.connect.azure.blob.AzureBlobStorageSinkConnector",
     "tasks.max": "1",
-    "topics": "blob_topic",
+    "topics": "blob-topic",
     "flush.size": "3",
     "azblob.account.name": "\${file:/data:AZURE_ACCOUNT_NAME}",
     "azblob.account.key": "\${file:/data:AZURE_ACCOUNT_KEY}",
@@ -99,8 +99,8 @@ playground connector create-or-update --connector azure-blob-sink  << EOF
 EOF
 
 
-log "Sending messages to topic blob_topic"
-playground topic produce -t blob_topic --nb-messages 10 << 'EOF'
+log "Sending messages to topic blob-topic"
+playground topic produce -t blob-topic --nb-messages 10 << 'EOF'
 {
     "type": "record",
     "namespace": "com.github.vdesabou",
@@ -137,9 +137,9 @@ log "Listing objects of container ${AZURE_CONTAINER_NAME} in Azure Blob Storage"
 az storage fs file list --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" -f "${AZURE_CONTAINER_NAME}" --output table
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-az storage blob download --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --name topics/blob_topic/partition=0/blob_topic+0+0000000000.avro --file /tmp/blob_topic+0+0000000000.avro
+az storage blob download --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --name topics/blob-topic/partition=0/blob-topic+0+0000000000.avro --file /tmp/blob-topic+0+0000000000.avro
 
-playground  tools read-avro-file --file /tmp/blob_topic+0+0000000000.avro
+playground  tools read-avro-file --file /tmp/blob-topic+0+0000000000.avro
 
 
 log "Creating Azure Blob Storage Source connector"
@@ -164,5 +164,5 @@ EOF
 
 sleep 5
 
-log "Verifying topic copy_of_blob_topic"
-playground topic consume --topic copy_of_blob_topic --min-expected-messages 3 --timeout 60
+log "Verifying topic copy_of_blob-topic"
+playground topic consume --topic copy_of_blob-topic --min-expected-messages 3 --timeout 60

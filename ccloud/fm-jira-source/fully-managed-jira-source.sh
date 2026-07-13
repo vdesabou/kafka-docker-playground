@@ -29,9 +29,9 @@ fi
 bootstrap_ccloud_environment
 
 set +e
-playground topic delete --topic datalake_topic
+playground topic delete --topic datalake-topic
 sleep 3
-playground topic create --topic datalake_topic --nb-partitions 1
+playground topic create --topic datalake-topic --nb-partitions 1
 set -e
 
 

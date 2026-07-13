@@ -104,9 +104,9 @@ az storage account create \
 bootstrap_ccloud_environment "azure" "$AZURE_REGION"
 
 set +e
-playground topic delete --topic datalake_topic
+playground topic delete --topic datalake-topic
 sleep 3
-playground topic create --topic datalake_topic --nb-partitions 1
+playground topic create --topic datalake-topic --nb-partitions 1
 set -e
 
 
@@ -123,7 +123,7 @@ playground connector create-or-update --connector $connector_name << EOF
   "kafka.auth.mode": "KAFKA_API_KEY",
   "kafka.api.key": "$CLOUD_KEY",
   "kafka.api.secret": "$CLOUD_SECRET",
-  "topics": "datalake_topic",
+  "topics": "datalake-topic",
   "azure.datalake.gen2.client.id": "$AZURE_DATALAKE_CLIENT_ID",
   "azure.datalake.gen2.client.key": "$AZURE_DATALAKE_CLIENT_PASSWORD",
   "azure.datalake.gen2.account.name": "$AZURE_DATALAKE_ACCOUNT_NAME",
@@ -137,7 +137,7 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-playground topic produce -t datalake_topic --nb-messages 1000 --forced-value '{"f1":"value%g"}' << 'EOF'
+playground topic produce -t datalake-topic --nb-messages 1000 --forced-value '{"f1":"value%g"}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -158,9 +158,9 @@ az storage fs file list --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}" --file-s
 playground connector show-lag --connector $connector_name
 
 # log "Getting one of the avro files locally and displaying content with avro-tools"
-# az storage blob download  --container-name topics --name datalake_topic/partition=0/datalake_topic+0+0000000000.avro --file /tmp/datalake_topic+0+0000000000.avro --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}"
+# az storage blob download  --container-name topics --name datalake-topic/partition=0/datalake-topic+0+0000000000.avro --file /tmp/datalake-topic+0+0000000000.avro --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}"
 
-# playground  tools read-avro-file --file /tmp/datalake_topic+0+0000000000.avro
+# playground  tools read-avro-file --file /tmp/datalake-topic+0+0000000000.avro
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
