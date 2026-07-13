@@ -28305,18 +28305,11 @@ playground_topic_consume_command() {
           then
             # check if it is base64 encoded
             set +e
-            base64=$(echo "$payload" | tr -d '"' | base64 -d 2>/dev/null)
-            if [ $? -eq 0 ]
+            # Avoid command substitution on raw binary output (can contain NUL bytes).
+            if printf '%s' "$payload" | tr -d '"' | base64 -d 2>/dev/null | iconv -f UTF-8 -t UTF-8 >/dev/null 2>&1
             then
-              if [ "$base64" != "" ]
-              then
-                decoded=$(echo "$base64" | iconv -t UTF-8//IGNORE 2>/dev/null)
-                if [ "$decoded" == "$base64" ]
-                then
-                  logwarn "🤖 Data is base64 encoded, payload will be decoded"
-                  is_base64=1
-                fi
-              fi
+              logwarn "🤖 Data is base64 encoded, payload will be decoded"
+              is_base64=1
             fi
             set -e
           fi
@@ -28326,9 +28319,9 @@ playground_topic_consume_command() {
 
         if [ $is_base64 -eq 1 ]
         then
-          base64=$(echo "$payload" | tr -d '"' | base64 -d 2>/dev/null)
-          if [ -n "$base64" ]; then
-            line_with_date=$(awk -v new_value="$base64" -v l="$line_with_date" -v idx="$value_field_index" 'BEGIN{FS=OFS="|"} {
+          decoded_payload=$(printf '%s' "$payload" | tr -d '"' | base64 -d 2>/dev/null | iconv -t UTF-8//IGNORE 2>/dev/null | tr -d '\000')
+          if [ -n "$decoded_payload" ]; then
+            line_with_date=$(awk -v new_value="$decoded_payload" -v l="$line_with_date" -v idx="$value_field_index" 'BEGIN{FS=OFS="|"} {
               split(l,a,"|"); a[idx]=new_value;
               for(i=1;i<=length(a);i++){printf i==length(a)?a[i]"\n":a[i]"|"}
             }')
