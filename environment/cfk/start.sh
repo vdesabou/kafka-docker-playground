@@ -61,6 +61,7 @@ export CP_INIT_IMAGE CP_INIT_TAG
 : "${CFK_TMPFS_DEFAULT_SIZE_LIMIT:=256Mi}"
 : "${CFK_TMPFS_SHM_SIZE_LIMIT:=1Gi}"
 : "${CFK_CONNECTOR_ARCHIVE_HOST:=}"
+: "${CFK_OPERATOR_CHART_VERSION:=}"
 
 : "${CFK_CONNECT_PLUGIN_PATH:=}"
 if [[ -n "${CONNECT_PLUGIN_PATH+x}" ]]
@@ -2814,7 +2815,13 @@ fi
 helm repo update confluentinc
 
 log "Install Confluent for Kubernetes"
-helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes
+if [[ -n "$CFK_OPERATOR_CHART_VERSION" ]]
+then
+  log "📌 Using CFK Helm chart version ${CFK_OPERATOR_CHART_VERSION}"
+  helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes --version "$CFK_OPERATOR_CHART_VERSION"
+else
+  helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes
+fi
 
 log "Deploy Confluent Platform"
 CFK_MANIFEST_FILE=$(mktemp)
