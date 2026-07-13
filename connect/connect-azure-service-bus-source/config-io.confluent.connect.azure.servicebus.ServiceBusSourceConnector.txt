@@ -41,7 +41,7 @@ The name of Kafka topic to publish data to. Only a single topic must be specifie
 	 - Required: true
 
 ==========================
- Azure Service Bus
+Azure Service Bus
 ==========================
 🔘 azure.servicebus.sas.keyname
 
