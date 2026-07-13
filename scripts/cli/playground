@@ -124,7 +124,6 @@ playground_usage() {
   printf "  %s   🎯 Take a java thread dump\n" "$(green "debug thread-dump")                         "
   printf "  %s   👻 Take a heap dump\n" "$(green "debug heap-dump")                           "
   printf "  %s   🔬 Analyze a heap dump file using Eclipse MAT (Memory Analyzer Tool)\n" "$(green "debug heap-analyze")                        "
-  printf "  %s   📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n" "$(green "debug cfk-bundle-analyze")                  "
   printf "  %s   📈 Analyze JVM Garbage Collection logs\n" "$(green "debug gc-analyze")                          "
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "debug tcp-dump")                            "
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "debug block-traffic")                       "
@@ -132,6 +131,7 @@ playground_usage() {
   printf "  %s   ✂️ jscissors is an instrumentation framework and can help to analyse control flow and perform some specific logging\n" "$(green "debug jscissors")                           "
   printf "  %s   🛩️ Record flight recorder\n" "$(green "debug flight-recorder")                     "
   printf "  %s   🧬 Set log level for any package\n" "$(green "debug log-level")                           "
+  printf "  %s   🐞 CFK debug sub-commands\n" "$(green "debug cfk")                                 "
   echo
   printf "%s\n" "$(bold "Container commands:")"
   printf "  %s   🐳 Container commands\n" "$(green "container")                                 "
@@ -4335,7 +4335,6 @@ playground_debug_usage() {
   printf "  %s   🎯 Take a java thread dump\n" "$(green "thread-dump")             "
   printf "  %s   👻 Take a heap dump\n" "$(green "heap-dump")               "
   printf "  %s   🔬 Analyze a heap dump file using Eclipse MAT (Memory Analyzer Tool)\n" "$(green "heap-analyze")            "
-  printf "  %s   📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n" "$(green "cfk-bundle-analyze")      "
   printf "  %s   📈 Analyze JVM Garbage Collection logs\n" "$(green "gc-analyze")              "
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "tcp-dump")                "
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "block-traffic")           "
@@ -4343,6 +4342,10 @@ playground_debug_usage() {
   printf "  %s   ✂️ jscissors is an instrumentation framework and can help to analyse control flow and perform some specific logging\n" "$(green "jscissors")               "
   printf "  %s   🛩️ Record flight recorder\n" "$(green "flight-recorder")         "
   printf "  %s   🧬 Set log level for any package\n" "$(green "log-level")               "
+  echo
+  printf "%s\n" "$(bold "Debug commands:")"
+  printf "  %s   🐞 CFK debug sub-commands\n" "$(green "cfk")                     "
+  printf "  %s   📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n" "$(green "cfk cfk-bundle-analyze")  "
   echo
 
   # :command.long_usage
@@ -4654,82 +4657,6 @@ playground_debug_heap_analyze_usage() {
     printf "  playground debug heap-analyze --file heap-dump-connect-2026-04-08.hprof\n"
     printf "  playground debug heap-analyze -f heap-dump-broker.hprof --output-dir\n  ./analysis\n"
     printf "  playground debug heap-analyze -f heap-dump-connect.hprof --report-type leaks\n"
-    echo
-
-  fi
-}
-
-# :command.usage
-playground_debug_cfk_bundle_analyze_usage() {
-  if [[ -n $long_usage ]]; then
-    printf "playground debug cfk-bundle-analyze\n\n"
-    printf "  📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n  \n  🔍 Scans pod describes, events, component CRs, and logs for ~30 issue\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling, …) and prints concrete remediation steps per category.\n  \n  🔒 Sanitization (IPs / hostnames / emails / secrets) is ON by default — pass\n  --no-sanitize only for internal/test bundles.\n  \n  🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.\n  \n  🔖 Use --json to emit machine-readable output for downstream tooling.\n\n"
-  else
-    printf "playground debug cfk-bundle-analyze - 📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n\n"
-  fi
-
-  printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground debug cfk-bundle-analyze [OPTIONS]\n"
-  printf "  playground debug cfk-bundle-analyze --help | -h\n"
-  echo
-
-  # :command.long_usage
-  if [[ -n "$long_usage" ]]; then
-    # :command.usage_options
-    printf "%s\n" "$(bold "== Options ==")"
-
-    # :command.usage_flags
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--bundle, -b PATH (required)")"
-    printf "    🗂️  Path to the CFK support bundle (directory or .tar/.tar.gz/.tgz/.zip)\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--json")"
-    printf "    📄 Emit machine-readable JSON (includes per-issue recommendation) instead of\n    the text report\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--no-sanitize")"
-    printf "    ⚠️  Disable sanitization of IPs, hostnames, emails, and credentials.\n    \n    🚫 NEVER use this for customer bundles. Internal/test bundles only.\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--severity LEVEL")"
-    printf "    🎚️  Filter issues by minimum severity (critical | high | medium | low)\n"
-    printf "    %s\n" "Allowed: critical, high, medium, low"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--top N")"
-    printf "    🔢 Max number of issues to display per category in text mode (default: 5)\n"
-    printf "    %s\n" "Default: 5"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--html")"
-    printf "    🌐 Generate a self-contained HTML report and open it in the default browser\n    \n    ❕ No external CDN/network needed — single offline-viewable file you can\n    share.\n"
-    echo
-
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--output-dir DIR")"
-    printf "    📁 Directory for the HTML report (default: ./cfk-reports). Only used with\n    --html.\n"
-    printf "    %s\n" "Default: ./cfk-reports"
-    echo
-
-    # :command.usage_fixed_flags
-    printf "  %s\n" "$(magenta "--help, -h")"
-    printf "    Show this help\n"
-    echo
-
-    # :command.usage_examples
-    printf "%s\n" "$(bold "Examples")"
-    printf "  playground debug cfk-bundle-analyze --bundle ./customer-bundle.tar.gz\n"
-    printf "  playground debug cfk-bundle-analyze --bundle ./extracted-bundle/\n"
-    printf "  playground debug cfk-bundle-analyze --bundle ./bundle.zip --severity high\n"
-    printf "  playground debug cfk-bundle-analyze --bundle ./bundle.tar.gz --json >\n  report.json\n"
-    printf "  playground debug cfk-bundle-analyze -b ./bundle.tgz --html\n"
-    printf "  playground debug cfk-bundle-analyze -b ./bundle.tgz --html --output-dir\n  ./reports\n"
     echo
 
   fi
@@ -5155,6 +5082,108 @@ playground_debug_log_level_set_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_debug_cfk_usage() {
+  printf "playground debug cfk - 🐞 CFK debug sub-commands\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground debug cfk COMMAND\n"
+  printf "  playground debug cfk [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n" "$(green "cfk-bundle-analyze")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_debug_cfk_cfk_bundle_analyze_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground debug cfk cfk-bundle-analyze\n\n"
+    printf "  📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n  \n  🔍 Scans pod describes, events, component CRs, and logs for ~30 issue\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling, …) and prints concrete remediation steps per category.\n  \n  🔒 Sanitization (IPs / hostnames / emails / secrets) is ON by default — pass\n  --no-sanitize only for internal/test bundles.\n  \n  🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.\n  \n  🔖 Use --json to emit machine-readable output for downstream tooling.\n\n"
+  else
+    printf "playground debug cfk cfk-bundle-analyze - 📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground debug cfk cfk-bundle-analyze [OPTIONS]\n"
+  printf "  playground debug cfk cfk-bundle-analyze --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--bundle, -b PATH (required)")"
+    printf "    🗂️  Path to the CFK support bundle (directory or .tar/.tar.gz/.tgz/.zip)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📄 Emit machine-readable JSON (includes per-issue recommendation) instead of\n    the text report\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-sanitize")"
+    printf "    ⚠️  Disable sanitization of IPs, hostnames, emails, and credentials.\n    \n    🚫 NEVER use this for customer bundles. Internal/test bundles only.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--severity LEVEL")"
+    printf "    🎚️  Filter issues by minimum severity (critical | high | medium | low)\n"
+    printf "    %s\n" "Allowed: critical, high, medium, low"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--top N")"
+    printf "    🔢 Max number of issues to display per category in text mode (default: 5)\n"
+    printf "    %s\n" "Default: 5"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--html")"
+    printf "    🌐 Generate a self-contained HTML report and open it in the default browser\n    \n    ❕ No external CDN/network needed — single offline-viewable file you can\n    share.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir DIR")"
+    printf "    📁 Directory for the HTML report (default: ./cfk-reports). Only used with\n    --html.\n"
+    printf "    %s\n" "Default: ./cfk-reports"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground debug cfk cfk-bundle-analyze --bundle ./customer-bundle.tar.gz\n"
+    printf "  playground debug cfk cfk-bundle-analyze --bundle ./extracted-bundle/\n"
+    printf "  playground debug cfk cfk-bundle-analyze --bundle ./bundle.zip --severity high\n"
+    printf "  playground debug cfk cfk-bundle-analyze --bundle ./bundle.tar.gz --json >\n  report.json\n"
+    printf "  playground debug cfk cfk-bundle-analyze -b ./bundle.tgz --html\n"
+    printf "  playground debug cfk cfk-bundle-analyze -b ./bundle.tgz --html --output-dir\n  ./reports\n"
     echo
 
   fi
@@ -10530,9 +10559,7 @@ function open_file_with_editor() {
 
 function arm64_support() {
 
-  environment=$(playground state get run.environment)
   test_file=$(playground state get run.test_file)
-  cfk_port_forward_pids=$(ps -axo pid=,command= | grep -E '[k]ubectl( |.* )port-forward ' | grep 'confluent' | awk '{print $1}')
 
   if [ ! -f $test_file ]
   then
@@ -13057,7 +13084,7 @@ function bootstrap_ccloud_environment () {
       fi
     fi
 
-    if [[ $test_file == *"fm-gcp"* ]] || ( [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-gcp"* ]] )
+    if [[ $test_file == *"fm-gcp"* ]] || [[ $test_file == *"fm-debezium-gcp"* ]] || ( [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-gcp"* ]] )
     then
       if [ ! -z "$GCP_CLUSTER_NAME" ]
       then
@@ -20583,23 +20610,24 @@ playground_stop_command() {
   fi
 
   log "🛑 Stopping example $filename in dir $test_file_directory"
-    if [[ "$environment" == "cfk" ]] || [[ -z "$environment" && -n "$cfk_port_forward_pids" ]]
-    then
+
+  if [[ "$environment" == "cfk" ]] || [[ -z "$environment" && -n "$cfk_port_forward_pids" ]]
+  then
       cfk_stop_script="$root_folder/environment/cfk/stop.sh"
       if [ -f "$cfk_stop_script" ]
       then
-        bash "$cfk_stop_script"
+          bash "$cfk_stop_script"
       fi
 
       if [[ -n "$cfk_port_forward_pids" ]]
       then
-        log "🔀 Stopping CFK port-forward process(es): $(echo "$cfk_port_forward_pids" | tr '\n' ' ' | sed 's/ *$//')"
-        echo "$cfk_port_forward_pids" | xargs kill > /dev/null 2>&1 || true
+          log "🔀 Stopping CFK port-forward process(es): $(echo "$cfk_port_forward_pids" | tr '\n' ' ' | sed 's/ *$//')"
+          echo "$cfk_port_forward_pids" | xargs kill > /dev/null 2>&1 || true
       else
-        log "🔀 No CFK port-forward process found"
+          log "🔀 No CFK port-forward process found"
       fi
       exit 0
-    fi
+  fi
 
   docker_command=$(playground state get run.docker_command)
   echo "$docker_command" > $tmp_dir/tmp
@@ -24667,150 +24695,6 @@ EOF
 }
 
 # :command.function
-playground_debug_cfk_bundle_analyze_command() {
-
-  # src/commands/debug/cfk-bundle-analyze.sh
-  bundle="${args[--bundle]}"
-  json_out="${args[--json]}"
-  no_sanitize="${args[--no-sanitize]}"
-  severity="${args[--severity]}"
-  top="${args[--top]}"
-  html="${args[--html]}"
-  output_dir="${args[--output-dir]}"
-
-  set +e
-
-  # ── Validate input ─────────────────────────────────────────────────────────
-  if [[ -z "$bundle" ]]; then
-      logerror "❌ Must provide --bundle <path-to-cfk-support-bundle>"
-      log ""
-      log "Examples:"
-      log "  playground debug cfk-bundle-analyze --bundle ./customer-bundle.tar.gz"
-      log "  playground debug cfk-bundle-analyze --bundle ./extracted-bundle/"
-      log "  playground debug cfk-bundle-analyze --bundle ./bundle.zip --json > report.json"
-      exit 1
-  fi
-
-  # Handle fzf @path trick (mirrors gc-analyze convention)
-  if [[ "$bundle" == *"@"* ]]; then
-      bundle=$(echo "$bundle" | cut -d "@" -f 2)
-  fi
-
-  if [[ ! -e "$bundle" ]]; then
-      logerror "❌ Bundle path does not exist: $bundle"
-      exit 1
-  fi
-
-  # ── Locate the analyzer CLI ────────────────────────────────────────────────
-  analyzer_cli="$root_folder/cfk-analysis/analyzer_cli.py"
-  if [[ ! -f "$analyzer_cli" ]]; then
-      logerror "❌ CFK analyzer CLI not found at: $analyzer_cli"
-      logerror "   Make sure cfk-analysis/analyzer_cli.py exists in the playground root"
-      logerror "   (symlink cfk-bundle-analyzer/ as cfk-analysis/ in the playground root)"
-      exit 1
-  fi
-
-  analyzer_dir="$root_folder/cfk-analysis"
-
-  bundle_abs=$(cd "$(dirname "$bundle")" && pwd)/$(basename "$bundle")
-  bundle_container="/tmp/input/$(basename "$bundle")"
-
-  # ── Build CLI args ─────────────────────────────────────────────────────────
-  cli_args=("$bundle")
-
-  if [[ -n "$json_out" ]]; then
-      cli_args+=(--json)
-  fi
-
-  if [[ -n "$no_sanitize" ]]; then
-      cli_args+=(--no-sanitize)
-      logwarn "⚠️  Sanitization DISABLED. Do not share this output for customer bundles."
-  fi
-
-  if [[ -n "$severity" ]]; then
-      cli_args+=(--severity "$severity")
-  fi
-
-  if [[ -n "$top" ]]; then
-      cli_args+=(--top "$top")
-  fi
-
-  # ── HTML output target ─────────────────────────────────────────────────────
-  html_out=""
-  html_out_container=""
-  if [[ -n "$html" ]]; then
-      : "${output_dir:=./cfk-reports}"
-      mkdir -p "$output_dir"
-      output_dir_abs=$(cd "$output_dir" && pwd)
-
-      bundle_basename=$(basename "$bundle")
-      # strip common archive suffixes for a clean filename
-      bundle_basename="${bundle_basename%.tar.gz}"
-      bundle_basename="${bundle_basename%.tgz}"
-      bundle_basename="${bundle_basename%.tar}"
-      bundle_basename="${bundle_basename%.zip}"
-
-      html_out="${output_dir_abs}/${bundle_basename}-cfk-report-$(date '+%Y%m%d-%H%M%S').html"
-      html_out_container="/tmp/output/$(basename "$html_out")"
-      cli_args+=(--html-out "$html_out_container")
-  fi
-
-  # ── Run the analyzer ───────────────────────────────────────────────────────
-  if [[ -z "$json_out" ]]; then
-      log "🔬 Analyzing CFK bundle: $bundle"
-      log ""
-  fi
-
-  docker_args=(
-      -i
-      --rm
-      -v "$analyzer_dir:/tmp/cfk-analysis:ro"
-      -v "$bundle_abs:$bundle_container:ro"
-  )
-
-  if [[ -n "$html_out" ]]; then
-      docker_args+=( -v "$output_dir_abs:/tmp/output" )
-  fi
-
-  container_cli_args=("$bundle_container")
-  if [[ ${#cli_args[@]} -gt 1 ]]; then
-      container_cli_args+=("${cli_args[@]:1}")
-  fi
-
-  docker run "${docker_args[@]}" python:3.7-slim sh -lc 'pip install -q -r /tmp/cfk-analysis/requirements.txt && python /tmp/cfk-analysis/analyzer_cli.py "$@"' sh "${container_cli_args[@]}"
-  exit_code=$?
-
-  # ── Open HTML report in browser ────────────────────────────────────────────
-  if [[ -n "$html" && -f "$html_out" ]]; then
-      log ""
-      log "🌐 HTML report saved: $html_out"
-      if command -v open &>/dev/null; then
-          log "🌐 Opening report in browser..."
-          open "$html_out"
-      elif command -v xdg-open &>/dev/null; then
-          log "🌐 Opening report in browser..."
-          xdg-open "$html_out" >/dev/null 2>&1 &
-      else
-          log "🔗 Open in browser: file://$html_out"
-      fi
-  fi
-
-  if [[ -z "$json_out" ]]; then
-      log ""
-      case $exit_code in
-          0) log "✅ Analysis complete — no critical or high-severity issues found." ;;
-          1) logwarn "⚠️  Analysis complete — high-severity issues found. Review the report above." ;;
-          2) logerror "❌ Analysis complete — CRITICAL issues found. Act on the recommendations above." ;;
-          64) logerror "❌ Analysis failed — invalid bundle path or format." ;;
-          *) logerror "❌ Analyzer exited with code $exit_code." ;;
-      esac
-  fi
-
-  exit $exit_code
-
-}
-
-# :command.function
 playground_debug_gc_analyze_command() {
 
   # src/commands/debug/gc-analyze.sh
@@ -25081,11 +24965,11 @@ securityContext:
   runAsNonRoot: false
 EOF
 
-    debug_output=$(kubectl -n confluent debug "pod/$pod_name" --profile=sysadmin --custom="$debug_custom_file" --image=nicolaka/netshoot --target="$target_container" -- bash -lc "$cmd" 2>&1)
+  		debug_output=$(kubectl -n confluent debug "pod/$pod_name" --profile=sysadmin --custom="$debug_custom_file" --image=nicolaka/netshoot --target="$target_container" -- bash -lc "$cmd" 2>&1)
   	debug_exit_code=$?
   	rm -f "$debug_custom_file"
-    cleaned_output=$(echo "$debug_output" | sed -E '/^Targeting container /d; /^Defaulting debug container name to /d')
-    if [ $debug_exit_code -ne 0 ]
+  		cleaned_output=$(echo "$debug_output" | sed -E '/^Targeting container /d; /^Defaulting debug container name to /d')
+  		if [ $debug_exit_code -ne 0 ]
   	then
   		logerror "❌ failed to execute netfilter command on pod $pod_name"
   		if [[ -n "$cleaned_output" ]]
@@ -25269,26 +25153,26 @@ EOF
   		then
   			if [[ "$environment" == "cfk" ]]
   			then
-            rule_cmd="iptables -${action} OUTPUT -p tcp -d ${ip} --dport ${port} -j DROP"
-            check_cmd="iptables -C OUTPUT -p tcp -d ${ip} --dport ${port} -j DROP"
-            run_cfk_netfilter_command "$container" "$rule_cmd"
-            if [[ "$action" == "A" ]]
-            then
-              run_cfk_netfilter_command "$container" "$check_cmd"
-            fi
+  					rule_cmd="iptables -${action} OUTPUT -p tcp -d ${ip} --dport ${port} -j DROP"
+  					check_cmd="iptables -C OUTPUT -p tcp -d ${ip} --dport ${port} -j DROP"
+  					run_cfk_netfilter_command "$container" "$rule_cmd"
+  					if [[ "$action" == "A" ]]
+  					then
+  						run_cfk_netfilter_command "$container" "$check_cmd"
+  					fi
   			else
   				docker exec --privileged --user root ${container} bash -c "iptables -${action} OUTPUT -p tcp -d ${ip} --dport ${port} -j DROP"
   			fi
   		else
   			if [[ "$environment" == "cfk" ]]
   			then
-            rule_cmd="iptables -${action} OUTPUT -d ${ip} -j DROP"
-            check_cmd="iptables -C OUTPUT -d ${ip} -j DROP"
-            run_cfk_netfilter_command "$container" "$rule_cmd"
-            if [[ "$action" == "A" ]]
-            then
-              run_cfk_netfilter_command "$container" "$check_cmd"
-            fi
+  					rule_cmd="iptables -${action} OUTPUT -d ${ip} -j DROP"
+  					check_cmd="iptables -C OUTPUT -d ${ip} -j DROP"
+  					run_cfk_netfilter_command "$container" "$rule_cmd"
+  					if [[ "$action" == "A" ]]
+  					then
+  						run_cfk_netfilter_command "$container" "$check_cmd"
+  					fi
   			else
   				docker exec --privileged --user root ${container} bash -c "iptables -${action} OUTPUT -d ${ip} -j DROP"
   			fi
@@ -25539,6 +25423,18 @@ playground_debug_log_level_set_command() {
   else
       log "🧬⏭️ Skipping as log level for package $package was already set to $level"
   fi
+}
+
+# :command.function
+playground_debug_cfk_cfk_bundle_analyze_command() {
+
+  # src/commands/debug/cfk/cfk-bundle-analyze.sh
+  echo "# This file is located at 'src/commands/debug/cfk/cfk-bundle-analyze.sh'."
+  echo "# It contains the implementation for the 'playground debug cfk cfk-bundle-analyze' command."
+  echo "# The code you write here will be wrapped by a function named 'playground_debug_cfk_cfk_bundle_analyze_command()'."
+  echo "# Feel free to edit this file; your changes will persist when regenerating."
+  inspect_args
+
 }
 
 # :command.function
@@ -25939,6 +25835,9 @@ playground_container_kill_all_command() {
   log "💀 kill all docker containers (this also removes volumes)"
   if [[ "$environment" == "cfk" ]]
   then
+  	log "💀 stop local kubectl port-forward in confluent namespace"
+  	pkill -f "kubectl -n confluent port-forward" > /dev/null 2>&1 || true
+  	pkill -f "kubectl .*--namespace[= ]confluent.*port-forward" > /dev/null 2>&1 || true
   	log "💀 delete all pods in confluent namespace"
   	kubectl -n confluent delete pod --all
   else
@@ -26144,8 +26043,8 @@ playground_container_change_jdk_command() {
               exit 1
           fi
 
-            connect_cr_json=$(kubectl -n confluent get connect connect -o json 2>/dev/null)
-            current_image=$(echo "$connect_cr_json" | jq -r '.spec.image.application // empty')
+          connect_cr_json=$(kubectl -n confluent get connect connect -o json 2>/dev/null)
+          current_image=$(echo "$connect_cr_json" | jq -r '.spec.image.application // empty')
           if [[ -z "$current_image" ]]
           then
               logerror "❌ could not read current Connect image from Connect CR"
@@ -26155,30 +26054,30 @@ playground_container_change_jdk_command() {
           local_image="playground-connect-zulu${version}:$(date '+%Y%m%d%H%M%S')"
           build_dir=$(mktemp -d -t pg-jdk-build-XXXXXXXXXX)
 
-            connect_plugins_file=""
-            connect_confluent_hub_plugins=$(echo "$connect_cr_json" | jq -r '.spec.build.onDemand.plugins.confluentHub[]? | "\(.owner)|\(.name)|\(.version)"')
-            if [[ -n "$connect_confluent_hub_plugins" ]]
-            then
+          connect_plugins_file=""
+          connect_confluent_hub_plugins=$(echo "$connect_cr_json" | jq -r '.spec.build.onDemand.plugins.confluentHub[]? | "\(.owner)|\(.name)|\(.version)"')
+          if [[ -n "$connect_confluent_hub_plugins" ]]
+          then
               connect_plugins_file="$build_dir/cfk-confluent-hub-plugins.txt"
               echo "$connect_confluent_hub_plugins" > "$connect_plugins_file"
-            fi
+          fi
 
-              connect_url_plugins_file=""
-              connect_url_plugins_dir=""
-              connect_url_plugins=$(echo "$connect_cr_json" | jq -r '.spec.build.onDemand.plugins.url[]? | "\(.name)|\(.archivePath)|\(.checksum)"')
-              if [[ -n "$connect_url_plugins" ]]
-            then
-                connect_url_plugins_file="$build_dir/cfk-url-plugins.txt"
-                connect_url_plugins_dir="$build_dir/cfk-url-plugins"
-                mkdir -p "$connect_url_plugins_dir"
-                : > "$connect_url_plugins_file"
+          connect_url_plugins_file=""
+          connect_url_plugins_dir=""
+          connect_url_plugins=$(echo "$connect_cr_json" | jq -r '.spec.build.onDemand.plugins.url[]? | "\(.name)|\(.archivePath)|\(.checksum)"')
+          if [[ -n "$connect_url_plugins" ]]
+          then
+              connect_url_plugins_file="$build_dir/cfk-url-plugins.txt"
+              connect_url_plugins_dir="$build_dir/cfk-url-plugins"
+              mkdir -p "$connect_url_plugins_dir"
+              : > "$connect_url_plugins_file"
 
-                url_index=0
-                while IFS='|' read -r url_name url_archive_path url_checksum
-                do
+              url_index=0
+              while IFS='|' read -r url_name url_archive_path url_checksum
+              do
                   if [[ -z "$url_name" || -z "$url_archive_path" ]]
                   then
-                    continue
+                      continue
                   fi
 
                   safe_url_name=$(echo "$url_name" | sed -E 's/[^a-zA-Z0-9._-]+/_/g')
@@ -26191,107 +26090,107 @@ playground_container_change_jdk_command() {
                   download_candidates=("$url_archive_path")
                   if [[ "$url_archive_path" == *"host.docker.internal"* ]]
                   then
-                    download_candidates+=("$(echo "$url_archive_path" | sed 's#host\.docker\.internal#localhost#g')")
-                    download_candidates+=("$(echo "$url_archive_path" | sed 's#host\.docker\.internal#127.0.0.1#g')")
+                      download_candidates+=("$(echo "$url_archive_path" | sed 's#host\.docker\.internal#localhost#g')")
+                      download_candidates+=("$(echo "$url_archive_path" | sed 's#host\.docker\.internal#127.0.0.1#g')")
                   fi
 
                   download_success=0
                   for download_url in "${download_candidates[@]}"
                   do
-                    if curl -fsSL "$download_url" -o "$archive_file_abs"
-                    then
-                      download_success=1
-                      break
-                    fi
+                      if curl -fsSL "$download_url" -o "$archive_file_abs"
+                      then
+                          download_success=1
+                          break
+                      fi
                   done
 
                   if [[ "$download_success" != "1" ]]
                   then
-                    logwarn "⚠️ URL download failed for $url_name, trying to package plugin from running pod $resolved_container"
-                    archive_file_rel="${safe_url_name}-${url_index}.tar"
-                    archive_file_abs="$connect_url_plugins_dir/$archive_file_rel"
+                      logwarn "⚠️ URL download failed for $url_name, trying to package plugin from running pod $resolved_container"
+                      archive_file_rel="${safe_url_name}-${url_index}.tar"
+                      archive_file_abs="$connect_url_plugins_dir/$archive_file_rel"
 
-                    if kubectl -n confluent exec "$resolved_container" -c connect -- sh -lc "plugin_source_dir=''; for d in '/usr/share/confluent-hub-components/${url_name}' '/mnt/plugins/${url_name}'; do if [ -d \"\$d\" ]; then plugin_source_dir=\"\$d\"; break; fi; done; [ -n \"\$plugin_source_dir\" ] || exit 1; plugin_parent=\"\${plugin_source_dir%/*}\"; plugin_dir=\"\${plugin_source_dir##*/}\"; tar -C \"\$plugin_parent\" -cf - \"\$plugin_dir\"" > "$archive_file_abs" 2>/dev/null \
-                      || kubectl -n confluent exec "$resolved_container" -- sh -lc "plugin_source_dir=''; for d in '/usr/share/confluent-hub-components/${url_name}' '/mnt/plugins/${url_name}'; do if [ -d \"\$d\" ]; then plugin_source_dir=\"\$d\"; break; fi; done; [ -n \"\$plugin_source_dir\" ] || exit 1; plugin_parent=\"\${plugin_source_dir%/*}\"; plugin_dir=\"\${plugin_source_dir##*/}\"; tar -C \"\$plugin_parent\" -cf - \"\$plugin_dir\"" > "$archive_file_abs" 2>/dev/null
-                    then
-                      if [[ -s "$archive_file_abs" ]]
+                            if kubectl -n confluent exec "$resolved_container" -c connect -- sh -lc "plugin_source_dir=''; for d in '/usr/share/confluent-hub-components/${url_name}' '/mnt/plugins/${url_name}'; do if [ -d \"\$d\" ]; then plugin_source_dir=\"\$d\"; break; fi; done; [ -n \"\$plugin_source_dir\" ] || exit 1; plugin_parent=\"\${plugin_source_dir%/*}\"; plugin_dir=\"\${plugin_source_dir##*/}\"; tar -C \"\$plugin_parent\" -cf - \"\$plugin_dir\"" > "$archive_file_abs" 2>/dev/null \
+                                || kubectl -n confluent exec "$resolved_container" -- sh -lc "plugin_source_dir=''; for d in '/usr/share/confluent-hub-components/${url_name}' '/mnt/plugins/${url_name}'; do if [ -d \"\$d\" ]; then plugin_source_dir=\"\$d\"; break; fi; done; [ -n \"\$plugin_source_dir\" ] || exit 1; plugin_parent=\"\${plugin_source_dir%/*}\"; plugin_dir=\"\${plugin_source_dir##*/}\"; tar -C \"\$plugin_parent\" -cf - \"\$plugin_dir\"" > "$archive_file_abs" 2>/dev/null
                       then
-                        download_success=1
-                        checksum_verifiable=0
-                        log "🔌 Reused installed plugin $url_name from pod $resolved_container"
-                      else
-                        rm -f "$archive_file_abs"
+                          if [[ -s "$archive_file_abs" ]]
+                          then
+                              download_success=1
+                              checksum_verifiable=0
+                              log "🔌 Reused installed plugin $url_name from pod $resolved_container"
+                          else
+                              rm -f "$archive_file_abs"
+                          fi
                       fi
-                    fi
 
-                    if [[ "$download_success" != "1" ]]
-                    then
-                      hub_owner="${url_name%%-*}"
-                      hub_name="${url_name#*-}"
-                      if [[ -n "$hub_owner" && -n "$hub_name" && "$hub_owner" != "$url_name" ]]
+                      if [[ "$download_success" != "1" ]]
                       then
-                        if [[ -z "$connect_plugins_file" ]]
-                        then
-                          connect_plugins_file="$build_dir/cfk-confluent-hub-plugins.txt"
-                          : > "$connect_plugins_file"
-                        fi
-                        if ! grep -Fqx "${hub_owner}|${hub_name}|latest" "$connect_plugins_file" 2>/dev/null
-                        then
-                          echo "${hub_owner}|${hub_name}|latest" >> "$connect_plugins_file"
-                        fi
-                        use_confluent_hub_fallback=1
-                        download_success=1
-                        logwarn "⚠️ Falling back to Confluent Hub install for $url_name as ${hub_owner}/${hub_name}:latest"
+                          hub_owner="${url_name%%-*}"
+                          hub_name="${url_name#*-}"
+                          if [[ -n "$hub_owner" && -n "$hub_name" && "$hub_owner" != "$url_name" ]]
+                          then
+                              if [[ -z "$connect_plugins_file" ]]
+                              then
+                                  connect_plugins_file="$build_dir/cfk-confluent-hub-plugins.txt"
+                                  : > "$connect_plugins_file"
+                              fi
+                              if ! grep -Fqx "${hub_owner}|${hub_name}|latest" "$connect_plugins_file" 2>/dev/null
+                              then
+                                  echo "${hub_owner}|${hub_name}|latest" >> "$connect_plugins_file"
+                              fi
+                              use_confluent_hub_fallback=1
+                              download_success=1
+                              logwarn "⚠️ Falling back to Confluent Hub install for $url_name as ${hub_owner}/${hub_name}:latest"
+                          fi
                       fi
-                    fi
 
-                    if [[ "$download_success" != "1" ]]
-                    then
-                      logerror "❌ failed to download URL plugin archive for $url_name from $url_archive_path"
-                      logerror "❌ and failed to package plugin $url_name from pod $resolved_container"
-                      rm -rf "$build_dir"
-                      exit 1
-                    fi
+                      if [[ "$download_success" != "1" ]]
+                      then
+                          logerror "❌ failed to download URL plugin archive for $url_name from $url_archive_path"
+                          logerror "❌ and failed to package plugin $url_name from pod $resolved_container"
+                          rm -rf "$build_dir"
+                          exit 1
+                      fi
                   fi
 
                   if [[ "$use_confluent_hub_fallback" == "1" ]]
                   then
-                    url_index=$((url_index+1))
-                    continue
+                      url_index=$((url_index+1))
+                      continue
                   fi
 
                   if [[ -n "$url_checksum" && "$checksum_verifiable" == "1" ]]
                   then
-                    downloaded_checksum=$(shasum -a 512 "$archive_file_abs" | awk '{print $1}' | tr '[:upper:]' '[:lower:]')
-                    expected_checksum=$(echo "$url_checksum" | tr '[:upper:]' '[:lower:]')
-                    if [[ "$downloaded_checksum" != "$expected_checksum" ]]
-                    then
-                      logerror "❌ checksum mismatch for URL plugin $url_name"
-                      logerror "expected: $expected_checksum"
-                      logerror "actual:   $downloaded_checksum"
-                      rm -rf "$build_dir"
-                      exit 1
-                    fi
+                      downloaded_checksum=$(shasum -a 512 "$archive_file_abs" | awk '{print $1}' | tr '[:upper:]' '[:lower:]')
+                      expected_checksum=$(echo "$url_checksum" | tr '[:upper:]' '[:lower:]')
+                      if [[ "$downloaded_checksum" != "$expected_checksum" ]]
+                      then
+                          logerror "❌ checksum mismatch for URL plugin $url_name"
+                          logerror "expected: $expected_checksum"
+                          logerror "actual:   $downloaded_checksum"
+                          rm -rf "$build_dir"
+                          exit 1
+                      fi
                   fi
 
                   echo "${url_name}|${archive_file_rel}" >> "$connect_url_plugins_file"
                   url_index=$((url_index+1))
-                done <<< "$connect_url_plugins"
-            fi
+              done <<< "$connect_url_plugins"
+          fi
 
           log "🏗️ Building persistent CFK Connect image with JDK ${version} from ${current_image}"
           cat << EOF > "$build_dir/Dockerfile"
 FROM ${current_image}
 USER root
-      $(if [[ -n "$connect_plugins_file" ]]; then echo 'COPY cfk-confluent-hub-plugins.txt /tmp/cfk-confluent-hub-plugins.txt'; fi)
-      $(if [[ -n "$connect_url_plugins_file" ]]; then echo 'COPY cfk-url-plugins.txt /tmp/cfk-url-plugins.txt'; fi)
-      $(if [[ -n "$connect_url_plugins_dir" ]]; then echo 'COPY cfk-url-plugins/ /tmp/cfk-url-plugins/'; fi)
+$(if [[ -n "$connect_plugins_file" ]]; then echo 'COPY cfk-confluent-hub-plugins.txt /tmp/cfk-confluent-hub-plugins.txt'; fi)
+$(if [[ -n "$connect_url_plugins_file" ]]; then echo 'COPY cfk-url-plugins.txt /tmp/cfk-url-plugins.txt'; fi)
+$(if [[ -n "$connect_url_plugins_dir" ]]; then echo 'COPY cfk-url-plugins/ /tmp/cfk-url-plugins/'; fi)
 RUN if command -v microdnf >/dev/null 2>&1; then microdnf -y install yum; fi \
  && yum install -y https://cdn.azul.com/zulu/bin/zulu-repo-1.0.0-1.noarch.rpm \
-       && yum -y install zulu${version}-jdk unzip \
-       && if [ -f /tmp/cfk-confluent-hub-plugins.txt ]; then while IFS='|' read -r owner name version_value; do [ -z "\$owner" ] && continue; confluent-hub install --no-prompt "\${owner}/\${name}:\${version_value}"; done < /tmp/cfk-confluent-hub-plugins.txt; fi \
-      && if [ -f /tmp/cfk-url-plugins.txt ]; then while IFS='|' read -r plugin_name plugin_archive_file; do [ -z "\$plugin_name" ] && continue; [ -z "\$plugin_archive_file" ] && continue; plugin_archive_path="/tmp/cfk-url-plugins/\${plugin_archive_file}"; plugin_unpack_dir="/tmp/cfk-url-plugin-unpack-\${plugin_name}"; rm -rf "\$plugin_unpack_dir"; mkdir -p "\$plugin_unpack_dir"; case "\$plugin_archive_path" in *.zip) unzip -q "\$plugin_archive_path" -d "\$plugin_unpack_dir" ;; *.tar) tar -xf "\$plugin_archive_path" -C "\$plugin_unpack_dir" ;; *) unzip -q "\$plugin_archive_path" -d "\$plugin_unpack_dir" ;; esac; plugin_src_dir="\$plugin_unpack_dir"; if [ "\$(find "\$plugin_unpack_dir" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d '[:space:]')" = "1" ] && [ -z "\$(find "\$plugin_unpack_dir" -mindepth 1 -maxdepth 1 -type f -print -quit)" ]; then plugin_src_dir="\$(find "\$plugin_unpack_dir" -mindepth 1 -maxdepth 1 -type d | head -1)"; fi; mkdir -p "/usr/share/confluent-hub-components/\${plugin_name}"; cp -R "\$plugin_src_dir"/. "/usr/share/confluent-hub-components/\${plugin_name}/"; done < /tmp/cfk-url-plugins.txt; fi \
-       && chown -R 1000:1000 /usr/share/confluent-hub-components || true \
+ && yum -y install zulu${version}-jdk unzip \
+ && if [ -f /tmp/cfk-confluent-hub-plugins.txt ]; then while IFS='|' read -r owner name version_value; do [ -z "\$owner" ] && continue; confluent-hub install --no-prompt "\${owner}/\${name}:\${version_value}"; done < /tmp/cfk-confluent-hub-plugins.txt; fi \
+ && if [ -f /tmp/cfk-url-plugins.txt ]; then while IFS='|' read -r plugin_name plugin_archive_file; do [ -z "\$plugin_name" ] && continue; [ -z "\$plugin_archive_file" ] && continue; plugin_archive_path="/tmp/cfk-url-plugins/\${plugin_archive_file}"; plugin_unpack_dir="/tmp/cfk-url-plugin-unpack-\${plugin_name}"; rm -rf "\$plugin_unpack_dir"; mkdir -p "\$plugin_unpack_dir"; case "\$plugin_archive_path" in *.zip) unzip -q "\$plugin_archive_path" -d "\$plugin_unpack_dir" ;; *.tar) tar -xf "\$plugin_archive_path" -C "\$plugin_unpack_dir" ;; *) unzip -q "\$plugin_archive_path" -d "\$plugin_unpack_dir" ;; esac; plugin_src_dir="\$plugin_unpack_dir"; if [ "\$(find "\$plugin_unpack_dir" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d '[:space:]')" = "1" ] && [ -z "\$(find "\$plugin_unpack_dir" -mindepth 1 -maxdepth 1 -type f -print -quit)" ]; then plugin_src_dir="\$(find "\$plugin_unpack_dir" -mindepth 1 -maxdepth 1 -type d | head -1)"; fi; mkdir -p "/usr/share/confluent-hub-components/\${plugin_name}"; cp -R "\$plugin_src_dir"/. "/usr/share/confluent-hub-components/\${plugin_name}/"; done < /tmp/cfk-url-plugins.txt; fi \
+ && chown -R 1000:1000 /usr/share/confluent-hub-components || true \
  && java_candidate=\$(update-alternatives --display java 2>/dev/null | awk '/java-${version}-zulu-openjdk/ && /priority/ {print \$1; exit}') \
  && if [ -z "\$java_candidate" ]; then echo "Could not resolve java alternative for zulu${version}" >&2; exit 1; fi \
  && update-alternatives --set java "\$java_candidate" \
@@ -46066,13 +45965,6 @@ playground_debug_parse_requirements() {
       shift $#
       ;;
 
-    cfk-bundle-analyze)
-      action="cfk-bundle-analyze"
-      shift
-      playground_debug_cfk_bundle_analyze_parse_requirements "$@"
-      shift $#
-      ;;
-
     gc-analyze)
       action="gc-analyze"
       shift
@@ -46119,6 +46011,13 @@ playground_debug_parse_requirements() {
       action="log-level"
       shift
       playground_debug_log_level_parse_requirements "$@"
+      shift $#
+      ;;
+
+    cfk)
+      action="cfk"
+      shift
+      playground_debug_cfk_parse_requirements "$@"
       shift $#
       ;;
 
@@ -46703,158 +46602,6 @@ playground_debug_heap_analyze_parse_requirements() {
   # :command.whitelist_filter
   if [[ ${args['--report-type']:-} ]] && [[ ! ${args['--report-type']:-} =~ ^(all|leaks|overview|top-components)$ ]]; then
     printf "%s\n" "--report-type must be one of: all, leaks, overview, top-components" >&2
-    exit 1
-  fi
-
-}
-
-# :command.parse_requirements
-playground_debug_cfk_bundle_analyze_parse_requirements() {
-  local key
-
-  # :command.fixed_flags_filter
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-      --help | -h)
-        long_usage=yes
-        playground_debug_cfk_bundle_analyze_usage
-        exit
-        ;;
-
-      *)
-        break
-        ;;
-
-    esac
-  done
-
-  # :command.command_filter
-  action="debug cfk-bundle-analyze"
-
-  # :command.parse_requirements_while
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-      # :flag.case
-      --bundle | -b)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          args['--bundle']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--bundle requires an argument: --bundle, -b PATH" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
-      --json)
-
-        # :flag.case_no_arg
-        args['--json']=1
-        shift
-        ;;
-
-      # :flag.case
-      --no-sanitize)
-
-        # :flag.case_no_arg
-        args['--no-sanitize']=1
-        shift
-        ;;
-
-      # :flag.case
-      --severity)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          args['--severity']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--severity requires an argument: --severity LEVEL" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
-      --top)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          args['--top']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--top requires an argument: --top N" >&2
-          exit 1
-        fi
-        ;;
-
-      # :flag.case
-      --html)
-
-        # :flag.case_no_arg
-        args['--html']=1
-        shift
-        ;;
-
-      # :flag.case
-      --output-dir)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          args['--output-dir']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--output-dir requires an argument: --output-dir DIR" >&2
-          exit 1
-        fi
-        ;;
-
-      -?*)
-        printf "invalid option: %s\n" "$key" >&2
-        exit 1
-        ;;
-
-      *)
-        # :command.parse_requirements_case
-        # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
-
-        ;;
-
-    esac
-  done
-
-  # :command.required_flags_filter
-  if [[ -z ${args['--bundle']+x} ]]; then
-    printf "missing required flag: --bundle, -b PATH\n" >&2
-    exit 1
-  fi
-
-  # :command.default_assignments
-  [[ -n ${args['--top']:-} ]] || args['--top']="5"
-  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="./cfk-reports"
-
-  # :command.validations
-  # :flag.validations
-  if [[ -v args['--top'] ]]; then
-    validation_output="$(validate_integer "${args['--top']:-}")"
-    if [[ -n "${validation_output}" ]]; then
-      printf "validation error in %s:\n%s\n" "--top N" "$validation_output" >&2
-      exit 1
-    fi
-  fi
-
-  # :command.whitelist_filter
-  if [[ ${args['--severity']:-} ]] && [[ ! ${args['--severity']:-} =~ ^(critical|high|medium|low)$ ]]; then
-    printf "%s\n" "--severity must be one of: critical, high, medium, low" >&2
     exit 1
   fi
 
@@ -47867,6 +47614,228 @@ playground_debug_log_level_set_parse_requirements() {
   # :command.whitelist_filter
   if [[ ${args['--level']:-} ]] && [[ ! ${args['--level']:-} =~ ^(INFO|WARN|DEBUG|TRACE)$ ]]; then
     printf "%s\n" "--level must be one of: INFO, WARN, DEBUG, TRACE" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_debug_cfk_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_debug_cfk_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    cfk-bundle-analyze)
+      action="cfk-bundle-analyze"
+      shift
+      playground_debug_cfk_cfk_bundle_analyze_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_debug_cfk_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_debug_cfk_cfk_bundle_analyze_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_debug_cfk_cfk_bundle_analyze_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="debug cfk cfk-bundle-analyze"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --bundle | -b)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--bundle']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--bundle requires an argument: --bundle, -b PATH" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --no-sanitize)
+
+        # :flag.case_no_arg
+        args['--no-sanitize']=1
+        shift
+        ;;
+
+      # :flag.case
+      --severity)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--severity']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--severity requires an argument: --severity LEVEL" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --top)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--top']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--top requires an argument: --top N" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --html)
+
+        # :flag.case_no_arg
+        args['--html']=1
+        shift
+        ;;
+
+      # :flag.case
+      --output-dir)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--bundle']+x} ]]; then
+    printf "missing required flag: --bundle, -b PATH\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--top']:-} ]] || args['--top']="5"
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="./cfk-reports"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--top'] ]]; then
+    validation_output="$(validate_integer "${args['--top']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--top N" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--severity']:-} ]] && [[ ! ${args['--severity']:-} =~ ^(critical|high|medium|low)$ ]]; then
+    printf "%s\n" "--severity must be one of: critical, high, medium, low" >&2
     exit 1
   fi
 
@@ -56013,7 +55982,6 @@ run() {
     "debug thread-dump") playground_debug_thread_dump_command ;;
     "debug heap-dump") playground_debug_heap_dump_command ;;
     "debug heap-analyze") playground_debug_heap_analyze_command ;;
-    "debug cfk-bundle-analyze") playground_debug_cfk_bundle_analyze_command ;;
     "debug gc-analyze") playground_debug_gc_analyze_command ;;
     "debug tcp-dump") playground_debug_tcp_dump_command ;;
     "debug block-traffic") playground_debug_block_traffic_command ;;
@@ -56023,6 +55991,8 @@ run() {
     "debug log-level") playground_debug_log_level_command ;;
     "debug log-level get") playground_debug_log_level_get_command ;;
     "debug log-level set") playground_debug_log_level_set_command ;;
+    "debug cfk") playground_debug_cfk_command ;;
+    "debug cfk cfk-bundle-analyze") playground_debug_cfk_cfk_bundle_analyze_command ;;
     "get-jmx-metrics") playground_get_jmx_metrics_command ;;
     "container") playground_container_command ;;
     "container get-properties") playground_container_get_properties_command ;;
