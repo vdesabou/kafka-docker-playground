@@ -124,15 +124,6 @@ Password for accessing the trust store.
 ==========================
 Logging
 ==========================
-🔘 couchbase.metrics.interval
-
-The connector writes metrics to the log at this interval.
-
-	 - Type: STRING
-	 - Default: 10m
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.log.redaction
 
 Determines which kinds of sensitive log messages from the Couchbase connector will be tagged for later redaction by the Couchbase log redaction tool. NONE = no tagging; PARTIAL = user data is tagged; FULL = user, meta, and system data is tagged.
@@ -148,6 +139,15 @@ If true, document lifecycle milestones will be logged at INFO level instead of D
 
 	 - Type: BOOLEAN
 	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.metrics.interval
+
+The connector writes metrics to the log at this interval.
+
+	 - Type: STRING
+	 - Default: 10m
 	 - Importance: MEDIUM
 	 - Required: false
 
