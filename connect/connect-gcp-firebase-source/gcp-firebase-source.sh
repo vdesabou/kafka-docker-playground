@@ -34,6 +34,14 @@ else
 fi
 cd -
 
+GCP_FIREBASE_REGION=${1:-europe-west1}
+if [ "$GCP_FIREBASE_REGION" == "us-central1" ]
+then
+     GCP_FIREBASE_DATABASE_REFERENCE="https://${GCP_PROJECT}.firebaseio.com/musicBlog"
+else
+     GCP_FIREBASE_DATABASE_REFERENCE="https://${GCP_PROJECT}-default-rtdb.${GCP_FIREBASE_REGION}.firebasedatabase.app/musicBlog"
+fi
+
 log "Removing all data"
 docker run -p 9005:9005 -v $PWD/../../connect/connect-gcp-firebase-source/keyfile.json:/tmp/keyfile.json -e GOOGLE_APPLICATION_CREDENTIALS="/tmp/keyfile.json" -e PROJECT=$GCP_PROJECT -i andreysenov/firebase-tools firebase database:remove / --project "$GCP_PROJECT" --force
 log "Adding data from musicBlog.json"
@@ -50,7 +58,7 @@ playground connector create-or-update --connector firebase-source  << EOF
     "connector.class" : "io.confluent.connect.firebase.FirebaseSourceConnector",
     "tasks.max" : "1",
     "gcp.firebase.credentials.path": "/tmp/keyfile.json",
-    "gcp.firebase.database.reference": "https://$GCP_PROJECT.firebaseio.com/musicBlog",
+    "gcp.firebase.database.reference": "${GCP_FIREBASE_DATABASE_REFERENCE}",
     "gcp.firebase.snapshot":"true",
     "confluent.topic.bootstrap.servers": "broker:9092",
     "confluent.topic.replication.factor": "1",
