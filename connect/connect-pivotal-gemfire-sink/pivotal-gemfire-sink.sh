@@ -26,7 +26,7 @@ then
      log "Building pivotal-gemfire docker image..it can take a while..."
      OLDDIR=$PWD
      cd ${DIR}/docker-pivotal-gemfire
-     docker build --build-arg PIVOTAL_GEMFIRE_VERSION=9.15.1 -t pivotal-gemfire:latest .
+     docker build --load --build-arg PIVOTAL_GEMFIRE_VERSION=9.15.1 -t pivotal-gemfire:latest .
      cd ${OLDDIR}
 fi
 
