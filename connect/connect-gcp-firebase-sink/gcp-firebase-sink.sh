@@ -17,7 +17,7 @@ then
      exit 1
 fi
 
-GCP_FIREBASE_REGION=${1:-europe-west1}
+GCP_FIREBASE_REGION=${GCP_FIREBASE_REGION:-europe-west1}
 if [ "$GCP_FIREBASE_REGION" == "us-central1" ]
 then
      GCP_FIREBASE_DATABASE_REFERENCE="https://${GCP_PROJECT}.firebaseio.com/musicBlog"
