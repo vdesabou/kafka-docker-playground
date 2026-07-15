@@ -69,3 +69,5 @@ Simply run:
 ```bash
 $ just use <playground run> command and search for gcp-firebase-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> .sh in this folder
 ```
+
+`gcp.firebase.database.reference` is built from `GCP_PROJECT` and the `GCP_FIREBASE_REGION` environment variable (defaults to `europe-west1`), e.g. `https://<GCP_PROJECT>-default-rtdb.<GCP_FIREBASE_REGION>.firebasedatabase.app/musicBlog`. Set `GCP_FIREBASE_REGION` to `us-central1` for legacy databases using the `https://<GCP_PROJECT>.firebaseio.com/musicBlog` format instead.
