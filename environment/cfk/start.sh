@@ -3131,10 +3131,9 @@ CONNECT3_PF_PID=""
 KSQLDB_PF_PID=""
 REST_PROXY_PF_PID=""
 cleanup() {
-  if [ -n "$CONNECTOR_ZIP_SERVER_PID" ]
-  then
-    kill "$CONNECTOR_ZIP_SERVER_PID" >/dev/null 2>&1 || true
-  fi
+  # Note: CONNECTOR_ZIP_SERVER_PID is intentionally NOT killed here
+  # It continues running to support `playground container update` and similar operations
+  # The server is killed at the start of the next run if a new one needs to be started
   if [ -n "$CONNECTOR_ZIP_DIR" ]
   then
     rm -rf "$CONNECTOR_ZIP_DIR" >/dev/null 2>&1 || true
