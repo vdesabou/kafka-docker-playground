@@ -202,6 +202,60 @@ Specifies whether to use Transport Layer Security (TLS) to connect to the Oracle
 	 - Importance: Specifies the number of Oracle processor licenses required for the source database server or cluster. The is determined by multiplying the total number of processor cores by a core processor licensing factor, as specified in the Oracle Processor Core Factor Table.
 	 - Required: MEDIUM
 
+🔘 downstream.database.hostname
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: IP address or hostname of the downstream Oracle database server. When specified, enables downstream capture mode where the snapshot and metadata are read from the source database, and streaming occurs from the downstream database.
+	 - Required: MEDIUM
+
+🔘 downstream.database.port
+
+Port number of the downstream Oracle database server. Required when downstream capture is enabled.
+
+	 - Type: INT
+	 - Default: 1521
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 downstream.database.dbname
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of the downstream database to connect to. In a multitenant container database, this is the name of the container database (CDB). Required when downstream capture is enabled.
+	 - Required: MEDIUM
+
+🔘 downstream.database.service.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of the downstream database service to which to connect. In a multitenant container database, this is the service used to connect to the container database (CDB). For Oracle Real Application Clusters (RAC), use the service created by Oracle XStream. Required when downstream capture is enabled.
+	 - Required: MEDIUM
+
+🔘 downstream.database.tls.mode
+
+Specifies whether to use Transport Layer Security (TLS) to connect to the downstream Oracle database. Select one of the following options: 
+
+	 - Type: STRING
+	 - Default: disable
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 downstream.database.wallet.file
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Specifies the Oracle client wallet (cwallet.sso) that holds the certificates used for TLS connections between the connector and the downstream database server. This must be a single sign-on (SSO) auto-login wallet. For one-way TLS, a client wallet is required only if the system's default certificate store does not contain the trusted CA root certificate used to sign the server's certificate. In that case, the client wallet must include the trusted CA root certificate. For two-way TLS (mutual TLS), a client wallet is required and must contain both the client certificate and the trusted CA root certificate used to sign the server's certificate.
+	 - Required: MEDIUM
+
 ==========================
 Output messages
 ==========================
