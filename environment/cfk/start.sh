@@ -2860,15 +2860,16 @@ fi
 
 reset_cfk_namespace_state
 
-log "Add the Confluent for Kubernetes Helm repository"
+log "🕸️ Add the Confluent for Kubernetes Helm repository"
 if ! helm repo list | awk 'NR>1 {print $1}' | grep -qx "confluentinc"
 then
   helm repo add confluentinc https://packages.confluent.io/helm
 fi
 helm repo update confluentinc
 
-log "Install Confluent for Kubernetes"
+
 CFK_HELM_CHART_VERSION=$(get_cfk_helm_chart_version "$CFK_VERSION")
+log "🕸️ Install Confluent for Kubernetes version $CFK_VERSION (helm chart version $CFK_HELM_CHART_VERSION), you can change it by setting CFK_VERSION environment variable"
 if [[ -z "$CFK_HELM_CHART_VERSION" ]]
 then
   exit 1
