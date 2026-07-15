@@ -883,6 +883,10 @@ function timeout() {
 function get_connect_image() {
   set +e
   CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
+  # If docker inspect failed, try kubectl for Kubernetes/CFK environment
+  if [ -z "$CP_CONNECT_TAG" ] && command -v kubectl &> /dev/null; then
+    CP_CONNECT_TAG=$(kubectl get pod -l app=connect -o jsonpath='{.items[0].spec.containers[0].image}' 2> /dev/null | cut -d ":" -f 2)
+  fi
   set -e
   if [ "$CP_CONNECT_TAG" == "" ]
   then
