@@ -45,6 +45,17 @@ function normalize_cfk_connect_plugin_path() {
       continue
     fi
 
+    # CFK on-demand plugins are materialized under /mnt/plugins/<plugin>.
+    # Normalize plugin-specific paths to stable base directories to avoid
+    # noisy FileNotFoundException when a specific subdirectory is absent.
+    if [[ "$token" == /usr/share/confluent-hub-components/* ]]
+    then
+      token="/usr/share/confluent-hub-components"
+    elif [[ "$token" == /mnt/plugins/* ]]
+    then
+      token="/mnt/plugins"
+    fi
+
     if [[ ",$normalized," != *",$token,"* ]]
     then
       if [[ -z "$normalized" ]]
@@ -3043,7 +3054,8 @@ then
         else
           for token in $(echo "$expected_plugin_lc" | tr -cs 'a-z0-9' '\n')
           do
-            if [[ ${#token} -lt 4 ]] || [[ "$token" == "kafka" ]] || [[ "$token" == "connect" ]] || [[ "$token" == "confluentinc" ]] || [[ "$token" == "plugin" ]] || [[ "$token" == "source" ]] || [[ "$token" == "sink" ]]
+            # Keep short but meaningful tokens like "s3" while filtering generic words.
+            if [[ ${#token} -lt 2 ]] || [[ "$token" =~ ^[0-9]+$ ]] || [[ "$token" == "kafka" ]] || [[ "$token" == "connect" ]] || [[ "$token" == "confluentinc" ]] || [[ "$token" == "plugin" ]] || [[ "$token" == "source" ]] || [[ "$token" == "sink" ]]
             then
               continue
             fi
