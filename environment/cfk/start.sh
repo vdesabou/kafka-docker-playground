@@ -29,6 +29,64 @@ function checksum_sha512() {
     "$SHASUM_BIN" -a 512 "$file_path" | awk '{print $1}'
 }
 
+function normalize_cfk_connect_plugin_path() {
+  local raw_value="$1"
+  local normalized=""
+  local token=""
+  local has_mnt_plugins=0
+
+  IFS=',' read -r -a plugin_tokens <<< "$raw_value"
+  for token in "${plugin_tokens[@]}"
+  do
+    token=$(echo "$token" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
+    token="${token%/}"
+    if [[ -z "$token" ]]
+    then
+      continue
+    fi
+
+    # CFK on-demand plugins are materialized under /mnt/plugins/<plugin>.
+    # Normalize plugin-specific paths to stable base directories to avoid
+    # noisy FileNotFoundException when a specific subdirectory is absent.
+    if [[ "$token" == /usr/share/confluent-hub-components/* ]]
+    then
+      token="/usr/share/confluent-hub-components"
+    elif [[ "$token" == /mnt/plugins/* ]]
+    then
+      token="/mnt/plugins"
+    fi
+
+    if [[ ",$normalized," != *",$token,"* ]]
+    then
+      if [[ -z "$normalized" ]]
+      then
+        normalized="$token"
+      else
+        normalized="${normalized},${token}"
+      fi
+    fi
+
+    if [[ "$token" == "/mnt/plugins" ]] || [[ "$token" == /mnt/plugins/* ]]
+    then
+      has_mnt_plugins=1
+    fi
+  done
+
+  if [[ -z "$normalized" ]]
+  then
+    normalized="/usr/share/confluent-hub-components,/mnt/plugins"
+    echo "$normalized"
+    return 0
+  fi
+
+  if [[ "$has_mnt_plugins" -ne 1 ]]
+  then
+    normalized="${normalized},/mnt/plugins"
+  fi
+
+  echo "$normalized"
+}
+
 : "${K3D_CLUSTER_NAME:=playground-cfk}"
 : "${K3D_REGISTRY_CACHE_ENABLED:=0}"
 : "${K3D_REGISTRY_CACHE_NAME:=playground-registry}"
@@ -61,18 +119,20 @@ export CP_INIT_IMAGE CP_INIT_TAG
 : "${CFK_TMPFS_DEFAULT_SIZE_LIMIT:=256Mi}"
 : "${CFK_TMPFS_SHM_SIZE_LIMIT:=1Gi}"
 : "${CFK_CONNECTOR_ARCHIVE_HOST:=}"
-: "${CFK_OPERATOR_CHART_VERSION:=}"
 
 : "${CFK_CONNECT_PLUGIN_PATH:=}"
 if [[ -n "${CONNECT_PLUGIN_PATH+x}" ]]
 then
-  CFK_CONNECT_PLUGIN_PATH="${CONNECT_PLUGIN_PATH}"
+  CFK_CONNECT_PLUGIN_PATH=$(normalize_cfk_connect_plugin_path "${CONNECT_PLUGIN_PATH}")
 fi
 if [[ -z "$CFK_CONNECT_PLUGIN_PATH" ]]
 then
   CFK_CONNECT_PLUGIN_PATH="/usr/share/confluent-hub-components,/mnt/plugins"
 fi
+CFK_CONNECT_PLUGIN_PATH=$(normalize_cfk_connect_plugin_path "$CFK_CONNECT_PLUGIN_PATH")
 export CFK_CONNECT_PLUGIN_PATH
+
+playground state set run.environment "cfk"
 
 function log_generated_yaml_file() {
   local label="$1"
@@ -844,6 +904,7 @@ function generate_connect_env_patch_from_compose() {
 
     if [[ "$env_key" == "CONNECT_PLUGIN_PATH" ]]
     then
+      env_value=$(normalize_cfk_connect_plugin_path "$env_value")
       CFK_CONNECT_PLUGIN_PATH="$env_value"
       export CFK_CONNECT_PLUGIN_PATH
       log "🔎 Effective CFK plugin.path source set from CONNECT_PLUGIN_PATH: ${CFK_CONNECT_PLUGIN_PATH}"
@@ -2815,13 +2876,7 @@ fi
 helm repo update confluentinc
 
 log "Install Confluent for Kubernetes"
-if [[ -n "$CFK_OPERATOR_CHART_VERSION" ]]
-then
-  log "📌 Using CFK Helm chart version ${CFK_OPERATOR_CHART_VERSION}"
-  helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes --version "$CFK_OPERATOR_CHART_VERSION"
-else
-  helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes
-fi
+helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes
 
 log "Deploy Confluent Platform"
 CFK_MANIFEST_FILE=$(mktemp)
@@ -2999,7 +3054,8 @@ then
         else
           for token in $(echo "$expected_plugin_lc" | tr -cs 'a-z0-9' '\n')
           do
-            if [[ ${#token} -lt 4 ]] || [[ "$token" == "kafka" ]] || [[ "$token" == "connect" ]] || [[ "$token" == "confluentinc" ]] || [[ "$token" == "plugin" ]] || [[ "$token" == "source" ]] || [[ "$token" == "sink" ]]
+            # Keep short but meaningful tokens like "s3" while filtering generic words.
+            if [[ ${#token} -lt 2 ]] || [[ "$token" =~ ^[0-9]+$ ]] || [[ "$token" == "kafka" ]] || [[ "$token" == "connect" ]] || [[ "$token" == "confluentinc" ]] || [[ "$token" == "plugin" ]] || [[ "$token" == "source" ]] || [[ "$token" == "sink" ]]
             then
               continue
             fi
@@ -3454,5 +3510,3 @@ then
   done < "$EXTRA_PODS_FILE"
   set -e
 fi
-
-playground state set run.environment "cfk"

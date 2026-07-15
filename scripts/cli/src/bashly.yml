@@ -2568,6 +2568,8 @@ commands:
     group: Debug
     help: |-
       🧱 CFK debug sub-commands
+    filters:
+    - cfk_environment
     commands:
       - name: cfk-bundle-analyze
         help: |-
@@ -2629,6 +2631,24 @@ commands:
         - playground debug cfk cfk-bundle-analyze --bundle ./bundle.tar.gz --json > report.json
         - playground debug cfk cfk-bundle-analyze -b ./bundle.tgz --html
         - playground debug cfk cfk-bundle-analyze -b ./bundle.tgz --html --output-dir ./reports
+
+      - name: generate-bundle
+        help: |-
+          ⛑️ Generate a Support bundle
+
+          see https://docs.confluent.io/operator/current/co-troubleshooting.html#support-bundle
+        dependencies:
+          kubectl: visit https://kubernetes.io/docs/tasks/tools/ to install
+        flags:
+        - long: --follow-logs-duration
+          arg: follow-logs-duration
+          validate: integer
+          required: false
+          default: "0"
+          help: |-
+            Max duration to follow logs
+        examples:
+        - playground debug cfk generate-bundle
 
 - name: get-jmx-metrics
   group: Kafka
@@ -2760,6 +2780,11 @@ commands:
           🎯 Grep pattern to filter logs
 
         conflicts: [--open, --wait-for-log]
+
+      - long: --previous
+        required: false
+        help: |-
+          🕰️ Show logs from the previous pod instance (only relevant when --environment=cfk is used)
       examples:
       - playground container logs --container connect
       - playground container logs -c connect --open
@@ -2769,6 +2794,7 @@ commands:
       - playground container logs -c broker -c connect -c schema-registry
       - playground container logs -c connect -c broker --wait-for-log "ERROR" --max-wait 120
       - playground container logs --container connect --grep "ERROR"
+      - playground pod logs --previous
 
     - name: display-error-all
       group: Container
