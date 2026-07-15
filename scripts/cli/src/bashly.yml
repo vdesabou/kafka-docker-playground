@@ -2630,6 +2630,24 @@ commands:
         - playground debug cfk cfk-bundle-analyze -b ./bundle.tgz --html
         - playground debug cfk cfk-bundle-analyze -b ./bundle.tgz --html --output-dir ./reports
 
+      - name: generate-bundle
+        help: |-
+          ⛑️ Generate a Support bundle
+
+          see https://docs.confluent.io/operator/current/co-troubleshooting.html#support-bundle
+        dependencies:
+          kubectl: visit https://kubernetes.io/docs/tasks/tools/ to install
+        flags:
+        - long: --follow-logs-duration
+          arg: follow-logs-duration
+          validate: integer
+          required: false
+          default: "0"
+          help: |-
+            Max duration to follow logs
+        examples:
+        - playground debug cfk generate-bundle
+
 - name: get-jmx-metrics
   group: Kafka
   help: |-

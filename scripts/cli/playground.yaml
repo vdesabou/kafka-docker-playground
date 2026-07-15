@@ -2268,7 +2268,7 @@ subcommands:
         options: []
       - name: cfk
         description: | 
-          🐞 CFK debug sub-commands
+          🧱 CFK debug sub-commands
         usage: playground debug cfk COMMAND
         options: []
   - name: log-level
@@ -2316,7 +2316,7 @@ subcommands:
             
   - name: cfk
     description: | 
-        🐞 CFK debug sub-commands
+        🧱 CFK debug sub-commands
     usage: playground debug cfk COMMAND
     options: []
     subcommands:
@@ -2387,6 +2387,21 @@ subcommands:
             📁 Directory for the HTML report (default: ./cfk-reports). Only used with --html.
             
             Default value: ./cfk-reports
+            
+      - name: generate-bundle
+        description: | 
+          ⛑️ Generate a Support bundle
+            
+            see https://docs.confluent.io/operator/current/co-troubleshooting.html#support-bundle
+        usage: playground debug cfk generate-bundle [OPTIONS]
+        options:
+        - names:
+          - --follow-logs-duration
+          argument: 0
+          description: | 
+            Max duration to follow logs
+            
+            Default value: 0
             
 
   - name: get-jmx-metrics

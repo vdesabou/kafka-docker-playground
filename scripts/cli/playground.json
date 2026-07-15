@@ -1943,7 +1943,7 @@
         },
         {
           "name": "cfk",
-          "description": "🐞 CFK debug sub-commands\n",
+          "description": "🧱 CFK debug sub-commands\n",
           "usage": "playground debug cfk COMMAND",
           "options": []
         }
@@ -2002,7 +2002,7 @@
     },
     {
       "name": "cfk",
-      "description": "🐞 CFK debug sub-commands\n",
+      "description": "🧱 CFK debug sub-commands\n",
       "usage": "playground debug cfk COMMAND",
       "options": [],
       "subcommands": [
@@ -2065,6 +2065,20 @@
               ],
               "argument": "./cfk-reports",
               "description": "📁 Directory for the HTML report (default: ./cfk-reports). Only used with --html.\n\nDefault value: ./cfk-reports\n"
+            }
+          ]
+        },
+        {
+          "name": "generate-bundle",
+          "description": "⛑️ Generate a Support bundle\n  \n  see https://docs.confluent.io/operator/current/co-troubleshooting.html#support-bundle\n",
+          "usage": "playground debug cfk generate-bundle [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--follow-logs-duration"
+              ],
+              "argument": 0,
+              "description": "Max duration to follow logs\n\nDefault value: 0\n"
             }
           ]
         }
