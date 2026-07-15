@@ -2568,6 +2568,8 @@ commands:
     group: Debug
     help: |-
       🧱 CFK debug sub-commands
+    filters:
+    - cfk_environment
     commands:
       - name: cfk-bundle-analyze
         help: |-
