@@ -88,7 +88,7 @@ spec:
       - status.storage.replication.factor=1
       - config.storage.replication.factor=1
       - confluent.topic.replication.factor=1
-      - plugin.path=${CFK_CONNECT_PLUGIN_PATH}
+      - plugin.path=/usr/share/confluent-hub-components,/mnt/plugins,/usr/share/filestream-connectors
 
       - confluent.topic.bootstrap.servers=kafka:9071
       - confluent.topic.replication.factor=1
