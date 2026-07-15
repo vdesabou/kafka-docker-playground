@@ -2221,6 +2221,13 @@
               ],
               "argument": null,
               "description": "🎯 Grep pattern to filter logs\n\nDefault value: \n\nConflicts with: --open, --wait-for-log\n"
+            },
+            {
+              "names": [
+                "--previous"
+              ],
+              "argument": "",
+              "description": "🕰️ Show logs from the previous pod instance (only relevant when --environment=cfk is used)\n"
             }
           ]
         },

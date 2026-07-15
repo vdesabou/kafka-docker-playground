@@ -2569,6 +2569,12 @@ subcommands:
             
             Conflicts with: --open, --wait-for-log
             
+        - names:
+          - --previous
+          argument: ""
+          description: | 
+            🕰️ Show logs from the previous pod instance (only relevant when --environment=cfk is used)
+            
       - name: display-error-all
         description: | 
           🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick troubleshooting

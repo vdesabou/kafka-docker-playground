@@ -2780,6 +2780,11 @@ commands:
           🎯 Grep pattern to filter logs
 
         conflicts: [--open, --wait-for-log]
+
+      - long: --previous
+        required: false
+        help: |-
+          🕰️ Show logs from the previous pod instance (only relevant when --environment=cfk is used)
       examples:
       - playground container logs --container connect
       - playground container logs -c connect --open
@@ -2789,6 +2794,7 @@ commands:
       - playground container logs -c broker -c connect -c schema-registry
       - playground container logs -c connect -c broker --wait-for-log "ERROR" --max-wait 120
       - playground container logs --container connect --grep "ERROR"
+      - playground pod logs --previous
 
     - name: display-error-all
       group: Container

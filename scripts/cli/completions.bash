@@ -500,6 +500,7 @@ _playground_completions_node_flag_state() {
     107:--vvv|107:-v) return 0 ;;
     107:--help|107:-h) return 0 ;;
     107:--open|107:-o) return 0 ;;
+    107:--previous) return 0 ;;
     108:--output-level|108:-o) return 2 ;;
     108:--vvv|108:-v) return 0 ;;
     108:--help|108:-h) return 0 ;;
@@ -4412,6 +4413,7 @@ _playground_completions() {
         _playground_completions_option_seen "--wait-for-log" "-w" || words+=("--wait-for-log" "-w")
         _playground_completions_option_seen "--max-wait" "-m" || words+=("--max-wait" "-m")
         _playground_completions_option_seen "--grep" || words+=("--grep")
+        _playground_completions_option_seen "--previous" || words+=("--previous")
         while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "${words[*]}" -- "$cur")
         return
         ;;
