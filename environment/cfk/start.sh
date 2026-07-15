@@ -1440,7 +1440,10 @@ function generate_extra_pods_from_compose_override() {
 
       auto_image="local/${pod_name}-cfk:latest"
       log "🧱 Building image $auto_image for service $service_name from $build_context_abs"
-      docker build -t "$auto_image" "$build_context_abs"
+      docker build \
+        --build-arg "CP_CONNECT_IMAGE=$CP_CONNECT_IMAGE" \
+        --build-arg "CP_CONNECT_TAG=$CP_CONNECT_TAG" \
+        -t "$auto_image" "$build_context_abs"
       image="$auto_image"
       image_pull_policy="Never"
       # Defer k3d import until after all large-file baking for this service
