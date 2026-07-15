@@ -908,6 +908,8 @@ function generate_connect_env_patch_from_compose() {
       CFK_CONNECT_PLUGIN_PATH="$env_value"
       export CFK_CONNECT_PLUGIN_PATH
       log "🔎 Effective CFK plugin.path source set from CONNECT_PLUGIN_PATH: ${CFK_CONNECT_PLUGIN_PATH}"
+      # Skip adding to podTemplate envVars since it's already set via configOverrides.server.plugin.path
+      continue
     fi
 
     escaped_value=$(printf '%s' "$env_value" | sed 's/\\/\\\\/g; s/"/\\"/g')
