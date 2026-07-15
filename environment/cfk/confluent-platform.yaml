@@ -10,7 +10,7 @@ spec:
   metrics: {}
   image:
     application: ${CP_SERVER_IMAGE}:${CP_SERVER_TAG}
-    init: ${CP_INIT_IMAGE}:${CP_INIT_TAG}
+    init: ${CP_INIT_IMAGE}:${CFK_VERSION}
   listeners:
     controller:
       tls:
@@ -29,7 +29,7 @@ spec:
   metrics: {}
   image:
     application: ${CP_SERVER_IMAGE}:${CP_SERVER_TAG}
-    init: ${CP_INIT_IMAGE}:${CP_INIT_TAG}
+    init: ${CP_INIT_IMAGE}:${CFK_VERSION}
   dataVolumeCapacity: 10Gi
   metricReporter:
     enabled: true
@@ -59,7 +59,7 @@ spec:
   metrics: {}
   image:
     application: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
-    init: ${CP_INIT_IMAGE}:${CP_INIT_TAG}
+    init: ${CP_INIT_IMAGE}:${CFK_VERSION}
   podTemplate:
     podSecurityContext:
       fsGroup: 1000
@@ -109,7 +109,7 @@ spec:
   metrics: {}
   image:
     application: ${CP_SCHEMA_REGISTRY_IMAGE}:${CP_SCHEMA_REGISTRY_TAG}
-    init: ${CP_INIT_IMAGE}:${CP_INIT_TAG}
+    init: ${CP_INIT_IMAGE}:${CFK_VERSION}
 ---
 apiVersion: platform.confluent.io/v1beta1
 kind: ControlCenter
@@ -122,7 +122,7 @@ spec:
   metrics: {}
   image:
     application: ${CP_CONTROL_CENTER_IMAGE}:${CP_CONTROL_CENTER_TAG}
-    init: ${CP_INIT_IMAGE}:${CP_INIT_TAG}
+    init: ${CP_INIT_IMAGE}:${CFK_VERSION}
   dataVolumeCapacity: 10Gi
   dependencies:
     schemaRegistry:

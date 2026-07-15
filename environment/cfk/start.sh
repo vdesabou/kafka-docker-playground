@@ -48,7 +48,6 @@ function checksum_sha512() {
 : "${CP_CONTROL_CENTER_IMAGE:=confluentinc/cp-enterprise-control-center-next-gen}"
 : "${CP_CONTROL_CENTER_TAG:=latest}"
 : "${CP_INIT_IMAGE:=confluentinc/confluent-init-container}"
-: "${CP_INIT_TAG:=3.3.0}"
 
 export CP_SERVER_IMAGE CP_SERVER_TAG
 export CP_CONNECT_IMAGE CP_CONNECT_TAG
@@ -56,13 +55,64 @@ export CP_SCHEMA_REGISTRY_IMAGE CP_SCHEMA_REGISTRY_TAG
 export CP_KSQL_IMAGE CP_KSQL_TAG
 export CP_REST_PROXY_IMAGE CP_REST_PROXY_TAG
 export CP_CONTROL_CENTER_IMAGE CP_CONTROL_CENTER_TAG
-export CP_INIT_IMAGE CP_INIT_TAG
+export CP_INIT_IMAGE
 
 : "${CFK_TMPFS_DEFAULT_SIZE_LIMIT:=256Mi}"
 : "${CFK_TMPFS_SHM_SIZE_LIMIT:=1Gi}"
 : "${CFK_CONNECTOR_ARCHIVE_HOST:=}"
+: "${CFK_VERSION:=3.3.0}"
+
+export CFK_VERSION
 
 playground state set run.environment "cfk"
+
+# Map CFK version to helm chart version
+# Reference: https://docs.confluent.io/operator/current/co-plan.html#co-long-image-tags
+function get_cfk_helm_chart_version() {
+  local cfk_version="$1"
+  
+  case "$cfk_version" in
+    3.3.0) echo "0.1718.10" ;;
+    3.2.3) echo "0.1514.76" ;;
+    3.2.2) echo "0.1514.40" ;;
+    3.2.1) echo "0.1514.19" ;;
+    3.2.0) echo "0.1514.1" ;;
+    3.1.3) echo "0.1351.147" ;;
+    3.1.2) echo "0.1351.103" ;;
+    3.1.1) echo "0.1351.59" ;;
+    3.1.0) echo "0.1351.24" ;;
+    3.0.5) echo "0.1263.163" ;;
+    3.0.4) echo "0.1263.124" ;;
+    3.0.3) echo "0.1263.105" ;;
+    3.0.2) echo "0.1263.79" ;;
+    3.0.1) echo "0.1263.34" ;;
+    3.0.0) echo "0.1263.8" ;;
+    2.11.6) echo "0.1193.192" ;;
+    2.11.5) echo "0.1193.151" ;;
+    2.11.4) echo "0.1193.108" ;;
+    2.11.3) echo "0.1193.70" ;;
+    2.11.2) echo "0.1193.47" ;;
+    2.11.1) echo "0.1193.34" ;;
+    2.11.0) echo "0.1193.1" ;;
+    2.10.6) echo "0.1145.181" ;;
+    2.10.5) echo "0.1145.141" ;;
+    2.10.4) echo "0.1145.102" ;;
+    2.10.3) echo "0.1145.71" ;;
+    2.10.2) echo "0.1145.50" ;;
+    2.10.1) echo "0.1145.35" ;;
+    2.9.10) echo "0.1033.238" ;;
+    2.9.9) echo "0.1033.196" ;;
+    2.9.8) echo "0.1033.150" ;;
+    2.9.7) echo "0.1033.110" ;;
+    2.9.6) echo "0.1033.87" ;;
+    2.9.5) echo "0.1033.71" ;;
+    *)
+      logerror "❌ CFK version $cfk_version is not supported"
+      logerror "   Supported versions: 3.3.0, 3.2.3, 3.2.2, 3.2.1, 3.2.0, 3.1.3, 3.1.2, 3.1.1, 3.1.0, 3.0.5, 3.0.4, 3.0.3, 3.0.2, 3.0.1, 3.0.0, 2.11.6, 2.11.5, 2.11.4, 2.11.3, 2.11.2, 2.11.1, 2.11.0, 2.10.6, 2.10.5, 2.10.4, 2.10.3, 2.10.2, 2.10.1, 2.9.10, 2.9.9, 2.9.8, 2.9.7, 2.9.6, 2.9.5"
+      return 1
+      ;;
+  esac
+}
 
 function log_generated_yaml_file() {
   local label="$1"
@@ -2123,7 +2173,7 @@ function build_cfk_manifest() {
   rendered_file=$(mktemp)
   base_manifest_file=$(mktemp)
 
-  envsubst '${CP_SERVER_IMAGE} ${CP_SERVER_TAG} ${CP_CONNECT_IMAGE} ${CP_CONNECT_TAG} ${CP_SCHEMA_REGISTRY_IMAGE} ${CP_SCHEMA_REGISTRY_TAG} ${CP_CONTROL_CENTER_IMAGE} ${CP_CONTROL_CENTER_TAG} ${CP_INIT_IMAGE} ${CP_INIT_TAG}' < "${DIR}/confluent-platform.yaml" > "$rendered_file"
+  envsubst '${CP_SERVER_IMAGE} ${CP_SERVER_TAG} ${CP_CONNECT_IMAGE} ${CP_CONNECT_TAG} ${CP_SCHEMA_REGISTRY_IMAGE} ${CP_SCHEMA_REGISTRY_TAG} ${CP_CONTROL_CENTER_IMAGE} ${CP_CONTROL_CENTER_TAG} ${CP_INIT_IMAGE} ${CFK_VERSION}' < "${DIR}/confluent-platform.yaml" > "$rendered_file"
 
   if [[ -n "$ENABLE_CONTROL_CENTER" ]]
   then
@@ -2818,7 +2868,13 @@ fi
 helm repo update confluentinc
 
 log "Install Confluent for Kubernetes"
-helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes
+CFK_HELM_CHART_VERSION=$(get_cfk_helm_chart_version "$CFK_VERSION")
+if [[ -z "$CFK_HELM_CHART_VERSION" ]]
+then
+  exit 1
+fi
+helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes --version "$CFK_HELM_CHART_VERSION"
+log "✅ Installed Confluent for Kubernetes CFK version $CFK_VERSION (helm chart version $CFK_HELM_CHART_VERSION)"
 
 log "Deploy Confluent Platform"
 CFK_MANIFEST_FILE=$(mktemp)
