@@ -2774,6 +2774,20 @@ then
   # Avoid stale listeners from previous runs serving the wrong directory on 18080.
   set +e
   lsof -i ":18080" 2>/dev/null | awk 'NR>1 {print $2}' | xargs kill -9 2>/dev/null || true
+  
+  # Clean up old connector archive directory from previous run
+  if [[ -f /tmp/cfk-connector-archive-dir.state ]]
+  then
+    old_connector_zip_dir=$(cat /tmp/cfk-connector-archive-dir.state 2>/dev/null)
+    if [[ -n "$old_connector_zip_dir" ]] && [[ "$old_connector_zip_dir" != "$CONNECTOR_ZIP_DIR" ]] && [[ -d "$old_connector_zip_dir" ]]
+    then
+      rm -rf "$old_connector_zip_dir" 2>/dev/null || true
+    fi
+  fi
+  
+  # Save current connector archive directory for cleanup on next run
+  echo "$CONNECTOR_ZIP_DIR" > /tmp/cfk-connector-archive-dir.state 2>/dev/null || true
+  
   set -e
 
   python3 -m http.server 18080 --directory "$CONNECTOR_ZIP_DIR" >/tmp/cfk-connector-zip-http.log 2>&1 &
@@ -3134,10 +3148,10 @@ cleanup() {
   # Note: CONNECTOR_ZIP_SERVER_PID is intentionally NOT killed here
   # It continues running to support `playground container update` and similar operations
   # The server is killed at the start of the next run if a new one needs to be started
-  if [ -n "$CONNECTOR_ZIP_DIR" ]
-  then
-    rm -rf "$CONNECTOR_ZIP_DIR" >/dev/null 2>&1 || true
-  fi
+  
+  # Also DO NOT delete CONNECTOR_ZIP_DIR while the server is running
+  # The directory will be cleaned up when the server is killed at the start of the next run
+  
   if [ -n "$CONNECT_BUILD_PATCH_FILE" ]
   then
     rm -f "$CONNECT_BUILD_PATCH_FILE" >/dev/null 2>&1 || true
