@@ -24,10 +24,10 @@ then
 
     if [ "$container_kill_all_before_run" == "true" ] || [ "$container_kill_all_before_run" == "" ]
     then
-    log "💀 kill all docker containers (disable with 'playground config container-kill-all-before-run false')"
-    playground container kill-all
+        log "💀 kill all docker containers (disable with 'playground config container-kill-all-before-run false')"
+        playground container kill-all
     else
-    playground stop
+        playground stop
     fi
     set -e
 fi
@@ -35,6 +35,11 @@ fi
 if [[ -n "$wait_for_control_center" ]]
 then
   export WAIT_FOR_CONTROL_CENTER=1
+fi
+
+if [[ -n "$no_stop" ]]
+then
+  export NO_STOP=1
 fi
 
 # Handle --service flag (can be passed multiple times)
