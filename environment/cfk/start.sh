@@ -3504,9 +3504,41 @@ then
     if [[ -n "$current_svc_name" ]] && [[ "$yaml_line" =~ ^[[:space:]]*port:[[:space:]]*([0-9]+) ]]
     then
       svc_port="${BASH_REMATCH[1]}"
-      start_port_forward "$current_svc_name" "$svc_port" "$svc_port" \
-        "/tmp/${current_svc_name}-${svc_port}-port-forward.log" "$current_svc_name" > /dev/null || true
-      log "🔌 Extra service ${current_svc_name} is reachable at http://127.0.0.1:${svc_port}"
+      # Look up the host (local) port from the docker-compose override.
+      # docker-compose ports entries have the form [ip:]host_port:container_port.
+      # Default to the container port if no host mapping is found.
+      local_port="$svc_port"
+      if [[ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]]
+      then
+        compose_host_port=$(awk -v svc="$current_svc_name" -v cport="$svc_port" '
+          function trim(s) { gsub(/^[[:space:]]+|[[:space:]]+$/, "", s); return s }
+          function unquote(s) { gsub(/^"|"$/, "", s); gsub(/^\047|\047$/, "", s); return s }
+          BEGIN { in_svc=0; section="" }
+          /^services:[[:space:]]*$/ { in_services=1; next }
+          in_services && /^  [A-Za-z0-9_.-]+:[[:space:]]*$/ {
+            cur=$1; sub(/:$/, "", cur)
+            in_svc=(cur == svc); section=""
+          }
+          in_svc && /^    ports:[[:space:]]*$/ { section="ports"; next }
+          in_svc && section != "ports" && /^    [A-Za-z0-9_.-]+:/ { section="" }
+          in_svc && section == "ports" && /^      -/ {
+            p=$0; sub(/^      -[[:space:]]*/, "", p); p=trim(unquote(p))
+            sub(/\/[a-z]*$/, "", p)
+            n=split(p, parts, ":")
+            if (n == 1) { hp=parts[1]; cp=parts[1] }
+            else if (n == 2) { hp=parts[1]; cp=parts[2] }
+            else { hp=parts[2]; cp=parts[3] }
+            if (cp == cport) { print hp; exit }
+          }
+        ' "${DOCKER_COMPOSE_FILE_OVERRIDE}")
+        if [[ -n "$compose_host_port" ]] && [[ "$compose_host_port" =~ ^[0-9]+$ ]]
+        then
+          local_port="$compose_host_port"
+        fi
+      fi
+      start_port_forward "$current_svc_name" "$local_port" "$svc_port" \
+        "/tmp/${current_svc_name}-${local_port}-port-forward.log" "$current_svc_name" > /dev/null || true
+      log "🔌 Extra service ${current_svc_name} is reachable at http://127.0.0.1:${local_port}"
     fi
   done < "$EXTRA_PODS_FILE"
   set -e
