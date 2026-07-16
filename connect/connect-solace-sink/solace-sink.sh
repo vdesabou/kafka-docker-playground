@@ -48,7 +48,7 @@ playground topic produce -t sink-messages --nb-messages 10 << 'EOF'
 EOF
 
 log "Creating Solace sink connector"
-playground connector create-or-update --connector SolaceSinkConnector  << EOF
+playground connector create-or-update --connector solace-sink  << EOF
 {
      "connector.class": "io.confluent.connect.jms.SolaceSinkConnector",
      "tasks.max": "1",
