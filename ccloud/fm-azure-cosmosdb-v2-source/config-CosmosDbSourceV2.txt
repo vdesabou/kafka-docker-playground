@@ -1,4 +1,55 @@
 ==========================
+Authentication method
+==========================
+🔘 authentication.method
+
+How Confluent Cloud authenticates with Azure.
+
+	 - Type: STRING
+	 - Default: Master Key
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 secret.manager.enabled
+
+Fetch sensitive configuration values from a secret manager.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Secret manager configuration
+==========================
+🔘 secret.manager
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the secret manager to use for retrieving sensitive data.
+	 - Required: HIGH
+
+🔘 secret.manager.managed.configs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Select the configurations to fetch their values from the secret manager.
+	 - Required: HIGH
+
+🔘 secret.manager.provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing provider integration that has access to your secret manager.
+	 - Required: HIGH
+
+==========================
 Azure credentials
 ==========================
 🔘 provider.integration.id
@@ -8,15 +59,6 @@ Azure credentials
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Azure provider-integration to mint Microsoft Entra ID application tokens.
-	 - Required: HIGH
-
-🔘 authentication.method
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: How Confluent Cloud authenticates with Azure.
 	 - Required: HIGH
 
 ==========================
