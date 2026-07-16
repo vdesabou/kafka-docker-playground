@@ -1141,6 +1141,19 @@ commands:
     - long: --wait-for-control-center
       help: |- 
         😴 Wait for control-center instead of connect
+    - long: --service
+      arg: service
+      private: true
+      help: |-
+        service to start
+
+        Example: --service "oracle" --service "connect"
+      required: false
+      repeatable: true
+    - long: --no-stop
+      private: true
+      help: |- 
+        Do not stop the environment before starting it
     - long: --docker-compose-override-file
       short: -f
       validate: file_exists

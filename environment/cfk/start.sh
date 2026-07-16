@@ -1353,6 +1353,24 @@ function generate_extra_pods_from_compose_override() {
       continue
     fi
 
+    # Filter services if START_SERVICES env var is set
+    if [[ -n "$START_SERVICES" ]]
+    then
+      local service_matched=0
+      for start_service in $START_SERVICES
+      do
+        if [[ "$service_name" == "$start_service" ]]
+        then
+          service_matched=1
+          break
+        fi
+      done
+      if [[ "$service_matched" -eq 0 ]]
+      then
+        continue
+      fi
+    fi
+
     # Respect docker-compose profiles: skip services that declare profiles unless the
     # corresponding env var (profile name uppercased, hyphens→underscores) is non-empty.
     if [[ -n "$profiles_list" ]]
