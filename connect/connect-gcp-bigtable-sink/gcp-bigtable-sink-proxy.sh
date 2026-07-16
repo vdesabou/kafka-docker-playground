@@ -129,6 +129,8 @@ playground connector create-or-update --connector gcp-bigtable-sink  << EOF
 }
 EOF
 
+sleep 5
+
 playground connector show-lag --connector gcp-bigtable-sink --max-wait 360
 
 if [ -z "$GITHUB_RUN_NUMBER" ]
