@@ -29,6 +29,63 @@ If 'transaction.boundary' is set to 'interval', determines the interval for prod
 	 - Required: false
 
 ==========================
+Transforms: AddPrefix
+==========================
+🔘 transforms.AddPrefix.type
+
+Class for the 'AddPrefix' transformation.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.AddPrefix.plugin.version
+
+Version of the 'AddPrefix' transformation.
+
+	 - Type: STRING
+	 - Default: 8.3.0-ce
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 transforms.AddPrefix.regex
+
+Regular expression to use for matching.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.AddPrefix.replacement
+
+Replacement string.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.AddPrefix.negate
+
+Whether the configured predicate should be negated.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.AddPrefix.predicate
+
+The alias of a predicate used to determine whether to apply this transformation.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
 Storage
 ==========================
 🔘 mode
@@ -552,74 +609,5 @@ When true, the connector emits four Kafka record headers per record describing t
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: LOW
-	 - Required: false
-
-==========================
-Serialization
-==========================
-🔘 value.converter.decimal.format
-
-Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
-
-	 - Type: STRING
-	 - Default: BASE64
-	 - Importance: LOW
-	 - Required: false
-
-==========================
-null
-==========================
-🔘 value.converter.converter.type
-
-How this converter will be used.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: LOW
-	 - Required: true
-
-==========================
-Schemas
-==========================
-🔘 value.converter.schemas.cache.size
-
-The maximum number of schemas that can be cached in this converter instance.
-
-	 - Type: INT
-	 - Default: 1000
-	 - Importance: HIGH
-	 - Required: false
-
-==========================
-Serialization
-==========================
-🔘 value.converter.replace.null.with.default
-
-Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: LOW
-	 - Required: false
-
-==========================
-Schemas
-==========================
-🔘 value.converter.schemas.enable
-
-Include schemas within each of the serialized values and keys.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: HIGH
-	 - Required: false
-
-🔘 value.converter.schema.content
-
-When set, this is used as the schema for all messages, and the schemas within each of the message will be ignored.Otherwise, the schema will be included in the content of each message. This configuration applies only 'schemas.enable' is true, and it exclusively affects the sink connector.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
 	 - Required: false
 
