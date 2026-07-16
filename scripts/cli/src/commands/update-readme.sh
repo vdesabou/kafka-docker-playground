@@ -1,5 +1,6 @@
 tags="${args[--tags]}"
 generate_for_kb="${args[--generate-for-kb]}"
+cfk="${args[--cfk]}"
 
 set +e
 tmp_dir="/tmp/update-readme"
@@ -289,7 +290,12 @@ do
           cat ${gh_msg_file_intro} >> ${gh_msg_file_final}
           cat ${gh_msg_file} >> ${gh_msg_file_final}
           log "Creating GH issue with title $title"
-          gh issue create --title "$title" --body-file "$gh_msg_file_final" --assignee vdesabou --label "new 🆕"
+          if [[ -n "$cfk" ]]
+          then
+            gh issue create --title "$title" --body-file "$gh_msg_file_final" --assignee vdesabou --label "new 🆕" --label "cfk"
+          else
+            gh issue create --title "$title" --body-file "$gh_msg_file_final" --assignee vdesabou --label "new 🆕"
+          fi
         else
           echo -e "🤦‍♂️💥 Still failing !\n" >> ${gh_msg_file_intro}
           cat ${gh_msg_file_intro} >> ${gh_msg_file_final}
@@ -303,7 +309,12 @@ do
                 log "🐛 Skipping as test has an opened GH issue (${issue_number} $title) with label 'CI ignore ⏭️'"
             else
                 gh issue comment ${issue_number} --body-file "$gh_msg_file_final"
-                gh issue edit ${issue_number} --add-label "CI failing 🔥" --remove-label "new 🆕"
+                if [[ -n "$cfk" ]]
+                then
+                  gh issue edit ${issue_number} --add-label "CI failing 🔥" --add-label "cfk" --remove-label "new 🆕"
+                else
+                  gh issue edit ${issue_number} --add-label "CI failing 🔥" --remove-label "new 🆕"
+                fi
             fi
         fi
         gh_issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')

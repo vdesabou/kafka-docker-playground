@@ -278,6 +278,8 @@ commands:
         💯 list of tags
     - long: --generate-for-kb
       required: false
+    - long: --cfk
+      required: false
 
 - name: force-ci
   private: true
