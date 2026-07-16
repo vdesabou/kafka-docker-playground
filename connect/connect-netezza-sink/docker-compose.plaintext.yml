@@ -1,0 +1,11 @@
+---
+services:
+
+  connect:
+    environment:
+      # The Netezza JDBC driver (nzjdbc3.jar) is copied by the test script into
+      # ../../confluent-hub/confluentinc-kafka-connect-netezza/lib, which the base
+      # environment already mounts at /usr/share/confluent-hub-components, so no
+      # extra volume mount is needed here. (nzsql runs in a separate amd64
+      # container, not in connect - see netezza-sink.sh.)
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-netezza
