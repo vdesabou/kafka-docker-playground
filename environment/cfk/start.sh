@@ -2677,7 +2677,7 @@ then
 fi
 
 log "Start or reuse k3d (k3s)"
-K3D_MEMORY=${K3D_MEMORY:-"16g"}
+K3D_MEMORY=${K3D_MEMORY:-"24g"}
 if k3d cluster list 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$K3D_CLUSTER_NAME"
 then
   log "✅ k3d cluster $K3D_CLUSTER_NAME already exists, ensuring it is running"
