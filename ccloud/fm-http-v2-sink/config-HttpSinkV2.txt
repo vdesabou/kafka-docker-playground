@@ -505,6 +505,45 @@ The identifier for the API key used in authentication. The format depends on the
 	 - Importance: The password to be used for proxy authentication.
 	 - Required: MEDIUM
 
+🔘 secret.manager.enabled
+
+Fetch sensitive configuration values from a secret manager.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Secret manager configuration
+==========================
+🔘 secret.manager
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the secret manager to use for retrieving sensitive data.
+	 - Required: HIGH
+
+🔘 secret.manager.managed.configs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Select the configurations to fetch their values from the secret manager.
+	 - Required: HIGH
+
+🔘 secret.manager.provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing provider integration that has access to your secret manager.
+	 - Required: HIGH
+
 ==========================
 Behavior on error
 ==========================
@@ -942,7 +981,7 @@ How to handle records with a non-null key and a null value (i.e. Kafka tombstone
 
 🔘 api1.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -969,7 +1008,7 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api1.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -1278,7 +1317,7 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api2.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -1296,7 +1335,7 @@ Whether to enable GZip compression on HTTP responses. Valid options are ``true``
 
 🔘 api2.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -1605,7 +1644,7 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api3.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -1623,7 +1662,7 @@ Whether to enable GZip compression on HTTP responses. Valid options are ``true``
 
 🔘 api3.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -1923,7 +1962,7 @@ How to handle records with a non-null key and a null value (i.e. Kafka tombstone
 
 🔘 api4.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -1950,7 +1989,7 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api4.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -2250,7 +2289,7 @@ How to handle records with a non-null key and a null value (i.e. Kafka tombstone
 
 🔘 api5.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -2277,7 +2316,7 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api5.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -2586,7 +2625,7 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api6.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -2595,7 +2634,7 @@ Whether to enable GZip compression on HTTP responses. Valid options are ``true``
 
 🔘 api6.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -2904,7 +2943,7 @@ The time in milliseconds to wait for a request response from the server
 
 🔘 api7.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -2931,7 +2970,7 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api7.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -3231,7 +3270,7 @@ How to handle records with a non-null key and a null value (i.e. Kafka tombstone
 
 🔘 api8.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -3258,7 +3297,7 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api8.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -3567,7 +3606,7 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api9.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -3585,7 +3624,7 @@ Whether to enable GZip compression on HTTP responses. Valid options are ``true``
 
 🔘 api9.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -3885,7 +3924,7 @@ How to handle records with a non-null key and a null value (i.e. Kafka tombstone
 
 🔘 api10.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -3903,7 +3942,7 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api10.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -4221,7 +4260,7 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api11.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -4230,7 +4269,7 @@ Whether to enable GZip compression on HTTP responses. Valid options are ``true``
 
 🔘 api11.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -4548,7 +4587,7 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api12.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -4557,7 +4596,7 @@ Whether to enable GZip compression on HTTP responses. Valid options are ``true``
 
 🔘 api12.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -4875,7 +4914,7 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api13.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -4884,7 +4923,7 @@ Whether to enable GZip compression on HTTP responses. Valid options are ``true``
 
 🔘 api13.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -5193,7 +5232,7 @@ The time in milliseconds to wait for a request response from the server
 
 🔘 api14.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -5211,7 +5250,7 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api14.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5
@@ -5520,7 +5559,7 @@ How to handle records with a non-null key and a null value (i.e. Kafka tombstone
 
 🔘 api15.http.response.compression.enabled
 
-Whether to enable GZip compression on HTTP responses. Valid options are ``true`` and ``false``. Default is ``true``. The HTTP server must support compression for this setting to work.
+Specify whether to enable GZip compression on HTTP responses. Valid options are ``true`` (default) and ``false``. The HTTP server must support compression for this setting to work.
 
 	 - Type: BOOLEAN
 	 - Default: true
@@ -5538,7 +5577,7 @@ The format of the request body. Valid options are JSON or String. The default va
 
 🔘 api15.max.retries
 
-The maximum number of times to retry on errors before failing the task.
+The maximum number of times to retry on errors before failing the task. Must be between 1 and 5000
 
 	 - Type: INT
 	 - Default: 5

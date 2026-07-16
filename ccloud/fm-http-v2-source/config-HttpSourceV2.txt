@@ -1110,7 +1110,7 @@ The character that separates multiple distinct path parameters within ``http.pat
 
 🔘 api1.http.response.schema.enforce
 
-Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings.
+Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings. When set to ``EVOLVE``, the connector evolves a single per-topic schema across responses, using Schema Registry as the persistence layer; ``value.converter.schema.registry.url`` must be set and ``value.converter.value.subject.name.strategy`` must be ``TopicNameStrategy`` (the default).
 
 	 - Type: STRING
 	 - Default: NONE
@@ -1473,7 +1473,7 @@ The character that separates multiple distinct path parameters within ``http.pat
 
 🔘 api2.http.response.schema.enforce
 
-Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings.
+Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings. When set to ``EVOLVE``, the connector evolves a single per-topic schema across responses, using Schema Registry as the persistence layer; ``value.converter.schema.registry.url`` must be set and ``value.converter.value.subject.name.strategy`` must be ``TopicNameStrategy`` (the default).
 
 	 - Type: STRING
 	 - Default: NONE
@@ -1836,7 +1836,7 @@ The character that separates multiple distinct path parameters within ``http.pat
 
 🔘 api3.http.response.schema.enforce
 
-Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings.
+Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings. When set to ``EVOLVE``, the connector evolves a single per-topic schema across responses, using Schema Registry as the persistence layer; ``value.converter.schema.registry.url`` must be set and ``value.converter.value.subject.name.strategy`` must be ``TopicNameStrategy`` (the default).
 
 	 - Type: STRING
 	 - Default: NONE
@@ -2199,7 +2199,7 @@ The character that separates multiple distinct path parameters within ``http.pat
 
 🔘 api4.http.response.schema.enforce
 
-Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings.
+Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings. When set to ``EVOLVE``, the connector evolves a single per-topic schema across responses, using Schema Registry as the persistence layer; ``value.converter.schema.registry.url`` must be set and ``value.converter.value.subject.name.strategy`` must be ``TopicNameStrategy`` (the default).
 
 	 - Type: STRING
 	 - Default: NONE
@@ -2562,7 +2562,7 @@ The character that separates multiple distinct path parameters within ``http.pat
 
 🔘 api5.http.response.schema.enforce
 
-Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings.
+Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings. When set to ``EVOLVE``, the connector evolves a single per-topic schema across responses, using Schema Registry as the persistence layer; ``value.converter.schema.registry.url`` must be set and ``value.converter.value.subject.name.strategy`` must be ``TopicNameStrategy`` (the default).
 
 	 - Type: STRING
 	 - Default: NONE
@@ -2925,7 +2925,7 @@ The character that separates multiple distinct path parameters within ``http.pat
 
 🔘 api6.http.response.schema.enforce
 
-Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings.
+Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings. When set to ``EVOLVE``, the connector evolves a single per-topic schema across responses, using Schema Registry as the persistence layer; ``value.converter.schema.registry.url`` must be set and ``value.converter.value.subject.name.strategy`` must be ``TopicNameStrategy`` (the default).
 
 	 - Type: STRING
 	 - Default: NONE
@@ -3288,7 +3288,7 @@ The character that separates multiple distinct path parameters within ``http.pat
 
 🔘 api7.http.response.schema.enforce
 
-Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings.
+Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings. When set to ``EVOLVE``, the connector evolves a single per-topic schema across responses, using Schema Registry as the persistence layer; ``value.converter.schema.registry.url`` must be set and ``value.converter.value.subject.name.strategy`` must be ``TopicNameStrategy`` (the default).
 
 	 - Type: STRING
 	 - Default: NONE
@@ -3651,7 +3651,7 @@ The character that separates multiple distinct path parameters within ``http.pat
 
 🔘 api8.http.response.schema.enforce
 
-Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings.
+Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings. When set to ``EVOLVE``, the connector evolves a single per-topic schema across responses, using Schema Registry as the persistence layer; ``value.converter.schema.registry.url`` must be set and ``value.converter.value.subject.name.strategy`` must be ``TopicNameStrategy`` (the default).
 
 	 - Type: STRING
 	 - Default: NONE
@@ -4014,7 +4014,7 @@ The character that separates multiple distinct path parameters within ``http.pat
 
 🔘 api9.http.response.schema.enforce
 
-Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings.
+Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings. When set to ``EVOLVE``, the connector evolves a single per-topic schema across responses, using Schema Registry as the persistence layer; ``value.converter.schema.registry.url`` must be set and ``value.converter.value.subject.name.strategy`` must be ``TopicNameStrategy`` (the default).
 
 	 - Type: STRING
 	 - Default: NONE
@@ -4377,7 +4377,7 @@ The character that separates multiple distinct path parameters within ``http.pat
 
 🔘 api10.http.response.schema.enforce
 
-Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings.
+Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings. When set to ``EVOLVE``, the connector evolves a single per-topic schema across responses, using Schema Registry as the persistence layer; ``value.converter.schema.registry.url`` must be set and ``value.converter.value.subject.name.strategy`` must be ``TopicNameStrategy`` (the default).
 
 	 - Type: STRING
 	 - Default: NONE
@@ -4740,7 +4740,7 @@ The character that separates multiple distinct path parameters within ``http.pat
 
 🔘 api11.http.response.schema.enforce
 
-Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings.
+Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings. When set to ``EVOLVE``, the connector evolves a single per-topic schema across responses, using Schema Registry as the persistence layer; ``value.converter.schema.registry.url`` must be set and ``value.converter.value.subject.name.strategy`` must be ``TopicNameStrategy`` (the default).
 
 	 - Type: STRING
 	 - Default: NONE
@@ -5103,7 +5103,7 @@ The character that separates multiple distinct path parameters within ``http.pat
 
 🔘 api12.http.response.schema.enforce
 
-Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings.
+Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings. When set to ``EVOLVE``, the connector evolves a single per-topic schema across responses, using Schema Registry as the persistence layer; ``value.converter.schema.registry.url`` must be set and ``value.converter.value.subject.name.strategy`` must be ``TopicNameStrategy`` (the default).
 
 	 - Type: STRING
 	 - Default: NONE
@@ -5466,7 +5466,7 @@ The character that separates multiple distinct path parameters within ``http.pat
 
 🔘 api13.http.response.schema.enforce
 
-Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings.
+Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings. When set to ``EVOLVE``, the connector evolves a single per-topic schema across responses, using Schema Registry as the persistence layer; ``value.converter.schema.registry.url`` must be set and ``value.converter.value.subject.name.strategy`` must be ``TopicNameStrategy`` (the default).
 
 	 - Type: STRING
 	 - Default: NONE
@@ -5829,7 +5829,7 @@ The character that separates multiple distinct path parameters within ``http.pat
 
 🔘 api14.http.response.schema.enforce
 
-Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings.
+Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings. When set to ``EVOLVE``, the connector evolves a single per-topic schema across responses, using Schema Registry as the persistence layer; ``value.converter.schema.registry.url`` must be set and ``value.converter.value.subject.name.strategy`` must be ``TopicNameStrategy`` (the default).
 
 	 - Type: STRING
 	 - Default: NONE
@@ -6192,7 +6192,7 @@ The character that separates multiple distinct path parameters within ``http.pat
 
 🔘 api15.http.response.schema.enforce
 
-Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings.
+Controls how strictly the connector enforces the HTTP response schema. When set to ``STRICT``, the connector validates that the response conforms to the defined OpenAPI response schema. For both missing non-optional and new fields, the connector handles the error (fail or ignore) based on the ``behavior.on.error`` setting. When set to ``NONE``, the connector does not enforce the OpenAPI schema and incase non-optional field is missing, connector deduces the schema for the response dynamically otherwise connector registers new fields as optional strings. When set to ``EVOLVE``, the connector evolves a single per-topic schema across responses, using Schema Registry as the persistence layer; ``value.converter.schema.registry.url`` must be set and ``value.converter.value.subject.name.strategy`` must be ``TopicNameStrategy`` (the default).
 
 	 - Type: STRING
 	 - Default: NONE
