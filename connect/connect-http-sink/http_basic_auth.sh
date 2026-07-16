@@ -35,7 +35,7 @@ EOF
 
 playground debug log-level set --package "org.apache.http" --level TRACE
 
-log "Creating HttpSinkBasicAuth connector"
+log "Creating http-basic-auth connector"
 playground connector create-or-update --connector http-basic-auth  << EOF
 {
      "topics": "http-messages",
