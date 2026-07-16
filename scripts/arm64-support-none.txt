@@ -1,6 +1,3 @@
-connect/connect-cdc-oracle11-source
-connect/connect-cdc-oracle12-source
-connect/connect-cdc-oracle18-source
 connect/connect-cdc-oracle21-source
 connect/connect-jdbc-oracle11-sink
 connect/connect-jdbc-oracle11-source
