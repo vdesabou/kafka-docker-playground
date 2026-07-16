@@ -4,9 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-logwarn "skipped as it does not work"
-exit 111
-
 if connect_cp_version_greater_than_8 && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "1.1.0"
 then
      logwarn "minimal supported connector version is 1.1.1 for CP 8.0"
@@ -75,6 +72,8 @@ EOF
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances delete $GCP_SPANNER_INSTANCE --project $GCP_PROJECT  << EOF
 Y
 EOF
+  log "Unblocking spanner.googleapis.com traffic"
+  playground debug block-traffic --container connect --destination spanner.googleapis.com --action stop || true
   docker rm -f gcloud-config
 }
 trap cleanup_cloud_resources EXIT
@@ -124,7 +123,7 @@ EOF
 
 IP=$(nslookup spanner.googleapis.com | grep Address | grep -v "#" | cut -d " " -f 2)
 log "Blocking spanner.googleapis.com IP $IP to make sure proxy is used"
-playground container exec --container connect --root --command "bash -c \"iptables -A INPUT -p tcp -s $IP -j DROP\""
+playground debug block-traffic --container connect --destination $IP --action start
 
 log "Creating GCP Spanner Sink connector"
 playground connector create-or-update --connector gcp-spanner-sink  << EOF
