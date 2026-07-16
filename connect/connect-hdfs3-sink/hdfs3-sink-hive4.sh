@@ -13,6 +13,19 @@ cd -
 
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+
+# HDFS3 sink is not compatible with CFK (Confluent for Kubernetes)
+# CFK processes the docker-compose override to create Kubernetes Pods,
+# but HDFS datanodes fail to register with the namenode in K8s networking model.
+# HDFS cluster requires StatefulSets for persistent node identity, not ephemeral Pods.
+if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+then
+  logwarn "⚠️  HDFS3 sink connector is not compatible with CFK (Confluent for Kubernetes)"
+  logwarn "   HDFS requires persistent node registration that K8s Pods cannot maintain"
+  logwarn "   This example is for Docker Compose environments only"
+  exit 111
+fi
+
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.hive4.yml"
 
 sleep 10
