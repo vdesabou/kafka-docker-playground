@@ -387,6 +387,14 @@ function verify_build_archive_urls_reachable_from_cluster() {
 
   for archive_url in "${archive_urls[@]}"
   do
+    # Skip verification for local URLs (host.docker.internal, localhost, 127.0.0.1)
+    # These are served from the host and are always reachable, no need for probe pod
+    if [[ "$archive_url" =~ (host\.docker\.internal|localhost|127\.0\.0\.1) ]]
+    then
+      log "✅ Archive URL is local and reachable: $archive_url (skipping verification)"
+      continue
+    fi
+
     probe_pod="cfk-archive-url-check-$(date +%s)-$RANDOM"
     log "🔎 Verifying in-cluster access to plugin archive URL: $archive_url"
 
@@ -416,6 +424,10 @@ function verify_build_archive_urls_reachable_from_cluster() {
       logerror "❌ Archive URL is not reachable from cluster: $archive_url"
       log "  Probe pod logs:"
       kubectl -n confluent logs "$probe_pod" --tail=80 2>/dev/null || true
+      log "  Phase: $phase"
+      log "  Pod $probe_pod YAML:"
+      kubectl -n confluent get pod "$probe_pod" -o yaml
+      playground container logs --container "$probe_pod"
       log "  Hint: override host with CFK_CONNECTOR_ARCHIVE_HOST (current: ${CFK_CONNECTOR_ARCHIVE_HOST})"
     else
       log "✅ Archive URL is reachable from cluster: $archive_url"
@@ -2665,12 +2677,13 @@ then
 fi
 
 log "Start or reuse k3d (k3s)"
+K3D_MEMORY=${K3D_MEMORY:-"16g"}
 if k3d cluster list 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$K3D_CLUSTER_NAME"
 then
   log "✅ k3d cluster $K3D_CLUSTER_NAME already exists, ensuring it is running"
   k3d cluster start "$K3D_CLUSTER_NAME" >/dev/null 2>&1 || true
 else
-  log "🚀 Creating k3d cluster $K3D_CLUSTER_NAME"
+  log "🚀 Creating k3d cluster $K3D_CLUSTER_NAME with memory $K3D_MEMORY (configure with K3D_MEMORY env var)"
   if [[ "$K3D_REGISTRY_CACHE_ENABLED" == "1" ]]
   then
     K3D_CONFIG_FILE=$(mktemp)
@@ -2678,15 +2691,15 @@ else
     log "🗂️ Using registry cache for k3d cluster creation (${K3D_REGISTRY_CACHE_NAME}:${K3D_REGISTRY_CACHE_PORT})"
     k3d cluster create --config "$K3D_CONFIG_FILE" --wait
   else
-    k3d cluster create "$K3D_CLUSTER_NAME" --servers 1 --agents 0 --wait
+    k3d cluster create "$K3D_CLUSTER_NAME" --servers 1 --agents 0 --servers-memory "$K3D_MEMORY" --wait
   fi
 fi
 
 kubectl config use-context "k3d-${K3D_CLUSTER_NAME}" >/dev/null
 
-if ! wait_for_kubernetes_apiserver "120"
+if ! wait_for_kubernetes_apiserver "300"
 then
-  logerror "❌ Kubernetes API server did not become ready within 120s"
+  logerror "❌ Kubernetes API server did not become ready within 300s"
   exit 1
 fi
 
@@ -2771,7 +2784,7 @@ then
   
   set -e
 
-  python3 -m http.server 18080 --directory "$CONNECTOR_ZIP_DIR" >/tmp/cfk-connector-zip-http.log 2>&1 &
+  python3 -m http.server 18080 --bind 0.0.0.0 --directory "$CONNECTOR_ZIP_DIR" >/tmp/cfk-connector-zip-http.log 2>&1 &
   CONNECTOR_ZIP_SERVER_PID=$!
   disown "$CONNECTOR_ZIP_SERVER_PID" 2>/dev/null || true
 
