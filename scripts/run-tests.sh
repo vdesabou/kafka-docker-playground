@@ -238,6 +238,11 @@ do
                 log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 14 days ago...re-running. Test url: $html_url"
                 log "####################################################"
                 aws s3 rm $s3_file --region us-east-1
+            elif [ ! -z "$PLAYGROUND_ENVIRONMENT" ] && [ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]
+            then
+                log "####################################################"
+                log "☸️ Test with $PLAYGROUND_ENVIRONMENT environment ($environment)...re-running. Test url: $html_url"
+                log "####################################################"
             elif [ "$environment" != "plaintext" ] && [ "$environment" != "" ]
             then
                 log "####################################################"
