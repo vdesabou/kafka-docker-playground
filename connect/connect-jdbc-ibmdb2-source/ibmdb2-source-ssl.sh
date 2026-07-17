@@ -12,7 +12,8 @@ then
 fi
 
 log "Starting up ibmdb2 container to get db2jcc4.jar"
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml" --service ibmdb2
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml" --service ibmdb2
 
 cd ../../connect/connect-jdbc-ibmdb2-source
 rm -f db2jcc4.jar

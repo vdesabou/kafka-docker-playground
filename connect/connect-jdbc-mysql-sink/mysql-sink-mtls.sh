@@ -29,7 +29,8 @@ cp ../../connect/connect-jdbc-mysql-sink/mysql-connector-j-8.4.0.jar ../../confl
 cd -
 
 log "Starting up mysql container to get generated certs from /var/lib/mysql"
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.mtls.yml" --service mysql
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.mtls.yml" --service mysql
 
 sleep 5
 
@@ -66,7 +67,8 @@ fi
 docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -importkeystore -srckeystore /tmp/client-keystore.p12 -srcstoretype pkcs12 -srcstorepass mypassword -destkeystore /tmp/keystore.jks -deststoretype JKS -deststorepass mypassword
 cd -
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.mtls.yml" --no-stop
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.mtls.yml" --no-stop
 wait_container_ready
 
 log "Creating MySQL sink connector with server side Encrypted Connections (using <usermtls> user which requires SSL)"

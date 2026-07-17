@@ -28,7 +28,8 @@ cp ../../connect/connect-jdbc-mysql-source/mysql-connector-j-8.4.0.jar ../../con
 cd -
 
 log "Starting up mysql container to get generated certs from /var/lib/mysql"
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssl.yml" --service mysql
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssl.yml" --service mysql
 
 sleep 5
 
@@ -65,7 +66,8 @@ fi
 docker run --quiet --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} keytool -importkeystore -srckeystore /tmp/client-keystore.p12 -srcstoretype pkcs12 -srcstorepass mypassword -destkeystore /tmp/keystore.jks -deststoretype JKS -deststorepass mypassword
 cd -
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssl.yml" --no-stop
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssl.yml" --no-stop
 wait_container_ready
 
 

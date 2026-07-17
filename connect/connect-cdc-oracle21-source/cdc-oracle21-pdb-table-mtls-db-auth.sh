@@ -22,7 +22,8 @@ fi
 create_or_get_oracle_image "LINUX.X64_213000_db_home.zip" "../../connect/connect-cdc-oracle21-source/ora-setup-scripts-pdb-table"
 
 log "Starting up oracle container to get generated cert from oracle server wallet"
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.pdb-table-mtls.yml" --service oracle
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.pdb-table-mtls.yml" --service oracle
 
 playground container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 600
 log "Oracle DB has started!"
@@ -213,7 +214,8 @@ EOF
 log "Sleeping 60 seconds"
 sleep 60
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.pdb-table-mtls.yml" --no-stop
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.pdb-table-mtls.yml" --no-stop
 
 wait_container_ready
 

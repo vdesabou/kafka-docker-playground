@@ -66,7 +66,8 @@ cp ../../connect/connect-jms-oracle21-source/aqapi.jar ../../confluent-hub/confl
 cp ../../connect/connect-jms-oracle21-source/jta-1.1.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/jta-1.1.jar
 cd -
 
-playground start-environment --environment plaintext --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml" --no-stop
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml" --no-stop
 
 wait_container_ready
 
