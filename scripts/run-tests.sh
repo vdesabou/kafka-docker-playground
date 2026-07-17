@@ -48,6 +48,15 @@ do
         continue
     fi
 
+    # Skip non-connect examples when using CfK environment
+    if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ] && [[ ! "$dir" =~ ^connect/ ]]
+    then
+        log "####################################################"
+        log "⏭ skipping dir $dir, CfK environment only supports connect/ examples"
+        log "####################################################"
+        continue
+    fi
+
     cd $dir > /dev/null
 
     # 🤖 CI: ignore examples with github issues opened and with label 'CI ignore ⏭️' #7203
