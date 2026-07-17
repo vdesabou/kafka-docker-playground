@@ -128,10 +128,24 @@ run_nzsql () {
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-log "Drop table orders in Netezza, if it exists"
+# Tag the topic (and therefore the auto-created Netezza table) per run so parallel
+# runs / leftovers never collide. Prefer $TAG (e.g. the CP version), otherwise fall
+# back to $GITHUB_RUN_NUMBER.
+if [ ! -z "$TAG" ]
+then
+     SUFFIX="$TAG"
+else
+     SUFFIX="$GITHUB_RUN_NUMBER"
+fi
+# Netezza table names are derived from the topic and can't contain '.' or '-',
+# so normalise those to '_'.
+SUFFIX=$(echo "$SUFFIX" | tr '.-' '__')
+TOPIC="orders_${SUFFIX}"
+
+log "Drop table ${TOPIC} in Netezza, if it exists"
 set +e
 run_nzsql << EOF
-DROP TABLE orders;
+DROP TABLE ${TOPIC};
 EOF
 set -e
 
@@ -139,8 +153,8 @@ set -e
 # data produced by THIS run - not leftovers if a previous run could not drop the
 # table.
 UNIQUE_VALUE="foo-$(date +%s)-${RANDOM}"
-log "Sending messages to topic orders (unique product value: ${UNIQUE_VALUE})"
-playground topic produce -t orders --nb-messages 1 --forced-value '{"id":2,"product":"'"${UNIQUE_VALUE}"'","quantity":2,"price":0.86583304}' << 'EOF'
+log "Sending messages to topic ${TOPIC} (unique product value: ${UNIQUE_VALUE})"
+playground topic produce -t "${TOPIC}" --nb-messages 1 --forced-value '{"id":2,"product":"'"${UNIQUE_VALUE}"'","quantity":2,"price":0.86583304}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -175,7 +189,7 @@ playground connector create-or-update --connector netezza-sink  << EOF
   "connection.database": "${NETEZZA_DB}",
   "connection.user": "${NETEZZA_USER}",
   "connection.password": "${NETEZZA_PASSWORD}",
-  "topics": "orders",
+  "topics": "${TOPIC}",
   "auto.create": "true"
 }
 EOF
@@ -186,7 +200,7 @@ log "Verify data is in Netezza"
 
 set +e
 run_nzsql > /tmp/result.log 2>&1 << EOF
-SELECT * FROM orders;
+SELECT * FROM ${TOPIC};
 EOF
 select_rc=$?
 set -e
@@ -194,22 +208,22 @@ cat /tmp/result.log
 
 # Always drop the table (cleanup) BEFORE asserting, so it happens even when the
 # assertion fails. Wrapped so a cleanup failure never masks the real result.
-log "Drop table orders in Netezza (cleanup)"
+log "Drop table ${TOPIC} in Netezza (cleanup)"
 set +e
 run_nzsql << EOF
-DROP TABLE orders;
+DROP TABLE ${TOPIC};
 EOF
 set -e
 
 if [ $select_rc -ne 0 ]
 then
-     logerror "❌ nzsql failed to read table 'orders' (exit code ${select_rc}) - see the error above"
+     logerror "❌ nzsql failed to read table '${TOPIC}' (exit code ${select_rc}) - see the error above"
      exit 1
 fi
 
 if ! grep -q "${UNIQUE_VALUE}" /tmp/result.log
 then
-     logerror "❌ expected value '${UNIQUE_VALUE}' not found in Netezza table 'orders' - data was not delivered"
+     logerror "❌ expected value '${UNIQUE_VALUE}' not found in Netezza table '${TOPIC}' - data was not delivered"
      exit 1
 fi
 log "🎉 Found '${UNIQUE_VALUE}' in Netezza - data delivered successfully"
