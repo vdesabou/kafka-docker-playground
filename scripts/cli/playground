@@ -22435,7 +22435,30 @@ EOF
       else
         producer_hostname="${producer_hostname}$i"
       fi
-      get_producer_run_heredoc
+
+      producer_log_topic="$topic_name"
+      producer_topic_override=""
+      producer_detach_flag=""
+      producer_version_label=""
+
+      if [ $nb_producers -gt 1 ]
+      then
+        producer_version_label=" v$i"
+      fi
+
+      if [[ "$description_kebab_case" == *perf* ]]
+      then
+        producer_log_topic="${topic_name}${i}"
+        producer_topic_override="-e TOPIC=${producer_log_topic}"
+        producer_detach_flag="-d"
+        producer_version_label=" v$i"
+      fi
+
+      cat << EOF >> $tmp_dir/java_producer
+log "✨ Run the $producer java producer${producer_version_label} which produces to topic ${producer_log_topic}"
+docker exec ${producer_topic_override} ${producer_detach_flag} $producer_hostname bash -c "java \${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
+
+EOF
     done
     if [ $kafka_cli_producer_error = 1 ]
     then
