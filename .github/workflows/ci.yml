@@ -124,7 +124,7 @@ jobs:
                       "🚀 connect/connect-jms-tibco-sink connect/connect-jms-tibco-source connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source connect/connect-debezium-postgresql-source connect/connect-debezium-timescaledb-source connect/connect-debezium-sqlserver-source connect/connect-elasticsearch-sink connect/connect-http-elasticsearchv9-sink connect/connect-datadiode-source-sink",
                       "🚀 connect/connect-hdfs2-sink connect/connect-hdfs2-source connect/connect-hdfs3-sink connect/connect-hdfs3-source connect/connect-ibm-mq-sink connect/connect-ibm-mq-source connect/connect-snmp-source connect/connect-heavy-ai-sink",
                       "🚀 connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source connect/connect-jdbc-sqlserver-sink",
-                      "🚀 connect/connect-jdbc-sqlserver-source connect/connect-jdbc-vertica-sink connect/connect-singlestore-sink connect/connect-jdbc-singlestore-source connect/connect-jms-active-mq-source connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink connect/connect-jms-solace-source connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-mqtt-source connect/connect-tibco-sink connect/connect-tibco-source",
+                      "🚀 connect/connect-jdbc-sqlserver-source connect/connect-jdbc-vertica-sink connect/connect-singlestore-sink connect/connect-jdbc-singlestore-source connect/connect-jms-active-mq-source connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink connect/connect-jms-solace-source connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-netezza-sink connect/connect-mqtt-source connect/connect-tibco-sink connect/connect-tibco-source",
                       "🚀 connect/connect-jdbc-oracle19-source connect/connect-jdbc-oracle19-sink connect/connect-jms-oracle19-sink connect/connect-jms-oracle19-source",
                       "🚀 connect/connect-jdbc-oracle21-source connect/connect-jdbc-oracle21-sink connect/connect-jms-oracle21-sink connect/connect-jms-oracle21-source",
                       "🚀 connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator connect/connect-sftp-source connect/connect-solace-sink connect/connect-solace-source",
@@ -362,6 +362,7 @@ jobs:
           CLICKHOUSE_CLOUD_HOSTNAME: ${{ secrets.CLICKHOUSE_CLOUD_HOSTNAME}}
           CLICKHOUSE_CLOUD_USERNAME: ${{ secrets.CLICKHOUSE_CLOUD_USERNAME}}
           CLICKHOUSE_CLOUD_PASSWORD: ${{ secrets.CLICKHOUSE_CLOUD_PASSWORD}}
+          NETEZZA_PASSWORD: ${{ secrets.NETEZZA_PASSWORD}}
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           
       - name: Commit connector config file if changed
@@ -637,6 +638,7 @@ jobs:
           CLICKHOUSE_CLOUD_HOSTNAME: ${{ secrets.CLICKHOUSE_CLOUD_HOSTNAME}}
           CLICKHOUSE_CLOUD_USERNAME: ${{ secrets.CLICKHOUSE_CLOUD_USERNAME}}
           CLICKHOUSE_CLOUD_PASSWORD: ${{ secrets.CLICKHOUSE_CLOUD_PASSWORD}}
+          NETEZZA_PASSWORD: ${{ secrets.NETEZZA_PASSWORD}}
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           
       - name: Commit connector config file if changed
