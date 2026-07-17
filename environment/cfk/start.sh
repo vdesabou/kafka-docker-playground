@@ -2892,7 +2892,11 @@ then
   fi
 fi
 
-reset_cfk_namespace_state
+# Only reset namespace if we're NOT skipping container stop (--no-stop not set)
+if [[ -z "$NO_STOP" ]]
+then
+  reset_cfk_namespace_state
+fi
 
 log "🕸️ Add the Confluent for Kubernetes Helm repository"
 if ! helm repo list | awk 'NR>1 {print $1}' | grep -qx "confluentinc"
