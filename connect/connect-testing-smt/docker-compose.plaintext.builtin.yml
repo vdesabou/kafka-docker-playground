@@ -1,0 +1,17 @@
+---
+services:
+
+  connect:
+    environment:
+      # Apache Kafka built-in SMTs (org.apache.kafka.connect.transforms.*) ship
+      # with the Connect runtime, so only the HTTP sink carrier is installed here
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-http
+
+  httpserver:
+    build:
+      # reuse the controllable mock HTTP server from connect-http-sink
+      context: ../../connect/connect-http-sink/httpserver
+    hostname: httpserver
+    container_name: httpserver
+    ports:
+      - "9006:9006"
