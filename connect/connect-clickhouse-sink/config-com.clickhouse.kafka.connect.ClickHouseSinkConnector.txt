@@ -280,6 +280,15 @@ Bypass field cleanup. default: false
 	 - Importance: LOW
 	 - Required: false
 
+🔘 debeziumCDCEnabled
+
+Enable Debezium CDC envelope processing. When true, records whose schema name ends with '.Envelope' are routed through DebeziumRecordConvertor, which extracts op/before/after, injects _version (from source.lsn / gtid / change_lsn) and is_deleted columns. Requires a ReplacingMergeTree(_version, is_deleted) target table. default: false
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 ignorePartitionsWhenBatching
 
 Ignore partitions when batching. Flag ignored when exactlyOnce=true. default: false
@@ -304,6 +313,15 @@ Maximum time in milliseconds to buffer records before flushing, regardless of bu
 
 	 - Type: LONG
 	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 clickhouseClientInsertTimeoutMs
+
+Maximum time in milliseconds to wait for a single ClickHouse insert response. Must stay below consumer.override.max.poll.interval.ms: if an insert hangs longer than the poll interval, Kafka assumes the worker is dead and rebalances the partitions mid-insert. Leave a comfortable margin (e.g. at least 2x the slowest expected insert) so transient slow inserts do not race the poll interval. On timeout a RetriableException is thrown, so the Connect framework retries the batch; in exactly-once mode the retry reuses insert_deduplication_token and ClickHouse drops duplicates. Default: 240000 ms.
+
+	 - Type: LONG
+	 - Default: 240000
 	 - Importance: LOW
 	 - Required: false
 
@@ -354,4 +372,13 @@ Whether to map Connect STRUCT fields to ClickHouse JSON columns during schema ev
 	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 clusterName
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Cluster name to include in all distributed DDL queries run by the connector
+	 - Required: MEDIUM
 

@@ -38,10 +38,33 @@ else
   KRAFT_KERBEROS_DOCKER_COMPOSE_FILE_OVERRIDE=""
 fi
 
-docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml ${KRAFT_KERBEROS_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} down -v --remove-orphans
+# Support selective service startup via START_SERVICES env var
+# Format: "service1 service2 service3"
+SERVICES_ARGS=""
+if [[ -n "$START_SERVICES" ]]
+then
+  SERVICES_ARGS="$START_SERVICES"
+  log "🔍 Starting only services: $START_SERVICES"
+fi
+
+# Support selective service startup via START_SERVICES env var
+# Format: "service1 service2 service3"
+SERVICES_ARGS=""
+if [[ -n "$START_SERVICES" ]]
+then
+  SERVICES_ARGS="$START_SERVICES"
+  log "🔍 Starting only services: $START_SERVICES"
+fi
+
+# Only run 'down' if we're NOT skipping container stop (--no-stop not set)
+if [[ -z "$NO_STOP" ]]
+then
+  docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml ${KRAFT_KERBEROS_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} down -v --remove-orphans
+fi
+
 docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml ${KRAFT_KERBEROS_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} build kdc
 docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml ${KRAFT_KERBEROS_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} build client
-docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml ${KRAFT_KERBEROS_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} up -d --quiet-pull kdc
+docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml ${KRAFT_KERBEROS_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} up -d --quiet-pull kdc $SERVICES_ARGS
 
 ### Create the required identities:
 # Kafka service principal:
@@ -107,9 +130,9 @@ then
   docker exec -i kdc chmod a+r /var/lib/secret/kafka-controlcenter.key
 fi
 
-docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml ${KRAFT_KERBEROS_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} up -d --quiet-pull
+docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml ${KRAFT_KERBEROS_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} up -d --quiet-pull $SERVICES_ARGS
 log "📝 To see the actual properties file, use cli command 'playground container get-properties -c <container>'"
-command="source ${DIR}/../../scripts/utils.sh && docker compose ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ${DIR}/../../environment/mdc-plaintext/docker-compose.yml -f ${DIR}/../../environment/mdc-kerberos/docker-compose.kerberos.yml ${KRAFT_KERBEROS_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} up -d --quiet-pull"
+command="source ${DIR}/../../scripts/utils.sh && docker compose ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ${DIR}/../../environment/mdc-plaintext/docker-compose.yml -f ${DIR}/../../environment/mdc-kerberos/docker-compose.kerberos.yml ${KRAFT_KERBEROS_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} up -d --quiet-pull $SERVICES_ARGS\"
 playground state set run.docker_command "$command"
 playground state set run.environment "mdc-kerberos"
 log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command 'playground container recreate'"

@@ -49,6 +49,8 @@ EOF
 
 sleep 5
 
+playground connector show-lag --max-wait 60
+
 log "Check messages received in RabbitMQ"
 playground container exec --container rabbitmq --command "rabbitmqadmin -u myuser -p mypassword get queue=queue1 count=10" > /tmp/result.log  2>&1
 cat /tmp/result.log

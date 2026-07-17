@@ -3,6 +3,7 @@ open="${args[--open]}"
 log="${args[--wait-for-log]}"
 grep="${args[--grep]}"
 max_wait="${args[--max-wait]}"
+previous="${args[--previous]}"
 
 get_environment_used
 
@@ -14,10 +15,15 @@ do
 	resolved_container=$(resolve_container_name_for_environment "$container")
 	if [[ "$environment" == "cfk" ]]
 	then
+        maybe_previous=""
+        if [[ -n "$previous" ]]
+        then
+            maybe_previous="--previous"
+        fi
 		if [[ -n "$open" ]]
 		then
 			filename="/tmp/${container}-$(date '+%Y-%m-%d-%H-%M-%S').log"
-			kubectl -n confluent logs "$resolved_container" > "$filename" 2>&1
+			kubectl -n confluent logs "$resolved_container" $maybe_previous > "$filename" 2>&1
 			if [ $? -eq 0 ]
 			then
 				playground open --file "${filename}"
@@ -48,19 +54,24 @@ do
 		elif [[ -n "$grep" ]]
 		then
 			if [ ${#container_array[@]} -gt 1 ]; then
-				kubectl -n confluent logs --tail=200 -f "$resolved_container" 2>&1 | grep --line-buffered "$grep" | sed "s/^/[$container] /" &
+				kubectl -n confluent logs --tail=200 $maybe_previous -f "$resolved_container" 2>&1 | grep --line-buffered "$grep" | sed "s/^/[$container] /" &
 			else
-				kubectl -n confluent logs --tail=200 -f "$resolved_container" 2>&1 | grep --line-buffered "$grep"
+				kubectl -n confluent logs --tail=200 $maybe_previous -f "$resolved_container" 2>&1 | grep --line-buffered "$grep"
 			fi
 		else
 			if [ ${#container_array[@]} -gt 1 ]; then
-				kubectl -n confluent logs --tail=200 -f "$resolved_container" 2>&1 | sed "s/^/[$container] /" &
+				kubectl -n confluent logs --tail=200 $maybe_previous -f "$resolved_container" 2>&1 | sed "s/^/[$container] /" &
 			else
-				kubectl -n confluent logs --tail=200 -f "$resolved_container"
+				kubectl -n confluent logs --tail=200 $maybe_previous -f "$resolved_container"
 			fi
 		fi
 		continue
 	fi
+
+	if [[ -n "$previous" ]]
+	then
+        logwarn "--previous is not supported for container logs, only for pod logs"
+    fi
 	if [[ -n "$open" ]]
 	then
 		filename="/tmp/${container}-$(date '+%Y-%m-%d-%H-%M-%S').log"

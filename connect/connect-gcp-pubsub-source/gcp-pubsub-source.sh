@@ -43,8 +43,16 @@ docker rm -f gcloud-config
 set -e
 docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --project ${GCP_PROJECT} --key-file /tmp/keyfile.json
 
-GCP_PUB_SUB_TOPIC="topic-1-$GITHUB_RUN_NUMBER"
-GCP_PUB_SUB_SUBSCRIPTION="subscription-1-$GITHUB_RUN_NUMBER"
+if [ ! -z "$TAG" ]
+then
+     SUFFIX="$TAG"
+else
+     SUFFIX="$GITHUB_RUN_NUMBER"
+fi
+
+KAFKA_TOPIC="pubsub-topic-$SUFFIX"
+GCP_PUB_SUB_TOPIC="topic-1-$SUFFIX"
+GCP_PUB_SUB_SUBSCRIPTION="subscription-1-$SUFFIX"
 
 # cleanup if required
 set +e
@@ -82,7 +90,7 @@ playground connector create-or-update --connector pubsub-source  << EOF
 {
     "connector.class" : "io.confluent.connect.gcp.pubsub.PubSubSourceConnector",
     "tasks.max" : "1",
-    "kafka.topic" : "pubsub-topic",
+    "kafka.topic" : "$KAFKA_TOPIC",
     "gcp.pubsub.project.id" : "$GCP_PROJECT",
     "gcp.pubsub.topic.id" : "$GCP_PUB_SUB_TOPIC",
     "gcp.pubsub.subscription.id" : "$GCP_PUB_SUB_SUBSCRIPTION",
@@ -97,8 +105,8 @@ EOF
 
 sleep 10
 
-log "Verify messages are in topic pubsub-topic"
-playground topic consume --topic pubsub-topic --min-expected-messages 3 --timeout 60
+log "Verify messages are in topic $KAFKA_TOPIC"
+playground topic consume --topic $KAFKA_TOPIC --min-expected-messages 3 --timeout 60
 
 log "⏳ Waiting 80 seconds (ack deadline is 60s) to verify acknowledgement behavior..."
 log "If ACK is working: messages are acknowledged, no redelivery will occur"
@@ -107,7 +115,7 @@ sleep 80
 
 log "Checking for duplicate messages after ack deadline..."
 # Get all messages that have accumulated in the topic
-all_messages=$(playground topic consume --topic pubsub-topic --min-expected-messages 3 --timeout 60 --max-messages 5000)
+all_messages=$(playground topic consume --topic $KAFKA_TOPIC --min-expected-messages 3 --timeout 60 --max-messages 5000)
 
 # Count total occurrences and unique messages
 message_count=$(echo "$all_messages" | grep -o "Peter\|Megan\|Erin" | wc -l | tr -d ' ')

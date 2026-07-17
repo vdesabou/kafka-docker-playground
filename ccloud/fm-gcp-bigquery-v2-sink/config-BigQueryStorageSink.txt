@@ -122,6 +122,57 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 	 - Required: HIGH
 
 ==========================
+Authentication method
+==========================
+🔘 authentication.method
+
+Select how you want to authenticate with BigQuery.
+
+	 - Type: STRING
+	 - Default: Google cloud service account
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 secret.manager.enabled
+
+Fetch sensitive configuration values from a secret manager.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Secret manager configuration
+==========================
+🔘 secret.manager
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the secret manager to use for retrieving sensitive data.
+	 - Required: HIGH
+
+🔘 secret.manager.managed.configs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Select the configurations to fetch their values from the secret manager.
+	 - Required: HIGH
+
+🔘 secret.manager.provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing provider integration that has access to your secret manager.
+	 - Required: HIGH
+
+==========================
 GCP credentials
 ==========================
 🔘 provider.integration.id
@@ -132,15 +183,6 @@ GCP credentials
 	 - Default: STRING
 	 - Importance: Select an existing integration that has access to your resource. In case you need to integrate a new Google Service Account, use provider integration
 	 - Required: HIGH
-
-🔘 authentication.method
-
-Select how you want to authenticate with BigQuery.
-
-	 - Type: STRING
-	 - Default: Google cloud service account
-	 - Importance: HIGH
-	 - Required: false
 
 🔘 keyfile
 

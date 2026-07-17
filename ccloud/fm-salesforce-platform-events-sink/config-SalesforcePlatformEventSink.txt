@@ -135,7 +135,7 @@ How should we connect to Salesforce?
 ==========================
 🔘 salesforce.grant.type
 
-OAuth grant type the connector uses for Salesforce authentication: PASSWORD, CLIENT_CREDENTIALS, or JWT_BEARER
+Grant type the connector uses for Salesforce authentication: PASSWORD, CLIENT_CREDENTIALS, JWT_BEARER, or OAUTH2_AUTH_CODE_BYOA (OAuth 2.0 Authorization Code with your own connected app)
 
 	 - Type: STRING
 	 - Default: PASSWORD
@@ -144,7 +144,7 @@ OAuth grant type the connector uses for Salesforce authentication: PASSWORD, CLI
 
 🔘 salesforce.instance
 
-Salesforce endpoint URL the connector uses for API requests. For CLIENT_CREDENTIALS, use your Salesforce domain URL. Defaults to https://login.salesforce.com.
+Salesforce endpoint URL the connector uses for API requests. For CLIENT_CREDENTIALS and the OAuth 2.0 Authorization Code grant, set this to your org's My Domain URL (for example https://MyDomainName.my.salesforce.com). Defaults to https://login.salesforce.com.
 
 	 - Type: STRING
 	 - Default: https://login.salesforce.com
@@ -222,6 +222,15 @@ The number of Salesforce platform events to write to. Must be between 1 and 5.
 	 - Default: 1
 	 - Importance: HIGH
 	 - Required: false
+
+🔘 oauth.refresh.token
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: OAuth 2.0 refresh token. Populated by Confluent Cloud after authorization.
+	 - Required: HIGH
 
 ==========================
 CSFLE

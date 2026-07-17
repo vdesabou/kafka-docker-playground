@@ -72,7 +72,7 @@ fi
 DOMAIN=$(echo $MARKETO_ENDPOINT_URL | cut -d "/" -f 3)
 IP=$(nslookup $DOMAIN | grep Address | grep -v "#" | cut -d " " -f 2 | tail -1)
 log "Blocking $DOMAIN IP $IP to make sure proxy is used"
-playground container exec --container connect --root --command "bash -c \"iptables -A INPUT -p tcp -s $IP -j DROP\""
+playground debug block-traffic --container connect --destination $IP --action start
 
 log "Creating Marketo Source connector"
 playground connector create-or-update --connector marketo-source  << EOF

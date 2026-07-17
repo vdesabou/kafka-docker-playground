@@ -17,7 +17,13 @@ then
      exit 1
 fi
 
-GCP_FIREBASE_REGION=${1:-europe-west1}
+GCP_FIREBASE_REGION=${GCP_FIREBASE_REGION:-europe-west1}
+if [ "$GCP_FIREBASE_REGION" == "us-central1" ]
+then
+     GCP_FIREBASE_DATABASE_REFERENCE="https://${GCP_PROJECT}.firebaseio.com/musicBlog"
+else
+     GCP_FIREBASE_DATABASE_REFERENCE="https://${GCP_PROJECT}-default-rtdb.${GCP_FIREBASE_REGION}.firebasedatabase.app/musicBlog"
+fi
 
 cd ../../connect/connect-gcp-firebase-sink
 GCP_KEYFILE="${PWD}/keyfile.json"
@@ -49,7 +55,7 @@ playground connector create-or-update --connector firebase-sink  << EOF
   "tasks.max" : "1",
   "topics":"artists,songs",
   "gcp.firebase.credentials.path": "/tmp/keyfile.json",
-  "gcp.firebase.database.reference": "https://${GCP_PROJECT}-default-rtdb.${GCP_FIREBASE_REGION}.firebasedatabase.app/musicBlog",
+  "gcp.firebase.database.reference": "${GCP_FIREBASE_DATABASE_REFERENCE}",
   "insert.mode":"update",
   "key.converter": "org.apache.kafka.connect.storage.StringConverter",
   "value.converter" : "io.confluent.connect.avro.AvroConverter",

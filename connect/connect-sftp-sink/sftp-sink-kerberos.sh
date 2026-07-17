@@ -12,6 +12,11 @@ then
 fi
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+then
+     logwarn "Kerberos tests are not supported with cfk"
+     exit 111
+fi
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.kerberos.yml"
 
 # following https://www.confluent.io/blog/containerized-testing-with-kerberos-and-ssh/

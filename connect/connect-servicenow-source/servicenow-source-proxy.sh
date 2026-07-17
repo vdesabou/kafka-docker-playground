@@ -59,13 +59,13 @@ playground container exec --container connect --command "bash -c \"export HTTP_P
 # playground container exec -i --privileged --user root connect bash -c "iptables -A INPUT -s $ip -j REJECT"
 # playground container exec -i --privileged --user root connect bash -c "iptables -L -n -v"
 
-curl --request PUT \
-  --url http://localhost:8083/admin/loggers/io.confluent.connect.servicenow \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "TRACE"
-}'
+# curl --request PUT \
+#   --url http://localhost:8083/admin/loggers/io.confluent.connect.servicenow \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "TRACE"
+# }'
 
 TODAY=$(date -u '+%Y-%m-%d')
 

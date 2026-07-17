@@ -50,6 +50,12 @@ jobs:
 
           tail -n +2 changelog_orig.md > changelog_tmp.md
 
+          cat <<'EOF_RELEASE_NOTES' > release_notes_raw.md
+          ${{ steps.read_release_file.outputs.content }}
+          EOF_RELEASE_NOTES
+
+          sed 's/^#/##/g' release_notes_raw.md | sed 's/###/#####/g' > release_notes_formatted.md
+
           current_month=$(date +"%B %Y")
           
           # Check if current month section already exists
@@ -73,14 +79,14 @@ jobs:
             # Build new changelog
             cat before_current.md > ./docs/changelog.md
             echo "## ${current_month}" >> ./docs/changelog.md
-            echo "${{ steps.read_release_file.outputs.content }}" | sed 's/^#/##/g' | sed 's/###/#####/g' >> ./docs/changelog.md
+            cat release_notes_formatted.md >> ./docs/changelog.md
             cat after_current.md >> ./docs/changelog.md
           else
             echo "Creating new month section '${current_month}'"
             echo "# 📜 Change Log" > ./docs/changelog.md
             echo "" >> ./docs/changelog.md
             echo "## ${current_month}" >> ./docs/changelog.md
-            echo "${{ steps.read_release_file.outputs.content }}" | sed 's/^#/##/g' | sed 's/###/#####/g' >> ./docs/changelog.md
+            cat release_notes_formatted.md >> ./docs/changelog.md
             cat changelog_tmp.md >> ./docs/changelog.md
           fi
 

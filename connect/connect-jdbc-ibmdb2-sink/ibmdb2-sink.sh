@@ -11,32 +11,9 @@ then
      exit 111
 fi
 
-# https://docs.docker.com/compose/profiles/
-profile_control_center_command=""
-if [ -z "$ENABLE_CONTROL_CENTER" ]
-then
-  log "🛑 control-center is disabled"
-else
-  log "💠 control-center is enabled"
-  log "Use http://localhost:9021 to login"
-  profile_control_center_command="--profile control-center"
-fi
-
-profile_ksqldb_command=""
-if [ -z "$ENABLE_KSQLDB" ]
-then
-  log "🛑 ksqldb is disabled"
-else
-  log "🚀 ksqldb is enabled"
-  log "🔧 You can use ksqlDB with CLI using:"
-  log "playground container exec -i ksqldb-cli ksql http://ksqldb-server:8088"
-  profile_ksqldb_command="--profile ksqldb"
-fi
-
-set_profiles
-docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f "${PWD}/docker-compose.plaintext.yml" ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} down -v --remove-orphans
 log "Starting up ibmdb2 container to get db2jcc4.jar"
-docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f "${PWD}/docker-compose.plaintext.yml" ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} up -d ibmdb2
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml" --service ibmdb2
 
 cd ../../connect/connect-jdbc-ibmdb2-sink
 rm -f db2jcc4.jar
@@ -58,25 +35,13 @@ cd -
 playground container logs --container ibmdb2 --wait-for-log "Setup has completed" --max-wait 600
 log "ibmdb2 DB has started!"
 
-set_profiles
-docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f "${PWD}/docker-compose.plaintext.yml" ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} up -d --quiet-pull
-command="source ${DIR}/../../scripts/utils.sh && docker compose -f ${DIR}/../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f "${PWD}/docker-compose.plaintext.yml" ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} up -d"
-playground state set run.docker_command "$command"
-playground state set run.environment "plaintext"
-
-wait_container_ready
-
-# Keep it for utils.sh
-
 cd ../../connect/connect-jdbc-ibmdb2-sink
-
 # Copy JAR files to confluent-hub
 mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/
 cp ../../connect/connect-jdbc-ibmdb2-sink/db2jcc4.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/db2jcc4.jar
-cp ../../connect/connect-jdbc-ibmdb2-sink/db2jcc4.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/db2jcc4.jar
 cd -
-# PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-#playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml" --no-stop
 
 log "Sending messages to topic ORDERS"
 playground topic produce -t ORDERS --nb-messages 1 << 'EOF'

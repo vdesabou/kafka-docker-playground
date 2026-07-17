@@ -22,6 +22,7 @@
     "max.poll.records": "500",
     "max.timeout.ms": "200000",
     "name": "STRING",
+    "oauth.refresh.token": "PASSWORD",
     "reporter.error.topic.name": "error-${connector}",
     "reporter.result.topic.name": "success-${connector}",
     "request.max.retries.time.ms": "30000",
