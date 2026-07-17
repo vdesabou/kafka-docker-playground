@@ -66,12 +66,8 @@ cp ../../connect/connect-jms-oracle21-source/aqapi.jar ../../confluent-hub/confl
 cp ../../connect/connect-jms-oracle21-source/jta-1.1.jar ../../confluent-hub/confluentinc-kafka-connect-jms/lib/jta-1.1.jar
 cd -
 
-set_profiles
-docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f "${PWD}/docker-compose.plaintext.yml" ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} up -d --quiet-pull
-command="source ${DIR}/../../scripts/utils.sh && docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ${PWD}/docker-compose.plaintext.yml ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} up -d"
-playground state set run.docker_command "$command"
-playground state set run.environment "plaintext"
-log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command 'playground container recreate'"
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml" --no-stop
 
 wait_container_ready
 

@@ -107,7 +107,7 @@ EOF
 
 IP=$(dig +short bigtableadmin.googleapis.com)
 log "Blocking bigtableadmin.googleapis.com IP $IP to make sure proxy is used"
-playground container exec --container connect --root --command "bash -c \"iptables -A INPUT -p tcp -s $IP -j DROP\""
+playground debug block-traffic --container connect --destination $IP --action start
 
 log "Creating GCP BigTbale Sink connector"
 playground connector create-or-update --connector gcp-bigtable-sink  << EOF
@@ -128,6 +128,8 @@ playground connector create-or-update --connector gcp-bigtable-sink  << EOF
     "confluent.topic.replication.factor": "1"
 }
 EOF
+
+sleep 5
 
 playground connector show-lag --connector gcp-bigtable-sink --max-wait 360
 

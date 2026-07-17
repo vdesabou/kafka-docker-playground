@@ -78,7 +78,7 @@ fi
 
 # playground debug log-level set --package "org.apache.http" --level TRACE
 
-playground topic create --topic marketo_leads
+playground topic create --topic marketo-leads
 
 log "Creating Marketo Source connector"
 playground connector create-or-update --connector marketo-source  << EOF
@@ -86,7 +86,7 @@ playground connector create-or-update --connector marketo-source  << EOF
      "connector.class": "io.confluent.connect.marketo.MarketoSourceConnector",
      "tasks.max": "1",
      "poll.interval.ms": 1000,
-     "topic.name.pattern": "marketo_\${entityName}",
+     "topic.name.pattern": "marketo-\${entityName}",
      "marketo.url": "$MARKETO_ENDPOINT_URL",
      "marketo.since": "$SINCE",
      "entity.names": "leads",
@@ -103,5 +103,5 @@ EOF
 
 sleep 10
 
-log "Verify we have received the data in marketo_leads topic"
-playground topic consume --topic marketo_leads --min-expected-messages 1 --timeout 600
+log "Verify we have received the data in marketo-leads topic"
+playground topic consume --topic marketo-leads --min-expected-messages 1 --timeout 600

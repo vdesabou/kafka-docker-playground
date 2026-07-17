@@ -42,11 +42,26 @@ else
   set -e
 fi
 
-docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/mdc-sasl-plain/docker-compose.sasl-plain.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} build
+# Support selective service startup via START_SERVICES env var
+# Format: "service1 service2 service3"
+SERVICES_ARGS=""
+if [[ -n "$START_SERVICES" ]]
+then
+  SERVICES_ARGS="$START_SERVICES"
+  log "🔍 Starting only services: $START_SERVICES"
+fi
+
+# Only run 'down' if we're NOT skipping container stop (--no-stop not set)
+if [[ -z "$NO_STOP" ]]
+then
+  docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/mdc-sasl-plain/docker-compose.sasl-plain.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} down -v --remove-orphans
+fi
+
+docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/mdc-sasl-plain/docker-compose.sasl-plain.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} up -d --quiet-pull $SERVICES_ARGS
 docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/mdc-sasl-plain/docker-compose.sasl-plain.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} down -v --remove-orphans
 docker compose -f ../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/mdc-sasl-plain/docker-compose.sasl-plain.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} up -d --quiet-pull
 log "📝 To see the actual properties file, use cli command 'playground container get-properties -c <container>'"
-command="source ${DIR}/../../scripts/utils.sh && docker compose -f ${DIR}/../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ${DIR}/../../environment/mdc-sasl-plain/docker-compose.sasl-plain.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} up -d --quiet-pull"
+command="source ${DIR}/../../scripts/utils.sh && docker compose -f ${DIR}/../../environment/mdc-plaintext/docker-compose.yml ${MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ${DIR}/../../environment/mdc-sasl-plain/docker-compose.sasl-plain.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} ${profile_flink} ${profile_zookeeper_command} up -d --quiet-pull $SERVICES_ARGS"
 playground state set run.docker_command "$command"
 playground state set run.environment "mdc-sasl-plain"
 log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command 'playground container recreate'"

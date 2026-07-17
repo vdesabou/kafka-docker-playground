@@ -48,7 +48,6 @@ function checksum_sha512() {
 : "${CP_CONTROL_CENTER_IMAGE:=confluentinc/cp-enterprise-control-center-next-gen}"
 : "${CP_CONTROL_CENTER_TAG:=latest}"
 : "${CP_INIT_IMAGE:=confluentinc/confluent-init-container}"
-: "${CP_INIT_TAG:=3.3.0}"
 
 export CP_SERVER_IMAGE CP_SERVER_TAG
 export CP_CONNECT_IMAGE CP_CONNECT_TAG
@@ -56,23 +55,64 @@ export CP_SCHEMA_REGISTRY_IMAGE CP_SCHEMA_REGISTRY_TAG
 export CP_KSQL_IMAGE CP_KSQL_TAG
 export CP_REST_PROXY_IMAGE CP_REST_PROXY_TAG
 export CP_CONTROL_CENTER_IMAGE CP_CONTROL_CENTER_TAG
-export CP_INIT_IMAGE CP_INIT_TAG
+export CP_INIT_IMAGE
 
 : "${CFK_TMPFS_DEFAULT_SIZE_LIMIT:=256Mi}"
 : "${CFK_TMPFS_SHM_SIZE_LIMIT:=1Gi}"
 : "${CFK_CONNECTOR_ARCHIVE_HOST:=}"
-: "${CFK_OPERATOR_CHART_VERSION:=}"
+: "${CFK_VERSION:=3.3.0}"
 
-: "${CFK_CONNECT_PLUGIN_PATH:=}"
-if [[ -n "${CONNECT_PLUGIN_PATH+x}" ]]
-then
-  CFK_CONNECT_PLUGIN_PATH="${CONNECT_PLUGIN_PATH}"
-fi
-if [[ -z "$CFK_CONNECT_PLUGIN_PATH" ]]
-then
-  CFK_CONNECT_PLUGIN_PATH="/usr/share/confluent-hub-components,/mnt/plugins"
-fi
-export CFK_CONNECT_PLUGIN_PATH
+export CFK_VERSION
+
+playground state set run.environment "cfk"
+
+# Map CFK version to helm chart version
+# Reference: https://docs.confluent.io/operator/current/co-plan.html#co-long-image-tags
+function get_cfk_helm_chart_version() {
+  local cfk_version="$1"
+  
+  case "$cfk_version" in
+    3.3.0) echo "0.1718.10" ;;
+    3.2.3) echo "0.1514.76" ;;
+    3.2.2) echo "0.1514.40" ;;
+    3.2.1) echo "0.1514.19" ;;
+    3.2.0) echo "0.1514.1" ;;
+    3.1.3) echo "0.1351.147" ;;
+    3.1.2) echo "0.1351.103" ;;
+    3.1.1) echo "0.1351.59" ;;
+    3.1.0) echo "0.1351.24" ;;
+    3.0.5) echo "0.1263.163" ;;
+    3.0.4) echo "0.1263.124" ;;
+    3.0.3) echo "0.1263.105" ;;
+    3.0.2) echo "0.1263.79" ;;
+    3.0.1) echo "0.1263.34" ;;
+    3.0.0) echo "0.1263.8" ;;
+    2.11.6) echo "0.1193.192" ;;
+    2.11.5) echo "0.1193.151" ;;
+    2.11.4) echo "0.1193.108" ;;
+    2.11.3) echo "0.1193.70" ;;
+    2.11.2) echo "0.1193.47" ;;
+    2.11.1) echo "0.1193.34" ;;
+    2.11.0) echo "0.1193.1" ;;
+    2.10.6) echo "0.1145.181" ;;
+    2.10.5) echo "0.1145.141" ;;
+    2.10.4) echo "0.1145.102" ;;
+    2.10.3) echo "0.1145.71" ;;
+    2.10.2) echo "0.1145.50" ;;
+    2.10.1) echo "0.1145.35" ;;
+    2.9.10) echo "0.1033.238" ;;
+    2.9.9) echo "0.1033.196" ;;
+    2.9.8) echo "0.1033.150" ;;
+    2.9.7) echo "0.1033.110" ;;
+    2.9.6) echo "0.1033.87" ;;
+    2.9.5) echo "0.1033.71" ;;
+    *)
+      logerror "❌ CFK version $cfk_version is not supported"
+      logerror "   Supported versions: 3.3.0, 3.2.3, 3.2.2, 3.2.1, 3.2.0, 3.1.3, 3.1.2, 3.1.1, 3.1.0, 3.0.5, 3.0.4, 3.0.3, 3.0.2, 3.0.1, 3.0.0, 2.11.6, 2.11.5, 2.11.4, 2.11.3, 2.11.2, 2.11.1, 2.11.0, 2.10.6, 2.10.5, 2.10.4, 2.10.3, 2.10.2, 2.10.1, 2.9.10, 2.9.9, 2.9.8, 2.9.7, 2.9.6, 2.9.5"
+      return 1
+      ;;
+  esac
+}
 
 function log_generated_yaml_file() {
   local label="$1"
@@ -347,6 +387,14 @@ function verify_build_archive_urls_reachable_from_cluster() {
 
   for archive_url in "${archive_urls[@]}"
   do
+    # Skip verification for local URLs (host.docker.internal, localhost, 127.0.0.1)
+    # These are served from the host and are always reachable, no need for probe pod
+    if [[ "$archive_url" =~ (host\.docker\.internal|localhost|127\.0\.0\.1) ]]
+    then
+      log "✅ Archive URL is local and reachable: $archive_url (skipping verification)"
+      continue
+    fi
+
     probe_pod="cfk-archive-url-check-$(date +%s)-$RANDOM"
     log "🔎 Verifying in-cluster access to plugin archive URL: $archive_url"
 
@@ -376,6 +424,10 @@ function verify_build_archive_urls_reachable_from_cluster() {
       logerror "❌ Archive URL is not reachable from cluster: $archive_url"
       log "  Probe pod logs:"
       kubectl -n confluent logs "$probe_pod" --tail=80 2>/dev/null || true
+      log "  Phase: $phase"
+      log "  Pod $probe_pod YAML:"
+      kubectl -n confluent get pod "$probe_pod" -o yaml
+      playground container logs --container "$probe_pod"
       log "  Hint: override host with CFK_CONNECTOR_ARCHIVE_HOST (current: ${CFK_CONNECTOR_ARCHIVE_HOST})"
     else
       log "✅ Archive URL is reachable from cluster: $archive_url"
@@ -844,9 +896,8 @@ function generate_connect_env_patch_from_compose() {
 
     if [[ "$env_key" == "CONNECT_PLUGIN_PATH" ]]
     then
-      CFK_CONNECT_PLUGIN_PATH="$env_value"
-      export CFK_CONNECT_PLUGIN_PATH
-      log "🔎 Effective CFK plugin.path source set from CONNECT_PLUGIN_PATH: ${CFK_CONNECT_PLUGIN_PATH}"
+      # Skip CONNECT_PLUGIN_PATH since plugin.path is hardcoded in confluent-platform.yaml
+      continue
     fi
 
     escaped_value=$(printf '%s' "$env_value" | sed 's/\\/\\\\/g; s/"/\\"/g')
@@ -1302,6 +1353,24 @@ function generate_extra_pods_from_compose_override() {
       continue
     fi
 
+    # Filter services if START_SERVICES env var is set
+    if [[ -n "$START_SERVICES" ]]
+    then
+      local service_matched=0
+      for start_service in $START_SERVICES
+      do
+        if [[ "$service_name" == "$start_service" ]]
+        then
+          service_matched=1
+          break
+        fi
+      done
+      if [[ "$service_matched" -eq 0 ]]
+      then
+        continue
+      fi
+    fi
+
     # Respect docker-compose profiles: skip services that declare profiles unless the
     # corresponding env var (profile name uppercased, hyphens→underscores) is non-empty.
     if [[ -n "$profiles_list" ]]
@@ -1401,7 +1470,10 @@ function generate_extra_pods_from_compose_override() {
 
       auto_image="local/${pod_name}-cfk:latest"
       log "🧱 Building image $auto_image for service $service_name from $build_context_abs"
-      docker build -t "$auto_image" "$build_context_abs"
+      docker build \
+        --build-arg "CP_CONNECT_IMAGE=$CP_CONNECT_IMAGE" \
+        --build-arg "CP_CONNECT_TAG=$CP_CONNECT_TAG" \
+        -t "$auto_image" "$build_context_abs"
       image="$auto_image"
       image_pull_policy="Never"
       # Defer k3d import until after all large-file baking for this service
@@ -2134,7 +2206,7 @@ function build_cfk_manifest() {
   rendered_file=$(mktemp)
   base_manifest_file=$(mktemp)
 
-  envsubst '${CP_SERVER_IMAGE} ${CP_SERVER_TAG} ${CP_CONNECT_IMAGE} ${CP_CONNECT_TAG} ${CP_SCHEMA_REGISTRY_IMAGE} ${CP_SCHEMA_REGISTRY_TAG} ${CP_CONTROL_CENTER_IMAGE} ${CP_CONTROL_CENTER_TAG} ${CP_INIT_IMAGE} ${CP_INIT_TAG} ${CFK_CONNECT_PLUGIN_PATH}' < "${DIR}/confluent-platform.yaml" > "$rendered_file"
+  envsubst '${CP_SERVER_IMAGE} ${CP_SERVER_TAG} ${CP_CONNECT_IMAGE} ${CP_CONNECT_TAG} ${CP_SCHEMA_REGISTRY_IMAGE} ${CP_SCHEMA_REGISTRY_TAG} ${CP_CONTROL_CENTER_IMAGE} ${CP_CONTROL_CENTER_TAG} ${CP_INIT_IMAGE} ${CFK_VERSION}' < "${DIR}/confluent-platform.yaml" > "$rendered_file"
 
   if [[ -n "$ENABLE_CONTROL_CENTER" ]]
   then
@@ -2623,12 +2695,13 @@ then
 fi
 
 log "Start or reuse k3d (k3s)"
+K3D_MEMORY=${K3D_MEMORY:-"24g"}
 if k3d cluster list 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$K3D_CLUSTER_NAME"
 then
   log "✅ k3d cluster $K3D_CLUSTER_NAME already exists, ensuring it is running"
   k3d cluster start "$K3D_CLUSTER_NAME" >/dev/null 2>&1 || true
 else
-  log "🚀 Creating k3d cluster $K3D_CLUSTER_NAME"
+  log "🚀 Creating k3d cluster $K3D_CLUSTER_NAME with memory $K3D_MEMORY (configure with K3D_MEMORY env var)"
   if [[ "$K3D_REGISTRY_CACHE_ENABLED" == "1" ]]
   then
     K3D_CONFIG_FILE=$(mktemp)
@@ -2636,15 +2709,15 @@ else
     log "🗂️ Using registry cache for k3d cluster creation (${K3D_REGISTRY_CACHE_NAME}:${K3D_REGISTRY_CACHE_PORT})"
     k3d cluster create --config "$K3D_CONFIG_FILE" --wait
   else
-    k3d cluster create "$K3D_CLUSTER_NAME" --servers 1 --agents 0 --wait
+    k3d cluster create "$K3D_CLUSTER_NAME" --servers 1 --agents 0 --servers-memory "$K3D_MEMORY" --wait
   fi
 fi
 
 kubectl config use-context "k3d-${K3D_CLUSTER_NAME}" >/dev/null
 
-if ! wait_for_kubernetes_apiserver "120"
+if ! wait_for_kubernetes_apiserver "300"
 then
-  logerror "❌ Kubernetes API server did not become ready within 120s"
+  logerror "❌ Kubernetes API server did not become ready within 300s"
   exit 1
 fi
 
@@ -2713,9 +2786,23 @@ then
   # Avoid stale listeners from previous runs serving the wrong directory on 18080.
   set +e
   lsof -i ":18080" 2>/dev/null | awk 'NR>1 {print $2}' | xargs kill -9 2>/dev/null || true
+  
+  # Clean up old connector archive directory from previous run
+  if [[ -f /tmp/cfk-connector-archive-dir.state ]]
+  then
+    old_connector_zip_dir=$(cat /tmp/cfk-connector-archive-dir.state 2>/dev/null)
+    if [[ -n "$old_connector_zip_dir" ]] && [[ "$old_connector_zip_dir" != "$CONNECTOR_ZIP_DIR" ]] && [[ -d "$old_connector_zip_dir" ]]
+    then
+      rm -rf "$old_connector_zip_dir" 2>/dev/null || true
+    fi
+  fi
+  
+  # Save current connector archive directory for cleanup on next run
+  echo "$CONNECTOR_ZIP_DIR" > /tmp/cfk-connector-archive-dir.state 2>/dev/null || true
+  
   set -e
 
-  python3 -m http.server 18080 --directory "$CONNECTOR_ZIP_DIR" >/tmp/cfk-connector-zip-http.log 2>&1 &
+  python3 -m http.server 18080 --bind 0.0.0.0 --directory "$CONNECTOR_ZIP_DIR" >/tmp/cfk-connector-zip-http.log 2>&1 &
   CONNECTOR_ZIP_SERVER_PID=$!
   disown "$CONNECTOR_ZIP_SERVER_PID" 2>/dev/null || true
 
@@ -2805,23 +2892,28 @@ then
   fi
 fi
 
-reset_cfk_namespace_state
+# Only reset namespace if we're NOT skipping container stop (--no-stop not set)
+if [[ -z "$NO_STOP" ]]
+then
+  reset_cfk_namespace_state
+fi
 
-log "Add the Confluent for Kubernetes Helm repository"
+log "🕸️ Add the Confluent for Kubernetes Helm repository"
 if ! helm repo list | awk 'NR>1 {print $1}' | grep -qx "confluentinc"
 then
   helm repo add confluentinc https://packages.confluent.io/helm
 fi
 helm repo update confluentinc
 
-log "Install Confluent for Kubernetes"
-if [[ -n "$CFK_OPERATOR_CHART_VERSION" ]]
+
+CFK_HELM_CHART_VERSION=$(get_cfk_helm_chart_version "$CFK_VERSION")
+log "🕸️ Install Confluent for Kubernetes version $CFK_VERSION (helm chart version $CFK_HELM_CHART_VERSION), you can change it by setting CFK_VERSION environment variable"
+if [[ -z "$CFK_HELM_CHART_VERSION" ]]
 then
-  log "📌 Using CFK Helm chart version ${CFK_OPERATOR_CHART_VERSION}"
-  helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes --version "$CFK_OPERATOR_CHART_VERSION"
-else
-  helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes
+  exit 1
 fi
+helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes --version "$CFK_HELM_CHART_VERSION"
+log "✅ Installed Confluent for Kubernetes CFK version $CFK_VERSION (helm chart version $CFK_HELM_CHART_VERSION)"
 
 log "Deploy Confluent Platform"
 CFK_MANIFEST_FILE=$(mktemp)
@@ -2999,7 +3091,8 @@ then
         else
           for token in $(echo "$expected_plugin_lc" | tr -cs 'a-z0-9' '\n')
           do
-            if [[ ${#token} -lt 4 ]] || [[ "$token" == "kafka" ]] || [[ "$token" == "connect" ]] || [[ "$token" == "confluentinc" ]] || [[ "$token" == "plugin" ]] || [[ "$token" == "source" ]] || [[ "$token" == "sink" ]]
+            # Keep short but meaningful tokens like "s3" while filtering generic words.
+            if [[ ${#token} -lt 2 ]] || [[ "$token" =~ ^[0-9]+$ ]] || [[ "$token" == "kafka" ]] || [[ "$token" == "connect" ]] || [[ "$token" == "confluentinc" ]] || [[ "$token" == "plugin" ]] || [[ "$token" == "source" ]] || [[ "$token" == "sink" ]]
             then
               continue
             fi
@@ -3075,14 +3168,13 @@ CONNECT3_PF_PID=""
 KSQLDB_PF_PID=""
 REST_PROXY_PF_PID=""
 cleanup() {
-  if [ -n "$CONNECTOR_ZIP_SERVER_PID" ]
-  then
-    kill "$CONNECTOR_ZIP_SERVER_PID" >/dev/null 2>&1 || true
-  fi
-  if [ -n "$CONNECTOR_ZIP_DIR" ]
-  then
-    rm -rf "$CONNECTOR_ZIP_DIR" >/dev/null 2>&1 || true
-  fi
+  # Note: CONNECTOR_ZIP_SERVER_PID is intentionally NOT killed here
+  # It continues running to support `playground container update` and similar operations
+  # The server is killed at the start of the next run if a new one needs to be started
+  
+  # Also DO NOT delete CONNECTOR_ZIP_DIR while the server is running
+  # The directory will be cleaned up when the server is killed at the start of the next run
+  
   if [ -n "$CONNECT_BUILD_PATCH_FILE" ]
   then
     rm -f "$CONNECT_BUILD_PATCH_FILE" >/dev/null 2>&1 || true
@@ -3447,12 +3539,42 @@ then
     if [[ -n "$current_svc_name" ]] && [[ "$yaml_line" =~ ^[[:space:]]*port:[[:space:]]*([0-9]+) ]]
     then
       svc_port="${BASH_REMATCH[1]}"
-      start_port_forward "$current_svc_name" "$svc_port" "$svc_port" \
-        "/tmp/${current_svc_name}-${svc_port}-port-forward.log" "$current_svc_name" > /dev/null || true
-      log "🔌 Extra service ${current_svc_name} is reachable at http://127.0.0.1:${svc_port}"
+      # Look up the host (local) port from the docker-compose override.
+      # docker-compose ports entries have the form [ip:]host_port:container_port.
+      # Default to the container port if no host mapping is found.
+      local_port="$svc_port"
+      if [[ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]]
+      then
+        compose_host_port=$(awk -v svc="$current_svc_name" -v cport="$svc_port" '
+          function trim(s) { gsub(/^[[:space:]]+|[[:space:]]+$/, "", s); return s }
+          function unquote(s) { gsub(/^"|"$/, "", s); gsub(/^\047|\047$/, "", s); return s }
+          BEGIN { in_svc=0; section="" }
+          /^services:[[:space:]]*$/ { in_services=1; next }
+          in_services && /^  [A-Za-z0-9_.-]+:[[:space:]]*$/ {
+            cur=$1; sub(/:$/, "", cur)
+            in_svc=(cur == svc); section=""
+          }
+          in_svc && /^    ports:[[:space:]]*$/ { section="ports"; next }
+          in_svc && section != "ports" && /^    [A-Za-z0-9_.-]+:/ { section="" }
+          in_svc && section == "ports" && /^      -/ {
+            p=$0; sub(/^      -[[:space:]]*/, "", p); p=trim(unquote(p))
+            sub(/\/[a-z]*$/, "", p)
+            n=split(p, parts, ":")
+            if (n == 1) { hp=parts[1]; cp=parts[1] }
+            else if (n == 2) { hp=parts[1]; cp=parts[2] }
+            else { hp=parts[2]; cp=parts[3] }
+            if (cp == cport) { print hp; exit }
+          }
+        ' "${DOCKER_COMPOSE_FILE_OVERRIDE}")
+        if [[ -n "$compose_host_port" ]] && [[ "$compose_host_port" =~ ^[0-9]+$ ]]
+        then
+          local_port="$compose_host_port"
+        fi
+      fi
+      start_port_forward "$current_svc_name" "$local_port" "$svc_port" \
+        "/tmp/${current_svc_name}-${local_port}-port-forward.log" "$current_svc_name" > /dev/null || true
+      log "🔌 Extra service ${current_svc_name} is reachable at http://127.0.0.1:${local_port}"
     fi
   done < "$EXTRA_PODS_FILE"
   set -e
 fi
-
-playground state set run.environment "cfk"

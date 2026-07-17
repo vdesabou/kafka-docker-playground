@@ -61,13 +61,13 @@ playground container exec --container ibmmq --command "runmqsc QM1" << EOF
 REFRESH SECURITY TYPE(AUTHSERV)
 EOF
 
-playground topic create --topic MyKafkaTopicName
+playground topic create --topic ibm-topic
 
 log "Creating IBM MQ source connector"
 playground connector create-or-update --connector ibm-mq-source-eos  << EOF
 {
     "connector.class": "io.confluent.connect.ibm.mq.IbmMQSourceConnector",
-    "kafka.topic": "MyKafkaTopicName",
+    "kafka.topic": "ibm-topic",
     "mq.hostname": "ibmmq",
     "mq.port": "1414",
     "mq.transport.type": "client",
@@ -98,5 +98,5 @@ Message 2
 EOF
 sleep 5
 
-log "Verify we have received the data in MyKafkaTopicName topic using --isolation-level read_committed"
-playground topic consume --topic MyKafkaTopicName --min-expected-messages 2 --timeout 60 --isolation-level read_committed
+log "Verify we have received the data in ibm-topic topic using --isolation-level read_committed"
+playground topic consume --topic ibm-topic --min-expected-messages 2 --timeout 60 --isolation-level read_committed
