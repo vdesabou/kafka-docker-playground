@@ -6,6 +6,8 @@
     "enableCompression": "false",
     "gcp.credentials.file.path": "STRING",
     "gcp.credentials.json": "STRING",
+    "gcp.sa.credentials.file.path": "STRING",
+    "gcp.sa.credentials.json": "STRING",
     "headers.publish": "false",
     "key.converter.converter.encoding": "UTF-8",
     "key.converter.converter.type": "",
