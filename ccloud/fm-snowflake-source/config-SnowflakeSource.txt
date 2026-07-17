@@ -101,6 +101,57 @@ How should we connect to your data?
 	 - Required: HIGH
 
 ==========================
+Authentication method
+==========================
+🔘 connection.credentials.source
+
+The source of the credentials to use for authentication. Supported values are: `PRIVATE_KEY`: Use the private key to authenticate. `PRIVATE_KEY_PASSPHRASE`: Use the private key and passphrase to authenticate.
+
+	 - Type: STRING
+	 - Default: PRIVATE_KEY
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 secret.manager.enabled
+
+Fetch sensitive configuration values from a secret manager.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Secret manager configuration
+==========================
+🔘 secret.manager
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the secret manager to use for retrieving sensitive data.
+	 - Required: HIGH
+
+🔘 secret.manager.managed.configs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Select the configurations to fetch their values from the secret manager.
+	 - Required: HIGH
+
+🔘 secret.manager.provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing provider integration that has access to your secret manager.
+	 - Required: HIGH
+
+==========================
 How should we connect to your Snowflake Instance?
 ==========================
 🔘 connection.url
@@ -120,15 +171,6 @@ How should we connect to your Snowflake Instance?
 	 - Default: STRING
 	 - Importance: User to be used for authenticating to snowflake.
 	 - Required: HIGH
-
-🔘 connection.credentials.source
-
-The source of the credentials to use for authentication. Supported values are: `PRIVATE_KEY`: Use the private key to authenticate. `PRIVATE_KEY_PASSPHRASE`: Use the private key and passphrase to authenticate.
-
-	 - Type: STRING
-	 - Default: PRIVATE_KEY
-	 - Importance: HIGH
-	 - Required: false
 
 🔘 connection.private.key
 
