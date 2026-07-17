@@ -1,0 +1,12 @@
+---
+services:
+
+  connect:
+    volumes:
+      # datagen schemas used as a structured source so the output topic can be
+      # consumed to inspect the record key, headers and target topic name
+      - ../../connect/connect-testing-smt/schemas:/tmp/schemas
+    environment:
+      # Apache Kafka built-in SMTs (org.apache.kafka.connect.transforms.*) ship
+      # with the Connect runtime, so only the datagen source carrier is installed here
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-datagen

@@ -4,61 +4,39 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-# The HTTP sink connector needs jcl-over-slf4j on its classpath
-cd ${DIR}
-if [ ! -f jcl-over-slf4j-2.0.7.jar ]
-then
-     wget -q https://repo1.maven.org/maven2/org/slf4j/jcl-over-slf4j/2.0.7/jcl-over-slf4j-2.0.7.jar
-fi
-mkdir -p ${DIR}/../../confluent-hub/confluentinc-kafka-connect-http/lib/
-cp ${DIR}/jcl-over-slf4j-2.0.7.jar ${DIR}/../../confluent-hub/confluentinc-kafka-connect-http/lib/
-cd - > /dev/null
-
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.datagen.transforms.yml"
 
-log "Sending 10 messages (with a fixed key) to topic http-messages"
-playground topic produce -t http-messages --nb-messages 10 --forced-key "user-key-123" << 'EOF'
+log "Creating datagen source connector on topic smt-output (key set from route_field) with the Confluent Drop SMT (io.confluent.connect.transforms) nullifying the record key"
+playground connector create-or-update --connector datagen-smt-output  << EOF
 {
-    "id": "iteration.index",
-    "name": "faker.internet.userName()",
-    "email": "faker.internet.exampleEmail()"
-}
-EOF
-
-playground debug log-level set --package "org.apache.http" --level TRACE
-
-log "Set webserver to reply with 200"
-curl -X PUT -H "Content-Type: application/json" --data '{"errorCode": 200}' http://localhost:9006/set-response-error-code
-curl -X PUT -H "Content-Type: application/json" --data '{"message":"Hello, World!"}' http://localhost:9006/set-response-body
-
-log "Creating http-sink connector with the Confluent Drop SMT (io.confluent.connect.transforms) nullifying the record key"
-playground connector create-or-update --connector http-sink  << EOF
-{
-     "topics": "http-messages",
-     "tasks.max": "1",
-     "connector.class": "io.confluent.connect.http.HttpSinkConnector",
+     "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
+     "kafka.topic": "smt-output",
      "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-     "value.converter":"org.apache.kafka.connect.json.JsonConverter",
-     "value.converter.schemas.enable":"false",
-     "confluent.topic.bootstrap.servers": "broker:9092",
-     "confluent.topic.replication.factor": "1",
-     "reporter.bootstrap.servers": "broker:9092",
-     "reporter.error.topic.name": "error-responses",
-     "reporter.error.topic.replication.factor": 1,
-     "reporter.result.topic.name": "success-responses",
-     "reporter.result.topic.replication.factor": 1,
-     "reporter.result.topic.value.format": "string",
-     "http.api.url": "http://httpserver:9006",
-     "request.body.format" : "json",
-     "headers": "Content-Type: application/json",
+     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+     "value.converter.schemas.enable": "false",
+     "max.interval": 100,
+     "iterations": "10",
+     "tasks.max": "1",
+     "schema.filename": "/tmp/schemas/smt-source.avro",
+     "schema.keyfield": "route_field",
 
      "transforms": "dropKey",
      "transforms.dropKey.type": "io.confluent.connect.transforms.Drop\$Key"
 }
 EOF
 
-sleep 10
+wait_for_datagen_connector_to_inject_data "smt-output" "1"
 
-log "Check the success-responses topic: all 10 records still flow to the HTTP server with the Drop SMT applied to the key"
-playground topic consume --topic success-responses --min-expected-messages 10 --timeout 60
+log "Consume from smt-output and verify the Drop SMT nullified the key (route_field=ROUTE_FIELD_VALUE would otherwise be the key)"
+playground topic consume --topic smt-output --min-expected-messages 10 --max-messages 10 --timeout 60 | tee /tmp/smt-drop-consume.txt
+
+# the records really flowed and still carry route_field in the value ...
+grep 'route_field":"ROUTE_FIELD_VALUE"' /tmp/smt-drop-consume.txt
+# ... but the key no longer carries that value: Drop$Key nullified it (Key: label isolates the key from the value)
+if grep -q "Key:ROUTE_FIELD_VALUE" /tmp/smt-drop-consume.txt
+then
+     logerror "Drop SMT did not nullify the key: Key:ROUTE_FIELD_VALUE is still present"
+     exit 1
+fi
+log "Drop SMT applied: record key nullified"
