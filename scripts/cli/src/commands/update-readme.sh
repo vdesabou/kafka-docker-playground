@@ -1,6 +1,5 @@
 tags="${args[--tags]}"
 generate_for_kb="${args[--generate-for-kb]}"
-cfk="${args[--cfk]}"
 
 set +e
 tmp_dir="/tmp/update-readme"
@@ -49,6 +48,17 @@ nb_total_tests=0
 nb_connector_tests=0
 nb_total_fail=0
 nb_total_success=0
+
+# Loop through environments: regular CI and CfK
+for environment_suffix in "" "-cfk"
+do
+  environment_label="ci"
+  if [ "$environment_suffix" = "-cfk" ]
+  then
+    environment_label="ci_cfk"
+  fi
+  log "⏱️  Processing $environment_label results"
+
 for test in $test_list
 do
   nb_tests=0
@@ -148,17 +158,8 @@ do
         release_date=""
       fi
       testdir=$(echo "$test" | sed 's/\//-/g')
-      ci_file="${ci_folder}/${image_version}-${testdir}-${version}-${script_name}"
-      if [[ -n "$cfk" ]]
-      then
-        ci_file="$ci_file-cfk"
-      fi
-      ci_output_file="${ci_output_folder}/${image_version}-${testdir}-${version}-${script_name}"
-      if [[ -n "$cfk" ]]
-      then
-        ci_output_file="$ci_output_file-cfk"
-      fi
-      ci_output_file="$ci_output_file.log"
+      ci_file="${ci_folder}/${image_version}-${testdir}-${version}-${script_name}${environment_suffix}"
+      ci_output_file="${ci_output_folder}/${image_version}-${testdir}-${version}-${script_name}${environment_suffix}.log"
 
       if [ -f ${ci_file} ]
       then
@@ -289,7 +290,7 @@ do
       fi
       t=$(echo ${testdir} | sed 's/-/\//')
       title="🔥 ${t}"
-      if [[ -n "$cfk" ]]
+      if [ "$environment_suffix" = "-cfk" ]
       then
         title="🔥 ${t} (cfk)"
       fi
@@ -303,7 +304,7 @@ do
           cat ${gh_msg_file_intro} >> ${gh_msg_file_final}
           cat ${gh_msg_file} >> ${gh_msg_file_final}
           log "Creating GH issue with title $title"
-          if [[ -n "$cfk" ]]
+          if [ "$environment_suffix" = "-cfk" ]
           then
             gh issue create --title "$title" --body-file "$gh_msg_file_final" --assignee vdesabou --label "new 🆕" --label "cfk"
           else
@@ -322,7 +323,7 @@ do
                 log "🐛 Skipping as test has an opened GH issue (${issue_number} $title) with label 'CI ignore ⏭️'"
             else
                 gh issue comment ${issue_number} --body-file "$gh_msg_file_final"
-                if [[ -n "$cfk" ]]
+                if [ "$environment_suffix" = "-cfk" ]
                 then
                   gh issue edit ${issue_number} --add-label "CI failing 🔥" --add-label "cfk" --remove-label "new 🆕"
                 else
@@ -350,8 +351,11 @@ do
     fi
 
     ci=""
+    ci_cfk=""
     ci_nb_fail=0
     ci_nb_skipped=0
+    ci_cfk_nb_fail=0
+    ci_cfk_nb_skipped=0
     nb_image_versions=0
     for image_version in $tags
     do
@@ -362,29 +366,64 @@ do
         gh_issue_number=$(echo $gh_issue_number|tr -d '\n')
         if [ "${gh_issue_number}" != "" ]
         then
-          ci="$ci [![issue $gh_issue_number](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-red)](https://github.com/vdesabou/kafka-docker-playground/issues/$gh_issue_number)"
+          if [ "$environment_suffix" = "-cfk" ]
+          then
+            ci_cfk="$ci_cfk [![issue $gh_issue_number](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-red)](https://github.com/vdesabou/kafka-docker-playground/issues/$gh_issue_number)"
+            let "ci_cfk_nb_fail++"
+          else
+            ci="$ci [![issue $gh_issue_number](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-red)](https://github.com/vdesabou/kafka-docker-playground/issues/$gh_issue_number)"
+            let "ci_nb_fail++"
+          fi
         else
-          ci="$ci ${TEST_FAILED[$image_version_no_dot]}"
+          if [ "$environment_suffix" = "-cfk" ]
+          then
+            ci_cfk="$ci_cfk ${TEST_FAILED[$image_version_no_dot]}"
+            let "ci_cfk_nb_fail++"
+          else
+            ci="$ci ${TEST_FAILED[$image_version_no_dot]}"
+            let "ci_nb_fail++"
+          fi
         fi
-        let "ci_nb_fail++"
       elif [ "${TEST_SKIPPED[$image_version_no_dot]}" != "" ]
       then
-        ci="$ci ${TEST_SKIPPED[$image_version_no_dot]}"
-        let "ci_nb_skipped++"
+        if [ "$environment_suffix" = "-cfk" ]
+        then
+          ci_cfk="$ci_cfk ${TEST_SKIPPED[$image_version_no_dot]}"
+          let "ci_cfk_nb_skipped++"
+        else
+          ci="$ci ${TEST_SKIPPED[$image_version_no_dot]}"
+          let "ci_nb_skipped++"
+        fi
       elif [ "${TEST_SUCCESS[$image_version_no_dot]}" != "" ]
       then
-        ci="$ci [![CP $image_version](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-green)](${TEST_SUCCESS[$image_version_no_dot]})"
+        if [ "$environment_suffix" = "-cfk" ]
+        then
+          ci_cfk="$ci_cfk [![CP $image_version](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-green)](${TEST_SUCCESS[$image_version_no_dot]})"
+        else
+          ci="$ci [![CP $image_version](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-green)](${TEST_SUCCESS[$image_version_no_dot]})"
+        fi
       else
         logerror "TEST_SUCCESS, TEST_SKIPPED and TEST_FAILED are all empty !"
       fi
     done
 
-    if [ ${ci_nb_fail} -eq 0 ] && [ ${ci_nb_skipped} -eq 0 ]
+    if [ "$environment_suffix" = "-cfk" ]
     then
+      if [ ${ci_cfk_nb_fail} -eq 0 ] && [ ${ci_cfk_nb_skipped} -eq 0 ]
+      then
+        ci_cfk="[![CI_CFK ok](https://img.shields.io/badge/$nb_success/$nb_tests-ok!-green)]($html_url)"
+      elif [ ${ci_cfk_nb_fail} -eq ${nb_image_versions} ]
+      then
+        ci_cfk="[![CI_CFK fail](https://img.shields.io/badge/$nb_success/$nb_tests-fail!-red)](https://github.com/vdesabou/kafka-docker-playground/issues/$gh_issue_number)"
+      fi
+    else
+      if [ ${ci_nb_fail} -eq 0 ] && [ ${ci_nb_skipped} -eq 0 ]
+      then
         ci="[![CI ok](https://img.shields.io/badge/$nb_success/$nb_tests-ok!-green)]($html_url)"
-    elif [ ${ci_nb_fail} -eq ${nb_image_versions} ]
-    then
+      elif [ ${ci_nb_fail} -eq ${nb_image_versions} ]
+      then
         ci="[![CI fail](https://img.shields.io/badge/$nb_success/$nb_tests-fail!-red)](https://github.com/vdesabou/kafka-docker-playground/issues/$gh_issue_number)"
+      fi
     fi
   fi
 
@@ -435,7 +474,7 @@ do
     fi
 
     let "nb_connector_tests++"
-    sed -e "s|:${test}:|\&nbsp; $connector_badge $owner_badge $arm64 $ci |g" \
+    sed -e "s|:${test}:|\&nbsp; $connector_badge $owner_badge $arm64 $ci $ci_cfk |g" \
         $content_file > $content_tmp_file
 
     cp $content_tmp_file $content_file
@@ -458,12 +497,13 @@ do
         arm64="![arm64](https://img.shields.io/badge/arm64-native%20support-green)"
     fi
 
-    sed -e "s|:${test}:|\&nbsp; $arm64 $ci |g" \
+    sed -e "s|:${test}:|\&nbsp; $arm64 $ci $ci_cfk |g" \
         $content_file > $content_tmp_file
 
     cp $content_tmp_file $content_file
   fi
 done #end test_list
+done #end environment_suffix loop
 
 cp_version_tested=""
 for image_version in $tags
