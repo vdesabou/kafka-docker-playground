@@ -1608,6 +1608,16 @@ metadata:
   labels:
     app: ${pod_name}
 spec:
+EOF
+
+    if [[ "$pod_name" == "rest" ]]
+    then
+      cat >> "$output_file" << EOF
+  enableServiceLinks: false
+EOF
+    fi
+
+    cat >> "$output_file" << EOF
   containers:
     - name: ${container_name}
       image: ${image}
@@ -1706,7 +1716,7 @@ EOF
 
     if [[ -n "$command_list" ]]
     then
-      echo "      args:" >> "$output_file"
+      command_written=0
       IFS=';' read -r -a command_items <<< "$command_list"
       for command_item in "${command_items[@]}"
       do
@@ -1715,14 +1725,23 @@ EOF
           continue
         fi
         # Remove leading/trailing quotes from YAML array items if present
-        clean_item=$(echo "$command_item" | sed -e 's/^[[:space:]]*"//; s/"[[:space:]]*$//')
+        clean_item=$(echo "$command_item" | sed -e 's/^[[:space:]]*"//; s/"[[:space:]]*$//' -e 's/^[[:space:]]\+//; s/[[:space:]]\+$//')
+        if [[ -z "$clean_item" ]]
+        then
+          continue
+        fi
+        if [[ "$command_written" -eq 0 ]]
+        then
+          echo "      args:" >> "$output_file"
+          command_written=1
+        fi
         echo "        - $clean_item" >> "$output_file"
       done
     fi
 
     if [[ -n "$entrypoint_list" ]]
     then
-      echo "      command:" >> "$output_file"
+      entrypoint_written=0
       IFS=';' read -r -a entrypoint_items <<< "$entrypoint_list"
       for entrypoint_item in "${entrypoint_items[@]}"
       do
@@ -1731,7 +1750,16 @@ EOF
           continue
         fi
         # Remove leading/trailing quotes from YAML array items if present
-        clean_item=$(echo "$entrypoint_item" | sed -e 's/^[[:space:]]*"//; s/"[[:space:]]*$//')
+        clean_item=$(echo "$entrypoint_item" | sed -e 's/^[[:space:]]*"//; s/"[[:space:]]*$//' -e 's/^[[:space:]]\+//; s/[[:space:]]\+$//')
+        if [[ -z "$clean_item" ]]
+        then
+          continue
+        fi
+        if [[ "$entrypoint_written" -eq 0 ]]
+        then
+          echo "      command:" >> "$output_file"
+          entrypoint_written=1
+        fi
         echo "        - $clean_item" >> "$output_file"
       done
     fi
