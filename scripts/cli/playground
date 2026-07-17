@@ -1085,11 +1085,6 @@ playground_update_readme_usage() {
     printf "\n"
     echo
 
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--cfk")"
-    printf "\n"
-    echo
-
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -38867,14 +38862,6 @@ playground_update_readme_parse_requirements() {
 
         # :flag.case_no_arg
         args['--generate-for-kb']=1
-        shift
-        ;;
-
-      # :flag.case
-      --cfk)
-
-        # :flag.case_no_arg
-        args['--cfk']=1
         shift
         ;;
 
