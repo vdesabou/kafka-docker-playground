@@ -61,9 +61,9 @@ do
 
     # 🤖 CI: ignore examples with github issues opened and with label 'CI ignore ⏭️' #7203
     title="🔥 ${dir}"
-    if [ ! -z "$environment" ] && [ "$environment" != "plaintext" ]
+    if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
     then
-      title="🔥 ${dir} ($environment)"
+        title="🔥 ${dir} ($environment)"
     fi
     set +e
     gh issue list --limit 500 | grep "$title" > /dev/null 2>&1
@@ -120,9 +120,9 @@ do
             log "####################################################"
             testdir=$(echo "$dir" | sed 's/\//-/g')
             file="/tmp/$TAG-$testdir--$script"
-            if [ ! -z "$environment" ] && [ "$environment" != "plaintext" ]
+            if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
             then
-              file="$file-$environment"
+                file="$file-$PLAYGROUND_ENVIRONMENT"
             fi
             rm -f $file
             touch $file
@@ -180,9 +180,9 @@ do
 
         testdir=$(echo "$dir" | sed 's/\//-/g')
         file="$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
-        if [ ! -z "$environment" ] && [ "$environment" != "plaintext" ]
+        if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
         then
-          file="$file-$environment"
+            file="$file-$PLAYGROUND_ENVIRONMENT"
         fi
         s3_file="s3://kafka-docker-playground/ci/$file"
         set +e
@@ -259,11 +259,6 @@ do
                 log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 14 days ago...re-running. Test url: $html_url"
                 log "####################################################"
                 aws s3 rm $s3_file --region us-east-1
-            elif [ "$environment" != "plaintext" ] && [ "$environment" != "" ]
-            then
-                log "####################################################"
-                log "🔐 Test with environment not plaintext ($environment)...re-running. Test url: $html_url"
-                log "####################################################"
             elif [ "$status" = "failure" ]
             then
                 log "####################################################"
@@ -298,9 +293,9 @@ do
         SECONDS=0
         tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
         file_output="$tmp_dir/$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
-        if [ ! -z "$environment" ] && [ "$environment" != "plaintext" ]
+        if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
         then
-          file_output="$file_output-$environment"
+            file_output="$file_output-$PLAYGROUND_ENVIRONMENT"
         fi
         file_output="$file_output.log"
         rm -f $file_output
@@ -312,9 +307,9 @@ do
         CUMULATED="cumulated time: $((($ELAPSED_TOTAL / 60) % 60))min $(($ELAPSED_TOTAL % 60))sec"
         testdir=$(echo "$dir" | sed 's/\//-/g')
         file="$tmp_dir/$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
-        if [ ! -z "$environment" ] && [ "$environment" != "plaintext" ]
+        if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
         then
-          file="$file-$environment"
+            file="$file-$PLAYGROUND_ENVIRONMENT"
         fi
         rm -f $file
         touch $file
