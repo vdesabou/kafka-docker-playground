@@ -52,6 +52,10 @@ do
 
     # 🤖 CI: ignore examples with github issues opened and with label 'CI ignore ⏭️' #7203
     title="🔥 ${dir}"
+    if [ ! -z "$environment" ] && [ "$environment" != "plaintext" ]
+    then
+      title="🔥 ${dir} ($environment)"
+    fi
     set +e
     gh issue list --limit 500 | grep "$title" > /dev/null 2>&1
     if [ $? == 0 ]
@@ -107,6 +111,10 @@ do
             log "####################################################"
             testdir=$(echo "$dir" | sed 's/\//-/g')
             file="/tmp/$TAG-$testdir--$script"
+            if [ ! -z "$environment" ] && [ "$environment" != "plaintext" ]
+            then
+              file="$file-$environment"
+            fi
             rm -f $file
             touch $file
             echo "|$(date +%s)|skipped|$GITHUB_RUN_ID" > $file
@@ -163,6 +171,10 @@ do
 
         testdir=$(echo "$dir" | sed 's/\//-/g')
         file="$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
+        if [ ! -z "$environment" ] && [ "$environment" != "plaintext" ]
+        then
+          file="$file-$environment"
+        fi
         s3_file="s3://kafka-docker-playground/ci/$file"
         set +e
         exists=$(aws s3 ls $s3_file --region us-east-1)
@@ -276,7 +288,12 @@ do
         log "####################################################"
         SECONDS=0
         tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-        file_output="$tmp_dir/$TAG-$testdir-$THE_CONNECTOR_TAG-$script.log"
+        file_output="$tmp_dir/$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
+        if [ ! -z "$environment" ] && [ "$environment" != "plaintext" ]
+        then
+          file_output="$file_output-$environment"
+        fi
+        file_output="$file_output.log"
         rm -f $file_output
         touch $file_output
         retry playground run -f "$PWD/$script" $flag_tag $flag_environment 2>&1 | tee "$file_output"
@@ -286,6 +303,10 @@ do
         CUMULATED="cumulated time: $((($ELAPSED_TOTAL / 60) % 60))min $(($ELAPSED_TOTAL % 60))sec"
         testdir=$(echo "$dir" | sed 's/\//-/g')
         file="$tmp_dir/$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
+        if [ ! -z "$environment" ] && [ "$environment" != "plaintext" ]
+        then
+          file="$file-$environment"
+        fi
         rm -f $file
         touch $file
         if [ $ret -eq 0 ]

@@ -149,7 +149,16 @@ do
       fi
       testdir=$(echo "$test" | sed 's/\//-/g')
       ci_file="${ci_folder}/${image_version}-${testdir}-${version}-${script_name}"
-      ci_output_file="${ci_output_folder}/${image_version}-${testdir}-${version}-${script_name}.log"
+      if [[ -n "$cfk" ]]
+      then
+        ci_file="$ci_file-cfk"
+      fi
+      ci_output_file="${ci_output_folder}/${image_version}-${testdir}-${version}-${script_name}"
+      if [[ -n "$cfk" ]]
+      then
+        ci_output_file="$ci_output_file-cfk"
+      fi
+      ci_output_file="$ci_output_file.log"
 
       if [ -f ${ci_file} ]
       then
@@ -280,6 +289,10 @@ do
       fi
       t=$(echo ${testdir} | sed 's/-/\//')
       title="🔥 ${t}"
+      if [[ -n "$cfk" ]]
+      then
+        title="🔥 ${t} (cfk)"
+      fi
       log "Number of successful tests: $nb_success/${nb_tests}"
       if [ ${nb_fail} -gt 0 ]
       then

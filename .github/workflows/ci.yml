@@ -797,7 +797,7 @@ jobs:
       - name: Update README
         run: |
           cd ./scripts/cli
-          if [ -n "${{ github.event.inputs.playground_environment }}" ]; then
+          if [ "${{ github.event.inputs.playground_environment }}" = "cfk" ]; then
             ./playground update-readme --tags "8.3.0" --cfk
           else
             ./playground update-readme --tags "8.3.0"
