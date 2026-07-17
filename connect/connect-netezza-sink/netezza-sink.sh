@@ -135,8 +135,12 @@ DROP TABLE orders;
 EOF
 set -e
 
-log "Sending messages to topic orders"
-playground topic produce -t orders --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}' << 'EOF'
+# Use a unique product value on every run so the verification below only matches
+# data produced by THIS run - not leftovers if a previous run could not drop the
+# table.
+UNIQUE_VALUE="foo-$(date +%s)-${RANDOM}"
+log "Sending messages to topic orders (unique product value: ${UNIQUE_VALUE})"
+playground topic produce -t orders --nb-messages 1 --forced-value '{"id":2,"product":"'"${UNIQUE_VALUE}"'","quantity":2,"price":0.86583304}' << 'EOF'
 {
   "type": "record",
   "name": "myrecord",
@@ -176,16 +180,36 @@ playground connector create-or-update --connector netezza-sink  << EOF
 }
 EOF
 
-sleep 15
+sleep 30
 
 log "Verify data is in Netezza"
+
+set +e
 run_nzsql > /tmp/result.log 2>&1 << EOF
 SELECT * FROM orders;
 EOF
+select_rc=$?
+set -e
 cat /tmp/result.log
-grep "foo" /tmp/result.log
 
+# Always drop the table (cleanup) BEFORE asserting, so it happens even when the
+# assertion fails. Wrapped so a cleanup failure never masks the real result.
 log "Drop table orders in Netezza (cleanup)"
+set +e
 run_nzsql << EOF
 DROP TABLE orders;
 EOF
+set -e
+
+if [ $select_rc -ne 0 ]
+then
+     logerror "❌ nzsql failed to read table 'orders' (exit code ${select_rc}) - see the error above"
+     exit 1
+fi
+
+if ! grep -q "${UNIQUE_VALUE}" /tmp/result.log
+then
+     logerror "❌ expected value '${UNIQUE_VALUE}' not found in Netezza table 'orders' - data was not delivered"
+     exit 1
+fi
+log "🎉 Found '${UNIQUE_VALUE}' in Netezza - data delivered successfully"
