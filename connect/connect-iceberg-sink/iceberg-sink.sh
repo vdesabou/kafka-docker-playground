@@ -46,10 +46,15 @@ then
   # not running with github actions
   log "You can open the jupyter lab at http://localhost:8888/lab/tree/notebooks and use the sample notebook in notebooks/iceberg.ipynb to query the table"
 
-  log "Verify data is in Iceberg"
-  playground container exec --container spark-iceberg --command "spark-sql" << EOF
+  if playground container exec --container spark-iceberg --command "true" > /dev/null 2>&1
+  then
+    log "Verify data is in Iceberg"
+    playground container exec --container spark-iceberg --command "spark-sql" << EOF
 SELECT *
 FROM orders.payments
 LIMIT 10;
 EOF
+  else
+    logwarn "Skipping Iceberg SQL verification because runtime 'spark-iceberg' is not available in this environment"
+  fi
 fi
