@@ -103,6 +103,6 @@ playground container exec --container namenode1 --command "kinit -kt /opt/hadoop
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
 playground container exec --container namenode1 --command "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hadoop fs -copyToLocal /topics/hdfs-topic/partition=0/hdfs-topic+0+0000000000+0000000002.avro /tmp"
-playground container cp --source namenode1:/tmp/hdfs-topic+0+0000000000+0000000002.avro --destination /tmp/
+playground container cp --source namenode1:/tmp/hdfs-topic+0+0000000000+0000000002.avro --destination /tmp/hdfs-topic+0+0000000000+0000000002.avro
 
 playground  tools read-avro-file --file /tmp/hdfs-topic+0+0000000000+0000000002.avro

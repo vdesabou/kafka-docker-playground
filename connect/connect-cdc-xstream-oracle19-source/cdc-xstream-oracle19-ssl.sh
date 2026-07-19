@@ -158,7 +158,7 @@ log "Set connect default certificate store (common root certificate) with oracle
 cd ${DIR}/ssl
 # https://confluentinc.atlassian.net/wiki/spaces/OAAC/pages/4192768158/Oracle+XStream+Connector+Connection+Encryption#One-way-TLS-without-client-wallet
 playground container cp --source oracle:/tmp/root/b64certificate.txt --destination b64certificate.txt
-playground container cp --source b64certificate.txt --destination connect:/etc/pki/ca-trust/source/anchors/
+playground container cp --source b64certificate.txt --destination connect:/etc/pki/ca-trust/source/anchors/b64certificate.txt
 playground container exec --root --command "update-ca-trust" --container connect
 cd ${DIR}
 

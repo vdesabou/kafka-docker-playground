@@ -57,6 +57,6 @@ sleep 10
 log "Listing content of ./upload/topics/test_sftp_sink/partition\=0/"
 playground container exec --container sftp-server --command "ls /home/foo/upload/topics/test_sftp_sink/partition\\=0/"
 
-playground container cp --source sftp-server:/home/foo/upload/topics/test_sftp_sink/partition\=0/test_sftp_sink+0+0000000000.avro --destination /tmp/
+playground container cp --source sftp-server:/home/foo/upload/topics/test_sftp_sink/partition\=0/test_sftp_sink+0+0000000000.avro --destination /tmp/test_sftp_sink+0+0000000000.avro
 
 playground  tools read-avro-file --file /tmp/test_sftp_sink+0+0000000000.avro
