@@ -173,7 +173,7 @@
 
 - 👬 [Separate principals](https://docs.confluent.io/current/connect/security.html#separate-principals) when using connectors: [example with SFTP source](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/connect-override-policy-sftp-source) :other/connect-override-policy-sftp-source:
 - 🏦 [Connect Centralized License](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-centralized-license)
-
+- 🍥 [SMT tests covering all Confluent Platform-supported transforms](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-testing-smt)
 
 ## ☁️ Confluent Cloud
 
