@@ -16797,10 +16797,10 @@ playground_update_readme_command() {
       then
         if [ ${ci_cfk_nb_fail} -eq 0 ] && [ ${ci_cfk_nb_skipped} -eq 0 ]
         then
-          ci_cfk="[![CI_CFK ok](https://img.shields.io/badge/$nb_success/$nb_tests-ok!-green)]($html_url)"
+          ci_cfk="[![CI_CFK ok](https://img.shields.io/badge/$nb_success/$nb_tests-cfk_ok!-green)]($html_url)"
         elif [ ${ci_cfk_nb_fail} -eq ${nb_image_versions} ]
         then
-          ci_cfk="[![CI_CFK fail](https://img.shields.io/badge/$nb_success/$nb_tests-fail!-red)](https://github.com/vdesabou/kafka-docker-playground/issues/$gh_issue_number)"
+          ci_cfk="[![CI_CFK fail](https://img.shields.io/badge/$nb_success/$nb_tests-cfk_fail!-red)](https://github.com/vdesabou/kafka-docker-playground/issues/$gh_issue_number)"
         fi
       else
         if [ ${ci_nb_fail} -eq 0 ] && [ ${ci_nb_skipped} -eq 0 ]
