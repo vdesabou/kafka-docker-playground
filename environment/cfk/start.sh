@@ -1345,6 +1345,41 @@ function generate_extra_pods_from_compose_override() {
     fi
   }
 
+  infer_ports_from_image_exposed_ports() {
+    local image_ref="$1"
+    local exposed_ports=""
+    local exposed_port=""
+
+    if [[ -z "$image_ref" ]]
+    then
+      return 1
+    fi
+
+    exposed_ports=$(docker image inspect "$image_ref" --format '{{range $port, $_ := .Config.ExposedPorts}}{{println $port}}{{end}}' 2>/dev/null)
+    if [[ -z "$exposed_ports" ]]
+    then
+      return 1
+    fi
+
+    while IFS= read -r exposed_port
+    do
+      exposed_port=$(echo "$exposed_port" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
+      exposed_port="${exposed_port%%/*}"
+      if [[ "$exposed_port" =~ ^[0-9]+$ ]]
+      then
+        parsed_ports+=("$exposed_port")
+      fi
+    done <<< "$exposed_ports"
+
+    if [[ "${#parsed_ports[@]}" -gt 0 ]]
+    then
+      has_any_port=1
+      return 0
+    fi
+
+    return 1
+  }
+
   : > "$output_file"
   while IFS="$compose_field_sep" read -r service_name image build_context platform compose_user tmpfs_list env_list ports_list entrypoint_list command_list volumes_list profiles_list
   do
@@ -1797,6 +1832,26 @@ EOF
     then
       parsed_ports=("3306")
       has_any_port=1
+    fi
+
+    # MariaDB examples follow the same pattern as MySQL and also need a Service
+    # even when the compose override does not expose ports explicitly.
+    if [[ "$has_any_port" -eq 0 ]] && [[ "$pod_name" == "mariadb" ]]
+    then
+      parsed_ports=("3306")
+      has_any_port=1
+    fi
+
+    # PostgreSQL examples rely on the default database port as well.
+    if [[ "$has_any_port" -eq 0 ]] && [[ "$pod_name" == "postgres" ]]
+    then
+      parsed_ports=("5432")
+      has_any_port=1
+    fi
+
+    if [[ "$has_any_port" -eq 0 ]]
+    then
+      infer_ports_from_image_exposed_ports "$image" || true
     fi
 
     # Hadoop NameNode examples often omit explicit port mapping in compose overrides.
