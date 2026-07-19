@@ -40,6 +40,7 @@
     "rabbitmq.routing.key": "",
     "rabbitmq.security.protocol": "PLAINTEXT",
     "rabbitmq.shutdown.timeout.ms": "10000",
+    "rabbitmq.topic.queue.map": "STRING",
     "rabbitmq.topology.recovery.enabled": "true",
     "rabbitmq.username": "guest",
     "rabbitmq.virtual.host": "/",
