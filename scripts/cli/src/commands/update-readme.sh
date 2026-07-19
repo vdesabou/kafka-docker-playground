@@ -64,6 +64,7 @@ do
   nb_tests=0
   nb_fail=0
   nb_success=0
+  cfk_placeholder=":cfk-${test}:"
   TEST_FAILED=()
   TEST_SUCCESS=()
   TEST_SKIPPED=()
@@ -472,11 +473,17 @@ do
         arm64="![arm64](https://img.shields.io/badge/arm64-native%20support-green)"
     fi
 
-    let "nb_connector_tests++"
-    sed -e "s|:${test}:|\&nbsp; $connector_badge $owner_badge $arm64 $ci $ci_cfk |g" \
-        $content_file > $content_tmp_file
-
-    cp $content_tmp_file $content_file
+    if [ "$environment_suffix" = "" ]
+    then
+      let "nb_connector_tests++"
+      sed -e "s|:${test}:|\&nbsp; $connector_badge $owner_badge $arm64 $ci ${cfk_placeholder} |g" \
+          $content_file > $content_tmp_file
+      cp $content_tmp_file $content_file
+    else
+      sed -e "s|${cfk_placeholder}|$ci_cfk|g" \
+          $content_file > $content_tmp_file
+      cp $content_tmp_file $content_file
+    fi
   else
     arm64=""
     grep "${test}" ${root_folder}/scripts/arm64-support-with-emulation.txt > /dev/null
@@ -496,10 +503,16 @@ do
         arm64="![arm64](https://img.shields.io/badge/arm64-native%20support-green)"
     fi
 
-    sed -e "s|:${test}:|\&nbsp; $arm64 $ci $ci_cfk |g" \
-        $content_file > $content_tmp_file
-
-    cp $content_tmp_file $content_file
+    if [ "$environment_suffix" = "" ]
+    then
+      sed -e "s|:${test}:|\&nbsp; $arm64 $ci ${cfk_placeholder} |g" \
+          $content_file > $content_tmp_file
+      cp $content_tmp_file $content_file
+    else
+      sed -e "s|${cfk_placeholder}|$ci_cfk|g" \
+          $content_file > $content_tmp_file
+      cp $content_tmp_file $content_file
+    fi
   fi
 done #end test_list
 done #end environment_suffix loop
