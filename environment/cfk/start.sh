@@ -3007,10 +3007,10 @@ log "✅ Installed Confluent for Kubernetes CFK version $CFK_VERSION (helm chart
 log "Deploy Confluent Platform"
 CFK_MANIFEST_FILE=$(mktemp)
 build_cfk_manifest "$CFK_MANIFEST_FILE"
-if [[ -z "$GITHUB_RUN_NUMBER" ]]
-then
-  log_generated_yaml_file "📋 Generated CFK manifest:" "$CFK_MANIFEST_FILE"
-fi
+# if [[ -z "$GITHUB_RUN_NUMBER" ]]
+# then
+#   log_generated_yaml_file "📋 Generated CFK manifest:" "$CFK_MANIFEST_FILE"
+# fi
 kubectl apply -f "$CFK_MANIFEST_FILE"
 
 if [[ -n "$CONNECT_MOUNT_RESOURCES_FILE" ]] && [[ -s "$CONNECT_MOUNT_RESOURCES_FILE" ]]
