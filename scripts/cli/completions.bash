@@ -1847,26 +1847,26 @@ _playground_completions() {
       return
       ;;
     27:--file|27:-f)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-examples-list-with-fzf \"$cur\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-examples-list-with-fzf "$cur")" -- "$cur")
       return
       ;;
     27:--tag)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-tag-list \"$cur\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-tag-list "$cur")" -- "$cur")
       return
       ;;
     27:--connect-tag)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-tag-list \"$cur\" --connect-only)" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-tag-list "$cur" --connect-only)" -- "$cur")
       return
       ;;
     27:--connector-tag)
       return
       ;;
     27:--connector-zip)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zip-or-jar-with-fzf --type zip \"$cur\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zip-or-jar-with-fzf --type zip "$cur")" -- "$cur")
       return
       ;;
     27:--connector-jar)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zip-or-jar-with-fzf --type jar \"$cur\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zip-or-jar-with-fzf --type jar "$cur")" -- "$cur")
       return
       ;;
     27:--cluster-cloud)
@@ -1878,15 +1878,15 @@ _playground_completions() {
       return
       ;;
     27:--cluster-region)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-kafka-region-list \"$cur\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-kafka-region-list "$cur")" -- "$cur")
       return
       ;;
     27:--cluster-environment)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-ccloud-environment-list \"$cur\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-ccloud-environment-list "$cur")" -- "$cur")
       return
       ;;
     27:--cluster-name)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-ccloud-cluster-list \"$cur\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-ccloud-cluster-list "$cur")" -- "$cur")
       return
       ;;
     27:--cluster-creds)
@@ -1920,22 +1920,22 @@ _playground_completions() {
       return
       ;;
     33:--tag)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-tag-list \"$cur\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-tag-list "$cur")" -- "$cur")
       return
       ;;
     33:--connect-tag)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-tag-list \"$cur\" --connect-only)" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-tag-list "$cur" --connect-only)" -- "$cur")
       return
       ;;
     33:--connector-tag)
       return
       ;;
     33:--connector-zip)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zip-or-jar-with-fzf --type zip \"$cur\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zip-or-jar-with-fzf --type zip "$cur")" -- "$cur")
       return
       ;;
     33:--connector-jar)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zip-or-jar-with-fzf --type jar \"$cur\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-zip-or-jar-with-fzf --type jar "$cur")" -- "$cur")
       return
       ;;
     34:--output-level|34:-o)
@@ -1943,7 +1943,7 @@ _playground_completions() {
       return
       ;;
     34:--file|34:-f)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-any-file-with-fzf \"$cur\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-any-file-with-fzf "$cur")" -- "$cur")
       return
       ;;
     35:--output-level|35:-o)
@@ -2003,7 +2003,7 @@ _playground_completions() {
       return
       ;;
     45:--file|45:-f)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-playground-repro-export-with-fzf \"$cur\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-playground-repro-export-with-fzf "$cur")" -- "$cur")
       return
       ;;
     46:--output-level|46:-o)
@@ -2011,18 +2011,18 @@ _playground_completions() {
       return
       ;;
     46:--file|46:-f)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-examples-list-with-fzf --without-repro \"$cur\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-examples-list-with-fzf --without-repro "$cur")" -- "$cur")
       return
       ;;
     46:--description|46:-d)
       return
       ;;
     46:--connector-plugin)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-plugin \"$cur\" \"onprem\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-plugin "$cur" \"onprem\")" -- "$cur")
       return
       ;;
     46:--pipeline)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-examples-list-with-fzf --without-repro --sink-only \"$cur\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-examples-list-with-fzf --without-repro --sink-only "$cur")" -- "$cur")
       return
       ;;
     47:--output-level|47:-o)
@@ -2053,7 +2053,7 @@ _playground_completions() {
       return
       ;;
     50:--schema)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-predefined-schemas \"$cur\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-predefined-schemas "$cur")" -- "$cur")
       return
       ;;
     50:--id)
@@ -2279,7 +2279,7 @@ _playground_completions() {
       return
       ;;
     76:--file|76:-f)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-specific-file-extension \"$cur\" --extension \"avro\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-specific-file-extension "$cur" --extension \"avro\")" -- "$cur")
       return
       ;;
     77:--output-level|77:-o)
@@ -2287,7 +2287,7 @@ _playground_completions() {
       return
       ;;
     77:--file|77:-f)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-specific-file-extension \"$cur\" --extension \"parquet\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-specific-file-extension "$cur" --extension \"parquet\")" -- "$cur")
       return
       ;;
     78:--output-level|78:-o)
@@ -2366,7 +2366,7 @@ _playground_completions() {
       return
       ;;
     87:--file|87:-f)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-specific-file-extension \"$cur\" --extension \"hprof\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-specific-file-extension "$cur" --extension \"hprof\")" -- "$cur")
       return
       ;;
     87:--output-dir|87:-o)
@@ -2381,7 +2381,7 @@ _playground_completions() {
       return
       ;;
     88:--file|88:-f)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-specific-file-extension \"$cur\" --extension \"log\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-specific-file-extension "$cur" --extension \"log\")" -- "$cur")
       return
       ;;
     88:--container|88:-c|88:--pod|88:-p)
@@ -2767,11 +2767,11 @@ _playground_completions() {
       return
       ;;
     125:--key)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-predefined-schemas \"$cur\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-predefined-schemas "$cur")" -- "$cur")
       return
       ;;
     125:--value)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-predefined-schemas \"$cur\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-predefined-schemas "$cur")" -- "$cur")
       return
       ;;
     125:--topic|125:-t)
@@ -2871,7 +2871,7 @@ _playground_completions() {
       return
       ;;
     130:--connector-plugin|130:-c)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-plugin \"$cur\" \"onprem\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-plugin "$cur" \"onprem\")" -- "$cur")
       return
       ;;
     130:--connector-tag)
@@ -2885,7 +2885,7 @@ _playground_completions() {
       return
       ;;
     131:--connector-plugin|131:-c)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-plugin \"$cur\" \"onprem\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-plugin "$cur" \"onprem\")" -- "$cur")
       return
       ;;
     131:--last)
@@ -2906,7 +2906,7 @@ _playground_completions() {
       return
       ;;
     133:--connector-plugin|133:-c)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-plugin \"$cur\" \"all\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-plugin "$cur" \"all\")" -- "$cur")
       return
       ;;
     133:--connector-tag)
@@ -3155,7 +3155,7 @@ _playground_completions() {
       return
       ;;
     166:--connector-plugin)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-plugin \"$cur\" \"fm\")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(playground get-connector-plugin "$cur" \"fm\")" -- "$cur")
       return
       ;;
     167:--output-level|167:-o)
