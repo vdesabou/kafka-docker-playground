@@ -1,0 +1,20 @@
+---
+services:
+
+  postgres:
+    image: debezium/postgres:15-alpine
+    hostname: postgres
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=mypassword
+      - POSTGRES_DB=postgres
+
+  connect:
+    depends_on:
+      - postgres
+    environment:
+      # Debezium SMTs (io.debezium.transforms.*) ship inside the Debezium connector plugin
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/debezium-debezium-connector-postgresql

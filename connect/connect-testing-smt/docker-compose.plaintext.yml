@@ -1,0 +1,19 @@
+---
+services:
+
+  connect:
+    environment:
+      # The connector under test (connect-transforms) MUST be listed first: for
+      # PR testing, connect-ci-cd injects the PR-built artifact (CONNECTOR_ZIP /
+      # CONNECTOR_JAR) and KDP applies it only to the first plugin on the path.
+      # The HTTP sink is just the carrier and is installed from Confluent Hub.
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-connect-transforms,/usr/share/confluent-hub-components/confluentinc-kafka-connect-http
+
+  httpserver:
+    build:
+      # reuse the controllable mock HTTP server from connect-http-sink
+      context: ../../connect/connect-http-sink/httpserver
+    hostname: httpserver
+    container_name: httpserver
+    ports:
+      - "9006:9006"

@@ -1,0 +1,25 @@
+{
+  "namespace": "com.confluent.smttest",
+  "name": "SmtSource",
+  "type": "record",
+  "fields": [
+    {
+      "name": "id",
+      "type": {
+        "type": "int",
+        "arg.properties": {
+          "iteration": { "start": 1 }
+        }
+      }
+    },
+    {
+      "name": "route_field",
+      "type": {
+        "type": "string",
+        "arg.properties": {
+          "options": ["ROUTE_FIELD_VALUE"]
+        }
+      }
+    }
+  ]
+}
