@@ -354,10 +354,10 @@ Kafka topic to write the messages to.
 
 🔘 rabbitmq.prefetch.count
 
-Maximum number of messages that the server will deliver, 0 if unlimited. See `Channel.basicQos(int, boolean) <https://rabbitmq.github.io/rabbitmq-java-client/api/current/com/rabbitmq/client/Channel.html#basicQos-int-boolean->`_
+Maximum number of messages the broker delivers to a single consumer before requiring an acknowledgment. Default `500`. Use `0` for unlimited. Avoid unlimited prefetch at high queue counts because the broker buffers the entire queue into the consumer's in-flight set on `basicConsume`. See `Channel.basicQos(int, boolean) <https://rabbitmq.github.io/rabbitmq-java-client/api/current/com/rabbitmq/client/Channel.html#basicQos-int-boolean->`_
 
 	 - Type: INT
-	 - Default: 0
+	 - Default: 500
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -372,12 +372,21 @@ True if the settings should be applied to the entire channel rather than each co
 
 🔘 rabbitmq.queue
 
-RabbitMQ queue to read from.
+Comma-separated list of one or more RabbitMQ queues to read from. Duplicate entries are removed automatically.
 
 	 - Type: LIST
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: true
+
+🔘 rabbitmq.queue.topic.map
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: JSON object mapping RabbitMQ queue names to Kafka topic names, e.g. {"queue-1":"topic-a","queue-2":"topic-b"}. Messages consumed from a mapped queue are published to its mapped topic. Queues not listed in the map, or any queue when the map is empty, fall back to `kafka.topic`.
+	 - Required: MEDIUM
 
 🔘 batch.size
 
@@ -395,5 +404,32 @@ The number of milliseconds to wait when no records are returned from the RabbitM
 	 - Type: INT
 	 - Default: 100
 	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 rabbitmq.queue.failure.tolerance
+
+Controls how the connector reacts when a queue in `rabbitmq.queue` can no longer be subscribed to while the connector is running (for example, an administrator deletes the queue on the broker, permissions are revoked, or the queue is locked by another connection) and the task attempts to resubscribe on the next channel recreation. `fail-fast` (default): the connector transitions to `FAILED` on the first such queue. `skip-and-continue`: the connector skips the affected queues and continues consuming from the rest.
+
+	 - Type: STRING
+	 - Default: fail-fast
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 rabbitmq.max.queue.per.task
+
+Upper bound on the number of RabbitMQ queues a single task may subscribe to. The connector splits `rabbitmq.queue` (`N` queues) across `tasks.max` tasks (clamped to the queue count) such that no task receives more than this many queues. Validation rejects the config at submit time if `tasks.max` would require more than this many queues per task (`tasks.max < ceil(N / value)`) or exceeds the total queue count. Typically tuned per scope (org / env / cluster) via Cloud config-override rules; customers can also set it explicitly in the connector config.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+🔘 rabbitmq.queue.consumer.mode
+
+How the connector distributes the queues in `rabbitmq.queue` across Connect tasks. `dedicated` (default): each queue is subscribed to by exactly one task, preserving per-queue message ordering. `shared`: every task subscribes to every queue as an AMQP competing consumer, and per-queue message ordering is not preserved.
+
+	 - Type: STRING
+	 - Default: dedicated
+	 - Importance: LOW
 	 - Required: false
 
