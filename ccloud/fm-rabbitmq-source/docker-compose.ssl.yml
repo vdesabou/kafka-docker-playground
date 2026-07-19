@@ -10,9 +10,9 @@ services:
       - "8080:8080"
     volumes:
       - ../../ccloud/fm-rabbitmq-source/ssl/rabbitmq.conf:/etc/rabbitmq/advanced.config
-      - ../../ccloud/fm-rabbitmq-source/security/snakeoil-ca-1.crt:/tmp/ca.crt
-      - ../../ccloud/fm-rabbitmq-source/security/rabbitmq.certificate.pem:/tmp/server.pem
-      - ../../ccloud/fm-rabbitmq-source/security/rabbitmq.key:/tmp/server.key
+      - ../../ccloud/fm-rabbitmq-source/security/snakeoil-ca-1.crt:/var/lib/rabbitmq/ca.crt
+      - ../../ccloud/fm-rabbitmq-source/security/rabbitmq.certificate.pem:/var/lib/rabbitmq/server.pem
+      - ../../ccloud/fm-rabbitmq-source/security/rabbitmq.key:/var/lib/rabbitmq/server.key
     environment:
       RABBITMQ_DEFAULT_USER: "myuser"
       RABBITMQ_DEFAULT_PASS: "mypassword"

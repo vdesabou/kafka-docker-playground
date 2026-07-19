@@ -27,7 +27,7 @@ docker compose -f docker-compose.ssl.yml build
 docker compose -f docker-compose.ssl.yml down -v --remove-orphans
 docker compose -f docker-compose.ssl.yml up -d --quiet-pull
 
-playground container exec --command  "chown rabbitmq:rabbitmq /tmp/*" --container rabbitmq
+playground container exec --command  "chown rabbitmq:rabbitmq /var/lib/rabbitmq/*" --container rabbitmq
 playground container restart --container rabbitmq
 
 sleep 10
