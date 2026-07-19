@@ -6,13 +6,13 @@ services:
     hostname: rabbitmq
     container_name: rabbitmq
     ports:
-      - "5672:5672"
+      - "5671:5671"
       - "8080:8080"
     volumes:
       - ../../connect/connect-rabbitmq-sink/ssl/rabbitmq.conf:/etc/rabbitmq/advanced.config
-      - ../../connect/connect-rabbitmq-sink/security/snakeoil-ca-1.crt:/var/lib/rabbitmq/ca.crt
-      - ../../connect/connect-rabbitmq-sink/security/rabbitmq.certificate.pem:/var/lib/rabbitmq/server.pem
-      - ../../connect/connect-rabbitmq-sink/security/rabbitmq.key:/var/lib/rabbitmq/server.key
+      - ../../connect/connect-rabbitmq-sink/security/snakeoil-ca-1.crt:/etc/rabbitmq/certs/ca.crt
+      - ../../connect/connect-rabbitmq-sink/security/rabbitmq.certificate.pem:/etc/rabbitmq/certs/server.pem
+      - ../../connect/connect-rabbitmq-sink/security/rabbitmq.key:/etc/rabbitmq/certs/server.key
     environment:
       RABBITMQ_DEFAULT_USER: "myuser"
       RABBITMQ_DEFAULT_PASS: "mypassword"

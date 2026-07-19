@@ -10,9 +10,9 @@ services:
       - "8080:8080"
     volumes:
       - ../../connect/connect-rabbitmq-source/ssl/rabbitmq.conf:/etc/rabbitmq/advanced.config
-      - ../../connect/connect-rabbitmq-source/security/snakeoil-ca-1.crt:/var/lib/rabbitmq/ca.crt
-      - ../../connect/connect-rabbitmq-source/security/rabbitmq.certificate.pem:/var/lib/rabbitmq/server.pem
-      - ../../connect/connect-rabbitmq-source/security/rabbitmq.key:/var/lib/rabbitmq/server.key
+      - ../../connect/connect-rabbitmq-source/security/snakeoil-ca-1.crt:/tmp/ca.crt
+      - ../../connect/connect-rabbitmq-source/security/rabbitmq.certificate.pem:/tmp/server.pem
+      - ../../connect/connect-rabbitmq-source/security/rabbitmq.key:/tmp/server.key
     environment:
       RABBITMQ_DEFAULT_USER: "myuser"
       RABBITMQ_DEFAULT_PASS: "mypassword"
