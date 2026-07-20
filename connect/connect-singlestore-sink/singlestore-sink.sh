@@ -33,8 +33,12 @@ cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-log "Starting singlestore cluster"
-docker start singlestore
+if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+then
+  log "CFK mode: singlestore is managed as a pod"
+else
+  docker start singlestore
+fi
 
 singlestore-wait-start
 
