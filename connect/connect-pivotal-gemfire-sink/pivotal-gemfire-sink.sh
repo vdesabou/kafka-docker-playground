@@ -33,12 +33,14 @@ fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
+GEMFIRE_RUNTIME_ENV='JAVA_BIN=$(command -v java) && export GF_JAVA="$JAVA_BIN" && export JAVA_HOME=$(dirname $(dirname $(readlink -f "$JAVA_BIN"))) && export PATH="$PATH:$JAVA_HOME/bin:/opt/pivotal/vmware-gemfire-9.15.1/bin"'
+
 log "Starting up locator"
-playground container exec --container pivotal-gemfire --command "sh /opt/pivotal/workdir/startLocator.sh"
+playground container exec --container pivotal-gemfire --shell sh --command "$GEMFIRE_RUNTIME_ENV && sh /opt/pivotal/workdir/startLocator.sh"
 log "Starting up server1"
-playground container exec --container pivotal-gemfire --command "sh /opt/pivotal/workdir/startServer1.sh"
+playground container exec --container pivotal-gemfire --shell sh --command "$GEMFIRE_RUNTIME_ENV && sh /opt/pivotal/workdir/startServer1.sh"
 log "Starting up server2"
-playground container exec --container pivotal-gemfire --command "sh /opt/pivotal/workdir/startServer2.sh"
+playground container exec --container pivotal-gemfire --shell sh --command "$GEMFIRE_RUNTIME_ENV && sh /opt/pivotal/workdir/startServer2.sh"
 
 sleep 8
 
@@ -75,7 +77,7 @@ EOF
 sleep 5
 
 log "Check messages received in Pivotal Gemfire"
-playground container exec --container pivotal-gemfire --command "gfsh" > /tmp/result.log  2>&1 <<-EOF
+playground container exec --container pivotal-gemfire --shell sh --command "$GEMFIRE_RUNTIME_ENV && gfsh" > /tmp/result.log  2>&1 <<-EOF
 connect --locator=localhost[10334]
 query --query="select * from /exampleRegion"
 EOF

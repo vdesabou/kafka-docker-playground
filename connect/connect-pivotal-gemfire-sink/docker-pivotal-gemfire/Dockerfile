@@ -14,7 +14,9 @@ RUN chmod 777 /opt/pivotal
 RUN apt-get update && \
     apt-get install -y openjdk-8-jdk
 
-RUN ln -s /usr/lib/jvm/java-8-openjdk-amd64 current_java
+RUN java_bin="$(readlink -f "$(command -v java)")" && \
+    java_home="$(dirname "$(dirname "$java_bin")")" && \
+    ln -s "$java_home" current_java
 RUN apt-get install -y unzip zip
 
 #Add gemfire installation file

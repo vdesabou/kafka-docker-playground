@@ -6,6 +6,7 @@ services:
     container_name: pivotal-gemfire
     ports:
       - '7070:7070'
+      - '10334:10334'
 
   connect:
     depends_on:
