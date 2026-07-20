@@ -8,7 +8,7 @@ services:
     container_name: sfdx-cli
     entrypoint: ["sh", "-c", "sleep infinity"]
     volumes:
-    - ../../connect/connect-salesforce-platform-events-sink/event.apex:/tmp/event.apex
+      - ../../connect/connect-salesforce-platform-events-sink/event.apex:/tmp/event.apex
 
 
   connect:
