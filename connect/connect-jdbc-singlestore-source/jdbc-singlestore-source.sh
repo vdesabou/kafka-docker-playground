@@ -99,16 +99,15 @@ playground container exec --container singlestore --command "memsql -u root -pro
 log "Creating JDBC Singlestore source connector"
 playground connector create-or-update --connector jdbc-singlestore-source  << EOF
 {
-               "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
-               "tasks.max":"1",
-               "connection.url":"jdbc:mysql://singlestore:3306/db?user=root&password=root&useSSL=false",
-               "table.whitelist":"application",
-               "mode":"timestamp+incrementing",
-               "timestamp.column.name":"last_modified",
-               "incrementing.column.name":"id",
-               "topic.prefix":"singlestore-"
-
-          }
+    "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
+    "tasks.max":"1",
+    "connection.url":"jdbc:mysql://singlestore:3306/db?user=root&password=root&useSSL=false",
+    "table.whitelist":"application",
+    "mode":"timestamp+incrementing",
+    "timestamp.column.name":"last_modified",
+    "incrementing.column.name":"id",
+    "topic.prefix":"singlestore-"
+}
 EOF
 
 sleep 5

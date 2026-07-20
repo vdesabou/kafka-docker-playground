@@ -5,6 +5,8 @@ services:
     image:  ghcr.io/singlestore-labs/singlestoredb-dev
     hostname: singlestore
     container_name: singlestore
+    ports:
+      - "3306:3306"
     environment:
       LICENSE_KEY: "BDY3MWY1YjBlODE5MTQ5MzFiN2U3YjE5MmIxZTA3MjE1AAAAAAAAAAAEAAAAAAAAAAwwNAIYCEGeOFLkBLpI/heNrajZSFMOCSk7070QAhgaIkGN1St1VNrSETEYU5FpyrKXI7uR3LoAAA=="
       ROOT_PASSWORD: "root"
