@@ -484,6 +484,46 @@ function sanitize_secret_key() {
   echo "$raw_key" | sed -E 's/[^A-Za-z0-9._-]+/_/g'
 }
 
+normalize_arch_name() {
+  local raw_arch="$1"
+
+  case "$(echo "$raw_arch" | tr '[:upper:]' '[:lower:]')" in
+    x86_64|amd64)
+      echo "amd64"
+      ;;
+    aarch64|arm64)
+      echo "arm64"
+      ;;
+    armv7l|armv7|arm)
+      echo "arm"
+      ;;
+    *)
+      echo "$raw_arch"
+      ;;
+  esac
+}
+
+get_cfk_node_arch() {
+  local node_arch=""
+
+  if [[ -n "${CFK_NODE_ARCH:-}" ]]
+  then
+    echo "$CFK_NODE_ARCH"
+    return 0
+  fi
+
+  node_arch=$(kubectl get nodes -o jsonpath='{.items[0].status.nodeInfo.architecture}' 2>/dev/null || true)
+  node_arch=$(echo "$node_arch" | tr -d '[:space:]')
+  if [[ -z "$node_arch" ]]
+  then
+    node_arch=$(uname -m 2>/dev/null || true)
+  fi
+
+  CFK_NODE_ARCH="$(normalize_arch_name "$node_arch")"
+  echo "$CFK_NODE_ARCH"
+  return 0
+}
+
 function append_secret_manifest_from_file() {
   local output_file="$1"
   local secret_name="$2"
@@ -1457,11 +1497,23 @@ function generate_extra_pods_from_compose_override() {
       image=$(echo "$image" | envsubst)
       if [[ -n "$platform" ]]
       then
+        platform_arch="$(normalize_arch_name "${platform##*/}")"
+        node_arch="$(get_cfk_node_arch)"
+        if [[ -n "$platform_arch" ]] && [[ -n "$node_arch" ]] && [[ "$platform_arch" != "$node_arch" ]]
+        then
+          logerror "❌ Service $service_name requests platform $platform, but CFK node architecture is $node_arch"
+          logerror "   Kubernetes does not apply docker-compose style cross-arch emulation for pods"
+          logerror "   This typically fails with ImagePullBackOff: no match for platform in manifest"
+          logerror "   Use an amd64 CFK node/host for this example, or run it with PLAYGROUND_ENVIRONMENT=plaintext"
+          exit 1
+        fi
         log "📦 Pulling image $image for platform $platform for service $service_name"
         docker pull --platform "$platform" "$image"
         if import_image_into_k3d "$image" "$pod_name"
         then
-          image_pull_policy="Never"
+          # Even after successful import, keep IfNotPresent so kubelet can
+          # still recover if a node/runtime cache miss happens.
+          image_pull_policy="IfNotPresent"
         else
           image_pull_policy="IfNotPresent"
           logwarn "⚠️ Could not import platform image $image into k3d; using imagePullPolicy=IfNotPresent"
@@ -1485,7 +1537,9 @@ function generate_extra_pods_from_compose_override() {
 
         if [[ "$load_ret" -eq 0 ]]
         then
-          image_pull_policy="Never"
+          # Prefer IfNotPresent for pulled/tagged images to avoid ErrImageNeverPull
+          # when import verification is inconsistent across runtimes.
+          image_pull_policy="IfNotPresent"
         elif [[ "$host_image_exists" -ne 0 ]]
         then
           logwarn "⚠️ Image $image was not found in host docker daemon; Kubernetes may attempt registry pull"
