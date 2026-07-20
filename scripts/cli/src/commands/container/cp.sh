@@ -95,9 +95,30 @@ transform_for_environment() {
 resolved_source=$(transform_for_environment "$source")
 resolved_destination=$(transform_for_environment "$destination")
 
+extract_remote_pod_name() {
+  local resolved_ref="$1"
+  local pod_with_ns=""
+
+  if [[ "$resolved_ref" != *:* ]]
+  then
+    return 1
+  fi
+
+  pod_with_ns="${resolved_ref%%:*}"
+  if [[ "$pod_with_ns" == confluent/* ]]
+  then
+    echo "${pod_with_ns#confluent/}"
+    return 0
+  fi
+
+  return 1
+}
+
 if [[ "$environment" == "cfk" ]]
 then
   log "🪄 Copying files with kubectl cp"
+  cp_remote_pod=""
+  wait_status=0
   set +e
   kubectl_cp_output=$(kubectl cp "$resolved_source" "$resolved_destination" -n confluent 2>&1)
   kubectl_cp_status=$?
@@ -108,6 +129,40 @@ then
     if [[ -n "$kubectl_cp_output" ]]
     then
       echo "$kubectl_cp_output"
+    fi
+  elif echo "$kubectl_cp_output" | grep -Eqi 'unable to upgrade connection: container not found|container not found'
+  then
+    cp_remote_pod=$(extract_remote_pod_name "$resolved_source" || true)
+    if [[ -z "$cp_remote_pod" ]]
+    then
+      cp_remote_pod=$(extract_remote_pod_name "$resolved_destination" || true)
+    fi
+
+    if [[ -n "$cp_remote_pod" ]]
+    then
+      logwarn "⚠️ kubectl cp reported container not found for pod $cp_remote_pod; waiting for pod readiness and retrying"
+      set +e
+      kubectl -n confluent wait --for=condition=Ready "pod/$cp_remote_pod" --timeout=180s >/dev/null 2>&1
+      wait_status=$?
+      set -e
+
+      if [[ "$wait_status" -eq 0 ]]
+      then
+        set +e
+        kubectl_cp_output=$(kubectl cp "$resolved_source" "$resolved_destination" -n confluent 2>&1)
+        kubectl_cp_status=$?
+        set -e
+      fi
+    fi
+
+    if [[ "$kubectl_cp_status" -eq 0 ]]
+    then
+      if [[ -n "$kubectl_cp_output" ]]
+      then
+        echo "$kubectl_cp_output"
+      fi
+    else
+      cfk_stream_copy_fallback "$source" "$destination" "$resolved_source" "$resolved_destination"
     fi
   elif echo "$kubectl_cp_output" | grep -Eqi 'exec: "tar"|tar: not found|executable file not found in \$PATH'
   then
