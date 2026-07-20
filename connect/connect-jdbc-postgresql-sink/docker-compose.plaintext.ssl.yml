@@ -13,7 +13,12 @@ services:
     volumes:
      - ../../connect/connect-jdbc-postgresql-sink/ssl/my-postgres.conf:/etc/postgresql/postgresql.conf
      - ../../connect/connect-jdbc-postgresql-sink/ssl/pg_hba.conf:/etc/postgresql/pg_hba.conf
-    command: postgres -c config_file=/etc/postgresql/postgresql.conf -c hba_file=/etc/postgresql/pg_hba.conf
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - hba_file=/etc/postgresql/pg_hba.conf
 
   connect:
     depends_on:

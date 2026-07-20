@@ -15,7 +15,12 @@ services:
     volumes:
      - ../../connect/connect-debezium-postgresql-source/ssl/my-postgres.conf:/etc/postgresql/postgresql.conf
      - ../../connect/connect-debezium-postgresql-source/ssl/pg_hba.conf:/etc/postgresql/pg_hba.conf
-    command: postgres -c config_file=/etc/postgresql/postgresql.conf -c hba_file=/etc/postgresql/pg_hba.conf
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - hba_file=/etc/postgresql/pg_hba.conf
 
   connect:
     depends_on:
