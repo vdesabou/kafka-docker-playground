@@ -5,7 +5,7 @@ services:
     image: cockroachdb/cockroach:v23.2.21
     hostname: cockroachdb
     container_name: cockroachdb
-    command: start-single-node --insecure
+    command: ["start-single-node", "--insecure"]
     ports:
       - "8080:8080"
       - "26257:26257"
