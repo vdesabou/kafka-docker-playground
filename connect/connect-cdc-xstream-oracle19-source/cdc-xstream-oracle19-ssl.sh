@@ -65,6 +65,8 @@ cd ../../connect/connect-cdc-xstream-oracle19-source
 mkdir -p ../../confluent-hub/confluentinc-kafka-connect-oracle-xstream-cdc-source/lib/
 cp ../../connect/connect-cdc-xstream-oracle19-source/lib/instantclient/ojdbc8.jar ../../confluent-hub/confluentinc-kafka-connect-oracle-xstream-cdc-source/lib/ojdbc8.jar
 cp ../../connect/connect-cdc-xstream-oracle19-source/lib/instantclient/xstreams.jar ../../confluent-hub/confluentinc-kafka-connect-oracle-xstream-cdc-source/lib/xstreams.jar
+rm -rf ../../confluent-hub/confluentinc-kafka-connect-oracle-xstream-cdc-source/instantclient
+cp -R ../../connect/connect-cdc-xstream-oracle19-source/lib/instantclient ../../confluent-hub/confluentinc-kafka-connect-oracle-xstream-cdc-source/instantclient
 
 # Copy sqlnet.ora configuration file to confluent-hub
 if [ -f ssl/client/sqlnet.ora ]; then

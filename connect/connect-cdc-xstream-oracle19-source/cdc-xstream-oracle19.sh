@@ -64,6 +64,8 @@ cd ../../connect/connect-cdc-xstream-oracle19-source
 mkdir -p ../../confluent-hub/confluentinc-kafka-connect-oracle-xstream-cdc-source/lib/
 cp ../../connect/connect-cdc-xstream-oracle19-source/lib/instantclient/ojdbc8.jar ../../confluent-hub/confluentinc-kafka-connect-oracle-xstream-cdc-source/lib/ojdbc8.jar
 cp ../../connect/connect-cdc-xstream-oracle19-source/lib/instantclient/xstreams.jar ../../confluent-hub/confluentinc-kafka-connect-oracle-xstream-cdc-source/lib/xstreams.jar
+rm -rf ../../confluent-hub/confluentinc-kafka-connect-oracle-xstream-cdc-source/instantclient
+cp -R ../../connect/connect-cdc-xstream-oracle19-source/lib/instantclient ../../confluent-hub/confluentinc-kafka-connect-oracle-xstream-cdc-source/instantclient
 cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
@@ -225,10 +227,10 @@ then
 fi
 
 log "Running orclcdc_readiness.sql, see https://docs.confluent.io/cloud/current/connectors/cc-oracle-xstream-cdc-source/prereqs-validation.html#validate-prerequisites-completion"
-playground container cp --source orclcdc_readiness.sql --destination oracle:/orclcdc_readiness.sql
+playground container cp --source orclcdc_readiness.sql --destination oracle:/tmp/orclcdc_readiness.sql
 playground container exec --container oracle --command "bash -c \"ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog\"" << EOF
      CONNECT sys/Admin123 AS SYSDBA
-     @/orclcdc_readiness.sql C##CFLTADMIN C##CFLTUSER XOUT ''
+     @/tmp/orclcdc_readiness.sql C##CFLTADMIN C##CFLTUSER XOUT ''
 END;
 /
 EOF
