@@ -1,0 +1,285 @@
+==========================
+AppDynamics
+==========================
+🔘 machine.agent.host
+
+AppDynamics Machine Agent host through which the metrics will be sent to the AppD Controller.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 machine.agent.port
+
+AppDynamics machine agent port
+
+	 - Type: INT
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 behavior.on.error
+
+Error handling behavior setting. Must be configured to one of the following:
+
+	 - Type: STRING
+	 - Default: fail
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.retry.time.ms
+
+The maximum time upto which connector client will try creating API requests. The minimum recommended value is 5000 milliseconds.
+
+	 - Type: INT
+	 - Default: 5000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Proxy Connection
+==========================
+🔘 appdynamics.proxy.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: AppDynamics Proxy settings encoded in URL syntax. Use this property only if you need to access AppDynamics through a proxy.
+	 - Required: LOW
+
+🔘 appdynamics.proxy.user
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: AppDynamics Proxy User. Use this property only if you need to access AppDynamics through a proxy. Using ``appdynamics.proxy.user`` instead of embedding the username and password in ``appdynamics.proxy.url`` allows the password to be hidden in the logs.
+	 - Required: LOW
+
+🔘 appdynamics.proxy.password
+
+AppDynamics Proxy Password. Use this property only if you need to access AppDynamics through a proxy. Using ``appdynamics.proxy.password`` instead of embedding the username and password in ``appdynamics.proxy.url`` allows the password to be hidden in the logs.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+reporter.result.topic.name
+==========================
+🔘 ${connector}-success
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the topic to produce records to after successfully processing a sink record. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
+	 - Required: MEDIUM
+
+==========================
+reporter.result.topic.replication.factor
+==========================
+🔘 3
+
+
+
+	 - Type: false
+	 - Default: SHORT
+	 - Importance: The replication factor of the result topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
+	 - Required: MEDIUM
+
+==========================
+reporter.result.topic.partitions
+==========================
+🔘 1
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The number of partitions in the result topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions to handle the potential throughput.
+	 - Required: MEDIUM
+
+==========================
+Formatter
+==========================
+🔘 reporter.result.topic.key.format
+
+The format in which the result report key is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.result.topic.key.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.key.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Formatter
+==========================
+🔘 reporter.result.topic.value.format
+
+The format in which the result report value is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.result.topic.value.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.result.topic.value.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+reporter.error.topic.name
+==========================
+🔘 ${connector}-error
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the topic to produce records to after each unsuccessful record sink attempt. Use ``${connector}`` within the pattern to specify the current connector name. Leave blank to disable error reporting behavior.
+	 - Required: MEDIUM
+
+==========================
+reporter.error.topic.replication.factor
+==========================
+🔘 3
+
+
+
+	 - Type: false
+	 - Default: SHORT
+	 - Importance: The replication factor of the error topic when it is automatically created by this connector. This determines how many broker failures can be tolerated before data loss occurs. This should be 1 in development environments and ALWAYS at least 3 in production environments.
+	 - Required: MEDIUM
+
+==========================
+reporter.error.topic.partitions
+==========================
+🔘 1
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The number of partitions in the error topic when it is automatically created by this connector. This number of partitions should be the same as the number of input partitions in order to handle the potential throughput.
+	 - Required: MEDIUM
+
+==========================
+Formatter
+==========================
+🔘 reporter.error.topic.key.format
+
+The format in which the error report key is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.error.topic.key.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.key.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Formatter
+==========================
+🔘 reporter.error.topic.value.format
+
+The format in which the error report value is serialized.
+
+	 - Type: STRING
+	 - Default: json
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+JSON Formatter
+==========================
+🔘 reporter.error.topic.value.format.schemas.cache.size
+
+The maximum number of schemas that can be cached in the JSON formatter.
+
+	 - Type: INT
+	 - Default: 128
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 reporter.error.topic.value.format.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+reporter.bootstrap.servers
+==========================
+🔘 LIST
+
+
+
+	 - Type: MEDIUM
+	 - Default: false
+	 - Importance: 
+	 - Required: A list of host/port pairs to use for establishing the initial connection to the Kafka cluster. The client will make use of all servers irrespective of which servers are specified here for bootstrapping&mdash;this list only impacts the initial hosts used to discover the full set of servers. This list should be in the form <code>host1:port1,host2:port2,...</code>. Since these servers are just used for the initial connection to discover the full cluster membership (which may change dynamically), this list need not contain the full set of servers (you may want more than one, though, in case a server is down).
+
