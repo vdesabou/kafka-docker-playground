@@ -11,14 +11,14 @@ services:
       - POSTGRES_PASSWORD=mypassword
       - POSTGRES_DB=postgres
     volumes:
-     - ../../connect/connect-jdbc-postgresql-sink/ssl/my-postgres.conf:/etc/postgresql/postgresql.conf
-     - ../../connect/connect-jdbc-postgresql-sink/ssl/pg_hba.conf:/etc/postgresql/pg_hba.conf
+     - ../../connect/connect-jdbc-postgresql-sink/ssl/my-postgres.conf:/tmp/postgresql.conf
+     - ../../connect/connect-jdbc-postgresql-sink/ssl/pg_hba.conf:/tmp/pg_hba.conf
     command:
       - postgres
       - -c
-      - config_file=/etc/postgresql/postgresql.conf
+      - config_file=/tmp/postgresql.conf
       - -c
-      - hba_file=/etc/postgresql/pg_hba.conf
+      - hba_file=/tmp/pg_hba.conf
 
   connect:
     depends_on:
