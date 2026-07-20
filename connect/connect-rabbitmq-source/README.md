@@ -20,7 +20,7 @@ $ just use <playground run> command and search for rabbitmq.sh in this folder
 Send message to RabbitMQ in `myqueue`:
 
 ```bash
-$ docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
+$ docker exec rabbitmq-producer bash -c "python /producer.py myqueue 5"
 ```
 
 Creating RabbitMQ Source connector
@@ -64,7 +64,7 @@ Note:
 Run the following command to consume all records in RabbitMQ queue `myqueue`
 
 ```bash
-$ docker exec -i rabbitmq_consumer bash -c "python /consumer.py myqueue"
+$ docker exec -i rabbitmq-consumer bash -c "python /consumer.py myqueue"
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

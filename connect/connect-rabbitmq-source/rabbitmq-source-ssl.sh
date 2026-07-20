@@ -22,7 +22,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext-ssl.yml"
 
 log "Send message to RabbitMQ in myqueue"
-playground container exec --container rabbitmq_producer --command "bash -c \"python /producer.py myqueue 5\""
+playground container exec --container rabbitmq-producer --command "bash -c \"python /producer.py myqueue 5\""
 
 # Get the number of messages remaining in the queue
 num_messages=$(playground container exec --container rabbitmq --command "rabbitmqctl -q -p \"/\" list_queues name messages" | awk -v q="myqueue" '$1==q{print $2}')
@@ -74,4 +74,4 @@ fi
 log "verified queue $QUEUE_NAME is empty - all messages were successfully consumed and deleted"
 
 #log "Consume messages in RabbitMQ"
-#playground container exec -i rabbitmq_consumer bash -c "python /consumer.py myqueue"
+#playground container exec -i rabbitmq-consumer bash -c "python /consumer.py myqueue"

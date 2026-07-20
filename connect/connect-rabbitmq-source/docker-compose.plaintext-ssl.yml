@@ -6,6 +6,7 @@ services:
     hostname: rabbitmq
     container_name: rabbitmq
     ports:
+      - "5671:5671"
       - "5672:5672"
       - "8080:8080"
     volumes:
@@ -22,17 +23,17 @@ services:
       # RABBITMQ_SSL_KEYFILE: /tmp/server.key
       # RABBITMQ_SSL_VERIFY: "verify_peer"
 
-  rabbitmq_producer:
+  rabbitmq-producer:
     build:
       context: ../../connect/connect-rabbitmq-source/producer
-    hostname: rabbitmq_producer
-    container_name: rabbitmq_producer
+    hostname: rabbitmq-producer
+    container_name: rabbitmq-producer
 
-  rabbitmq_consumer:
+  rabbitmq-consumer:
     build:
       context: ../../connect/connect-rabbitmq-source/consumer
-    hostname: rabbitmq_consumer
-    container_name: rabbitmq_consumer
+    hostname: rabbitmq-consumer
+    container_name: rabbitmq-consumer
 
   connect:
     depends_on:

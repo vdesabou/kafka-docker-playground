@@ -6,7 +6,9 @@ services:
     hostname: rabbitmq
     container_name: rabbitmq
     ports:
+      - "5671:5671"
       - "5672:5672"
+      - "8080:8080"
       - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: "myuser"
