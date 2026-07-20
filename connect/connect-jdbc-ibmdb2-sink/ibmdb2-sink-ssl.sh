@@ -99,7 +99,7 @@ mkdir -p ${PWD}/security/
 rm -rf ${PWD}/security/*
 
 cd ${PWD}/security/
-playground container cp --source ibmdb2:/database/config/db2inst1/server.arm --destination .
+playground container cp --source ibmdb2:/database/config/db2inst1/server.arm --destination $PWD/server.arm
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
