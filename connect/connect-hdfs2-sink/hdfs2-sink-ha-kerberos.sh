@@ -11,6 +11,13 @@ then
 fi
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+then
+  logwarn "⚠️  HDFS 2 sink connector is not compatible with CFK (Confluent for Kubernetes)"
+  logwarn "   HDFS requires persistent node registration that K8s Pods cannot maintain"
+  logwarn "   This example is for Docker Compose environments only"
+  exit 111
+fi
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ha-kerberos.yml"
 
 if version_gt $TAG_BASE "8.2.99"
