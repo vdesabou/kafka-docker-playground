@@ -7,6 +7,8 @@ source ${DIR}/../../scripts/utils.sh
 mkdir -p ../../ccloud/fm-rabbitmq-source/security
 cd ../../ccloud/fm-rabbitmq-source/security
 playground tools certs-create --output-folder "$PWD" --container connect --container rabbitmq
+# RabbitMQ process runs as user 'rabbitmq'; ensure it can read mounted TLS key.
+chmod 644 rabbitmq.key
 base64_truststore=$(cat $PWD/kafka.connect.truststore.jks | base64 | tr -d '\n')
 base64_keystore=$(cat $PWD/kafka.connect.keystore.jks | base64 | tr -d '\n')
 cd -

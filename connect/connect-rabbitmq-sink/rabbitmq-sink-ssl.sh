@@ -14,6 +14,8 @@ fi
 mkdir -p ../../connect/connect-rabbitmq-sink/security
 cd ../../connect/connect-rabbitmq-sink/security
 playground tools certs-create --output-folder "$PWD" --container connect --container rabbitmq
+# RabbitMQ process runs as user 'rabbitmq'; ensure it can read mounted TLS key.
+chmod 644 rabbitmq.key
 cd -
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
