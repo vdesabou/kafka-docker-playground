@@ -42,21 +42,18 @@ playground container exec --container pivotal-gemfire --shell sh --command "$GEM
 log "Starting up server2"
 playground container exec --container pivotal-gemfire --shell sh --command "$GEMFIRE_RUNTIME_ENV && sh /opt/pivotal/workdir/startServer2.sh"
 
-sleep 8
-
-log "Sending messages to topic input-topic"
-playground topic produce -t input-topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
-{
-  "type": "record",
-  "name": "myrecord",
-  "fields": [
-    {
-      "name": "f1",
-      "type": "string"
-    }
-  ]
-}
+log "Waiting for GemFire cluster members to be ready"
+for _ in $(seq 1 24)
+do
+  if playground container exec --container pivotal-gemfire --shell sh --command "$GEMFIRE_RUNTIME_ENV && gfsh" <<-'EOF' | grep -q "Member Count : 3"
+connect --locator=localhost[10334]
+list members
 EOF
+  then
+    break
+  fi
+  sleep 5
+done
 
 log "Creating Pivotal Gemfire sink connector"
 playground connector create-or-update --connector pivotal-gemfire-sink  << EOF
@@ -71,6 +68,22 @@ playground connector create-or-update --connector pivotal-gemfire-sink  << EOF
   "gemfire.region":"exampleRegion",
   "confluent.topic.bootstrap.servers": "broker:9092",
   "confluent.topic.replication.factor": "1"
+}
+EOF
+
+sleep 10
+
+log "Sending messages to topic input-topic"
+playground topic produce -t input-topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
+{
+  "type": "record",
+  "name": "myrecord",
+  "fields": [
+    {
+      "name": "f1",
+      "type": "string"
+    }
+  ]
 }
 EOF
 
