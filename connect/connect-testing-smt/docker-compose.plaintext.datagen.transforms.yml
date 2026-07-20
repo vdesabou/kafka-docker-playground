@@ -6,6 +6,8 @@ services:
       # datagen schemas used as a structured source so the (renamed) output topic can be consumed
       - ../../connect/connect-testing-smt/schemas:/tmp/schemas
     environment:
-      # datagen source carrier FIRST, then the Confluent connect-transforms component that provides
-      # the io.confluent.connect.transforms.* SMTs (needed by the Confluent routing scripts)
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-datagen,/usr/share/confluent-hub-components/confluentinc-connect-transforms
+      # The connector under test (connect-transforms) MUST be listed first: for
+      # PR testing, connect-ci-cd injects the PR-built artifact (CONNECTOR_ZIP /
+      # CONNECTOR_JAR) and KDP applies it only to the first plugin on the path.
+      # The datagen source is just the carrier and is installed from Confluent Hub.
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-connect-transforms,/usr/share/confluent-hub-components/confluentinc-kafka-connect-datagen
