@@ -6,6 +6,8 @@ services:
     hostname: dksybase
     container_name: sybase
     command: ["bash", "/sybase/start"]
+    ports:
+      - "5000:5000"
 
   connect:
     depends_on:
