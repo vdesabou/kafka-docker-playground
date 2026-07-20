@@ -15,8 +15,7 @@ function wait_for_solace () {
      MAX_WAIT=240
      log "⌛ Waiting up to $MAX_WAIT seconds for Solace to startup"
      # Use playground logs so readiness wait works for both Docker and CFK environments.
-     playground container logs --container solace --wait-for-log "Starting solace process" --max-wait "$MAX_WAIT"
-     playground container logs --container solace --wait-for-log "Launching solacedaemon" --max-wait "$MAX_WAIT"
+     playground container logs --container solace --wait-for-log "Running pre-startup checks" --max-wait "$MAX_WAIT"
      log "Solace is started!"
      sleep 30
 }
