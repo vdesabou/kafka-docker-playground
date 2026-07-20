@@ -1265,9 +1265,9 @@ function generate_extra_pods_from_compose_override() {
       }
 
       if (section == "volumes") {
-        if ($0 ~ /^      -[[:space:]]*/) {
+        if ($0 ~ /^[[:space:]]*-[[:space:]]*/) {
           v=$0
-          sub(/^      -[[:space:]]*/, "", v)
+          sub(/^[[:space:]]*-[[:space:]]*/, "", v)
           v=trim(unquote(v))
           if (v != "") {
             volumes[++volumes_count]=v
@@ -1277,9 +1277,9 @@ function generate_extra_pods_from_compose_override() {
       }
 
       if (section == "tmpfs") {
-        if ($0 ~ /^      -[[:space:]]*/) {
+        if ($0 ~ /^[[:space:]]*-[[:space:]]*/) {
           t=$0
-          sub(/^      -[[:space:]]*/, "", t)
+          sub(/^[[:space:]]*-[[:space:]]*/, "", t)
           t=trim(unquote(t))
           if (t != "") {
             tmpfs[++tmpfs_count]=t
@@ -1289,9 +1289,9 @@ function generate_extra_pods_from_compose_override() {
       }
 
       if (section == "entrypoint") {
-        if ($0 ~ /^      -[[:space:]]*/) {
+        if ($0 ~ /^[[:space:]]*-[[:space:]]*/) {
           e=$0
-          sub(/^      -[[:space:]]*/, "", e)
+          sub(/^[[:space:]]*-[[:space:]]*/, "", e)
           e=trim(unquote(e))
           if (e != "") {
             entrypoints[++entrypoint_count]=e
@@ -1301,9 +1301,9 @@ function generate_extra_pods_from_compose_override() {
       }
 
       if (section == "command") {
-        if ($0 ~ /^      -[[:space:]]*/) {
+        if ($0 ~ /^[[:space:]]*-[[:space:]]*/) {
           c=$0
-          sub(/^      -[[:space:]]*/, "", c)
+          sub(/^[[:space:]]*-[[:space:]]*/, "", c)
           c=trim(unquote(c))
           if (c != "") {
             commands[++command_count]=c
@@ -1313,9 +1313,9 @@ function generate_extra_pods_from_compose_override() {
       }
 
       if (section == "profiles") {
-        if ($0 ~ /^      -[[:space:]]*/) {
+        if ($0 ~ /^[[:space:]]*-[[:space:]]*/) {
           pr=$0
-          sub(/^      -[[:space:]]*/, "", pr)
+          sub(/^[[:space:]]*-[[:space:]]*/, "", pr)
           pr=trim(unquote(pr))
           if (pr != "") {
             prof[++profiles_count]=pr
