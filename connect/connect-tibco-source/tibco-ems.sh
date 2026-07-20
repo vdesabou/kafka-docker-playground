@@ -38,8 +38,8 @@ then
      log "Building TIBCO EMS docker image..it can take a while..."
      OLDDIR=$PWD
      cd ../../connect/connect-tibco-source/docker-tibco
-     docker build -t tibbase:1.0.0 ./tibbase
-     docker build -t tibems:latest . -f ./tibems/Dockerfile
+     docker build -t tibbase:1.0.0 ./tibbase > /dev/null 2>&1
+     docker build -t tibems:latest . -f ./tibems/Dockerfile > /dev/null 2>&1
      cd ${OLDDIR}
 fi
 
