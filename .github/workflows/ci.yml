@@ -362,6 +362,8 @@ jobs:
           CLICKHOUSE_CLOUD_HOSTNAME: ${{ secrets.CLICKHOUSE_CLOUD_HOSTNAME}}
           CLICKHOUSE_CLOUD_USERNAME: ${{ secrets.CLICKHOUSE_CLOUD_USERNAME}}
           CLICKHOUSE_CLOUD_PASSWORD: ${{ secrets.CLICKHOUSE_CLOUD_PASSWORD}}
+          NETEZZA_HOST: ${{ vars.NETEZZA_HOST}}
+          NETEZZA_USER: ${{ vars.NETEZZA_USER}}
           NETEZZA_PASSWORD: ${{ secrets.NETEZZA_PASSWORD}}
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           
@@ -638,6 +640,8 @@ jobs:
           CLICKHOUSE_CLOUD_HOSTNAME: ${{ secrets.CLICKHOUSE_CLOUD_HOSTNAME}}
           CLICKHOUSE_CLOUD_USERNAME: ${{ secrets.CLICKHOUSE_CLOUD_USERNAME}}
           CLICKHOUSE_CLOUD_PASSWORD: ${{ secrets.CLICKHOUSE_CLOUD_PASSWORD}}
+          NETEZZA_HOST: ${{ vars.NETEZZA_HOST}}
+          NETEZZA_USER: ${{ vars.NETEZZA_USER}}
           NETEZZA_PASSWORD: ${{ secrets.NETEZZA_PASSWORD}}
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           
