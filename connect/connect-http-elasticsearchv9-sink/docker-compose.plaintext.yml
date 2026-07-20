@@ -8,10 +8,11 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
-    environment:
-      discovery.type: single-node
-      xpack.security.enabled: "false"
-      xpack.security.http.ssl.enabled: "false"
+    command:
+      - elasticsearch
+      - -Ediscovery.type=single-node
+      - -Expack.security.enabled=false
+      - -Expack.security.http.ssl.enabled=false
       
   connect:
     depends_on:
