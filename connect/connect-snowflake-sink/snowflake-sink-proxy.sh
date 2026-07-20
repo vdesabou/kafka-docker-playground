@@ -116,6 +116,11 @@ GRANT ROLE $PLAYGROUND_CONNECTOR_ROLE TO USER $PLAYGROUND_USER;
 EOF
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+SCHEMA_REGISTRY_URL="http://schemaregistry:8081"
+if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
+then
+  SCHEMA_REGISTRY_URL="http://schemaregistry.confluent.svc.cluster.local:8081"
+fi
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.proxy.yml"
 
 log "Sending messages to topic test_table"
@@ -166,20 +171,24 @@ then
     log "Creating Snowflake Sink connector with Iceberg integration and with connector version below v4"
 playground connector create-or-update --connector snowflake-sink  << EOF
 {
-     "connector.class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",
-     "topics": "test_table",
-     "tasks.max": "1",
-     "snowflake.url.name": "$SNOWFLAKE_URL",
-     "snowflake.user.name": "$PLAYGROUND_USER",
-     
-     "snowflake.private.key": "\${file:/data:private.key}",
-     "snowflake.private.key.passphrase": "confluent",
-     "snowflake.database.name": "$PLAYGROUND_DB",
-     "jvm.proxy.host": "squid",
-     "jvm.proxy.port": "3128",
-     "snowflake.schema.name":"PUBLIC",
-     "buffer.count.records": "3",
-     "buffer.flush.time" : "10"
+    "connector.class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",
+    "topics": "test_table",
+    "tasks.max": "1",
+    "snowflake.url.name": "$SNOWFLAKE_URL",
+    "snowflake.user.name": "$PLAYGROUND_USER",
+
+    "snowflake.private.key": "\${file:/data:private.key}",
+    "snowflake.private.key.passphrase": "confluent",
+    "snowflake.database.name": "$PLAYGROUND_DB",
+
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "$SCHEMA_REGISTRY_URL",
+
+    "jvm.proxy.host": "squid",
+    "jvm.proxy.port": "3128",
+    "snowflake.schema.name":"PUBLIC",
+    "buffer.count.records": "3",
+    "buffer.flush.time" : "10"
 }
 EOF
 else
@@ -197,6 +206,9 @@ playground connector create-or-update --connector snowflake-sink  << EOF
     "snowflake.private.key.passphrase": "confluent",
     "snowflake.database.name": "$PLAYGROUND_DB",
     "snowflake.schema.name":"PUBLIC",
+
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "$SCHEMA_REGISTRY_URL",
 
     "jvm.proxy.host": "squid",
     "jvm.proxy.port": "3128",
