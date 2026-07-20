@@ -7,6 +7,8 @@ services:
     restart: "unless-stopped"
     hostname: sap
     container_name: sap
+    ports:
+      - "39041:39041"
     volumes:
       - ../../connect/connect-jdbc-sap-hana-sink/post_start:/hana/hooks/post_start/
     environment: 
