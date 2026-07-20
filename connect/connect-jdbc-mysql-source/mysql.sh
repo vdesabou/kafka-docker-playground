@@ -52,7 +52,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Create table"
-playground container exec --container mysql --command "mysql --user=root --password=password --database=mydb" << EOF
+playground container exec --container mysql --command "mysql --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb" << EOF
 USE mydb;
 
 CREATE TABLE team (
@@ -79,7 +79,7 @@ select * from team;
 EOF
 
 log "Adding an element to the table"
-playground container exec --container mysql --command "mysql --user=root --password=password --database=mydb" << EOF
+playground container exec --container mysql --command "mysql --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb" << EOF
 USE mydb;
 
 INSERT INTO team (
@@ -101,7 +101,7 @@ then
 fi
 
 log "Show content of team table:"
-playground container exec --container mysql --command "bash -c \"mysql --user=root --password=password --database=mydb -e 'select * from team'\""
+playground container exec --container mysql --command "bash -c \"mysql --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb -e 'select * from team'\""
 
 log "Creating MySQL source connector"
 playground connector create-or-update --connector mysql-source << EOF
