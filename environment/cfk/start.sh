@@ -989,9 +989,11 @@ function generate_extra_pods_from_compose_override() {
   local auto_image=""
   local image_pull_policy="IfNotPresent"
   local compose_user=""
+  local compose_privileged=""
   local run_as_user=""
   local run_as_group=""
   local run_as_non_root=""
+  local security_context_written=0
   local tmpfs_list=""
   local env_list=""
   local ports_list=""
@@ -1115,12 +1117,13 @@ function generate_extra_pods_from_compose_override() {
         for (i = 1; i <= profiles_count; i++) {
           profiles_joined = profiles_joined (i > 1 ? ";" : "") prof[i]
         }
-        print service field_sep image field_sep build_context field_sep platform field_sep user_value field_sep tmpfs_joined field_sep env_joined field_sep ports_joined field_sep entrypoint_joined field_sep command_joined field_sep volumes_joined field_sep profiles_joined
+        print service field_sep image field_sep build_context field_sep platform field_sep user_value field_sep privileged_value field_sep tmpfs_joined field_sep env_joined field_sep ports_joined field_sep entrypoint_joined field_sep command_joined field_sep volumes_joined field_sep profiles_joined
       }
       service=""
       image=""
       platform=""
       user_value=""
+      privileged_value=""
       build_context=""
       section=""
       env_count=0
@@ -1139,7 +1142,7 @@ function generate_extra_pods_from_compose_override() {
       delete prof
     }
 
-    BEGIN { in_services=0; service=""; image=""; platform=""; user_value=""; build_context=""; section=""; env_count=0; ports_count=0; entrypoint_count=0; command_count=0; volumes_count=0; tmpfs_count=0; profiles_count=0 }
+    BEGIN { in_services=0; service=""; image=""; platform=""; user_value=""; privileged_value=""; build_context=""; section=""; env_count=0; ports_count=0; entrypoint_count=0; command_count=0; volumes_count=0; tmpfs_count=0; profiles_count=0 }
     /^services:[[:space:]]*$/ { in_services=1; next }
     {
       if (in_services == 1 && $0 ~ /^[^[:space:]]/) {
@@ -1178,6 +1181,13 @@ function generate_extra_pods_from_compose_override() {
         user_value=$0
         sub(/^    user:[[:space:]]*/, "", user_value)
         user_value=trim(unquote(user_value))
+        section=""
+        next
+      }
+      if ($0 ~ /^    privileged:[[:space:]]*/) {
+        privileged_value=$0
+        sub(/^    privileged:[[:space:]]*/, "", privileged_value)
+        privileged_value=trim(unquote(privileged_value))
         section=""
         next
       }
@@ -1421,7 +1431,7 @@ function generate_extra_pods_from_compose_override() {
   }
 
   : > "$output_file"
-  while IFS="$compose_field_sep" read -r service_name image build_context platform compose_user tmpfs_list env_list ports_list entrypoint_list command_list volumes_list profiles_list
+  while IFS="$compose_field_sep" read -r service_name image build_context platform compose_user compose_privileged tmpfs_list env_list ports_list entrypoint_list command_list volumes_list profiles_list
   do
     if [[ -z "$service_name" ]]
     then
@@ -1483,6 +1493,7 @@ function generate_extra_pods_from_compose_override() {
     run_as_user=""
     run_as_group=""
     run_as_non_root=""
+    security_context_written=0
     deferred_import=0
     volume_names=()
     volume_secret_names=()
@@ -1741,6 +1752,7 @@ EOF
       if [[ -n "$run_as_user" ]] || [[ -n "$run_as_group" ]] || [[ -n "$run_as_non_root" ]]
       then
         echo "      securityContext:" >> "$output_file"
+        security_context_written=1
         if [[ -n "$run_as_user" ]]
         then
           echo "        runAsUser: ${run_as_user}" >> "$output_file"
@@ -1754,6 +1766,17 @@ EOF
           echo "        runAsNonRoot: ${run_as_non_root}" >> "$output_file"
         fi
       fi
+    fi
+
+    compose_privileged=$(echo "$compose_privileged" | tr '[:upper:]' '[:lower:]' | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
+    if [[ "$compose_privileged" == "true" ]]
+    then
+      if [[ "$security_context_written" -eq 0 ]]
+      then
+        echo "      securityContext:" >> "$output_file"
+        security_context_written=1
+      fi
+      echo "        privileged: true" >> "$output_file"
     fi
 
     if [[ "${#volume_names[@]}" -gt 0 ]] || [[ "${#tmpfs_volume_names[@]}" -gt 0 ]]

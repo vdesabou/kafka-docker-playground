@@ -4,6 +4,30 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+ibmdb2-wait-sample-db-ready() {
+  local max_wait_seconds=600
+  local start_time=$SECONDS
+
+  log "Waiting for DB2 sample database to be ready..."
+  while true; do
+    if playground container exec --container ibmdb2 --command "bash" >/dev/null 2>/dev/null << 'EOF'
+su - db2inst1 -c "db2 connect to sample user db2inst1 using passw0rd >/dev/null"
+EOF
+    then
+      log "DB2 sample database is ready"
+      break
+    fi
+
+    if (( SECONDS - start_time >= max_wait_seconds )); then
+      logerror "Timed out waiting for DB2 sample database readiness after ${max_wait_seconds}s"
+      playground container logs --container ibmdb2 --tail 200 || true
+      exit 1
+    fi
+
+    sleep 2
+  done
+}
+
 if connect_cp_version_greater_than_8 && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "10.7.99"
 then
      logwarn "minimal supported connector version is 10.8.0 for CP 8.0"
@@ -33,6 +57,7 @@ cp db2jcc4.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/db2jcc4.j
 cd -
 
 playground container logs --container ibmdb2 --wait-for-log "Setup has completed" --max-wait 600
+ibmdb2-wait-sample-db-ready
 log "ibmdb2 DB has started!"
 
 log "Enable SSL on DB2"
