@@ -19,8 +19,6 @@ then
 fi
 cd -
 
-# required to make utils.sh script being able to work, do not remove:
-
 cd ../../connect/connect-jdbc-mysql-sink
 
 # Copy JAR files to confluent-hub
@@ -69,7 +67,6 @@ cd -
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.mtls.yml" --no-stop
-wait_container_ready
 
 log "Creating MySQL sink connector with server side Encrypted Connections (using <usermtls> user which requires SSL)"
 playground connector create-or-update --connector mysql-mtls-sink  << EOF

@@ -13,10 +13,6 @@ fi
 
 create_or_get_oracle_image "LINUX.X64_213000_db_home.zip" "../../connect/connect-jdbc-oracle21-source/ora-setup-scripts"
 
-# required to make utils.sh script being able to work, do not remove:
-# PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-#playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
-
 log "Starting up oracle container to get generated cert from oracle server wallet"
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.mtls-db-auth.yml" --service oracle
@@ -175,29 +171,28 @@ sleep 60
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.mtls-db-auth.yml" --no-stop
 
-wait_container_ready
 
 sleep 10
 
 log "Creating Oracle source connector"
 playground connector create-or-update --connector oracle-source-mtls-db-auth  << EOF
 {
-               "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
-               "tasks.max":"1",
-               "connection.oracle.net.ssl_server_dn_match": "true",
-               "connection.oracle.net.authentication_services": "(TCPS)",
-               "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLCDB))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))",
-               "numeric.mapping":"best_fit",
-               "mode":"timestamp",
-               "poll.interval.ms":"1000",
-               "validate.non.null":"false",
-               "schema.pattern": "C##MYUSER",
-               "table.whitelist":"CUSTOMERS",
-               "timestamp.column.name":"UPDATE_TS",
-               "topic.prefix":"oracle-",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
-          }
+    "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
+    "tasks.max":"1",
+    "connection.oracle.net.ssl_server_dn_match": "true",
+    "connection.oracle.net.authentication_services": "(TCPS)",
+    "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLCDB))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))",
+    "numeric.mapping":"best_fit",
+    "mode":"timestamp",
+    "poll.interval.ms":"1000",
+    "validate.non.null":"false",
+    "schema.pattern": "C##MYUSER",
+    "table.whitelist":"CUSTOMERS",
+    "timestamp.column.name":"UPDATE_TS",
+    "topic.prefix":"oracle-",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
+}
 EOF
 
 sleep 5

@@ -57,8 +57,6 @@ then
 fi
 cd -
 
-# required to make utils.sh script being able to work, do not remove:
-
 cd ../../connect/connect-cdc-xstream-oracle19-source
 
 # Copy JAR files to confluent-hub
@@ -118,8 +116,6 @@ sleep 60
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssl.yml" --no-stop
-
-wait_container_ready
 
 log "🔏 copy cwallet.sso to connect container"
 playground container cp --source oracle:/tmp/server/cwallet.sso --destination /tmp

@@ -18,8 +18,6 @@ then
      wget -q https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.4.0/mysql-connector-j-8.4.0.jar
 fi
 cd -
-# required to make utils.sh script being able to work, do not remove:
-
 cd ../../connect/connect-jdbc-mysql-source
 
 # Copy JAR files to confluent-hub
@@ -68,7 +66,6 @@ cd -
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssl.yml" --no-stop
-wait_container_ready
 
 
 log "Create table"
