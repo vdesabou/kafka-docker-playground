@@ -11,6 +11,12 @@ then
     exit 111
 fi
 
+if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+then
+     logwarn "this test is not supported with cfk"
+     exit 111
+fi
+
 export CONNECTOR_VERSION="0.9.3"
 if [ ! -f kafka-connector-hana_2.13-$CONNECTOR_VERSION.jar ]
 then
