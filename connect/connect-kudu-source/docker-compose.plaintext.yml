@@ -12,7 +12,7 @@ services:
     ports:
       - "3890:389"
     volumes:
-      - ../../connect/connect-kudu-source/ldap/custom:/container/service/slapd/assets/config/bootstrap/ldif/custom
+      - ../../connect/connect-kudu-source/ldap/custom/01_kudu.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/01_kudu.ldif
     command: 
     - "--copy-service"
     - "--loglevel"
