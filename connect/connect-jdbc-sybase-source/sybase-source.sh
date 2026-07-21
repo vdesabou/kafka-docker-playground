@@ -14,9 +14,21 @@ fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
+log "Waiting for Sybase to be ready..."
+for i in {1..60}; do
+  if playground container exec --container dksybase --command "/sybase/isql -S -Usa -Ppassword -b <<< \"select 1\"" > /dev/null 2>&1; then
+    log "✅ Sybase is ready!"
+    break
+  fi
+  if [ $i -eq 60 ]; then
+    logerror "❌ Sybase did not become ready after 60 seconds"
+    exit 1
+  fi
+  sleep 1
+done
 
 log "Create the table and insert data."
-playground container exec --container sybase --command "/sybase/isql -S -Usa -Ppassword" << EOF
+playground container exec --container dksybase --command "/sybase/isql -S -Usa -Ppassword" << EOF
 CREATE DATABASE testDB
 GO
 USE testDB
@@ -33,25 +45,25 @@ EOF
 log "Creating JDBC Sybase source connector"
 playground connector create-or-update --connector jdbc-sybase-source  << EOF
 {
-      "connector.class" : "io.confluent.connect.jdbc.JdbcSourceConnector",
-      "tasks.max" : "1",
-      "connection.url": "jdbc:jtds:sybase://sybase:5000/testDB",
-      "connection.user": "sa",
-      "connection.password": "password",
-      "table.whitelist": "customers",
-      "mode": "incrementing",
-      "incrementing.column.name": "id",
-      "topic.prefix": "sybase-",
-      "validate.non.null":"false",
-      "errors.log.enable": "true",
-      "errors.log.include.messages": "true"
+    "connector.class" : "io.confluent.connect.jdbc.JdbcSourceConnector",
+    "tasks.max" : "1",
+    "connection.url": "jdbc:jtds:sybase://dksybase:5000/testDB",
+    "connection.user": "sa",
+    "connection.password": "password",
+    "table.whitelist": "customers",
+    "mode": "incrementing",
+    "incrementing.column.name": "id",
+    "topic.prefix": "sybase-",
+    "validate.non.null":"false",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true"
 }
 EOF
 
 sleep 5
 
 log "insert another record"
-playground container exec --container sybase --command "/sybase/isql -S -Usa -Ppassword" << EOF
+playground container exec --container dksybase --command "/sybase/isql -S -Usa -Ppassword" << EOF
 USE testDB
 GO
 INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@office.com')

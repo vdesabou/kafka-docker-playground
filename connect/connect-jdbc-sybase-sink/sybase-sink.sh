@@ -14,12 +14,25 @@ fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
+log "Waiting for Sybase to be ready..."
+for i in {1..60}; do
+  if playground container exec --container dksybase --command "/sybase/isql -S -Usa -Ppassword -b <<< \"select 1\"" > /dev/null 2>&1; then
+    log "✅ Sybase is ready!"
+    break
+  fi
+  if [ $i -eq 60 ]; then
+    logerror "❌ Sybase did not become ready after 60 seconds"
+    exit 1
+  fi
+  sleep 1
+done
+
 log "Create JDBC Sybase sink connector"
 playground connector create-or-update --connector sybase-sink  << EOF
 {
   "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
   "tasks.max": "1",
-  "connection.url": "jdbc:jtds:sybase://sybase:5000",
+  "connection.url": "jdbc:jtds:sybase://dksybase:5000",
   "connection.user": "sa",
   "connection.password": "password",
   "topics": "orders",
@@ -82,7 +95,7 @@ EOF
 sleep 5
 
 log "Show content of orders table:"
-playground container exec --container sybase --command "/sybase/isql -S -Usa -Ppassword" > /tmp/result.log  2>&1 <<-EOF
+playground container exec --container dksybase --command "/sybase/isql -S -Usa -Ppassword" > /tmp/result.log  2>&1 <<-EOF
 select * from orders
 GO
 EOF
