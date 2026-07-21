@@ -318,6 +318,28 @@ playground_get_docker_ports_usage() {
 }
 
 # :command.usage
+playground_get_container_list_usage() {
+  printf "playground get-container-list - Return some completion for container/pod list\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground get-container-list\n"
+  printf "  playground get-container-list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_get_connector_list_usage() {
   printf "playground get-connector-list - Return some completion for connector list\n\n"
 
@@ -15775,6 +15797,21 @@ playground_get_docker_ports_command() {
 
   # src/commands/get-docker-ports.sh
   docker ps --format '{{.Ports}}' | tr ',' '\n' | awk -F '->' '{print $1}' | cut -d':' -f2 | tr -d '/tcp' | tr -d ' ' | awk '!/-/' | sort -n | uniq
+}
+
+# :command.function
+playground_get_container_list_command() {
+
+  # src/commands/get-container-list.sh
+  get_environment_used
+
+  if [[ "$environment" == "cfk" ]]
+  then
+    kubectl -n confluent get pods -o name 2>/dev/null | sed 's#pod/##'
+  else
+    docker ps --format '{{.Names}}'
+  fi
+
 }
 
 # :command.function
@@ -36957,6 +36994,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    get-container-list)
+      action="get-container-list"
+      shift
+      playground_get_container_list_parse_requirements "$@"
+      shift $#
+      ;;
+
     get-connector-list)
       action="get-connector-list"
       shift
@@ -37570,6 +37614,53 @@ playground_get_docker_ports_parse_requirements() {
 
   # :command.command_filter
   action="get-docker-ports"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_get_container_list_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_get_container_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="get-container-list"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -56809,6 +56900,7 @@ run() {
     "help") playground_help_command ;;
     "status") playground_status_command ;;
     "get-docker-ports") playground_get_docker_ports_command ;;
+    "get-container-list") playground_get_container_list_command ;;
     "get-connector-list") playground_get_connector_list_command ;;
     "get-ec2-instance-list") playground_get_ec2_instance_list_command ;;
     "get-ec2-cloudformation-list") playground_get_ec2_cloudformation_list_command ;;

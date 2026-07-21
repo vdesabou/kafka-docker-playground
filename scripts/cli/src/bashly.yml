@@ -53,6 +53,8 @@ commands:
   help: Return some completion for docker ports
   private: true
 
+- name: get-container-list
+  help: Return some completion for container/pod list
   private: true
 
 - name: get-connector-list
