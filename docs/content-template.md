@@ -3,6 +3,8 @@
 
 ## 🔗 Connectors
 
+Onprem (self-managed) connector examples support both Docker Compose and CFK (Confluent for Kubernetes) environments.
+
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/activemq.png" width="15"> [ActiveMQ Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-active-mq-sink) (also with 🔑 mTLS) :connect/connect-active-mq-sink:
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/activemq.png" width="15"> [ActiveMQ Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-active-mq-source) (also with 🔑  mTLS) :connect/connect-active-mq-source:
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/cloudwatch_logs.svg" width="15"> [Amazon CloudWatch Logs Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-aws-cloudwatch-logs-source) :connect/connect-aws-cloudwatch-logs-source:
