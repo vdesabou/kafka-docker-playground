@@ -116,7 +116,7 @@ GRANT ROLE $PLAYGROUND_CONNECTOR_ROLE TO USER $PLAYGROUND_USER;
 EOF
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-SCHEMA_REGISTRY_URL="http://schemaregistry:8081"
+SCHEMA_REGISTRY_URL="http://schema-registry:8081"
 if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
 then
   SCHEMA_REGISTRY_URL="http://schemaregistry.confluent.svc.cluster.local:8081"
