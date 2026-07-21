@@ -15,7 +15,7 @@ services:
     environment:
       MINIO_ACCESS_KEY: AKIAIOSFODNN7EXAMPLE
       MINIO_SECRET_KEY: wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY
-    command: server /data
+    command: ["server", "/data"]
 
   create-buckets:
     image: minio/mc
