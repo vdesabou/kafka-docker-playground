@@ -4,20 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-for component in json-producer
-do
-     set +e
-     log "🏗 Building jar for ${component}"
-     docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${PWD}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "${PWD}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
-     if [ $? != 0 ]
-     then
-          logerror "❌ failed to build java component $component"
-          tail -500 /tmp/result.log
-          exit 1
-     fi
-     set -e
-done
-
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
@@ -27,7 +13,92 @@ log "Creating Couchbase bucket travel-data"
 playground container exec --container couchbase --command "bash -c \"/opt/couchbase/bin/couchbase-cli bucket-create --cluster localhost:8091 --username Administrator --password password --bucket travel-data --bucket-type couchbase --bucket-ramsize 100\""
 
 log "Sending messages to topic couchbase-sink-example"
-playground container exec --container json-producer --command "bash -c \"java -jar json-producer-1.0.0-SNAPSHOT-jar-with-dependencies.jar\""
+# Ensure one CDG document exists for verification below.
+playground topic produce -t couchbase-sink-example --nb-messages 1 --forced-value '{"airport":"CDG","degreesF":70,"timestamp":1735689600000}' << 'EOF'
+{
+     "namespace": "couchbase",
+     "name": "weatherReport",
+     "type": "record",
+     "fields": [
+          {
+               "name": "airport",
+               "type": {
+                    "type": "string",
+                    "arg.properties": {
+                         "options": ["SFO", "YVR", "LHR", "CDG", "TXL", "VCE", "DME", "DEL", "BJS"]
+                    }
+               }
+          },
+          {
+               "name": "degreesF",
+               "type": {
+                    "type": "int",
+                    "arg.properties": {
+                         "range": {
+                              "min": 20,
+                              "max": 120
+                         }
+                    }
+               }
+          },
+          {
+               "name": "timestamp",
+               "type": {
+                    "type": "long",
+                    "arg.properties": {
+                         "range": {
+                              "min": 1574170000000,
+                              "max": 1893456000000
+                         }
+                    }
+               }
+          }
+     ]
+}
+EOF
+
+playground topic produce -t couchbase-sink-example --nb-messages 19 << 'EOF'
+{
+     "namespace": "couchbase",
+     "name": "weatherReport",
+     "type": "record",
+     "fields": [
+          {
+               "name": "airport",
+               "type": {
+                    "type": "string",
+                    "arg.properties": {
+                         "options": ["SFO", "YVR", "LHR", "CDG", "TXL", "VCE", "DME", "DEL", "BJS"]
+                    }
+               }
+          },
+          {
+               "name": "degreesF",
+               "type": {
+                    "type": "int",
+                    "arg.properties": {
+                         "range": {
+                              "min": 20,
+                              "max": 120
+                         }
+                    }
+               }
+          },
+          {
+               "name": "timestamp",
+               "type": {
+                    "type": "long",
+                    "arg.properties": {
+                         "range": {
+                              "min": 1574170000000,
+                              "max": 1893456000000
+                         }
+                    }
+               }
+          }
+     ]
+}
+EOF
 
 log "Creating Couchbase sink connector"
 playground connector create-or-update --connector couchbase-sink  << EOF

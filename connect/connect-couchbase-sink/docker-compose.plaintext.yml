@@ -14,13 +14,3 @@ services:
       - couchbase
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/couchbase-kafka-connect-couchbase
-
-  json-producer:
-    build:
-      context: ../../connect/connect-couchbase-sink/json-producer/
-      args:
-        CP_CONNECT_TAG: ${CP_CONNECT_TAG}
-        CP_CONNECT_IMAGE: ${CP_CONNECT_IMAGE}
-        KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
-    hostname: json-producer
-    container_name: json-producer
