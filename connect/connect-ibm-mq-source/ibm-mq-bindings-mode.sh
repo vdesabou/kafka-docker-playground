@@ -5,6 +5,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+then
+     logwarn "this test is not supported with cfk"
+     exit 111
+fi
+
 log "🔔 This example is using bindings mode, which means that the connector is running in the same container as IBM MQ, and is using local connection to connect to it"
 logwarn "🔔 CP version is hardcoded to 8.1.0 and connnector version is hardcoded to 13.0.5 in the Dockerfile, if you want to use different versions, you will need to build your own image and update the docker-compose file accordingly"
 
