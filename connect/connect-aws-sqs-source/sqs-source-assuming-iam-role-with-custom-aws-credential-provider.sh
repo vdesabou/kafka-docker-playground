@@ -73,9 +73,9 @@ log "Delete queue ${QUEUE_URL} in region ${AWS_REGION}"
 aws sqs delete-queue --queue-url ${QUEUE_URL} --region ${AWS_REGION}
 if [ $? -eq 0 ]
 then
-     # You must wait 60 seconds after deleting a queue before you can create another with the same name
-     log "Sleeping 60 seconds"
-     sleep 60
+     log "You must wait 60 seconds after deleting a queue before you can create another with the same name"
+     log "Sleeping 65 seconds"
+     sleep 65
      aws sqs delete-queue --queue-url ${QUEUE_URL} --region ${AWS_REGION}
 fi
 set -e
