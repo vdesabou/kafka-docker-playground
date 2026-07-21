@@ -31,7 +31,9 @@ services:
         IMPALA_LDAP_URI: "ldaps://ldap:636"
     depends_on:
       - ldap
-
+    ports:
+        - "21050:21050"
+        
   connect:
     depends_on:
       - kudu

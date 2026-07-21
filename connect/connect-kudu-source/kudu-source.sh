@@ -50,25 +50,25 @@ sleep 5
 log "Creating Kudu source connector"
 playground connector create-or-update --connector kudu-source  << EOF
 {
-                    "connector.class": "io.confluent.connect.kudu.KuduSourceConnector",
-                    "tasks.max": "1",
-                    "impala.server": "kudu",
-                    "impala.port": "21050",
-                    "kudu.database": "test",
-                    "mode": "incrementing",
-                    "incrementing.column.name": "id",
-                    "topic.prefix": "test-kudu-",
-                    "table.whitelist": "accounts",
-                    "key.converter": "io.confluent.connect.avro.AvroConverter",
-                    "key.converter.schema.registry.url": "http://schema-registry:8081",
-                    "value.converter": "io.confluent.connect.avro.AvroConverter",
-                    "value.converter.schema.registry.url": "http://schema-registry:8081",
-                    "impala.ldap.password": "secret",
-                    "impala.ldap.user": "kudu",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+    "connector.class": "io.confluent.connect.kudu.KuduSourceConnector",
+    "tasks.max": "1",
+    "impala.server": "kudu",
+    "impala.port": "21050",
+    "kudu.database": "test",
+    "mode": "incrementing",
+    "incrementing.column.name": "id",
+    "topic.prefix": "test-kudu-",
+    "table.whitelist": "accounts",
+    "key.converter": "io.confluent.connect.avro.AvroConverter",
+    "key.converter.schema.registry.url": "http://schema-registry:8081",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://schema-registry:8081",
+    "impala.ldap.password": "secret",
+    "impala.ldap.user": "kudu",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
+}
 EOF
 
 sleep 5

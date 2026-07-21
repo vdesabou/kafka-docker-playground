@@ -41,26 +41,26 @@ sleep 5
 log "Creating Kudu sink connector"
 playground connector create-or-update --connector kudu-sink  << EOF
 {
-                    "connector.class": "io.confluent.connect.kudu.KuduSinkConnector",
-                    "tasks.max": "1",
-                    "topics": "orders",
-                    "impala.server": "kudu",
-                    "impala.port": "21050",
-                    "kudu.database": "test",
-                    "auto.create": "true",
-                    "pk.mode":"record_value",
-                    "pk.fields":"id",
-                    "key.converter": "io.confluent.connect.avro.AvroConverter",
-                    "key.converter.schema.registry.url": "http://schema-registry:8081",
-                    "value.converter": "io.confluent.connect.avro.AvroConverter",
-                    "value.converter.schema.registry.url": "http://schema-registry:8081",
-                    "impala.ldap.password": "secret",
-                    "impala.ldap.user": "kudu",
-                    "kudu.tablet.replicas": "1",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }
+    "connector.class": "io.confluent.connect.kudu.KuduSinkConnector",
+    "tasks.max": "1",
+    "topics": "orders",
+    "impala.server": "kudu",
+    "impala.port": "21050",
+    "kudu.database": "test",
+    "auto.create": "true",
+    "pk.mode":"record_value",
+    "pk.fields":"id",
+    "key.converter": "io.confluent.connect.avro.AvroConverter",
+    "key.converter.schema.registry.url": "http://schema-registry:8081",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://schema-registry:8081",
+    "impala.ldap.password": "secret",
+    "impala.ldap.user": "kudu",
+    "kudu.tablet.replicas": "1",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
+}
 EOF
 
 
