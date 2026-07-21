@@ -12,7 +12,6 @@ services:
 
 
   timescaledb:
-    image: quay.io/debezium/timescaledb:2.4
     hostname: timescaledb
     container_name: timescaledb
     build:
