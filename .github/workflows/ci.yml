@@ -172,6 +172,7 @@ jobs:
           fetch-depth: 0
 
       - name: "Free up disk space"
+        if: contains(matrix.test_list, 'oracle')
         run: |
           df -h
           sudo apt-get -qq purge build-essential ghc*
@@ -449,6 +450,7 @@ jobs:
           fetch-depth: 0
 
       - name: "Free up disk space"
+        if: contains(matrix.test_list, 'oracle')
         run: |
           df -h
           sudo apt-get -qq purge build-essential ghc*
