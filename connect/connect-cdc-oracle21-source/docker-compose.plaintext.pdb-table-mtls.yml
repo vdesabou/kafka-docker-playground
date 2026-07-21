@@ -8,7 +8,7 @@ services:
     container_name: oracle
     ports:
       - "1521:1521"
-      - "1522:1522"
+      - "1532:1532"
     volumes:
       - ../../connect/connect-cdc-oracle21-source/ora-setup-scripts-pdb-table:/opt/oracle/scripts/setup
     environment:
