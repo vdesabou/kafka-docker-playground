@@ -32,20 +32,27 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 playground container logs --container sap --wait-for-log "Startup finished!" --max-wait 600
 log "SAP HANA has started!"
+log "Creating LOCALDEV user in SAP HANA (idempotent: in CFK mode post_start hooks are not mounted, so user must be created explicitly)"
+set +e
+playground container exec --container sap --command "/usr/sap/HXE/HDB90/exe/hdbsql -a -i 90 -d HXE -u SYSTEM -p HXEHana1" > /tmp/localdev_user.log 2>&1 <<-EOF
+CREATE USER LOCALDEV PASSWORD "Localdev1" NO FORCE_FIRST_PASSWORD_CHANGE;
+ALTER USER LOCALDEV DISABLE PASSWORD LIFETIME;
+EOF
+set -e
 
 log "Creating SAP HANA JDBC Sink connector"
 playground connector create-or-update --connector jdbc-sap-hana-sink  << EOF
 {
-     "tasks.max": "1",
-     "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-     "topics": "orders",
-     "connection.url": "jdbc:sap://sap:39041/?databaseName=HXE&reconnect=true&statementCacheSize=512",
-     "connection.user": "LOCALDEV",
-     "connection.password" : "Localdev1",
-     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-     "value.converter": "io.confluent.connect.avro.AvroConverter",
-     "value.converter.schema.registry.url": "http://schema-registry:8081",
-     "auto.create": "true"
+    "tasks.max": "1",
+    "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+    "topics": "orders",
+    "connection.url": "jdbc:sap://sap:39041/?databaseName=HXE&reconnect=true&statementCacheSize=512",
+    "connection.user": "LOCALDEV",
+    "connection.password" : "Localdev1",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://schema-registry:8081",
+    "auto.create": "true"
 }
 EOF
 
