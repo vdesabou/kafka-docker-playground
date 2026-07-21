@@ -29,6 +29,72 @@ If 'transaction.boundary' is set to 'interval', determines the interval for prod
 	 - Required: false
 
 ==========================
+Transforms: ExtractField
+==========================
+🔘 transforms.ExtractField.type
+
+Class for the 'ExtractField' transformation.
+
+	 - Type: CLASS
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 transforms.ExtractField.plugin.version
+
+Version of the 'ExtractField' transformation.
+
+	 - Type: STRING
+	 - Default: 8.3.0-ce
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 transforms.ExtractField.field
+
+Field name to extract.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: true
+
+🔘 transforms.ExtractField.field.syntax.version
+
+Defines the version of the syntax to access fields. If set to <code>V1</code>, then the field paths are limited to access the elements at the root level of the struct or map. If set to <code>V2</code>, the syntax will support accessing nested elements. To access nested elements, dotted notation is used. If dots are already included in the field name, then backtick pairs can be used to wrap field names containing dots. E.g. to access the subfield <code>baz</code> from a field named "foo.bar" in a struct/map the following format can be used to access its elements: "<code>foo.bar</code>.baz".
+
+	 - Type: STRING
+	 - Default: V1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 transforms.ExtractField.negate
+
+Whether the configured predicate should be negated.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.ExtractField.predicate
+
+The alias of a predicate used to determine whether to apply this transformation.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.ExtractField.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
 IBM MQ Connection
 ==========================
 🔘 mq.hostname
@@ -483,4 +549,16 @@ The replication factor for the Kafka topic used for Confluent Platform configura
 	 - Default: 3
 	 - Importance: LOW
 	 - Required: false
+
+==========================
+null
+==========================
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
 
