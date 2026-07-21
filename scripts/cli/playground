@@ -318,28 +318,6 @@ playground_get_docker_ports_usage() {
 }
 
 # :command.usage
-playground_get_container_list_usage() {
-  printf "playground get-container-list - Return some completion for container/pod list\n\n"
-
-  printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground get-container-list\n"
-  printf "  playground get-container-list --help | -h\n"
-  echo
-
-  # :command.long_usage
-  if [[ -n "$long_usage" ]]; then
-    # :command.usage_options
-    printf "%s\n" "$(bold "== Options ==")"
-
-    # :command.usage_fixed_flags
-    printf "  %s\n" "$(magenta "--help, -h")"
-    printf "    Show this help\n"
-    echo
-
-  fi
-}
-
-# :command.usage
 playground_get_connector_list_usage() {
   printf "playground get-connector-list - Return some completion for connector list\n\n"
 
@@ -1137,6 +1115,52 @@ playground_force_ci_usage() {
     # :argument.usage
     printf "  %s\n" "$(blue "FILENAME")"
     printf "    pattern of file to remove. A confirmation will be asked\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_start_ci_usage() {
+  printf "playground start-ci\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground start-ci [OPTIONS]\n"
+  printf "  playground start-ci --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--test-list TEST-LIST")"
+    printf "\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--all-failing")"
+    printf "\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cfk")"
+    printf "\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_environment_variables
+    printf "%s\n" "$(bold "Environment Variables:")"
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "GITHUB_TOKEN (required)")"
+    printf "    GITHUB_TOKEN\n"
     echo
 
   fi
@@ -15769,21 +15793,6 @@ playground_get_docker_ports_command() {
 }
 
 # :command.function
-playground_get_container_list_command() {
-
-  # src/commands/get-container-list.sh
-  get_environment_used
-
-  if [[ "$environment" == "cfk" ]]
-  then
-    kubectl -n confluent get pods -o name 2>/dev/null | sed 's#pod/##'
-  else
-    docker ps --format '{{.Names}}'
-  fi
-
-}
-
-# :command.function
 playground_get_connector_list_command() {
 
   # src/commands/get-connector-list.sh
@@ -16981,6 +16990,72 @@ playground_force_ci_command() {
           log "no file found containing '$filename' in its name."
       fi
   fi
+}
+
+# :command.function
+playground_start_ci_command() {
+
+  # src/commands/start-ci.sh
+  test_list="${args[--test-list]:-}"
+  all_failing="${args[--all-failing]:-}"
+  cfk="${args[--cfk]:-}"
+
+  if ! command -v gh >/dev/null 2>&1
+  then
+  	logerror "❌ gh CLI is required to trigger CI"
+  	exit 1
+  fi
+
+  if [[ -n "$cfk" ]]
+  then
+  	playground_environment="cfk"
+  else
+  	playground_environment=""
+  fi
+
+  if [[ -z "$test_list" ]] || [[ -n "$all_failing" ]]
+  then
+  	issue_args=(issue list --state open --limit 500 --label "CI failing 🔥" --json title)
+  	if [[ -n "$cfk" ]]
+  	then
+  		issue_args+=(--label cfk)
+  	fi
+
+  	issues_json=$(gh "${issue_args[@]}")
+  	test_list=$(printf '%s\n' "$issues_json" | jq -r '
+  		.[]
+  		| .title
+  		| sub("^🔥[[:space:]]+"; "")
+  		| sub("[[:space:]]*\\(cfk\\)$"; "")
+  	' | awk 'NF && !seen[$0]++' | paste -sd ' ' -)
+  fi
+
+  if [[ -z "$test_list" ]]
+  then
+  	logerror "❌ No failing tests were found in GitHub issues"
+  	exit 1
+  fi
+
+  ref="$(git branch --show-current 2>/dev/null || true)"
+  if [[ -z "$ref" ]]
+  then
+  	ref="master"
+  fi
+
+  workflow_args=(workflow run ci.yml --ref "$ref" -f test_name="$test_list")
+  if [[ -n "$playground_environment" ]]
+  then
+  	workflow_args+=(-f playground_environment="$playground_environment")
+  fi
+
+  log "Triggering CI workflow with test_name=$test_list"
+  if [[ -n "$playground_environment" ]]
+  then
+  	log "Using playground_environment=$playground_environment"
+  fi
+
+  echo "gh "${workflow_args[@]}""
+
 }
 
 # :command.function
@@ -36866,13 +36941,6 @@ parse_requirements() {
       shift $#
       ;;
 
-    get-container-list)
-      action="get-container-list"
-      shift
-      playground_get_container_list_parse_requirements "$@"
-      shift $#
-      ;;
-
     get-connector-list)
       action="get-connector-list"
       shift
@@ -37045,6 +37113,13 @@ parse_requirements() {
       action="force-ci"
       shift
       playground_force_ci_parse_requirements "$@"
+      shift $#
+      ;;
+
+    start-ci)
+      action="start-ci"
+      shift
+      playground_start_ci_parse_requirements "$@"
       shift $#
       ;;
 
@@ -37479,53 +37554,6 @@ playground_get_docker_ports_parse_requirements() {
 
   # :command.command_filter
   action="get-docker-ports"
-
-  # :command.parse_requirements_while
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-
-      -?*)
-        printf "invalid option: %s\n" "$key" >&2
-        exit 1
-        ;;
-
-      *)
-        # :command.parse_requirements_case
-        # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
-
-        ;;
-
-    esac
-  done
-
-}
-
-# :command.parse_requirements
-playground_get_container_list_parse_requirements() {
-  local key
-
-  # :command.fixed_flags_filter
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-      --help | -h)
-        long_usage=yes
-        playground_get_container_list_usage
-        exit
-        ;;
-
-      *)
-        break
-        ;;
-
-    esac
-  done
-
-  # :command.command_filter
-  action="get-container-list"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -39052,6 +39080,105 @@ playground_force_ci_parse_requirements() {
           printf "invalid argument: %s\n" "$key" >&2
           exit 1
         fi
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_start_ci_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_start_ci_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.environment_variables_filter
+
+  env_var_names+=("GITHUB_TOKEN")
+  if [[ -z "${GITHUB_TOKEN:-}" ]]; then
+    printf "missing required environment variable: GITHUB_TOKEN\n" >&2
+    exit 1
+  fi
+
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v gh >/dev/null 2>&1; then
+    printf "missing dependency: gh\n" >&2
+    printf "%s\n\n" "visit https://cli.github.com/manual/installation to install" >&2
+    missing_deps=1
+  else
+    deps['gh']="$(command -v gh | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
+
+  # :command.command_filter
+  action="start-ci"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --test-list)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--test-list']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--test-list requires an argument: --test-list TEST-LIST" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --all-failing)
+
+        # :flag.case_no_arg
+        args['--all-failing']=1
+        shift
+        ;;
+
+      # :flag.case
+      --cfk)
+
+        # :flag.case_no_arg
+        args['--cfk']=1
+        shift
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
 
         ;;
 
@@ -56666,7 +56793,6 @@ run() {
     "help") playground_help_command ;;
     "status") playground_status_command ;;
     "get-docker-ports") playground_get_docker_ports_command ;;
-    "get-container-list") playground_get_container_list_command ;;
     "get-connector-list") playground_get_connector_list_command ;;
     "get-ec2-instance-list") playground_get_ec2_instance_list_command ;;
     "get-ec2-cloudformation-list") playground_get_ec2_cloudformation_list_command ;;
@@ -56692,6 +56818,7 @@ run() {
     "update-cache-versions") playground_update_cache_versions_command ;;
     "update-readme") playground_update_readme_command ;;
     "force-ci") playground_force_ci_command ;;
+    "start-ci") playground_start_ci_command ;;
     "update-docs") playground_update_docs_command ;;
     "bashly-reload") playground_bashly_reload_command ;;
     "state") playground_state_command ;;
