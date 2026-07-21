@@ -919,27 +919,6 @@ function az() {
   docker run --quiet --rm -v /tmp:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli:azurelinux3.0 az "$@"
 }
 
-function display_docker_container_error_log() {
-  set +e
-  logerror "####################################################"
-  logerror "🐳 docker ps"
-  docker ps
-  logerror "####################################################"
-  while IFS= read -r container
-  do
-    logerror "####################################################"
-    logerror "$container logs"
-    if [[ "$container" == "connect" ]] || [[ "$container" == "sap" ]]
-    then
-        # always show all logs for connect
-        docker container logs --tail=150 $container 2>&1 | grep -v "was supplied but isn't a known config"
-    else
-        docker container logs $container 2>&1 | grep -E "ERROR|FATAL"
-    fi
-    logwarn "####################################################"
-  done < <(docker ps --format="{{.Names}}")
-}
-
 function retry() {
   local n=1
   local max_retriable=3
@@ -968,10 +947,10 @@ function retry() {
           logwarn "####################################################"
           logwarn "🧟‍♂️ The test $script (retriable) has failed. Retrying (attempt $n/$max_retriable)"
           logwarn "####################################################"
-          display_docker_container_error_log
+          playground container display-error-all
         else
           logerror "💀 The test $script (retriable) has failed after $n attempts."
-          display_docker_container_error_log
+          playground container display-error-all
           return 1
         fi
       else
@@ -980,10 +959,10 @@ function retry() {
           logwarn "####################################################"
           logwarn "🎰 The test $script (default_retry) has failed. Retrying (attempt $n/$max_default_retry)"
           logwarn "####################################################"
-          display_docker_container_error_log
+          playground container display-error-all
         else
           logerror "💀 The test $script (default_retry) has failed after $n attempts."
-          display_docker_container_error_log
+          playground container display-error-all
           return 1
         fi
       fi
@@ -1001,7 +980,7 @@ retrycmd() {
     do
         if (( attempt_num == max_attempts ))
         then
-            display_docker_container_error_log
+            playground container display-error-all
             logerror "Failed after $attempt_num attempts. Please troubleshoot and run again."
             return 1
         else
