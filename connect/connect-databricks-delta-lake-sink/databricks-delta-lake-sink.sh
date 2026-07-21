@@ -115,4 +115,6 @@ playground connector create-or-update --connector databricks-delta-lake-sink  <<
 }
 EOF
 
+sleep 30
+
 playground connector show-lag --max-wait 120
