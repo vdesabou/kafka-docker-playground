@@ -4,6 +4,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+then
+     logwarn "this test is not supported with cfk"
+     exit 111
+fi
+
 cd ../../connect/connect-lenses-active-mq-source
 if [ ! -f ${DIR}/activemq-all-5.15.4.jar ]
 then
@@ -33,11 +39,11 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 log "Creating Lenses JMS ActiveMQ source connector"
 playground connector create-or-update --connector lenses-active-mq-source << EOF
 {
-     "connector.class": "com.datamountaineer.streamreactor.connect.jms.source.JMSSourceConnector",
-     "connect.jms.kcql": "INSERT INTO MyKafkaTopicName SELECT * FROM myqueue WITHTYPE QUEUE WITHCONVERTER=\`com.datamountaineer.streamreactor.connect.converters.source.JsonSimpleConverter\`",
-     "connect.jms.url": "tcp://activemq:61616",
-     "connect.jms.initial.context.factory": "org.apache.activemq.jndi.ActiveMQInitialContextFactory",
-     "connect.jms.connection.factory": "ConnectionFactory"
+    "connector.class": "com.datamountaineer.streamreactor.connect.jms.source.JMSSourceConnector",
+    "connect.jms.kcql": "INSERT INTO MyKafkaTopicName SELECT * FROM myqueue WITHTYPE QUEUE WITHCONVERTER=\`com.datamountaineer.streamreactor.connect.converters.source.JsonSimpleConverter\`",
+    "connect.jms.url": "tcp://activemq:61616",
+    "connect.jms.initial.context.factory": "org.apache.activemq.jndi.ActiveMQInitialContextFactory",
+    "connect.jms.connection.factory": "ConnectionFactory"
 }
 EOF
 
