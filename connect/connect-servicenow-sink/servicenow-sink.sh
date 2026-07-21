@@ -32,15 +32,15 @@ then
      exit 1
 fi
 
-if [ ! -z "$GITHUB_RUN_NUMBER" ]
-then
-     # this is github actions
-     set +e
-     log "Waking up servicenow instance..."
-     docker run -e USERNAME="$SERVICENOW_DEVELOPER_USERNAME" -e PASSWORD="$SERVICENOW_DEVELOPER_PASSWORD" vdesabou/servicenowinstancewakeup:latest
-     set -e
-     wait_for_end_of_hibernation
-fi
+# if [ ! -z "$GITHUB_RUN_NUMBER" ]
+# then
+#      # this is github actions
+#      set +e
+#      log "Waking up servicenow instance..."
+#      docker run -e USERNAME="$SERVICENOW_DEVELOPER_USERNAME" -e PASSWORD="$SERVICENOW_DEVELOPER_PASSWORD" vdesabou/servicenowinstancewakeup:latest
+#      set -e
+#      wait_for_end_of_hibernation
+# fi
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
