@@ -14,6 +14,21 @@ fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
+log "Waiting for Cassandra to be ready..."
+for i in {1..120}; do
+  if playground container exec --container cassandra --command "cqlsh -e 'SELECT now() FROM system.local;'" > /dev/null 2>&1; then
+    log "✅ Cassandra is ready!"
+    break
+  fi
+  if [ $i -eq 120 ]; then
+    logerror "❌ Cassandra did not become ready after 120 seconds"
+    exit 1
+  fi
+  if [ $((i % 20)) -eq 0 ]; then
+    log "⏳ Still waiting for Cassandra... ($i/120 seconds)"
+  fi
+  sleep 1
+done
 
 log "Getting value for cassandra.local.datacenter (2.0.x only), see https://docs.confluent.io/kafka-connect-cassandra/current/index.html#upgrading-to-version-2-0-x"
 DATACENTER=$(playground container exec --container cassandra --command "cqlsh -e 'SELECT data_center FROM system.local;'" | head -5 | tail -1 | tr -d ' ')
