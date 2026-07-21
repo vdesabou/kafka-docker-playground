@@ -7,9 +7,9 @@ services:
     container_name: rabbitmq
     volumes:
       - ../../ccloud/fm-rabbitmq-sink/ssl/rabbitmq.conf:/etc/rabbitmq/advanced.config
-      - ../../ccloud/fm-rabbitmq-sink/security/snakeoil-ca-1.crt:/tmp/ca.crt
-      - ../../ccloud/fm-rabbitmq-sink/security/rabbitmq.certificate.pem:/tmp/server.pem
-      - ../../ccloud/fm-rabbitmq-sink/security/rabbitmq.key:/tmp/server.key
+      - ../../ccloud/fm-rabbitmq-sink/security/snakeoil-ca-1.crt:/etc/rabbitmq/certs/ca.crt
+      - ../../ccloud/fm-rabbitmq-sink/security/rabbitmq.certificate.pem:/etc/rabbitmq/certs/server.pem
+      - ../../ccloud/fm-rabbitmq-sink/security/rabbitmq.key:/etc/rabbitmq/certs/server.key
     ports:
       - "5671:5671"
       - "15672:15672"
