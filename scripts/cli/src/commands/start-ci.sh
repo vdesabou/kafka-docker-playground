@@ -56,4 +56,4 @@ then
 	log "Using playground_environment=$playground_environment"
 fi
 
-echo "gh "${workflow_args[@]}""
+gh "${workflow_args[@]}"
