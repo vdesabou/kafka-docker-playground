@@ -12,10 +12,12 @@ services:
     volumes:
       - ../../connect/connect-appdynamics-metrics-sink/docker-appdynamics-metrics/mock-machine-agent.py:/mock.py:ro
     command: ["python", "/mock.py"]
-    # No host port mapping: the connector reaches the mock over the compose
+    # No host port mapping needed (but set for cfk): the connector reaches the mock over the compose
     # network (appdynamics-metrics:8293) and the test verifies via container
     # logs, so nothing needs the port on the host. Not publishing it avoids
     # host-port collisions when tests run in parallel.
+    ports:
+      - "8293:8293"
 
   connect:
     depends_on:
