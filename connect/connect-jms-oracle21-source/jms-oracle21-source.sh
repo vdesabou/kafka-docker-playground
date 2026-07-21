@@ -13,15 +13,8 @@ fi
 
 create_or_get_oracle_image "LINUX.X64_213000_db_home.zip" "../../connect/connect-cdc-oracle21-source/ora-setup-scripts-cdb-table"
 
-# required to make utils.sh script being able to work, do not remove:
-
-# PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-#playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
-
-
-docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f "${PWD}/docker-compose.plaintext.yml" down -v --remove-orphans
-log "Starting up oracle container to get ojdbc8.jar and aqapi.jar"
-docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f "${PWD}/docker-compose.plaintext.yml" up -d oracle
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml" --service oracle
 
 
 playground container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 600
@@ -68,9 +61,6 @@ cd -
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml" --no-stop
-
-wait_container_ready
-
 
 # https://github.com/monodot/oracle-aq-demo
 log "Grant all permissions to C##MYUSER"
@@ -134,27 +124,27 @@ EOF
 log "Creating JMS Oracle AQ source connector"
 playground connector create-or-update --connector jms-oracle-source  << EOF
 {
-               "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
-               "tasks.max": "1",
-               "kafka.topic": "jms-oracle-topic",
+    "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
+    "tasks.max": "1",
+    "kafka.topic": "jms-oracle-topic",
 
-               "db_url": "jdbc:oracle:thin:@oracle:1521/ORCLCDB",
-               "java.naming.factory.initial": "oracle.jms.AQjmsInitialContextFactory",
-               "java.naming.provider.url": "jdbc:oracle:thin:@oracle:1521/ORCLCDB",
-               "java.naming.security.credentials": "mypassword",
-               "java.naming.security.principal": "C##MYUSER",
-               "jms.destination.name": "PLAYGROUND",
-               "jms.destination.type": "queue",
-               "jms.message.format": "bytes",
-               "jndi.connection.factory": "javax.jms.XAQueueConnectionFactory",
+    "db_url": "jdbc:oracle:thin:@oracle:1521/ORCLCDB",
+    "java.naming.factory.initial": "oracle.jms.AQjmsInitialContextFactory",
+    "java.naming.provider.url": "jdbc:oracle:thin:@oracle:1521/ORCLCDB",
+    "java.naming.security.credentials": "mypassword",
+    "java.naming.security.principal": "C##MYUSER",
+    "jms.destination.name": "PLAYGROUND",
+    "jms.destination.type": "queue",
+    "jms.message.format": "bytes",
+    "jndi.connection.factory": "javax.jms.XAQueueConnectionFactory",
 
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://schema-registry:8081",
+    "confluent.license": "",
+    "confluent.topic.bootstrap.servers": "broker:9092",
+    "confluent.topic.replication.factor": "1"
+}
 EOF
 
 
