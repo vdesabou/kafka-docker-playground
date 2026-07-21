@@ -22,7 +22,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 
 log "Create teams table"
-playground container exec --container mysql --command "mysql --user=root --password=password --database=mydb" << EOF
+playground container exec --container mysql --command "mysql  --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb" << EOF
 USE mydb;
 
 CREATE TABLE team (
@@ -49,7 +49,7 @@ select * from team;
 EOF
 
 log "Adding an element to the table"
-playground container exec --container mysql --command "mysql --user=root --password=password --database=mydb" << EOF
+playground container exec --container mysql --command "mysql  --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb" << EOF
 USE mydb;
 
 INSERT INTO team (
@@ -64,7 +64,7 @@ INSERT INTO team (
 EOF
 
 log "Create customers table"
-playground container exec --container mysql --command "mysql --user=root --password=password --database=mydb" << EOF
+playground container exec --container mysql --command "mysql  --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb" << EOF
 USE mydb;
 CREATE TABLE customers (
   id            INT          NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -177,7 +177,7 @@ playground connector create-or-update --connector debezium-mysql-source  << EOF
 EOF
 
 log "insert a record in customers"
-playground container exec --container mysql --command "mysql --user=root --password=password --database=mydb" << EOF
+playground container exec --container mysql --command "mysql  --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb" << EOF
 INSERT INTO customers (
   name,
   email,
