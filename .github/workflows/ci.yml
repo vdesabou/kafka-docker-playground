@@ -17,7 +17,7 @@ on:
       playground_environment:
         description: 'override PLAYGROUND_ENVIRONMENT (example cfk, ccloud, plaintext)'
         required: false
-        default: ''
+        default: 'plaintext'
 
 jobs:
   pre-build:
@@ -100,11 +100,12 @@ jobs:
     if: ${{ github.event.inputs.test_name == '' }}
     runs-on: ubuntu-latest
     needs: pre-build
-    name: ${{ matrix.tag }} ${{ matrix.test_list }}
+    name: ${{ matrix.tag }} ${{ matrix.test_list }} ${{ matrix.playground_environment }}
     strategy:
       fail-fast: false
       matrix:
         tag: ["8.3.0"]
+        playground_environment: ["plaintext", "cfk"]
         test_list : [
                       # requiring ngrok
                       "🚀1️⃣ ccloud/fm-debezium-mysql-v2-source ccloud/fm-debezium-sqlserver-v2-source ccloud/fm-elasticsearch-sink ccloud/fm-elasticsearch-v2-sink ccloud/fm-jdbc-sqlserver-sink ccloud/fm-jdbc-sqlserver-source ccloud/fm-ibm-mq-source ccloud/fm-ibm-mq-sink ccloud/fm-jdbc-mysql-source ccloud/fm-jdbc-postgresql-sink ccloud/fm-mqtt-source ccloud/fm-mqtt-sink ccloud/fm-debezium-postgresql-v2-source ccloud/fm-jdbc-postgresql-source ccloud/fm-jdbc-ibmdb2-source",
@@ -249,10 +250,7 @@ jobs:
       - name: Build and Test
         run: |
           export PATH=$PATH:$GITHUB_WORKSPACE/scripts/cli
-          if [ -n "${{ github.event.inputs.playground_environment }}" ]; then
-            export PLAYGROUND_ENVIRONMENT="${{ github.event.inputs.playground_environment }}"
-          fi
-          bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
+          bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}" "${{ matrix.playground_environment }}"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
@@ -422,7 +420,7 @@ jobs:
   execute_one_test:
     if: ${{ github.event.inputs.test_name != '' }}
     runs-on: ubuntu-latest
-    name: ${{ matrix.tag }} ${{ matrix.test_list }}
+    name: ${{ matrix.tag }} ${{ matrix.test_list }} ${{ matrix.playground_environment }}
     strategy:
       fail-fast: false
       matrix:
@@ -430,6 +428,7 @@ jobs:
         test_list : [
                       "🚀 ${{ github.event.inputs.test_name }}"
                     ]
+        playground_environment: ["${{ github.event.inputs.playground_environment }}"]
     steps:
 
       # - name: Maximize build space
@@ -527,10 +526,7 @@ jobs:
       - name: Build and Test
         run: |
           export PATH=$PATH:$GITHUB_WORKSPACE/scripts/cli
-          if [ -n "${{ github.event.inputs.playground_environment }}" ]; then
-            export PLAYGROUND_ENVIRONMENT="${{ github.event.inputs.playground_environment }}"
-          fi
-          bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
+          bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}" "${{ matrix.playground_environment }}"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
