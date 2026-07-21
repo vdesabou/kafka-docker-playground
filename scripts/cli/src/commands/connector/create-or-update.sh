@@ -408,6 +408,48 @@ else
         echo "kubectl -n confluent apply -f $connector_cr_file"
 
         kubectl -n confluent apply -f "$connector_cr_file"
+
+        log "Waiting for CFK connector $connector to reconcile"
+        max_attempts=90
+        attempt=1
+        while true
+        do
+            set +e
+            connector_status_json=$(kubectl -n confluent get connector "$connector" -o json 2>/dev/null)
+            ret=$?
+            set -e
+
+            if [ "$ret" -eq 0 ] && [ -n "$connector_status_json" ]
+            then
+                app_ready=$(echo "$connector_status_json" | jq -r '.status.conditions[]? | select(.type=="platform.confluent.io/app-ready") | .status' | head -1)
+                state=$(echo "$connector_status_json" | jq -r '.status.state // ""')
+                reason=$(echo "$connector_status_json" | jq -r '.status.conditions[]? | select(.type=="platform.confluent.io/app-ready") | .reason' | head -1)
+                message=$(echo "$connector_status_json" | jq -r '.status.conditions[]? | select(.type=="platform.confluent.io/app-ready") | .message' | head -1)
+
+                if [[ "$app_ready" == "True" ]] || [[ "$state" == "RUNNING" ]]
+                then
+                    log "CFK connector $connector is ready"
+                    break
+                fi
+
+                if [[ "$reason" == "CreateFailed" ]]
+                then
+                    logerror "❌ CFK connector creation failed: ${message:-no message from status condition}"
+                    kubectl -n confluent get connector "$connector" -o yaml
+                    exit 1
+                fi
+            fi
+
+            if [ "$attempt" -ge "$max_attempts" ]
+            then
+                logerror "❌ CFK connector $connector did not become ready after $max_attempts attempts"
+                kubectl -n confluent get connector "$connector" -o yaml
+                exit 1
+            fi
+
+            sleep 2
+            attempt=$((attempt + 1))
+        done
     elif [[ -n "$initial_state" ]]
     then
         log "🪵 creating $connector_type connector $connector with --initial-state: $initial_state" 
