@@ -29,45 +29,36 @@ If 'transaction.boundary' is set to 'interval', determines the interval for prod
 	 - Required: false
 
 ==========================
-Transforms: insertHeader
+Transforms: valueToKey
 ==========================
-🔘 transforms.insertHeader.type
+🔘 transforms.valueToKey.type
 
-Class for the 'insertHeader' transformation.
+Class for the 'valueToKey' transformation.
 
 	 - Type: CLASS
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 transforms.insertHeader.plugin.version
+🔘 transforms.valueToKey.plugin.version
 
-Version of the 'insertHeader' transformation.
+Version of the 'valueToKey' transformation.
 
 	 - Type: STRING
 	 - Default: 8.3.0-ce
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 transforms.insertHeader.header
+🔘 transforms.valueToKey.fields
 
-The name of the header.
+Field names on the record value to extract as the record key.
 
-	 - Type: STRING
+	 - Type: LIST
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 transforms.insertHeader.value.literal
-
-The literal value that is to be set as the header value on all records.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
-🔘 transforms.insertHeader.negate
+🔘 transforms.valueToKey.negate
 
 Whether the configured predicate should be negated.
 
@@ -76,12 +67,21 @@ Whether the configured predicate should be negated.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 transforms.insertHeader.predicate
+🔘 transforms.valueToKey.predicate
 
 The alias of a predicate used to determine whether to apply this transformation.
 
 	 - Type: STRING
 	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.valueToKey.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -160,6 +160,21 @@ Numeric seed for generating random data. Two connectors started with the same se
 	 - Importance: LOW
 	 - Required: false
 
+==========================
+Serialization
+==========================
+🔘 key.converter.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
 🔘 key.converter.converter.type
 
 How this converter will be used.
@@ -169,12 +184,48 @@ How this converter will be used.
 	 - Importance: LOW
 	 - Required: true
 
-🔘 key.converter.converter.encoding
+==========================
+Schemas
+==========================
+🔘 key.converter.schemas.cache.size
 
-The name of the Java character set to use for encoding strings as byte arrays.
+The maximum number of schemas that can be cached in this converter instance.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 key.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schemas
+==========================
+🔘 key.converter.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 key.converter.schema.content
+
+When set, this is used as the schema for all messages, and the schemas within each of the message will be ignored.Otherwise, the schema will be included in the content of each message. This configuration applies only 'schemas.enable' is true, and it exclusively affects the sink connector.
 
 	 - Type: STRING
-	 - Default: UTF-8
+	 - Default: null
 	 - Importance: HIGH
 	 - Required: false
 
