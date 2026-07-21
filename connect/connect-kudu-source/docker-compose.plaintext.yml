@@ -2,18 +2,18 @@
 services:
 
   ldap:
-      image: osixia/openldap:1.3.0
-      hostname: ldap
-      container_name: ldap
-      environment:
-          LDAP_ORGANISATION: "kudu"
-          LDAP_DOMAIN: "example.com"
-          LDAP_TLS_VERIFY_CLIENT: "try"
-      ports:
-          - "3890:389"
-      volumes:
-          - ../../connect/connect-kudu-source/ldap/custom:/container/service/slapd/assets/config/bootstrap/ldif/custom
-      command: "--copy-service --loglevel debug"
+    image: osixia/openldap:1.3.0
+    hostname: ldap
+    container_name: ldap
+    environment:
+      LDAP_ORGANISATION: "kudu"
+      LDAP_DOMAIN: "example.com"
+      LDAP_TLS_VERIFY_CLIENT: "try"
+    ports:
+        - "3890:389"
+    volumes:
+        - ../../connect/connect-kudu-source/ldap/custom:/container/service/slapd/assets/config/bootstrap/ldif/custom
+    command: "--copy-service --loglevel debug"
 
 
   kudu:
