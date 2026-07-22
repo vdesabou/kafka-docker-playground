@@ -18,7 +18,35 @@ fi
 
 IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-source ${DIR}/../scripts/utils.sh
+
+function log() {
+    echo -e "\033[0;33m$(date +"%H:%M:%S") ℹ️ $*\033[0m"
+}
+
+function logwarn() {
+    echo -e "\033[0;35m$(date +"%H:%M:%S") ❗ $*\033[0m"
+}
+
+function logerror() {
+    echo -e "\033[0;31m$(date +"%H:%M:%S") 🔥 $*\033[0m"
+}
+
+function version_gt() {
+    test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"
+}
+
+function displaytime() {
+    local T=$1
+    local D=$((T/60/60/24))
+    local H=$((T/60/60%24))
+    local M=$((T/60%60))
+    local S=$((T%60))
+    (( $D > 0 )) && printf '%d days ' $D
+    (( $H > 0 )) && printf '%d hours ' $H
+    (( $M > 0 )) && printf '%d minutes ' $M
+    (( $D > 0 || $H > 0 || $M > 0 )) && printf 'and '
+    printf '%d seconds\n' $S
+}
 
 # go to root folder
 cd ${DIR}/..
@@ -300,6 +328,11 @@ do
         file_output="$file_output.log"
         rm -f $file_output
         touch $file_output
+        if [ -z "${RUN_TESTS_UTILS_SOURCED:-}" ]
+        then
+            source ${DIR}/../scripts/utils.sh
+            export RUN_TESTS_UTILS_SOURCED=1
+        fi
         retry playground run -f "$PWD/$script" $flag_tag $flag_environment 2>&1 | tee "$file_output"
         ret=${PIPESTATUS[0]}
         ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
