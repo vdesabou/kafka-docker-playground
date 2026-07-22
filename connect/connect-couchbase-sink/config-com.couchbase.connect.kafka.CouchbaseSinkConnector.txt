@@ -10,15 +10,6 @@ Password of the Couchbase user.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.username
-
-Name of the Couchbase user to authenticate as.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
 🔘 couchbase.bucket
 
 This property is required unless using the experimental AnalyticsSinkHandler.
@@ -27,6 +18,15 @@ This property is required unless using the experimental AnalyticsSinkHandler.
 	 - Default: STRING
 	 - Importance: Name of the Couchbase bucket to use.
 	 - Required: HIGH
+
+🔘 couchbase.username
+
+Name of the Couchbase user to authenticate as.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 couchbase.seed.nodes
 
@@ -154,33 +154,6 @@ The connector writes metrics to the log at this interval.
 ==========================
 Sink Behavior
 ==========================
-🔘 couchbase.document.expiration
-
-Document expiration time specified as an integer followed by a time unit (s = seconds, m = minutes, h = hours, d = days). For example, to have documents expire after 30 minutes, set this value to "30m".
-
-	 - Type: STRING
-	 - Default: 0
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.retry.timeout
-
-Retry failed writes to Couchbase until this deadline is reached. If time runs out, the connector terminates.
-
-	 - Type: STRING
-	 - Default: 0
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.default.collection
-
-Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
-
-	 - Type: STRING
-	 - Default: _default._default
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.topic.to.collection
 
 Topic and collection are joined by an equals sign. Map entries are delimited by commas.
@@ -232,6 +205,33 @@ Whether to remove the ID identified by 'couchbase.documentId' from the document 
 
 	 - Type: BOOLEAN
 	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.document.expiration
+
+Document expiration time specified as an integer followed by a time unit (s = seconds, m = minutes, h = hours, d = days). For example, to have documents expire after 30 minutes, set this value to "30m".
+
+	 - Type: STRING
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.retry.timeout
+
+Retry failed writes to Couchbase until this deadline is reached. If time runs out, the connector terminates.
+
+	 - Type: STRING
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.default.collection
+
+Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
+
+	 - Type: STRING
+	 - Default: _default._default
 	 - Importance: MEDIUM
 	 - Required: false
 
