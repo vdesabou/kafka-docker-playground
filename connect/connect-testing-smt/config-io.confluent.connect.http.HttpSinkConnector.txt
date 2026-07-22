@@ -1,34 +1,34 @@
 ==========================
-Transforms: flatten
+Transforms: handleTombstones
 ==========================
-🔘 transforms.flatten.type
+🔘 transforms.handleTombstones.type
 
-Class for the 'flatten' transformation.
+Class for the 'handleTombstones' transformation.
 
 	 - Type: CLASS
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 transforms.flatten.plugin.version
+🔘 transforms.handleTombstones.plugin.version
 
-Version of the 'flatten' transformation.
+Version of the 'handleTombstones' transformation.
 
 	 - Type: STRING
-	 - Default: 8.3.0-ce
+	 - Default: undefined
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 transforms.flatten.delimiter
+🔘 transforms.handleTombstones.behavior
 
-Delimiter to insert between field names from the input record when generating field names for the output record
+How to handle tombstone records.If set to 'ignore', then the record will be ignored silently, with a DEBUG messagewritten to log.If set to 'warn', then the record will be ignored silently, with a WARN messagewritten to log.If set to 'fail', then the execution will fail, and a org.apache.kafka.connect.errors.DataException will be thrown, with aDEBUG message written to log.
 
 	 - Type: STRING
-	 - Default: .
+	 - Default: WARN
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 transforms.flatten.negate
+🔘 transforms.handleTombstones.negate
 
 Whether the configured predicate should be negated.
 
@@ -37,7 +37,7 @@ Whether the configured predicate should be negated.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 transforms.flatten.predicate
+🔘 transforms.handleTombstones.predicate
 
 The alias of a predicate used to determine whether to apply this transformation.
 

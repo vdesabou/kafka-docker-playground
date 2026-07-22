@@ -29,45 +29,36 @@ If 'transaction.boundary' is set to 'interval', determines the interval for prod
 	 - Required: false
 
 ==========================
-Transforms: extractTopic
+Transforms: valueToKey
 ==========================
-🔘 transforms.extractTopic.type
+🔘 transforms.valueToKey.type
 
-Class for the 'extractTopic' transformation.
+Class for the 'valueToKey' transformation.
 
 	 - Type: CLASS
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 transforms.extractTopic.plugin.version
+🔘 transforms.valueToKey.plugin.version
 
-Version of the 'extractTopic' transformation.
+Version of the 'valueToKey' transformation.
 
 	 - Type: STRING
-	 - Default: undefined
+	 - Default: 8.3.0-ce
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 transforms.extractTopic.field
+🔘 transforms.valueToKey.fields
 
+Field names on the record value to extract as the record key.
 
+	 - Type: LIST
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
 
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Field name or header key to use when extracting the topic name. Required when extracting from a header. Otherwise, if left blank, the entire key or value is used (and assumed to be a string).
-	 - Required: MEDIUM
-
-🔘 transforms.extractTopic.field.format
-
-Determine the format of fieldconfig. If set to JSON_PATH, the transformer will interpret the field with json path interpreter. If left blank or set to PLAIN, the transformer evaluates field config as non nested field name.
-
-	 - Type: STRING
-	 - Default: PLAIN
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 transforms.extractTopic.negate
+🔘 transforms.valueToKey.negate
 
 Whether the configured predicate should be negated.
 
@@ -76,7 +67,7 @@ Whether the configured predicate should be negated.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 transforms.extractTopic.predicate
+🔘 transforms.valueToKey.predicate
 
 The alias of a predicate used to determine whether to apply this transformation.
 
@@ -85,13 +76,13 @@ The alias of a predicate used to determine whether to apply this transformation.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 transforms.extractTopic.skip.missing.or.null
+🔘 transforms.valueToKey.replace.null.with.default
 
-How to handle missing fields and null fields, keys, and values. By default, this transformation will throw an exception if a field specified via the field configuration is missing or null, or if no field is specified but the message's key or value is null. If this configuration is set to true, the transformation will instead silently ignore these conditions and all the record to pass through unaltered.
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
 
 	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: LOW
+	 - Default: true
+	 - Importance: MEDIUM
 	 - Required: false
 
 ==========================
@@ -169,6 +160,21 @@ Numeric seed for generating random data. Two connectors started with the same se
 	 - Importance: LOW
 	 - Required: false
 
+==========================
+Serialization
+==========================
+🔘 key.converter.decimal.format
+
+Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
 🔘 key.converter.converter.type
 
 How this converter will be used.
@@ -178,12 +184,48 @@ How this converter will be used.
 	 - Importance: LOW
 	 - Required: true
 
-🔘 key.converter.converter.encoding
+==========================
+Schemas
+==========================
+🔘 key.converter.schemas.cache.size
 
-The name of the Java character set to use for encoding strings as byte arrays.
+The maximum number of schemas that can be cached in this converter instance.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Serialization
+==========================
+🔘 key.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schemas
+==========================
+🔘 key.converter.schemas.enable
+
+Include schemas within each of the serialized values and keys.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 key.converter.schema.content
+
+When set, this is used as the schema for all messages, and the schemas within each of the message will be ignored.Otherwise, the schema will be included in the content of each message. This configuration applies only 'schemas.enable' is true, and it exclusively affects the sink connector.
 
 	 - Type: STRING
-	 - Default: UTF-8
+	 - Default: null
 	 - Importance: HIGH
 	 - Required: false
 
