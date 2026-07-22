@@ -16,6 +16,8 @@ then
     export PLAYGROUND_ENVIRONMENT=$environment
 fi
 
+export DEBUG_RUN_TESTS=true
+
 IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
@@ -29,6 +31,13 @@ function logwarn() {
 
 function logerror() {
     echo -e "\033[0;31m$(date +"%H:%M:%S") 🔥 $*\033[0m"
+}
+
+function debug_log() {
+    if [ "${DEBUG_RUN_TESTS:-false}" = "true" ]
+    then
+        echo -e "\033[0;36m$(date +"%H:%M:%S") 🐛 $*\033[0m"
+    fi
 }
 
 function version_gt() {
@@ -53,6 +62,8 @@ cd ${DIR}/..
 
 latest_tag=$(grep "default tag" ./scripts/utils.sh | cut -d "=" -f 2 | cut -d " " -f 1)
 
+debug_log "run-tests starting tag=${tag:-<default>} environment=${environment:-<default>} test_list_arg=${1:-<empty>}"
+
 nb_test_failed=0
 nb_test_skipped=0
 failed_tests=""
@@ -64,10 +75,13 @@ then
     test_list=$(grep "🚀" ${DIR}/../.github/workflows/ci.yml | cut -d '"' -f 2 | tr '\n' ' ' | tr ' ' '\n' | grep -v "^🚀" | tr '\n' ' ')
 fi
 
+debug_log "resolved test list: $test_list"
+
 playground config container-kill-all-before-run true
 
 for dir in $test_list
 do
+    debug_log "processing directory $dir"
     if [ ! -d $dir ]
     then
         log "####################################################"
@@ -116,9 +130,11 @@ do
     curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o /tmp/README.txt
     for script in *.sh
     do
+        debug_log "evaluating script $dir/$script"
         force_test_connector_plugin_version=0
         if [[ "$script" = "stop.sh" ]]
         then
+            debug_log "skip $dir/$script because it is stop.sh"
             continue
         fi
 
@@ -129,6 +145,7 @@ do
             log "####################################################"
             log "⏭ skipping $script in dir $dir"
             log "####################################################"
+            debug_log "skip $dir/$script because it is in tests-ignored.txt"
             continue
         fi
 
@@ -137,6 +154,7 @@ do
             log "####################################################"
             log "⏭ skipping reproduction model $script in dir $dir"
             log "####################################################"
+            debug_log "skip $dir/$script because it is a reproduction model"
             continue
         fi
 
@@ -157,6 +175,7 @@ do
             echo "|$(date +%s)|skipped|$GITHUB_RUN_ID" > $file
             aws s3 cp "$file" "s3://kafka-docker-playground/ci/" --region us-east-1
             log "📄 INFO: <$file> was uploaded to S3 bucket"
+            debug_log "skip $dir/$script because fully managed examples only run on latest tag; status file=$file"
             continue
         fi
 
@@ -217,6 +236,7 @@ do
         exists=$(aws s3 ls $s3_file --region us-east-1)
         if [ -z "$exists" ]; then
             log "$s3_file does not exist on the bucket, run the test"
+            debug_log "no prior S3 result for $dir/$script, scheduling execution"
             :
         else
             aws s3 cp $s3_file /tmp/ --region us-east-1
@@ -308,6 +328,7 @@ do
                     log "####################################################"
                     log "✅ Skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago. Test url: $html_url"
                     log "####################################################"
+                    debug_log "skip $dir/$script because cached result is still valid: s3_file=$s3_file html_url=$html_url elapsed_time=$elapsed_time"
                     skipped_tests=$skipped_tests"$dir[$script]\n"
                     let "nb_test_skipped++"
                     continue
@@ -325,6 +346,7 @@ do
             export RUN_TESTS_UTILS_SOURCED=1
         fi
         tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+        debug_log "created tmp_dir=$tmp_dir for $dir/$script"
         file_output="$tmp_dir/$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
         if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
         then
@@ -333,8 +355,10 @@ do
         file_output="$file_output.log"
         rm -f $file_output
         touch $file_output
+        debug_log "capturing output for $dir/$script in $file_output"
         retry playground run -f "$PWD/$script" $flag_tag $flag_environment 2>&1 | tee "$file_output"
         ret=${PIPESTATUS[0]}
+        debug_log "playground run finished for $dir/$script with exit_code=$ret"
         ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
         let ELAPSED_TOTAL+=$SECONDS
         CUMULATED="cumulated time: $((($ELAPSED_TOTAL / 60) % 60))min $(($ELAPSED_TOTAL % 60))sec"
@@ -346,6 +370,7 @@ do
         fi
         rm -f $file
         touch $file
+        debug_log "writing status file $file for $dir/$script"
         if [ $ret -eq 0 ]
         then
             log "####################################################"
@@ -379,6 +404,7 @@ do
         fi
         if [ -f "$file" ]
         then
+            debug_log "uploading status artifact $file to s3://kafka-docker-playground/ci/"
             aws s3 cp "$file" "s3://kafka-docker-playground/ci/" --region us-east-1
             log "📄 INFO: <$file> was uploaded to S3 bucket in ci folder"
         else
@@ -387,15 +413,15 @@ do
         fi
         if [ -f "$file_output" ]
         then
+            debug_log "uploading log artifact $file_output to s3://kafka-docker-playground/ci_output/"
             aws s3 cp "$file_output" "s3://kafka-docker-playground/ci_output/" --region us-east-1
             log "📄 INFO: <$file_output> was uploaded to S3 bucket in ci_output folder"
         else
             logerror "$file_output could not be created"
             exit 1
         fi
-        set +e
+        debug_log "running stop.sh for $dir/$script"
         bash stop.sh
-        set -e
     done
     cd - > /dev/null
 done
