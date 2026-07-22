@@ -26685,8 +26685,8 @@ playground_container_display_error_all_command() {
           log "☸️ kubectl get pods -o wide"
           kubectl -n confluent get pods -o wide
           log "####################################################"
-          log "☸️ kubectl get events (latest 120)"
-          kubectl -n confluent get events --sort-by=.metadata.creationTimestamp | tail -n 120
+          log "☸️ kubectl get events (latest 20)"
+          kubectl -n confluent get events --sort-by=.metadata.creationTimestamp | tail -n 20
 
           while IFS= read -r container
           do
@@ -26694,22 +26694,25 @@ playground_container_display_error_all_command() {
                   continue
               fi
 
+              if [[ "$container" == *"schemaregistry"* ]]
+              then
+                  continue
+              fi
+
               ready_status=$(kubectl -n confluent get pod "$container" -o jsonpath='{.status.containerStatuses[*].ready}' 2>/dev/null)
-             # restart_count=$(kubectl -n confluent get pod "$container" -o jsonpath='{range .status.containerStatuses[*]}{.restartCount}{" "}{end}' 2>/dev/null | tr ' ' '\n' | awk '$1>0{sum+=$1} END{print sum+0}')
               phase=$(kubectl -n confluent get pod "$container" -o jsonpath='{.status.phase}' 2>/dev/null)
 
               if [[ "$phase" != "Running" ]] || [[ "$ready_status" == *"false"* ]]
-              # || [[ "$restart_count" -gt 0 ]]
               then
                   log "####################################################"
                   log "☸️ kubectl describe pod $container"
                   kubectl -n confluent describe pod "$container"
                   log "####################################################"
-                  log "☸️ kubectl logs $container --all-containers --tail=200"
-                  kubectl -n confluent logs "$container" --all-containers --tail=200
+                  log "☸️ kubectl logs $container --all-containers --tail=100"
+                  kubectl -n confluent logs "$container" --all-containers --tail=100
                   log "####################################################"
-                  log "☸️ kubectl logs $container --all-containers --previous --tail=200"
-                  kubectl -n confluent logs "$container" --all-containers --previous --tail=200
+                  log "☸️ kubectl logs $container --all-containers --previous --tail=100"
+                  kubectl -n confluent logs "$container" --all-containers --previous --tail=100
               fi
           done <<< "$containers"
 
