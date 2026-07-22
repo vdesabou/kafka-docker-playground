@@ -319,6 +319,11 @@ do
         log "🚀 Executing $script in dir $dir"
         log "####################################################"
         SECONDS=0
+        if [ -z "${RUN_TESTS_UTILS_SOURCED:-}" ]
+        then
+            source ${DIR}/../scripts/utils.sh
+            export RUN_TESTS_UTILS_SOURCED=1
+        fi
         tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
         file_output="$tmp_dir/$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
         if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
@@ -328,11 +333,6 @@ do
         file_output="$file_output.log"
         rm -f $file_output
         touch $file_output
-        if [ -z "${RUN_TESTS_UTILS_SOURCED:-}" ]
-        then
-            source ${DIR}/../scripts/utils.sh
-            export RUN_TESTS_UTILS_SOURCED=1
-        fi
         retry playground run -f "$PWD/$script" $flag_tag $flag_environment 2>&1 | tee "$file_output"
         ret=${PIPESTATUS[0]}
         ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
