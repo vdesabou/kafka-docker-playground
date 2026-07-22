@@ -132,6 +132,7 @@ do
     do
         debug_log "evaluating script $dir/$script"
         force_test_connector_plugin_version=0
+        debug_log "checkpoint: entered per-script loop for $dir/$script"
         if [[ "$script" = "stop.sh" ]]
         then
             debug_log "skip $dir/$script because it is stop.sh"
@@ -139,8 +140,8 @@ do
         fi
 
         # check for ignored scripts in scripts/tests-ignored.txt
-        grep "$script" ${DIR}/tests-ignored.txt > /dev/null
-        if [ $? = 0 ]
+        debug_log "checkpoint: checking tests-ignored for $dir/$script"
+        if grep "$script" ${DIR}/tests-ignored.txt > /dev/null
         then
             log "####################################################"
             log "⏭ skipping $script in dir $dir"
@@ -148,8 +149,10 @@ do
             debug_log "skip $dir/$script because it is in tests-ignored.txt"
             continue
         fi
+        debug_log "checkpoint: $dir/$script is not in tests-ignored.txt"
 
         # check for scripts containing "repro"
+        debug_log "checkpoint: checking repro pattern for $dir/$script"
         if [[ "$script" == *"repro"* ]]; then
             log "####################################################"
             log "⏭ skipping reproduction model $script in dir $dir"
@@ -157,8 +160,10 @@ do
             debug_log "skip $dir/$script because it is a reproduction model"
             continue
         fi
+        debug_log "checkpoint: $dir/$script is not a reproduction model"
 
         # check for scripts containing "fm-"
+        debug_log "checkpoint: checking fully-managed tag gate for $dir/$script"
         if [[ "$script" == *"fm-"* ]] && [ "$tag" != "$latest_tag" ]
         then
             log "####################################################"
@@ -178,10 +183,12 @@ do
             debug_log "skip $dir/$script because fully managed examples only run on latest tag; status file=$file"
             continue
         fi
+        debug_log "checkpoint: fully-managed tag gate passed for $dir/$script"
 
         log "####################################################"
         log "🕹 processing $script in dir $dir"
         log "####################################################"
+        debug_log "checkpoint: starting connector metadata resolution for $dir/$script"
 
         THE_CONNECTOR_TAG=""
         if [[ "$dir" == "connect"* ]]
