@@ -154,6 +154,24 @@ The connector writes metrics to the log at this interval.
 ==========================
 Sink Behavior
 ==========================
+🔘 couchbase.document.expiration
+
+Document expiration time specified as an integer followed by a time unit (s = seconds, m = minutes, h = hours, d = days). For example, to have documents expire after 30 minutes, set this value to "30m".
+
+	 - Type: STRING
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.retry.timeout
+
+Retry failed writes to Couchbase until this deadline is reached. If time runs out, the connector terminates.
+
+	 - Type: STRING
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.default.collection
 
 Qualified name (scope.collection or bucket.scope.collection) of the destination collection.
@@ -214,24 +232,6 @@ Whether to remove the ID identified by 'couchbase.documentId' from the document 
 
 	 - Type: BOOLEAN
 	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.document.expiration
-
-Document expiration time specified as an integer followed by a time unit (s = seconds, m = minutes, h = hours, d = days). For example, to have documents expire after 30 minutes, set this value to "30m".
-
-	 - Type: STRING
-	 - Default: 0
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.retry.timeout
-
-Retry failed writes to Couchbase until this deadline is reached. If time runs out, the connector terminates.
-
-	 - Type: STRING
-	 - Default: 0
 	 - Importance: MEDIUM
 	 - Required: false
 
