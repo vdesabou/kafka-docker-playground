@@ -393,7 +393,9 @@ do
             logerror "$file_output could not be created"
             exit 1
         fi
+        set +e
         bash stop.sh
+        set -e
     done
     cd - > /dev/null
 done
