@@ -117,8 +117,17 @@ sleep 60
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssl.yml" --no-stop
 
+playground container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 600
+log "Oracle DB has started!"
+
 log "🔏 copy cwallet.sso to connect container"
+set +e
 playground container cp --source oracle:/tmp/server/cwallet.sso --destination /tmp/cwallet.sso
+if [ $? -ne 0 ] || [ ! -f /tmp/cwallet.sso ]; then
+  logerror "❌ Failed to copy cwallet.sso from oracle container"
+  exit 1
+fi
+set -e
 playground container cp --source /tmp/cwallet.sso --destination connect:/tmp/cwallet.sso
 playground container exec --root --command "chown appuser /tmp/cwallet.sso"
 

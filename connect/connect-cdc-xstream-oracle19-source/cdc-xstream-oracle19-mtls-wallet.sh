@@ -138,8 +138,17 @@ then
      playground container change-jdk --version 17 --container connect
 fi
 
+playground container logs --container oracle --wait-for-log "DATABASE IS READY TO USE" --max-wait 600
+log "Oracle DB has started!"
+
 log "🔏 copy cwallet.sso to connect container"
-playground container cp --source oracle:/tmp/client/cwallet.sso --destination /tmp
+set +e
+playground container cp --source oracle:/tmp/server/cwallet.sso --destination /tmp/cwallet.sso
+if [ $? -ne 0 ] || [ ! -f /tmp/cwallet.sso ]; then
+  logerror "❌ Failed to copy cwallet.sso from oracle container"
+  exit 1
+fi
+set -e
 playground container cp --source /tmp/cwallet.sso --destination connect:/tmp/cwallet.sso
 playground container exec --root --command "chown appuser /tmp/cwallet.sso"
 
