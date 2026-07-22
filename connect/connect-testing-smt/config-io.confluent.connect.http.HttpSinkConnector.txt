@@ -1,34 +1,34 @@
 ==========================
-Transforms: handleTombstones
+Transforms: castLevel
 ==========================
-🔘 transforms.handleTombstones.type
+🔘 transforms.castLevel.type
 
-Class for the 'handleTombstones' transformation.
+Class for the 'castLevel' transformation.
 
 	 - Type: CLASS
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 transforms.handleTombstones.plugin.version
+🔘 transforms.castLevel.plugin.version
 
-Version of the 'handleTombstones' transformation.
+Version of the 'castLevel' transformation.
 
 	 - Type: STRING
-	 - Default: undefined
+	 - Default: 8.3.0-ce
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 transforms.handleTombstones.behavior
+🔘 transforms.castLevel.spec
 
-How to handle tombstone records.If set to 'ignore', then the record will be ignored silently, with a DEBUG messagewritten to log.If set to 'warn', then the record will be ignored silently, with a WARN messagewritten to log.If set to 'fail', then the execution will fail, and a org.apache.kafka.connect.errors.DataException will be thrown, with aDEBUG message written to log.
+List of fields and the type to cast them to of the form field1:type,field2:type to cast fields of Maps or Structs. A single type to cast the entire value. Valid types are int8, int16, int32, int64, float32, float64, boolean, and string. Note that binary fields can only be cast to string.
 
-	 - Type: STRING
-	 - Default: WARN
-	 - Importance: MEDIUM
-	 - Required: false
+	 - Type: LIST
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
 
-🔘 transforms.handleTombstones.negate
+🔘 transforms.castLevel.negate
 
 Whether the configured predicate should be negated.
 
@@ -37,12 +37,21 @@ Whether the configured predicate should be negated.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 transforms.handleTombstones.predicate
+🔘 transforms.castLevel.predicate
 
 The alias of a predicate used to determine whether to apply this transformation.
 
 	 - Type: STRING
 	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transforms.castLevel.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
+
+	 - Type: BOOLEAN
+	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
 
