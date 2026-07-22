@@ -26,3 +26,5 @@ services:
       LICENSE: accept
       MQ_QMGR_NAME: QM1
       MQ_ADMIN_PASSWORD: passw0rd
+      # not used but needed for playground script logic:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq
