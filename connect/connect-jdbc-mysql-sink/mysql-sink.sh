@@ -96,10 +96,10 @@ sleep 5
 
 
 log "Describing the orders table in DB 'db':"
-playground container exec --container mysql --command "bash -c \"mysql --user=root --password=password --database=db -e 'describe orders'\""
+playground container exec --container mysql --command "bash -c \"mysql --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=db -e 'describe orders'\""
 
 log "Show content of orders table:"
-playground container exec --container mysql --command "bash -c \"mysql --user=root --password=password --database=db -e 'select * from orders'\"" > /tmp/result.log  2>&1
+playground container exec --container mysql --command "bash -c \"mysql --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=db -e 'select * from orders'\"" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "foo" /tmp/result.log
 
