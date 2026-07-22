@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 function wait_for_solace () {
-     MAX_WAIT=240
+  MAX_WAIT=600
      log "⌛ Waiting up to $MAX_WAIT seconds for Solace to startup"
      # Use playground logs so readiness wait works for both Docker and CFK environments.
      playground container logs --container solace --wait-for-log "Running pre-startup checks" --max-wait "$MAX_WAIT"
