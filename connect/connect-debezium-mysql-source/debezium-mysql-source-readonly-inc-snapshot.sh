@@ -137,7 +137,10 @@ log "Verifying topic server1_mydb_team"
 playground topic consume --topic server1_mydb_team --min-expected-messages 2 --timeout 60
 
 log "Show content of customer table:"
-playground container exec --container mysql --command "bash -c \"mysql --user=root --password=password --database=mydb -e 'select * from customers'\""
+playground container exec --container mysql --command "mysql  --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb" << EOF
+select * from customers;
+EOF
+
 
 log "Adding customers table to the connector"
 playground connector create-or-update --connector debezium-mysql-source  << EOF
