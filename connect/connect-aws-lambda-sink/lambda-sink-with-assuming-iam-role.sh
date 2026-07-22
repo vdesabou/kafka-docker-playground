@@ -11,6 +11,11 @@ then
      exit 111
 fi
 
+if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+then
+     logwarn "this test is not supported with cfk"
+     exit 111
+fi
 
 export AWS_CREDENTIALS_FILE_NAME=$HOME/.aws/credentials-with-assuming-iam-role
 if [ ! -f $AWS_CREDENTIALS_FILE_NAME ]
