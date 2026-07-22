@@ -26574,7 +26574,7 @@ playground_container_logs_command() {
           if [[ -n "$open" ]]
           then
               filename="/tmp/${container}-$(date '+%Y-%m-%d-%H-%M-%S').log"
-              kubectl -n confluent logs "$resolved_container" $maybe_previous > "$filename" 2>&1
+              kubectl -n confluent logs "$resolved_container" --all-containers=true $maybe_previous > "$filename" 2>&1
               if [ $? -eq 0 ]
               then
                   playground open --file "${filename}"
@@ -26587,7 +26587,7 @@ playground_container_logs_command() {
               log "⌛ Waiting up to $max_wait seconds for message $log to be present in $resolved_container pod logs..."
               while true
               do
-                  kubectl -n confluent logs "$resolved_container" > /tmp/out.txt 2>&1
+                  kubectl -n confluent logs "$resolved_container" --all-containers=true > /tmp/out.txt 2>&1
                   if grep "$log" /tmp/out.txt > /dev/null
                   then
                       grep "$log" /tmp/out.txt
@@ -26599,7 +26599,7 @@ playground_container_logs_command() {
                   if [[ "$cur_wait" -gt "$max_wait" ]]
                   then
                       logerror "The logs in $resolved_container pod do not show '$log' after $max_wait seconds:"
-                      kubectl -n confluent logs "$resolved_container" --tail=100
+                      kubectl -n confluent logs "$resolved_container" --all-containers=true --tail=100
                       exit 1
                   fi
               done
