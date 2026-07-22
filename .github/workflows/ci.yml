@@ -178,7 +178,6 @@ jobs:
           sudo apt-get -qq purge build-essential ghc*
           sudo apt-get clean
           sudo apt-get update
-          sudo apt-get install expect fzf coreutils -y
           docker system prune -af
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
@@ -228,10 +227,12 @@ jobs:
           k3d version
           kubectl version --client
 
-      - name: "Install confluent CLI"
+      - name: "Install confluent CLI and tools"
         run: |
             curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
             export PATH=$PATH:/usr/local/bin
+            sudo apt-get update
+            sudo apt-get install expect fzf coreutils -y
 
       - name: Decrypt secrets.tar
         run: |
@@ -455,8 +456,6 @@ jobs:
           df -h
           sudo apt-get -qq purge build-essential ghc*
           sudo apt-get clean
-          sudo apt-get update
-          sudo apt-get install expect fzf coreutils -y
           docker system prune -af
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
@@ -506,10 +505,12 @@ jobs:
           k3d version
           kubectl version --client
 
-      - name: "Install confluent CLI"
+      - name: "Install confluent CLI and tools"
         run: |
             curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
             export PATH=$PATH:/usr/local/bin
+            sudo apt-get update
+            sudo apt-get install expect fzf coreutils -y
             
       - name: Decrypt secrets.tar
         run: |
