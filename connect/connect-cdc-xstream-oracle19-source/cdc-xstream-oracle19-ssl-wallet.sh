@@ -118,7 +118,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssl.yml" --no-stop
 
 log "🔏 copy cwallet.sso to connect container"
-playground container cp --source oracle:/tmp/server/cwallet.sso --destination /tmp
+playground container cp --source oracle:/tmp/server/cwallet.sso --destination /tmp/cwallet.sso
 playground container cp --source /tmp/cwallet.sso --destination connect:/tmp/cwallet.sso
 playground container exec --root --command "chown appuser /tmp/cwallet.sso"
 

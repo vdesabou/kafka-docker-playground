@@ -312,7 +312,7 @@ set -e
 
 
 log "🔏 copy cwallet.sso to /tmp"
-playground container cp --source oracle:/tmp/server/cwallet.sso --destination /tmp
+playground container cp --source oracle:/tmp/server/cwallet.sso --destination /tmp/cwallet.sso
 base64_cwallet=$(cat /tmp/cwallet.sso | base64 | tr -d '\n')
 
 log "Creating fully managed connector"
