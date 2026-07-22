@@ -29,45 +29,45 @@ If 'transaction.boundary' is set to 'interval', determines the interval for prod
 	 - Required: false
 
 ==========================
-Transforms: insertKeep
+Transforms: extractTopic
 ==========================
-🔘 transforms.insertKeep.type
+🔘 transforms.extractTopic.type
 
-Class for the 'insertKeep' transformation.
+Class for the 'extractTopic' transformation.
 
 	 - Type: CLASS
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 transforms.insertKeep.plugin.version
+🔘 transforms.extractTopic.plugin.version
 
-Version of the 'insertKeep' transformation.
+Version of the 'extractTopic' transformation.
 
 	 - Type: STRING
-	 - Default: 8.3.0-ce
+	 - Default: undefined
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 transforms.insertKeep.header
+🔘 transforms.extractTopic.field
 
-The name of the header.
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Field name or header key to use when extracting the topic name. Required when extracting from a header. Otherwise, if left blank, the entire key or value is used (and assumed to be a string).
+	 - Required: MEDIUM
+
+🔘 transforms.extractTopic.field.format
+
+Determine the format of fieldconfig. If set to JSON_PATH, the transformer will interpret the field with json path interpreter. If left blank or set to PLAIN, the transformer evaluates field config as non nested field name.
 
 	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
+	 - Default: PLAIN
+	 - Importance: MEDIUM
+	 - Required: false
 
-🔘 transforms.insertKeep.value.literal
-
-The literal value that is to be set as the header value on all records.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
-🔘 transforms.insertKeep.negate
+🔘 transforms.extractTopic.negate
 
 Whether the configured predicate should be negated.
 
@@ -76,7 +76,7 @@ Whether the configured predicate should be negated.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 transforms.insertKeep.predicate
+🔘 transforms.extractTopic.predicate
 
 The alias of a predicate used to determine whether to apply this transformation.
 
@@ -85,109 +85,13 @@ The alias of a predicate used to determine whether to apply this transformation.
 	 - Importance: MEDIUM
 	 - Required: false
 
-==========================
-Transforms: insertDrop
-==========================
-🔘 transforms.insertDrop.type
+🔘 transforms.extractTopic.skip.missing.or.null
 
-Class for the 'insertDrop' transformation.
-
-	 - Type: CLASS
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
-🔘 transforms.insertDrop.plugin.version
-
-Version of the 'insertDrop' transformation.
-
-	 - Type: STRING
-	 - Default: 8.3.0-ce
-	 - Importance: HIGH
-	 - Required: false
-
-🔘 transforms.insertDrop.header
-
-The name of the header.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
-🔘 transforms.insertDrop.value.literal
-
-The literal value that is to be set as the header value on all records.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
-🔘 transforms.insertDrop.negate
-
-Whether the configured predicate should be negated.
+How to handle missing fields and null fields, keys, and values. By default, this transformation will throw an exception if a field specified via the field configuration is missing or null, or if no field is specified but the message's key or value is null. If this configuration is set to true, the transformation will instead silently ignore these conditions and all the record to pass through unaltered.
 
 	 - Type: BOOLEAN
 	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 transforms.insertDrop.predicate
-
-The alias of a predicate used to determine whether to apply this transformation.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: MEDIUM
-	 - Required: false
-
-==========================
-Transforms: dropHeaders
-==========================
-🔘 transforms.dropHeaders.type
-
-Class for the 'dropHeaders' transformation.
-
-	 - Type: CLASS
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
-🔘 transforms.dropHeaders.plugin.version
-
-Version of the 'dropHeaders' transformation.
-
-	 - Type: STRING
-	 - Default: 8.3.0-ce
-	 - Importance: HIGH
-	 - Required: false
-
-🔘 transforms.dropHeaders.headers
-
-The name of the headers to be removed.
-
-	 - Type: LIST
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
-🔘 transforms.dropHeaders.negate
-
-Whether the configured predicate should be negated.
-
-	 - Type: BOOLEAN
-	 - Default: false
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 transforms.dropHeaders.predicate
-
-The alias of a predicate used to determine whether to apply this transformation.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: MEDIUM
+	 - Importance: LOW
 	 - Required: false
 
 ==========================

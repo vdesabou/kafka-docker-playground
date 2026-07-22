@@ -1,34 +1,34 @@
 ==========================
-Transforms: castLevel
+Transforms: flatten
 ==========================
-🔘 transforms.castLevel.type
+🔘 transforms.flatten.type
 
-Class for the 'castLevel' transformation.
+Class for the 'flatten' transformation.
 
 	 - Type: CLASS
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 transforms.castLevel.plugin.version
+🔘 transforms.flatten.plugin.version
 
-Version of the 'castLevel' transformation.
+Version of the 'flatten' transformation.
 
 	 - Type: STRING
 	 - Default: 8.3.0-ce
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 transforms.castLevel.spec
+🔘 transforms.flatten.delimiter
 
-List of fields and the type to cast them to of the form field1:type,field2:type to cast fields of Maps or Structs. A single type to cast the entire value. Valid types are int8, int16, int32, int64, float32, float64, boolean, and string. Note that binary fields can only be cast to string.
+Delimiter to insert between field names from the input record when generating field names for the output record
 
-	 - Type: LIST
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
+	 - Type: STRING
+	 - Default: .
+	 - Importance: MEDIUM
+	 - Required: false
 
-🔘 transforms.castLevel.negate
+🔘 transforms.flatten.negate
 
 Whether the configured predicate should be negated.
 
@@ -37,21 +37,12 @@ Whether the configured predicate should be negated.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 transforms.castLevel.predicate
+🔘 transforms.flatten.predicate
 
 The alias of a predicate used to determine whether to apply this transformation.
 
 	 - Type: STRING
 	 - Default: null
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 transforms.castLevel.replace.null.with.default
-
-Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
-
-	 - Type: BOOLEAN
-	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
 
