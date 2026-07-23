@@ -5,6 +5,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 source ${DIR}/../../scripts/utils.sh
 
+if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+then
+     logwarn "this test is not supported with cfk"
+     exit 111
+fi
+
 # https://confluentinc.atlassian.net/wiki/spaces/~62c938d4fa577c57c3b80d59/pages/4038003034/DRAFT+User+facing+documentation+Oracle+XStream+CDC+source+connector+Early+Access
 
 create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "../../connect/connect-cdc-oracle19-source/ora-setup-scripts-cdb-table"
