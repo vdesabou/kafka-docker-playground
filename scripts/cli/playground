@@ -32083,8 +32083,39 @@ playground_connector_status_command() {
       then
           # Display kubectl get connector output
           log "☸️ kubectl -n confluent get connector $connector"
+          connector_status_json=$(kubectl -n confluent get connector "$connector" -o json 2>/dev/null || true)
           kubectl -n confluent get connector "$connector" 2>/dev/null || true
           echo ""
+
+          if [[ -n "$connector_status_json" ]]
+          then
+              cfk_state=$(echo "$connector_status_json" | jq -r '.status.state // empty')
+              connector_status=$(echo "$connector_status_json" | jq -r '.status.connectorStatus // empty')
+              tasks_ready=$(echo "$connector_status_json" | jq -r '.status.tasksReady // empty')
+              app_ready=$(echo "$connector_status_json" | jq -r '.status.conditions[]? | select(.type=="platform.confluent.io/app-ready") | .status' | head -1)
+              reason=$(echo "$connector_status_json" | jq -r '.status.conditions[]? | select(.type=="platform.confluent.io/app-ready") | .reason' | head -1)
+              message=$(echo "$connector_status_json" | jq -r '.status.conditions[]? | select(.type=="platform.confluent.io/app-ready") | .message' | head -1)
+
+              if [[ -n "$cfk_state" || -n "$connector_status" || -n "$tasks_ready" || -n "$app_ready" || -n "$reason" || -n "$message" ]]
+              then
+                  log "☸️ CFK status details"
+                  [[ -n "$cfk_state" ]] && log "   state: $cfk_state"
+                  [[ -n "$connector_status" ]] && log "   connectorStatus: $connector_status"
+                  [[ -n "$tasks_ready" ]] && log "   tasksReady: $tasks_ready"
+                  [[ -n "$app_ready" ]] && log "   app-ready: $app_ready"
+                  [[ -n "$reason" ]] && log "   reason: $reason"
+                  [[ -n "$message" ]] && log "   message: $message"
+                  echo ""
+
+                  if [[ "$reason" == "CreateFailed" ]]
+                  then
+                      logerror "❌ CFK connector creation failed"
+                      kubectl -n confluent get connector "$connector" -o yaml 2>/dev/null || true
+                      echo ""
+                  fi
+              fi
+          fi
+          continue
       fi
       # --- CLOUD / CUSTOM BLOCK ---
       if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
@@ -32126,7 +32157,7 @@ playground_connector_status_command() {
           elif [ "$status" == "PROVISIONING" ]; then status="🏭 PROVISIONING"
           else status="🤔 UNKNOWN (API Error)"; fi
 
-          tasks=$(echo "$curl_output" | jq -r '.tasks[] | "\(.id):\(.state)"' | tr '\n' ',' | sed 's/,$/\n/')
+          tasks=$(echo "$curl_output" | jq -r '.tasks[]? | "\(.id):\(.state)"' | tr '\n' ',' | sed 's/,$/\n/')
 
           # Task Mapping
           if [[ "$tasks" == *"RUNNING"* ]]; then tasks="${tasks//RUNNING/🟢 RUNNING}"
@@ -32138,9 +32169,9 @@ playground_connector_status_command() {
           else tasks="🤔 N/A"; fi
 
           # Stacktrace Extraction
-          stacktrace_connector=$(echo "$curl_output" | jq -r '.connector.trace | select(length > 0)')
-          errors_from_trace=$(echo "$curl_output" | jq -r '.errors_from_trace[0].error | select(length > 0)')
-          validation_errors=$(echo "$curl_output" | jq -r '.validation_errors[0] | select(length > 0)')
+          stacktrace_connector=$(echo "$curl_output" | jq -r '.connector.trace? // empty')
+          errors_from_trace=$(echo "$curl_output" | jq -r '.errors_from_trace[0]?.error? // empty')
+          validation_errors=$(echo "$curl_output" | jq -r '.validation_errors[0]? // empty')
           stacktrace=""
           if [ "$stacktrace_connector" != "" ]; then stacktrace="connector: $stacktrace_connector"; fi
           if [ "$errors_from_trace" != "" ]; then stacktrace="$stacktrace errors_from_trace: $errors_from_trace"; fi
@@ -32213,8 +32244,8 @@ playground_connector_status_command() {
           elif [[ "$tasks" == *"UNASSIGNED"* ]]; then tasks="${tasks//UNASSIGNED/⌛ UNASSIGNED}"
           else tasks="🤔 N/A"; fi
 
-          stacktrace_connector=$(echo "$curl_output" | jq -r '.connector.trace | select(length > 0)')
-          stacktrace_tasks=$(echo "$curl_output" | jq -r '.tasks[].trace | select(length > 0)')
+          stacktrace_connector=$(echo "$curl_output" | jq -r '.connector.trace? // empty' | sed '/^$/d')
+          stacktrace_tasks=$(echo "$curl_output" | jq -r '.tasks[]?.trace? // empty' | sed '/^$/d')
           stacktrace=""
           if [ "$stacktrace_connector" != "" ]; then stacktrace="connector: $stacktrace_connector"; fi
           if [ "$stacktrace_tasks" != "" ]; then stacktrace="$stacktrace tasks: $stacktrace_tasks"; fi
