@@ -92,6 +92,66 @@ function run_solace_cli_script_with_retry () {
      done
 }
 
+function create_solace_queue_with_retry () {
+     local queue_name="$1"
+     local max_wait=300
+     local cur_wait=0
+     local output_file="/tmp/solace-semp-create-queue-${queue_name}.log"
+     local get_status
+     local post_status
+
+     if [[ "${PLAYGROUND_ENVIRONMENT:-plaintext}" == "cfk" ]]
+     then
+          max_wait=900
+     fi
+
+     log "⌛ Waiting up to $max_wait seconds for Solace SEMP API to create queue ${queue_name}"
+     while true
+     do
+          set +e
+          get_status=$(curl -sS -u admin:admin -o "$output_file" -w "%{http_code}" "http://localhost:8080/SEMP/v2/config/msgVpns/default/queues/${queue_name}")
+          ret_get=$?
+          set -e
+
+          if [ $ret_get -eq 0 ] && [[ "$get_status" == "200" ]]
+          then
+               log "Solace queue ${queue_name} is ready"
+               return
+          fi
+
+          set +e
+          post_status=$(curl -sS -u admin:admin -o "$output_file" -w "%{http_code}" -X POST "http://localhost:8080/SEMP/v2/config/msgVpns/default/queues" -H "Content-Type: application/json" -d "{\"queueName\":\"${queue_name}\",\"permission\":\"consume\",\"ingressEnabled\":true,\"egressEnabled\":true}")
+          ret_post=$?
+          set -e
+
+          if [ $ret_post -eq 0 ] && { [[ "$post_status" == "200" ]] || [[ "$post_status" == "201" ]] || [[ "$post_status" == "204" ]]; }
+          then
+               log "Solace queue ${queue_name} was created through SEMP API"
+               return
+          fi
+
+          if [ $ret_post -eq 0 ] && [[ "$post_status" == "400" ]] && grep -qi "already exists" "$output_file"
+          then
+               log "Solace queue ${queue_name} already exists"
+               return
+          fi
+
+          sleep 10
+          cur_wait=$((cur_wait + 10))
+          if (( cur_wait % 60 == 0 ))
+          then
+               logwarn "Solace SEMP queue creation not ready yet, retrying... (${cur_wait}/${max_wait}s)"
+          fi
+          if [[ "$cur_wait" -gt "$max_wait" ]]
+          then
+               logerror "Solace SEMP API could not create queue ${queue_name} after ${max_wait} seconds"
+               cat "$output_file"
+               dump_solace_cfk_debug
+               exit 1
+          fi
+     done
+}
+
 cd ../../connect/connect-solace-source
 if [ ! -f ${DIR}/sol-jms-10.6.4.jar ]
 then
@@ -99,6 +159,15 @@ then
      wget -q https://repo1.maven.org/maven2/com/solacesystems/sol-jms/10.6.4/sol-jms-10.6.4.jar
 fi
 cd -
+
+
+cd ../../connect/connect-solace-source
+
+# Copy JAR files to confluent-hub
+mkdir -p ../../confluent-hub/confluentinc-kafka-connect-solace-source/lib/
+cp ../../connect/connect-solace-source/sol-jms-10.6.4.jar ../../confluent-hub/confluentinc-kafka-connect-solace-source/lib/sol-jms-10.6.4.jar
+cd -
+PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 
 # In CFK mode, compose tmpfs /dev/shm is translated to an EmptyDir volume with a size limit.
 # Solace can restart during startup in constrained CI environments when this is too small.
@@ -108,20 +177,18 @@ then
      log "Using CFK_TMPFS_SHM_SIZE_LIMIT=${CFK_TMPFS_SHM_SIZE_LIMIT} for Solace stability in CI"
 fi
 
-cd ../../connect/connect-solace-source
-
-# Copy JAR files to confluent-hub
-mkdir -p ../../confluent-hub/confluentinc-kafka-connect-solace-source/lib/
-cp ../../connect/connect-solace-source/sol-jms-10.6.4.jar ../../confluent-hub/confluentinc-kafka-connect-solace-source/lib/sol-jms-10.6.4.jar
-cd -
-PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 wait_for_solace
 log "Solace UI is accessible at http://127.0.0.1:8080 (admin/admin)"
 
 log "Create the queue connector-quickstart in the default Message VPN using CLI"
-run_solace_cli_script_with_retry "create_queue_cmd" "queue creation"
+if [[ "${PLAYGROUND_ENVIRONMENT}" == "cfk" ]]
+then
+     create_solace_queue_with_retry "connector-quickstart"
+else
+     run_solace_cli_script_with_retry "create_queue_cmd" "queue creation"
+fi
 
 # Setting message.timestamp.type=LogAppendTime otherwise we have CreateTime:0
 playground topic create --topic from-solace-messages --nb-partitions 1
