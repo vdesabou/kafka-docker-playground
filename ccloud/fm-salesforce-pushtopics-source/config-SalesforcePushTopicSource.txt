@@ -282,7 +282,7 @@ Maximum time in milliseconds until the connector stops retrying failed Salesforc
 The version of Salesforce API to use.
 
 	 - Type: STRING
-	 - Default: 65.0
+	 - Default: 67.0
 	 - Importance: LOW
 	 - Required: false
 
