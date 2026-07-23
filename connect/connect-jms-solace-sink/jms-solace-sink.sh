@@ -41,22 +41,18 @@ function run_solace_cli_script_with_retry () {
                return
           fi
 
-          if grep -E "SolOS startup in progress|Please try again later" "$output_file" > /dev/null 2>&1
+          sleep 10
+          cur_wait=$((cur_wait + 10))
+          if (( cur_wait % 60 == 0 ))
           then
-               sleep 10
-               cur_wait=$((cur_wait + 10))
-               if [[ "$cur_wait" -gt "$max_wait" ]]
-               then
-                    logerror "Solace CLI is not ready for ${description} after ${max_wait} seconds"
-                    cat "$output_file"
-                    exit 1
-               fi
-               continue
+               logwarn "Solace CLI not ready yet for ${description}, retrying... (${cur_wait}/${max_wait}s)"
           fi
-
-          logerror "Solace CLI command for ${description} failed with a non-retryable error"
-          cat "$output_file"
-          exit 1
+          if [[ "$cur_wait" -gt "$max_wait" ]]
+          then
+               logerror "Solace CLI is not ready for ${description} after ${max_wait} seconds"
+               cat "$output_file"
+               exit 1
+          fi
      done
 }
 
