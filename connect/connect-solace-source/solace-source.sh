@@ -20,12 +20,47 @@ function wait_for_solace () {
      sleep 30
 }
 
+function dump_solace_cfk_debug () {
+     if [[ "${PLAYGROUND_ENVIRONMENT:-plaintext}" != "cfk" ]]
+     then
+          return
+     fi
+
+nproc
+free -h
+df -h
+ulimit -a
+docker info
+
+     log "####################################################"
+     log "☸️ kubectl get pods -o wide"
+     kubectl -n confluent get pods -o wide || true
+     log "####################################################"
+     log "☸️ kubectl describe pod solace"
+     kubectl -n confluent describe pod solace || true
+     log "####################################################"
+     log "☸️ kubectl get events (latest 30)"
+     kubectl -n confluent get events --sort-by=.lastTimestamp | tail -30 || true
+     log "####################################################"
+     log "☸️ kubectl logs solace --all-containers --tail=200"
+     kubectl -n confluent logs solace --all-containers=true --tail=200 || true
+     log "####################################################"
+     log "☸️ kubectl logs solace --all-containers --previous --tail=200"
+     kubectl -n confluent logs solace --all-containers=true --previous --tail=200 || true
+     log "####################################################"
+}
+
 function run_solace_cli_script_with_retry () {
      local script_name="$1"
      local description="$2"
      local max_wait=300
      local cur_wait=0
      local output_file="/tmp/solace-cli-${script_name}.log"
+
+     if [[ "${PLAYGROUND_ENVIRONMENT:-plaintext}" == "cfk" ]]
+     then
+          max_wait=900
+     fi
 
      log "⌛ Waiting up to $max_wait seconds for Solace CLI to be ready for ${description}"
      while true
@@ -50,6 +85,7 @@ function run_solace_cli_script_with_retry () {
           if [[ "$cur_wait" -gt "$max_wait" ]]
           then
                logerror "Solace CLI is not ready for ${description} after ${max_wait} seconds"
+               dump_solace_cfk_debug
                cat "$output_file"
                exit 1
           fi
