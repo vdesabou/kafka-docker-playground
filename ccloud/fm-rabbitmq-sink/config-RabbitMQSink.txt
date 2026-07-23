@@ -253,7 +253,7 @@ RabbitMQ
 
 	 - Type: true
 	 - Default: STRING
-	 - Importance: RabbitMQ routing key that dictates how the message travels once it reaches RabbitMQ.
+	 - Importance: RabbitMQ routing key that dictates how the message travels after it reaches RabbitMQ. Applied only to messages routed through ``rabbitmq.exchange`` (unmapped topics); records for topics listed in ``rabbitmq.topic.queue.map`` use the mapped queue name as the routing key against the default exchange instead.
 	 - Required: HIGH
 
 🔘 rabbitmq.delivery.mode
@@ -264,6 +264,15 @@ RabbitMQ
 	 - Default: STRING
 	 - Importance: PERSISTENT or TRANSIENT, decides message durability in RabbitMQ.
 	 - Required: HIGH
+
+🔘 rabbitmq.topic.queue.map
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: JSON object mapping Kafka topic names to RabbitMQ queue names, e.g. {"topic-a":"queue-1","topic-b":"queue-2"}. Records from a mapped topic are published directly to their mapped queue via the RabbitMQ default (nameless) exchange. Unmapped topics fall back to ``rabbitmq.exchange`` with ``rabbitmq.routing.key``.
+	 - Required: MEDIUM
 
 🔘 rabbitmq.forward.kafka.key
 
@@ -298,7 +307,7 @@ RabbitMQ
 
 	 - Type: true
 	 - Default: STRING
-	 - Importance: The destination RabbitMQ exchange where messages need to be delivered. The connector will deliver messages to this one RabbitMQ exchange even when the connector consumes from multiple specified Kafka topics.
+	 - Importance: The destination RabbitMQ exchange where messages need to be delivered when no ``rabbitmq.topic.queue.map`` entry matches. The connector delivers messages to this RabbitMQ exchange for all unmapped topics; records from a mapped topic bypass this exchange and are published directly to their mapped queue via the default (nameless) exchange.
 	 - Required: HIGH
 
 ==========================

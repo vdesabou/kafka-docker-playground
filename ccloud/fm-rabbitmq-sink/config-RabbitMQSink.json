@@ -35,6 +35,7 @@
     "rabbitmq.publish.max.retries": "1",
     "rabbitmq.routing.key": "STRING",
     "rabbitmq.security.protocol": "PLAINTEXT",
+    "rabbitmq.topic.queue.map": "STRING",
     "rabbitmq.username": "STRING",
     "rabbitmq.virtual.host": "/",
     "schema.context.name": "default",
