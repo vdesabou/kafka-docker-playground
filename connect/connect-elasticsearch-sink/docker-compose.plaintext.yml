@@ -8,11 +8,15 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
+    command:
+      - elasticsearch
+      - -Ediscovery.type=single-node
+      - -Enetwork.host=0.0.0.0
+      - -Expack.security.enabled=false
+      - -Expack.security.http.ssl.enabled=false
+      - -Expack.security.transport.ssl.enabled=false
     environment:
-      discovery.type: single-node
-      xpack.security.enabled: "false"
-      xpack.security.http.ssl.enabled: "false"
-      xpack.security.transport.ssl.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
       
   connect:
     depends_on:
