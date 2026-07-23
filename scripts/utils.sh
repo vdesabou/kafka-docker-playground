@@ -40,6 +40,32 @@ function cleanup-workaround-file {
   rm -f /tmp/without-cli-workaround > /dev/null 2>&1
 }
 
+function salesforce_ensure_jwt_keystore() {
+  local target_dir="${1:-$PWD}"
+  local keystore_path="$target_dir/salesforce-confluent.keystore.jks"
+
+  if [ ! -f "$keystore_path" ]
+  then
+    (cd "$target_dir" && get_3rdparty_file "salesforce-confluent.keystore.jks")
+  fi
+
+  if [ ! -f "$keystore_path" ]
+  then
+    logerror "❌ $keystore_path is missing. Check README !"
+    exit 1
+  fi
+
+  echo "$keystore_path"
+}
+
+function salesforce_get_jwt_keystore_base64() {
+  local target_dir="${1:-$PWD}"
+  local keystore_path=""
+
+  keystore_path=$(salesforce_ensure_jwt_keystore "$target_dir")
+  cat "$keystore_path" | base64 | tr -d '\n'
+}
+
 if [ ! -f /tmp/playground-run-command-used ]
 then
   # fm examples not working without using CLI #5635
