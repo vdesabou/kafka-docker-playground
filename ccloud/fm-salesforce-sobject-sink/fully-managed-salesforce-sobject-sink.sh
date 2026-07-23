@@ -11,6 +11,7 @@ SALESFORCE_CONSUMER_PASSWORD=${SALESFORCE_CONSUMER_PASSWORD:-$4}
 SALESFORCE_SECURITY_TOKEN=${SALESFORCE_SECURITY_TOKEN:-$5}
 SALESFORCE_INSTANCE=${SALESFORCE_INSTANCE:-"https://login.salesforce.com"}
 
+
 # second account (for SObject sink)
 SALESFORCE_USERNAME_ACCOUNT2=${SALESFORCE_USERNAME_ACCOUNT2:-$6}
 SALESFORCE_PASSWORD_ACCOUNT2=${SALESFORCE_PASSWORD_ACCOUNT2:-$7}
@@ -18,6 +19,7 @@ SALESFORCE_SECURITY_TOKEN_ACCOUNT2=${SALESFORCE_SECURITY_TOKEN_ACCOUNT2:-$8}
 SALESFORCE_CONSUMER_KEY_ACCOUNT2=${SALESFORCE_CONSUMER_KEY_ACCOUNT2:-$9}
 SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2=${SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2:-${10}}
 SALESFORCE_INSTANCE_ACCOUNT2=${SALESFORCE_INSTANCE_ACCOUNT2:-"https://login.salesforce.com"}
+SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2=${SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2:-${SALESFORCE_CONSUMER_KEY_ACCOUNT2:-$SALESFORCE_CONSUMER_KEY_WITH_JWT}}
 
 if [ -z "$SALESFORCE_USERNAME" ]
 then
@@ -32,9 +34,9 @@ then
 fi
 
 
-if [ -z "$SALESFORCE_CONSUMER_KEY" ]
+if [ -z "$SALESFORCE_CONSUMER_KEY_WITH_JWT" ]
 then
-     logerror "SALESFORCE_CONSUMER_KEY is not set. Export it as environment variable or pass it as argument"
+     logerror "SALESFORCE_CONSUMER_KEY_WITH_JWT is not set. Export it as environment variable or pass it as argument. Check README !"
      exit 1
 fi
 
@@ -68,9 +70,9 @@ then
      exit 1
 fi
 
-if [ -z "$SALESFORCE_CONSUMER_KEY_ACCOUNT2" ]
+if [ -z "$SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2" ]
 then
-     logerror "SALESFORCE_CONSUMER_KEY_ACCOUNT2 is not set. Export it as environment variable or pass it as argument"
+     logerror "SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2 is not set. Export it as environment variable or pass it as argument. Check README !"
      exit 1
 fi
 
@@ -102,6 +104,8 @@ set -e
 docker compose build
 docker compose down -v --remove-orphans
 docker compose up -d --quiet-pull
+
+base64_truststore=$(salesforce_get_jwt_keystore_base64 "$PWD")
 
 # the Salesforce PushTopic source connector is used to get data into Kafka and the Salesforce SObject sink connector is used to export data from Kafka to Salesforce
 
@@ -137,10 +141,10 @@ playground connector create-or-update --connector $connector_name << EOF
      "salesforce.push.topic.name" : "$PUSH_TOPICS_NAME",
      "salesforce.instance" : "$SALESFORCE_INSTANCE",
      "salesforce.username" : "$SALESFORCE_USERNAME",
-     "salesforce.password" : "$SALESFORCE_PASSWORD",
-     "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
-     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY",
-     "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD",
+     "salesforce.grant.type" : "JWT_BEARER",
+     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY_WITH_JWT",
+     "salesforce.jwt.keystore.file": "data:text/plain;base64,$base64_truststore",
+     "salesforce.jwt.keystore.password": "confluent",
      "salesforce.initial.start" : "latest",
      "output.data.format": "AVRO",
      "tasks.max": "1"
@@ -180,10 +184,10 @@ playground connector create-or-update --connector $connector_name2 << EOF
      "salesforce.object" : "Lead",
      "salesforce.instance" : "$SALESFORCE_INSTANCE_ACCOUNT2",
      "salesforce.username" : "$SALESFORCE_USERNAME_ACCOUNT2",
-     "salesforce.password" : "$SALESFORCE_PASSWORD_ACCOUNT2",
-     "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN_ACCOUNT2",
-     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY_ACCOUNT2",
-     "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2",
+     "salesforce.grant.type" : "JWT_BEARER",
+     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2",
+     "salesforce.jwt.keystore.file": "data:text/plain;base64,$base64_truststore",
+     "salesforce.jwt.keystore.password": "confluent",
 
      "salesforce.ignore.fields" : "CleanStatus",
      "salesforce.ignore.reference.fields" : "true",

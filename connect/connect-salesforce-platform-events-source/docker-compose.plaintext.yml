@@ -11,5 +11,7 @@ services:
       - ../../connect/connect-salesforce-platform-events-source/event.apex:/tmp/event.apex
 
   connect:
+    volumes:
+      - ../../connect/connect-salesforce-platform-events-source/salesforce-confluent.keystore.jks:/tmp/salesforce-confluent.keystore.jks
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce

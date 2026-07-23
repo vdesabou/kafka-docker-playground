@@ -13,6 +13,7 @@ SALESFORCE_CONSUMER_PASSWORD=${SALESFORCE_CONSUMER_PASSWORD:-$4}
 SALESFORCE_SECURITY_TOKEN=${SALESFORCE_SECURITY_TOKEN:-$5}
 SALESFORCE_INSTANCE=${SALESFORCE_INSTANCE:-"https://login.salesforce.com"}
 
+
 if [ -z "$SALESFORCE_USERNAME" ]
 then
      logerror "SALESFORCE_USERNAME is not set. Export it as environment variable or pass it as argument"
@@ -26,9 +27,9 @@ then
 fi
 
 
-if [ -z "$SALESFORCE_CONSUMER_KEY" ]
+if [ -z "$SALESFORCE_CONSUMER_KEY_WITH_JWT" ]
 then
-     logerror "SALESFORCE_CONSUMER_KEY is not set. Export it as environment variable or pass it as argument"
+     logerror "SALESFORCE_CONSUMER_KEY_WITH_JWT is not set. Export it as environment variable or pass it as argument. Check README !"
      exit 1
 fi
 
@@ -67,6 +68,8 @@ docker compose build
 docker compose down -v --remove-orphans
 docker compose up -d --quiet-pull
 
+base64_truststore=$(salesforce_get_jwt_keystore_base64 "$PWD")
+
 log "Login with sfdx CLI"
 docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
 
@@ -100,10 +103,10 @@ playground connector create-or-update --connector $connector_name << EOF
      "salesforce.push.topic.name" : "$PUSH_TOPICS_NAME",
      "salesforce.instance" : "$SALESFORCE_INSTANCE",
      "salesforce.username" : "$SALESFORCE_USERNAME",
-     "salesforce.password" : "$SALESFORCE_PASSWORD",
-     "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
-     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY",
-     "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD",
+     "salesforce.grant.type" : "JWT_BEARER",
+     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY_WITH_JWT",
+     "salesforce.jwt.keystore.file": "data:text/plain;base64,$base64_truststore",
+     "salesforce.jwt.keystore.password": "confluent",
      "salesforce.initial.start" : "latest",
      "connection.max.message.size": "10048576",
      "output.data.format": "JSON",

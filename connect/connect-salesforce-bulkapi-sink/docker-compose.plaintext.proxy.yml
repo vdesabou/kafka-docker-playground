@@ -22,4 +22,6 @@ services:
   connect:
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce-bulk-api,/usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce
+    volumes:
+      - ../../connect/connect-salesforce-bulkapi-sink/salesforce-confluent.keystore.jks:/tmp/salesforce-confluent.keystore.jks
     #dns: 0.0.0.0

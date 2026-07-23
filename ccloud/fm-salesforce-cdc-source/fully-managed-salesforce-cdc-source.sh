@@ -4,14 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-
-
 SALESFORCE_USERNAME=${SALESFORCE_USERNAME:-$1}
 SALESFORCE_PASSWORD=${SALESFORCE_PASSWORD:-$2}
 SALESFORCE_CONSUMER_KEY=${SALESFORCE_CONSUMER_KEY:-$3}
 SALESFORCE_CONSUMER_PASSWORD=${SALESFORCE_CONSUMER_PASSWORD:-$4}
 SALESFORCE_SECURITY_TOKEN=${SALESFORCE_SECURITY_TOKEN:-$5}
 SALESFORCE_INSTANCE=${SALESFORCE_INSTANCE:-"https://login.salesforce.com"}
+
 
 if [ -z "$SALESFORCE_USERNAME" ]
 then
@@ -26,15 +25,9 @@ then
 fi
 
 
-if [ -z "$SALESFORCE_CONSUMER_KEY" ]
+if [ -z "$SALESFORCE_CONSUMER_KEY_WITH_JWT" ]
 then
-     logerror "SALESFORCE_CONSUMER_KEY is not set. Export it as environment variable or pass it as argument"
-     exit 1
-fi
-
-if [ -z "$SALESFORCE_CONSUMER_PASSWORD" ]
-then
-     logerror "SALESFORCE_CONSUMER_PASSWORD is not set. Export it as environment variable or pass it as argument"
+     logerror "SALESFORCE_CONSUMER_KEY_WITH_JWT is not set. Export it as environment variable or pass it as argument. Check README !"
      exit 1
 fi
 
@@ -58,6 +51,8 @@ docker compose build
 docker compose down -v --remove-orphans
 docker compose up -d --quiet-pull
 
+base64_truststore=$(salesforce_get_jwt_keystore_base64 "$PWD")
+
 connector_name="SalesforceCdcSource_$USER"
 set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
@@ -72,12 +67,14 @@ playground connector create-or-update --connector $connector_name << EOF
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",
      "kafka.topic": "sfdc-cdc-contacts",
+     "salesforce.grant.type" : "JWT_BEARER",
      "salesforce.instance" : "$SALESFORCE_INSTANCE",
      "salesforce.username": "$SALESFORCE_USERNAME",
-     "salesforce.password": "$SALESFORCE_PASSWORD",
-     "salesforce.password.token": "$SALESFORCE_SECURITY_TOKEN",
-     "salesforce.consumer.key": "$SALESFORCE_CONSUMER_KEY",
-     "salesforce.consumer.secret": "$SALESFORCE_CONSUMER_PASSWORD",
+
+     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY_WITH_JWT",
+     "salesforce.jwt.keystore.file": "data:text/plain;base64,$base64_truststore",
+     "salesforce.jwt.keystore.password": "confluent",
+
      "salesforce.cdc.name": "ContactChangeEvent",
      "output.data.format": "JSON",
      "tasks.max": "1"
@@ -85,7 +82,7 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-sleep 10
+sleep 5
 
 log "Login with sfdx CLI"
 docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
@@ -93,7 +90,7 @@ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME
 log "Add a Contact to Salesforce"
 docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Contact -v \"FirstName='John_$RANDOM' LastName='Doe_$RANDOM'\""
 
-sleep 30
+sleep 10
 
 log "Verify we have received the data in sfdc-cdc-contacts topic"
 playground topic consume --topic sfdc-cdc-contacts --min-expected-messages 1 --timeout 60

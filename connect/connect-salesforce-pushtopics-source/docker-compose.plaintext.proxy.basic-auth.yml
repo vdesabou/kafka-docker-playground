@@ -21,6 +21,8 @@ services:
     - ../../connect/connect-salesforce-pushtopics-source/MyLeadPushTopics.apex:/tmp/MyLeadPushTopics.apex
 
   connect:
+    volumes:
+      - ../../connect/connect-salesforce-pushtopics-source/salesforce-confluent.keystore.jks:/tmp/salesforce-confluent.keystore.jks
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce
     #dns: 0.0.0.0

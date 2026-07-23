@@ -11,6 +11,7 @@ SALESFORCE_CONSUMER_PASSWORD=${SALESFORCE_CONSUMER_PASSWORD:-$4}
 SALESFORCE_SECURITY_TOKEN=${SALESFORCE_SECURITY_TOKEN:-$5}
 SALESFORCE_INSTANCE=${SALESFORCE_INSTANCE:-"https://login.salesforce.com"}
 
+
 if [ -z "$SALESFORCE_USERNAME" ]
 then
      logerror "SALESFORCE_USERNAME is not set. Export it as environment variable or pass it as argument"
@@ -24,9 +25,9 @@ then
 fi
 
 
-if [ -z "$SALESFORCE_CONSUMER_KEY" ]
+if [ -z "$SALESFORCE_CONSUMER_KEY_WITH_JWT" ]
 then
-     logerror "SALESFORCE_CONSUMER_KEY is not set. Export it as environment variable or pass it as argument"
+     logerror "SALESFORCE_CONSUMER_KEY_WITH_JWT is not set. Export it as environment variable or pass it as argument. Check README !"
      exit 1
 fi
 
@@ -52,6 +53,8 @@ docker compose build
 docker compose down -v --remove-orphans
 docker compose up -d --quiet-pull
 
+base64_truststore=$(salesforce_get_jwt_keystore_base64 "$PWD")
+
 sleep 5
 
 connector_name="SalesforcePlatformEventSource_$USER"
@@ -71,10 +74,10 @@ playground connector create-or-update --connector $connector_name << EOF
      "salesforce.platform.event.name" : "MyPlatformEvent__e",
      "salesforce.instance" : "$SALESFORCE_INSTANCE",
      "salesforce.username" : "$SALESFORCE_USERNAME",
-     "salesforce.password" : "$SALESFORCE_PASSWORD",
-     "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
-     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY",
-     "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD",
+     "salesforce.grant.type" : "JWT_BEARER",
+     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY_WITH_JWT",
+     "salesforce.jwt.keystore.file": "data:text/plain;base64,$base64_truststore",
+     "salesforce.jwt.keystore.password": "confluent",
      "salesforce.initial.start" : "latest",
      "output.data.format": "AVRO",
      "tasks.max" : "1"
@@ -114,10 +117,10 @@ playground connector create-or-update --connector $connector_name2 << EOF
      "salesforce.platform.event.name" : "MyPlatformEvent__e",
      "salesforce.instance" : "$SALESFORCE_INSTANCE",
      "salesforce.username" : "$SALESFORCE_USERNAME",
-     "salesforce.password" : "$SALESFORCE_PASSWORD",
-     "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
-     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY",
-     "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD",
+     "salesforce.grant.type" : "JWT_BEARER",
+     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY_WITH_JWT",
+     "salesforce.jwt.keystore.file": "data:text/plain;base64,$base64_truststore",
+     "salesforce.jwt.keystore.password": "confluent",
      "tasks.max" : "1"
 }
 EOF

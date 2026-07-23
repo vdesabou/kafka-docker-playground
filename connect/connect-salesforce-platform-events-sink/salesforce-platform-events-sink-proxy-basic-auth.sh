@@ -18,6 +18,7 @@ SALESFORCE_CONSUMER_PASSWORD=${SALESFORCE_CONSUMER_PASSWORD:-$4}
 SALESFORCE_SECURITY_TOKEN=${SALESFORCE_SECURITY_TOKEN:-$5}
 SALESFORCE_INSTANCE=${SALESFORCE_INSTANCE:-"https://login.salesforce.com"}
 
+
 if [ -z "$SALESFORCE_USERNAME" ]
 then
      logerror "SALESFORCE_USERNAME is not set. Export it as environment variable or pass it as argument"
@@ -31,9 +32,9 @@ then
 fi
 
 
-if [ -z "$SALESFORCE_CONSUMER_KEY" ]
+if [ -z "$SALESFORCE_CONSUMER_KEY_WITH_JWT" ]
 then
-     logerror "SALESFORCE_CONSUMER_KEY is not set. Export it as environment variable or pass it as argument"
+     logerror "SALESFORCE_CONSUMER_KEY_WITH_JWT is not set. Export it as environment variable or pass it as argument. Check README !"
      exit 1
 fi
 
@@ -48,6 +49,8 @@ then
      logerror "SALESFORCE_SECURITY_TOKEN is not set. Export it as environment variable or pass it as argument"
      exit 1
 fi
+
+salesforce_ensure_jwt_keystore "$PWD" > /dev/null
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.proxy-basic-auth.yml"
@@ -68,10 +71,10 @@ playground connector create-or-update --connector salesforce-platform-events-sou
      "salesforce.platform.event.name" : "MyPlatformEvent__e",
      "salesforce.instance" : "$SALESFORCE_INSTANCE",
      "salesforce.username" : "$SALESFORCE_USERNAME",
-     "salesforce.password" : "$SALESFORCE_PASSWORD",
-     "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
-     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY",
-     "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD",
+     "salesforce.grant.type" : "JWT_BEARER",
+     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY_WITH_JWT",
+     "salesforce.jwt.keystore.path": "/tmp/salesforce-confluent.keystore.jks",
+     "salesforce.jwt.keystore.password": "confluent",
      "http.proxy": "squid:8888",
      "http.proxy.auth.scheme": "BASIC",
      "http.proxy.user": "admin",
@@ -108,10 +111,10 @@ playground connector create-or-update --connector salesforce-platform-events-sin
      "salesforce.platform.event.name" : "MyPlatformEvent__e",
      "salesforce.instance" : "$SALESFORCE_INSTANCE",
      "salesforce.username" : "$SALESFORCE_USERNAME",
-     "salesforce.password" : "$SALESFORCE_PASSWORD",
-     "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
-     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY",
-     "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD",
+     "salesforce.grant.type" : "JWT_BEARER",
+     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY_WITH_JWT",
+     "salesforce.jwt.keystore.path": "/tmp/salesforce-confluent.keystore.jks",
+     "salesforce.jwt.keystore.password": "confluent",
      "http.proxy": "squid:8888",
      "http.proxy.auth.scheme": "BASIC",
      "http.proxy.user": "admin",

@@ -18,6 +18,7 @@ SALESFORCE_CONSUMER_PASSWORD=${SALESFORCE_CONSUMER_PASSWORD:-$4}
 SALESFORCE_SECURITY_TOKEN=${SALESFORCE_SECURITY_TOKEN:-$5}
 SALESFORCE_INSTANCE=${SALESFORCE_INSTANCE:-"https://login.salesforce.com"}
 
+
 if [ -z "$SALESFORCE_USERNAME" ]
 then
      logerror "SALESFORCE_USERNAME is not set. Export it as environment variable or pass it as argument"
@@ -31,9 +32,9 @@ then
 fi
 
 
-if [ -z "$SALESFORCE_CONSUMER_KEY" ]
+if [ -z "$SALESFORCE_CONSUMER_KEY_WITH_JWT" ]
 then
-     logerror "SALESFORCE_CONSUMER_KEY is not set. Export it as environment variable or pass it as argument"
+     logerror "SALESFORCE_CONSUMER_KEY_WITH_JWT is not set. Export it as environment variable or pass it as argument. Check README !"
      exit 1
 fi
 
@@ -48,6 +49,8 @@ then
      logerror "SALESFORCE_SECURITY_TOKEN is not set. Export it as environment variable or pass it as argument"
      exit 1
 fi
+
+salesforce_ensure_jwt_keystore "$PWD" > /dev/null
 
 PUSH_TOPICS_NAME=MyLeadPushTopics${TAG}
 PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME//[-._]/}
@@ -90,10 +93,10 @@ playground connector create-or-update --connector salesforce-pushtopic-source  <
      "salesforce.push.topic.name" : "$PUSH_TOPICS_NAME",
      "salesforce.instance" : "$SALESFORCE_INSTANCE",
      "salesforce.username" : "$SALESFORCE_USERNAME",
-     "salesforce.password" : "$SALESFORCE_PASSWORD",
-     "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
-     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY",
-     "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD",
+     "salesforce.grant.type" : "JWT_BEARER",
+     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY_WITH_JWT",
+     "salesforce.jwt.keystore.path": "/tmp/salesforce-confluent.keystore.jks",
+     "salesforce.jwt.keystore.password": "confluent",
      "http.proxy": "nginx-proxy:8888",
      "salesforce.initial.start" : "latest",
      "connection.max.message.size": "10048576",

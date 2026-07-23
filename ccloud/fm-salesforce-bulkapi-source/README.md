@@ -12,9 +12,12 @@ Quickly test [Fully Managed Salesforce Bulk API Source](https://docs.confluent.i
 
 Go to [Salesforce developer portal](https://developer.salesforce.com/signup/) and register an account.
 
-## Follow instructions to create a Connected App
+## OAuth with JWT Bearer Flow
 
-[Link](https://docs.confluent.io/current/connect/kafka-connect-salesforce/bukapis/salesforce_bukapi_source_connector_quickstart.html#salesforce-account)
+Follow instructions from [here](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-salesforce-cdc-source#oauth-with-jwt-bearer-flow) to create the External Client App with the JWT Bearer Flow.
+
+
+
 
 ## How to run
 
