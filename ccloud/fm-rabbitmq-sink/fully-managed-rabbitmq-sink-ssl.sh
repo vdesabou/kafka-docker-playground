@@ -56,7 +56,7 @@ do
   sleep 5
 done
 
-sleep 5
+sleep 15
 
 log "Create RabbitMQ exchange, queue and binding"
 docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare exchange name=exchange1 type=direct
