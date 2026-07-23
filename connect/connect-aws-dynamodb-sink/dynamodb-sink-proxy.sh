@@ -4,6 +4,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+then
+     logwarn "this test is not supported with cfk"
+     exit 111
+fi
+
 if ! version_gt $TAG_BASE "5.9.99" && version_gt $CONNECTOR_TAG "1.2.99"
 then
     logwarn "connector version >= 1.3.0 do not support CP versions < 6.0.0"
