@@ -96,7 +96,7 @@ sleep 10
 log "Create one record to ServiceNow using proxy"
 playground container exec --container connect --command "bash" << EOF > /tmp/result.log 2>&1
 export HTTP_PROXY=nginx-proxy:8888 && export HTTPS_PROXY=nginx-proxy:8888
-curl -X POST "${SERVICENOW_URL}/api/now/table/incident" --user admin:\"$SERVICENOW_PASSWORD\" -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{\"short_description\": \"This is test\"}'
+curl -X POST "${SERVICENOW_URL}/api/now/table/incident" --user admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{"short_description": "This is test"}'
 EOF
 cat /tmp/result.log
 
@@ -104,52 +104,3 @@ sleep 5
 
 log "Verify we have received the data in topic-servicenow topic"
 playground topic consume --topic topic-servicenow --min-expected-messages 1 --max-messages 3 --timeout 60
-
-# echo "$SERVICENOW_URL" | cut -d "/" -f3
-# ip=$(dig +short $(echo "$SERVICENOW_URL" | cut -d "/" -f3))
-# log "Blocking serviceNow response on nginx-proxy"
-# playground container exec -i --privileged --user root nginx-proxy bash -c "apt-get update -y && apt-get install iptables -y"
-# playground container exec -i --privileged --user root nginx-proxy bash -c "iptables -A INPUT -p tcp -s $ip -j DROP"
-
-
-# [2021-09-30 09:01:29,490] ERROR [servicenow-source|task-0] WorkerSourceTask{id=servicenow-source-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:184)
-# io.confluent.connect.utils.retry.RetryCountExceeded: Failed after 4 attempts to send request to ServiceNow: 504 Gateway Time-out
-# <html>
-# <head><title>504 Gateway Time-out</title></head>
-# <body>
-# <center><h1>504 Gateway Time-out</h1></center>
-# <hr><center>nginx/1.18.0 (Ubuntu)</center>
-# </body>
-# </html>
-
-#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:429)
-#         at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
-#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.executeRequest(ServiceNowClientImpl.java:229)
-#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.get(ServiceNowClientImpl.java:183)
-#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.getObjects(ServiceNowClientImpl.java:146)
-#         at io.confluent.connect.servicenow.ServiceNowSourceTask.fetchRecordFromServiceNow(ServiceNowSourceTask.java:183)
-#         at io.confluent.connect.servicenow.ServiceNowSourceTask.poll(ServiceNowSourceTask.java:142)
-#         at org.apache.kafka.connect.runtime.WorkerSourceTask.poll(WorkerSourceTask.java:268)
-#         at org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:241)
-#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:182)
-#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:231)
-#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
-#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-#         at java.base/java.lang.Thread.run(Thread.java:829)
-# Caused by: com.google.api.client.http.HttpResponseException: 504 Gateway Time-out
-# <html>
-# <head><title>504 Gateway Time-out</title></head>
-# <body>
-# <center><h1>504 Gateway Time-out</h1></center>
-# <hr><center>nginx/1.18.0 (Ubuntu)</center>
-# </body>
-# </html>
-
-#         at com.google.api.client.http.HttpRequest.execute(HttpRequest.java:1097)
-#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.lambda$executeRequest$2(ServiceNowClientImpl.java:230)
-#         at io.confluent.connect.utils.retry.RetryPolicy.lambda$call$1(RetryPolicy.java:337)
-#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:417)
-#         ... 15 more
-        
