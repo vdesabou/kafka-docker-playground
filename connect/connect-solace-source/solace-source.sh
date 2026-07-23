@@ -100,6 +100,13 @@ then
 fi
 cd -
 
+# In CFK mode, compose tmpfs /dev/shm is translated to an EmptyDir volume with a size limit.
+# Solace can restart during startup in constrained CI environments when this is too small.
+if [[ "${PLAYGROUND_ENVIRONMENT}" == "cfk" ]] && [[ -z "${CFK_TMPFS_SHM_SIZE_LIMIT:-}" ]]
+then
+     export CFK_TMPFS_SHM_SIZE_LIMIT="2Gi"
+     log "Using CFK_TMPFS_SHM_SIZE_LIMIT=${CFK_TMPFS_SHM_SIZE_LIMIT} for Solace stability in CI"
+fi
 
 cd ../../connect/connect-solace-source
 
