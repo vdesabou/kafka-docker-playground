@@ -59,7 +59,7 @@ function run_solace_cli_script_with_retry () {
 
      if [[ "${PLAYGROUND_ENVIRONMENT:-plaintext}" == "cfk" ]]
      then
-          max_wait=900
+          max_wait=300
      fi
 
      log "⌛ Waiting up to $max_wait seconds for Solace CLI to be ready for ${description}"
@@ -108,10 +108,22 @@ function create_solace_queue_with_retry () {
      log "⌛ Waiting up to $max_wait seconds for Solace SEMP API to create queue ${queue_name}"
      while true
      do
-          set +e
-          get_status=$(curl -sS -u admin:admin -o "$output_file" -w "%{http_code}" "http://localhost:8080/SEMP/v2/config/msgVpns/default/queues/${queue_name}")
-          ret_get=$?
-          set -e
+          if [[ "${PLAYGROUND_ENVIRONMENT:-plaintext}" == "cfk" ]]
+          then
+               set +e
+               get_status=$(playground container exec --container solace --command "bash -c 'curl -sS -u admin:admin -o /tmp/semp-get.log -w \"%{http_code}\" \"http://localhost:8080/SEMP/v2/config/msgVpns/default/queues/${queue_name}\"'")
+               ret_get=$?
+               if [ $ret_get -eq 0 ]
+               then
+                    playground container exec --container solace --command "cat /tmp/semp-get.log" > "$output_file" 2>&1 || true
+               fi
+               set -e
+          else
+               set +e
+               get_status=$(curl -sS -u admin:admin -o "$output_file" -w "%{http_code}" "http://localhost:8080/SEMP/v2/config/msgVpns/default/queues/${queue_name}")
+               ret_get=$?
+               set -e
+          fi
 
           if [ $ret_get -eq 0 ] && [[ "$get_status" == "200" ]]
           then
@@ -119,10 +131,22 @@ function create_solace_queue_with_retry () {
                return
           fi
 
-          set +e
-          post_status=$(curl -sS -u admin:admin -o "$output_file" -w "%{http_code}" -X POST "http://localhost:8080/SEMP/v2/config/msgVpns/default/queues" -H "Content-Type: application/json" -d "{\"queueName\":\"${queue_name}\",\"permission\":\"consume\",\"ingressEnabled\":true,\"egressEnabled\":true}")
-          ret_post=$?
-          set -e
+          if [[ "${PLAYGROUND_ENVIRONMENT:-plaintext}" == "cfk" ]]
+          then
+               set +e
+               post_status=$(playground container exec --container solace --command "bash -c 'curl -sS -u admin:admin -o /tmp/semp-post.log -w \"%{http_code}\" -X POST \"http://localhost:8080/SEMP/v2/config/msgVpns/default/queues\" -H \"Content-Type: application/json\" -d \"{\\\"queueName\\\":\\\"${queue_name}\\\",\\\"permission\\\":\\\"consume\\\",\\\"ingressEnabled\\\":true,\\\"egressEnabled\\\":true}\"'")
+               ret_post=$?
+               if [ $ret_post -eq 0 ]
+               then
+                    playground container exec --container solace --command "cat /tmp/semp-post.log" > "$output_file" 2>&1 || true
+               fi
+               set -e
+          else
+               set +e
+               post_status=$(curl -sS -u admin:admin -o "$output_file" -w "%{http_code}" -X POST "http://localhost:8080/SEMP/v2/config/msgVpns/default/queues" -H "Content-Type: application/json" -d "{\"queueName\":\"${queue_name}\",\"permission\":\"consume\",\"ingressEnabled\":true,\"egressEnabled\":true}")
+               ret_post=$?
+               set -e
+          fi
 
           if [ $ret_post -eq 0 ] && { [[ "$post_status" == "200" ]] || [[ "$post_status" == "201" ]] || [[ "$post_status" == "204" ]]; }
           then
@@ -198,7 +222,12 @@ log "Publish messages to the Solace queue using the REST endpoint"
 
 for i in 1000 1001 1002
 do
-     curl -X POST -d "m1" http://localhost:9000/Queue/connector-quickstart -H "Content-Type: text/plain" -H "Solace-Message-ID: $i"
+     if [[ "${PLAYGROUND_ENVIRONMENT}" == "cfk" ]]
+     then
+          playground container exec --container solace --command "bash -c 'curl -sS -X POST -d \"m1\" \"http://localhost:9000/Queue/connector-quickstart\" -H \"Content-Type: text/plain\" -H \"Solace-Message-ID: ${i}\"'"
+     else
+          curl -X POST -d "m1" http://localhost:9000/Queue/connector-quickstart -H "Content-Type: text/plain" -H "Solace-Message-ID: $i"
+     fi
 done
 
 log "Creating Solace source connector"
@@ -229,7 +258,12 @@ sleep 5
 
 log "Asserting that Solace queue connector-quickstart is empty after connector processing"
 log "This tests that commitRecord API properly deletes messages from external system"
-QUEUE_MSG_COUNT=$(curl -s -u admin:admin http://localhost:8080/SEMP/v2/monitor/msgVpns/default/queues/connector-quickstart | jq -r '.data.msgSpoolUsage // empty')
+if [[ "${PLAYGROUND_ENVIRONMENT}" == "cfk" ]]
+then
+     QUEUE_MSG_COUNT=$(playground container exec --container solace --command "curl -s -u admin:admin http://localhost:8080/SEMP/v2/monitor/msgVpns/default/queues/connector-quickstart" | jq -r '.data.msgSpoolUsage // empty')
+else
+     QUEUE_MSG_COUNT=$(curl -s -u admin:admin http://localhost:8080/SEMP/v2/monitor/msgVpns/default/queues/connector-quickstart | jq -r '.data.msgSpoolUsage // empty')
+fi
 
 if [ -z "$QUEUE_MSG_COUNT" ]; then
     logerror "❌ Failed to retrieve queue message count from Solace"
@@ -243,6 +277,11 @@ if [ "$QUEUE_MSG_COUNT" -eq 0 ]; then
 else
     logerror "❌ FAILURE: Messages still remain in Solace queue connector-quickstart (spool usage: $QUEUE_MSG_COUNT bytes) - messages were not deleted"
     log "Displaying queue statistics:"
-    curl -s -u admin:admin http://localhost:8080/SEMP/v2/monitor/msgVpns/default/queues/connector-quickstart | jq '.'
+     if [[ "${PLAYGROUND_ENVIRONMENT}" == "cfk" ]]
+     then
+          playground container exec --container solace --command "curl -s -u admin:admin http://localhost:8080/SEMP/v2/monitor/msgVpns/default/queues/connector-quickstart" | jq '.'
+     else
+          curl -s -u admin:admin http://localhost:8080/SEMP/v2/monitor/msgVpns/default/queues/connector-quickstart | jq '.'
+     fi
     exit 1
 fi
