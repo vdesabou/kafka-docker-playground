@@ -23,13 +23,32 @@ Install OpenSSL and generate a private key and a digital certificate using the c
 For example:
 
 ```bash
-keytool -genkey -noprompt -alias salesforce-confluent -dname "CN=ca1.test.confluent.io/OU=TEST/O=CONFLUENT/L=PaloAlto/ST=Ca/C=US" -keystore salesforce-confluent.keystore.jks -keyalg RSA -storepass confluent -keypass confluent -deststoretype pkcs12
+keytool -genkeypair -noprompt \
+  -alias salesforce-confluent \
+  -dname "CN=ca1.test.confluent.io, OU=TEST, O=CONFLUENT, L=PaloAlto, ST=Ca, C=US" \
+  -keystore salesforce-confluent.p12 \
+  -storetype PKCS12 \
+  -keyalg RSA \
+  -keysize 2048 \
+  -validity 3650 \
+  -storepass confluent \
+  -keypass confluent
 
 keytool -exportcert -rfc \
   -keystore salesforce-confluent.p12 \
+  -storetype PKCS12 \
   -alias salesforce-confluent \
   -file salesforce-confluent.crt \
   -storepass confluent
+
+keytool -importkeystore \
+  -srckeystore salesforce-confluent.p12 \
+  -srcstoretype PKCS12 \
+  -srcstorepass confluent \
+  -destkeystore salesforce-confluent.keystore.jks \
+  -deststoretype PKCS12 \
+  -deststorepass confluent \
+  -noprompt
 ```
 
 ### Create a new External Client App
@@ -81,6 +100,10 @@ Login to Salesforce and authorize the External Client app.
 Go to `External Client App Manager` and Relax IP restrictions:
 
 ![Relax IP restrictions](jwt-bearer-authentication3.png)
+
+### Troubleshooting
+
+* If it fails, check the logs in Salesforce: `Setup` -> `Login History` and look for the error message.
 
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
