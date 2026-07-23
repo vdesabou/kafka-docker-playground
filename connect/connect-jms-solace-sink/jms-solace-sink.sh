@@ -20,6 +20,46 @@ function wait_for_solace () {
      sleep 30
 }
 
+function run_solace_cli_script_with_retry () {
+     local script_name="$1"
+     local description="$2"
+     local output_file="${3:-/tmp/solace-cli-${script_name}.log}"
+     local max_wait=300
+     local cur_wait=0
+
+     log "⌛ Waiting up to $max_wait seconds for Solace CLI to be ready for ${description}"
+     while true
+     do
+          set +e
+          playground container exec --container solace --command "bash -c \"/usr/sw/loads/currentload/bin/cli -A -s cliscripts/${script_name}\"" > "$output_file" 2>&1
+          ret=$?
+          set -e
+
+          if [ $ret -eq 0 ]
+          then
+               log "Solace CLI is ready for ${description}"
+               return
+          fi
+
+          if grep -E "SolOS startup in progress|Please try again later" "$output_file" > /dev/null 2>&1
+          then
+               sleep 10
+               cur_wait=$((cur_wait + 10))
+               if [[ "$cur_wait" -gt "$max_wait" ]]
+               then
+                    logerror "Solace CLI is not ready for ${description} after ${max_wait} seconds"
+                    cat "$output_file"
+                    exit 1
+               fi
+               continue
+          fi
+
+          logerror "Solace CLI command for ${description} failed with a non-retryable error"
+          cat "$output_file"
+          exit 1
+     done
+}
+
 if [ ! -f ${DIR}/sol-jms-10.6.4.jar ]
 then
      log "Downloading sol-jms-10.6.4.jar"
@@ -52,7 +92,7 @@ playground topic produce -t sink-messages --nb-messages 10 << 'EOF'
 EOF
 
 log "Create connector-quickstart queue in the default Message VPN using CLI"
-playground container exec --container solace --command "bash -c \"/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd\""
+run_solace_cli_script_with_retry "create_queue_cmd" "queue creation"
 
 log "Creating Solace sink connector"
 playground connector create-or-update --connector jms-solace-sink  << EOF
@@ -78,6 +118,6 @@ EOF
 sleep 10
 
 log "Confirm the messages were delivered to the connector-quickstart queue in the default Message VPN using CLI"
-playground container exec --container solace --command "bash -c \"/usr/sw/loads/currentload/bin/cli -A -s cliscripts/show_queue_cmd\"" > /tmp/result.log  2>&1
+run_solace_cli_script_with_retry "show_queue_cmd" "queue stats check" "/tmp/result.log"
 cat /tmp/result.log
 grep "10       0.00" /tmp/result.log

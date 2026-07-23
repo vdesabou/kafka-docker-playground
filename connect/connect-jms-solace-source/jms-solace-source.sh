@@ -20,6 +20,46 @@ function wait_for_solace () {
      sleep 30
 }
 
+function run_solace_cli_script_with_retry () {
+     local script_name="$1"
+     local description="$2"
+     local output_file="${3:-/tmp/solace-cli-${script_name}.log}"
+     local max_wait=300
+     local cur_wait=0
+
+     log "⌛ Waiting up to $max_wait seconds for Solace CLI to be ready for ${description}"
+     while true
+     do
+          set +e
+          playground container exec --container solace --command "bash -c \"/usr/sw/loads/currentload/bin/cli -A -s cliscripts/${script_name}\"" > "$output_file" 2>&1
+          ret=$?
+          set -e
+
+          if [ $ret -eq 0 ]
+          then
+               log "Solace CLI is ready for ${description}"
+               return
+          fi
+
+          if grep -E "SolOS startup in progress|Please try again later" "$output_file" > /dev/null 2>&1
+          then
+               sleep 10
+               cur_wait=$((cur_wait + 10))
+               if [[ "$cur_wait" -gt "$max_wait" ]]
+               then
+                    logerror "Solace CLI is not ready for ${description} after ${max_wait} seconds"
+                    cat "$output_file"
+                    exit 1
+               fi
+               continue
+          fi
+
+          logerror "Solace CLI command for ${description} failed with a non-retryable error"
+          cat "$output_file"
+          exit 1
+     done
+}
+
 if [ ! -f ${DIR}/sol-jms-10.6.4.jar ]
 then
      log "Downloading sol-jms-10.6.4.jar"
@@ -47,7 +87,7 @@ wait_for_solace
 log "Solace UI is accessible at http://127.0.0.1:8080 (admin/admin)"
 
 log "Create the queue connector-quickstart in the default Message VPN using CLI"
-playground container exec --container solace --command "bash -c \"/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd\""
+run_solace_cli_script_with_retry "create_queue_cmd" "queue creation"
 
 # Setting message.timestamp.type=LogAppendTime otherwise we have CreateTime:0
 playground topic create --topic source-messages --nb-partitions 1
