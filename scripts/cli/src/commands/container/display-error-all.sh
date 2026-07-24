@@ -39,11 +39,20 @@ else
                 log "☸️ kubectl describe pod $container"
                 kubectl -n confluent describe pod "$container"
                 log "####################################################"
-                log "☸️ kubectl logs $container --all-containers --tail=100"
-                kubectl -n confluent logs "$container" --all-containers --tail=100
-                log "####################################################"
-                log "☸️ kubectl logs $container --all-containers --previous --tail=100"
-                kubectl -n confluent logs "$container" --all-containers --previous --tail=100
+                if [[ "$container" == connect* ]]
+                then
+                    log "☸️ kubectl logs $container --all-containers --tail=150"
+                    kubectl -n confluent logs "$container" --all-containers --tail=150
+                    log "####################################################"
+                    log "☸️ kubectl logs $container --all-containers --previous --tail=150"
+                    kubectl -n confluent logs "$container" --all-containers --previous --tail=150
+                else
+                    log "☸️ kubectl logs $container --all-containers --tail=100"
+                    kubectl -n confluent logs "$container" --all-containers --tail=100
+                    log "####################################################"
+                    log "☸️ kubectl logs $container --all-containers --previous --tail=100"
+                    kubectl -n confluent logs "$container" --all-containers --previous --tail=100
+                fi
             fi
         done <<< "$containers"
 
@@ -62,9 +71,19 @@ else
         log "$container logs"
         if [[ "$environment" == "cfk" ]]
         then
-            kubectl -n confluent logs "$container" 2>&1 | grep -E "ERROR|FATAL"
+            if [[ "$container" == connect* ]]
+            then
+                kubectl -n confluent logs "$container" --tail=150
+            else
+                kubectl -n confluent logs "$container" 2>&1 | grep -E "ERROR|FATAL"
+            fi
         else
-            docker container logs "$container" 2>&1 | grep -E "ERROR|FATAL"
+            if [[ "$container" == connect* ]]
+            then
+                docker container logs --tail=150 "$container"
+            else
+                docker container logs "$container" 2>&1 | grep -E "ERROR|FATAL"
+            fi
         fi
         log "####################################################"
     done <<< "$containers"
