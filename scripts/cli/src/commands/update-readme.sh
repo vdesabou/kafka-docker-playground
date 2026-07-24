@@ -68,6 +68,9 @@ do
   TEST_FAILED=()
   TEST_SUCCESS=()
   TEST_SKIPPED=()
+  declare -A TEST_TOTAL_COUNT
+  declare -A TEST_SKIPPED_COUNT
+  declare -A TEST_FAILED_COUNT
   rm -f ${gh_msg_file}
   touch ${gh_msg_file}
   rm -f ${gh_msg_file_intro}
@@ -132,6 +135,7 @@ do
       let "nb_tests++"
       let "nb_total_tests++"
       image_version_no_dot=$(echo ${image_version} | sed 's/\.//g')
+      TEST_TOTAL_COUNT[$image_version_no_dot]=$(( ${TEST_TOTAL_COUNT[$image_version_no_dot]:-0} + 1 ))
       time_day=""
       time_day_hour=""
       version=""
@@ -229,6 +233,7 @@ do
       then
         let "nb_fail++"
         let "nb_total_fail++"
+        TEST_FAILED_COUNT[$image_version_no_dot]=$(( ${TEST_FAILED_COUNT[$image_version_no_dot]:-0} + 1 ))
         TEST_FAILED[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-red)]($html_url)"
         echo -e "🔥 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
         if [ -f ${ci_output_file} ]; then
@@ -254,6 +259,7 @@ do
       then
         let "nb_success++"
         let "nb_total_success++"
+        TEST_SKIPPED_COUNT[$image_version_no_dot]=$(( ${TEST_SKIPPED_COUNT[$image_version_no_dot]:-0} + 1 ))
         TEST_SKIPPED[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/skipped-CP%20$image_version-lightgrey)]($html_url)"
         echo -e "⏭ SKIPPED CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
         log "⏭ SKIPPED CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
@@ -361,7 +367,11 @@ do
     do
       let "nb_image_versions++"
       image_version_no_dot=$(echo ${image_version} | sed 's/\.//g')
-      if [ "${TEST_FAILED[$image_version_no_dot]}" != "" ]
+      total_count_for_version=${TEST_TOTAL_COUNT[$image_version_no_dot]:-0}
+      skipped_count_for_version=${TEST_SKIPPED_COUNT[$image_version_no_dot]:-0}
+      failed_count_for_version=${TEST_FAILED_COUNT[$image_version_no_dot]:-0}
+
+      if [ "$failed_count_for_version" -gt 0 ]
       then
         gh_issue_number=$(echo $gh_issue_number|tr -d '\n')
         if [ "${gh_issue_number}" != "" ]
@@ -384,7 +394,7 @@ do
             let "ci_nb_fail++"
           fi
         fi
-      elif [ "${TEST_SKIPPED[$image_version_no_dot]}" != "" ]
+      elif [ "$total_count_for_version" -gt 0 ] && [ "$skipped_count_for_version" -eq "$total_count_for_version" ] && [ "${TEST_SKIPPED[$image_version_no_dot]}" != "" ]
       then
         if [ "$environment_suffix" = "-cfk" ]
         then
