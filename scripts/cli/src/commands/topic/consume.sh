@@ -150,7 +150,7 @@ get_topic_message_count() {
   playground topic get-number-records -t "$topic_name" | tail -1
 }
 
-TOPIC_NOT_FOUND_RETRY_SECONDS=30
+TOPIC_NOT_FOUND_RETRY_SECONDS=60
 
 get_topic_message_count_with_retry() {
   local topic_name="$1"
