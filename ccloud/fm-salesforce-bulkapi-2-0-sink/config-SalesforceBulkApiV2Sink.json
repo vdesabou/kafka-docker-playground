@@ -77,7 +77,7 @@
     "salesforce.password": "PASSWORD",
     "salesforce.password.token": "PASSWORD",
     "salesforce.username": "STRING",
-    "salesforce.version": "65.0",
+    "salesforce.version": "67.0",
     "schema.context.name": "default",
     "skip.object1.relationship.fields": "true",
     "skip.object2.relationship.fields": "true",
