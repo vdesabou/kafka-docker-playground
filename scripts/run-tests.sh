@@ -63,27 +63,25 @@ do
     title="🔥 ${dir}"
     if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
     then
-        title="🔥 ${dir} ($environment)"
+        title="🔥 ${dir} ($PLAYGROUND_ENVIRONMENT)"
     fi
     set +e
-    gh issue list --limit 500 | grep "$title" > /dev/null 2>&1
-    if [ $? == 0 ]
+    issue_number=$(gh issue list --state open --limit 500 --json number,title --jq ".[] | select(.title == \"$title\") | .number" 2>/dev/null | head -1)
+    if [ -n "$issue_number" ]
     then
-        issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}' 2>/dev/null)
-        if [ -n "$issue_number" ]; then
-            gh issue view ${issue_number} --json labels 2>/dev/null | grep "CI ignore ⏭️" > /dev/null 2>&1
-            if [ $? == 0 ]
-            then
-                log "####################################################"
-                log "🐛 Skipping as test has an opened GH issue (${issue_number} $title) with label 'CI ignore ⏭️'"
-                log "####################################################"
-                skipped_tests=$skipped_tests"$dir[$script]\n"
-                let "nb_test_skipped++"
-                cd - > /dev/null
-                continue
-            fi
+        gh issue view ${issue_number} --json labels --jq '.labels[].name' 2>/dev/null | grep -Fx "CI ignore ⏭️" > /dev/null 2>&1
+        if [ $? == 0 ]
+        then
+            log "####################################################"
+            log "🐛 Skipping as test has an opened GH issue (${issue_number} $title) with label 'CI ignore ⏭️'"
+            log "####################################################"
+            skipped_tests=$skipped_tests"$dir[$script]\n"
+            let "nb_test_skipped++"
+            cd - > /dev/null
+            continue
         fi
     fi
+    set -e
         
     curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o /tmp/README.txt
     for script in *.sh
