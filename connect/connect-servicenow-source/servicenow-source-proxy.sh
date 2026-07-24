@@ -45,9 +45,8 @@ fi
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.nginx-proxy.yml"
 
-export HTTP_PROXY=127.0.0.1:8888
-export HTTPS_PROXY=127.0.0.1:8888
 log "Verify forward proxy is working correctly"
+HTTP_PROXY=127.0.0.1:8888 HTTPS_PROXY=127.0.0.1:8888 \
 curl --compressed -H 'Accept-Encoding: gzip' -H 'Content-Type: application/json' -H 'User-Agent: Google-HTTP-Java-Client/1.30.0 (gzip)' -v ${SERVICENOW_URL}api/now/table/incident?sysparm_limit=1 -u "admin:$SERVICENOW_PASSWORD" | jq .
 
 playground container exec --container connect --command "bash -c \"export HTTP_PROXY=nginx-proxy:8888 && export HTTPS_PROXY=nginx-proxy:8888 && curl --compressed -H 'Accept-Encoding: gzip' -H 'User-Agent: Google-HTTP-Java-Client/1.30.0 (gzip)' -v ${SERVICENOW_URL}api/now/table/incident?sysparm_limit=1 -u \\\"admin:$SERVICENOW_PASSWORD\\\"\""
