@@ -33837,18 +33837,35 @@ playground_connector_show_lag_command() {
 
     fi
 
-    playground connector status --connector $connector  > $tmp_dir/result.log  2>&1
-    if [ $(grep -c "✅" $tmp_dir/result.log) -ne 1 ]
-    then
-        logerror "❌ $connector_type connector ${connector}${maybe_id} instance is not in ✅ RUNNING state"
-        exit 1
-    fi
+      status_wait_timeout=60
+      status_wait_interval=2
+      status_wait_elapsed=0
+      connector_ready=0
 
-    if [ $(grep -c "🟢" $tmp_dir/result.log) -lt 1 ]
-    then
-        logerror "❌ $connector_type connector ${connector}${maybe_id} does not have 🟢 task in RUNNING state"
+      while [ "$status_wait_elapsed" -le "$status_wait_timeout" ]
+      do
+        playground connector status --connector $connector > $tmp_dir/result.log 2>&1
+
+        if [ "$(grep -c "✅" $tmp_dir/result.log)" -eq 1 ] && [ "$(grep -c "🟢" $tmp_dir/result.log)" -ge 1 ]
+        then
+          connector_ready=1
+          break
+        fi
+
+        sleep "$status_wait_interval"
+        status_wait_elapsed=$((status_wait_elapsed + status_wait_interval))
+      done
+
+      if [ "$connector_ready" -ne 1 ]
+      then
+        if [ "$(grep -c "✅" $tmp_dir/result.log)" -ne 1 ]
+        then
+          logerror "❌ $connector_type connector ${connector}${maybe_id} instance is not in ✅ RUNNING state after ${status_wait_timeout}s"
+        else
+          logerror "❌ $connector_type connector ${connector}${maybe_id} does not have 🟢 task in RUNNING state after ${status_wait_timeout}s"
+        fi
         exit 1
-    fi
+      fi
 
     if [[ -n "$verbose" ]]
     then
