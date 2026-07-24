@@ -96,8 +96,12 @@ do
                 if [[ "$reason" == "CreateFailed" ]]
                 then
                     logerror "❌ CFK connector creation failed"
-                    kubectl -n confluent get connector "$connector" -o yaml 2>/dev/null || true
-                    echo ""
+                    if [ -z "$GITHUB_RUN_NUMBER" ]
+                    then
+                        # not running with CI
+                        kubectl -n confluent get connector "$connector" -o yaml 2>/dev/null || true
+                        echo ""
+                    fi
                 fi
             fi
         fi
