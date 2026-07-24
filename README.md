@@ -43,6 +43,3 @@ Love it? Give it a ⭐️ by clicking below:
 
 <a href="https://github.com/vdesabou/kafka-docker-playground/stargazers"><img src="https://img.shields.io/github/stars/vdesabou/kafka-docker-playground?style=social" style="margin-left:0;box-shadow:none;border-radius:0;height:24px"></a>
 
-## ⭐️ Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=vdesabou/kafka-docker-playground&type=Date)](https://star-history.com/#vdesabou/kafka-docker-playground&Date)
