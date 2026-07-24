@@ -40,7 +40,7 @@ fi
 bootstrap_ccloud_environment
 
 set +e
-playground topic delete --topic sfdc-platform-events
+playground topic delete --topic sfdc-platform-events-from-source
 set -e
 
 docker compose build
@@ -64,7 +64,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",
-     "kafka.topic": "sfdc-platform-events",
+     "kafka.topic": "sfdc-platform-events-from-source",
      "salesforce.platform.event.name" : "MyPlatformEvent__e",
      "salesforce.instance" : "$SALESFORCE_INSTANCE",
      "salesforce.username" : "$SALESFORCE_USERNAME",
@@ -88,8 +88,8 @@ docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" 
 
 sleep 10
 
-log "Verifying topic sfdc-platform-events"
-playground topic consume --topic sfdc-platform-events --min-expected-messages 2 --timeout 60
+log "Verifying topic sfdc-platform-events-from-source"
+playground topic consume --topic sfdc-platform-events-from-source --min-expected-messages 2 --timeout 60
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
