@@ -46,7 +46,8 @@ function salesforce_ensure_jwt_keystore() {
 
   if [ ! -f "$keystore_path" ]
   then
-    (cd "$target_dir" && get_3rdparty_file "salesforce-confluent.keystore.jks")
+    # Keep stdout clean for command substitution callers; logs still go to stderr.
+    (cd "$target_dir" && get_3rdparty_file "salesforce-confluent.keystore.jks") >&2
   fi
 
   if [ ! -f "$keystore_path" ]
@@ -63,7 +64,7 @@ function salesforce_get_jwt_keystore_base64() {
   local keystore_path=""
 
   keystore_path=$(salesforce_ensure_jwt_keystore "$target_dir")
-  cat "$keystore_path" | base64 | tr -d '\n'
+  base64 < "$keystore_path" | tr -d '\n'
 }
 
 if [ ! -f /tmp/playground-run-command-used ]
