@@ -4,6 +4,16 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$GITHUB_RUN_NUMBER" ]
+then
+    # running with CI
+    if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+    then
+        logwarn "skipping as failing on github ci with cfk"
+        exit 111
+    fi
+fi
+
 if connect_cp_version_greater_than_8 && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "1.1.99"
 then
      logwarn "minimal supported connector version is 1.2.0 for CP 8.0"

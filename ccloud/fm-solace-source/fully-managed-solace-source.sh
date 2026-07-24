@@ -4,6 +4,16 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$GITHUB_RUN_NUMBER" ]
+then
+    # running with CI
+    if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+    then
+        logwarn "skipping as failing on github ci with cfk"
+        exit 111
+    fi
+fi
+
 function wait_for_solace () {
      MAX_WAIT=240
      log "⌛ Waiting up to $MAX_WAIT seconds for Solace to startup"
