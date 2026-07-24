@@ -102,10 +102,10 @@ do
                         kubectl -n confluent get connector "$connector" -o yaml 2>/dev/null || true
                         echo ""
                     fi
+                    continue
                 fi
             fi
         fi
-        continue
     fi
     # --- CLOUD / CUSTOM BLOCK ---
     if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
