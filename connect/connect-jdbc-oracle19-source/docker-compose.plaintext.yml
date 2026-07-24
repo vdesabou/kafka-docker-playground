@@ -9,7 +9,7 @@ services:
     profiles:
     - sql_datagen
     volumes:
-      - ../../connect-jdbc-oracle19-source/oracle-datagen/target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
+      - ../../connect/connect-jdbc-oracle19-source/oracle-datagen/target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
 
 
   oracle:
