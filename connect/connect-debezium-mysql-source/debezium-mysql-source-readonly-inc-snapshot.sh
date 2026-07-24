@@ -141,6 +141,14 @@ playground container exec --container mysql --command "mysql  --protocol=TCP --h
 select * from customers;
 EOF
 
+log "Verify GTID mode is ON before enabling read-only incremental snapshot"
+gtid_mode=$(playground --output-level ERROR  container exec --container mysql --command "mysql --protocol=TCP --host=127.0.0.1 --user=root --password=password -N -s -e \"SELECT @@GLOBAL.GTID_MODE;\"" | tr -d '\r\n[:space:]')
+if [[ "$gtid_mode" != "ON" ]]
+then
+  logerror "Read only incremental snapshot requires GTID_MODE=ON, got GTID_MODE=$gtid_mode"
+  exit 1
+fi
+
 
 log "Adding customers table to the connector"
 playground connector create-or-update --connector debezium-mysql-source  << EOF

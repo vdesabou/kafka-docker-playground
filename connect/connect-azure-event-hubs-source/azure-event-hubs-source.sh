@@ -29,6 +29,10 @@ done
 login_and_maybe_set_azure_subscription
 
 AZURE_NAME=pg${USER}eh${GITHUB_RUN_NUMBER}${TAG_BASE}
+if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+then
+    AZURE_NAME=pg${USER}cfkeh${GITHUB_RUN_NUMBER}${TAG_BASE}
+fi
 AZURE_NAME=${AZURE_NAME//[-._]/}
 if [ ${#AZURE_NAME} -gt 24 ]; then
   AZURE_NAME=${AZURE_NAME:0:24}

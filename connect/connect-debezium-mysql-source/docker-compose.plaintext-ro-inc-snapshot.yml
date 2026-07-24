@@ -4,6 +4,12 @@ services:
     image: mysql:8.1
     hostname: mysql
     container_name: mysql
+    command:
+      - --server-id=223344
+      - --log-bin=mysql-bin
+      - --binlog-format=ROW
+      - --gtid-mode=ON
+      - --enforce-gtid-consistency=ON
     volumes:
       - ../../connect/connect-debezium-mysql-source/mysql-gtid.cnf:/etc/mysql/conf.d/custom.cnf
       - ../../connect/connect-debezium-mysql-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
