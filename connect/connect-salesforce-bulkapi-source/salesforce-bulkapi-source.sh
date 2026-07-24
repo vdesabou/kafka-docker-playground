@@ -13,7 +13,6 @@ fi
 
 SALESFORCE_USERNAME=${SALESFORCE_USERNAME:-$1}
 SALESFORCE_PASSWORD=${SALESFORCE_PASSWORD:-$2}
-SALESFORCE_CONSUMER_KEY_WITH_JWT=${SALESFORCE_CONSUMER_KEY_WITH_JWT:-$3}
 SALESFORCE_SECURITY_TOKEN=${SALESFORCE_SECURITY_TOKEN:-$4}
 SALESFORCE_INSTANCE=${SALESFORCE_INSTANCE:-"https://login.salesforce.com"}
 
@@ -36,14 +35,6 @@ then
      exit 1
 fi
 
-if [ -z "$SALESFORCE_CONSUMER_KEY_WITH_JWT" ]
-then
-     logerror "SALESFORCE_CONSUMER_KEY_WITH_JWT is not set. Export it as environment variable or pass it as argument. Check README !"
-     exit 1
-fi
-
-salesforce_ensure_jwt_keystore "$PWD" > /dev/null
-
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
@@ -64,11 +55,9 @@ playground connector create-or-update --connector salesforce-bulkapi-source  << 
      "curl.logging": "true",
      "salesforce.object" : "Lead",
      "salesforce.instance" : "$SALESFORCE_INSTANCE",
-     "salesforce.grant.type" : "JWT_BEARER",
      "salesforce.username" : "$SALESFORCE_USERNAME",
-     "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY_WITH_JWT",
-     "salesforce.jwt.keystore.path": "/tmp/salesforce-confluent.keystore.jks",
-     "salesforce.jwt.keystore.password": "confluent",
+     "salesforce.password" : "$SALESFORCE_PASSWORD",
+     "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
      "connection.max.message.size": "10048576",
      "key.converter": "org.apache.kafka.connect.json.JsonConverter",
      "value.converter": "org.apache.kafka.connect.json.JsonConverter",

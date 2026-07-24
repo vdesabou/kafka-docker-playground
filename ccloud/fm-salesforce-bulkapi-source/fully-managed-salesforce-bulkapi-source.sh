@@ -6,8 +6,9 @@ source ${DIR}/../../scripts/utils.sh
 
 SALESFORCE_USERNAME=${SALESFORCE_USERNAME:-$1}
 SALESFORCE_PASSWORD=${SALESFORCE_PASSWORD:-$2}
-SALESFORCE_CONSUMER_KEY_WITH_JWT=${SALESFORCE_CONSUMER_KEY_WITH_JWT:-$3}
-SALESFORCE_SECURITY_TOKEN=${SALESFORCE_SECURITY_TOKEN:-$4}
+SALESFORCE_CONSUMER_KEY=${SALESFORCE_CONSUMER_KEY:-${SALESFORCE_CONSUMER_KEY_WITH_JWT:-$3}}
+SALESFORCE_CONSUMER_PASSWORD=${SALESFORCE_CONSUMER_PASSWORD:-$4}
+SALESFORCE_SECURITY_TOKEN=${SALESFORCE_SECURITY_TOKEN:-$5}
 SALESFORCE_INSTANCE=${SALESFORCE_INSTANCE:-"https://login.salesforce.com"}
 
 
@@ -43,8 +44,6 @@ docker compose build
 docker compose down -v --remove-orphans
 docker compose up -d --quiet-pull
 
-base64_truststore=$(salesforce_get_jwt_keystore_base64 "$PWD")
-
 connector_name="SalesforceBulkApiSource_$USER"
 set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
@@ -60,12 +59,12 @@ playground connector create-or-update --connector $connector_name << EOF
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",
      "kafka.topic": "sfdc-bulkapi-leads",
-     "salesforce.grant.type": "JWT_BEARER",
      "salesforce.instance" : "$SALESFORCE_INSTANCE",
      "salesforce.username": "$SALESFORCE_USERNAME",
-     "salesforce.consumer.key": "$SALESFORCE_CONSUMER_KEY_WITH_JWT",
-     "salesforce.jwt.keystore.file": "data:text/plain;base64,$base64_truststore",
-     "salesforce.jwt.keystore.password": "confluent",
+     "salesforce.password": "$SALESFORCE_PASSWORD",
+     "salesforce.password.token": "$SALESFORCE_SECURITY_TOKEN",
+     "salesforce.consumer.key": "$SALESFORCE_CONSUMER_KEY",
+     "salesforce.consumer.secret": "$SALESFORCE_CONSUMER_PASSWORD",
      "salesforce.since": "$TODAY",
      "salesforce.object" : "Lead",
      "output.data.format": "JSON",
