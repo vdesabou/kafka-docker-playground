@@ -148,15 +148,12 @@ Setting this field to true is generally discouraged due to performance implicati
 	 - Importance: LOW
 	 - Required: false
 
-==========================
-null
-==========================
 🔘 gcp.pubsub.credentials.provider.class
 
 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: 
+	 - Importance: The fully qualified name of a class that implements the ``com.google.api.gax.core.CredentialsProvider`` interface to use a custom credentials provider. 
 	 - Required: LOW
 
