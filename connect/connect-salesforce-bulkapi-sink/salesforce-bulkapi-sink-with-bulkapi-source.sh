@@ -133,8 +133,10 @@ EOF
 
 sleep 10
 
+# 180s, not 60s: the Bulk API query job runs asynchronously on a Salesforce-side
+# queue, so its completion time is not under this test's control.
 log "Verify we have received the data in sfdc-bulkapi-leads topic"
-playground topic consume --topic sfdc-bulkapi-leads --min-expected-messages 1 --timeout 60
+playground topic consume --topic sfdc-bulkapi-leads --min-expected-messages 1 --timeout 180
 
 log "Creating Salesforce Bulk API Sink connector"
 playground connector create-or-update --connector salesforce-bulkapi-sink  << EOF
@@ -172,8 +174,13 @@ EOF
 
 sleep 30
 
+# 180s, not 60s: the sink reports to success-responses only once the Bulk API v2
+# ingest job reaches JobComplete, and that job is processed asynchronously on a
+# Salesforce-side queue. With an unchanged test and identical input this was
+# observed both completing well inside 60s and exceeding it, so 60s made this
+# assertion flaky rather than meaningful.
 log "Verify topic success-responses"
-playground topic consume --topic success-responses --min-expected-messages 1 --timeout 60
+playground topic consume --topic success-responses --min-expected-messages 1 --timeout 180
 
 # log "Verify topic error-responses"
 playground topic consume --topic error-responses --min-expected-messages 0 --timeout 60

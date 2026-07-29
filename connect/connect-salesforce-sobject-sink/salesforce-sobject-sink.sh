@@ -692,8 +692,10 @@ EOF
 
 sleep 10
 
+# 180s, not 60s: the sink reports to success-responses only after its writes to
+# Salesforce complete, which was observed exceeding 60s.
 log "Verify topic success-responses"
-playground topic consume --topic success-responses --min-expected-messages 1 --timeout 60
+playground topic consume --topic success-responses --min-expected-messages 1 --timeout 180
 
 # log "Verify topic error-responses"
 playground topic consume --topic error-responses --min-expected-messages 0 --timeout 60

@@ -88,5 +88,8 @@ EOF
 
 sleep 10
 
+# 180s, not 60s: the Bulk API query job runs asynchronously on a Salesforce-side
+# queue, so how long it takes to complete is not under this test's control and
+# varies from seconds to minutes.
 log "Verify we have received the data in sfdc-bulkapi-leads topic"
-playground topic consume --topic sfdc-bulkapi-leads --min-expected-messages 1 --timeout 60
+playground topic consume --topic sfdc-bulkapi-leads --min-expected-messages 1 --timeout 180
