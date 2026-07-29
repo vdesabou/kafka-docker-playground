@@ -78,7 +78,9 @@ fi
 
 
 
-PUSH_TOPICS_NAME=MyLeadPushTopics${TAG}
+# Unique per test - see the comment in salesforce-pushtopic-source.sh. Sharing
+# one PushTopic name across tests breaks concurrent runs against the same org.
+PUSH_TOPICS_NAME=sobjLead${TAG}
 PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME//[-._]/}
 if [ ${#PUSH_TOPICS_NAME} -gt 25 ]; then
   PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME:0:25}
@@ -138,6 +140,31 @@ LEAD_FIRSTNAME=John_$RANDOM
 LEAD_LASTNAME=Doe_$RANDOM
 log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
 playground container exec --container sfdx-cli --command "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\"" --shell sh
+
+# Remove what this test created, so repeated runs do not accumulate records in
+# shared Salesforce orgs. This test writes to two orgs: the Lead seeded above in
+# the source org, and the Lead the sink writes into the ACCOUNT2 org (same
+# FirstName/LastName), plus the PushTopic. Only exact matches are deleted, so a
+# concurrent test's data is never touched. Registered as an EXIT trap so cleanup
+# also happens when an assertion below fails; the ACCOUNT2 delete is best-effort
+# because that org is not authenticated until later in the script.
+cleanup_salesforce_test_data() {
+  set +e
+  log "🧹 Cleaning up: Lead $LEAD_FIRSTNAME $LEAD_LASTNAME (both orgs) and PushTopic $PUSH_TOPICS_NAME"
+  # Re-authenticate both orgs first, so cleanup does not depend on an sfdx session
+  # established earlier in the test still being valid.
+  playground container exec --container sfdx-cli --command "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\"" --shell sh > /dev/null
+  playground container exec --container sfdx-cli --command "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\"" --shell sh > /dev/null
+  playground container exec --container sfdx-cli --command "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" --shell sh << EOF
+Database.delete([SELECT Id FROM Lead WHERE FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'], false);
+Database.delete([SELECT Id FROM PushTopic WHERE Name = '$PUSH_TOPICS_NAME'], false);
+EOF
+  playground container exec --container sfdx-cli --command "sfdx apex run --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\"" --shell sh << EOF
+Database.delete([SELECT Id FROM Lead WHERE FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'], false);
+EOF
+  set -e
+}
+trap cleanup_salesforce_test_data EXIT
 
 sleep 30
 

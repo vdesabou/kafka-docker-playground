@@ -45,7 +45,13 @@ fi
 
 salesforce_ensure_jwt_keystore "$PWD" > /dev/null
 
-PUSH_TOPICS_NAME=MyLeadPushTopics${TAG}
+# The PushTopic name must be unique per test: salesforce-pushtopic-source,
+# salesforce-sobject-sink and salesforce-bulkapi-sink-with-bulkapi-source all
+# create a Lead PushTopic and delete any existing one of the same name first.
+# Sharing one name means that, when these tests run concurrently against the same
+# Salesforce org, one test deletes the PushTopic another is still using.
+# The discriminator is a prefix so it survives the 25-character truncation below.
+PUSH_TOPICS_NAME=ptsrcLead${TAG}
 PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME//[-._]/}
 if [ ${#PUSH_TOPICS_NAME} -gt 25 ]; then
   PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME:0:25}
@@ -101,6 +107,22 @@ LEAD_FIRSTNAME=John_$RANDOM
 LEAD_LASTNAME=Doe_$RANDOM
 log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
 playground container exec --container sfdx-cli --command "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\"" --shell sh
+
+# Remove what this test created, so repeated runs do not accumulate records in a
+# shared Salesforce org (Developer Edition orgs have a hard storage limit).
+# Only the exact Lead created above is matched, so a concurrent test's data is
+# never touched. Registered as an EXIT trap so cleanup also happens when an
+# assertion below fails.
+cleanup_salesforce_test_data() {
+  set +e
+  log "🧹 Cleaning up: Lead $LEAD_FIRSTNAME $LEAD_LASTNAME and PushTopic $PUSH_TOPICS_NAME"
+  playground container exec --container sfdx-cli --command "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" --shell sh << EOF
+Database.delete([SELECT Id FROM Lead WHERE FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'], false);
+Database.delete([SELECT Id FROM PushTopic WHERE Name = '$PUSH_TOPICS_NAME'], false);
+EOF
+  set -e
+}
+trap cleanup_salesforce_test_data EXIT
 
 sleep 30
 
