@@ -151,10 +151,6 @@ playground container exec --container sfdx-cli --command "sfdx data:create:recor
 cleanup_salesforce_test_data() {
   set +e
   log "🧹 Cleaning up: Lead $LEAD_FIRSTNAME $LEAD_LASTNAME (both orgs) and PushTopic $PUSH_TOPICS_NAME"
-  # Re-authenticate both orgs first, so cleanup does not depend on an sfdx session
-  # established earlier in the test still being valid.
-  playground container exec --container sfdx-cli --command "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\"" --shell sh > /dev/null
-  playground container exec --container sfdx-cli --command "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\"" --shell sh > /dev/null
   playground container exec --container sfdx-cli --command "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" --shell sh << EOF
 Database.delete([SELECT Id FROM Lead WHERE FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'], false);
 Database.delete([SELECT Id FROM PushTopic WHERE Name = '$PUSH_TOPICS_NAME'], false);
@@ -162,6 +158,11 @@ EOF
   playground container exec --container sfdx-cli --command "sfdx apex run --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\"" --shell sh << EOF
 Database.delete([SELECT Id FROM Lead WHERE FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'], false);
 EOF
+  # Release the session(s) this test opened. Each sfpowerkit:auth:login creates two
+  # Salesforce sessions, and without a logout they are left to expire - so a run
+  # accumulates sessions against the same user and later logins evict earlier ones
+  # ("Session expired or invalid").
+  playground container exec --container sfdx-cli --command "sfdx force:auth:logout --all --no-prompt" --shell sh > /dev/null
   set -e
 }
 trap cleanup_salesforce_test_data EXIT
