@@ -113,6 +113,66 @@ Determines whether the connector honours CSFLE rules or not
 	 - Required: HIGH
 
 ==========================
+Authentication method
+==========================
+🔘 rediskafka.cluster.service.name
+
+Specify the Redis service you are using. Choose `AWS ElastiCache` for Amazon ElastiCache, `AWS MemoryDB` for Amazon MemoryDB, or `Others` for any other Redis service (self-hosted, Redis Cloud, etc.). Note: IAM roles authentication is only supported for AWS ElastiCache and AWS MemoryDB services. For other services, use password authentication.
+
+	 - Type: STRING
+	 - Default: Others
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 authentication.method
+
+Select how you want to authenticate the DB. Username Password or AWS IAM Roles.
+
+	 - Type: STRING
+	 - Default: Password
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 secret.manager.enabled
+
+Fetch sensitive configuration values from a secret manager.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Secret manager configuration
+==========================
+🔘 secret.manager
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the secret manager to use for retrieving sensitive data.
+	 - Required: HIGH
+
+🔘 secret.manager.managed.configs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Select the configurations to fetch their values from the secret manager.
+	 - Required: HIGH
+
+🔘 secret.manager.provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing provider integration that has access to your secret manager.
+	 - Required: HIGH
+
+==========================
 Redis connection
 ==========================
 🔘 redis.host
@@ -160,26 +220,14 @@ Whether redis server is running on one or multiple nodes.
 	 - Importance: MEDIUM
 	 - Required: false
 
-==========================
-Auth Mode
-==========================
-🔘 rediskafka.cluster.service.name
+🔘 redis.password
 
-Specify the Redis service you are using. Choose `AWS ElastiCache` for Amazon ElastiCache, `AWS MemoryDB` for Amazon MemoryDB, or `Others` for any other Redis service (self-hosted, Redis Cloud, etc.). Note: IAM roles authentication is only supported for AWS ElastiCache and AWS MemoryDB services. For other services, use password authentication.
 
-	 - Type: STRING
-	 - Default: Others
-	 - Importance: MEDIUM
-	 - Required: false
 
-🔘 authentication.method
-
-Select how you want to authenticate the DB. Username Password or AWS IAM Roles.
-
-	 - Type: STRING
-	 - Default: Password
-	 - Importance: HIGH
-	 - Required: false
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password of the Redis user connecting to the Redis database server.
+	 - Required: MEDIUM
 
 🔘 provider.integration.id
 
@@ -189,15 +237,6 @@ Select how you want to authenticate the DB. Username Password or AWS IAM Roles.
 	 - Default: STRING
 	 - Importance: Select an existing integration that has access to your resource. In case you need to integrate a new IAM role, use provider integration
 	 - Required: HIGH
-
-🔘 redis.password
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The password of the Redis user connecting to the Redis database server.
-	 - Required: MEDIUM
 
 🔘 rediskafka.aws.credentials.provider.cluster.name
 
