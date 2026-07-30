@@ -1,4 +1,16 @@
 ==========================
+Add connector details
+==========================
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
 How should we connect to your data?
 ==========================
 🔘 connector.class
@@ -10,13 +22,40 @@ How should we connect to your data?
 	 - Importance: 
 	 - Required: HIGH
 
-🔘 name
+🔘 use.open.api.spec
+
+Whether to drive the connector configuration from an OpenAPI (OAS 3.0 or higher) specification.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 open.api.spec.format
+
+How you want to provide the OpenAPI specification — either a URL endpoint or an uploaded YAML/JSON file.
+
+	 - Type: STRING
+	 - Default: URL
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 open.api.spec.url
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: STRING
-	 - Importance: Sets a name for your connector.
+	 - Importance: URL endpoint that hosts the OpenAPI specification (OAS 3.0 or higher) in YAML or JSON format.
+	 - Required: HIGH
+
+🔘 open.api.spec.file
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Uploaded OpenAPI specification (OAS 3.0 or higher) in YAML or JSON format. Maximum file size 3 MB.
 	 - Required: HIGH
 
 ==========================
@@ -125,19 +164,19 @@ Number of tasks for this connector
 	 - Required: HIGH
 
 ==========================
-Behavior on error
+Authentication
 ==========================
-🔘 behavior.on.error
+🔘 secret.manager.enabled
 
-Error handling behavior setting for handling error response from HTTP requests. 
+Fetch sensitive configuration values from a secret manager.
 
-	 - Type: STRING
-	 - Default: FAIL
-	 - Importance: LOW
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
 	 - Required: false
 
 ==========================
-Authentication
+Service connection
 ==========================
 🔘 http.api.base.url
 
@@ -145,12 +184,12 @@ Authentication
 
 	 - Type: true
 	 - Default: STRING
-	 - Importance: The HTTP API Base URL. For example: `http://example.com/absenceManagement/v1`.
+	 - Importance: The HTTP API Base URL. For example: ``http://example.com/absenceManagement/v1``. When an OpenAPI spec is provided, this is dynamically populated from the parsed spec's base URLs.
 	 - Required: HIGH
 
 🔘 auth.type
 
-Authentication type of the endpoint. Valid values are ``NONE``, ``BASIC``, ``OAUTH2`` (Client Credentials grant type only), ``BEARER``, ``API_KEY``
+Authentication type of the endpoint. Valid values are ``NONE``, ``BASIC``, ``OAUTH2`` (Client Credentials grant type only), ``BEARER``, ``API_KEY``. When an OpenAPI spec is provided, this list is narrowed to the auth schemes declared by the spec.
 
 	 - Type: STRING
 	 - Default: NONE
@@ -184,15 +223,6 @@ Authentication type of the endpoint. Valid values are ``NONE``, ``BASIC``, ``OAU
 	 - Importance: The bearer authentication token to be used with an endpoint requiring bearer token based authentication.
 	 - Required: MEDIUM
 
-🔘 oauth2.token.url
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The URL to be used for fetching the OAuth2 token. Client Credentials is the only supported grant type.
-	 - Required: MEDIUM
-
 🔘 oauth2.client.id
 
 
@@ -211,15 +241,6 @@ Authentication type of the endpoint. Valid values are ``NONE``, ``BASIC``, ``OAU
 	 - Importance: The client secret used when fetching the OAuth2 token.
 	 - Required: MEDIUM
 
-🔘 oauth2.token.property
-
-The name of the property containing the OAuth2 token returned by the OAuth2 token URL (defaults to `access_token`).
-
-	 - Type: STRING
-	 - Default: access_token
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 oauth2.client.scope
 
 The scope parameter sent to the service when fetching the OAuth2 token.
@@ -231,21 +252,12 @@ The scope parameter sent to the service when fetching the OAuth2 token.
 
 🔘 oauth2.client.auth.mode
 
-Specifies how to encode ``client_id`` and ``client_secret`` in the OAuth2 authorization request. If set to ``header``, the credentials are encoded as an `'Authorization: Basic <base-64 encoded client_id:client_secret>'` HTTP header. If set to 'url', then ``client_id`` and ``client_secret`` are sent as URL encoded parameters.
+Specifies how to encode ``client_id`` and ``client_secret`` in the OAuth2 authorization request. If set to ``header``, the credentials are encoded as an ``'Authorization: Basic <base-64 encoded client_id:client_secret>'`` HTTP header. If set to ``url``, then ``client_id`` and ``client_secret`` are sent as URL encoded parameters.
 
 	 - Type: STRING
 	 - Default: header
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 oauth2.client.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: HTTP headers to be included in the OAuth2 client endpoint. Individual headers should be separated by ``|``. This configuration can be set via CLI only.
-	 - Required: LOW
 
 🔘 oauth2.client.header.separator
 
@@ -255,6 +267,33 @@ Separator character used in OAuth2 Client Headers. This configuration can be set
 	 - Default: |
 	 - Importance: LOW
 	 - Required: false
+
+🔘 oauth2.token.property
+
+The name of the property containing the OAuth2 token returned by the OAuth2 token URL (defaults to `access_token`).
+
+	 - Type: STRING
+	 - Default: access_token
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 oauth2.token.url
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The URL to be used for fetching the OAuth2 token. Client Credentials is the only supported grant type.
+	 - Required: MEDIUM
+
+🔘 oauth2.client.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: HTTP headers to be included in the OAuth2 client endpoint. Individual headers should be separated by ``|``. This configuration can be set via CLI only.
+	 - Required: LOW
 
 🔘 gcp.credentials.json
 
@@ -406,7 +445,7 @@ The identifier for the API key used in authentication. The format depends on the
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The host or IP address of the HTTP proxy.
+	 - Importance: The host name or IP address of the HTTP proxy used to route connector requests to the HTTP endpoint.
 	 - Required: MEDIUM
 
 🔘 http.proxy.port
@@ -415,7 +454,7 @@ The identifier for the API key used in authentication. The format depends on the
 
 	 - Type: false
 	 - Default: INT
-	 - Importance: The port number of the HTTP proxy.
+	 - Importance: The port number on which the HTTP proxy is listening.
 	 - Required: MEDIUM
 
 🔘 http.proxy.user
@@ -424,7 +463,7 @@ The identifier for the API key used in authentication. The format depends on the
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The username to be used for proxy authentication.
+	 - Importance: The username for authenticating with the HTTP proxy, if the proxy requires authentication.
 	 - Required: MEDIUM
 
 🔘 http.proxy.password
@@ -433,16 +472,16 @@ The identifier for the API key used in authentication. The format depends on the
 
 	 - Type: false
 	 - Default: PASSWORD
-	 - Importance: The password to be used for proxy authentication.
+	 - Importance: The password for authenticating with the HTTP proxy, if the proxy requires authentication.
 	 - Required: MEDIUM
 
-🔘 secret.manager.enabled
+🔘 http.proxy.enabled
 
-Fetch sensitive configuration values from a secret manager.
+Whether to route connector requests through an HTTP proxy. Enable this to configure the proxy host, port, and optional credentials. This is a cloud-only setting used to control the visibility of the HTTP proxy settings.
 
 	 - Type: BOOLEAN
 	 - Default: false
-	 - Importance: HIGH
+	 - Importance: MEDIUM
 	 - Required: false
 
 ==========================
@@ -478,6 +517,15 @@ Secret manager configuration
 ==========================
 APIs
 ==========================
+🔘 api.chaining.parent.child.relationship
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Comma separated list of parent-child relationship in case of API Chaining. For ex - If api1 is the parent API, and api2,api3 are the child APIs of api1, then the value will be set to ``api1::api2,api1::api3``.
+	 - Required: HIGH
+
 🔘 apis.num
 
 The number of http(s) APIs to configure. This value should be less than or equal to 15
@@ -486,15 +534,6 @@ The number of http(s) APIs to configure. This value should be less than or equal
 	 - Default: 1
 	 - Importance: HIGH
 	 - Required: true
-
-🔘 api.chaining.parent.child.relationship
-
-
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Comma separated list of parent-child relationship in case of API Chaining. For ex - If api1 is the parent API, and api2,api3 are the child APIs of api1, then the value will be set to ``api1::api2,api1::api3``.
-	 - Required: HIGH
 
 ==========================
 Reporter
@@ -505,15 +544,6 @@ The name of the topic to produce errant records after each unsuccessful API oper
 
 	 - Type: STRING
 	 - Default: error-${connector}
-	 - Importance: LOW
-	 - Required: false
-
-🔘 report.errors.as
-
-Dictates the content of records produced to the error topic. If set to ``Error string`` the value would be a human readable string describing the failure. The value will include some or all of the following information if available: http response code, reason phrase, submitted payload, url, response content, exception and error message. If set to http_response, the value would be the plain response content for the request which failed to write the record. In both modes, any information about the failure will also be included in the error records headers.
-
-	 - Type: STRING
-	 - Default: Error string
 	 - Importance: LOW
 	 - Required: false
 
@@ -791,7 +821,40 @@ Whether to flatten singleton unions. Applicable for Avro and JSON_SR Converters.
 	 - Required: LOW
 
 ==========================
-API-1 Configs
+Advanced configs
+==========================
+🔘 behavior.on.error
+
+Error handling behavior setting for handling error response from HTTP requests. 
+
+	 - Type: STRING
+	 - Default: FAIL
+	 - Importance: LOW
+	 - Required: false
+
+🔘 report.errors.as
+
+Dictates the content of records produced to the error topic. If set to ``Error string`` the value would be a human readable string describing the failure. The value will include some or all of the following information if available: http response code, reason phrase, submitted payload, url, response content, exception and error message. If set to http_response, the value would be the plain response content for the request which failed to write the record. In both modes, any information about the failure will also be included in the error records headers.
+
+	 - Type: STRING
+	 - Default: Error string
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+API-1 | Create a new topic
+==========================
+🔘 api1.topics
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Kafka topic to publish data from this API to.
+	 - Required: HIGH
+
+==========================
+API-1 | Path
 ==========================
 🔘 api1.http.api.path
 
@@ -799,44 +862,29 @@ API-1 Configs
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
-	 - Required: HIGH
-
-🔘 api1.topics
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Kafka topics to publish data to.
+	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 	 - Required: HIGH
 
 🔘 api1.http.request.method
 
-HTTP Request Method. Valid options are `GET` and `POST`.
+HTTP Request Method. Valid options are ``GET`` and ``POST``. When an OpenAPI spec is provided, this is populated from the parsed spec.
 
 	 - Type: STRING
 	 - Default: GET
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api1.http.request.headers
+==========================
+API-1 | Request configuration
+==========================
+🔘 api1.http.path.parameters
 
 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``. The UI splits the entered key/value pairs into individual rows for editing.
 	 - Required: MEDIUM
-
-🔘 api1.http.connect.timeout.ms
-
-The time in milliseconds to wait for a connection to be established
-
-	 - Type: INT
-	 - Default: 30000
-	 - Importance: MEDIUM
-	 - Required: false
 
 🔘 api1.http.request.parameters
 
@@ -844,7 +892,25 @@ The time in milliseconds to wait for a connection to be established
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
+	 - Importance: HTTP query parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The parameters are only set if ``http.request.method`` = ``GET``.
+	 - Required: MEDIUM
+
+🔘 api1.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
+
+🔘 api1.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api1.http.request.body
@@ -853,8 +919,32 @@ The time in milliseconds to wait for a connection to be established
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
+	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The body is only set if ``http.request.method`` = ``POST``.
 	 - Required: MEDIUM
+
+==========================
+API-1 | Schema
+==========================
+🔘 api1.http.response.schema
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP response schema (parsed from the OpenAPI spec when one is provided). Defines the structure of records produced from this API's responses.
+	 - Required: MEDIUM
+
+==========================
+API-1 | Settings
+==========================
+🔘 api1.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api1.http.request.timeout.ms
 
@@ -1027,15 +1117,6 @@ Whether to use cursor pagination with timestamp mode.
 	 - Importance: Name of the request parameter which holds the next page token.
 	 - Required: MEDIUM
 
-🔘 api1.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api1.initial.end.timestamp.value
 
 
@@ -1089,15 +1170,6 @@ Whether next page token is an absolute url or not.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api1.http.path.parameters
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``.
-	 - Required: MEDIUM
 
 🔘 api1.http.path.parameters.separator
 
@@ -1154,7 +1226,7 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Required: MEDIUM
 
 ==========================
-API-2 Configs
+API-2 | Create a new topic
 ==========================
 🔘 api2.topics
 
@@ -1162,44 +1234,41 @@ API-2 Configs
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The name of the Kafka topics to publish data to.
+	 - Importance: The name of the Kafka topic to publish data from this API to.
 	 - Required: HIGH
 
+==========================
+API-2 | Path
+==========================
 🔘 api2.http.api.path
 
 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 	 - Required: HIGH
 
 🔘 api2.http.request.method
 
-HTTP Request Method. Valid options are `GET` and `POST`.
+HTTP Request Method. Valid options are ``GET`` and ``POST``. When an OpenAPI spec is provided, this is populated from the parsed spec.
 
 	 - Type: STRING
 	 - Default: GET
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api2.http.request.headers
+==========================
+API-2 | Request configuration
+==========================
+🔘 api2.http.path.parameters
 
 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``. The UI splits the entered key/value pairs into individual rows for editing.
 	 - Required: MEDIUM
-
-🔘 api2.http.connect.timeout.ms
-
-The time in milliseconds to wait for a connection to be established
-
-	 - Type: INT
-	 - Default: 30000
-	 - Importance: MEDIUM
-	 - Required: false
 
 🔘 api2.http.request.parameters
 
@@ -1207,7 +1276,25 @@ The time in milliseconds to wait for a connection to be established
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
+	 - Importance: HTTP query parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The parameters are only set if ``http.request.method`` = ``GET``.
+	 - Required: MEDIUM
+
+🔘 api2.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
+
+🔘 api2.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api2.http.request.body
@@ -1216,8 +1303,32 @@ The time in milliseconds to wait for a connection to be established
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
+	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The body is only set if ``http.request.method`` = ``POST``.
 	 - Required: MEDIUM
+
+==========================
+API-2 | Schema
+==========================
+🔘 api2.http.response.schema
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP response schema (parsed from the OpenAPI spec when one is provided). Defines the structure of records produced from this API's responses.
+	 - Required: MEDIUM
+
+==========================
+API-2 | Settings
+==========================
+🔘 api2.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api2.http.request.timeout.ms
 
@@ -1399,15 +1510,6 @@ Flag to determine if the api needs to be tested
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
 	 - Required: MEDIUM
 
-🔘 api2.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api2.timestamp.format
 
 Timestamp format used in the time related request parameters. It should match the format of initial.start.timestamp.value and initial.end.timestamp.value
@@ -1452,15 +1554,6 @@ Whether next page token is an absolute url or not.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api2.http.path.parameters
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``.
-	 - Required: MEDIUM
 
 🔘 api2.http.path.parameters.separator
 
@@ -1517,7 +1610,19 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Required: MEDIUM
 
 ==========================
-API-3 Configs
+API-3 | Create a new topic
+==========================
+🔘 api3.topics
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Kafka topic to publish data from this API to.
+	 - Required: HIGH
+
+==========================
+API-3 | Path
 ==========================
 🔘 api3.http.api.path
 
@@ -1525,35 +1630,29 @@ API-3 Configs
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 	 - Required: HIGH
-
-🔘 api3.topics
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Kafka topics to publish data to.
-	 - Required: HIGH
-
-🔘 api3.http.request.headers
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
-	 - Required: MEDIUM
 
 🔘 api3.http.request.method
 
-HTTP Request Method. Valid options are `GET` and `POST`.
+HTTP Request Method. Valid options are ``GET`` and ``POST``. When an OpenAPI spec is provided, this is populated from the parsed spec.
 
 	 - Type: STRING
 	 - Default: GET
 	 - Importance: HIGH
 	 - Required: false
+
+==========================
+API-3 | Request configuration
+==========================
+🔘 api3.http.path.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
 
 🔘 api3.http.request.parameters
 
@@ -1561,9 +1660,51 @@ HTTP Request Method. Valid options are `GET` and `POST`.
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
+	 - Importance: HTTP query parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The parameters are only set if ``http.request.method`` = ``GET``.
 	 - Required: MEDIUM
 
+🔘 api3.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
+
+🔘 api3.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api3.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The body is only set if ``http.request.method`` = ``POST``.
+	 - Required: MEDIUM
+
+==========================
+API-3 | Schema
+==========================
+🔘 api3.http.response.schema
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP response schema (parsed from the OpenAPI spec when one is provided). Defines the structure of records produced from this API's responses.
+	 - Required: MEDIUM
+
+==========================
+API-3 | Settings
+==========================
 🔘 api3.http.connect.timeout.ms
 
 The time in milliseconds to wait for a connection to be established
@@ -1572,15 +1713,6 @@ The time in milliseconds to wait for a connection to be established
 	 - Default: 30000
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api3.http.request.body
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
-	 - Required: MEDIUM
 
 🔘 api3.http.request.timeout.ms
 
@@ -1762,15 +1894,6 @@ Flag to determine if the api needs to be tested
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
 	 - Required: MEDIUM
 
-🔘 api3.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api3.timestamp.format
 
 Timestamp format used in the time related request parameters. It should match the format of initial.start.timestamp.value and initial.end.timestamp.value
@@ -1815,15 +1938,6 @@ Whether next page token is an absolute url or not.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api3.http.path.parameters
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``.
-	 - Required: MEDIUM
 
 🔘 api3.http.path.parameters.separator
 
@@ -1880,7 +1994,19 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Required: MEDIUM
 
 ==========================
-API-4 Configs
+API-4 | Create a new topic
+==========================
+🔘 api4.topics
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Kafka topic to publish data from this API to.
+	 - Required: HIGH
+
+==========================
+API-4 | Path
 ==========================
 🔘 api4.http.api.path
 
@@ -1888,35 +2014,29 @@ API-4 Configs
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 	 - Required: HIGH
-
-🔘 api4.topics
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Kafka topics to publish data to.
-	 - Required: HIGH
-
-🔘 api4.http.request.headers
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
-	 - Required: MEDIUM
 
 🔘 api4.http.request.method
 
-HTTP Request Method. Valid options are `GET` and `POST`.
+HTTP Request Method. Valid options are ``GET`` and ``POST``. When an OpenAPI spec is provided, this is populated from the parsed spec.
 
 	 - Type: STRING
 	 - Default: GET
 	 - Importance: HIGH
 	 - Required: false
+
+==========================
+API-4 | Request configuration
+==========================
+🔘 api4.http.path.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
 
 🔘 api4.http.request.parameters
 
@@ -1924,9 +2044,51 @@ HTTP Request Method. Valid options are `GET` and `POST`.
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
+	 - Importance: HTTP query parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The parameters are only set if ``http.request.method`` = ``GET``.
 	 - Required: MEDIUM
 
+🔘 api4.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
+
+🔘 api4.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api4.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The body is only set if ``http.request.method`` = ``POST``.
+	 - Required: MEDIUM
+
+==========================
+API-4 | Schema
+==========================
+🔘 api4.http.response.schema
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP response schema (parsed from the OpenAPI spec when one is provided). Defines the structure of records produced from this API's responses.
+	 - Required: MEDIUM
+
+==========================
+API-4 | Settings
+==========================
 🔘 api4.http.connect.timeout.ms
 
 The time in milliseconds to wait for a connection to be established
@@ -1944,15 +2106,6 @@ The time in milliseconds to wait for a request response from the server
 	 - Default: 30000
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api4.http.request.body
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
-	 - Required: MEDIUM
 
 🔘 api4.http.response.compression.enabled
 
@@ -2125,15 +2278,6 @@ Whether to use cursor pagination with timestamp mode.
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
 	 - Required: MEDIUM
 
-🔘 api4.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api4.timestamp.format
 
 Timestamp format used in the time related request parameters. It should match the format of initial.start.timestamp.value and initial.end.timestamp.value
@@ -2178,15 +2322,6 @@ Whether next page token is an absolute url or not.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api4.http.path.parameters
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``.
-	 - Required: MEDIUM
 
 🔘 api4.http.path.parameters.separator
 
@@ -2243,7 +2378,19 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Required: MEDIUM
 
 ==========================
-API-5 Configs
+API-5 | Create a new topic
+==========================
+🔘 api5.topics
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Kafka topic to publish data from this API to.
+	 - Required: HIGH
+
+==========================
+API-5 | Path
 ==========================
 🔘 api5.http.api.path
 
@@ -2251,34 +2398,28 @@ API-5 Configs
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
-	 - Required: HIGH
-
-🔘 api5.topics
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Kafka topics to publish data to.
+	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 	 - Required: HIGH
 
 🔘 api5.http.request.method
 
-HTTP Request Method. Valid options are `GET` and `POST`.
+HTTP Request Method. Valid options are ``GET`` and ``POST``. When an OpenAPI spec is provided, this is populated from the parsed spec.
 
 	 - Type: STRING
 	 - Default: GET
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api5.http.request.headers
+==========================
+API-5 | Request configuration
+==========================
+🔘 api5.http.path.parameters
 
 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``. The UI splits the entered key/value pairs into individual rows for editing.
 	 - Required: MEDIUM
 
 🔘 api5.http.request.parameters
@@ -2287,9 +2428,51 @@ HTTP Request Method. Valid options are `GET` and `POST`.
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
+	 - Importance: HTTP query parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The parameters are only set if ``http.request.method`` = ``GET``.
 	 - Required: MEDIUM
 
+🔘 api5.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
+
+🔘 api5.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api5.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The body is only set if ``http.request.method`` = ``POST``.
+	 - Required: MEDIUM
+
+==========================
+API-5 | Schema
+==========================
+🔘 api5.http.response.schema
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP response schema (parsed from the OpenAPI spec when one is provided). Defines the structure of records produced from this API's responses.
+	 - Required: MEDIUM
+
+==========================
+API-5 | Settings
+==========================
 🔘 api5.http.connect.timeout.ms
 
 The time in milliseconds to wait for a connection to be established
@@ -2307,15 +2490,6 @@ The time in milliseconds to wait for a request response from the server
 	 - Default: 30000
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api5.http.request.body
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
-	 - Required: MEDIUM
 
 🔘 api5.http.response.compression.enabled
 
@@ -2488,15 +2662,6 @@ Flag to determine if the api needs to be tested
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
 	 - Required: MEDIUM
 
-🔘 api5.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api5.timestamp.format
 
 Timestamp format used in the time related request parameters. It should match the format of initial.start.timestamp.value and initial.end.timestamp.value
@@ -2541,15 +2706,6 @@ Whether next page token is an absolute url or not.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api5.http.path.parameters
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``.
-	 - Required: MEDIUM
 
 🔘 api5.http.path.parameters.separator
 
@@ -2606,7 +2762,19 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Required: MEDIUM
 
 ==========================
-API-6 Configs
+API-6 | Create a new topic
+==========================
+🔘 api6.topics
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Kafka topic to publish data from this API to.
+	 - Required: HIGH
+
+==========================
+API-6 | Path
 ==========================
 🔘 api6.http.api.path
 
@@ -2614,34 +2782,28 @@ API-6 Configs
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
-	 - Required: HIGH
-
-🔘 api6.topics
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Kafka topics to publish data to.
+	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 	 - Required: HIGH
 
 🔘 api6.http.request.method
 
-HTTP Request Method. Valid options are `GET` and `POST`.
+HTTP Request Method. Valid options are ``GET`` and ``POST``. When an OpenAPI spec is provided, this is populated from the parsed spec.
 
 	 - Type: STRING
 	 - Default: GET
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api6.http.request.headers
+==========================
+API-6 | Request configuration
+==========================
+🔘 api6.http.path.parameters
 
 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``. The UI splits the entered key/value pairs into individual rows for editing.
 	 - Required: MEDIUM
 
 🔘 api6.http.request.parameters
@@ -2650,9 +2812,51 @@ HTTP Request Method. Valid options are `GET` and `POST`.
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
+	 - Importance: HTTP query parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The parameters are only set if ``http.request.method`` = ``GET``.
 	 - Required: MEDIUM
 
+🔘 api6.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
+
+🔘 api6.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api6.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The body is only set if ``http.request.method`` = ``POST``.
+	 - Required: MEDIUM
+
+==========================
+API-6 | Schema
+==========================
+🔘 api6.http.response.schema
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP response schema (parsed from the OpenAPI spec when one is provided). Defines the structure of records produced from this API's responses.
+	 - Required: MEDIUM
+
+==========================
+API-6 | Settings
+==========================
 🔘 api6.http.connect.timeout.ms
 
 The time in milliseconds to wait for a connection to be established
@@ -2670,15 +2874,6 @@ The time in milliseconds to wait for a request response from the server
 	 - Default: 30000
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api6.http.request.body
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
-	 - Required: MEDIUM
 
 🔘 api6.http.offset.mode
 
@@ -2851,15 +3046,6 @@ Whether to use cursor pagination with timestamp mode.
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
 	 - Required: MEDIUM
 
-🔘 api6.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api6.timestamp.format
 
 Timestamp format used in the time related request parameters. It should match the format of initial.start.timestamp.value and initial.end.timestamp.value
@@ -2904,15 +3090,6 @@ Whether next page token is an absolute url or not.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api6.http.path.parameters
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``.
-	 - Required: MEDIUM
 
 🔘 api6.http.path.parameters.separator
 
@@ -2969,7 +3146,19 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Required: MEDIUM
 
 ==========================
-API-7 Configs
+API-7 | Create a new topic
+==========================
+🔘 api7.topics
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Kafka topic to publish data from this API to.
+	 - Required: HIGH
+
+==========================
+API-7 | Path
 ==========================
 🔘 api7.http.api.path
 
@@ -2977,34 +3166,28 @@ API-7 Configs
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
-	 - Required: HIGH
-
-🔘 api7.topics
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Kafka topics to publish data to.
+	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 	 - Required: HIGH
 
 🔘 api7.http.request.method
 
-HTTP Request Method. Valid options are `GET` and `POST`.
+HTTP Request Method. Valid options are ``GET`` and ``POST``. When an OpenAPI spec is provided, this is populated from the parsed spec.
 
 	 - Type: STRING
 	 - Default: GET
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api7.http.request.headers
+==========================
+API-7 | Request configuration
+==========================
+🔘 api7.http.path.parameters
 
 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``. The UI splits the entered key/value pairs into individual rows for editing.
 	 - Required: MEDIUM
 
 🔘 api7.http.request.parameters
@@ -3013,9 +3196,51 @@ HTTP Request Method. Valid options are `GET` and `POST`.
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
+	 - Importance: HTTP query parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The parameters are only set if ``http.request.method`` = ``GET``.
 	 - Required: MEDIUM
 
+🔘 api7.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
+
+🔘 api7.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api7.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The body is only set if ``http.request.method`` = ``POST``.
+	 - Required: MEDIUM
+
+==========================
+API-7 | Schema
+==========================
+🔘 api7.http.response.schema
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP response schema (parsed from the OpenAPI spec when one is provided). Defines the structure of records produced from this API's responses.
+	 - Required: MEDIUM
+
+==========================
+API-7 | Settings
+==========================
 🔘 api7.http.connect.timeout.ms
 
 The time in milliseconds to wait for a connection to be established
@@ -3033,15 +3258,6 @@ The time in milliseconds to wait for a request response from the server
 	 - Default: 30000
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api7.http.request.body
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
-	 - Required: MEDIUM
 
 🔘 api7.http.response.compression.enabled
 
@@ -3205,15 +3421,6 @@ Flag to determine if the api needs to be tested
 	 - Importance: Name of the request parameter which holds the next page token.
 	 - Required: MEDIUM
 
-🔘 api7.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api7.initial.end.timestamp.value
 
 
@@ -3267,15 +3474,6 @@ Whether next page token is an absolute url or not.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api7.http.path.parameters
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``.
-	 - Required: MEDIUM
 
 🔘 api7.http.path.parameters.separator
 
@@ -3332,7 +3530,19 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Required: MEDIUM
 
 ==========================
-API-8 Configs
+API-8 | Create a new topic
+==========================
+🔘 api8.topics
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Kafka topic to publish data from this API to.
+	 - Required: HIGH
+
+==========================
+API-8 | Path
 ==========================
 🔘 api8.http.api.path
 
@@ -3340,17 +3550,38 @@ API-8 Configs
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 	 - Required: HIGH
 
-🔘 api8.topics
+🔘 api8.http.request.method
+
+HTTP Request Method. Valid options are ``GET`` and ``POST``. When an OpenAPI spec is provided, this is populated from the parsed spec.
+
+	 - Type: STRING
+	 - Default: GET
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+API-8 | Request configuration
+==========================
+🔘 api8.http.path.parameters
 
 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The name of the Kafka topics to publish data to.
-	 - Required: HIGH
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
+
+🔘 api8.http.request.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP query parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The parameters are only set if ``http.request.method`` = ``GET``.
+	 - Required: MEDIUM
 
 🔘 api8.http.request.headers
 
@@ -3358,18 +3589,42 @@ API-8 Configs
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
 	 - Required: MEDIUM
 
-🔘 api8.http.request.method
+🔘 api8.http.request.sensitive.headers
 
-HTTP Request Method. Valid options are `GET` and `POST`.
 
-	 - Type: STRING
-	 - Default: GET
-	 - Importance: HIGH
-	 - Required: false
 
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api8.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The body is only set if ``http.request.method`` = ``POST``.
+	 - Required: MEDIUM
+
+==========================
+API-8 | Schema
+==========================
+🔘 api8.http.response.schema
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP response schema (parsed from the OpenAPI spec when one is provided). Defines the structure of records produced from this API's responses.
+	 - Required: MEDIUM
+
+==========================
+API-8 | Settings
+==========================
 🔘 api8.http.connect.timeout.ms
 
 The time in milliseconds to wait for a connection to be established
@@ -3379,15 +3634,6 @@ The time in milliseconds to wait for a connection to be established
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 api8.http.request.parameters
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
-	 - Required: MEDIUM
-
 🔘 api8.http.request.timeout.ms
 
 The time in milliseconds to wait for a request response from the server
@@ -3396,15 +3642,6 @@ The time in milliseconds to wait for a request response from the server
 	 - Default: 30000
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api8.http.request.body
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
-	 - Required: MEDIUM
 
 🔘 api8.http.response.compression.enabled
 
@@ -3577,15 +3814,6 @@ Flag to determine if the api needs to be tested
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
 	 - Required: MEDIUM
 
-🔘 api8.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api8.timestamp.format
 
 Timestamp format used in the time related request parameters. It should match the format of initial.start.timestamp.value and initial.end.timestamp.value
@@ -3630,15 +3858,6 @@ Whether next page token is an absolute url or not.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api8.http.path.parameters
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``.
-	 - Required: MEDIUM
 
 🔘 api8.http.path.parameters.separator
 
@@ -3695,7 +3914,19 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Required: MEDIUM
 
 ==========================
-API-9 Configs
+API-9 | Create a new topic
+==========================
+🔘 api9.topics
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Kafka topic to publish data from this API to.
+	 - Required: HIGH
+
+==========================
+API-9 | Path
 ==========================
 🔘 api9.http.api.path
 
@@ -3703,44 +3934,29 @@ API-9 Configs
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
-	 - Required: HIGH
-
-🔘 api9.topics
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Kafka topics to publish data to.
+	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 	 - Required: HIGH
 
 🔘 api9.http.request.method
 
-HTTP Request Method. Valid options are `GET` and `POST`.
+HTTP Request Method. Valid options are ``GET`` and ``POST``. When an OpenAPI spec is provided, this is populated from the parsed spec.
 
 	 - Type: STRING
 	 - Default: GET
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api9.http.request.headers
+==========================
+API-9 | Request configuration
+==========================
+🔘 api9.http.path.parameters
 
 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``. The UI splits the entered key/value pairs into individual rows for editing.
 	 - Required: MEDIUM
-
-🔘 api9.http.connect.timeout.ms
-
-The time in milliseconds to wait for a connection to be established
-
-	 - Type: INT
-	 - Default: 30000
-	 - Importance: MEDIUM
-	 - Required: false
 
 🔘 api9.http.request.parameters
 
@@ -3748,7 +3964,25 @@ The time in milliseconds to wait for a connection to be established
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
+	 - Importance: HTTP query parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The parameters are only set if ``http.request.method`` = ``GET``.
+	 - Required: MEDIUM
+
+🔘 api9.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
+
+🔘 api9.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api9.http.request.body
@@ -3757,8 +3991,32 @@ The time in milliseconds to wait for a connection to be established
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
+	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The body is only set if ``http.request.method`` = ``POST``.
 	 - Required: MEDIUM
+
+==========================
+API-9 | Schema
+==========================
+🔘 api9.http.response.schema
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP response schema (parsed from the OpenAPI spec when one is provided). Defines the structure of records produced from this API's responses.
+	 - Required: MEDIUM
+
+==========================
+API-9 | Settings
+==========================
+🔘 api9.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api9.http.request.timeout.ms
 
@@ -3940,15 +4198,6 @@ Flag to determine if the api needs to be tested
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
 	 - Required: MEDIUM
 
-🔘 api9.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api9.timestamp.format
 
 Timestamp format used in the time related request parameters. It should match the format of initial.start.timestamp.value and initial.end.timestamp.value
@@ -3993,15 +4242,6 @@ Whether next page token is an absolute url or not.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api9.http.path.parameters
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``.
-	 - Required: MEDIUM
 
 🔘 api9.http.path.parameters.separator
 
@@ -4058,7 +4298,19 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Required: MEDIUM
 
 ==========================
-API-10 Configs
+API-10 | Create a new topic
+==========================
+🔘 api10.topics
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Kafka topic to publish data from this API to.
+	 - Required: HIGH
+
+==========================
+API-10 | Path
 ==========================
 🔘 api10.http.api.path
 
@@ -4066,44 +4318,29 @@ API-10 Configs
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
-	 - Required: HIGH
-
-🔘 api10.topics
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Kafka topics to publish data to.
+	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 	 - Required: HIGH
 
 🔘 api10.http.request.method
 
-HTTP Request Method. Valid options are `GET` and `POST`.
+HTTP Request Method. Valid options are ``GET`` and ``POST``. When an OpenAPI spec is provided, this is populated from the parsed spec.
 
 	 - Type: STRING
 	 - Default: GET
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api10.http.request.headers
+==========================
+API-10 | Request configuration
+==========================
+🔘 api10.http.path.parameters
 
 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``. The UI splits the entered key/value pairs into individual rows for editing.
 	 - Required: MEDIUM
-
-🔘 api10.http.connect.timeout.ms
-
-The time in milliseconds to wait for a connection to be established
-
-	 - Type: INT
-	 - Default: 30000
-	 - Importance: MEDIUM
-	 - Required: false
 
 🔘 api10.http.request.parameters
 
@@ -4111,7 +4348,25 @@ The time in milliseconds to wait for a connection to be established
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
+	 - Importance: HTTP query parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The parameters are only set if ``http.request.method`` = ``GET``.
+	 - Required: MEDIUM
+
+🔘 api10.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
+
+🔘 api10.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api10.http.request.body
@@ -4120,8 +4375,32 @@ The time in milliseconds to wait for a connection to be established
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
+	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The body is only set if ``http.request.method`` = ``POST``.
 	 - Required: MEDIUM
+
+==========================
+API-10 | Schema
+==========================
+🔘 api10.http.response.schema
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP response schema (parsed from the OpenAPI spec when one is provided). Defines the structure of records produced from this API's responses.
+	 - Required: MEDIUM
+
+==========================
+API-10 | Settings
+==========================
+🔘 api10.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api10.http.request.timeout.ms
 
@@ -4294,15 +4573,6 @@ Flag to determine if the api needs to be tested
 	 - Importance: Name of the request parameter which holds the next page token.
 	 - Required: MEDIUM
 
-🔘 api10.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api10.initial.end.timestamp.value
 
 
@@ -4356,15 +4626,6 @@ Whether next page token is an absolute url or not.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api10.http.path.parameters
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``.
-	 - Required: MEDIUM
 
 🔘 api10.http.path.parameters.separator
 
@@ -4421,7 +4682,19 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Required: MEDIUM
 
 ==========================
-API-11 Configs
+API-11 | Create a new topic
+==========================
+🔘 api11.topics
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Kafka topic to publish data from this API to.
+	 - Required: HIGH
+
+==========================
+API-11 | Path
 ==========================
 🔘 api11.http.api.path
 
@@ -4429,44 +4702,29 @@ API-11 Configs
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 	 - Required: HIGH
-
-🔘 api11.topics
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Kafka topics to publish data to.
-	 - Required: HIGH
-
-🔘 api11.http.request.headers
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
-	 - Required: MEDIUM
 
 🔘 api11.http.request.method
 
-HTTP Request Method. Valid options are `GET` and `POST`.
+HTTP Request Method. Valid options are ``GET`` and ``POST``. When an OpenAPI spec is provided, this is populated from the parsed spec.
 
 	 - Type: STRING
 	 - Default: GET
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api11.http.connect.timeout.ms
+==========================
+API-11 | Request configuration
+==========================
+🔘 api11.http.path.parameters
 
-The time in milliseconds to wait for a connection to be established
 
-	 - Type: INT
-	 - Default: 30000
-	 - Importance: MEDIUM
-	 - Required: false
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
 
 🔘 api11.http.request.parameters
 
@@ -4474,7 +4732,25 @@ The time in milliseconds to wait for a connection to be established
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
+	 - Importance: HTTP query parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The parameters are only set if ``http.request.method`` = ``GET``.
+	 - Required: MEDIUM
+
+🔘 api11.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
+
+🔘 api11.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api11.http.request.body
@@ -4483,8 +4759,32 @@ The time in milliseconds to wait for a connection to be established
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
+	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The body is only set if ``http.request.method`` = ``POST``.
 	 - Required: MEDIUM
+
+==========================
+API-11 | Schema
+==========================
+🔘 api11.http.response.schema
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP response schema (parsed from the OpenAPI spec when one is provided). Defines the structure of records produced from this API's responses.
+	 - Required: MEDIUM
+
+==========================
+API-11 | Settings
+==========================
+🔘 api11.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api11.http.request.timeout.ms
 
@@ -4666,15 +4966,6 @@ Flag to determine if the api needs to be tested
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
 	 - Required: MEDIUM
 
-🔘 api11.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api11.timestamp.format
 
 Timestamp format used in the time related request parameters. It should match the format of initial.start.timestamp.value and initial.end.timestamp.value
@@ -4719,15 +5010,6 @@ Whether next page token is an absolute url or not.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api11.http.path.parameters
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``.
-	 - Required: MEDIUM
 
 🔘 api11.http.path.parameters.separator
 
@@ -4784,7 +5066,19 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Required: MEDIUM
 
 ==========================
-API-12 Configs
+API-12 | Create a new topic
+==========================
+🔘 api12.topics
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Kafka topic to publish data from this API to.
+	 - Required: HIGH
+
+==========================
+API-12 | Path
 ==========================
 🔘 api12.http.api.path
 
@@ -4792,44 +5086,29 @@ API-12 Configs
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 	 - Required: HIGH
-
-🔘 api12.topics
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Kafka topics to publish data to.
-	 - Required: HIGH
-
-🔘 api12.http.request.headers
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
-	 - Required: MEDIUM
 
 🔘 api12.http.request.method
 
-HTTP Request Method. Valid options are `GET` and `POST`.
+HTTP Request Method. Valid options are ``GET`` and ``POST``. When an OpenAPI spec is provided, this is populated from the parsed spec.
 
 	 - Type: STRING
 	 - Default: GET
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api12.http.connect.timeout.ms
+==========================
+API-12 | Request configuration
+==========================
+🔘 api12.http.path.parameters
 
-The time in milliseconds to wait for a connection to be established
 
-	 - Type: INT
-	 - Default: 30000
-	 - Importance: MEDIUM
-	 - Required: false
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
 
 🔘 api12.http.request.parameters
 
@@ -4837,7 +5116,25 @@ The time in milliseconds to wait for a connection to be established
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
+	 - Importance: HTTP query parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The parameters are only set if ``http.request.method`` = ``GET``.
+	 - Required: MEDIUM
+
+🔘 api12.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
+
+🔘 api12.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api12.http.request.body
@@ -4846,8 +5143,32 @@ The time in milliseconds to wait for a connection to be established
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
+	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The body is only set if ``http.request.method`` = ``POST``.
 	 - Required: MEDIUM
+
+==========================
+API-12 | Schema
+==========================
+🔘 api12.http.response.schema
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP response schema (parsed from the OpenAPI spec when one is provided). Defines the structure of records produced from this API's responses.
+	 - Required: MEDIUM
+
+==========================
+API-12 | Settings
+==========================
+🔘 api12.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api12.http.request.timeout.ms
 
@@ -5020,15 +5341,6 @@ Flag to determine if the api needs to be tested
 	 - Importance: Name of the request parameter which holds the next page token.
 	 - Required: MEDIUM
 
-🔘 api12.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api12.initial.end.timestamp.value
 
 
@@ -5082,15 +5394,6 @@ Whether next page token is an absolute url or not.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api12.http.path.parameters
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``.
-	 - Required: MEDIUM
 
 🔘 api12.http.path.parameters.separator
 
@@ -5147,7 +5450,19 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Required: MEDIUM
 
 ==========================
-API-13 Configs
+API-13 | Create a new topic
+==========================
+🔘 api13.topics
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Kafka topic to publish data from this API to.
+	 - Required: HIGH
+
+==========================
+API-13 | Path
 ==========================
 🔘 api13.http.api.path
 
@@ -5155,44 +5470,29 @@ API-13 Configs
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 	 - Required: HIGH
-
-🔘 api13.topics
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Kafka topics to publish data to.
-	 - Required: HIGH
-
-🔘 api13.http.request.headers
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
-	 - Required: MEDIUM
 
 🔘 api13.http.request.method
 
-HTTP Request Method. Valid options are `GET` and `POST`.
+HTTP Request Method. Valid options are ``GET`` and ``POST``. When an OpenAPI spec is provided, this is populated from the parsed spec.
 
 	 - Type: STRING
 	 - Default: GET
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api13.http.connect.timeout.ms
+==========================
+API-13 | Request configuration
+==========================
+🔘 api13.http.path.parameters
 
-The time in milliseconds to wait for a connection to be established
 
-	 - Type: INT
-	 - Default: 30000
-	 - Importance: MEDIUM
-	 - Required: false
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
 
 🔘 api13.http.request.parameters
 
@@ -5200,7 +5500,25 @@ The time in milliseconds to wait for a connection to be established
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
+	 - Importance: HTTP query parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The parameters are only set if ``http.request.method`` = ``GET``.
+	 - Required: MEDIUM
+
+🔘 api13.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
+
+🔘 api13.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
 	 - Required: MEDIUM
 
 🔘 api13.http.request.body
@@ -5209,8 +5527,32 @@ The time in milliseconds to wait for a connection to be established
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
+	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The body is only set if ``http.request.method`` = ``POST``.
 	 - Required: MEDIUM
+
+==========================
+API-13 | Schema
+==========================
+🔘 api13.http.response.schema
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP response schema (parsed from the OpenAPI spec when one is provided). Defines the structure of records produced from this API's responses.
+	 - Required: MEDIUM
+
+==========================
+API-13 | Settings
+==========================
+🔘 api13.http.connect.timeout.ms
+
+The time in milliseconds to wait for a connection to be established
+
+	 - Type: INT
+	 - Default: 30000
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 api13.http.request.timeout.ms
 
@@ -5392,15 +5734,6 @@ Flag to determine if the api needs to be tested
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
 	 - Required: MEDIUM
 
-🔘 api13.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api13.timestamp.format
 
 Timestamp format used in the time related request parameters. It should match the format of initial.start.timestamp.value and initial.end.timestamp.value
@@ -5445,15 +5778,6 @@ Whether next page token is an absolute url or not.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api13.http.path.parameters
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``.
-	 - Required: MEDIUM
 
 🔘 api13.http.path.parameters.separator
 
@@ -5510,7 +5834,19 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Required: MEDIUM
 
 ==========================
-API-14 Configs
+API-14 | Create a new topic
+==========================
+🔘 api14.topics
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Kafka topic to publish data from this API to.
+	 - Required: HIGH
+
+==========================
+API-14 | Path
 ==========================
 🔘 api14.http.api.path
 
@@ -5518,34 +5854,28 @@ API-14 Configs
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
-	 - Required: HIGH
-
-🔘 api14.topics
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Kafka topics to publish data to.
+	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 	 - Required: HIGH
 
 🔘 api14.http.request.method
 
-HTTP Request Method. Valid options are `GET` and `POST`.
+HTTP Request Method. Valid options are ``GET`` and ``POST``. When an OpenAPI spec is provided, this is populated from the parsed spec.
 
 	 - Type: STRING
 	 - Default: GET
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 api14.http.request.headers
+==========================
+API-14 | Request configuration
+==========================
+🔘 api14.http.path.parameters
 
 
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``. The UI splits the entered key/value pairs into individual rows for editing.
 	 - Required: MEDIUM
 
 🔘 api14.http.request.parameters
@@ -5554,9 +5884,51 @@ HTTP Request Method. Valid options are `GET` and `POST`.
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
+	 - Importance: HTTP query parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The parameters are only set if ``http.request.method`` = ``GET``.
 	 - Required: MEDIUM
 
+🔘 api14.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
+
+🔘 api14.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api14.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The body is only set if ``http.request.method`` = ``POST``.
+	 - Required: MEDIUM
+
+==========================
+API-14 | Schema
+==========================
+🔘 api14.http.response.schema
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP response schema (parsed from the OpenAPI spec when one is provided). Defines the structure of records produced from this API's responses.
+	 - Required: MEDIUM
+
+==========================
+API-14 | Settings
+==========================
 🔘 api14.http.connect.timeout.ms
 
 The time in milliseconds to wait for a connection to be established
@@ -5574,15 +5946,6 @@ The time in milliseconds to wait for a request response from the server
 	 - Default: 30000
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api14.http.request.body
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
-	 - Required: MEDIUM
 
 🔘 api14.http.response.compression.enabled
 
@@ -5746,15 +6109,6 @@ Flag to determine if the api needs to be tested
 	 - Importance: Name of the request parameter which holds the next page token.
 	 - Required: MEDIUM
 
-🔘 api14.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api14.initial.end.timestamp.value
 
 
@@ -5808,15 +6162,6 @@ Whether next page token is an absolute url or not.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api14.http.path.parameters
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``.
-	 - Required: MEDIUM
 
 🔘 api14.http.path.parameters.separator
 
@@ -5873,7 +6218,19 @@ Specifies how records are ordered during chaining when using timestamp mode. Use
 	 - Required: MEDIUM
 
 ==========================
-API-15 Configs
+API-15 | Create a new topic
+==========================
+🔘 api15.topics
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the Kafka topic to publish data from this API to.
+	 - Required: HIGH
+
+==========================
+API-15 | Path
 ==========================
 🔘 api15.http.api.path
 
@@ -5881,35 +6238,29 @@ API-15 Configs
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The HTTP API path together with the 'http.api.base.url' will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset').
+	 - Importance: The HTTP API path together with the ``http.api.base.url`` will form the complete HTTP(S) URL. This path can be templated with offset information. For example: ``/resource1/${offset}`` where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). When an OpenAPI spec is provided, this is populated from the parsed spec.
 	 - Required: HIGH
-
-🔘 api15.topics
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Kafka topics to publish data to.
-	 - Required: HIGH
-
-🔘 api15.http.request.headers
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by `:`. Distinct headers should be separated by `|`. For example: `From:abcxyz@confluent.io|Content-Length:348`.
-	 - Required: MEDIUM
 
 🔘 api15.http.request.method
 
-HTTP Request Method. Valid options are `GET` and `POST`.
+HTTP Request Method. Valid options are ``GET`` and ``POST``. When an OpenAPI spec is provided, this is populated from the parsed spec.
 
 	 - Type: STRING
 	 - Default: GET
 	 - Importance: HIGH
 	 - Required: false
+
+==========================
+API-15 | Request configuration
+==========================
+🔘 api15.http.path.parameters
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
 
 🔘 api15.http.request.parameters
 
@@ -5917,9 +6268,51 @@ HTTP Request Method. Valid options are `GET` and `POST`.
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: HTTP parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The parameters are only set if 'http.request.method' = `GET`.
+	 - Importance: HTTP query parameters to be added to each request. Parameter names and values should be separated by ``=``. Distinct parameters should be separated by ``&``. Parameter values can be templated with offset information (for example: ``search_after=${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The parameters are only set if ``http.request.method`` = ``GET``.
 	 - Required: MEDIUM
 
+🔘 api15.http.request.headers
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP headers to be included in each request. Header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. The UI splits the entered key/value pairs into individual rows for editing.
+	 - Required: MEDIUM
+
+🔘 api15.http.request.sensitive.headers
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
+	 - Required: MEDIUM
+
+🔘 api15.http.request.body
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from ``http.initial.offset``). The body is only set if ``http.request.method`` = ``POST``.
+	 - Required: MEDIUM
+
+==========================
+API-15 | Schema
+==========================
+🔘 api15.http.response.schema
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: HTTP response schema (parsed from the OpenAPI spec when one is provided). Defines the structure of records produced from this API's responses.
+	 - Required: MEDIUM
+
+==========================
+API-15 | Settings
+==========================
 🔘 api15.http.connect.timeout.ms
 
 The time in milliseconds to wait for a connection to be established
@@ -5928,15 +6321,6 @@ The time in milliseconds to wait for a connection to be established
 	 - Default: 30000
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api15.http.request.body
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The payload to be sent along with each HTTP request. The value can be templated with offset (for example: ``search_after: ${offset}``) where ``${offset}`` will be substituted with the offset generated from the previous request's response (or if it's the first request, from 'http.initial.offset'). The body is only set if 'http.request.method' = `POST`.
-	 - Required: MEDIUM
 
 🔘 api15.http.request.timeout.ms
 
@@ -6118,15 +6502,6 @@ Whether to use cursor pagination with timestamp mode.
 	 - Importance: Sets the initial end timestamp to generate the first request when using ``enable.cursor.pagination.with.timestamp.mode`` or ``chaining.with.timestamp.mode`` with ``chaining.with.timestamp.mode.record.ordering`` set to ``Global``.
 	 - Required: MEDIUM
 
-🔘 api15.http.request.sensitive.headers
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Sensitive HTTP headers to include in each request. Sensitive header names and values should be separated by ``:``. Distinct headers should be separated by ``|``. For example: ``From:abcxyz@confluent.io|Content-Length:348``. If a key is present in both regular and sensitive headers, the value in sensitive headers takes priority. This is a **CLI-only feature**.
-	 - Required: MEDIUM
-
 🔘 api15.timestamp.format
 
 Timestamp format used in the time related request parameters. It should match the format of initial.start.timestamp.value and initial.end.timestamp.value
@@ -6171,15 +6546,6 @@ Whether next page token is an absolute url or not.
 	 - Default: true
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 api15.http.path.parameters
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: HTTP path parameters to be added to the request. Parameter names and values should be separated by ``:``. Distinct parameters should be separated by ``|``. Parameter values can be templated with different template values like ``${offset}``.
-	 - Required: MEDIUM
 
 🔘 api15.http.path.parameters.separator
 
