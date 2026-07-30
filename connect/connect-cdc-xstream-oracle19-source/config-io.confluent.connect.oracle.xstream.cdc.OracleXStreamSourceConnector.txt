@@ -457,6 +457,24 @@ A list of host/port pairs that the connector will use for establishing the initi
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 snapshot.select.statement.overrides.data.map
+
+An optional JSON object that maps fully-qualified table identifiers to custom SELECT statements that determine which rows to include in the initial snapshot. Each identifier is of the form `schemaName.tableName`. The connector runs these statements during the initial snapshot instead of selecting all rows. It does not apply to events that the connector reads from the log during the streaming phase. Tables configured with a custom SELECT statement are read as of the statement's own execution SCN rather than the shared snapshot SCN, and are therefore not captured with the same point-in-time consistency as other tables.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snapshot.select.statement.overrides
+
+An optional, comma-separated list of tables for which the connector uses custom SELECT statements to determine which rows to include in the initial snapshot. The connector runs these statements during the initial snapshot instead of selecting all rows. It does not apply to events that the connector reads from the log during the streaming phase. Tables configured with a custom SELECT statement are read as of the statement's own execution SCN rather than the shared snapshot SCN, and are therefore not captured with the same point-in-time consistency as other tables.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 outbound.server.attach.position.mode
 
 Specifies the position the connector passes when attaching to the XStream outbound server. Select one of the following options:

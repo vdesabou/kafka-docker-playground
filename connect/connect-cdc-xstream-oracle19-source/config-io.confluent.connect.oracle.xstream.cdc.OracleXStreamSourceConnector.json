@@ -43,6 +43,8 @@
     "snapshot.fetch.size": "",
     "snapshot.max.threads": "1",
     "snapshot.mode": "initial",
+    "snapshot.select.statement.overrides": "",
+    "snapshot.select.statement.overrides.data.map": "",
     "table.exclude.list": "",
     "table.include.list": "",
     "time.precision.mode": "adaptive",
