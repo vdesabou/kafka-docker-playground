@@ -46,6 +46,25 @@ LEAD_LASTNAME=Doe_$RANDOM
 log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
 playground container exec --container sfdx-cli --command "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\"" --shell sh
 
+# Remove what this test created, so repeated runs do not accumulate records in a
+# shared Salesforce org. Only the exact Lead created above is matched, so a
+# concurrent test's data is never touched. Registered as an EXIT trap so cleanup
+# also happens when an assertion below fails.
+cleanup_salesforce_test_data() {
+  set +e
+  log "🧹 Cleaning up: Lead $LEAD_FIRSTNAME $LEAD_LASTNAME"
+  # Re-authenticate first: the connector logs in as the same user with the
+  # username-password grant, which makes Salesforce evict the sfdx CLI session
+  # ("Session expired or invalid"), so the sfdx login done earlier may no longer
+  # be usable by the time this runs.
+  playground container exec --container sfdx-cli --command "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\"" --shell sh > /dev/null
+  playground container exec --container sfdx-cli --command "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" --shell sh << EOF
+Database.delete([SELECT Id FROM Lead WHERE FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'], false);
+EOF
+  set -e
+}
+trap cleanup_salesforce_test_data EXIT
+
 log "Creating Salesforce Bulk API Source connector"
 playground connector create-or-update --connector salesforce-bulkapi-source  << EOF
 {
@@ -69,5 +88,8 @@ EOF
 
 sleep 10
 
+# 180s, not 60s: the Bulk API query job runs asynchronously on a Salesforce-side
+# queue, so how long it takes to complete is not under this test's control and
+# varies from seconds to minutes.
 log "Verify we have received the data in sfdc-bulkapi-leads topic"
-playground topic consume --topic sfdc-bulkapi-leads --min-expected-messages 1 --timeout 60
+playground topic consume --topic sfdc-bulkapi-leads --min-expected-messages 1 --timeout 180
