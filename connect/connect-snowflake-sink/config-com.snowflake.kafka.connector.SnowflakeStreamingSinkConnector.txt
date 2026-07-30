@@ -94,6 +94,69 @@ Snowflake role: snowflake.role.name
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 snowflake.authenticator
+
+Authenticator for JDBC and streaming ingest SDK. Valid values: snowflake_jwt, oauth.
+
+	 - Type: STRING
+	 - Default: snowflake_jwt
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.oauth.client.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Client id of target OAuth integration
+	 - Required: HIGH
+
+🔘 snowflake.oauth.client.secret
+
+Client secret of target OAuth integration
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 snowflake.oauth.refresh.token
+
+Refresh token for OAuth. If empty, client_credentials grant is used.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 snowflake.oauth.token.endpoint
+
+OAuth token endpoint URL. If not set, defaults to the Snowflake account URL.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 snowflake.oauth.include.scope
+
+Whether OAuth token requests include a scope parameter. Defaults to false, which sends no scope (matching KC v3). Set to true to send a scope: either the explicit snowflake.oauth.scope or, if that is unset, session:role:{role} derived from snowflake.role.name.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.oauth.scope
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Explicit OAuth scope to request. Only used when snowflake.oauth.include.scope is true; when it is true and this is unset, the scope defaults to session:role:{role}. Has no effect while snowflake.oauth.include.scope is false (no scope is sent).
+	 - Required: LOW
+
 ==========================
 Proxy Info
 ==========================
@@ -187,6 +250,15 @@ Flag to control whether ConnectorPushTime is collected in snowflake metadata for
 
 	 - Type: BOOLEAN
 	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.feature.structured.headers
+
+When true, Kafka record headers are written to RECORD_METADATA:headers preserving their converted structured types (objects, arrays, numbers, booleans). When false (default), header values are flattened to strings. Enabling this is a breaking change for consumers that rely on the legacy string representation.
+
+	 - Type: BOOLEAN
+	 - Default: false
 	 - Importance: LOW
 	 - Required: false
 
@@ -322,6 +394,24 @@ When true (default), records are schematized into individual columns. When false
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 snowflake.autocreate.table.type
+
+Controls table auto-creation. 'snowflake' (default): auto-create a standard Snowflake table if it is missing. 'iceberg': auto-create a Snowflake-managed Iceberg table if it is missing. 'none': never auto-create the table (fail fast if it is missing); the pipe is still auto-managed by the connector as usual. An existing table is always used as-is, regardless of this setting.
+
+	 - Type: STRING
+	 - Default: snowflake
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 snowflake.iceberg.create.table.options
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: SQL clauses spliced into the auto-created Iceberg table's CREATE statement after the column list (e.g. "EXTERNAL_VOLUME='v' ICEBERG_VERSION=3 CLUSTER BY (id)"). Lets operators set any managed-Iceberg create option without a per-option knob. Only valid when snowflake.autocreate.table.type=iceberg. Do NOT include CATALOG, ENABLE_SCHEMA_EVOLUTION or ERROR_LOGGING -- the connector always supplies those. Ignored if the table already exists.
+	 - Required: LOW
+
 🔘 snowflake.cache.table.exists
 
 Enable caching for Snowflake table existence checks to reduce database queries
@@ -355,6 +445,15 @@ Cache expiration time in milliseconds for pipe existence checks. Must be a posit
 
 	 - Type: LONG
 	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 snowflake.topic2table.map.regex.replacement
+
+When true, table names in snowflake.topic2table.map support regex group replacement (e.g. topic(.*):table$1). Default false preserves legacy behavior (no group substitution), which is required for table names that contain a literal '$'.
+
+	 - Type: BOOLEAN
+	 - Default: false
 	 - Importance: LOW
 	 - Required: false
 
