@@ -247,7 +247,7 @@ Database details
 
 	 - Type: false
 	 - Default: LIST
-	 - Importance: A comma-separated list of regular expressions that match the fully-qualified names of tables to be copied. Use a comma-separated list to specify multiple regular expressions. Table names are case-sensitive. For example, ``table.include.list: schema1.customer.*,schema2.order.*``. If specified, ``table.whitelist`` cannot be set.
+	 - Importance: A comma-separated list of regular expressions that match the fully-qualified names of tables to be copied. Use a comma-separated list to specify multiple regular expressions. Table names are case-sensitive. For example, ``table.include.list: schema1.customer.*,schema2.order.*``. If specified, ``table.whitelist`` cannot be set. For PostgreSQL, use ``schema.table`` format and do not include database name in the fully-qualified name (for example, ``public.customers``).
 	 - Required: MEDIUM
 
 🔘 table.exclude.list
@@ -256,7 +256,7 @@ Database details
 
 	 - Type: false
 	 - Default: LIST
-	 - Importance: A comma-separated list of regular expressions that match the fully-qualified names of tables to be excluded from copying. Use a comma-separated list to specify multiple regular expressions. Table names are case-sensitive. For example, ``table.exclude.list: schema1.customer.*,schema2.order.*``. If specified, ``table.whitelist`` cannot not be set.
+	 - Importance: A comma-separated list of regular expressions that match the fully-qualified names of tables to be excluded from copying. Use a comma-separated list to specify multiple regular expressions. Table names are case-sensitive. For example, ``table.exclude.list: schema1.customer.*,schema2.order.*``. If specified, ``table.whitelist`` cannot not be set. For PostgreSQL, use ``schema.table`` format and do not include database name in the fully-qualified name (for example, ``public.customers``).
 	 - Required: MEDIUM
 
 🔘 query
