@@ -65,6 +65,65 @@ EOF
 }
 trap cleanup_salesforce_test_data EXIT
 
+# Wait for the connector's task to reach RUNNING, restarting it if it died with
+# INVALID_SESSION_ID.
+#
+# The Bulk API connectors authenticate with the username-password SOAP grant. Connector
+# validation opens its own PartnerConnection and ends it with a SOAP logout(), and
+# Salesforce reuses one session across identical logins by the same user - so validation
+# can tear down the session the task is holding. The task then fails its very first
+# describeSObject with INVALID_SESSION_ID ("Session not found, missing session hash")
+# within seconds of starting, and Connect does not retry a task that threw from start().
+#
+# Restarting the task re-authenticates without re-running validation, which is also the
+# remedy Salesforce documents for a session invalidated by a concurrent logout. Only
+# INVALID_SESSION_ID is retried: any other task failure fails the test immediately, so a
+# genuine regression is still caught.
+restart_task_on_invalid_session() {
+  local connector="$1"
+  local max_restarts="${2:-2}"
+  local restarts=0
+  local checks=0
+  local task_status state trace
+
+  while [ "$checks" -lt 12 ]; do
+    sleep 10
+    checks=$((checks + 1))
+    task_status=$(curl -s "http://localhost:8083/connectors/${connector}/status")
+    state=$(echo "$task_status" | jq -r '.tasks[0].state // "MISSING"')
+
+    case "$state" in
+      RUNNING)
+        if [ "$restarts" -gt 0 ]; then
+          log "✅ $connector task reached RUNNING after $restarts restart(s)"
+        fi
+        return 0
+        ;;
+      FAILED)
+        trace=$(echo "$task_status" | jq -r '.tasks[0].trace // ""')
+        if ! echo "$trace" | grep -q "INVALID_SESSION_ID"; then
+          logerror "$connector task FAILED, and not with INVALID_SESSION_ID:"
+          echo "$trace" | head -20
+          return 1
+        fi
+        if [ "$restarts" -ge "$max_restarts" ]; then
+          logerror "$connector still hitting INVALID_SESSION_ID after $restarts restart(s)"
+          return 1
+        fi
+        restarts=$((restarts + 1))
+        logwarn "⚠️ $connector hit INVALID_SESSION_ID, restarting task ($restarts/$max_restarts)"
+        curl -s -X POST "http://localhost:8083/connectors/${connector}/tasks/0/restart" > /dev/null
+        ;;
+      *)
+        # UNASSIGNED or not yet reported while the task is still coming up.
+        ;;
+    esac
+  done
+
+  logerror "$connector task never reached RUNNING (last state: $state)"
+  return 1
+}
+
 log "Creating Salesforce Bulk API Source connector"
 playground connector create-or-update --connector salesforce-bulkapi-source  << EOF
 {
@@ -86,7 +145,7 @@ playground connector create-or-update --connector salesforce-bulkapi-source  << 
 }
 EOF
 
-sleep 10
+restart_task_on_invalid_session salesforce-bulkapi-source
 
 # 180s, not 60s: the Bulk API query job runs asynchronously on a Salesforce-side
 # queue, so how long it takes to complete is not under this test's control and
