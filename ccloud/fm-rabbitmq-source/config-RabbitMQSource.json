@@ -25,6 +25,8 @@
     "rabbitmq.password": "PASSWORD",
     "rabbitmq.port": "5672",
     "rabbitmq.queue": "LIST",
+    "rabbitmq.queue.failure.tolerance": "fail-fast",
+    "rabbitmq.queue.topic.map": "STRING",
     "rabbitmq.security.protocol": "PLAINTEXT",
     "rabbitmq.username": "STRING",
     "rabbitmq.virtual.host": "/",
