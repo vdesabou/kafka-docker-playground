@@ -4,10 +4,9 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-# FIXTHIS
-if connect_cp_version_greater_than_8 && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "0.0.0"
+if connect_cp_version_greater_than_8 && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "0.0.7"
 then
-     logwarn "minimal supported connector version is 0.0.0 for CP 8.0"
+     logwarn "minimal supported connector version is 0.0.7 for CP 8.0"
      logwarn "see https://docs.confluent.io/platform/8.0/connect/supported-connector-version.html#"
      exit 111
 fi
