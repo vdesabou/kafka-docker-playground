@@ -39,6 +39,7 @@ playground connector create-or-update --connector splunk-sink  << EOF
      "topics": "splunk-qs",
      "splunk.indexes": "main",
      "splunk.hec.uri": "http://splunk:8088",
+     "splunk.hec.ssl.enforced": "false",
      "splunk.hec.token": "99582090-3ac3-4db1-9487-e17b17a05081",
      "splunk.sourcetypes": "my_sourcetype",
      "value.converter":"org.apache.kafka.connect.json.JsonConverter",
