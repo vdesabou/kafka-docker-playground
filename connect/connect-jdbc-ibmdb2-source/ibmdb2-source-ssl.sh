@@ -37,7 +37,7 @@ fi
 
 log "Starting up ibmdb2 container to get db2jcc4.jar"
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml" --service ibmdb2
+playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.ssl.yml" --service ibmdb2
 
 cd ../../connect/connect-jdbc-ibmdb2-source
 rm -f db2jcc4.jar
