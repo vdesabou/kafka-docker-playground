@@ -16483,6 +16483,7 @@ playground_update_readme_command() {
     TEST_FAILED=()
     TEST_SUCCESS=()
     TEST_SKIPPED=()
+    unset TEST_TOTAL_COUNT TEST_SKIPPED_COUNT TEST_FAILED_COUNT TEST_SUCCESS
     declare -A TEST_TOTAL_COUNT
     declare -A TEST_SKIPPED_COUNT
     declare -A TEST_FAILED_COUNT
