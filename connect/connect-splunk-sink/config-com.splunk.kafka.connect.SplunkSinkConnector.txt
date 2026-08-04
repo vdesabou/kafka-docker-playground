@@ -73,6 +73,15 @@ Valid settings are true or false. Enables or disables HTTP connection keep-alive
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 splunk.hec.ssl.enforced
+
+Valid settings are true or false. Requires every Splunk HEC URI to use HTTPS when enabled. Set to false only for private-network HEC deployments without TLS. By default, this is set to true.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 splunk.hec.ssl.validate.certs
 
 Valid settings are true or false. Enables or disables HTTPS certification validation. By default, this is set to true.
@@ -237,10 +246,10 @@ Maximum amount of un-acknowledged events kept in memory by connector. Will trigg
 
 🔘 splunk.hec.max.retries
 
-Number of retries for failed batches before giving up. By default this is set to -1 which will retry indefinitely.
+Number of retries for failed batches before giving up. By default this is set to 5. If set to -1, the retries are never stopped.
 
 	 - Type: INT
-	 - Default: -1
+	 - Default: 5
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -387,6 +396,15 @@ Set to true if you want to extract the timestamp
 	 - Default: STRING
 	 - Importance: Regex
 	 - Required: MEDIUM
+
+🔘 timestamp.regex.timeout.ms
+
+Maximum time in milliseconds allowed for a timestamp regex evaluation. The connector skips timestamp extraction when this timeout is reached. Default is 500 milliseconds.
+
+	 - Type: INT
+	 - Default: 500
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 timestamp.format
 
