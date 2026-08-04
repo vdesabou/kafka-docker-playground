@@ -8,7 +8,7 @@ services:
     container_name: ibmdb2
     privileged: true
     ports:
-      - "50002:50002"
+      - "50000:50000"
     environment:
       LICENSE: accept
       DB2INST1_PASSWORD: passw0rd
