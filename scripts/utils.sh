@@ -48,7 +48,7 @@ function run_solace_cli_script_with_retry {
   while true
   do
     set +e
-    timeout "$attempt_timeout" playground container exec --container solace --command "bash -c \"/usr/sw/loads/currentload/bin/cli -A -s cliscripts/${script_name}\"" > "$output_file" 2>&1
+    timeout "$attempt_timeout" playground container exec --container solace --command "bash -c \"/usr/sw/loads/currentload/bin/cli -A -s cliscripts/${script_name}\"" > "$output_file" 2>&1 < /dev/null
     local ret=$?
     set -e
 
