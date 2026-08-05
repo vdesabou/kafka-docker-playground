@@ -101,6 +101,57 @@ Add a schema context name. A schema context represents an independent scope in S
 	 - Required: false
 
 ==========================
+Authentication method
+==========================
+🔘 authentication.method
+
+Select how you want to authenticate with your database.
+
+	 - Type: STRING
+	 - Default: Password
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 secret.manager.enabled
+
+Fetch sensitive configuration values from a secret manager.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Secret manager configuration
+==========================
+🔘 secret.manager
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the secret manager to use for retrieving sensitive data.
+	 - Required: HIGH
+
+🔘 secret.manager.managed.configs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Select the configurations to fetch their values from the secret manager.
+	 - Required: HIGH
+
+🔘 secret.manager.provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing provider integration that has access to your secret manager.
+	 - Required: HIGH
+
+==========================
 How should we connect to your database?
 ==========================
 🔘 database.hostname
@@ -470,6 +521,15 @@ Specifies which signaling channels are enabled for the connector. Supported valu
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Specifies the name of the Kafka topic that the connector monitors for signals. The topic must have a single partition to ensure signal ordering is preserved.
+	 - Required: MEDIUM
+
+🔘 snapshot.select.statement.overrides.data.map
+
+The case of object names in the fully-qualified table identifier must match exactly how they are stored in the Oracle database. Unquoted identifiers are case-insensitive and are treated as uppercase by default, whereas quoted identifiers are case-sensitive and must be enclosed in double quotes. Any double quotes inside the key or value must be escaped with a backslash.
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: An optional JSON object that maps fully-qualified table identifiers to custom SELECT statements that determine which rows to include in the initial snapshot. Each identifier is of the form ``schemaName.tableName``. The connector runs these statements during the initial snapshot instead of selecting all rows. It does not apply to events that the connector reads from the log during the streaming phase. Tables configured with a custom SELECT statement are read as of the statement's own execution SCN rather than the shared snapshot SCN, and are therefore not captured with the same point-in-time consistency as other tables.
 	 - Required: MEDIUM
 
 🔘 outbound.server.attach.position.mode
