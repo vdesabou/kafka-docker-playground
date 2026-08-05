@@ -10,15 +10,6 @@ Password of the Couchbase user.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.username
-
-Name of the Couchbase user to authenticate as.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
 🔘 couchbase.bucket
 
 This property is required unless using the experimental AnalyticsSinkHandler.
@@ -27,6 +18,15 @@ This property is required unless using the experimental AnalyticsSinkHandler.
 	 - Default: STRING
 	 - Importance: Name of the Couchbase bucket to use.
 	 - Required: HIGH
+
+🔘 couchbase.username
+
+Name of the Couchbase user to authenticate as.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 couchbase.seed.nodes
 
@@ -37,21 +37,21 @@ Addresses of Couchbase Server nodes, delimited by commas.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.network
-
-The network selection strategy for connecting to a Couchbase Server cluster that advertises alternate addresses.
-
-	 - Type: STRING
-	 - Default: auto
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.bootstrap.timeout
 
 On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
 
 	 - Type: STRING
 	 - Default: 30s
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.network
+
+The network selection strategy for connecting to a Couchbase Server cluster that advertises alternate addresses.
+
+	 - Type: STRING
+	 - Default: auto
 	 - Importance: MEDIUM
 	 - Required: false
 
