@@ -43,11 +43,16 @@ function cleanup-workaround-file {
 # Errors that mean "the external system briefly misbehaved", not "this config is wrong".
 # Kept deliberately narrow: anything not listed here fails on the first attempt, so a real
 # misconfiguration or a genuine connector bug is never retried into a green run.
+#
+# INVALID_SESSION_ID is included: Salesforce reuses one session across identical
+# username-password logins by the same user, so a concurrent logout elsewhere can
+# invalidate the session validation is holding. Retrying re-authenticates.
 SALESFORCE_TRANSIENT_CREATE_ERRORS="${SALESFORCE_TRANSIENT_CREATE_ERRORS:-\
 Exception encountered while calling salesforce|\
 Read timed out|Connection reset|Connection refused|\
 502 Bad Gateway|503 Service Unavailable|504 Gateway|\
-SERVER_UNAVAILABLE|Server Unavailable|UNABLE_TO_LOCK_ROW}"
+SERVER_UNAVAILABLE|Server Unavailable|UNABLE_TO_LOCK_ROW|\
+INVALID_SESSION_ID}"
 
 # Create a connector, retrying only when validation failed for a transient reason.
 #
