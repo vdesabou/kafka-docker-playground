@@ -120,11 +120,6 @@ cleanup_salesforce_test_data() {
 Database.delete([SELECT Id FROM Lead WHERE FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'], false);
 Database.delete([SELECT Id FROM PushTopic WHERE Name = '$PUSH_TOPICS_NAME'], false);
 EOF
-  # Release the session(s) this test opened. Each sfpowerkit:auth:login creates two
-  # Salesforce sessions, and without a logout they are left to expire - so a run
-  # accumulates sessions against the same user and later logins evict earlier ones
-  # ("Session expired or invalid").
-  playground container exec --container sfdx-cli --command "sfdx force:auth:logout --all --no-prompt" --shell sh > /dev/null
   set -e
 }
 trap cleanup_salesforce_test_data EXIT
