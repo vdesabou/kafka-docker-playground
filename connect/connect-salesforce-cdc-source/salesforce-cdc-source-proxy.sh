@@ -85,12 +85,12 @@ EOF
 sleep 5
 
 log "Login with sfdx CLI"
-playground container exec --container sfdx-cli --command "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\"" --shell sh
+salesforce_sfdx_with_retry "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
 
 log "Add a Contact to Salesforce"
-playground container exec --container sfdx-cli --command "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Contact -v \"FirstName='John_$RANDOM' LastName='Doe_$RANDOM'\"" --shell sh
+salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Contact -v \"FirstName='John_$RANDOM' LastName='Doe_$RANDOM'\""
 
 sleep 10
 
 log "Verify we have received the data in sfdc-cdc-contacts topic"
-playground topic consume --topic sfdc-cdc-contacts --min-expected-messages 1 --timeout 60
+playground topic consume --topic sfdc-cdc-contacts --min-expected-messages 1 --timeout 180

@@ -87,14 +87,14 @@ EOF
 sleep 5
 
 log "Login with sfdx CLI"
-playground container exec --container sfdx-cli --command "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\"" --shell sh
+salesforce_sfdx_with_retry "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
 
 # Captured in variables (rather than inlined) so the cleanup below can match the
 # exact Contact this run created.
 CONTACT_FIRSTNAME=John_$RANDOM
 CONTACT_LASTNAME=Doe_$RANDOM
 log "Add a Contact to Salesforce: $CONTACT_FIRSTNAME $CONTACT_LASTNAME"
-playground container exec --container sfdx-cli --command "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Contact -v \"FirstName='$CONTACT_FIRSTNAME' LastName='$CONTACT_LASTNAME'\"" --shell sh
+salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Contact -v \"FirstName='$CONTACT_FIRSTNAME' LastName='$CONTACT_LASTNAME'\""
 
 # Remove what this test created, so repeated runs do not accumulate records in a
 # shared Salesforce org. Only the exact Contact created above is matched, so a
@@ -103,7 +103,7 @@ playground container exec --container sfdx-cli --command "sfdx data:create:recor
 cleanup_salesforce_test_data() {
   set +e
   log "🧹 Cleaning up: Contact $CONTACT_FIRSTNAME $CONTACT_LASTNAME"
-  playground container exec --container sfdx-cli --command "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" --shell sh << EOF
+  salesforce_sfdx_with_retry --stdin "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
 Database.delete([SELECT Id FROM Contact WHERE FirstName = '$CONTACT_FIRSTNAME' AND LastName = '$CONTACT_LASTNAME'], false);
 EOF
   set -e
@@ -113,4 +113,4 @@ trap cleanup_salesforce_test_data EXIT
 sleep 10
 
 log "Verify we have received the data in sfdc-cdc-contacts topic"
-playground topic consume --topic sfdc-cdc-contacts --min-expected-messages 1 --timeout 60
+playground topic consume --topic sfdc-cdc-contacts --min-expected-messages 1 --timeout 180

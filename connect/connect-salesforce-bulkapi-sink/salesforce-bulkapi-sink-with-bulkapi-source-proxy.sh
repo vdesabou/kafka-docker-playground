@@ -73,12 +73,12 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.proxy.yml"
 
 log "Login with sfdx CLI"
-playground container exec --container sfdx-cli --command "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\"" --shell sh
+salesforce_sfdx_with_retry "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
 
 LEAD_FIRSTNAME=John_$RANDOM
 LEAD_LASTNAME=Doe_$RANDOM
 log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
-playground container exec --container sfdx-cli --command "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\"" --shell sh
+salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
 
 DOMAIN=$(echo $SALESFORCE_INSTANCE | cut -d "/" -f 3)
 IP=$(nslookup $DOMAIN | grep Address | grep -v "#" | cut -d " " -f 2 | tail -1)
@@ -159,11 +159,11 @@ sleep 30
 log "Verify topic success-responses"
 playground topic consume --topic success-responses --min-expected-messages 1 --timeout 60
 
-# log "Verify topic error-responses"
-playground topic consume --topic error-responses --min-expected-messages 0 --timeout 60
+log "Verify the connector reported no errors"
+salesforce_assert_topic_empty error-responses
 
 log "Login with sfdx CLI on the account #2"
-playground container exec --container sfdx-cli --command "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\"" --shell sh
+salesforce_sfdx_with_retry "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\""
 
 log "Get the Lead created on account #2"
 # data:query, not data:record:get: the sink inserts (it never upserts), so a shared org
@@ -172,6 +172,6 @@ log "Get the Lead created on account #2"
 # record the test just wrote is present. data:query returns every match, and the grep
 # below still fails if the record is genuinely missing.
 # || true so cat always runs - without it set -e aborts here and the error is never shown.
-playground container exec --container sfdx-cli --command "sfdx data:query --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -q \"SELECT Id, FirstName, LastName FROM Lead WHERE FirstName='$LEAD_FIRSTNAME' AND LastName='$LEAD_LASTNAME' AND Company='Confluent'\"" --shell sh > /tmp/result.log 2>&1 || true
+salesforce_sfdx_with_retry "sfdx data:query --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -q \"SELECT Id, FirstName, LastName FROM Lead WHERE FirstName='$LEAD_FIRSTNAME' AND LastName='$LEAD_LASTNAME' AND Company='Confluent'\"" > /tmp/result.log 2>&1 || true
 cat /tmp/result.log
 grep "$LEAD_FIRSTNAME" /tmp/result.log
