@@ -163,7 +163,7 @@ restart_task_on_invalid_session() {
 }
 
 log "Creating Salesforce Bulk API Source connector"
-playground connector create-or-update --connector salesforce-bulkapi-source  << EOF
+salesforce_create_connector_with_retry salesforce-bulkapi-source << EOF
 {
      "connector.class": "io.confluent.connect.salesforce.SalesforceBulkApiSourceConnector",
      "kafka.topic": "sfdc-bulkapi-leads",
@@ -191,7 +191,7 @@ log "Verify we have received the data in sfdc-bulkapi-leads topic"
 playground topic consume --topic sfdc-bulkapi-leads --min-expected-messages 1 --timeout 180
 
 log "Creating Salesforce Bulk API Sink connector"
-playground connector create-or-update --connector salesforce-bulkapi-sink  << EOF
+salesforce_create_connector_with_retry salesforce-bulkapi-sink << EOF
 {
     "connector.class": "io.confluent.connect.salesforce.SalesforceBulkApiSinkConnector",
     "topics": "sfdc-bulkapi-leads",

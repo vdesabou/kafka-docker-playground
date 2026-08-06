@@ -78,6 +78,98 @@ function cleanup-workaround-file {
   rm -f /tmp/without-cli-workaround > /dev/null 2>&1
 }
 
+# Errors that mean "the external system briefly misbehaved", not "this config is wrong".
+# Kept deliberately narrow: anything not listed here fails on the first attempt, so a real
+# misconfiguration or a genuine connector bug is never retried into a green run.
+#
+# INVALID_SESSION_ID is included: Salesforce reuses one session across identical
+# username-password logins by the same user, so a concurrent logout elsewhere can
+# invalidate the session validation is holding. Retrying re-authenticates.
+SALESFORCE_TRANSIENT_CREATE_ERRORS="${SALESFORCE_TRANSIENT_CREATE_ERRORS:-\
+Exception encountered while calling salesforce|\
+Read timed out|Connection reset|Connection refused|\
+502 Bad Gateway|503 Service Unavailable|504 Gateway|\
+SERVER_UNAVAILABLE|Server Unavailable|UNABLE_TO_LOCK_ROW|\
+INVALID_SESSION_ID}"
+
+# Retries consumed so far by this test. Reset per test process, since each test runs in
+# its own shell - so the budget below is genuinely per test, not per connector.
+SALESFORCE_CREATE_RETRIES_USED=0
+
+# Create a connector, retrying only when validation failed for a transient reason.
+#
+# Connector validation calls out to Salesforce (token endpoint, /services/data/,
+# describeSObject). A single blip there aborts the whole test even though nothing is
+# wrong with the connector or the test. Observed in CI: validation got HTTP 404 from
+# /services/data/ one second after a successful JWT auth, twice, then the identical
+# commit passed - so the failure is intermittent and upstream.
+#
+# Usage is identical to `playground connector create-or-update --connector X << EOF`:
+#
+#   salesforce_create_connector_with_retry salesforce-cdc-source << EOF
+#   { ... }
+#   EOF
+#
+# The retry budget is per TEST, not per connector: SALESFORCE_CREATE_MAX_RETRIES retries
+# are shared across every connector a test creates, so a test that creates three
+# connectors cannot spend three retries on each of them. First attempts are never
+# counted against the budget.
+#
+# The body is read from stdin once and replayed on each attempt.
+function salesforce_create_connector_with_retry() {
+  local connector="$1"
+  local max_retries="${SALESFORCE_CREATE_MAX_RETRIES:-3}"
+  local delay="${SALESFORCE_CREATE_RETRY_DELAY:-15}"
+  local body attempt=1 rc out had_errexit=0
+
+  # Remember whether the caller had errexit on, so it can be restored exactly. Setting
+  # it unconditionally would turn it on for callers that deliberately had it off - the
+  # cleanup traps run under set +e.
+  case $- in
+    *e*) had_errexit=1 ;;
+  esac
+
+  body="$(cat)"
+
+  while true
+  do
+    set +e
+    out="$(printf '%s\n' "$body" | playground connector create-or-update --connector "$connector" 2>&1)"
+    rc=$?
+    if [ $had_errexit -eq 1 ]
+    then
+      set -e
+    fi
+    echo "$out"
+
+    if [ $rc -eq 0 ]
+    then
+      if [ $attempt -gt 1 ]
+      then
+        log "✅ $connector created on attempt $attempt"
+      fi
+      return 0
+    fi
+
+    if ! echo "$out" | grep -qE "$SALESFORCE_TRANSIENT_CREATE_ERRORS"
+    then
+      logerror "❌ $connector creation failed for a non-transient reason, not retrying"
+      return $rc
+    fi
+
+    if [ "$SALESFORCE_CREATE_RETRIES_USED" -ge "$max_retries" ]
+    then
+      logerror "❌ $connector hit a transient error but this test has already used its $max_retries retry(ies)"
+      return $rc
+    fi
+
+    SALESFORCE_CREATE_RETRIES_USED=$((SALESFORCE_CREATE_RETRIES_USED + 1))
+    logwarn "⚠️ transient error creating $connector, retrying in ${delay}s (retry $SALESFORCE_CREATE_RETRIES_USED/$max_retries for this test)"
+    sleep "$delay"
+    attempt=$((attempt + 1))
+  done
+}
+
 function salesforce_ensure_jwt_keystore() {
   local target_dir="${1:-$PWD}"
   local keystore_path="$target_dir/salesforce-confluent.keystore.jks"

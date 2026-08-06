@@ -100,7 +100,7 @@ log "Create $PUSH_TOPICS_NAME"
 playground container exec --container sfdx-cli --command "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" -f \"/tmp/MyLeadPushTopics.apex\"" --shell sh
 
 log "Creating Salesforce PushTopics Source connector"
-playground connector create-or-update --connector salesforce-pushtopic-source  << EOF
+salesforce_create_connector_with_retry salesforce-pushtopic-source << EOF
 {
      "connector.class": "io.confluent.salesforce.SalesforcePushTopicSourceConnector",
      "kafka.topic": "sfdc-pushtopic-leads",
@@ -138,7 +138,7 @@ playground topic consume --topic sfdc-pushtopic-leads --min-expected-messages 1 
 
 
 log "Creating Salesforce Bulk API Sink connector"
-playground connector create-or-update --connector salesforce-bulkapi-sink  << EOF
+salesforce_create_connector_with_retry salesforce-bulkapi-sink << EOF
 {
                     "connector.class": "io.confluent.connect.salesforce.SalesforceBulkApiSinkConnector",
                     "topics": "sfdc-pushtopic-leads",
