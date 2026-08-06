@@ -49,7 +49,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Salesforce Platform Events Source connector"
-playground connector create-or-update --connector salesforce-platform-events-source  << EOF
+salesforce_create_connector_with_retry salesforce-platform-events-source << EOF
 {
      "connector.class": "io.confluent.salesforce.SalesforcePlatformEventSourceConnector",
      "kafka.topic": "sfdc-platform-events",

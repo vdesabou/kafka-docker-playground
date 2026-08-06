@@ -78,7 +78,7 @@ log "Blocking $DOMAIN IP $IP to make sure proxy is used"
 playground debug block-traffic --container connect --destination $IP --action start
 
 log "Creating Salesforce PushTopics Source connector"
-playground connector create-or-update --connector salesforce-pushtopic-source  << EOF
+salesforce_create_connector_with_retry salesforce-pushtopic-source << EOF
 {
      "connector.class": "io.confluent.salesforce.SalesforcePushTopicSourceConnector",
      "kafka.topic": "sfdc-pushtopic-leads",

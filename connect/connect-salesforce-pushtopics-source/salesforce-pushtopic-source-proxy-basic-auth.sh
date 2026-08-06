@@ -90,7 +90,7 @@ curl --request PUT \
 }'
 
 log "Creating Salesforce PushTopics Source connector"
-playground connector create-or-update --connector salesforce-pushtopic-source-proxy-basic-auth  << EOF
+salesforce_create_connector_with_retry salesforce-pushtopic-source-proxy-basic-auth << EOF
 {
      "connector.class": "io.confluent.salesforce.SalesforcePushTopicSourceConnector",
      "kafka.topic": "sfdc-pushtopic-leads",

@@ -52,7 +52,7 @@ log "Blocking $DOMAIN IP $IP to make sure proxy is used"
 playground debug block-traffic --container connect --destination $IP --action start
 
 log "Creating Salesforce Bulk API Source connector"
-playground connector create-or-update --connector salesforce-bulkapi-source  << EOF
+salesforce_create_connector_with_retry salesforce-bulkapi-source << EOF
 {
      "connector.class": "io.confluent.connect.salesforce.SalesforceBulkApiSourceConnector",
      "kafka.topic": "sfdc-bulkapi-leads",

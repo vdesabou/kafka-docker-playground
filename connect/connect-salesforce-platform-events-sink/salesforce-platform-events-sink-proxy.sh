@@ -56,7 +56,7 @@ log "Blocking $DOMAIN IP $IP to make sure proxy is used"
 playground debug block-traffic --container connect --destination $IP --action start
 
 log "Creating Salesforce Platform Events Source connector"
-playground connector create-or-update --connector salesforce-platform-events-source  << EOF
+salesforce_create_connector_with_retry salesforce-platform-events-source << EOF
 {
      "connector.class": "io.confluent.salesforce.SalesforcePlatformEventSourceConnector",
      "kafka.topic": "sfdc-platform-events",
@@ -93,7 +93,7 @@ log "Verify we have received the data in sfdc-platform-events topic"
 playground topic consume --topic sfdc-platform-events --min-expected-messages 2 --timeout 60
 
 log "Creating Salesforce Platform Events Sink connector"
-playground connector create-or-update --connector salesforce-platform-events-sink  << EOF
+salesforce_create_connector_with_retry salesforce-platform-events-sink << EOF
 {
      "connector.class": "io.confluent.salesforce.SalesforcePlatformEventSinkConnector",
      "topics": "sfdc-platform-events",

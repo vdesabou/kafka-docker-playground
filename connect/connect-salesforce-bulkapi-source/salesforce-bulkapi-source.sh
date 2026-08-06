@@ -120,7 +120,7 @@ restart_task_on_invalid_session() {
 }
 
 log "Creating Salesforce Bulk API Source connector"
-playground connector create-or-update --connector salesforce-bulkapi-source  << EOF
+salesforce_create_connector_with_retry salesforce-bulkapi-source << EOF
 {
      "connector.class": "io.confluent.connect.salesforce.SalesforceBulkApiSourceConnector",
      "kafka.topic": "sfdc-bulkapi-leads",

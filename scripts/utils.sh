@@ -40,6 +40,73 @@ function cleanup-workaround-file {
   rm -f /tmp/without-cli-workaround > /dev/null 2>&1
 }
 
+# Errors that mean "the external system briefly misbehaved", not "this config is wrong".
+# Kept deliberately narrow: anything not listed here fails on the first attempt, so a real
+# misconfiguration or a genuine connector bug is never retried into a green run.
+SALESFORCE_TRANSIENT_CREATE_ERRORS="${SALESFORCE_TRANSIENT_CREATE_ERRORS:-\
+Exception encountered while calling salesforce|\
+Read timed out|Connection reset|Connection refused|\
+502 Bad Gateway|503 Service Unavailable|504 Gateway|\
+SERVER_UNAVAILABLE|Server Unavailable|UNABLE_TO_LOCK_ROW}"
+
+# Create a connector, retrying only when validation failed for a transient reason.
+#
+# Connector validation calls out to Salesforce (token endpoint, /services/data/,
+# describeSObject). A single blip there aborts the whole test even though nothing is
+# wrong with the connector or the test. Observed in CI: validation got HTTP 404 from
+# /services/data/ one second after a successful JWT auth, twice, then the identical
+# commit passed - so the failure is intermittent and upstream.
+#
+# Usage is identical to `playground connector create-or-update --connector X << EOF`:
+#
+#   salesforce_create_connector_with_retry salesforce-cdc-source << EOF
+#   { ... }
+#   EOF
+#
+# The body is read from stdin once and replayed on each attempt.
+function salesforce_create_connector_with_retry() {
+  local connector="$1"
+  local max_attempts="${SALESFORCE_CREATE_MAX_ATTEMPTS:-3}"
+  local delay="${SALESFORCE_CREATE_RETRY_DELAY:-15}"
+  local body attempt=1 rc out
+
+  body="$(cat)"
+
+  while true
+  do
+    set +e
+    out="$(printf '%s\n' "$body" | playground connector create-or-update --connector "$connector" 2>&1)"
+    rc=$?
+    set -e
+    echo "$out"
+
+    if [ $rc -eq 0 ]
+    then
+      if [ $attempt -gt 1 ]
+      then
+        log "✅ $connector created on attempt $attempt"
+      fi
+      return 0
+    fi
+
+    if ! echo "$out" | grep -qE "$SALESFORCE_TRANSIENT_CREATE_ERRORS"
+    then
+      logerror "❌ $connector creation failed for a non-transient reason, not retrying"
+      return $rc
+    fi
+
+    if [ $attempt -ge $max_attempts ]
+    then
+      logerror "❌ $connector still failing with a transient error after $attempt attempt(s)"
+      return $rc
+    fi
+
+    logwarn "⚠️ transient error creating $connector (attempt $attempt/$max_attempts), retrying in ${delay}s"
+    sleep "$delay"
+    attempt=$((attempt + 1))
+  done
+}
+
 function salesforce_ensure_jwt_keystore() {
   local target_dir="${1:-$PWD}"
   local keystore_path="$target_dir/salesforce-confluent.keystore.jks"

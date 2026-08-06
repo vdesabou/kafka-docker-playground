@@ -56,7 +56,7 @@ log "Blocking $DOMAIN IP $IP to make sure proxy is used"
 playground debug block-traffic --container connect --destination $IP --action start
 
 log "Creating Salesforce Platform Events Source connector"
-playground connector create-or-update --connector salesforce-platform-events-source  << EOF
+salesforce_create_connector_with_retry salesforce-platform-events-source << EOF
 {
      "connector.class": "io.confluent.salesforce.SalesforcePlatformEventSourceConnector",
      "kafka.topic": "sfdc-platform-events",
