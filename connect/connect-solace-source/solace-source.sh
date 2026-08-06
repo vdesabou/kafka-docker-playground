@@ -22,7 +22,7 @@ then
 fi
 
 function wait_for_solace () {
-     MAX_WAIT=240
+     MAX_WAIT=600
      log "⌛ Waiting up to $MAX_WAIT seconds for Solace to startup"
      # Use playground logs so readiness wait works for both Docker and CFK environments.
      playground container logs --container solace --wait-for-log "Running pre-startup checks" --max-wait "$MAX_WAIT"
@@ -52,7 +52,7 @@ wait_for_solace
 log "Solace UI is accessible at http://127.0.0.1:8080 (admin/admin)"
 
 log "Create the queue connector-quickstart in the default Message VPN using CLI"
-playground container exec --container solace --command "bash -c \"/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd\""
+run_solace_cli_script_with_retry "create_queue_cmd" "queue creation"
 
 # Setting message.timestamp.type=LogAppendTime otherwise we have CreateTime:0
 playground topic create --topic from-solace-messages --nb-partitions 1

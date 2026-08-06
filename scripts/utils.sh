@@ -36,6 +36,44 @@ function install_connector_with_retry {
   return 1
 }
 
+function run_solace_cli_script_with_retry {
+  local script_name="$1"
+  local description="$2"
+  local output_file="${3:-/tmp/solace-cli-${script_name}.log}"
+  local max_wait=${SOLACE_CLI_MAX_WAIT:-300}
+  local attempt_timeout=${SOLACE_CLI_ATTEMPT_TIMEOUT:-60}
+  local cur_wait=0
+
+  log "⌛ Waiting up to $max_wait seconds for Solace CLI to be ready for ${description}"
+  while true
+  do
+    set +e
+    timeout "$attempt_timeout" playground container exec --container solace --command "bash -c \"/usr/sw/loads/currentload/bin/cli -A -s cliscripts/${script_name}\"" > "$output_file" 2>&1 < /dev/null
+    local ret=$?
+    set -e
+
+    if [ "$ret" -eq 0 ]
+    then
+      log "Solace CLI is ready for ${description}"
+      return 0
+    fi
+
+    if [ "$ret" -eq 124 ]
+    then
+      logwarn "Solace CLI did not respond within ${attempt_timeout}s for ${description}, retrying... (${cur_wait}/${max_wait}s)"
+    fi
+
+    sleep 10
+    cur_wait=$((cur_wait + 10))
+    if [ "$cur_wait" -gt "$max_wait" ]
+    then
+      logerror "Solace CLI is not ready for ${description} after ${max_wait} seconds"
+      cat "$output_file"
+      exit 1
+    fi
+  done
+}
+
 function cleanup-workaround-file {
   rm -f /tmp/without-cli-workaround > /dev/null 2>&1
 }
