@@ -54,6 +54,10 @@ Read timed out|Connection reset|Connection refused|\
 SERVER_UNAVAILABLE|Server Unavailable|UNABLE_TO_LOCK_ROW|\
 INVALID_SESSION_ID}"
 
+# Retries consumed so far by this test. Reset per test process, since each test runs in
+# its own shell - so the budget below is genuinely per test, not per connector.
+SALESFORCE_CREATE_RETRIES_USED=0
+
 # Create a connector, retrying only when validation failed for a transient reason.
 #
 # Connector validation calls out to Salesforce (token endpoint, /services/data/,
@@ -68,12 +72,24 @@ INVALID_SESSION_ID}"
 #   { ... }
 #   EOF
 #
+# The retry budget is per TEST, not per connector: SALESFORCE_CREATE_MAX_RETRIES retries
+# are shared across every connector a test creates, so a test that creates three
+# connectors cannot spend three retries on each of them. First attempts are never
+# counted against the budget.
+#
 # The body is read from stdin once and replayed on each attempt.
 function salesforce_create_connector_with_retry() {
   local connector="$1"
-  local max_attempts="${SALESFORCE_CREATE_MAX_ATTEMPTS:-3}"
+  local max_retries="${SALESFORCE_CREATE_MAX_RETRIES:-3}"
   local delay="${SALESFORCE_CREATE_RETRY_DELAY:-15}"
-  local body attempt=1 rc out
+  local body attempt=1 rc out had_errexit=0
+
+  # Remember whether the caller had errexit on, so it can be restored exactly. Setting
+  # it unconditionally would turn it on for callers that deliberately had it off - the
+  # cleanup traps run under set +e.
+  case $- in
+    *e*) had_errexit=1 ;;
+  esac
 
   body="$(cat)"
 
@@ -82,7 +98,10 @@ function salesforce_create_connector_with_retry() {
     set +e
     out="$(printf '%s\n' "$body" | playground connector create-or-update --connector "$connector" 2>&1)"
     rc=$?
-    set -e
+    if [ $had_errexit -eq 1 ]
+    then
+      set -e
+    fi
     echo "$out"
 
     if [ $rc -eq 0 ]
@@ -100,13 +119,14 @@ function salesforce_create_connector_with_retry() {
       return $rc
     fi
 
-    if [ $attempt -ge $max_attempts ]
+    if [ "$SALESFORCE_CREATE_RETRIES_USED" -ge "$max_retries" ]
     then
-      logerror "❌ $connector still failing with a transient error after $attempt attempt(s)"
+      logerror "❌ $connector hit a transient error but this test has already used its $max_retries retry(ies)"
       return $rc
     fi
 
-    logwarn "⚠️ transient error creating $connector (attempt $attempt/$max_attempts), retrying in ${delay}s"
+    SALESFORCE_CREATE_RETRIES_USED=$((SALESFORCE_CREATE_RETRIES_USED + 1))
+    logwarn "⚠️ transient error creating $connector, retrying in ${delay}s (retry $SALESFORCE_CREATE_RETRIES_USED/$max_retries for this test)"
     sleep "$delay"
     attempt=$((attempt + 1))
   done
