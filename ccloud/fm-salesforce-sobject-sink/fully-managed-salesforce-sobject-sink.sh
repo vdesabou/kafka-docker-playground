@@ -199,7 +199,13 @@ log "Login with sfdx CLI on the account #2"
 docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\""
 
 log "Get the Lead created on account #2"
-docker exec sfdx-cli sh -c "sfdx data:record:get --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -s Lead -w \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\"" > /tmp/result.log  2>&1
+# data:query, not data:record:get: the sink inserts (it never upserts), so a shared org
+# accumulates Leads and an aborted run can leave one behind. data:record:get then fails
+# with "is not a unique qualifier for Lead; N records were retrieved" even though the
+# record the test just wrote is present. data:query returns every match, and the grep
+# below still fails if the record is genuinely missing.
+# || true so cat always runs - without it set -e aborts here and the error is never shown.
+playground container exec --container sfdx-cli --command "sfdx data:query --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -q \"SELECT Id, FirstName, LastName FROM Lead WHERE FirstName='$LEAD_FIRSTNAME' AND LastName='$LEAD_LASTNAME' AND Company='Confluent'\"" --shell sh > /tmp/result.log 2>&1 || true
 cat /tmp/result.log
 grep "$LEAD_FIRSTNAME" /tmp/result.log
 
