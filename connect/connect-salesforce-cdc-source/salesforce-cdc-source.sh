@@ -102,6 +102,7 @@ salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_
 # also happens when an assertion below fails.
 cleanup_salesforce_test_data() {
   set +e
+  salesforce_sfdx_relogin ""
   log "🧹 Cleaning up: Contact $CONTACT_FIRSTNAME $CONTACT_LASTNAME"
   salesforce_sfdx_with_retry --stdin "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
 Database.delete([SELECT Id FROM Contact WHERE FirstName = '$CONTACT_FIRSTNAME' AND LastName = '$CONTACT_LASTNAME'], false);

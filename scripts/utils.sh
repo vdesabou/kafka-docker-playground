@@ -296,6 +296,35 @@ function salesforce_sfdx_with_retry() {
   done
 }
 
+# Re-authenticate the sfdx CLI for one account. Pass "" for the primary account or
+# "_ACCOUNT2" for the second.
+#
+# Cleanup needs this. A connector on the username-password SOAP grant ends its session with
+# logout() during validation, and Salesforce reuses one session across identical logins by
+# the same user - so it also kills the session the sfdx CLI is holding. By the time the EXIT
+# trap runs, `sfdx apex run` fails with "Session expired or invalid" and the test's records
+# are never deleted. Retrying cannot help: re-running the command does not re-authenticate.
+#
+# Observed locally on CP 8.3.0: salesforce-bulkapi-source and
+# salesforce-bulkapi-sink-with-bulkapi-source each burned all three retries on the cleanup
+# Apex and still left their Lead behind. The five tests whose connectors use JWT were
+# unaffected. Re-authenticating restores what KDP commit 478e93a5 removed.
+function salesforce_sfdx_relogin() {
+  local suffix="${1:-}"
+  local uv="SALESFORCE_USERNAME${suffix}" pv="SALESFORCE_PASSWORD${suffix}"
+  local tv="SALESFORCE_SECURITY_TOKEN${suffix}" iv="SALESFORCE_INSTANCE${suffix}"
+  local u="${!uv}" p="${!pv}" t="${!tv}" i="${!iv:-https://login.salesforce.com}"
+
+  if [ -z "$u" ] || [ -z "$p" ] || [ -z "$t" ]
+  then
+    logwarn "⚠️ cannot re-authenticate sfdx for account '${suffix:-primary}', credentials not set"
+    return 1
+  fi
+
+  log "🔑 Re-authenticating sfdx for $u before cleanup"
+  salesforce_sfdx_with_retry "sfdx sfpowerkit:auth:login -u \"$u\" -p \"$p\" -r \"$i\" -s \"$t\""
+}
+
 # Assert a topic is empty, and fail the test if it is not.
 #
 # `playground topic consume --min-expected-messages 0` does NOT assert anything: with 0 the

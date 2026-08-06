@@ -150,6 +150,8 @@ salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_
 # because that org is not authenticated until later in the script.
 cleanup_salesforce_test_data() {
   set +e
+  salesforce_sfdx_relogin ""
+  salesforce_sfdx_relogin "_ACCOUNT2"
   log "🧹 Cleaning up: Lead $LEAD_FIRSTNAME $LEAD_LASTNAME (both orgs) and PushTopic $PUSH_TOPICS_NAME"
   salesforce_sfdx_with_retry --stdin "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
 Database.delete([SELECT Id FROM Lead WHERE FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'], false);
