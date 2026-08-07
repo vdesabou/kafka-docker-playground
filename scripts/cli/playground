@@ -11808,7 +11808,7 @@ function version_gt() {
 }
 
 function get_docker_compose_version() {
-  docker compose version | grep "^Docker Compose version" | cut -d' ' -f3 | cut -d',' -f1
+  docker compose version --short
 }
 
 function check_docker_compose_version() {
