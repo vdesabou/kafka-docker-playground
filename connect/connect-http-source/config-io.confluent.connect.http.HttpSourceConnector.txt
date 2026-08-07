@@ -673,21 +673,6 @@ The name of the Java character set to use for encoding strings as byte arrays.
 	 - Importance: HIGH
 	 - Required: false
 
-==========================
-Serialization
-==========================
-🔘 value.converter.decimal.format
-
-Controls which format this converter will serialize decimals in. This value is case insensitive and can be either 'BASE64' (default) or 'NUMERIC'
-
-	 - Type: STRING
-	 - Default: BASE64
-	 - Importance: LOW
-	 - Required: false
-
-==========================
-null
-==========================
 🔘 value.converter.converter.type
 
 How this converter will be used.
@@ -697,48 +682,12 @@ How this converter will be used.
 	 - Importance: LOW
 	 - Required: true
 
-==========================
-Schemas
-==========================
-🔘 value.converter.schemas.cache.size
+🔘 value.converter.converter.encoding
 
-The maximum number of schemas that can be cached in this converter instance.
-
-	 - Type: INT
-	 - Default: 1000
-	 - Importance: HIGH
-	 - Required: false
-
-==========================
-Serialization
-==========================
-🔘 value.converter.replace.null.with.default
-
-Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: LOW
-	 - Required: false
-
-==========================
-Schemas
-==========================
-🔘 value.converter.schemas.enable
-
-Include schemas within each of the serialized values and keys.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: HIGH
-	 - Required: false
-
-🔘 value.converter.schema.content
-
-When set, this is used as the schema for all messages, and the schemas within each of the message will be ignored.Otherwise, the schema will be included in the content of each message. This configuration applies only 'schemas.enable' is true, and it exclusively affects the sink connector.
+The name of the Java character set to use for encoding strings as byte arrays.
 
 	 - Type: STRING
-	 - Default: null
+	 - Default: UTF-8
 	 - Importance: HIGH
 	 - Required: false
 
