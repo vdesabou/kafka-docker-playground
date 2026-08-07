@@ -92,6 +92,32 @@ Read timed out|Connection reset|Connection refused|\
 SERVER_UNAVAILABLE|Server Unavailable|UNABLE_TO_LOCK_ROW|\
 INVALID_SESSION_ID}"
 
+# The same idea for the sfdx CLI steps (login, record create, Apex). These run before and
+# around the connector, and a blip in any of them aborts the test just as hard.
+#
+# "Could not retrieve the username after successful auth code exchange" is observed in CI:
+# sfpowerkit:auth:login failed with it, and the identical login with the identical
+# credentials succeeded 15 seconds later in the same test's teardown - so it is transient.
+SALESFORCE_TRANSIENT_SFDX_ERRORS="${SALESFORCE_TRANSIENT_SFDX_ERRORS:-\
+Could not retrieve the username after successful auth code exchange|\
+Session expired or invalid|INVALID_SESSION_ID|Bad_OAuth_Token|\
+Read timed out|Connection reset|Connection refused|ETIMEDOUT|ECONNRESET|EAI_AGAIN|\
+socket hang up|502 Bad Gateway|503 Service Unavailable|504 Gateway|\
+SERVER_UNAVAILABLE|Server Unavailable|UNABLE_TO_LOCK_ROW}"
+
+# Errors that must NEVER be retried, checked before the transient lists above.
+#
+# REQUEST_LIMIT_EXCEEDED is the org's 24h API request cap. Retrying spends more of the
+# very budget that is exhausted, and when it hits, every test fails at once - which looks
+# exactly like a session bug unless it is called out explicitly.
+#
+# DUPLICATES_DETECTED and the *_REQUIRED_FIELD / INVALID_FIELD family are deterministic:
+# the same request will fail the same way however many times it is sent.
+SALESFORCE_FATAL_ERRORS="${SALESFORCE_FATAL_ERRORS:-\
+REQUEST_LIMIT_EXCEEDED|TotalRequests Limit exceeded|\
+DUPLICATES_DETECTED|REQUIRED_FIELD_MISSING|INVALID_FIELD|\
+INSUFFICIENT_ACCESS|INVALID_LOGIN}"
+
 # Retries consumed so far by this test. Reset per test process, since each test runs in
 # its own shell - so the budget below is genuinely per test, not per connector.
 SALESFORCE_CREATE_RETRIES_USED=0
@@ -151,6 +177,12 @@ function salesforce_create_connector_with_retry() {
       return 0
     fi
 
+    if echo "$out" | grep -qE "$SALESFORCE_FATAL_ERRORS"
+    then
+      logerror "❌ $connector creation hit a limit or a deterministic rejection that retrying cannot fix, not retrying"
+      return $rc
+    fi
+
     if ! echo "$out" | grep -qE "$SALESFORCE_TRANSIENT_CREATE_ERRORS"
     then
       logerror "❌ $connector creation failed for a non-transient reason, not retrying"
@@ -168,6 +200,158 @@ function salesforce_create_connector_with_retry() {
     sleep "$delay"
     attempt=$((attempt + 1))
   done
+}
+
+# Run an sfdx command in the sfdx-cli container, retrying only on a transient failure.
+#
+# Every sfdx step in these tests runs under `set -e`, so a single blip in a login, a record
+# create or an Apex run aborts the test even though nothing is wrong with the connector.
+# Only connector creation was retried before this; the steps around it were not.
+#
+# Usage mirrors the call it replaces:
+#
+#   salesforce_sfdx_with_retry "sfdx sfpowerkit:auth:login -u \"$USER\" ..."
+#
+# and for the commands that pipe Apex in on stdin:
+#
+#   salesforce_sfdx_with_retry --stdin "sfdx apex run --target-org \"$USER\"" << EOF
+#   Database.delete(...);
+#   EOF
+#
+# The retry budget is shared with salesforce_create_connector_with_retry, so
+# SALESFORCE_CREATE_MAX_RETRIES is the ceiling for the whole test, not per step.
+function salesforce_sfdx_with_retry() {
+  local use_stdin=0
+
+  if [ "$1" == "--stdin" ]
+  then
+    use_stdin=1
+    shift
+  fi
+
+  local sfdx_command="$1"
+  local label="${2:-$(echo "$sfdx_command" | awk '{print $1" "$2}')}"
+  local max_retries="${SALESFORCE_CREATE_MAX_RETRIES:-3}"
+  local delay="${SALESFORCE_CREATE_RETRY_DELAY:-15}"
+  local body="" attempt=1 rc out had_errexit=0
+
+  # As in salesforce_create_connector_with_retry: restore the caller's errexit exactly,
+  # because the cleanup traps deliberately run with it off.
+  case $- in
+    *e*) had_errexit=1 ;;
+  esac
+
+  if [ $use_stdin -eq 1 ]
+  then
+    body="$(cat)"
+  fi
+
+  while true
+  do
+    set +e
+    if [ $use_stdin -eq 1 ]
+    then
+      out="$(printf '%s\n' "$body" | playground container exec --container sfdx-cli --command "$sfdx_command" --shell sh 2>&1)"
+    else
+      out="$(playground container exec --container sfdx-cli --command "$sfdx_command" --shell sh 2>&1)"
+    fi
+    rc=$?
+    if [ $had_errexit -eq 1 ]
+    then
+      set -e
+    fi
+    echo "$out"
+
+    if [ $rc -eq 0 ]
+    then
+      if [ $attempt -gt 1 ]
+      then
+        log "✅ $label succeeded on attempt $attempt"
+      fi
+      return 0
+    fi
+
+    if echo "$out" | grep -qE "$SALESFORCE_FATAL_ERRORS"
+    then
+      logerror "❌ $label hit a limit or a deterministic rejection that retrying cannot fix, not retrying"
+      return $rc
+    fi
+
+    if ! echo "$out" | grep -qE "$SALESFORCE_TRANSIENT_SFDX_ERRORS"
+    then
+      logerror "❌ $label failed for a non-transient reason, not retrying"
+      return $rc
+    fi
+
+    if [ "$SALESFORCE_CREATE_RETRIES_USED" -ge "$max_retries" ]
+    then
+      logerror "❌ $label hit a transient error but this test has already used its $max_retries retry(ies)"
+      return $rc
+    fi
+
+    SALESFORCE_CREATE_RETRIES_USED=$((SALESFORCE_CREATE_RETRIES_USED + 1))
+    logwarn "⚠️ transient error during $label, retrying in ${delay}s (retry $SALESFORCE_CREATE_RETRIES_USED/$max_retries for this test)"
+    sleep "$delay"
+    attempt=$((attempt + 1))
+  done
+}
+
+# Re-authenticate the sfdx CLI for one account. Pass "" for the primary account or
+# "_ACCOUNT2" for the second.
+#
+# Cleanup needs this. A connector on the username-password SOAP grant ends its session with
+# logout() during validation, and Salesforce reuses one session across identical logins by
+# the same user - so it also kills the session the sfdx CLI is holding. By the time the EXIT
+# trap runs, `sfdx apex run` fails with "Session expired or invalid" and the test's records
+# are never deleted. Retrying cannot help: re-running the command does not re-authenticate.
+#
+# Observed locally on CP 8.3.0: salesforce-bulkapi-source and
+# salesforce-bulkapi-sink-with-bulkapi-source each burned all three retries on the cleanup
+# Apex and still left their Lead behind. The five tests whose connectors use JWT were
+# unaffected. Re-authenticating restores what KDP commit 478e93a5 removed.
+function salesforce_sfdx_relogin() {
+  local suffix="${1:-}"
+  local uv="SALESFORCE_USERNAME${suffix}" pv="SALESFORCE_PASSWORD${suffix}"
+  local tv="SALESFORCE_SECURITY_TOKEN${suffix}" iv="SALESFORCE_INSTANCE${suffix}"
+  local u="${!uv}" p="${!pv}" t="${!tv}" i="${!iv:-https://login.salesforce.com}"
+
+  if [ -z "$u" ] || [ -z "$p" ] || [ -z "$t" ]
+  then
+    logwarn "⚠️ cannot re-authenticate sfdx for account '${suffix:-primary}', credentials not set"
+    return 1
+  fi
+
+  log "🔑 Re-authenticating sfdx for $u before cleanup"
+  salesforce_sfdx_with_retry "sfdx sfpowerkit:auth:login -u \"$u\" -p \"$p\" -r \"$i\" -s \"$t\""
+}
+
+# Assert a topic is empty, and fail the test if it is not.
+#
+# `playground topic consume --min-expected-messages 0` does NOT assert anything: with 0 the
+# CLI skips its count check entirely and only warns when the topic is missing. The sink
+# tests used it for error-responses, so a partial failure (one good record plus N errored
+# ones) satisfied "success-responses >= 1" and the errors were never looked at.
+function salesforce_assert_topic_empty() {
+  local topic="$1"
+  local nb_messages=""
+
+  nb_messages=$(playground topic get-number-records -t "$topic" 2>/dev/null | tail -1)
+
+  # A topic that was never created means the connector produced no errors at all.
+  if [[ ! "$nb_messages" =~ ^[0-9]+$ ]]
+  then
+    log "✅ topic $topic contains no records (topic was never created)"
+    return 0
+  fi
+
+  if [ "$nb_messages" -gt 0 ]
+  then
+    logerror "❌ topic $topic should be empty but contains $nb_messages message(s)"
+    playground topic consume --topic "$topic" --max-messages -1 || true
+    return 1
+  fi
+
+  log "✅ topic $topic is empty, as expected"
 }
 
 function salesforce_ensure_jwt_keystore() {
