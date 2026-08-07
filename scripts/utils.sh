@@ -354,6 +354,37 @@ function salesforce_assert_topic_empty() {
   log "✅ topic $topic is empty, as expected"
 }
 
+# Version of the connector actually under test, or "" when it cannot be determined.
+#
+# --connector-tag runs set CONNECTOR_TAG, but --connector-zip and --connector-jar runs do
+# NOT: utils.sh only assigns CONNECTOR_TAG on the path where neither is set. CI gates build
+# the connector from the PR branch and pass --connector-zip, so CONNECTOR_TAG is empty there
+# and any guard written as `[ ! -z "$CONNECTOR_TAG" ] && ...` silently never fires. The
+# version is still available - in the artifact filename, e.g.
+# confluentinc-kafka-connect-salesforce-bulk-api-3.0.15-SNAPSHOT.zip
+function salesforce_connector_version() {
+  local artifact=""
+
+  if [ ! -z "$CONNECTOR_TAG" ]
+  then
+    echo "$CONNECTOR_TAG"
+    return 0
+  fi
+
+  if [ ! -z "$CONNECTOR_ZIP" ]
+  then
+    artifact="$(basename "$CONNECTOR_ZIP")"
+  elif [ ! -z "$CONNECTOR_JAR" ]
+  then
+    artifact="$(basename "$CONNECTOR_JAR")"
+  else
+    return 0
+  fi
+
+  # Trailing -SNAPSHOT is dropped so the result compares cleanly with a plain x.y.z bound.
+  echo "$artifact" | sed -nE 's/.*[-_]([0-9]+\.[0-9]+\.[0-9]+)(-SNAPSHOT)?\.(zip|jar)$/\1/p'
+}
+
 function salesforce_ensure_jwt_keystore() {
   local target_dir="${1:-$PWD}"
   local keystore_path="$target_dir/salesforce-confluent.keystore.jks"

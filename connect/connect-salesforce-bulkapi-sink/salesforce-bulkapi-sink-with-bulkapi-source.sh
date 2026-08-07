@@ -11,6 +11,7 @@ then
      exit 111
 fi
 
+SALESFORCE_CONSUMER_KEY_WITH_JWT=${SALESFORCE_CONSUMER_KEY_WITH_JWT:-$3}
 SALESFORCE_USERNAME=${SALESFORCE_USERNAME:-$1}
 SALESFORCE_PASSWORD=${SALESFORCE_PASSWORD:-$2}
 SALESFORCE_SECURITY_TOKEN=${SALESFORCE_SECURITY_TOKEN:-$4}
@@ -21,6 +22,7 @@ SALESFORCE_INSTANCE=${SALESFORCE_INSTANCE:-"https://login.salesforce.com"}
 SALESFORCE_USERNAME_ACCOUNT2=${SALESFORCE_USERNAME_ACCOUNT2:-$5}
 SALESFORCE_PASSWORD_ACCOUNT2=${SALESFORCE_PASSWORD_ACCOUNT2:-$6}
 SALESFORCE_SECURITY_TOKEN_ACCOUNT2=${SALESFORCE_SECURITY_TOKEN_ACCOUNT2:-$7}
+SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2=${SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2:-$8}
 SALESFORCE_INSTANCE_ACCOUNT2=${SALESFORCE_INSTANCE_ACCOUNT2:-"https://login.salesforce.com"}
 
 if [ -z "$SALESFORCE_USERNAME" ]
@@ -70,6 +72,53 @@ fi
 
 sed -e "s|:PUSH_TOPIC_NAME:|$PUSH_TOPICS_NAME|g" \
      ../../connect/connect-salesforce-bulkapi-sink/MyLeadPushTopics-template.apex > ../../connect/connect-salesforce-bulkapi-sink/MyLeadPushTopics.apex
+
+
+# JWT_BEARER for the Bulk API connector arrived in 3.0.x; older artifacts only support the
+# username-password SOAP grant. Rather than duplicating this test per grant, or skipping it
+# on older artifacts, pick the grant from the version actually under test. An undeterminable
+# version falls back to username-password, which every version supports.
+SALESFORCE_CONNECTOR_VERSION="$(salesforce_connector_version)"
+if [ -n "$SALESFORCE_CONNECTOR_VERSION" ] && ! version_gt "3.0.0" "$SALESFORCE_CONNECTOR_VERSION"
+then
+  SALESFORCE_GRANT=JWT_BEARER
+else
+  SALESFORCE_GRANT=PASSWORD
+fi
+log "🔐 connector ${SALESFORCE_CONNECTOR_VERSION:-unknown} -> authenticating with $SALESFORCE_GRANT"
+
+if [ "$SALESFORCE_GRANT" = "JWT_BEARER" ]
+then
+  for v in SALESFORCE_CONSUMER_KEY_WITH_JWT SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2
+  do
+    if [ -z "${!v}" ]
+    then
+         logerror "$v is not set. Export it as environment variable or pass it as argument. Check README !"
+         exit 1
+    fi
+  done
+  # Both orgs' connected apps trust the same certificate, so one keystore covers source and
+  # sink. docker-compose.plaintext.yml already mounts it into connect at /tmp.
+  salesforce_ensure_jwt_keystore "$PWD" > /dev/null
+
+  SALESFORCE_SOURCE_AUTH="\"salesforce.grant.type\" : \"JWT_BEARER\",
+     \"salesforce.username\" : \"$SALESFORCE_USERNAME\",
+     \"salesforce.consumer.key\" : \"$SALESFORCE_CONSUMER_KEY_WITH_JWT\",
+     \"salesforce.jwt.keystore.path\" : \"/tmp/salesforce-confluent.keystore.jks\",
+     \"salesforce.jwt.keystore.password\" : \"confluent\","
+  SALESFORCE_SINK_AUTH="\"salesforce.grant.type\" : \"JWT_BEARER\",
+     \"salesforce.username\" : \"$SALESFORCE_USERNAME_ACCOUNT2\",
+     \"salesforce.consumer.key\" : \"$SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2\",
+     \"salesforce.jwt.keystore.path\" : \"/tmp/salesforce-confluent.keystore.jks\",
+     \"salesforce.jwt.keystore.password\" : \"confluent\","
+else
+  SALESFORCE_SOURCE_AUTH="\"salesforce.username\" : \"$SALESFORCE_USERNAME\",
+     \"salesforce.password\" : \"$SALESFORCE_PASSWORD\",
+     \"salesforce.password.token\" : \"$SALESFORCE_SECURITY_TOKEN\","
+  SALESFORCE_SINK_AUTH="\"salesforce.username\" : \"$SALESFORCE_USERNAME_ACCOUNT2\",
+     \"salesforce.password\" : \"$SALESFORCE_PASSWORD_ACCOUNT2\",
+     \"salesforce.password.token\" : \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\","
+fi
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
@@ -173,9 +222,7 @@ salesforce_create_connector_with_retry salesforce-bulkapi-source << EOF
      "curl.logging": "true",
      "salesforce.object" : "Lead",
      "salesforce.instance" : "$SALESFORCE_INSTANCE",
-     "salesforce.username" : "$SALESFORCE_USERNAME",
-     "salesforce.password" : "$SALESFORCE_PASSWORD",
-     "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
+     $SALESFORCE_SOURCE_AUTH
      "connection.max.message.size": "10048576",
      "key.converter": "org.apache.kafka.connect.json.JsonConverter",
      "value.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -185,7 +232,7 @@ salesforce_create_connector_with_retry salesforce-bulkapi-source << EOF
 }
 EOF
 
-restart_task_on_invalid_session salesforce-bulkapi-source
+if [ "$SALESFORCE_GRANT" = "PASSWORD" ]; then restart_task_on_invalid_session salesforce-bulkapi-source; fi
 
 # 180s, not 60s: the Bulk API query job runs asynchronously on a Salesforce-side
 # queue, so its completion time is not under this test's control.
@@ -201,9 +248,7 @@ salesforce_create_connector_with_retry salesforce-bulkapi-sink << EOF
     "curl.logging": "true",
     "salesforce.object" : "Lead",
     "salesforce.instance" : "$SALESFORCE_INSTANCE_ACCOUNT2",
-    "salesforce.username" : "$SALESFORCE_USERNAME_ACCOUNT2",
-     "salesforce.password" : "$SALESFORCE_PASSWORD_ACCOUNT2",
-     "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN_ACCOUNT2",
+    $SALESFORCE_SINK_AUTH
     "salesforce.ignore.fields" : "CleanStatus",
     "salesforce.ignore.reference.fields" : "true",
     "connection.max.message.size": "10048576",
@@ -224,7 +269,7 @@ salesforce_create_connector_with_retry salesforce-bulkapi-sink << EOF
 }
 EOF
 
-restart_task_on_invalid_session salesforce-bulkapi-sink
+if [ "$SALESFORCE_GRANT" = "PASSWORD" ]; then restart_task_on_invalid_session salesforce-bulkapi-sink; fi
 
 sleep 30
 
