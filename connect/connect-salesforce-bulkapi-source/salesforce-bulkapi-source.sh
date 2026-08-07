@@ -78,11 +78,21 @@ salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_
 # also happens when an assertion below fails.
 cleanup_salesforce_test_data() {
   set +e
+  # Cleanup gets its own retry allowance: the test body may already have spent the shared
+  # budget, and with two orgs the first delete could otherwise leave the second with a
+  # single attempt.
+  SALESFORCE_CREATE_RETRIES_USED=0
+  local cleanup_failed=0
   salesforce_sfdx_relogin ""
   log "🧹 Cleaning up: Lead $LEAD_FIRSTNAME $LEAD_LASTNAME"
   salesforce_sfdx_with_retry --stdin "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
 Database.delete([SELECT Id FROM Lead WHERE FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'], false);
 EOF
+  [ $? -ne 0 ] && cleanup_failed=1
+  if [ $cleanup_failed -ne 0 ]
+  then
+    logwarn "⚠️ cleanup did not complete - test records may be left behind in the org"
+  fi
   set -e
 }
 trap cleanup_salesforce_test_data EXIT

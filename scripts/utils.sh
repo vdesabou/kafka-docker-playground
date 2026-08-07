@@ -383,30 +383,49 @@ function salesforce_assert_topic_empty() {
   local topic="$1"
   local nb_messages=""
 
-  local out="" rc=0
-  out="$(playground topic get-number-records -t "$topic" 2>&1)"
-  rc=$?
-  nb_messages="$(printf '%s\n' "$out" | tail -1)"
+  local out="" rc=0 had_errexit=0
 
-  # Only an explicit "does not exist" may be read as "no errors were produced". Anything else
-  # non-numeric means the count could not be determined - a failed docker exec, an unknown CP
-  # version, an empty awk sum - and must fail rather than silently pass. logerror writes to
-  # stdout, so a discarded exit code plus 2>/dev/null would have turned those into a pass.
-  if [[ ! "$nb_messages" =~ ^[0-9]+$ ]]
+  # Callers run under `set -e`, so the count must be read with errexit off: otherwise a
+  # non-zero exit from the CLI kills the test script on this very line and none of the
+  # diagnostics below ever run.
+  case $- in
+    *e*) had_errexit=1 ;;
+  esac
+
+  # Decide existence directly instead of inferring it from a log line. Matching "does not
+  # exist" in the output was unsound in both directions: an empty or failed topic list is
+  # byte-identical to a genuinely absent topic (false pass), and the message is produced by
+  # logwarn, which returns early under PG_LOG_LEVEL=INFO (false failure).
+  set +e
+  playground get-topic-list | grep -qFx "$topic"
+  local topic_exists=$?
+  set -e
+  if [ $had_errexit -eq 0 ]
   then
-    if printf '%s' "$out" | grep -q "does not exist"
-    then
-      log "✅ topic $topic contains no records (topic was never created)"
-      return 0
-    fi
-    logerror "❌ could not determine the record count for $topic, refusing to assume it is empty"
-    printf '%s\n' "$out"
-    return 1
+    set +e
   fi
 
-  if [ $rc -ne 0 ]
+  if [ $topic_exists -ne 0 ]
   then
-    logerror "❌ getting the record count for $topic failed (rc=$rc)"
+    log "✅ topic $topic contains no records (topic does not exist)"
+    return 0
+  fi
+
+  set +e
+  out="$(playground topic get-number-records -t "$topic" 2>&1)"
+  rc=$?
+  if [ $had_errexit -eq 1 ]
+  then
+    set -e
+  fi
+  nb_messages="$(printf '%s\n' "$out" | tail -1)"
+
+  # The topic exists, so the count must be a number. Anything else means it could not be
+  # determined - a failed docker exec, an unknown CP version, an empty awk sum - and must
+  # fail rather than silently pass.
+  if [ $rc -ne 0 ] || [[ ! "$nb_messages" =~ ^[0-9]+$ ]]
+  then
+    logerror "❌ could not determine the record count for $topic (rc=$rc), refusing to assume it is empty"
     printf '%s\n' "$out"
     return 1
   fi
@@ -449,7 +468,10 @@ function salesforce_connector_version() {
   fi
 
   # Trailing -SNAPSHOT is dropped so the result compares cleanly with a plain x.y.z bound.
-  echo "$artifact" | sed -nE 's/.*[-_]([0-9]+\.[0-9]+\.[0-9]+)(-SNAPSHOT)?\.(zip|jar)$/\1/p'
+  # Accept any qualifier after x.y.z (-SNAPSHOT, -rc1, Maven timestamped snapshots,
+  # -jar-with-dependencies) and either case of the extension. version_gt strips the
+  # qualifier itself, so only the x.y.z prefix has to be recovered here.
+  echo "$artifact" | sed -nE 's/.*[-_]([0-9]+\.[0-9]+\.[0-9]+)([-.][^/]*)?\.([zZ][iI][pP]|[jJ][aA][rR])$/\1/p'
 }
 
 function salesforce_ensure_jwt_keystore() {

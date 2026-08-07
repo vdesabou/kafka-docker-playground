@@ -134,6 +134,36 @@ LEAD_LASTNAME=Doe_$RANDOM
 log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
 salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
 
+# Remove what this test created, so repeated runs do not accumulate records in a shared
+# Salesforce org. Only the exact records created above are matched, so a concurrent test's
+# data is never touched. An EXIT trap so cleanup also happens when an assertion fails.
+cleanup_salesforce_test_data() {
+  set +e
+  # Cleanup gets its own retry allowance: the test body may already have spent the shared
+  # budget, and with two orgs the first delete could otherwise leave the second with a
+  # single attempt.
+  SALESFORCE_CREATE_RETRIES_USED=0
+  local cleanup_failed=0
+  salesforce_sfdx_relogin """"
+  salesforce_sfdx_relogin ""_ACCOUNT2""
+  log "🧹 Cleaning up: Lead $LEAD_FIRSTNAME $LEAD_LASTNAME (both orgs) and PushTopic $PUSH_TOPICS_NAME"
+  salesforce_sfdx_with_retry --stdin "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
+Database.delete([SELECT Id FROM Lead WHERE FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'], false);
+Database.delete([SELECT Id FROM PushTopic WHERE Name = '$PUSH_TOPICS_NAME'], false);
+EOF
+  [ $? -ne 0 ] && cleanup_failed=1
+  salesforce_sfdx_with_retry --stdin "sfdx apex run --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\"" << EOF
+Database.delete([SELECT Id FROM Lead WHERE FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'], false);
+EOF
+  [ $? -ne 0 ] && cleanup_failed=1
+  if [ $cleanup_failed -ne 0 ]
+  then
+    logwarn "⚠️ cleanup did not complete - test records may be left behind in the org"
+  fi
+  set -e
+}
+trap cleanup_salesforce_test_data EXIT
+
 sleep 30
 
 log "Verify we have received the data in sfdc-pushtopic-leads topic"

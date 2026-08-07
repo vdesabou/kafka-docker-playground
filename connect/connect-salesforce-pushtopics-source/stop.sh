@@ -15,8 +15,10 @@ source ${DIR}/../../scripts/utils.sh
 # an apparent "delete all Leads" teardown.
 #
 # It is removed rather than repaired: the query was unfiltered, so a working version would
-# delete EVERY Lead in the org including hand-made sample data. Each test already removes
-# exactly the records it created, in its own EXIT trap. A filtered sweep for leftovers from
-# aborted runs can be added separately, matching only the test naming patterns.
+# delete EVERY Lead in the org including hand-made sample data. Each test now removes exactly
+# the records it created, in its own EXIT trap - that was only true of 5 of the 13
+# data-creating tests when the sweep was first removed, and traps were added to the rest.
+# A filtered sweep for leftovers from aborted runs could still be added separately, matching
+# only the test naming patterns.
 
 stop_all "$DIR"
