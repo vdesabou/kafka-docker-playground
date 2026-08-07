@@ -88,6 +88,15 @@ On startup, the connector will wait this long for a Couchbase connection to be e
 ==========================
 Security
 ==========================
+🔘 couchbase.trust.store.password
+
+Password for accessing the trust store.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.enable.tls
 
 Use secure connection to Couchbase Server.
@@ -136,15 +145,6 @@ If you supply a value for this config property, the `couchbase.username` and `co
 🔘 couchbase.client.certificate.password
 
 Password for accessing the client certificate.
-
-	 - Type: PASSWORD
-	 - Default: [hidden]
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.trust.store.password
-
-Password for accessing the trust store.
 
 	 - Type: PASSWORD
 	 - Default: [hidden]
