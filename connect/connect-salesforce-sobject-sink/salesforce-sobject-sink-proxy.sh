@@ -99,7 +99,10 @@ salesforce_sfdx_with_retry "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME
 
 log "Delete $PUSH_TOPICS_NAME, if required"
 set +e
-salesforce_sfdx_with_retry --stdin "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
+# Expected to fail when the PushTopic does not exist yet, so deliberately NOT routed
+# through salesforce_sfdx_with_retry: retrying a step whose failure is normal would
+# spend this test's shared retry budget, and trigger a pointless re-authentication.
+playground container exec --container sfdx-cli --command "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF --shell sh
 List<PushTopic> pts = [SELECT Id FROM PushTopic WHERE Name = '$PUSH_TOPICS_NAME'];
 Database.delete(pts);
 EOF
@@ -149,6 +152,20 @@ LEAD_FIRSTNAME=John_$RANDOM
 LEAD_LASTNAME=Doe_$RANDOM
 log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
 salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
+
+# Remove the records this test created, so repeated runs do not accumulate data in a
+# shared Salesforce org. Only the exact records created above are matched. An EXIT trap,
+# so cleanup also happens when an assertion fails.
+cleanup_salesforce_test_data() {
+  set +e
+  salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_PASSWORD" "$SALESFORCE_SECURITY_TOKEN" "$SALESFORCE_INSTANCE" \
+    "Lead:FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'" \
+    "PushTopic:Name = '$PUSH_TOPICS_NAME'"
+  salesforce_cleanup_records "$SALESFORCE_USERNAME_ACCOUNT2" "$SALESFORCE_PASSWORD_ACCOUNT2" "$SALESFORCE_SECURITY_TOKEN_ACCOUNT2" "$SALESFORCE_INSTANCE_ACCOUNT2" \
+    "Lead:FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'"
+  set -e
+}
+trap cleanup_salesforce_test_data EXIT
 
 sleep 30
 
@@ -208,6 +225,6 @@ log "Get the Lead created on account #2"
 # record the test just wrote is present. data:query returns every match, and the grep
 # below still fails if the record is genuinely missing.
 # || true so cat always runs - without it set -e aborts here and the error is never shown.
-salesforce_sfdx_with_retry "sfdx data:query --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -q \"SELECT Id, FirstName, LastName FROM Lead WHERE FirstName='$LEAD_FIRSTNAME' AND LastName='$LEAD_LASTNAME' AND Company='Confluent'\"" > /tmp/result.log 2>&1 || true
+playground container exec --container sfdx-cli --command "sfdx data:query --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -q \"SELECT Id, FirstName, LastName FROM Lead WHERE FirstName='$LEAD_FIRSTNAME' AND LastName='$LEAD_LASTNAME' AND Company='Confluent'\"" --shell sh > /tmp/result.log 2>&1 || true
 cat /tmp/result.log
 grep "$LEAD_FIRSTNAME" /tmp/result.log

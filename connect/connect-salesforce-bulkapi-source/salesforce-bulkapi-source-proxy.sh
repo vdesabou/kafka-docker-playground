@@ -46,6 +46,17 @@ LEAD_LASTNAME=Doe_$RANDOM
 log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
 salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
 
+# Remove the records this test created, so repeated runs do not accumulate data in a
+# shared Salesforce org. Only the exact records created above are matched. An EXIT trap,
+# so cleanup also happens when an assertion fails.
+cleanup_salesforce_test_data() {
+  set +e
+  salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_PASSWORD" "$SALESFORCE_SECURITY_TOKEN" "$SALESFORCE_INSTANCE" \
+    "Lead:FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'"
+  set -e
+}
+trap cleanup_salesforce_test_data EXIT
+
 DOMAIN=$(echo $SALESFORCE_INSTANCE | cut -d "/" -f 3)
 IP=$(nslookup $DOMAIN | grep Address | grep -v "#" | cut -d " " -f 2 | tail -1)
 log "Blocking $DOMAIN IP $IP to make sure proxy is used"

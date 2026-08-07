@@ -96,17 +96,13 @@ CONTACT_LASTNAME=Doe_$RANDOM
 log "Add a Contact to Salesforce: $CONTACT_FIRSTNAME $CONTACT_LASTNAME"
 salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Contact -v \"FirstName='$CONTACT_FIRSTNAME' LastName='$CONTACT_LASTNAME'\""
 
-# Remove what this test created, so repeated runs do not accumulate records in a
-# shared Salesforce org. Only the exact Contact created above is matched, so a
-# concurrent test's data is never touched. Registered as an EXIT trap so cleanup
-# also happens when an assertion below fails.
+# Remove the records this test created, so repeated runs do not accumulate data in a
+# shared Salesforce org. Only the exact records created above are matched. An EXIT trap,
+# so cleanup also happens when an assertion fails.
 cleanup_salesforce_test_data() {
   set +e
-  salesforce_sfdx_relogin ""
-  log "🧹 Cleaning up: Contact $CONTACT_FIRSTNAME $CONTACT_LASTNAME"
-  salesforce_sfdx_with_retry --stdin "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
-Database.delete([SELECT Id FROM Contact WHERE FirstName = '$CONTACT_FIRSTNAME' AND LastName = '$CONTACT_LASTNAME'], false);
-EOF
+  salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_PASSWORD" "$SALESFORCE_SECURITY_TOKEN" "$SALESFORCE_INSTANCE" \
+    "Contact:FirstName = '$CONTACT_FIRSTNAME' AND LastName = '$CONTACT_LASTNAME'"
   set -e
 }
 trap cleanup_salesforce_test_data EXIT

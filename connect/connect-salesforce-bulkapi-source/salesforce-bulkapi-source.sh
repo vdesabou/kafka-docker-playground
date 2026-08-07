@@ -72,79 +72,17 @@ LEAD_LASTNAME=Doe_$RANDOM
 log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
 salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
 
-# Remove what this test created, so repeated runs do not accumulate records in a
-# shared Salesforce org. Only the exact Lead created above is matched, so a
-# concurrent test's data is never touched. Registered as an EXIT trap so cleanup
-# also happens when an assertion below fails.
+# Remove the records this test created, so repeated runs do not accumulate data in a
+# shared Salesforce org. Only the exact records created above are matched. An EXIT trap,
+# so cleanup also happens when an assertion fails.
 cleanup_salesforce_test_data() {
   set +e
-  salesforce_sfdx_relogin ""
-  log "🧹 Cleaning up: Lead $LEAD_FIRSTNAME $LEAD_LASTNAME"
-  salesforce_sfdx_with_retry --stdin "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
-Database.delete([SELECT Id FROM Lead WHERE FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'], false);
-EOF
+  salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_PASSWORD" "$SALESFORCE_SECURITY_TOKEN" "$SALESFORCE_INSTANCE" \
+    "Lead:FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'"
   set -e
 }
 trap cleanup_salesforce_test_data EXIT
 
-# Wait for the connector's task to reach RUNNING, restarting it if it died with
-# INVALID_SESSION_ID.
-#
-# The Bulk API connectors authenticate with the username-password SOAP grant. Connector
-# validation opens its own PartnerConnection and ends it with a SOAP logout(), and
-# Salesforce reuses one session across identical logins by the same user - so validation
-# can tear down the session the task is holding. The task then fails its very first
-# describeSObject with INVALID_SESSION_ID ("Session not found, missing session hash")
-# within seconds of starting, and Connect does not retry a task that threw from start().
-#
-# Restarting the task re-authenticates without re-running validation, which is also the
-# remedy Salesforce documents for a session invalidated by a concurrent logout. Only
-# INVALID_SESSION_ID is retried: any other task failure fails the test immediately, so a
-# genuine regression is still caught.
-restart_task_on_invalid_session() {
-  local connector="$1"
-  local max_restarts="${2:-2}"
-  local restarts=0
-  local checks=0
-  local task_status state trace
-
-  while [ "$checks" -lt 12 ]; do
-    sleep 10
-    checks=$((checks + 1))
-    task_status=$(curl -s "http://localhost:8083/connectors/${connector}/status")
-    state=$(echo "$task_status" | jq -r '.tasks[0].state // "MISSING"')
-
-    case "$state" in
-      RUNNING)
-        if [ "$restarts" -gt 0 ]; then
-          log "✅ $connector task reached RUNNING after $restarts restart(s)"
-        fi
-        return 0
-        ;;
-      FAILED)
-        trace=$(echo "$task_status" | jq -r '.tasks[0].trace // ""')
-        if ! echo "$trace" | grep -q "INVALID_SESSION_ID"; then
-          logerror "$connector task FAILED, and not with INVALID_SESSION_ID:"
-          echo "$trace" | head -20
-          return 1
-        fi
-        if [ "$restarts" -ge "$max_restarts" ]; then
-          logerror "$connector still hitting INVALID_SESSION_ID after $restarts restart(s)"
-          return 1
-        fi
-        restarts=$((restarts + 1))
-        logwarn "⚠️ $connector hit INVALID_SESSION_ID, restarting task ($restarts/$max_restarts)"
-        curl -s -X POST "http://localhost:8083/connectors/${connector}/tasks/0/restart" > /dev/null
-        ;;
-      *)
-        # UNASSIGNED or not yet reported while the task is still coming up.
-        ;;
-    esac
-  done
-
-  logerror "$connector task never reached RUNNING (last state: $state)"
-  return 1
-}
 
 
 if [ "$SALESFORCE_GRANT" = "JWT_BEARER" ]
@@ -179,12 +117,13 @@ salesforce_create_connector_with_retry salesforce-bulkapi-source << EOF
 }
 EOF
 
-# Only the username-password grant shares one Salesforce session, so only it can have
-# its session torn down by validation's logout(). JWT takes a token per connection.
-if [ "$SALESFORCE_GRANT" = "PASSWORD" ]
-then
-  restart_task_on_invalid_session salesforce-bulkapi-source
-fi
+# Called for both grants. Despite its name this is also the only place this test asserts
+# the task reached RUNNING: it fails with the task's stack trace on any other FAILED
+# state, and fails if the task never comes up within 120s. Gating it on the password
+# grant removed that assertion from the JWT path - the path CI takes - leaving a genuine
+# task failure to surface only as "topic contains 0 messages" with no trace. Its
+# INVALID_SESSION_ID branch simply never fires under JWT.
+restart_task_on_invalid_session salesforce-bulkapi-source
 
 # 180s, not 60s: the Bulk API query job runs asynchronously on a Salesforce-side
 # queue, so how long it takes to complete is not under this test's control and

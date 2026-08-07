@@ -131,87 +131,20 @@ LEAD_LASTNAME=Doe_$RANDOM
 log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
 salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
 
-# Remove what this test created, so repeated runs do not accumulate records in
-# shared Salesforce orgs. This test writes to two orgs: the Lead seeded above in
-# the source org, and the Lead the sink writes into the ACCOUNT2 org (same
-# FirstName/LastName), plus the PushTopic. Only exact matches are deleted, so a
-# concurrent test's data is never touched. Registered as an EXIT trap so cleanup
-# also happens when an assertion below fails; the ACCOUNT2 delete is best-effort
-# because that org is not authenticated until later in the script.
+# Remove the records this test created, so repeated runs do not accumulate data in a
+# shared Salesforce org. Only the exact records created above are matched. An EXIT trap,
+# so cleanup also happens when an assertion fails.
 cleanup_salesforce_test_data() {
   set +e
-  salesforce_sfdx_relogin ""
-  salesforce_sfdx_relogin "_ACCOUNT2"
-  log "🧹 Cleaning up: Lead $LEAD_FIRSTNAME $LEAD_LASTNAME (both orgs) and PushTopic $PUSH_TOPICS_NAME"
-  salesforce_sfdx_with_retry --stdin "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
-Database.delete([SELECT Id FROM Lead WHERE FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'], false);
-Database.delete([SELECT Id FROM PushTopic WHERE Name = '$PUSH_TOPICS_NAME'], false);
-EOF
-  salesforce_sfdx_with_retry --stdin "sfdx apex run --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\"" << EOF
-Database.delete([SELECT Id FROM Lead WHERE FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'], false);
-EOF
+  salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_PASSWORD" "$SALESFORCE_SECURITY_TOKEN" "$SALESFORCE_INSTANCE" \
+    "Lead:FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'" \
+    "PushTopic:Name = '$PUSH_TOPICS_NAME'"
+  salesforce_cleanup_records "$SALESFORCE_USERNAME_ACCOUNT2" "$SALESFORCE_PASSWORD_ACCOUNT2" "$SALESFORCE_SECURITY_TOKEN_ACCOUNT2" "$SALESFORCE_INSTANCE_ACCOUNT2" \
+    "Lead:FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'"
   set -e
 }
 trap cleanup_salesforce_test_data EXIT
 
-# Wait for the connector's task to reach RUNNING, restarting it if it died with
-# INVALID_SESSION_ID.
-#
-# The Bulk API connectors authenticate with the username-password SOAP grant. Connector
-# validation opens its own PartnerConnection and ends it with a SOAP logout(), and
-# Salesforce reuses one session across identical logins by the same user - so validation
-# can tear down the session the task is holding. The task then fails its very first
-# describeSObject with INVALID_SESSION_ID ("Session not found, missing session hash")
-# within seconds of starting, and Connect does not retry a task that threw from start().
-#
-# Restarting the task re-authenticates without re-running validation, which is also the
-# remedy Salesforce documents for a session invalidated by a concurrent logout. Only
-# INVALID_SESSION_ID is retried: any other task failure fails the test immediately, so a
-# genuine regression is still caught.
-restart_task_on_invalid_session() {
-  local connector="$1"
-  local max_restarts="${2:-2}"
-  local restarts=0
-  local checks=0
-  local task_status state trace
-
-  while [ "$checks" -lt 12 ]; do
-    sleep 10
-    checks=$((checks + 1))
-    task_status=$(curl -s "http://localhost:8083/connectors/${connector}/status")
-    state=$(echo "$task_status" | jq -r '.tasks[0].state // "MISSING"')
-
-    case "$state" in
-      RUNNING)
-        if [ "$restarts" -gt 0 ]; then
-          log "✅ $connector task reached RUNNING after $restarts restart(s)"
-        fi
-        return 0
-        ;;
-      FAILED)
-        trace=$(echo "$task_status" | jq -r '.tasks[0].trace // ""')
-        if ! echo "$trace" | grep -q "INVALID_SESSION_ID"; then
-          logerror "$connector task FAILED, and not with INVALID_SESSION_ID:"
-          echo "$trace" | head -20
-          return 1
-        fi
-        if [ "$restarts" -ge "$max_restarts" ]; then
-          logerror "$connector still hitting INVALID_SESSION_ID after $restarts restart(s)"
-          return 1
-        fi
-        restarts=$((restarts + 1))
-        logwarn "⚠️ $connector hit INVALID_SESSION_ID, restarting task ($restarts/$max_restarts)"
-        curl -s -X POST "http://localhost:8083/connectors/${connector}/tasks/0/restart" > /dev/null
-        ;;
-      *)
-        # UNASSIGNED or not yet reported while the task is still coming up.
-        ;;
-    esac
-  done
-
-  logerror "$connector task never reached RUNNING (last state: $state)"
-  return 1
-}
 
 log "Creating Salesforce Bulk API Source connector"
 salesforce_create_connector_with_retry salesforce-bulkapi-source << EOF
@@ -232,7 +165,13 @@ salesforce_create_connector_with_retry salesforce-bulkapi-source << EOF
 }
 EOF
 
-if [ "$SALESFORCE_GRANT" = "PASSWORD" ]; then restart_task_on_invalid_session salesforce-bulkapi-source; fi
+# Called for both grants. Despite its name this is also the only place this test asserts
+# the task reached RUNNING: it fails with the task's stack trace on any other FAILED
+# state, and fails if the task never comes up within 120s. Gating it on the password
+# grant removed that assertion from the JWT path - the path CI takes - leaving a genuine
+# task failure to surface only as "topic contains 0 messages" with no trace. Its
+# INVALID_SESSION_ID branch simply never fires under JWT.
+restart_task_on_invalid_session salesforce-bulkapi-source
 
 # 180s, not 60s: the Bulk API query job runs asynchronously on a Salesforce-side
 # queue, so its completion time is not under this test's control.
@@ -269,7 +208,13 @@ salesforce_create_connector_with_retry salesforce-bulkapi-sink << EOF
 }
 EOF
 
-if [ "$SALESFORCE_GRANT" = "PASSWORD" ]; then restart_task_on_invalid_session salesforce-bulkapi-sink; fi
+# Called for both grants. Despite its name this is also the only place this test asserts
+# the task reached RUNNING: it fails with the task's stack trace on any other FAILED
+# state, and fails if the task never comes up within 120s. Gating it on the password
+# grant removed that assertion from the JWT path - the path CI takes - leaving a genuine
+# task failure to surface only as "topic contains 0 messages" with no trace. Its
+# INVALID_SESSION_ID branch simply never fires under JWT.
+restart_task_on_invalid_session salesforce-bulkapi-sink
 
 sleep 30
 
@@ -294,6 +239,6 @@ log "Get the Lead created on account #2"
 # record the test just wrote is present. data:query returns every match, and the grep
 # below still fails if the record is genuinely missing.
 # || true so cat always runs - without it set -e aborts here and the error is never shown.
-salesforce_sfdx_with_retry "sfdx data:query --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -q \"SELECT Id, FirstName, LastName FROM Lead WHERE FirstName='$LEAD_FIRSTNAME' AND LastName='$LEAD_LASTNAME' AND Company='Confluent'\"" > /tmp/result.log 2>&1 || true
+playground container exec --container sfdx-cli --command "sfdx data:query --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -q \"SELECT Id, FirstName, LastName FROM Lead WHERE FirstName='$LEAD_FIRSTNAME' AND LastName='$LEAD_LASTNAME' AND Company='Confluent'\"" --shell sh > /tmp/result.log 2>&1 || true
 cat /tmp/result.log
 grep "$LEAD_FIRSTNAME" /tmp/result.log
