@@ -85,12 +85,12 @@ function cleanup-workaround-file {
 # INVALID_SESSION_ID is included: Salesforce reuses one session across identical
 # username-password logins by the same user, so a concurrent logout elsewhere can
 # invalidate the session validation is holding. Retrying re-authenticates.
-SALESFORCE_TRANSIENT_CREATE_ERRORS="${SALESFORCE_TRANSIENT_CREATE_ERRORS:-\
+SALESFORCE_TRANSIENT_CREATE_ERRORS="\
 Exception encountered while calling salesforce|\
 Read timed out|Connection reset|Connection refused|\
 502 Bad Gateway|503 Service Unavailable|504 Gateway|\
 SERVER_UNAVAILABLE|Server Unavailable|UNABLE_TO_LOCK_ROW|\
-INVALID_SESSION_ID}"
+INVALID_SESSION_ID"
 
 # The same idea for the sfdx CLI steps (login, record create, Apex). These run before and
 # around the connector, and a blip in any of them aborts the test just as hard.
@@ -98,12 +98,12 @@ INVALID_SESSION_ID}"
 # "Could not retrieve the username after successful auth code exchange" is observed in CI:
 # sfpowerkit:auth:login failed with it, and the identical login with the identical
 # credentials succeeded 15 seconds later in the same test's teardown - so it is transient.
-SALESFORCE_TRANSIENT_SFDX_ERRORS="${SALESFORCE_TRANSIENT_SFDX_ERRORS:-\
+SALESFORCE_TRANSIENT_SFDX_ERRORS="\
 Could not retrieve the username after successful auth code exchange|\
 Session expired or invalid|INVALID_SESSION_ID|Bad_OAuth_Token|\
 Read timed out|Connection reset|Connection refused|ETIMEDOUT|ECONNRESET|EAI_AGAIN|\
 socket hang up|502 Bad Gateway|503 Service Unavailable|504 Gateway|\
-SERVER_UNAVAILABLE|Server Unavailable|UNABLE_TO_LOCK_ROW}"
+SERVER_UNAVAILABLE|Server Unavailable|UNABLE_TO_LOCK_ROW"
 
 # Errors that must NEVER be retried, checked before the transient lists above.
 #
@@ -113,10 +113,10 @@ SERVER_UNAVAILABLE|Server Unavailable|UNABLE_TO_LOCK_ROW}"
 #
 # DUPLICATES_DETECTED and the *_REQUIRED_FIELD / INVALID_FIELD family are deterministic:
 # the same request will fail the same way however many times it is sent.
-SALESFORCE_FATAL_ERRORS="${SALESFORCE_FATAL_ERRORS:-\
+SALESFORCE_FATAL_ERRORS="\
 REQUEST_LIMIT_EXCEEDED|TotalRequests Limit exceeded|\
 DUPLICATES_DETECTED|REQUIRED_FIELD_MISSING|INVALID_FIELD|\
-INSUFFICIENT_ACCESS|INVALID_LOGIN}"
+INSUFFICIENT_ACCESS|INVALID_LOGIN"
 
 # Retries consumed so far by this test. Reset per test process, since each test runs in
 # its own shell - so the budget below is genuinely per test, not per connector.
@@ -298,38 +298,22 @@ function salesforce_sfdx_with_retry() {
     # invalid" 4 seconds later, because an earlier username-password connector's validation
     # logout() had killed the session Salesforce reuses for identical logins by the same user.
     # Retrying alone would have burned the whole budget and still failed.
+    # Re-authenticate before retrying: re-running a command cannot revive a dead session.
+    # This rescues setup steps that run before any connector exists, which the EXIT trap
+    # cannot help with - observed in CI on a PushTopic test whose `apex run -f` failed here.
     if echo "$out" | grep -qE "Session expired or invalid|INVALID_SESSION_ID|Bad_OAuth_Token"
     then
       case "$sfdx_command" in
         *auth:login*)
-          # The command being retried IS a login; no point logging in first.
+          : # the command being retried IS a login
+          ;;
+        *"$SALESFORCE_USERNAME_ACCOUNT2"*)
+          salesforce_sfdx_relogin "$SALESFORCE_USERNAME_ACCOUNT2" "$SALESFORCE_PASSWORD_ACCOUNT2" \
+            "$SALESFORCE_SECURITY_TOKEN_ACCOUNT2" "$SALESFORCE_INSTANCE_ACCOUNT2" || true
           ;;
         *)
-          local target=""
-          # First match only: a greedy .* would pick up a later --target-org appearing inside
-          # a SOQL string and re-authenticate the wrong org. Both long and short forms.
-          target="$(printf '%s' "$sfdx_command" \
-            | grep -oE '(--target-org|--targetusername|-o)[= ]+\\?"?[^"\\ ]+' \
-            | head -1 | sed -E 's/^(--target-org|--targetusername|-o)[= ]+\\?"?//')"
-          if [ -z "$target" ]
-          then
-            # Guessing the primary account here could refresh the wrong org's session, so
-            # say so and retry without re-authenticating rather than pick one.
-            logwarn "⚠️ could not determine the target org of $label, retrying without re-authenticating"
-          else
-            local suffix=""
-            if [ "$target" = "$SALESFORCE_USERNAME_ACCOUNT2" ]
-            then
-              suffix="_ACCOUNT2"
-            fi
-            # `if !` keeps errexit from killing the test when the re-login fails: this is a
-            # best-effort rescue, and the retry below is still worth attempting. Output is
-            # deliberately not suppressed so a failed re-login is visible in the CI log.
-            if ! salesforce_sfdx_relogin "$suffix"
-            then
-              logwarn "⚠️ re-authentication before retrying $label failed, retrying anyway"
-            fi
-          fi
+          salesforce_sfdx_relogin "$SALESFORCE_USERNAME" "$SALESFORCE_PASSWORD" \
+            "$SALESFORCE_SECURITY_TOKEN" "$SALESFORCE_INSTANCE" || true
           ;;
       esac
     fi
@@ -339,38 +323,118 @@ function salesforce_sfdx_with_retry() {
   done
 }
 
-# Re-authenticate the sfdx CLI for one account. Pass "" for the primary account or
-# "_ACCOUNT2" for the second.
+# Re-authenticate the sfdx CLI for one org, one attempt, best effort.
 #
-# Cleanup needs this. A connector on the username-password SOAP grant ends its session with
-# logout() during validation, and Salesforce reuses one session across identical logins by
-# the same user - so it also kills the session the sfdx CLI is holding. By the time the EXIT
-# trap runs, `sfdx apex run` fails with "Session expired or invalid" and the test's records
-# are never deleted. Retrying cannot help: re-running the command does not re-authenticate.
+# Needed because a connector on the username-password SOAP grant ends its session with a
+# SOAP logout() during validation, and Salesforce reuses one session across identical logins
+# by the same user - so it also kills the session the sfdx CLI is holding. Re-running a
+# command cannot revive a dead session; only a fresh login can.
 #
-# Observed locally on CP 8.3.0: salesforce-bulkapi-source and
-# salesforce-bulkapi-sink-with-bulkapi-source each burned all three retries on the cleanup
-# Apex and still left their Lead behind. The five tests whose connectors use JWT were
-# unaffected. Re-authenticating restores what KDP commit 478e93a5 removed.
+# Deliberately not routed through salesforce_sfdx_with_retry: that would consume the caller's
+# retry budget and sleep twice per attempt.
 function salesforce_sfdx_relogin() {
-  local suffix="${1:-}"
-  local uv="SALESFORCE_USERNAME${suffix}" pv="SALESFORCE_PASSWORD${suffix}"
-  local tv="SALESFORCE_SECURITY_TOKEN${suffix}" iv="SALESFORCE_INSTANCE${suffix}"
-  local u="${!uv}" p="${!pv}" t="${!tv}" i="${!iv:-https://login.salesforce.com}"
+  local u="$1" p="$2" t="$3" i="${4:-https://login.salesforce.com}"
 
   if [ -z "$u" ] || [ -z "$p" ] || [ -z "$t" ]
   then
-    logwarn "⚠️ cannot re-authenticate sfdx for account '${suffix:-primary}', credentials not set"
+    logwarn "⚠️ cannot re-authenticate sfdx, credentials not set"
     return 1
   fi
 
-  # Deliberately a single direct attempt, NOT routed through salesforce_sfdx_with_retry.
-  # Recursing would consume the shared per-test retry budget that the caller is trying to
-  # spend on the real step, and would sleep twice per attempt. Callers treat a failure here
-  # as best-effort.
+  # < /dev/null because `playground container exec` reads stdin, and this can be called from
+  # a cleanup trap or between piped commands, where it would otherwise swallow input meant
+  # for something else.
   log "🔑 Re-authenticating sfdx for $u"
   playground container exec --container sfdx-cli \
-    --command "sfdx sfpowerkit:auth:login -u \"$u\" -p \"$p\" -r \"$i\" -s \"$t\"" --shell sh
+    --command "sfdx sfpowerkit:auth:login -u \"$u\" -p \"$p\" -r \"$i\" -s \"$t\"" --shell sh < /dev/null
+}
+
+# Delete the records a test created, in one org. Best effort: warns and never changes the
+# test's exit status, so a cleanup problem cannot mask or invent a test failure.
+#
+# Each call resets the retry budget, so one org's delete cannot starve another's.
+#
+#   salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_PASSWORD" \
+#     "$SALESFORCE_SECURITY_TOKEN" "$SALESFORCE_INSTANCE" \
+#     "Lead:FirstName='$LEAD_FIRSTNAME' AND LastName='$LEAD_LASTNAME'" \
+#     "PushTopic:Name='$PUSH_TOPICS_NAME'"
+# Wait for the connector's task to reach RUNNING, restarting it if it died with
+# INVALID_SESSION_ID.
+#
+# The Bulk API connectors authenticate with the username-password SOAP grant. Connector
+# validation opens its own PartnerConnection and ends it with a SOAP logout(), and
+# Salesforce reuses one session across identical logins by the same user - so validation
+# can tear down the session the task is holding. The task then fails its very first
+# describeSObject with INVALID_SESSION_ID ("Session not found, missing session hash")
+# within seconds of starting, and Connect does not retry a task that threw from start().
+#
+# Restarting the task re-authenticates without re-running validation, which is also the
+# remedy Salesforce documents for a session invalidated by a concurrent logout. Only
+# INVALID_SESSION_ID is retried: any other task failure fails the test immediately, so a
+# genuine regression is still caught.
+function restart_task_on_invalid_session() {
+  local connector="$1"
+  local max_restarts="${2:-2}"
+  local restarts=0
+  local checks=0
+  local task_status state trace
+
+  while [ "$checks" -lt 12 ]; do
+    sleep 10
+    checks=$((checks + 1))
+    task_status=$(curl -s "http://localhost:8083/connectors/${connector}/status")
+    state=$(echo "$task_status" | jq -r '.tasks[0].state // "MISSING"')
+
+    case "$state" in
+      RUNNING)
+        if [ "$restarts" -gt 0 ]; then
+          log "✅ $connector task reached RUNNING after $restarts restart(s)"
+        fi
+        return 0
+        ;;
+      FAILED)
+        trace=$(echo "$task_status" | jq -r '.tasks[0].trace // ""')
+        if ! echo "$trace" | grep -q "INVALID_SESSION_ID"; then
+          logerror "$connector task FAILED, and not with INVALID_SESSION_ID:"
+          echo "$trace" | head -20
+          return 1
+        fi
+        if [ "$restarts" -ge "$max_restarts" ]; then
+          logerror "$connector still hitting INVALID_SESSION_ID after $restarts restart(s)"
+          return 1
+        fi
+        restarts=$((restarts + 1))
+        logwarn "⚠️ $connector hit INVALID_SESSION_ID, restarting task ($restarts/$max_restarts)"
+        curl -s -X POST "http://localhost:8083/connectors/${connector}/tasks/0/restart" > /dev/null
+        ;;
+      *)
+        # UNASSIGNED or not yet reported while the task is still coming up.
+        ;;
+    esac
+  done
+
+  logerror "$connector task never reached RUNNING (last state: $state)"
+  return 1
+}
+
+function salesforce_cleanup_records() {
+  local u="$1" p="$2" t="$3" i="$4"
+  shift 4
+  local apex="" spec=""
+
+  for spec in "$@"
+  do
+    apex="${apex}Database.delete([SELECT Id FROM ${spec%%:*} WHERE ${spec#*:}], false);
+"
+  done
+
+  SALESFORCE_CREATE_RETRIES_USED=0
+  salesforce_sfdx_relogin "$u" "$p" "$t" "$i"
+
+  if ! printf '%s' "$apex" | salesforce_sfdx_with_retry --stdin "sfdx apex run --target-org \"$u\""
+  then
+    logwarn "⚠️ cleanup in org $u did not complete - records may be left behind"
+  fi
 }
 
 # Assert a topic is empty, and fail the test if it is not.
@@ -437,7 +501,7 @@ function salesforce_assert_topic_empty() {
   # The topic exists, so the count must be a number. Anything else means it could not be
   # determined - a failed docker exec, an unknown CP version, an empty awk sum - and must
   # fail rather than silently pass.
-  if [ $rc -ne 0 ] || [[ ! "$nb_messages" =~ ^[0-9]+$ ]]
+  if [ $rc -ne 0 ] || [ -z "$nb_messages" ]
   then
     logerror "❌ could not determine the record count for $topic (rc=$rc), refusing to assume it is empty"
     printf '%s\n' "$out"
