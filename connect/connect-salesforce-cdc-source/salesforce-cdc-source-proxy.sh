@@ -87,8 +87,10 @@ sleep 5
 log "Login with sfdx CLI"
 salesforce_sfdx_with_retry "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
 
-log "Add a Contact to Salesforce"
-salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Contact -v \"FirstName='John_$RANDOM' LastName='Doe_$RANDOM'\""
+CONTACT_FIRSTNAME=John_$RANDOM
+CONTACT_LASTNAME=Doe_$RANDOM
+log "Add a Contact to Salesforce: $CONTACT_FIRSTNAME $CONTACT_LASTNAME"
+salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Contact -v \"FirstName='$CONTACT_FIRSTNAME' LastName='$CONTACT_LASTNAME'\""
 
 # Remove what this test created, so repeated runs do not accumulate records in a shared
 # Salesforce org. Only the exact records created above are matched, so a concurrent test's
@@ -100,7 +102,7 @@ cleanup_salesforce_test_data() {
   # single attempt.
   SALESFORCE_CREATE_RETRIES_USED=0
   local cleanup_failed=0
-  salesforce_sfdx_relogin """"
+  salesforce_sfdx_relogin ""
   log "🧹 Cleaning up: Contact $CONTACT_FIRSTNAME $CONTACT_LASTNAME"
   salesforce_sfdx_with_retry --stdin "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
 Database.delete([SELECT Id FROM Contact WHERE FirstName = '$CONTACT_FIRSTNAME' AND LastName = '$CONTACT_LASTNAME'], false);

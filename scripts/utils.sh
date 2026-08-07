@@ -396,16 +396,28 @@ function salesforce_assert_topic_empty() {
   # exist" in the output was unsound in both directions: an empty or failed topic list is
   # byte-identical to a genuinely absent topic (false pass), and the message is produced by
   # logwarn, which returns early under PG_LOG_LEVEL=INFO (false failure).
+  # The list and its status must be captured separately. Piping straight into grep yields
+  # grep's status, which makes a failed or empty topic list indistinguishable from a
+  # genuinely absent topic - the silent pass this helper exists to prevent. get-topic-list
+  # prints nothing and still exits 0 when it cannot resolve the broker container, so an
+  # empty list is treated as "could not determine", not "absent".
+  local topics="" list_rc=0
   set +e
-  playground get-topic-list | grep -qFx "$topic"
-  local topic_exists=$?
-  set -e
-  if [ $had_errexit -eq 0 ]
+  topics="$(playground get-topic-list 2>&1)"
+  list_rc=$?
+  if [ $had_errexit -eq 1 ]
   then
-    set +e
+    set -e
   fi
 
-  if [ $topic_exists -ne 0 ]
+  if [ $list_rc -ne 0 ] || [ -z "$topics" ]
+  then
+    logerror "❌ could not list topics (rc=$list_rc), refusing to assume $topic is empty"
+    printf '%s\n' "$topics"
+    return 1
+  fi
+
+  if ! printf '%s\n' "$topics" | grep -qFx "$topic"
   then
     log "✅ topic $topic contains no records (topic does not exist)"
     return 0
@@ -418,7 +430,9 @@ function salesforce_assert_topic_empty() {
   then
     set -e
   fi
-  nb_messages="$(printf '%s\n' "$out" | tail -1)"
+  # Take the last purely-numeric line: stderr is merged in (deliberately, so it can be
+  # shown on failure) and a warning flushed after the count would otherwise be read as it.
+  nb_messages="$(printf '%s\n' "$out" | grep -oE '^[0-9]+$' | tail -1)"
 
   # The topic exists, so the count must be a number. Anything else means it could not be
   # determined - a failed docker exec, an unknown CP version, an empty awk sum - and must
@@ -468,10 +482,11 @@ function salesforce_connector_version() {
   fi
 
   # Trailing -SNAPSHOT is dropped so the result compares cleanly with a plain x.y.z bound.
-  # Accept any qualifier after x.y.z (-SNAPSHOT, -rc1, Maven timestamped snapshots,
-  # -jar-with-dependencies) and either case of the extension. version_gt strips the
-  # qualifier itself, so only the x.y.z prefix has to be recovered here.
-  echo "$artifact" | sed -nE 's/.*[-_]([0-9]+\.[0-9]+\.[0-9]+)([-.][^/]*)?\.([zZ][iI][pP]|[jJ][aA][rR])$/\1/p'
+  # The FIRST x.y.z triple is the Maven version; a greedy match would take the last, so
+  # ...-3.0.15-SNAPSHOT-cp-8.0.0.zip would resolve to 8.0.0. Any qualifier after it
+  # (-SNAPSHOT, -rc1, a timestamped snapshot, -jar-with-dependencies) is left to version_gt,
+  # which strips it.
+  echo "$artifact" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1
 }
 
 function salesforce_ensure_jwt_keystore() {

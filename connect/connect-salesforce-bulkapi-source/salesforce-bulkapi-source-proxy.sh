@@ -56,7 +56,7 @@ cleanup_salesforce_test_data() {
   # single attempt.
   SALESFORCE_CREATE_RETRIES_USED=0
   local cleanup_failed=0
-  salesforce_sfdx_relogin """"
+  salesforce_sfdx_relogin ""
   log "🧹 Cleaning up: Lead $LEAD_FIRSTNAME $LEAD_LASTNAME"
   salesforce_sfdx_with_retry --stdin "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
 Database.delete([SELECT Id FROM Lead WHERE FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'], false);

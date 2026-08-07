@@ -153,6 +153,9 @@ Database.delete([SELECT Id FROM Lead WHERE FirstName = '$LEAD_FIRSTNAME' AND Las
 Database.delete([SELECT Id FROM PushTopic WHERE Name = '$PUSH_TOPICS_NAME'], false);
 EOF
   [ $? -ne 0 ] && cleanup_failed=1
+  # A second reset: without it the first org's delete can spend the whole allowance and
+  # leave this one a single attempt.
+  SALESFORCE_CREATE_RETRIES_USED=0
   salesforce_sfdx_with_retry --stdin "sfdx apex run --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\"" << EOF
 Database.delete([SELECT Id FROM Lead WHERE FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'], false);
 EOF
