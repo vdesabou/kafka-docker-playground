@@ -11437,11 +11437,6 @@ function yq() {
   verbose_end
 }
 
-# https://stackoverflow.com/a/24067243
-function version_gt() {
-  test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
-}
-
 function set_kafka_client_tag()
 {
     if [[ $TAG_BASE = 8.3.* ]]
@@ -11807,7 +11802,9 @@ function delete_topic()
 }
 
 function version_gt() {
-  test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
+  local v1=$(echo "$1" | cut -d'-' -f1 | tr -cd '0-9.' | sed 's/\.*$//')
+  local v2=$(echo "$2" | cut -d'-' -f1 | tr -cd '0-9.' | sed 's/\.*$//')
+  test "$(printf '%s\n' "$v1" "$v2" | sort -V | head -n 1)" != "$v1";
 }
 
 function get_docker_compose_version() {
