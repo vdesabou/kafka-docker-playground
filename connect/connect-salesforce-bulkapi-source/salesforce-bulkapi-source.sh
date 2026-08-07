@@ -179,12 +179,13 @@ salesforce_create_connector_with_retry salesforce-bulkapi-source << EOF
 }
 EOF
 
-# Only the username-password grant shares one Salesforce session, so only it can have
-# its session torn down by validation's logout(). JWT takes a token per connection.
-if [ "$SALESFORCE_GRANT" = "PASSWORD" ]
-then
-  restart_task_on_invalid_session salesforce-bulkapi-source
-fi
+# Called for both grants. Despite its name this is also the only place this test asserts
+# the task reached RUNNING: it fails with the task's stack trace on any other FAILED
+# state, and fails if the task never comes up within 120s. Gating it on the password
+# grant removed that assertion from the JWT path - the path CI takes - leaving a genuine
+# task failure to surface only as "topic contains 0 messages" with no trace. Its
+# INVALID_SESSION_ID branch simply never fires under JWT.
+restart_task_on_invalid_session salesforce-bulkapi-source
 
 # 180s, not 60s: the Bulk API query job runs asynchronously on a Salesforce-side
 # queue, so how long it takes to complete is not under this test's control and

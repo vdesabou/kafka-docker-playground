@@ -291,6 +291,49 @@ function salesforce_sfdx_with_retry() {
 
     SALESFORCE_CREATE_RETRIES_USED=$((SALESFORCE_CREATE_RETRIES_USED + 1))
     logwarn "⚠️ transient error during $label, retrying in ${delay}s (retry $SALESFORCE_CREATE_RETRIES_USED/$max_retries for this test)"
+
+    # A dead sfdx session cannot be fixed by re-running the command, so re-authenticate the
+    # org this command targets before retrying. Observed in CI on a PushTopic test: sfdx
+    # logged in successfully, then the very next `apex run` failed "Session expired or
+    # invalid" 4 seconds later, because an earlier username-password connector's validation
+    # logout() had killed the session Salesforce reuses for identical logins by the same user.
+    # Retrying alone would have burned the whole budget and still failed.
+    if echo "$out" | grep -qE "Session expired or invalid|INVALID_SESSION_ID|Bad_OAuth_Token"
+    then
+      case "$sfdx_command" in
+        *auth:login*)
+          # The command being retried IS a login; no point logging in first.
+          ;;
+        *)
+          local target=""
+          # First match only: a greedy .* would pick up a later --target-org appearing inside
+          # a SOQL string and re-authenticate the wrong org. Both long and short forms.
+          target="$(printf '%s' "$sfdx_command" \
+            | grep -oE '(--target-org|--targetusername|-o)[= ]+\\?"?[^"\\ ]+' \
+            | head -1 | sed -E 's/^(--target-org|--targetusername|-o)[= ]+\\?"?//')"
+          if [ -z "$target" ]
+          then
+            # Guessing the primary account here could refresh the wrong org's session, so
+            # say so and retry without re-authenticating rather than pick one.
+            logwarn "⚠️ could not determine the target org of $label, retrying without re-authenticating"
+          else
+            local suffix=""
+            if [ "$target" = "$SALESFORCE_USERNAME_ACCOUNT2" ]
+            then
+              suffix="_ACCOUNT2"
+            fi
+            # `if !` keeps errexit from killing the test when the re-login fails: this is a
+            # best-effort rescue, and the retry below is still worth attempting. Output is
+            # deliberately not suppressed so a failed re-login is visible in the CI log.
+            if ! salesforce_sfdx_relogin "$suffix"
+            then
+              logwarn "⚠️ re-authentication before retrying $label failed, retrying anyway"
+            fi
+          fi
+          ;;
+      esac
+    fi
+
     sleep "$delay"
     attempt=$((attempt + 1))
   done
@@ -321,8 +364,13 @@ function salesforce_sfdx_relogin() {
     return 1
   fi
 
-  log "🔑 Re-authenticating sfdx for $u before cleanup"
-  salesforce_sfdx_with_retry "sfdx sfpowerkit:auth:login -u \"$u\" -p \"$p\" -r \"$i\" -s \"$t\""
+  # Deliberately a single direct attempt, NOT routed through salesforce_sfdx_with_retry.
+  # Recursing would consume the shared per-test retry budget that the caller is trying to
+  # spend on the real step, and would sleep twice per attempt. Callers treat a failure here
+  # as best-effort.
+  log "🔑 Re-authenticating sfdx for $u"
+  playground container exec --container sfdx-cli \
+    --command "sfdx sfpowerkit:auth:login -u \"$u\" -p \"$p\" -r \"$i\" -s \"$t\"" --shell sh
 }
 
 # Assert a topic is empty, and fail the test if it is not.
@@ -335,13 +383,32 @@ function salesforce_assert_topic_empty() {
   local topic="$1"
   local nb_messages=""
 
-  nb_messages=$(playground topic get-number-records -t "$topic" 2>/dev/null | tail -1)
+  local out="" rc=0
+  out="$(playground topic get-number-records -t "$topic" 2>&1)"
+  rc=$?
+  nb_messages="$(printf '%s\n' "$out" | tail -1)"
 
-  # A topic that was never created means the connector produced no errors at all.
+  # Only an explicit "does not exist" may be read as "no errors were produced". Anything else
+  # non-numeric means the count could not be determined - a failed docker exec, an unknown CP
+  # version, an empty awk sum - and must fail rather than silently pass. logerror writes to
+  # stdout, so a discarded exit code plus 2>/dev/null would have turned those into a pass.
   if [[ ! "$nb_messages" =~ ^[0-9]+$ ]]
   then
-    log "✅ topic $topic contains no records (topic was never created)"
-    return 0
+    if printf '%s' "$out" | grep -q "does not exist"
+    then
+      log "✅ topic $topic contains no records (topic was never created)"
+      return 0
+    fi
+    logerror "❌ could not determine the record count for $topic, refusing to assume it is empty"
+    printf '%s\n' "$out"
+    return 1
+  fi
+
+  if [ $rc -ne 0 ]
+  then
+    logerror "❌ getting the record count for $topic failed (rc=$rc)"
+    printf '%s\n' "$out"
+    return 1
   fi
 
   if [ "$nb_messages" -gt 0 ]

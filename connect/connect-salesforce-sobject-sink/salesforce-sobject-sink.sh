@@ -101,7 +101,10 @@ salesforce_sfdx_with_retry "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME
 
 log "Delete $PUSH_TOPICS_NAME, if required"
 set +e
-salesforce_sfdx_with_retry --stdin "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
+# Expected to fail when the PushTopic does not exist yet, so deliberately NOT routed
+# through salesforce_sfdx_with_retry: retrying a step whose failure is normal would
+# spend this test's shared retry budget, and trigger a pointless re-authentication.
+playground container exec --container sfdx-cli --command "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF --shell sh
 List<PushTopic> pts = [SELECT Id FROM PushTopic WHERE Name = '$PUSH_TOPICS_NAME'];
 Database.delete(pts);
 EOF
