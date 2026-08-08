@@ -58,6 +58,15 @@ This property is required unless using the experimental AnalyticsSinkHandler.
 	 - Importance: Name of the Couchbase bucket to use.
 	 - Required: HIGH
 
+🔘 couchbase.bootstrap.timeout
+
+On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
+
+	 - Type: STRING
+	 - Default: 30s
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.seed.nodes
 
 Addresses of Couchbase Server nodes, delimited by commas.
@@ -76,18 +85,18 @@ The network selection strategy for connecting to a Couchbase Server cluster that
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 couchbase.bootstrap.timeout
-
-On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
-
-	 - Type: STRING
-	 - Default: 30s
-	 - Importance: MEDIUM
-	 - Required: false
-
 ==========================
 Security
 ==========================
+🔘 couchbase.trust.store.password
+
+Password for accessing the trust store.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.enable.tls
 
 Use secure connection to Couchbase Server.
@@ -136,15 +145,6 @@ If you supply a value for this config property, the `couchbase.username` and `co
 🔘 couchbase.client.certificate.password
 
 Password for accessing the client certificate.
-
-	 - Type: PASSWORD
-	 - Default: [hidden]
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.trust.store.password
-
-Password for accessing the trust store.
 
 	 - Type: PASSWORD
 	 - Default: [hidden]
