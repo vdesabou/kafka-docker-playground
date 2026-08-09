@@ -40,15 +40,6 @@ Password of the Couchbase user.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.username
-
-Name of the Couchbase user to authenticate as.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
 🔘 couchbase.bucket
 
 This property is required unless using the experimental AnalyticsSinkHandler.
@@ -58,14 +49,14 @@ This property is required unless using the experimental AnalyticsSinkHandler.
 	 - Importance: Name of the Couchbase bucket to use.
 	 - Required: HIGH
 
-🔘 couchbase.bootstrap.timeout
+🔘 couchbase.username
 
-On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
+Name of the Couchbase user to authenticate as.
 
 	 - Type: STRING
-	 - Default: 30s
-	 - Importance: MEDIUM
-	 - Required: false
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 couchbase.seed.nodes
 
@@ -85,18 +76,18 @@ The network selection strategy for connecting to a Couchbase Server cluster that
 	 - Importance: MEDIUM
 	 - Required: false
 
-==========================
-Security
-==========================
-🔘 couchbase.trust.store.password
+🔘 couchbase.bootstrap.timeout
 
-Password for accessing the trust store.
+On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
 
-	 - Type: PASSWORD
-	 - Default: [hidden]
+	 - Type: STRING
+	 - Default: 30s
 	 - Importance: MEDIUM
 	 - Required: false
 
+==========================
+Security
+==========================
 🔘 couchbase.enable.tls
 
 Use secure connection to Couchbase Server.
@@ -145,6 +136,15 @@ If you supply a value for this config property, the `couchbase.username` and `co
 🔘 couchbase.client.certificate.password
 
 Password for accessing the client certificate.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.trust.store.password
+
+Password for accessing the trust store.
 
 	 - Type: PASSWORD
 	 - Default: [hidden]
