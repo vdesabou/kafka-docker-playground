@@ -559,6 +559,9 @@ function salesforce_ensure_jwt_keystore() {
 
   if [ ! -f "$keystore_path" ]
   then
+    # If a previous aborted run left a directory at this path, aws s3 cp will fail
+    # with "Is a directory". Remove it so the download can proceed.
+    rm -rf "$keystore_path"
     # Keep stdout clean for command substitution callers; logs still go to stderr.
     (cd "$target_dir" && get_3rdparty_file "salesforce-confluent.keystore.jks") >&2
   fi
