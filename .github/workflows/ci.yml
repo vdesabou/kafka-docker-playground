@@ -415,7 +415,7 @@ jobs:
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: "[CI] Connector config file updated - ${{ github.repository }}"
           to: ${{ secrets.SALESFORCE_USERNAME }}
-          from: GitHub Actions
+          from: ${{ secrets.SALESFORCE_USERNAME }}
           body: file:///tmp/email_body.txt
 
   execute_one_test:
@@ -693,7 +693,7 @@ jobs:
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: "[CI] Connector config file updated - ${{ github.repository }}"
           to: ${{ secrets.SALESFORCE_USERNAME }}
-          from: GitHub Actions
+          from: ${{ secrets.SALESFORCE_USERNAME }}
           body: file:///tmp/email_body.txt
 
   post-build:
