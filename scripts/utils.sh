@@ -1,6 +1,14 @@
 DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR_UTILS}/../scripts/cli/src/lib/utils_function.sh
 
+if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]] 
+then
+    # if GITHUB_RUN_NUMBER is set, append "cfk" to GITHUB_RUN_NUMBER, only if this is not appended already
+    if [[ -n "$GITHUB_RUN_NUMBER" && "$GITHUB_RUN_NUMBER" != *cfk* ]]; then
+        export GITHUB_RUN_NUMBER="${GITHUB_RUN_NUMBER}cfk"
+    fi
+fi
+
 function install_connector_with_retry {
   local install_command="$1"
   local max_retries=${CONNECTOR_INSTALL_MAX_RETRIES:-5}
