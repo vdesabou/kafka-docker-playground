@@ -299,6 +299,10 @@ Onprem (self-managed) connector examples support both Docker Compose and CFK (Co
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/s3.png" width="15"> [Amazon S3 Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/custom-connector-connect-aws-s3-sink) :ccloud/custom-connector-connect-aws-s3-sink:
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/tabular.png" width="15"> [Apache Iceberg Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/custom-connector-connect-iceberg-sink) :ccloud/custom-connector-connect-iceberg-sink:
 
+### 🚇 Custom SMT
+
+  - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/http.png" width="15"> [HTTP V2 Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fm-custom-smt-http-v2-sink) :ccloud/fm-custom-smt-http-v2-sink:
+
 ### 🔗 Self-Managed Connectors
 
 💫 Any connector example can be run as *self-managed* by using `--environment ccloud` option when running it with [playground run](/playground%20run) command ! This is also the case for any other [environment](/content?id=%f0%9f%94%90-environments)
