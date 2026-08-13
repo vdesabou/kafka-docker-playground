@@ -302,6 +302,7 @@ Onprem (self-managed) connector examples support both Docker Compose and CFK (Co
 ### 🚇 Custom SMT
 
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/http.png" width="15"> [HTTP V2 Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fm-custom-smt-http-v2-sink) :ccloud/fm-custom-smt-http-v2-sink:
+  - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/mysql.png" width="15"> [JDBC MySQL Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fm-custom-smt-jdbc-mysql-sink) :ccloud/fm-custom-smt-jdbc-mysql-sink: 
 
 ### 🔗 Self-Managed Connectors
 
