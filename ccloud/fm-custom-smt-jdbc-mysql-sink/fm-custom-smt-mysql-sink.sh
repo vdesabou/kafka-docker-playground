@@ -309,7 +309,9 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-sleep 25
+sleep 10
+
+playground connector show-lag --max-wait 300 --connector $connector_name
 
 log "Describing the mysqlorders table in DB 'mydb':"
 docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'describe mysqlorders'"
