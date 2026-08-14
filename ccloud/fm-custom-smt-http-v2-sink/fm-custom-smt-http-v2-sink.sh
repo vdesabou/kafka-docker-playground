@@ -161,7 +161,7 @@ artifact_id=$(echo "$output" | jq -r '.id')
 log "✅ SMT artifact '$artifact_name' uploaded with id $artifact_id"
 
 log "⌛ Waiting for SMT artifact $artifact_id to reach READY state (Confluent scans uploaded JARs)"
-MAX_WAIT=120
+MAX_WAIT=300
 CUR_WAIT=0
 WAIT_INTERVAL=5
 while true
