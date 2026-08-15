@@ -261,7 +261,7 @@ Specifies how to encode ``client_id`` and ``client_secret`` in the OAuth2 author
 
 🔘 oauth2.client.header.separator
 
-Separator character used in OAuth2 Client Headers. This configuration can be set via CLI only.
+Separator character used in OAuth2 Client Headers.
 
 	 - Type: STRING
 	 - Default: |
@@ -292,7 +292,7 @@ The name of the property containing the OAuth2 token returned by the OAuth2 toke
 
 	 - Type: false
 	 - Default: PASSWORD
-	 - Importance: HTTP headers to be included in the OAuth2 client endpoint. Individual headers should be separated by ``|``. This configuration can be set via CLI only.
+	 - Importance: HTTP headers to be included in the OAuth2 client endpoint. Individual headers should be separated by ``|``.
 	 - Required: LOW
 
 🔘 gcp.credentials.json
@@ -1047,7 +1047,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api1.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -1065,7 +1065,7 @@ The time in milliseconds to wait between consecutive requests.
 
 🔘 api1.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -1173,7 +1173,7 @@ Whether next page token is an absolute url or not.
 
 🔘 api1.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -1431,7 +1431,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api2.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -1449,7 +1449,7 @@ The time in milliseconds to wait between consecutive requests.
 
 🔘 api2.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -1557,7 +1557,7 @@ Whether next page token is an absolute url or not.
 
 🔘 api2.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -1815,7 +1815,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api3.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -1833,7 +1833,7 @@ The time in milliseconds to wait between consecutive requests.
 
 🔘 api3.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -1941,7 +1941,7 @@ Whether next page token is an absolute url or not.
 
 🔘 api3.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -2199,7 +2199,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api4.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -2217,7 +2217,7 @@ The time in milliseconds to wait between consecutive requests.
 
 🔘 api4.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -2325,7 +2325,7 @@ Whether next page token is an absolute url or not.
 
 🔘 api4.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -2592,7 +2592,7 @@ The time in milliseconds to wait between consecutive requests.
 
 🔘 api5.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -2601,7 +2601,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 🔘 api5.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -2709,7 +2709,7 @@ Whether next page token is an absolute url or not.
 
 🔘 api5.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -2976,7 +2976,7 @@ The time in milliseconds to wait between consecutive requests.
 
 🔘 api6.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -2985,7 +2985,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 🔘 api6.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -3093,7 +3093,7 @@ Whether next page token is an absolute url or not.
 
 🔘 api6.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -3351,7 +3351,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api7.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -3369,7 +3369,7 @@ The time in milliseconds to wait between consecutive requests.
 
 🔘 api7.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -3477,7 +3477,7 @@ Whether next page token is an absolute url or not.
 
 🔘 api7.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -3744,7 +3744,7 @@ The time in milliseconds to wait between consecutive requests.
 
 🔘 api8.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -3753,7 +3753,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 🔘 api8.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -3861,7 +3861,7 @@ Whether next page token is an absolute url or not.
 
 🔘 api8.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -4128,7 +4128,7 @@ The time in milliseconds to wait between consecutive requests.
 
 🔘 api9.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -4137,7 +4137,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 🔘 api9.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -4245,7 +4245,7 @@ Whether next page token is an absolute url or not.
 
 🔘 api9.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -4512,7 +4512,7 @@ The time in milliseconds to wait between consecutive requests.
 
 🔘 api10.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -4521,7 +4521,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 🔘 api10.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -4629,7 +4629,7 @@ Whether next page token is an absolute url or not.
 
 🔘 api10.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -4896,7 +4896,7 @@ The time in milliseconds to wait between consecutive requests.
 
 🔘 api11.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -4905,7 +4905,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 🔘 api11.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -5013,7 +5013,7 @@ Whether next page token is an absolute url or not.
 
 🔘 api11.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -5280,7 +5280,7 @@ The time in milliseconds to wait between consecutive requests.
 
 🔘 api12.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -5289,7 +5289,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 🔘 api12.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -5397,7 +5397,7 @@ Whether next page token is an absolute url or not.
 
 🔘 api12.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -5664,7 +5664,7 @@ The time in milliseconds to wait between consecutive requests.
 
 🔘 api13.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -5673,7 +5673,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 🔘 api13.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -5781,7 +5781,7 @@ Whether next page token is an absolute url or not.
 
 🔘 api13.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -6039,7 +6039,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api14.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -6057,7 +6057,7 @@ The time in milliseconds to wait between consecutive requests.
 
 🔘 api14.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -6165,7 +6165,7 @@ Whether next page token is an absolute url or not.
 
 🔘 api14.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -6432,7 +6432,7 @@ The time in milliseconds to wait between consecutive requests.
 
 🔘 api15.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -6441,7 +6441,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 🔘 api15.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -6549,7 +6549,7 @@ Whether next page token is an absolute url or not.
 
 🔘 api15.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
