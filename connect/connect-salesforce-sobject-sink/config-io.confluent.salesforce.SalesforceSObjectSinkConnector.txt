@@ -33,12 +33,12 @@ The URL of the Salesforce endpoint to use. The default is blank. This directs th
 
 🔘 salesforce.username
 
-The Salesforce username the connector should use.
 
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Salesforce username for connector authentication
+	 - Required: HIGH
 
 🔘 salesforce.password
 
@@ -69,10 +69,10 @@ The HTTP(S) proxy host and port the connector should use when communicating with
 
 🔘 salesforce.grant.type
 
-Authorization mechanism. Valid options are 'PASSWORD' or 'JWT_BEARER'.
+OAuth grant type the connector uses for Salesforce authentication: PASSWORD, CLIENT_CREDENTIALS, or JWT_BEARER
 
 	 - Type: STRING
-	 - Default: PASSWORD
+	 - Default: password
 	 - Importance: HIGH
 	 - Required: false
 
