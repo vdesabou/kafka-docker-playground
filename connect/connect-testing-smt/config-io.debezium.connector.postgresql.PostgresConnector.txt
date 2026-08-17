@@ -45,7 +45,7 @@ Class for the 'tzConverter' transformation.
 Version of the 'tzConverter' transformation.
 
 	 - Type: STRING
-	 - Default: 3.2.6-2
+	 - Default: 3.2.6-3
 	 - Importance: HIGH
 	 - Required: false
 

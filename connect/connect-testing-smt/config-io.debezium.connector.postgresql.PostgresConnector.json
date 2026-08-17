@@ -120,7 +120,7 @@
     "transforms.tzConverter.exclude.list": "",
     "transforms.tzConverter.include.list": "",
     "transforms.tzConverter.negate": "false",
-    "transforms.tzConverter.plugin.version": "3.2.6-2",
+    "transforms.tzConverter.plugin.version": "3.2.6-3",
     "transforms.tzConverter.predicate": "",
     "transforms.tzConverter.type": "",
     "unavailable.value.placeholder": "__debezium_unavailable_value",
