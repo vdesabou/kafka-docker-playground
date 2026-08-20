@@ -88,6 +88,15 @@ Max number of retry attempts. In case of a network error, the connector can auto
 	 - Importance: LOW
 	 - Required: false
 
+🔘 sqs.max.retry.time.ms
+
+The total duration, in milliseconds, the connector retries a single SQS fetch after transient errors (network, DNS, or timeouts) before failing the task. Raise this setting to handle longer environment disruptions. Must be at least 1000 ms. This sets the overall retry duration across attempts, unlike ``sqs.max.retries``, which limits individual AWS SDK retries per request.
+
+	 - Type: LONG
+	 - Default: 30000
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 AWS Credentials
 ==========================

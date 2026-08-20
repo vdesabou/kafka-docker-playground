@@ -4,6 +4,7 @@
     "kafka.topic": "",
     "sqs.credentials.provider.class": "software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider",
     "sqs.max.retries": "3",
+    "sqs.max.retry.time.ms": "30000",
     "sqs.messages.max": "10",
     "sqs.proxy.password": "[hidden]",
     "sqs.proxy.url": "STRING",
