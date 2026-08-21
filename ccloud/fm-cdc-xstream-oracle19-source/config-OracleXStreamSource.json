@@ -30,7 +30,7 @@
     "field.name.adjustment.mode": "none",
     "header.converter": "STRING",
     "heartbeat.interval.ms": "0",
-    "kafka.api.key": "STRING",
+    "kafka.api.key": "PASSWORD",
     "kafka.api.secret": "PASSWORD",
     "kafka.auth.mode": "${connect.regional.connector}",
     "kafka.service.account.id": "STRING",
