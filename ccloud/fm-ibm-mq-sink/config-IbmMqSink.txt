@@ -103,6 +103,15 @@ Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTO
 	 - Importance: HIGH
 	 - Required: true
 
+🔘 input.key.format
+
+Sets the input Kafka record key format. Valid entries are AVRO, BYTES, JSON, JSON_SR, PROTOBUF, or STRING. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
+	 - Required: false
+
 ==========================
 Kafka Cluster credentials
 ==========================
@@ -129,7 +138,7 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 
 	 - Type: false
-	 - Default: STRING
+	 - Default: PASSWORD
 	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 	 - Required: HIGH
 
@@ -727,6 +736,15 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 	 - Required: LOW
 
+🔘 key.converter.schemas.enable
+
+Include schemas within each of the serialized keys. Input message keys must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Key Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.optional.for.nullables
 
 
@@ -762,6 +780,15 @@ Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type v
 	 - Default: BOOLEAN
 	 - Importance: Use latest version of schema in subject for serialization when auto.register.schemas is false.
 	 - Required: LOW
+
+🔘 key.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Key Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.subject.name.strategy
 
