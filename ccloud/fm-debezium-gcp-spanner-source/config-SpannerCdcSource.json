@@ -23,7 +23,7 @@
     "gcp.spanner.start.time": "STRING",
     "header.converter": "STRING",
     "heartbeat.interval.ms": "300000",
-    "kafka.api.key": "STRING",
+    "kafka.api.key": "PASSWORD",
     "kafka.api.secret": "PASSWORD",
     "kafka.auth.mode": "${connect.regional.connector}",
     "kafka.service.account.id": "STRING",
