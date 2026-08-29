@@ -28,7 +28,7 @@
     "input.file.parser.format": "JSON",
     "input.file.pattern": "STRING",
     "input.path": "STRING",
-    "kafka.api.key": "STRING",
+    "kafka.api.key": "PASSWORD",
     "kafka.api.secret": "PASSWORD",
     "kafka.auth.mode": "${connect.regional.connector}",
     "kafka.service.account.id": "STRING",
