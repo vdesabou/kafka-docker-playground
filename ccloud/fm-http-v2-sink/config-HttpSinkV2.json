@@ -574,7 +574,7 @@
     "https.ssl.truststorefile": "PASSWORD",
     "input.data.format": "JSON",
     "json.decimal.format": "BASE64",
-    "kafka.api.key": "STRING",
+    "kafka.api.key": "PASSWORD",
     "kafka.api.secret": "PASSWORD",
     "kafka.auth.mode": "${connect.regional.connector}",
     "kafka.service.account.id": "STRING",
