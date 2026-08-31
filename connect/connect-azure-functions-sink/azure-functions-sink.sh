@@ -63,7 +63,9 @@ fi
 
 log "Creating local functions project with HTTP trigger"
 # https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-first-azure-function-azure-cli?pivots=programming-language-javascript&tabs=bash%2Cbrowser
-docker run --platform linux/amd64 -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node22 bash -c "npm install -g azure-functions-core-tools@4 --unsafe-perm && func init LocalFunctionProj --javascript && cd LocalFunctionProj && func new --name HttpExample --template \"HTTP trigger\" --authlevel \"anonymous\""
+# pinned: 4.14.0 ships a shrinkwrap pointing to a private Azure DevOps feed, causing npm E401
+AZURE_FUNCTIONS_CORE_TOOLS_VERSION=${AZURE_FUNCTIONS_CORE_TOOLS_VERSION:-4.13.0}
+docker run --platform linux/amd64 -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node22 bash -c "npm install -g azure-functions-core-tools@$AZURE_FUNCTIONS_CORE_TOOLS_VERSION --unsafe-perm && func init LocalFunctionProj --javascript && cd LocalFunctionProj && func new --name HttpExample --template \"HTTP trigger\" --authlevel \"anonymous\""
 
 log "Creating functions app $AZURE_FUNCTIONS_NAME"
 az functionapp create --consumption-plan-location "$AZURE_REGION" --name "$AZURE_FUNCTIONS_NAME" --resource-group "$AZURE_RESOURCE_GROUP" --runtime node --storage-account "$AZURE_STORAGE_NAME" --runtime-version 22 --functions-version 4 --tags owner_email="$AZ_USER" cflt_managed_by=user cflt_managed_id="$USER" --disable-app-insights true
