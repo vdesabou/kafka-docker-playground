@@ -21,7 +21,7 @@ then
         log "Cloning kafka-connect-insert-uuid repository"
         git clone --depth 1 https://github.com/confluentinc/kafka-connect-insert-uuid.git "$UUID_REPO_DIR"
     fi
-
+    set +e
     log "🏗 Building InsertUuid SMT JAR with Maven (skipping tests)"
     docker run -i --rm \
         -v "$UUID_REPO_DIR":/usr/src/project \
@@ -36,6 +36,7 @@ then
         tail -100 /tmp/insert-uuid-build.log
         exit 1
     fi
+    set -e
     log "✅ JAR built: $UUID_JAR"
 fi
 
