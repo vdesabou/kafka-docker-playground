@@ -417,6 +417,68 @@ function restart_task_on_invalid_session() {
   return 1
 }
 
+# Adopt per-test Salesforce credentials when they exist, otherwise keep the shared ones.
+#
+# The seven gated tests share one Salesforce org, one user and one connected app. That forces
+# them to run sequentially: the Bulk API source reads every Lead in the object, so a
+# concurrent test's record gets ingested and copied into the second org, and every JWT token
+# comes from the same connected app, which caps how many can be live at once.
+#
+# Giving a test its own credentials removes both constraints. Any subset can be provided -
+# each variable falls back independently, so a suffix with no credentials configured behaves
+# exactly as before and nothing needs to change for GitHub Actions or any other consumer.
+#
+#   salesforce_use_test_creds CDC              # primary org only
+#   salesforce_use_test_creds SOBJECT ACCOUNT2 # also the second org
+#
+# For suffix CDC this prefers, when set and non-empty:
+#   SALESFORCE_USERNAME_CDC, SALESFORCE_PASSWORD_CDC, SALESFORCE_SECURITY_TOKEN_CDC,
+#   SALESFORCE_INSTANCE_CDC, SALESFORCE_CONSUMER_KEY_WITH_JWT_CDC
+# and with ACCOUNT2, the same names suffixed _CDC_ACCOUNT2 for the second org.
+#
+# Indirect expansion is used deliberately here: this resolves five names across two orgs, so
+# spelling each out would be ten near-identical blocks.
+function salesforce_use_test_creds() {
+  local suffix="$1"
+  local also_account2="${2:-}"
+  local bases="USERNAME PASSWORD SECURITY_TOKEN INSTANCE CONSUMER_KEY_WITH_JWT"
+  local base="" shared="" specific="" adopted=0
+
+  if [ -z "$suffix" ]
+  then
+    return 0
+  fi
+
+  for base in $bases
+  do
+    shared="SALESFORCE_${base}"
+    specific="SALESFORCE_${base}_${suffix}"
+    if [ -n "${!specific:-}" ]
+    then
+      export "$shared=${!specific}"
+      adopted=$((adopted + 1))
+    fi
+
+    if [ -n "$also_account2" ]
+    then
+      shared="SALESFORCE_${base}_ACCOUNT2"
+      specific="SALESFORCE_${base}_${suffix}_ACCOUNT2"
+      if [ -n "${!specific:-}" ]
+      then
+        export "$shared=${!specific}"
+        adopted=$((adopted + 1))
+      fi
+    fi
+  done
+
+  if [ "$adopted" -gt 0 ]
+  then
+    log "🔑 using $suffix-specific Salesforce credentials ($adopted of the shared values overridden)"
+  else
+    log "🔑 no $suffix-specific Salesforce credentials set, using the shared account"
+  fi
+}
+
 function salesforce_cleanup_records() {
   local u="$1" p="$2" t="$3" i="$4"
   shift 4

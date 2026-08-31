@@ -17,6 +17,10 @@ then
      exit 111
 fi
 
+# Prefer credentials dedicated to this test when they are configured, so it can run
+# concurrently with the others; falls back to the shared account otherwise.
+salesforce_use_test_creds KDP_CDC
+
 SALESFORCE_USERNAME=${SALESFORCE_USERNAME:-$1}
 SALESFORCE_PASSWORD=${SALESFORCE_PASSWORD:-$2}
 SALESFORCE_CONSUMER_KEY_WITH_JWT=${SALESFORCE_CONSUMER_KEY_WITH_JWT:-$3}
