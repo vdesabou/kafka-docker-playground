@@ -425,6 +425,68 @@ function restart_task_on_invalid_session() {
   return 1
 }
 
+# Adopt per-test Salesforce credentials when they exist, otherwise keep the shared ones.
+#
+# The seven gated tests share one Salesforce org, one user and one connected app. That forces
+# them to run sequentially: the Bulk API source reads every Lead in the object, so a
+# concurrent test's record gets ingested and copied into the second org, and every JWT token
+# comes from the same connected app, which caps how many can be live at once.
+#
+# Giving a test its own credentials removes both constraints. Any subset can be provided -
+# each variable falls back independently, so a suffix with no credentials configured behaves
+# exactly as before and nothing needs to change for GitHub Actions or any other consumer.
+#
+#   salesforce_use_test_creds CDC              # primary org only
+#   salesforce_use_test_creds SOBJECT ACCOUNT2 # also the second org
+#
+# For suffix CDC this prefers, when set and non-empty:
+#   SALESFORCE_USERNAME_CDC, SALESFORCE_PASSWORD_CDC, SALESFORCE_SECURITY_TOKEN_CDC,
+#   SALESFORCE_INSTANCE_CDC, SALESFORCE_CONSUMER_KEY_WITH_JWT_CDC
+# and with ACCOUNT2, the same names suffixed _CDC_ACCOUNT2 for the second org.
+#
+# Indirect expansion is used deliberately here: this resolves five names across two orgs, so
+# spelling each out would be ten near-identical blocks.
+function salesforce_use_test_creds() {
+  local suffix="$1"
+  local also_account2="${2:-}"
+  local bases="USERNAME PASSWORD SECURITY_TOKEN INSTANCE CONSUMER_KEY_WITH_JWT"
+  local base="" shared="" specific="" adopted=0
+
+  if [ -z "$suffix" ]
+  then
+    return 0
+  fi
+
+  for base in $bases
+  do
+    shared="SALESFORCE_${base}"
+    specific="SALESFORCE_${base}_${suffix}"
+    if [ -n "${!specific:-}" ]
+    then
+      export "$shared=${!specific}"
+      adopted=$((adopted + 1))
+    fi
+
+    if [ -n "$also_account2" ]
+    then
+      shared="SALESFORCE_${base}_ACCOUNT2"
+      specific="SALESFORCE_${base}_${suffix}_ACCOUNT2"
+      if [ -n "${!specific:-}" ]
+      then
+        export "$shared=${!specific}"
+        adopted=$((adopted + 1))
+      fi
+    fi
+  done
+
+  if [ "$adopted" -gt 0 ]
+  then
+    log "🔑 using $suffix-specific Salesforce credentials ($adopted of the shared values overridden)"
+  else
+    log "🔑 no $suffix-specific Salesforce credentials set, using the shared account"
+  fi
+}
+
 function salesforce_cleanup_records() {
   local u="$1" p="$2" t="$3" i="$4"
   shift 4
@@ -559,6 +621,33 @@ function salesforce_connector_version() {
   # (-SNAPSHOT, -rc1, a timestamped snapshot, -jar-with-dependencies) is left to version_gt,
   # which strips it.
   echo "$artifact" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1
+}
+
+# Whether the given Bulk API connector version supports the JWT_BEARER grant.
+#
+# JWT_BEARER was backported onto two lines independently: 3.0.15 on 3.0.x and 3.1.9 on 3.1.x.
+# A blanket ">= 3.0.0" check is wrong: 3.1.0-3.1.8 are ">= 3.0.0" in a plain version sort but
+# predate the 3.1.x backport, so that check would wrongly select JWT for them and fail with
+# invalid_client. This instead checks the two ranges that actually have it:
+#   [3.0.15, 3.1.0)  - the 3.0.x line from where it landed, up to the next line
+#   (3.1.8, ∞)       - the 3.1.x line from where it landed, and every line after (3.2.x, ...),
+#                      which all descend from master after the merge
+# An empty or undeterminable version returns false, so the caller falls back to
+# username-password, which every version supports.
+function salesforce_bulkapi_supports_jwt() {
+  local version="$1"
+
+  if [ -z "$version" ]
+  then
+    return 1
+  fi
+
+  if ! version_gt "3.0.15" "$version" && version_gt "3.1.0" "$version"
+  then
+    return 0
+  fi
+
+  version_gt "$version" "3.1.8"
 }
 
 function salesforce_ensure_jwt_keystore() {
