@@ -20,6 +20,7 @@ aws/ap-east-1
 gcp/asia-east2
 azure/eastasia
 aws/ap-south-2
+azure/indonesiacentral
 azure/centralus
 gcp/us-central1
 aws/eu-west-1

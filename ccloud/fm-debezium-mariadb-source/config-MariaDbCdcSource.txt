@@ -45,7 +45,7 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 
 	 - Type: false
-	 - Default: STRING
+	 - Default: PASSWORD
 	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 	 - Required: HIGH
 
@@ -188,6 +188,15 @@ Controls whether a delete event is followed by a tombstone event. The following 
 	 - Type: BOOLEAN
 	 - Default: true
 	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 after.state.only.replace.null.with.default
+
+Applies only when After-state only is enabled. When set to true, null field values are replaced by the source-defined default values when the connector rewrites the record. Set to false to preserve null field values (for example, so that clearing a column value or removing a column default is reflected as null in the output record).
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
 	 - Required: false
 
 ==========================

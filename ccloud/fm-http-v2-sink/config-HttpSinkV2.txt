@@ -22,33 +22,6 @@ Which topics do you want to get data from?
 	 - Importance: Identifies the topic name or a comma-separated list of topic names.
 	 - Required: HIGH
 
-🔘 errors.deadletterqueue.topic.name
-
-The name of the topic to be used as the dead letter queue (DLQ) for messages that result in an error when processed by this sink connector, or its transformations or converters. Defaults to 'dlq-${connector}' if not set. The DLQ topic will be created automatically if it does not exist. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
-
-	 - Type: STRING
-	 - Default: dlq-${connector}
-	 - Importance: LOW
-	 - Required: false
-
-🔘 reporter.result.topic.name
-
-The name of the topic to produce records to after successfully processing a sink record. Defaults to 'success-${connector}' if not set. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
-
-	 - Type: STRING
-	 - Default: success-${connector}
-	 - Importance: LOW
-	 - Required: false
-
-🔘 reporter.error.topic.name
-
-The name of the topic to produce records to after each unsuccessful record sink attempt. Defaults to 'error-${connector}' if not set. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
-
-	 - Type: STRING
-	 - Default: error-${connector}
-	 - Importance: LOW
-	 - Required: false
-
 ==========================
 Schema Config
 ==========================
@@ -147,7 +120,7 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 
 	 - Type: false
-	 - Default: STRING
+	 - Default: PASSWORD
 	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 	 - Required: HIGH
 
@@ -330,7 +303,7 @@ The scope parameter sent to the service when fetching the OAuth2 token.
 
 🔘 oauth2.client.header.separator
 
-Separator character used in OAuth2 Client Headers. This configuration can be set via CLI only.
+Separator character used in OAuth2 Client Headers.
 
 	 - Type: STRING
 	 - Default: |
@@ -361,7 +334,7 @@ The name of the property containing the OAuth2 token returned by the OAuth2 toke
 
 	 - Type: false
 	 - Default: PASSWORD
-	 - Importance: HTTP headers to be included in the OAuth2 client endpoint. Individual headers should be separated by ``|``. This configuration can be set via CLI only.
+	 - Importance: HTTP headers to be included in the OAuth2 client endpoint. Individual headers should be separated by ``|``.
 	 - Required: LOW
 
 🔘 gcp.credentials.json
@@ -924,7 +897,7 @@ Whether to flatten singleton unions. Applicable for Avro and JSON_SR Converters.
 
 🔘 json.decimal.format
 
-Specify the Request Body JSON serialization format for Connect DECIMAL logical type values with two allowed literals : BASE64 to serialize DECIMAL logical types as base64 encoded binary data and NUMERIC to serialize Connect DECIMAL logical type values in JSON Request Body as a number representing the decimal value. Applicable when `request.body.format` is `json`. This configuration can be set via CLI only.
+Specify the Request Body JSON serialization format for Connect DECIMAL logical type values with two allowed literals : BASE64 to serialize DECIMAL logical types as base64 encoded binary data and NUMERIC to serialize Connect DECIMAL logical type values in JSON Request Body as a number representing the decimal value. Applicable when `request.body.format` is `json`.
 
 	 - Type: STRING
 	 - Default: BASE64
@@ -949,6 +922,33 @@ Dictates the content of records produced to the error topic. If set to ``Error s
 
 	 - Type: STRING
 	 - Default: Error string
+	 - Importance: LOW
+	 - Required: false
+
+🔘 reporter.result.topic.name
+
+The name of the topic to produce records to after successfully processing a sink record. Defaults to 'success-${connector}' if not set. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: success-${connector}
+	 - Importance: LOW
+	 - Required: false
+
+🔘 reporter.error.topic.name
+
+The name of the topic to produce records to after each unsuccessful record sink attempt. Defaults to 'error-${connector}' if not set. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: error-${connector}
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.deadletterqueue.topic.name
+
+The name of the topic to be used as the dead letter queue (DLQ) for messages that result in an error when processed by this sink connector, or its transformations or converters. Defaults to 'dlq-${connector}' if not set. The DLQ topic will be created automatically if it does not exist. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: dlq-${connector}
 	 - Importance: LOW
 	 - Required: false
 
@@ -1155,7 +1155,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api1.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -1164,7 +1164,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 🔘 api1.batch.separator
 
-Separator for records in a batch. This configuration can be set via CLI only.
+Separator for records in a batch.
 
 	 - Type: STRING
 	 - Default: ,
@@ -1173,7 +1173,7 @@ Separator for records in a batch. This configuration can be set via CLI only.
 
 🔘 api1.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -1204,7 +1204,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 	 - Required: MEDIUM
 
 🔘 api1.regex.replacements
@@ -1213,7 +1213,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 	 - Required: MEDIUM
 
 🔘 api1.regex.separator
@@ -1222,12 +1222,12 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 	 - Required: MEDIUM
 
 🔘 api1.allow.get.request.body
 
-Allow Request Body in case of GET call. This configuration can be set via CLI only.
+Allow Request Body in case of GET call.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -1236,7 +1236,7 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 
 🔘 api1.report.only.status.code.to.success.topic
 
-Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -1245,7 +1245,7 @@ Whether to report only the status code to the success topic. If the API response
 
 🔘 api1.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -1491,7 +1491,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api2.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -1500,7 +1500,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 🔘 api2.batch.separator
 
-Separator for records in a batch. This configuration can be set via CLI only.
+Separator for records in a batch.
 
 	 - Type: STRING
 	 - Default: ,
@@ -1518,7 +1518,7 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 🔘 api2.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -1531,7 +1531,7 @@ The character that separates multiple distinct request parameters within ``http.
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 	 - Required: MEDIUM
 
 🔘 api2.test.api
@@ -1549,7 +1549,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 	 - Required: MEDIUM
 
 🔘 api2.regex.separator
@@ -1558,12 +1558,12 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 	 - Required: MEDIUM
 
 🔘 api2.allow.get.request.body
 
-Allow Request Body in case of GET call. This configuration can be set via CLI only.
+Allow Request Body in case of GET call.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -1572,7 +1572,7 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 
 🔘 api2.report.only.status.code.to.success.topic
 
-Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -1581,7 +1581,7 @@ Whether to report only the status code to the success topic. If the API response
 
 🔘 api2.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -1827,7 +1827,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api3.batch.separator
 
-Separator for records in a batch. This configuration can be set via CLI only.
+Separator for records in a batch.
 
 	 - Type: STRING
 	 - Default: ,
@@ -1836,7 +1836,7 @@ Separator for records in a batch. This configuration can be set via CLI only.
 
 🔘 api3.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -1854,7 +1854,7 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 🔘 api3.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -1876,7 +1876,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 	 - Required: MEDIUM
 
 🔘 api3.regex.replacements
@@ -1885,7 +1885,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 	 - Required: MEDIUM
 
 🔘 api3.regex.separator
@@ -1894,12 +1894,12 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 	 - Required: MEDIUM
 
 🔘 api3.allow.get.request.body
 
-Allow Request Body in case of GET call. This configuration can be set via CLI only.
+Allow Request Body in case of GET call.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -1908,7 +1908,7 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 
 🔘 api3.report.only.status.code.to.success.topic
 
-Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -1917,7 +1917,7 @@ Whether to report only the status code to the success topic. If the API response
 
 🔘 api3.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -2163,7 +2163,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api4.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -2172,7 +2172,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 🔘 api4.batch.separator
 
-Separator for records in a batch. This configuration can be set via CLI only.
+Separator for records in a batch.
 
 	 - Type: STRING
 	 - Default: ,
@@ -2190,7 +2190,7 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 🔘 api4.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -2212,7 +2212,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 	 - Required: MEDIUM
 
 🔘 api4.regex.replacements
@@ -2221,7 +2221,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 	 - Required: MEDIUM
 
 🔘 api4.regex.separator
@@ -2230,12 +2230,12 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 	 - Required: MEDIUM
 
 🔘 api4.allow.get.request.body
 
-Allow Request Body in case of GET call. This configuration can be set via CLI only.
+Allow Request Body in case of GET call.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -2244,7 +2244,7 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 
 🔘 api4.report.only.status.code.to.success.topic
 
-Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -2253,7 +2253,7 @@ Whether to report only the status code to the success topic. If the API response
 
 🔘 api4.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -2499,7 +2499,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api5.batch.separator
 
-Separator for records in a batch. This configuration can be set via CLI only.
+Separator for records in a batch.
 
 	 - Type: STRING
 	 - Default: ,
@@ -2508,7 +2508,7 @@ Separator for records in a batch. This configuration can be set via CLI only.
 
 🔘 api5.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -2526,7 +2526,7 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 🔘 api5.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -2539,7 +2539,7 @@ The character that separates multiple distinct request parameters within ``http.
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 	 - Required: MEDIUM
 
 🔘 api5.test.api
@@ -2557,7 +2557,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 	 - Required: MEDIUM
 
 🔘 api5.regex.separator
@@ -2566,12 +2566,12 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 	 - Required: MEDIUM
 
 🔘 api5.allow.get.request.body
 
-Allow Request Body in case of GET call. This configuration can be set via CLI only.
+Allow Request Body in case of GET call.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -2580,7 +2580,7 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 
 🔘 api5.report.only.status.code.to.success.topic
 
-Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -2589,7 +2589,7 @@ Whether to report only the status code to the success topic. If the API response
 
 🔘 api5.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -2835,7 +2835,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api6.batch.separator
 
-Separator for records in a batch. This configuration can be set via CLI only.
+Separator for records in a batch.
 
 	 - Type: STRING
 	 - Default: ,
@@ -2844,7 +2844,7 @@ Separator for records in a batch. This configuration can be set via CLI only.
 
 🔘 api6.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -2853,7 +2853,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 🔘 api6.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -2875,7 +2875,7 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 	 - Required: MEDIUM
 
 🔘 api6.test.api
@@ -2893,7 +2893,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 	 - Required: MEDIUM
 
 🔘 api6.regex.separator
@@ -2902,12 +2902,12 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 	 - Required: MEDIUM
 
 🔘 api6.allow.get.request.body
 
-Allow Request Body in case of GET call. This configuration can be set via CLI only.
+Allow Request Body in case of GET call.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -2916,7 +2916,7 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 
 🔘 api6.report.only.status.code.to.success.topic
 
-Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -2925,7 +2925,7 @@ Whether to report only the status code to the success topic. If the API response
 
 🔘 api6.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -3171,7 +3171,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api7.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -3180,7 +3180,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 🔘 api7.batch.separator
 
-Separator for records in a batch. This configuration can be set via CLI only.
+Separator for records in a batch.
 
 	 - Type: STRING
 	 - Default: ,
@@ -3198,7 +3198,7 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 🔘 api7.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -3211,7 +3211,7 @@ The character that separates multiple distinct request parameters within ``http.
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 	 - Required: MEDIUM
 
 🔘 api7.test.api
@@ -3229,7 +3229,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 	 - Required: MEDIUM
 
 🔘 api7.regex.separator
@@ -3238,12 +3238,12 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 	 - Required: MEDIUM
 
 🔘 api7.allow.get.request.body
 
-Allow Request Body in case of GET call. This configuration can be set via CLI only.
+Allow Request Body in case of GET call.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -3252,7 +3252,7 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 
 🔘 api7.report.only.status.code.to.success.topic
 
-Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -3261,7 +3261,7 @@ Whether to report only the status code to the success topic. If the API response
 
 🔘 api7.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -3507,7 +3507,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api8.batch.separator
 
-Separator for records in a batch. This configuration can be set via CLI only.
+Separator for records in a batch.
 
 	 - Type: STRING
 	 - Default: ,
@@ -3516,7 +3516,7 @@ Separator for records in a batch. This configuration can be set via CLI only.
 
 🔘 api8.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -3534,7 +3534,7 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 🔘 api8.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -3547,7 +3547,7 @@ The character that separates multiple distinct request parameters within ``http.
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 	 - Required: MEDIUM
 
 🔘 api8.test.api
@@ -3565,7 +3565,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 	 - Required: MEDIUM
 
 🔘 api8.regex.separator
@@ -3574,12 +3574,12 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 	 - Required: MEDIUM
 
 🔘 api8.allow.get.request.body
 
-Allow Request Body in case of GET call. This configuration can be set via CLI only.
+Allow Request Body in case of GET call.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -3588,7 +3588,7 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 
 🔘 api8.report.only.status.code.to.success.topic
 
-Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -3597,7 +3597,7 @@ Whether to report only the status code to the success topic. If the API response
 
 🔘 api8.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -3843,7 +3843,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api9.batch.separator
 
-Separator for records in a batch. This configuration can be set via CLI only.
+Separator for records in a batch.
 
 	 - Type: STRING
 	 - Default: ,
@@ -3852,7 +3852,7 @@ Separator for records in a batch. This configuration can be set via CLI only.
 
 🔘 api9.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -3870,7 +3870,7 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 🔘 api9.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -3883,7 +3883,7 @@ The character that separates multiple distinct request parameters within ``http.
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 	 - Required: MEDIUM
 
 🔘 api9.test.api
@@ -3901,7 +3901,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 	 - Required: MEDIUM
 
 🔘 api9.regex.separator
@@ -3910,12 +3910,12 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 	 - Required: MEDIUM
 
 🔘 api9.allow.get.request.body
 
-Allow Request Body in case of GET call. This configuration can be set via CLI only.
+Allow Request Body in case of GET call.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -3924,7 +3924,7 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 
 🔘 api9.report.only.status.code.to.success.topic
 
-Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -3933,7 +3933,7 @@ Whether to report only the status code to the success topic. If the API response
 
 🔘 api9.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -4179,7 +4179,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api10.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -4188,7 +4188,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 🔘 api10.batch.separator
 
-Separator for records in a batch. This configuration can be set via CLI only.
+Separator for records in a batch.
 
 	 - Type: STRING
 	 - Default: ,
@@ -4206,7 +4206,7 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 🔘 api10.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -4228,7 +4228,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 	 - Required: MEDIUM
 
 🔘 api10.regex.replacements
@@ -4237,7 +4237,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 	 - Required: MEDIUM
 
 🔘 api10.regex.separator
@@ -4246,12 +4246,12 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 	 - Required: MEDIUM
 
 🔘 api10.allow.get.request.body
 
-Allow Request Body in case of GET call. This configuration can be set via CLI only.
+Allow Request Body in case of GET call.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -4260,7 +4260,7 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 
 🔘 api10.report.only.status.code.to.success.topic
 
-Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -4269,7 +4269,7 @@ Whether to report only the status code to the success topic. If the API response
 
 🔘 api10.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -4515,7 +4515,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api11.batch.separator
 
-Separator for records in a batch. This configuration can be set via CLI only.
+Separator for records in a batch.
 
 	 - Type: STRING
 	 - Default: ,
@@ -4524,7 +4524,7 @@ Separator for records in a batch. This configuration can be set via CLI only.
 
 🔘 api11.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -4542,7 +4542,7 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 🔘 api11.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -4555,7 +4555,7 @@ The character that separates multiple distinct request parameters within ``http.
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 	 - Required: MEDIUM
 
 🔘 api11.test.api
@@ -4573,7 +4573,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 	 - Required: MEDIUM
 
 🔘 api11.regex.separator
@@ -4582,12 +4582,12 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 	 - Required: MEDIUM
 
 🔘 api11.allow.get.request.body
 
-Allow Request Body in case of GET call. This configuration can be set via CLI only.
+Allow Request Body in case of GET call.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -4596,7 +4596,7 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 
 🔘 api11.report.only.status.code.to.success.topic
 
-Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -4605,7 +4605,7 @@ Whether to report only the status code to the success topic. If the API response
 
 🔘 api11.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -4851,7 +4851,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api12.batch.separator
 
-Separator for records in a batch. This configuration can be set via CLI only.
+Separator for records in a batch.
 
 	 - Type: STRING
 	 - Default: ,
@@ -4860,7 +4860,7 @@ Separator for records in a batch. This configuration can be set via CLI only.
 
 🔘 api12.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -4869,7 +4869,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 🔘 api12.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -4891,7 +4891,7 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 	 - Required: MEDIUM
 
 🔘 api12.test.api
@@ -4909,7 +4909,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 	 - Required: MEDIUM
 
 🔘 api12.regex.separator
@@ -4918,12 +4918,12 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 	 - Required: MEDIUM
 
 🔘 api12.allow.get.request.body
 
-Allow Request Body in case of GET call. This configuration can be set via CLI only.
+Allow Request Body in case of GET call.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -4932,7 +4932,7 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 
 🔘 api12.report.only.status.code.to.success.topic
 
-Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -4941,7 +4941,7 @@ Whether to report only the status code to the success topic. If the API response
 
 🔘 api12.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -5187,7 +5187,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api13.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -5196,7 +5196,7 @@ The character that separates multiple distinct headers within ``http.request.hea
 
 🔘 api13.batch.separator
 
-Separator for records in a batch. This configuration can be set via CLI only.
+Separator for records in a batch.
 
 	 - Type: STRING
 	 - Default: ,
@@ -5214,7 +5214,7 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 🔘 api13.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -5227,7 +5227,7 @@ The character that separates multiple distinct request parameters within ``http.
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 	 - Required: MEDIUM
 
 🔘 api13.test.api
@@ -5245,7 +5245,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 	 - Required: MEDIUM
 
 🔘 api13.regex.separator
@@ -5254,12 +5254,12 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 	 - Required: MEDIUM
 
 🔘 api13.allow.get.request.body
 
-Allow Request Body in case of GET call. This configuration can be set via CLI only.
+Allow Request Body in case of GET call.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -5268,7 +5268,7 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 
 🔘 api13.report.only.status.code.to.success.topic
 
-Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -5277,7 +5277,7 @@ Whether to report only the status code to the success topic. If the API response
 
 🔘 api13.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -5523,7 +5523,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api14.batch.separator
 
-Separator for records in a batch. This configuration can be set via CLI only.
+Separator for records in a batch.
 
 	 - Type: STRING
 	 - Default: ,
@@ -5532,7 +5532,7 @@ Separator for records in a batch. This configuration can be set via CLI only.
 
 🔘 api14.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -5550,7 +5550,7 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 🔘 api14.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -5563,7 +5563,7 @@ The character that separates multiple distinct request parameters within ``http.
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 	 - Required: MEDIUM
 
 🔘 api14.test.api
@@ -5581,7 +5581,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 	 - Required: MEDIUM
 
 🔘 api14.regex.separator
@@ -5590,12 +5590,12 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 	 - Required: MEDIUM
 
 🔘 api14.allow.get.request.body
 
-Allow Request Body in case of GET call. This configuration can be set via CLI only.
+Allow Request Body in case of GET call.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -5604,7 +5604,7 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 
 🔘 api14.report.only.status.code.to.success.topic
 
-Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -5613,7 +5613,7 @@ Whether to report only the status code to the success topic. If the API response
 
 🔘 api14.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |
@@ -5859,7 +5859,7 @@ Comma-separated list of HTTP status codes or range of codes to retry on. Ranges 
 
 🔘 api15.batch.separator
 
-Separator for records in a batch. This configuration can be set via CLI only.
+Separator for records in a batch.
 
 	 - Type: STRING
 	 - Default: ,
@@ -5868,7 +5868,7 @@ Separator for records in a batch. This configuration can be set via CLI only.
 
 🔘 api15.http.request.headers.separator
 
-The character that separates multiple distinct headers within ``http.request.headers``. This configuration can be set via CLI only.
+The character that separates multiple distinct headers within ``http.request.headers``.
 
 	 - Type: STRING
 	 - Default: |
@@ -5886,7 +5886,7 @@ Whether or not to use an array to bundle json records. Only used when request.bo
 
 🔘 api15.http.request.parameters.separator
 
-The character that separates multiple distinct request parameters within ``http.request.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct request parameters within ``http.request.parameters``.
 
 	 - Type: STRING
 	 - Default: &
@@ -5908,7 +5908,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``. This configuration can be set via CLI only.
+	 - Importance: Regular expression patterns used for replacements in the message sent to the HTTP service. Multiple regular expression patterns can be specified, but must be separated by ``regex.separator``.
 	 - Required: MEDIUM
 
 🔘 api15.regex.replacements
@@ -5917,7 +5917,7 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here. This configuration can be set via CLI only.
+	 - Importance: Regex replacements to use with the patterns in ``regex.patterns``.  Multiple replacements can be specified, but must be separated by ``regex.separator``. ``${key}``, ``${topic}``, ``${partition}``, and ``${kafka_offset}`` can be used here.
 	 - Required: MEDIUM
 
 🔘 api15.regex.separator
@@ -5926,12 +5926,12 @@ Flag to determine if the api needs to be tested
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property. This configuration can be set via CLI only.
+	 - Importance: Separator character used in ``regex.patterns`` and ``regex.replacements`` property.
 	 - Required: MEDIUM
 
 🔘 api15.allow.get.request.body
 
-Allow Request Body in case of GET call. This configuration can be set via CLI only.
+Allow Request Body in case of GET call.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -5940,7 +5940,7 @@ Allow Request Body in case of GET call. This configuration can be set via CLI on
 
 🔘 api15.report.only.status.code.to.success.topic
 
-Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput. Please note that this is a **CLI only feature**.
+Whether to report only the status code to the success topic. If the API response payload is huge, it is recommended to set this to true, for better throughput.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -5949,7 +5949,7 @@ Whether to report only the status code to the success topic. If the API response
 
 🔘 api15.http.path.parameters.separator
 
-The character that separates multiple distinct path parameters within ``http.path.parameters``. This configuration can be set via CLI only.
+The character that separates multiple distinct path parameters within ``http.path.parameters``.
 
 	 - Type: STRING
 	 - Default: |

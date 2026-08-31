@@ -45,7 +45,7 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 
 	 - Type: false
-	 - Default: STRING
+	 - Default: PASSWORD
 	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 	 - Required: HIGH
 
@@ -147,12 +147,21 @@ Output messages
 ==========================
 🔘 output.data.format
 
-Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, JSON, BYTES, or STRING. Schema Registry is required for the schema-based formats (AVRO, JSON_SR, PROTOBUF). ``AVRO``, ``JSON_SR``, ``PROTOBUF`` and ``JSON`` write the message body together with the JMS message metadata, such as the message ID, correlation ID and message properties. ``BYTES`` and ``STRING`` write only the message body, without that metadata: ``BYTES`` writes a ``BytesMessage`` body unchanged and a ``TextMessage`` body as its UTF-8 bytes, and ``STRING`` writes a ``TextMessage`` body as a raw string. A ``MapMessage`` body cannot be represented this way, so with ``BYTES`` those records fail with a ``DataException``.
 
 	 - Type: STRING
 	 - Default: JSON
 	 - Importance: HIGH
-	 - Required: true
+	 - Required: false
+
+🔘 output.key.format
+
+Sets the output Kafka record key format. Valid entries are AVRO, JSON_SR, PROTOBUF, STRING or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+
+	 - Type: STRING
+	 - Default: STRING
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 IBM MQ Secure Connection
@@ -646,6 +655,15 @@ The class name of the schema ID serializer for keys. This is used to serialize s
 	 - Importance: Verify latest subject version is backward compatible when `use.latest.version` is `true`.
 	 - Required: LOW
 
+🔘 key.converter.schemas.enable
+
+Include schemas within each of the serialized keys. Input message keys must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Key Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.optional.for.nullables
 
 
@@ -681,6 +699,15 @@ The class name of the schema ID serializer for keys. This is used to serialize s
 	 - Default: BOOLEAN
 	 - Importance: Use latest version of schema in subject for serialization when auto.register.schemas is false.
 	 - Required: LOW
+
+🔘 key.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Key Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.value.subject.name.strategy
 

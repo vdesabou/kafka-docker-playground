@@ -2046,7 +2046,7 @@ function bootstrap_ccloud_environment () {
       fi
     fi
 
-    if [[ $test_file == *"fm-azure"* ]] || ( [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-azure"* ]] )
+    if [[ $test_file == *"fm-azure"* ]] || ( [[ -n "$connect_migration_utility" ]] && [[ $test_file == *"connect-azure"* ]] ) || ( [[ $test_file == *"fm-custom-smt"* ]] && ( [[ "$USER" == "vsaboulin" ]] || [[ "$USER" == "runner" ]] ) )
     then
       if [ ! -z "$AZURE_CLUSTER_NAME" ]
       then

@@ -45,7 +45,7 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 
 	 - Type: false
-	 - Default: STRING
+	 - Default: PASSWORD
 	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 	 - Required: HIGH
 
@@ -250,7 +250,7 @@ Specifies whether to use Transport Layer Security (TLS) to connect to the Oracle
 
 	 - Type: true
 	 - Default: INT
-	 - Importance: Specifies the number of Oracle processor licenses required for the source database server or cluster. The is determined by multiplying the total number of processor cores by a core processor licensing factor, as specified in the Oracle Processor Core Factor Table.
+	 - Importance: Specifies the number of Oracle processor licenses required for the source database server or cluster. The is determined by multiplying the total number of processor cores by a core processor licensing factor, as specified in the Oracle Processor Core Factor Table. Confluent shares this value with Oracle for audit purposes. Enter the exact number of processor licenses for your Oracle database.
 	 - Required: MEDIUM
 
 🔘 downstream.database.hostname

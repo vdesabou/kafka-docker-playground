@@ -45,7 +45,7 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 
 	 - Type: false
-	 - Default: STRING
+	 - Default: PASSWORD
 	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 	 - Required: HIGH
 
@@ -94,9 +94,18 @@ Add a schema context name. A schema context represents an independent scope in S
 ==========================
 How should we connect to Salesforce?
 ==========================
+🔘 salesforce.grant.type
+
+Grant type the connector uses for Salesforce authentication: PASSWORD, CLIENT_CREDENTIALS, or JWT_BEARER
+
+	 - Type: STRING
+	 - Default: PASSWORD
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 salesforce.instance
 
-The URL of the Salesforce endpoint to use. The default is https://login.salesforce.com. This directs the connector to use the endpoint specified in the authentication response.
+The URL of the Salesforce endpoint to use. The default is https://login.salesforce.com. This directs the connector to use the endpoint specified in the authentication response. For the CLIENT_CREDENTIALS grant type, set this to your org's My Domain URL (for example https://MyDomainName.my.salesforce.com).
 
 	 - Type: STRING
 	 - Default: https://login.salesforce.com
@@ -107,7 +116,7 @@ The URL of the Salesforce endpoint to use. The default is https://login.salesfor
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: STRING
 	 - Importance: The Salesforce username the connector should use.
 	 - Required: HIGH
@@ -116,7 +125,7 @@ The URL of the Salesforce endpoint to use. The default is https://login.salesfor
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: PASSWORD
 	 - Importance: The Salesforce password the connector should use.
 	 - Required: HIGH
@@ -125,10 +134,46 @@ The URL of the Salesforce endpoint to use. The default is https://login.salesfor
 
 
 
-	 - Type: true
+	 - Type: false
 	 - Default: PASSWORD
 	 - Importance: The Salesforce security token associated with the username.
 	 - Required: HIGH
+
+🔘 salesforce.consumer.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Client ID (consumer key) for the Salesforce connected app. Required for the JWT_BEARER and CLIENT_CREDENTIALS grant types.
+	 - Required: HIGH
+
+🔘 salesforce.consumer.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Client secret (consumer secret) for the Salesforce connected app. The JWT_BEARER grant signs an assertion instead and does not use it.
+	 - Required: MEDIUM
+
+🔘 salesforce.jwt.keystore.file
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Keystore file that stores the private key for JWT authentication
+	 - Required: MEDIUM
+
+🔘 salesforce.jwt.keystore.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Password that unlocks the JWT keystore file
+	 - Required: MEDIUM
 
 🔘 salesforce.object
 

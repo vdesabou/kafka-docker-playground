@@ -1,6 +1,14 @@
 DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR_UTILS}/../scripts/cli/src/lib/utils_function.sh
 
+if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]] 
+then
+    # if GITHUB_RUN_NUMBER is set, append "cfk" to GITHUB_RUN_NUMBER, only if this is not appended already
+    if [[ -n "$GITHUB_RUN_NUMBER" && "$GITHUB_RUN_NUMBER" != *cfk* ]]; then
+        export GITHUB_RUN_NUMBER="${GITHUB_RUN_NUMBER}cfk"
+    fi
+fi
+
 function install_connector_with_retry {
   local install_command="$1"
   local max_retries=${CONNECTOR_INSTALL_MAX_RETRIES:-5}
@@ -648,6 +656,9 @@ function salesforce_ensure_jwt_keystore() {
 
   if [ ! -f "$keystore_path" ]
   then
+    # If a previous aborted run left a directory at this path, aws s3 cp will fail
+    # with "Is a directory". Remove it so the download can proceed.
+    rm -rf "$keystore_path"
     # Keep stdout clean for command substitution callers; logs still go to stderr.
     (cd "$target_dir" && get_3rdparty_file "salesforce-confluent.keystore.jks") >&2
   fi

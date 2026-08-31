@@ -42,12 +42,12 @@ The URL of the Salesforce endpoint to use. The default is blank. This directs th
 
 🔘 salesforce.username
 
-The Salesforce username the connector should use.
 
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Salesforce username for connector authentication
+	 - Required: HIGH
 
 🔘 salesforce.password
 
@@ -103,6 +103,51 @@ Enable trace logging for BulkApiClient.
 ==========================
 Connection
 ==========================
+🔘 salesforce.grant.type
+
+OAuth grant type the connector uses for Salesforce authentication: PASSWORD, CLIENT_CREDENTIALS, or JWT_BEARER
+
+	 - Type: STRING
+	 - Default: password
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 salesforce.consumer.key
+
+The consumer key for the OAuth application.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 salesforce.consumer.secret
+
+The consumer secret for the OAuth application.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 salesforce.jwt.keystore.path
+
+Path to keystore containing key to use in OAuth token bearer flow
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 salesforce.jwt.keystore.password
+
+Keystore password to enable OAuth token bearer flow
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 http.proxy.auth.scheme
 
 Authentication scheme to be used when authenticate the connector towards HTTP(s) proxy.

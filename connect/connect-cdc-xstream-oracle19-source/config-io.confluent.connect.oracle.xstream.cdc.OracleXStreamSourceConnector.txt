@@ -378,7 +378,7 @@ Specifies the database server's operating system timezone. This is used to read 
 
 🔘 lob.oversize.handling.mode
 
-Defines how the connector handles large object (LOB) column values that exceed the size threshold specified using the `lob.oversize.threshold` configuration. Select one of the following options:
+Defines how the connector handles large object (LOB) and XMLType column values that exceed the size threshold specified using the `lob.oversize.threshold` configuration. Select one of the following options:
 
 	 - Type: STRING
 	 - Default: fail
@@ -387,7 +387,7 @@ Defines how the connector handles large object (LOB) column values that exceed t
 
 🔘 lob.oversize.threshold
 
-Specifies the maximum size threshold (in bytes) for large object (LOB) column values, including CLOB, NCLOB, and BLOB. For CLOB and NCLOB values, the connector calculates the size as the UTF-8 encoded byte length of the string. If a LOB value exceeds this threshold, the connector handles it according to the strategy specified using the `lob.oversize.handling.mode` configuration. The default value is -1, which disables oversize handling.
+Specifies the maximum size threshold (in bytes) for large object (LOB) column values (CLOB, NCLOB, and BLOB) and XMLType column values. For CLOB, NCLOB, and XMLType values, the connector calculates the size as the UTF-8 encoded byte length of the string. If a value exceeds this threshold, the connector handles it according to the strategy specified using the `lob.oversize.handling.mode` configuration. The default value is -1, which disables oversize handling.
 
 	 - Type: INT
 	 - Default: -1
