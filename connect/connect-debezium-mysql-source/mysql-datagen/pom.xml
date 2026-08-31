@@ -12,7 +12,7 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <mysql.jdbc.driver.version>8.0.33</mysql.jdbc.driver.version>
-        <log4j2.version>2.20.0</log4j2.version>
+        <log4j2.version>2.26.1</log4j2.version>
         <jcommander.version>1.82</jcommander.version>
     </properties>
 
