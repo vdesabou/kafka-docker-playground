@@ -615,6 +615,33 @@ function salesforce_connector_version() {
   echo "$artifact" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1
 }
 
+# Whether the given Bulk API connector version supports the JWT_BEARER grant.
+#
+# JWT_BEARER was backported onto two lines independently: 3.0.15 on 3.0.x and 3.1.9 on 3.1.x.
+# A blanket ">= 3.0.0" check is wrong: 3.1.0-3.1.8 are ">= 3.0.0" in a plain version sort but
+# predate the 3.1.x backport, so that check would wrongly select JWT for them and fail with
+# invalid_client. This instead checks the two ranges that actually have it:
+#   [3.0.15, 3.1.0)  - the 3.0.x line from where it landed, up to the next line
+#   (3.1.8, ∞)       - the 3.1.x line from where it landed, and every line after (3.2.x, ...),
+#                      which all descend from master after the merge
+# An empty or undeterminable version returns false, so the caller falls back to
+# username-password, which every version supports.
+function salesforce_bulkapi_supports_jwt() {
+  local version="$1"
+
+  if [ -z "$version" ]
+  then
+    return 1
+  fi
+
+  if ! version_gt "3.0.15" "$version" && version_gt "3.1.0" "$version"
+  then
+    return 0
+  fi
+
+  version_gt "$version" "3.1.8"
+}
+
 function salesforce_ensure_jwt_keystore() {
   local target_dir="${1:-$PWD}"
   local keystore_path="$target_dir/salesforce-confluent.keystore.jks"

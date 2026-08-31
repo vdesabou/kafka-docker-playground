@@ -41,12 +41,11 @@ then
 fi
 
 
-# JWT_BEARER for the Bulk API connector arrived in 3.0.x; older artifacts only support the
-# username-password SOAP grant. Rather than duplicating this test per grant, or skipping it
-# on older artifacts, pick the grant from the version actually under test. An undeterminable
-# version falls back to username-password, which every version supports.
+# JWT_BEARER for the Bulk API connector arrived on 3.0.x and 3.1.x independently. Rather than
+# duplicating this test per grant, or skipping it on older artifacts, pick the grant from the
+# version actually under test - see salesforce_bulkapi_supports_jwt in utils.sh.
 SALESFORCE_CONNECTOR_VERSION="$(salesforce_connector_version)"
-if [ -n "$SALESFORCE_CONNECTOR_VERSION" ] && ! version_gt "3.0.0" "$SALESFORCE_CONNECTOR_VERSION"
+if salesforce_bulkapi_supports_jwt "$SALESFORCE_CONNECTOR_VERSION"
 then
   SALESFORCE_GRANT=JWT_BEARER
 else
