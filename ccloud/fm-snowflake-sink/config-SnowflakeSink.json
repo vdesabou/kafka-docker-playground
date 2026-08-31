@@ -17,7 +17,7 @@
     "header.converter": "STRING",
     "input.data.format": "JSON",
     "input.key.format": "STRING",
-    "kafka.api.key": "STRING",
+    "kafka.api.key": "PASSWORD",
     "kafka.api.secret": "PASSWORD",
     "kafka.auth.mode": "${connect.regional.connector}",
     "kafka.service.account.id": "STRING",
