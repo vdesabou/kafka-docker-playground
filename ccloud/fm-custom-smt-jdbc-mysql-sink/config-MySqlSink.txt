@@ -117,7 +117,7 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 
 	 - Type: false
-	 - Default: STRING
+	 - Default: PASSWORD
 	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 	 - Required: HIGH
 
@@ -135,7 +135,7 @@ Authentication method
 ==========================
 🔘 authentication.method
 
-How Confluent Cloud authenticates with Azure or GCP. Allowed values - ``Password``, ``Microsoft Entra ID application`` and ``Google service account impersonation``.
+How Confluent Cloud authenticates with the database. Allowed values - ``Password``, ``Microsoft Entra ID application``, ``Google service account impersonation`` and ``IAM Roles``.
 
 	 - Type: STRING
 	 - Default: Password
@@ -158,6 +158,15 @@ Fetch sensitive configuration values from a secret manager.
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Select an existing integration that has access to your resource.
+	 - Required: HIGH
+
+🔘 database.aws.region
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The AWS region of your RDS or Aurora database instance, for example ``us-east-1``. Required when the authentication method is ``IAM Roles``.
 	 - Required: HIGH
 
 ==========================
