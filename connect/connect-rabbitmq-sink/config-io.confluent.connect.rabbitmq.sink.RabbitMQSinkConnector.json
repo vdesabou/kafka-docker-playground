@@ -38,6 +38,7 @@
     "rabbitmq.requested.frame.max": "0",
     "rabbitmq.requested.heartbeat.seconds": "60",
     "rabbitmq.routing.key": "",
+    "rabbitmq.sasl.mechanism": "PLAIN",
     "rabbitmq.security.protocol": "PLAINTEXT",
     "rabbitmq.shutdown.timeout.ms": "10000",
     "rabbitmq.topic.queue.map": "STRING",
