@@ -169,6 +169,15 @@ The security protocol to use when connection to RabbitMQ. Values can be `PLAINTE
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 rabbitmq.sasl.mechanism
+
+The SASL mechanism used to authenticate to RabbitMQ. Valid values: `PLAIN` (default) sends username/password over the AMQP handshake; `EXTERNAL` derives the identity from the TLS client certificate presented during the mTLS handshake and requires the RabbitMQ `rabbitmq_auth_mechanism_ssl` plugin on the broker. When `EXTERNAL` is selected, `rabbitmq.username` and `rabbitmq.password` are ignored, and `rabbitmq.security.protocol` must be `SSL` with a keystore configured.
+
+	 - Type: STRING
+	 - Default: PLAIN
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 rabbitmq.https.ssl.key.password
 
 The password of the private key in the key store file or the PEM key specified in 'ssl.keystore.key'.
