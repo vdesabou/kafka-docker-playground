@@ -11,8 +11,16 @@ Quickly test [Fully Managed ServiceNow Sink](https://docs.confluent.io/cloud/cur
 ## Register a test account
 
 Go to [ServiceNow developer portal](https://developer.servicenow.com) and register an account.
-Click on `Manage`->`Instance` and register for a Vancouver instance. After some time (about one hour in my case) on the waiting list, you should receive an email with details of your test instance.
+Click on `Manage`->`Instance` and register for an Australia instance. After some time (about one hour in my case) on the waiting list, you should receive an email with details of your test instance.
 
+
+## Verify User-Level Requirements
+
+The user account should have `Identity Type` set to `Machine`.
+
+* Navigate to `User Administration > Users`.
+* Search for and open the admin record.
+* Make sure `Identity Type` is set to `Machine`
 ## Create the test_table in ServiceNow
 
 Search for `Tables` in the `All` menu and select the one from `System Definition`:
