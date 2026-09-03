@@ -45,7 +45,7 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 
 
 	 - Type: false
-	 - Default: STRING
+	 - Default: PASSWORD
 	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
 	 - Required: HIGH
 
@@ -150,6 +150,18 @@ How should we connect to Amazon SQS?
 	 - Default: STRING
 	 - Importance: The AWS region that the SQS queue belongs to. If left empty, the connector will attempt to infer the region from the SQS URL.
 	 - Required: MEDIUM
+
+==========================
+Connection details
+==========================
+🔘 sqs.max.retry.time.ms
+
+The maximum time in milliseconds the connector retries a single SQS fetch after a transient error such as a network, DNS, or timeout failure. The task fails once this threshold is reached. Increase the time if your environment experiences prolonged disruptions. Minimum is 1000 ms.
+
+	 - Type: LONG
+	 - Default: 30000
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Output messages
