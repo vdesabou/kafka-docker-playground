@@ -14,7 +14,7 @@ function listAllTags() {
     cat /tmp/all_tags | sort
 } 
 
-listAllTags "confluentinc/cp-server-connect-base" | grep -v "ubi8" | grep -v "ubi9" | grep -v "arm64" | grep -v "amd64" | grep -v "latest" | grep -v "deb8" > /tmp/tmp_tags
+listAllTags "confluentinc/cp-server-connect" | grep -v "ubi8" | grep -v "ubi9" | grep -v "arm64" | grep -v "amd64" | grep -v "latest" | grep -v "deb8" > /tmp/tmp_tags
 
 rm -f $root_folder/scripts/cli/tag-list.txt
 rm -f $root_folder/scripts/cli/connect-tag-list.txt
@@ -30,7 +30,7 @@ do
     fi
 
     # check if docker connect image locally exists
-    if docker image inspect "confluentinc/cp-server-connect-base:${tag}" > /dev/null 2>&1
+    if docker image inspect "confluentinc/cp-server-connect:${tag}" > /dev/null 2>&1
     then
         echo "${tag} - already installed 💻" >> $root_folder/scripts/cli/connect-tag-list.txt
     else

@@ -734,7 +734,7 @@ then
 
     if [ -z "$CP_CONNECT_IMAGE" ]
     then
-      export CP_CONNECT_IMAGE=confluentinc/cp-server-connect-base
+      export CP_CONNECT_IMAGE=confluentinc/cp-server-connect
     fi
 
     if [ -z "$CP_SCHEMA_REGISTRY_IMAGE" ]
@@ -952,18 +952,18 @@ else
     if version_gt $first_version $second_version; then
         if [ "$first_version" == "5.3.6" ]
         then
-          logwarn "Workaround for ST-6539, using custom image vdesabou/cp-server-connect-base !"
-          export CP_CONNECT_IMAGE=vdesabou/cp-server-connect-base
+          logwarn "Workaround for ST-6539, using custom image vdesabou/cp-server-connect !"
+          export CP_CONNECT_IMAGE=vdesabou/cp-server-connect
         else
           if [ -z "$CP_CONNECT_IMAGE" ]
           then
-            export CP_CONNECT_IMAGE=confluentinc/cp-server-connect-base
+            export CP_CONNECT_IMAGE=confluentinc/cp-server-connect
           fi
         fi
     else
         if [ -z "$CP_CONNECT_IMAGE" ]
         then
-          export CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect-base
+          export CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect
         fi
     fi
     second_version=5.3.99

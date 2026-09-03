@@ -905,9 +905,9 @@ function get_connect_image() {
   then
     if version_gt $CP_CONNECT_TAG 5.2.99
     then
-      CP_CONNECT_IMAGE=confluentinc/cp-server-connect-base
+      CP_CONNECT_IMAGE=confluentinc/cp-server-connect
     else
-      CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect-base
+      CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect
     fi
   fi
 }
