@@ -24,7 +24,7 @@ fi
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.standalone-worker.yml" --wait-for-control-center
 
 log "Create table"
-playground container exec --container sqlserver --command "/opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password!" << EOF
+playground container exec --container sqlserver --command '/opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password!' << EOF
 -- Create the test database
 CREATE DATABASE testDB;
 GO
@@ -56,7 +56,7 @@ playground container exec --container -d --command "connect bash -c 'connect-sta
 log "Sleeping 60 seconds to let the standalone connector doing the work"
 sleep 60
 
-playground container exec --container sqlserver --command "/opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password!" << EOF
+playground container exec --container sqlserver --command '/opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password!' << EOF
 USE testDB;
 INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@office.com');
 GO
