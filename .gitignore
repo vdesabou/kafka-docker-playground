@@ -91,5 +91,6 @@ heap-analysis
 gc-analysis-output
 cfk-reports
 config.yaml
-.claude
+.claude/*
+!.claude/skills/
 .terraform-playground
