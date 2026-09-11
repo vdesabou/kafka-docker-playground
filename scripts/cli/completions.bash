@@ -1352,6 +1352,14 @@ _playground_completions_resolve_node() {
         node_id=104
         node_word_count=2
         ;;
+      101:edit)
+        node_id=104
+        node_word_count=2
+        ;;
+      101:alter)
+        node_id=104
+        node_word_count=2
+        ;;
       101:get-ip-addresses)
         node_id=105
         node_word_count=2
@@ -1581,6 +1589,14 @@ _playground_completions_resolve_node() {
         node_word_count=2
         ;;
       134:update)
+        node_id=171
+        node_word_count=2
+        ;;
+      134:edit)
+        node_id=171
+        node_word_count=2
+        ;;
+      134:alter)
         node_id=171
         node_word_count=2
         ;;
@@ -3342,7 +3358,7 @@ _playground_completions() {
         return
         ;;
       101)
-        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "get-properties recreate update get-ip-addresses kill-all logs display-error-all ssh change-jdk exec cp restart pause resume unpause kill set-environment-variables" -- "$cur")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "get-properties recreate update edit alter get-ip-addresses kill-all logs display-error-all ssh change-jdk exec cp restart pause resume unpause kill set-environment-variables" -- "$cur")
         return
         ;;
       118)
@@ -3354,7 +3370,7 @@ _playground_completions() {
         return
         ;;
       134)
-        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "status oracle-cdc-xstream offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart stop resume unpause delete show-lag show-config show-config-parameters display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update" -- "$cur")
+        while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "status oracle-cdc-xstream offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart stop resume unpause delete show-lag show-config show-config-parameters display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update edit alter" -- "$cur")
         return
         ;;
       136)

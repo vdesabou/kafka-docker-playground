@@ -2758,6 +2758,9 @@ commands:
         when you save and close the file.
       flags:
       - *container
+      alias:
+      - edit
+      - alter
       examples:
       - playground container update --container connect
       - playground container update -c splunk
@@ -4826,7 +4829,9 @@ commands:
     - *connector
     examples: |
       playground connector update -c filestream-sink
-
+    alias:
+    - edit
+    - alter
   examples:
   - playground connector status
   - playground connector status --json

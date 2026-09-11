@@ -5463,6 +5463,8 @@ playground_container_update_usage() {
   else
     printf "playground container update - ✍️ Edit and apply runtime container/pod definition\n\n"
   fi
+  printf "Alias: edit, alter\n"
+  echo
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground container update [OPTIONS]\n"
@@ -8258,6 +8260,8 @@ fi
 # :command.usage
 playground_connector_update_usage() {
   printf "playground connector update - 🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.\n\n"
+  printf "Alias: edit, alter\n"
+  echo
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground connector update [OPTIONS]\n"
@@ -49176,7 +49180,7 @@ playground_container_parse_requirements() {
       shift $#
       ;;
 
-    update)
+    update | edit | alter)
       action="update"
       shift
       playground_container_update_parse_requirements "$@"
@@ -53082,7 +53086,7 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
-    update)
+    update | edit | alter)
       action="update"
       shift
       playground_connector_update_parse_requirements "$@"
