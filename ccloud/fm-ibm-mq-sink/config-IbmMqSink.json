@@ -6,6 +6,7 @@
     "consumer.override.isolation.level": "STRING",
     "csfle.enabled": "false",
     "csfle.onFailure": "ERROR",
+    "disable.mqcsp.authentication": "false",
     "errors.deadletterqueue.topic.name": "dlq-${connector}",
     "errors.tolerance": "all",
     "exactly.once.enabled": "false",

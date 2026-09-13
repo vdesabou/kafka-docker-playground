@@ -208,6 +208,15 @@ IBM MQ broker port
 	 - Importance: The channel for client connections.
 	 - Required: HIGH
 
+🔘 disable.mqcsp.authentication
+
+Whether to disable MQCSP authentication in the connector. By default, the connector uses MQCSP authentication, which is the recommended secure authentication method. Disabling MQCSP will make the connector use legacy authentication mode. **WARNING: The legacy authentication mode is inherently insecure and should only be used when absolutely necessary. When MQCSP is disabled on non-SSL/TLS connections, credentials are transmitted in clear text, exposing them to potential interception and unauthorized access. It is strongly recommended to use MQCSP authentication (default) or, if legacy mode is required, configure a secure connection using SSL/TLS with an appropriate cipher suite.**
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 🔘 jms.destination.name
 
 
