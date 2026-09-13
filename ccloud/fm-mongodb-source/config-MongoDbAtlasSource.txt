@@ -360,7 +360,7 @@ Producer configuration
 ==========================
 🔘 linger.ms
 
-Artificial delay for records to be sent together.
+Artificial delay for records to be sent together. Note that this connector doesn't honor the ``producer.override.linger.ms`` property and silently ignores any value you set for it. To configure the producer linger time, use ``linger.ms`` directly instead.
 
 	 - Type: LONG
 	 - Default: 0
