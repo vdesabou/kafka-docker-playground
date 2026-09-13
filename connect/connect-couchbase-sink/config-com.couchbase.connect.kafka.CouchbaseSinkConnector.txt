@@ -10,15 +10,6 @@ Password of the Couchbase user.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.username
-
-Name of the Couchbase user to authenticate as.
-
-	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
-
 🔘 couchbase.bucket
 
 This property is required unless using the experimental AnalyticsSinkHandler.
@@ -27,6 +18,15 @@ This property is required unless using the experimental AnalyticsSinkHandler.
 	 - Default: STRING
 	 - Importance: Name of the Couchbase bucket to use.
 	 - Required: HIGH
+
+🔘 couchbase.username
+
+Name of the Couchbase user to authenticate as.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
 
 🔘 couchbase.seed.nodes
 
@@ -268,6 +268,15 @@ For Couchbase Server versions prior to 6.5, this is how you require the connecto
 ==========================
 N1ql Sink Handler
 ==========================
+🔘 couchbase.n1ql.create.document
+
+Controls whether to create the document if it does not exist.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.n1ql.operation
 
 The type of update to use when `couchbase.sink.handler` is set to `com.couchbase.connect.kafka.handler.sink.N1qlSinkHandler`.
@@ -285,15 +294,6 @@ This property is specific to `N1qlSinkHandler`.
 	 - Default: LIST
 	 - Importance: When using the UPDATE_WHERE operation, this is the list of document fields that must match the Kafka message in order for the document to be updated with the remaining message fields. To match against a literal value instead of a message field, use a colon to delimit the document field name and the target value. For example, "type:widget,color" matches documents whose 'type' field is 'widget' and whose 'color' field matches the 'color' field of the Kafka message.
 	 - Required: MEDIUM
-
-🔘 couchbase.n1ql.create.document
-
-Controls whether to create the document if it does not exist.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: MEDIUM
-	 - Required: false
 
 ==========================
 Analytics Sink Handler
