@@ -672,6 +672,15 @@ Controls the number of digits used for zero-padding Kafka offset numbers in S3 o
 , 	.
 	 - Required: LOW
 
+🔘 value.converter.generalized.sum.type.support
+
+When set to true, enables interoperability of enum/union (sum type) constructs across Avro, JSON Schema and Protobuf when converting records to Connect's internal schema. Enable this if records contain sum types (e.g. a Protobuf or JSON Schema `oneOf`) that fail schema conversion with errors such as 'Illegal character' during Parquet/Avro conversion.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 Consumer configuration
 ==========================

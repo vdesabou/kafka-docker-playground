@@ -92,6 +92,7 @@
     "value.converter.enhanced.protobuf.schema.support": "BOOLEAN",
     "value.converter.flatten.singleton.unions": "false",
     "value.converter.flatten.unions": "BOOLEAN",
+    "value.converter.generalized.sum.type.support": "false",
     "value.converter.generate.index.for.unions": "BOOLEAN",
     "value.converter.generate.struct.for.nulls": "BOOLEAN",
     "value.converter.ignore.default.for.nullables": "false",
