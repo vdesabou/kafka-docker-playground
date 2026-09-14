@@ -196,24 +196,6 @@ Authentication type of the endpoint. Valid values are ``NONE``, ``BASIC``, ``OAU
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 connection.user
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username to be used with an endpoint requiring basic authentication.
-	 - Required: MEDIUM
-
-🔘 connection.password
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The password to be used with an endpoint requiring basic authentication.
-	 - Required: MEDIUM
-
 🔘 bearer.token
 
 
@@ -239,6 +221,15 @@ Authentication type of the endpoint. Valid values are ``NONE``, ``BASIC``, ``OAU
 	 - Type: false
 	 - Default: PASSWORD
 	 - Importance: The client secret used when fetching the OAuth2 token.
+	 - Required: MEDIUM
+
+🔘 connection.user
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The username to be used with an endpoint requiring basic authentication.
 	 - Required: MEDIUM
 
 🔘 oauth2.client.scope
@@ -267,6 +258,15 @@ Separator character used in OAuth2 Client Headers.
 	 - Default: |
 	 - Importance: LOW
 	 - Required: false
+
+🔘 connection.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password to be used with an endpoint requiring basic authentication.
+	 - Required: MEDIUM
 
 🔘 oauth2.token.property
 
@@ -496,15 +496,6 @@ Secret manager configuration
 	 - Importance: Select the secret manager to use for retrieving sensitive data.
 	 - Required: HIGH
 
-🔘 secret.manager.managed.configs
-
-
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Select the configurations to fetch their values from the secret manager.
-	 - Required: HIGH
-
 🔘 secret.manager.provider.integration.id
 
 
@@ -512,6 +503,15 @@ Secret manager configuration
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Select an existing provider integration that has access to your secret manager.
+	 - Required: HIGH
+
+🔘 secret.manager.managed.configs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Select the configurations to fetch their values from the secret manager.
 	 - Required: HIGH
 
 ==========================

@@ -205,7 +205,7 @@ Port number of the Oracle database server.
 
 	 - Type: true
 	 - Default: STRING
-	 - Importance: Name of the database service to which to connect. In a multitenant container database, this is the service used to connect to the container database (CDB). For Oracle Real Application Clusters (RAC), use the service created by Oracle XStream.
+	 - Importance: Name of the database service to which to connect. In a multitenant container database, this is the service used to connect to the container database (CDB). For Oracle Real Application Clusters (RAC), use the service created by Oracle XStream. Escape special characters (for example, ``$``) in the service name using a single backslash (``\$``).
 	 - Required: HIGH
 
 🔘 database.pdb.name
