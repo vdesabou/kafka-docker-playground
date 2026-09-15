@@ -58,15 +58,6 @@ On startup, the connector will wait this long for a Couchbase connection to be e
 ==========================
 Security
 ==========================
-🔘 couchbase.trust.store.password
-
-Password for accessing the trust store.
-
-	 - Type: PASSWORD
-	 - Default: [hidden]
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 couchbase.enable.tls
 
 Use secure connection to Couchbase Server.
@@ -115,6 +106,24 @@ If you supply a value for this config property, the `couchbase.username` and `co
 🔘 couchbase.client.certificate.password
 
 Password for accessing the client certificate.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 couchbase.cipher.suites
+
+Note that this config is considered advanced, please only customize the cipher list if you know what you are doing (for example if you want to shrink the cipher list down to a very specific subset for security or compliance reasons).
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: The custom list of ciphers to use when connecting to Couchbase using regular or DCP clients.
+	 - Required: MEDIUM
+
+🔘 couchbase.trust.store.password
+
+Password for accessing the trust store.
 
 	 - Type: PASSWORD
 	 - Default: [hidden]

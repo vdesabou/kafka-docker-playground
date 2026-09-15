@@ -3,6 +3,7 @@
     "couchbase.analytics.query.timeout": "5m",
     "couchbase.bootstrap.timeout": "30s",
     "couchbase.bucket": "STRING",
+    "couchbase.cipher.suites": "LIST",
     "couchbase.client.certificate.password": "[hidden]",
     "couchbase.client.certificate.path": "STRING",
     "couchbase.default.collection": "_default._default",
