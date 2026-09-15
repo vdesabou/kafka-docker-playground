@@ -199,15 +199,6 @@ Number of tasks for this connector
 ==========================
 Authentication
 ==========================
-🔘 https.host.verifier.enabled
-
-Whether to enable SSL host verification, which validates that the server's certificate matches the requested hostname.
-
-	 - Type: STRING
-	 - Default: true
-	 - Importance: MEDIUM
-	 - Required: false
-
 🔘 secret.manager.enabled
 
 Fetch sensitive configuration values from a secret manager.
@@ -215,6 +206,15 @@ Fetch sensitive configuration values from a secret manager.
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: HIGH
+	 - Required: false
+
+🔘 https.host.verifier.enabled
+
+Whether to enable SSL host verification, which validates that the server's certificate matches the requested hostname.
+
+	 - Type: STRING
+	 - Default: true
+	 - Importance: MEDIUM
 	 - Required: false
 
 ==========================
@@ -237,24 +237,6 @@ Authentication type of the endpoint. Valid values are ``NONE``, ``BASIC``, ``OAU
 	 - Default: NONE
 	 - Importance: HIGH
 	 - Required: false
-
-🔘 connection.user
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The username to be used with an endpoint requiring basic authentication.
-	 - Required: MEDIUM
-
-🔘 connection.password
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: The password to be used with an endpoint requiring basic authentication.
-	 - Required: MEDIUM
 
 🔘 bearer.token
 
@@ -292,6 +274,15 @@ Specifies how to encode ``client_id`` and ``client_secret`` in the OAuth2 author
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 connection.user
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The username to be used with an endpoint requiring basic authentication.
+	 - Required: MEDIUM
+
 🔘 oauth2.client.scope
 
 The scope parameter sent to the service when fetching the OAuth2 token.
@@ -318,6 +309,15 @@ The name of the property containing the OAuth2 token returned by the OAuth2 toke
 	 - Default: access_token
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 connection.password
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: The password to be used with an endpoint requiring basic authentication.
+	 - Required: MEDIUM
 
 🔘 oauth2.token.url
 
@@ -538,15 +538,6 @@ Secret manager configuration
 	 - Importance: Select the secret manager to use for retrieving sensitive data.
 	 - Required: HIGH
 
-🔘 secret.manager.managed.configs
-
-
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: Select the configurations to fetch their values from the secret manager.
-	 - Required: HIGH
-
 🔘 secret.manager.provider.integration.id
 
 
@@ -554,6 +545,15 @@ Secret manager configuration
 	 - Type: false
 	 - Default: STRING
 	 - Importance: Select an existing provider integration that has access to your secret manager.
+	 - Required: HIGH
+
+🔘 secret.manager.managed.configs
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Select the configurations to fetch their values from the secret manager.
 	 - Required: HIGH
 
 ==========================
