@@ -1941,13 +1941,13 @@ playground_config_check_and_update_repo_version_usage() {
 playground_ai_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground ai\n\n"
-    printf "  🧞‍♂️  AI\n  \n  It is using Claude Code (https://code.claude.com/docs/en/quickstart) in\n  interactive mode.\n  \n  MCP servers are available:\n  \n  1. mcp-playground-cli - \n  \n    Tools:\n    - playground_command_help:\n        Get detailed help for playground commands\n    - playground_command_suggest:\n        Get command suggestions and completions for the Kafka Docker Playground\n  CLI\n    - playground_command_validate:\n        Validate a complete playground command and suggest corrections\n  \n  2. mcp-server - Confluent MCP Server (see\n  http://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html#quick-start\n  and https://github.com/confluentinc/mcp-confluent)\n  \n    Tools:\n    - list-topics: List all topics in the Kafka cluster.\n    - create-topics: Create one or more Kafka topics.\n    - delete-topics: Delete topics by name.\n    - produce-message: Produce records to a Kafka topic (supports Schema\n  Registry).\n    - consume-messages: Consume messages from one or more Kafka topics (supports\n  Schema Registry).\n    - list-schemas: List all schemas in the Schema Registry.\n    - delete-schema: Delete a schema subject or a specific version from the\n  Schema Registry.\n  \n  3. mcp-ccloud - Confluent MCP Server (see\n  http://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html#quick-start\n  and https://github.com/confluentinc/mcp-confluent)\n  \n    Tools:\n      Environment & Cluster Management\n      - list-environments: Get all environments in Confluent Cloud.\n      - read-environment: Get details of a specific environment.\n      - list-clusters: Get all clusters in a Confluent Cloud environment.\n  \n      Topic Management\n      - list-topics: List all topics in a Kafka cluster.\n      - create-topics: Create one or more Kafka topics.\n      - delete-topics: Delete topics by name.\n      - search-topics-by-name: Search for topics matching a name.\n      - get-topic-config: Retrieve configuration details for a topic.\n      - alter-topic-config: Update topic configuration (SET/DELETE).\n  \n      Messaging\n      - produce-message: Produce records to a topic (supports Schema Registry\n  serialization).\n      - consume-messages: Consume and deserialize messages from one or more\n  topics.\n  \n      Schema Registry\n      - list-schemas: List schemas (latest or all versions).\n      - delete-schema: Delete a schema subject or specific version.\n      - list-tags: Retrieve all tag definitions.\n      - create-topic-tags: Create new tag definitions.\n      - delete-tag: Delete a tag definition.\n      - add-tags-to-topic: Assign tags to Kafka topics.\n      - remove-tag-from-entity: Remove tags from entities.\n      - search-topics-by-tag: List topics with a specific tag.\n  \n      Connector Management\n      - list-connectors: List active connectors in a cluster.\n      - read-connector: Get detailed information about a connector.\n      - create-connector: Create a new Managed or Custom connector.\n      - delete-connector: Delete an existing connector.\n  \n      Metrics & Billing\n      - list-available-metrics: Discover valid metric names and filter fields.\n      - query-metrics: Query metrics from the Telemetry API (Kafka, Flink,\n  Connect, SR).\n      - list-billing-costs: Retrieve billing cost data for an organization.\n\n"
+    printf "  🧞‍♂️  AI\n  \n  It is using Claude Code (https://code.claude.com/docs/en/quickstart) in\n  interactive mode.\n  \n  MCP servers are available:\n  \n  1. mcp-playground - Playground MCP Server (see\n  https://github.com/vdesabou/kafka-docker-playground-mcp-server), it exposes\n  the live state of this checkout\n  \n    Tools:\n    - playground_status:\n        Docker availability, the example currently running (script, environment,\n  connector type),\n        every container with its state/health/ports and the recent \`playground\n  run\` history.\n    - playground_connectors:\n        Status of every connector, with the root cause of each FAILED task.\n  Talks to the running\n        Connect worker (ssl/rbac included) or to the Confluent Cloud Connect\n  API, whichever the\n        current environment uses.\n    - playground_logs:\n        Container logs without flooding the context: de-duplicated errors with\n  collapsed stack\n        traces (default), tail, or regex search.\n    - playground_find_example:\n        Search the ~2500 runnable example scripts by connector class, path,\n  title or body, and get\n        the exact \`playground run -f <script>\` command back.\n    - playground_example_details:\n        One call for everything about an example: source, connector payloads,\n  default environment,\n        docker-compose overrides, sibling variants and the variables you must\n  export.\n  \n  2. mcp-server - Confluent MCP Server (see\n  http://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html#quick-start\n  and https://github.com/confluentinc/mcp-confluent)\n  \n    Tools:\n    - list-topics: List all topics in the Kafka cluster.\n    - create-topics: Create one or more Kafka topics.\n    - delete-topics: Delete topics by name.\n    - produce-message: Produce records to a Kafka topic (supports Schema\n  Registry).\n    - consume-messages: Consume messages from one or more Kafka topics (supports\n  Schema Registry).\n    - list-schemas: List all schemas in the Schema Registry.\n    - delete-schema: Delete a schema subject or a specific version from the\n  Schema Registry.\n  \n  3. mcp-ccloud - Confluent MCP Server (see\n  http://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html#quick-start\n  and https://github.com/confluentinc/mcp-confluent)\n  \n    Tools:\n      Environment & Cluster Management\n      - list-environments: Get all environments in Confluent Cloud.\n      - read-environment: Get details of a specific environment.\n      - list-clusters: Get all clusters in a Confluent Cloud environment.\n  \n      Topic Management\n      - list-topics: List all topics in a Kafka cluster.\n      - create-topics: Create one or more Kafka topics.\n      - delete-topics: Delete topics by name.\n      - search-topics-by-name: Search for topics matching a name.\n      - get-topic-config: Retrieve configuration details for a topic.\n      - alter-topic-config: Update topic configuration (SET/DELETE).\n  \n      Messaging\n      - produce-message: Produce records to a topic (supports Schema Registry\n  serialization).\n      - consume-messages: Consume and deserialize messages from one or more\n  topics.\n  \n      Schema Registry\n      - list-schemas: List schemas (latest or all versions).\n      - delete-schema: Delete a schema subject or specific version.\n      - list-tags: Retrieve all tag definitions.\n      - create-topic-tags: Create new tag definitions.\n      - delete-tag: Delete a tag definition.\n      - add-tags-to-topic: Assign tags to Kafka topics.\n      - remove-tag-from-entity: Remove tags from entities.\n      - search-topics-by-tag: List topics with a specific tag.\n  \n      Connector Management\n      - list-connectors: List active connectors in a cluster.\n      - read-connector: Get detailed information about a connector.\n      - create-connector: Create a new Managed or Custom connector.\n      - delete-connector: Delete an existing connector.\n  \n      Metrics & Billing\n      - list-available-metrics: Discover valid metric names and filter fields.\n      - query-metrics: Query metrics from the Telemetry API (Kafka, Flink,\n  Connect, SR).\n      - list-billing-costs: Retrieve billing cost data for an organization.\n\n"
   else
     printf "playground ai - 🧞‍♂️  AI\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground ai [--] [GEMINI CLI ARGUMENTS...]\n"
+  printf "  playground ai [--] [CLAUDE CLI ARGUMENTS...]\n"
   printf "  playground ai --help | -h\n"
   echo
 
@@ -1964,13 +1964,14 @@ playground_ai_usage() {
     # :command.usage_args
     printf "%s\n" "$(bold "== Arguments ==")"
 
-    echo "  GEMINI CLI ARGUMENTS..."
-    printf "    arguments to pass to gemini cli, see\n    https://google-gemini.github.io/gemini-cli/docs/cli/configuration.html#command-line-arguments\n    for all options\n"
+    echo "  CLAUDE CLI ARGUMENTS..."
+    printf "    arguments to pass to claude cli, see\n    https://code.claude.com/docs/en/cli-reference for all options\n"
     echo
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground ai --model gemini-1.5-pro-latest --output-format json\n"
+    printf "  playground ai\n"
+    printf "  playground ai --model opus\n"
     echo
 
   fi
@@ -17370,6 +17371,51 @@ playground_ai_command() {
 
   get_environment_used
 
+  # 🧞‍♂️ The playground MCP server is declared in .mcp.json at the root of this
+  # repository, so it is offered to anybody running claude here. Claude Code asks
+  # for approval once per project before it starts a server found in .mcp.json;
+  # running `playground ai` is that approval, so record it (with the read-only
+  # tool permissions) in .claude/settings.local.json, which is not versioned.
+  if [ -f "$root_folder/.mcp.json" ]
+  then
+      log "🧞‍♂️ mcp-playground server is used (see https://github.com/vdesabou/kafka-docker-playground-mcp-server) to inspect this playground: containers, connectors, logs and examples"
+      mkdir -p "$root_folder/.claude"
+      claude_settings="$root_folder/.claude/settings.local.json"
+      if [ ! -s "$claude_settings" ]
+      then
+          echo '{}' > "$claude_settings"
+      fi
+      tmp_claude_settings=$(mktemp)
+      if jq '
+          .enabledMcpjsonServers = ((.enabledMcpjsonServers // []) + ["mcp-playground"] | unique)
+          | .permissions.allow = ((.permissions.allow // []) + [
+              "mcp__mcp-playground__playground_status",
+              "mcp__mcp-playground__playground_connectors",
+              "mcp__mcp-playground__playground_logs",
+              "mcp__mcp-playground__playground_find_example",
+              "mcp__mcp-playground__playground_example_details"
+            ] | unique)
+      ' "$claude_settings" > "$tmp_claude_settings"
+      then
+          mv "$tmp_claude_settings" "$claude_settings"
+      else
+          rm -f "$tmp_claude_settings"
+          logwarn "⚠️ could not update $claude_settings, claude will ask to approve the mcp-playground server"
+      fi
+
+      # npx clones and builds the server on first use, which can take longer than
+      # claude waits for an MCP server to come up. Run it once here with no stdin
+      # so that it fills the npx cache and exits immediately, instead of timing
+      # out inside claude with an unhelpful "Failed to reconnect".
+      mcp_playground_command=$(jq -r '.mcpServers."mcp-playground" | ([.command] + .args) | @sh' "$root_folder/.mcp.json" 2>/dev/null)
+      if [ -n "$mcp_playground_command" ]
+      then
+          set +e
+          eval "$mcp_playground_command" < /dev/null > /dev/null 2>&1
+          set -e
+      fi
+  fi
+
   if [[ "$environment" == "ccloud" ]]
   then
       if [ -f .ccloud/.env ]
@@ -17394,7 +17440,10 @@ playground_ai_command() {
               -e "s|:CONFLUENT_CLOUD_API_SECRET:|$CONFLUENT_CLOUD_API_SECRET|g" \
               $root_folder/scripts/cli/src/mcp-confluent-config-ccloud-template.yaml > $root_folder/config.yaml
 
-          claude mcp add mcp-ccloud -- npx -y @confluentinc/mcp-confluent --config ./config.yaml
+          # --registry: the packages are public, so do not go through a private
+          # registry the user may be logged out of (npm ERR! E401 would make the
+          # server exit at startup, and claude only reports "Failed to reconnect").
+          claude mcp add mcp-ccloud -- npx --registry=https://registry.npmjs.org -y @confluentinc/mcp-confluent --config ./config.yaml
           cd - > /dev/null
       else
           logerror "❌ .ccloud/.env file is not present!"
@@ -17409,8 +17458,7 @@ playground_ai_command() {
           claude mcp remove mcp-kafka > /dev/null 2>&1 || true
           cd $root_folder > /dev/null
           cp $root_folder/scripts/cli/src/mcp-confluent-config-local.yaml config.yaml
-          claude mcp add mcp-kafka -- npx -y @confluentinc/mcp-confluent --config ./config.yaml
-
+          claude mcp add mcp-kafka -- npx --registry=https://registry.npmjs.org -y @confluentinc/mcp-confluent --config ./config.yaml
           cd - > /dev/null
       else
           logwarn "🔐 $environment environment is used, using mcp-confluent server (https://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html) to interact with the cluster will not be used, only works with plaintext for now"

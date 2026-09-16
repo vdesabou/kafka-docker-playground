@@ -48,6 +48,72 @@ Once installed, go on a `.sh` script and then type  in Palette `Ctrl+Shift+P` (o
 
 ![extension](./images/vscode_extension2.jpg)
 
+### 🤖 Setup MCP server for Playground CLI
+
+The [playground MCP server](https://github.com/vdesabou/kafka-docker-playground-mcp-server) exposes the live state of your checkout to any MCP client (Claude Code, Github Copilot, Claude desktop, Cursor, etc...). It finds the repository by walking up from its working directory, so there is no path to configure.
+
+#### Features
+
+- **playground_status**: Docker availability, the example currently running, every container with its state/health/ports, and the recent `playground run` history
+- **playground_connectors**: status of every connector with the root cause of each FAILED task, against the running Connect worker or the Confluent Cloud Connect API
+- **playground_logs**: container logs as de-duplicated errors with collapsed stack traces, tail, or regex search — instead of tens of thousands of raw lines
+- **playground_find_example**: search the ~2500 runnable example scripts and get the exact `playground run -f <script>` command back
+- **playground_example_details**: everything about one example in a single call — source, connector payloads, environment, compose overrides, variants and required variables
+
+Secrets coming from `playground.ini`, connector configurations and logs are redacted before they leave the server.
+
+#### installation for Claude Code
+
+Nothing to do: the repository ships a `.mcp.json` at its root, so the server is offered the first time you run `claude` from the playground directory — accept it once. [playground ai](/playground%20ai) accepts it for you and starts `claude` with the Confluent MCP server as well.
+
+#### installation for Visual Studio Code (Github Copilot)
+
+Add in `.vscode/mcp.json`:
+
+```json
+{
+	"servers": {
+		"playground": {
+			"command": "npx",
+			"args": ["--registry=https://registry.npmjs.org", "-y", "github:vdesabou/kafka-docker-playground-mcp-server"]
+		}
+	},
+	"inputs": []
+}
+```
+
+Start the server if not already started:
+
+![mcp](./images/mcp_vscode1.png)
+
+Then use Github Copilot to ask about your playground, example:
+
+![mcp](./images/mcp_vscode2.png)
+
+#### installation for Claude desktop
+
+Claude desktop does not start the server in your repository, so the path has to be given explicitly:
+
+```json
+{
+  "mcpServers": {
+    "playground": {
+      "command": "npx",
+      "args": [
+        "--registry=https://registry.npmjs.org",
+        "-y",
+        "github:vdesabou/kafka-docker-playground-mcp-server"
+      ],
+      "env": {
+        "PLAYGROUND_REPO_ROOT": "/path/to/kafka-docker-playground"
+      }
+    }
+  }
+}
+```
+
+![mcp](./images/mcp_claude1.png)
+
 ### ⚙️ Config
 
 CLI can be configured using [playground config](/playground%20config) 
