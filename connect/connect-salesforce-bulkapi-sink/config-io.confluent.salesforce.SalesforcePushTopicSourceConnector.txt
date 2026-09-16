@@ -78,7 +78,7 @@ The HTTP(S) proxy host and port the connector should use when communicating with
 
 🔘 salesforce.grant.type
 
-OAuth grant type the connector uses for Salesforce authentication: PASSWORD, CLIENT_CREDENTIALS, or JWT_BEARER
+OAuth grant type the connector uses for Salesforce authentication: PASSWORD, CLIENT_CREDENTIALS, or JWT_BEARER. Note: 'PASSWORD' (the username-password OAuth flow) is deprecated by Salesforce in accordance with the Winter '27 release; migrate to 'CLIENT_CREDENTIALS' or 'JWT_BEARER' instead.
 
 	 - Type: STRING
 	 - Default: password
