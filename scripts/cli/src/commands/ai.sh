@@ -4,10 +4,6 @@ cd $root_folder
 
 get_environment_used
 
-set +e
-docker pull vdesabou/mcp-playground-server:latest > /dev/null 2>&1
-set -e
-
 if [[ "$environment" == "ccloud" ]]
 then
     if [ -f .ccloud/.env ]
