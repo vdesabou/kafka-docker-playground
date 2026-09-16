@@ -172,7 +172,32 @@ playground repro export --all           # package uncommitted models
 playground repro import --file playground_repro_export.tgz
 ```
 
-Keep them minimal and focused on one issue, include the case number in the filename (e.g. `fully-managed-s3-sink-repro-12345-description.sh`), document expected vs actual in comments, and never include customer-sensitive data.
+**⚠️ Always scaffold a new repro model with `playground repro bootstrap` — never hand-write the `.sh`
+file.** Bootstrap copies the base example, adds the standard header (date, author, description,
+documentation links, `# 💬 comments:` block), copies and renames the docker-compose override, appends the
+CLI cheat-sheet + snippets after `exit 0`, and registers the model in the CLI state/metrics. A hand-written
+file looks almost right but is missing all of that.
+
+Non-interactive form (what to use when driving it from an agent):
+
+```bash
+playground repro bootstrap -f "${PWD}/connect/connect-http-sink/http_no_auth.sh" -d "unknown magic byte dlq"
+```
+
+- `-f` is the **absolute path** of the example to use as basis; passing it skips the whole fzf menu.
+  Without `-f`, the command is fully interactive.
+- `-d` is the description; it is kebab-cased into the filename
+  (`<base>-repro-<description>.sh`) and into the compose override
+  (`docker-compose.<environment>.repro-<description>.yml`). Start the description with the 6-digit case
+  number when there is one (e.g. `-d "123456 dlq not working"`) — bootstrap detects it and links the case.
+- The command ends with `playground open` (editor) then `playground run --force-interactive-repro`. With
+  no TTY that last fzf menu just exits — **the files are already generated at that point**, but it also
+  runs `container-kill-all-before-run`, so any running environment is stopped.
+
+Then edit the generated file to build the scenario, and run it with `playground run -f <generated file>`.
+
+Keep them minimal and focused on one issue, document expected vs actual in the `# 💬 comments:` header
+block, and never include customer-sensitive data.
 
 ## Conventions
 
