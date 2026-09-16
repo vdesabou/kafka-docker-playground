@@ -191,8 +191,10 @@ playground repro bootstrap -f "${PWD}/connect/connect-http-sink/http_no_auth.sh"
   (`docker-compose.<environment>.repro-<description>.yml`). Start the description with the 6-digit case
   number when there is one (e.g. `-d "123456 dlq not working"`) — bootstrap detects it and links the case.
 - The command ends with `playground open` (editor) then `playground run --force-interactive-repro`. With
-  no TTY that last fzf menu just exits — **the files are already generated at that point**, but it also
-  runs `container-kill-all-before-run`, so any running environment is stopped.
+  no TTY that last fzf menu just exits — **the files are already generated at that point** (~2s), but the
+  tail still spends several minutes on `container-kill-all-before-run` and image checks, and it stops any
+  running environment. So **run bootstrap in the background** and start editing the generated file as soon
+  as it appears rather than waiting for the command to return.
 
 Then edit the generated file to build the scenario, and run it with `playground run -f <generated file>`.
 
