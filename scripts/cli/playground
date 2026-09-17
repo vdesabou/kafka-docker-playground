@@ -216,6 +216,7 @@ playground_usage() {
   printf "  %s   🔴 Stop an EC2 instance\n" "$(green "ec2 stop")                                  "
   printf "  %s   🟢 Start an EC2 instance\n" "$(green "ec2 start")                                 "
   printf "  %s   ↔️ Synchronize reproduction-models folder bewteen local and ec2 instance\n" "$(green "ec2 sync-repro-folder")                     "
+  printf "  %s   🔐 Send the secrets store to an ec2 instance\n" "$(green "ec2 push-secrets")                          "
   echo
 
   # :command.long_usage
@@ -1999,18 +2000,19 @@ playground_secrets_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   🔐 Store a credential\n" "$(green "set")    "
-  printf "  %s   🔍 Show a stored credential (masked unless --reveal is used)\n" "$(green "get")    "
-  printf "  %s   🗑️ Remove a stored credential\n" "$(green "unset")  "
-  printf "  %s   📋 List stored credentials\n" "$(green "list")   "
-  printf "  %s   🔗 Point a variable at a secret manager, without storing any value\n" "$(green "link")   "
-  printf "  %s   ✅ Show what an example needs, and what is missing\n" "$(green "check")  "
-  printf "  %s   📥 Import an existing secret.properties / variable.properties file\n" "$(green "import") "
-  printf "  %s   📤 Write every credential of a profile to a file, in clear text\n" "$(green "export") "
-  printf "  %s   ✏️ Open the store in your editor\n" "$(green "edit")   "
-  printf "  %s   🏦 Show or change where secrets are kept\n" "$(green "backend")"
-  printf "  %s   🗂️ Show or switch the active profile\n" "$(green "profile")"
-  printf "  %s   🔎 Look for stored credentials in clear text in the repository\n" "$(green "scan")   "
+  printf "  %s   🔐 Store a credential\n" "$(green "set")        "
+  printf "  %s   🔍 Show a stored credential (masked unless --reveal is used)\n" "$(green "get")        "
+  printf "  %s   🗑️ Remove a stored credential\n" "$(green "unset")      "
+  printf "  %s   📋 List stored credentials\n" "$(green "list")       "
+  printf "  %s   🔗 Point a variable at a secret manager, without storing any value\n" "$(green "link")       "
+  printf "  %s   ✅ Show what an example needs, and what is missing\n" "$(green "check")      "
+  printf "  %s   📥 Import an existing secret.properties / variable.properties file\n" "$(green "import")     "
+  printf "  %s   📤 Write every credential of a profile to a file, in clear text\n" "$(green "export")     "
+  printf "  %s   🐙 Push a profile to the GitHub Actions secrets and variables of a repository\n" "$(green "push-github")"
+  printf "  %s   ✏️ Open the store in your editor\n" "$(green "edit")       "
+  printf "  %s   🏦 Show or change where secrets are kept\n" "$(green "backend")    "
+  printf "  %s   🗂️ Show or switch the active profile\n" "$(green "profile")    "
+  printf "  %s   🔎 Look for stored credentials in clear text in the repository\n" "$(green "scan")       "
   echo
 
   # :command.long_usage
@@ -2353,6 +2355,18 @@ playground_secrets_import_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--secret")"
+    printf "    🔐 Treat every line as a credential, whatever the variable names are\n"
+    printf "    %s\n" "Conflicts: --plain"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--plain")"
+    printf "    📝 Treat every line as a non sensitive variable\n    \n    That is what a variables.properties file usually is: regions, project\n    ids, account names, URLs.\n"
+    printf "    %s\n" "Conflicts: --secret"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--profile PROFILE")"
     printf "    🗂️ Secrets profile to use (default is the active one)\n"
     echo
@@ -2366,6 +2380,7 @@ playground_secrets_import_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground secrets import --file ~/secret.properties\n"
     printf "  playground secrets import --file ~/secret.properties --shred\n"
+    printf "  playground secrets import --file ~/variables.properties --plain\n"
     echo
 
   fi
@@ -2402,6 +2417,13 @@ playground_secrets_export_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--only ONLY")"
+    printf "    🎯 Export only the credentials, only the plain variables, or both\n"
+    printf "    %s\n" "Allowed: secret, plain, all"
+    printf "    %s\n" "Default: all"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--profile PROFILE")"
     printf "    🗂️ Secrets profile to use (default is the active one)\n"
     echo
@@ -2414,6 +2436,76 @@ playground_secrets_export_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground secrets export --file ~/kdp-secrets.properties\n  --yes-i-want-plaintext\n"
+    printf "  playground secrets export --file ~/kdp-vars.properties --only plain\n  --yes-i-want-plaintext\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_secrets_push_github_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground secrets push-github\n\n"
+    printf "  🐙 Push a profile to the GitHub Actions secrets and variables of a repository\n  \n  Credentials become repository secrets ('gh secret set'), plain variables\n  become repository variables ('gh variable set'), so the workflows can\n  read them as secrets.NAME and vars.NAME.\n  \n  Values are piped to 'gh' on stdin: nothing is written to disk and nothing\n  shows up in 'ps' or in the shell history.\n  \n  🎓 Tip: start with --dry-run, it lists what would be pushed without\n  touching the repository.\n\n"
+  else
+    printf "playground secrets push-github - 🐙 Push a profile to the GitHub Actions secrets and variables of a repository\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground secrets push-github [OPTIONS]\n"
+  printf "  playground secrets push-github --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--repo REPO")"
+    printf "    🐙 Target repository as OWNER/REPO (default is the current one)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--only ONLY")"
+    printf "    🎯 Push only the credentials, only the plain variables, or both\n"
+    printf "    %s\n" "Allowed: secret, plain, all"
+    printf "    %s\n" "Default: all"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--as AS")"
+    printf "    🎛️ Where everything lands on the GitHub side\n    \n    auto     credentials become secrets, plain variables become variables\n    secret   everything becomes a repository secret\n    variable everything becomes a repository variable\n"
+    printf "    %s\n" "Allowed: auto, secret, variable"
+    printf "    %s\n" "Default: auto"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--dry-run")"
+    printf "    🔍 List what would be pushed, change nothing\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--force")"
+    printf "    ⏩ Do not ask for confirmation\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--profile PROFILE")"
+    printf "    🗂️ Secrets profile to use (default is the active one)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground secrets push-github --dry-run\n"
+    printf "  playground secrets push-github\n"
+    printf "  playground secrets push-github --only secret --repo\n  vdesabou/kafka-docker-playground\n"
     echo
 
   fi
@@ -8990,6 +9082,7 @@ playground_ec2_usage() {
   printf "  %s   🔴 Stop an EC2 instance\n" "$(green "stop")             "
   printf "  %s   🟢 Start an EC2 instance\n" "$(green "start")            "
   printf "  %s   ↔️ Synchronize reproduction-models folder bewteen local and ec2 instance\n" "$(green "sync-repro-folder")"
+  printf "  %s   🔐 Send the secrets store to an ec2 instance\n" "$(green "push-secrets")     "
   echo
 
   # :command.long_usage
@@ -9344,6 +9437,55 @@ playground_ec2_sync_repro_folder_ec2_to_local_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_ec2_push_secrets_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground ec2 push-secrets\n\n"
+    printf "  🔐 Send the secrets store to an ec2 instance\n  \n  Writes ~/.playground-secrets.properties (mode 0600) on the instance, which\n  the playground .zshrc sources on login. This replaces the encrypted\n  secrets.tar.gpg committed in the repository.\n  \n  The file is piped over ssh, so no clear text copy is ever written locally\n  and the values never appear in 'ps'.\n  \n  The credentials that cannot be stored as name=value pairs are sent too,\n  when they exist at the root of the repository:\n  \n    aws_credentials_with_assuming_iam_role       ->\n  ~/.aws/credentials-with-assuming-iam-role\n    aws_credentials_aws_account_with_assume_role ->\n  ~/.aws/credentials_aws_account_with_assume_role\n    github_ssh_key_file                          -> ~/.ssh/id_rsa\n\n"
+  else
+    printf "playground ec2 push-secrets - 🔐 Send the secrets store to an ec2 instance\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ec2 push-secrets [OPTIONS]\n"
+  printf "  playground ec2 push-secrets --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--instance, -i INSTANCE")"
+    printf "    🖥️ ec2 instance (need to use completion to get all required details)\n    \n    🎓 Tip: If not specified, the command will apply to all ec2 instances\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--profile PROFILE")"
+    printf "    🗂️ Secrets profile to use (default is the active one)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--dry-run")"
+    printf "    🔍 List what would be sent, change nothing\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground ec2 push-secrets\n"
+    printf "  playground ec2 push-secrets --instance pg-vsaboulin-abc123\n"
     echo
 
   fi
@@ -12417,6 +12559,28 @@ function secret_get () {
     printf '%s' "${!name}"
     return 0
   fi
+
+  local ref
+  ref=$(secret_lookup_reference "$name" "$profile") || return 1
+  [ -n "$ref" ] || return 1
+
+  local value
+  value=$(secret_resolve_reference "$ref" || true)
+  [ -n "$value" ] || return 1
+  printf '%s' "$value"
+}
+
+#
+# Same thing, but ignoring the environment.
+#
+# For anything that copies a value into another system of record — GitHub
+# Actions secrets, mainly — the store has to be the source of truth. A shell
+# that still has an old `source secret.properties` in it would otherwise push
+# the value you just rotated away.
+#
+function secret_get_from_store () {
+  local name="$1"
+  local profile="${2:-$(get_active_secret_profile)}"
 
   local ref
   ref=$(secret_lookup_reference "$name" "$profile") || return 1
@@ -19063,10 +19227,25 @@ playground_secrets_import_command() {
   profile="${args[--profile]:-$(get_active_secret_profile)}"
   shred="${args[--shred]}"
 
-  backend=$(get_secret_backend)
-  secret_backend_ready "$backend" || exit 1
+  force=""
+  if [[ -n "${args[--secret]}" ]]
+  then
+      force="secret"
+  elif [[ -n "${args[--plain]}" ]]
+  then
+      force="plain"
+  fi
 
-  log "📥 Importing $file into profile $profile (backend: $backend)"
+  backend=$(get_secret_backend)
+
+  # with --plain nothing reaches the backend, so do not ask it to be unlocked
+  if [ "$force" != "plain" ]
+  then
+      secret_backend_ready "$backend" || exit 1
+      log "📥 Importing $file into profile $profile (backend: $backend)"
+  else
+      log "📥 Importing $file into profile $profile as plain variables"
+  fi
 
   nb_secrets=0
   nb_plain=0
@@ -19113,9 +19292,9 @@ playground_secrets_import_command() {
           continue
       fi
 
-      if secret_store_value "$name" "$value" "$profile"
+      if secret_store_value "$name" "$value" "$profile" "$force"
       then
-          if is_secret_env_var_name "$name"
+          if [ "$(secret_store_location "$name" "$profile" || true)" == "secret" ]
           then
               nb_secrets=$((nb_secrets+1))
           else
@@ -19160,6 +19339,7 @@ playground_secrets_export_command() {
   file="${args[--file]}"
   profile="${args[--profile]:-$(get_active_secret_profile)}"
   confirmed="${args[--yes-i-want-plaintext]}"
+  only="${args[--only]:-all}"
 
   if [[ ! -n "$confirmed" ]]
   then
@@ -19183,6 +19363,12 @@ playground_secrets_export_command() {
   nb=0
   for name in $(secret_store_names "$profile")
   do
+      location=$(secret_store_location "$name" "$profile" || true)
+      if [ "$only" != "all" ] && [ "$location" != "$only" ]
+      then
+          continue
+      fi
+
       if value=$(secret_get "$name" "$profile")
       then
           printf "%s=%s\n" "$name" "$value" >> "$tmp"
@@ -19197,6 +19383,237 @@ playground_secrets_export_command() {
 
   log "📤 Exported $nb variable(s) of profile $profile to $file (mode 0600)"
   logwarn "⚠️ $file now contains credentials in clear text, delete it as soon as you are done"
+
+}
+
+# :command.function
+playground_secrets_push_github_command() {
+
+  # src/commands/secrets/push-github.sh
+  profile="${args[--profile]:-$(get_active_secret_profile)}"
+  repo="${args[--repo]}"
+  only="${args[--only]:-all}"
+  push_as="${args[--as]:-auto}"
+  dry_run="${args[--dry-run]}"
+  force="${args[--force]}"
+
+  if ! command -v gh > /dev/null 2>&1
+  then
+      logerror "❌ the GitHub CLI (gh) is not installed"
+      logerror "👉 brew install gh"
+      exit 1
+  fi
+
+  if ! gh auth status > /dev/null 2>&1
+  then
+      logerror "❌ not logged in to GitHub"
+      logerror "👉 gh auth login"
+      exit 1
+  fi
+
+  #
+  # Always resolve the repository and pass it explicitly: a clone with several
+  # remotes (a fork plus the upstream) makes gh refuse to guess, and "pushed the
+  # secrets to the wrong repository" is not a mistake we want to make silently.
+  #
+  target="$repo"
+  if [ -z "$target" ]
+  then
+      target=$(gh repo view --json nameWithOwner --jq .nameWithOwner 2>/dev/null)
+      if [ -z "$target" ]
+      then
+          logerror "❌ could not guess the repository from the current directory"
+          logerror "👉 playground secrets push-github --repo <owner>/<repo>"
+          exit 1
+      fi
+  fi
+  repo_args=(--repo "$target")
+
+  names=$(secret_store_names "$profile")
+  if [ -z "$names" ]
+  then
+      logerror "❌ profile $profile is empty, there is nothing to push"
+      logerror "👉 playground secrets import --file <secret.properties>"
+      exit 1
+  fi
+
+  #
+  # Resolving every value up front means a locked 1Password or an expired session
+  # fails before anything has been pushed, instead of halfway through.
+  #
+  secret_backend_ready || exit 1
+
+  #
+  # What the repository already has. Used to warn when a name is about to move
+  # from secrets.NAME to vars.NAME (or the reverse): GitHub keeps both, and the
+  # workflow that still reads the old one would silently get a stale value.
+  #
+  existing_secrets=" $(gh secret list "${repo_args[@]}" --json name --jq '.[].name' 2>/dev/null | tr '\n' ' ')"
+  existing_vars=" $(gh variable list "${repo_args[@]}" --json name --jq '.[].name' 2>/dev/null | tr '\n' ' ')"
+
+  to_push_secret=""
+  to_push_plain=""
+  nb_skipped=0
+  nb_moved=0
+
+  for name in $names
+  do
+      location=$(secret_store_location "$name" "$profile" || true)
+      if [ "$only" != "all" ] && [ "$location" != "$only" ]
+      then
+          continue
+      fi
+
+      #
+      # GitHub only accepts [A-Za-z_][A-Za-z0-9_]* and reserves the GITHUB_
+      # prefix. A rejected name is a hard error on gh's side, so filter it here
+      # and keep going with the rest.
+      #
+      if [[ ! "$name" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || [[ "$name" == GITHUB_* ]]
+      then
+          logwarn "⚠️ $name is not a valid GitHub secret name, skipped"
+          nb_skipped=$((nb_skipped+1))
+          continue
+      fi
+
+      #
+      # The store is the source of truth here, not the shell. Say so loudly when
+      # the two disagree: a leftover `source secret.properties` in the shell
+      # profile is exactly how a rotation gets pushed with the old value.
+      #
+      if [ -n "${!name:-}" ] && [ "${!name}" != "$(secret_get_from_store "$name" "$profile" || true)" ]
+      then
+          logwarn "⚠️ \$$name is exported with a different value, the store wins"
+      fi
+
+      case "$push_as" in
+          secret)   destination="secret" ;;
+          variable) destination="variable" ;;
+          *)
+              if [ "$location" == "secret" ]
+              then
+                  destination="secret"
+              else
+                  destination="variable"
+              fi
+          ;;
+      esac
+
+      if [ "$destination" == "secret" ]
+      then
+          to_push_secret="${to_push_secret} ${name}"
+          if [[ "$existing_vars" == *" ${name} "* ]]
+          then
+              nb_moved=$((nb_moved+1))
+          fi
+      else
+          to_push_plain="${to_push_plain} ${name}"
+          if [[ "$existing_secrets" == *" ${name} "* ]]
+          then
+              nb_moved=$((nb_moved+1))
+          fi
+      fi
+  done
+
+  if [ -z "$to_push_secret" ] && [ -z "$to_push_plain" ]
+  then
+      logerror "❌ nothing to push for profile $profile (--only $only)"
+      exit 1
+  fi
+
+  log "🐙 Pushing profile $profile to $target (--as $push_as)"
+  echo ""
+  for name in $to_push_secret
+  do
+      if [[ "$existing_vars" == *" ${name} "* ]]
+      then
+          printf "  🔐 %-45s → secrets.%-45s ⚠️ vars.%s already exists\n" "$name" "$name" "$name"
+      else
+          printf "  🔐 %-45s → secrets.%s\n" "$name" "$name"
+      fi
+  done
+  for name in $to_push_plain
+  do
+      if [[ "$existing_secrets" == *" ${name} "* ]]
+      then
+          printf "  📝 %-45s → vars.%-45s ⚠️ secrets.%s already exists\n" "$name" "$name" "$name"
+      else
+          printf "  📝 %-45s → vars.%s\n" "$name" "$name"
+      fi
+  done
+  echo ""
+
+  if [ $nb_moved -gt 0 ]
+  then
+      logwarn "⚠️ $nb_moved name(s) already exist on the other side in $target"
+      logwarn "⚠️ GitHub keeps both, so a workflow reading the old one would get a stale value"
+      logwarn "👉 either use --as secret to keep everything where it is, or update the workflows and delete the leftovers"
+  fi
+
+  if [[ -n "$dry_run" ]]
+  then
+      log "🔍 --dry-run, nothing was pushed"
+      exit 0
+  fi
+
+  if [[ ! -n "$force" ]]
+  then
+      logwarn "⚠️ this overwrites the existing secrets and variables of $target"
+      check_if_continue
+  fi
+
+  nb_pushed=0
+  nb_failed=0
+
+  for name in $to_push_secret
+  do
+      if ! value=$(secret_get_from_store "$name" "$profile")
+      then
+          logerror "❌ $name could not be resolved, skipped"
+          nb_failed=$((nb_failed+1))
+          continue
+      fi
+      # stdin, so the value never appears in `ps` nor in a file
+      if printf '%s' "$value" | gh secret set "$name" "${repo_args[@]}" > /dev/null 2>&1
+      then
+          log "🔐 secrets.$name updated"
+          nb_pushed=$((nb_pushed+1))
+      else
+          logerror "❌ could not set secrets.$name"
+          nb_failed=$((nb_failed+1))
+      fi
+  done
+
+  for name in $to_push_plain
+  do
+      if ! value=$(secret_get_from_store "$name" "$profile")
+      then
+          logerror "❌ $name could not be resolved, skipped"
+          nb_failed=$((nb_failed+1))
+          continue
+      fi
+      if printf '%s' "$value" | gh variable set "$name" "${repo_args[@]}" > /dev/null 2>&1
+      then
+          log "📝 vars.$name=$value updated"
+          nb_pushed=$((nb_pushed+1))
+      else
+          logerror "❌ could not set vars.$name"
+          nb_failed=$((nb_failed+1))
+      fi
+  done
+
+  echo ""
+  if [ $nb_failed -gt 0 ]
+  then
+      logerror "❌ $nb_pushed pushed, $nb_failed failed"
+      exit 1
+  fi
+
+  log "✅ $nb_pushed pushed to $target"
+  if [ $nb_skipped -gt 0 ]
+  then
+      logwarn "⚠️ $nb_skipped skipped because of an invalid name"
+  fi
 
 }
 
@@ -38790,7 +39207,6 @@ playground_ec2_create_command() {
                    ParameterKey=KeyName,ParameterValue=${key_name} \
                    ParameterKey=InstanceName,ParameterValue=$name \
                    ParameterKey=IPAddressRange,ParameterValue=${myip}/32 \
-                   ParameterKey=SecretsEncryptionPassword,ParameterValue="${SECRETS_ENCRYPTION_PASSWORD}" \
                    ParameterKey=LinuxUserName,ParameterValue="${username}" \
       --tags Key=cflt_managed_by,Value=user \
              Key=cflt_managed_id,Value="${USER}"
@@ -38813,6 +39229,15 @@ playground_ec2_create_command() {
   wait_for_ec2_cloudformation_to_be_completed "$name"
 
   playground ec2 sync-repro-folder local-to-ec2 --instance "$instance" > /dev/null
+
+  #
+  # Credentials are sent from the local secrets store, over ssh, once the
+  # instance is up. They are deliberately not baked into the cloud formation
+  # bootstrap: that one clones the public repository, so anything it reads has to
+  # be committed.
+  #
+  playground ec2 push-secrets --instance "$instance"
+
   log "🎉 ec2 instance $name is ready!"
   log "🐚 make sure to use zsh in order to have everything working out of the box"
 }
@@ -39267,6 +39692,191 @@ playground_ec2_sync_repro_folder_ec2_to_local_command() {
       log "👈 Sync ec2 instance $name reproduction-models folder to local"
       rsync -cauv --exclude '.git' --filter=':- .gitignore' -e "ssh -i $pem_file -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" "$username@$ip:/home/$username/kafka-docker-playground/reproduction-models" "$root_folder"
   done
+}
+
+# :command.function
+playground_ec2_push_secrets_command() {
+
+  # src/commands/ec2/push-secrets.sh
+  instance="${args[--instance]}"
+  profile="${args[--profile]:-$(get_active_secret_profile)}"
+  dry_run="${args[--dry-run]}"
+
+  remote_file=".playground-secrets.properties"
+
+  if [[ $instance == *"@"* ]]
+  then
+      instance=$(echo "$instance" | cut -d "@" -f 2)
+  fi
+
+  if [[ ! -n "$instance" ]]
+  then
+      instance=$(playground --output-level WARN ec2 list)
+      if [ "$instance" == "" ]
+      then
+          log "💤 No ec2 instance was found !"
+          exit 1
+      fi
+  fi
+
+  names=$(secret_store_names "$profile")
+  if [ -z "$names" ]
+  then
+      logerror "❌ profile $profile is empty, there is nothing to send"
+      logerror "👉 playground secrets import --file <secret.properties>"
+      exit 1
+  fi
+
+  secret_backend_ready || exit 1
+
+  #
+  # Build the whole file in memory before contacting any instance: a locked
+  # 1Password then fails before a half written file lands on the remote side.
+  #
+  # Like `playground secrets push-github`, this deliberately reads the store and
+  # not the environment. The instance must get what the store holds, not what the
+  # shell that happens to launch the command still has exported.
+  #
+  payload=""
+  nb=0
+  nb_failed=0
+  for name in $names
+  do
+      if value=$(secret_get_from_store "$name" "$profile")
+      then
+          payload="${payload}${name}=${value}"$'\n'
+          nb=$((nb+1))
+      else
+          logwarn "⚠️ $name could not be resolved, skipped"
+          nb_failed=$((nb_failed+1))
+      fi
+  done
+
+  if [ $nb -eq 0 ]
+  then
+      logerror "❌ no value of profile $profile could be resolved, nothing to send"
+      exit 1
+  fi
+
+  #
+  # Credentials that cannot live in the secrets store, because they are multi
+  # line files and not name=value pairs. They used to travel inside secrets.tar,
+  # which the cloud formation bootstrap decrypted on the instance; sending them
+  # over ssh instead is what makes that tarball removable.
+  #
+  # Each entry is <local file at repo root>:<remote path>:<mode>.
+  #
+  # The two aws ones are bind mounted into the connect container by the
+  # *-with-assuming-iam-role examples, hence the world readable mode: the uid
+  # inside the container is not the uid of the ec2 user.
+  #
+  files_to_send=(
+      "aws_credentials_with_assuming_iam_role:.aws/credentials-with-assuming-iam-role:644"
+      "aws_credentials_aws_account_with_assume_role:.aws/credentials_aws_account_with_assume_role:644"
+      "github_ssh_key_file:.ssh/id_rsa:600"
+  )
+
+  available_files=()
+  for entry in "${files_to_send[@]}"
+  do
+      local_file="$root_folder/${entry%%:*}"
+      if [ -f "$local_file" ]
+      then
+          available_files+=("$entry")
+      else
+          logwarn "⚠️ $local_file does not exist, it will not be sent"
+      fi
+  done
+
+  if [[ -n "$dry_run" ]]
+  then
+      log "🔍 $nb variable(s) of profile $profile would be written to ~/$remote_file on:"
+      for i in $instance
+      do
+          log "   👉 $(echo "$i" | cut -d "/" -f 1)"
+      done
+      for entry in "${available_files[@]}"
+      do
+          rest="${entry#*:}"
+          log "🔍 $root_folder/${entry%%:*} would be sent to ~/${rest%%:*} (mode ${rest##*:})"
+      done
+      exit 0
+  fi
+
+  items=($instance)
+  length=${#items[@]}
+  if ((length > 1))
+  then
+      log "✨ --instance flag was not provided, applying command to all ec2 instances"
+  fi
+
+  for instance in "${items[@]}"
+  do
+      name=$(echo "${instance}" | cut -d "/" -f 1)
+      state=$(echo "${instance}" | cut -d "/" -f 2)
+
+      pem_file="$root_folder/$name.pem"
+      username=$(whoami)
+
+      if [ ! -f "$pem_file" ]
+      then
+          logerror "❌ aws ec2 pem file $pem_file file does not exist"
+          exit 1
+      fi
+
+      if [ "$state" != "$EC2_INSTANCE_STATE_RUNNING" ]
+      then
+          log "ec2 instance $name is in state $state (not running), skipping it"
+          continue
+      fi
+
+      playground ec2 allow-my-ip --instance "$instance"
+      instance="$(playground ec2 status --instance "$name" --all)"
+      ip=$(echo "${instance}" | cut -d "/" -f 3)
+
+      log "🔐 Sending $nb variable(s) of profile $profile to $name (~/$remote_file)"
+      #
+      # umask on the remote side rather than a chmod afterwards: the file is never
+      # readable by anyone else, not even for the instant between the two commands.
+      #
+      if printf '%s' "$payload" | ssh -i "$pem_file" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+          "$username@$ip" "umask 077 && cat > ~/$remote_file"
+      then
+          log "✅ ~/$remote_file written on $name"
+          log "🎓 it is sourced by the playground .zshrc, open a new shell to pick it up"
+      else
+          logerror "❌ could not write ~/$remote_file on $name"
+          exit 1
+      fi
+
+      for entry in "${available_files[@]}"
+      do
+          local_file="$root_folder/${entry%%:*}"
+          rest="${entry#*:}"
+          remote_path="${rest%%:*}"
+          mode="${rest##*:}"
+
+          log "🔐 Sending $(basename "$local_file") to $name (~/$remote_path)"
+          #
+          # umask first so the file is never readable by anyone else while it is
+          # being written, then the final mode once it is complete.
+          #
+          if ssh -i "$pem_file" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+              "$username@$ip" "umask 077 && mkdir -p ~/$(dirname "$remote_path") && cat > ~/$remote_path && chmod $mode ~/$remote_path" < "$local_file"
+          then
+              log "✅ ~/$remote_path written on $name"
+          else
+              logerror "❌ could not write ~/$remote_path on $name"
+              exit 1
+          fi
+      done
+  done
+
+  if [ $nb_failed -gt 0 ]
+  then
+      logwarn "⚠️ $nb_failed variable(s) could not be resolved and were left out"
+  fi
+
 }
 
 # :command.parse_requirements
@@ -43318,6 +43928,13 @@ playground_secrets_parse_requirements() {
       shift $#
       ;;
 
+    push-github)
+      action="push-github"
+      shift
+      playground_secrets_push_github_parse_requirements "$@"
+      shift $#
+      ;;
+
     edit)
       action="edit"
       shift
@@ -44012,6 +44629,32 @@ playground_secrets_import_parse_requirements() {
         ;;
 
       # :flag.case
+      --secret)
+        # :flag.conflicts
+        if [[ -n "${args['--plain']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--plain" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--secret']=1
+        shift
+        ;;
+
+      # :flag.case
+      --plain)
+        # :flag.conflicts
+        if [[ -n "${args['--secret']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--secret" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--plain']=1
+        shift
+        ;;
+
+      # :flag.case
       --profile)
 
         # :flag.case_arg
@@ -44110,6 +44753,20 @@ playground_secrets_export_parse_requirements() {
         ;;
 
       # :flag.case
+      --only)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--only']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--only requires an argument: --only ONLY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --profile)
 
         # :flag.case_arg
@@ -44142,6 +44799,147 @@ playground_secrets_export_parse_requirements() {
   # :command.required_flags_filter
   if [[ -z ${args['--file']+x} ]]; then
     printf "missing required flag: --file FILE\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--only']:-} ]] || args['--only']="all"
+
+  # :command.whitelist_filter
+  if [[ ${args['--only']:-} ]] && [[ ! ${args['--only']:-} =~ ^(secret|plain|all)$ ]]; then
+    printf "%s\n" "--only must be one of: secret, plain, all" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_secrets_push_github_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_secrets_push_github_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="secrets push-github"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --repo)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--repo']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--repo requires an argument: --repo REPO" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --only)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--only']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--only requires an argument: --only ONLY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --as)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--as']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--as requires an argument: --as AS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --dry-run)
+
+        # :flag.case_no_arg
+        args['--dry-run']=1
+        shift
+        ;;
+
+      # :flag.case
+      --force)
+
+        # :flag.case_no_arg
+        args['--force']=1
+        shift
+        ;;
+
+      # :flag.case
+      --profile)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--profile']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--profile requires an argument: --profile PROFILE" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--only']:-} ]] || args['--only']="all"
+  [[ -n ${args['--as']:-} ]] || args['--as']="auto"
+
+  # :command.whitelist_filter
+  if [[ ${args['--only']:-} ]] && [[ ! ${args['--only']:-} =~ ^(secret|plain|all)$ ]]; then
+    printf "%s\n" "--only must be one of: secret, plain, all" >&2
+    exit 1
+  fi
+  if [[ ${args['--as']:-} ]] && [[ ! ${args['--as']:-} =~ ^(auto|secret|variable)$ ]]; then
+    printf "%s\n" "--as must be one of: auto, secret, variable" >&2
     exit 1
   fi
 
@@ -59669,6 +60467,13 @@ playground_ec2_parse_requirements() {
       shift $#
       ;;
 
+    push-secrets)
+      action="push-secrets"
+      shift
+      playground_ec2_push_secrets_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_ec2_usage >&2
@@ -60541,6 +61346,98 @@ playground_ec2_sync_repro_folder_ec2_to_local_parse_requirements() {
 
 }
 
+# :command.parse_requirements
+playground_ec2_push_secrets_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_ec2_push_secrets_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="ec2 push-secrets"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --instance | -i)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--instance']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--instance requires an argument: --instance, -i INSTANCE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --profile)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--profile']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--profile requires an argument: --profile PROFILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --dry-run)
+
+        # :flag.case_no_arg
+        args['--dry-run']=1
+        shift
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--instance'] ]]; then
+    validation_output="$(validate_not_empty "${args['--instance']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--instance, -i INSTANCE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
 # :command.user_hooks
 before_hook() {
   # src/before.sh
@@ -60656,6 +61553,7 @@ run() {
     "secrets check") playground_secrets_check_command ;;
     "secrets import") playground_secrets_import_command ;;
     "secrets export") playground_secrets_export_command ;;
+    "secrets push-github") playground_secrets_push_github_command ;;
     "secrets edit") playground_secrets_edit_command ;;
     "secrets backend") playground_secrets_backend_command ;;
     "secrets profile") playground_secrets_profile_command ;;
@@ -60832,6 +61730,7 @@ run() {
     "ec2 sync-repro-folder") playground_ec2_sync_repro_folder_command ;;
     "ec2 sync-repro-folder local-to-ec2") playground_ec2_sync_repro_folder_local_to_ec2_command ;;
     "ec2 sync-repro-folder ec2-to-local") playground_ec2_sync_repro_folder_ec2_to_local_command ;;
+    "ec2 push-secrets") playground_ec2_push_secrets_command ;;
   esac
 }
 

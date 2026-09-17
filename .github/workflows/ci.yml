@@ -42,19 +42,19 @@ jobs:
           ./playground cleanup-cloud-resources --force
           ./playground cleanup-cloud-resources --force --user vsaboulin --resource ccloud --resource aws --resource azure --resource gcp
         env:
-          AZ_USER: ${{ secrets.AZ_USER}}
-          AZ_CLIENT_ID: ${{ secrets.AZ_CLIENT_ID}}
+          AZ_USER: ${{ vars.AZ_USER}}
+          AZ_CLIENT_ID: ${{ vars.AZ_CLIENT_ID}}
           AZ_CLIENT_SECRET: ${{ secrets.AZ_CLIENT_SECRET}}
-          AZ_TENANT_ID: ${{ secrets.AZ_TENANT_ID}}
-          AZURE_DATALAKE_CLIENT_ID: ${{ secrets.AZURE_DATALAKE_CLIENT_ID}}
+          AZ_TENANT_ID: ${{ vars.AZ_TENANT_ID}}
+          AZURE_DATALAKE_CLIENT_ID: ${{ vars.AZURE_DATALAKE_CLIENT_ID}}
           AZURE_DATALAKE_CLIENT_PASSWORD: ${{ secrets.AZURE_DATALAKE_CLIENT_PASSWORD}}
-          AZURE_COGNITIVE_APP_ID: ${{ secrets.AZURE_COGNITIVE_APP_ID}}
+          AZURE_COGNITIVE_APP_ID: ${{ vars.AZURE_COGNITIVE_APP_ID}}
           AZURE_COGNITIVE_APP_PASSWORD: ${{ secrets.AZURE_COGNITIVE_APP_PASSWORD}}
-          AZURE_SUBSCRIPTION_NAME: ${{ secrets.AZURE_SUBSCRIPTION_NAME}}
-          AZURE_LOGS_CLIENT_ID: ${{ secrets.AZURE_LOGS_CLIENT_ID }}
+          AZURE_SUBSCRIPTION_NAME: ${{ vars.AZURE_SUBSCRIPTION_NAME}}
+          AZURE_LOGS_CLIENT_ID: ${{ vars.AZURE_LOGS_CLIENT_ID }}
           AZURE_LOGS_CLIENT_SECRET: ${{ secrets.AZURE_LOGS_CLIENT_SECRET }}
-          AZURE_LOGS_SP_OBJECT_ID: ${{ secrets.AZURE_LOGS_SP_OBJECT_ID }}
-          CONFLUENT_CLOUD_EMAIL: ${{ secrets.CONFLUENT_CLOUD_EMAIL}}
+          AZURE_LOGS_SP_OBJECT_ID: ${{ vars.AZURE_LOGS_SP_OBJECT_ID }}
+          CONFLUENT_CLOUD_EMAIL: ${{ vars.CONFLUENT_CLOUD_EMAIL}}
           CONFLUENT_CLOUD_PASSWORD: ${{ secrets.CONFLUENT_CLOUD_PASSWORD}}
           ENVIRONMENT: ${{ vars.ENVIRONMENT}}
           CLUSTER_NAME: ${{ vars.CLUSTER_NAME}}
@@ -74,23 +74,23 @@ jobs:
           AZURE_CLUSTER_CLOUD: ${{ vars.AZURE_CLUSTER_CLOUD}}
           AZURE_CLUSTER_CREDS: ${{ secrets.AZURE_CLUSTER_CREDS}}
           SCHEMA_REGISTRY_CREDS: ${{ secrets.SCHEMA_REGISTRY_CREDS}}
-          SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_ACCOUNT_NAME}}
-          SNOWFLAKE_USERNAME: ${{ secrets.SNOWFLAKE_USERNAME}}
+          SNOWFLAKE_ACCOUNT_NAME: ${{ vars.SNOWFLAKE_ACCOUNT_NAME}}
+          SNOWFLAKE_USERNAME: ${{ vars.SNOWFLAKE_USERNAME}}
           SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD}}
           GCP_KEYFILE_CONTENT: ${{ secrets.GCP_KEYFILE_CONTENT}}
-          GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
+          GCP_PROJECT: ${{ vars.GCP_PROJECT}}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           AWS_REGION: ${{ vars.AWS_REGION}}
           CONFLUENT_CLOUD_API_KEY: ${{ secrets.CONFLUENT_CLOUD_API_KEY}}
           CONFLUENT_CLOUD_API_SECRET: ${{ secrets.CONFLUENT_CLOUD_API_SECRET}}
-          SALESFORCE_USERNAME: ${{ secrets.SALESFORCE_USERNAME}}
+          SALESFORCE_USERNAME: ${{ vars.SALESFORCE_USERNAME}}
           SALESFORCE_PASSWORD: ${{ secrets.SALESFORCE_PASSWORD}}
           SALESFORCE_SECURITY_TOKEN: ${{ secrets.SALESFORCE_SECURITY_TOKEN}}
           SALESFORCE_CONSUMER_KEY: ${{ secrets.SALESFORCE_CONSUMER_KEY}}
           SALESFORCE_CONSUMER_PASSWORD: ${{ secrets.SALESFORCE_CONSUMER_PASSWORD}}
-          SALESFORCE_INSTANCE: ${{ secrets.SALESFORCE_INSTANCE}}
-          SALESFORCE_USERNAME_ACCOUNT2: ${{ secrets.SALESFORCE_USERNAME_ACCOUNT2}}
+          SALESFORCE_INSTANCE: ${{ vars.SALESFORCE_INSTANCE}}
+          SALESFORCE_USERNAME_ACCOUNT2: ${{ vars.SALESFORCE_USERNAME_ACCOUNT2}}
           SALESFORCE_PASSWORD_ACCOUNT2: ${{ secrets.SALESFORCE_PASSWORD_ACCOUNT2}}
           SALESFORCE_SECURITY_TOKEN_ACCOUNT2: ${{ secrets.SALESFORCE_SECURITY_TOKEN_ACCOUNT2}}
           SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2}}
@@ -233,20 +233,18 @@ jobs:
             sudo apt-get update
             sudo apt-get install expect fzf coreutils -y
 
-      - name: Decrypt secrets.tar
+      - name: Set up credentials
         run: |
-          ./.github/scripts/decrypt_secret.sh
-          tar xvf secrets.tar
-          rm secrets.tar
           mkdir -p $HOME/.aws
-          mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role
-          mv aws_credentials_aws_account_with_assume_role $HOME/.aws/credentials_aws_account_with_assume_role
+          printf '%s\n' "$AWS_CREDENTIALS_WITH_ASSUMING_IAM_ROLE" > $HOME/.aws/credentials-with-assuming-iam-role
+          printf '%s\n' "$AWS_CREDENTIALS_AWS_ACCOUNT_WITH_ASSUME_ROLE" > $HOME/.aws/credentials_aws_account_with_assume_role
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.confluent
           echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         env:
-          SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
+          AWS_CREDENTIALS_WITH_ASSUMING_IAM_ROLE: ${{ secrets.AWS_CREDENTIALS_WITH_ASSUMING_IAM_ROLE }}
+          AWS_CREDENTIALS_AWS_ACCOUNT_WITH_ASSUME_ROLE: ${{ secrets.AWS_CREDENTIALS_AWS_ACCOUNT_WITH_ASSUME_ROLE }}
+          DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: Build and Test
@@ -256,24 +254,24 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          S3_PROVIDER_INTEGRATION_ID: ${{ secrets.S3_PROVIDER_INTEGRATION_ID}}
+          S3_PROVIDER_INTEGRATION_ID: ${{ vars.S3_PROVIDER_INTEGRATION_ID}}
           AWS_REGION: ${{ vars.AWS_REGION}}
           AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID}}
           AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY}}
-          AWS_STS_ROLE_ARN: ${{ secrets.AWS_STS_ROLE_ARN}}
-          AZ_USER: ${{ secrets.AZ_USER}}
-          AZ_CLIENT_ID: ${{ secrets.AZ_CLIENT_ID}}
+          AWS_STS_ROLE_ARN: ${{ vars.AWS_STS_ROLE_ARN}}
+          AZ_USER: ${{ vars.AZ_USER}}
+          AZ_CLIENT_ID: ${{ vars.AZ_CLIENT_ID}}
           AZ_CLIENT_SECRET: ${{ secrets.AZ_CLIENT_SECRET}}
-          AZ_TENANT_ID: ${{ secrets.AZ_TENANT_ID}}
-          AZURE_DATALAKE_CLIENT_ID: ${{ secrets.AZURE_DATALAKE_CLIENT_ID}}
+          AZ_TENANT_ID: ${{ vars.AZ_TENANT_ID}}
+          AZURE_DATALAKE_CLIENT_ID: ${{ vars.AZURE_DATALAKE_CLIENT_ID}}
           AZURE_DATALAKE_CLIENT_PASSWORD: ${{ secrets.AZURE_DATALAKE_CLIENT_PASSWORD}}
-          AZURE_COGNITIVE_APP_ID: ${{ secrets.AZURE_COGNITIVE_APP_ID}}
+          AZURE_COGNITIVE_APP_ID: ${{ vars.AZURE_COGNITIVE_APP_ID}}
           AZURE_COGNITIVE_APP_PASSWORD: ${{ secrets.AZURE_COGNITIVE_APP_PASSWORD}}
-          AZURE_SUBSCRIPTION_NAME: ${{ secrets.AZURE_SUBSCRIPTION_NAME}}
-          AZURE_LOGS_CLIENT_ID: ${{ secrets.AZURE_LOGS_CLIENT_ID }}
+          AZURE_SUBSCRIPTION_NAME: ${{ vars.AZURE_SUBSCRIPTION_NAME}}
+          AZURE_LOGS_CLIENT_ID: ${{ vars.AZURE_LOGS_CLIENT_ID }}
           AZURE_LOGS_CLIENT_SECRET: ${{ secrets.AZURE_LOGS_CLIENT_SECRET }}
-          AZURE_LOGS_SP_OBJECT_ID: ${{ secrets.AZURE_LOGS_SP_OBJECT_ID }}
-          CONFLUENT_CLOUD_EMAIL: ${{ secrets.CONFLUENT_CLOUD_EMAIL}}
+          AZURE_LOGS_SP_OBJECT_ID: ${{ vars.AZURE_LOGS_SP_OBJECT_ID }}
+          CONFLUENT_CLOUD_EMAIL: ${{ vars.CONFLUENT_CLOUD_EMAIL}}
           CONFLUENT_CLOUD_PASSWORD: ${{ secrets.CONFLUENT_CLOUD_PASSWORD}}
           ENVIRONMENT: ${{ vars.ENVIRONMENT}}
           CLUSTER_NAME: ${{ vars.CLUSTER_NAME}}
@@ -293,73 +291,73 @@ jobs:
           AZURE_CLUSTER_CLOUD: ${{ vars.AZURE_CLUSTER_CLOUD}}
           AZURE_CLUSTER_CREDS: ${{ secrets.AZURE_CLUSTER_CREDS}}
           SCHEMA_REGISTRY_CREDS: ${{ secrets.SCHEMA_REGISTRY_CREDS}}
-          CONFLUENT_LICENSE: ${{ secrets.CONFLUENT_LICENSE}}
-          SALESFORCE_USERNAME: ${{ secrets.SALESFORCE_USERNAME}}
+          CONFLUENT_LICENSE: ${{ vars.CONFLUENT_LICENSE}}
+          SALESFORCE_USERNAME: ${{ vars.SALESFORCE_USERNAME}}
           SALESFORCE_PASSWORD: ${{ secrets.SALESFORCE_PASSWORD}}
           SALESFORCE_SECURITY_TOKEN: ${{ secrets.SALESFORCE_SECURITY_TOKEN}}
           SALESFORCE_CONSUMER_KEY: ${{ secrets.SALESFORCE_CONSUMER_KEY}}
           SALESFORCE_CONSUMER_PASSWORD: ${{ secrets.SALESFORCE_CONSUMER_PASSWORD}}
-          SALESFORCE_INSTANCE: ${{ secrets.SALESFORCE_INSTANCE}}
-          SALESFORCE_USERNAME_ACCOUNT2: ${{ secrets.SALESFORCE_USERNAME_ACCOUNT2}}
+          SALESFORCE_INSTANCE: ${{ vars.SALESFORCE_INSTANCE}}
+          SALESFORCE_USERNAME_ACCOUNT2: ${{ vars.SALESFORCE_USERNAME_ACCOUNT2}}
           SALESFORCE_PASSWORD_ACCOUNT2: ${{ secrets.SALESFORCE_PASSWORD_ACCOUNT2}}
           SALESFORCE_SECURITY_TOKEN_ACCOUNT2: ${{ secrets.SALESFORCE_SECURITY_TOKEN_ACCOUNT2}}
           SALESFORCE_CONSUMER_KEY_WITH_JWT: ${{ secrets.SALESFORCE_CONSUMER_KEY_WITH_JWT}}
           SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2}}
           DD_API_KEY: ${{ secrets.DD_API_KEY}}
           DD_APP_KEY: ${{ secrets.DD_APP_KEY}}
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
+          DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
-          JIRA_URL: ${{ secrets.JIRA_URL}}
-          JIRA_USERNAME: ${{ secrets.JIRA_USERNAME}}
+          JIRA_URL: ${{ vars.JIRA_URL}}
+          JIRA_USERNAME: ${{ vars.JIRA_USERNAME}}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN}}
-          MARKETO_ENDPOINT_URL: ${{ secrets.MARKETO_ENDPOINT_URL}}
-          MARKETO_CLIENT_ID: ${{ secrets.MARKETO_CLIENT_ID}}
+          MARKETO_ENDPOINT_URL: ${{ vars.MARKETO_ENDPOINT_URL}}
+          MARKETO_CLIENT_ID: ${{ vars.MARKETO_CLIENT_ID}}
           MARKETO_CLIENT_SECRET: ${{ secrets.MARKETO_CLIENT_SECRET}}
-          PAGERDUTY_USER_EMAIL: ${{ secrets.PAGERDUTY_USER_EMAIL}}
+          PAGERDUTY_USER_EMAIL: ${{ vars.PAGERDUTY_USER_EMAIL}}
           PAGERDUTY_API_KEY: ${{ secrets.PAGERDUTY_API_KEY}}
-          PAGERDUTY_SERVICE_ID: ${{ secrets.PAGERDUTY_SERVICE_ID}}
+          PAGERDUTY_SERVICE_ID: ${{ vars.PAGERDUTY_SERVICE_ID}}
           CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY: ${{ secrets.CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY}}
           CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET: ${{ secrets.CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET}}
-          SERVICENOW_URL: ${{ secrets.SERVICENOW_URL}}
+          SERVICENOW_URL: ${{ vars.SERVICENOW_URL}}
           SERVICENOW_PASSWORD: ${{ secrets.SERVICENOW_PASSWORD}}
-          SERVICENOW_DEVELOPER_USERNAME: ${{ secrets.SERVICENOW_DEVELOPER_USERNAME}}
+          SERVICENOW_DEVELOPER_USERNAME: ${{ vars.SERVICENOW_DEVELOPER_USERNAME}}
           SERVICENOW_DEVELOPER_PASSWORD: ${{ secrets.SERVICENOW_DEVELOPER_PASSWORD}}
-          SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_ACCOUNT_NAME}}
-          SNOWFLAKE_USERNAME: ${{ secrets.SNOWFLAKE_USERNAME}}
+          SNOWFLAKE_ACCOUNT_NAME: ${{ vars.SNOWFLAKE_ACCOUNT_NAME}}
+          SNOWFLAKE_USERNAME: ${{ vars.SNOWFLAKE_USERNAME}}
           SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD}}
-          ZENDESK_URL: ${{ secrets.ZENDESK_URL}}
-          ZENDESK_USERNAME: ${{ secrets.ZENDESK_USERNAME}}
+          ZENDESK_URL: ${{ vars.ZENDESK_URL}}
+          ZENDESK_USERNAME: ${{ vars.ZENDESK_USERNAME}}
           ZENDESK_PASSWORD: ${{ secrets.ZENDESK_PASSWORD}}
           CONNECTOR_GITHUB_ACCESS_TOKEN: ${{ secrets.CONNECTOR_GITHUB_ACCESS_TOKEN}}
           CI_GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN}}
-          AUDIT_LOG_CLUSTER_BOOTSTRAP_SERVERS: ${{ secrets.AUDIT_LOG_CLUSTER_BOOTSTRAP_SERVERS}}
+          AUDIT_LOG_CLUSTER_BOOTSTRAP_SERVERS: ${{ vars.AUDIT_LOG_CLUSTER_BOOTSTRAP_SERVERS}}
           AUDIT_LOG_CLUSTER_API_KEY: ${{ secrets.AUDIT_LOG_CLUSTER_API_KEY}}
           AUDIT_LOG_CLUSTER_API_SECRET: ${{ secrets.AUDIT_LOG_CLUSTER_API_SECRET}}
           NGROK_AUTH_TOKEN: ${{ secrets.NGROK_CI_AUTH_TOKEN}}
           NGROK_CI_AUTH_TOKEN_BACKUP: ${{ secrets.NGROK_CI_AUTH_TOKEN_BACKUP}}
-          DATABRICKS_AWS_BUCKET_NAME: ${{ secrets.DATABRICKS_AWS_BUCKET_NAME}}
-          DATABRICKS_AWS_BUCKET_REGION: ${{ secrets.DATABRICKS_AWS_BUCKET_REGION}}
+          DATABRICKS_AWS_BUCKET_NAME: ${{ vars.DATABRICKS_AWS_BUCKET_NAME}}
+          DATABRICKS_AWS_BUCKET_REGION: ${{ vars.DATABRICKS_AWS_BUCKET_REGION}}
           DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID: ${{ secrets.DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID}}
           DATABRICKS_AWS_STAGING_S3_SECRET_ACCESS_KEY: ${{ secrets.DATABRICKS_AWS_STAGING_S3_SECRET_ACCESS_KEY}}
-          DATABRICKS_SERVER_HOSTNAME: ${{ secrets.DATABRICKS_SERVER_HOSTNAME}}
-          DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH}}
+          DATABRICKS_SERVER_HOSTNAME: ${{ vars.DATABRICKS_SERVER_HOSTNAME}}
+          DATABRICKS_HTTP_PATH: ${{ vars.DATABRICKS_HTTP_PATH}}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN}}
-          ORACLE_CONTAINER_REGISTRY_USERNAME: ${{ secrets.ORACLE_CONTAINER_REGISTRY_USERNAME}}
+          ORACLE_CONTAINER_REGISTRY_USERNAME: ${{ vars.ORACLE_CONTAINER_REGISTRY_USERNAME}}
           ORACLE_CONTAINER_REGISTRY_PASSWORD: ${{ secrets.ORACLE_CONTAINER_REGISTRY_PASSWORD}}
           GCP_KEYFILE_CONTENT: ${{ secrets.GCP_KEYFILE_CONTENT}}
-          GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
-          HPE_MAPR_EMAIL: ${{ secrets.HPE_MAPR_EMAIL}}
+          GCP_PROJECT: ${{ vars.GCP_PROJECT}}
+          HPE_MAPR_EMAIL: ${{ vars.HPE_MAPR_EMAIL}}
           HPE_MAPR_TOKEN: ${{ secrets.HPE_MAPR_TOKEN}}
           CONFLUENT_CLOUD_API_KEY: ${{ secrets.CONFLUENT_CLOUD_API_KEY}}
           CONFLUENT_CLOUD_API_SECRET: ${{ secrets.CONFLUENT_CLOUD_API_SECRET}}
-          MONGODB_ATLAS_HOST: ${{ secrets.MONGODB_ATLAS_HOST}}
-          MONGODB_ATLAS_USER: ${{ secrets.MONGODB_ATLAS_USER}}
+          MONGODB_ATLAS_HOST: ${{ vars.MONGODB_ATLAS_HOST}}
+          MONGODB_ATLAS_USER: ${{ vars.MONGODB_ATLAS_USER}}
           MONGODB_ATLAS_PASSWORD: ${{ secrets.MONGODB_ATLAS_PASSWORD}}
-          COUCHBASE_HOSTNAME: ${{ secrets.COUCHBASE_HOSTNAME}}
+          COUCHBASE_HOSTNAME: ${{ vars.COUCHBASE_HOSTNAME}}
           COUCHBASE_USERNAME: ${{ vars.COUCHBASE_USERNAME}}
           COUCHBASE_PASSWORD: ${{ secrets.COUCHBASE_PASSWORD}}
-          CLICKHOUSE_CLOUD_HOSTNAME: ${{ secrets.CLICKHOUSE_CLOUD_HOSTNAME}}
-          CLICKHOUSE_CLOUD_USERNAME: ${{ secrets.CLICKHOUSE_CLOUD_USERNAME}}
+          CLICKHOUSE_CLOUD_HOSTNAME: ${{ vars.CLICKHOUSE_CLOUD_HOSTNAME}}
+          CLICKHOUSE_CLOUD_USERNAME: ${{ vars.CLICKHOUSE_CLOUD_USERNAME}}
           CLICKHOUSE_CLOUD_PASSWORD: ${{ secrets.CLICKHOUSE_CLOUD_PASSWORD}}
           NETEZZA_HOST: ${{ vars.NETEZZA_HOST}}
           NETEZZA_USER: ${{ vars.NETEZZA_USER}}
@@ -411,11 +409,11 @@ jobs:
         with:
           server_address: smtp.gmail.com
           server_port: 587
-          username: ${{ secrets.SALESFORCE_USERNAME }}
+          username: ${{ vars.SALESFORCE_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: "[CI] Connector config file updated - ${{ github.repository }}"
-          to: ${{ secrets.SALESFORCE_USERNAME }}
-          from: ${{ secrets.SALESFORCE_USERNAME }}
+          to: ${{ vars.SALESFORCE_USERNAME }}
+          from: ${{ vars.SALESFORCE_USERNAME }}
           body: file:///tmp/email_body.txt
 
   execute_one_test:
@@ -510,20 +508,18 @@ jobs:
             sudo apt-get update
             sudo apt-get install expect fzf coreutils -y
             
-      - name: Decrypt secrets.tar
+      - name: Set up credentials
         run: |
-          ./.github/scripts/decrypt_secret.sh
-          tar xvf secrets.tar
-          rm secrets.tar
           mkdir -p $HOME/.aws
-          mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role
-          mv aws_credentials_aws_account_with_assume_role $HOME/.aws/credentials_aws_account_with_assume_role
+          printf '%s\n' "$AWS_CREDENTIALS_WITH_ASSUMING_IAM_ROLE" > $HOME/.aws/credentials-with-assuming-iam-role
+          printf '%s\n' "$AWS_CREDENTIALS_AWS_ACCOUNT_WITH_ASSUME_ROLE" > $HOME/.aws/credentials_aws_account_with_assume_role
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.confluent
           echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         env:
-          SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
+          AWS_CREDENTIALS_WITH_ASSUMING_IAM_ROLE: ${{ secrets.AWS_CREDENTIALS_WITH_ASSUMING_IAM_ROLE }}
+          AWS_CREDENTIALS_AWS_ACCOUNT_WITH_ASSUME_ROLE: ${{ secrets.AWS_CREDENTIALS_AWS_ACCOUNT_WITH_ASSUME_ROLE }}
+          DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: Build and Test
@@ -533,24 +529,24 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          S3_PROVIDER_INTEGRATION_ID: ${{ secrets.S3_PROVIDER_INTEGRATION_ID}}
+          S3_PROVIDER_INTEGRATION_ID: ${{ vars.S3_PROVIDER_INTEGRATION_ID}}
           AWS_REGION: ${{ vars.AWS_REGION}}
           AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID}}
           AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY}}
-          AWS_STS_ROLE_ARN: ${{ secrets.AWS_STS_ROLE_ARN}}
-          AZ_USER: ${{ secrets.AZ_USER}}
-          AZ_CLIENT_ID: ${{ secrets.AZ_CLIENT_ID}}
+          AWS_STS_ROLE_ARN: ${{ vars.AWS_STS_ROLE_ARN}}
+          AZ_USER: ${{ vars.AZ_USER}}
+          AZ_CLIENT_ID: ${{ vars.AZ_CLIENT_ID}}
           AZ_CLIENT_SECRET: ${{ secrets.AZ_CLIENT_SECRET}}
-          AZ_TENANT_ID: ${{ secrets.AZ_TENANT_ID}}
-          AZURE_DATALAKE_CLIENT_ID: ${{ secrets.AZURE_DATALAKE_CLIENT_ID}}
+          AZ_TENANT_ID: ${{ vars.AZ_TENANT_ID}}
+          AZURE_DATALAKE_CLIENT_ID: ${{ vars.AZURE_DATALAKE_CLIENT_ID}}
           AZURE_DATALAKE_CLIENT_PASSWORD: ${{ secrets.AZURE_DATALAKE_CLIENT_PASSWORD}}
-          AZURE_COGNITIVE_APP_ID: ${{ secrets.AZURE_COGNITIVE_APP_ID}}
+          AZURE_COGNITIVE_APP_ID: ${{ vars.AZURE_COGNITIVE_APP_ID}}
           AZURE_COGNITIVE_APP_PASSWORD: ${{ secrets.AZURE_COGNITIVE_APP_PASSWORD}}
-          AZURE_SUBSCRIPTION_NAME: ${{ secrets.AZURE_SUBSCRIPTION_NAME}}
-          AZURE_LOGS_CLIENT_ID: ${{ secrets.AZURE_LOGS_CLIENT_ID }}
+          AZURE_SUBSCRIPTION_NAME: ${{ vars.AZURE_SUBSCRIPTION_NAME}}
+          AZURE_LOGS_CLIENT_ID: ${{ vars.AZURE_LOGS_CLIENT_ID }}
           AZURE_LOGS_CLIENT_SECRET: ${{ secrets.AZURE_LOGS_CLIENT_SECRET }}
-          AZURE_LOGS_SP_OBJECT_ID: ${{ secrets.AZURE_LOGS_SP_OBJECT_ID }}
-          CONFLUENT_CLOUD_EMAIL: ${{ secrets.CONFLUENT_CLOUD_EMAIL}}
+          AZURE_LOGS_SP_OBJECT_ID: ${{ vars.AZURE_LOGS_SP_OBJECT_ID }}
+          CONFLUENT_CLOUD_EMAIL: ${{ vars.CONFLUENT_CLOUD_EMAIL}}
           CONFLUENT_CLOUD_PASSWORD: ${{ secrets.CONFLUENT_CLOUD_PASSWORD}}
           ENVIRONMENT: ${{ vars.ENVIRONMENT}}
           CLUSTER_NAME: ${{ vars.CLUSTER_NAME}}
@@ -570,73 +566,73 @@ jobs:
           AZURE_CLUSTER_CLOUD: ${{ vars.AZURE_CLUSTER_CLOUD}}
           AZURE_CLUSTER_CREDS: ${{ secrets.AZURE_CLUSTER_CREDS}}
           SCHEMA_REGISTRY_CREDS: ${{ secrets.SCHEMA_REGISTRY_CREDS}}
-          CONFLUENT_LICENSE: ${{ secrets.CONFLUENT_LICENSE}}
-          SALESFORCE_USERNAME: ${{ secrets.SALESFORCE_USERNAME}}
+          CONFLUENT_LICENSE: ${{ vars.CONFLUENT_LICENSE}}
+          SALESFORCE_USERNAME: ${{ vars.SALESFORCE_USERNAME}}
           SALESFORCE_PASSWORD: ${{ secrets.SALESFORCE_PASSWORD}}
           SALESFORCE_SECURITY_TOKEN: ${{ secrets.SALESFORCE_SECURITY_TOKEN}}
           SALESFORCE_CONSUMER_KEY: ${{ secrets.SALESFORCE_CONSUMER_KEY}}
           SALESFORCE_CONSUMER_PASSWORD: ${{ secrets.SALESFORCE_CONSUMER_PASSWORD}}
-          SALESFORCE_INSTANCE: ${{ secrets.SALESFORCE_INSTANCE}}
-          SALESFORCE_USERNAME_ACCOUNT2: ${{ secrets.SALESFORCE_USERNAME_ACCOUNT2}}
+          SALESFORCE_INSTANCE: ${{ vars.SALESFORCE_INSTANCE}}
+          SALESFORCE_USERNAME_ACCOUNT2: ${{ vars.SALESFORCE_USERNAME_ACCOUNT2}}
           SALESFORCE_PASSWORD_ACCOUNT2: ${{ secrets.SALESFORCE_PASSWORD_ACCOUNT2}}
           SALESFORCE_SECURITY_TOKEN_ACCOUNT2: ${{ secrets.SALESFORCE_SECURITY_TOKEN_ACCOUNT2}}
           SALESFORCE_CONSUMER_KEY_WITH_JWT: ${{ secrets.SALESFORCE_CONSUMER_KEY_WITH_JWT}}
           SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2}}
           DD_API_KEY: ${{ secrets.DD_API_KEY}}
           DD_APP_KEY: ${{ secrets.DD_APP_KEY}}
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
+          DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
-          JIRA_URL: ${{ secrets.JIRA_URL}}
-          JIRA_USERNAME: ${{ secrets.JIRA_USERNAME}}
+          JIRA_URL: ${{ vars.JIRA_URL}}
+          JIRA_USERNAME: ${{ vars.JIRA_USERNAME}}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN}}
-          MARKETO_ENDPOINT_URL: ${{ secrets.MARKETO_ENDPOINT_URL}}
-          MARKETO_CLIENT_ID: ${{ secrets.MARKETO_CLIENT_ID}}
+          MARKETO_ENDPOINT_URL: ${{ vars.MARKETO_ENDPOINT_URL}}
+          MARKETO_CLIENT_ID: ${{ vars.MARKETO_CLIENT_ID}}
           MARKETO_CLIENT_SECRET: ${{ secrets.MARKETO_CLIENT_SECRET}}
-          PAGERDUTY_USER_EMAIL: ${{ secrets.PAGERDUTY_USER_EMAIL}}
+          PAGERDUTY_USER_EMAIL: ${{ vars.PAGERDUTY_USER_EMAIL}}
           PAGERDUTY_API_KEY: ${{ secrets.PAGERDUTY_API_KEY}}
-          PAGERDUTY_SERVICE_ID: ${{ secrets.PAGERDUTY_SERVICE_ID}}
+          PAGERDUTY_SERVICE_ID: ${{ vars.PAGERDUTY_SERVICE_ID}}
           CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY: ${{ secrets.CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY}}
           CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET: ${{ secrets.CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET}}
-          SERVICENOW_URL: ${{ secrets.SERVICENOW_URL}}
+          SERVICENOW_URL: ${{ vars.SERVICENOW_URL}}
           SERVICENOW_PASSWORD: ${{ secrets.SERVICENOW_PASSWORD}}
-          SERVICENOW_DEVELOPER_USERNAME: ${{ secrets.SERVICENOW_DEVELOPER_USERNAME}}
+          SERVICENOW_DEVELOPER_USERNAME: ${{ vars.SERVICENOW_DEVELOPER_USERNAME}}
           SERVICENOW_DEVELOPER_PASSWORD: ${{ secrets.SERVICENOW_DEVELOPER_PASSWORD}}
-          SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_ACCOUNT_NAME}}
-          SNOWFLAKE_USERNAME: ${{ secrets.SNOWFLAKE_USERNAME}}
+          SNOWFLAKE_ACCOUNT_NAME: ${{ vars.SNOWFLAKE_ACCOUNT_NAME}}
+          SNOWFLAKE_USERNAME: ${{ vars.SNOWFLAKE_USERNAME}}
           SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD}}
-          ZENDESK_URL: ${{ secrets.ZENDESK_URL}}
-          ZENDESK_USERNAME: ${{ secrets.ZENDESK_USERNAME}}
+          ZENDESK_URL: ${{ vars.ZENDESK_URL}}
+          ZENDESK_USERNAME: ${{ vars.ZENDESK_USERNAME}}
           ZENDESK_PASSWORD: ${{ secrets.ZENDESK_PASSWORD}}
           CONNECTOR_GITHUB_ACCESS_TOKEN: ${{ secrets.CONNECTOR_GITHUB_ACCESS_TOKEN}}
           CI_GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN}}
-          AUDIT_LOG_CLUSTER_BOOTSTRAP_SERVERS: ${{ secrets.AUDIT_LOG_CLUSTER_BOOTSTRAP_SERVERS}}
+          AUDIT_LOG_CLUSTER_BOOTSTRAP_SERVERS: ${{ vars.AUDIT_LOG_CLUSTER_BOOTSTRAP_SERVERS}}
           AUDIT_LOG_CLUSTER_API_KEY: ${{ secrets.AUDIT_LOG_CLUSTER_API_KEY}}
           AUDIT_LOG_CLUSTER_API_SECRET: ${{ secrets.AUDIT_LOG_CLUSTER_API_SECRET}}
           NGROK_AUTH_TOKEN: ${{ secrets.NGROK_CI_AUTH_TOKEN}}
           NGROK_CI_AUTH_TOKEN_BACKUP: ${{ secrets.NGROK_CI_AUTH_TOKEN_BACKUP}}
-          DATABRICKS_AWS_BUCKET_NAME: ${{ secrets.DATABRICKS_AWS_BUCKET_NAME}}
-          DATABRICKS_AWS_BUCKET_REGION: ${{ secrets.DATABRICKS_AWS_BUCKET_REGION}}
+          DATABRICKS_AWS_BUCKET_NAME: ${{ vars.DATABRICKS_AWS_BUCKET_NAME}}
+          DATABRICKS_AWS_BUCKET_REGION: ${{ vars.DATABRICKS_AWS_BUCKET_REGION}}
           DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID: ${{ secrets.DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID}}
           DATABRICKS_AWS_STAGING_S3_SECRET_ACCESS_KEY: ${{ secrets.DATABRICKS_AWS_STAGING_S3_SECRET_ACCESS_KEY}}
-          DATABRICKS_SERVER_HOSTNAME: ${{ secrets.DATABRICKS_SERVER_HOSTNAME}}
-          DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH}}
+          DATABRICKS_SERVER_HOSTNAME: ${{ vars.DATABRICKS_SERVER_HOSTNAME}}
+          DATABRICKS_HTTP_PATH: ${{ vars.DATABRICKS_HTTP_PATH}}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN}}
-          ORACLE_CONTAINER_REGISTRY_USERNAME: ${{ secrets.ORACLE_CONTAINER_REGISTRY_USERNAME}}
+          ORACLE_CONTAINER_REGISTRY_USERNAME: ${{ vars.ORACLE_CONTAINER_REGISTRY_USERNAME}}
           ORACLE_CONTAINER_REGISTRY_PASSWORD: ${{ secrets.ORACLE_CONTAINER_REGISTRY_PASSWORD}}
           GCP_KEYFILE_CONTENT: ${{ secrets.GCP_KEYFILE_CONTENT}}
-          GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
-          HPE_MAPR_EMAIL: ${{ secrets.HPE_MAPR_EMAIL}}
+          GCP_PROJECT: ${{ vars.GCP_PROJECT}}
+          HPE_MAPR_EMAIL: ${{ vars.HPE_MAPR_EMAIL}}
           HPE_MAPR_TOKEN: ${{ secrets.HPE_MAPR_TOKEN}}
           CONFLUENT_CLOUD_API_KEY: ${{ secrets.CONFLUENT_CLOUD_API_KEY}}
           CONFLUENT_CLOUD_API_SECRET: ${{ secrets.CONFLUENT_CLOUD_API_SECRET}}
-          MONGODB_ATLAS_HOST: ${{ secrets.MONGODB_ATLAS_HOST}}
-          MONGODB_ATLAS_USER: ${{ secrets.MONGODB_ATLAS_USER}}
+          MONGODB_ATLAS_HOST: ${{ vars.MONGODB_ATLAS_HOST}}
+          MONGODB_ATLAS_USER: ${{ vars.MONGODB_ATLAS_USER}}
           MONGODB_ATLAS_PASSWORD: ${{ secrets.MONGODB_ATLAS_PASSWORD}}
-          COUCHBASE_HOSTNAME: ${{ secrets.COUCHBASE_HOSTNAME}}
+          COUCHBASE_HOSTNAME: ${{ vars.COUCHBASE_HOSTNAME}}
           COUCHBASE_USERNAME: ${{ vars.COUCHBASE_USERNAME}}
           COUCHBASE_PASSWORD: ${{ secrets.COUCHBASE_PASSWORD}}
-          CLICKHOUSE_CLOUD_HOSTNAME: ${{ secrets.CLICKHOUSE_CLOUD_HOSTNAME}}
-          CLICKHOUSE_CLOUD_USERNAME: ${{ secrets.CLICKHOUSE_CLOUD_USERNAME}}
+          CLICKHOUSE_CLOUD_HOSTNAME: ${{ vars.CLICKHOUSE_CLOUD_HOSTNAME}}
+          CLICKHOUSE_CLOUD_USERNAME: ${{ vars.CLICKHOUSE_CLOUD_USERNAME}}
           CLICKHOUSE_CLOUD_PASSWORD: ${{ secrets.CLICKHOUSE_CLOUD_PASSWORD}}
           NETEZZA_HOST: ${{ vars.NETEZZA_HOST}}
           NETEZZA_USER: ${{ vars.NETEZZA_USER}}
@@ -689,11 +685,11 @@ jobs:
         with:
           server_address: smtp.gmail.com
           server_port: 587
-          username: ${{ secrets.SALESFORCE_USERNAME }}
+          username: ${{ vars.SALESFORCE_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: "[CI] Connector config file updated - ${{ github.repository }}"
-          to: ${{ secrets.SALESFORCE_USERNAME }}
-          from: ${{ secrets.SALESFORCE_USERNAME }}
+          to: ${{ vars.SALESFORCE_USERNAME }}
+          from: ${{ vars.SALESFORCE_USERNAME }}
           body: file:///tmp/email_body.txt
 
   post-build:
@@ -708,21 +704,15 @@ jobs:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
           # submodules: recursive
-          ssh-key: ${{ secrets.GH_SSH_KEY_FILE }}
+          # ssh-key: ${{ secrets.GH_SSH_KEY_FILE }}
           ssh-strict: 'false'
 
-      - name: Decrypt secrets.tar
+      - name: Log in to Docker Hub
         run: |
-          ./.github/scripts/decrypt_secret.sh
-          tar xvf secrets.tar
-          rm secrets.tar
-          mkdir -p $HOME/.aws
-          chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.confluent
           echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         env:
-          SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
+          DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: "Install confluent CLI"
@@ -736,19 +726,19 @@ jobs:
           ./playground cleanup-cloud-resources --force
           ./playground cleanup-cloud-resources --force --user vsaboulin
         env:
-          AZ_USER: ${{ secrets.AZ_USER}}
-          AZ_CLIENT_ID: ${{ secrets.AZ_CLIENT_ID}}
+          AZ_USER: ${{ vars.AZ_USER}}
+          AZ_CLIENT_ID: ${{ vars.AZ_CLIENT_ID}}
           AZ_CLIENT_SECRET: ${{ secrets.AZ_CLIENT_SECRET}}
-          AZ_TENANT_ID: ${{ secrets.AZ_TENANT_ID}}
-          AZURE_DATALAKE_CLIENT_ID: ${{ secrets.AZURE_DATALAKE_CLIENT_ID}}
+          AZ_TENANT_ID: ${{ vars.AZ_TENANT_ID}}
+          AZURE_DATALAKE_CLIENT_ID: ${{ vars.AZURE_DATALAKE_CLIENT_ID}}
           AZURE_DATALAKE_CLIENT_PASSWORD: ${{ secrets.AZURE_DATALAKE_CLIENT_PASSWORD}}
-          AZURE_COGNITIVE_APP_ID: ${{ secrets.AZURE_COGNITIVE_APP_ID}}
+          AZURE_COGNITIVE_APP_ID: ${{ vars.AZURE_COGNITIVE_APP_ID}}
           AZURE_COGNITIVE_APP_PASSWORD: ${{ secrets.AZURE_COGNITIVE_APP_PASSWORD}}
-          AZURE_SUBSCRIPTION_NAME: ${{ secrets.AZURE_SUBSCRIPTION_NAME}}
-          AZURE_LOGS_CLIENT_ID: ${{ secrets.AZURE_LOGS_CLIENT_ID }}
+          AZURE_SUBSCRIPTION_NAME: ${{ vars.AZURE_SUBSCRIPTION_NAME}}
+          AZURE_LOGS_CLIENT_ID: ${{ vars.AZURE_LOGS_CLIENT_ID }}
           AZURE_LOGS_CLIENT_SECRET: ${{ secrets.AZURE_LOGS_CLIENT_SECRET }}
-          AZURE_LOGS_SP_OBJECT_ID: ${{ secrets.AZURE_LOGS_SP_OBJECT_ID }}
-          CONFLUENT_CLOUD_EMAIL: ${{ secrets.CONFLUENT_CLOUD_EMAIL}}
+          AZURE_LOGS_SP_OBJECT_ID: ${{ vars.AZURE_LOGS_SP_OBJECT_ID }}
+          CONFLUENT_CLOUD_EMAIL: ${{ vars.CONFLUENT_CLOUD_EMAIL}}
           CONFLUENT_CLOUD_PASSWORD: ${{ secrets.CONFLUENT_CLOUD_PASSWORD}}
           ENVIRONMENT: ${{ vars.ENVIRONMENT}}
           CLUSTER_NAME: ${{ vars.CLUSTER_NAME}}
@@ -768,23 +758,23 @@ jobs:
           AZURE_CLUSTER_CLOUD: ${{ vars.AZURE_CLUSTER_CLOUD}}
           AZURE_CLUSTER_CREDS: ${{ secrets.AZURE_CLUSTER_CREDS}}
           SCHEMA_REGISTRY_CREDS: ${{ secrets.SCHEMA_REGISTRY_CREDS}}
-          SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_ACCOUNT_NAME}}
-          SNOWFLAKE_USERNAME: ${{ secrets.SNOWFLAKE_USERNAME}}
+          SNOWFLAKE_ACCOUNT_NAME: ${{ vars.SNOWFLAKE_ACCOUNT_NAME}}
+          SNOWFLAKE_USERNAME: ${{ vars.SNOWFLAKE_USERNAME}}
           SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD}}
           GCP_KEYFILE_CONTENT: ${{ secrets.GCP_KEYFILE_CONTENT}}
-          GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
+          GCP_PROJECT: ${{ vars.GCP_PROJECT}}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           AWS_REGION: ${{ vars.AWS_REGION}}
           CONFLUENT_CLOUD_API_KEY: ${{ secrets.CONFLUENT_CLOUD_API_KEY}}
           CONFLUENT_CLOUD_API_SECRET: ${{ secrets.CONFLUENT_CLOUD_API_SECRET}}
-          SALESFORCE_USERNAME: ${{ secrets.SALESFORCE_USERNAME}}
+          SALESFORCE_USERNAME: ${{ vars.SALESFORCE_USERNAME}}
           SALESFORCE_PASSWORD: ${{ secrets.SALESFORCE_PASSWORD}}
           SALESFORCE_SECURITY_TOKEN: ${{ secrets.SALESFORCE_SECURITY_TOKEN}}
           SALESFORCE_CONSUMER_KEY: ${{ secrets.SALESFORCE_CONSUMER_KEY}}
           SALESFORCE_CONSUMER_PASSWORD: ${{ secrets.SALESFORCE_CONSUMER_PASSWORD}}
-          SALESFORCE_INSTANCE: ${{ secrets.SALESFORCE_INSTANCE}}
-          SALESFORCE_USERNAME_ACCOUNT2: ${{ secrets.SALESFORCE_USERNAME_ACCOUNT2}}
+          SALESFORCE_INSTANCE: ${{ vars.SALESFORCE_INSTANCE}}
+          SALESFORCE_USERNAME_ACCOUNT2: ${{ vars.SALESFORCE_USERNAME_ACCOUNT2}}
           SALESFORCE_PASSWORD_ACCOUNT2: ${{ secrets.SALESFORCE_PASSWORD_ACCOUNT2}}
           SALESFORCE_SECURITY_TOKEN_ACCOUNT2: ${{ secrets.SALESFORCE_SECURITY_TOKEN_ACCOUNT2}}
           SALESFORCE_CONSUMER_KEY_WITH_JWT: ${{ secrets.SALESFORCE_CONSUMER_KEY_WITH_JWT}}

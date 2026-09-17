@@ -1,6 +1,7 @@
 file="${args[--file]}"
 profile="${args[--profile]:-$(get_active_secret_profile)}"
 confirmed="${args[--yes-i-want-plaintext]}"
+only="${args[--only]:-all}"
 
 if [[ ! -n "$confirmed" ]]
 then
@@ -24,6 +25,12 @@ chmod 0600 "$tmp"
 nb=0
 for name in $(secret_store_names "$profile")
 do
+    location=$(secret_store_location "$name" "$profile" || true)
+    if [ "$only" != "all" ] && [ "$location" != "$only" ]
+    then
+        continue
+    fi
+
     if value=$(secret_get "$name" "$profile")
     then
         printf "%s=%s\n" "$name" "$value" >> "$tmp"

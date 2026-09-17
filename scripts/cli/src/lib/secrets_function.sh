@@ -512,6 +512,28 @@ function secret_get () {
   printf '%s' "$value"
 }
 
+#
+# Same thing, but ignoring the environment.
+#
+# For anything that copies a value into another system of record — GitHub
+# Actions secrets, mainly — the store has to be the source of truth. A shell
+# that still has an old `source secret.properties` in it would otherwise push
+# the value you just rotated away.
+#
+function secret_get_from_store () {
+  local name="$1"
+  local profile="${2:-$(get_active_secret_profile)}"
+
+  local ref
+  ref=$(secret_lookup_reference "$name" "$profile") || return 1
+  [ -n "$ref" ] || return 1
+
+  local value
+  value=$(secret_resolve_reference "$ref" || true)
+  [ -n "$value" ] || return 1
+  printf '%s' "$value"
+}
+
 ################################################################################
 # helpers
 ################################################################################

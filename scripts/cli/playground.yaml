@@ -270,6 +270,25 @@ subcommands:
             🔥 Securely delete the source file after a successful import
             
         - names:
+          - --secret
+          argument: ""
+          description: | 
+            🔐 Treat every line as a credential, whatever the variable names are
+            
+            Conflicts with: --plain
+            
+        - names:
+          - --plain
+          argument: ""
+          description: | 
+            📝 Treat every line as a non sensitive variable
+            
+            That is what a variables.properties file usually is: regions, project
+            ids, account names, URLs.
+            
+            Conflicts with: --secret
+            
+        - names:
           - --profile
           argument: PROFILE
           description: | 
@@ -295,6 +314,79 @@ subcommands:
           argument: ""
           description: | 
             🔓 Required, this writes credentials in clear text
+            
+        - names:
+          - --only
+          argument: all
+          description: | 
+            🎯 Export only the credentials, only the plain variables, or both
+            
+            Default value: all
+            
+            Allowed values: secret, plain, all
+            
+        - names:
+          - --profile
+          argument: PROFILE
+          description: | 
+            🗂️ Secrets profile to use (default is the active one)
+            
+      - name: push-github
+        description: | 
+          🐙 Push a profile to the GitHub Actions secrets and variables of a repository
+            
+            Credentials become repository secrets ('gh secret set'), plain variables
+            become repository variables ('gh variable set'), so the workflows can
+            read them as secrets.NAME and vars.NAME.
+            
+            Values are piped to 'gh' on stdin: nothing is written to disk and nothing
+            shows up in 'ps' or in the shell history.
+            
+            🎓 Tip: start with --dry-run, it lists what would be pushed without
+            touching the repository.
+        usage: playground secrets push-github [OPTIONS]
+        options:
+        - names:
+          - --repo
+          argument: REPO
+          description: | 
+            🐙 Target repository as OWNER/REPO (default is the current one)
+            
+        - names:
+          - --only
+          argument: all
+          description: | 
+            🎯 Push only the credentials, only the plain variables, or both
+            
+            Default value: all
+            
+            Allowed values: secret, plain, all
+            
+        - names:
+          - --as
+          argument: auto
+          description: | 
+            🎛️ Where everything lands on the GitHub side
+            
+            auto     credentials become secrets, plain variables become variables
+            secret   everything becomes a repository secret
+            variable everything becomes a repository variable
+            
+            Default value: auto
+            
+            Allowed values: auto, secret, variable
+            
+        - names:
+          - --dry-run
+          argument: ""
+          description: | 
+            🔍 List what would be pushed, change nothing
+            
+        - names:
+          - --force
+          argument: ""
+          description: | 
+            ⏩ Do not ask for confirmation
             
         - names:
           - --profile
@@ -4929,6 +5021,46 @@ subcommands:
             
         usage: playground ec2 sync-repro-folder COMMAND
         options: []
+      - name: push-secrets
+        description: | 
+          🔐 Send the secrets store to an ec2 instance
+            
+            Writes ~/.playground-secrets.properties (mode 0600) on the instance, which
+            the playground .zshrc sources on login. This replaces the encrypted
+            secrets.tar.gpg committed in the repository.
+            
+            The file is piped over ssh, so no clear text copy is ever written locally
+            and the values never appear in 'ps'.
+            
+            The credentials that cannot be stored as name=value pairs are sent too,
+            when they exist at the root of the repository:
+            
+              aws_credentials_with_assuming_iam_role       -> ~/.aws/credentials-with-assuming-iam-role
+              aws_credentials_aws_account_with_assume_role -> ~/.aws/credentials_aws_account_with_assume_role
+              github_ssh_key_file                          -> ~/.ssh/id_rsa
+        usage: playground ec2 push-secrets [OPTIONS]
+        options:
+        - names:
+          - --instance
+          - -i
+          argument: INSTANCE
+          description: | 
+            🖥️ ec2 instance (need to use completion to get all required details)
+            
+            🎓 Tip: If not specified, the command will apply to all ec2 instances
+            
+        - names:
+          - --profile
+          argument: PROFILE
+          description: | 
+            🗂️ Secrets profile to use (default is the active one)
+            
+        - names:
+          - --dry-run
+          argument: ""
+          description: | 
+            🔍 List what would be sent, change nothing
+            
   - name: sync-repro-folder
     description: | 
         ↔️ Synchronize reproduction-models folder bewteen local and ec2 instance

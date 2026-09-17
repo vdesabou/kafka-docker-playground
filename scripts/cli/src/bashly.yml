@@ -684,10 +684,23 @@ commands:
     - long: --shred
       required: false
       help: 🔥 Securely delete the source file after a successful import
+    - long: --secret
+      required: false
+      conflicts: [--plain]
+      help: 🔐 Treat every line as a credential, whatever the variable names are
+    - long: --plain
+      required: false
+      conflicts: [--secret]
+      help: |-
+        📝 Treat every line as a non sensitive variable
+
+        That is what a variables.properties file usually is: regions, project
+        ids, account names, URLs.
     - *secret-profile
     examples:
     - playground secrets import --file ~/secret.properties
     - playground secrets import --file ~/secret.properties --shred
+    - playground secrets import --file ~/variables.properties --plain
 
   - name: export
     help: |-
@@ -702,9 +715,63 @@ commands:
     - long: --yes-i-want-plaintext
       required: false
       help: 🔓 Required, this writes credentials in clear text
+    - long: --only
+      arg: only
+      required: false
+      allowed: [secret, plain, all]
+      default: all
+      help: 🎯 Export only the credentials, only the plain variables, or both
     - *secret-profile
     examples:
     - playground secrets export --file ~/kdp-secrets.properties --yes-i-want-plaintext
+    - playground secrets export --file ~/kdp-vars.properties --only plain --yes-i-want-plaintext
+
+  - name: push-github
+    help: |-
+      🐙 Push a profile to the GitHub Actions secrets and variables of a repository
+
+      Credentials become repository secrets ('gh secret set'), plain variables
+      become repository variables ('gh variable set'), so the workflows can
+      read them as secrets.NAME and vars.NAME.
+
+      Values are piped to 'gh' on stdin: nothing is written to disk and nothing
+      shows up in 'ps' or in the shell history.
+
+      🎓 Tip: start with --dry-run, it lists what would be pushed without
+      touching the repository.
+    flags:
+    - long: --repo
+      arg: repo
+      required: false
+      help: 🐙 Target repository as OWNER/REPO (default is the current one)
+    - long: --only
+      arg: only
+      required: false
+      allowed: [secret, plain, all]
+      default: all
+      help: 🎯 Push only the credentials, only the plain variables, or both
+    - long: --as
+      arg: as
+      required: false
+      allowed: [auto, secret, variable]
+      default: auto
+      help: |-
+        🎛️ Where everything lands on the GitHub side
+
+        auto     credentials become secrets, plain variables become variables
+        secret   everything becomes a repository secret
+        variable everything becomes a repository variable
+    - long: --dry-run
+      required: false
+      help: 🔍 List what would be pushed, change nothing
+    - long: --force
+      required: false
+      help: ⏩ Do not ask for confirmation
+    - *secret-profile
+    examples:
+    - playground secrets push-github --dry-run
+    - playground secrets push-github
+    - playground secrets push-github --only secret --repo vdesabou/kafka-docker-playground
 
   - name: edit
     help: ✏️ Open the store in your editor
@@ -5297,3 +5364,35 @@ commands:
       help: 👈 Sync ec2 instance reproduction-models folder to local
       flags:
         - *instance
+
+  - name: push-secrets
+    help: |-
+      🔐 Send the secrets store to an ec2 instance
+
+      Writes ~/.playground-secrets.properties (mode 0600) on the instance, which
+      the playground .zshrc sources on login. This replaces the encrypted
+      secrets.tar.gpg committed in the repository.
+
+      The file is piped over ssh, so no clear text copy is ever written locally
+      and the values never appear in 'ps'.
+
+      The credentials that cannot be stored as name=value pairs are sent too,
+      when they exist at the root of the repository:
+
+        aws_credentials_with_assuming_iam_role       -> ~/.aws/credentials-with-assuming-iam-role
+        aws_credentials_aws_account_with_assume_role -> ~/.aws/credentials_aws_account_with_assume_role
+        github_ssh_key_file                          -> ~/.ssh/id_rsa
+    flags:
+      - *instance
+      - long: --profile
+        arg: profile
+        required: false
+        help: 🗂️ Secrets profile to use (default is the active one)
+        completions:
+        - $(playground get-secret-profile-list)
+      - long: --dry-run
+        required: false
+        help: 🔍 List what would be sent, change nothing
+    examples:
+    - playground ec2 push-secrets
+    - playground ec2 push-secrets --instance pg-vsaboulin-abc123

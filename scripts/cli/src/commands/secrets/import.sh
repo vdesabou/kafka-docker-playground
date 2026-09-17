@@ -2,10 +2,25 @@ file="${args[--file]}"
 profile="${args[--profile]:-$(get_active_secret_profile)}"
 shred="${args[--shred]}"
 
-backend=$(get_secret_backend)
-secret_backend_ready "$backend" || exit 1
+force=""
+if [[ -n "${args[--secret]}" ]]
+then
+    force="secret"
+elif [[ -n "${args[--plain]}" ]]
+then
+    force="plain"
+fi
 
-log "📥 Importing $file into profile $profile (backend: $backend)"
+backend=$(get_secret_backend)
+
+# with --plain nothing reaches the backend, so do not ask it to be unlocked
+if [ "$force" != "plain" ]
+then
+    secret_backend_ready "$backend" || exit 1
+    log "📥 Importing $file into profile $profile (backend: $backend)"
+else
+    log "📥 Importing $file into profile $profile as plain variables"
+fi
 
 nb_secrets=0
 nb_plain=0
@@ -52,9 +67,9 @@ do
         continue
     fi
 
-    if secret_store_value "$name" "$value" "$profile"
+    if secret_store_value "$name" "$value" "$profile" "$force"
     then
-        if is_secret_env_var_name "$name"
+        if [ "$(secret_store_location "$name" "$profile" || true)" == "secret" ]
         then
             nb_secrets=$((nb_secrets+1))
         else

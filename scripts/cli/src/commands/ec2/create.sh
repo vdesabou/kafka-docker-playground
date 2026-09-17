@@ -71,7 +71,6 @@ aws cloudformation create-stack \
                  ParameterKey=KeyName,ParameterValue=${key_name} \
                  ParameterKey=InstanceName,ParameterValue=$name \
                  ParameterKey=IPAddressRange,ParameterValue=${myip}/32 \
-                 ParameterKey=SecretsEncryptionPassword,ParameterValue="${SECRETS_ENCRYPTION_PASSWORD}" \
                  ParameterKey=LinuxUserName,ParameterValue="${username}" \
     --tags Key=cflt_managed_by,Value=user \
            Key=cflt_managed_id,Value="${USER}"
@@ -94,5 +93,14 @@ playground ec2 open --instance "$instance"
 wait_for_ec2_cloudformation_to_be_completed "$name"
 
 playground ec2 sync-repro-folder local-to-ec2 --instance "$instance" > /dev/null
+
+#
+# Credentials are sent from the local secrets store, over ssh, once the
+# instance is up. They are deliberately not baked into the cloud formation
+# bootstrap: that one clones the public repository, so anything it reads has to
+# be committed.
+#
+playground ec2 push-secrets --instance "$instance"
+
 log "🎉 ec2 instance $name is ready!"
 log "🐚 make sure to use zsh in order to have everything working out of the box"

@@ -91,16 +91,6 @@ Parameters:
     Default: 0.0.0.0/0
     AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
     ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
-  GithubSshKeyFile:
-    Description: github_ssh_key_file
-    Type: String
-    Default: ''
-    NoEcho: 'true'
-  SecretsEncryptionPassword:
-    Description: SECRETS_ENCRYPTION_PASSWORD
-    Type: String
-    Default: ''
-    NoEcho: 'true'
 
 Resources:
   AWSInstance:
@@ -124,7 +114,7 @@ Resources:
 
                       cat << EOF | su "
                     - Ref: LinuxUserName
-                    - >-
+                    - >+
                       "
 
                       cd 
@@ -158,35 +148,6 @@ Resources:
                       wget -q https://github.com/vdesabou/kafka-docker-playground/raw/master/cloudformation/dotfiles/zshrc ~/zshrc
 
                       mv ~/zshrc ~/.zshrc
-
-                      if [ "\$(whoami)" = "vsaboulin" ]
-
-                      then
-
-                      export SECRETS_ENCRYPTION_PASSWORD="
-                    - Ref: SecretsEncryptionPassword
-                    - >+
-                      "
-
-                        cd kafka-docker-playground
-
-                        ./.github/scripts/decrypt_secret.sh
-
-                        tar xvf secrets.tar
-
-                        set -o allexport;source secrets.properties;set +o allexport
-
-                        set -o allexport;source variables.properties;set +o allexport
-
-                        mkdir -p ~/.aws
-
-                        cp aws_credentials_with_assuming_iam_role ~/.aws/credentials-with-assuming-iam-role
-
-                        cp aws_credentials_aws_account_with_assume_role ~/.aws/credentials_aws_account_with_assume_role
-
-                        chmod -R a+rw ~/.aws
-
-                      fi
 
                       git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 
@@ -286,8 +247,6 @@ Resources:
           if [ "${LinuxUserName}" != "ubuntu" ]; then echo "${LinuxUserName} ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/${LinuxUserName};fi
           mkdir -p /home/${LinuxUserName}/.ssh
           if [ "${LinuxUserName}" != "ubuntu" ]; then sudo cp /home/ubuntu/.ssh/authorized_keys /home/${LinuxUserName}/.ssh/;fi
-          echo "${GithubSshKeyFile}" > /home/${LinuxUserName}/.ssh/id_rsa
-          chmod 600 /home/${LinuxUserName}/.ssh/id_rsa
           if [ "${LinuxUserName}" != "ubuntu" ]; then sudo chown ${LinuxUserName} /home/${LinuxUserName}/.ssh/*;fi
           ssh-keyscan -t rsa github.com >> /home/${LinuxUserName}/.ssh/known_hosts
           sudo groupadd docker
