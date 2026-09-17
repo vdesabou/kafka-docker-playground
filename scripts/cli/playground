@@ -40,6 +40,7 @@ playground_usage() {
   printf "  %s   Show help about a command\n" "$(green "help")                                      "
   printf "  %s   🗺️ Show a status\n" "$(green "status")                                    "
   printf "  %s   ⚙️ Configure CLI\n" "$(green "config")                                    "
+  printf "  %s   🔐 Credentials required by examples\n" "$(green "secrets")                                   "
   printf "  %s   🧞‍♂️  AI\n" "$(green "ai")                                        "
   printf "  %s   💰  Retrieve ccloud costs for a range of dates\n" "$(green "ccloud-costs")                              "
   printf "  %s   👛  Retrieve ccloud costs for each month since last year\n" "$(green "ccloud-costs-history")                      "
@@ -428,6 +429,50 @@ playground_get_zazkia_connection_list_usage() {
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground get-zazkia-connection-list\n"
   printf "  playground get-zazkia-connection-list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_get_secret_list_usage() {
+  printf "playground get-secret-list - Return some completion for secret names\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground get-secret-list\n"
+  printf "  playground get-secret-list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_get_secret_profile_list_usage() {
+  printf "playground get-secret-profile-list - Return some completion for secret profiles\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground get-secret-profile-list\n"
+  printf "  playground get-secret-profile-list --help | -h\n"
   echo
 
   # :command.long_usage
@@ -1932,6 +1977,635 @@ playground_config_check_and_update_repo_version_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground config check-and-update-repo-version false\n"
     printf "  playground config check-and-update-repo-version true\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_secrets_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground secrets\n\n"
+    printf "  🔐 Credentials required by examples\n  \n  Stored outside the repository, in ~/.config/kafka-docker-playground, so that\n  they survive 'git clean -fdx' and can never be committed by mistake.\n  \n  🎓 Tip: an exported environment variable always wins over the store, so\n  'export FOO=bar' and 'source secret.properties' keep working.\n\n"
+  else
+    printf "playground secrets - 🔐 Credentials required by examples\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground secrets COMMAND\n"
+  printf "  playground secrets [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🔐 Store a credential\n" "$(green "set")    "
+  printf "  %s   🔍 Show a stored credential (masked unless --reveal is used)\n" "$(green "get")    "
+  printf "  %s   🗑️ Remove a stored credential\n" "$(green "unset")  "
+  printf "  %s   📋 List stored credentials\n" "$(green "list")   "
+  printf "  %s   🔗 Point a variable at a secret manager, without storing any value\n" "$(green "link")   "
+  printf "  %s   ✅ Show what an example needs, and what is missing\n" "$(green "check")  "
+  printf "  %s   📥 Import an existing secret.properties / variable.properties file\n" "$(green "import") "
+  printf "  %s   📤 Write every credential of a profile to a file, in clear text\n" "$(green "export") "
+  printf "  %s   ✏️ Open the store in your editor\n" "$(green "edit")   "
+  printf "  %s   🏦 Show or change where secrets are kept\n" "$(green "backend")"
+  printf "  %s   🗂️ Show or switch the active profile\n" "$(green "profile")"
+  printf "  %s   🔎 Look for stored credentials in clear text in the repository\n" "$(green "scan")   "
+  printf "  %s   🧹 List the examples whose environment variables are not auto-detected\n" "$(green "lint")   "
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_secrets_set_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground secrets set\n\n"
+    printf "  🔐 Store a credential\n  \n  Without --value the value is prompted without echo, so it never lands in\n  the shell history.\n  \n  A name that looks like a credential (PASSWORD, SECRET, TOKEN, KEY, CREDS,\n  PWD, PASSPHRASE) goes to the secure backend, anything else is kept as a\n  plain variable. Use --secret or --plain to decide yourself.\n\n"
+  else
+    printf "playground secrets set - 🔐 Store a credential\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground secrets set NAME [OPTIONS]\n"
+  printf "  playground secrets set --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--value VALUE")"
+    printf "    🔓 Value to store\n    \n    ❗ it will be visible in your shell history, prefer the prompt ❗\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--secret")"
+    printf "    🔐 Treat the value as a credential, whatever the variable name is\n    \n    It goes to the secure backend (keychain, 1Password, pass…) instead of\n    being kept in clear text.\n"
+    printf "    %s\n" "Conflicts: --plain"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--plain")"
+    printf "    📝 Treat the value as a non sensitive variable\n    \n    It is kept in clear text in env.ini, which is handy for a URL, an\n    account name or a project id.\n"
+    printf "    %s\n" "Conflicts: --secret"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--profile PROFILE")"
+    printf "    🗂️ Secrets profile to use (default is the active one)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "NAME")"
+    printf "    🔑 Environment variable name\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground secrets set SALESFORCE_PASSWORD\n"
+    printf "  playground secrets set NGROK_AUTH_TOKEN --value 2abcDEF...\n"
+    printf "  playground secrets set GCP_PROJECT --value my-gcp-project\n"
+    printf "  playground secrets set MY_API_CREDENTIAL --secret\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_secrets_get_usage() {
+  printf "playground secrets get - 🔍 Show a stored credential (masked unless --reveal is used)\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground secrets get NAME [OPTIONS]\n"
+  printf "  playground secrets get --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--reveal")"
+    printf "    👀 Print the value in clear text\n    \n    ❗ it will be visible in your terminal scrollback ❗\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--profile PROFILE")"
+    printf "    🗂️ Secrets profile to use (default is the active one)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "NAME")"
+    printf "    🔑 Environment variable name\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground secrets get SALESFORCE_PASSWORD\n"
+    printf "  playground secrets get SALESFORCE_PASSWORD --reveal\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_secrets_unset_usage() {
+  printf "playground secrets unset - 🗑️ Remove a stored credential\n\n"
+  printf "Alias: delete, rm\n"
+  echo
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground secrets unset NAME [OPTIONS]\n"
+  printf "  playground secrets unset --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--profile PROFILE")"
+    printf "    🗂️ Secrets profile to use (default is the active one)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "NAME")"
+    printf "    🔑 Environment variable name\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground secrets unset SALESFORCE_PASSWORD\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_secrets_list_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground secrets list\n\n"
+    printf "  📋 List stored credentials\n  \n  Values are never printed: secrets are shown as a masked fingerprint\n  (last 4 characters and a sha256 prefix), which is enough to tell whether\n  it is the token you rotated yesterday.\n\n"
+  else
+    printf "playground secrets list - 📋 List stored credentials\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground secrets list [OPTIONS]\n"
+  printf "  playground secrets list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--show-source")"
+    printf "    🔗 Show the backend reference instead of the fingerprint\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--profile PROFILE")"
+    printf "    🗂️ Secrets profile to use (default is the active one)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground secrets list\n"
+    printf "  playground secrets list --profile customer-123456\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_secrets_link_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground secrets link\n\n"
+    printf "  🔗 Point a variable at a secret manager, without storing any value\n  \n  The store then only contains a reference, which is safe to back up, sync\n  between machines, or share with your team.\n\n"
+  else
+    printf "playground secrets link - 🔗 Point a variable at a secret manager, without storing any value\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground secrets link NAME REFERENCE [OPTIONS]\n"
+  printf "  playground secrets link --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--profile PROFILE")"
+    printf "    🗂️ Secrets profile to use (default is the active one)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "NAME")"
+    printf "    🔑 Environment variable name\n"
+    echo
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "REFERENCE")"
+    printf "    🔗 op://<vault>/<item>/<field>, vault://<path>#<field>,\n    keychain:<profile>:<NAME>, secret-tool:<profile>:<NAME> or pass:<path>\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground secrets link SALESFORCE_PASSWORD op://Private/salesforce/password\n"
+    printf "  playground secrets link SNOWFLAKE_PASSWORD\n  vault://secret/kdp/snowflake#password\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_secrets_check_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground secrets check\n\n"
+    printf "  ✅ Show what an example needs, and what is missing\n  \n  🎓 Tip: run it before a long example, it fails in a second instead of\n  several minutes into the environment startup.\n\n"
+  else
+    printf "playground secrets check - ✅ Show what an example needs, and what is missing\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground secrets check [OPTIONS]\n"
+  printf "  playground secrets check --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file, -f FILE")"
+    printf "    📄 Example script (default is the last example ran)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--profile PROFILE")"
+    printf "    🗂️ Secrets profile to use (default is the active one)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground secrets check\n"
+    printf "  playground secrets check -f ccloud/fm-splunk-sink/fully-managed-splunk-sink.sh\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_secrets_import_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground secrets import\n\n"
+    printf "  📥 Import an existing secret.properties / variable.properties file\n  \n  Each KEY=value line is classified and stored in the right place.\n\n"
+  else
+    printf "playground secrets import - 📥 Import an existing secret.properties / variable.properties file\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground secrets import [OPTIONS]\n"
+  printf "  playground secrets import --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file FILE (required)")"
+    printf "    📄 File to import\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--shred")"
+    printf "    🔥 Securely delete the source file after a successful import\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--profile PROFILE")"
+    printf "    🗂️ Secrets profile to use (default is the active one)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground secrets import --file ~/secret.properties\n"
+    printf "  playground secrets import --file ~/secret.properties --shred\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_secrets_export_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground secrets export\n\n"
+    printf "  📤 Write every credential of a profile to a file, in clear text\n  \n  ❗ Only for the rare case where a tool needs a properties file ❗\n\n"
+  else
+    printf "playground secrets export - 📤 Write every credential of a profile to a file, in clear text\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground secrets export [OPTIONS]\n"
+  printf "  playground secrets export --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file FILE (required)")"
+    printf "    📄 Destination file, outside the repository\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--yes-i-want-plaintext")"
+    printf "    🔓 Required, this writes credentials in clear text\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--profile PROFILE")"
+    printf "    🗂️ Secrets profile to use (default is the active one)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground secrets export --file ~/kdp-secrets.properties\n  --yes-i-want-plaintext\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_secrets_edit_usage() {
+  printf "playground secrets edit - ✏️ Open the store in your editor\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground secrets edit [OPTIONS]\n"
+  printf "  playground secrets edit --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--plain")"
+    printf "    📝 Edit the non sensitive variables instead of the secrets\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground secrets edit\n"
+    printf "  playground secrets edit --plain\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_secrets_backend_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground secrets backend\n\n"
+    printf "  🏦 Show or change where secrets are kept\n  \n  keychain (macOS), secret-tool (Linux), pass, op (1Password), vault\n  (HashiCorp) or file.\n  \n  op and vault are reference-only: create the item there, then use\n  'playground secrets link'.\n\n"
+  else
+    printf "playground secrets backend - 🏦 Show or change where secrets are kept\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground secrets backend [BACKEND]\n"
+  printf "  playground secrets backend --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "BACKEND")"
+    printf "    🏦 Backend to use\n"
+    printf "    %s\n" "Allowed: keychain, secret-tool, pass, op, vault, file"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground secrets backend\n"
+    printf "  playground secrets backend op\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_secrets_profile_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground secrets profile\n\n"
+    printf "  🗂️ Show or switch the active profile\n  \n  🎓 Tip: use one profile per support case, so last week's customer\n  credentials never leak into this week's reproduction model.\n\n"
+  else
+    printf "playground secrets profile - 🗂️ Show or switch the active profile\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground secrets profile [PROFILE]\n"
+  printf "  playground secrets profile --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "PROFILE")"
+    printf "    🗂️ Profile to activate\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground secrets profile\n"
+    printf "  playground secrets profile customer-123456\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_secrets_scan_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground secrets scan\n\n"
+    printf "  🔎 Look for stored credentials in clear text in the repository\n  \n  🎓 Tip: wire it as a pre-commit hook with\n  'playground secrets scan --staged'\n\n"
+  else
+    printf "playground secrets scan - 🔎 Look for stored credentials in clear text in the repository\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground secrets scan [OPTIONS]\n"
+  printf "  playground secrets scan --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--staged")"
+    printf "    📦 Scan the staged diff instead of the whole working tree\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--profile PROFILE")"
+    printf "    🗂️ Secrets profile to use (default is the active one)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground secrets scan\n"
+    printf "  playground secrets scan --staged\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_secrets_lint_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground secrets lint\n\n"
+    printf "  🧹 List the examples whose environment variables are not auto-detected\n  \n  Only variables declared with the standard error string are picked up by\n  'playground run' and 'playground secrets check'.\n\n"
+  else
+    printf "playground secrets lint - 🧹 List the examples whose environment variables are not auto-detected\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground secrets lint\n"
+  printf "  playground secrets lint --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground secrets lint\n"
     echo
 
   fi
@@ -11246,6 +11920,698 @@ ini_keys() {
   for a in "${keys[@]}"; do echo "$a"; done | sort
 }
 
+# src/lib/secrets_function.sh
+# 🔐 playground secrets — credentials required by examples
+#
+# Secrets are stored OUTSIDE the repository, in $PLAYGROUND_SECRETS_DIR
+# (default $HOME/.config/kafka-docker-playground), so that they survive
+# `git clean -fdx`, are never picked up by `git add -A` and never end up in a
+# `playground repro export` archive.
+#
+# Two stores, same INI format, one [profile] section per profile:
+#
+#   secrets.ini (0600) NAME = <backend reference>   (or the value itself with
+#                                                    the `file` backend)
+#   env.ini     (0644) NAME = <plain value>         non sensitive variables
+#                                                   (GCP_PROJECT, AWS_REGION…)
+#
+# They are deliberately NOT read with lib/ini.sh: ini_load() evals any value
+# containing a `$`, which would corrupt — or execute — a password.
+
+PLAYGROUND_SECRETS_SERVICE="kafka-docker-playground"
+
+function get_secrets_dir () {
+  local dir="${PLAYGROUND_SECRETS_DIR:-$HOME/.config/kafka-docker-playground}"
+  if [ ! -d "$dir" ]
+  then
+    mkdir -p "$dir"
+    chmod 0700 "$dir"
+  fi
+  echo "$dir"
+}
+
+function get_secrets_file () {
+  echo "$(get_secrets_dir)/secrets.ini"
+}
+
+function get_env_file () {
+  echo "$(get_secrets_dir)/env.ini"
+}
+
+function get_active_secret_profile () {
+  if [ -n "${PLAYGROUND_SECRETS_PROFILE:-}" ]
+  then
+    echo "$PLAYGROUND_SECRETS_PROFILE"
+    return
+  fi
+  if [ -z "${PLAYGROUND_SECRETS_PROFILE_CACHE:-}" ]
+  then
+    PLAYGROUND_SECRETS_PROFILE_CACHE=$(playground config get secrets.profile 2>/dev/null)
+    [ -z "$PLAYGROUND_SECRETS_PROFILE_CACHE" ] && PLAYGROUND_SECRETS_PROFILE_CACHE="default"
+  fi
+  echo "$PLAYGROUND_SECRETS_PROFILE_CACHE"
+}
+
+#
+# Backend used when storing a new secret.
+#
+# Only the backends that can be used without any interactive setup are picked
+# automatically. `op` and `vault` must be selected explicitly with
+# `playground secrets backend <name>`, so that we never block on a vault
+# unlock prompt in the middle of an example.
+#
+function get_secret_backend () {
+  if [ -n "${PLAYGROUND_SECRETS_BACKEND:-}" ]
+  then
+    echo "$PLAYGROUND_SECRETS_BACKEND"
+    return
+  fi
+  if [ -z "${PLAYGROUND_SECRETS_BACKEND_CACHE:-}" ]
+  then
+    PLAYGROUND_SECRETS_BACKEND_CACHE=$(playground config get secrets.backend 2>/dev/null)
+    if [ -z "$PLAYGROUND_SECRETS_BACKEND_CACHE" ]
+    then
+      if [[ "$OSTYPE" == "darwin"* ]] && command -v security > /dev/null 2>&1
+      then
+        PLAYGROUND_SECRETS_BACKEND_CACHE="keychain"
+      elif command -v secret-tool > /dev/null 2>&1
+      then
+        PLAYGROUND_SECRETS_BACKEND_CACHE="secret-tool"
+      elif command -v pass > /dev/null 2>&1
+      then
+        PLAYGROUND_SECRETS_BACKEND_CACHE="pass"
+      else
+        PLAYGROUND_SECRETS_BACKEND_CACHE="file"
+      fi
+    fi
+  fi
+  echo "$PLAYGROUND_SECRETS_BACKEND_CACHE"
+}
+
+# store primitives (no eval, ever)
+
+# dump a store as: profile<TAB>name<TAB>value
+function secret_store_dump () {
+  local file="$1"
+  [ -f "$file" ] || return 0
+  awk '
+    /^[ \t]*[;#]/ { next }
+    /^[ \t]*\[.*\][ \t]*$/ {
+      section=$0
+      sub(/^[ \t]*\[[ \t]*/, "", section)
+      sub(/[ \t]*\][ \t]*$/, "", section)
+      next
+    }
+    {
+      idx=index($0, "=")
+      if (idx == 0) next
+      key=substr($0, 1, idx-1)
+      val=substr($0, idx+1)
+      gsub(/^[ \t]+|[ \t]+$/, "", key)
+      gsub(/^[ \t]+|[ \t]+$/, "", val)
+      if (key == "") next
+      if (section == "") section="default"
+      printf "%s\t%s\t%s\n", section, key, val
+    }
+  ' "$file"
+}
+
+function secret_store_render () {
+  sort -t"$(printf '\t')" -k1,1 -k2,2 | awk -F"\t" '
+    $1 != section { if (section != "") printf "\n"; printf "[%s]\n", $1; section=$1 }
+    { printf "%s = %s\n", $2, $3 }
+  '
+}
+
+function secret_store_get () {
+  local file="$1"
+  local profile="$2"
+  local name="$3"
+
+  local value
+  value=$(secret_store_dump "$file" | awk -F"\t" -v p="$profile" -v n="$name" '$1==p && $2==n { print $3; exit }')
+  [ -n "$value" ] || return 1
+  printf '%s' "$value"
+}
+
+function secret_store_set () {
+  local file="$1"
+  local profile="$2"
+  local name="$3"
+  local value="$4"
+  local mode="$5"
+
+  local tmp="${file}.tmp.$$"
+  {
+    secret_store_dump "$file" | awk -F"\t" -v p="$profile" -v n="$name" '!($1==p && $2==n)'
+    printf "%s\t%s\t%s\n" "$profile" "$name" "$value"
+  } | secret_store_render > "$tmp"
+  chmod "$mode" "$tmp"
+  mv -f "$tmp" "$file"
+}
+
+function secret_store_del () {
+  local file="$1"
+  local profile="$2"
+  local name="$3"
+  local mode="$4"
+
+  [ -f "$file" ] || return 0
+  local tmp="${file}.tmp.$$"
+  secret_store_dump "$file" | awk -F"\t" -v p="$profile" -v n="$name" '!($1==p && $2==n)' | secret_store_render > "$tmp"
+  chmod "$mode" "$tmp"
+  mv -f "$tmp" "$file"
+}
+
+# all names known for a profile, secrets first then plain variables
+function secret_store_names () {
+  local profile="${1:-$(get_active_secret_profile)}"
+  {
+    secret_store_dump "$(get_secrets_file)" | awk -F"\t" -v p="$profile" '$1==p { print $2 }'
+    secret_store_dump "$(get_env_file)"     | awk -F"\t" -v p="$profile" '$1==p { print $2 }'
+  } | sort -u
+}
+
+function secret_store_profiles () {
+  {
+    echo "default"
+    secret_store_dump "$(get_secrets_file)" | awk -F"\t" '{ print $1 }'
+    secret_store_dump "$(get_env_file)"     | awk -F"\t" '{ print $1 }'
+  } | sort -u
+}
+
+# backends
+
+#
+# 1Password vault the items are created in. `Private` is the vault every
+# account has, so it is the default; a shared vault is often a better choice
+# for a team, hence the override.
+#
+function get_op_vault () {
+  if [ -n "${PLAYGROUND_OP_VAULT:-}" ]
+  then
+    echo "$PLAYGROUND_OP_VAULT"
+    return
+  fi
+  local vault
+  vault=$(playground config get secrets.op-vault 2>/dev/null)
+  echo "${vault:-Private}"
+}
+
+#
+# Title of the item we create in 1Password.
+#
+# No space and no slash, so that the resulting `op://<vault>/<title>/password`
+# reference can be copied and pasted without quoting. The `kdp-` prefix is also
+# what tells us, on `secrets unset`, whether we created the item or whether the
+# user linked one of their own.
+#
+function get_op_item_title () {
+  local profile="$1"
+  local name="$2"
+  echo "kdp-${profile}-${name}"
+}
+
+#
+# Store a value and echo back the reference to keep in secrets.ini.
+#
+# ⚠️ keychain/secret-tool/pass/op all take the value on their command line, so
+# it is briefly visible in `ps` on a multi-user machine. That is a limitation of
+# those tools, not of this store.
+#
+function secret_backend_put () {
+  local backend="$1"
+  local profile="$2"
+  local name="$3"
+  local value="$4"
+
+  # stdout is the reference, so every message here has to go to stderr
+  case "$backend" in
+    keychain)
+      if ! security add-generic-password -U -s "$PLAYGROUND_SECRETS_SERVICE" -a "${profile}:${name}" -w "$value" > /dev/null 2>&1
+      then
+        logerror "❌ could not store $name in the macOS keychain" >&2
+        return 1
+      fi
+      echo "keychain:${profile}:${name}"
+    ;;
+    secret-tool)
+      if ! printf '%s' "$value" | secret-tool store --label="${PLAYGROUND_SECRETS_SERVICE} ${name}" service "$PLAYGROUND_SECRETS_SERVICE" profile "$profile" name "$name"
+      then
+        logerror "❌ could not store $name with secret-tool" >&2
+        return 1
+      fi
+      echo "secret-tool:${profile}:${name}"
+    ;;
+    pass)
+      if ! printf '%s\n' "$value" | pass insert -m -f "${PLAYGROUND_SECRETS_SERVICE}/${profile}/${name}" > /dev/null 2>&1
+      then
+        logerror "❌ could not store $name with pass" >&2
+        return 1
+      fi
+      echo "pass:${PLAYGROUND_SECRETS_SERVICE}/${profile}/${name}"
+    ;;
+    op)
+      local vault title op_error
+      vault=$(get_op_vault)
+      title=$(get_op_item_title "$profile" "$name")
+
+      if ! op whoami > /dev/null 2>&1
+      then
+        logerror "❌ not signed in to 1Password, cannot store $name" >&2
+        logerror "👉 enable 'Integrate with 1Password CLI' in the desktop app, or run: eval \$(op signin)" >&2
+        return 1
+      fi
+
+      if op item get "$title" --vault "$vault" > /dev/null 2>&1
+      then
+        if ! op_error=$(op item edit "$title" --vault "$vault" "password=${value}" 2>&1 > /dev/null)
+        then
+          logerror "❌ could not update 1Password item $title: $op_error" >&2
+          return 1
+        fi
+      else
+        if ! op_error=$(op item create --category Password --vault "$vault" --title "$title" \
+            --tags "$PLAYGROUND_SECRETS_SERVICE" "password=${value}" 2>&1 > /dev/null)
+        then
+          logerror "❌ could not create 1Password item $title in vault $vault: $op_error" >&2
+          return 1
+        fi
+      fi
+      echo "op://${vault}/${title}/password"
+    ;;
+    vault)
+      logerror "❌ backend vault is reference-only, it cannot create a secret" >&2
+      logerror "👉 store the secret in Vault, then run: playground secrets link $name vault://<path>#<field>" >&2
+      return 1
+    ;;
+    file)
+      # the value itself is the reference
+      printf '%s' "$value"
+    ;;
+    *)
+      logerror "❌ unknown secrets backend $backend" >&2
+      return 1
+    ;;
+  esac
+}
+
+function secret_backend_del () {
+  local ref="$1"
+
+  case "$ref" in
+    keychain:*)
+      security delete-generic-password -s "$PLAYGROUND_SECRETS_SERVICE" -a "${ref#keychain:}" > /dev/null 2>&1
+    ;;
+    secret-tool:*)
+      local rest="${ref#secret-tool:}"
+      secret-tool clear service "$PLAYGROUND_SECRETS_SERVICE" profile "${rest%%:*}" name "${rest#*:}" > /dev/null 2>&1
+    ;;
+    pass:*)
+      pass rm -f "${ref#pass:}" > /dev/null 2>&1
+    ;;
+    op://*)
+      #
+      # Only touch the items we created ourselves. A reference added with
+      # `playground secrets link` points at an item the user already had, and
+      # forgetting a variable here must never destroy it.
+      #
+      local rest="${ref#op://}"
+      local vault="${rest%%/*}"
+      rest="${rest#*/}"
+      local title="${rest%%/*}"
+      case "$title" in
+        kdp-*)
+          if ! op item delete "$title" --vault "$vault" --archive > /dev/null 2>&1
+          then
+            logwarn "⚠️ could not archive the 1Password item $title, remove it yourself if needed"
+          fi
+        ;;
+        *)
+          logwarn "🔗 $ref was linked, not created by playground: the 1Password item is left untouched"
+        ;;
+      esac
+    ;;
+    vault://*)
+      logwarn "🔗 $ref was linked, not created by playground: the Vault secret is left untouched"
+    ;;
+  esac
+  return 0
+}
+
+#
+# Check once, before a batch of writes, that the backend can actually be
+# written to. Without it a `secrets import` of twenty variables prints the same
+# "not signed in" error twenty times.
+#
+function secret_backend_ready () {
+  local backend="${1:-$(get_secret_backend)}"
+
+  case "$backend" in
+    op)
+      if ! command -v op > /dev/null 2>&1
+      then
+        logerror "❌ the 1Password CLI (op) is not installed"
+        logerror "👉 brew install 1password-cli"
+        return 1
+      fi
+      if ! op whoami > /dev/null 2>&1
+      then
+        logerror "❌ not signed in to 1Password"
+        logerror "👉 enable 'Integrate with 1Password CLI' in the desktop app (Settings > Developer), or run: eval \$(op signin)"
+        return 1
+      fi
+      local vault
+      vault=$(get_op_vault)
+      if ! op vault get "$vault" > /dev/null 2>&1
+      then
+        logerror "❌ 1Password vault $vault is not readable with your current session"
+        logerror "👉 playground config set secrets.op-vault <vault>"
+        return 1
+      fi
+    ;;
+    pass)
+      if ! pass ls > /dev/null 2>&1
+      then
+        logerror "❌ the pass store is not initialised"
+        logerror "👉 pass init <gpg-id>"
+        return 1
+      fi
+    ;;
+  esac
+  return 0
+}
+
+function secret_reference_backend () {
+  case "$1" in
+    keychain:*)    echo "keychain" ;;
+    secret-tool:*) echo "secret-tool" ;;
+    pass:*)        echo "pass" ;;
+    op://*)        echo "op" ;;
+    vault://*)     echo "vault" ;;
+    *)             echo "file" ;;
+  esac
+}
+
+function secret_resolve_reference () {
+  local ref="$1"
+
+  case "$ref" in
+    keychain:*)
+      security find-generic-password -s "$PLAYGROUND_SECRETS_SERVICE" -a "${ref#keychain:}" -w 2>/dev/null
+    ;;
+    secret-tool:*)
+      local rest="${ref#secret-tool:}"
+      secret-tool lookup service "$PLAYGROUND_SECRETS_SERVICE" profile "${rest%%:*}" name "${rest#*:}" 2>/dev/null
+    ;;
+    pass:*)
+      pass show "${ref#pass:}" 2>/dev/null | head -1
+    ;;
+    op://*)
+      op read "$ref" 2>/dev/null
+    ;;
+    vault://*)
+      local path="${ref#vault://}"
+      local field="${path##*#}"
+      path="${path%#*}"
+      vault kv get -field="$field" "$path" 2>/dev/null
+    ;;
+    *)
+      printf '%s' "$ref"
+    ;;
+  esac
+}
+
+# lookup
+
+# echo the reference stored for a name, searching the active profile then the
+# default one, secrets store then plain variables store
+function secret_lookup_reference () {
+  local name="$1"
+  local profile="${2:-$(get_active_secret_profile)}"
+
+  local file
+  for file in "$(get_secrets_file)" "$(get_env_file)"
+  do
+    local ref
+    if ref=$(secret_store_get "$file" "$profile" "$name")
+    then
+      printf '%s' "$ref"
+      return 0
+    fi
+    if [ "$profile" != "default" ] && ref=$(secret_store_get "$file" "default" "$name")
+    then
+      printf '%s' "$ref"
+      return 0
+    fi
+  done
+  return 1
+}
+
+#
+# Where a variable is kept: "secret" (secrets.ini, value in the backend),
+# "plain" (env.ini, value in clear text) or nothing when it is not stored.
+#
+# Since --secret and --plain let the user override the name-based guess, this
+# is what the display commands have to use, not is_secret_env_var_name().
+#
+function secret_store_location () {
+  local name="$1"
+  local profile="${2:-$(get_active_secret_profile)}"
+
+  local file location
+  for location in secret plain
+  do
+    if [ "$location" == "secret" ]
+    then
+      file="$(get_secrets_file)"
+    else
+      file="$(get_env_file)"
+    fi
+    if secret_store_get "$file" "$profile" "$name" > /dev/null
+    then
+      echo "$location"
+      return 0
+    fi
+    if [ "$profile" != "default" ] && secret_store_get "$file" "default" "$name" > /dev/null
+    then
+      echo "$location"
+      return 0
+    fi
+  done
+  return 1
+}
+
+#
+# Resolve a variable. A real environment variable always wins, so
+# `export FOO=bar`, `source secret.properties` and GitHub Actions secrets keep
+# working exactly as before.
+#
+function secret_get () {
+  local name="$1"
+  local profile="${2:-$(get_active_secret_profile)}"
+
+  if [ -n "${!name:-}" ]
+  then
+    printf '%s' "${!name}"
+    return 0
+  fi
+
+  local ref
+  ref=$(secret_lookup_reference "$name" "$profile") || return 1
+  [ -n "$ref" ] || return 1
+
+  local value
+  value=$(secret_resolve_reference "$ref" || true)
+  [ -n "$value" ] || return 1
+  printf '%s' "$value"
+}
+
+# helpers
+
+#
+# Same classification as the fzf preview in `playground run`: a name that looks
+# like a credential goes to the secrets store, anything else to the plain
+# variables store.
+#
+function is_secret_env_var_name () {
+  case "$1" in
+    *PASSWORD*|*PASSPHRASE*|*SECRET*|*TOKEN*|*KEY*|*CREDS*|*PWD*) return 0 ;;
+  esac
+  return 1
+}
+
+function secret_sha256 () {
+  if command -v shasum > /dev/null 2>&1
+  then
+    printf '%s' "$1" | shasum -a 256 | cut -c1-8
+  elif command -v sha256sum > /dev/null 2>&1
+  then
+    printf '%s' "$1" | sha256sum | cut -c1-8
+  else
+    echo "????????"
+  fi
+}
+
+#
+# A value is never printed: this returns just enough to answer "is this the
+# token I rotated yesterday?" without putting it in scrollback.
+#
+function secret_fingerprint () {
+  local value="$1"
+  local len=${#value}
+
+  if [ "$len" -eq 0 ]
+  then
+    echo "(empty)"
+    return
+  fi
+
+  local hash
+  hash=$(secret_sha256 "$value")
+  if [ "$len" -le 8 ]
+  then
+    echo "**** (${len} chars, sha256:${hash})"
+  else
+    echo "****${value: -4} (${len} chars, sha256:${hash})"
+  fi
+}
+
+function read_secret_value_interactively () {
+  local name="$1"
+  local value=""
+
+  if [ ! -t 0 ]
+  then
+    logerror "❌ no terminal available to prompt for $name, use --value"
+    return 1
+  fi
+  >&2 printf '🔐 Enter value for %s (input hidden): ' "$name"
+  read -r -s value
+  >&2 echo ""
+  if [ -z "$value" ]
+  then
+    logerror "❌ empty value, nothing stored"
+    return 1
+  fi
+  printf '%s' "$value"
+}
+
+#
+# $4 forces the classification: "secret" or "plain". Left empty, the variable
+# name decides, which is what `secrets import` relies on to sort a whole
+# secret.properties in one pass.
+#
+function secret_store_value () {
+  local name="$1"
+  local value="$2"
+  local profile="${3:-$(get_active_secret_profile)}"
+  local force="${4:-}"
+
+  if [[ "$value" == *$'\n'* ]]
+  then
+    logerror "❌ $name contains a newline, which the store does not support"
+    logerror "👉 for a multi-line credential (a key file, a PEM), point the example at a file path instead"
+    return 1
+  fi
+
+  # an 'if' on purpose: a bare '&&' would make the case statement return 1 and
+  # trip errexit when the name is not a credential
+  local sensitive=1
+  case "$force" in
+    secret) sensitive=0 ;;
+    plain)  sensitive=1 ;;
+    *)
+      if is_secret_env_var_name "$name"
+      then
+        sensitive=0
+      fi
+    ;;
+  esac
+
+  if [ $sensitive -eq 0 ]
+  then
+    local backend
+    backend=$(get_secret_backend)
+    local ref
+    ref=$(secret_backend_put "$backend" "$profile" "$name" "$value") || return 1
+    secret_store_set "$(get_secrets_file)" "$profile" "$name" "$ref" "0600"
+    #
+    # A variable promoted from --plain to --secret would otherwise keep its
+    # clear text copy in env.ini, which defeats the whole point.
+    #
+    secret_store_del "$(get_env_file)" "$profile" "$name" "0644"
+    log "🔐 $name stored in profile $profile (backend: $backend)"
+  else
+    # demoted from a secret: drop the backend item and its reference
+    local old_ref
+    if old_ref=$(secret_store_get "$(get_secrets_file)" "$profile" "$name")
+    then
+      secret_backend_del "$old_ref"
+      secret_store_del "$(get_secrets_file)" "$profile" "$name" "0600"
+    fi
+    secret_store_set "$(get_env_file)" "$profile" "$name" "$value" "0644"
+    log "📝 $name=$value stored in profile $profile as a plain variable"
+    if [ -z "$force" ]
+    then
+      log "🎓 $name does not look like a credential, so it is kept in clear text in $(get_env_file)"
+      log "👉 playground secrets set $name --secret to put it in $(get_secret_backend) instead"
+    fi
+  fi
+}
+
+function secret_delete_value () {
+  local name="$1"
+  local profile="${2:-$(get_active_secret_profile)}"
+
+  local ref
+  if ref=$(secret_store_get "$(get_secrets_file)" "$profile" "$name")
+  then
+    secret_backend_del "$ref"
+    secret_store_del "$(get_secrets_file)" "$profile" "$name" "0600"
+    log "🗑️ $name removed from profile $profile"
+    return 0
+  fi
+  if secret_store_get "$(get_env_file)" "$profile" "$name" > /dev/null
+  then
+    secret_store_del "$(get_env_file)" "$profile" "$name" "0644"
+    log "🗑️ $name removed from profile $profile"
+    return 0
+  fi
+  logwarn "🤔 $name is not stored in profile $profile"
+  return 1
+}
+
+#
+# Export into the current process every variable an example needs and that is
+# not already set. Scoped to the example's own list, so we never do the
+# `set -o allexport; source secrets.properties` trick that leaks every
+# credential into every process for the rest of the session.
+#
+function load_secrets_for_example () {
+  local test_file="$1"
+  local profile
+  profile=$(get_active_secret_profile)
+  local loaded=""
+
+  local name
+  for name in $(get_mandatory_env_vars "$test_file")
+  do
+    [ -n "${!name:-}" ] && continue
+    local value
+    if value=$(secret_get "$name" "$profile")
+    then
+      export "$name=$value"
+      loaded="${loaded} ${name}"
+    fi
+  done
+
+  if [ -n "$loaded" ]
+  then
+    log "🔐 Loaded from secrets profile $profile:${loaded}"
+  fi
+}
+
 # src/lib/send_completions.sh
 send_completions() {
   echo $'# playground completion                                    -*- shell-script -*-'
@@ -15310,6 +16676,32 @@ function login_and_maybe_set_azure_subscription () {
   fi
 }
 
+#
+# Names of the environment variables an example requires, one per line.
+#
+# Derived from the standard error string that examples use:
+#
+#   logerror "FOO is not set. Export it as environment variable or pass it as argument"
+#
+# Shared by the fzf preview of `playground run`, by the pre-flight of a non
+# interactive run, and by `playground secrets check`.
+#
+function get_mandatory_env_vars () {
+  local test_file="$1"
+  [ -f "$test_file" ] || return 0
+
+  {
+    awk -F '"' '/Export it as environment variable or pass it as argument/ { split($2,a," "); print a[1] }' "$test_file"
+
+    # a few variables are required by a shared helper the example calls, so the
+    # marker is in this library rather than in the example itself
+    if grep -q "display_ngrok_warning" "$test_file"
+    then
+      echo "NGROK_AUTH_TOKEN"
+    fi
+  } | awk 'NF' | sort -u
+}
+
 function handle_aws_credentials () {
   rm -rf /tmp/aws_credentials
   export AWS_CREDENTIALS_FILE_NAME="/tmp/aws_credentials"
@@ -15724,6 +17116,16 @@ validate_percentage() {
   fi
 }
 
+# src/lib/validations/validate_secret_name.sh
+validate_secret_name() {
+  if [[ "$1" =~ ^[A-Z][A-Z0-9_]*$ ]]; then
+    return 0
+  else
+    logerror "<$1> must be an uppercase environment variable name, for example SALESFORCE_PASSWORD"
+    return
+  fi
+}
+
 # :command.command_functions
 # :command.function
 playground_help_command() {
@@ -15878,6 +17280,23 @@ playground_get_zazkia_connection_list_command() {
 
   # src/commands/get-zazkia-connection-list.sh
   get_zazkia_id_list
+}
+
+# :command.function
+playground_get_secret_list_command() {
+
+  # src/commands/get-secret-list.sh
+  # names only, never values
+  secret_store_names "$(get_active_secret_profile)"
+
+}
+
+# :command.function
+playground_get_secret_profile_list_command() {
+
+  # src/commands/get-secret-profile-list.sh
+  secret_store_profiles
+
 }
 
 # :command.function
@@ -17362,6 +18781,695 @@ playground_config_check_and_update_repo_version_command() {
 }
 
 # :command.function
+playground_secrets_set_command() {
+
+  # src/commands/secrets/set.sh
+  name="${args[name]}"
+  value="${args[--value]}"
+  profile="${args[--profile]:-$(get_active_secret_profile)}"
+
+  force=""
+  if [[ -n "${args[--secret]}" ]]
+  then
+      force="secret"
+  elif [[ -n "${args[--plain]}" ]]
+  then
+      force="plain"
+  fi
+
+  if [ "$force" == "secret" ] || { [ -z "$force" ] && is_secret_env_var_name "$name"; }
+  then
+      secret_backend_ready || exit 1
+  fi
+
+  if [[ ! -n "$value" ]]
+  then
+      value=$(read_secret_value_interactively "$name") || exit 1
+  fi
+
+  secret_store_value "$name" "$value" "$profile" "$force"
+
+}
+
+# :command.function
+playground_secrets_get_command() {
+
+  # src/commands/secrets/get.sh
+  name="${args[name]}"
+  reveal="${args[--reveal]}"
+  profile="${args[--profile]:-$(get_active_secret_profile)}"
+
+  if ! value=$(secret_get "$name" "$profile")
+  then
+      logerror "❌ $name is not set and not stored in profile $profile"
+      logerror "👉 playground secrets set $name"
+      exit 1
+  fi
+
+  if [[ -n "$reveal" ]]
+  then
+      printf '%s\n' "$value"
+  else
+      log "🔐 $name $(secret_fingerprint "$value")"
+      log "🎓 Tip: use --reveal to print the value"
+  fi
+
+}
+
+# :command.function
+playground_secrets_unset_command() {
+
+  # src/commands/secrets/unset.sh
+  name="${args[name]}"
+  profile="${args[--profile]:-$(get_active_secret_profile)}"
+
+  secret_delete_value "$name" "$profile"
+
+}
+
+# :command.function
+playground_secrets_list_command() {
+
+  # src/commands/secrets/list.sh
+  profile="${args[--profile]:-$(get_active_secret_profile)}"
+  show_source="${args[--show-source]}"
+
+  names=$(secret_store_names "$profile")
+
+  if [ -z "$names" ]
+  then
+      log "🔐 No secret stored in profile $profile"
+      log "👉 playground secrets set <NAME>"
+      log "👉 playground secrets import --file <secret.properties>"
+      exit 0
+  fi
+
+  log "🔐 Secrets in profile $profile ($(get_secrets_dir))"
+  echo ""
+  printf "%-45s %-14s %s\n" "NAME" "BACKEND" "VALUE"
+  printf "%-45s %-14s %s\n" "----" "-------" "-----"
+
+  for name in $names
+  do
+      ref=$(secret_lookup_reference "$name" "$profile" || true)
+      backend=$(secret_reference_backend "$ref")
+
+      if [ "$(secret_store_location "$name" "$profile" || true)" == "secret" ]
+      then
+          value=$(secret_resolve_reference "$ref" || true)
+          if [ -z "$value" ]
+          then
+              display="❌ cannot be resolved"
+          else
+              display=$(secret_fingerprint "$value")
+          fi
+      else
+          # not sensitive, show it
+          display="$ref"
+          backend="plain"
+      fi
+
+      if [ -n "${!name:-}" ]
+      then
+          display="$display  ⚠️ overridden by the environment"
+      fi
+
+      if [[ -n "$show_source" ]]
+      then
+          printf "%-45s %-14s %s\n" "$name" "$backend" "$ref"
+      else
+          printf "%-45s %-14s %s\n" "$name" "$backend" "$display"
+      fi
+  done
+  echo ""
+
+}
+
+# :command.function
+playground_secrets_link_command() {
+
+  # src/commands/secrets/link.sh
+  name="${args[name]}"
+  reference="${args[reference]}"
+  profile="${args[--profile]:-$(get_active_secret_profile)}"
+
+  case "$reference" in
+      op://*|vault://*|keychain:*|secret-tool:*|pass:*)
+      ;;
+      *)
+          logerror "❌ <$reference> is not a supported reference"
+          logerror "👉 expected one of: op://<vault>/<item>/<field>, vault://<path>#<field>, keychain:<profile>:<NAME>, secret-tool:<profile>:<NAME>, pass:<path>"
+          exit 1
+      ;;
+  esac
+
+  secret_store_set "$(get_secrets_file)" "$profile" "$name" "$reference" "0600"
+  log "🔗 $name linked to $reference in profile $profile"
+
+  value=$(secret_resolve_reference "$reference" || true)
+  if [ -n "$value" ]
+  then
+      log "✅ reference resolves: $(secret_fingerprint "$value")"
+  else
+      logwarn "⚠️ the reference does not resolve right now (not logged in to $(secret_reference_backend "$reference") ?)"
+  fi
+
+}
+
+# :command.function
+playground_secrets_check_command() {
+
+  # src/commands/secrets/check.sh
+  test_file="${args[--file]}"
+  profile="${args[--profile]:-$(get_active_secret_profile)}"
+
+  if [[ ! -n "$test_file" ]]
+  then
+      test_file=$(playground state get run.test_file)
+      if [ -z "$test_file" ]
+      then
+          logerror "❌ no example specified and no example was ran before"
+          logerror "👉 playground secrets check -f <example>"
+          exit 1
+      fi
+      log "🔍 No --file specified, using the last example ran"
+  fi
+
+  if [[ $test_file == *"@"* ]]
+  then
+    test_file=${test_file#*@}
+  fi
+
+  if [ ! -f "$test_file" ]
+  then
+      logerror "❌ $test_file does not exist"
+      exit 1
+  fi
+
+  GREEN='\033[0;32m'
+  RED='\033[0;31m'
+  NC='\033[0m'
+
+  log "🔍 $test_file (secrets profile: $profile)"
+  echo ""
+
+  nb_missing=0
+  mandatory_env_vars=$(get_mandatory_env_vars "$test_file")
+
+  if [ -z "$mandatory_env_vars" ]
+  then
+      log "✅ This example does not require any environment variable"
+  else
+      for name in $mandatory_env_vars
+      do
+          if [ -n "${!name:-}" ]
+          then
+              # mask on the name, but also when the store says it is a credential
+              # whatever its name looks like
+              if is_secret_env_var_name "$name" || [ "$(secret_store_location "$name" "$profile" || true)" == "secret" ]
+              then
+                  echo -e "🔑 ${GREEN}${name}${NC} set (environment)"
+              else
+                  echo -e "🔑 ${GREEN}${name}=${!name}${NC} (environment)"
+              fi
+              continue
+          fi
+
+          ref=$(secret_lookup_reference "$name" "$profile" || true)
+          if [ -n "$ref" ] && value=$(secret_get "$name" "$profile")
+          then
+              echo -e "🔐 ${GREEN}${name}${NC} set ($(secret_reference_backend "$ref"): ${ref})"
+          elif [ -n "$ref" ]
+          then
+              echo -e "❌ ${RED}${name}${NC} stored as ${ref} but it cannot be resolved"
+              nb_missing=$((nb_missing+1))
+          else
+              echo -e "❌ ${RED}${name}${NC} missing        👉 playground secrets set $name"
+              nb_missing=$((nb_missing+1))
+          fi
+      done
+  fi
+
+  #
+  # cloud provider credentials are not environment variables only, mirror what
+  # playground run checks in its fzf preview
+  #
+  if [[ $test_file == *"aws"* ]]
+  then
+      if [ -f "$HOME/.aws/credentials" ]
+      then
+          echo -e "🔑 ${GREEN}$HOME/.aws/credentials${NC} is present"
+      elif [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]
+      then
+          echo -e "🔑 ${GREEN}AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY${NC} are set"
+      else
+          echo -e "❌ ${RED}AWS credentials${NC} missing        👉 playground secrets set AWS_ACCESS_KEY_ID"
+          nb_missing=$((nb_missing+1))
+      fi
+  fi
+
+  if [[ $test_file == *"gcp"* ]]
+  then
+      test_file_directory="$(dirname "$test_file")"
+      if [ -f "$test_file_directory/keyfile.json" ]
+      then
+          echo -e "🔑 ${GREEN}$test_file_directory/keyfile.json${NC} is present"
+      elif [ -n "$GCP_KEYFILE_CONTENT" ]
+      then
+          echo -e "🔑 ${GREEN}GCP_KEYFILE_CONTENT${NC} is set"
+      else
+          echo -e "❌ ${RED}$test_file_directory/keyfile.json${NC} missing"
+          nb_missing=$((nb_missing+1))
+      fi
+  fi
+
+  echo ""
+  if [ $nb_missing -gt 0 ]
+  then
+      logerror "❌ $nb_missing variable(s) missing, the example would fail"
+      exit 1
+  fi
+
+  log "✅ Everything this example needs is available"
+
+}
+
+# :command.function
+playground_secrets_import_command() {
+
+  # src/commands/secrets/import.sh
+  file="${args[--file]}"
+  profile="${args[--profile]:-$(get_active_secret_profile)}"
+  shred="${args[--shred]}"
+
+  backend=$(get_secret_backend)
+  secret_backend_ready "$backend" || exit 1
+
+  log "📥 Importing $file into profile $profile (backend: $backend)"
+
+  nb_secrets=0
+  nb_plain=0
+  nb_skipped=0
+
+  while IFS= read -r line || [ -n "$line" ]
+  do
+      # skip comments and blank lines
+      case "$line" in
+          ''|\#*|\;*) continue ;;
+      esac
+
+      # tolerate `export FOO=bar`
+      line="${line#export }"
+
+      case "$line" in
+          *=*) ;;
+          *) continue ;;
+      esac
+
+      name="${line%%=*}"
+      value="${line#*=}"
+
+      # trim surrounding whitespace on the name
+      name="$(echo "$name" | tr -d '[:space:]')"
+
+      if [[ ! "$name" =~ ^[A-Z][A-Z0-9_]*$ ]]
+      then
+          logwarn "⏭️ skipping <$name>, not an uppercase environment variable name"
+          nb_skipped=$((nb_skipped+1))
+          continue
+      fi
+
+      # strip one level of surrounding quotes
+      case "$value" in
+          \"*\") value="${value#\"}"; value="${value%\"}" ;;
+          \'*\') value="${value#\'}"; value="${value%\'}" ;;
+      esac
+
+      if [ -z "$value" ]
+      then
+          logwarn "⏭️ skipping $name, empty value"
+          nb_skipped=$((nb_skipped+1))
+          continue
+      fi
+
+      if secret_store_value "$name" "$value" "$profile"
+      then
+          if is_secret_env_var_name "$name"
+          then
+              nb_secrets=$((nb_secrets+1))
+          else
+              nb_plain=$((nb_plain+1))
+          fi
+      else
+          nb_skipped=$((nb_skipped+1))
+      fi
+  done < "$file"
+
+  log "✅ Imported $nb_secrets secret(s) and $nb_plain plain variable(s), $nb_skipped skipped"
+
+  if [[ -n "$shred" ]]
+  then
+      if [ $nb_secrets -eq 0 ] && [ $nb_plain -eq 0 ]
+      then
+          logwarn "⚠️ nothing was imported, $file is left untouched"
+          exit 0
+      fi
+      log "🔥 Securely deleting $file"
+      if command -v shred > /dev/null 2>&1
+      then
+          shred -u "$file"
+      elif [[ "$OSTYPE" == "darwin"* ]]
+      then
+          rm -P "$file"
+      else
+          rm -f "$file"
+      fi
+      log "✅ $file deleted"
+  else
+      logwarn "⚠️ $file still contains your credentials in clear text"
+      logwarn "👉 re-run with --shred to securely delete it, or delete it yourself"
+  fi
+
+}
+
+# :command.function
+playground_secrets_export_command() {
+
+  # src/commands/secrets/export.sh
+  file="${args[--file]}"
+  profile="${args[--profile]:-$(get_active_secret_profile)}"
+  confirmed="${args[--yes-i-want-plaintext]}"
+
+  if [[ ! -n "$confirmed" ]]
+  then
+      logerror "❌ this writes every credential of profile $profile in clear text to $file"
+      logerror "👉 re-run with --yes-i-want-plaintext if that is really what you want"
+      exit 1
+  fi
+
+  case "$file" in
+      "$root_folder"/*)
+          logerror "❌ refusing to write credentials inside the repository ($root_folder)"
+          logerror "👉 pick a path outside the repo, it would be one 'git add -A' away from being committed"
+          exit 1
+      ;;
+  esac
+
+  tmp="${file}.tmp.$$"
+  : > "$tmp"
+  chmod 0600 "$tmp"
+
+  nb=0
+  for name in $(secret_store_names "$profile")
+  do
+      if value=$(secret_get "$name" "$profile")
+      then
+          printf "%s=%s\n" "$name" "$value" >> "$tmp"
+          nb=$((nb+1))
+      else
+          logwarn "⚠️ $name could not be resolved, skipped"
+      fi
+  done
+
+  mv -f "$tmp" "$file"
+  chmod 0600 "$file"
+
+  log "📤 Exported $nb variable(s) of profile $profile to $file (mode 0600)"
+  logwarn "⚠️ $file now contains credentials in clear text, delete it as soon as you are done"
+
+}
+
+# :command.function
+playground_secrets_edit_command() {
+
+  # src/commands/secrets/edit.sh
+  secrets_file=$(get_secrets_file)
+  env_file=$(get_env_file)
+  plain="${args[--plain]}"
+
+  if [[ -n "$plain" ]]
+  then
+      file="$env_file"
+      [ -f "$file" ] || { : > "$file"; chmod 0644 "$file"; }
+  else
+      file="$secrets_file"
+      [ -f "$file" ] || { : > "$file"; chmod 0600 "$file"; }
+
+      backend=$(get_secret_backend)
+      if [ "$backend" == "file" ]
+      then
+          logwarn "⚠️ the file backend is in use: $file contains your credentials in clear text"
+      else
+          log "🔐 Backend is $backend, so $file only contains references, not values"
+      fi
+  fi
+
+  editor=$(playground config get editor || true)
+  [ -z "$editor" ] && editor="${EDITOR:-vi}"
+
+  log "📖 Opening $file with $editor"
+  $editor "$file"
+
+  # the editor may have recreated the file with default permissions
+  if [ "$file" == "$secrets_file" ]
+  then
+      chmod 0600 "$file"
+  fi
+
+}
+
+# :command.function
+playground_secrets_backend_command() {
+
+  # src/commands/secrets/backend.sh
+  backend="${args[backend]}"
+
+  if [[ ! -n "$backend" ]]
+  then
+      log "🔐 Current secrets backend: $(get_secret_backend)"
+      log "🎓 Tip: playground secrets backend <keychain|secret-tool|pass|op|vault|file>"
+      exit 0
+  fi
+
+  case "$backend" in
+      keychain)
+          if [[ "$OSTYPE" != "darwin"* ]]
+          then
+              logerror "❌ the keychain backend is only available on macOS"
+              exit 1
+          fi
+      ;;
+      secret-tool|pass|op|vault)
+          if ! command -v "$backend" > /dev/null 2>&1
+          then
+              logerror "❌ $backend is not installed"
+              exit 1
+          fi
+      ;;
+      file)
+          logwarn "⚠️ the file backend keeps values in $(get_secrets_file) (mode 0600) without encryption"
+          logwarn "👉 prefer keychain, pass, op or vault when one of them is available"
+      ;;
+  esac
+
+  playground config set secrets.backend "$backend"
+  log "🔐 Secrets backend set to $backend"
+
+  case "$backend" in
+      op)
+          vault=$(get_op_vault)
+          log "🏦 1Password items will be created in vault $vault"
+          log "🎓 change it with: playground config set secrets.op-vault <vault>"
+          log "🎓 you can also point a variable at an item you already have:"
+          log "   playground secrets link SALESFORCE_PASSWORD op://Private/salesforce/password"
+
+          if ! op whoami > /dev/null 2>&1
+          then
+              logwarn "⚠️ not signed in to 1Password"
+              logwarn "👉 enable 'Integrate with 1Password CLI' in the desktop app, or run: eval \$(op signin)"
+          elif ! op vault get "$vault" > /dev/null 2>&1
+          then
+              logwarn "⚠️ vault $vault is not readable with your current 1Password session"
+              logwarn "👉 playground config set secrets.op-vault <one of: $(op vault list --format json 2>/dev/null | jq -r '[.[].name] | join(", ")' 2>/dev/null)>"
+          fi
+      ;;
+      vault)
+          log "🎓 vault is reference-only: store the secret in Vault, then run"
+          log "   playground secrets link SALESFORCE_PASSWORD vault://secret/kdp/salesforce#password"
+      ;;
+  esac
+
+}
+
+# :command.function
+playground_secrets_profile_command() {
+
+  # src/commands/secrets/profile.sh
+  profile="${args[profile]}"
+
+  if [[ ! -n "$profile" ]]
+  then
+      active=$(get_active_secret_profile)
+      log "🗂️ Active secrets profile: $active"
+      echo ""
+      for p in $(secret_store_profiles)
+      do
+          nb=$(secret_store_names "$p" | wc -l | tr -d ' ')
+          if [ "$p" == "$active" ]
+          then
+              echo "👉 $p ($nb variable(s))"
+          else
+              echo "   $p ($nb variable(s))"
+          fi
+      done
+      echo ""
+      log "🎓 Tip: playground secrets profile <name> to switch"
+      exit 0
+  fi
+
+  playground config set secrets.profile "$profile"
+  log "🗂️ Active secrets profile is now $profile ($(secret_store_names "$profile" | wc -l | tr -d ' ') variable(s))"
+
+}
+
+# :command.function
+playground_secrets_scan_command() {
+
+  # src/commands/secrets/scan.sh
+  staged="${args[--staged]}"
+  profile="${args[--profile]:-$(get_active_secret_profile)}"
+
+  cd "$root_folder"
+
+  names=$(secret_store_names "$profile")
+  if [ -z "$names" ]
+  then
+      log "🔐 No secret stored in profile $profile, nothing to scan for"
+      exit 0
+  fi
+
+  if [[ -n "$staged" ]]
+  then
+      log "🔎 Scanning the staged diff for values of profile $profile"
+      haystack=$(git diff --staged)
+  else
+      log "🔎 Scanning the working tree for values of profile $profile"
+      haystack=""
+  fi
+
+  nb_leaks=0
+
+  for name in $names
+  do
+      # plain variables are not sensitive, a bucket name or a region is expected
+      # to appear in the examples
+      [ "$(secret_store_location "$name" "$profile" || true)" == "secret" ] || continue
+
+      value=$(secret_get "$name" "$profile") || continue
+      # too short to be searched for without a flood of false positives
+      [ ${#value} -lt 8 ] && continue
+
+      if [[ -n "$staged" ]]
+      then
+          if printf '%s' "$haystack" | grep -qF -- "$value"
+          then
+              logerror "🚨 the value of $name appears in the staged diff"
+              nb_leaks=$((nb_leaks+1))
+          fi
+      else
+          set +e
+          hits=$(git grep -l -F -- "$value" 2>/dev/null)
+          untracked_hits=$(git ls-files --others --exclude-standard -z 2>/dev/null | xargs -0 grep -l -F -- "$value" 2>/dev/null)
+          set -e
+          all_hits=$(printf '%s\n%s\n' "$hits" "$untracked_hits" | awk 'NF' | sort -u)
+          if [ -n "$all_hits" ]
+          then
+              logerror "🚨 the value of $name appears in:"
+              echo "$all_hits" | sed 's/^/     /'
+              nb_leaks=$((nb_leaks+1))
+          fi
+      fi
+  done
+
+  echo ""
+  if [ $nb_leaks -gt 0 ]
+  then
+      logerror "🚨 $nb_leaks secret(s) found in clear text — do not commit"
+      exit 1
+  fi
+
+  log "✅ No stored secret value found"
+
+}
+
+# :command.function
+playground_secrets_lint_command() {
+
+  # src/commands/secrets/lint.sh
+  cd "$root_folder"
+
+  #
+  # An example declares the variables it needs with the standard error string:
+  #
+  #   logerror "FOO is not set. Export it as environment variable or pass it as argument"
+  #
+  # Only those are auto-detected by `playground run` and `playground secrets check`.
+  # This reports the ones checked with a bare `if [ -z "$FOO" ]` instead.
+  #
+  search_dirs="connect ccloud ksqldb flink schema-registry rest-proxy multi-data-center other operator academy environment"
+
+  # set by the CLI, by an example flag or by CI, never by the user
+  ignored="GITHUB_RUN_NUMBER CONNECTOR_TAG CONNECTOR_ZIP CONNECTOR_JAR CONNECT_TAG LATEST_TAG CLASSPATH CLOUDFORMATION KAFKA_CLUSTER_ID"
+
+  log "🔎 Looking for environment variables checked without the standard marker"
+
+  # one pass for the bare checks, keeping the file each one is in
+  bare_checks=$(grep -rnE 'if \[ -z "\$[A-Z][A-Z0-9_]*"' --include="*.sh" $search_dirs 2>/dev/null \
+    | sed -E 's|^([^:]+):[0-9]+:.*\$([A-Z][A-Z0-9_]*).*|\2 \1|' \
+    | sort -u)
+
+  # one pass for the properly declared ones
+  declared=$(grep -rhoE '"[A-Z][A-Z0-9_]* is not set\. Export it as environment variable' --include="*.sh" $search_dirs 2>/dev/null \
+    | grep -oE '"[A-Z][A-Z0-9_]*' | tr -d '"' | sort -u)
+
+  nb=0
+  for name in $(echo "$bare_checks" | awk '{print $1}' | sort -u)
+  do
+      case " $ignored " in
+          *" $name "*) continue ;;
+      esac
+      case " $(echo $declared) " in
+          *" $name "*) continue ;;
+      esac
+      # ENABLE_* are playground flags, not credentials
+      case "$name" in
+          ENABLE_*) continue ;;
+      esac
+
+      nb=$((nb+1))
+      files=$(echo "$bare_checks" | awk -v n="$name" '$1==n {print $2}' | head -3 | tr '\n' ' ')
+      if is_secret_env_var_name "$name"
+      then
+          printf "🔐 %-42s %s\n" "$name" "$files"
+      else
+          printf "📝 %-42s %s\n" "$name" "$files"
+      fi
+  done
+
+  echo ""
+  if [ $nb -eq 0 ]
+  then
+      log "✅ Every environment variable uses the standard marker"
+      exit 0
+  fi
+
+  logwarn "⚠️ $nb variable(s) are not auto-detected by 'playground run' and 'playground secrets check'"
+  logwarn "👉 in the example, replace the bare check with:"
+  logwarn '   logerror "FOO is not set. Export it as environment variable or pass it as argument"'
+
+}
+
+# :command.function
 playground_ai_command() {
 
   # src/commands/ai.sh
@@ -18474,6 +20582,46 @@ playground_run_command() {
     exit 1
   fi
 
+  #
+  # 🔐 Resolve, from the secrets store, the variables this example needs and that
+  # are not already exported. Scoped to the example's own list on purpose: no
+  # blanket 'set -o allexport' that would leak every credential into every
+  # process for the rest of the session.
+  #
+  load_secrets_for_example "$test_file"
+
+  #
+  # 🔐 Pre-flight for non interactive runs. In interactive mode the fzf menu
+  # already refuses to start with a missing variable; without it the example used
+  # to fail minutes later, after the whole environment had started. It has to stay
+  # before the container kill-all below, otherwise a missing variable costs the
+  # user the environment they already had running.
+  #
+  # Skipped in CI, so that an example keeps its own control over its exit code
+  # (111 = unsupported combination, 107 = known issue).
+  #
+  if [ $interactive_mode != 1 ] && [ -z "$GITHUB_RUN_NUMBER" ]
+  then
+    missing_mandatory_env=""
+    for mandatory_environment_variable in $(get_mandatory_env_vars "$test_file")
+    do
+      if [ -z "${!mandatory_environment_variable:-}" ]
+      then
+        missing_mandatory_env="${missing_mandatory_env} ${mandatory_environment_variable}"
+      fi
+    done
+
+    if [ -n "$missing_mandatory_env" ]
+    then
+      logerror "❌ Cannot run $test_file, missing environment variable(s):${missing_mandatory_env}"
+      for mandatory_environment_variable in $missing_mandatory_env
+      do
+        logerror "👉 playground secrets set $mandatory_environment_variable"
+      done
+      exit 1
+    fi
+  fi
+
   if [[ $test_file == *"ccloud"* ]]
   then
     verify_installed "confluent"
@@ -19010,7 +21158,7 @@ playground_run_command() {
     declare -a mandatory_env_vars=()
     while IFS= read -r __mev; do
       [ -n "$__mev" ] && mandatory_env_vars+=("$__mev")
-    done < <(awk -F '"' '/Export it as environment variable or pass it as argument/ { split($2,a," "); print a[1] }' "$test_file")
+    done < <(get_mandatory_env_vars "$test_file")
 
     stop=0
     while [ $stop != 1 ]
@@ -19391,6 +21539,17 @@ playground_run_command() {
             set -e
 
             export $mandatory_environment_variable="$mandatory_environment_variable_value"
+
+            if [ -n "$mandatory_environment_variable_value" ]
+            then
+              set +e
+              save_answer=$(printf "yes\nno" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="💾" --header="Save $mandatory_environment_variable for next time? (playground secrets)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
+              set -e
+              if [ "$save_answer" == "yes" ]
+              then
+                secret_store_value "$mandatory_environment_variable" "$mandatory_environment_variable_value"
+              fi
+            fi
           fi
         done
       fi
@@ -37234,6 +39393,20 @@ parse_requirements() {
       shift $#
       ;;
 
+    get-secret-list)
+      action="get-secret-list"
+      shift
+      playground_get_secret_list_parse_requirements "$@"
+      shift $#
+      ;;
+
+    get-secret-profile-list)
+      action="get-secret-profile-list"
+      shift
+      playground_get_secret_profile_list_parse_requirements "$@"
+      shift $#
+      ;;
+
     compile-all-connector-plugins)
       action="compile-all-connector-plugins"
       shift
@@ -37413,6 +39586,13 @@ parse_requirements() {
       action="config"
       shift
       playground_config_parse_requirements "$@"
+      shift $#
+      ;;
+
+    secrets)
+      action="secrets"
+      shift
+      playground_secrets_parse_requirements "$@"
       shift $#
       ;;
 
@@ -38066,6 +40246,100 @@ playground_get_zazkia_connection_list_parse_requirements() {
 
   # :command.command_filter
   action="get-zazkia-connection-list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_get_secret_list_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_get_secret_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="get-secret-list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_get_secret_profile_list_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_get_secret_profile_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="get-secret-profile-list"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -40957,6 +43231,1199 @@ playground_config_check_and_update_repo_version_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['enabled']:-} ]] || args['enabled']="true"
+
+}
+
+# :command.parse_requirements
+playground_secrets_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_secrets_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    set)
+      action="set"
+      shift
+      playground_secrets_set_parse_requirements "$@"
+      shift $#
+      ;;
+
+    get)
+      action="get"
+      shift
+      playground_secrets_get_parse_requirements "$@"
+      shift $#
+      ;;
+
+    unset | delete | rm)
+      action="unset"
+      shift
+      playground_secrets_unset_parse_requirements "$@"
+      shift $#
+      ;;
+
+    list)
+      action="list"
+      shift
+      playground_secrets_list_parse_requirements "$@"
+      shift $#
+      ;;
+
+    link)
+      action="link"
+      shift
+      playground_secrets_link_parse_requirements "$@"
+      shift $#
+      ;;
+
+    check)
+      action="check"
+      shift
+      playground_secrets_check_parse_requirements "$@"
+      shift $#
+      ;;
+
+    import)
+      action="import"
+      shift
+      playground_secrets_import_parse_requirements "$@"
+      shift $#
+      ;;
+
+    export)
+      action="export"
+      shift
+      playground_secrets_export_parse_requirements "$@"
+      shift $#
+      ;;
+
+    edit)
+      action="edit"
+      shift
+      playground_secrets_edit_parse_requirements "$@"
+      shift $#
+      ;;
+
+    backend)
+      action="backend"
+      shift
+      playground_secrets_backend_parse_requirements "$@"
+      shift $#
+      ;;
+
+    profile)
+      action="profile"
+      shift
+      playground_secrets_profile_parse_requirements "$@"
+      shift $#
+      ;;
+
+    scan)
+      action="scan"
+      shift
+      playground_secrets_scan_parse_requirements "$@"
+      shift $#
+      ;;
+
+    lint)
+      action="lint"
+      shift
+      playground_secrets_lint_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_secrets_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_secrets_set_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_secrets_set_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="secrets set"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --value)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--value']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--value requires an argument: --value VALUE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --secret)
+        # :flag.conflicts
+        if [[ -n "${args['--plain']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--plain" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--secret']=1
+        shift
+        ;;
+
+      # :flag.case
+      --plain)
+        # :flag.conflicts
+        if [[ -n "${args['--secret']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--secret" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--plain']=1
+        shift
+        ;;
+
+      # :flag.case
+      --profile)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--profile']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--profile requires an argument: --profile PROFILE" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['name']+x} ]]; then
+          args['name']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['name']+x} ]]; then
+    printf "missing required argument: NAME\nusage: playground secrets set NAME [OPTIONS]\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground secrets set SALESFORCE_PASSWORD\n" >&2
+    printf "  playground secrets set NGROK_AUTH_TOKEN --value 2abcDEF...\n" >&2
+    printf "  playground secrets set GCP_PROJECT --value my-gcp-project\n" >&2
+    printf "  playground secrets set MY_API_CREDENTIAL --secret\n" >&2
+
+    exit 1
+  fi
+
+  # :command.validations
+  # :argument.validations
+  if [[ -v args['name'] ]]; then
+    validation_output="$(validate_secret_name "${args['name']:-}")"
+    if [[ -n "$validation_output" ]]; then
+      printf "validation error in %s:\n%s\n" "NAME" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_secrets_get_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_secrets_get_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="secrets get"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --reveal)
+
+        # :flag.case_no_arg
+        args['--reveal']=1
+        shift
+        ;;
+
+      # :flag.case
+      --profile)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--profile']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--profile requires an argument: --profile PROFILE" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['name']+x} ]]; then
+          args['name']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['name']+x} ]]; then
+    printf "missing required argument: NAME\nusage: playground secrets get NAME [OPTIONS]\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground secrets get SALESFORCE_PASSWORD\n" >&2
+    printf "  playground secrets get SALESFORCE_PASSWORD --reveal\n" >&2
+
+    exit 1
+  fi
+
+  # :command.validations
+  # :argument.validations
+  if [[ -v args['name'] ]]; then
+    validation_output="$(validate_secret_name "${args['name']:-}")"
+    if [[ -n "$validation_output" ]]; then
+      printf "validation error in %s:\n%s\n" "NAME" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_secrets_unset_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_secrets_unset_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="secrets unset"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --profile)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--profile']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--profile requires an argument: --profile PROFILE" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['name']+x} ]]; then
+          args['name']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['name']+x} ]]; then
+    printf "missing required argument: NAME\nusage: playground secrets unset NAME [OPTIONS]\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground secrets unset SALESFORCE_PASSWORD\n" >&2
+
+    exit 1
+  fi
+
+  # :command.validations
+  # :argument.validations
+  if [[ -v args['name'] ]]; then
+    validation_output="$(validate_secret_name "${args['name']:-}")"
+    if [[ -n "$validation_output" ]]; then
+      printf "validation error in %s:\n%s\n" "NAME" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_secrets_list_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_secrets_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="secrets list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --show-source)
+
+        # :flag.case_no_arg
+        args['--show-source']=1
+        shift
+        ;;
+
+      # :flag.case
+      --profile)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--profile']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--profile requires an argument: --profile PROFILE" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_secrets_link_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_secrets_link_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="secrets link"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --profile)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--profile']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--profile requires an argument: --profile PROFILE" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['name']+x} ]]; then
+          args['name']=$1
+          shift
+        # :argument.case
+        elif [[ -z ${args['reference']+x} ]]; then
+          args['reference']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['name']+x} ]]; then
+    printf "missing required argument: NAME\nusage: playground secrets link NAME REFERENCE [OPTIONS]\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground secrets link SALESFORCE_PASSWORD op://Private/salesforce/password\n" >&2
+    printf "  playground secrets link SNOWFLAKE_PASSWORD\n  vault://secret/kdp/snowflake#password\n" >&2
+
+    exit 1
+  fi
+
+  if [[ -z ${args['reference']+x} ]]; then
+    printf "missing required argument: REFERENCE\nusage: playground secrets link NAME REFERENCE [OPTIONS]\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground secrets link SALESFORCE_PASSWORD op://Private/salesforce/password\n" >&2
+    printf "  playground secrets link SNOWFLAKE_PASSWORD\n  vault://secret/kdp/snowflake#password\n" >&2
+
+    exit 1
+  fi
+
+  # :command.validations
+  # :argument.validations
+  if [[ -v args['name'] ]]; then
+    validation_output="$(validate_secret_name "${args['name']:-}")"
+    if [[ -n "$validation_output" ]]; then
+      printf "validation error in %s:\n%s\n" "NAME" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :argument.validations
+  if [[ -v args['reference'] ]]; then
+    validation_output="$(validate_not_empty "${args['reference']:-}")"
+    if [[ -n "$validation_output" ]]; then
+      printf "validation error in %s:\n%s\n" "REFERENCE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_secrets_check_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_secrets_check_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="secrets check"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --file | -f)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --profile)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--profile']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--profile requires an argument: --profile PROFILE" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--file'] ]]; then
+    validation_output="$(validate_file_exists_with_trick "${args['--file']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_secrets_import_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_secrets_import_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="secrets import"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --file)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --shred)
+
+        # :flag.case_no_arg
+        args['--shred']=1
+        shift
+        ;;
+
+      # :flag.case
+      --profile)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--profile']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--profile requires an argument: --profile PROFILE" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--file']+x} ]]; then
+    printf "missing required flag: --file FILE\n" >&2
+    exit 1
+  fi
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--file'] ]]; then
+    validation_output="$(validate_file_exists "${args['--file']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--file FILE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_secrets_export_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_secrets_export_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="secrets export"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --file)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --yes-i-want-plaintext)
+
+        # :flag.case_no_arg
+        args['--yes-i-want-plaintext']=1
+        shift
+        ;;
+
+      # :flag.case
+      --profile)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--profile']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--profile requires an argument: --profile PROFILE" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--file']+x} ]]; then
+    printf "missing required flag: --file FILE\n" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_secrets_edit_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_secrets_edit_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="secrets edit"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --plain)
+
+        # :flag.case_no_arg
+        args['--plain']=1
+        shift
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_secrets_backend_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_secrets_backend_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="secrets backend"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['backend']+x} ]]; then
+          args['backend']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.whitelist_filter
+  if [[ -n ${args['backend']:-} ]] && [[ ! ${args['backend']:-} =~ ^(keychain|secret-tool|pass|op|vault|file)$ ]]; then
+    printf "%s\n" "backend must be one of: keychain, secret-tool, pass, op, vault, file" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_secrets_profile_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_secrets_profile_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="secrets profile"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['profile']+x} ]]; then
+          args['profile']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_secrets_scan_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_secrets_scan_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="secrets scan"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --staged)
+
+        # :flag.case_no_arg
+        args['--staged']=1
+        shift
+        ;;
+
+      # :flag.case
+      --profile)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--profile']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--profile requires an argument: --profile PROFILE" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_secrets_lint_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_secrets_lint_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="secrets lint"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -57133,6 +60600,8 @@ run() {
     "get-ec2-instance-list") playground_get_ec2_instance_list_command ;;
     "get-ec2-cloudformation-list") playground_get_ec2_cloudformation_list_command ;;
     "get-zazkia-connection-list") playground_get_zazkia_connection_list_command ;;
+    "get-secret-list") playground_get_secret_list_command ;;
+    "get-secret-profile-list") playground_get_secret_profile_list_command ;;
     "compile-all-connector-plugins") playground_compile_all_connector_plugins_command ;;
     "generate-fzf-find-files") playground_generate_fzf_find_files_command ;;
     "generate-tag-list") playground_generate_tag_list_command ;;
@@ -57177,6 +60646,20 @@ run() {
     "config open-grafana-in-browser browser") playground_config_open_grafana_in_browser_browser_command ;;
     "config container-kill-all-before-run") playground_config_container_kill_all_before_run_command ;;
     "config check-and-update-repo-version") playground_config_check_and_update_repo_version_command ;;
+    "secrets") playground_secrets_command ;;
+    "secrets set") playground_secrets_set_command ;;
+    "secrets get") playground_secrets_get_command ;;
+    "secrets unset") playground_secrets_unset_command ;;
+    "secrets list") playground_secrets_list_command ;;
+    "secrets link") playground_secrets_link_command ;;
+    "secrets check") playground_secrets_check_command ;;
+    "secrets import") playground_secrets_import_command ;;
+    "secrets export") playground_secrets_export_command ;;
+    "secrets edit") playground_secrets_edit_command ;;
+    "secrets backend") playground_secrets_backend_command ;;
+    "secrets profile") playground_secrets_profile_command ;;
+    "secrets scan") playground_secrets_scan_command ;;
+    "secrets lint") playground_secrets_lint_command ;;
     "ai") playground_ai_command ;;
     "cloud-resources") playground_cloud_resources_command ;;
     "cloud-resources aws") playground_cloud_resources_aws_command ;;

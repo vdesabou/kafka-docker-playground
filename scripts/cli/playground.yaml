@@ -102,6 +102,264 @@ subcommands:
           browser to use
         usage: playground config open-grafana-in-browser browser [BROWSER]
         options: []
+  - name: secrets
+    description: | 
+        🔐 Credentials required by examples
+        
+        Stored outside the repository, in ~/.config/kafka-docker-playground, so that
+        they survive 'git clean -fdx' and can never be committed by mistake.
+        
+        🎓 Tip: an exported environment variable always wins over the store, so
+        'export FOO=bar' and 'source secret.properties' keep working.
+    usage: playground secrets COMMAND
+    options: []
+    subcommands:
+      - name: set
+        description: | 
+          🔐 Store a credential
+            
+            Without --value the value is prompted without echo, so it never lands in
+            the shell history.
+            
+            A name that looks like a credential (PASSWORD, SECRET, TOKEN, KEY, CREDS,
+            PWD, PASSPHRASE) goes to the secure backend, anything else is kept as a
+            plain variable. Use --secret or --plain to decide yourself.
+        usage: playground secrets set NAME [OPTIONS]
+        options:
+        - names:
+          - --value
+          argument: VALUE
+          description: | 
+            🔓 Value to store
+            
+            ❗ it will be visible in your shell history, prefer the prompt ❗
+            
+        - names:
+          - --secret
+          argument: ""
+          description: | 
+            🔐 Treat the value as a credential, whatever the variable name is
+            
+            It goes to the secure backend (keychain, 1Password, pass…) instead of
+            being kept in clear text.
+            
+            Conflicts with: --plain
+            
+        - names:
+          - --plain
+          argument: ""
+          description: | 
+            📝 Treat the value as a non sensitive variable
+            
+            It is kept in clear text in env.ini, which is handy for a URL, an
+            account name or a project id.
+            
+            Conflicts with: --secret
+            
+        - names:
+          - --profile
+          argument: PROFILE
+          description: | 
+            🗂️ Secrets profile to use (default is the active one)
+            
+      - name: get
+        description: | 
+          🔍 Show a stored credential (masked unless --reveal is used)
+        usage: playground secrets get NAME [OPTIONS]
+        options:
+        - names:
+          - --reveal
+          argument: ""
+          description: | 
+            👀 Print the value in clear text
+            
+            ❗ it will be visible in your terminal scrollback ❗
+            
+        - names:
+          - --profile
+          argument: PROFILE
+          description: | 
+            🗂️ Secrets profile to use (default is the active one)
+            
+      - name: unset
+        description: | 
+          🗑️ Remove a stored credential
+        usage: playground secrets unset NAME [OPTIONS]
+        options:
+        - names:
+          - --profile
+          argument: PROFILE
+          description: | 
+            🗂️ Secrets profile to use (default is the active one)
+            
+      - name: list
+        description: | 
+          📋 List stored credentials
+            
+            Values are never printed: secrets are shown as a masked fingerprint
+            (last 4 characters and a sha256 prefix), which is enough to tell whether
+            it is the token you rotated yesterday.
+        usage: playground secrets list [OPTIONS]
+        options:
+        - names:
+          - --show-source
+          argument: ""
+          description: | 
+            🔗 Show the backend reference instead of the fingerprint
+            
+        - names:
+          - --profile
+          argument: PROFILE
+          description: | 
+            🗂️ Secrets profile to use (default is the active one)
+            
+      - name: link
+        description: | 
+          🔗 Point a variable at a secret manager, without storing any value
+            
+            The store then only contains a reference, which is safe to back up, sync
+            between machines, or share with your team.
+        usage: playground secrets link NAME REFERENCE [OPTIONS]
+        options:
+        - names:
+          - --profile
+          argument: PROFILE
+          description: | 
+            🗂️ Secrets profile to use (default is the active one)
+            
+      - name: check
+        description: | 
+          ✅ Show what an example needs, and what is missing
+            
+            🎓 Tip: run it before a long example, it fails in a second instead of
+            several minutes into the environment startup.
+        usage: playground secrets check [OPTIONS]
+        options:
+        - names:
+          - --file
+          - -f
+          argument: FILE
+          description: | 
+            📄 Example script (default is the last example ran)
+            
+        - names:
+          - --profile
+          argument: PROFILE
+          description: | 
+            🗂️ Secrets profile to use (default is the active one)
+            
+      - name: import
+        description: | 
+          📥 Import an existing secret.properties / variable.properties file
+            
+            Each KEY=value line is classified and stored in the right place.
+        usage: playground secrets import [OPTIONS]
+        options:
+        - names:
+          - --file
+          argument: FILE
+          description: | 
+            📄 File to import
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --shred
+          argument: ""
+          description: | 
+            🔥 Securely delete the source file after a successful import
+            
+        - names:
+          - --profile
+          argument: PROFILE
+          description: | 
+            🗂️ Secrets profile to use (default is the active one)
+            
+      - name: export
+        description: | 
+          📤 Write every credential of a profile to a file, in clear text
+            
+            ❗ Only for the rare case where a tool needs a properties file ❗
+        usage: playground secrets export [OPTIONS]
+        options:
+        - names:
+          - --file
+          argument: FILE
+          description: | 
+            📄 Destination file, outside the repository
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --yes-i-want-plaintext
+          argument: ""
+          description: | 
+            🔓 Required, this writes credentials in clear text
+            
+        - names:
+          - --profile
+          argument: PROFILE
+          description: | 
+            🗂️ Secrets profile to use (default is the active one)
+            
+      - name: edit
+        description: | 
+          ✏️ Open the store in your editor
+        usage: playground secrets edit [OPTIONS]
+        options:
+        - names:
+          - --plain
+          argument: ""
+          description: | 
+            📝 Edit the non sensitive variables instead of the secrets
+            
+      - name: backend
+        description: | 
+          🏦 Show or change where secrets are kept
+            
+            keychain (macOS), secret-tool (Linux), pass, op (1Password), vault
+            (HashiCorp) or file.
+            
+            op and vault are reference-only: create the item there, then use
+            'playground secrets link'.
+        usage: playground secrets backend [BACKEND]
+        options: []
+      - name: profile
+        description: | 
+          🗂️ Show or switch the active profile
+            
+            🎓 Tip: use one profile per support case, so last week's customer
+            credentials never leak into this week's reproduction model.
+        usage: playground secrets profile [PROFILE]
+        options: []
+      - name: scan
+        description: | 
+          🔎 Look for stored credentials in clear text in the repository
+            
+            🎓 Tip: wire it as a pre-commit hook with
+            'playground secrets scan --staged'
+        usage: playground secrets scan [OPTIONS]
+        options:
+        - names:
+          - --staged
+          argument: ""
+          description: | 
+            📦 Scan the staged diff instead of the whole working tree
+            
+        - names:
+          - --profile
+          argument: PROFILE
+          description: | 
+            🗂️ Secrets profile to use (default is the active one)
+            
+      - name: lint
+        description: | 
+          🧹 List the examples whose environment variables are not auto-detected
+            
+            Only variables declared with the standard error string are picked up by
+            'playground run' and 'playground secrets check'.
+        usage: playground secrets lint
+        options: []
 
   - name: ai
     description: | 

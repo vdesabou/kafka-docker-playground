@@ -4010,6 +4010,32 @@ function login_and_maybe_set_azure_subscription () {
   fi
 }
 
+#
+# Names of the environment variables an example requires, one per line.
+#
+# Derived from the standard error string that examples use:
+#
+#   logerror "FOO is not set. Export it as environment variable or pass it as argument"
+#
+# Shared by the fzf preview of `playground run`, by the pre-flight of a non
+# interactive run, and by `playground secrets check`.
+#
+function get_mandatory_env_vars () {
+  local test_file="$1"
+  [ -f "$test_file" ] || return 0
+
+  {
+    awk -F '"' '/Export it as environment variable or pass it as argument/ { split($2,a," "); print a[1] }' "$test_file"
+
+    # a few variables are required by a shared helper the example calls, so the
+    # marker is in this library rather than in the example itself
+    if grep -q "display_ngrok_warning" "$test_file"
+    then
+      echo "NGROK_AUTH_TOKEN"
+    fi
+  } | awk 'NF' | sort -u
+}
+
 function handle_aws_credentials () {
   rm -rf /tmp/aws_credentials
   export AWS_CREDENTIALS_FILE_NAME="/tmp/aws_credentials"

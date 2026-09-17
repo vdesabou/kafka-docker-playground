@@ -5,6 +5,8 @@
 
 Onprem (self-managed) connector examples support both Docker Compose and CFK (Confluent for Kubernetes) environments.
 
+🔐 Many of the examples below talk to a real SaaS (Salesforce, Snowflake, ServiceNow, Zendesk, …) and expect their credentials in environment variables. Store them once, outside the repository, with `playground secrets set <NAME>`, and check what a given example needs with `playground secrets check -f <example.sh>`. An exported environment variable always wins over the store, so an existing `source secret.properties` keeps working. See [playground secrets](https://kafka-docker-playground.io/#/cli?id=playground-secrets).
+
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/activemq.png" width="15"> [ActiveMQ Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-active-mq-sink) (also with 🔑 mTLS) :connect/connect-active-mq-sink:
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/activemq.png" width="15"> [ActiveMQ Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-active-mq-source) (also with 🔑  mTLS) :connect/connect-active-mq-source:
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/cloudwatch_logs.svg" width="15"> [Amazon CloudWatch Logs Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-aws-cloudwatch-logs-source) :connect/connect-aws-cloudwatch-logs-source:

@@ -81,6 +81,14 @@ commands:
   help: Return some completion for zazkia connections list
   private: true
 
+- name: get-secret-list
+  help: Return some completion for secret names
+  private: true
+
+- name: get-secret-profile-list
+  help: Return some completion for secret profiles
+  private: true
+
 - name: compile-all-connector-plugins
   help: Call playground connector-plugin sourcecode --compile for all plugins in confluent-hub-plugin-list.txt
   private: true
@@ -496,6 +504,275 @@ commands:
     examples:
     - playground config check-and-update-repo-version false
     - playground config check-and-update-repo-version true
+
+- name: secrets
+  help: |-
+    🔐 Credentials required by examples
+
+    Stored outside the repository, in ~/.config/kafka-docker-playground, so that
+    they survive 'git clean -fdx' and can never be committed by mistake.
+
+    🎓 Tip: an exported environment variable always wins over the store, so
+    'export FOO=bar' and 'source secret.properties' keep working.
+
+  commands:
+  - name: set
+    help: |-
+      🔐 Store a credential
+
+      Without --value the value is prompted without echo, so it never lands in
+      the shell history.
+
+      A name that looks like a credential (PASSWORD, SECRET, TOKEN, KEY, CREDS,
+      PWD, PASSPHRASE) goes to the secure backend, anything else is kept as a
+      plain variable. Use --secret or --plain to decide yourself.
+    args:
+    - name: name
+      required: true
+      help: 🔑 Environment variable name
+      validate: secret_name
+      completions:
+      - $(playground get-secret-list)
+    flags:
+    - long: --value
+      arg: value
+      required: false
+      help: |-
+        🔓 Value to store
+
+        ❗ it will be visible in your shell history, prefer the prompt ❗
+    - long: --secret
+      required: false
+      conflicts: [--plain]
+      help: |-
+        🔐 Treat the value as a credential, whatever the variable name is
+
+        It goes to the secure backend (keychain, 1Password, pass…) instead of
+        being kept in clear text.
+    - long: --plain
+      required: false
+      conflicts: [--secret]
+      help: |-
+        📝 Treat the value as a non sensitive variable
+
+        It is kept in clear text in env.ini, which is handy for a URL, an
+        account name or a project id.
+    - &secret-profile
+      long: --profile
+      arg: profile
+      required: false
+      help: 🗂️ Secrets profile to use (default is the active one)
+      completions:
+      - $(playground get-secret-profile-list)
+    examples:
+    - playground secrets set SALESFORCE_PASSWORD
+    - playground secrets set NGROK_AUTH_TOKEN --value 2abcDEF...
+    - playground secrets set GCP_PROJECT --value my-gcp-project
+    - playground secrets set MY_API_CREDENTIAL --secret
+
+  - name: get
+    help: 🔍 Show a stored credential (masked unless --reveal is used)
+    args:
+    - name: name
+      required: true
+      help: 🔑 Environment variable name
+      validate: secret_name
+      completions:
+      - $(playground get-secret-list)
+    flags:
+    - long: --reveal
+      required: false
+      help: |-
+        👀 Print the value in clear text
+
+        ❗ it will be visible in your terminal scrollback ❗
+    - *secret-profile
+    examples:
+    - playground secrets get SALESFORCE_PASSWORD
+    - playground secrets get SALESFORCE_PASSWORD --reveal
+
+  - name: unset
+    help: 🗑️ Remove a stored credential
+    alias:
+     - delete
+     - rm
+    args:
+    - name: name
+      required: true
+      help: 🔑 Environment variable name
+      validate: secret_name
+      completions:
+      - $(playground get-secret-list)
+    flags:
+    - *secret-profile
+    examples:
+    - playground secrets unset SALESFORCE_PASSWORD
+
+  - name: list
+    help: |-
+      📋 List stored credentials
+
+      Values are never printed: secrets are shown as a masked fingerprint
+      (last 4 characters and a sha256 prefix), which is enough to tell whether
+      it is the token you rotated yesterday.
+    flags:
+    - long: --show-source
+      required: false
+      help: 🔗 Show the backend reference instead of the fingerprint
+    - *secret-profile
+    examples:
+    - playground secrets list
+    - playground secrets list --profile customer-123456
+
+  - name: link
+    help: |-
+      🔗 Point a variable at a secret manager, without storing any value
+
+      The store then only contains a reference, which is safe to back up, sync
+      between machines, or share with your team.
+    args:
+    - name: name
+      required: true
+      help: 🔑 Environment variable name
+      validate: secret_name
+      completions:
+      - $(playground get-secret-list)
+    - name: reference
+      required: true
+      help: |-
+        🔗 op://<vault>/<item>/<field>, vault://<path>#<field>,
+        keychain:<profile>:<NAME>, secret-tool:<profile>:<NAME> or pass:<path>
+      validate: not_empty
+    flags:
+    - *secret-profile
+    examples:
+    - playground secrets link SALESFORCE_PASSWORD op://Private/salesforce/password
+    - playground secrets link SNOWFLAKE_PASSWORD vault://secret/kdp/snowflake#password
+
+  - name: check
+    help: |-
+      ✅ Show what an example needs, and what is missing
+
+      🎓 Tip: run it before a long example, it fails in a second instead of
+      several minutes into the environment startup.
+    flags:
+    - short: -f
+      long: --file
+      arg: file
+      required: false
+      help: 📄 Example script (default is the last example ran)
+      validate: file_exists_with_trick
+      completions:
+      - $(playground get-examples-list-with-fzf)
+    - *secret-profile
+    examples:
+    - playground secrets check
+    - playground secrets check -f ccloud/fm-splunk-sink/fully-managed-splunk-sink.sh
+
+  - name: import
+    help: |-
+      📥 Import an existing secret.properties / variable.properties file
+
+      Each KEY=value line is classified and stored in the right place.
+    flags:
+    - long: --file
+      arg: file
+      required: true
+      help: 📄 File to import
+      validate: file_exists
+    - long: --shred
+      required: false
+      help: 🔥 Securely delete the source file after a successful import
+    - *secret-profile
+    examples:
+    - playground secrets import --file ~/secret.properties
+    - playground secrets import --file ~/secret.properties --shred
+
+  - name: export
+    help: |-
+      📤 Write every credential of a profile to a file, in clear text
+
+      ❗ Only for the rare case where a tool needs a properties file ❗
+    flags:
+    - long: --file
+      arg: file
+      required: true
+      help: 📄 Destination file, outside the repository
+    - long: --yes-i-want-plaintext
+      required: false
+      help: 🔓 Required, this writes credentials in clear text
+    - *secret-profile
+    examples:
+    - playground secrets export --file ~/kdp-secrets.properties --yes-i-want-plaintext
+
+  - name: edit
+    help: ✏️ Open the store in your editor
+    flags:
+    - long: --plain
+      required: false
+      help: 📝 Edit the non sensitive variables instead of the secrets
+    examples:
+    - playground secrets edit
+    - playground secrets edit --plain
+
+  - name: backend
+    help: |-
+      🏦 Show or change where secrets are kept
+
+      keychain (macOS), secret-tool (Linux), pass, op (1Password), vault
+      (HashiCorp) or file.
+
+      op and vault are reference-only: create the item there, then use
+      'playground secrets link'.
+    args:
+    - name: backend
+      required: false
+      help: 🏦 Backend to use
+      allowed: [keychain, secret-tool, pass, op, vault, file]
+    examples:
+    - playground secrets backend
+    - playground secrets backend op
+
+  - name: profile
+    help: |-
+      🗂️ Show or switch the active profile
+
+      🎓 Tip: use one profile per support case, so last week's customer
+      credentials never leak into this week's reproduction model.
+    args:
+    - name: profile
+      required: false
+      help: 🗂️ Profile to activate
+      completions:
+      - $(playground get-secret-profile-list)
+    examples:
+    - playground secrets profile
+    - playground secrets profile customer-123456
+
+  - name: scan
+    help: |-
+      🔎 Look for stored credentials in clear text in the repository
+
+      🎓 Tip: wire it as a pre-commit hook with
+      'playground secrets scan --staged'
+    flags:
+    - long: --staged
+      required: false
+      help: 📦 Scan the staged diff instead of the whole working tree
+    - *secret-profile
+    examples:
+    - playground secrets scan
+    - playground secrets scan --staged
+
+  - name: lint
+    private: true
+    help: |-
+      🧹 List the examples whose environment variables are not auto-detected
+
+      Only variables declared with the standard error string are picked up by
+      'playground run' and 'playground secrets check'.
+    examples:
+    - playground secrets lint
 
 - name: ai
   dependencies:

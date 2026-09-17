@@ -73,6 +73,46 @@ then
   exit 1
 fi
 
+#
+# 🔐 Resolve, from the secrets store, the variables this example needs and that
+# are not already exported. Scoped to the example's own list on purpose: no
+# blanket 'set -o allexport' that would leak every credential into every
+# process for the rest of the session.
+#
+load_secrets_for_example "$test_file"
+
+#
+# 🔐 Pre-flight for non interactive runs. In interactive mode the fzf menu
+# already refuses to start with a missing variable; without it the example used
+# to fail minutes later, after the whole environment had started. It has to stay
+# before the container kill-all below, otherwise a missing variable costs the
+# user the environment they already had running.
+#
+# Skipped in CI, so that an example keeps its own control over its exit code
+# (111 = unsupported combination, 107 = known issue).
+#
+if [ $interactive_mode != 1 ] && [ -z "$GITHUB_RUN_NUMBER" ]
+then
+  missing_mandatory_env=""
+  for mandatory_environment_variable in $(get_mandatory_env_vars "$test_file")
+  do
+    if [ -z "${!mandatory_environment_variable:-}" ]
+    then
+      missing_mandatory_env="${missing_mandatory_env} ${mandatory_environment_variable}"
+    fi
+  done
+
+  if [ -n "$missing_mandatory_env" ]
+  then
+    logerror "❌ Cannot run $test_file, missing environment variable(s):${missing_mandatory_env}"
+    for mandatory_environment_variable in $missing_mandatory_env
+    do
+      logerror "👉 playground secrets set $mandatory_environment_variable"
+    done
+    exit 1
+  fi
+fi
+
 if [[ $test_file == *"ccloud"* ]]
 then
   verify_installed "confluent"
@@ -609,7 +649,7 @@ then
   declare -a mandatory_env_vars=()
   while IFS= read -r __mev; do
     [ -n "$__mev" ] && mandatory_env_vars+=("$__mev")
-  done < <(awk -F '"' '/Export it as environment variable or pass it as argument/ { split($2,a," "); print a[1] }' "$test_file")
+  done < <(get_mandatory_env_vars "$test_file")
 
   stop=0
   while [ $stop != 1 ]
@@ -986,6 +1026,17 @@ then
           set -e
 
           export $mandatory_environment_variable="$mandatory_environment_variable_value"
+
+          if [ -n "$mandatory_environment_variable_value" ]
+          then
+            set +e
+            save_answer=$(printf "yes\nno" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="💾" --header="Save $mandatory_environment_variable for next time? (playground secrets)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
+            set -e
+            if [ "$save_answer" == "yes" ]
+            then
+              secret_store_value "$mandatory_environment_variable" "$mandatory_environment_variable_value"
+            fi
+          fi
         fi
       done
     fi

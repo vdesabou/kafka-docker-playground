@@ -110,6 +110,250 @@
       ]
     },
     {
+      "name": "secrets",
+      "description": "🔐 Credentials required by examples\n\nStored outside the repository, in ~/.config/kafka-docker-playground, so that\nthey survive 'git clean -fdx' and can never be committed by mistake.\n\n🎓 Tip: an exported environment variable always wins over the store, so\n'export FOO=bar' and 'source secret.properties' keep working.\n",
+      "usage": "playground secrets COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "set",
+          "description": "🔐 Store a credential\n  \n  Without --value the value is prompted without echo, so it never lands in\n  the shell history.\n  \n  A name that looks like a credential (PASSWORD, SECRET, TOKEN, KEY, CREDS,\n  PWD, PASSPHRASE) goes to the secure backend, anything else is kept as a\n  plain variable. Use --secret or --plain to decide yourself.\n",
+          "usage": "playground secrets set NAME [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--value"
+              ],
+              "argument": "VALUE",
+              "description": "🔓 Value to store\n\n❗ it will be visible in your shell history, prefer the prompt ❗\n"
+            },
+            {
+              "names": [
+                "--secret"
+              ],
+              "argument": "",
+              "description": "🔐 Treat the value as a credential, whatever the variable name is\n\nIt goes to the secure backend (keychain, 1Password, pass…) instead of\nbeing kept in clear text.\n\nConflicts with: --plain\n"
+            },
+            {
+              "names": [
+                "--plain"
+              ],
+              "argument": "",
+              "description": "📝 Treat the value as a non sensitive variable\n\nIt is kept in clear text in env.ini, which is handy for a URL, an\naccount name or a project id.\n\nConflicts with: --secret\n"
+            },
+            {
+              "names": [
+                "--profile"
+              ],
+              "argument": "PROFILE",
+              "description": "🗂️ Secrets profile to use (default is the active one)\n"
+            }
+          ]
+        },
+        {
+          "name": "get",
+          "description": "🔍 Show a stored credential (masked unless --reveal is used)\n",
+          "usage": "playground secrets get NAME [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--reveal"
+              ],
+              "argument": "",
+              "description": "👀 Print the value in clear text\n\n❗ it will be visible in your terminal scrollback ❗\n"
+            },
+            {
+              "names": [
+                "--profile"
+              ],
+              "argument": "PROFILE",
+              "description": "🗂️ Secrets profile to use (default is the active one)\n"
+            }
+          ]
+        },
+        {
+          "name": "unset",
+          "description": "🗑️ Remove a stored credential\n",
+          "usage": "playground secrets unset NAME [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--profile"
+              ],
+              "argument": "PROFILE",
+              "description": "🗂️ Secrets profile to use (default is the active one)\n"
+            }
+          ]
+        },
+        {
+          "name": "list",
+          "description": "📋 List stored credentials\n  \n  Values are never printed: secrets are shown as a masked fingerprint\n  (last 4 characters and a sha256 prefix), which is enough to tell whether\n  it is the token you rotated yesterday.\n",
+          "usage": "playground secrets list [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--show-source"
+              ],
+              "argument": "",
+              "description": "🔗 Show the backend reference instead of the fingerprint\n"
+            },
+            {
+              "names": [
+                "--profile"
+              ],
+              "argument": "PROFILE",
+              "description": "🗂️ Secrets profile to use (default is the active one)\n"
+            }
+          ]
+        },
+        {
+          "name": "link",
+          "description": "🔗 Point a variable at a secret manager, without storing any value\n  \n  The store then only contains a reference, which is safe to back up, sync\n  between machines, or share with your team.\n",
+          "usage": "playground secrets link NAME REFERENCE [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--profile"
+              ],
+              "argument": "PROFILE",
+              "description": "🗂️ Secrets profile to use (default is the active one)\n"
+            }
+          ]
+        },
+        {
+          "name": "check",
+          "description": "✅ Show what an example needs, and what is missing\n  \n  🎓 Tip: run it before a long example, it fails in a second instead of\n  several minutes into the environment startup.\n",
+          "usage": "playground secrets check [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--file",
+                "-f"
+              ],
+              "argument": "FILE",
+              "description": "📄 Example script (default is the last example ran)\n"
+            },
+            {
+              "names": [
+                "--profile"
+              ],
+              "argument": "PROFILE",
+              "description": "🗂️ Secrets profile to use (default is the active one)\n"
+            }
+          ]
+        },
+        {
+          "name": "import",
+          "description": "📥 Import an existing secret.properties / variable.properties file\n  \n  Each KEY=value line is classified and stored in the right place.\n",
+          "usage": "playground secrets import [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--file"
+              ],
+              "argument": "FILE",
+              "description": "📄 File to import\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--shred"
+              ],
+              "argument": "",
+              "description": "🔥 Securely delete the source file after a successful import\n"
+            },
+            {
+              "names": [
+                "--profile"
+              ],
+              "argument": "PROFILE",
+              "description": "🗂️ Secrets profile to use (default is the active one)\n"
+            }
+          ]
+        },
+        {
+          "name": "export",
+          "description": "📤 Write every credential of a profile to a file, in clear text\n  \n  ❗ Only for the rare case where a tool needs a properties file ❗\n",
+          "usage": "playground secrets export [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--file"
+              ],
+              "argument": "FILE",
+              "description": "📄 Destination file, outside the repository\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--yes-i-want-plaintext"
+              ],
+              "argument": "",
+              "description": "🔓 Required, this writes credentials in clear text\n"
+            },
+            {
+              "names": [
+                "--profile"
+              ],
+              "argument": "PROFILE",
+              "description": "🗂️ Secrets profile to use (default is the active one)\n"
+            }
+          ]
+        },
+        {
+          "name": "edit",
+          "description": "✏️ Open the store in your editor\n",
+          "usage": "playground secrets edit [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--plain"
+              ],
+              "argument": "",
+              "description": "📝 Edit the non sensitive variables instead of the secrets\n"
+            }
+          ]
+        },
+        {
+          "name": "backend",
+          "description": "🏦 Show or change where secrets are kept\n  \n  keychain (macOS), secret-tool (Linux), pass, op (1Password), vault\n  (HashiCorp) or file.\n  \n  op and vault are reference-only: create the item there, then use\n  'playground secrets link'.\n",
+          "usage": "playground secrets backend [BACKEND]",
+          "options": []
+        },
+        {
+          "name": "profile",
+          "description": "🗂️ Show or switch the active profile\n  \n  🎓 Tip: use one profile per support case, so last week's customer\n  credentials never leak into this week's reproduction model.\n",
+          "usage": "playground secrets profile [PROFILE]",
+          "options": []
+        },
+        {
+          "name": "scan",
+          "description": "🔎 Look for stored credentials in clear text in the repository\n  \n  🎓 Tip: wire it as a pre-commit hook with\n  'playground secrets scan --staged'\n",
+          "usage": "playground secrets scan [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--staged"
+              ],
+              "argument": "",
+              "description": "📦 Scan the staged diff instead of the whole working tree\n"
+            },
+            {
+              "names": [
+                "--profile"
+              ],
+              "argument": "PROFILE",
+              "description": "🗂️ Secrets profile to use (default is the active one)\n"
+            }
+          ]
+        },
+        {
+          "name": "lint",
+          "description": "🧹 List the examples whose environment variables are not auto-detected\n  \n  Only variables declared with the standard error string are picked up by\n  'playground run' and 'playground secrets check'.\n",
+          "usage": "playground secrets lint",
+          "options": []
+        }
+      ]
+    },
+    {
       "name": "ai",
       "description": "🧞‍♂️  AI\n\nIt is using Claude Code (https://code.claude.com/docs/en/quickstart) in interactive mode.\n\nMCP servers are available:\n\n1. mcp-playground - Playground MCP Server (see https://github.com/vdesabou/kafka-docker-playground-mcp-server), it exposes the live state of this checkout\n\n  Tools:\n  - playground_status:\n      Docker availability, the example currently running (script, environment, connector type),\n      every container with its state/health/ports and the recent `playground run` history.\n  - playground_connectors:\n      Status of every connector, with the root cause of each FAILED task. Talks to the running\n      Connect worker (ssl/rbac included) or to the Confluent Cloud Connect API, whichever the\n      current environment uses.\n  - playground_logs:\n      Container logs without flooding the context: de-duplicated errors with collapsed stack\n      traces (default), tail, or regex search.\n  - playground_find_example:\n      Search the ~2500 runnable example scripts by connector class, path, title or body, and get\n      the exact `playground run -f <script>` command back.\n  - playground_example_details:\n      One call for everything about an example: source, connector payloads, default environment,\n      docker-compose overrides, sibling variants and the variables you must export.\n\n2. mcp-server - Confluent MCP Server (see http://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html#quick-start and https://github.com/confluentinc/mcp-confluent)\n\n  Tools:\n  - list-topics: List all topics in the Kafka cluster.\n  - create-topics: Create one or more Kafka topics.\n  - delete-topics: Delete topics by name.\n  - produce-message: Produce records to a Kafka topic (supports Schema Registry).\n  - consume-messages: Consume messages from one or more Kafka topics (supports Schema Registry).\n  - list-schemas: List all schemas in the Schema Registry.\n  - delete-schema: Delete a schema subject or a specific version from the Schema Registry.\n\n3. mcp-ccloud - Confluent MCP Server (see http://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html#quick-start and https://github.com/confluentinc/mcp-confluent)\n\n  Tools:\n    Environment & Cluster Management\n    - list-environments: Get all environments in Confluent Cloud.\n    - read-environment: Get details of a specific environment.\n    - list-clusters: Get all clusters in a Confluent Cloud environment.\n\n    Topic Management\n    - list-topics: List all topics in a Kafka cluster.\n    - create-topics: Create one or more Kafka topics.\n    - delete-topics: Delete topics by name.\n    - search-topics-by-name: Search for topics matching a name.\n    - get-topic-config: Retrieve configuration details for a topic.\n    - alter-topic-config: Update topic configuration (SET/DELETE).\n\n    Messaging\n    - produce-message: Produce records to a topic (supports Schema Registry serialization).\n    - consume-messages: Consume and deserialize messages from one or more topics.\n\n    Schema Registry\n    - list-schemas: List schemas (latest or all versions).\n    - delete-schema: Delete a schema subject or specific version.\n    - list-tags: Retrieve all tag definitions.\n    - create-topic-tags: Create new tag definitions.\n    - delete-tag: Delete a tag definition.\n    - add-tags-to-topic: Assign tags to Kafka topics.\n    - remove-tag-from-entity: Remove tags from entities.\n    - search-topics-by-tag: List topics with a specific tag.\n\n    Connector Management\n    - list-connectors: List active connectors in a cluster.\n    - read-connector: Get detailed information about a connector.\n    - create-connector: Create a new Managed or Custom connector.\n    - delete-connector: Delete an existing connector.\n\n    Metrics & Billing\n    - list-available-metrics: Discover valid metric names and filter fields.\n    - query-metrics: Query metrics from the Telemetry API (Kafka, Flink, Connect, SR).\n    - list-billing-costs: Retrieve billing cost data for an organization.\n",
       "usage": "playground ai [--] [CLAUDE CLI ARGUMENTS...]",
