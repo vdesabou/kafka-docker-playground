@@ -762,6 +762,13 @@ function secret_get_from_store () {
 function is_secret_env_var_name () {
   case "$1" in
     *PASSWORD*|*PASSPHRASE*|*SECRET*|*TOKEN*|*KEY*|*CREDS*|*PWD*) return 0 ;;
+    #
+    # CONFLUENT_LICENSE is a signed JWT, not a setting: whoever holds it can run
+    # the licensed components. None of the words above appear in it, so without
+    # this line it is filed as a plain variable and written in clear into
+    # env.ini, which is mode 0644 while secrets.ini is 0600.
+    #
+    *LICENSE*|*LICENCE*) return 0 ;;
   esac
   return 1
 }

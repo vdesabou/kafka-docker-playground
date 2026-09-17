@@ -2033,7 +2033,7 @@ playground_secrets_usage() {
 playground_secrets_set_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground secrets set\n\n"
-    printf "  🔐 Store a credential\n  \n  Without --value the value is prompted without echo, so it never lands in\n  the shell history.\n  \n  A name that looks like a credential (PASSWORD, SECRET, TOKEN, KEY, CREDS,\n  PWD, PASSPHRASE) goes to the secure backend, anything else is kept as a\n  plain variable. Use --secret or --plain to decide yourself.\n\n"
+    printf "  🔐 Store a credential\n  \n  Without --value the value is prompted without echo, so it never lands in\n  the shell history.\n  \n  A name that looks like a credential (PASSWORD, SECRET, TOKEN, KEY, CREDS,\n  PWD, PASSPHRASE, LICENSE) goes to the secure backend, anything else is\n  kept as a plain variable. Use --secret or --plain to decide yourself.\n\n"
   else
     printf "playground secrets set - 🔐 Store a credential\n\n"
   fi
@@ -12872,6 +12872,13 @@ function secret_get_from_store () {
 function is_secret_env_var_name () {
   case "$1" in
     *PASSWORD*|*PASSPHRASE*|*SECRET*|*TOKEN*|*KEY*|*CREDS*|*PWD*) return 0 ;;
+    #
+    # CONFLUENT_LICENSE is a signed JWT, not a setting: whoever holds it can run
+    # the licensed components. None of the words above appear in it, so without
+    # this line it is filed as a plain variable and written in clear into
+    # env.ini, which is mode 0644 while secrets.ini is 0600.
+    #
+    *LICENSE*|*LICENCE*) return 0 ;;
   esac
   return 1
 }

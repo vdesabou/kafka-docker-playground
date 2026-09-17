@@ -525,8 +525,8 @@ commands:
       the shell history.
 
       A name that looks like a credential (PASSWORD, SECRET, TOKEN, KEY, CREDS,
-      PWD, PASSPHRASE) goes to the secure backend, anything else is kept as a
-      plain variable. Use --secret or --plain to decide yourself.
+      PWD, PASSPHRASE, LICENSE) goes to the secure backend, anything else is
+      kept as a plain variable. Use --secret or --plain to decide yourself.
     args:
     - name: name
       required: true

@@ -117,7 +117,7 @@
       "subcommands": [
         {
           "name": "set",
-          "description": "🔐 Store a credential\n  \n  Without --value the value is prompted without echo, so it never lands in\n  the shell history.\n  \n  A name that looks like a credential (PASSWORD, SECRET, TOKEN, KEY, CREDS,\n  PWD, PASSPHRASE) goes to the secure backend, anything else is kept as a\n  plain variable. Use --secret or --plain to decide yourself.\n",
+          "description": "🔐 Store a credential\n  \n  Without --value the value is prompted without echo, so it never lands in\n  the shell history.\n  \n  A name that looks like a credential (PASSWORD, SECRET, TOKEN, KEY, CREDS,\n  PWD, PASSPHRASE, LICENSE) goes to the secure backend, anything else is\n  kept as a plain variable. Use --secret or --plain to decide yourself.\n",
           "usage": "playground secrets set NAME [OPTIONS]",
           "options": [
             {
