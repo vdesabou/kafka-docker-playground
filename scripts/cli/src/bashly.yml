@@ -506,6 +506,7 @@ commands:
     - playground config check-and-update-repo-version true
 
 - name: secrets
+  group: Secrets
   help: |-
     🔐 Credentials required by examples
 

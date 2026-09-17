@@ -40,10 +40,12 @@ playground_usage() {
   printf "  %s   Show help about a command\n" "$(green "help")                                      "
   printf "  %s   🗺️ Show a status\n" "$(green "status")                                    "
   printf "  %s   ⚙️ Configure CLI\n" "$(green "config")                                    "
-  printf "  %s   🔐 Credentials required by examples\n" "$(green "secrets")                                   "
   printf "  %s   🧞‍♂️  AI\n" "$(green "ai")                                        "
   printf "  %s   💰  Retrieve ccloud costs for a range of dates\n" "$(green "ccloud-costs")                              "
   printf "  %s   👛  Retrieve ccloud costs for each month since last year\n" "$(green "ccloud-costs-history")                      "
+  echo
+  printf "%s\n" "$(bold "Secrets commands:")"
+  printf "  %s   🔐 Credentials required by examples\n" "$(green "secrets")                                   "
   echo
   printf "%s\n" "$(bold "Cloud Resources commands:")"
   printf "  %s   🔗 Connector commands\n" "$(green "cloud-resources")                           "
@@ -2009,7 +2011,6 @@ playground_secrets_usage() {
   printf "  %s   🏦 Show or change where secrets are kept\n" "$(green "backend")"
   printf "  %s   🗂️ Show or switch the active profile\n" "$(green "profile")"
   printf "  %s   🔎 Look for stored credentials in clear text in the repository\n" "$(green "scan")   "
-  printf "  %s   🧹 List the examples whose environment variables are not auto-detected\n" "$(green "lint")   "
   echo
 
   # :command.long_usage

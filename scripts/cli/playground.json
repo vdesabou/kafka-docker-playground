@@ -344,12 +344,6 @@
               "description": "🗂️ Secrets profile to use (default is the active one)\n"
             }
           ]
-        },
-        {
-          "name": "lint",
-          "description": "🧹 List the examples whose environment variables are not auto-detected\n  \n  Only variables declared with the standard error string are picked up by\n  'playground run' and 'playground secrets check'.\n",
-          "usage": "playground secrets lint",
-          "options": []
         }
       ]
     },

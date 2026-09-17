@@ -352,14 +352,6 @@ subcommands:
           description: | 
             🗂️ Secrets profile to use (default is the active one)
             
-      - name: lint
-        description: | 
-          🧹 List the examples whose environment variables are not auto-detected
-            
-            Only variables declared with the standard error string are picked up by
-            'playground run' and 'playground secrets check'.
-        usage: playground secrets lint
-        options: []
 
   - name: ai
     description: | 
