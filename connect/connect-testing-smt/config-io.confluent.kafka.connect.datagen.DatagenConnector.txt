@@ -45,7 +45,7 @@ Class for the 'valueToKey' transformation.
 Version of the 'valueToKey' transformation.
 
 	 - Type: STRING
-	 - Default: 8.3.0-ce
+	 - Default: 8.3.2-ce
 	 - Importance: HIGH
 	 - Required: false
 

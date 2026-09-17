@@ -17,7 +17,7 @@
     "transaction.boundary.interval.ms": "",
     "transforms.valueToKey.fields": "",
     "transforms.valueToKey.negate": "false",
-    "transforms.valueToKey.plugin.version": "8.3.0-ce",
+    "transforms.valueToKey.plugin.version": "8.3.2-ce",
     "transforms.valueToKey.predicate": "",
     "transforms.valueToKey.replace.null.with.default": "true",
     "transforms.valueToKey.type": "",
