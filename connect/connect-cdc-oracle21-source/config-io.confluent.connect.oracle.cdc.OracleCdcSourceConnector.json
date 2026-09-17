@@ -106,6 +106,8 @@
     "redo.log.consumer.sasl.oauthbearer.aws.iam.webidentitytoken.signing.algorithm": "",
     "redo.log.consumer.sasl.oauthbearer.client.credentials.client.id": "",
     "redo.log.consumer.sasl.oauthbearer.client.credentials.client.secret": "",
+    "redo.log.consumer.sasl.oauthbearer.expected.audience": "LIST",
+    "redo.log.consumer.sasl.oauthbearer.expected.issuer": "",
     "redo.log.consumer.sasl.oauthbearer.jwks.endpoint.url": "",
     "redo.log.consumer.sasl.oauthbearer.jwt.retriever.class": "org.apache.kafka.common.security.oauthbearer.DefaultJwtRetriever",
     "redo.log.consumer.sasl.oauthbearer.jwt.validator.class": "org.apache.kafka.common.security.oauthbearer.DefaultJwtValidator",
