@@ -767,6 +767,7 @@ commands:
     - playground secrets export --file ~/kdp-vars.properties --only plain --yes-i-want-plaintext
 
   - name: push-github
+    private: true
     help: |-
       🐙 Push a profile to the GitHub Actions secrets and variables of a repository
 
@@ -777,8 +778,19 @@ commands:
       Values are piped to 'gh' on stdin: nothing is written to disk and nothing
       shows up in 'ps' or in the shell history.
 
+      With NAME only that one is pushed, without the confirmation prompt. This
+      is what 'playground secrets set' calls when the config key
+      secrets.github-repo is set.
+
       🎓 Tip: start with --dry-run, it lists what would be pushed without
       touching the repository.
+    args:
+    - name: name
+      required: false
+      help: 🔑 Push only this variable (default is the whole profile)
+      validate: secret_name
+      completions:
+      - $(playground get-secret-list)
     flags:
     - long: --repo
       arg: repo
@@ -811,6 +823,7 @@ commands:
     examples:
     - playground secrets push-github --dry-run
     - playground secrets push-github
+    - playground secrets push-github SALESFORCE_PASSWORD
     - playground secrets push-github --only secret --repo vdesabou/kafka-docker-playground
 
   - name: edit

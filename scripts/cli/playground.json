@@ -356,55 +356,6 @@
           ]
         },
         {
-          "name": "push-github",
-          "description": "🐙 Push a profile to the GitHub Actions secrets and variables of a repository\n  \n  Credentials become repository secrets ('gh secret set'), plain variables\n  become repository variables ('gh variable set'), so the workflows can\n  read them as secrets.NAME and vars.NAME.\n  \n  Values are piped to 'gh' on stdin: nothing is written to disk and nothing\n  shows up in 'ps' or in the shell history.\n  \n  🎓 Tip: start with --dry-run, it lists what would be pushed without\n  touching the repository.\n",
-          "usage": "playground secrets push-github [OPTIONS]",
-          "options": [
-            {
-              "names": [
-                "--repo"
-              ],
-              "argument": "REPO",
-              "description": "🐙 Target repository as OWNER/REPO (default is the current one)\n"
-            },
-            {
-              "names": [
-                "--only"
-              ],
-              "argument": "all",
-              "description": "🎯 Push only the credentials, only the plain variables, or both\n\nDefault value: all\n\nAllowed values: secret, plain, all\n"
-            },
-            {
-              "names": [
-                "--as"
-              ],
-              "argument": "auto",
-              "description": "🎛️ Where everything lands on the GitHub side\n\nauto     credentials become secrets, plain variables become variables\nsecret   everything becomes a repository secret\nvariable everything becomes a repository variable\n\nDefault value: auto\n\nAllowed values: auto, secret, variable\n"
-            },
-            {
-              "names": [
-                "--dry-run"
-              ],
-              "argument": "",
-              "description": "🔍 List what would be pushed, change nothing\n"
-            },
-            {
-              "names": [
-                "--force"
-              ],
-              "argument": "",
-              "description": "⏩ Do not ask for confirmation\n"
-            },
-            {
-              "names": [
-                "--profile"
-              ],
-              "argument": "PROFILE",
-              "description": "🗂️ Secrets profile to use (default is the active one)\n"
-            }
-          ]
-        },
-        {
           "name": "edit",
           "description": "✏️ Open the store in your editor\n",
           "usage": "playground secrets edit [OPTIONS]",

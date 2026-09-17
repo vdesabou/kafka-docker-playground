@@ -2009,7 +2009,6 @@ playground_secrets_usage() {
   printf "  %s   🐚 Export what an example needs into the current shell\n" "$(green "env")        "
   printf "  %s   📥 Import an existing secret.properties / variable.properties file\n" "$(green "import")     "
   printf "  %s   📤 Write every credential of a profile to a file, in clear text\n" "$(green "export")     "
-  printf "  %s   🐙 Push a profile to the GitHub Actions secrets and variables of a repository\n" "$(green "push-github")"
   printf "  %s   ✏️ Open the store in your editor\n" "$(green "edit")       "
   printf "  %s   🏦 Show or change where secrets are kept\n" "$(green "backend")    "
   printf "  %s   🗂️ Show or switch the active profile\n" "$(green "profile")    "
@@ -2502,13 +2501,13 @@ playground_secrets_export_usage() {
 playground_secrets_push_github_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground secrets push-github\n\n"
-    printf "  🐙 Push a profile to the GitHub Actions secrets and variables of a repository\n  \n  Credentials become repository secrets ('gh secret set'), plain variables\n  become repository variables ('gh variable set'), so the workflows can\n  read them as secrets.NAME and vars.NAME.\n  \n  Values are piped to 'gh' on stdin: nothing is written to disk and nothing\n  shows up in 'ps' or in the shell history.\n  \n  🎓 Tip: start with --dry-run, it lists what would be pushed without\n  touching the repository.\n\n"
+    printf "  🐙 Push a profile to the GitHub Actions secrets and variables of a repository\n  \n  Credentials become repository secrets ('gh secret set'), plain variables\n  become repository variables ('gh variable set'), so the workflows can\n  read them as secrets.NAME and vars.NAME.\n  \n  Values are piped to 'gh' on stdin: nothing is written to disk and nothing\n  shows up in 'ps' or in the shell history.\n  \n  With NAME only that one is pushed, without the confirmation prompt. This\n  is what 'playground secrets set' calls when the config key\n  secrets.github-repo is set.\n  \n  🎓 Tip: start with --dry-run, it lists what would be pushed without\n  touching the repository.\n\n"
   else
     printf "playground secrets push-github - 🐙 Push a profile to the GitHub Actions secrets and variables of a repository\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground secrets push-github [OPTIONS]\n"
+  printf "  playground secrets push-github [NAME] [OPTIONS]\n"
   printf "  playground secrets push-github --help | -h\n"
   echo
 
@@ -2557,10 +2556,19 @@ playground_secrets_push_github_usage() {
     printf "    Show this help\n"
     echo
 
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "NAME")"
+    printf "    🔑 Push only this variable (default is the whole profile)\n"
+    echo
+
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground secrets push-github --dry-run\n"
     printf "  playground secrets push-github\n"
+    printf "  playground secrets push-github SALESFORCE_PASSWORD\n"
     printf "  playground secrets push-github --only secret --repo\n  vdesabou/kafka-docker-playground\n"
     echo
 
@@ -19283,6 +19291,35 @@ playground_secrets_set_command() {
 
   secret_store_value "$name" "$value" "$profile" "$force"
 
+  #
+  # 🐙 Keep the GitHub Actions configuration in sync, for whoever maintains the
+  # repository the workflows run in.
+  #
+  # Opt in through a config key rather than a hardcoded username: `whoami` is the
+  # same on the ec2 playground instances, where gh is usually not authenticated,
+  # and an explicit OWNER/REPO means a clone of a fork can never be written to by
+  # accident (push-github otherwise guesses the target from the remote).
+  #
+  #   playground config set secrets.github-repo vdesabou/kafka-docker-playground
+  #
+  # Hooked here and not in secret_store_value(): `secrets import` would fire one
+  # gh call per line, and the "save this for next time" menu of `playground run`
+  # would quietly publish to GitHub.
+  #
+  github_repo=$(playground config get secrets.github-repo 2> /dev/null)
+  if [ -n "$github_repo" ] && [ -z "$GITHUB_RUN_NUMBER" ] && command -v gh > /dev/null 2>&1
+  then
+      #
+      # Never fail `secrets set` on this: the value is already stored and rotated
+      # by now, and losing that outcome over an expired gh token would be absurd.
+      #
+      if ! playground secrets push-github "$name" --repo "$github_repo" --profile "$profile"
+      then
+          logwarn "⚠️ $name was stored but could not be pushed to $github_repo"
+          logwarn "👉 playground secrets push-github $name"
+      fi
+  fi
+
 }
 
 # :command.function
@@ -19813,6 +19850,7 @@ playground_secrets_export_command() {
 playground_secrets_push_github_command() {
 
   # src/commands/secrets/push-github.sh
+  single="${args[name]}"
   profile="${args[--profile]:-$(get_active_secret_profile)}"
   repo="${args[--repo]}"
   only="${args[--only]:-all}"
@@ -19852,12 +19890,23 @@ playground_secrets_push_github_command() {
   fi
   repo_args=(--repo "$target")
 
-  names=$(secret_store_names "$profile")
-  if [ -z "$names" ]
+  if [ -n "$single" ]
   then
-      logerror "❌ profile $profile is empty, there is nothing to push"
-      logerror "👉 playground secrets import --file <secret.properties>"
-      exit 1
+      if ! secret_store_location "$single" "$profile" > /dev/null 2>&1
+      then
+          logerror "❌ $single is not in profile $profile"
+          logerror "👉 playground secrets set $single"
+          exit 1
+      fi
+      names="$single"
+  else
+      names=$(secret_store_names "$profile")
+      if [ -z "$names" ]
+      then
+          logerror "❌ profile $profile is empty, there is nothing to push"
+          logerror "👉 playground secrets import --file <secret.properties>"
+          exit 1
+      fi
   fi
 
   #
@@ -19871,8 +19920,17 @@ playground_secrets_push_github_command() {
   # from secrets.NAME to vars.NAME (or the reverse): GitHub keeps both, and the
   # workflow that still reads the old one would silently get a stale value.
   #
-  existing_secrets=" $(gh secret list "${repo_args[@]}" --json name --jq '.[].name' 2>/dev/null | tr '\n' ' ')"
-  existing_vars=" $(gh variable list "${repo_args[@]}" --json name --jq '.[].name' 2>/dev/null | tr '\n' ' ')"
+  # Skipped in single name mode, which `playground secrets set` calls on every
+  # rotation: these are two network round trips for a warning about a migration
+  # that only happens during a bulk push.
+  #
+  existing_secrets=""
+  existing_vars=""
+  if [ -z "$single" ]
+  then
+      existing_secrets=" $(gh secret list "${repo_args[@]}" --json name --jq '.[].name' 2>/dev/null | tr '\n' ' ')"
+      existing_vars=" $(gh variable list "${repo_args[@]}" --json name --jq '.[].name' 2>/dev/null | tr '\n' ' ')"
+  fi
 
   to_push_secret=""
   to_push_plain=""
@@ -19944,42 +20002,55 @@ playground_secrets_push_github_command() {
       exit 1
   fi
 
-  log "🐙 Pushing profile $profile to $target (--as $push_as)"
-  echo ""
-  for name in $to_push_secret
-  do
-      if [[ "$existing_vars" == *" ${name} "* ]]
-      then
-          printf "  🔐 %-45s → secrets.%-45s ⚠️ vars.%s already exists\n" "$name" "$name" "$name"
-      else
-          printf "  🔐 %-45s → secrets.%s\n" "$name" "$name"
-      fi
-  done
-  for name in $to_push_plain
-  do
-      if [[ "$existing_secrets" == *" ${name} "* ]]
-      then
-          printf "  📝 %-45s → vars.%-45s ⚠️ secrets.%s already exists\n" "$name" "$name" "$name"
-      else
-          printf "  📝 %-45s → vars.%s\n" "$name" "$name"
-      fi
-  done
-  echo ""
-
-  if [ $nb_moved -gt 0 ]
+  #
+  # The plan table is for a bulk push, where it is the only chance to see what is
+  # about to change. A single name says everything it needs to in the one line
+  # the push itself prints.
+  #
+  if [ -z "$single" ]
   then
-      logwarn "⚠️ $nb_moved name(s) already exist on the other side in $target"
-      logwarn "⚠️ GitHub keeps both, so a workflow reading the old one would get a stale value"
-      logwarn "👉 either use --as secret to keep everything where it is, or update the workflows and delete the leftovers"
+      log "🐙 Pushing profile $profile to $target (--as $push_as)"
+      echo ""
+      for name in $to_push_secret
+      do
+          if [[ "$existing_vars" == *" ${name} "* ]]
+          then
+              printf "  🔐 %-45s → secrets.%-45s ⚠️ vars.%s already exists\n" "$name" "$name" "$name"
+          else
+              printf "  🔐 %-45s → secrets.%s\n" "$name" "$name"
+          fi
+      done
+      for name in $to_push_plain
+      do
+          if [[ "$existing_secrets" == *" ${name} "* ]]
+          then
+              printf "  📝 %-45s → vars.%-45s ⚠️ secrets.%s already exists\n" "$name" "$name" "$name"
+          else
+              printf "  📝 %-45s → vars.%s\n" "$name" "$name"
+          fi
+      done
+      echo ""
+
+      if [ $nb_moved -gt 0 ]
+      then
+          logwarn "⚠️ $nb_moved name(s) already exist on the other side in $target"
+          logwarn "⚠️ GitHub keeps both, so a workflow reading the old one would get a stale value"
+          logwarn "👉 either use --as secret to keep everything where it is, or update the workflows and delete the leftovers"
+      fi
   fi
 
   if [[ -n "$dry_run" ]]
   then
-      log "🔍 --dry-run, nothing was pushed"
+      log "🔍 ${single:-profile $profile} would be pushed to $target, --dry-run so nothing was"
       exit 0
   fi
 
-  if [[ ! -n "$force" ]]
+  #
+  # A single explicit name is its own confirmation: the caller named the one thing
+  # that is about to be overwritten. The prompt is for the bulk push, which
+  # rewrites the whole repository configuration.
+  #
+  if [[ ! -n "$force" ]] && [ -z "$single" ]
   then
       logwarn "⚠️ this overwrites the existing secrets and variables of $target"
       check_if_continue
@@ -20025,17 +20096,22 @@ playground_secrets_push_github_command() {
       fi
   done
 
-  echo ""
   if [ $nb_failed -gt 0 ]
   then
+      [ -z "$single" ] && echo ""
       logerror "❌ $nb_pushed pushed, $nb_failed failed"
       exit 1
   fi
 
-  log "✅ $nb_pushed pushed to $target"
-  if [ $nb_skipped -gt 0 ]
+  # the per name line above already says it when there is only one
+  if [ -z "$single" ]
   then
-      logwarn "⚠️ $nb_skipped skipped because of an invalid name"
+      echo ""
+      log "✅ $nb_pushed pushed to $target"
+      if [ $nb_skipped -gt 0 ]
+      then
+          logwarn "⚠️ $nb_skipped skipped because of an invalid name"
+      fi
   fi
 
 }
@@ -45479,8 +45555,14 @@ playground_secrets_push_github_parse_requirements() {
       *)
         # :command.parse_requirements_case
         # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
+        # :argument.case
+        if [[ -z ${args['name']+x} ]]; then
+          args['name']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
 
         ;;
 
@@ -45490,6 +45572,16 @@ playground_secrets_push_github_parse_requirements() {
   # :command.default_assignments
   [[ -n ${args['--only']:-} ]] || args['--only']="all"
   [[ -n ${args['--as']:-} ]] || args['--as']="auto"
+
+  # :command.validations
+  # :argument.validations
+  if [[ -v args['name'] ]]; then
+    validation_output="$(validate_secret_name "${args['name']:-}")"
+    if [[ -n "$validation_output" ]]; then
+      printf "validation error in %s:\n%s\n" "NAME" "$validation_output" >&2
+      exit 1
+    fi
+  fi
 
   # :command.whitelist_filter
   if [[ ${args['--only']:-} ]] && [[ ! ${args['--only']:-} =~ ^(secret|plain|all)$ ]]; then
