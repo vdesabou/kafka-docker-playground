@@ -247,8 +247,12 @@ Resources:
           if [ "${LinuxUserName}" != "ubuntu" ]; then echo "${LinuxUserName} ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/${LinuxUserName};fi
           mkdir -p /home/${LinuxUserName}/.ssh
           if [ "${LinuxUserName}" != "ubuntu" ]; then sudo cp /home/ubuntu/.ssh/authorized_keys /home/${LinuxUserName}/.ssh/;fi
-          if [ "${LinuxUserName}" != "ubuntu" ]; then sudo chown ${LinuxUserName} /home/${LinuxUserName}/.ssh/*;fi
           ssh-keyscan -t rsa github.com >> /home/${LinuxUserName}/.ssh/known_hosts
+          # this user data runs as root, so .ssh itself is root owned: give the whole
+          # directory back, otherwise `playground ec2 push-secrets` cannot create
+          # ~/.ssh/id_rsa in it (Permission denied)
+          if [ "${LinuxUserName}" != "ubuntu" ]; then sudo chown -R ${LinuxUserName}:${LinuxUserName} /home/${LinuxUserName}/.ssh;fi
+          sudo chmod 700 /home/${LinuxUserName}/.ssh
           sudo groupadd docker
           sudo usermod -aG docker ${LinuxUserName}
           apt-get update -y

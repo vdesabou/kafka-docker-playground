@@ -16,7 +16,7 @@ backend=$(get_secret_backend)
 # with --plain nothing reaches the backend, so do not ask it to be unlocked
 if [ "$force" != "plain" ]
 then
-    secret_backend_ready "$backend" || exit 1
+    secret_backend_writable "$backend" || exit 1
     log "📥 Importing $file into profile $profile (backend: $backend)"
 else
     log "📥 Importing $file into profile $profile as plain variables"

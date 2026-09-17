@@ -248,6 +248,52 @@ subcommands:
           description: | 
             🗂️ Secrets profile to use (default is the active one)
             
+      - name: env
+        description: | 
+          🐚 Export what an example needs into the current shell
+            
+            This is the replacement for 'source secret.properties'. Instead of putting
+            every credential into every shell, it exports only the variables the example
+            at hand declares, read from the secrets store:
+            
+              source <(playground secrets env)
+            
+            Handy when copy pasting pieces of an example script into a terminal. With no
+            --file it uses the last example ran, like 'playground secrets check'.
+            
+            The shell code goes to stdout and everything else to stderr, so nothing
+            unexpected ever gets executed.
+            
+            🎓 Tip: put a shortcut in your shell profile:
+            
+              alias pgenv='source <(playground secrets env)'
+        usage: playground secrets env [OPTIONS]
+        options:
+        - names:
+          - --file
+          - -f
+          argument: FILE
+          description: | 
+            📄 Example script (default is the last example ran)
+            
+        - names:
+          - --all
+          argument: ""
+          description: | 
+            📦 Export the whole profile, not only what the example needs
+            
+        - names:
+          - --force
+          argument: ""
+          description: | 
+            🙈 Print to a terminal anyway, showing every value in clear
+            
+        - names:
+          - --profile
+          argument: PROFILE
+          description: | 
+            🗂️ Secrets profile to use (default is the active one)
+            
       - name: import
         description: | 
           📥 Import an existing secret.properties / variable.properties file

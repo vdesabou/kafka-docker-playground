@@ -13,7 +13,7 @@ fi
 
 if [ "$force" == "secret" ] || { [ -z "$force" ] && is_secret_env_var_name "$name"; }
 then
-    secret_backend_ready || exit 1
+    secret_backend_writable || exit 1
 fi
 
 if [[ ! -n "$value" ]]

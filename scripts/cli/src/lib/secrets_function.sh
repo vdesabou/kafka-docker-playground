@@ -343,9 +343,13 @@ function secret_backend_del () {
 }
 
 #
-# Check once, before a batch of writes, that the backend can actually be
-# written to. Without it a `secrets import` of twenty variables prints the same
+# Check once, before a batch of reads or writes, that the backend is usable at
+# all. Without it a `secrets import` of twenty variables prints the same
 # "not signed in" error twenty times.
+#
+# Deliberately cheap: only the checks that are local or answered from the
+# already open session. `op whoami` is ~0.07s, while `op vault get` is a real
+# round trip and costs several seconds — see secret_backend_vault_ready().
 #
 function secret_backend_ready () {
   local backend="${1:-$(get_secret_backend)}"
@@ -364,14 +368,6 @@ function secret_backend_ready () {
         logerror "👉 enable 'Integrate with 1Password CLI' in the desktop app (Settings > Developer), or run: eval \$(op signin)"
         return 1
       fi
-      local vault
-      vault=$(get_op_vault)
-      if ! op vault get "$vault" > /dev/null 2>&1
-      then
-        logerror "❌ 1Password vault $vault is not readable with your current session"
-        logerror "👉 playground config set secrets.op-vault <vault>"
-        return 1
-      fi
     ;;
     pass)
       if ! pass ls > /dev/null 2>&1
@@ -382,6 +378,43 @@ function secret_backend_ready () {
       fi
     ;;
   esac
+  return 0
+}
+
+#
+# The expensive half of the check above: does the configured vault actually
+# exist and is it readable.
+#
+# Worth several seconds, so only the commands that are about to *write* call it
+# up front. Read paths call it lazily, to explain a lookup that came back empty
+# rather than to gate one that would have worked.
+#
+function secret_backend_vault_ready () {
+  local backend="${1:-$(get_secret_backend)}"
+
+  case "$backend" in
+    op)
+      local vault
+      vault=$(get_op_vault)
+      if ! op vault get "$vault" > /dev/null 2>&1
+      then
+        logerror "❌ 1Password vault $vault is not readable with your current session"
+        logerror "👉 playground config set secrets.op-vault <vault>"
+        return 1
+      fi
+    ;;
+  esac
+  return 0
+}
+
+#
+# Both halves, for the commands that write.
+#
+function secret_backend_writable () {
+  local backend="${1:-$(get_secret_backend)}"
+
+  secret_backend_ready "$backend" || return 1
+  secret_backend_vault_ready "$backend" || return 1
   return 0
 }
 
@@ -487,6 +520,110 @@ function secret_store_location () {
   return 1
 }
 
+################################################################################
+# prefetch
+################################################################################
+
+#
+# Values already resolved in this process, and the names we have already tried.
+# Two arrays and not one, because "resolved to nothing" has to be remembered as
+# well, otherwise a missing variable is looked up again on every call.
+#
+declare -A PLAYGROUND_SECRET_CACHE 2> /dev/null || true
+declare -A PLAYGROUND_SECRET_CACHE_TRIED 2> /dev/null || true
+
+#
+# Resolve a whole list of variables at once, in parallel, into the cache above.
+#
+# Every backend resolution is an out of process round trip: `op read` alone is
+# ~1.5s, and they are completely independent of each other. Doing them one
+# after the other is what made `playground secrets env` take tens of seconds on
+# an example needing a handful of credentials. Firing them together turns
+# N x 1.5s into roughly 1.5s.
+#
+# Bounded, because `secrets env --all` covers the whole store and no backend
+# enjoys a hundred simultaneous clients — and with a locked session each one
+# could raise its own unlock prompt. 16 is where 1Password stops getting
+# meaningfully faster for the size of store this is used with (57 `op read`:
+# 5.7s at 8, 3.2s at 16, 2.0s at 32) while still spawning a sane number of
+# processes. Most examples need a handful of variables, so the cap rarely bites.
+#
+function secret_prefetch () {
+  local profile="${1:-$(get_active_secret_profile)}"
+  shift
+
+  local tmp_dir
+  tmp_dir=$(mktemp -d)
+  chmod 0700 "$tmp_dir"
+
+  local pending=()
+  local name
+  for name in "$@"
+  do
+    [ -n "${PLAYGROUND_SECRET_CACHE_TRIED[$name]:-}" ] && continue
+    #
+    # An exported value wins, same rule as secret_get(); no point spawning a
+    # backend call for it.
+    #
+    [ -n "${!name:-}" ] && continue
+    pending+=("$name")
+  done
+
+  #
+  # Resolve the first one on its own, before fanning out.
+  #
+  # A locked backend authorises *per client process*: 1Password's desktop app
+  # integration validates the code signature of every `op` it is talking to and
+  # pops "Allow <app> to get CLI access" for one it does not know yet. Sixteen
+  # of them starting at the same millisecond means sixteen of those dialogs.
+  # The first call alone takes the prompt and unlocks the session; the rest then
+  # find it already open and stay silent.
+  #
+  local value
+  if [ ${#pending[@]} -gt 0 ]
+  then
+    name="${pending[0]}"
+    if value=$(secret_get_from_store "$name" "$profile")
+    then
+      printf '%s' "$value" > "$tmp_dir/$name"
+    fi
+    pending=("${pending[@]:1}")
+  fi
+
+  local nb_running=0
+  for name in "${pending[@]}"
+  do
+    (
+      if value=$(secret_get_from_store "$name" "$profile")
+      then
+        printf '%s' "$value" > "$tmp_dir/$name"
+      fi
+    ) &
+
+    nb_running=$((nb_running+1))
+    if [ $nb_running -ge 16 ]
+    then
+      wait
+      nb_running=0
+    fi
+  done
+  wait
+
+  for name in "$@"
+  do
+    [ -n "${PLAYGROUND_SECRET_CACHE_TRIED[$name]:-}" ] && continue
+    [ -n "${!name:-}" ] && continue
+
+    PLAYGROUND_SECRET_CACHE_TRIED[$name]=1
+    if [ -f "$tmp_dir/$name" ]
+    then
+      PLAYGROUND_SECRET_CACHE[$name]=$(< "$tmp_dir/$name")
+    fi
+  done
+
+  rm -rf "$tmp_dir"
+}
+
 #
 # Resolve a variable. A real environment variable always wins, so
 # `export FOO=bar`, `source secret.properties` and GitHub Actions secrets keep
@@ -502,14 +639,7 @@ function secret_get () {
     return 0
   fi
 
-  local ref
-  ref=$(secret_lookup_reference "$name" "$profile") || return 1
-  [ -n "$ref" ] || return 1
-
-  local value
-  value=$(secret_resolve_reference "$ref" || true)
-  [ -n "$value" ] || return 1
-  printf '%s' "$value"
+  secret_get_from_store "$name" "$profile"
 }
 
 #
@@ -523,6 +653,13 @@ function secret_get () {
 function secret_get_from_store () {
   local name="$1"
   local profile="${2:-$(get_active_secret_profile)}"
+
+  if [ -n "${PLAYGROUND_SECRET_CACHE_TRIED[$name]:-}" ]
+  then
+    [ -n "${PLAYGROUND_SECRET_CACHE[$name]:-}" ] || return 1
+    printf '%s' "${PLAYGROUND_SECRET_CACHE[$name]}"
+    return 0
+  fi
 
   local ref
   ref=$(secret_lookup_reference "$name" "$profile") || return 1
@@ -548,6 +685,22 @@ function is_secret_env_var_name () {
     *PASSWORD*|*PASSPHRASE*|*SECRET*|*TOKEN*|*KEY*|*CREDS*|*PWD*) return 0 ;;
   esac
   return 1
+}
+
+#
+# Render <name>='<value>' for a file that a shell is going to source.
+#
+# Anything written as a bare name=value breaks as soon as the value holds a
+# space, a `$`, a brace or a quote: `FOO=a b` runs `b` as a command,
+# `FOO=${x}` is expanded, `FOO=}` is a parse error. Single quotes make the
+# value literal; the only character needing care inside them is the single
+# quote itself, closed and reopened around an escaped one.
+#
+function secret_shell_assignment () {
+  local name="$1"
+  local value="$2"
+
+  printf "%s='%s'\n" "$name" "${value//\'/\'\\\'\'}"
 }
 
 function secret_sha256 () {
@@ -703,8 +856,15 @@ function load_secrets_for_example () {
   profile=$(get_active_secret_profile)
   local loaded=""
 
+  local names
+  names=$(get_mandatory_env_vars "$test_file")
+  [ -n "$names" ] || return 0
+
+  # one round trip for all of them instead of one per variable
+  secret_prefetch "$profile" $names
+
   local name
-  for name in $(get_mandatory_env_vars "$test_file")
+  for name in $names
   do
     [ -n "${!name:-}" ] && continue
     local value

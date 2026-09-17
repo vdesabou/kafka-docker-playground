@@ -37,6 +37,10 @@ secret_backend_ready || exit 1
 # not the environment. The instance must get what the store holds, not what the
 # shell that happens to launch the command still has exported.
 #
+# The file is sourced by the playground .zshrc, so every value is single quoted
+# (secret_shell_assignment): a bare name=value turns a password holding a space
+# into a command, and one holding a brace into a parse error.
+#
 payload=""
 nb=0
 nb_failed=0
@@ -44,7 +48,7 @@ for name in $names
 do
     if value=$(secret_get_from_store "$name" "$profile")
     then
-        payload="${payload}${name}=${value}"$'\n'
+        payload="${payload}$(secret_shell_assignment "$name" "$value")"$'\n'
         nb=$((nb+1))
     else
         logwarn "⚠️ $name could not be resolved, skipped"
@@ -161,8 +165,32 @@ do
         # umask first so the file is never readable by anyone else while it is
         # being written, then the final mode once it is complete.
         #
+        # ~/.ssh is created by root in the cloud formation user data, and only
+        # its content is given back to the user, so a plain `cat > ~/.ssh/id_rsa`
+        # fails with "Permission denied" on every instance created before that
+        # was fixed. Take ownership of the directory with sudo (passwordless on
+        # the playground instances) when it is not writable.
+        #
+        # The content lands in a temporary file next to its destination and is
+        # renamed once complete: never a half written credential file, and the
+        # rename also replaces a destination owned by root.
+        #
+        # A missing final newline is added: ssh-keygen (and therefore git over
+        # ssh) rejects a private key whose last line is not terminated with
+        # "Load key: invalid format", and so do most credential parsers.
+        #
+        printf -v remote_script 'umask 077
+dir="$HOME/%s"
+mkdir -p "$dir" 2>/dev/null || sudo mkdir -p "$dir"
+[ -w "$dir" ] || sudo chown -R "$(id -u):$(id -g)" "$dir"
+tmp=$(mktemp "$dir/.playground-push.XXXXXX") || exit 1
+cat > "$tmp" || { rm -f "$tmp"; exit 1; }
+[ -n "$(tail -c1 "$tmp")" ] && echo >> "$tmp"
+chmod %s "$tmp" && mv -f "$tmp" "$HOME/%s" || { rm -f "$tmp"; exit 1; }' \
+            "$(dirname "$remote_path")" "$mode" "$remote_path"
+
         if ssh -i "$pem_file" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-            "$username@$ip" "umask 077 && mkdir -p ~/$(dirname "$remote_path") && cat > ~/$remote_path && chmod $mode ~/$remote_path" < "$local_file"
+            "$username@$ip" "$remote_script" < "$local_file"
         then
             log "✅ ~/$remote_path written on $name"
         else

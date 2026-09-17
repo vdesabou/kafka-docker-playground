@@ -2006,6 +2006,7 @@ playground_secrets_usage() {
   printf "  %s   📋 List stored credentials\n" "$(green "list")       "
   printf "  %s   🔗 Point a variable at a secret manager, without storing any value\n" "$(green "link")       "
   printf "  %s   ✅ Show what an example needs, and what is missing\n" "$(green "check")      "
+  printf "  %s   🐚 Export what an example needs into the current shell\n" "$(green "env")        "
   printf "  %s   📥 Import an existing secret.properties / variable.properties file\n" "$(green "import")     "
   printf "  %s   📤 Write every credential of a profile to a file, in clear text\n" "$(green "export")     "
   printf "  %s   🐙 Push a profile to the GitHub Actions secrets and variables of a repository\n" "$(green "push-github")"
@@ -2319,6 +2320,61 @@ playground_secrets_check_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground secrets check\n"
     printf "  playground secrets check -f ccloud/fm-splunk-sink/fully-managed-splunk-sink.sh\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_secrets_env_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground secrets env\n\n"
+    printf "  🐚 Export what an example needs into the current shell\n  \n  This is the replacement for 'source secret.properties'. Instead of putting\n  every credential into every shell, it exports only the variables the example\n  at hand declares, read from the secrets store:\n  \n    source <(playground secrets env)\n  \n  Handy when copy pasting pieces of an example script into a terminal. With no\n  --file it uses the last example ran, like 'playground secrets check'.\n  \n  The shell code goes to stdout and everything else to stderr, so nothing\n  unexpected ever gets executed.\n  \n  🎓 Tip: put a shortcut in your shell profile:\n  \n    alias pgenv='source <(playground secrets env)'\n\n"
+  else
+    printf "playground secrets env - 🐚 Export what an example needs into the current shell\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground secrets env [OPTIONS]\n"
+  printf "  playground secrets env --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file, -f FILE")"
+    printf "    📄 Example script (default is the last example ran)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--all")"
+    printf "    📦 Export the whole profile, not only what the example needs\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--force")"
+    printf "    🙈 Print to a terminal anyway, showing every value in clear\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--profile PROFILE")"
+    printf "    🗂️ Secrets profile to use (default is the active one)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  source <(playground secrets env)\n"
+    printf "  source <(playground secrets env -f\n  ccloud/fm-splunk-sink/fully-managed-splunk-sink.sh)\n"
+    printf "  source <(playground secrets env --all)\n"
     echo
 
   fi
@@ -12403,9 +12459,13 @@ function secret_backend_del () {
 }
 
 #
-# Check once, before a batch of writes, that the backend can actually be
-# written to. Without it a `secrets import` of twenty variables prints the same
+# Check once, before a batch of reads or writes, that the backend is usable at
+# all. Without it a `secrets import` of twenty variables prints the same
 # "not signed in" error twenty times.
+#
+# Deliberately cheap: only the checks that are local or answered from the
+# already open session. `op whoami` is ~0.07s, while `op vault get` is a real
+# round trip and costs several seconds — see secret_backend_vault_ready().
 #
 function secret_backend_ready () {
   local backend="${1:-$(get_secret_backend)}"
@@ -12424,14 +12484,6 @@ function secret_backend_ready () {
         logerror "👉 enable 'Integrate with 1Password CLI' in the desktop app (Settings > Developer), or run: eval \$(op signin)"
         return 1
       fi
-      local vault
-      vault=$(get_op_vault)
-      if ! op vault get "$vault" > /dev/null 2>&1
-      then
-        logerror "❌ 1Password vault $vault is not readable with your current session"
-        logerror "👉 playground config set secrets.op-vault <vault>"
-        return 1
-      fi
     ;;
     pass)
       if ! pass ls > /dev/null 2>&1
@@ -12442,6 +12494,43 @@ function secret_backend_ready () {
       fi
     ;;
   esac
+  return 0
+}
+
+#
+# The expensive half of the check above: does the configured vault actually
+# exist and is it readable.
+#
+# Worth several seconds, so only the commands that are about to *write* call it
+# up front. Read paths call it lazily, to explain a lookup that came back empty
+# rather than to gate one that would have worked.
+#
+function secret_backend_vault_ready () {
+  local backend="${1:-$(get_secret_backend)}"
+
+  case "$backend" in
+    op)
+      local vault
+      vault=$(get_op_vault)
+      if ! op vault get "$vault" > /dev/null 2>&1
+      then
+        logerror "❌ 1Password vault $vault is not readable with your current session"
+        logerror "👉 playground config set secrets.op-vault <vault>"
+        return 1
+      fi
+    ;;
+  esac
+  return 0
+}
+
+#
+# Both halves, for the commands that write.
+#
+function secret_backend_writable () {
+  local backend="${1:-$(get_secret_backend)}"
+
+  secret_backend_ready "$backend" || return 1
+  secret_backend_vault_ready "$backend" || return 1
   return 0
 }
 
@@ -12545,6 +12634,108 @@ function secret_store_location () {
   return 1
 }
 
+# prefetch
+
+#
+# Values already resolved in this process, and the names we have already tried.
+# Two arrays and not one, because "resolved to nothing" has to be remembered as
+# well, otherwise a missing variable is looked up again on every call.
+#
+declare -A PLAYGROUND_SECRET_CACHE 2> /dev/null || true
+declare -A PLAYGROUND_SECRET_CACHE_TRIED 2> /dev/null || true
+
+#
+# Resolve a whole list of variables at once, in parallel, into the cache above.
+#
+# Every backend resolution is an out of process round trip: `op read` alone is
+# ~1.5s, and they are completely independent of each other. Doing them one
+# after the other is what made `playground secrets env` take tens of seconds on
+# an example needing a handful of credentials. Firing them together turns
+# N x 1.5s into roughly 1.5s.
+#
+# Bounded, because `secrets env --all` covers the whole store and no backend
+# enjoys a hundred simultaneous clients — and with a locked session each one
+# could raise its own unlock prompt. 16 is where 1Password stops getting
+# meaningfully faster for the size of store this is used with (57 `op read`:
+# 5.7s at 8, 3.2s at 16, 2.0s at 32) while still spawning a sane number of
+# processes. Most examples need a handful of variables, so the cap rarely bites.
+#
+function secret_prefetch () {
+  local profile="${1:-$(get_active_secret_profile)}"
+  shift
+
+  local tmp_dir
+  tmp_dir=$(mktemp -d)
+  chmod 0700 "$tmp_dir"
+
+  local pending=()
+  local name
+  for name in "$@"
+  do
+    [ -n "${PLAYGROUND_SECRET_CACHE_TRIED[$name]:-}" ] && continue
+    #
+    # An exported value wins, same rule as secret_get(); no point spawning a
+    # backend call for it.
+    #
+    [ -n "${!name:-}" ] && continue
+    pending+=("$name")
+  done
+
+  #
+  # Resolve the first one on its own, before fanning out.
+  #
+  # A locked backend authorises *per client process*: 1Password's desktop app
+  # integration validates the code signature of every `op` it is talking to and
+  # pops "Allow <app> to get CLI access" for one it does not know yet. Sixteen
+  # of them starting at the same millisecond means sixteen of those dialogs.
+  # The first call alone takes the prompt and unlocks the session; the rest then
+  # find it already open and stay silent.
+  #
+  local value
+  if [ ${#pending[@]} -gt 0 ]
+  then
+    name="${pending[0]}"
+    if value=$(secret_get_from_store "$name" "$profile")
+    then
+      printf '%s' "$value" > "$tmp_dir/$name"
+    fi
+    pending=("${pending[@]:1}")
+  fi
+
+  local nb_running=0
+  for name in "${pending[@]}"
+  do
+    (
+      if value=$(secret_get_from_store "$name" "$profile")
+      then
+        printf '%s' "$value" > "$tmp_dir/$name"
+      fi
+    ) &
+
+    nb_running=$((nb_running+1))
+    if [ $nb_running -ge 16 ]
+    then
+      wait
+      nb_running=0
+    fi
+  done
+  wait
+
+  for name in "$@"
+  do
+    [ -n "${PLAYGROUND_SECRET_CACHE_TRIED[$name]:-}" ] && continue
+    [ -n "${!name:-}" ] && continue
+
+    PLAYGROUND_SECRET_CACHE_TRIED[$name]=1
+    if [ -f "$tmp_dir/$name" ]
+    then
+      PLAYGROUND_SECRET_CACHE[$name]=$(< "$tmp_dir/$name")
+    fi
+  done
+
+  rm -rf "$tmp_dir"
+}
+
 #
 # Resolve a variable. A real environment variable always wins, so
 # `export FOO=bar`, `source secret.properties` and GitHub Actions secrets keep
@@ -12560,14 +12751,7 @@ function secret_get () {
     return 0
   fi
 
-  local ref
-  ref=$(secret_lookup_reference "$name" "$profile") || return 1
-  [ -n "$ref" ] || return 1
-
-  local value
-  value=$(secret_resolve_reference "$ref" || true)
-  [ -n "$value" ] || return 1
-  printf '%s' "$value"
+  secret_get_from_store "$name" "$profile"
 }
 
 #
@@ -12581,6 +12765,13 @@ function secret_get () {
 function secret_get_from_store () {
   local name="$1"
   local profile="${2:-$(get_active_secret_profile)}"
+
+  if [ -n "${PLAYGROUND_SECRET_CACHE_TRIED[$name]:-}" ]
+  then
+    [ -n "${PLAYGROUND_SECRET_CACHE[$name]:-}" ] || return 1
+    printf '%s' "${PLAYGROUND_SECRET_CACHE[$name]}"
+    return 0
+  fi
 
   local ref
   ref=$(secret_lookup_reference "$name" "$profile") || return 1
@@ -12604,6 +12795,22 @@ function is_secret_env_var_name () {
     *PASSWORD*|*PASSPHRASE*|*SECRET*|*TOKEN*|*KEY*|*CREDS*|*PWD*) return 0 ;;
   esac
   return 1
+}
+
+#
+# Render <name>='<value>' for a file that a shell is going to source.
+#
+# Anything written as a bare name=value breaks as soon as the value holds a
+# space, a `$`, a brace or a quote: `FOO=a b` runs `b` as a command,
+# `FOO=${x}` is expanded, `FOO=}` is a parse error. Single quotes make the
+# value literal; the only character needing care inside them is the single
+# quote itself, closed and reopened around an escaped one.
+#
+function secret_shell_assignment () {
+  local name="$1"
+  local value="$2"
+
+  printf "%s='%s'\n" "$name" "${value//\'/\'\\\'\'}"
 }
 
 function secret_sha256 () {
@@ -12759,8 +12966,15 @@ function load_secrets_for_example () {
   profile=$(get_active_secret_profile)
   local loaded=""
 
+  local names
+  names=$(get_mandatory_env_vars "$test_file")
+  [ -n "$names" ] || return 0
+
+  # one round trip for all of them instead of one per variable
+  secret_prefetch "$profile" $names
+
   local name
-  for name in $(get_mandatory_env_vars "$test_file")
+  for name in $names
   do
     [ -n "${!name:-}" ] && continue
     local value
@@ -18964,7 +19178,7 @@ playground_secrets_set_command() {
 
   if [ "$force" == "secret" ] || { [ -z "$force" ] && is_secret_env_var_name "$name"; }
   then
-      secret_backend_ready || exit 1
+      secret_backend_writable || exit 1
   fi
 
   if [[ ! -n "$value" ]]
@@ -19220,6 +19434,120 @@ playground_secrets_check_command() {
 }
 
 # :command.function
+playground_secrets_env_command() {
+
+  # src/commands/secrets/env.sh
+  test_file="${args[--file]}"
+  profile="${args[--profile]:-$(get_active_secret_profile)}"
+  all="${args[--all]}"
+  force="${args[--force]}"
+
+  #
+  # stdout carries shell code that the caller sources, so every message this
+  # command prints has to go to stderr. A stray log line on stdout would not be
+  # displayed, it would be executed.
+  #
+
+  if [ -t 1 ] && [[ ! -n "$force" ]]
+  then
+      logerror "❌ stdout is a terminal, every value would be printed in clear on screen" >&2
+      logerror "👉 source <(playground secrets env)" >&2
+      logerror "🎓 --force prints them anyway" >&2
+      exit 1
+  fi
+
+  if [[ -n "$all" ]]
+  then
+      names=$(secret_store_names "$profile")
+      what="profile $profile"
+  else
+      if [[ ! -n "$test_file" ]]
+      then
+          test_file=$(playground state get run.test_file)
+          if [ -z "$test_file" ]
+          then
+              logerror "❌ no example specified and no example was ran before" >&2
+              logerror "👉 playground secrets env -f <example>" >&2
+              exit 1
+          fi
+      fi
+
+      if [[ $test_file == *"@"* ]]
+      then
+          test_file=${test_file#*@}
+      fi
+
+      if [ ! -f "$test_file" ]
+      then
+          logerror "❌ $test_file does not exist" >&2
+          exit 1
+      fi
+
+      names=$(get_mandatory_env_vars "$test_file")
+      what="$(basename "$test_file")"
+  fi
+
+  if [ -z "$names" ]
+  then
+      log "💤 $what does not require any environment variable" >&2
+      exit 0
+  fi
+
+  # fail before printing half of the exports if the backend is locked
+  secret_backend_ready >&2 || exit 1
+
+  #
+  # Resolve everything in one parallel batch. Sourcing this is on the critical
+  # path of an interactive shell, and one sequential backend round trip per
+  # variable is what makes it feel slow.
+  #
+  secret_prefetch "$profile" $names 2> /dev/null
+
+  nb=0
+  nb_missing=0
+  missing=""
+  for name in $names
+  do
+      #
+      # secret_get and not secret_get_from_store: an exported value wins here, the
+      # same way it does when an example runs. Someone who exported a variable on
+      # purpose should not have it silently replaced.
+      #
+      if value=$(secret_get "$name" "$profile")
+      then
+          #
+          # single quoted, so nothing in the value is interpreted by the shell
+          # that sources this
+          #
+          printf 'export '
+          secret_shell_assignment "$name" "$value"
+          nb=$((nb+1))
+      else
+          missing="${missing} ${name}"
+          nb_missing=$((nb_missing+1))
+      fi
+  done
+
+  if [ $nb -gt 0 ]
+  then
+      log "🔐 $nb variable(s) exported for $what (profile $profile)" >&2
+  fi
+
+  if [ $nb_missing -gt 0 ]
+  then
+      #
+      # Only now is it worth paying for the vault round trip: it turns a
+      # misleading "missing from the store" into the real reason when the whole
+      # vault is the problem.
+      #
+      secret_backend_vault_ready >&2 || exit 1
+      logwarn "⚠️ not exported, missing from the store:${missing}" >&2
+      logwarn "👉 playground secrets set <name>" >&2
+  fi
+
+}
+
+# :command.function
 playground_secrets_import_command() {
 
   # src/commands/secrets/import.sh
@@ -19241,7 +19569,7 @@ playground_secrets_import_command() {
   # with --plain nothing reaches the backend, so do not ask it to be unlocked
   if [ "$force" != "plain" ]
   then
-      secret_backend_ready "$backend" || exit 1
+      secret_backend_writable "$backend" || exit 1
       log "📥 Importing $file into profile $profile (backend: $backend)"
   else
       log "📥 Importing $file into profile $profile as plain variables"
@@ -39737,6 +40065,10 @@ playground_ec2_push_secrets_command() {
   # not the environment. The instance must get what the store holds, not what the
   # shell that happens to launch the command still has exported.
   #
+  # The file is sourced by the playground .zshrc, so every value is single quoted
+  # (secret_shell_assignment): a bare name=value turns a password holding a space
+  # into a command, and one holding a brace into a parse error.
+  #
   payload=""
   nb=0
   nb_failed=0
@@ -39744,7 +40076,7 @@ playground_ec2_push_secrets_command() {
   do
       if value=$(secret_get_from_store "$name" "$profile")
       then
-          payload="${payload}${name}=${value}"$'\n'
+          payload="${payload}$(secret_shell_assignment "$name" "$value")"$'\n'
           nb=$((nb+1))
       else
           logwarn "⚠️ $name could not be resolved, skipped"
@@ -39861,8 +40193,32 @@ playground_ec2_push_secrets_command() {
           # umask first so the file is never readable by anyone else while it is
           # being written, then the final mode once it is complete.
           #
+          # ~/.ssh is created by root in the cloud formation user data, and only
+          # its content is given back to the user, so a plain `cat > ~/.ssh/id_rsa`
+          # fails with "Permission denied" on every instance created before that
+          # was fixed. Take ownership of the directory with sudo (passwordless on
+          # the playground instances) when it is not writable.
+          #
+          # The content lands in a temporary file next to its destination and is
+          # renamed once complete: never a half written credential file, and the
+          # rename also replaces a destination owned by root.
+          #
+          # A missing final newline is added: ssh-keygen (and therefore git over
+          # ssh) rejects a private key whose last line is not terminated with
+          # "Load key: invalid format", and so do most credential parsers.
+          #
+          printf -v remote_script 'umask 077
+  dir="$HOME/%s"
+  mkdir -p "$dir" 2>/dev/null || sudo mkdir -p "$dir"
+  [ -w "$dir" ] || sudo chown -R "$(id -u):$(id -g)" "$dir"
+  tmp=$(mktemp "$dir/.playground-push.XXXXXX") || exit 1
+  cat > "$tmp" || { rm -f "$tmp"; exit 1; }
+  [ -n "$(tail -c1 "$tmp")" ] && echo >> "$tmp"
+  chmod %s "$tmp" && mv -f "$tmp" "$HOME/%s" || { rm -f "$tmp"; exit 1; }' \
+              "$(dirname "$remote_path")" "$mode" "$remote_path"
+
           if ssh -i "$pem_file" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-              "$username@$ip" "umask 077 && mkdir -p ~/$(dirname "$remote_path") && cat > ~/$remote_path && chmod $mode ~/$remote_path" < "$local_file"
+              "$username@$ip" "$remote_script" < "$local_file"
           then
               log "✅ ~/$remote_path written on $name"
           else
@@ -43914,6 +44270,13 @@ playground_secrets_parse_requirements() {
       shift $#
       ;;
 
+    env)
+      action="env"
+      shift
+      playground_secrets_env_parse_requirements "$@"
+      shift $#
+      ;;
+
     import)
       action="import"
       shift
@@ -44534,6 +44897,106 @@ playground_secrets_check_parse_requirements() {
           printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --profile)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--profile']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--profile requires an argument: --profile PROFILE" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--file'] ]]; then
+    validation_output="$(validate_file_exists_with_trick "${args['--file']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_secrets_env_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_secrets_env_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="secrets env"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --file | -f)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --all)
+
+        # :flag.case_no_arg
+        args['--all']=1
+        shift
+        ;;
+
+      # :flag.case
+      --force)
+
+        # :flag.case_no_arg
+        args['--force']=1
+        shift
         ;;
 
       # :flag.case
@@ -61551,6 +62014,7 @@ run() {
     "secrets list") playground_secrets_list_command ;;
     "secrets link") playground_secrets_link_command ;;
     "secrets check") playground_secrets_check_command ;;
+    "secrets env") playground_secrets_env_command ;;
     "secrets import") playground_secrets_import_command ;;
     "secrets export") playground_secrets_export_command ;;
     "secrets push-github") playground_secrets_push_github_command ;;

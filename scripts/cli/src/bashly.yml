@@ -670,6 +670,46 @@ commands:
     - playground secrets check
     - playground secrets check -f ccloud/fm-splunk-sink/fully-managed-splunk-sink.sh
 
+  - name: env
+    help: |-
+      🐚 Export what an example needs into the current shell
+
+      This is the replacement for 'source secret.properties'. Instead of putting
+      every credential into every shell, it exports only the variables the example
+      at hand declares, read from the secrets store:
+
+        source <(playground secrets env)
+
+      Handy when copy pasting pieces of an example script into a terminal. With no
+      --file it uses the last example ran, like 'playground secrets check'.
+
+      The shell code goes to stdout and everything else to stderr, so nothing
+      unexpected ever gets executed.
+
+      🎓 Tip: put a shortcut in your shell profile:
+
+        alias pgenv='source <(playground secrets env)'
+    flags:
+    - short: -f
+      long: --file
+      arg: file
+      required: false
+      help: 📄 Example script (default is the last example ran)
+      validate: file_exists_with_trick
+      completions:
+      - $(playground get-examples-list-with-fzf)
+    - long: --all
+      required: false
+      help: 📦 Export the whole profile, not only what the example needs
+    - long: --force
+      required: false
+      help: 🙈 Print to a terminal anyway, showing every value in clear
+    - *secret-profile
+    examples:
+    - source <(playground secrets env)
+    - source <(playground secrets env -f ccloud/fm-splunk-sink/fully-managed-splunk-sink.sh)
+    - source <(playground secrets env --all)
+
   - name: import
     help: |-
       📥 Import an existing secret.properties / variable.properties file

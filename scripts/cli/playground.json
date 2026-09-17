@@ -243,6 +243,42 @@
           ]
         },
         {
+          "name": "env",
+          "description": "🐚 Export what an example needs into the current shell\n  \n  This is the replacement for 'source secret.properties'. Instead of putting\n  every credential into every shell, it exports only the variables the example\n  at hand declares, read from the secrets store:\n  \n    source <(playground secrets env)\n  \n  Handy when copy pasting pieces of an example script into a terminal. With no\n  --file it uses the last example ran, like 'playground secrets check'.\n  \n  The shell code goes to stdout and everything else to stderr, so nothing\n  unexpected ever gets executed.\n  \n  🎓 Tip: put a shortcut in your shell profile:\n  \n    alias pgenv='source <(playground secrets env)'\n",
+          "usage": "playground secrets env [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--file",
+                "-f"
+              ],
+              "argument": "FILE",
+              "description": "📄 Example script (default is the last example ran)\n"
+            },
+            {
+              "names": [
+                "--all"
+              ],
+              "argument": "",
+              "description": "📦 Export the whole profile, not only what the example needs\n"
+            },
+            {
+              "names": [
+                "--force"
+              ],
+              "argument": "",
+              "description": "🙈 Print to a terminal anyway, showing every value in clear\n"
+            },
+            {
+              "names": [
+                "--profile"
+              ],
+              "argument": "PROFILE",
+              "description": "🗂️ Secrets profile to use (default is the active one)\n"
+            }
+          ]
+        },
+        {
           "name": "import",
           "description": "📥 Import an existing secret.properties / variable.properties file\n  \n  Each KEY=value line is classified and stored in the right place.\n",
           "usage": "playground secrets import [OPTIONS]",
