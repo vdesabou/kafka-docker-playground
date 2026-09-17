@@ -68,16 +68,30 @@ AZURE_FUNCTIONS_CORE_TOOLS_VERSION=${AZURE_FUNCTIONS_CORE_TOOLS_VERSION:-4.13.0}
 docker run --platform linux/amd64 -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:4-node22 bash -c "npm install -g azure-functions-core-tools@$AZURE_FUNCTIONS_CORE_TOOLS_VERSION --unsafe-perm && func init LocalFunctionProj --javascript && cd LocalFunctionProj && func new --name HttpExample --template \"HTTP trigger\" --authlevel \"anonymous\""
 
 log "Creating functions app $AZURE_FUNCTIONS_NAME"
-az functionapp create --consumption-plan-location "$AZURE_REGION" --name "$AZURE_FUNCTIONS_NAME" --resource-group "$AZURE_RESOURCE_GROUP" --runtime node --storage-account "$AZURE_STORAGE_NAME" --runtime-version 22 --functions-version 4 --tags owner_email="$AZ_USER" cflt_managed_by=user cflt_managed_id="$USER" --disable-app-insights true
+#
+# "Cannot acquire exclusive lock to create, update or delete this site. Retry
+# the request later." is a transient ARM error: another operation still holds
+# the lock on the site being created. Retrying is enough, and much cheaper than
+# failing the example and recreating the whole resource group.
+#
+max_attempts="5"
+sleep_interval="60"
+attempt_num=1
 
-# Check if the function app was created successfully
-if [ $? -eq 0 ]
-then
-    log "Azure Function App created successfully."
-else
-    logerror "❌ Failed to create Azure Function App."
-    exit 1
-fi
+until az functionapp create --consumption-plan-location "$AZURE_REGION" --name "$AZURE_FUNCTIONS_NAME" --resource-group "$AZURE_RESOURCE_GROUP" --runtime node --storage-account "$AZURE_STORAGE_NAME" --runtime-version 22 --functions-version 4 --tags owner_email="$AZ_USER" cflt_managed_by=user cflt_managed_id="$USER" --disable-app-insights true
+do
+    if (( attempt_num == max_attempts ))
+    then
+        logerror "❌ Failed to create Azure Function App $AZURE_FUNCTIONS_NAME after $attempt_num attempts."
+        exit 1
+    else
+        logwarn "⚠️ az functionapp create failed, retrying ($attempt_num/$max_attempts) after $sleep_interval seconds..."
+        ((attempt_num++))
+        sleep $sleep_interval
+    fi
+done
+
+log "Azure Function App created successfully."
 
 sleep 10
 
