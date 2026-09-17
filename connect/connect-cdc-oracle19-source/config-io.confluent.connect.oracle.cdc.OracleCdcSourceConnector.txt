@@ -862,6 +862,24 @@ The OAuth/OIDC provider URL from which the provider's <a href="https://datatrack
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 redo.log.consumer.sasl.oauthbearer.expected.audience
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: The (strongly recommended) comma-delimited setting for the broker to use to verify that the JWT was issued for one of the expected audiences. The JWT will be inspected for the standard OAuth "aud" claim and if this value is set, the broker will match the value from JWT's "aud" claim  to see if there is an exact match. If there is no match, the broker will reject the JWT and authentication will fail. If this value is not set, the broker will accept a token that has no "aud" claim, which is strongly discouraged.
+	 - Required: HIGH
+
+🔘 redo.log.consumer.sasl.oauthbearer.expected.issuer
+
+The (strongly recommended) setting for the broker to use to verify that the JWT was created by the expected issuer. The JWT will be inspected for the standard OAuth "iss" claim and if this value is set, the broker will match it exactly against what is in the JWT's "iss" claim. If there is no match, the broker will reject the JWT and authentication will fail. If this value is not set, the broker will accept a JWT bearing any (or no) issuer, which is strongly discouraged.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
 🔘 redo.log.consumer.sasl.oauthbearer.jwt.retriever.class
 
 <p>The fully-qualified class name of a <code>JwtRetriever</code> implementation used to request tokens from the identity provider.</p><p>The default configuration value represents a class that maintains backward compatibility with previous versions of Apache Kafka. The default implementation uses the configuration to determine which concrete implementation to create.<p>Other implementations that are provided include:</p><ul><li><code>org.apache.kafka.common.security.oauthbearer.ClientCredentialsJwtRetriever</code></li><li><code>org.apache.kafka.common.security.oauthbearer.DefaultJwtRetriever</code></li><li><code>org.apache.kafka.common.security.oauthbearer.FileJwtRetriever</code></li><li><code>org.apache.kafka.common.security.oauthbearer.JwtBearerJwtRetriever</code></li></ul>
