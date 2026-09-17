@@ -496,6 +496,15 @@ Defines how map entries with string keys within record values should be written 
 	 - Importance: Header name to pull value for external versioning, defaults to using the kafka record offset. Must have a numeric value.
 	 - Required: LOW
 
+🔘 routing.header
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Header name to pull the value used as Elasticsearch's ``_routing`` field, which decides the shard a document is written to. The header value must not contain ``"`` or ``\``, which would produce a malformed bulk request that Elasticsearch rejects.
+	 - Required: LOW
+
 ==========================
 Connection Details
 ==========================

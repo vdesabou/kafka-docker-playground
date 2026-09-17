@@ -51,6 +51,7 @@
     "reporter.error.topic.name": "error-${connector}",
     "reporter.result.topic.name": "success-${connector}",
     "resource.type": "INDEX",
+    "routing.header": "STRING",
     "schema.context.name": "default",
     "schema.ignore": "false",
     "sr.service.account.id": "STRING",
