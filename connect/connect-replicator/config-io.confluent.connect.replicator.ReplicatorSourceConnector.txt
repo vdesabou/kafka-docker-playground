@@ -511,16 +511,16 @@ The (optional) value in seconds to allow for differences between the time of the
 
 	 - Type: false
 	 - Default: LIST
-	 - Importance: The (optional) comma-delimited setting for the broker to use to verify that the JWT was issued for one of the expected audiences. The JWT will be inspected for the standard OAuth "aud" claim and if this value is set, the broker will match the value from JWT's "aud" claim  to see if there is an exact match. If there is no match, the broker will reject the JWT and authentication will fail.
-	 - Required: LOW
+	 - Importance: The (strongly recommended) comma-delimited setting for the broker to use to verify that the JWT was issued for one of the expected audiences. The JWT will be inspected for the standard OAuth "aud" claim and if this value is set, the broker will match the value from JWT's "aud" claim  to see if there is an exact match. If there is no match, the broker will reject the JWT and authentication will fail. If this value is not set, the broker will accept a token that has no "aud" claim, which is strongly discouraged.
+	 - Required: HIGH
 
 🔘 src.kafka.sasl.oauthbearer.expected.issuer
 
-The (optional) setting for the broker to use to verify that the JWT was created by the expected issuer. The JWT will be inspected for the standard OAuth "iss" claim and if this value is set, the broker will match it exactly against what is in the JWT's "iss" claim. If there is no match, the broker will reject the JWT and authentication will fail.
+The (strongly recommended) setting for the broker to use to verify that the JWT was created by the expected issuer. The JWT will be inspected for the standard OAuth "iss" claim and if this value is set, the broker will match it exactly against what is in the JWT's "iss" claim. If there is no match, the broker will reject the JWT and authentication will fail. If this value is not set, the broker will accept a JWT bearing any (or no) issuer, which is strongly discouraged.
 
 	 - Type: STRING
 	 - Default: null
-	 - Importance: LOW
+	 - Importance: HIGH
 	 - Required: false
 
 🔘 src.kafka.sasl.oauthbearer.header.urlencode
@@ -1171,16 +1171,16 @@ The (optional) value in seconds to allow for differences between the time of the
 
 	 - Type: false
 	 - Default: LIST
-	 - Importance: The (optional) comma-delimited setting for the broker to use to verify that the JWT was issued for one of the expected audiences. The JWT will be inspected for the standard OAuth "aud" claim and if this value is set, the broker will match the value from JWT's "aud" claim  to see if there is an exact match. If there is no match, the broker will reject the JWT and authentication will fail.
-	 - Required: LOW
+	 - Importance: The (strongly recommended) comma-delimited setting for the broker to use to verify that the JWT was issued for one of the expected audiences. The JWT will be inspected for the standard OAuth "aud" claim and if this value is set, the broker will match the value from JWT's "aud" claim  to see if there is an exact match. If there is no match, the broker will reject the JWT and authentication will fail. If this value is not set, the broker will accept a token that has no "aud" claim, which is strongly discouraged.
+	 - Required: HIGH
 
 🔘 dest.kafka.sasl.oauthbearer.expected.issuer
 
-The (optional) setting for the broker to use to verify that the JWT was created by the expected issuer. The JWT will be inspected for the standard OAuth "iss" claim and if this value is set, the broker will match it exactly against what is in the JWT's "iss" claim. If there is no match, the broker will reject the JWT and authentication will fail.
+The (strongly recommended) setting for the broker to use to verify that the JWT was created by the expected issuer. The JWT will be inspected for the standard OAuth "iss" claim and if this value is set, the broker will match it exactly against what is in the JWT's "iss" claim. If there is no match, the broker will reject the JWT and authentication will fail. If this value is not set, the broker will accept a JWT bearing any (or no) issuer, which is strongly discouraged.
 
 	 - Type: STRING
 	 - Default: null
-	 - Importance: LOW
+	 - Importance: HIGH
 	 - Required: false
 
 🔘 dest.kafka.sasl.oauthbearer.header.urlencode
