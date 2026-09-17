@@ -299,6 +299,85 @@ function secret_backend_put () {
   esac
 }
 
+#
+# Write a new value into the item an existing reference already points at, and
+# echo that reference back unchanged.
+#
+# Rotation must not move a secret. secret_backend_put() derives the location
+# from the *configured* backend plus the kdp- naming convention, which is right
+# for a brand new secret and wrong for one that already exists: on a machine
+# where `secrets backend` says keychain but the reference says op://, it would
+# write the new value to the keychain, rewrite the reference, and leave the
+# 1Password item holding the old password — silently, and only on that machine.
+#
+# It also matters for `secrets link`, where the reference points at an item the
+# user named themselves, in a vault of their choosing. Only the reference knows
+# where that is.
+#
+function secret_backend_update () {
+  local ref="$1"
+  local value="$2"
+
+  # stdout is the reference, so every message here has to go to stderr
+  case "$ref" in
+    keychain:*)
+      if ! security add-generic-password -U -s "$PLAYGROUND_SECRETS_SERVICE" -a "${ref#keychain:}" -w "$value" > /dev/null 2>&1
+      then
+        logerror "❌ could not update $ref in the macOS keychain" >&2
+        return 1
+      fi
+    ;;
+    secret-tool:*)
+      local rest="${ref#secret-tool:}"
+      if ! printf '%s' "$value" | secret-tool store --label="${PLAYGROUND_SECRETS_SERVICE} ${rest#*:}" \
+          service "$PLAYGROUND_SECRETS_SERVICE" profile "${rest%%:*}" name "${rest#*:}"
+      then
+        logerror "❌ could not update $ref with secret-tool" >&2
+        return 1
+      fi
+    ;;
+    pass:*)
+      if ! printf '%s\n' "$value" | pass insert -m -f "${ref#pass:}" > /dev/null 2>&1
+      then
+        logerror "❌ could not update $ref with pass" >&2
+        return 1
+      fi
+    ;;
+    op://*)
+      #
+      # Split op://<vault>/<item>/<field> and edit that exact field, rather than
+      # recomputing a location from the configured vault and the kdp- title.
+      #
+      local rest="${ref#op://}"
+      local vault="${rest%%/*}"
+      rest="${rest#*/}"
+      local item="${rest%%/*}"
+      local field="${rest#*/}"
+      [ "$field" == "$item" ] && field="password"
+
+      local op_error
+      if ! op_error=$(op item edit "$item" --vault "$vault" "${field}=${value}" 2>&1 > /dev/null)
+      then
+        logerror "❌ could not update 1Password item $item in vault $vault: $op_error" >&2
+        logerror "👉 a service account token needs write_items on that vault to rotate a password" >&2
+        return 1
+      fi
+    ;;
+    vault://*)
+      logerror "❌ $ref points at Vault, which playground never writes to" >&2
+      logerror "👉 update the secret in Vault directly, the reference stays valid" >&2
+      return 1
+    ;;
+    *)
+      # `file` backend: the reference *is* the value
+      printf '%s' "$value"
+      return 0
+    ;;
+  esac
+
+  printf '%s' "$ref"
+}
+
 function secret_backend_del () {
   local ref="$1"
 
@@ -793,10 +872,19 @@ function secret_store_value () {
 
   if [ $sensitive -eq 0 ]
   then
-    local backend
-    backend=$(get_secret_backend)
-    local ref
-    ref=$(secret_backend_put "$backend" "$profile" "$name" "$value") || return 1
+    local ref old_ref backend
+    if old_ref=$(secret_store_get "$(get_secrets_file)" "$profile" "$name")
+    then
+      #
+      # Already stored: rotate it in place. The reference, not the configured
+      # backend, decides where the value goes — see secret_backend_update().
+      #
+      backend=$(secret_reference_backend "$old_ref")
+      ref=$(secret_backend_update "$old_ref" "$value") || return 1
+    else
+      backend=$(get_secret_backend)
+      ref=$(secret_backend_put "$backend" "$profile" "$name" "$value") || return 1
+    fi
     secret_store_set "$(get_secrets_file)" "$profile" "$name" "$ref" "0600"
     #
     # A variable promoted from --plain to --secret would otherwise keep its
