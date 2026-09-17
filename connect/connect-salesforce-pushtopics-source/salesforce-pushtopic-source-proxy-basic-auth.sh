@@ -157,7 +157,7 @@ EOF
 # 	kafka.topic = sfdc-pushtopic-leads
 # 	kafka.topic.lowercase = true
 # 	request.max.retries.time.ms = 900000
-# 	salesforce.consumer.key = 3MVG9lsAlIP.W_V.k0nr8DU2tp2TITctLGpiBlCaIVY1jac6hN2Zp0jqlLuUQ9UopxJsW72pLdFBu40TLRd7l
+# 	salesforce.consumer.key = xxx
 # 	salesforce.consumer.secret = [hidden]
 # 	salesforce.initial.start = latest
 # 	salesforce.instance = xxxx
