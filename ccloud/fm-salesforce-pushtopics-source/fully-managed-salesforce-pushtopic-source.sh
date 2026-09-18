@@ -54,9 +54,9 @@ bootstrap_ccloud_environment
 
 
 set +e
-playground topic delete --topic sfdc-pushtopic-leads
+playground topic delete --topic sfdc-pushtopic-leads-pushtopic-source
 sleep 3
-playground topic create --topic sfdc-pushtopic-leads
+playground topic create --topic sfdc-pushtopic-leads-pushtopic-source
 set -e
 
 docker compose build
@@ -93,7 +93,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",
-     "kafka.topic": "sfdc-pushtopic-leads",
+     "kafka.topic": "sfdc-pushtopic-leads-pushtopic-source",
      "salesforce.object" : "Lead",
      "salesforce.push.topic.name" : "$PUSH_TOPICS_NAME",
      "salesforce.instance" : "$SALESFORCE_INSTANCE",
@@ -120,8 +120,8 @@ docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_
 
 sleep 30
 
-log "Verify we have received the data in sfdc-pushtopic-leads topic"
-playground topic consume --topic sfdc-pushtopic-leads --min-expected-messages 1 --timeout 60
+log "Verify we have received the data in sfdc-pushtopic-leads-pushtopic-source topic"
+playground topic consume --topic sfdc-pushtopic-leads-pushtopic-source --min-expected-messages 1 --timeout 60
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue

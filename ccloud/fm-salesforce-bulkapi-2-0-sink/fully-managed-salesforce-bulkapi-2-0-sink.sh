@@ -74,9 +74,9 @@ bootstrap_ccloud_environment
 
 
 set +e
-playground topic delete --topic sfdc-pushtopic-leads
+playground topic delete --topic sfdc-pushtopic-leads-bulk-sink-v2
 sleep 3
-playground topic create --topic sfdc-pushtopic-leads
+playground topic create --topic sfdc-pushtopic-leads-bulk-sink-v2
 set -e
 
 docker compose build
@@ -113,7 +113,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",
-     "kafka.topic": "sfdc-pushtopic-leads",
+     "kafka.topic": "sfdc-pushtopic-leads-bulk-sink-v2",
      "salesforce.object" : "Lead",
      "salesforce.push.topic.name" : "$PUSH_TOPICS_NAME",
      "salesforce.instance" : "$SALESFORCE_INSTANCE",
@@ -140,8 +140,8 @@ docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_
 
 sleep 30
 
-log "Verify we have received the data in sfdc-pushtopic-leads topic"
-playground topic consume --topic sfdc-pushtopic-leads --min-expected-messages 1 --timeout 60
+log "Verify we have received the data in sfdc-pushtopic-leads-bulk-sink-v2 topic"
+playground topic consume --topic sfdc-pushtopic-leads-bulk-sink-v2 --min-expected-messages 1 --timeout 60
 
 
 connector_name2="SalesforceBulkApiV2Sink_$USER"
@@ -157,7 +157,7 @@ playground connector create-or-update --connector $connector_name2 << EOF
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",
-     "topics": "sfdc-pushtopic-leads",
+     "topics": "sfdc-pushtopic-leads-bulk-sink-v2",
      "salesforce.object" : "Lead",
      "salesforce.instance" : "$SALESFORCE_INSTANCE_ACCOUNT2",
      "salesforce.username" : "$SALESFORCE_USERNAME_ACCOUNT2",
