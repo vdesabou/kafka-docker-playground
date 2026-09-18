@@ -457,9 +457,9 @@ When to quote table names, column names, and other identifiers in SQL statements
 ==========================
 Connection details
 ==========================
-🔘 batch.sizes
+🔘 batch.size
 
-Maximum number of rows to include in a single batch when polling for new data. This setting can be used to limit the amount of data buffered internally in the connector.
+Specifies how many records to attempt to batch together for insertion into the destination table, when possible.
 
 	 - Type: INT
 	 - Default: 3000
