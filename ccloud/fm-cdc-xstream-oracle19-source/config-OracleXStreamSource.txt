@@ -471,7 +471,7 @@ Specifies the constant provided by the connector to indicate that the original v
 
 🔘 lob.oversize.threshold
 
-Specifies the maximum size threshold (in bytes) for large object (LOB) column values, including CLOB, NCLOB, and BLOB. For CLOB and NCLOB values, the connector calculates the size as the UTF-8 encoded byte length of the string. If a LOB value exceeds this threshold, the connector handles it according to the strategy specified using the ``lob.oversize.handling.mode`` configuration. The default value is -1, which disables oversize handling.
+Specifies the maximum size threshold (in bytes) for large object (LOB) column values (CLOB, NCLOB, and BLOB) and XMLType column values. For CLOB, NCLOB, and XMLType values, the connector calculates the size as the UTF-8 encoded byte length of the string. If a value exceeds this threshold, the connector handles it according to the strategy specified using the ``lob.oversize.handling.mode`` configuration. The default value is -1, which disables oversize handling.
 
 	 - Type: INT
 	 - Default: -1
