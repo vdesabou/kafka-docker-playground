@@ -7,7 +7,7 @@ services:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3
 
   minio:
-    image: minio/minio
+    image: quay.io/minio/minio
     hostname: minio
     container_name: minio
     ports:
@@ -18,7 +18,7 @@ services:
     command: ["server", "/data"]
 
   create-buckets:
-    image: minio/mc
+    image: quay.io/minio/mc
     hostname: create-buckets
     container_name: create-buckets
     depends_on:
@@ -33,7 +33,7 @@ services:
       "
 
   list-buckets:
-    image: minio/mc
+    image: quay.io/minio/mc
     hostname: list-buckets
     container_name: list-buckets
     depends_on:
@@ -48,7 +48,7 @@ services:
       "
 
   copy-files:
-    image: minio/mc
+    image: quay.io/minio/mc
     hostname: copy-files
     container_name: copy-files
     depends_on:

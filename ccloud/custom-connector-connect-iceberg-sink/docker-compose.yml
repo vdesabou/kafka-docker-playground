@@ -2,7 +2,7 @@
 services:
   # based on https://github.com/Wuerike/kafka-iceberg-streaming/tree/main
   minio:
-    image: minio/minio
+    image: quay.io/minio/minio
     hostname: minio
     container_name: minio
     environment:
