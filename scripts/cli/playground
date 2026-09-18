@@ -1999,7 +1999,7 @@ playground_secrets_usage() {
   printf "  playground secrets [COMMAND] --help | -h\n"
   echo
   # :command.usage_commands
-  printf "%s\n" "$(bold "== Commands ==")"
+  printf "%s\n" "$(bold "Secrets commands:")"
   printf "  %s   🔐 Store a credential\n" "$(green "set")        "
   printf "  %s   🔍 Show a stored credential (masked unless --reveal is used)\n" "$(green "get")        "
   printf "  %s   🗑️ Remove a stored credential\n" "$(green "unset")      "
@@ -2613,7 +2613,7 @@ playground_secrets_edit_usage() {
 playground_secrets_backend_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground secrets backend\n\n"
-    printf "  🏦 Show or change where secrets are kept\n  \n  keychain (macOS), secret-tool (Linux), pass, op (1Password), vault\n  (HashiCorp) or file.\n  \n  op and vault are reference-only: create the item there, then use\n  'playground secrets link'.\n\n"
+    printf "  🏦 Show or change where secrets are kept\n  \n  keychain (macOS), secret-tool (Linux), pass, op (1Password), vault\n  (HashiCorp) or file.\n  \n  vault is reference-only: create the secret there, then use\n  'playground secrets link'. op creates the item for you, but can also\n  point at an existing one with 'playground secrets link'.\n\n"
   else
     printf "playground secrets backend - 🏦 Show or change where secrets are kept\n\n"
   fi
@@ -25647,7 +25647,7 @@ do
     if [ \$? != 0 ]
     then
         logerror "❌ failed to build java component $component"
-        tail -500 /tmp/result.log
+        tail -100 /tmp/result.log
         exit 1
     fi
     set -e
@@ -25844,7 +25844,7 @@ do
     if [ \$? != 0 ]
     then
         logerror "❌ failed to build java component $component"
-        tail -500 /tmp/result.log
+        tail -100 /tmp/result.log
         exit 1
     fi
     set -e
@@ -27050,7 +27050,7 @@ EOF
   if [ $? != 0 ]
   then
       logerror "❌ error while calling derive-schema"
-      tail -500 /tmp/result.log
+      tail -100 /tmp/result.log
       exit 1
   fi
 
@@ -27777,7 +27777,7 @@ playground_tools_redos_check_command() {
   if [ $? != 0 ]
   then
       logerror "❌ failed to build java component redos-check"
-      tail -500 /tmp/result.log
+      tail -100 /tmp/result.log
       exit 1
   fi
   set -e
@@ -33316,7 +33316,7 @@ playground_topic_produce_command() {
       if [ $? != 0 ]
       then
           logerror "❌ failed to build java component schema-validator"
-          tail -500 /tmp/result.log
+          tail -100 /tmp/result.log
           exit 1
       fi
       set -e

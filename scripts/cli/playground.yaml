@@ -395,8 +395,9 @@ subcommands:
             keychain (macOS), secret-tool (Linux), pass, op (1Password), vault
             (HashiCorp) or file.
             
-            op and vault are reference-only: create the item there, then use
-            'playground secrets link'.
+            vault is reference-only: create the secret there, then use
+            'playground secrets link'. op creates the item for you, but can also
+            point at an existing one with 'playground secrets link'.
         usage: playground secrets backend [BACKEND]
         options: []
       - name: profile

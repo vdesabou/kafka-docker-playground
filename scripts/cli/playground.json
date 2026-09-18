@@ -371,7 +371,7 @@
         },
         {
           "name": "backend",
-          "description": "🏦 Show or change where secrets are kept\n  \n  keychain (macOS), secret-tool (Linux), pass, op (1Password), vault\n  (HashiCorp) or file.\n  \n  op and vault are reference-only: create the item there, then use\n  'playground secrets link'.\n",
+          "description": "🏦 Show or change where secrets are kept\n  \n  keychain (macOS), secret-tool (Linux), pass, op (1Password), vault\n  (HashiCorp) or file.\n  \n  vault is reference-only: create the secret there, then use\n  'playground secrets link'. op creates the item for you, but can also\n  point at an existing one with 'playground secrets link'.\n",
           "usage": "playground secrets backend [BACKEND]",
           "options": []
         },

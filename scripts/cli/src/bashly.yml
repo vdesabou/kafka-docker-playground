@@ -518,6 +518,7 @@ commands:
 
   commands:
   - name: set
+    group: Secrets
     help: |-
       🔐 Store a credential
 
@@ -572,6 +573,7 @@ commands:
     - playground secrets set MY_API_CREDENTIAL --secret
 
   - name: get
+    group: Secrets
     help: 🔍 Show a stored credential (masked unless --reveal is used)
     args:
     - name: name
@@ -593,6 +595,7 @@ commands:
     - playground secrets get SALESFORCE_PASSWORD --reveal
 
   - name: unset
+    group: Secrets
     help: 🗑️ Remove a stored credential
     alias:
      - delete
@@ -610,6 +613,7 @@ commands:
     - playground secrets unset SALESFORCE_PASSWORD
 
   - name: list
+    group: Secrets
     help: |-
       📋 List stored credentials
 
@@ -626,6 +630,7 @@ commands:
     - playground secrets list --profile customer-123456
 
   - name: link
+    group: Secrets
     help: |-
       🔗 Point a variable at a secret manager, without storing any value
 
@@ -651,6 +656,7 @@ commands:
     - playground secrets link SNOWFLAKE_PASSWORD vault://secret/kdp/snowflake#password
 
   - name: check
+    group: Secrets
     help: |-
       ✅ Show what an example needs, and what is missing
 
@@ -671,6 +677,7 @@ commands:
     - playground secrets check -f ccloud/fm-splunk-sink/fully-managed-splunk-sink.sh
 
   - name: env
+    group: Secrets
     help: |-
       🐚 Export what an example needs into the current shell
 
@@ -711,6 +718,7 @@ commands:
     - source <(playground secrets env --all)
 
   - name: import
+    group: Secrets
     help: |-
       📥 Import an existing secret.properties / variable.properties file
 
@@ -743,6 +751,7 @@ commands:
     - playground secrets import --file ~/variables.properties --plain
 
   - name: export
+    group: Secrets
     help: |-
       📤 Write every credential of a profile to a file, in clear text
 
@@ -768,6 +777,7 @@ commands:
 
   - name: push-github
     private: true
+    group: Secrets
     help: |-
       🐙 Push a profile to the GitHub Actions secrets and variables of a repository
 
@@ -827,6 +837,7 @@ commands:
     - playground secrets push-github --only secret --repo vdesabou/kafka-docker-playground
 
   - name: edit
+    group: Secrets
     help: ✏️ Open the store in your editor
     flags:
     - long: --plain
@@ -837,14 +848,16 @@ commands:
     - playground secrets edit --plain
 
   - name: backend
+    group: Secrets
     help: |-
       🏦 Show or change where secrets are kept
 
       keychain (macOS), secret-tool (Linux), pass, op (1Password), vault
       (HashiCorp) or file.
 
-      op and vault are reference-only: create the item there, then use
-      'playground secrets link'.
+      vault is reference-only: create the secret there, then use
+      'playground secrets link'. op creates the item for you, but can also
+      point at an existing one with 'playground secrets link'.
     args:
     - name: backend
       required: false
@@ -855,6 +868,7 @@ commands:
     - playground secrets backend op
 
   - name: profile
+    group: Secrets
     help: |-
       🗂️ Show or switch the active profile
 
@@ -871,6 +885,7 @@ commands:
     - playground secrets profile customer-123456
 
   - name: scan
+    group: Secrets
     help: |-
       🔎 Look for stored credentials in clear text in the repository
 
@@ -886,6 +901,7 @@ commands:
     - playground secrets scan --staged
 
   - name: lint
+    group: Secrets
     private: true
     help: |-
       🧹 List the examples whose environment variables are not auto-detected
