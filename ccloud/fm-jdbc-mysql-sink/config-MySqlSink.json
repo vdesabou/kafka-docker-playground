@@ -2,7 +2,7 @@
     "auto.create": "false",
     "auto.evolve": "false",
     "auto.restart.on.user.error": "true",
-    "batch.sizes": "3000",
+    "batch.size": "3000",
     "connection.host": "STRING",
     "connection.password": "PASSWORD",
     "connection.port": "INT",
