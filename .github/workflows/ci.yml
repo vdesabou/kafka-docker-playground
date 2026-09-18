@@ -662,35 +662,35 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
-      - name: Prepare email with diff content
-        if: always() && env.HAS_CHANGES == 'true'
-        run: |
-          DIFF_CONTENT=$(cat /tmp/config_changes.diff)
-          cat << 'EOF' > /tmp/email_body.txt
-          Connector configuration file has been updated in workflow run: ${{ github.run_id }}
+    #   - name: Prepare email with diff content
+    #     if: always() && env.HAS_CHANGES == 'true'
+    #     run: |
+    #       DIFF_CONTENT=$(cat /tmp/config_changes.diff)
+    #       cat << 'EOF' > /tmp/email_body.txt
+    #       Connector configuration file has been updated in workflow run: ${{ github.run_id }}
           
-          Repository: ${{ github.repository }}
-          Branch: ${{ github.ref_name }}
-          Commit: https://github.com/${{ github.repository }}/commit/${{ env.COMMIT_SHA }}
-          Workflow: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    #       Repository: ${{ github.repository }}
+    #       Branch: ${{ github.ref_name }}
+    #       Commit: https://github.com/${{ github.repository }}/commit/${{ env.COMMIT_SHA }}
+    #       Workflow: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
           
-          Changes:
-          ========
-          EOF
-          cat /tmp/config_changes.diff >> /tmp/email_body.txt
+    #       Changes:
+    #       ========
+    #       EOF
+    #       cat /tmp/config_changes.diff >> /tmp/email_body.txt
 
-      - name: Send email notification
-        if: always() && env.HAS_CHANGES == 'true'
-        uses: dawidd6/action-send-mail@v17
-        with:
-          server_address: smtp.gmail.com
-          server_port: 587
-          username: ${{ vars.SALESFORCE_USERNAME }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "[CI] Connector config file updated - ${{ github.repository }}"
-          to: ${{ vars.SALESFORCE_USERNAME }}
-          from: ${{ vars.SALESFORCE_USERNAME }}
-          body: file:///tmp/email_body.txt
+    #   - name: Send email notification
+    #     if: always() && env.HAS_CHANGES == 'true'
+    #     uses: dawidd6/action-send-mail@v17
+    #     with:
+    #       server_address: smtp.gmail.com
+    #       server_port: 587
+    #       username: ${{ vars.SALESFORCE_USERNAME }}
+    #       password: ${{ secrets.EMAIL_PASSWORD }}
+    #       subject: "[CI] Connector config file updated - ${{ github.repository }}"
+    #       to: ${{ vars.SALESFORCE_USERNAME }}
+    #       from: ${{ vars.SALESFORCE_USERNAME }}
+    #       body: file:///tmp/email_body.txt
 
   post-build:
     name: Cleanup resources and Update README
