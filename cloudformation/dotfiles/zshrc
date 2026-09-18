@@ -121,14 +121,15 @@ then
     export ENABLE_CONTROL_CENTER=1
     export C3_PORT=9022
     export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
-    cd ~/kafka-docker-playground
-    # sent by `playground ec2 push-secrets`, outside the git clone, mode 0600
-    if [ -f ~/.playground-secrets.properties ]
-    then
-        set -o allexport;source ~/.playground-secrets.properties;set +o allexport
-    fi
     echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin > /dev/null 2>&1
     cd -
 fi
 
 cd ~/kafka-docker-playground
+# sent by `playground ec2 push-secrets`, outside the git clone, mode 0600
+if [ -f ~/.playground-secrets.properties ]
+then
+    #set -o allexport;source ~/.playground-secrets.properties;set +o allexport
+    echo "secrets are present in ~/.playground-secrets.properties, use pgenv to load them in shell"
+    alias pgenv="source <(playground secrets env --all)"
+fi
