@@ -1,11 +1,11 @@
-name: Update README
+name: Update Docs
 
 on:
   workflow_dispatch:
 
 jobs:
-  update-readme:
-    name: Update README
+  update-docs:
+    name: Update Docs
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -13,8 +13,6 @@ jobs:
         with:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
-          # submodules: recursive
-          # ssh-key: ${{ secrets.GH_SSH_KEY_FILE }}
           ssh-strict: 'false'
 
       - name: Update DOCS
@@ -22,16 +20,6 @@ jobs:
           sudo gem install bashly
           cd ./scripts/cli
           ./playground update-docs
-
-      - name: Update README and update cache-versions.env
-        run: |
-          cd ./scripts/cli
-          ./playground update-readme --tags "8.3.2"
-        env:
-          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          AWS_REGION: ${{ vars.AWS_REGION}}
 
       - name: Pushes docs
         uses: dmnemec/copy_file_to_another_repo_action@main
