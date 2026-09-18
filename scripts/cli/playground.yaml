@@ -17,12 +17,35 @@ subcommands:
   - name: status
     description: | 
         🗺️ Show a status
+        
+        A single screen answering "what is running right now, and is it healthy":
+        the example currently running and its documentation link, the version of
+        every connector, the status and configuration of each of them, the topics
+        that exist, and whether an EC2 instance of yours is still up.
+        
+        Everything comes from the running containers and from playground.ini, so
+        it is also the quickest way to get back your bearings after a break.
     usage: playground status
     options: []
     subcommands:
   - name: config
     description: | 
         ⚙️ Configure CLI
+        
+        Your preferences, kept between sessions:
+        
+          editor <name>                      the editor every command opens files
+                                             with (code, vi, nano...)
+          folder_zip_or_jar <dir>...         where to look for connector zips and
+                                             jars, in addition to the current
+                                             folder
+          clipboard true|false               copy connector config to the
+                                             clipboard (macOS only)
+          container-kill-all-before-run      kill every container before each run,
+                                             or just stop the example
+          check-and-update-repo-version      warn when your clone is out of date
+          open-ccloud-connector-in-browser   open fully managed connectors, and in
+          open-grafana-in-browser            which browser
     usage: playground config COMMAND
     options: []
     subcommands:
@@ -179,7 +202,6 @@ subcommands:
           playground config set secrets.backend <backend>      🏦 see above
           playground config set secrets.profile <name>         🗂️ active profile
           playground config set secrets.op-vault <vault>       🔑 1Password vault
-          playground config set secrets.github-repo OWNER/REPO 🐙 sync CI secrets
         
         PLAYGROUND_SECRETS_DIR, PLAYGROUND_SECRETS_BACKEND,
         PLAYGROUND_SECRETS_PROFILE and PLAYGROUND_OP_VAULT override them for a
@@ -603,7 +625,18 @@ subcommands:
     description: | 
         🧞‍♂️  AI
         
+        Opens Claude Code in this checkout, already wired to the playground.
+        
         It is using Claude Code (https://code.claude.com/docs/en/quickstart) in interactive mode.
+        
+        Because of the MCP servers below, it can see what is actually running:
+        which example, which containers, which connectors are failing and why,
+        and it can search the ~2500 example scripts to find the one that already
+        reproduces what you are looking at. So ask it things like "why did my
+        connector fail" or "is there an example doing X", rather than treating it
+        as a generic assistant.
+        
+        Anything you pass after 'playground ai' goes straight to the claude cli.
         
         MCP servers are available:
         
@@ -683,25 +716,59 @@ subcommands:
     subcommands:
   - name: cloud-resources
     description: | 
-        🔗 Connector commands
+        ☁️ What the playground left behind in your cloud accounts, and what it costs
+        
+        Examples that talk to a real cloud create real resources, and an
+        interrupted run leaves them behind. These commands show what is still
+        alive and what you are being billed for:
+        
+          cloud-resources aws list            resources still up, scoped to you
+          cloud-resources aws costs           spend over a range of dates
+          cloud-resources aws costs-history   spend per month over the last year
+        
+        The same three exist for azure.
+        
+        🧹 Nothing is deleted here. To actually remove the resources, use
+           'playground cleanup-cloud-resources'.
     usage: playground cloud-resources COMMAND
     options: []
     subcommands:
       - name: aws
         description: | 
-          aws commands
+          ☁️ What is still running in AWS, and what it costs
+            
+              list            resources created by the playground, still alive
+              costs           spend over a range of dates, by service
+              costs-history   spend per month over the last year
+            
+            Uses the credentials and region of your aws CLI. Nothing is deleted
+            here, use 'playground cleanup-cloud-resources' for that.
             
         usage: playground cloud-resources aws COMMAND
         options: []
       - name: azure
         description: | 
-          azure commands
+          ☁️ What is still running in Azure, and what it costs
+            
+              list            resources created by the playground, still alive
+              costs           spend over a range of dates
+              costs-history   spend per month over the last year
+            
+            Uses the subscription your az CLI is logged into. Nothing is deleted
+            here, use 'playground cleanup-cloud-resources' for that.
             
         usage: playground cloud-resources azure COMMAND
         options: []
   - name: aws
     description: | 
-        aws commands
+        ☁️ What is still running in AWS, and what it costs
+        
+          list            resources created by the playground, still alive
+          costs           spend over a range of dates, by service
+          costs-history   spend per month over the last year
+        
+        Uses the credentials and region of your aws CLI. Nothing is deleted
+        here, use 'playground cleanup-cloud-resources' for that.
         
     usage: playground cloud-resources aws COMMAND
     options: []
@@ -709,6 +776,9 @@ subcommands:
       - name: list
         description: | 
           📋 List all active resources
+            
+            AWS resources created by the playground and still running, matched on
+            your username. Anything in the list is still being billed.
             
         usage: playground cloud-resources aws list [OPTIONS]
         options:
@@ -721,6 +791,15 @@ subcommands:
       - name: costs
         description: | 
           💰 Show aws costs
+            
+            Spend over a range of dates, broken down by AWS service, using the
+            Cost Explorer API. Run it after a week of heavy examples to see which
+            service the money actually went to, then use
+            'playground cloud-resources aws list' to find what is still up.
+            
+            Defaults cover the last month, ending 3 days ago because AWS needs a
+            couple of days to consolidate. --start-date cannot go back more than
+            one year.
             
         usage: playground cloud-resources aws costs [OPTIONS]
         options:
@@ -756,6 +835,10 @@ subcommands:
         description: | 
           👛  Retrieve aws costs for each month since last year
             
+            One line per month over the past year, drawn as a histogram, which
+            makes a month that went wrong obvious at a glance. Use costs when you
+            then want to know which service it was.
+            
             By default it will only display total cost in dollars. Use the --detailed flag to see more information.
         usage: playground cloud-resources aws costs-history [OPTIONS]
         options:
@@ -767,7 +850,14 @@ subcommands:
             
   - name: azure
     description: | 
-        azure commands
+        ☁️ What is still running in Azure, and what it costs
+        
+          list            resources created by the playground, still alive
+          costs           spend over a range of dates
+          costs-history   spend per month over the last year
+        
+        Uses the subscription your az CLI is logged into. Nothing is deleted
+        here, use 'playground cleanup-cloud-resources' for that.
         
     usage: playground cloud-resources azure COMMAND
     options: []
@@ -775,6 +865,9 @@ subcommands:
       - name: list
         description: | 
           📋 List all active resources
+            
+            Azure resources created by the playground and still running, matched
+            on your username. Anything in the list is still being billed.
             
         usage: playground cloud-resources azure list [OPTIONS]
         options:
@@ -787,6 +880,13 @@ subcommands:
       - name: costs
         description: | 
           💰 Show azure costs
+            
+            Spend over a range of dates for your subscription, using the Azure
+            Cost Management API. You need to be logged in with the az CLI.
+            
+            Defaults cover the last month, ending 3 days ago because the data
+            takes a couple of days to consolidate. --start-date cannot go back
+            more than one year.
             
         usage: playground cloud-resources azure costs [OPTIONS]
         options:
@@ -821,6 +921,9 @@ subcommands:
       - name: costs-history
         description: | 
           👛  Retrieve azure costs for each month since last year
+            
+            One line per month over the past year, so you can spot the month that
+            went wrong before digging into it with costs.
             
             By default it will only display total cost in dollars. Use the --detailed flag to see more information.
         usage: playground cloud-resources azure costs-history [OPTIONS]
@@ -893,6 +996,27 @@ subcommands:
         🕹️ Run any example !
         
         🔥 It start an interactive mode where you'll be fully guided !
+        
+          playground run                       🔍 pick an example, guided
+          playground run -f <example.sh>       🚀 run that one directly
+          playground re-run                    ⚡ same example, same flags
+        
+        Each run stops what was running, starts the environment the example asks
+        for, brings up its containers, creates the connector and produces data.
+        Credentials the example needs are loaded from 'playground secrets'.
+        
+        🔢 Choosing versions
+          --tag             Confluent Platform version for every component
+          --connect-tag     Confluent Platform version for connect only
+          --connector-tag   connector version from Confluent Hub
+          --connector-zip   connector from a local zip or a URL
+          --connector-jar   a single jar, dropped into the existing plugin
+        
+        🧰 Adding to the example
+          --environment     run a connector example under another security setup
+          --enable-<x>      add control-center, ksqldb, flink, grafana, kcat...
+          --pipeline        chain a source example into a sink example
+          --sql-datagen     continuous realistic data instead of a fixed batch
         
         
         ⛅ When running Confluent Cloud (ccloud) example:
@@ -1211,6 +1335,13 @@ subcommands:
   - name: re-run
     description: | 
         ⚡ Simply re-run last example you ran with <playground run>
+        
+        Same script and same flags as last time: the --tag, --connector-tag,
+        --connector-zip and --enable-* you picked are replayed from playground.ini,
+        so there is nothing to retype after a code change.
+        
+        🎓 Tip: to re-run with a different version, use 'playground run' again and
+        change the flag, or 'playground update-version' on the running example.
     usage: playground re-run
     options: []
     subcommands:
@@ -1218,6 +1349,14 @@ subcommands:
   - name: get-ci-result
     description: | 
         🤖 get CI result for current example
+        
+        Tells you whether the example you are running is green in the nightly CI,
+        both for the default environment and for cfk, by reading the published
+        badges from kafka-docker-playground.io.
+        
+        👉 Useful before you spend time debugging: if CI is red too, the breakage
+        is probably not on your side. Reproduction models are always reported as
+        fine, they are not part of the CI matrix.
     usage: playground get-ci-result
     options: []
     subcommands:
@@ -1225,6 +1364,10 @@ subcommands:
   - name: history
     description: | 
         🏰 Get an history of the examples which were run with run command and run it again
+        
+        Opens a picker over every 'playground run' command you have executed,
+        most recent first and de-duplicated. The command you select is shown for
+        editing before it runs, so you can change a --tag or add a flag on the way.
     usage: playground history
     options: []
     subcommands:
@@ -1234,6 +1377,15 @@ subcommands:
         🌩️  Switch to ccloud environment.
         
         It will bootstrap ccloud environment based on your previously ran ccloud example.
+        
+        Points the CLI at the Confluent Cloud cluster of your last ccloud run, so
+        that 'playground topic', 'playground connector' and 'playground schema'
+        talk to Confluent Cloud instead of the local containers. Nothing is
+        created or destroyed, and no container is started or stopped.
+        
+        ❕ Requires that you ran a ccloud example at least once, so that the
+           environment, cluster and credentials are cached in playground.ini.
+           The environment you were on is remembered for 'playground switch-back'.
     usage: playground switch-ccloud
     options: []
     subcommands:
@@ -1241,6 +1393,10 @@ subcommands:
   - name: switch-back
     description: | 
         💺  Switch back from previous environment before switch-ccloud was called.
+        
+        Restores the environment and connector type that were active before
+        'playground switch-ccloud', so the CLI talks to your local containers
+        again.
     usage: playground switch-back
     options: []
     subcommands:
@@ -1248,6 +1404,23 @@ subcommands:
   - name: update-version
     description: | 
         ✨ Update current confluent platform components (all with --tag or only connect with --connect-tag) or connector(s) with new version(s)
+        
+        Re-runs the example you are currently on with different versions, which is
+        the fastest way to answer "does it still happen on 8.x?" or "is it fixed in
+        connector 10.6.0?".
+        
+          --tag            🔢 every Confluent Platform component
+          --connect-tag    🔗 only the connect container, other components untouched
+          --connector-tag  🧩 the connector, from Confluent Hub
+          --connector-zip  📦 the connector, from a local zip or a URL
+          --connector-jar  ☕ a single jar, dropped into the existing plugin
+        
+        With no flag, you are prompted with the versions available. The versions
+        currently running are read from the broker and connect containers, so the
+        example must be up.
+        
+        🎓 Tip: this is a version bisect tool. Keep the example running and call it
+        repeatedly until you find the version where the behaviour changes.
     usage: playground update-version [OPTIONS]
     options:
     - names:
@@ -1319,6 +1492,11 @@ subcommands:
         👐 When --file is not provided, simply open last example you ran with <playground run>
         
         Otherwise, open any file from the playground using --file.
+        
+        Opens in the editor of your choice: 'playground config editor code'
+        (or vi, nano, sublime, etc). Add --open-docker-compose to also open the
+        docker-compose override file the example uses, which is where the
+        containers around Kafka are defined.
     usage: playground open [OPTIONS]
     options:
     - names:
@@ -1350,6 +1528,13 @@ subcommands:
   - name: stop
     description: | 
         🛑 Stop currently running example
+        
+        Tears down every container of the environment and of the example, and
+        removes their volumes, by replaying the docker compose command stored in
+        playground.ini. Nothing is left behind, so the next example starts clean.
+        
+        ❕ Data is not kept: topics, connectors and the content of the databases
+           started by the example are gone.
     usage: playground stop
     options: []
     subcommands:
@@ -1357,6 +1542,13 @@ subcommands:
   - name: remove-all-docker-images
     description: | 
         🧨 Remove all docker images (including docker volumes)
+        
+        Reclaims disk space by wiping your whole local Docker state, not just the
+        playground one. Everything has to be pulled again afterwards, so the next
+        run is slow.
+        
+        🎓 Tip: prefer 'playground remove-cp-docker-images' to drop only the
+        Confluent Platform versions you no longer test.
     usage: playground remove-all-docker-images
     options: []
     subcommands:
@@ -1364,6 +1556,12 @@ subcommands:
   - name: remove-cp-docker-images
     description: | 
         🧹 Remove all Confluent Platform docker images related to a version installed locally (a confirmation will be required for every version present)
+        
+        Each Confluent Platform version you have ever run keeps a dozen images on
+        disk, so this is usually where the space went. You are asked before every
+        version, unless you name one with --version.
+        
+        The default version used by the playground is never proposed for removal.
     usage: playground remove-cp-docker-images [OPTIONS]
     options:
     - names:
@@ -1379,6 +1577,9 @@ subcommands:
         🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally
         
             It also refreshes images for aws, gcp and azure cli
+        
+        Useful when a version tag has been re-published, or when the cloud CLI
+        images have drifted behind the API they talk to.
     usage: playground refresh-cp-docker-images [OPTIONS]
     options:
     - names:
@@ -1395,6 +1596,14 @@ subcommands:
     description: | 
         🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)
            use this command if you notice that the playground is using unexpected ccloud details
+        
+        Drops the cached environment, cluster, endpoints and API keys, so the next
+        ccloud example re-discovers them from scratch. Typically needed after you
+        changed of Confluent Cloud organisation, or deleted the cluster from the UI
+        behind the playground's back.
+        
+        ❕ Nothing is deleted in Confluent Cloud, only the local cache. To delete
+           the cloud resources themselves, see 'playground cleanup-cloud-resources'.
     usage: playground cleanup-cloud-details
     options: []
     subcommands:
@@ -1402,6 +1611,9 @@ subcommands:
   - name: open-docs
     description: | 
         🧑‍🎓 Open Confluent documentation of currently running example
+        
+        Jumps straight to the official Confluent page for the connector or feature
+        the running example demonstrates, so you do not have to search for it.
     usage: playground open-docs [OPTIONS]
     options:
     - names:
@@ -1430,6 +1642,16 @@ subcommands:
         🧹 Cleanup cloud resources that were created by running examples from the playground
         
         ❗it will remove all resources created by the playground, including topics, connectors, clusters, buckets, redshift cluster, etc...
+        
+        Examples that talk to a real cloud create real, billable resources, and an
+        interrupted run leaves them behind. This sweeps them, scoped to the ones
+        whose name contains your username, across AWS, GCP, Azure, Confluent Cloud
+        and Salesforce. Restrict the scope with --resource, and run it regularly.
+        
+        You are asked to confirm every deletion, unless --force is given.
+        
+        ☢️ Deletions are permanent. Use a dedicated cloud account for the
+           playground rather than one that also hosts resources you care about.
     usage: playground cleanup-cloud-resources [OPTIONS]
     options:
     - names:
@@ -1466,12 +1688,30 @@ subcommands:
   - name: repro
     description: | 
         👷‍♂️ Reproduction model commands
+        
+        A reproduction model is an example written to demonstrate one specific
+        problem, so that anyone can reproduce it with a single command.
+        
+          bootstrap   scaffold one from an existing example, then edit it
+          export      package the models you have not committed, as a tgz
+          import      unpack a tgz someone sent you, and run it
+        
+        👉 Always scaffold with bootstrap rather than copying a script by hand: it
+        creates the header, the docker compose override, the CLI cheat sheet and
+        registers the model, which a hand-written file would be missing.
+        
+        Keep a model minimal and about one issue, state expected versus actual
+        behaviour in its comments header, and never put customer data in it.
     usage: playground repro COMMAND
     options: []
     subcommands:
       - name: export
         description: | 
           📤 Export as tgz file uncommitted reproduction models from the folder of current reproduction model
+            
+            Produces a single tgz that a colleague can feed to
+            'playground repro import' to run your scenario as is. Use --all to take
+            every uncommitted model rather than only the current folder.
         usage: playground repro export [OPTIONS]
         options:
         - names:
@@ -1483,6 +1723,9 @@ subcommands:
       - name: import
         description: | 
           📥 Import tgz file which was created with export command
+            
+            Unpacks the models into your reproduction-models folder, from where you
+            can run them with 'playground run'.
         usage: playground repro import [OPTIONS]
         options:
         - names:
@@ -1600,12 +1843,42 @@ subcommands:
   - name: get-docker-compose
     description: | 
         🐋 Get docker-compose
+        
+        Prints the fully resolved docker compose configuration of the running
+        example: every file merged, every profile applied and every variable
+        substituted. This is what Docker actually received, which is the thing to
+        look at when a container did not get the image, port or setting you
+        expected.
     usage: playground get-docker-compose
     options: []
     subcommands:
   - name: schema
     description: | 
         🔰 Schema commands
+        
+        Talk to the Schema Registry of the running environment, whether it is the
+        local container or the one in Confluent Cloud, without building the urls
+        and the credentials yourself.
+        
+        🔍 Read
+          get                  every version of a subject, or of all subjects
+          get-compatibility    the compatibility rule in force
+          get-mode / get-alias
+        
+        ✍️ Write
+          register             add a new version to a subject
+          delete               a version, or the whole subject
+          set-compatibility    relax or tighten the evolution rule
+          set-mode             READWRITE, READONLY or IMPORT
+          set-normalize, validate-new-schemas   registry-wide behaviour
+          set-alias            point one subject name at another
+        
+        🪄 derive-schema turns a sample payload into an avro, json schema or
+        protobuf schema, which saves writing one by hand.
+        
+        A subject is normally named after the topic: <topic>-key and
+        <topic>-value. 'playground topic delete' removes both along with the
+        topic.
     usage: playground schema COMMAND
     options: []
     subcommands:
@@ -1654,6 +1927,21 @@ subcommands:
       - name: register
         description: | 
           ⏺️ Register a schema in specified subject
+            
+            Pushes a schema into the registry without producing any data, which is
+            how you set up a subject before a connector starts, or add a new version
+            to check whether it passes the compatibility rules.
+            
+            The format is detected from what you give it, avro, json schema or
+            protobuf all work. Pass it on stdin with a quoted heredoc, or pick one of
+            the bundled schemas with tab completion on --schema.
+            
+            Remember the naming convention: a topic's schemas live under the subjects
+            <topic>-key and <topic>-value, not under the topic name.
+            
+            ☢️ --id forces a specific schema id and overwrites whatever is already
+            registered at that id. It exists to reproduce id collisions, it is not
+            something to use casually.
         usage: playground schema register [OPTIONS]
         options:
         - names:
@@ -1714,6 +2002,10 @@ subcommands:
       - name: get-compatibility
         description: | 
           🛡️ Get subject-level compatibility
+            
+            The rule that decides whether a new schema version is accepted. When a
+            producer fails with "Schema being registered is incompatible with an
+            earlier schema", this is what rejected it.
         usage: playground schema get-compatibility [OPTIONS]
         options:
         - names:
@@ -1734,6 +2026,17 @@ subcommands:
       - name: set-compatibility
         description: | 
           🛡️ Set subject-level compatibility
+            
+            Overrides the rule for one subject:
+            
+              BACKWARD     new schema can read data written with the previous one
+              FORWARD      previous schema can read data written with the new one
+              FULL         both
+              NONE         anything is accepted
+              *_TRANSITIVE checked against all past versions, not just the last
+            
+            Set it to NONE when you deliberately want to register an incompatible
+            schema, typically to reproduce what it does to consumers downstream.
         usage: playground schema set-compatibility [OPTIONS]
         options:
         - names:
@@ -1764,6 +2067,9 @@ subcommands:
       - name: get-mode
         description: | 
           🔏 Get subject-level mode
+            
+            READWRITE normally; READONLY if registration has been frozen; IMPORT
+            while schemas are being migrated with their original ids and versions.
         usage: playground schema get-mode [OPTIONS]
         options:
         - names:
@@ -1785,7 +2091,14 @@ subcommands:
         description: | 
           🔏 Set subject-level mode
             
-            To enable mode changes on a Schema Registry cluster, you must also set mode.mutability=true in the Schema Registry properties file before starting Schema Registry
+              READWRITE   the normal mode, schemas can be read and registered
+              READONLY    freeze the subject, registration is refused
+              IMPORT      allow registering schemas at a chosen id and version,
+                          which is what a migration between registries needs
+            
+            ⚠️ To enable mode changes on a Schema Registry cluster, you must also set
+            mode.mutability=true in the Schema Registry properties file before
+            starting Schema Registry, otherwise this command is rejected.
         usage: playground schema set-mode [OPTIONS]
         options:
         - names:
@@ -1817,6 +2130,14 @@ subcommands:
         description: | 
           🧽 Set normalize at schema registry level
             
+            With normalization on, the registry rewrites a schema into a canonical
+            form before storing it, so two schemas that differ only in field order,
+            whitespace or the way defaults are written get the same id instead of
+            creating a new version every time.
+            
+            This applies to the whole registry, not to one subject. Turn it on when
+            an example keeps registering a new version of an unchanged schema.
+            
             See https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#schema-normalization
         usage: playground schema set-normalize [OPTIONS]
         options:
@@ -1841,6 +2162,14 @@ subcommands:
         description: | 
           🩺 Validate new schemas (default is true since CP 8.2.0)
             
+            Controls whether the registry checks a schema is well formed before
+            accepting it. Since CP 8.2.0 this is on by default, and Avro 1.12 added
+            strict namespace validation, so schemas that a customer registered years
+            ago can now be rejected on a newer version.
+            
+            Set it to false to reproduce what that customer had, or to let a legacy
+            schema through while you investigate. It applies to the whole registry.
+            
             See https://docs.confluent.io/cloud/current/sr/fundamentals/serdes-develop/index.html#supported-formats:~:text=Strict%20namespace%20validation%20with%20Avro%20version%201.12
         usage: playground schema validate-new-schemas [OPTIONS]
         options:
@@ -1864,6 +2193,16 @@ subcommands:
       - name: delete
         description: | 
           🧟 Delete schema
+            
+            Without --version the whole subject goes; with it, only that version.
+            
+            A plain delete is soft: the schema is hidden but its id and version
+            number stay taken, so re-registering does not reuse them. Add
+            --permanent to really remove it, which is what you need before
+            re-creating the same subject from scratch.
+            
+            ❕ The registry requires a soft delete before a permanent one; with
+               --permanent the command does both for you.
         usage: playground schema delete [OPTIONS]
         options:
         - names:
@@ -1898,6 +2237,11 @@ subcommands:
       - name: derive-schema
         description: | 
           🪄 Derive a schema based on payload
+            
+            Give it one or more json records, on stdin or with --payload, and it
+            works out a schema that covers them all. Much faster than writing an
+            avro schema by hand, and it handles unions when a field has different
+            types across records.
         usage: playground schema derive-schema [OPTIONS]
         options:
         - names:
@@ -1926,9 +2270,16 @@ subcommands:
             
       - name: set-alias
         description: | 
-          🔯 Set a subject alias (see https://docs.confluent.io/platform/8.2/schema-registry/fundamentals/index.html#subject-aliases)
+          🔯 Set a subject alias
             
-            CP 7.4.1 or higher is required to have this feature
+            Makes --alias point at --subject, so a client asking for the alias gets
+            the real subject's schemas. That is how you let a consumer keep its own
+            subject name while the data actually lives under another one, typically
+            after a topic rename or a migration between registries.
+            
+            CP 7.4.1 or higher is required to have this feature.
+            
+            See https://docs.confluent.io/platform/current/schema-registry/fundamentals/index.html#subject-aliases
         usage: playground schema set-alias [OPTIONS]
         options:
         - names:
@@ -1958,7 +2309,11 @@ subcommands:
         description: | 
           🔯 Get subject alias
             
-            CP 7.4.1 or higher is required to have this feature
+            Shows which real subject an alias resolves to. Use it when a client reads
+            schemas that do not match the subject it asked for, the alias is often
+            the missing piece.
+            
+            CP 7.4.1 or higher is required to have this feature.
         usage: playground schema get-alias [OPTIONS]
         options:
         - names:
@@ -1981,12 +2336,31 @@ subcommands:
         🏚 Zazkia TCP Proxy commands
         
         Simulate TCP connection issues (reset,delay,throttle,corrupt) using emicklei/zazkia (https://github.com/emicklei/zazkia) TCP proxy
+        
+        Slips a controllable proxy between a connector and the system it talks to,
+        so you can break the connection on purpose and watch what the connector
+        does: does it retry, does it lose records, does it fail the task.
+        
+          start        put the proxy in the path, rewriting the connector config
+          delay        add latency to the responses
+          break        drop a percentage of the responses
+          close-connection, close-all-connection-with-error
+          toggle-*     cut reads or writes in one direction only
+          get-connections   the live connections and their statistics
+          open-ui      drive all of the above from the Zazkia web UI
+        
+        🎓 Tip: start with 'playground tcp-proxy open-ui' to see what is
+        happening, then reproduce the same actions from the CLI in a script.
     usage: playground tcp-proxy COMMAND
     options: []
     subcommands:
       - name: start
         description: | 
           💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998
+            
+            Starts the proxy in front of --hostname and --port, then rewrites the
+            running connector configuration so its traffic goes through it. Nothing
+            else to change on your side.
         usage: playground tcp-proxy start [OPTIONS]
         options:
         - names:
@@ -2046,6 +2420,16 @@ subcommands:
       - name: get-connections
         description: | 
           🧲 Get Zazkia active TCP connections config and stats
+            
+            Lists every TCP connection currently going through the proxy, with its
+            id, its state (the toggles and the delay or break currently applied) and
+            its stats (bytes sent and received each way).
+            
+            Start here: the id printed by this command is what the other tcp-proxy
+            commands take as --connection-id. Connections in EOF state are hidden.
+            
+            🎓 Tip: every other tcp-proxy command applies to all active connections
+            when you do not pass --connection-id, which is normally what you want.
         usage: playground tcp-proxy get-connections [OPTIONS]
         options:
         - names:
@@ -2058,7 +2442,15 @@ subcommands:
       - name: delay
         description: | 
           ⏲️ Add milliseconds delay to service response.
-            Set it to 0 to remove the delay.
+            
+            Slows down every response coming back from the service, without
+            breaking anything. This is how you reproduce a slow database or a slow
+            API: request timeouts, retries, rebalances caused by a task that takes
+            too long to answer.
+            
+            Set it back to 0 to remove the delay.
+            
+            The new state is printed afterwards, so you can check it was applied.
         usage: playground tcp-proxy delay [OPTIONS]
         options:
         - names:
@@ -2079,7 +2471,15 @@ subcommands:
       - name: break
         description: | 
           💔 Break sending the response to the client.
-            Set it to 0% to remove the delay.
+            
+            Drops the response part way through, for the given percentage of
+            responses. Unlike close-connection, which kills the connection once,
+            this keeps failing intermittently, which is what you need to reproduce
+            the flaky network a customer is seeing rather than a clean outage.
+            
+            Set it back to 0 to stop breaking responses.
+            
+            The new state is printed afterwards, so you can check it was applied.
         usage: playground tcp-proxy break [OPTIONS]
         options:
         - names:
@@ -2100,6 +2500,12 @@ subcommands:
       - name: close-connection
         description: | 
           ❌ Close the Zazkia active TCP connections
+            
+            Kills the connection abruptly, the way a firewall or a restarted
+            database would. Use it to check that the connector reconnects on its
+            own, and how long it takes.
+            
+            Without --connection-id, every active connection is closed.
         usage: playground tcp-proxy close-connection [OPTIONS]
         options:
         - names:
@@ -2111,17 +2517,34 @@ subcommands:
             
       - name: close-all-connection-with-error
         description: | 
-          🧹 Close all Zazkia TCP connections which are in error state (close all with error button in Zazkia UI)
+          🧹 Close all Zazkia TCP connections which are in error state
+            
+            Same as the "close all with error" button in the Zazkia UI. Connections
+            left behind by a previous break or delay clutter get-connections;
+            this cleans them up so you only see the live ones.
         usage: playground tcp-proxy close-all-connection-with-error
         options: []
       - name: toggle-accept-connections
         description: | 
           🙅‍♂️ Change whether new connections can be accepted
+            
+            Turn it off and the service looks down to anything trying to connect,
+            while the connections already open keep working. That is the way to
+            reproduce a connector that cannot reconnect after a failure, or an
+            exhausted connection pool.
+            
+            This is a toggle, run it again to accept connections once more.
         usage: playground tcp-proxy toggle-accept-connections
         options: []
       - name: toggle-reads-client
         description: | 
           ✅ Change whether reading data from the client is enabled.
+            
+            Stops the proxy from reading what the client sends. The client's writes
+            pile up in its socket buffer and it eventually blocks, which is how you
+            reproduce backpressure and produce timeouts.
+            
+            This is a toggle, run it again to restore the flow.
             
               See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)
         usage: playground tcp-proxy toggle-reads-client [OPTIONS]
@@ -2137,6 +2560,13 @@ subcommands:
         description: | 
           ✅ Change whether reading data from the service is enabled.
             
+            Stops the proxy from reading what the service replies. Nothing comes
+            back to the client, so requests hang until they time out, without the
+            connection ever being closed. This is the classic black hole that a
+            TCP keepalive misconfiguration produces.
+            
+            This is a toggle, run it again to restore the flow.
+            
               See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)
         usage: playground tcp-proxy toggle-reads-service [OPTIONS]
         options:
@@ -2151,6 +2581,13 @@ subcommands:
         description: | 
           ✅ Change whether writing data to the client is enabled.
             
+            The proxy keeps reading the service's response but never forwards it to
+            the client. Close to toggle-reads-service from the client's point of
+            view, except the service sees its response as fully sent, so both sides
+            disagree about what happened.
+            
+            This is a toggle, run it again to restore the flow.
+            
               See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)
         usage: playground tcp-proxy toggle-writes-client [OPTIONS]
         options:
@@ -2163,7 +2600,13 @@ subcommands:
             
       - name: toggle-writes-service
         description: | 
-          ✅ Change whether reading data to the service is enabled.
+          ✅ Change whether writing data to the service is enabled.
+            
+            The proxy keeps reading the client's request but never forwards it to
+            the service. The client believes it sent its data, the service never
+            receives it, so nothing ever answers.
+            
+            This is a toggle, run it again to restore the flow.
             
               See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)
         usage: playground tcp-proxy toggle-writes-service [OPTIONS]
@@ -2178,17 +2621,39 @@ subcommands:
       - name: open-ui
         description: | 
           🌐 Just open Zazkia UI (http://localhost:9191) in your browser
+            
+            The UI shows the same connections as get-connections, but live, with
+            the toggles as buttons and a diagram of which direction each one cuts.
+            Easier than the CLI when you are exploring, the CLI is what you put in
+            a reproduction script once you know which fault you want.
         usage: playground tcp-proxy open-ui
         options: []
   - name: tools
     description: | 
         🧰 Tools commands
+        
+        Small utilities that are handy around the playground but are not tied to a
+        running environment:
+        
+          read-avro-file        dump an avro file as readable json
+          read-parquet-file     same, for parquet
+          certs-create          generate a keystore and truststore for a component
+          redos-check           check a topics.regex for catastrophic backtracking
+          install-vscode-extension   playground completion inside VS Code
+        
+        🎓 Tip: the file readers are what you use to check what a sink connector
+        really wrote, after pulling the file out with 'playground container cp'.
     usage: playground tools COMMAND
     options: []
     subcommands:
       - name: install-vscode-extension
         description: | 
           🪄 Install a slightly modified version of "Shell Script Command Completion" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)
+            
+            Gives you the same completion inside VS Code as in your terminal: while
+            editing an example or a reproduction model, playground commands, flags
+            and their allowed values are proposed as you type, with the help text
+            on hover. Worth the two minutes of setup if you write example scripts.
             
             After installation, install "playground" command:
             
@@ -2202,6 +2667,9 @@ subcommands:
       - name: read-avro-file
         description: | 
           🔖 Read provided avro file
+            
+            Prints the records as json, along with the writer schema embedded in the
+            file. The way to check what a sink connector actually produced.
         usage: playground tools read-avro-file [OPTIONS]
         options:
         - names:
@@ -2219,6 +2687,9 @@ subcommands:
       - name: read-parquet-file
         description: | 
           🔖 Read provided parquet file
+            
+            Prints the rows and the parquet schema, so you can verify what a sink
+            connector wrote without an external tool.
         usage: playground tools read-parquet-file [OPTIONS]
         options:
         - names:
@@ -2236,6 +2707,11 @@ subcommands:
       - name: certs-create
         description: | 
           🔐 Generate keys and certificates used for SSL
+            
+            Creates a certificate authority and, for each container, a keystore and
+            a truststore in --output-folder. This is how the certificates of the
+            ssl environments are produced; regenerate them when they have expired,
+            or to build a set for a container the playground does not know about.
         usage: playground tools certs-create [OPTIONS]
         options:
         - names:
@@ -2269,6 +2745,18 @@ subcommands:
       - name: redos-check
         description: | 
           🪖 Check topics.regex for ReDos vulnerabilities using recheck (https://github.com/makenowjust-labs/recheck)
+            
+            Some regular expressions take exponential time on certain inputs. A sink
+            connector using such a pattern in topics.regex can pin a CPU and stall
+            the whole worker on a topic name that happens to hit the bad case, with
+            nothing in the logs to explain it.
+            
+            Give it the regex and it answers safe, vulnerable, or timeout when the
+            analysis itself takes longer than --timeout. The exit code matches:
+            0 safe, 1 vulnerable, 2 timeout.
+            
+            🎓 Tip: worth running whenever a customer reports a connect worker at
+            100% CPU with no progress and a topics.regex in the configuration.
         usage: playground tools redos-check [OPTIONS]
         options:
         - names:
@@ -2292,6 +2780,33 @@ subcommands:
   - name: debug
     description: | 
         🐞 Debug commands
+        
+        The heavy tooling, made usable: the JDK utilities, tcpdump, iptables and
+        the analysis tools are run inside the right container, installed on the
+        fly when missing, and their output is brought back to your machine.
+        
+        🐌 It hangs, or it is slow
+          thread-dump         what every thread is doing right now
+          flight-recorder     record the JVM over a period, open it in JMC
+          gc-analyze          GC pauses, heap trends and tuning advice
+        
+        💾 It eats memory
+          heap-dump           take a .hprof, optionally as a histogram
+          heap-analyze        run Eclipse MAT on it, leak suspects report
+        
+        🌐 It is a network or TLS problem
+          tcp-dump            capture traffic, open it in Wireshark
+          testssl             probe a TLS endpoint, locally or in the cloud
+          block-traffic       cut a route with iptables, to simulate an outage
+          java-debug          turn on the JVM SSL, Kerberos or class loading traces
+        
+        🔬 It is in the code
+          log-level set       raise the level of any package, without a restart
+          enable-remote-debugging   attach your IDE debugger to a container
+          jscissors           trace method calls, arguments and return values
+        
+        📦 Hand it over
+          generate-diagnostics   a support bundle for connect or broker
     usage: playground debug COMMAND
     options: []
     subcommands:
@@ -2379,6 +2894,12 @@ subcommands:
           🎯 Take a java thread dump
             
             🔖 It will save output to a file and open with text editor set with playground config editor <editor> (default is code)
+            
+            The first thing to take when something is stuck: it shows the stack of
+            every thread, and the deadlocks if any.
+            
+            🎓 Tip: take two or three dumps a few seconds apart. Threads that appear
+            in the same place every time are the ones that are really blocked.
         usage: playground debug thread-dump [OPTIONS]
         options:
         - names:
@@ -2547,6 +3068,13 @@ subcommands:
       - name: tcp-dump
         description: | 
           🕵️‍♂️ Take a tcp dump (sniffing network)
+            
+            Captures the traffic in or out of a container for --duration seconds and
+            brings the capture file back, ready to open in Wireshark. Narrow it with
+            --port when you know which one you care about.
+            
+            ❕ On an encrypted listener you will see the handshake and the failures,
+               but not the records themselves.
         usage: playground debug tcp-dump [OPTIONS]
         options:
         - names:
@@ -2579,6 +3107,14 @@ subcommands:
       - name: block-traffic
         description: | 
           🚫 Blocking traffic using iptables
+            
+            Cuts the route from a container to a destination, so you can see how the
+            system behaves during a network outage: a broker that loses the
+            controller, a connector that can no longer reach its database, a client
+            that cannot resolve the schema registry.
+            
+            Blocking with --action start and restoring with --action stop, so the
+            failure is reversible without restarting anything.
         usage: playground debug block-traffic [OPTIONS]
         options:
         - names:
@@ -2621,6 +3157,14 @@ subcommands:
       - name: java-debug
         description: | 
           🤎 JVM arguments for SSL, Kerberos or Class Loading
+            
+            Turns on the JVM's own diagnostic traces in a container and restarts it.
+            This is how you find out why a TLS handshake fails, why a Kerberos
+            login is refused, or which jar a class was loaded from when two
+            versions collide.
+            
+            ❗ These traces are extremely verbose. Turn them back off with
+               --action disable once you have what you need.
         usage: playground debug java-debug [OPTIONS]
         options:
         - names:
@@ -2770,6 +3314,14 @@ subcommands:
       - name: log-level
         description: | 
           🧬 Set log level for any package
+            
+            Changes the level of any logger on the running connect worker, straight
+            away and without a restart, so you do not have to edit log4j properties
+            and rebuild the container.
+            
+            🎓 Tip: raise only the package you suspect, for instance
+            io.confluent.connect.s3 or org.apache.kafka.clients.consumer, rather
+            than the root logger, or the useful lines will be lost in the noise.
         usage: playground debug log-level COMMAND
         options: []
       - name: cfk
@@ -2780,12 +3332,22 @@ subcommands:
   - name: log-level
     description: | 
         🧬 Set log level for any package
+        
+        Changes the level of any logger on the running connect worker, straight
+        away and without a restart, so you do not have to edit log4j properties
+        and rebuild the container.
+        
+        🎓 Tip: raise only the package you suspect, for instance
+        io.confluent.connect.s3 or org.apache.kafka.clients.consumer, rather
+        than the root logger, or the useful lines will be lost in the noise.
     usage: playground debug log-level COMMAND
     options: []
     subcommands:
       - name: get
         description: | 
           Get log levels
+            
+            With no --package, every logger with an explicit level is listed.
         usage: playground debug log-level get [OPTIONS]
         options:
         - names:
@@ -2798,6 +3360,9 @@ subcommands:
       - name: set
         description: | 
           Set log level for specific logger
+            
+            Takes effect immediately and applies to the logger and everything
+            below it in the package hierarchy.
         usage: playground debug log-level set [OPTIONS]
         options:
         - names:
@@ -2948,6 +3513,33 @@ subcommands:
   - name: container
     description: | 
         🐳 Container commands
+        
+        Work on the containers of the running example without having to remember
+        their names, their users or their file layout. The same commands work
+        against Kubernetes pods when the example runs on the cfk environment,
+        which is why 'pod' is an accepted alias.
+        
+        🔍 Look inside
+          logs                 tail logs, grep them, or block until a line appears
+          display-error-all    every ERROR and FATAL across all containers
+          get-properties       the properties file a component actually loaded
+          get-ip-addresses     addresses on the docker network
+          exec / ssh           run a command, or get a shell
+        
+        🔁 Act on them
+          restart / kill / pause / resume
+          recreate             re-create with the same compose definition
+          update               edit the compose or Kubernetes definition, apply it
+          set-environment-variables   add settings, then recreate
+          cp                   copy files in and out
+          change-jdk           swap the JDK, to reproduce a JVM-specific issue
+          kill-all             kill everything and prune volumes
+        
+        Most commands accept --container several times to act on a few containers
+        at once.
+        
+        🎓 Tip: the usual names are broker, connect, schema-registry,
+        control-center, ksqldb-server, plus whatever the example adds.
     usage: playground container COMMAND
     options: []
     subcommands:
@@ -2976,6 +3568,12 @@ subcommands:
           💫 Recreate container(s)
             
             👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%e2%99%bb%ef%b8%8f-re-create-containers
+            
+            Replays the docker compose command of the example, so a container is
+            rebuilt from its current definition. This is what applies a change
+            made with 'playground container set-environment-variables' or
+            'playground container update', and what you use to restart a component
+            from scratch without re-running the whole example.
         usage: playground container recreate [OPTIONS]
         options:
         - names:
@@ -3011,16 +3609,34 @@ subcommands:
       - name: get-ip-addresses
         description: | 
           🖥️  Get ip address of running containers
+            
+            The address each container has on the docker network, which is what
+            you need when a component must be reached by IP rather than by name,
+            or when you are checking what a client actually connected to.
         usage: playground container get-ip-addresses
         options: []
       - name: kill-all
         description: | 
           💀 Kill all containers and prune all volumes
+            
+            Kills every container on your machine, playground or not, and prunes
+            the volumes. Used automatically before each 'playground run' to
+            guarantee a clean slate; disable that with
+            'playground config container-kill-all-before-run false'.
         usage: playground container kill-all
         options: []
       - name: logs
         description: | 
           🕵️  Tail and follow container logs
+            
+            Three ways to use it:
+            
+              --grep "ERROR"                    keep only the lines that matter
+              --open                            read the whole log in your editor
+              --wait-for-log "Started" -m 120   block until the line shows up
+            
+            The last one is what example scripts use to synchronise on a component
+            being ready, instead of sleeping and hoping.
         usage: playground container logs [OPTIONS]
         options:
         - names:
@@ -3084,11 +3700,19 @@ subcommands:
       - name: display-error-all
         description: | 
           🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick troubleshooting
+            
+            The first command to run when an example misbehaves and you do not yet
+            know which component is at fault. It sweeps every container at once,
+            so you do not have to guess where to look.
         usage: playground container display-error-all
         options: []
       - name: ssh
         description: | 
           🛬 SSH into container
+            
+            Interactive shell inside the container, as the user the component runs
+            with. Use 'playground container exec' instead when you want to run a
+            single command from a script.
         usage: playground container ssh [OPTIONS]
         options:
         - names:
@@ -3148,6 +3772,11 @@ subcommands:
       - name: exec
         description: | 
           🪄 Execute command in a container
+            
+            Runs one command and returns, which makes it the form to use inside
+            example scripts. Add --root when the component user is not allowed to
+            do what you are asking, typically to install a package or read a file
+            under /etc.
         usage: playground container exec [OPTIONS]
         options:
         - names:
@@ -3190,6 +3819,10 @@ subcommands:
       - name: cp
         description: | 
           🪄 Copy files between local filesystem and container
+            
+            Works in both directions, using the container:path notation. Typically
+            used to drop a jar, a certificate or a test file into a component, or
+            to pull out a file the connector has written.
         usage: playground container cp [OPTIONS]
         options:
         - names:
@@ -3211,6 +3844,10 @@ subcommands:
       - name: restart
         description: | 
           🔁 Restart a container
+            
+            Stops and starts the container, keeping its definition and its data.
+            Use 'playground container recreate' instead if you changed the compose
+            definition or an environment variable.
         usage: playground container restart [OPTIONS]
         options:
         - names:
@@ -3229,6 +3866,11 @@ subcommands:
       - name: pause
         description: | 
           ⏸️  Pause a container
+            
+            Freezes the processes without stopping the container: it keeps its
+            connections but stops responding. A good way to simulate a hung
+            broker, an unresponsive database or a GC pause, and to see how the
+            rest of the system reacts.
         usage: playground container pause [OPTIONS]
         options:
         - names:
@@ -3247,6 +3889,8 @@ subcommands:
       - name: resume
         description: | 
           ⏯️  Resume a container
+            
+            Unfreezes a container paused with 'playground container pause'.
         usage: playground container resume [OPTIONS]
         options:
         - names:
@@ -3265,6 +3909,10 @@ subcommands:
       - name: kill
         description: | 
           🔫 Kill a container
+            
+            Stops the container abruptly, without letting it shut down cleanly,
+            which is how you simulate a crash. Bring it back with
+            'playground container recreate'.
         usage: playground container kill [OPTIONS]
         options:
         - names:
@@ -3331,12 +3979,41 @@ subcommands:
   - name: topic
     description: | 
         🗳 Topic commands
+        
+        Produce, consume and manage topics without dealing with the kafka-* shell
+        scripts: the bootstrap server, the security properties and the schema
+        registry url are all derived from the running environment, so the same
+        command works on plaintext, on sasl-ssl and on Confluent Cloud.
+        
+        📤 Get data in
+          produce         generate records from a schema, or from your own data
+          create          create a topic with the partitions you need
+        
+        📥 Get data out
+          consume         read from the beginning, deserialising automatically
+          get-number-records   count what is in the topic
+          display-consumer-offsets   read the internal offsets topic
+        
+        🔧 Manage
+          list / describe / alter / delete
+          set-schema-compatibility   compatibility of the topic subjects
+        
+        Serialisation is handled for you: 'produce' registers the schema you give
+        it and 'consume' works out from the payload whether it is avro, protobuf,
+        json schema or plain text.
+        
+        🎓 Tip: in an example script, 'consume --min-expected-messages N' is the
+        assertion that the data made it through; it fails the run if it did not.
     usage: playground topic COMMAND
     options: []
     subcommands:
       - name: get-number-records
         description: | 
           💯 Get number of records in a topic
+            
+            Counts the records currently in the topic, from the partition offsets.
+            The cheap way to check that a source connector produced something, or
+            that a sink has data to read.
         usage: playground topic get-number-records [OPTIONS]
         options:
         - names:
@@ -3360,6 +4037,10 @@ subcommands:
       - name: display-consumer-offsets
         description: | 
           📭 Display content of __consumer_offsets topic
+            
+            Decodes the internal topic where Kafka keeps committed offsets, so you
+            can see exactly what each consumer group, including a sink connector,
+            has committed and when.
         usage: playground topic display-consumer-offsets [OPTIONS]
         options:
         - names:
@@ -3372,6 +4053,10 @@ subcommands:
       - name: list
         description: | 
           🔘 List topics
+            
+            Add --show-internal to also see the topics Kafka and Connect maintain
+            for themselves, such as the connect configs, offsets and status
+            topics.
         usage: playground topic list [OPTIONS]
         options:
         - names:
@@ -3383,6 +4068,10 @@ subcommands:
       - name: describe
         description: | 
           🔬 Describe topic
+            
+            Partitions, replicas, in-sync replicas and the configuration overrides
+            set on the topic. Where to look when records go to an unexpected
+            partition, or when a topic is not retaining what you expected.
         usage: playground topic describe [OPTIONS]
         options:
         - names:
@@ -3402,6 +4091,10 @@ subcommands:
       - name: set-schema-compatibility
         description: | 
           🛡️ Change topic's schema compatibility
+            
+            Sets the compatibility level on the subjects of the topic, which is
+            what you relax to let an otherwise rejected schema evolution through,
+            for instance to reproduce a schema compatibility issue.
         usage: playground topic set-schema-compatibility [OPTIONS]
         options:
         - names:
@@ -3431,6 +4124,14 @@ subcommands:
       - name: consume
         description: | 
           📥 Consume topic from beginning
+            
+            Reads from the earliest offset and deserialises records on its own:
+            avro, protobuf, json schema and plain formats are all detected from
+            the payload, so you do not have to pick a console consumer.
+            
+            🎓 Tip: --min-expected-messages turns it into an assertion. It waits
+            up to --timeout for that many records and fails otherwise, which is
+            how examples verify that data actually flowed.
         usage: playground topic consume [OPTIONS]
         options:
         - names:
@@ -3548,6 +4249,20 @@ subcommands:
           📤 Produce to a topic
             
             See video tutorial https://youtu.be/mbzHCewG_XE
+            
+            Generates records for you rather than making you write them. Give it
+            a schema, in avro, json schema or protobuf, and it registers the
+            schema and produces --nb-messages records of realistic random data.
+            The topic is created if it does not exist.
+            
+            Three ways to say what to send:
+            
+              a schema on stdin           generated data matching that schema
+              --value <predefined>        one of the bundled schemas
+              --forced-value '{...}'      your exact payload, %g being the index
+            
+            🎓 Tip: pipe the schema with a quoted heredoc, << 'EOF', so that the
+            %g placeholders survive the shell.
         usage: playground topic produce [OPTIONS]
         options:
         - names:
@@ -3885,6 +4600,11 @@ subcommands:
       - name: create
         description: | 
           🆕 Create topic
+            
+            Only needed when you want something other than the defaults, since
+            'playground topic produce' creates the topic on the fly. Any extra
+            argument is passed through to kafka-topics --create, so --config works
+            as usual.
         usage: playground topic create [OPTIONS] [--] [ARGUMENTS...]
         options:
         - names:
@@ -3914,6 +4634,14 @@ subcommands:
       - name: delete
         description: | 
           ❌ Delete topic and associated schema/subject if applicable
+            
+            Also removes the key and value subjects from the schema registry,
+            which is what you usually want: a topic re-created with a leftover
+            subject keeps the old compatibility rules and the old schema history.
+            Keep them with --skip-delete-schema.
+            
+            A regex is accepted, matched in full, to clean up a family of topics
+            at once.
         usage: playground topic delete [OPTIONS]
         options:
         - names:
@@ -3943,6 +4671,11 @@ subcommands:
       - name: alter
         description: | 
           🪛 Alter topic config
+            
+            Changes topic level settings on a live topic, which is how you
+            reproduce behaviour driven by configuration: a small
+            max.message.bytes to trigger a record too large error, a short
+            retention.ms to expire data, a compacted cleanup.policy, and so on.
         usage: playground topic alter [OPTIONS] [--] [ARGUMENTS...]
         options:
         - names:
@@ -3964,12 +4697,33 @@ subcommands:
   - name: connector-plugin
     description: | 
         🔌 Connector-plugin commands
+        
+        Questions about connector plugins on Confluent Hub, answered without a
+        running environment:
+        
+          versions              every released version of a plugin
+          display-last-updated  what was published recently, by vendor
+          search-jar            which jars ship in it, and which class is where
+          sourcecode            open the source on GitHub
+        
+        🎓 Tip: search-jar answers "is this class really in the plugin, and with
+        which signature", which is the question behind most NoSuchMethodError and
+        ClassNotFoundException reports.
     usage: playground connector-plugin COMMAND
     options: []
     subcommands:
       - name: search-jar
         description: | 
-          ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/ Search for specific class and display method signatures
+          ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/
+            
+            Downloads the plugin and lists the jars it ships. With --class it also
+            finds which jar contains that class and prints its method signatures
+            with javap.
+            
+            That answers the two questions a NoClassDefFoundError or a
+            NoSuchMethodError raises: is the class actually shipped, and does the
+            bundled version have the signature the code is calling. Run it again
+            with another --connector-tag to see when a dependency changed.
         usage: playground connector-plugin search-jar [OPTIONS]
         options:
         - names:
@@ -4004,6 +4758,10 @@ subcommands:
       - name: versions
         description: | 
           💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/
+            
+            What to feed to --connector-tag when you want to test another version,
+            and the way to find out which release you are behind on. The list is
+            cached; use --force-refresh after a brand new release.
         usage: playground connector-plugin versions [OPTIONS]
         options:
         - names:
@@ -4034,6 +4792,9 @@ subcommands:
       - name: display-last-updated
         description: | 
           🆕 List last updated connector plugins from confluent hub https://www.confluent.io/hub/
+            
+            A quick way to see what has just been released on the Hub, which often
+            explains why an example that passed yesterday behaves differently today.
         usage: playground connector-plugin display-last-updated [OPTIONS]
         options:
         - names:
@@ -4132,12 +4893,50 @@ subcommands:
   - name: connector
     description: | 
         🔗 Connector commands
+        
+        Everything you would otherwise do with curl on the Connect REST API, with
+        the right host, port and credentials already figured out. The same
+        commands work whether the connector is self managed in the connect
+        container or fully managed in Confluent Cloud.
+        
+        🔍 Look at what is running
+          status                  is it RUNNING, and if not, the full stack trace
+          show-config             the configuration actually applied
+          logs                    tail connect logs, filtered and followed
+          show-lag                consumer lag of a sink, until it reaches zero
+          offsets get             where the connector is reading or writing
+        
+        🛠️ Change it
+          create-or-update        create it, or apply a new config, from stdin
+          update                  edit the running config in your editor
+          pause / resume / stop / restart / delete
+          offsets alter / reset   rewind or fast-forward a connector
+        
+        🧑‍🔬 Understand it
+          show-config-parameters  every parameter the plugin accepts
+          select-config           pick parameters interactively
+          versions                installed version vs latest on Confluent Hub
+          sourcecode              open the source on GitHub, or diff two versions
+          open-docs               open the Confluent documentation
+          snippets                ready-to-paste converter and dlq config
+        
+        🐞 Dig deeper
+          log-level               raise connect log level for this connector
+          enable-remote-debugging attach a java debugger to the connector code
+          translate               self managed config to fully managed config
+        
+        Without --connector, commands apply to every connector of the example,
+        which is usually what you want since most examples run only one.
     usage: playground connector COMMAND
     options: []
     subcommands:
       - name: status
         description: | 
           🧩 Show status of all connectors
+            
+            The connector state, the state of each task, and for a failed task the
+            full stack trace, which is the thing you actually need. Add --verbose to
+            see the underlying REST call.
         usage: playground connector status [OPTIONS]
         options:
         - names:
@@ -4160,19 +4959,51 @@ subcommands:
         description: | 
           🅾️ Specific Oracle CDC Xstream commands
             
+            With XStream, half of the interesting state lives in the database, not
+            in Connect. A connector that shows RUNNING while no change arrives is
+            almost always a capture process or an outbound server that is stuck on
+            the Oracle side, and the connect logs say nothing about it.
+            
+              debug             query the XStream views from the Oracle container
+              generate-report   run the official diagnostics script
+            
+            Only available when an oracle container is running.
+            
         usage: playground connector oracle-cdc-xstream COMMAND
         options: []
       - name: offsets
         description: | 
           💈 Handle source and sink connectors offsets
             
-              Note: First-class offsets (KIP-875) is only available if CP > 7.6
+            Where a connector is in its data: for a source, the position it keeps in
+            the system it reads from (a SCN, a binlog position, a file offset); for a
+            sink, the consumer group offsets of the topics it consumes.
+            
+              get                          show them
+              alter                        edit them in your editor, then apply
+              reset                        start over from the beginning
+              get-offsets-request-status   did the last change go through
+            
+            This uses the first-class offsets API (KIP-875), so it needs CP 7.5 for
+            get and CP 7.6 for alter and reset. On older CP the playground falls back
+            to kafka-consumer-groups, which only covers sink connectors.
+            
+            The connector must not be running while its offsets change: alter and
+            reset stop it and resume it for you.
+            
+            🎓 Tip: a sink that reprocesses everything and a source that re-snapshots
+            are usually offsets problems, not connector problems. Look here first.
             
         usage: playground connector offsets COMMAND
         options: []
       - name: plugins
         description: | 
           🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag
+            
+            The first thing to check when a connector fails to be created with
+            "Failed to find any class that implements Connector": the class you
+            asked for is not in this list, so the plugin was not installed or not
+            picked up from the plugin path.
         usage: playground connector plugins [OPTIONS]
         options:
         - names:
@@ -4191,6 +5022,10 @@ subcommands:
       - name: pause
         description: | 
           ⏸️  Pause connector
+            
+            Tasks stop processing but stay assigned, and the configuration is kept.
+            Handy to let a backlog build up, or to freeze a connector while you
+            change the system it talks to. Resume with 'playground connector resume'.
         usage: playground connector pause [OPTIONS]
         options:
         - names:
@@ -4212,6 +5047,10 @@ subcommands:
       - name: versions
         description: | 
           🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example
+            
+            Tells you in one line whether you are testing an outdated connector.
+            To move to the version reported as latest, re-run the example with
+            'playground update-version --connector-tag <version>'.
             
         usage: playground connector versions
         options: []
@@ -4305,6 +5144,10 @@ subcommands:
       - name: restart
         description: | 
           ♻️  Restart connector
+            
+            The usual way to recover a connector whose tasks are FAILED after you
+            fixed the cause. Use --task-id to restart a single failed task and leave
+            the healthy ones alone.
         usage: playground connector restart [OPTIONS]
         options:
         - names:
@@ -4333,6 +5176,10 @@ subcommands:
       - name: stop
         description: | 
           🛑 Stop connector (only available if CP > 7.5)
+            
+            Stronger than pause: the tasks are shut down and unassigned, so the
+            connector consumes no resources at all. This is the state in which
+            offsets can be altered or reset.
         usage: playground connector stop [OPTIONS]
         options:
         - names:
@@ -4354,6 +5201,9 @@ subcommands:
       - name: resume
         description: | 
           ⏯️  Resume connector
+            
+            Restarts processing after a pause or a stop, from the offsets where the
+            connector left off.
         usage: playground connector resume [OPTIONS]
         options:
         - names:
@@ -4375,6 +5225,10 @@ subcommands:
       - name: delete
         description: | 
           🗑️  Delete connector
+            
+            Removes the connector and its configuration. Its offsets survive in the
+            Kafka internal topics, so re-creating it under the same name resumes
+            where it stopped rather than starting over.
         usage: playground connector delete [OPTIONS]
         options:
         - names:
@@ -4396,6 +5250,11 @@ subcommands:
       - name: show-lag
         description: | 
           🐢 Show lag of sink connector
+            
+            The consumer lag of the sink, refreshed every --interval seconds, so you
+            see whether it is catching up, standing still or falling behind. A lag
+            that does not move while the connector reports RUNNING means the tasks
+            are stuck rather than slow.
             
             It will run until all lag becomes 0 (press ctrl-c to exit)
             
@@ -4472,6 +5331,14 @@ subcommands:
       - name: show-config-parameters
         description: | 
           🔩 Show all possible configuration parameters of connector
+            
+            The full reference of what the plugin accepts, with types, defaults,
+            importance and documentation, read from the plugin itself rather than
+            from the website. Use it to check the exact spelling of a property, or
+            to discover the knob you need.
+            
+            Use --open to read it in your editor, --only-show-json to get it as
+            json.
         usage: playground connector show-config-parameters [OPTIONS]
         options:
         - names:
@@ -4523,7 +5390,14 @@ subcommands:
             
       - name: display-metrics-api
         description: | 
-          〽️ Display metrics api for fully managed connector, see https://api.telemetry.confluent.cloud/docs/descriptors/datasets/cloud
+          〽️ Display metrics api for fully managed connector
+            
+            Queries the Confluent Cloud Telemetry API for the connector: a summary
+            with the connector and task statuses, then every metric that is not
+            zero. A fully managed connector gives you no jmx and little logging, so
+            this is how you tell whether it is actually doing work.
+            
+            See https://api.telemetry.confluent.cloud/docs/descriptors/datasets/cloud
         usage: playground connector display-metrics-api [OPTIONS]
         options:
         - names:
@@ -4554,6 +5428,16 @@ subcommands:
       - name: display-metrics-api-with-grafana
         description: | 
           📊 Display metrics api for fully managed connector in Grafana dashboard
+            
+            Same metrics as display-metrics-api, but plotted over time in Grafana
+            instead of printed once. Use it when you need to see a trend, a spike or
+            the moment throughput dropped, rather than the current value.
+            
+            It starts its own prometheus and grafana containers with a dashboard
+            already provisioned, so there is nothing to enable beforehand and it
+            does not interfere with the grafana of the example.
+            
+            Not supported for custom connectors.
         usage: playground connector display-metrics-api-with-grafana [OPTIONS]
         options:
         - names:
@@ -4568,6 +5452,14 @@ subcommands:
       - name: select-config
         description: | 
           🗜️ Easily select config from all possible configuration parameters of connector
+            
+            An fzf picker over everything the plugin accepts. Type a few letters,
+            pick the properties you want and they are printed, with their default
+            value when there is one, ready to paste into a connector configuration.
+            On macOS they are copied to your clipboard as well.
+            
+            Faster than show-config-parameters when you already know roughly what
+            you are after and just want the exact property names.
             
             🎓 Tip: use <tab> to select multiple config at once, then press <enter> to confirm
         usage: playground connector select-config [OPTIONS]
@@ -4584,6 +5476,11 @@ subcommands:
       - name: snippets
         description: | 
           🔌 useful snippets
+            
+            Prints ready-to-paste blocks of connector configuration: the key and
+            value converter properties for a given format with --converter, and the
+            dead letter queue properties with --dlq. Saves you from looking up the
+            exact property names and the schema registry settings that go with them.
         usage: playground connector snippets [OPTIONS]
         options:
         - names:
@@ -4602,7 +5499,13 @@ subcommands:
             
       - name: open-docs
         description: | 
-          🧑‍🎓 Open connector documentation of currently running conector(s)
+          🧑‍🎓 Open connector documentation of currently running connector(s)
+            
+            Works out the documentation page from the connector class actually
+            running and opens it, so you land on the right page for the right
+            connector without searching for it.
+            
+            Use --only-show-url to print the link instead, for pasting in a case.
         usage: playground connector open-docs [OPTIONS]
         options:
         - names:
@@ -4614,6 +5517,13 @@ subcommands:
       - name: log-level
         description: | 
           🧬 Set connect log level
+            
+            Raises the log level for the packages of the connector that is running,
+            without restarting anything. Set it to TRACE, reproduce the problem,
+            then read 'playground connector logs'.
+            
+            This is the difference between "the task failed" and seeing the request
+            that failed, the record that broke and what the SMT chain did to it.
             
             🎓 Tip: it will also set io.confluent.kafka.schemaregistry.client.rest.RestService (to see schema registry rest requests) and org.apache.kafka.connect.runtime.TransformationChain (to see records before and after SMTs)
                     it will also set org.apache.kafka.connect.runtime.WorkerSinkTask for sink and org.apache.kafka.connect.runtime.WorkerSourceTask for source connectors.
@@ -4642,6 +5552,11 @@ subcommands:
       - name: logs
         description: | 
           🕵️  Tail and follow connect logs
+            
+            The logs of the worker running your connector. Combine it with
+            'playground connector log-level' to get more than the stack trace, and
+            with --wait-for-log to block until a given line appears, which is how
+            examples assert that something happened.
             
             For onprem connectors, this is basically a shortcut for "playground container logs --container connect", --connector flag is not relevant
             
@@ -4685,6 +5600,10 @@ subcommands:
       - name: open-ccloud-connector-in-browser
         description: | 
           🤖 Open Fully Managed connector in browser (Confluent Cloud dashboard)
+            
+            Jumps straight to the connector's page in the Confluent Cloud console,
+            resolving its lcc id for you, so you do not have to hunt through the
+            environment and cluster menus.
         usage: playground connector open-ccloud-connector-in-browser [OPTIONS]
         options:
         - names:
@@ -4718,6 +5637,14 @@ subcommands:
       - name: translate
         description: | 
           💱 Translate Self Managed Connector Plugin Configurations to Fully Managed Connector Plugin Configuration
+            
+            Takes the configuration of the self managed connector that is running
+            and asks Confluent Cloud what the fully managed equivalent looks like.
+            Properties are renamed, some disappear, some have no equivalent at all,
+            and this tells you which before you promise a customer a migration.
+            
+            Only translates the configuration. To actually move the connector along
+            with its offsets, use 'playground connector connect-migration-utility'.
             
             See https://docs.confluent.io/cloud/current/api.html#tag/Managed-Connector-Plugins-(connectv1)/operation/translateConnectv1ConnectorPlugin
             
@@ -4755,7 +5682,17 @@ subcommands:
         description: | 
           🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster
             
-            The connector example should be ran with --environment flag set to <ccloud>
+            Takes a self managed connector running in the connect container and
+            recreates it as a fully managed connector in Confluent Cloud, keeping
+            its offsets so consumers do not replay or skip data. Two steps:
+            
+              discovery   read the local connectors and export their configurations
+              migrate     create the equivalent connectors on Confluent Cloud
+            
+            Run discovery first, migrate second. Use it to rehearse a customer's
+            migration and see what their configuration turns into.
+            
+            The connector example should be ran with --environment flag set to ccloud.
             
             See a full example at https://github.com/vdesabou/kafka-docker-playground/blob/master/ccloud/connect-migration-utility/README.md
             
@@ -4764,6 +5701,18 @@ subcommands:
       - name: create-or-update
         description: | 
           🧑‍🎨  Create or update connector
+            
+            The command every example uses to deploy its connector. The json config
+            is read from stdin, usually as a heredoc, so it stays readable in the
+            script. If the connector already exists it is updated in place, which
+            makes the command safe to re-run while you iterate on a configuration.
+            
+            The command waits for the connector to be RUNNING and fails with the
+            error if it is not, so a broken config stops the example immediately
+            instead of failing silently later.
+            
+            🎓 Tip: add --validate to have the config checked by the plugin before
+            it is deployed, which reports every invalid property at once.
         usage: playground connector create-or-update [JSON] [OPTIONS]
         options:
         - names:
@@ -4859,6 +5808,10 @@ subcommands:
       - name: update
         description: | 
           🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.
+            
+            The quickest loop to try a configuration change: edit, save, close, and
+            the connector is updated. Nothing is applied if you close the file
+            without saving.
         usage: playground connector update [OPTIONS]
         options:
         - names:
@@ -4874,12 +5827,28 @@ subcommands:
     description: | 
         🅾️ Specific Oracle CDC Xstream commands
         
+        With XStream, half of the interesting state lives in the database, not
+        in Connect. A connector that shows RUNNING while no change arrives is
+        almost always a capture process or an outbound server that is stuck on
+        the Oracle side, and the connect logs say nothing about it.
+        
+          debug             query the XStream views from the Oracle container
+          generate-report   run the official diagnostics script
+        
+        Only available when an oracle container is running.
+        
     usage: playground connector oracle-cdc-xstream COMMAND
     options: []
     subcommands:
       - name: generate-report
         description: | 
-          ⚙️ Generate and open oracle cdc xstream connector diagnostics, see https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script
+          ⚙️ Generate and open oracle cdc xstream connector diagnostics
+            
+            Runs the diagnostics script Confluent support asks for, and opens the
+            result. This is the file to attach to a case rather than pasting
+            individual query outputs.
+            
+            See https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script
             
         usage: playground connector oracle-cdc-xstream generate-report
         options: []
@@ -4887,13 +5856,44 @@ subcommands:
         description: | 
           🐞 Execute various SQL commands to debug xstream components
             
+            Runs a series of queries against the XStream views inside the oracle
+            container and prints the results, with a link to the Oracle
+            documentation of each view:
+            
+              capture processes   their status, SCN values and latencies
+              redo logs           the files each capture process still needs
+              outbound server     general state, current transaction, low position
+              parameters          capture and apply settings actually in effect
+              rules               the rules the XStream components are using
+            
+            Read it top to bottom when a connector is RUNNING but idle: a capture
+            process not in CAPTURING CHANGES, or an SCN that never moves, tells
+            you the problem is in the database and not in the connector.
+            
         usage: playground connector oracle-cdc-xstream debug
         options: []
   - name: offsets
     description: | 
         💈 Handle source and sink connectors offsets
         
-          Note: First-class offsets (KIP-875) is only available if CP > 7.6
+        Where a connector is in its data: for a source, the position it keeps in
+        the system it reads from (a SCN, a binlog position, a file offset); for a
+        sink, the consumer group offsets of the topics it consumes.
+        
+          get                          show them
+          alter                        edit them in your editor, then apply
+          reset                        start over from the beginning
+          get-offsets-request-status   did the last change go through
+        
+        This uses the first-class offsets API (KIP-875), so it needs CP 7.5 for
+        get and CP 7.6 for alter and reset. On older CP the playground falls back
+        to kafka-consumer-groups, which only covers sink connectors.
+        
+        The connector must not be running while its offsets change: alter and
+        reset stop it and resume it for you.
+        
+        🎓 Tip: a sink that reprocesses everything and a source that re-snapshots
+        are usually offsets problems, not connector problems. Look here first.
         
     usage: playground connector offsets COMMAND
     options: []
@@ -4902,7 +5902,14 @@ subcommands:
         description: | 
           🏹 Get current offsets for source and sink connectors
             
-            ⚠️ Available for ccloud source connectors (see https://docs.confluent.io/cloud/current/connectors/offsets.html)
+            Prints the offsets json returned by the Connect REST API, or the
+            Confluent Cloud offsets API for a fully managed connector. For a sink
+            on CP older than 7.5, it falls back to kafka-consumer-groups
+            --describe on the connect-<connector> consumer group.
+            
+            Run it before and after alter or reset to check what really moved.
+            
+            See https://docs.confluent.io/cloud/current/connectors/offsets.html
             
         usage: playground connector offsets get [OPTIONS]
         options:
@@ -4926,7 +5933,16 @@ subcommands:
         description: | 
           🆕 Reset offsets for source and sink connectors
             
-            ⚠️ Available for ccloud connectors (see https://docs.confluent.io/cloud/current/connectors/offsets.html)
+            Wipes the recorded offsets so the connector starts over: a source
+            re-reads its origin from the beginning, a sink re-consumes its topics
+            from the earliest offset. The connector is stopped and resumed around
+            the reset.
+            
+            ⚠️ Everything is reprocessed, so expect duplicates downstream unless
+            the target is idempotent. Use alter when you only want to move back
+            to a specific point.
+            
+            See https://docs.confluent.io/cloud/current/connectors/offsets.html
             
         usage: playground connector offsets reset [OPTIONS]
         options:
@@ -4950,7 +5966,16 @@ subcommands:
         description: | 
           ⛏️ Alter offsets for source and sink connectors
             
-            ⚠️ Available for ccloud connectors (see https://docs.confluent.io/cloud/current/connectors/offsets.html)
+            Fetches the current offsets, opens them in your editor, and applies
+            what you saved once you close the file. That is how you rewind a sink
+            to a given offset, or move a source back to an earlier position,
+            without replaying everything.
+            
+            The connector is stopped before the change and resumed after it. On
+            Confluent Cloud the change is asynchronous, so the command then polls
+            get-offsets-request-status and prints the resulting offsets.
+            
+            See https://docs.confluent.io/cloud/current/connectors/offsets.html
             
         usage: playground connector offsets alter [OPTIONS]
         options:
@@ -4974,7 +5999,14 @@ subcommands:
         description: | 
           👁️‍🗨️ Get the status of the previous offset request
             
-            ⚠️ Available for ccloud source connectors (see https://docs.confluent.io/cloud/current/connectors/offsets.html)
+            On Confluent Cloud, alter and reset only queue a request. This shows
+            whether it was APPLIED or FAILED, and the error when it failed, which
+            is the only place the reason shows up.
+            
+            Only for fully managed and custom connectors, self managed connectors
+            apply the change synchronously.
+            
+            See https://docs.confluent.io/cloud/current/connectors/offsets.html
             
         usage: playground connector offsets get-offsets-request-status [OPTIONS]
         options:
@@ -4998,7 +6030,17 @@ subcommands:
     description: | 
         🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster
         
-        The connector example should be ran with --environment flag set to <ccloud>
+        Takes a self managed connector running in the connect container and
+        recreates it as a fully managed connector in Confluent Cloud, keeping
+        its offsets so consumers do not replay or skip data. Two steps:
+        
+          discovery   read the local connectors and export their configurations
+          migrate     create the equivalent connectors on Confluent Cloud
+        
+        Run discovery first, migrate second. Use it to rehearse a customer's
+        migration and see what their configuration turns into.
+        
+        The connector example should be ran with --environment flag set to ccloud.
         
         See a full example at https://github.com/vdesabou/kafka-docker-playground/blob/master/ccloud/connect-migration-utility/README.md
         
@@ -5058,6 +6100,24 @@ subcommands:
         ✨ Create and manage AWS EC2 instances (using Cloud Formation) to run kafka-docker-playground
         
         🪄 Open EC2 instances directly in Visual Studio code using Remote Development (over SSH)
+        
+        Run the playground on a remote machine instead of your laptop, which is
+        what you want for an example that needs far more CPU or memory than you
+        have, or one that must run for hours.
+        
+          create              provision the instance with Cloud Formation
+          open                open it in VS Code over SSH, as if it were local
+          push-secrets        send your credentials to it, over ssh
+          sync-repro-folder   keep reproduction-models in step, both directions
+          list / status / start / stop / delete
+        
+        💰 The instance is billed while it runs. Use 'playground ec2 stop' when
+           you pause, and 'playground ec2 delete' when you are done;
+           'playground status' reminds you when one is still up.
+        
+        🔐 A pem file is created at the root of the repository when the instance
+           is created. Back it up, it is the only way in, and only your current
+           ip address is allowed to connect.
     usage: playground ec2 COMMAND
     options: []
     subcommands:
@@ -5065,9 +6125,27 @@ subcommands:
         description: | 
           👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation
             
-            🔐 AWS EC2 pem file for the ec2 instance will be created and stored in root folder (make sure to do backup)
+            One command does the whole thing: a Cloud Formation stack, an instance
+            with docker and the playground repository already installed, a key pair,
+            a security group opened to your ip only. Your credentials are pushed to
+            it over ssh, then VS Code opens on it.
             
-            🌍 Region being used will be the one set in your environment (`aws configure get region`) either by AWS_REGION environment variable or ~/.aws/config
+            Creation takes a few minutes, and Cloud Formation keeps installing in the
+            background for about ten more. Follow output.log in the root folder of
+            the instance to see where it is.
+            
+            🔐 AWS EC2 pem file for the ec2 instance will be created and stored in the
+            root folder of the repository (make sure to do a backup, it is the only
+            way in).
+            
+            🌍 Region being used will be the one set in your environment
+            (aws configure get region) either by the AWS_REGION environment variable
+            or ~/.aws/config.
+            
+            💰 The instance is billed from now on. Stop it when you pause and delete
+            it when you are done.
+            
+            🐚 Use zsh on the instance to have everything working out of the box.
         usage: playground ec2 create [OPTIONS]
         options:
         - names:
@@ -5092,15 +6170,27 @@ subcommands:
           - --suffix
           argument: SUFFIX
           description: | 
-            📮 suffix to add to instance name pg-${username}-${suffix} 
+            📮 suffix to add to instance name, giving pg-<username>-<suffix>
             
-            if not set, default is pg-${username}-${6-chars-random-string}
+            if not set, the name is pg-<username>-<6 random characters>
+            
+            🎓 Tip: set it to the case number you are working on, so you can tell
+            your instances apart in 'playground ec2 list'.
             
       - name: delete
         description: | 
           ❌ Delete an EC2 instance created with Cloud Formation
             
-            WARNING:  This will delete your cloud formation and associated EC2 instance
+            Deletes the Cloud Formation stack, which takes the instance, its volume
+            and its security group with it, then removes the key pair on AWS and the
+            local pem file. This is what stops the billing for good, unlike stop
+            which only pauses it.
+            
+            ⚠️ Everything on the instance is lost, including any reproduction model
+            you have not synced back with 'playground ec2 sync-repro-folder'.
+            
+            Without --instance it applies to all your instances, and asks you to
+            confirm first.
         usage: playground ec2 delete [OPTIONS]
         options:
         - names:
@@ -5116,7 +6206,15 @@ subcommands:
         description: | 
           👨‍💻 Open an EC2 instance using Visual Studio code
             
-            🔐 Only your current ip address will be allowed to connect
+            Opens a VS Code window on the instance over ssh, using Remote
+            Development. The editor, the terminal and the playground CLI all run
+            there, so it feels like working locally while the containers use the
+            remote machine's CPU and memory.
+            
+            The security group is refreshed with your current ip on the way, so this
+            is also the command to run after your ip changed and ssh stopped working.
+            
+            🔐 Only your current ip address will be allowed to connect.
         usage: playground ec2 open [OPTIONS]
         options:
         - names:
@@ -5137,11 +6235,17 @@ subcommands:
       - name: list
         description: | 
           🔘 List all EC2 instance
+            
+            Your playground instances and their state. Anything not stopped is
+            costing money.
         usage: playground ec2 list
         options: []
       - name: stop
         description: | 
           🔴 Stop an EC2 instance
+            
+            Shuts the instance down while keeping its disk, so you stop paying for
+            compute and find your work again on 'playground ec2 start'.
         usage: playground ec2 stop [OPTIONS]
         options:
         - names:
@@ -5156,6 +6260,9 @@ subcommands:
       - name: start
         description: | 
           🟢 Start an EC2 instance
+            
+            Boots an instance stopped earlier. Its public address changes, so use
+            'playground ec2 open' rather than a bookmarked ssh command.
         usage: playground ec2 start [OPTIONS]
         options:
         - names:
@@ -5169,7 +6276,21 @@ subcommands:
             
       - name: sync-repro-folder
         description: | 
-          ↔️ Synchronize reproduction-models folder bewteen local and ec2 instance
+          ↔️ Synchronize reproduction-models folder between local and ec2 instance
+            
+            The reproduction models you write are the only thing on the instance
+            worth keeping, and deleting the instance destroys them. These two
+            commands copy that folder in one direction or the other with rsync.
+            
+              local-to-ec2   push what you wrote locally, before running it there
+              ec2-to-local   pull back what you wrote there, before deleting it
+            
+            'playground ec2 create' runs local-to-ec2 for you, and
+            'playground ec2 open --enable-sync-repro-folder' does it again each
+            time you open the instance.
+            
+            ⚠️ Get into the habit of running ec2-to-local before
+            'playground ec2 delete', nothing else brings those files back.
             
             Note: rsync needs to be installed
             
@@ -5217,7 +6338,21 @@ subcommands:
             
   - name: sync-repro-folder
     description: | 
-        ↔️ Synchronize reproduction-models folder bewteen local and ec2 instance
+        ↔️ Synchronize reproduction-models folder between local and ec2 instance
+        
+        The reproduction models you write are the only thing on the instance
+        worth keeping, and deleting the instance destroys them. These two
+        commands copy that folder in one direction or the other with rsync.
+        
+          local-to-ec2   push what you wrote locally, before running it there
+          ec2-to-local   pull back what you wrote there, before deleting it
+        
+        'playground ec2 create' runs local-to-ec2 for you, and
+        'playground ec2 open --enable-sync-repro-folder' does it again each
+        time you open the instance.
+        
+        ⚠️ Get into the habit of running ec2-to-local before
+        'playground ec2 delete', nothing else brings those files back.
         
         Note: rsync needs to be installed
         
@@ -5227,6 +6362,9 @@ subcommands:
       - name: local-to-ec2
         description: | 
           👉 Sync local reproduction-models folder to ec2 instance
+            
+            Copies your local reproduction-models to the instance, so you can run
+            there a model you started writing on your laptop.
         usage: playground ec2 sync-repro-folder local-to-ec2 [OPTIONS]
         options:
         - names:
@@ -5241,6 +6379,9 @@ subcommands:
       - name: ec2-to-local
         description: | 
           👈 Sync ec2 instance reproduction-models folder to local
+            
+            Brings back the models you wrote on the instance. Run it before
+            'playground ec2 delete', otherwise they go with the instance.
         usage: playground ec2 sync-repro-folder ec2-to-local [OPTIONS]
         options:
         - names:

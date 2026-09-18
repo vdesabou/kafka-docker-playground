@@ -14,14 +14,14 @@
     },
     {
       "name": "status",
-      "description": "🗺️ Show a status\n",
+      "description": "🗺️ Show a status\n\nA single screen answering \"what is running right now, and is it healthy\":\nthe example currently running and its documentation link, the version of\nevery connector, the status and configuration of each of them, the topics\nthat exist, and whether an EC2 instance of yours is still up.\n\nEverything comes from the running containers and from playground.ini, so\nit is also the quickest way to get back your bearings after a break.\n",
       "usage": "playground status",
       "options": [],
       "subcommands": null
     },
     {
       "name": "config",
-      "description": "⚙️ Configure CLI\n",
+      "description": "⚙️ Configure CLI\n\nYour preferences, kept between sessions:\n\n  editor <name>                      the editor every command opens files\n                                     with (code, vi, nano...)\n  folder_zip_or_jar <dir>...         where to look for connector zips and\n                                     jars, in addition to the current\n                                     folder\n  clipboard true|false               copy connector config to the\n                                     clipboard (macOS only)\n  container-kill-all-before-run      kill every container before each run,\n                                     or just stop the example\n  check-and-update-repo-version      warn when your clone is out of date\n  open-ccloud-connector-in-browser   open fully managed connectors, and in\n  open-grafana-in-browser            which browser\n",
       "usage": "playground config COMMAND",
       "options": [],
       "subcommands": [
@@ -111,7 +111,7 @@
     },
     {
       "name": "secrets",
-      "description": "🔐 Credentials required by examples\n\nExamples declare the environment variables they need. Store them once here\nand 'playground run' loads them automatically, picking only the ones the\nexample at hand declares:\n\n  playground secrets set SALESFORCE_PASSWORD    🔐 store it, prompted\n  playground secrets check -f <example>         ✅ what is still missing\n  playground run -f <example>                   🚀 loaded for you\n\n📂 Where it is stored\n\nIn ~/.config/kafka-docker-playground, never in the repository, so it\nsurvives 'git clean -fdx' and can never be committed by mistake:\n\n  secrets.ini  0600  credentials, as a reference to the backend\n                     ('op://...', 'keychain:...'), not as a value\n  env.ini      0644  plain variables, in clear text\n\nA name containing PASSWORD, PASSPHRASE, SECRET, TOKEN, KEY, CREDS, PWD or\nLICENSE is treated as a credential, anything else as a plain variable\n(GCP_PROJECT, AWS_REGION, an account name, a URL). Use 'secrets set\n--secret' or '--plain' to decide yourself.\n\n🏦 Backends\n\nWhere the credential values themselves are kept:\n\n  keychain     macOS Keychain\n  secret-tool  freedesktop secret service (GNOME Keyring, KWallet)\n  pass         the standard unix password manager\n  op           1Password, through the 'op' CLI\n  vault        HashiCorp Vault\n  file         clear text in secrets.ini, no encryption, last resort\n\nWith no configuration, the first available of keychain (macOS), then\nsecret-tool, then pass is used, and file is the fallback. op and vault\nare never picked automatically, so that an example never blocks on an\nunlock prompt. Choose one explicitly with:\n\n  playground secrets backend op\n\nop creates and rotates the items it stores. vault is reference-only:\ncreate the secret in Vault, then point a variable at it. Any backend can\nalso reuse a secret you already have, instead of storing a new one:\n\n  playground secrets link SALESFORCE_PASSWORD op://Private/sfdc/password\n\n🗂️ Profiles\n\nA profile is an independent set of variables, typically one per customer\nor per support case, so last week's credentials never leak into this\nweek's reproduction model:\n\n  playground secrets profile customer-123456    🗂️ switch to it\n  playground secrets profile                    📋 list them, with counts\n  playground secrets list --profile default     🎯 use one just this once\n\nLookup falls back to the 'default' profile, so what is shared between all\nof them (CONFLUENT_LICENSE, NGROK_AUTH_TOKEN) is stored there once.\n\n🔍 Resolution order\n\n  1. an exported environment variable, which always wins\n  2. the active profile\n  3. the default profile\n\nSo 'export FOO=bar' and 'source secret.properties' keep working, and\n'playground secrets list' flags what the environment overrides.\n\n⚙️ Configuration\n\n  playground config set secrets.backend <backend>      🏦 see above\n  playground config set secrets.profile <name>         🗂️ active profile\n  playground config set secrets.op-vault <vault>       🔑 1Password vault\n  playground config set secrets.github-repo OWNER/REPO 🐙 sync CI secrets\n\nPLAYGROUND_SECRETS_DIR, PLAYGROUND_SECRETS_BACKEND,\nPLAYGROUND_SECRETS_PROFILE and PLAYGROUND_OP_VAULT override them for a\nsingle command.\n",
+      "description": "🔐 Credentials required by examples\n\nExamples declare the environment variables they need. Store them once here\nand 'playground run' loads them automatically, picking only the ones the\nexample at hand declares:\n\n  playground secrets set SALESFORCE_PASSWORD    🔐 store it, prompted\n  playground secrets check -f <example>         ✅ what is still missing\n  playground run -f <example>                   🚀 loaded for you\n\n📂 Where it is stored\n\nIn ~/.config/kafka-docker-playground, never in the repository, so it\nsurvives 'git clean -fdx' and can never be committed by mistake:\n\n  secrets.ini  0600  credentials, as a reference to the backend\n                     ('op://...', 'keychain:...'), not as a value\n  env.ini      0644  plain variables, in clear text\n\nA name containing PASSWORD, PASSPHRASE, SECRET, TOKEN, KEY, CREDS, PWD or\nLICENSE is treated as a credential, anything else as a plain variable\n(GCP_PROJECT, AWS_REGION, an account name, a URL). Use 'secrets set\n--secret' or '--plain' to decide yourself.\n\n🏦 Backends\n\nWhere the credential values themselves are kept:\n\n  keychain     macOS Keychain\n  secret-tool  freedesktop secret service (GNOME Keyring, KWallet)\n  pass         the standard unix password manager\n  op           1Password, through the 'op' CLI\n  vault        HashiCorp Vault\n  file         clear text in secrets.ini, no encryption, last resort\n\nWith no configuration, the first available of keychain (macOS), then\nsecret-tool, then pass is used, and file is the fallback. op and vault\nare never picked automatically, so that an example never blocks on an\nunlock prompt. Choose one explicitly with:\n\n  playground secrets backend op\n\nop creates and rotates the items it stores. vault is reference-only:\ncreate the secret in Vault, then point a variable at it. Any backend can\nalso reuse a secret you already have, instead of storing a new one:\n\n  playground secrets link SALESFORCE_PASSWORD op://Private/sfdc/password\n\n🗂️ Profiles\n\nA profile is an independent set of variables, typically one per customer\nor per support case, so last week's credentials never leak into this\nweek's reproduction model:\n\n  playground secrets profile customer-123456    🗂️ switch to it\n  playground secrets profile                    📋 list them, with counts\n  playground secrets list --profile default     🎯 use one just this once\n\nLookup falls back to the 'default' profile, so what is shared between all\nof them (CONFLUENT_LICENSE, NGROK_AUTH_TOKEN) is stored there once.\n\n🔍 Resolution order\n\n  1. an exported environment variable, which always wins\n  2. the active profile\n  3. the default profile\n\nSo 'export FOO=bar' and 'source secret.properties' keep working, and\n'playground secrets list' flags what the environment overrides.\n\n⚙️ Configuration\n\n  playground config set secrets.backend <backend>      🏦 see above\n  playground config set secrets.profile <name>         🗂️ active profile\n  playground config set secrets.op-vault <vault>       🔑 1Password vault\n\nPLAYGROUND_SECRETS_DIR, PLAYGROUND_SECRETS_BACKEND,\nPLAYGROUND_SECRETS_PROFILE and PLAYGROUND_OP_VAULT override them for a\nsingle command.\n",
       "usage": "playground secrets COMMAND",
       "options": [],
       "subcommands": [
@@ -406,26 +406,26 @@
     },
     {
       "name": "ai",
-      "description": "🧞‍♂️  AI\n\nIt is using Claude Code (https://code.claude.com/docs/en/quickstart) in interactive mode.\n\nMCP servers are available:\n\n1. mcp-playground - Playground MCP Server (see https://github.com/vdesabou/kafka-docker-playground-mcp-server), it exposes the live state of this checkout\n\n  Tools:\n  - playground_status:\n      Docker availability, the example currently running (script, environment, connector type),\n      every container with its state/health/ports and the recent `playground run` history.\n  - playground_connectors:\n      Status of every connector, with the root cause of each FAILED task. Talks to the running\n      Connect worker (ssl/rbac included) or to the Confluent Cloud Connect API, whichever the\n      current environment uses.\n  - playground_logs:\n      Container logs without flooding the context: de-duplicated errors with collapsed stack\n      traces (default), tail, or regex search.\n  - playground_find_example:\n      Search the ~2500 runnable example scripts by connector class, path, title or body, and get\n      the exact `playground run -f <script>` command back.\n  - playground_example_details:\n      One call for everything about an example: source, connector payloads, default environment,\n      docker-compose overrides, sibling variants and the variables you must export.\n\n2. mcp-server - Confluent MCP Server (see http://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html#quick-start and https://github.com/confluentinc/mcp-confluent)\n\n  Tools:\n  - list-topics: List all topics in the Kafka cluster.\n  - create-topics: Create one or more Kafka topics.\n  - delete-topics: Delete topics by name.\n  - produce-message: Produce records to a Kafka topic (supports Schema Registry).\n  - consume-messages: Consume messages from one or more Kafka topics (supports Schema Registry).\n  - list-schemas: List all schemas in the Schema Registry.\n  - delete-schema: Delete a schema subject or a specific version from the Schema Registry.\n\n3. mcp-ccloud - Confluent MCP Server (see http://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html#quick-start and https://github.com/confluentinc/mcp-confluent)\n\n  Tools:\n    Environment & Cluster Management\n    - list-environments: Get all environments in Confluent Cloud.\n    - read-environment: Get details of a specific environment.\n    - list-clusters: Get all clusters in a Confluent Cloud environment.\n\n    Topic Management\n    - list-topics: List all topics in a Kafka cluster.\n    - create-topics: Create one or more Kafka topics.\n    - delete-topics: Delete topics by name.\n    - search-topics-by-name: Search for topics matching a name.\n    - get-topic-config: Retrieve configuration details for a topic.\n    - alter-topic-config: Update topic configuration (SET/DELETE).\n\n    Messaging\n    - produce-message: Produce records to a topic (supports Schema Registry serialization).\n    - consume-messages: Consume and deserialize messages from one or more topics.\n\n    Schema Registry\n    - list-schemas: List schemas (latest or all versions).\n    - delete-schema: Delete a schema subject or specific version.\n    - list-tags: Retrieve all tag definitions.\n    - create-topic-tags: Create new tag definitions.\n    - delete-tag: Delete a tag definition.\n    - add-tags-to-topic: Assign tags to Kafka topics.\n    - remove-tag-from-entity: Remove tags from entities.\n    - search-topics-by-tag: List topics with a specific tag.\n\n    Connector Management\n    - list-connectors: List active connectors in a cluster.\n    - read-connector: Get detailed information about a connector.\n    - create-connector: Create a new Managed or Custom connector.\n    - delete-connector: Delete an existing connector.\n\n    Metrics & Billing\n    - list-available-metrics: Discover valid metric names and filter fields.\n    - query-metrics: Query metrics from the Telemetry API (Kafka, Flink, Connect, SR).\n    - list-billing-costs: Retrieve billing cost data for an organization.\n",
+      "description": "🧞‍♂️  AI\n\nOpens Claude Code in this checkout, already wired to the playground.\n\nIt is using Claude Code (https://code.claude.com/docs/en/quickstart) in interactive mode.\n\nBecause of the MCP servers below, it can see what is actually running:\nwhich example, which containers, which connectors are failing and why,\nand it can search the ~2500 example scripts to find the one that already\nreproduces what you are looking at. So ask it things like \"why did my\nconnector fail\" or \"is there an example doing X\", rather than treating it\nas a generic assistant.\n\nAnything you pass after 'playground ai' goes straight to the claude cli.\n\nMCP servers are available:\n\n1. mcp-playground - Playground MCP Server (see https://github.com/vdesabou/kafka-docker-playground-mcp-server), it exposes the live state of this checkout\n\n  Tools:\n  - playground_status:\n      Docker availability, the example currently running (script, environment, connector type),\n      every container with its state/health/ports and the recent `playground run` history.\n  - playground_connectors:\n      Status of every connector, with the root cause of each FAILED task. Talks to the running\n      Connect worker (ssl/rbac included) or to the Confluent Cloud Connect API, whichever the\n      current environment uses.\n  - playground_logs:\n      Container logs without flooding the context: de-duplicated errors with collapsed stack\n      traces (default), tail, or regex search.\n  - playground_find_example:\n      Search the ~2500 runnable example scripts by connector class, path, title or body, and get\n      the exact `playground run -f <script>` command back.\n  - playground_example_details:\n      One call for everything about an example: source, connector payloads, default environment,\n      docker-compose overrides, sibling variants and the variables you must export.\n\n2. mcp-server - Confluent MCP Server (see http://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html#quick-start and https://github.com/confluentinc/mcp-confluent)\n\n  Tools:\n  - list-topics: List all topics in the Kafka cluster.\n  - create-topics: Create one or more Kafka topics.\n  - delete-topics: Delete topics by name.\n  - produce-message: Produce records to a Kafka topic (supports Schema Registry).\n  - consume-messages: Consume messages from one or more Kafka topics (supports Schema Registry).\n  - list-schemas: List all schemas in the Schema Registry.\n  - delete-schema: Delete a schema subject or a specific version from the Schema Registry.\n\n3. mcp-ccloud - Confluent MCP Server (see http://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html#quick-start and https://github.com/confluentinc/mcp-confluent)\n\n  Tools:\n    Environment & Cluster Management\n    - list-environments: Get all environments in Confluent Cloud.\n    - read-environment: Get details of a specific environment.\n    - list-clusters: Get all clusters in a Confluent Cloud environment.\n\n    Topic Management\n    - list-topics: List all topics in a Kafka cluster.\n    - create-topics: Create one or more Kafka topics.\n    - delete-topics: Delete topics by name.\n    - search-topics-by-name: Search for topics matching a name.\n    - get-topic-config: Retrieve configuration details for a topic.\n    - alter-topic-config: Update topic configuration (SET/DELETE).\n\n    Messaging\n    - produce-message: Produce records to a topic (supports Schema Registry serialization).\n    - consume-messages: Consume and deserialize messages from one or more topics.\n\n    Schema Registry\n    - list-schemas: List schemas (latest or all versions).\n    - delete-schema: Delete a schema subject or specific version.\n    - list-tags: Retrieve all tag definitions.\n    - create-topic-tags: Create new tag definitions.\n    - delete-tag: Delete a tag definition.\n    - add-tags-to-topic: Assign tags to Kafka topics.\n    - remove-tag-from-entity: Remove tags from entities.\n    - search-topics-by-tag: List topics with a specific tag.\n\n    Connector Management\n    - list-connectors: List active connectors in a cluster.\n    - read-connector: Get detailed information about a connector.\n    - create-connector: Create a new Managed or Custom connector.\n    - delete-connector: Delete an existing connector.\n\n    Metrics & Billing\n    - list-available-metrics: Discover valid metric names and filter fields.\n    - query-metrics: Query metrics from the Telemetry API (Kafka, Flink, Connect, SR).\n    - list-billing-costs: Retrieve billing cost data for an organization.\n",
       "usage": "playground ai [--] [CLAUDE CLI ARGUMENTS...]",
       "options": [],
       "subcommands": null
     },
     {
       "name": "cloud-resources",
-      "description": "🔗 Connector commands\n",
+      "description": "☁️ What the playground left behind in your cloud accounts, and what it costs\n\nExamples that talk to a real cloud create real resources, and an\ninterrupted run leaves them behind. These commands show what is still\nalive and what you are being billed for:\n\n  cloud-resources aws list            resources still up, scoped to you\n  cloud-resources aws costs           spend over a range of dates\n  cloud-resources aws costs-history   spend per month over the last year\n\nThe same three exist for azure.\n\n🧹 Nothing is deleted here. To actually remove the resources, use\n   'playground cleanup-cloud-resources'.\n",
       "usage": "playground cloud-resources COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "aws",
-          "description": "aws commands\n  \n",
+          "description": "☁️ What is still running in AWS, and what it costs\n  \n    list            resources created by the playground, still alive\n    costs           spend over a range of dates, by service\n    costs-history   spend per month over the last year\n  \n  Uses the credentials and region of your aws CLI. Nothing is deleted\n  here, use 'playground cleanup-cloud-resources' for that.\n  \n",
           "usage": "playground cloud-resources aws COMMAND",
           "options": []
         },
         {
           "name": "azure",
-          "description": "azure commands\n  \n",
+          "description": "☁️ What is still running in Azure, and what it costs\n  \n    list            resources created by the playground, still alive\n    costs           spend over a range of dates\n    costs-history   spend per month over the last year\n  \n  Uses the subscription your az CLI is logged into. Nothing is deleted\n  here, use 'playground cleanup-cloud-resources' for that.\n  \n",
           "usage": "playground cloud-resources azure COMMAND",
           "options": []
         }
@@ -433,13 +433,13 @@
     },
     {
       "name": "aws",
-      "description": "aws commands\n",
+      "description": "☁️ What is still running in AWS, and what it costs\n\n  list            resources created by the playground, still alive\n  costs           spend over a range of dates, by service\n  costs-history   spend per month over the last year\n\nUses the credentials and region of your aws CLI. Nothing is deleted\nhere, use 'playground cleanup-cloud-resources' for that.\n",
       "usage": "playground cloud-resources aws COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "list",
-          "description": "📋 List all active resources\n  \n",
+          "description": "📋 List all active resources\n  \n  AWS resources created by the playground and still running, matched on\n  your username. Anything in the list is still being billed.\n  \n",
           "usage": "playground cloud-resources aws list [OPTIONS]",
           "options": [
             {
@@ -453,7 +453,7 @@
         },
         {
           "name": "costs",
-          "description": "💰 Show aws costs\n  \n",
+          "description": "💰 Show aws costs\n  \n  Spend over a range of dates, broken down by AWS service, using the\n  Cost Explorer API. Run it after a week of heavy examples to see which\n  service the money actually went to, then use\n  'playground cloud-resources aws list' to find what is still up.\n  \n  Defaults cover the last month, ending 3 days ago because AWS needs a\n  couple of days to consolidate. --start-date cannot go back more than\n  one year.\n  \n",
           "usage": "playground cloud-resources aws costs [OPTIONS]",
           "options": [
             {
@@ -488,7 +488,7 @@
         },
         {
           "name": "costs-history",
-          "description": "👛  Retrieve aws costs for each month since last year\n  \n  By default it will only display total cost in dollars. Use the --detailed flag to see more information.\n",
+          "description": "👛  Retrieve aws costs for each month since last year\n  \n  One line per month over the past year, drawn as a histogram, which\n  makes a month that went wrong obvious at a glance. Use costs when you\n  then want to know which service it was.\n  \n  By default it will only display total cost in dollars. Use the --detailed flag to see more information.\n",
           "usage": "playground cloud-resources aws costs-history [OPTIONS]",
           "options": [
             {
@@ -504,13 +504,13 @@
     },
     {
       "name": "azure",
-      "description": "azure commands\n",
+      "description": "☁️ What is still running in Azure, and what it costs\n\n  list            resources created by the playground, still alive\n  costs           spend over a range of dates\n  costs-history   spend per month over the last year\n\nUses the subscription your az CLI is logged into. Nothing is deleted\nhere, use 'playground cleanup-cloud-resources' for that.\n",
       "usage": "playground cloud-resources azure COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "list",
-          "description": "📋 List all active resources\n  \n",
+          "description": "📋 List all active resources\n  \n  Azure resources created by the playground and still running, matched\n  on your username. Anything in the list is still being billed.\n  \n",
           "usage": "playground cloud-resources azure list [OPTIONS]",
           "options": [
             {
@@ -524,7 +524,7 @@
         },
         {
           "name": "costs",
-          "description": "💰 Show azure costs\n  \n",
+          "description": "💰 Show azure costs\n  \n  Spend over a range of dates for your subscription, using the Azure\n  Cost Management API. You need to be logged in with the az CLI.\n  \n  Defaults cover the last month, ending 3 days ago because the data\n  takes a couple of days to consolidate. --start-date cannot go back\n  more than one year.\n  \n",
           "usage": "playground cloud-resources azure costs [OPTIONS]",
           "options": [
             {
@@ -559,7 +559,7 @@
         },
         {
           "name": "costs-history",
-          "description": "👛  Retrieve azure costs for each month since last year\n  \n  By default it will only display total cost in dollars. Use the --detailed flag to see more information.\n",
+          "description": "👛  Retrieve azure costs for each month since last year\n  \n  One line per month over the past year, so you can spot the month that\n  went wrong before digging into it with costs.\n  \n  By default it will only display total cost in dollars. Use the --detailed flag to see more information.\n",
           "usage": "playground cloud-resources azure costs-history [OPTIONS]",
           "options": [
             {
@@ -619,7 +619,7 @@
     },
     {
       "name": "run",
-      "description": "🕹️ Run any example !\n\n🔥 It start an interactive mode where you'll be fully guided !\n\n\n⛅ When running Confluent Cloud (ccloud) example:\n\n  All you have to do is to be already logged in with confluent CLI.\n\n  By default, a new Confluent Cloud environment with a Cluster will be created.\n\n  You can configure the new cluster by setting:\n\n  --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: basic, standard and dedicated, default basic)\n  --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: aws, gcp and azure, default aws)\n  --cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use confluent kafka region list to get the list, default eu-west-2 for aws, westeurope for azure and europe-west2 for gcp)\n  --cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: txxxxx) \n\n  In case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n  --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n  --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)\n  --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\n❗ this command will kill all containers using \"playground container kill-all\", you can disable this by running \"playground config container-kill-all-before-run false\"\n",
+      "description": "🕹️ Run any example !\n\n🔥 It start an interactive mode where you'll be fully guided !\n\n  playground run                       🔍 pick an example, guided\n  playground run -f <example.sh>       🚀 run that one directly\n  playground re-run                    ⚡ same example, same flags\n\nEach run stops what was running, starts the environment the example asks\nfor, brings up its containers, creates the connector and produces data.\nCredentials the example needs are loaded from 'playground secrets'.\n\n🔢 Choosing versions\n  --tag             Confluent Platform version for every component\n  --connect-tag     Confluent Platform version for connect only\n  --connector-tag   connector version from Confluent Hub\n  --connector-zip   connector from a local zip or a URL\n  --connector-jar   a single jar, dropped into the existing plugin\n\n🧰 Adding to the example\n  --environment     run a connector example under another security setup\n  --enable-<x>      add control-center, ksqldb, flink, grafana, kcat...\n  --pipeline        chain a source example into a sink example\n  --sql-datagen     continuous realistic data instead of a fixed batch\n\n\n⛅ When running Confluent Cloud (ccloud) example:\n\n  All you have to do is to be already logged in with confluent CLI.\n\n  By default, a new Confluent Cloud environment with a Cluster will be created.\n\n  You can configure the new cluster by setting:\n\n  --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: basic, standard and dedicated, default basic)\n  --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: aws, gcp and azure, default aws)\n  --cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use confluent kafka region list to get the list, default eu-west-2 for aws, westeurope for azure and europe-west2 for gcp)\n  --cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: txxxxx) \n\n  In case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n  --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n  --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)\n  --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\n❗ this command will kill all containers using \"playground container kill-all\", you can disable this by running \"playground config container-kill-all-before-run false\"\n",
       "usage": "playground run [OPTIONS]",
       "options": [
         {
@@ -826,42 +826,42 @@
     },
     {
       "name": "re-run",
-      "description": "⚡ Simply re-run last example you ran with <playground run>\n",
+      "description": "⚡ Simply re-run last example you ran with <playground run>\n\nSame script and same flags as last time: the --tag, --connector-tag,\n--connector-zip and --enable-* you picked are replayed from playground.ini,\nso there is nothing to retype after a code change.\n\n🎓 Tip: to re-run with a different version, use 'playground run' again and\nchange the flag, or 'playground update-version' on the running example.\n",
       "usage": "playground re-run",
       "options": [],
       "subcommands": null
     },
     {
       "name": "get-ci-result",
-      "description": "🤖 get CI result for current example\n",
+      "description": "🤖 get CI result for current example\n\nTells you whether the example you are running is green in the nightly CI,\nboth for the default environment and for cfk, by reading the published\nbadges from kafka-docker-playground.io.\n\n👉 Useful before you spend time debugging: if CI is red too, the breakage\nis probably not on your side. Reproduction models are always reported as\nfine, they are not part of the CI matrix.\n",
       "usage": "playground get-ci-result",
       "options": [],
       "subcommands": null
     },
     {
       "name": "history",
-      "description": "🏰 Get an history of the examples which were run with run command and run it again\n",
+      "description": "🏰 Get an history of the examples which were run with run command and run it again\n\nOpens a picker over every 'playground run' command you have executed,\nmost recent first and de-duplicated. The command you select is shown for\nediting before it runs, so you can change a --tag or add a flag on the way.\n",
       "usage": "playground history",
       "options": [],
       "subcommands": null
     },
     {
       "name": "switch-ccloud",
-      "description": "🌩️  Switch to ccloud environment.\n\nIt will bootstrap ccloud environment based on your previously ran ccloud example.\n",
+      "description": "🌩️  Switch to ccloud environment.\n\nIt will bootstrap ccloud environment based on your previously ran ccloud example.\n\nPoints the CLI at the Confluent Cloud cluster of your last ccloud run, so\nthat 'playground topic', 'playground connector' and 'playground schema'\ntalk to Confluent Cloud instead of the local containers. Nothing is\ncreated or destroyed, and no container is started or stopped.\n\n❕ Requires that you ran a ccloud example at least once, so that the\n   environment, cluster and credentials are cached in playground.ini.\n   The environment you were on is remembered for 'playground switch-back'.\n",
       "usage": "playground switch-ccloud",
       "options": [],
       "subcommands": null
     },
     {
       "name": "switch-back",
-      "description": "💺  Switch back from previous environment before switch-ccloud was called.\n",
+      "description": "💺  Switch back from previous environment before switch-ccloud was called.\n\nRestores the environment and connector type that were active before\n'playground switch-ccloud', so the CLI talks to your local containers\nagain.\n",
       "usage": "playground switch-back",
       "options": [],
       "subcommands": null
     },
     {
       "name": "update-version",
-      "description": "✨ Update current confluent platform components (all with --tag or only connect with --connect-tag) or connector(s) with new version(s)\n",
+      "description": "✨ Update current confluent platform components (all with --tag or only connect with --connect-tag) or connector(s) with new version(s)\n\nRe-runs the example you are currently on with different versions, which is\nthe fastest way to answer \"does it still happen on 8.x?\" or \"is it fixed in\nconnector 10.6.0?\".\n\n  --tag            🔢 every Confluent Platform component\n  --connect-tag    🔗 only the connect container, other components untouched\n  --connector-tag  🧩 the connector, from Confluent Hub\n  --connector-zip  📦 the connector, from a local zip or a URL\n  --connector-jar  ☕ a single jar, dropped into the existing plugin\n\nWith no flag, you are prompted with the versions available. The versions\ncurrently running are read from the broker and connect containers, so the\nexample must be up.\n\n🎓 Tip: this is a version bisect tool. Keep the example running and call it\nrepeatedly until you find the version where the behaviour changes.\n",
       "usage": "playground update-version [OPTIONS]",
       "options": [
         {
@@ -904,7 +904,7 @@
     },
     {
       "name": "open",
-      "description": "👐 When --file is not provided, simply open last example you ran with <playground run>\n\nOtherwise, open any file from the playground using --file.\n",
+      "description": "👐 When --file is not provided, simply open last example you ran with <playground run>\n\nOtherwise, open any file from the playground using --file.\n\nOpens in the editor of your choice: 'playground config editor code'\n(or vi, nano, sublime, etc). Add --open-docker-compose to also open the\ndocker-compose override file the example uses, which is where the\ncontainers around Kafka are defined.\n",
       "usage": "playground open [OPTIONS]",
       "options": [
         {
@@ -934,21 +934,21 @@
     },
     {
       "name": "stop",
-      "description": "🛑 Stop currently running example\n",
+      "description": "🛑 Stop currently running example\n\nTears down every container of the environment and of the example, and\nremoves their volumes, by replaying the docker compose command stored in\nplayground.ini. Nothing is left behind, so the next example starts clean.\n\n❕ Data is not kept: topics, connectors and the content of the databases\n   started by the example are gone.\n",
       "usage": "playground stop",
       "options": [],
       "subcommands": null
     },
     {
       "name": "remove-all-docker-images",
-      "description": "🧨 Remove all docker images (including docker volumes)\n",
+      "description": "🧨 Remove all docker images (including docker volumes)\n\nReclaims disk space by wiping your whole local Docker state, not just the\nplayground one. Everything has to be pulled again afterwards, so the next\nrun is slow.\n\n🎓 Tip: prefer 'playground remove-cp-docker-images' to drop only the\nConfluent Platform versions you no longer test.\n",
       "usage": "playground remove-all-docker-images",
       "options": [],
       "subcommands": null
     },
     {
       "name": "remove-cp-docker-images",
-      "description": "🧹 Remove all Confluent Platform docker images related to a version installed locally (a confirmation will be required for every version present)\n",
+      "description": "🧹 Remove all Confluent Platform docker images related to a version installed locally (a confirmation will be required for every version present)\n\nEach Confluent Platform version you have ever run keeps a dozen images on\ndisk, so this is usually where the space went. You are asked before every\nversion, unless you name one with --version.\n\nThe default version used by the playground is never proposed for removal.\n",
       "usage": "playground remove-cp-docker-images [OPTIONS]",
       "options": [
         {
@@ -963,7 +963,7 @@
     },
     {
       "name": "refresh-cp-docker-images",
-      "description": "🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally\n\n    It also refreshes images for aws, gcp and azure cli\n",
+      "description": "🔄 Refresh (pull from Docker) all Confluent Platform docker images related to a version installed locally\n\n    It also refreshes images for aws, gcp and azure cli\n\nUseful when a version tag has been re-published, or when the cloud CLI\nimages have drifted behind the API they talk to.\n",
       "usage": "playground refresh-cp-docker-images [OPTIONS]",
       "options": [
         {
@@ -978,14 +978,14 @@
     },
     {
       "name": "cleanup-cloud-details",
-      "description": "🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)\n   use this command if you notice that the playground is using unexpected ccloud details\n",
+      "description": "🧼 playground is actively caching ccloud details (https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)\n   use this command if you notice that the playground is using unexpected ccloud details\n\nDrops the cached environment, cluster, endpoints and API keys, so the next\nccloud example re-discovers them from scratch. Typically needed after you\nchanged of Confluent Cloud organisation, or deleted the cluster from the UI\nbehind the playground's back.\n\n❕ Nothing is deleted in Confluent Cloud, only the local cache. To delete\n   the cloud resources themselves, see 'playground cleanup-cloud-resources'.\n",
       "usage": "playground cleanup-cloud-details",
       "options": [],
       "subcommands": null
     },
     {
       "name": "open-docs",
-      "description": "🧑‍🎓 Open Confluent documentation of currently running example\n",
+      "description": "🧑‍🎓 Open Confluent documentation of currently running example\n\nJumps straight to the official Confluent page for the connector or feature\nthe running example demonstrates, so you do not have to search for it.\n",
       "usage": "playground open-docs [OPTIONS]",
       "options": [
         {
@@ -1015,7 +1015,7 @@
     },
     {
       "name": "cleanup-cloud-resources",
-      "description": "🧹 Cleanup cloud resources that were created by running examples from the playground\n\n❗it will remove all resources created by the playground, including topics, connectors, clusters, buckets, redshift cluster, etc...\n",
+      "description": "🧹 Cleanup cloud resources that were created by running examples from the playground\n\n❗it will remove all resources created by the playground, including topics, connectors, clusters, buckets, redshift cluster, etc...\n\nExamples that talk to a real cloud create real, billable resources, and an\ninterrupted run leaves them behind. This sweeps them, scoped to the ones\nwhose name contains your username, across AWS, GCP, Azure, Confluent Cloud\nand Salesforce. Restrict the scope with --resource, and run it regularly.\n\nYou are asked to confirm every deletion, unless --force is given.\n\n☢️ Deletions are permanent. Use a dedicated cloud account for the\n   playground rather than one that also hosts resources you care about.\n",
       "usage": "playground cleanup-cloud-resources [OPTIONS]",
       "options": [
         {
@@ -1050,13 +1050,13 @@
     },
     {
       "name": "repro",
-      "description": "👷‍♂️ Reproduction model commands\n",
+      "description": "👷‍♂️ Reproduction model commands\n\nA reproduction model is an example written to demonstrate one specific\nproblem, so that anyone can reproduce it with a single command.\n\n  bootstrap   scaffold one from an existing example, then edit it\n  export      package the models you have not committed, as a tgz\n  import      unpack a tgz someone sent you, and run it\n\n👉 Always scaffold with bootstrap rather than copying a script by hand: it\ncreates the header, the docker compose override, the CLI cheat sheet and\nregisters the model, which a hand-written file would be missing.\n\nKeep a model minimal and about one issue, state expected versus actual\nbehaviour in its comments header, and never put customer data in it.\n",
       "usage": "playground repro COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "export",
-          "description": "📤 Export as tgz file uncommitted reproduction models from the folder of current reproduction model\n",
+          "description": "📤 Export as tgz file uncommitted reproduction models from the folder of current reproduction model\n  \n  Produces a single tgz that a colleague can feed to\n  'playground repro import' to run your scenario as is. Use --all to take\n  every uncommitted model rather than only the current folder.\n",
           "usage": "playground repro export [OPTIONS]",
           "options": [
             {
@@ -1070,7 +1070,7 @@
         },
         {
           "name": "import",
-          "description": "📥 Import tgz file which was created with export command\n",
+          "description": "📥 Import tgz file which was created with export command\n  \n  Unpacks the models into your reproduction-models folder, from where you\n  can run them with 'playground run'.\n",
           "usage": "playground repro import [OPTIONS]",
           "options": [
             {
@@ -1161,14 +1161,14 @@
     },
     {
       "name": "get-docker-compose",
-      "description": "🐋 Get docker-compose\n",
+      "description": "🐋 Get docker-compose\n\nPrints the fully resolved docker compose configuration of the running\nexample: every file merged, every profile applied and every variable\nsubstituted. This is what Docker actually received, which is the thing to\nlook at when a container did not get the image, port or setting you\nexpected.\n",
       "usage": "playground get-docker-compose",
       "options": [],
       "subcommands": null
     },
     {
       "name": "schema",
-      "description": "🔰 Schema commands\n",
+      "description": "🔰 Schema commands\n\nTalk to the Schema Registry of the running environment, whether it is the\nlocal container or the one in Confluent Cloud, without building the urls\nand the credentials yourself.\n\n🔍 Read\n  get                  every version of a subject, or of all subjects\n  get-compatibility    the compatibility rule in force\n  get-mode / get-alias\n\n✍️ Write\n  register             add a new version to a subject\n  delete               a version, or the whole subject\n  set-compatibility    relax or tighten the evolution rule\n  set-mode             READWRITE, READONLY or IMPORT\n  set-normalize, validate-new-schemas   registry-wide behaviour\n  set-alias            point one subject name at another\n\n🪄 derive-schema turns a sample payload into an avro, json schema or\nprotobuf schema, which saves writing one by hand.\n\nA subject is normally named after the topic: <topic>-key and\n<topic>-value. 'playground topic delete' removes both along with the\ntopic.\n",
       "usage": "playground schema COMMAND",
       "options": [],
       "subcommands": [
@@ -1217,7 +1217,7 @@
         },
         {
           "name": "register",
-          "description": "⏺️ Register a schema in specified subject\n",
+          "description": "⏺️ Register a schema in specified subject\n  \n  Pushes a schema into the registry without producing any data, which is\n  how you set up a subject before a connector starts, or add a new version\n  to check whether it passes the compatibility rules.\n  \n  The format is detected from what you give it, avro, json schema or\n  protobuf all work. Pass it on stdin with a quoted heredoc, or pick one of\n  the bundled schemas with tab completion on --schema.\n  \n  Remember the naming convention: a topic's schemas live under the subjects\n  <topic>-key and <topic>-value, not under the topic name.\n  \n  ☢️ --id forces a specific schema id and overwrites whatever is already\n  registered at that id. It exists to reproduce id collisions, it is not\n  something to use casually.\n",
           "usage": "playground schema register [OPTIONS]",
           "options": [
             {
@@ -1267,7 +1267,7 @@
         },
         {
           "name": "get-compatibility",
-          "description": "🛡️ Get subject-level compatibility\n",
+          "description": "🛡️ Get subject-level compatibility\n  \n  The rule that decides whether a new schema version is accepted. When a\n  producer fails with \"Schema being registered is incompatible with an\n  earlier schema\", this is what rejected it.\n",
           "usage": "playground schema get-compatibility [OPTIONS]",
           "options": [
             {
@@ -1289,7 +1289,7 @@
         },
         {
           "name": "set-compatibility",
-          "description": "🛡️ Set subject-level compatibility\n",
+          "description": "🛡️ Set subject-level compatibility\n  \n  Overrides the rule for one subject:\n  \n    BACKWARD     new schema can read data written with the previous one\n    FORWARD      previous schema can read data written with the new one\n    FULL         both\n    NONE         anything is accepted\n    *_TRANSITIVE checked against all past versions, not just the last\n  \n  Set it to NONE when you deliberately want to register an incompatible\n  schema, typically to reproduce what it does to consumers downstream.\n",
           "usage": "playground schema set-compatibility [OPTIONS]",
           "options": [
             {
@@ -1326,7 +1326,7 @@
         },
         {
           "name": "get-mode",
-          "description": "🔏 Get subject-level mode\n",
+          "description": "🔏 Get subject-level mode\n  \n  READWRITE normally; READONLY if registration has been frozen; IMPORT\n  while schemas are being migrated with their original ids and versions.\n",
           "usage": "playground schema get-mode [OPTIONS]",
           "options": [
             {
@@ -1348,7 +1348,7 @@
         },
         {
           "name": "set-mode",
-          "description": "🔏 Set subject-level mode\n  \n  To enable mode changes on a Schema Registry cluster, you must also set mode.mutability=true in the Schema Registry properties file before starting Schema Registry\n",
+          "description": "🔏 Set subject-level mode\n  \n    READWRITE   the normal mode, schemas can be read and registered\n    READONLY    freeze the subject, registration is refused\n    IMPORT      allow registering schemas at a chosen id and version,\n                which is what a migration between registries needs\n  \n  ⚠️ To enable mode changes on a Schema Registry cluster, you must also set\n  mode.mutability=true in the Schema Registry properties file before\n  starting Schema Registry, otherwise this command is rejected.\n",
           "usage": "playground schema set-mode [OPTIONS]",
           "options": [
             {
@@ -1381,7 +1381,7 @@
         },
         {
           "name": "set-normalize",
-          "description": "🧽 Set normalize at schema registry level\n  \n  See https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#schema-normalization\n",
+          "description": "🧽 Set normalize at schema registry level\n  \n  With normalization on, the registry rewrites a schema into a canonical\n  form before storing it, so two schemas that differ only in field order,\n  whitespace or the way defaults are written get the same id instead of\n  creating a new version every time.\n  \n  This applies to the whole registry, not to one subject. Turn it on when\n  an example keeps registering a new version of an unchanged schema.\n  \n  See https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#schema-normalization\n",
           "usage": "playground schema set-normalize [OPTIONS]",
           "options": [
             {
@@ -1406,7 +1406,7 @@
         },
         {
           "name": "validate-new-schemas",
-          "description": "🩺 Validate new schemas (default is true since CP 8.2.0)\n  \n  See https://docs.confluent.io/cloud/current/sr/fundamentals/serdes-develop/index.html#supported-formats:~:text=Strict%20namespace%20validation%20with%20Avro%20version%201.12\n",
+          "description": "🩺 Validate new schemas (default is true since CP 8.2.0)\n  \n  Controls whether the registry checks a schema is well formed before\n  accepting it. Since CP 8.2.0 this is on by default, and Avro 1.12 added\n  strict namespace validation, so schemas that a customer registered years\n  ago can now be rejected on a newer version.\n  \n  Set it to false to reproduce what that customer had, or to let a legacy\n  schema through while you investigate. It applies to the whole registry.\n  \n  See https://docs.confluent.io/cloud/current/sr/fundamentals/serdes-develop/index.html#supported-formats:~:text=Strict%20namespace%20validation%20with%20Avro%20version%201.12\n",
           "usage": "playground schema validate-new-schemas [OPTIONS]",
           "options": [
             {
@@ -1431,7 +1431,7 @@
         },
         {
           "name": "delete",
-          "description": "🧟 Delete schema\n",
+          "description": "🧟 Delete schema\n  \n  Without --version the whole subject goes; with it, only that version.\n  \n  A plain delete is soft: the schema is hidden but its id and version\n  number stay taken, so re-registering does not reuse them. Add\n  --permanent to really remove it, which is what you need before\n  re-creating the same subject from scratch.\n  \n  ❕ The registry requires a soft delete before a permanent one; with\n     --permanent the command does both for you.\n",
           "usage": "playground schema delete [OPTIONS]",
           "options": [
             {
@@ -1467,7 +1467,7 @@
         },
         {
           "name": "derive-schema",
-          "description": "🪄 Derive a schema based on payload\n",
+          "description": "🪄 Derive a schema based on payload\n  \n  Give it one or more json records, on stdin or with --payload, and it\n  works out a schema that covers them all. Much faster than writing an\n  avro schema by hand, and it handles unions when a field has different\n  types across records.\n",
           "usage": "playground schema derive-schema [OPTIONS]",
           "options": [
             {
@@ -1488,7 +1488,7 @@
         },
         {
           "name": "set-alias",
-          "description": "🔯 Set a subject alias (see https://docs.confluent.io/platform/8.2/schema-registry/fundamentals/index.html#subject-aliases)\n  \n  CP 7.4.1 or higher is required to have this feature\n",
+          "description": "🔯 Set a subject alias\n  \n  Makes --alias point at --subject, so a client asking for the alias gets\n  the real subject's schemas. That is how you let a consumer keep its own\n  subject name while the data actually lives under another one, typically\n  after a topic rename or a migration between registries.\n  \n  CP 7.4.1 or higher is required to have this feature.\n  \n  See https://docs.confluent.io/platform/current/schema-registry/fundamentals/index.html#subject-aliases\n",
           "usage": "playground schema set-alias [OPTIONS]",
           "options": [
             {
@@ -1517,7 +1517,7 @@
         },
         {
           "name": "get-alias",
-          "description": "🔯 Get subject alias\n  \n  CP 7.4.1 or higher is required to have this feature\n",
+          "description": "🔯 Get subject alias\n  \n  Shows which real subject an alias resolves to. Use it when a client reads\n  schemas that do not match the subject it asked for, the alias is often\n  the missing piece.\n  \n  CP 7.4.1 or higher is required to have this feature.\n",
           "usage": "playground schema get-alias [OPTIONS]",
           "options": [
             {
@@ -1541,13 +1541,13 @@
     },
     {
       "name": "tcp-proxy",
-      "description": "🏚 Zazkia TCP Proxy commands\n\nSimulate TCP connection issues (reset,delay,throttle,corrupt) using emicklei/zazkia (https://github.com/emicklei/zazkia) TCP proxy\n",
+      "description": "🏚 Zazkia TCP Proxy commands\n\nSimulate TCP connection issues (reset,delay,throttle,corrupt) using emicklei/zazkia (https://github.com/emicklei/zazkia) TCP proxy\n\nSlips a controllable proxy between a connector and the system it talks to,\nso you can break the connection on purpose and watch what the connector\ndoes: does it retry, does it lose records, does it fail the task.\n\n  start        put the proxy in the path, rewriting the connector config\n  delay        add latency to the responses\n  break        drop a percentage of the responses\n  close-connection, close-all-connection-with-error\n  toggle-*     cut reads or writes in one direction only\n  get-connections   the live connections and their statistics\n  open-ui      drive all of the above from the Zazkia web UI\n\n🎓 Tip: start with 'playground tcp-proxy open-ui' to see what is\nhappening, then reproduce the same actions from the CLI in a script.\n",
       "usage": "playground tcp-proxy COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "start",
-          "description": "💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998\n",
+          "description": "💗 Start the TCP proxy and automatically replace connector config with zazkia hostname and port 49998\n  \n  Starts the proxy in front of --hostname and --port, then rewrites the\n  running connector configuration so its traffic goes through it. Nothing\n  else to change on your side.\n",
           "usage": "playground tcp-proxy start [OPTIONS]",
           "options": [
             {
@@ -1603,7 +1603,7 @@
         },
         {
           "name": "get-connections",
-          "description": "🧲 Get Zazkia active TCP connections config and stats\n",
+          "description": "🧲 Get Zazkia active TCP connections config and stats\n  \n  Lists every TCP connection currently going through the proxy, with its\n  id, its state (the toggles and the delay or break currently applied) and\n  its stats (bytes sent and received each way).\n  \n  Start here: the id printed by this command is what the other tcp-proxy\n  commands take as --connection-id. Connections in EOF state are hidden.\n  \n  🎓 Tip: every other tcp-proxy command applies to all active connections\n  when you do not pass --connection-id, which is normally what you want.\n",
           "usage": "playground tcp-proxy get-connections [OPTIONS]",
           "options": [
             {
@@ -1617,7 +1617,7 @@
         },
         {
           "name": "delay",
-          "description": "⏲️ Add milliseconds delay to service response.\n  Set it to 0 to remove the delay.\n",
+          "description": "⏲️ Add milliseconds delay to service response.\n  \n  Slows down every response coming back from the service, without\n  breaking anything. This is how you reproduce a slow database or a slow\n  API: request timeouts, retries, rebalances caused by a task that takes\n  too long to answer.\n  \n  Set it back to 0 to remove the delay.\n  \n  The new state is printed afterwards, so you can check it was applied.\n",
           "usage": "playground tcp-proxy delay [OPTIONS]",
           "options": [
             {
@@ -1638,7 +1638,7 @@
         },
         {
           "name": "break",
-          "description": "💔 Break sending the response to the client.\n  Set it to 0% to remove the delay.\n",
+          "description": "💔 Break sending the response to the client.\n  \n  Drops the response part way through, for the given percentage of\n  responses. Unlike close-connection, which kills the connection once,\n  this keeps failing intermittently, which is what you need to reproduce\n  the flaky network a customer is seeing rather than a clean outage.\n  \n  Set it back to 0 to stop breaking responses.\n  \n  The new state is printed afterwards, so you can check it was applied.\n",
           "usage": "playground tcp-proxy break [OPTIONS]",
           "options": [
             {
@@ -1659,7 +1659,7 @@
         },
         {
           "name": "close-connection",
-          "description": "❌ Close the Zazkia active TCP connections\n",
+          "description": "❌ Close the Zazkia active TCP connections\n  \n  Kills the connection abruptly, the way a firewall or a restarted\n  database would. Use it to check that the connector reconnects on its\n  own, and how long it takes.\n  \n  Without --connection-id, every active connection is closed.\n",
           "usage": "playground tcp-proxy close-connection [OPTIONS]",
           "options": [
             {
@@ -1673,19 +1673,19 @@
         },
         {
           "name": "close-all-connection-with-error",
-          "description": "🧹 Close all Zazkia TCP connections which are in error state (close all with error button in Zazkia UI)\n",
+          "description": "🧹 Close all Zazkia TCP connections which are in error state\n  \n  Same as the \"close all with error\" button in the Zazkia UI. Connections\n  left behind by a previous break or delay clutter get-connections;\n  this cleans them up so you only see the live ones.\n",
           "usage": "playground tcp-proxy close-all-connection-with-error",
           "options": []
         },
         {
           "name": "toggle-accept-connections",
-          "description": "🙅‍♂️ Change whether new connections can be accepted\n",
+          "description": "🙅‍♂️ Change whether new connections can be accepted\n  \n  Turn it off and the service looks down to anything trying to connect,\n  while the connections already open keep working. That is the way to\n  reproduce a connector that cannot reconnect after a failure, or an\n  exhausted connection pool.\n  \n  This is a toggle, run it again to accept connections once more.\n",
           "usage": "playground tcp-proxy toggle-accept-connections",
           "options": []
         },
         {
           "name": "toggle-reads-client",
-          "description": "✅ Change whether reading data from the client is enabled.\n  \n    See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)\n",
+          "description": "✅ Change whether reading data from the client is enabled.\n  \n  Stops the proxy from reading what the client sends. The client's writes\n  pile up in its socket buffer and it eventually blocks, which is how you\n  reproduce backpressure and produce timeouts.\n  \n  This is a toggle, run it again to restore the flow.\n  \n    See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)\n",
           "usage": "playground tcp-proxy toggle-reads-client [OPTIONS]",
           "options": [
             {
@@ -1699,7 +1699,7 @@
         },
         {
           "name": "toggle-reads-service",
-          "description": "✅ Change whether reading data from the service is enabled.\n  \n    See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)\n",
+          "description": "✅ Change whether reading data from the service is enabled.\n  \n  Stops the proxy from reading what the service replies. Nothing comes\n  back to the client, so requests hang until they time out, without the\n  connection ever being closed. This is the classic black hole that a\n  TCP keepalive misconfiguration produces.\n  \n  This is a toggle, run it again to restore the flow.\n  \n    See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)\n",
           "usage": "playground tcp-proxy toggle-reads-service [OPTIONS]",
           "options": [
             {
@@ -1713,7 +1713,7 @@
         },
         {
           "name": "toggle-writes-client",
-          "description": "✅ Change whether writing data to the client is enabled.\n  \n    See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)\n",
+          "description": "✅ Change whether writing data to the client is enabled.\n  \n  The proxy keeps reading the service's response but never forwards it to\n  the client. Close to toggle-reads-service from the client's point of\n  view, except the service sees its response as fully sent, so both sides\n  disagree about what happened.\n  \n  This is a toggle, run it again to restore the flow.\n  \n    See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)\n",
           "usage": "playground tcp-proxy toggle-writes-client [OPTIONS]",
           "options": [
             {
@@ -1727,7 +1727,7 @@
         },
         {
           "name": "toggle-writes-service",
-          "description": "✅ Change whether reading data to the service is enabled.\n  \n    See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)\n",
+          "description": "✅ Change whether writing data to the service is enabled.\n  \n  The proxy keeps reading the client's request but never forwards it to\n  the service. The client believes it sent its data, the service never\n  receives it, so nothing ever answers.\n  \n  This is a toggle, run it again to restore the flow.\n  \n    See diagram in https://github.com/emicklei/zazkia#how-does-it-work- (or locally http://localhost:9191/help.html)\n",
           "usage": "playground tcp-proxy toggle-writes-service [OPTIONS]",
           "options": [
             {
@@ -1741,7 +1741,7 @@
         },
         {
           "name": "open-ui",
-          "description": "🌐 Just open Zazkia UI (http://localhost:9191) in your browser\n",
+          "description": "🌐 Just open Zazkia UI (http://localhost:9191) in your browser\n  \n  The UI shows the same connections as get-connections, but live, with\n  the toggles as buttons and a diagram of which direction each one cuts.\n  Easier than the CLI when you are exploring, the CLI is what you put in\n  a reproduction script once you know which fault you want.\n",
           "usage": "playground tcp-proxy open-ui",
           "options": []
         }
@@ -1749,19 +1749,19 @@
     },
     {
       "name": "tools",
-      "description": "🧰 Tools commands\n",
+      "description": "🧰 Tools commands\n\nSmall utilities that are handy around the playground but are not tied to a\nrunning environment:\n\n  read-avro-file        dump an avro file as readable json\n  read-parquet-file     same, for parquet\n  certs-create          generate a keystore and truststore for a component\n  redos-check           check a topics.regex for catastrophic backtracking\n  install-vscode-extension   playground completion inside VS Code\n\n🎓 Tip: the file readers are what you use to check what a sink connector\nreally wrote, after pulling the file out with 'playground container cp'.\n",
       "usage": "playground tools COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "install-vscode-extension",
-          "description": "🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n  \n  After installation, install \"playground\" command:\n  \n  * Go on a .sh file\n  \n  * Type Ctrl+Shift+P (or ⌘+⇧+P on macOS) and choose \"Shell Completion: Load Command Spec (experimental)\"\" and then type \"playground\"\n  \n  👉 Check documentation https://kafka-docker-playground.io/#/cli?id=%f0%9f%aa%84-setup-shell-script-command-completion-visual-studio-code-extension\n",
+          "description": "🪄 Install a slightly modified version of \"Shell Script Command Completion\" Visual Studio Code extension (https://marketplace.visualstudio.com/items?itemName=tetradresearch.vscode-h2o)\n  \n  Gives you the same completion inside VS Code as in your terminal: while\n  editing an example or a reproduction model, playground commands, flags\n  and their allowed values are proposed as you type, with the help text\n  on hover. Worth the two minutes of setup if you write example scripts.\n  \n  After installation, install \"playground\" command:\n  \n  * Go on a .sh file\n  \n  * Type Ctrl+Shift+P (or ⌘+⇧+P on macOS) and choose \"Shell Completion: Load Command Spec (experimental)\"\" and then type \"playground\"\n  \n  👉 Check documentation https://kafka-docker-playground.io/#/cli?id=%f0%9f%aa%84-setup-shell-script-command-completion-visual-studio-code-extension\n",
           "usage": "playground tools install-vscode-extension",
           "options": []
         },
         {
           "name": "read-avro-file",
-          "description": "🔖 Read provided avro file\n",
+          "description": "🔖 Read provided avro file\n  \n  Prints the records as json, along with the writer schema embedded in the\n  file. The way to check what a sink connector actually produced.\n",
           "usage": "playground tools read-avro-file [OPTIONS]",
           "options": [
             {
@@ -1776,7 +1776,7 @@
         },
         {
           "name": "read-parquet-file",
-          "description": "🔖 Read provided parquet file\n",
+          "description": "🔖 Read provided parquet file\n  \n  Prints the rows and the parquet schema, so you can verify what a sink\n  connector wrote without an external tool.\n",
           "usage": "playground tools read-parquet-file [OPTIONS]",
           "options": [
             {
@@ -1791,7 +1791,7 @@
         },
         {
           "name": "certs-create",
-          "description": "🔐 Generate keys and certificates used for SSL\n",
+          "description": "🔐 Generate keys and certificates used for SSL\n  \n  Creates a certificate authority and, for each container, a keystore and\n  a truststore in --output-folder. This is how the certificates of the\n  ssl environments are produced; regenerate them when they have expired,\n  or to build a set for a container the playground does not know about.\n",
           "usage": "playground tools certs-create [OPTIONS]",
           "options": [
             {
@@ -1835,7 +1835,7 @@
         },
         {
           "name": "redos-check",
-          "description": "🪖 Check topics.regex for ReDos vulnerabilities using recheck (https://github.com/makenowjust-labs/recheck)\n",
+          "description": "🪖 Check topics.regex for ReDos vulnerabilities using recheck (https://github.com/makenowjust-labs/recheck)\n  \n  Some regular expressions take exponential time on certain inputs. A sink\n  connector using such a pattern in topics.regex can pin a CPU and stall\n  the whole worker on a topic name that happens to hit the bad case, with\n  nothing in the logs to explain it.\n  \n  Give it the regex and it answers safe, vulnerable, or timeout when the\n  analysis itself takes longer than --timeout. The exit code matches:\n  0 safe, 1 vulnerable, 2 timeout.\n  \n  🎓 Tip: worth running whenever a customer reports a connect worker at\n  100% CPU with no progress and a topics.regex in the configuration.\n",
           "usage": "playground tools redos-check [OPTIONS]",
           "options": [
             {
@@ -1858,7 +1858,7 @@
     },
     {
       "name": "debug",
-      "description": "🐞 Debug commands\n",
+      "description": "🐞 Debug commands\n\nThe heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\nthe analysis tools are run inside the right container, installed on the\nfly when missing, and their output is brought back to your machine.\n\n🐌 It hangs, or it is slow\n  thread-dump         what every thread is doing right now\n  flight-recorder     record the JVM over a period, open it in JMC\n  gc-analyze          GC pauses, heap trends and tuning advice\n\n💾 It eats memory\n  heap-dump           take a .hprof, optionally as a histogram\n  heap-analyze        run Eclipse MAT on it, leak suspects report\n\n🌐 It is a network or TLS problem\n  tcp-dump            capture traffic, open it in Wireshark\n  testssl             probe a TLS endpoint, locally or in the cloud\n  block-traffic       cut a route with iptables, to simulate an outage\n  java-debug          turn on the JVM SSL, Kerberos or class loading traces\n\n🔬 It is in the code\n  log-level set       raise the level of any package, without a restart\n  enable-remote-debugging   attach your IDE debugger to a container\n  jscissors           trace method calls, arguments and return values\n\n📦 Hand it over\n  generate-diagnostics   a support bundle for connect or broker\n",
       "usage": "playground debug COMMAND",
       "options": [],
       "subcommands": [
@@ -1930,7 +1930,7 @@
         },
         {
           "name": "thread-dump",
-          "description": "🎯 Take a java thread dump\n  \n  🔖 It will save output to a file and open with text editor set with playground config editor <editor> (default is code)\n",
+          "description": "🎯 Take a java thread dump\n  \n  🔖 It will save output to a file and open with text editor set with playground config editor <editor> (default is code)\n  \n  The first thing to take when something is stuck: it shows the stack of\n  every thread, and the deadlocks if any.\n  \n  🎓 Tip: take two or three dumps a few seconds apart. Threads that appear\n  in the same place every time are the ones that are really blocked.\n",
           "usage": "playground debug thread-dump [OPTIONS]",
           "options": [
             {
@@ -2057,7 +2057,7 @@
         },
         {
           "name": "tcp-dump",
-          "description": "🕵️‍♂️ Take a tcp dump (sniffing network)\n",
+          "description": "🕵️‍♂️ Take a tcp dump (sniffing network)\n  \n  Captures the traffic in or out of a container for --duration seconds and\n  brings the capture file back, ready to open in Wireshark. Narrow it with\n  --port when you know which one you care about.\n  \n  ❕ On an encrypted listener you will see the handshake and the failures,\n     but not the records themselves.\n",
           "usage": "playground debug tcp-dump [OPTIONS]",
           "options": [
             {
@@ -2086,7 +2086,7 @@
         },
         {
           "name": "block-traffic",
-          "description": "🚫 Blocking traffic using iptables\n",
+          "description": "🚫 Blocking traffic using iptables\n  \n  Cuts the route from a container to a destination, so you can see how the\n  system behaves during a network outage: a broker that loses the\n  controller, a connector that can no longer reach its database, a client\n  that cannot resolve the schema registry.\n  \n  Blocking with --action start and restoring with --action stop, so the\n  failure is reversible without restarting anything.\n",
           "usage": "playground debug block-traffic [OPTIONS]",
           "options": [
             {
@@ -2125,7 +2125,7 @@
         },
         {
           "name": "java-debug",
-          "description": "🤎 JVM arguments for SSL, Kerberos or Class Loading\n",
+          "description": "🤎 JVM arguments for SSL, Kerberos or Class Loading\n  \n  Turns on the JVM's own diagnostic traces in a container and restarts it.\n  This is how you find out why a TLS handshake fails, why a Kerberos\n  login is refused, or which jar a class was loaded from when two\n  versions collide.\n  \n  ❗ These traces are extremely verbose. Turn them back off with\n     --action disable once you have what you need.\n",
           "usage": "playground debug java-debug [OPTIONS]",
           "options": [
             {
@@ -2232,7 +2232,7 @@
         },
         {
           "name": "log-level",
-          "description": "🧬 Set log level for any package\n",
+          "description": "🧬 Set log level for any package\n  \n  Changes the level of any logger on the running connect worker, straight\n  away and without a restart, so you do not have to edit log4j properties\n  and rebuild the container.\n  \n  🎓 Tip: raise only the package you suspect, for instance\n  io.confluent.connect.s3 or org.apache.kafka.clients.consumer, rather\n  than the root logger, or the useful lines will be lost in the noise.\n",
           "usage": "playground debug log-level COMMAND",
           "options": []
         },
@@ -2246,13 +2246,13 @@
     },
     {
       "name": "log-level",
-      "description": "🧬 Set log level for any package\n",
+      "description": "🧬 Set log level for any package\n\nChanges the level of any logger on the running connect worker, straight\naway and without a restart, so you do not have to edit log4j properties\nand rebuild the container.\n\n🎓 Tip: raise only the package you suspect, for instance\nio.confluent.connect.s3 or org.apache.kafka.clients.consumer, rather\nthan the root logger, or the useful lines will be lost in the noise.\n",
       "usage": "playground debug log-level COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "get",
-          "description": "Get log levels\n",
+          "description": "Get log levels\n  \n  With no --package, every logger with an explicit level is listed.\n",
           "usage": "playground debug log-level get [OPTIONS]",
           "options": [
             {
@@ -2267,7 +2267,7 @@
         },
         {
           "name": "set",
-          "description": "Set log level for specific logger\n",
+          "description": "Set log level for specific logger\n  \n  Takes effect immediately and applies to the logger and everything\n  below it in the package hierarchy.\n",
           "usage": "playground debug log-level set [OPTIONS]",
           "options": [
             {
@@ -2413,7 +2413,7 @@
     },
     {
       "name": "container",
-      "description": "🐳 Container commands\n",
+      "description": "🐳 Container commands\n\nWork on the containers of the running example without having to remember\ntheir names, their users or their file layout. The same commands work\nagainst Kubernetes pods when the example runs on the cfk environment,\nwhich is why 'pod' is an accepted alias.\n\n🔍 Look inside\n  logs                 tail logs, grep them, or block until a line appears\n  display-error-all    every ERROR and FATAL across all containers\n  get-properties       the properties file a component actually loaded\n  get-ip-addresses     addresses on the docker network\n  exec / ssh           run a command, or get a shell\n\n🔁 Act on them\n  restart / kill / pause / resume\n  recreate             re-create with the same compose definition\n  update               edit the compose or Kubernetes definition, apply it\n  set-environment-variables   add settings, then recreate\n  cp                   copy files in and out\n  change-jdk           swap the JDK, to reproduce a JVM-specific issue\n  kill-all             kill everything and prune volumes\n\nMost commands accept --container several times to act on a few containers\nat once.\n\n🎓 Tip: the usual names are broker, connect, schema-registry,\ncontrol-center, ksqldb-server, plus whatever the example adds.\n",
       "usage": "playground container COMMAND",
       "options": [],
       "subcommands": [
@@ -2434,7 +2434,7 @@
         },
         {
           "name": "recreate",
-          "description": "💫 Recreate container(s)\n  \n  👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%e2%99%bb%ef%b8%8f-re-create-containers\n",
+          "description": "💫 Recreate container(s)\n  \n  👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%e2%99%bb%ef%b8%8f-re-create-containers\n  \n  Replays the docker compose command of the example, so a container is\n  rebuilt from its current definition. This is what applies a change\n  made with 'playground container set-environment-variables' or\n  'playground container update', and what you use to restart a component\n  from scratch without re-running the whole example.\n",
           "usage": "playground container recreate [OPTIONS]",
           "options": [
             {
@@ -2463,19 +2463,19 @@
         },
         {
           "name": "get-ip-addresses",
-          "description": "🖥️  Get ip address of running containers\n",
+          "description": "🖥️  Get ip address of running containers\n  \n  The address each container has on the docker network, which is what\n  you need when a component must be reached by IP rather than by name,\n  or when you are checking what a client actually connected to.\n",
           "usage": "playground container get-ip-addresses",
           "options": []
         },
         {
           "name": "kill-all",
-          "description": "💀 Kill all containers and prune all volumes\n",
+          "description": "💀 Kill all containers and prune all volumes\n  \n  Kills every container on your machine, playground or not, and prunes\n  the volumes. Used automatically before each 'playground run' to\n  guarantee a clean slate; disable that with\n  'playground config container-kill-all-before-run false'.\n",
           "usage": "playground container kill-all",
           "options": []
         },
         {
           "name": "logs",
-          "description": "🕵️  Tail and follow container logs\n",
+          "description": "🕵️  Tail and follow container logs\n  \n  Three ways to use it:\n  \n    --grep \"ERROR\"                    keep only the lines that matter\n    --open                            read the whole log in your editor\n    --wait-for-log \"Started\" -m 120   block until the line shows up\n  \n  The last one is what example scripts use to synchronise on a component\n  being ready, instead of sleeping and hoping.\n",
           "usage": "playground container logs [OPTIONS]",
           "options": [
             {
@@ -2528,13 +2528,13 @@
         },
         {
           "name": "display-error-all",
-          "description": "🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick troubleshooting\n",
+          "description": "🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick troubleshooting\n  \n  The first command to run when an example misbehaves and you do not yet\n  know which component is at fault. It sweeps every container at once,\n  so you do not have to guess where to look.\n",
           "usage": "playground container display-error-all",
           "options": []
         },
         {
           "name": "ssh",
-          "description": "🛬 SSH into container\n",
+          "description": "🛬 SSH into container\n  \n  Interactive shell inside the container, as the user the component runs\n  with. Use 'playground container exec' instead when you want to run a\n  single command from a script.\n",
           "usage": "playground container ssh [OPTIONS]",
           "options": [
             {
@@ -2586,7 +2586,7 @@
         },
         {
           "name": "exec",
-          "description": "🪄 Execute command in a container\n",
+          "description": "🪄 Execute command in a container\n  \n  Runs one command and returns, which makes it the form to use inside\n  example scripts. Add --root when the component user is not allowed to\n  do what you are asking, typically to install a package or read a file\n  under /etc.\n",
           "usage": "playground container exec [OPTIONS]",
           "options": [
             {
@@ -2622,7 +2622,7 @@
         },
         {
           "name": "cp",
-          "description": "🪄 Copy files between local filesystem and container\n",
+          "description": "🪄 Copy files between local filesystem and container\n  \n  Works in both directions, using the container:path notation. Typically\n  used to drop a jar, a certificate or a test file into a component, or\n  to pull out a file the connector has written.\n",
           "usage": "playground container cp [OPTIONS]",
           "options": [
             {
@@ -2643,7 +2643,7 @@
         },
         {
           "name": "restart",
-          "description": "🔁 Restart a container\n",
+          "description": "🔁 Restart a container\n  \n  Stops and starts the container, keeping its definition and its data.\n  Use 'playground container recreate' instead if you changed the compose\n  definition or an environment variable.\n",
           "usage": "playground container restart [OPTIONS]",
           "options": [
             {
@@ -2658,7 +2658,7 @@
         },
         {
           "name": "pause",
-          "description": "⏸️  Pause a container\n",
+          "description": "⏸️  Pause a container\n  \n  Freezes the processes without stopping the container: it keeps its\n  connections but stops responding. A good way to simulate a hung\n  broker, an unresponsive database or a GC pause, and to see how the\n  rest of the system reacts.\n",
           "usage": "playground container pause [OPTIONS]",
           "options": [
             {
@@ -2673,7 +2673,7 @@
         },
         {
           "name": "resume",
-          "description": "⏯️  Resume a container\n",
+          "description": "⏯️  Resume a container\n  \n  Unfreezes a container paused with 'playground container pause'.\n",
           "usage": "playground container resume [OPTIONS]",
           "options": [
             {
@@ -2688,7 +2688,7 @@
         },
         {
           "name": "kill",
-          "description": "🔫 Kill a container\n",
+          "description": "🔫 Kill a container\n  \n  Stops the container abruptly, without letting it shut down cleanly,\n  which is how you simulate a crash. Bring it back with\n  'playground container recreate'.\n",
           "usage": "playground container kill [OPTIONS]",
           "options": [
             {
@@ -2741,13 +2741,13 @@
     },
     {
       "name": "topic",
-      "description": "🗳 Topic commands\n",
+      "description": "🗳 Topic commands\n\nProduce, consume and manage topics without dealing with the kafka-* shell\nscripts: the bootstrap server, the security properties and the schema\nregistry url are all derived from the running environment, so the same\ncommand works on plaintext, on sasl-ssl and on Confluent Cloud.\n\n📤 Get data in\n  produce         generate records from a schema, or from your own data\n  create          create a topic with the partitions you need\n\n📥 Get data out\n  consume         read from the beginning, deserialising automatically\n  get-number-records   count what is in the topic\n  display-consumer-offsets   read the internal offsets topic\n\n🔧 Manage\n  list / describe / alter / delete\n  set-schema-compatibility   compatibility of the topic subjects\n\nSerialisation is handled for you: 'produce' registers the schema you give\nit and 'consume' works out from the payload whether it is avro, protobuf,\njson schema or plain text.\n\n🎓 Tip: in an example script, 'consume --min-expected-messages N' is the\nassertion that the data made it through; it fails the run if it did not.\n",
       "usage": "playground topic COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "get-number-records",
-          "description": "💯 Get number of records in a topic\n",
+          "description": "💯 Get number of records in a topic\n  \n  Counts the records currently in the topic, from the partition offsets.\n  The cheap way to check that a source connector produced something, or\n  that a sink has data to read.\n",
           "usage": "playground topic get-number-records [OPTIONS]",
           "options": [
             {
@@ -2769,7 +2769,7 @@
         },
         {
           "name": "display-consumer-offsets",
-          "description": "📭 Display content of __consumer_offsets topic\n",
+          "description": "📭 Display content of __consumer_offsets topic\n  \n  Decodes the internal topic where Kafka keeps committed offsets, so you\n  can see exactly what each consumer group, including a sink connector,\n  has committed and when.\n",
           "usage": "playground topic display-consumer-offsets [OPTIONS]",
           "options": [
             {
@@ -2784,7 +2784,7 @@
         },
         {
           "name": "list",
-          "description": "🔘 List topics\n",
+          "description": "🔘 List topics\n  \n  Add --show-internal to also see the topics Kafka and Connect maintain\n  for themselves, such as the connect configs, offsets and status\n  topics.\n",
           "usage": "playground topic list [OPTIONS]",
           "options": [
             {
@@ -2798,7 +2798,7 @@
         },
         {
           "name": "describe",
-          "description": "🔬 Describe topic\n",
+          "description": "🔬 Describe topic\n  \n  Partitions, replicas, in-sync replicas and the configuration overrides\n  set on the topic. Where to look when records go to an unexpected\n  partition, or when a topic is not retaining what you expected.\n",
           "usage": "playground topic describe [OPTIONS]",
           "options": [
             {
@@ -2821,7 +2821,7 @@
         },
         {
           "name": "set-schema-compatibility",
-          "description": "🛡️ Change topic's schema compatibility\n",
+          "description": "🛡️ Change topic's schema compatibility\n  \n  Sets the compatibility level on the subjects of the topic, which is\n  what you relax to let an otherwise rejected schema evolution through,\n  for instance to reproduce a schema compatibility issue.\n",
           "usage": "playground topic set-schema-compatibility [OPTIONS]",
           "options": [
             {
@@ -2859,7 +2859,7 @@
         },
         {
           "name": "consume",
-          "description": "📥 Consume topic from beginning\n",
+          "description": "📥 Consume topic from beginning\n  \n  Reads from the earliest offset and deserialises records on its own:\n  avro, protobuf, json schema and plain formats are all detected from\n  the payload, so you do not have to pick a console consumer.\n  \n  🎓 Tip: --min-expected-messages turns it into an assertion. It waits\n  up to --timeout for that many records and fails otherwise, which is\n  how examples verify that data actually flowed.\n",
           "usage": "playground topic consume [OPTIONS]",
           "options": [
             {
@@ -2960,7 +2960,7 @@
         },
         {
           "name": "produce",
-          "description": "📤 Produce to a topic\n  \n  See video tutorial https://youtu.be/mbzHCewG_XE\n",
+          "description": "📤 Produce to a topic\n  \n  See video tutorial https://youtu.be/mbzHCewG_XE\n  \n  Generates records for you rather than making you write them. Give it\n  a schema, in avro, json schema or protobuf, and it registers the\n  schema and produces --nb-messages records of realistic random data.\n  The topic is created if it does not exist.\n  \n  Three ways to say what to send:\n  \n    a schema on stdin           generated data matching that schema\n    --value <predefined>        one of the bundled schemas\n    --forced-value '{...}'      your exact payload, %g being the index\n  \n  🎓 Tip: pipe the schema with a quoted heredoc, << 'EOF', so that the\n  %g placeholders survive the shell.\n",
           "usage": "playground topic produce [OPTIONS]",
           "options": [
             {
@@ -3231,7 +3231,7 @@
         },
         {
           "name": "create",
-          "description": "🆕 Create topic\n",
+          "description": "🆕 Create topic\n  \n  Only needed when you want something other than the defaults, since\n  'playground topic produce' creates the topic on the fly. Any extra\n  argument is passed through to kafka-topics --create, so --config works\n  as usual.\n",
           "usage": "playground topic create [OPTIONS] [--] [ARGUMENTS...]",
           "options": [
             {
@@ -3261,7 +3261,7 @@
         },
         {
           "name": "delete",
-          "description": "❌ Delete topic and associated schema/subject if applicable\n",
+          "description": "❌ Delete topic and associated schema/subject if applicable\n  \n  Also removes the key and value subjects from the schema registry,\n  which is what you usually want: a topic re-created with a leftover\n  subject keeps the old compatibility rules and the old schema history.\n  Keep them with --skip-delete-schema.\n  \n  A regex is accepted, matched in full, to clean up a family of topics\n  at once.\n",
           "usage": "playground topic delete [OPTIONS]",
           "options": [
             {
@@ -3291,7 +3291,7 @@
         },
         {
           "name": "alter",
-          "description": "🪛 Alter topic config\n",
+          "description": "🪛 Alter topic config\n  \n  Changes topic level settings on a live topic, which is how you\n  reproduce behaviour driven by configuration: a small\n  max.message.bytes to trigger a record too large error, a short\n  retention.ms to expire data, a compacted cleanup.policy, and so on.\n",
           "usage": "playground topic alter [OPTIONS] [--] [ARGUMENTS...]",
           "options": [
             {
@@ -3316,13 +3316,13 @@
     },
     {
       "name": "connector-plugin",
-      "description": "🔌 Connector-plugin commands\n",
+      "description": "🔌 Connector-plugin commands\n\nQuestions about connector plugins on Confluent Hub, answered without a\nrunning environment:\n\n  versions              every released version of a plugin\n  display-last-updated  what was published recently, by vendor\n  search-jar            which jars ship in it, and which class is where\n  sourcecode            open the source on GitHub\n\n🎓 Tip: search-jar answers \"is this class really in the plugin, and with\nwhich signature\", which is the question behind most NoSuchMethodError and\nClassNotFoundException reports.\n",
       "usage": "playground connector-plugin COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "search-jar",
-          "description": "☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/ Search for specific class and display method signatures\n",
+          "description": "☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/\n  \n  Downloads the plugin and lists the jars it ships. With --class it also\n  finds which jar contains that class and prints its method signatures\n  with javap.\n  \n  That answers the two questions a NoClassDefFoundError or a\n  NoSuchMethodError raises: is the class actually shipped, and does the\n  bundled version have the signature the code is calling. Run it again\n  with another --connector-tag to see when a dependency changed.\n",
           "usage": "playground connector-plugin search-jar [OPTIONS]",
           "options": [
             {
@@ -3351,7 +3351,7 @@
         },
         {
           "name": "versions",
-          "description": "💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n",
+          "description": "💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n  \n  What to feed to --connector-tag when you want to test another version,\n  and the way to find out which release you are behind on. The list is\n  cached; use --force-refresh after a brand new release.\n",
           "usage": "playground connector-plugin versions [OPTIONS]",
           "options": [
             {
@@ -3380,7 +3380,7 @@
         },
         {
           "name": "display-last-updated",
-          "description": "🆕 List last updated connector plugins from confluent hub https://www.confluent.io/hub/\n",
+          "description": "🆕 List last updated connector plugins from confluent hub https://www.confluent.io/hub/\n  \n  A quick way to see what has just been released on the Hub, which often\n  explains why an example that passed yesterday behaves differently today.\n",
           "usage": "playground connector-plugin display-last-updated [OPTIONS]",
           "options": [
             {
@@ -3468,13 +3468,13 @@
     },
     {
       "name": "connector",
-      "description": "🔗 Connector commands\n",
+      "description": "🔗 Connector commands\n\nEverything you would otherwise do with curl on the Connect REST API, with\nthe right host, port and credentials already figured out. The same\ncommands work whether the connector is self managed in the connect\ncontainer or fully managed in Confluent Cloud.\n\n🔍 Look at what is running\n  status                  is it RUNNING, and if not, the full stack trace\n  show-config             the configuration actually applied\n  logs                    tail connect logs, filtered and followed\n  show-lag                consumer lag of a sink, until it reaches zero\n  offsets get             where the connector is reading or writing\n\n🛠️ Change it\n  create-or-update        create it, or apply a new config, from stdin\n  update                  edit the running config in your editor\n  pause / resume / stop / restart / delete\n  offsets alter / reset   rewind or fast-forward a connector\n\n🧑‍🔬 Understand it\n  show-config-parameters  every parameter the plugin accepts\n  select-config           pick parameters interactively\n  versions                installed version vs latest on Confluent Hub\n  sourcecode              open the source on GitHub, or diff two versions\n  open-docs               open the Confluent documentation\n  snippets                ready-to-paste converter and dlq config\n\n🐞 Dig deeper\n  log-level               raise connect log level for this connector\n  enable-remote-debugging attach a java debugger to the connector code\n  translate               self managed config to fully managed config\n\nWithout --connector, commands apply to every connector of the example,\nwhich is usually what you want since most examples run only one.\n",
       "usage": "playground connector COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "status",
-          "description": "🧩 Show status of all connectors\n",
+          "description": "🧩 Show status of all connectors\n  \n  The connector state, the state of each task, and for a failed task the\n  full stack trace, which is the thing you actually need. Add --verbose to\n  see the underlying REST call.\n",
           "usage": "playground connector status [OPTIONS]",
           "options": [
             {
@@ -3497,19 +3497,19 @@
         },
         {
           "name": "oracle-cdc-xstream",
-          "description": "🅾️ Specific Oracle CDC Xstream commands\n  \n",
+          "description": "🅾️ Specific Oracle CDC Xstream commands\n  \n  With XStream, half of the interesting state lives in the database, not\n  in Connect. A connector that shows RUNNING while no change arrives is\n  almost always a capture process or an outbound server that is stuck on\n  the Oracle side, and the connect logs say nothing about it.\n  \n    debug             query the XStream views from the Oracle container\n    generate-report   run the official diagnostics script\n  \n  Only available when an oracle container is running.\n  \n",
           "usage": "playground connector oracle-cdc-xstream COMMAND",
           "options": []
         },
         {
           "name": "offsets",
-          "description": "💈 Handle source and sink connectors offsets\n  \n    Note: First-class offsets (KIP-875) is only available if CP > 7.6\n  \n",
+          "description": "💈 Handle source and sink connectors offsets\n  \n  Where a connector is in its data: for a source, the position it keeps in\n  the system it reads from (a SCN, a binlog position, a file offset); for a\n  sink, the consumer group offsets of the topics it consumes.\n  \n    get                          show them\n    alter                        edit them in your editor, then apply\n    reset                        start over from the beginning\n    get-offsets-request-status   did the last change go through\n  \n  This uses the first-class offsets API (KIP-875), so it needs CP 7.5 for\n  get and CP 7.6 for alter and reset. On older CP the playground falls back\n  to kafka-consumer-groups, which only covers sink connectors.\n  \n  The connector must not be running while its offsets change: alter and\n  reset stop it and resume it for you.\n  \n  🎓 Tip: a sink that reprocesses everything and a source that re-snapshots\n  are usually offsets problems, not connector problems. Look here first.\n  \n",
           "usage": "playground connector offsets COMMAND",
           "options": []
         },
         {
           "name": "plugins",
-          "description": "🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n",
+          "description": "🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n  \n  The first thing to check when a connector fails to be created with\n  \"Failed to find any class that implements Connector\": the class you\n  asked for is not in this list, so the plugin was not installed or not\n  picked up from the plugin path.\n",
           "usage": "playground connector plugins [OPTIONS]",
           "options": [
             {
@@ -3531,7 +3531,7 @@
         },
         {
           "name": "pause",
-          "description": "⏸️  Pause connector\n",
+          "description": "⏸️  Pause connector\n  \n  Tasks stop processing but stay assigned, and the configuration is kept.\n  Handy to let a backlog build up, or to freeze a connector while you\n  change the system it talks to. Resume with 'playground connector resume'.\n",
           "usage": "playground connector pause [OPTIONS]",
           "options": [
             {
@@ -3554,7 +3554,7 @@
         },
         {
           "name": "versions",
-          "description": "🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n  \n",
+          "description": "🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n  \n  Tells you in one line whether you are testing an outdated connector.\n  To move to the version reported as latest, re-run the example with\n  'playground update-version --connector-tag <version>'.\n  \n",
           "usage": "playground connector versions",
           "options": []
         },
@@ -3635,7 +3635,7 @@
         },
         {
           "name": "restart",
-          "description": "♻️  Restart connector\n",
+          "description": "♻️  Restart connector\n  \n  The usual way to recover a connector whose tasks are FAILED after you\n  fixed the cause. Use --task-id to restart a single failed task and leave\n  the healthy ones alone.\n",
           "usage": "playground connector restart [OPTIONS]",
           "options": [
             {
@@ -3666,7 +3666,7 @@
         },
         {
           "name": "stop",
-          "description": "🛑 Stop connector (only available if CP > 7.5)\n",
+          "description": "🛑 Stop connector (only available if CP > 7.5)\n  \n  Stronger than pause: the tasks are shut down and unassigned, so the\n  connector consumes no resources at all. This is the state in which\n  offsets can be altered or reset.\n",
           "usage": "playground connector stop [OPTIONS]",
           "options": [
             {
@@ -3689,7 +3689,7 @@
         },
         {
           "name": "resume",
-          "description": "⏯️  Resume connector\n",
+          "description": "⏯️  Resume connector\n  \n  Restarts processing after a pause or a stop, from the offsets where the\n  connector left off.\n",
           "usage": "playground connector resume [OPTIONS]",
           "options": [
             {
@@ -3712,7 +3712,7 @@
         },
         {
           "name": "delete",
-          "description": "🗑️  Delete connector\n",
+          "description": "🗑️  Delete connector\n  \n  Removes the connector and its configuration. Its offsets survive in the\n  Kafka internal topics, so re-creating it under the same name resumes\n  where it stopped rather than starting over.\n",
           "usage": "playground connector delete [OPTIONS]",
           "options": [
             {
@@ -3735,7 +3735,7 @@
         },
         {
           "name": "show-lag",
-          "description": "🐢 Show lag of sink connector\n  \n  It will run until all lag becomes 0 (press ctrl-c to exit)\n  \n",
+          "description": "🐢 Show lag of sink connector\n  \n  The consumer lag of the sink, refreshed every --interval seconds, so you\n  see whether it is catching up, standing still or falling behind. A lag\n  that does not move while the connector reports RUNNING means the tasks\n  are stuck rather than slow.\n  \n  It will run until all lag becomes 0 (press ctrl-c to exit)\n  \n",
           "usage": "playground connector show-lag [OPTIONS]",
           "options": [
             {
@@ -3809,7 +3809,7 @@
         },
         {
           "name": "show-config-parameters",
-          "description": "🔩 Show all possible configuration parameters of connector\n",
+          "description": "🔩 Show all possible configuration parameters of connector\n  \n  The full reference of what the plugin accepts, with types, defaults,\n  importance and documentation, read from the plugin itself rather than\n  from the website. Use it to check the exact spelling of a property, or\n  to discover the knob you need.\n  \n  Use --open to read it in your editor, --only-show-json to get it as\n  json.\n",
           "usage": "playground connector show-config-parameters [OPTIONS]",
           "options": [
             {
@@ -3868,7 +3868,7 @@
         },
         {
           "name": "display-metrics-api",
-          "description": "〽️ Display metrics api for fully managed connector, see https://api.telemetry.confluent.cloud/docs/descriptors/datasets/cloud\n",
+          "description": "〽️ Display metrics api for fully managed connector\n  \n  Queries the Confluent Cloud Telemetry API for the connector: a summary\n  with the connector and task statuses, then every metric that is not\n  zero. A fully managed connector gives you no jmx and little logging, so\n  this is how you tell whether it is actually doing work.\n  \n  See https://api.telemetry.confluent.cloud/docs/descriptors/datasets/cloud\n",
           "usage": "playground connector display-metrics-api [OPTIONS]",
           "options": [
             {
@@ -3899,7 +3899,7 @@
         },
         {
           "name": "display-metrics-api-with-grafana",
-          "description": "📊 Display metrics api for fully managed connector in Grafana dashboard\n",
+          "description": "📊 Display metrics api for fully managed connector in Grafana dashboard\n  \n  Same metrics as display-metrics-api, but plotted over time in Grafana\n  instead of printed once. Use it when you need to see a trend, a spike or\n  the moment throughput dropped, rather than the current value.\n  \n  It starts its own prometheus and grafana containers with a dashboard\n  already provisioned, so there is nothing to enable beforehand and it\n  does not interfere with the grafana of the example.\n  \n  Not supported for custom connectors.\n",
           "usage": "playground connector display-metrics-api-with-grafana [OPTIONS]",
           "options": [
             {
@@ -3914,7 +3914,7 @@
         },
         {
           "name": "select-config",
-          "description": "🗜️ Easily select config from all possible configuration parameters of connector\n  \n  🎓 Tip: use <tab> to select multiple config at once, then press <enter> to confirm\n",
+          "description": "🗜️ Easily select config from all possible configuration parameters of connector\n  \n  An fzf picker over everything the plugin accepts. Type a few letters,\n  pick the properties you want and they are printed, with their default\n  value when there is one, ready to paste into a connector configuration.\n  On macOS they are copied to your clipboard as well.\n  \n  Faster than show-config-parameters when you already know roughly what\n  you are after and just want the exact property names.\n  \n  🎓 Tip: use <tab> to select multiple config at once, then press <enter> to confirm\n",
           "usage": "playground connector select-config [OPTIONS]",
           "options": [
             {
@@ -3929,7 +3929,7 @@
         },
         {
           "name": "snippets",
-          "description": "🔌 useful snippets\n",
+          "description": "🔌 useful snippets\n  \n  Prints ready-to-paste blocks of connector configuration: the key and\n  value converter properties for a given format with --converter, and the\n  dead letter queue properties with --dlq. Saves you from looking up the\n  exact property names and the schema registry settings that go with them.\n",
           "usage": "playground connector snippets [OPTIONS]",
           "options": [
             {
@@ -3958,7 +3958,7 @@
         },
         {
           "name": "open-docs",
-          "description": "🧑‍🎓 Open connector documentation of currently running conector(s)\n",
+          "description": "🧑‍🎓 Open connector documentation of currently running connector(s)\n  \n  Works out the documentation page from the connector class actually\n  running and opens it, so you land on the right page for the right\n  connector without searching for it.\n  \n  Use --only-show-url to print the link instead, for pasting in a case.\n",
           "usage": "playground connector open-docs [OPTIONS]",
           "options": [
             {
@@ -3972,7 +3972,7 @@
         },
         {
           "name": "log-level",
-          "description": "🧬 Set connect log level\n  \n  🎓 Tip: it will also set io.confluent.kafka.schemaregistry.client.rest.RestService (to see schema registry rest requests) and org.apache.kafka.connect.runtime.TransformationChain (to see records before and after SMTs)\n          it will also set org.apache.kafka.connect.runtime.WorkerSinkTask for sink and org.apache.kafka.connect.runtime.WorkerSourceTask for source connectors.\n",
+          "description": "🧬 Set connect log level\n  \n  Raises the log level for the packages of the connector that is running,\n  without restarting anything. Set it to TRACE, reproduce the problem,\n  then read 'playground connector logs'.\n  \n  This is the difference between \"the task failed\" and seeing the request\n  that failed, the record that broke and what the SMT chain did to it.\n  \n  🎓 Tip: it will also set io.confluent.kafka.schemaregistry.client.rest.RestService (to see schema registry rest requests) and org.apache.kafka.connect.runtime.TransformationChain (to see records before and after SMTs)\n          it will also set org.apache.kafka.connect.runtime.WorkerSinkTask for sink and org.apache.kafka.connect.runtime.WorkerSourceTask for source connectors.\n",
           "usage": "playground connector log-level [OPTIONS]",
           "options": [
             {
@@ -4000,7 +4000,7 @@
         },
         {
           "name": "logs",
-          "description": "🕵️  Tail and follow connect logs\n  \n  For onprem connectors, this is basically a shortcut for \"playground container logs --container connect\", --connector flag is not relevant\n  \n  For Fully Managed connectors, limitations apply (see https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli)\n",
+          "description": "🕵️  Tail and follow connect logs\n  \n  The logs of the worker running your connector. Combine it with\n  'playground connector log-level' to get more than the stack trace, and\n  with --wait-for-log to block until a given line appears, which is how\n  examples assert that something happened.\n  \n  For onprem connectors, this is basically a shortcut for \"playground container logs --container connect\", --connector flag is not relevant\n  \n  For Fully Managed connectors, limitations apply (see https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli)\n",
           "usage": "playground connector logs [OPTIONS]",
           "options": [
             {
@@ -4039,7 +4039,7 @@
         },
         {
           "name": "open-ccloud-connector-in-browser",
-          "description": "🤖 Open Fully Managed connector in browser (Confluent Cloud dashboard)\n",
+          "description": "🤖 Open Fully Managed connector in browser (Confluent Cloud dashboard)\n  \n  Jumps straight to the connector's page in the Confluent Cloud console,\n  resolving its lcc id for you, so you do not have to hunt through the\n  environment and cluster menus.\n",
           "usage": "playground connector open-ccloud-connector-in-browser [OPTIONS]",
           "options": [
             {
@@ -4067,7 +4067,7 @@
         },
         {
           "name": "translate",
-          "description": "💱 Translate Self Managed Connector Plugin Configurations to Fully Managed Connector Plugin Configuration\n  \n  See https://docs.confluent.io/cloud/current/api.html#tag/Managed-Connector-Plugins-(connectv1)/operation/translateConnectv1ConnectorPlugin\n  \n  The connector example should be ran with --environment flag set to <ccloud>\n  \n",
+          "description": "💱 Translate Self Managed Connector Plugin Configurations to Fully Managed Connector Plugin Configuration\n  \n  Takes the configuration of the self managed connector that is running\n  and asks Confluent Cloud what the fully managed equivalent looks like.\n  Properties are renamed, some disappear, some have no equivalent at all,\n  and this tells you which before you promise a customer a migration.\n  \n  Only translates the configuration. To actually move the connector along\n  with its offsets, use 'playground connector connect-migration-utility'.\n  \n  See https://docs.confluent.io/cloud/current/api.html#tag/Managed-Connector-Plugins-(connectv1)/operation/translateConnectv1ConnectorPlugin\n  \n  The connector example should be ran with --environment flag set to <ccloud>\n  \n",
           "usage": "playground connector translate [OPTIONS]",
           "options": [
             {
@@ -4097,13 +4097,13 @@
         },
         {
           "name": "connect-migration-utility",
-          "description": "🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster\n  \n  The connector example should be ran with --environment flag set to <ccloud>\n  \n  See a full example at https://github.com/vdesabou/kafka-docker-playground/blob/master/ccloud/connect-migration-utility/README.md\n  \n",
+          "description": "🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster\n  \n  Takes a self managed connector running in the connect container and\n  recreates it as a fully managed connector in Confluent Cloud, keeping\n  its offsets so consumers do not replay or skip data. Two steps:\n  \n    discovery   read the local connectors and export their configurations\n    migrate     create the equivalent connectors on Confluent Cloud\n  \n  Run discovery first, migrate second. Use it to rehearse a customer's\n  migration and see what their configuration turns into.\n  \n  The connector example should be ran with --environment flag set to ccloud.\n  \n  See a full example at https://github.com/vdesabou/kafka-docker-playground/blob/master/ccloud/connect-migration-utility/README.md\n  \n",
           "usage": "playground connector connect-migration-utility COMMAND",
           "options": []
         },
         {
           "name": "create-or-update",
-          "description": "🧑‍🎨  Create or update connector\n",
+          "description": "🧑‍🎨  Create or update connector\n  \n  The command every example uses to deploy its connector. The json config\n  is read from stdin, usually as a heredoc, so it stays readable in the\n  script. If the connector already exists it is updated in place, which\n  makes the command safe to re-run while you iterate on a configuration.\n  \n  The command waits for the connector to be RUNNING and fails with the\n  error if it is not, so a broken config stops the example immediately\n  instead of failing silently later.\n  \n  🎓 Tip: add --validate to have the config checked by the plugin before\n  it is deployed, which reports every invalid property at once.\n",
           "usage": "playground connector create-or-update [JSON] [OPTIONS]",
           "options": [
             {
@@ -4200,7 +4200,7 @@
         },
         {
           "name": "update",
-          "description": "🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.\n",
+          "description": "🛠️ Update connector configuration by opening current connector config in text editor set with playground config editor <editor> (default is code). Once file is saved, the new configuration is updated.\n  \n  The quickest loop to try a configuration change: edit, save, close, and\n  the connector is updated. Nothing is applied if you close the file\n  without saving.\n",
           "usage": "playground connector update [OPTIONS]",
           "options": [
             {
@@ -4217,19 +4217,19 @@
     },
     {
       "name": "oracle-cdc-xstream",
-      "description": "🅾️ Specific Oracle CDC Xstream commands\n",
+      "description": "🅾️ Specific Oracle CDC Xstream commands\n\nWith XStream, half of the interesting state lives in the database, not\nin Connect. A connector that shows RUNNING while no change arrives is\nalmost always a capture process or an outbound server that is stuck on\nthe Oracle side, and the connect logs say nothing about it.\n\n  debug             query the XStream views from the Oracle container\n  generate-report   run the official diagnostics script\n\nOnly available when an oracle container is running.\n",
       "usage": "playground connector oracle-cdc-xstream COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "generate-report",
-          "description": "⚙️ Generate and open oracle cdc xstream connector diagnostics, see https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script\n  \n",
+          "description": "⚙️ Generate and open oracle cdc xstream connector diagnostics\n  \n  Runs the diagnostics script Confluent support asks for, and opens the\n  result. This is the file to attach to a case rather than pasting\n  individual query outputs.\n  \n  See https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script\n  \n",
           "usage": "playground connector oracle-cdc-xstream generate-report",
           "options": []
         },
         {
           "name": "debug",
-          "description": "🐞 Execute various SQL commands to debug xstream components\n  \n",
+          "description": "🐞 Execute various SQL commands to debug xstream components\n  \n  Runs a series of queries against the XStream views inside the oracle\n  container and prints the results, with a link to the Oracle\n  documentation of each view:\n  \n    capture processes   their status, SCN values and latencies\n    redo logs           the files each capture process still needs\n    outbound server     general state, current transaction, low position\n    parameters          capture and apply settings actually in effect\n    rules               the rules the XStream components are using\n  \n  Read it top to bottom when a connector is RUNNING but idle: a capture\n  process not in CAPTURING CHANGES, or an SCN that never moves, tells\n  you the problem is in the database and not in the connector.\n  \n",
           "usage": "playground connector oracle-cdc-xstream debug",
           "options": []
         }
@@ -4237,13 +4237,13 @@
     },
     {
       "name": "offsets",
-      "description": "💈 Handle source and sink connectors offsets\n\n  Note: First-class offsets (KIP-875) is only available if CP > 7.6\n",
+      "description": "💈 Handle source and sink connectors offsets\n\nWhere a connector is in its data: for a source, the position it keeps in\nthe system it reads from (a SCN, a binlog position, a file offset); for a\nsink, the consumer group offsets of the topics it consumes.\n\n  get                          show them\n  alter                        edit them in your editor, then apply\n  reset                        start over from the beginning\n  get-offsets-request-status   did the last change go through\n\nThis uses the first-class offsets API (KIP-875), so it needs CP 7.5 for\nget and CP 7.6 for alter and reset. On older CP the playground falls back\nto kafka-consumer-groups, which only covers sink connectors.\n\nThe connector must not be running while its offsets change: alter and\nreset stop it and resume it for you.\n\n🎓 Tip: a sink that reprocesses everything and a source that re-snapshots\nare usually offsets problems, not connector problems. Look here first.\n",
       "usage": "playground connector offsets COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "get",
-          "description": "🏹 Get current offsets for source and sink connectors\n  \n  ⚠️ Available for ccloud source connectors (see https://docs.confluent.io/cloud/current/connectors/offsets.html)\n  \n",
+          "description": "🏹 Get current offsets for source and sink connectors\n  \n  Prints the offsets json returned by the Connect REST API, or the\n  Confluent Cloud offsets API for a fully managed connector. For a sink\n  on CP older than 7.5, it falls back to kafka-consumer-groups\n  --describe on the connect-<connector> consumer group.\n  \n  Run it before and after alter or reset to check what really moved.\n  \n  See https://docs.confluent.io/cloud/current/connectors/offsets.html\n  \n",
           "usage": "playground connector offsets get [OPTIONS]",
           "options": [
             {
@@ -4266,7 +4266,7 @@
         },
         {
           "name": "reset",
-          "description": "🆕 Reset offsets for source and sink connectors\n  \n  ⚠️ Available for ccloud connectors (see https://docs.confluent.io/cloud/current/connectors/offsets.html)\n  \n",
+          "description": "🆕 Reset offsets for source and sink connectors\n  \n  Wipes the recorded offsets so the connector starts over: a source\n  re-reads its origin from the beginning, a sink re-consumes its topics\n  from the earliest offset. The connector is stopped and resumed around\n  the reset.\n  \n  ⚠️ Everything is reprocessed, so expect duplicates downstream unless\n  the target is idempotent. Use alter when you only want to move back\n  to a specific point.\n  \n  See https://docs.confluent.io/cloud/current/connectors/offsets.html\n  \n",
           "usage": "playground connector offsets reset [OPTIONS]",
           "options": [
             {
@@ -4289,7 +4289,7 @@
         },
         {
           "name": "alter",
-          "description": "⛏️ Alter offsets for source and sink connectors\n  \n  ⚠️ Available for ccloud connectors (see https://docs.confluent.io/cloud/current/connectors/offsets.html)\n  \n",
+          "description": "⛏️ Alter offsets for source and sink connectors\n  \n  Fetches the current offsets, opens them in your editor, and applies\n  what you saved once you close the file. That is how you rewind a sink\n  to a given offset, or move a source back to an earlier position,\n  without replaying everything.\n  \n  The connector is stopped before the change and resumed after it. On\n  Confluent Cloud the change is asynchronous, so the command then polls\n  get-offsets-request-status and prints the resulting offsets.\n  \n  See https://docs.confluent.io/cloud/current/connectors/offsets.html\n  \n",
           "usage": "playground connector offsets alter [OPTIONS]",
           "options": [
             {
@@ -4312,7 +4312,7 @@
         },
         {
           "name": "get-offsets-request-status",
-          "description": "👁️‍🗨️ Get the status of the previous offset request\n  \n  ⚠️ Available for ccloud source connectors (see https://docs.confluent.io/cloud/current/connectors/offsets.html)\n  \n",
+          "description": "👁️‍🗨️ Get the status of the previous offset request\n  \n  On Confluent Cloud, alter and reset only queue a request. This shows\n  whether it was APPLIED or FAILED, and the error when it failed, which\n  is the only place the reason shows up.\n  \n  Only for fully managed and custom connectors, self managed connectors\n  apply the change synchronously.\n  \n  See https://docs.confluent.io/cloud/current/connectors/offsets.html\n  \n",
           "usage": "playground connector offsets get-offsets-request-status [OPTIONS]",
           "options": [
             {
@@ -4337,7 +4337,7 @@
     },
     {
       "name": "connect-migration-utility",
-      "description": "🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster\n\nThe connector example should be ran with --environment flag set to <ccloud>\n\nSee a full example at https://github.com/vdesabou/kafka-docker-playground/blob/master/ccloud/connect-migration-utility/README.md\n",
+      "description": "🧩 Run Kafka Connector Migration Utility (see https://github.com/confluentinc/connect-migration-utility/) on running connect cluster\n\nTakes a self managed connector running in the connect container and\nrecreates it as a fully managed connector in Confluent Cloud, keeping\nits offsets so consumers do not replay or skip data. Two steps:\n\n  discovery   read the local connectors and export their configurations\n  migrate     create the equivalent connectors on Confluent Cloud\n\nRun discovery first, migrate second. Use it to rehearse a customer's\nmigration and see what their configuration turns into.\n\nThe connector example should be ran with --environment flag set to ccloud.\n\nSee a full example at https://github.com/vdesabou/kafka-docker-playground/blob/master/ccloud/connect-migration-utility/README.md\n",
       "usage": "playground connector connect-migration-utility COMMAND",
       "options": [],
       "subcommands": [
@@ -4381,13 +4381,13 @@
     },
     {
       "name": "ec2",
-      "description": "✨ Create and manage AWS EC2 instances (using Cloud Formation) to run kafka-docker-playground\n\n🪄 Open EC2 instances directly in Visual Studio code using Remote Development (over SSH)\n",
+      "description": "✨ Create and manage AWS EC2 instances (using Cloud Formation) to run kafka-docker-playground\n\n🪄 Open EC2 instances directly in Visual Studio code using Remote Development (over SSH)\n\nRun the playground on a remote machine instead of your laptop, which is\nwhat you want for an example that needs far more CPU or memory than you\nhave, or one that must run for hours.\n\n  create              provision the instance with Cloud Formation\n  open                open it in VS Code over SSH, as if it were local\n  push-secrets        send your credentials to it, over ssh\n  sync-repro-folder   keep reproduction-models in step, both directions\n  list / status / start / stop / delete\n\n💰 The instance is billed while it runs. Use 'playground ec2 stop' when\n   you pause, and 'playground ec2 delete' when you are done;\n   'playground status' reminds you when one is still up.\n\n🔐 A pem file is created at the root of the repository when the instance\n   is created. Back it up, it is the only way in, and only your current\n   ip address is allowed to connect.\n",
       "usage": "playground ec2 COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "create",
-          "description": "👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation\n  \n  🔐 AWS EC2 pem file for the ec2 instance will be created and stored in root folder (make sure to do backup)\n  \n  🌍 Region being used will be the one set in your environment (`aws configure get region`) either by AWS_REGION environment variable or ~/.aws/config\n",
+          "description": "👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation\n  \n  One command does the whole thing: a Cloud Formation stack, an instance\n  with docker and the playground repository already installed, a key pair,\n  a security group opened to your ip only. Your credentials are pushed to\n  it over ssh, then VS Code opens on it.\n  \n  Creation takes a few minutes, and Cloud Formation keeps installing in the\n  background for about ten more. Follow output.log in the root folder of\n  the instance to see where it is.\n  \n  🔐 AWS EC2 pem file for the ec2 instance will be created and stored in the\n  root folder of the repository (make sure to do a backup, it is the only\n  way in).\n  \n  🌍 Region being used will be the one set in your environment\n  (aws configure get region) either by the AWS_REGION environment variable\n  or ~/.aws/config.\n  \n  💰 The instance is billed from now on. Stop it when you pause and delete\n  it when you are done.\n  \n  🐚 Use zsh on the instance to have everything working out of the box.\n",
           "usage": "playground ec2 create [OPTIONS]",
           "options": [
             {
@@ -4409,13 +4409,13 @@
                 "--suffix"
               ],
               "argument": "SUFFIX",
-              "description": "📮 suffix to add to instance name pg-${username}-${suffix} \n\nif not set, default is pg-${username}-${6-chars-random-string}\n"
+              "description": "📮 suffix to add to instance name, giving pg-<username>-<suffix>\n\nif not set, the name is pg-<username>-<6 random characters>\n\n🎓 Tip: set it to the case number you are working on, so you can tell\nyour instances apart in 'playground ec2 list'.\n"
             }
           ]
         },
         {
           "name": "delete",
-          "description": "❌ Delete an EC2 instance created with Cloud Formation\n  \n  WARNING:  This will delete your cloud formation and associated EC2 instance\n",
+          "description": "❌ Delete an EC2 instance created with Cloud Formation\n  \n  Deletes the Cloud Formation stack, which takes the instance, its volume\n  and its security group with it, then removes the key pair on AWS and the\n  local pem file. This is what stops the billing for good, unlike stop\n  which only pauses it.\n  \n  ⚠️ Everything on the instance is lost, including any reproduction model\n  you have not synced back with 'playground ec2 sync-repro-folder'.\n  \n  Without --instance it applies to all your instances, and asks you to\n  confirm first.\n",
           "usage": "playground ec2 delete [OPTIONS]",
           "options": [
             {
@@ -4430,7 +4430,7 @@
         },
         {
           "name": "open",
-          "description": "👨‍💻 Open an EC2 instance using Visual Studio code\n  \n  🔐 Only your current ip address will be allowed to connect\n",
+          "description": "👨‍💻 Open an EC2 instance using Visual Studio code\n  \n  Opens a VS Code window on the instance over ssh, using Remote\n  Development. The editor, the terminal and the playground CLI all run\n  there, so it feels like working locally while the containers use the\n  remote machine's CPU and memory.\n  \n  The security group is refreshed with your current ip on the way, so this\n  is also the command to run after your ip changed and ssh stopped working.\n  \n  🔐 Only your current ip address will be allowed to connect.\n",
           "usage": "playground ec2 open [OPTIONS]",
           "options": [
             {
@@ -4452,13 +4452,13 @@
         },
         {
           "name": "list",
-          "description": "🔘 List all EC2 instance\n",
+          "description": "🔘 List all EC2 instance\n  \n  Your playground instances and their state. Anything not stopped is\n  costing money.\n",
           "usage": "playground ec2 list",
           "options": []
         },
         {
           "name": "stop",
-          "description": "🔴 Stop an EC2 instance\n",
+          "description": "🔴 Stop an EC2 instance\n  \n  Shuts the instance down while keeping its disk, so you stop paying for\n  compute and find your work again on 'playground ec2 start'.\n",
           "usage": "playground ec2 stop [OPTIONS]",
           "options": [
             {
@@ -4473,7 +4473,7 @@
         },
         {
           "name": "start",
-          "description": "🟢 Start an EC2 instance\n",
+          "description": "🟢 Start an EC2 instance\n  \n  Boots an instance stopped earlier. Its public address changes, so use\n  'playground ec2 open' rather than a bookmarked ssh command.\n",
           "usage": "playground ec2 start [OPTIONS]",
           "options": [
             {
@@ -4488,7 +4488,7 @@
         },
         {
           "name": "sync-repro-folder",
-          "description": "↔️ Synchronize reproduction-models folder bewteen local and ec2 instance\n  \n  Note: rsync needs to be installed\n  \n",
+          "description": "↔️ Synchronize reproduction-models folder between local and ec2 instance\n  \n  The reproduction models you write are the only thing on the instance\n  worth keeping, and deleting the instance destroys them. These two\n  commands copy that folder in one direction or the other with rsync.\n  \n    local-to-ec2   push what you wrote locally, before running it there\n    ec2-to-local   pull back what you wrote there, before deleting it\n  \n  'playground ec2 create' runs local-to-ec2 for you, and\n  'playground ec2 open --enable-sync-repro-folder' does it again each\n  time you open the instance.\n  \n  ⚠️ Get into the habit of running ec2-to-local before\n  'playground ec2 delete', nothing else brings those files back.\n  \n  Note: rsync needs to be installed\n  \n",
           "usage": "playground ec2 sync-repro-folder COMMAND",
           "options": []
         },
@@ -4525,13 +4525,13 @@
     },
     {
       "name": "sync-repro-folder",
-      "description": "↔️ Synchronize reproduction-models folder bewteen local and ec2 instance\n\nNote: rsync needs to be installed\n",
+      "description": "↔️ Synchronize reproduction-models folder between local and ec2 instance\n\nThe reproduction models you write are the only thing on the instance\nworth keeping, and deleting the instance destroys them. These two\ncommands copy that folder in one direction or the other with rsync.\n\n  local-to-ec2   push what you wrote locally, before running it there\n  ec2-to-local   pull back what you wrote there, before deleting it\n\n'playground ec2 create' runs local-to-ec2 for you, and\n'playground ec2 open --enable-sync-repro-folder' does it again each\ntime you open the instance.\n\n⚠️ Get into the habit of running ec2-to-local before\n'playground ec2 delete', nothing else brings those files back.\n\nNote: rsync needs to be installed\n",
       "usage": "playground ec2 sync-repro-folder COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "local-to-ec2",
-          "description": "👉 Sync local reproduction-models folder to ec2 instance\n",
+          "description": "👉 Sync local reproduction-models folder to ec2 instance\n  \n  Copies your local reproduction-models to the instance, so you can run\n  there a model you started writing on your laptop.\n",
           "usage": "playground ec2 sync-repro-folder local-to-ec2 [OPTIONS]",
           "options": [
             {
@@ -4546,7 +4546,7 @@
         },
         {
           "name": "ec2-to-local",
-          "description": "👈 Sync ec2 instance reproduction-models folder to local\n",
+          "description": "👈 Sync ec2 instance reproduction-models folder to local\n  \n  Brings back the models you wrote on the instance. Run it before\n  'playground ec2 delete', otherwise they go with the instance.\n",
           "usage": "playground ec2 sync-repro-folder ec2-to-local [OPTIONS]",
           "options": [
             {
