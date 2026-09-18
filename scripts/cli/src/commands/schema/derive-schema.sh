@@ -94,7 +94,7 @@ docker run -i --rm -v "${tmp_dir}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v 
 if [ $? != 0 ]
 then
     logerror "❌ error while calling derive-schema"
-    tail -500 /tmp/result.log
+    tail -100 /tmp/result.log
     exit 1
 fi
 

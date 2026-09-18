@@ -770,7 +770,7 @@ do
     if [ \$? != 0 ]
     then
         logerror "❌ failed to build java component $component"
-        tail -500 /tmp/result.log
+        tail -100 /tmp/result.log
         exit 1
     fi
     set -e
@@ -967,7 +967,7 @@ do
     if [ \$? != 0 ]
     then
         logerror "❌ failed to build java component $component"
-        tail -500 /tmp/result.log
+        tail -100 /tmp/result.log
         exit 1
     fi
     set -e

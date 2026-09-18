@@ -48,7 +48,7 @@ do
     if [ $? != 0 ]
     then
         logerror "❌ failed to build java component "
-        tail -500 /tmp/result.log
+        tail -100 /tmp/result.log
         exit 1
     fi
     cp "${PWD}/${component}"/target/awscredentialsprovider-1.0.0-jar-with-dependencies.jar ../../confluent-hub/confluentinc-kafka-connect-aws-lambda/lib/awscredentialsprovider-1.0.0-jar-with-dependencies.jar

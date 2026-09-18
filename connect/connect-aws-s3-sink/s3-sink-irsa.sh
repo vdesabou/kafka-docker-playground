@@ -46,7 +46,7 @@ docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${
 if [ $? != 0 ]
 then
     logerror "Failed to build java component"
-    tail -500 /tmp/result.log
+    tail -100 /tmp/result.log
     exit 1
 fi
 set -e

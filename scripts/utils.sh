@@ -1094,7 +1094,7 @@ then
           if ! install_connector_with_retry "$install_command"
           then
               logerror "❌ failed to install connector $owner/$name:$CONNECTOR_VERSION"
-              tail -500 /tmp/result.log
+              tail -100 /tmp/result.log
               exit 1
           else
             grep "Download" /tmp/result.log
@@ -1249,7 +1249,7 @@ else
               if ! install_connector_with_retry "$install_command"
               then
                   logerror "❌ failed to install connector from zip $connector_zip_name"
-                  tail -500 /tmp/result.log
+                  tail -100 /tmp/result.log
                   exit 1
               else
                 grep "Installing" /tmp/result.log
@@ -1288,7 +1288,7 @@ else
             if ! install_connector_with_retry "$install_command"
             then
                 logerror "❌ failed to install connector $owner/$name:$version_to_get_from_hub"
-                tail -500 /tmp/result.log
+                tail -100 /tmp/result.log
                 exit 1
             else
               grep "Download" /tmp/result.log
