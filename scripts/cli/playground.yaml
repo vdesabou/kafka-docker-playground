@@ -106,11 +106,84 @@ subcommands:
     description: | 
         🔐 Credentials required by examples
         
-        Stored outside the repository, in ~/.config/kafka-docker-playground, so that
-        they survive 'git clean -fdx' and can never be committed by mistake.
+        Examples declare the environment variables they need. Store them once here
+        and 'playground run' loads them automatically, picking only the ones the
+        example at hand declares:
         
-        🎓 Tip: an exported environment variable always wins over the store, so
-        'export FOO=bar' and 'source secret.properties' keep working.
+          playground secrets set SALESFORCE_PASSWORD    🔐 store it, prompted
+          playground secrets check -f <example>         ✅ what is still missing
+          playground run -f <example>                   🚀 loaded for you
+        
+        📂 Where it is stored
+        
+        In ~/.config/kafka-docker-playground, never in the repository, so it
+        survives 'git clean -fdx' and can never be committed by mistake:
+        
+          secrets.ini  0600  credentials, as a reference to the backend
+                             ('op://...', 'keychain:...'), not as a value
+          env.ini      0644  plain variables, in clear text
+        
+        A name containing PASSWORD, PASSPHRASE, SECRET, TOKEN, KEY, CREDS, PWD or
+        LICENSE is treated as a credential, anything else as a plain variable
+        (GCP_PROJECT, AWS_REGION, an account name, a URL). Use 'secrets set
+        --secret' or '--plain' to decide yourself.
+        
+        🏦 Backends
+        
+        Where the credential values themselves are kept:
+        
+          keychain     macOS Keychain
+          secret-tool  freedesktop secret service (GNOME Keyring, KWallet)
+          pass         the standard unix password manager
+          op           1Password, through the 'op' CLI
+          vault        HashiCorp Vault
+          file         clear text in secrets.ini, no encryption, last resort
+        
+        With no configuration, the first available of keychain (macOS), then
+        secret-tool, then pass is used, and file is the fallback. op and vault
+        are never picked automatically, so that an example never blocks on an
+        unlock prompt. Choose one explicitly with:
+        
+          playground secrets backend op
+        
+        op creates and rotates the items it stores. vault is reference-only:
+        create the secret in Vault, then point a variable at it. Any backend can
+        also reuse a secret you already have, instead of storing a new one:
+        
+          playground secrets link SALESFORCE_PASSWORD op://Private/sfdc/password
+        
+        🗂️ Profiles
+        
+        A profile is an independent set of variables, typically one per customer
+        or per support case, so last week's credentials never leak into this
+        week's reproduction model:
+        
+          playground secrets profile customer-123456    🗂️ switch to it
+          playground secrets profile                    📋 list them, with counts
+          playground secrets list --profile default     🎯 use one just this once
+        
+        Lookup falls back to the 'default' profile, so what is shared between all
+        of them (CONFLUENT_LICENSE, NGROK_AUTH_TOKEN) is stored there once.
+        
+        🔍 Resolution order
+        
+          1. an exported environment variable, which always wins
+          2. the active profile
+          3. the default profile
+        
+        So 'export FOO=bar' and 'source secret.properties' keep working, and
+        'playground secrets list' flags what the environment overrides.
+        
+        ⚙️ Configuration
+        
+          playground config set secrets.backend <backend>      🏦 see above
+          playground config set secrets.profile <name>         🗂️ active profile
+          playground config set secrets.op-vault <vault>       🔑 1Password vault
+          playground config set secrets.github-repo OWNER/REPO 🐙 sync CI secrets
+        
+        PLAYGROUND_SECRETS_DIR, PLAYGROUND_SECRETS_BACKEND,
+        PLAYGROUND_SECRETS_PROFILE and PLAYGROUND_OP_VAULT override them for a
+        single command.
     usage: playground secrets COMMAND
     options: []
     subcommands:
@@ -124,6 +197,13 @@ subcommands:
             A name that looks like a credential (PASSWORD, SECRET, TOKEN, KEY, CREDS,
             PWD, PASSPHRASE, LICENSE) goes to the secure backend, anything else is
             kept as a plain variable. Use --secret or --plain to decide yourself.
+            
+            Run again on a name already stored to rotate it. The value is then
+            updated where the existing reference points, which is not necessarily
+            the backend currently configured.
+            
+            🎓 Tip: set the config key secrets.github-repo and every value stored
+            here is also pushed to that repository's GitHub Actions secrets.
         usage: playground secrets set NAME [OPTIONS]
         options:
         - names:
@@ -165,6 +245,9 @@ subcommands:
       - name: get
         description: | 
           🔍 Show a stored credential (masked unless --reveal is used)
+            
+            Resolved the same way an example does: an exported environment variable
+            first, then the active profile, then the default one.
         usage: playground secrets get NAME [OPTIONS]
         options:
         - names:
@@ -184,6 +267,12 @@ subcommands:
       - name: unset
         description: | 
           🗑️ Remove a stored credential
+            
+            The value goes too, not only the reference: the keychain entry is
+            deleted, the 1Password item is archived.
+            
+            A secret pointed at with 'playground secrets link' is left untouched,
+            since it belongs to you and not to the playground.
         usage: playground secrets unset NAME [OPTIONS]
         options:
         - names:
@@ -198,7 +287,15 @@ subcommands:
             
             Values are never printed: secrets are shown as a masked fingerprint
             (last 4 characters and a sha256 prefix), which is enough to tell whether
-            it is the token you rotated yesterday.
+            it is the token you rotated yesterday. Plain variables are shown as is.
+            
+            Two markers to look out for:
+            
+              ⚠️ overridden by the environment   an exported variable is what the
+                                                example will actually get
+              ❌ cannot be resolved              the reference is there but the
+                                                backend gave nothing back, usually
+                                                a locked session or a deleted item
         usage: playground secrets list [OPTIONS]
         options:
         - names:
@@ -219,6 +316,14 @@ subcommands:
             
             The store then only contains a reference, which is safe to back up, sync
             between machines, or share with your team.
+            
+            Use it to reuse a secret that already exists, rather than storing a
+            second copy of it, and for the vault backend which playground never
+            writes to. The reference is resolved right away, so a typo or a locked
+            session is reported on the spot.
+            
+            'playground secrets unset' drops the reference but leaves the secret
+            itself alone.
         usage: playground secrets link NAME REFERENCE [OPTIONS]
         options:
         - names:
@@ -230,6 +335,16 @@ subcommands:
       - name: check
         description: | 
           ✅ Show what an example needs, and what is missing
+            
+            One line per variable, saying where the value comes from (environment,
+            or which backend and which reference) or how to store it. AWS and GCP
+            examples also get their ~/.aws/credentials and keyfile.json checked.
+            
+            The list comes from the example itself: every variable it declares with
+            the standard 'Export it as environment variable or pass it as argument'
+            error string, which is also what 'playground run' loads.
+            
+            Exits 1 when something is missing.
             
             🎓 Tip: run it before a long example, it fails in a second instead of
             several minutes into the environment startup.
@@ -262,7 +377,9 @@ subcommands:
             --file it uses the last example ran, like 'playground secrets check'.
             
             The shell code goes to stdout and everything else to stderr, so nothing
-            unexpected ever gets executed.
+            unexpected ever gets executed. Running it straight in a terminal is
+            refused rather than printing every value on screen, use --force for
+            that.
             
             🎓 Tip: put a shortcut in your shell profile:
             
@@ -298,7 +415,12 @@ subcommands:
         description: | 
           📥 Import an existing secret.properties / variable.properties file
             
-            Each KEY=value line is classified and stored in the right place.
+            Each KEY=value line is classified and stored in the right place. A
+            leading 'export', comments, blank lines and one level of surrounding
+            quotes are handled; anything that is not an uppercase variable name is
+            skipped and reported.
+            
+            This is the one step migration away from 'source secret.properties'.
         usage: playground secrets import [OPTIONS]
         options:
         - names:
@@ -345,6 +467,12 @@ subcommands:
           📤 Write every credential of a profile to a file, in clear text
             
             ❗ Only for the rare case where a tool needs a properties file ❗
+            
+            The file is written with mode 0600, and a path inside the repository is
+            refused: it would be one 'git add -A' away from being committed.
+            
+            🎓 Tip: to feed a shell instead of a file, 'playground secrets env' is
+            what you want, it exports without writing anything to disk.
         usage: playground secrets export [OPTIONS]
         options:
         - names:
@@ -380,6 +508,14 @@ subcommands:
       - name: edit
         description: | 
           ✏️ Open the store in your editor
+            
+            secrets.ini by default, env.ini with --plain. Unless the backend is
+            file, secrets.ini holds references and not values, so this is where you
+            rename a variable or move one between profiles, not where you read a
+            password.
+            
+            Uses the config key editor, then the EDITOR environment variable, then
+            vi.
         usage: playground secrets edit [OPTIONS]
         options:
         - names:
@@ -392,17 +528,42 @@ subcommands:
         description: | 
           🏦 Show or change where secrets are kept
             
-            keychain (macOS), secret-tool (Linux), pass, op (1Password), vault
-            (HashiCorp) or file.
+              keychain     macOS Keychain, through 'security'
+              secret-tool  freedesktop secret service (GNOME Keyring, KWallet)
+              pass         the standard unix password manager
+              op           1Password, through the 'op' CLI
+              vault        HashiCorp Vault, through the 'vault' CLI
+              file         clear text in secrets.ini, no encryption, last resort
             
-            vault is reference-only: create the secret there, then use
-            'playground secrets link'. op creates the item for you, but can also
-            point at an existing one with 'playground secrets link'.
+            With no configuration, the first available of keychain (macOS),
+            secret-tool and pass is used, and file is the fallback. op and vault
+            have to be chosen here, so that an example never blocks on an unlock
+            prompt halfway through.
+            
+            Only new values are affected: what is already stored keeps being read
+            from, and rotated in, the backend it went to.
+            
+            vault is reference-only, playground never writes to it: create the
+            secret there, then use 'playground secrets link'. op creates the item
+            for you, named kdp-<profile>-<NAME> in the vault set by
+            'playground config set secrets.op-vault' (default: Private), and can
+            also point at an existing one with 'playground secrets link'.
         usage: playground secrets backend [BACKEND]
         options: []
       - name: profile
         description: | 
           🗂️ Show or switch the active profile
+            
+            A profile is an independent set of variables. Without an argument it
+            lists them all with their variable count, and marks the active one.
+            
+            A variable missing from the active profile is looked up in 'default',
+            so what is shared between all of them (CONFLUENT_LICENSE,
+            NGROK_AUTH_TOKEN) only needs to be stored once, there.
+            
+            Switching is persistent, it writes the config key secrets.profile. To
+            use another one just for a command, every secrets command takes
+            --profile.
             
             🎓 Tip: use one profile per support case, so last week's customer
             credentials never leak into this week's reproduction model.
@@ -411,6 +572,15 @@ subcommands:
       - name: scan
         description: | 
           🔎 Look for stored credentials in clear text in the repository
+            
+            Resolves every credential of the profile and greps the working tree,
+            tracked and untracked files alike, for the values themselves. Catches
+            the password pasted into a reproduction model, which no pattern based
+            scanner would recognise.
+            
+            Plain variables are skipped, a region or a bucket name is expected to
+            appear in an example, and so are values shorter than 8 characters,
+            which would match everywhere. Exits 1 as soon as one is found.
             
             🎓 Tip: wire it as a pre-commit hook with
             'playground secrets scan --staged'

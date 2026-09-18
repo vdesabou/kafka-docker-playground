@@ -1989,7 +1989,7 @@ playground_config_check_and_update_repo_version_usage() {
 playground_secrets_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground secrets\n\n"
-    printf "  🔐 Credentials required by examples\n  \n  Stored outside the repository, in ~/.config/kafka-docker-playground, so that\n  they survive 'git clean -fdx' and can never be committed by mistake.\n  \n  🎓 Tip: an exported environment variable always wins over the store, so\n  'export FOO=bar' and 'source secret.properties' keep working.\n\n"
+    printf "  🔐 Credentials required by examples\n  \n  Examples declare the environment variables they need. Store them once here\n  and 'playground run' loads them automatically, picking only the ones the\n  example at hand declares:\n  \n    playground secrets set SALESFORCE_PASSWORD    🔐 store it, prompted\n    playground secrets check -f <example>         ✅ what is still missing\n    playground run -f <example>                   🚀 loaded for you\n  \n  📂 Where it is stored\n  \n  In ~/.config/kafka-docker-playground, never in the repository, so it\n  survives 'git clean -fdx' and can never be committed by mistake:\n  \n    secrets.ini  0600  credentials, as a reference to the backend\n                       ('op://...', 'keychain:...'), not as a value\n    env.ini      0644  plain variables, in clear text\n  \n  A name containing PASSWORD, PASSPHRASE, SECRET, TOKEN, KEY, CREDS, PWD or\n  LICENSE is treated as a credential, anything else as a plain variable\n  (GCP_PROJECT, AWS_REGION, an account name, a URL). Use 'secrets set\n  --secret' or '--plain' to decide yourself.\n  \n  🏦 Backends\n  \n  Where the credential values themselves are kept:\n  \n    keychain     macOS Keychain\n    secret-tool  freedesktop secret service (GNOME Keyring, KWallet)\n    pass         the standard unix password manager\n    op           1Password, through the 'op' CLI\n    vault        HashiCorp Vault\n    file         clear text in secrets.ini, no encryption, last resort\n  \n  With no configuration, the first available of keychain (macOS), then\n  secret-tool, then pass is used, and file is the fallback. op and vault\n  are never picked automatically, so that an example never blocks on an\n  unlock prompt. Choose one explicitly with:\n  \n    playground secrets backend op\n  \n  op creates and rotates the items it stores. vault is reference-only:\n  create the secret in Vault, then point a variable at it. Any backend can\n  also reuse a secret you already have, instead of storing a new one:\n  \n    playground secrets link SALESFORCE_PASSWORD op://Private/sfdc/password\n  \n  🗂️ Profiles\n  \n  A profile is an independent set of variables, typically one per customer\n  or per support case, so last week's credentials never leak into this\n  week's reproduction model:\n  \n    playground secrets profile customer-123456    🗂️ switch to it\n    playground secrets profile                    📋 list them, with counts\n    playground secrets list --profile default     🎯 use one just this once\n  \n  Lookup falls back to the 'default' profile, so what is shared between all\n  of them (CONFLUENT_LICENSE, NGROK_AUTH_TOKEN) is stored there once.\n  \n  🔍 Resolution order\n  \n    1. an exported environment variable, which always wins\n    2. the active profile\n    3. the default profile\n  \n  So 'export FOO=bar' and 'source secret.properties' keep working, and\n  'playground secrets list' flags what the environment overrides.\n  \n  ⚙️ Configuration\n  \n    playground config set secrets.backend <backend>      🏦 see above\n    playground config set secrets.profile <name>         🗂️ active profile\n    playground config set secrets.op-vault <vault>       🔑 1Password vault\n    playground config set secrets.github-repo OWNER/REPO 🐙 sync CI secrets\n  \n  PLAYGROUND_SECRETS_DIR, PLAYGROUND_SECRETS_BACKEND,\n  PLAYGROUND_SECRETS_PROFILE and PLAYGROUND_OP_VAULT override them for a\n  single command.\n\n"
   else
     printf "playground secrets - 🔐 Credentials required by examples\n\n"
   fi
@@ -2032,7 +2032,7 @@ playground_secrets_usage() {
 playground_secrets_set_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground secrets set\n\n"
-    printf "  🔐 Store a credential\n  \n  Without --value the value is prompted without echo, so it never lands in\n  the shell history.\n  \n  A name that looks like a credential (PASSWORD, SECRET, TOKEN, KEY, CREDS,\n  PWD, PASSPHRASE, LICENSE) goes to the secure backend, anything else is\n  kept as a plain variable. Use --secret or --plain to decide yourself.\n\n"
+    printf "  🔐 Store a credential\n  \n  Without --value the value is prompted without echo, so it never lands in\n  the shell history.\n  \n  A name that looks like a credential (PASSWORD, SECRET, TOKEN, KEY, CREDS,\n  PWD, PASSPHRASE, LICENSE) goes to the secure backend, anything else is\n  kept as a plain variable. Use --secret or --plain to decide yourself.\n  \n  Run again on a name already stored to rotate it. The value is then\n  updated where the existing reference points, which is not necessarily\n  the backend currently configured.\n  \n  🎓 Tip: set the config key secrets.github-repo and every value stored\n  here is also pushed to that repository's GitHub Actions secrets.\n\n"
   else
     printf "playground secrets set - 🔐 Store a credential\n\n"
   fi
@@ -2096,7 +2096,12 @@ playground_secrets_set_usage() {
 
 # :command.usage
 playground_secrets_get_usage() {
-  printf "playground secrets get - 🔍 Show a stored credential (masked unless --reveal is used)\n\n"
+  if [[ -n $long_usage ]]; then
+    printf "playground secrets get\n\n"
+    printf "  🔍 Show a stored credential (masked unless --reveal is used)\n  \n  Resolved the same way an example does: an exported environment variable\n  first, then the active profile, then the default one.\n\n"
+  else
+    printf "playground secrets get - 🔍 Show a stored credential (masked unless --reveal is used)\n\n"
+  fi
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground secrets get NAME [OPTIONS]\n"
@@ -2143,7 +2148,12 @@ playground_secrets_get_usage() {
 
 # :command.usage
 playground_secrets_unset_usage() {
-  printf "playground secrets unset - 🗑️ Remove a stored credential\n\n"
+  if [[ -n $long_usage ]]; then
+    printf "playground secrets unset\n\n"
+    printf "  🗑️ Remove a stored credential\n  \n  The value goes too, not only the reference: the keychain entry is\n  deleted, the 1Password item is archived.\n  \n  A secret pointed at with 'playground secrets link' is left untouched,\n  since it belongs to you and not to the playground.\n\n"
+  else
+    printf "playground secrets unset - 🗑️ Remove a stored credential\n\n"
+  fi
   printf "Alias: delete, rm\n"
   echo
 
@@ -2188,7 +2198,7 @@ playground_secrets_unset_usage() {
 playground_secrets_list_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground secrets list\n\n"
-    printf "  📋 List stored credentials\n  \n  Values are never printed: secrets are shown as a masked fingerprint\n  (last 4 characters and a sha256 prefix), which is enough to tell whether\n  it is the token you rotated yesterday.\n\n"
+    printf "  📋 List stored credentials\n  \n  Values are never printed: secrets are shown as a masked fingerprint\n  (last 4 characters and a sha256 prefix), which is enough to tell whether\n  it is the token you rotated yesterday. Plain variables are shown as is.\n  \n  Two markers to look out for:\n  \n    ⚠️ overridden by the environment   an exported variable is what the\n                                      example will actually get\n    ❌ cannot be resolved              the reference is there but the\n                                      backend gave nothing back, usually\n                                      a locked session or a deleted item\n\n"
   else
     printf "playground secrets list - 📋 List stored credentials\n\n"
   fi
@@ -2232,7 +2242,7 @@ playground_secrets_list_usage() {
 playground_secrets_link_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground secrets link\n\n"
-    printf "  🔗 Point a variable at a secret manager, without storing any value\n  \n  The store then only contains a reference, which is safe to back up, sync\n  between machines, or share with your team.\n\n"
+    printf "  🔗 Point a variable at a secret manager, without storing any value\n  \n  The store then only contains a reference, which is safe to back up, sync\n  between machines, or share with your team.\n  \n  Use it to reuse a secret that already exists, rather than storing a\n  second copy of it, and for the vault backend which playground never\n  writes to. The reference is resolved right away, so a typo or a locked\n  session is reported on the spot.\n  \n  'playground secrets unset' drops the reference but leaves the secret\n  itself alone.\n\n"
   else
     printf "playground secrets link - 🔗 Point a variable at a secret manager, without storing any value\n\n"
   fi
@@ -2275,6 +2285,7 @@ playground_secrets_link_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground secrets link SALESFORCE_PASSWORD op://Private/salesforce/password\n"
     printf "  playground secrets link SNOWFLAKE_PASSWORD\n  vault://secret/kdp/snowflake#password\n"
+    printf "  playground secrets link CONFLUENT_LICENSE pass:work/confluent/license\n"
     echo
 
   fi
@@ -2284,7 +2295,7 @@ playground_secrets_link_usage() {
 playground_secrets_check_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground secrets check\n\n"
-    printf "  ✅ Show what an example needs, and what is missing\n  \n  🎓 Tip: run it before a long example, it fails in a second instead of\n  several minutes into the environment startup.\n\n"
+    printf "  ✅ Show what an example needs, and what is missing\n  \n  One line per variable, saying where the value comes from (environment,\n  or which backend and which reference) or how to store it. AWS and GCP\n  examples also get their ~/.aws/credentials and keyfile.json checked.\n  \n  The list comes from the example itself: every variable it declares with\n  the standard 'Export it as environment variable or pass it as argument'\n  error string, which is also what 'playground run' loads.\n  \n  Exits 1 when something is missing.\n  \n  🎓 Tip: run it before a long example, it fails in a second instead of\n  several minutes into the environment startup.\n\n"
   else
     printf "playground secrets check - ✅ Show what an example needs, and what is missing\n\n"
   fi
@@ -2328,7 +2339,7 @@ playground_secrets_check_usage() {
 playground_secrets_env_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground secrets env\n\n"
-    printf "  🐚 Export what an example needs into the current shell\n  \n  This is the replacement for 'source secret.properties'. Instead of putting\n  every credential into every shell, it exports only the variables the example\n  at hand declares, read from the secrets store:\n  \n    source <(playground secrets env)\n  \n  Handy when copy pasting pieces of an example script into a terminal. With no\n  --file it uses the last example ran, like 'playground secrets check'.\n  \n  The shell code goes to stdout and everything else to stderr, so nothing\n  unexpected ever gets executed.\n  \n  🎓 Tip: put a shortcut in your shell profile:\n  \n    alias pgenv='source <(playground secrets env)'\n\n"
+    printf "  🐚 Export what an example needs into the current shell\n  \n  This is the replacement for 'source secret.properties'. Instead of putting\n  every credential into every shell, it exports only the variables the example\n  at hand declares, read from the secrets store:\n  \n    source <(playground secrets env)\n  \n  Handy when copy pasting pieces of an example script into a terminal. With no\n  --file it uses the last example ran, like 'playground secrets check'.\n  \n  The shell code goes to stdout and everything else to stderr, so nothing\n  unexpected ever gets executed. Running it straight in a terminal is\n  refused rather than printing every value on screen, use --force for\n  that.\n  \n  🎓 Tip: put a shortcut in your shell profile:\n  \n    alias pgenv='source <(playground secrets env)'\n\n"
   else
     printf "playground secrets env - 🐚 Export what an example needs into the current shell\n\n"
   fi
@@ -2383,7 +2394,7 @@ playground_secrets_env_usage() {
 playground_secrets_import_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground secrets import\n\n"
-    printf "  📥 Import an existing secret.properties / variable.properties file\n  \n  Each KEY=value line is classified and stored in the right place.\n\n"
+    printf "  📥 Import an existing secret.properties / variable.properties file\n  \n  Each KEY=value line is classified and stored in the right place. A\n  leading 'export', comments, blank lines and one level of surrounding\n  quotes are handled; anything that is not an uppercase variable name is\n  skipped and reported.\n  \n  This is the one step migration away from 'source secret.properties'.\n\n"
   else
     printf "playground secrets import - 📥 Import an existing secret.properties / variable.properties file\n\n"
   fi
@@ -2445,7 +2456,7 @@ playground_secrets_import_usage() {
 playground_secrets_export_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground secrets export\n\n"
-    printf "  📤 Write every credential of a profile to a file, in clear text\n  \n  ❗ Only for the rare case where a tool needs a properties file ❗\n\n"
+    printf "  📤 Write every credential of a profile to a file, in clear text\n  \n  ❗ Only for the rare case where a tool needs a properties file ❗\n  \n  The file is written with mode 0600, and a path inside the repository is\n  refused: it would be one 'git add -A' away from being committed.\n  \n  🎓 Tip: to feed a shell instead of a file, 'playground secrets env' is\n  what you want, it exports without writing anything to disk.\n\n"
   else
     printf "playground secrets export - 📤 Write every credential of a profile to a file, in clear text\n\n"
   fi
@@ -2577,7 +2588,12 @@ playground_secrets_push_github_usage() {
 
 # :command.usage
 playground_secrets_edit_usage() {
-  printf "playground secrets edit - ✏️ Open the store in your editor\n\n"
+  if [[ -n $long_usage ]]; then
+    printf "playground secrets edit\n\n"
+    printf "  ✏️ Open the store in your editor\n  \n  secrets.ini by default, env.ini with --plain. Unless the backend is\n  file, secrets.ini holds references and not values, so this is where you\n  rename a variable or move one between profiles, not where you read a\n  password.\n  \n  Uses the config key editor, then the EDITOR environment variable, then\n  vi.\n\n"
+  else
+    printf "playground secrets edit - ✏️ Open the store in your editor\n\n"
+  fi
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground secrets edit [OPTIONS]\n"
@@ -2613,7 +2629,7 @@ playground_secrets_edit_usage() {
 playground_secrets_backend_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground secrets backend\n\n"
-    printf "  🏦 Show or change where secrets are kept\n  \n  keychain (macOS), secret-tool (Linux), pass, op (1Password), vault\n  (HashiCorp) or file.\n  \n  vault is reference-only: create the secret there, then use\n  'playground secrets link'. op creates the item for you, but can also\n  point at an existing one with 'playground secrets link'.\n\n"
+    printf "  🏦 Show or change where secrets are kept\n  \n    keychain     macOS Keychain, through 'security'\n    secret-tool  freedesktop secret service (GNOME Keyring, KWallet)\n    pass         the standard unix password manager\n    op           1Password, through the 'op' CLI\n    vault        HashiCorp Vault, through the 'vault' CLI\n    file         clear text in secrets.ini, no encryption, last resort\n  \n  With no configuration, the first available of keychain (macOS),\n  secret-tool and pass is used, and file is the fallback. op and vault\n  have to be chosen here, so that an example never blocks on an unlock\n  prompt halfway through.\n  \n  Only new values are affected: what is already stored keeps being read\n  from, and rotated in, the backend it went to.\n  \n  vault is reference-only, playground never writes to it: create the\n  secret there, then use 'playground secrets link'. op creates the item\n  for you, named kdp-<profile>-<NAME> in the vault set by\n  'playground config set secrets.op-vault' (default: Private), and can\n  also point at an existing one with 'playground secrets link'.\n\n"
   else
     printf "playground secrets backend - 🏦 Show or change where secrets are kept\n\n"
   fi
@@ -2655,7 +2671,7 @@ playground_secrets_backend_usage() {
 playground_secrets_profile_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground secrets profile\n\n"
-    printf "  🗂️ Show or switch the active profile\n  \n  🎓 Tip: use one profile per support case, so last week's customer\n  credentials never leak into this week's reproduction model.\n\n"
+    printf "  🗂️ Show or switch the active profile\n  \n  A profile is an independent set of variables. Without an argument it\n  lists them all with their variable count, and marks the active one.\n  \n  A variable missing from the active profile is looked up in 'default',\n  so what is shared between all of them (CONFLUENT_LICENSE,\n  NGROK_AUTH_TOKEN) only needs to be stored once, there.\n  \n  Switching is persistent, it writes the config key secrets.profile. To\n  use another one just for a command, every secrets command takes\n  --profile.\n  \n  🎓 Tip: use one profile per support case, so last week's customer\n  credentials never leak into this week's reproduction model.\n\n"
   else
     printf "playground secrets profile - 🗂️ Show or switch the active profile\n\n"
   fi
@@ -2696,7 +2712,7 @@ playground_secrets_profile_usage() {
 playground_secrets_scan_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground secrets scan\n\n"
-    printf "  🔎 Look for stored credentials in clear text in the repository\n  \n  🎓 Tip: wire it as a pre-commit hook with\n  'playground secrets scan --staged'\n\n"
+    printf "  🔎 Look for stored credentials in clear text in the repository\n  \n  Resolves every credential of the profile and greps the working tree,\n  tracked and untracked files alike, for the values themselves. Catches\n  the password pasted into a reproduction model, which no pattern based\n  scanner would recognise.\n  \n  Plain variables are skipped, a region or a bucket name is expected to\n  appear in an example, and so are values shorter than 8 characters,\n  which would match everywhere. Exits 1 as soon as one is found.\n  \n  🎓 Tip: wire it as a pre-commit hook with\n  'playground secrets scan --staged'\n\n"
   else
     printf "playground secrets scan - 🔎 Look for stored credentials in clear text in the repository\n\n"
   fi
@@ -44993,6 +45009,7 @@ playground_secrets_link_parse_requirements() {
     printf "examples:\n" >&2
     printf "  playground secrets link SALESFORCE_PASSWORD op://Private/salesforce/password\n" >&2
     printf "  playground secrets link SNOWFLAKE_PASSWORD\n  vault://secret/kdp/snowflake#password\n" >&2
+    printf "  playground secrets link CONFLUENT_LICENSE pass:work/confluent/license\n" >&2
 
     exit 1
   fi
@@ -45003,6 +45020,7 @@ playground_secrets_link_parse_requirements() {
     printf "examples:\n" >&2
     printf "  playground secrets link SALESFORCE_PASSWORD op://Private/salesforce/password\n" >&2
     printf "  playground secrets link SNOWFLAKE_PASSWORD\n  vault://secret/kdp/snowflake#password\n" >&2
+    printf "  playground secrets link CONFLUENT_LICENSE pass:work/confluent/license\n" >&2
 
     exit 1
   fi
