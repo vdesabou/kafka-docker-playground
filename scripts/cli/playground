@@ -25105,39 +25105,71 @@ EOF
       fi
   }
 
+  # Run sfdx commands against one org in a one-shot sfdx-cli container, logged in with the
+  # OAuth JWT bearer flow - the same External Client App, certificate and user the Salesforce
+  # connectors use. The connector keystore is mounted read-only and converted to the PEM key
+  # sfdx needs with the image's own openssl, so the key never lands on the host.
+  #
+  # Replaces `sfdx sfpowerkit:auth:login` (username + password + security token), whose SOAP
+  # login() Salesforce blocks by default on orgs created Summer '26 or later and retires with
+  # Summer '27. stdin is passed through, for `sfdx apex run` fed from a heredoc.
+  function salesforce_sfdx_run_as () {
+      local username="$1" consumer_key="$2" instance="$3" commands="$4"
+
+      docker run -i --rm -v "$SALESFORCE_JWT_KEYSTORE:/tmp/salesforce-confluent.keystore.jks:ro" vdesabou/sfdx-cli:latest sh -c "openssl pkcs12 -in /tmp/salesforce-confluent.keystore.jks -nocerts -nodes -passin pass:confluent -out /tmp/salesforce-confluent.key && sfdx auth:jwt:grant --username \"$username\" --client-id \"$consumer_key\" --jwt-key-file /tmp/salesforce-confluent.key --instance-url \"$instance\" && $commands"
+  }
+
+  function cleanup_salesforce_org () {
+      local username="$1" consumer_key="$2" instance="$3"
+
+      if [ -z "$consumer_key" ]
+      then
+          logwarn "⚠️ no JWT consumer key set for $username, skipping Salesforce cleanup for this account"
+          return
+      fi
+
+      log "Cleanup Salesforce Leads on account with $username"
+      salesforce_sfdx_run_as "$username" "$consumer_key" "$instance" "sfdx data:query --target-org \"$username\" -q \"SELECT Id FROM Lead\" --result-format csv > /tmp/out.csv && sfdx force:data:bulk:delete --target-org \"$username\" -s Lead -f /tmp/out.csv"
+
+      log "Cleanup Salesforce Contacts on account with $username"
+      salesforce_sfdx_run_as "$username" "$consumer_key" "$instance" "sfdx data:query --target-org \"$username\" -q \"SELECT Id FROM Contact\" --result-format csv > /tmp/out.csv && sfdx force:data:bulk:delete --target-org \"$username\" -s Contact -f /tmp/out.csv"
+
+      log "Cleanup PushTopics on account with $username"
+      salesforce_sfdx_run_as "$username" "$consumer_key" "$instance" "sfdx apex run --target-org \"$username\"" << EOF
+List<PushTopic> pts = [SELECT Id FROM PushTopic];
+Database.delete(pts);
+EOF
+  }
+
   function cleanup_salesforce () {
+      local keystore_dir=""
 
-      SALESFORCE_INSTANCE=${SALESFORCE_INSTANCE:-"https://login.salesforce.com"}
-      if [ ! -z $SALESFORCE_USERNAME ]
+      if [ -z "$SALESFORCE_USERNAME" ] && [ -z "$SALESFORCE_USERNAME_ACCOUNT2" ]
       then
-          log "Cleanup Salesforce Leads on account with $SALESFORCE_USERNAME"
-          docker run -i --rm vdesabou/sfdx-cli:latest sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\" && sfdx data:query --target-org \"$SALESFORCE_USERNAME\" -q \"SELECT Id FROM Lead\" --result-format csv > /tmp/out.csv && sfdx force:data:bulk:delete --target-org \"$SALESFORCE_USERNAME\" -s Lead -f /tmp/out.csv"
-
-          log "Cleanup Salesforce Contacts on account with $SALESFORCE_USERNAME"
-          docker run -i --rm vdesabou/sfdx-cli:latest sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\" && sfdx data:query --target-org \"$SALESFORCE_USERNAME\" -q \"SELECT Id FROM Contact\" --result-format csv > /tmp/out.csv && sfdx force:data:bulk:delete --target-org \"$SALESFORCE_USERNAME\" -s Contact -f /tmp/out.csv"
-
-          log "Cleanup PushTopics on account with $SALESFORCE_USERNAME"
-          docker run -i --rm vdesabou/sfdx-cli:latest sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\" && sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
-List<PushTopic> pts = [SELECT Id FROM PushTopic];
-Database.delete(pts);
-EOF
+          return
       fi
 
-      SALESFORCE_INSTANCE_ACCOUNT2=${SALESFORCE_INSTANCE_ACCOUNT2:-"https://login.salesforce.com"}
-      if [ ! -z $SALESFORCE_USERNAME_ACCOUNT2 ]
+      # Same keystore every Salesforce example mounts into connect for the JWT_BEARER grant.
+      keystore_dir=$(mktemp -d)
+      (cd "$keystore_dir" && get_3rdparty_file "salesforce-confluent.keystore.jks")
+      SALESFORCE_JWT_KEYSTORE="$keystore_dir/salesforce-confluent.keystore.jks"
+      if [ ! -f "$SALESFORCE_JWT_KEYSTORE" ]
       then
-          log "Cleanup Salesforce Leads on account with $SALESFORCE_USERNAME_ACCOUNT2"
-          docker run -i --rm vdesabou/sfdx-cli:latest sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\" && sfdx data:query --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -q \"SELECT Id FROM Lead\" --result-format csv > /tmp/out.csv && sfdx force:data:bulk:delete --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -s Lead -f /tmp/out.csv"
-
-          log "Cleanup Salesforce Contacts on account with $SALESFORCE_USERNAME_ACCOUNT2"
-          docker run -i --rm vdesabou/sfdx-cli:latest sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\" && sfdx data:query --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -q \"SELECT Id FROM Contact\" --result-format csv > /tmp/out.csv && sfdx force:data:bulk:delete --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -s Contact -f /tmp/out.csv"
-
-          log "Cleanup PushTopics on account with $SALESFORCE_USERNAME_ACCOUNT2"
-          docker run -i --rm vdesabou/sfdx-cli:latest sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\" && sfdx apex run --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\"" << EOF
-List<PushTopic> pts = [SELECT Id FROM PushTopic];
-Database.delete(pts);
-EOF
+          logerror "❌ could not fetch salesforce-confluent.keystore.jks, skipping Salesforce cleanup"
+          return
       fi
+
+      if [ ! -z "$SALESFORCE_USERNAME" ]
+      then
+          cleanup_salesforce_org "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "${SALESFORCE_INSTANCE:-https://login.salesforce.com}"
+      fi
+
+      if [ ! -z "$SALESFORCE_USERNAME_ACCOUNT2" ]
+      then
+          cleanup_salesforce_org "$SALESFORCE_USERNAME_ACCOUNT2" "$SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2" "${SALESFORCE_INSTANCE_ACCOUNT2:-https://login.salesforce.com}"
+      fi
+
+      rm -rf "$keystore_dir"
   }
 
   for resource in "${resources[@]}"

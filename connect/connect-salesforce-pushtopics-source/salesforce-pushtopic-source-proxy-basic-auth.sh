@@ -64,7 +64,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.proxy.basic-auth.yml"
 
 log "Login with sfdx CLI"
-salesforce_sfdx_with_retry "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
+salesforce_sfdx_login "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE"
 
 log "Delete $PUSH_TOPICS_NAME, if required"
 set +e
@@ -188,7 +188,7 @@ salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_
 # so cleanup also happens when an assertion fails.
 cleanup_salesforce_test_data() {
   set +e
-  salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_PASSWORD" "$SALESFORCE_SECURITY_TOKEN" "$SALESFORCE_INSTANCE" \
+  salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE" \
     "Lead:FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'" \
     "PushTopic:Name = '$PUSH_TOPICS_NAME'"
   set -e

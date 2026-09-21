@@ -42,6 +42,12 @@ then
      exit 1
 fi
 
+if [ -z "$SALESFORCE_CONSUMER_KEY_WITH_JWT" ]
+then
+     logerror "SALESFORCE_CONSUMER_KEY_WITH_JWT is not set. Export it as environment variable or pass it as argument. Check README !"
+     exit 1
+fi
+
 if [ -z "$SALESFORCE_USERNAME_ACCOUNT2" ]
 then
      logerror "SALESFORCE_USERNAME_ACCOUNT2 is not set. Export it as environment variable or pass it as argument"
@@ -60,6 +66,12 @@ then
      exit 1
 fi
 
+if [ -z "$SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2" ]
+then
+     logerror "SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2 is not set. Export it as environment variable or pass it as argument. Check README !"
+     exit 1
+fi
+
 PUSH_TOPICS_NAME=MyLeadPushTopics${TAG}
 PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME//[-._]/}
 if [ ${#PUSH_TOPICS_NAME} -gt 25 ]; then
@@ -73,7 +85,7 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.proxy.yml"
 
 log "Login with sfdx CLI"
-salesforce_sfdx_with_retry "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
+salesforce_sfdx_login "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE"
 
 LEAD_FIRSTNAME=John_$RANDOM
 LEAD_LASTNAME=Doe_$RANDOM
@@ -85,9 +97,9 @@ salesforce_sfdx_with_retry "sfdx data:create:record  --target-org \"$SALESFORCE_
 # so cleanup also happens when an assertion fails.
 cleanup_salesforce_test_data() {
   set +e
-  salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_PASSWORD" "$SALESFORCE_SECURITY_TOKEN" "$SALESFORCE_INSTANCE" \
+  salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE" \
     "Lead:FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'"
-  salesforce_cleanup_records "$SALESFORCE_USERNAME_ACCOUNT2" "$SALESFORCE_PASSWORD_ACCOUNT2" "$SALESFORCE_SECURITY_TOKEN_ACCOUNT2" "$SALESFORCE_INSTANCE_ACCOUNT2" \
+  salesforce_cleanup_records "$SALESFORCE_USERNAME_ACCOUNT2" "$SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2" "$SALESFORCE_INSTANCE_ACCOUNT2" \
     "Lead:FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'"
   set -e
 }
@@ -176,7 +188,7 @@ log "Verify the connector reported no errors"
 salesforce_assert_topic_empty error-responses
 
 log "Login with sfdx CLI on the account #2"
-salesforce_sfdx_with_retry "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\""
+salesforce_sfdx_login "$SALESFORCE_USERNAME_ACCOUNT2" "$SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2" "$SALESFORCE_INSTANCE_ACCOUNT2"
 
 log "Get the Lead created on account #2"
 # data:query, not data:record:get: the sink inserts (it never upserts), so a shared org

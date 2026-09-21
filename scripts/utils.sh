@@ -104,12 +104,13 @@ INVALID_SESSION_ID"
 # around the connector, and a blip in any of them aborts the test just as hard.
 #
 # "Could not retrieve the username after successful auth code exchange" is observed in CI:
-# sfpowerkit:auth:login failed with it, and the identical login with the identical
-# credentials succeeded 15 seconds later in the same test's teardown - so it is transient.
+# the sfdx login failed with it, and the identical login with the identical credentials
+# succeeded 15 seconds later in the same test's teardown - so it is transient.
 SALESFORCE_TRANSIENT_SFDX_ERRORS="\
 Could not retrieve the username after successful auth code exchange|\
 Session expired or invalid|INVALID_SESSION_ID|Bad_OAuth_Token|\
 Read timed out|Connection reset|Connection refused|ETIMEDOUT|ECONNRESET|EAI_AGAIN|\
+ENOTFOUND|ECONNREFUSED|EHOSTUNREACH|ENETUNREACH|EPIPE|getaddrinfo|fetch failed|\
 socket hang up|502 Bad Gateway|503 Service Unavailable|504 Gateway|\
 SERVER_UNAVAILABLE|Server Unavailable|UNABLE_TO_LOCK_ROW"
 
@@ -121,10 +122,16 @@ SERVER_UNAVAILABLE|Server Unavailable|UNABLE_TO_LOCK_ROW"
 #
 # DUPLICATES_DETECTED and the *_REQUIRED_FIELD / INVALID_FIELD family are deterministic:
 # the same request will fail the same way however many times it is sent.
+#
+# The JWT bearer flow's rejections are deterministic too: "client identifier invalid" (wrong
+# consumer key), "user hasn't approved this consumer" (user not pre-authorised on the External
+# Client App) and "invalid assertion" (certificate does not match). sfdx prints Salesforce's
+# error_description, so those phrases are matched alongside the OAuth error codes.
 SALESFORCE_FATAL_ERRORS="\
 REQUEST_LIMIT_EXCEEDED|TotalRequests Limit exceeded|\
 DUPLICATES_DETECTED|REQUIRED_FIELD_MISSING|INVALID_FIELD|\
-INSUFFICIENT_ACCESS|INVALID_LOGIN"
+INSUFFICIENT_ACCESS|INVALID_LOGIN|\
+invalid_grant|invalid_client_id|client identifier invalid|approved this consumer|invalid assertion"
 
 # Retries consumed so far by this test. Reset per test process, since each test runs in
 # its own shell - so the budget below is genuinely per test, not per connector.
@@ -218,9 +225,10 @@ function salesforce_create_connector_with_retry() {
 #
 # Usage mirrors the call it replaces:
 #
-#   salesforce_sfdx_with_retry "sfdx sfpowerkit:auth:login -u \"$USER\" ..."
+#   salesforce_sfdx_with_retry "sfdx data:create:record --target-org \"$USER\" ..."
 #
-# and for the commands that pipe Apex in on stdin:
+# (logins go through salesforce_sfdx_login, which wraps this), and for the commands that
+# pipe Apex in on stdin:
 #
 #   salesforce_sfdx_with_retry --stdin "sfdx apex run --target-org \"$USER\"" << EOF
 #   Database.delete(...);
@@ -303,25 +311,22 @@ function salesforce_sfdx_with_retry() {
     # A dead sfdx session cannot be fixed by re-running the command, so re-authenticate the
     # org this command targets before retrying. Observed in CI on a PushTopic test: sfdx
     # logged in successfully, then the very next `apex run` failed "Session expired or
-    # invalid" 4 seconds later, because an earlier username-password connector's validation
-    # logout() had killed the session Salesforce reuses for identical logins by the same user.
-    # Retrying alone would have burned the whole budget and still failed.
-    # Re-authenticate before retrying: re-running a command cannot revive a dead session.
-    # This rescues setup steps that run before any connector exists, which the EXIT trap
-    # cannot help with - observed in CI on a PushTopic test whose `apex run -f` failed here.
+    # invalid" 4 seconds later. Retrying alone would have burned the whole budget and still
+    # failed; only a fresh login revives a dead session. This rescues setup steps that run
+    # before any connector exists, which the EXIT trap cannot help with.
     if echo "$out" | grep -qE "Session expired or invalid|INVALID_SESSION_ID|Bad_OAuth_Token"
     then
       case "$sfdx_command" in
-        *auth:login*)
+        *auth:jwt:grant*)
           : # the command being retried IS a login
           ;;
         *"$SALESFORCE_USERNAME_ACCOUNT2"*)
-          salesforce_sfdx_relogin "$SALESFORCE_USERNAME_ACCOUNT2" "$SALESFORCE_PASSWORD_ACCOUNT2" \
-            "$SALESFORCE_SECURITY_TOKEN_ACCOUNT2" "$SALESFORCE_INSTANCE_ACCOUNT2" || true
+          salesforce_sfdx_relogin "$SALESFORCE_USERNAME_ACCOUNT2" \
+            "$SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2" "$SALESFORCE_INSTANCE_ACCOUNT2" || true
           ;;
         *)
-          salesforce_sfdx_relogin "$SALESFORCE_USERNAME" "$SALESFORCE_PASSWORD" \
-            "$SALESFORCE_SECURITY_TOKEN" "$SALESFORCE_INSTANCE" || true
+          salesforce_sfdx_relogin "$SALESFORCE_USERNAME" \
+            "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE" || true
           ;;
       esac
     fi
@@ -331,30 +336,149 @@ function salesforce_sfdx_with_retry() {
   done
 }
 
-# Re-authenticate the sfdx CLI for one org, one attempt, best effort.
+# Where the sfdx CLI's JWT private key lives inside the sfdx-cli container.
+SALESFORCE_SFDX_JWT_KEY_FILE=/tmp/salesforce-confluent.key
+
+# Materialise the JWT private key inside the sfdx-cli container, once per container.
 #
-# Needed because a connector on the username-password SOAP grant ends its session with a
-# SOAP logout() during validation, and Salesforce reuses one session across identical logins
-# by the same user - so it also kills the session the sfdx CLI is holding. Re-running a
-# command cannot revive a dead session; only a fresh login can.
+# The connector consumes the key as the PKCS12 keystore salesforce-confluent.keystore.jks
+# (password "confluent", the value every test's connector config already uses); sfdx needs
+# the same key as a PEM file. The keystore is copied in and converted with the image's own
+# openssl, so the unencrypted key only ever exists inside the container.
+function salesforce_sfdx_prepare_jwt_key() {
+  local keystore_path=""
+
+  # < /dev/null because `playground container exec` reads stdin, and this runs from cleanup
+  # traps and between piped commands, where it would otherwise swallow input meant for
+  # something else.
+  if playground container exec --container sfdx-cli \
+      --command "test -s $SALESFORCE_SFDX_JWT_KEY_FILE" --shell sh < /dev/null > /dev/null 2>&1
+  then
+    return 0
+  fi
+
+  keystore_path="$(salesforce_ensure_jwt_keystore "$PWD")" || return 1
+  playground container cp --source "$keystore_path" \
+    --destination sfdx-cli:/tmp/salesforce-confluent.keystore.jks < /dev/null > /dev/null || return 1
+  playground container exec --container sfdx-cli --shell sh < /dev/null > /dev/null \
+    --command "openssl pkcs12 -in /tmp/salesforce-confluent.keystore.jks -nocerts -nodes -passin pass:confluent -out $SALESFORCE_SFDX_JWT_KEY_FILE && chmod 600 $SALESFORCE_SFDX_JWT_KEY_FILE"
+}
+
+# The sfdx login gets its own small retry budget, separate from SALESFORCE_CREATE_MAX_RETRIES:
+# it runs before any connector exists, so retrying it can never paper over a connector bug,
+# and it is the step CI has seen fail intermittently (one org, ~50% of runs on 2026-09-21)
+# with nothing recorded on the Salesforce side. Anything Salesforce rejects deterministically
+# (SALESFORCE_FATAL_ERRORS) still fails on the first attempt.
+SALESFORCE_LOGIN_MAX_ATTEMPTS="${SALESFORCE_LOGIN_MAX_ATTEMPTS:-3}"
+SALESFORCE_LOGIN_RETRY_DELAY="${SALESFORCE_LOGIN_RETRY_DELAY:-15}"
+
+# Record, from inside the sfdx-cli container, what the login path can reach: name resolution
+# for the login host and a plain HTTP round trip to its OAuth token endpoint (a 4xx there is
+# healthy - Salesforce rejects a bare GET - anything else names the layer that is broken).
+# Diagnostics only; never changes the caller's exit status.
+function salesforce_sfdx_probe() {
+  local i="$1" host=""
+  host="${i#https://}"
+  host="${host#http://}"
+  host="${host%%/*}"
+  host="${host%%:*}"
+
+  log "🔎 probing $host from the sfdx-cli container"
+  playground container exec --container sfdx-cli --shell sh < /dev/null \
+    --command "echo \"    dns: \$(getent hosts $host | awk '{print \$1}' | tr '\n' ' ')\"; echo \"    token endpoint: \$(curl -sS -o /dev/null -m 15 -w 'http=%{http_code} dns=%{time_namelookup}s connect=%{time_connect}s tls=%{time_appconnect}s total=%{time_total}s' $i/services/oauth2/token 2>&1)\"" || true
+}
+
+# Log the sfdx CLI into one org with the OAuth JWT bearer flow - the same External Client
+# App, certificate and user the connector under test authenticates with, so it needs nothing
+# a JWT_BEARER connector config does not already need.
+#
+# Replaces `sfdx sfpowerkit:auth:login`, a username + password + security-token SOAP login():
+# Salesforce blocks that call by default on orgs created Summer '26 or later and retires it
+# for API versions 31.0-64.0 with Summer '27; sfpowerkit itself is an archived project. It also
+# swallowed the underlying error ("Unable to connect to the target org", cause undefined) -
+# sfdx's own auth command reports the real one, and a failed attempt is followed by a probe.
+#
+#   salesforce_sfdx_login "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE"
+function salesforce_sfdx_login() {
+  local u="$1" k="$2" i="${3:-https://login.salesforce.com}"
+  local attempt=1 rc=0 out="" had_errexit=0
+
+  if [ -z "$u" ] || [ -z "$k" ]
+  then
+    logerror "❌ cannot log the sfdx CLI in: username or JWT consumer key is not set"
+    return 1
+  fi
+
+  case $- in
+    *e*) had_errexit=1 ;;
+  esac
+
+  salesforce_sfdx_prepare_jwt_key || return 1
+
+  while true
+  do
+    set +e
+    out="$(playground container exec --container sfdx-cli \
+      --command "sfdx auth:jwt:grant --username \"$u\" --client-id \"$k\" --jwt-key-file $SALESFORCE_SFDX_JWT_KEY_FILE --instance-url \"$i\"" --shell sh < /dev/null 2>&1)"
+    rc=$?
+    if [ $had_errexit -eq 1 ]
+    then
+      set -e
+    fi
+    echo "$out"
+
+    if [ $rc -eq 0 ]
+    then
+      if [ $attempt -gt 1 ]
+      then
+        log "✅ sfdx login to $u succeeded on attempt $attempt"
+      fi
+      return 0
+    fi
+
+    # `auth:jwt:grant` tries the instance URL, then falls back to login.salesforce.com and
+    # test.salesforce.com, and prints every attempt's error. A transient signature from any of
+    # them means the path to Salesforce was the problem, so it is retried; only an output that is
+    # purely a deterministic rejection fails on the first attempt.
+    if ! echo "$out" | grep -qE "$SALESFORCE_TRANSIENT_SFDX_ERRORS" \
+       && echo "$out" | grep -qE "$SALESFORCE_FATAL_ERRORS"
+    then
+      logerror "❌ sfdx login to $u was rejected by Salesforce for a deterministic reason, not retrying"
+      return $rc
+    fi
+
+    salesforce_sfdx_probe "$i"
+
+    if [ "$attempt" -ge "$SALESFORCE_LOGIN_MAX_ATTEMPTS" ]
+    then
+      logerror "❌ sfdx login to $u failed on all $SALESFORCE_LOGIN_MAX_ATTEMPTS attempts"
+      return $rc
+    fi
+
+    logwarn "⚠️ sfdx login to $u failed (attempt $attempt/$SALESFORCE_LOGIN_MAX_ATTEMPTS), retrying in ${SALESFORCE_LOGIN_RETRY_DELAY}s"
+    sleep "$SALESFORCE_LOGIN_RETRY_DELAY"
+    attempt=$((attempt + 1))
+  done
+}
+
+# Re-authenticate the sfdx CLI for one org, one attempt, best effort. Re-running a command
+# cannot revive a dead session; only a fresh login can.
 #
 # Deliberately not routed through salesforce_sfdx_with_retry: that would consume the caller's
 # retry budget and sleep twice per attempt.
 function salesforce_sfdx_relogin() {
-  local u="$1" p="$2" t="$3" i="${4:-https://login.salesforce.com}"
+  local u="$1" k="$2" i="${3:-https://login.salesforce.com}"
 
-  if [ -z "$u" ] || [ -z "$p" ] || [ -z "$t" ]
+  if [ -z "$u" ] || [ -z "$k" ]
   then
     logwarn "⚠️ cannot re-authenticate sfdx, credentials not set"
     return 1
   fi
 
-  # < /dev/null because `playground container exec` reads stdin, and this can be called from
-  # a cleanup trap or between piped commands, where it would otherwise swallow input meant
-  # for something else.
   log "🔑 Re-authenticating sfdx for $u"
+  salesforce_sfdx_prepare_jwt_key || return 1
   playground container exec --container sfdx-cli \
-    --command "sfdx sfpowerkit:auth:login -u \"$u\" -p \"$p\" -r \"$i\" -s \"$t\"" --shell sh < /dev/null
+    --command "sfdx auth:jwt:grant --username \"$u\" --client-id \"$k\" --jwt-key-file $SALESFORCE_SFDX_JWT_KEY_FILE --instance-url \"$i\"" --shell sh < /dev/null
 }
 
 # Delete the records a test created, in one org. Best effort: warns and never changes the
@@ -362,8 +486,8 @@ function salesforce_sfdx_relogin() {
 #
 # Each call resets the retry budget, so one org's delete cannot starve another's.
 #
-#   salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_PASSWORD" \
-#     "$SALESFORCE_SECURITY_TOKEN" "$SALESFORCE_INSTANCE" \
+#   salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" \
+#     "$SALESFORCE_INSTANCE" \
 #     "Lead:FirstName='$LEAD_FIRSTNAME' AND LastName='$LEAD_LASTNAME'" \
 #     "PushTopic:Name='$PUSH_TOPICS_NAME'"
 # Wait for the connector's task to reach RUNNING, restarting it if it died with
@@ -488,8 +612,8 @@ function salesforce_use_test_creds() {
 }
 
 function salesforce_cleanup_records() {
-  local u="$1" p="$2" t="$3" i="$4"
-  shift 4
+  local u="$1" k="$2" i="$3"
+  shift 3
   local apex="" spec=""
 
   for spec in "$@"
@@ -499,7 +623,7 @@ function salesforce_cleanup_records() {
   done
 
   SALESFORCE_CREATE_RETRIES_USED=0
-  salesforce_sfdx_relogin "$u" "$p" "$t" "$i"
+  salesforce_sfdx_relogin "$u" "$k" "$i"
 
   if ! printf '%s' "$apex" | salesforce_sfdx_with_retry --stdin "sfdx apex run --target-org \"$u\""
   then
