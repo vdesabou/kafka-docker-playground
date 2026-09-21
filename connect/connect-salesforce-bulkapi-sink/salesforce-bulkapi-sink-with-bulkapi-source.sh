@@ -92,14 +92,16 @@ log "🔐 connector ${SALESFORCE_CONNECTOR_VERSION:-unknown} -> authenticating w
 
 if [ "$SALESFORCE_GRANT" = "JWT_BEARER" ]
 then
-  for v in SALESFORCE_CONSUMER_KEY_WITH_JWT SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2
-  do
-    if [ -z "${!v}" ]
-    then
-         logerror "$v is not set. Export it as environment variable or pass it as argument. Check README !"
-         exit 1
-    fi
-  done
+  if [ -z "$SALESFORCE_CONSUMER_KEY_WITH_JWT" ]
+  then
+       logerror "SALESFORCE_CONSUMER_KEY_WITH_JWT is not set. Export it as environment variable or pass it as argument. Check README !"
+       exit 1
+  fi
+  if [ -z "$SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2" ]
+  then
+       logerror "SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2 is not set. Export it as environment variable or pass it as argument. Check README !"
+       exit 1
+  fi
   # Both orgs' connected apps trust the same certificate, so one keystore covers source and
   # sink. docker-compose.plaintext.yml already mounts it into connect at /tmp.
   salesforce_ensure_jwt_keystore "$PWD" > /dev/null
