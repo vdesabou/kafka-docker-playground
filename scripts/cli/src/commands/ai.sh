@@ -73,10 +73,7 @@ then
             -e "s|:CONFLUENT_CLOUD_API_SECRET:|$CONFLUENT_CLOUD_API_SECRET|g" \
             $root_folder/scripts/cli/src/mcp-confluent-config-ccloud-template.yaml > $root_folder/config.yaml
 
-        # --registry: the packages are public, so do not go through a private
-        # registry the user may be logged out of (npm ERR! E401 would make the
-        # server exit at startup, and claude only reports "Failed to reconnect").
-        claude mcp add mcp-ccloud -- npx --registry=https://registry.npmjs.org -y @confluentinc/mcp-confluent --config ./config.yaml
+        claude mcp add mcp-ccloud -- npx -y @confluentinc/mcp-confluent --config ./config.yaml
         cd - > /dev/null
     else
         logerror "❌ .ccloud/.env file is not present!"
@@ -91,7 +88,7 @@ else
         claude mcp remove mcp-kafka > /dev/null 2>&1 || true
         cd $root_folder > /dev/null
         cp $root_folder/scripts/cli/src/mcp-confluent-config-local.yaml config.yaml
-        claude mcp add mcp-kafka -- npx --registry=https://registry.npmjs.org -y @confluentinc/mcp-confluent --config ./config.yaml
+        claude mcp add mcp-kafka -- npx -y @confluentinc/mcp-confluent --config ./config.yaml
         cd - > /dev/null
     else
         logwarn "🔐 $environment environment is used, using mcp-confluent server (https://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html) to interact with the cluster will not be used, only works with plaintext for now"
