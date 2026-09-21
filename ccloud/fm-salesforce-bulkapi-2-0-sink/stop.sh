@@ -17,7 +17,7 @@ then
     SALESFORCE_INSTANCE_ACCOUNT2=${SALESFORCE_INSTANCE_ACCOUNT2:-"https://login.salesforce.com"}
 
     log "Login with sfdx CLI on the account #2"
-    docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\""
+    salesforce_sfdx_login "$SALESFORCE_USERNAME_ACCOUNT2" "$SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2" "$SALESFORCE_INSTANCE_ACCOUNT2"
 
     log "Bulk delete leads"
     docker exec sfdx-cli sh -c "sfdx data:query --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -q \"SELECT Id FROM Lead\" --result-format csv" > /tmp/out.csv

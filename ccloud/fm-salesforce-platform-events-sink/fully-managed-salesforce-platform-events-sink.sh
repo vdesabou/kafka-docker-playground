@@ -82,7 +82,7 @@ wait_for_ccloud_connector_up $connector_name 180
 
 
 log "Login with sfdx CLI"
-docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
+salesforce_sfdx_login "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE"
 
 log "Send Platform Events"
 docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" -f \"/tmp/event.apex\""
