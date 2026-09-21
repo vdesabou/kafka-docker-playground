@@ -45,8 +45,11 @@ for i in $(seq 1 $RETRIES); do
     log "Attempt $i to delete cluster $CLUSTER_NAME"
     if aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
     then
+        log "Waiting for cluster $CLUSTER_NAME to be fully deleted"
+        # Redshift delete is async; wait for it rather than a fixed sleep that
+        # raced create-cluster (ClusterAlreadyExists) and SG delete.
+        aws redshift wait cluster-deleted --cluster-identifier $CLUSTER_NAME
         log "Cluster $CLUSTER_NAME deleted successfully"
-        sleep 120
         log "Delete security group sg$CLUSTER_NAME, if required"
         aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
         break
@@ -63,11 +66,23 @@ for i in $(seq 1 $RETRIES); do
 done
 log "Delete security group sg$CLUSTER_NAME, if required"
 aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
+# Safety net: wait out any same-named cluster left mid-deletion by a prior run.
+aws redshift wait cluster-deleted --cluster-identifier $CLUSTER_NAME 2>/dev/null || true
 set -e
 
 log "Create AWS Redshift cluster"
 # https://docs.aws.amazon.com/redshift/latest/mgmt/getting-started-cli.html
 aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password myPassword1 --node-type ra3.large --cluster-type single-node --publicly-accessible --tags Key=cflt_managed_by,Value=user Key=cflt_managed_id,Value="$USER"
+
+function cleanup_cloud_resources {
+  set +e
+  log "Delete AWS Redshift cluster $CLUSTER_NAME"
+  check_if_continue
+  aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
+  log "Delete security group sg$CLUSTER_NAME, if required"
+  aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
+}
+trap cleanup_cloud_resources EXIT
 
 # Verify AWS Redshift cluster has started within MAX_WAIT seconds
 MAX_WAIT=480
