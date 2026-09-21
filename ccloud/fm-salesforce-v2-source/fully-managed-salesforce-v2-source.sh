@@ -29,6 +29,12 @@ then
      exit 1
 fi
 
+if [ -z "$SALESFORCE_CONSUMER_KEY_WITH_JWT" ]
+then
+     logerror "SALESFORCE_CONSUMER_KEY_WITH_JWT is not set. Export it as environment variable or pass it as argument. Check README !"
+     exit 1
+fi
+
 bootstrap_ccloud_environment
 
 
@@ -75,7 +81,7 @@ EOF
 wait_for_ccloud_connector_up $connector_name 180
 
 log "Login with sfdx CLI"
-docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
+salesforce_sfdx_login "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE"
 
 LEAD_FIRSTNAME=John_$RANDOM
 LEAD_LASTNAME=Doe_$RANDOM
