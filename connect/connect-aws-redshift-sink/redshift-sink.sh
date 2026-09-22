@@ -25,6 +25,26 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 CLUSTER_NAME=pg${USER}redshift${GITHUB_RUN_NUMBER}${TAG_BASE}
 CLUSTER_NAME=${CLUSTER_NAME//[-._]/}
 
+function delete_redshift_security_group_with_retry {
+  local CLUSTER_TO_DELETE=$1
+  aws redshift wait cluster-deleted --cluster-identifier "$CLUSTER_TO_DELETE" 2>/dev/null
+  log "Delete security group sg$CLUSTER_TO_DELETE, if required"
+  local SG_DELETE_RETRIES=${SG_DELETE_RETRIES:-5}
+  local sg_deleted=false
+  for sg_attempt in $(seq 1 "$SG_DELETE_RETRIES"); do
+      sleep 120
+      if aws ec2 delete-security-group --group-name sg$CLUSTER_TO_DELETE
+      then
+          sg_deleted=true
+          break
+      fi
+  done
+  if [ "$sg_deleted" != true ]
+  then
+      logwarn "Failed to delete security group sg$CLUSTER_TO_DELETE after cluster $CLUSTER_TO_DELETE was deleted - it will not be retried"
+  fi
+}
+
 # CLUSTER_NAME is unique per run, so a cluster from a killed job (SIGKILL, timeout,
 # agent preemption) is never reused/reclaimed by a future run's exact-name delete.
 # Reap this script's own clusters by age instead of by name so a killed job still gets cleaned
@@ -40,24 +60,9 @@ function reap_redshift_cluster {
   if [ $? -eq 0 ]
   then
       log "Cluster $CLUSTER_TO_DELETE deleted successfully"
-      aws redshift wait cluster-deleted --cluster-identifier "$CLUSTER_TO_DELETE" 2>/dev/null
-      log "Delete security group sg$CLUSTER_TO_DELETE, if required"
       # Once the cluster is gone it never reappears in a future describe-clusters scan,
       # so this is the only chance the reaper gets to clean up its security group.
-      local SG_DELETE_RETRIES=${SG_DELETE_RETRIES:-5}
-      local sg_deleted=false
-      for sg_attempt in $(seq 1 "$SG_DELETE_RETRIES"); do
-          sleep 120
-          if aws ec2 delete-security-group --group-name sg$CLUSTER_TO_DELETE
-          then
-              sg_deleted=true
-              break
-          fi
-      done
-      if [ "$sg_deleted" != true ]
-      then
-          logwarn "Failed to delete security group sg$CLUSTER_TO_DELETE after cluster $CLUSTER_TO_DELETE was deleted - it will not be retried (the cluster no longer appears in future scans)"
-      fi
+      delete_redshift_security_group_with_retry "$CLUSTER_TO_DELETE"
       return 0
   else
       logwarn "Failed to reap cluster $CLUSTER_TO_DELETE: $error (will retry on a future run)"
@@ -102,8 +107,7 @@ function cleanup_cloud_resources {
   log "Delete AWS Redshift cluster $CLUSTER_NAME"
   check_if_continue
   aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
-  log "Delete security group sg$CLUSTER_NAME, if required"
-  aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
+  delete_redshift_security_group_with_retry "$CLUSTER_NAME"
 }
 trap cleanup_cloud_resources EXIT
 
