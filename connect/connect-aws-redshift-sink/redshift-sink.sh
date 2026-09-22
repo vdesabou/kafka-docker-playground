@@ -43,18 +43,16 @@ function reap_redshift_cluster {
       aws redshift wait cluster-deleted --cluster-identifier "$CLUSTER_TO_DELETE" 2>/dev/null
       log "Delete security group sg$CLUSTER_TO_DELETE, if required"
       # Once the cluster is gone it never reappears in a future describe-clusters scan,
-      # so this is the only chance the reaper gets to clean up its security group - a
-      # short retry here is worth it since delete-security-group is fast/synchronous and
-      # a DependencyViolation right after cluster deletion is usually just eventual
-      # consistency clearing within a few seconds.
+      # so this is the only chance the reaper gets to clean up its security group.
+      local SG_DELETE_RETRIES=${SG_DELETE_RETRIES:-5}
       local sg_deleted=false
-      for sg_attempt in 1 2 3; do
+      for sg_attempt in $(seq 1 "$SG_DELETE_RETRIES"); do
+          sleep 120
           if aws ec2 delete-security-group --group-name sg$CLUSTER_TO_DELETE
           then
               sg_deleted=true
               break
           fi
-          sleep 10
       done
       if [ "$sg_deleted" != true ]
       then
