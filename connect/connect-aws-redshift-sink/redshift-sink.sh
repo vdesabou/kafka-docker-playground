@@ -25,34 +25,74 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 CLUSTER_NAME=pg${USER}redshift${GITHUB_RUN_NUMBER}${TAG_BASE}
 CLUSTER_NAME=${CLUSTER_NAME//[-._]/}
 
-log "Delete AWS Redshift cluster, if required"
+# CLUSTER_NAME is unique per run, so a cluster from a killed job (SIGKILL, timeout,
+# agent preemption) is never reused/reclaimed by a future run's exact-name delete.
+# Reap this script's own clusters by age instead of by name so a killed job still gets cleaned
+# up eventually, by whichever run notices it next.
+function reap_redshift_cluster {
+  local CLUSTER_TO_DELETE=$1
+  # Unlike the old pre-create delete logic, this run's own cluster creation never depends
+  # on this function to succeed. It is deleting some other run's leftover. So one attempt is enough: if
+  # it fails (e.g. transient InvalidClusterState), the reaper picks it up again next
+  # run, now even older instead of retrying/sleeping in this run for no benefit to it.
+  local error
+  error=$(aws redshift delete-cluster --cluster-identifier $CLUSTER_TO_DELETE --skip-final-cluster-snapshot 2>&1)
+  if [ $? -eq 0 ]
+  then
+      log "Cluster $CLUSTER_TO_DELETE deleted successfully"
+      aws redshift wait cluster-deleted --cluster-identifier "$CLUSTER_TO_DELETE" 2>/dev/null
+      log "Delete security group sg$CLUSTER_TO_DELETE, if required"
+      # Once the cluster is gone it never reappears in a future describe-clusters scan,
+      # so this is the only chance the reaper gets to clean up its security group - a
+      # short retry here is worth it since delete-security-group is fast/synchronous and
+      # a DependencyViolation right after cluster deletion is usually just eventual
+      # consistency clearing within a few seconds.
+      local sg_deleted=false
+      for sg_attempt in 1 2 3; do
+          if aws ec2 delete-security-group --group-name sg$CLUSTER_TO_DELETE
+          then
+              sg_deleted=true
+              break
+          fi
+          sleep 10
+      done
+      if [ "$sg_deleted" != true ]
+      then
+          logwarn "Failed to delete security group sg$CLUSTER_TO_DELETE after cluster $CLUSTER_TO_DELETE was deleted - it will not be retried (the cluster no longer appears in future scans)"
+      fi
+      return 0
+  else
+      logwarn "Failed to reap cluster $CLUSTER_TO_DELETE: $error (will retry on a future run)"
+      return 1
+  fi
+}
+
+REDSHIFT_REAP_MAX_AGE_HOURS=${REDSHIFT_REAP_MAX_AGE_HOURS:-6}
+REAP_PREFIX="pg${USER}redshift"
+log "Reap AWS Redshift clusters matching ${REAP_PREFIX}* older than ${REDSHIFT_REAP_MAX_AGE_HOURS}h, if any"
 set +e
-RETRIES=3
-# Set the retry interval in seconds
-RETRY_INTERVAL=60
-# Attempt to delete the cluster
-for i in $(seq 1 $RETRIES); do
-    log "Attempt $i to delete cluster $CLUSTER_NAME"
-    if aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
-    then
-        log "Cluster $CLUSTER_NAME deleted successfully"
-        sleep 120
-        log "Delete security group sg$CLUSTER_NAME, if required"
-        aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
-        break
-    else
-        error=$(aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot 2>&1)
-        if [[ $error == *"InvalidClusterState"* ]]
+NOW_EPOCH=$(date -u +%s)
+STALE_CLUSTERS=$(aws redshift describe-clusters --query "Clusters[?starts_with(ClusterIdentifier, '${REAP_PREFIX}')].[ClusterIdentifier,ClusterCreateTime]" --output text)
+if [ -n "$STALE_CLUSTERS" ]
+then
+    while IFS=$'\t' read -r STALE_NAME STALE_CREATE_TIME
+    do
+        [ -z "$STALE_NAME" ] && continue
+        if [[ "$OSTYPE" == "darwin"* ]]
         then
-            logwarn "InvalidClusterState error encountered. Retrying in $RETRY_INTERVAL seconds..."
-            sleep $RETRY_INTERVAL
+            STALE_CREATE_EPOCH=$(date -j -u -f "%Y-%m-%dT%H:%M:%S" "${STALE_CREATE_TIME%%.*}" +%s 2>/dev/null)
         else
-            logwarn "Error deleting cluster $CLUSTER_NAME: $error"
+            STALE_CREATE_EPOCH=$(date -u -d "$STALE_CREATE_TIME" +%s 2>/dev/null)
         fi
-    fi
-done
-log "Delete security group sg$CLUSTER_NAME, if required"
-aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
+        [ -z "$STALE_CREATE_EPOCH" ] && continue
+        AGE_HOURS=$(( (NOW_EPOCH - STALE_CREATE_EPOCH) / 3600 ))
+        if [ "$AGE_HOURS" -ge "$REDSHIFT_REAP_MAX_AGE_HOURS" ]
+        then
+            logwarn "Reaping orphaned Redshift cluster $STALE_NAME (age ${AGE_HOURS}h)"
+            reap_redshift_cluster "$STALE_NAME"
+        fi
+    done <<< "$STALE_CLUSTERS"
+fi
 set -e
 
 log "Create AWS Redshift cluster"
