@@ -18,6 +18,10 @@ then
 fi
 
 dump_mongodb_diagnostics() {
+    echo "=== DIAGNOSTIC: host kernel/OS (checking applicability of https://jira.mongodb.org/browse/SERVER-121912, kernel 6.19+) ==="
+    uname -a 2>&1 || true
+    cat /etc/os-release 2>&1 || true
+    echo
     echo "=== DIAGNOSTIC: mongodb container state (docker inspect) ==="
     docker inspect mongodb --format '{{json .State}}' 2>&1 || true
     echo
