@@ -2,7 +2,7 @@
 services:
 
   mongodb:
-    image: mongo:latest
+    image: mongo:8.0.32
     hostname: mongodb
     container_name: mongodb
     ports:
@@ -10,7 +10,7 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: debezium
       MONGO_INITDB_ROOT_PASSWORD: dbz
-    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "debezium", "--wiredTigerCacheSizeGB", "0.25" ]
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "debezium" ]
 
   mongo-express:
     image: mongo-express:latest
