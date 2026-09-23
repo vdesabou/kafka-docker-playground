@@ -17,6 +17,29 @@ then
      exit 111
 fi
 
+dump_mongodb_diagnostics() {
+    echo "=== DIAGNOSTIC: mongodb container state (docker inspect) ==="
+    docker inspect mongodb --format '{{json .State}}' 2>&1 || true
+    echo
+    echo "=== DIAGNOSTIC: mongodb container logs (last 200 lines) ==="
+    docker logs --tail 200 mongodb 2>&1 || true
+    echo
+    echo "=== DIAGNOSTIC: dmesg (oom/kill-related lines) ==="
+    if command -v dmesg >/dev/null 2>&1; then
+        (dmesg 2>&1 || sudo dmesg 2>&1 || true) | grep -iE "kill|oom" | tail -50
+    else
+        echo "dmesg not available on this host"
+    fi
+    echo
+    echo "=== DIAGNOSTIC: host memory ==="
+    if command -v free >/dev/null 2>&1; then
+        free -h 2>&1 || true
+    else
+        vm_stat 2>&1 || echo "no memory stats command available"
+    fi
+}
+trap dump_mongodb_diagnostics EXIT
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

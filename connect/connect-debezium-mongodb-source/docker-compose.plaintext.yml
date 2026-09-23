@@ -2,7 +2,7 @@
 services:
 
   mongodb:
-    image: mongo:8.0.32
+    image: mongo:latest
     hostname: mongodb
     container_name: mongodb
     ports:
