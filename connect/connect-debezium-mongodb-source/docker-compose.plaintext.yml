@@ -10,7 +10,7 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: debezium
       MONGO_INITDB_ROOT_PASSWORD: dbz
-    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "debezium" ]
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "debezium", "--wiredTigerCacheSizeGB", "0.25" ]
 
   mongo-express:
     image: mongo-express:latest
