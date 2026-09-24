@@ -16219,7 +16219,7 @@ function validate_ccloud_connector_up() {
   if [ -f "/tmp/config-$connector" ]
   then
     set +e
-    playground connector create-or-update --connector "$connector" --no-clipboard < "/tmp/config-$connector" > /tmp/output.log 2>&1
+    PG_SKIP_ERROR_RECOMMENDATIONS=1 playground connector create-or-update --connector "$connector" --no-clipboard < "/tmp/config-$connector" > /tmp/output.log 2>&1
     if [ $? -ne 0 ]
     then
       echo "💀"
@@ -16265,7 +16265,14 @@ function wait_for_ccloud_connector_up() {
 
   connectorId=$(get_ccloud_connector_lcc $connectorName)
   log "⏳ waiting up to $maxWait seconds for connector $connectorName ($connectorId) to be RUNNING"
-  ccloud::retry $maxWait validate_ccloud_connector_up $connectorName || exit 1
+  if ! ccloud::retry $maxWait validate_ccloud_connector_up $connectorName
+  then
+    logerror "❌ connector $connectorName ($connectorId) is not RUNNING after $maxWait seconds"
+    set +e
+    playground connector status --connector $connectorName
+    set -e
+    exit 1
+  fi
   log "🟢 connector $connectorName ($connectorId) is RUNNING"
 
   if [ -z "$GITHUB_RUN_NUMBER" ]
@@ -36306,6 +36313,13 @@ playground_connector_status_command() {
           printf "%-30s %-12s %-30s %-50s\n" "$connector" "$status" "$tasks" "$stacktrace"
           echo "-------------------------------------------------------------------------------------------------------------"
 
+          # PG_SKIP_ERROR_RECOMMENDATIONS is set by callers running this command in a loop (show-lag, validate_ccloud_connector_up)
+          if [ -z "$PG_SKIP_ERROR_RECOMMENDATIONS" ] && echo "$curl_output" | jq -e '[.connector.state, .tasks[]?.state] | index("FAILED")' > /dev/null 2>&1
+          then
+              log "💡 $connector_type connector $connector is failing, getting error recommendations from Confluent Cloud"
+              playground connector error-recommendations --connector $connector || true
+          fi
+
       # --- ON PREM BLOCK ---
       else
           log "🧩 Displaying status for $connector_type connector $connector"
@@ -38021,7 +38035,7 @@ playground_connector_show_lag_command() {
 
       while [ "$status_wait_elapsed" -le "$status_wait_timeout" ]
       do
-        playground connector status --connector $connector > $tmp_dir/result.log 2>&1
+        PG_SKIP_ERROR_RECOMMENDATIONS=1 playground connector status --connector $connector > $tmp_dir/result.log 2>&1
 
         if [ "$(grep -c "✅" $tmp_dir/result.log)" -eq 1 ] && [ "$(grep -c "🟢" $tmp_dir/result.log)" -ge 1 ]
         then

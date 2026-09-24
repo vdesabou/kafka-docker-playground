@@ -171,6 +171,13 @@ do
         printf "%-30s %-12s %-30s %-50s\n" "$connector" "$status" "$tasks" "$stacktrace"
         echo "-------------------------------------------------------------------------------------------------------------"
 
+        # PG_SKIP_ERROR_RECOMMENDATIONS is set by callers running this command in a loop (show-lag, validate_ccloud_connector_up)
+        if [ -z "$PG_SKIP_ERROR_RECOMMENDATIONS" ] && echo "$curl_output" | jq -e '[.connector.state, .tasks[]?.state] | index("FAILED")' > /dev/null 2>&1
+        then
+            log "💡 $connector_type connector $connector is failing, getting error recommendations from Confluent Cloud"
+            playground connector error-recommendations --connector $connector || true
+        fi
+
     # --- ON PREM BLOCK ---
     else
         log "🧩 Displaying status for $connector_type connector $connector"

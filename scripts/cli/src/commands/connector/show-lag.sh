@@ -186,7 +186,7 @@ do
 
     while [ "$status_wait_elapsed" -le "$status_wait_timeout" ]
     do
-      playground connector status --connector $connector > $tmp_dir/result.log 2>&1
+      PG_SKIP_ERROR_RECOMMENDATIONS=1 playground connector status --connector $connector > $tmp_dir/result.log 2>&1
 
       if [ "$(grep -c "✅" $tmp_dir/result.log)" -eq 1 ] && [ "$(grep -c "🟢" $tmp_dir/result.log)" -ge 1 ]
       then

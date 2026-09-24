@@ -2268,7 +2268,7 @@ function validate_ccloud_connector_up() {
   if [ -f "/tmp/config-$connector" ]
   then
     set +e
-    playground connector create-or-update --connector "$connector" --no-clipboard < "/tmp/config-$connector" > /tmp/output.log 2>&1
+    PG_SKIP_ERROR_RECOMMENDATIONS=1 playground connector create-or-update --connector "$connector" --no-clipboard < "/tmp/config-$connector" > /tmp/output.log 2>&1
     if [ $? -ne 0 ]
     then
       echo "💀"
@@ -2314,7 +2314,14 @@ function wait_for_ccloud_connector_up() {
 
   connectorId=$(get_ccloud_connector_lcc $connectorName)
   log "⏳ waiting up to $maxWait seconds for connector $connectorName ($connectorId) to be RUNNING"
-  ccloud::retry $maxWait validate_ccloud_connector_up $connectorName || exit 1
+  if ! ccloud::retry $maxWait validate_ccloud_connector_up $connectorName
+  then
+    logerror "❌ connector $connectorName ($connectorId) is not RUNNING after $maxWait seconds"
+    set +e
+    playground connector status --connector $connectorName
+    set -e
+    exit 1
+  fi
   log "🟢 connector $connectorName ($connectorId) is RUNNING"
 
   if [ -z "$GITHUB_RUN_NUMBER" ]
