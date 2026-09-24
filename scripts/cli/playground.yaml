@@ -3997,6 +3997,7 @@ subcommands:
         🔧 Manage
           list / describe / alter / delete
           set-schema-compatibility   compatibility of the topic subjects
+          tag             stream catalog tags (Confluent Cloud only)
         
         Serialisation is handled for you: 'produce' registers the schema you give
         it and 'consume' works out from the payload whether it is avro, protobuf,
@@ -4717,6 +4718,208 @@ subcommands:
             🗳 Topic name
             
             Required: ✓ Yes
+            
+      - name: tag
+        description: | 
+          🏷️ Stream Catalog tags (Confluent Cloud only)
+            
+            Tag definitions live in the Stream Catalog of the environment, served
+            by the Schema Registry endpoint. Create a tag once, then assign it to
+            topics and search topics by tag.
+            
+              list     tag definitions
+              create   create a tag definition
+              delete   delete a tag definition
+              add      assign a tag to a topic
+              remove   remove a tag from a topic
+              show     tags assigned to a topic
+              search   topics having a tag
+            
+            🎓 Tip: a newly created topic can take a minute to show up in the
+            Stream Catalog before a tag can be assigned to it.
+        usage: playground topic tag COMMAND
+        options: []
+  - name: tag
+    description: | 
+        🏷️ Stream Catalog tags (Confluent Cloud only)
+        
+        Tag definitions live in the Stream Catalog of the environment, served
+        by the Schema Registry endpoint. Create a tag once, then assign it to
+        topics and search topics by tag.
+        
+          list     tag definitions
+          create   create a tag definition
+          delete   delete a tag definition
+          add      assign a tag to a topic
+          remove   remove a tag from a topic
+          show     tags assigned to a topic
+          search   topics having a tag
+        
+        🎓 Tip: a newly created topic can take a minute to show up in the
+        Stream Catalog before a tag can be assigned to it.
+    usage: playground topic tag COMMAND
+    options: []
+    subcommands:
+      - name: list
+        description: | 
+          🏷️ List tag definitions
+        usage: playground topic tag list [OPTIONS]
+        options:
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+      - name: create
+        description: | 
+          🆕 Create a tag definition
+        usage: playground topic tag create [OPTIONS]
+        options:
+        - names:
+          - --tag
+          argument: TAG
+          description: | 
+            🏷️ Tag name (letters, digits and underscores, starting with a letter)
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --description
+          argument: 
+          description: | 
+            📝 Tag description
+            
+            Default value: 
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+      - name: delete
+        description: | 
+          ❌ Delete a tag definition
+            
+            The tag must not be assigned to any topic anymore.
+        usage: playground topic tag delete [OPTIONS]
+        options:
+        - names:
+          - --tag
+          argument: TAG
+          description: | 
+            🏷️ Tag name
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+      - name: add
+        description: | 
+          🏷️ Assign a tag to a topic
+        usage: playground topic tag add [OPTIONS]
+        options:
+        - names:
+          - --topic
+          - -t
+          argument: TOPIC
+          description: | 
+            🗳 Topic name
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --tag
+          argument: TAG
+          description: | 
+            🏷️ Tag name
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+      - name: remove
+        description: | 
+          🧽 Remove a tag from a topic
+        usage: playground topic tag remove [OPTIONS]
+        options:
+        - names:
+          - --topic
+          - -t
+          argument: TOPIC
+          description: | 
+            🗳 Topic name
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --tag
+          argument: TAG
+          description: | 
+            🏷️ Tag name
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+      - name: show
+        description: | 
+          🔎 Show tags assigned to a topic
+        usage: playground topic tag show [OPTIONS]
+        options:
+        - names:
+          - --topic
+          - -t
+          argument: TOPIC
+          description: | 
+            🗳 Topic name
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+      - name: search
+        description: | 
+          🔎 Search topics having a tag
+        usage: playground topic tag search [OPTIONS]
+        options:
+        - names:
+          - --tag
+          argument: TAG
+          description: | 
+            🏷️ Tag name
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
             
   - name: consumer-group
     description: | 

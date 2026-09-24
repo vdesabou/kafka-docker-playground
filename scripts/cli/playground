@@ -168,6 +168,7 @@ playground_usage() {
   printf "  %s   🆕 Create topic\n" "$(green "topic create")                              "
   printf "  %s   ❌ Delete topic and associated schema/subject if applicable\n" "$(green "topic delete")                              "
   printf "  %s   🪛 Alter topic config\n" "$(green "topic alter")                               "
+  printf "  %s   🏷️ Stream Catalog tags (Confluent Cloud only)\n" "$(green "topic tag")                                 "
   printf "  %s   👥 Consumer group commands\n" "$(green "consumer-group")                            "
   printf "  %s   👥 List consumer groups\n" "$(green "consumer-group list")                       "
   printf "  %s   🔬 Describe consumer group\n" "$(green "consumer-group describe")                   "
@@ -813,6 +814,28 @@ playground_get_consumer_group_list_usage() {
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground get-consumer-group-list\n"
   printf "  playground get-consumer-group-list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_get_catalog_tag_list_usage() {
+  printf "playground get-catalog-tag-list - Return some completion for stream catalog tag list\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground get-catalog-tag-list\n"
+  printf "  playground get-catalog-tag-list --help | -h\n"
   echo
 
   # :command.long_usage
@@ -7172,7 +7195,7 @@ playground_container_wait_for_connect_rest_api_ready_usage() {
 playground_topic_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground topic\n\n"
-    printf "  🗳 Topic commands\n  \n  Produce, consume and manage topics without dealing with the kafka-* shell\n  scripts: the bootstrap server, the security properties and the schema\n  registry url are all derived from the running environment, so the same\n  command works on plaintext, on sasl-ssl and on Confluent Cloud.\n  \n  📤 Get data in\n    produce         generate records from a schema, or from your own data\n    create          create a topic with the partitions you need\n  \n  📥 Get data out\n    consume         read from the beginning, deserialising automatically\n    get-number-records   count what is in the topic\n    get-offsets          earliest and latest offsets per partition\n    display-consumer-offsets   read the internal offsets topic\n  \n  🔧 Manage\n    list / describe / alter / delete\n    set-schema-compatibility   compatibility of the topic subjects\n  \n  Serialisation is handled for you: 'produce' registers the schema you give\n  it and 'consume' works out from the payload whether it is avro, protobuf,\n  json schema or plain text.\n  \n  🎓 Tip: in an example script, 'consume --min-expected-messages N' is the\n  assertion that the data made it through; it fails the run if it did not.\n\n"
+    printf "  🗳 Topic commands\n  \n  Produce, consume and manage topics without dealing with the kafka-* shell\n  scripts: the bootstrap server, the security properties and the schema\n  registry url are all derived from the running environment, so the same\n  command works on plaintext, on sasl-ssl and on Confluent Cloud.\n  \n  📤 Get data in\n    produce         generate records from a schema, or from your own data\n    create          create a topic with the partitions you need\n  \n  📥 Get data out\n    consume         read from the beginning, deserialising automatically\n    get-number-records   count what is in the topic\n    get-offsets          earliest and latest offsets per partition\n    display-consumer-offsets   read the internal offsets topic\n  \n  🔧 Manage\n    list / describe / alter / delete\n    set-schema-compatibility   compatibility of the topic subjects\n    tag             stream catalog tags (Confluent Cloud only)\n  \n  Serialisation is handled for you: 'produce' registers the schema you give\n  it and 'consume' works out from the payload whether it is avro, protobuf,\n  json schema or plain text.\n  \n  🎓 Tip: in an example script, 'consume --min-expected-messages N' is the\n  assertion that the data made it through; it fails the run if it did not.\n\n"
   else
     printf "playground topic - 🗳 Topic commands\n\n"
   fi
@@ -7194,6 +7217,7 @@ playground_topic_usage() {
   printf "  %s   🆕 Create topic\n" "$(green "create")                  "
   printf "  %s   ❌ Delete topic and associated schema/subject if applicable\n" "$(green "delete")                  "
   printf "  %s   🪛 Alter topic config\n" "$(green "alter")                   "
+  printf "  %s   🏷️ Stream Catalog tags (Confluent Cloud only)\n" "$(green "tag")                     "
   echo
 
   # :command.long_usage
@@ -7871,6 +7895,320 @@ playground_topic_alter_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground topic alter --topic atopic --add-config max.message.bytes=5242940\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_tag_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground topic tag\n\n"
+    printf "  🏷️ Stream Catalog tags (Confluent Cloud only)\n  \n  Tag definitions live in the Stream Catalog of the environment, served\n  by the Schema Registry endpoint. Create a tag once, then assign it to\n  topics and search topics by tag.\n  \n    list     tag definitions\n    create   create a tag definition\n    delete   delete a tag definition\n    add      assign a tag to a topic\n    remove   remove a tag from a topic\n    show     tags assigned to a topic\n    search   topics having a tag\n  \n  🎓 Tip: a newly created topic can take a minute to show up in the\n  Stream Catalog before a tag can be assigned to it.\n\n"
+  else
+    printf "playground topic tag - 🏷️ Stream Catalog tags (Confluent Cloud only)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic tag COMMAND\n"
+  printf "  playground topic tag [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🏷️ List tag definitions\n" "$(green "list")  "
+  printf "  %s   🆕 Create a tag definition\n" "$(green "create")"
+  printf "  %s   ❌ Delete a tag definition\n" "$(green "delete")"
+  printf "  %s   🏷️ Assign a tag to a topic\n" "$(green "add")   "
+  printf "  %s   🧽 Remove a tag from a topic\n" "$(green "remove")"
+  printf "  %s   🔎 Show tags assigned to a topic\n" "$(green "show")  "
+  printf "  %s   🔎 Search topics having a tag\n" "$(green "search")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_tag_list_usage() {
+  printf "playground topic tag list - 🏷️ List tag definitions\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic tag list [OPTIONS]\n"
+  printf "  playground topic tag list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_tag_create_usage() {
+  printf "playground topic tag create - 🆕 Create a tag definition\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic tag create [OPTIONS]\n"
+  printf "  playground topic tag create --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--tag TAG (required)")"
+    printf "    🏷️ Tag name (letters, digits and underscores, starting with a letter)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--description DESCRIPTION")"
+    printf "    📝 Tag description\n"
+    printf "    %s\n" "Default: "
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground topic tag create --tag PII --description \"Personally identifiable\n  information\"\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_tag_delete_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground topic tag delete\n\n"
+    printf "  ❌ Delete a tag definition\n  \n  The tag must not be assigned to any topic anymore.\n\n"
+  else
+    printf "playground topic tag delete - ❌ Delete a tag definition\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic tag delete [OPTIONS]\n"
+  printf "  playground topic tag delete --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--tag TAG (required)")"
+    printf "    🏷️ Tag name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground topic tag delete --tag PII\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_tag_add_usage() {
+  printf "playground topic tag add - 🏷️ Assign a tag to a topic\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic tag add [OPTIONS]\n"
+  printf "  playground topic tag add --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
+    printf "    🗳 Topic name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--tag TAG (required)")"
+    printf "    🏷️ Tag name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground topic tag add --topic pageviews --tag PII\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_tag_remove_usage() {
+  printf "playground topic tag remove - 🧽 Remove a tag from a topic\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic tag remove [OPTIONS]\n"
+  printf "  playground topic tag remove --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
+    printf "    🗳 Topic name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--tag TAG (required)")"
+    printf "    🏷️ Tag name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground topic tag remove --topic pageviews --tag PII\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_tag_show_usage() {
+  printf "playground topic tag show - 🔎 Show tags assigned to a topic\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic tag show [OPTIONS]\n"
+  printf "  playground topic tag show --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
+    printf "    🗳 Topic name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground topic tag show --topic pageviews\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_tag_search_usage() {
+  printf "playground topic tag search - 🔎 Search topics having a tag\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic tag search [OPTIONS]\n"
+  printf "  playground topic tag search --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--tag TAG (required)")"
+    printf "    🏷️ Tag name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground topic tag search --tag PII\n"
     echo
 
   fi
@@ -10900,6 +11238,66 @@ function get_security_broker() {
   elif [[ "$environment" != *plaintext ]]
   then
       security="$config_file_name /etc/kafka/secrets/client_without_interceptors.config"
+  fi
+}
+
+# Call the Confluent Cloud Stream Catalog REST API, served by the Schema Registry
+# endpoint of the environment. Sets $curl_output, returns 1 on an HTTP error.
+# Honors $verbose to print the command.
+# Usage: handle_catalog_rest_api <method> <path> [json body]
+function handle_catalog_rest_api() {
+  method="$1"
+  path="$2"
+  body="$3"
+
+  get_kafka_docker_playground_dir
+  DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+  if [ -f $DELTA_CONFIGS_ENV ]
+  then
+    source $DELTA_CONFIGS_ENV
+  else
+    logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
+    exit 1
+  fi
+
+  if [[ -n "$verbose" ]]
+  then
+    log "🐞 curl command used"
+    if [ -n "$body" ]
+    then
+      echo "curl -s -X $method -u \$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO -H \"Content-Type: application/json\" --data '$body' \"$SCHEMA_REGISTRY_URL$path\""
+    else
+      echo "curl -s -X $method -u \$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO \"$SCHEMA_REGISTRY_URL$path\""
+    fi
+  fi
+
+  if [ -n "$body" ]
+  then
+    curl_output=$(curl -s -w '\n%{http_code}' -X $method -u "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -H "Content-Type: application/json" --data "$body" "$SCHEMA_REGISTRY_URL$path")
+  else
+    curl_output=$(curl -s -w '\n%{http_code}' -X $method -u "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$SCHEMA_REGISTRY_URL$path")
+  fi
+  http_code=$(echo "$curl_output" | tail -n1)
+  curl_output=$(echo "$curl_output" | sed '$d')
+
+  if [[ ! "$http_code" =~ ^2 ]]
+  then
+    message=$(echo "$curl_output" | jq -r '.message // .error_message // empty' 2>/dev/null || true)
+    logerror "❌ Stream Catalog API returned HTTP $http_code: ${message:-$curl_output}"
+    return 1
+  fi
+}
+
+# Resolve the Stream Catalog qualified name (lsrc-xxx:lkc-xxx:topic) of a topic.
+# Sets $qualified_name, returns 1 if the topic is not (yet) in the catalog.
+function get_catalog_topic_qualified_name() {
+  topic="$1"
+  handle_catalog_rest_api GET "/catalog/v1/search/basic?types=kafka_topic&query=$topic&limit=100" || return 1
+  qualified_name=$(echo "$curl_output" | jq -r --arg topic "$topic" '[.entities[]? | select(.typeName == "kafka_topic") | .attributes.qualifiedName | select(endswith(":" + $topic))][0] // empty')
+  if [ -z "$qualified_name" ]
+  then
+    logerror "❌ topic $topic was not found in the Stream Catalog (a newly created topic can take a minute to show up)"
+    return 1
   fi
 }
 
@@ -18853,6 +19251,16 @@ playground_get_consumer_group_list_command() {
   # src/commands/get-consumer-group-list.sh
   set +e
   run_kafka_admin_tool kafka-consumer-groups --list 2>/dev/null | grep -v "No configuration found" | sort
+  set -e
+
+}
+
+# :command.function
+playground_get_catalog_tag_list_command() {
+
+  # src/commands/get-catalog-tag-list.sh
+  set +e
+  handle_catalog_rest_api GET "/catalog/v1/types/tagdefs" > /dev/null 2>&1 && echo "$curl_output" | jq -r '.[].name' | sort
   set -e
 
 }
@@ -35038,6 +35446,156 @@ playground_topic_alter_command() {
 }
 
 # :command.function
+playground_topic_tag_list_command() {
+
+  # src/commands/topic/tag/list.sh
+  verbose="${args[--verbose]}"
+
+  log "🏷️ Listing Stream Catalog tag definitions"
+  handle_catalog_rest_api GET "/catalog/v1/types/tagdefs" || exit 1
+  if [ "$(echo "$curl_output" | jq 'length')" == "0" ]
+  then
+      log "💤 No tag defined, create one with 'playground topic tag create --tag <tag>'"
+      exit 0
+  fi
+  printf "%-30s %-60s\n" "TAG" "DESCRIPTION"
+  echo "$curl_output" | jq -r '.[] | [.name, (.description // "")] | @tsv' | sort | while IFS=$'\t' read -r name description
+  do
+      printf "%-30s %-60s\n" "$name" "$description"
+  done
+
+}
+
+# :command.function
+playground_topic_tag_create_command() {
+
+  # src/commands/topic/tag/create.sh
+  tag="${args[--tag]}"
+  description="${args[--description]}"
+  verbose="${args[--verbose]}"
+
+  if [[ ! "$tag" =~ ^[A-Za-z][A-Za-z0-9_]*$ ]]
+  then
+      logerror "❌ tag name $tag is not valid: it must start with a letter and contain only letters, digits and underscores"
+      exit 1
+  fi
+
+  log "🆕 Creating Stream Catalog tag $tag"
+  body=$(jq -cn --arg name "$tag" --arg description "$description" '[{name: $name, description: $description, entityTypes: ["kafka_topic"]}]')
+  handle_catalog_rest_api POST "/catalog/v1/types/tagdefs" "$body" || exit 1
+  error=$(echo "$curl_output" | jq -r '.[0].error // empty' 2>/dev/null || true)
+  if [ -n "$error" ]
+  then
+      logerror "❌ Failed to create tag $tag: $error"
+      exit 1
+  fi
+  log "✅ Tag $tag created, assign it with 'playground topic tag add --topic <topic> --tag $tag'"
+
+}
+
+# :command.function
+playground_topic_tag_delete_command() {
+
+  # src/commands/topic/tag/delete.sh
+  tag="${args[--tag]}"
+  verbose="${args[--verbose]}"
+
+  log "❌ Deleting Stream Catalog tag $tag"
+  encoded_tag=$(jq -rn --arg tag "$tag" '$tag | @uri')
+  if ! handle_catalog_rest_api DELETE "/catalog/v1/types/tagdefs/$encoded_tag"
+  then
+      if [ "$http_code" == "409" ]
+      then
+          logwarn "💡 the tag is still assigned to entities, check with 'playground topic tag search --tag $tag'. Right after 'playground topic tag remove', wait a minute for the catalog to catch up"
+      fi
+      exit 1
+  fi
+  log "✅ Tag $tag deleted"
+
+}
+
+# :command.function
+playground_topic_tag_add_command() {
+
+  # src/commands/topic/tag/add.sh
+  topic="${args[--topic]}"
+  tag="${args[--tag]}"
+  verbose="${args[--verbose]}"
+
+  get_catalog_topic_qualified_name "$topic" || exit 1
+  log "🏷️ Adding tag $tag to topic $topic ($qualified_name)"
+  body=$(jq -cn --arg name "$qualified_name" --arg tag "$tag" '[{entityType: "kafka_topic", entityName: $name, typeName: $tag}]')
+  handle_catalog_rest_api POST "/catalog/v1/entity/tags" "$body" || exit 1
+  error=$(echo "$curl_output" | jq -r '.[0].error // empty' 2>/dev/null || true)
+  if [ -n "$error" ]
+  then
+      logerror "❌ Failed to add tag $tag to topic $topic: $error"
+      exit 1
+  fi
+  log "✅ Tag $tag added to topic $topic"
+
+}
+
+# :command.function
+playground_topic_tag_remove_command() {
+
+  # src/commands/topic/tag/remove.sh
+  topic="${args[--topic]}"
+  tag="${args[--tag]}"
+  verbose="${args[--verbose]}"
+
+  get_catalog_topic_qualified_name "$topic" || exit 1
+  log "🧽 Removing tag $tag from topic $topic ($qualified_name)"
+  encoded_tag=$(jq -rn --arg tag "$tag" '$tag | @uri')
+  handle_catalog_rest_api DELETE "/catalog/v1/entity/type/kafka_topic/name/$qualified_name/tags/$encoded_tag" || exit 1
+  log "✅ Tag $tag removed from topic $topic"
+
+}
+
+# :command.function
+playground_topic_tag_show_command() {
+
+  # src/commands/topic/tag/show.sh
+  topic="${args[--topic]}"
+  verbose="${args[--verbose]}"
+
+  get_catalog_topic_qualified_name "$topic" || exit 1
+  log "🔎 Tags of topic $topic ($qualified_name)"
+  handle_catalog_rest_api GET "/catalog/v1/entity/type/kafka_topic/name/$qualified_name/tags" || exit 1
+  if [ "$(echo "$curl_output" | jq 'length')" == "0" ]
+  then
+      log "💤 Topic $topic has no tag"
+      exit 0
+  fi
+  echo "$curl_output" | jq -r '.[].typeName' | sort
+
+}
+
+# :command.function
+playground_topic_tag_search_command() {
+
+  # src/commands/topic/tag/search.sh
+  tag="${args[--tag]}"
+  verbose="${args[--verbose]}"
+
+  log "🔎 Topics with tag $tag"
+  encoded_tag=$(jq -rn --arg tag "$tag" '$tag | @uri')
+  handle_catalog_rest_api GET "/catalog/v1/search/basic?types=kafka_topic&tag=$encoded_tag&limit=500" || exit 1
+  topics=$(echo "$curl_output" | jq -r '.entities[]? | .attributes.qualifiedName' | sort)
+  if [ -z "$topics" ]
+  then
+      log "💤 No topic has tag $tag"
+      exit 0
+  fi
+  printf "%-30s %-60s\n" "TOPIC" "QUALIFIED NAME"
+  for qualified_name in $topics
+  do
+      printf "%-30s %-60s\n" "${qualified_name##*:}" "$qualified_name"
+  done
+
+}
+
+# :command.function
 playground_consumer_group_list_command() {
 
   # src/commands/consumer-group/list.sh
@@ -41656,6 +42214,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    get-catalog-tag-list)
+      action="get-catalog-tag-list"
+      shift
+      playground_get_catalog_tag_list_parse_requirements "$@"
+      shift $#
+      ;;
+
     get-subject-list)
       action="get-subject-list"
       shift
@@ -43168,6 +43733,53 @@ playground_get_consumer_group_list_parse_requirements() {
 
   # :command.command_filter
   action="get-consumer-group-list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_get_catalog_tag_list_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_get_catalog_tag_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="get-catalog-tag-list"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -56852,6 +57464,13 @@ playground_topic_parse_requirements() {
       shift $#
       ;;
 
+    tag)
+      action="tag"
+      shift
+      playground_topic_tag_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_topic_usage >&2
@@ -58429,6 +59048,676 @@ playground_topic_alter_parse_requirements() {
   # :command.required_flags_filter
   if [[ -z ${args['--topic']+x} ]]; then
     printf "missing required flag: --topic, -t TOPIC\n" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_topic_tag_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_tag_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    list)
+      action="list"
+      shift
+      playground_topic_tag_list_parse_requirements "$@"
+      shift $#
+      ;;
+
+    create)
+      action="create"
+      shift
+      playground_topic_tag_create_parse_requirements "$@"
+      shift $#
+      ;;
+
+    delete)
+      action="delete"
+      shift
+      playground_topic_tag_delete_parse_requirements "$@"
+      shift $#
+      ;;
+
+    add)
+      action="add"
+      shift
+      playground_topic_tag_add_parse_requirements "$@"
+      shift $#
+      ;;
+
+    remove)
+      action="remove"
+      shift
+      playground_topic_tag_remove_parse_requirements "$@"
+      shift $#
+      ;;
+
+    show)
+      action="show"
+      shift
+      playground_topic_tag_show_parse_requirements "$@"
+      shift $#
+      ;;
+
+    search)
+      action="search"
+      shift
+      playground_topic_tag_search_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_topic_tag_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.user_filter
+  filter_error=$(filter_ccloud_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_topic_tag_list_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_tag_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="topic tag list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_topic_tag_create_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_tag_create_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="topic tag create"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --tag)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--tag']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--tag requires an argument: --tag TAG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --description)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--description']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--description requires an argument: --description DESCRIPTION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--tag']+x} ]]; then
+    printf "missing required flag: --tag TAG\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--description']:-} ]] || args['--description']=""
+
+}
+
+# :command.parse_requirements
+playground_topic_tag_delete_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_tag_delete_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="topic tag delete"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --tag)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--tag']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--tag requires an argument: --tag TAG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--tag']+x} ]]; then
+    printf "missing required flag: --tag TAG\n" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_topic_tag_add_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_tag_add_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="topic tag add"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --tag)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--tag']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--tag requires an argument: --tag TAG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--topic']+x} ]]; then
+    printf "missing required flag: --topic, -t TOPIC\n" >&2
+    exit 1
+  fi
+  if [[ -z ${args['--tag']+x} ]]; then
+    printf "missing required flag: --tag TAG\n" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_topic_tag_remove_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_tag_remove_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="topic tag remove"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --tag)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--tag']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--tag requires an argument: --tag TAG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--topic']+x} ]]; then
+    printf "missing required flag: --topic, -t TOPIC\n" >&2
+    exit 1
+  fi
+  if [[ -z ${args['--tag']+x} ]]; then
+    printf "missing required flag: --tag TAG\n" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_topic_tag_show_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_tag_show_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="topic tag show"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--topic']+x} ]]; then
+    printf "missing required flag: --topic, -t TOPIC\n" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_topic_tag_search_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_tag_search_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="topic tag search"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --tag)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--tag']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--tag requires an argument: --tag TAG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--tag']+x} ]]; then
+    printf "missing required flag: --tag TAG\n" >&2
     exit 1
   fi
 
@@ -63639,6 +64928,7 @@ run() {
     "get-kafka-region-list") playground_get_kafka_region_list_command ;;
     "get-topic-list") playground_get_topic_list_command ;;
     "get-consumer-group-list") playground_get_consumer_group_list_command ;;
+    "get-catalog-tag-list") playground_get_catalog_tag_list_command ;;
     "get-subject-list") playground_get_subject_list_command ;;
     "get-examples-list-with-fzf") playground_get_examples_list_with_fzf_command ;;
     "get-zip-or-jar-with-fzf") playground_get_zip_or_jar_with_fzf_command ;;
@@ -63805,6 +65095,14 @@ run() {
     "topic create") playground_topic_create_command ;;
     "topic delete") playground_topic_delete_command ;;
     "topic alter") playground_topic_alter_command ;;
+    "topic tag") playground_topic_tag_command ;;
+    "topic tag list") playground_topic_tag_list_command ;;
+    "topic tag create") playground_topic_tag_create_command ;;
+    "topic tag delete") playground_topic_tag_delete_command ;;
+    "topic tag add") playground_topic_tag_add_command ;;
+    "topic tag remove") playground_topic_tag_remove_command ;;
+    "topic tag show") playground_topic_tag_show_command ;;
+    "topic tag search") playground_topic_tag_search_command ;;
     "consumer-group") playground_consumer_group_command ;;
     "consumer-group list") playground_consumer_group_list_command ;;
     "consumer-group describe") playground_consumer_group_describe_command ;;

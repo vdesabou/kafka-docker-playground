@@ -186,6 +186,10 @@ commands:
   help: Return some completion for consumer group list
   private: true
 
+- name: get-catalog-tag-list
+  help: Return some completion for stream catalog tag list
+  private: true
+
 - name: get-subject-list
   help: Return some completion for subject list
   private: true
@@ -4304,6 +4308,7 @@ commands:
     🔧 Manage
       list / describe / alter / delete
       set-schema-compatibility   compatibility of the topic subjects
+      tag             stream catalog tags (Confluent Cloud only)
 
     Serialisation is handled for you: 'produce' registers the schema you give
     it and 'consume' works out from the payload whether it is avro, protobuf,
@@ -5428,6 +5433,117 @@ commands:
         required: false
       examples: |
         playground topic alter --topic atopic --add-config max.message.bytes=5242940
+
+    - name: tag
+      group: Topic
+      filters:
+      - ccloud_environment
+      help: |-
+        🏷️ Stream Catalog tags (Confluent Cloud only)
+
+        Tag definitions live in the Stream Catalog of the environment, served
+        by the Schema Registry endpoint. Create a tag once, then assign it to
+        topics and search topics by tag.
+
+          list     tag definitions
+          create   create a tag definition
+          delete   delete a tag definition
+          add      assign a tag to a topic
+          remove   remove a tag from a topic
+          show     tags assigned to a topic
+          search   topics having a tag
+
+        🎓 Tip: a newly created topic can take a minute to show up in the
+        Stream Catalog before a tag can be assigned to it.
+      commands:
+      - name: list
+        help: |-
+          🏷️ List tag definitions
+        flags:
+        - *verbose
+
+      - name: create
+        help: |-
+          🆕 Create a tag definition
+        flags:
+        - long: --tag
+          required: true
+          arg: tag
+          help: |-
+            🏷️ Tag name (letters, digits and underscores, starting with a letter)
+        - long: --description
+          required: false
+          arg: description
+          default: ""
+          help: |-
+            📝 Tag description
+        - *verbose
+        examples:
+        - playground topic tag create --tag PII --description "Personally identifiable information"
+
+      - name: delete
+        help: |-
+          ❌ Delete a tag definition
+
+          The tag must not be assigned to any topic anymore.
+        flags:
+        - &catalog-tag
+          long: --tag
+          required: true
+          arg: tag
+          completions:
+            - $(playground get-catalog-tag-list)
+          help: |-
+            🏷️ Tag name
+        - *verbose
+        examples:
+        - playground topic tag delete --tag PII
+
+      - name: add
+        help: |-
+          🏷️ Assign a tag to a topic
+        flags:
+        - &topic-required
+          long: --topic
+          short: -t
+          required: true
+          arg: topic
+          completions:
+            - $(playground get-topic-list)
+          help: |-
+            🗳 Topic name
+        - *catalog-tag
+        - *verbose
+        examples:
+        - playground topic tag add --topic pageviews --tag PII
+
+      - name: remove
+        help: |-
+          🧽 Remove a tag from a topic
+        flags:
+        - *topic-required
+        - *catalog-tag
+        - *verbose
+        examples:
+        - playground topic tag remove --topic pageviews --tag PII
+
+      - name: show
+        help: |-
+          🔎 Show tags assigned to a topic
+        flags:
+        - *topic-required
+        - *verbose
+        examples:
+        - playground topic tag show --topic pageviews
+
+      - name: search
+        help: |-
+          🔎 Search topics having a tag
+        flags:
+        - *catalog-tag
+        - *verbose
+        examples:
+        - playground topic tag search --tag PII
 
 - name: consumer-group
   expose: always

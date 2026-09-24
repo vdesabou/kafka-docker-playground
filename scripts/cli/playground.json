@@ -2741,7 +2741,7 @@
     },
     {
       "name": "topic",
-      "description": "🗳 Topic commands\n\nProduce, consume and manage topics without dealing with the kafka-* shell\nscripts: the bootstrap server, the security properties and the schema\nregistry url are all derived from the running environment, so the same\ncommand works on plaintext, on sasl-ssl and on Confluent Cloud.\n\n📤 Get data in\n  produce         generate records from a schema, or from your own data\n  create          create a topic with the partitions you need\n\n📥 Get data out\n  consume         read from the beginning, deserialising automatically\n  get-number-records   count what is in the topic\n  get-offsets          earliest and latest offsets per partition\n  display-consumer-offsets   read the internal offsets topic\n\n🔧 Manage\n  list / describe / alter / delete\n  set-schema-compatibility   compatibility of the topic subjects\n\nSerialisation is handled for you: 'produce' registers the schema you give\nit and 'consume' works out from the payload whether it is avro, protobuf,\njson schema or plain text.\n\n🎓 Tip: in an example script, 'consume --min-expected-messages N' is the\nassertion that the data made it through; it fails the run if it did not.\n",
+      "description": "🗳 Topic commands\n\nProduce, consume and manage topics without dealing with the kafka-* shell\nscripts: the bootstrap server, the security properties and the schema\nregistry url are all derived from the running environment, so the same\ncommand works on plaintext, on sasl-ssl and on Confluent Cloud.\n\n📤 Get data in\n  produce         generate records from a schema, or from your own data\n  create          create a topic with the partitions you need\n\n📥 Get data out\n  consume         read from the beginning, deserialising automatically\n  get-number-records   count what is in the topic\n  get-offsets          earliest and latest offsets per partition\n  display-consumer-offsets   read the internal offsets topic\n\n🔧 Manage\n  list / describe / alter / delete\n  set-schema-compatibility   compatibility of the topic subjects\n  tag             stream catalog tags (Confluent Cloud only)\n\nSerialisation is handled for you: 'produce' registers the schema you give\nit and 'consume' works out from the payload whether it is avro, protobuf,\njson schema or plain text.\n\n🎓 Tip: in an example script, 'consume --min-expected-messages N' is the\nassertion that the data made it through; it fails the run if it did not.\n",
       "usage": "playground topic COMMAND",
       "options": [],
       "subcommands": [
@@ -3332,6 +3332,191 @@
               ],
               "argument": "TOPIC",
               "description": "🗳 Topic name\n\nRequired: ✓ Yes\n"
+            }
+          ]
+        },
+        {
+          "name": "tag",
+          "description": "🏷️ Stream Catalog tags (Confluent Cloud only)\n  \n  Tag definitions live in the Stream Catalog of the environment, served\n  by the Schema Registry endpoint. Create a tag once, then assign it to\n  topics and search topics by tag.\n  \n    list     tag definitions\n    create   create a tag definition\n    delete   delete a tag definition\n    add      assign a tag to a topic\n    remove   remove a tag from a topic\n    show     tags assigned to a topic\n    search   topics having a tag\n  \n  🎓 Tip: a newly created topic can take a minute to show up in the\n  Stream Catalog before a tag can be assigned to it.\n",
+          "usage": "playground topic tag COMMAND",
+          "options": []
+        }
+      ]
+    },
+    {
+      "name": "tag",
+      "description": "🏷️ Stream Catalog tags (Confluent Cloud only)\n\nTag definitions live in the Stream Catalog of the environment, served\nby the Schema Registry endpoint. Create a tag once, then assign it to\ntopics and search topics by tag.\n\n  list     tag definitions\n  create   create a tag definition\n  delete   delete a tag definition\n  add      assign a tag to a topic\n  remove   remove a tag from a topic\n  show     tags assigned to a topic\n  search   topics having a tag\n\n🎓 Tip: a newly created topic can take a minute to show up in the\nStream Catalog before a tag can be assigned to it.\n",
+      "usage": "playground topic tag COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "list",
+          "description": "🏷️ List tag definitions\n",
+          "usage": "playground topic tag list [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        },
+        {
+          "name": "create",
+          "description": "🆕 Create a tag definition\n",
+          "usage": "playground topic tag create [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--tag"
+              ],
+              "argument": "TAG",
+              "description": "🏷️ Tag name (letters, digits and underscores, starting with a letter)\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--description"
+              ],
+              "argument": null,
+              "description": "📝 Tag description\n\nDefault value: \n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        },
+        {
+          "name": "delete",
+          "description": "❌ Delete a tag definition\n  \n  The tag must not be assigned to any topic anymore.\n",
+          "usage": "playground topic tag delete [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--tag"
+              ],
+              "argument": "TAG",
+              "description": "🏷️ Tag name\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        },
+        {
+          "name": "add",
+          "description": "🏷️ Assign a tag to a topic\n",
+          "usage": "playground topic tag add [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--topic",
+                "-t"
+              ],
+              "argument": "TOPIC",
+              "description": "🗳 Topic name\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--tag"
+              ],
+              "argument": "TAG",
+              "description": "🏷️ Tag name\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        },
+        {
+          "name": "remove",
+          "description": "🧽 Remove a tag from a topic\n",
+          "usage": "playground topic tag remove [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--topic",
+                "-t"
+              ],
+              "argument": "TOPIC",
+              "description": "🗳 Topic name\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--tag"
+              ],
+              "argument": "TAG",
+              "description": "🏷️ Tag name\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        },
+        {
+          "name": "show",
+          "description": "🔎 Show tags assigned to a topic\n",
+          "usage": "playground topic tag show [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--topic",
+                "-t"
+              ],
+              "argument": "TOPIC",
+              "description": "🗳 Topic name\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        },
+        {
+          "name": "search",
+          "description": "🔎 Search topics having a tag\n",
+          "usage": "playground topic tag search [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--tag"
+              ],
+              "argument": "TAG",
+              "description": "🏷️ Tag name\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
             }
           ]
         }

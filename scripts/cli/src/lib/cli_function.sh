@@ -575,6 +575,66 @@ function get_security_broker() {
   fi
 }
 
+# Call the Confluent Cloud Stream Catalog REST API, served by the Schema Registry
+# endpoint of the environment. Sets $curl_output, returns 1 on an HTTP error.
+# Honors $verbose to print the command.
+# Usage: handle_catalog_rest_api <method> <path> [json body]
+function handle_catalog_rest_api() {
+  method="$1"
+  path="$2"
+  body="$3"
+
+  get_kafka_docker_playground_dir
+  DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+  if [ -f $DELTA_CONFIGS_ENV ]
+  then
+    source $DELTA_CONFIGS_ENV
+  else
+    logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
+    exit 1
+  fi
+
+  if [[ -n "$verbose" ]]
+  then
+    log "🐞 curl command used"
+    if [ -n "$body" ]
+    then
+      echo "curl -s -X $method -u \$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO -H \"Content-Type: application/json\" --data '$body' \"$SCHEMA_REGISTRY_URL$path\""
+    else
+      echo "curl -s -X $method -u \$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO \"$SCHEMA_REGISTRY_URL$path\""
+    fi
+  fi
+
+  if [ -n "$body" ]
+  then
+    curl_output=$(curl -s -w '\n%{http_code}' -X $method -u "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -H "Content-Type: application/json" --data "$body" "$SCHEMA_REGISTRY_URL$path")
+  else
+    curl_output=$(curl -s -w '\n%{http_code}' -X $method -u "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$SCHEMA_REGISTRY_URL$path")
+  fi
+  http_code=$(echo "$curl_output" | tail -n1)
+  curl_output=$(echo "$curl_output" | sed '$d')
+
+  if [[ ! "$http_code" =~ ^2 ]]
+  then
+    message=$(echo "$curl_output" | jq -r '.message // .error_message // empty' 2>/dev/null || true)
+    logerror "❌ Stream Catalog API returned HTTP $http_code: ${message:-$curl_output}"
+    return 1
+  fi
+}
+
+# Resolve the Stream Catalog qualified name (lsrc-xxx:lkc-xxx:topic) of a topic.
+# Sets $qualified_name, returns 1 if the topic is not (yet) in the catalog.
+function get_catalog_topic_qualified_name() {
+  topic="$1"
+  handle_catalog_rest_api GET "/catalog/v1/search/basic?types=kafka_topic&query=$topic&limit=100" || return 1
+  qualified_name=$(echo "$curl_output" | jq -r --arg topic "$topic" '[.entities[]? | select(.typeName == "kafka_topic") | .attributes.qualifiedName | select(endswith(":" + $topic))][0] // empty')
+  if [ -z "$qualified_name" ]
+  then
+    logerror "❌ topic $topic was not found in the Stream Catalog (a newly created topic can take a minute to show up)"
+    return 1
+  fi
+}
+
 # Run a kafka-* admin tool (kafka-consumer-groups, kafka-run-class ...) against
 # the current environment: bootstrap server and security properties are added,
 # and the tool runs in the broker/client container, the connect pod (cfk) or a
