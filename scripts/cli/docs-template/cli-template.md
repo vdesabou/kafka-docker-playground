@@ -64,7 +64,12 @@ Secrets coming from `playground.ini`, connector configurations and logs are reda
 
 #### installation for Claude Code
 
-Nothing to do: the repository ships a `.mcp.json` at its root, so the server is offered the first time you run `claude` from the playground directory — accept it once. [playground ai](/playground%20ai) accepts it for you and starts `claude` with the Confluent MCP server as well.
+Nothing to do: the repository ships a `.mcp.json` at its root and a `.claude/settings.json` that enables the server and allows its (read-only) tools. Run `claude` from anywhere in the checkout and trust the workspace when asked the first time — the server then loads automatically.
+
+> [!NOTE]
+> The first start builds the server from GitHub with `npx`, which can take up to a minute; `.claude/settings.json` raises `MCP_TIMEOUT` accordingly. On machines where an enterprise policy restricts MCP servers (`allowManagedMcpServersOnly`), the server is not loaded.
+
+If you used the former `playground ai` command, remove the MCP servers it registered: `claude mcp remove mcp-kafka; claude mcp remove mcp-ccloud`
 
 #### installation for Visual Studio Code (Github Copilot)
 

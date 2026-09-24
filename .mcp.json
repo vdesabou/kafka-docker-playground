@@ -6,10 +6,7 @@
         "--registry=https://registry.npmjs.org",
         "-y",
         "github:vdesabou/kafka-docker-playground-mcp-server"
-      ],
-      "env": {
-        "PLAYGROUND_REPO_ROOT": "${PWD}"
-      }
+      ]
     }
   }
 }

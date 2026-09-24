@@ -1,0 +1,11 @@
+{
+  "enabledMcpjsonServers": ["mcp-playground"],
+  "permissions": {
+    "allow": [
+      "mcp__mcp-playground__*"
+    ]
+  },
+  "env": {
+    "MCP_TIMEOUT": "120000"
+  }
+}

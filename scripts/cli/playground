@@ -40,7 +40,6 @@ playground_usage() {
   printf "  %s   Show help about a command\n" "$(green "help")                                      "
   printf "  %s   🗺️ Show a status\n" "$(green "status")                                    "
   printf "  %s   ⚙️ Configure CLI\n" "$(green "config")                                    "
-  printf "  %s   🧞‍♂️  AI\n" "$(green "ai")                                        "
   printf "  %s   💰  Retrieve ccloud costs for a range of dates\n" "$(green "ccloud-costs")                              "
   printf "  %s   👛  Retrieve ccloud costs for each month since last year\n" "$(green "ccloud-costs-history")                      "
   echo
@@ -2839,46 +2838,6 @@ playground_secrets_lint_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground secrets lint\n"
-    echo
-
-  fi
-}
-
-# :command.usage
-playground_ai_usage() {
-  if [[ -n $long_usage ]]; then
-    printf "playground ai\n\n"
-    printf "  🧞‍♂️  AI\n  \n  Opens Claude Code in this checkout, already wired to the playground.\n  \n  It is using Claude Code (https://code.claude.com/docs/en/quickstart) in\n  interactive mode.\n  \n  Because of the MCP servers below, it can see what is actually running:\n  which example, which containers, which connectors are failing and why,\n  and it can search the ~2500 example scripts to find the one that already\n  reproduces what you are looking at. So ask it things like \"why did my\n  connector fail\" or \"is there an example doing X\", rather than treating it\n  as a generic assistant.\n  \n  Anything you pass after 'playground ai' goes straight to the claude cli.\n  \n  MCP servers are available:\n  \n  1. mcp-playground - Playground MCP Server (see\n  https://github.com/vdesabou/kafka-docker-playground-mcp-server), it exposes\n  the live state of this checkout\n  \n    Tools:\n    - playground_status:\n        Docker availability, the example currently running (script, environment,\n  connector type),\n        every container with its state/health/ports and the recent \`playground\n  run\` history.\n    - playground_connectors:\n        Status of every connector, with the root cause of each FAILED task.\n  Talks to the running\n        Connect worker (ssl/rbac included) or to the Confluent Cloud Connect\n  API, whichever the\n        current environment uses.\n    - playground_logs:\n        Container logs without flooding the context: de-duplicated errors with\n  collapsed stack\n        traces (default), tail, or regex search.\n    - playground_find_example:\n        Search the ~2500 runnable example scripts by connector class, path,\n  title or body, and get\n        the exact \`playground run -f <script>\` command back.\n    - playground_example_details:\n        One call for everything about an example: source, connector payloads,\n  default environment,\n        docker-compose overrides, sibling variants and the variables you must\n  export.\n  \n  2. mcp-server - Confluent MCP Server (see\n  http://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html#quick-start\n  and https://github.com/confluentinc/mcp-confluent)\n  \n    Tools:\n    - list-topics: List all topics in the Kafka cluster.\n    - create-topics: Create one or more Kafka topics.\n    - delete-topics: Delete topics by name.\n    - produce-message: Produce records to a Kafka topic (supports Schema\n  Registry).\n    - consume-messages: Consume messages from one or more Kafka topics (supports\n  Schema Registry).\n    - list-schemas: List all schemas in the Schema Registry.\n    - delete-schema: Delete a schema subject or a specific version from the\n  Schema Registry.\n  \n  3. mcp-ccloud - Confluent MCP Server (see\n  http://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html#quick-start\n  and https://github.com/confluentinc/mcp-confluent)\n  \n    Tools:\n      Environment & Cluster Management\n      - list-environments: Get all environments in Confluent Cloud.\n      - read-environment: Get details of a specific environment.\n      - list-clusters: Get all clusters in a Confluent Cloud environment.\n  \n      Topic Management\n      - list-topics: List all topics in a Kafka cluster.\n      - create-topics: Create one or more Kafka topics.\n      - delete-topics: Delete topics by name.\n      - search-topics-by-name: Search for topics matching a name.\n      - get-topic-config: Retrieve configuration details for a topic.\n      - alter-topic-config: Update topic configuration (SET/DELETE).\n  \n      Messaging\n      - produce-message: Produce records to a topic (supports Schema Registry\n  serialization).\n      - consume-messages: Consume and deserialize messages from one or more\n  topics.\n  \n      Schema Registry\n      - list-schemas: List schemas (latest or all versions).\n      - delete-schema: Delete a schema subject or specific version.\n      - list-tags: Retrieve all tag definitions.\n      - create-topic-tags: Create new tag definitions.\n      - delete-tag: Delete a tag definition.\n      - add-tags-to-topic: Assign tags to Kafka topics.\n      - remove-tag-from-entity: Remove tags from entities.\n      - search-topics-by-tag: List topics with a specific tag.\n  \n      Connector Management\n      - list-connectors: List active connectors in a cluster.\n      - read-connector: Get detailed information about a connector.\n      - create-connector: Create a new Managed or Custom connector.\n      - delete-connector: Delete an existing connector.\n  \n      Metrics & Billing\n      - list-available-metrics: Discover valid metric names and filter fields.\n      - query-metrics: Query metrics from the Telemetry API (Kafka, Flink,\n  Connect, SR).\n      - list-billing-costs: Retrieve billing cost data for an organization.\n\n"
-  else
-    printf "playground ai - 🧞‍♂️  AI\n\n"
-  fi
-
-  printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground ai [--] [CLAUDE CLI ARGUMENTS...]\n"
-  printf "  playground ai --help | -h\n"
-  echo
-
-  # :command.long_usage
-  if [[ -n "$long_usage" ]]; then
-    # :command.usage_options
-    printf "%s\n" "$(bold "== Options ==")"
-
-    # :command.usage_fixed_flags
-    printf "  %s\n" "$(magenta "--help, -h")"
-    printf "    Show this help\n"
-    echo
-
-    # :command.usage_args
-    printf "%s\n" "$(bold "== Arguments ==")"
-
-    echo "  CLAUDE CLI ARGUMENTS..."
-    printf "    arguments to pass to claude cli, see\n    https://code.claude.com/docs/en/cli-reference for all options\n"
-    echo
-
-    # :command.usage_examples
-    printf "%s\n" "$(bold "Examples")"
-    printf "  playground ai\n"
-    printf "  playground ai --model opus\n"
     echo
 
   fi
@@ -13164,29 +13123,6 @@ function install_confluent_plugin() {
     log "✅ Confluent kubectl plugin installed successfully!"
 }
 
-function check_if_call_dev_login()
-{
-    if [ ! -z "$GITHUB_RUN_NUMBER" ]
-    then
-        # running with github actions, continue
-        return
-    fi
-
-    if [ ! -f $HOME/.cc-dotfiles/caas.sh ]
-    then
-        # not using dev-login
-        return
-    fi
-    log "🎓 make sure you have executed <dev-login> command in the last 12 hours"
-    echo ""
-    read -p "🛂 execute dev-login (y/n)?" choice
-    case "$choice" in
-    y|Y ) source $HOME/.cc-dotfiles/caas.sh && dev-login -f;;
-    n|N ) ;;
-    * ) logwarn "invalid response <$choice>! Please enter y or n."; check_if_call_dev_login;;
-    esac
-}
-
 # src/lib/colors.sh
 print_in_color() {
   local color="$1"
@@ -21579,115 +21515,6 @@ playground_secrets_lint_command() {
   logwarn "👉 in the example, replace the bare check with:"
   logwarn '   logerror "FOO is not set. Export it as environment variable or pass it as argument"'
 
-}
-
-# :command.function
-playground_ai_command() {
-
-  # src/commands/ai.sh
-  arguments="${args[arguments]}"
-
-  cd $root_folder
-
-  get_environment_used
-
-  # 🧞‍♂️ The playground MCP server is declared in .mcp.json at the root of this
-  # repository, so it is offered to anybody running claude here. Claude Code asks
-  # for approval once per project before it starts a server found in .mcp.json;
-  # running `playground ai` is that approval, so record it (with the read-only
-  # tool permissions) in .claude/settings.local.json, which is not versioned.
-  if [ -f "$root_folder/.mcp.json" ]
-  then
-      log "🧞‍♂️ mcp-playground server is used (see https://github.com/vdesabou/kafka-docker-playground-mcp-server) to inspect this playground: containers, connectors, logs and examples"
-      mkdir -p "$root_folder/.claude"
-      claude_settings="$root_folder/.claude/settings.local.json"
-      if [ ! -s "$claude_settings" ]
-      then
-          echo '{}' > "$claude_settings"
-      fi
-      tmp_claude_settings=$(mktemp)
-      if jq '
-          .enabledMcpjsonServers = ((.enabledMcpjsonServers // []) + ["mcp-playground"] | unique)
-          | .permissions.allow = ((.permissions.allow // []) + [
-              "mcp__mcp-playground__playground_status",
-              "mcp__mcp-playground__playground_connectors",
-              "mcp__mcp-playground__playground_logs",
-              "mcp__mcp-playground__playground_find_example",
-              "mcp__mcp-playground__playground_example_details"
-            ] | unique)
-      ' "$claude_settings" > "$tmp_claude_settings"
-      then
-          mv "$tmp_claude_settings" "$claude_settings"
-      else
-          rm -f "$tmp_claude_settings"
-          logwarn "⚠️ could not update $claude_settings, claude will ask to approve the mcp-playground server"
-      fi
-
-      # npx clones and builds the server on first use, which can take longer than
-      # claude waits for an MCP server to come up. Run it once here with no stdin
-      # so that it fills the npx cache and exits immediately, instead of timing
-      # out inside claude with an unhelpful "Failed to reconnect".
-      mcp_playground_command=$(jq -r '.mcpServers."mcp-playground" | ([.command] + .args) | @sh' "$root_folder/.mcp.json" 2>/dev/null)
-      if [ -n "$mcp_playground_command" ]
-      then
-          set +e
-          eval "$mcp_playground_command" < /dev/null > /dev/null 2>&1
-          set -e
-      fi
-  fi
-
-  if [[ "$environment" == "ccloud" ]]
-  then
-      if [ -f .ccloud/.env ]
-      then
-          log "🌩️ ccloud environment is used, using mcp-confluent server (https://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html) to interact with confluent cloud"
-          claude mcp remove mcp-kafka > /dev/null 2>&1 || true
-          claude mcp remove mcp-ccloud > /dev/null 2>&1 || true
-          cd $root_folder > /dev/null
-          source .ccloud/.env
-          # generate data file for mcp-confluent
-          sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
-              -e "s|:KAFKA_API_KEY:|$KAFKA_API_KEY|g" \
-              -e "s|:KAFKA_API_SECRET:|$KAFKA_API_SECRET|g" \
-              -e "s|:KAFKA_REST_ENDPOINT:|$KAFKA_REST_ENDPOINT|g" \
-              -e "s|:KAFKA_CLUSTER_ID:|$KAFKA_CLUSTER_ID|g" \
-              -e "s|:KAFKA_ENV_ID:|$KAFKA_ENV_ID|g" \
-              -e "s|:SCHEMA_REGISTRY_ENDPOINT:|$SCHEMA_REGISTRY_ENDPOINT|g" \
-              -e "s|:SCHEMA_REGISTRY_API_KEY:|$SCHEMA_REGISTRY_API_KEY|g" \
-              -e "s|:SCHEMA_REGISTRY_API_SECRET:|$SCHEMA_REGISTRY_API_SECRET|g" \
-              -e "s|:CONFLUENT_CLOUD_REST_ENDPOINT:|$CONFLUENT_CLOUD_REST_ENDPOINT|g" \
-              -e "s|:CONFLUENT_CLOUD_API_KEY:|$CONFLUENT_CLOUD_API_KEY|g" \
-              -e "s|:CONFLUENT_CLOUD_API_SECRET:|$CONFLUENT_CLOUD_API_SECRET|g" \
-              $root_folder/scripts/cli/src/mcp-confluent-config-ccloud-template.yaml > $root_folder/config.yaml
-
-          check_if_call_dev_login
-          claude mcp add mcp-ccloud -- npx -y @confluentinc/mcp-confluent --config ./config.yaml
-          cd - > /dev/null
-      else
-          logerror "❌ .ccloud/.env file is not present!"
-          exit 1
-      fi
-  else
-      claude mcp remove mcp-ccloud > /dev/null 2>&1 || true
-
-      if [[ "$environment" == "plaintext" ]]
-      then
-          log "📭 plaintext environment is used, using mcp-confluent server (https://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html) to interact with the cluster"
-          claude mcp remove mcp-kafka > /dev/null 2>&1 || true
-          cd $root_folder > /dev/null
-          cp $root_folder/scripts/cli/src/mcp-confluent-config-local.yaml config.yaml
-          check_if_call_dev_login
-          claude mcp add mcp-kafka -- npx -y @confluentinc/mcp-confluent --config ./config.yaml
-          cd - > /dev/null
-      else
-          logwarn "🔐 $environment environment is used, using mcp-confluent server (https://docs.confluent.io/cloud/current/ai/ai-tools/open-source-mcp-server.html) to interact with the cluster will not be used, only works with plaintext for now"
-      fi
-  fi
-
-  log "consider using confluent agent skills (see https://docs.confluent.io/cloud/current/ai/ai-tools/agent-skills.html)"
-
-  log "🧞‍♂️ calling claude cli: claude ${other_args[*]}"
-  claude "${other_args[*]}"
 }
 
 # :command.function
@@ -42333,13 +42160,6 @@ parse_requirements() {
       shift $#
       ;;
 
-    ai)
-      action="ai"
-      shift
-      playground_ai_parse_requirements "$@"
-      shift $#
-      ;;
-
     cloud-resources)
       action="cloud-resources"
       shift
@@ -47570,74 +47390,6 @@ playground_secrets_lint_parse_requirements() {
         # :command.parse_requirements_case_simple
         printf "invalid argument: %s\n" "$key" >&2
         exit 1
-
-        ;;
-
-    esac
-  done
-
-}
-
-# :command.parse_requirements
-playground_ai_parse_requirements() {
-  local key
-
-  # :command.fixed_flags_filter
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-      --help | -h)
-        long_usage=yes
-        playground_ai_usage
-        exit
-        ;;
-
-      *)
-        break
-        ;;
-
-    esac
-  done
-
-  # :command.dependencies_filter
-  missing_deps=
-  # :dependency.filter
-  if ! command -v claude >/dev/null 2>&1; then
-    printf "missing dependency: claude\n" >&2
-    printf "%s\n\n" "visit https://code.claude.com/docs/en/quickstart to install" >&2
-    missing_deps=1
-  else
-    deps['claude']="$(command -v claude | head -n1)"
-  fi
-
-  if [[ -n $missing_deps ]]; then
-    exit 1
-  fi
-
-  # :command.command_filter
-  action="ai"
-
-  # :command.parse_requirements_while
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-
-      --)
-        shift
-        other_args+=("$@")
-        break
-        ;;
-
-      -?*)
-        other_args+=("$1")
-        shift
-        ;;
-
-      *)
-        # :command.parse_requirements_case
-        # :command.parse_requirements_case_catch_all
-        other_args+=("$1")
-        shift
 
         ;;
 
@@ -64978,7 +64730,6 @@ run() {
     "secrets profile") playground_secrets_profile_command ;;
     "secrets scan") playground_secrets_scan_command ;;
     "secrets lint") playground_secrets_lint_command ;;
-    "ai") playground_ai_command ;;
     "cloud-resources") playground_cloud_resources_command ;;
     "cloud-resources aws") playground_cloud_resources_aws_command ;;
     "cloud-resources aws list") playground_cloud_resources_aws_list_command ;;
