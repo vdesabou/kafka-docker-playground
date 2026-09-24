@@ -79,27 +79,6 @@ function get_latest_version_from_confluent_hub () {
     fi
 }
 
-function check_if_call_dev_login()
-{
-    if [ ! -z "$GITHUB_RUN_NUMBER" ]
-    then
-        # running with github actions, continue
-        return
-    fi
-    if [[ -n "$skip_dev_login_check" ]]
-    then
-        return
-    fi
-    log "🎓 make sure you have executed <dev-login> command in the last 12 hours"
-    echo ""
-    read -p "🛂 execute dev-login (y/n)?" choice
-    case "$choice" in
-    y|Y ) source $HOME/.cc-dotfiles/caas.sh && dev-login -f;;
-    n|N ) ;;
-    * ) logwarn "invalid response <$choice>! Please enter y or n."; check_if_call_dev_login;;
-    esac
-}
-
 function check_if_ready_to_continue()
 {
   if [ ! -z "$GITHUB_RUN_NUMBER" ]

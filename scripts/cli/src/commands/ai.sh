@@ -73,6 +73,7 @@ then
             -e "s|:CONFLUENT_CLOUD_API_SECRET:|$CONFLUENT_CLOUD_API_SECRET|g" \
             $root_folder/scripts/cli/src/mcp-confluent-config-ccloud-template.yaml > $root_folder/config.yaml
 
+        check_if_call_dev_login
         claude mcp add mcp-ccloud -- npx -y @confluentinc/mcp-confluent --config ./config.yaml
         cd - > /dev/null
     else
@@ -88,6 +89,7 @@ else
         claude mcp remove mcp-kafka > /dev/null 2>&1 || true
         cd $root_folder > /dev/null
         cp $root_folder/scripts/cli/src/mcp-confluent-config-local.yaml config.yaml
+        check_if_call_dev_login
         claude mcp add mcp-kafka -- npx -y @confluentinc/mcp-confluent --config ./config.yaml
         cd - > /dev/null
     else

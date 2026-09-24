@@ -2354,3 +2354,26 @@ function install_confluent_plugin() {
     
     log "✅ Confluent kubectl plugin installed successfully!"
 }
+
+function check_if_call_dev_login()
+{
+    if [ ! -z "$GITHUB_RUN_NUMBER" ]
+    then
+        # running with github actions, continue
+        return
+    fi
+
+    if [ ! -f $HOME/.cc-dotfiles/caas.sh ]
+    then
+        # not using dev-login
+        return
+    fi
+    log "🎓 make sure you have executed <dev-login> command in the last 12 hours"
+    echo ""
+    read -p "🛂 execute dev-login (y/n)?" choice
+    case "$choice" in
+    y|Y ) source $HOME/.cc-dotfiles/caas.sh && dev-login -f;;
+    n|N ) ;;
+    * ) logwarn "invalid response <$choice>! Please enter y or n."; check_if_call_dev_login;;
+    esac
+}

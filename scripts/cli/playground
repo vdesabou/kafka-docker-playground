@@ -12475,6 +12475,29 @@ function install_confluent_plugin() {
     log "✅ Confluent kubectl plugin installed successfully!"
 }
 
+function check_if_call_dev_login()
+{
+    if [ ! -z "$GITHUB_RUN_NUMBER" ]
+    then
+        # running with github actions, continue
+        return
+    fi
+
+    if [ ! -f $HOME/.cc-dotfiles/caas.sh ]
+    then
+        # not using dev-login
+        return
+    fi
+    log "🎓 make sure you have executed <dev-login> command in the last 12 hours"
+    echo ""
+    read -p "🛂 execute dev-login (y/n)?" choice
+    case "$choice" in
+    y|Y ) source $HOME/.cc-dotfiles/caas.sh && dev-login -f;;
+    n|N ) ;;
+    * ) logwarn "invalid response <$choice>! Please enter y or n."; check_if_call_dev_login;;
+    esac
+}
+
 # src/lib/colors.sh
 print_in_color() {
   local color="$1"
@@ -20921,6 +20944,7 @@ playground_ai_command() {
               -e "s|:CONFLUENT_CLOUD_API_SECRET:|$CONFLUENT_CLOUD_API_SECRET|g" \
               $root_folder/scripts/cli/src/mcp-confluent-config-ccloud-template.yaml > $root_folder/config.yaml
 
+          check_if_call_dev_login
           claude mcp add mcp-ccloud -- npx -y @confluentinc/mcp-confluent --config ./config.yaml
           cd - > /dev/null
       else
@@ -20936,6 +20960,7 @@ playground_ai_command() {
           claude mcp remove mcp-kafka > /dev/null 2>&1 || true
           cd $root_folder > /dev/null
           cp $root_folder/scripts/cli/src/mcp-confluent-config-local.yaml config.yaml
+          check_if_call_dev_login
           claude mcp add mcp-kafka -- npx -y @confluentinc/mcp-confluent --config ./config.yaml
           cd - > /dev/null
       else
@@ -34980,27 +35005,6 @@ playground_connector_plugin_sourcecode_command() {
           logerror "❌ --connector-tag flag is set 2 times, but one of them is set to latest. Comparison between version can only works when providing versions"
           exit 1
       fi
-  }
-
-  function check_if_call_dev_login()
-  {
-      if [ ! -z "$GITHUB_RUN_NUMBER" ]
-      then
-          # running with github actions, continue
-          return
-      fi
-      if [[ -n "$skip_dev_login_check" ]]
-      then
-          return
-      fi
-      log "🎓 make sure you have executed <dev-login> command in the last 12 hours"
-      echo ""
-      read -p "🛂 execute dev-login (y/n)?" choice
-      case "$choice" in
-      y|Y ) source $HOME/.cc-dotfiles/caas.sh && dev-login -f;;
-      n|N ) ;;
-      * ) logwarn "invalid response <$choice>! Please enter y or n."; check_if_call_dev_login;;
-      esac
   }
 
   function check_if_ready_to_continue()
