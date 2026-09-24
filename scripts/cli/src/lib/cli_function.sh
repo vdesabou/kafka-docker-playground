@@ -575,6 +575,56 @@ function get_security_broker() {
   fi
 }
 
+# Run a kafka-* admin tool (kafka-consumer-groups, kafka-run-class ...) against
+# the current environment: bootstrap server and security properties are added,
+# and the tool runs in the broker/client container, the connect pod (cfk) or a
+# throwaway connect image container (ccloud).
+# Honors $verbose to print the command.
+# Usage: run_kafka_admin_tool <tool> [args...]
+function run_kafka_admin_tool() {
+  tool="$1"
+  shift
+  get_environment_used
+
+  if [[ "$environment" == "ccloud" ]]
+  then
+    get_kafka_docker_playground_dir
+    DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+    if [ -f $DELTA_CONFIGS_ENV ]
+    then
+      source $DELTA_CONFIGS_ENV
+    else
+      logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
+      exit 1
+    fi
+    if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
+    then
+      logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
+      exit 1
+    fi
+    if [[ -n "$verbose" ]]
+    then
+      log "🐞 CLI command used"
+      echo "$tool $* --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
+    fi
+    get_connect_image
+    docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $tool "$@" --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
+  else
+    get_security_broker "--command-config"
+    if [[ -n "$verbose" ]]
+    then
+      log "🐞 CLI command used"
+      echo "$tool $* --bootstrap-server $bootstrap_server $security"
+    fi
+    if [[ "$environment" == "cfk" ]]
+    then
+      kubectl -n confluent exec -i $container -- $tool "$@" --bootstrap-server $bootstrap_server $security
+    else
+      docker exec -i $container $tool "$@" --bootstrap-server $bootstrap_server $security
+    fi
+  fi
+}
+
 function get_fzf_version() {
     version=$(fzf --version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | cut -d " " -f 1)
     echo "$version"

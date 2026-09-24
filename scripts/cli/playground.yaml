@@ -3991,6 +3991,7 @@ subcommands:
         📥 Get data out
           consume         read from the beginning, deserialising automatically
           get-number-records   count what is in the topic
+          get-offsets          earliest and latest offsets per partition
           display-consumer-offsets   read the internal offsets topic
         
         🔧 Manage
@@ -4032,6 +4033,30 @@ subcommands:
             Default value: read_uncommitted
             
             Allowed values: read_uncommitted, read_committed
+            
+      - name: get-offsets
+        description: | 
+          📍 Get earliest and latest offsets per partition of a topic
+            
+            The low and high watermarks of every partition, and the number of
+            records in between. Useful to see whether retention has already
+            deleted data, which partitions received records, or which offsets a
+            connector should be at.
+        usage: playground topic get-offsets [OPTIONS]
+        options:
+        - names:
+          - --topic
+          - -t
+          argument: TOPIC
+          description: | 
+            🗳 Topic name
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
             
       - name: display-consumer-offsets
         description: | 
@@ -4693,6 +4718,79 @@ subcommands:
             
             Required: ✓ Yes
             
+  - name: consumer-group
+    description: | 
+        👥 Consumer group commands
+        
+        Inspect any consumer group (not only the ones of sink connectors): which
+        groups exist, their state and members, and the committed offsets and lag
+        per partition. Works on plaintext, secured environments, cfk and
+        Confluent Cloud.
+        
+          list       consumer groups, optionally with their state
+          describe   committed offsets and lag, or --state, or --members
+        
+        🎓 Tip: for a sink connector, 'playground connector show-lag' follows the
+        lag until it reaches 0.
+    usage: playground consumer-group COMMAND
+    options: []
+    subcommands:
+      - name: list
+        description: | 
+          👥 List consumer groups
+        usage: playground consumer-group list [OPTIONS]
+        options:
+        - names:
+          - --state
+          argument: ""
+          description: | 
+            🚦 Also display the state of each group (Stable, Empty, PreparingRebalance...)
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+      - name: describe
+        description: | 
+          🔬 Describe consumer group
+            
+            By default, shows the committed offset, log end offset and lag of
+            every partition consumed by the group, followed by the total lag.
+            Use --state for the coordinator, assignment strategy and state, and
+            --members for the members and their assigned partitions.
+        usage: playground consumer-group describe [OPTIONS]
+        options:
+        - names:
+          - --group
+          - -g
+          argument: GROUP
+          description: | 
+            👥 Consumer group name
+            
+            ℹ️ If not set, all consumer groups are described
+            
+        - names:
+          - --state
+          argument: ""
+          description: | 
+            🚦 Display state of the group (coordinator, assignment strategy, state, number of members)
+            
+        - names:
+          - --members
+          argument: ""
+          description: | 
+            🧑‍🤝‍🧑 Display members of the group and their assigned partitions
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
   - name: connector-plugin
     description: | 
         🔌 Connector-plugin commands
@@ -4900,6 +4998,7 @@ subcommands:
         
         🔍 Look at what is running
           status                  is it RUNNING, and if not, the full stack trace
+          error-recommendations   suggested fixes for a failed fully managed connector
           show-config             the configuration actually applied
           logs                    tail connect logs, filtered and followed
           show-lag                consumer lag of a sink, until it reaches zero
@@ -4937,6 +5036,32 @@ subcommands:
             full stack trace, which is the thing you actually need. Add --verbose to
             see the underlying REST call.
         usage: playground connector status [OPTIONS]
+        options:
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
+          - --connector
+          - -c
+          argument: CONNECTOR
+          description: | 
+            🔗 Connector name
+            
+            🎓 Tip: If not specified, the command will apply to all connectors
+            
+      - name: error-recommendations
+        description: | 
+          💡 Show error recommendations for fully managed connectors
+            
+            Confluent Cloud analyses the failure stack trace of a failed fully
+            managed or custom connector and suggests remediation steps. Nothing is
+            returned for a healthy connector, or for one that only failed config
+            validation: 'playground connector status' shows those errors.
+        usage: playground connector error-recommendations [OPTIONS]
         options:
         - names:
           - --verbose

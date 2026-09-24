@@ -2741,7 +2741,7 @@
     },
     {
       "name": "topic",
-      "description": "🗳 Topic commands\n\nProduce, consume and manage topics without dealing with the kafka-* shell\nscripts: the bootstrap server, the security properties and the schema\nregistry url are all derived from the running environment, so the same\ncommand works on plaintext, on sasl-ssl and on Confluent Cloud.\n\n📤 Get data in\n  produce         generate records from a schema, or from your own data\n  create          create a topic with the partitions you need\n\n📥 Get data out\n  consume         read from the beginning, deserialising automatically\n  get-number-records   count what is in the topic\n  display-consumer-offsets   read the internal offsets topic\n\n🔧 Manage\n  list / describe / alter / delete\n  set-schema-compatibility   compatibility of the topic subjects\n\nSerialisation is handled for you: 'produce' registers the schema you give\nit and 'consume' works out from the payload whether it is avro, protobuf,\njson schema or plain text.\n\n🎓 Tip: in an example script, 'consume --min-expected-messages N' is the\nassertion that the data made it through; it fails the run if it did not.\n",
+      "description": "🗳 Topic commands\n\nProduce, consume and manage topics without dealing with the kafka-* shell\nscripts: the bootstrap server, the security properties and the schema\nregistry url are all derived from the running environment, so the same\ncommand works on plaintext, on sasl-ssl and on Confluent Cloud.\n\n📤 Get data in\n  produce         generate records from a schema, or from your own data\n  create          create a topic with the partitions you need\n\n📥 Get data out\n  consume         read from the beginning, deserialising automatically\n  get-number-records   count what is in the topic\n  get-offsets          earliest and latest offsets per partition\n  display-consumer-offsets   read the internal offsets topic\n\n🔧 Manage\n  list / describe / alter / delete\n  set-schema-compatibility   compatibility of the topic subjects\n\nSerialisation is handled for you: 'produce' registers the schema you give\nit and 'consume' works out from the payload whether it is avro, protobuf,\njson schema or plain text.\n\n🎓 Tip: in an example script, 'consume --min-expected-messages N' is the\nassertion that the data made it through; it fails the run if it did not.\n",
       "usage": "playground topic COMMAND",
       "options": [],
       "subcommands": [
@@ -2764,6 +2764,29 @@
               ],
               "argument": "read_uncommitted",
               "description": "🫥 The isolation level to use, see https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#isolation-level\nIf not set, default is read_uncommitted\n\nDefault value: read_uncommitted\n\nAllowed values: read_uncommitted, read_committed\n"
+            }
+          ]
+        },
+        {
+          "name": "get-offsets",
+          "description": "📍 Get earliest and latest offsets per partition of a topic\n  \n  The low and high watermarks of every partition, and the number of\n  records in between. Useful to see whether retention has already\n  deleted data, which partitions received records, or which offsets a\n  connector should be at.\n",
+          "usage": "playground topic get-offsets [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--topic",
+                "-t"
+              ],
+              "argument": "TOPIC",
+              "description": "🗳 Topic name\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
             }
           ]
         },
@@ -3315,6 +3338,73 @@
       ]
     },
     {
+      "name": "consumer-group",
+      "description": "👥 Consumer group commands\n\nInspect any consumer group (not only the ones of sink connectors): which\ngroups exist, their state and members, and the committed offsets and lag\nper partition. Works on plaintext, secured environments, cfk and\nConfluent Cloud.\n\n  list       consumer groups, optionally with their state\n  describe   committed offsets and lag, or --state, or --members\n\n🎓 Tip: for a sink connector, 'playground connector show-lag' follows the\nlag until it reaches 0.\n",
+      "usage": "playground consumer-group COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "list",
+          "description": "👥 List consumer groups\n",
+          "usage": "playground consumer-group list [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--state"
+              ],
+              "argument": "",
+              "description": "🚦 Also display the state of each group (Stable, Empty, PreparingRebalance...)\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        },
+        {
+          "name": "describe",
+          "description": "🔬 Describe consumer group\n  \n  By default, shows the committed offset, log end offset and lag of\n  every partition consumed by the group, followed by the total lag.\n  Use --state for the coordinator, assignment strategy and state, and\n  --members for the members and their assigned partitions.\n",
+          "usage": "playground consumer-group describe [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--group",
+                "-g"
+              ],
+              "argument": "GROUP",
+              "description": "👥 Consumer group name\n\nℹ️ If not set, all consumer groups are described\n"
+            },
+            {
+              "names": [
+                "--state"
+              ],
+              "argument": "",
+              "description": "🚦 Display state of the group (coordinator, assignment strategy, state, number of members)\n"
+            },
+            {
+              "names": [
+                "--members"
+              ],
+              "argument": "",
+              "description": "🧑‍🤝‍🧑 Display members of the group and their assigned partitions\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "connector-plugin",
       "description": "🔌 Connector-plugin commands\n\nQuestions about connector plugins on Confluent Hub, answered without a\nrunning environment:\n\n  versions              every released version of a plugin\n  display-last-updated  what was published recently, by vendor\n  search-jar            which jars ship in it, and which class is where\n  sourcecode            open the source on GitHub\n\n🎓 Tip: search-jar answers \"is this class really in the plugin, and with\nwhich signature\", which is the question behind most NoSuchMethodError and\nClassNotFoundException reports.\n",
       "usage": "playground connector-plugin COMMAND",
@@ -3468,7 +3558,7 @@
     },
     {
       "name": "connector",
-      "description": "🔗 Connector commands\n\nEverything you would otherwise do with curl on the Connect REST API, with\nthe right host, port and credentials already figured out. The same\ncommands work whether the connector is self managed in the connect\ncontainer or fully managed in Confluent Cloud.\n\n🔍 Look at what is running\n  status                  is it RUNNING, and if not, the full stack trace\n  show-config             the configuration actually applied\n  logs                    tail connect logs, filtered and followed\n  show-lag                consumer lag of a sink, until it reaches zero\n  offsets get             where the connector is reading or writing\n\n🛠️ Change it\n  create-or-update        create it, or apply a new config, from stdin\n  update                  edit the running config in your editor\n  pause / resume / stop / restart / delete\n  offsets alter / reset   rewind or fast-forward a connector\n\n🧑‍🔬 Understand it\n  show-config-parameters  every parameter the plugin accepts\n  select-config           pick parameters interactively\n  versions                installed version vs latest on Confluent Hub\n  sourcecode              open the source on GitHub, or diff two versions\n  open-docs               open the Confluent documentation\n  snippets                ready-to-paste converter and dlq config\n\n🐞 Dig deeper\n  log-level               raise connect log level for this connector\n  enable-remote-debugging attach a java debugger to the connector code\n  translate               self managed config to fully managed config\n\nWithout --connector, commands apply to every connector of the example,\nwhich is usually what you want since most examples run only one.\n",
+      "description": "🔗 Connector commands\n\nEverything you would otherwise do with curl on the Connect REST API, with\nthe right host, port and credentials already figured out. The same\ncommands work whether the connector is self managed in the connect\ncontainer or fully managed in Confluent Cloud.\n\n🔍 Look at what is running\n  status                  is it RUNNING, and if not, the full stack trace\n  error-recommendations   suggested fixes for a failed fully managed connector\n  show-config             the configuration actually applied\n  logs                    tail connect logs, filtered and followed\n  show-lag                consumer lag of a sink, until it reaches zero\n  offsets get             where the connector is reading or writing\n\n🛠️ Change it\n  create-or-update        create it, or apply a new config, from stdin\n  update                  edit the running config in your editor\n  pause / resume / stop / restart / delete\n  offsets alter / reset   rewind or fast-forward a connector\n\n🧑‍🔬 Understand it\n  show-config-parameters  every parameter the plugin accepts\n  select-config           pick parameters interactively\n  versions                installed version vs latest on Confluent Hub\n  sourcecode              open the source on GitHub, or diff two versions\n  open-docs               open the Confluent documentation\n  snippets                ready-to-paste converter and dlq config\n\n🐞 Dig deeper\n  log-level               raise connect log level for this connector\n  enable-remote-debugging attach a java debugger to the connector code\n  translate               self managed config to fully managed config\n\nWithout --connector, commands apply to every connector of the example,\nwhich is usually what you want since most examples run only one.\n",
       "usage": "playground connector COMMAND",
       "options": [],
       "subcommands": [
@@ -3476,6 +3566,29 @@
           "name": "status",
           "description": "🧩 Show status of all connectors\n  \n  The connector state, the state of each task, and for a failed task the\n  full stack trace, which is the thing you actually need. Add --verbose to\n  see the underlying REST call.\n",
           "usage": "playground connector status [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
+                "--connector",
+                "-c"
+              ],
+              "argument": "CONNECTOR",
+              "description": "🔗 Connector name\n\n🎓 Tip: If not specified, the command will apply to all connectors\n"
+            }
+          ]
+        },
+        {
+          "name": "error-recommendations",
+          "description": "💡 Show error recommendations for fully managed connectors\n  \n  Confluent Cloud analyses the failure stack trace of a failed fully\n  managed or custom connector and suggests remediation steps. Nothing is\n  returned for a healthy connector, or for one that only failed config\n  validation: 'playground connector status' shows those errors.\n",
+          "usage": "playground connector error-recommendations [OPTIONS]",
           "options": [
             {
               "names": [

@@ -182,6 +182,10 @@ commands:
   - long: --skip-internal-topics
     required: false
 
+- name: get-consumer-group-list
+  help: Return some completion for consumer group list
+  private: true
+
 - name: get-subject-list
   help: Return some completion for subject list
   private: true
@@ -4294,6 +4298,7 @@ commands:
     📥 Get data out
       consume         read from the beginning, deserialising automatically
       get-number-records   count what is in the topic
+      get-offsets          earliest and latest offsets per partition
       display-consumer-offsets   read the internal offsets topic
 
     🔧 Manage
@@ -4340,6 +4345,21 @@ commands:
       examples:
       - playground get-number-records --topic a-topic
       - playground get-number-records -t a-topic
+
+    - name: get-offsets
+      group: Topic
+      help: |-
+        📍 Get earliest and latest offsets per partition of a topic
+
+        The low and high watermarks of every partition, and the number of
+        records in between. Useful to see whether retention has already
+        deleted data, which partitions received records, or which offsets a
+        connector should be at.
+      flags:
+      - *topic
+      - *verbose
+      examples:
+      - playground topic get-offsets --topic a-topic
 
     - name: display-consumer-offsets
       group: Topic
@@ -5409,6 +5429,74 @@ commands:
       examples: |
         playground topic alter --topic atopic --add-config max.message.bytes=5242940
 
+- name: consumer-group
+  expose: always
+  group: Topic
+  filters:
+  - not_mdc_environment
+  help: |-
+    👥 Consumer group commands
+
+    Inspect any consumer group (not only the ones of sink connectors): which
+    groups exist, their state and members, and the committed offsets and lag
+    per partition. Works on plaintext, secured environments, cfk and
+    Confluent Cloud.
+
+      list       consumer groups, optionally with their state
+      describe   committed offsets and lag, or --state, or --members
+
+    🎓 Tip: for a sink connector, 'playground connector show-lag' follows the
+    lag until it reaches 0.
+  commands:
+
+    - name: list
+      group: Topic
+      help: |-
+        👥 List consumer groups
+      flags:
+      - long: --state
+        required: false
+        help: |-
+          🚦 Also display the state of each group (Stable, Empty, PreparingRebalance...)
+      - *verbose
+      examples:
+      - playground consumer-group list
+      - playground consumer-group list --state
+
+    - name: describe
+      group: Topic
+      help: |-
+        🔬 Describe consumer group
+
+        By default, shows the committed offset, log end offset and lag of
+        every partition consumed by the group, followed by the total lag.
+        Use --state for the coordinator, assignment strategy and state, and
+        --members for the members and their assigned partitions.
+      flags:
+      - long: --group
+        short: -g
+        required: false
+        arg: group
+        completions:
+          - $(playground get-consumer-group-list)
+        help: |-
+          👥 Consumer group name
+
+          ℹ️ If not set, all consumer groups are described
+      - long: --state
+        required: false
+        help: |-
+          🚦 Display state of the group (coordinator, assignment strategy, state, number of members)
+      - long: --members
+        required: false
+        help: |-
+          🧑‍🤝‍🧑 Display members of the group and their assigned partitions
+      - *verbose
+      examples:
+      - playground consumer-group describe --group connect-http-sink
+      - playground consumer-group describe --group my-app --members
+      - playground consumer-group describe --group my-app --state
+
 - name: connector-plugin
   expose: always
   group: Connector-Plugin
@@ -5617,6 +5705,7 @@ commands:
 
     🔍 Look at what is running
       status                  is it RUNNING, and if not, the full stack trace
+      error-recommendations   suggested fixes for a failed fully managed connector
       show-config             the configuration actually applied
       logs                    tail connect logs, filtered and followed
       show-lag                consumer lag of a sink, until it reaches zero
@@ -5664,6 +5753,22 @@ commands:
         🔗 Connector name
 
         🎓 Tip: If not specified, the command will apply to all connectors
+
+  - name: error-recommendations
+    filters:
+    - ccloud_environment
+    help: |-
+      💡 Show error recommendations for fully managed connectors
+
+      Confluent Cloud analyses the failure stack trace of a failed fully
+      managed or custom connector and suggests remediation steps. Nothing is
+      returned for a healthy connector, or for one that only failed config
+      validation: 'playground connector status' shows those errors.
+    flags:
+    - *verbose
+    - *connector
+    examples:
+    - playground connector error-recommendations --connector MySinkConnector
 
   - name: oracle-cdc-xstream
     help: |
