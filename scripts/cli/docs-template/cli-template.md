@@ -48,76 +48,24 @@ Once installed, go on a `.sh` script and then type  in Palette `Ctrl+Shift+P` (o
 
 ![extension](./images/vscode_extension2.jpg)
 
-### 🤖 Setup MCP server for Playground CLI
+### 🤖 Using the CLI from AI agents
 
-The [playground MCP server](https://github.com/vdesabou/kafka-docker-playground-mcp-server) exposes the live state of your checkout to any MCP client (Claude Code, Github Copilot, Claude desktop, Cursor, etc...). It finds the repository by walking up from its working directory, so there is no path to configure.
+AI coding agents (Claude Code, Github Copilot, Cursor, etc...) drive the playground with the same CLI as you do: there is no MCP server to install. A few commands and flags are designed so that an agent gets a bounded, non-interactive answer:
 
-#### Features
+| Question | Command |
+| --- | --- |
+| is there an example that does X? | `playground find-example "oracle cdc ssl" [--category connect] [--limit 5]` |
+| what is running right now? | `playground status` (flags exited or restarting containers) |
+| what is the state of the connectors? | `playground connector status` |
+| why did it fail? | `playground container logs --container connect --errors [--since 10m] [--include-warnings]` |
+| show me some raw logs | `playground container logs --container connect --no-follow --tail 500` or `--grep "Caused by" --no-follow` |
 
-- **playground_status**: Docker availability, the example currently running, every container with its state/health/ports, and the recent `playground run` history
-- **playground_connectors**: status of every connector with the root cause of each FAILED task, against the running Connect worker or the Confluent Cloud Connect API
-- **playground_logs**: container logs as de-duplicated errors with collapsed stack traces, tail, or regex search — instead of tens of thousands of raw lines
-- **playground_find_example**: search the ~2500 runnable example scripts and get the exact `playground run -f <script>` command back
-- **playground_example_details**: everything about one example in a single call — source, connector payloads, environment, compose overrides, variants and required variables
+`--errors` de-duplicates ERROR/FATAL records with an occurrence count and collapses stack traces to their `Caused by:` chain, so tens of thousands of lines come back as a few findings. Without `--no-follow` (or `--errors`), `playground container logs` keeps following the logs and never returns.
 
-Secrets coming from `playground.ini`, connector configurations and logs are redacted before they leave the server.
-
-#### installation for Claude Code
-
-Nothing to do: the repository ships a `.mcp.json` at its root and a `.claude/settings.json` that enables the server and allows its (read-only) tools. Run `claude` from anywhere in the checkout and trust the workspace when asked the first time — the server then loads automatically.
+The repository `CLAUDE.md` gives Claude Code the full mapping from raw `docker` / `curl` / `kafka-*` commands to their `playground` equivalent.
 
 > [!NOTE]
-> The first start builds the server from GitHub with `npx`, which can take up to a minute; `.claude/settings.json` raises `MCP_TIMEOUT` accordingly. On machines where an enterprise policy restricts MCP servers (`allowManagedMcpServersOnly`), the server is not loaded.
-
-If you used the former `playground ai` command, remove the MCP servers it registered: `claude mcp remove mcp-kafka; claude mcp remove mcp-ccloud`
-
-#### installation for Visual Studio Code (Github Copilot)
-
-Add in `.vscode/mcp.json`:
-
-```json
-{
-	"servers": {
-		"playground": {
-			"command": "npx",
-			"args": ["--registry=https://registry.npmjs.org", "-y", "github:vdesabou/kafka-docker-playground-mcp-server"]
-		}
-	},
-	"inputs": []
-}
-```
-
-Start the server if not already started:
-
-![mcp](./images/mcp_vscode1.png)
-
-Then use Github Copilot to ask about your playground, example:
-
-![mcp](./images/mcp_vscode2.png)
-
-#### installation for Claude desktop
-
-Claude desktop does not start the server in your repository, so the path has to be given explicitly:
-
-```json
-{
-  "mcpServers": {
-    "playground": {
-      "command": "npx",
-      "args": [
-        "--registry=https://registry.npmjs.org",
-        "-y",
-        "github:vdesabou/kafka-docker-playground-mcp-server"
-      ],
-      "env": {
-        "PLAYGROUND_REPO_ROOT": "/path/to/kafka-docker-playground"
-      }
-    }
-  }
-}
-```
-
-![mcp](./images/mcp_claude1.png)
+> If you used the former playground MCP server, remove it: delete the `playground` entry from `.vscode/mcp.json` (Github Copilot) or from your Claude desktop configuration.
 
 ### ⚙️ Config
 

@@ -1,11 +1,10 @@
 {
-  "enabledMcpjsonServers": ["mcp-playground"],
   "permissions": {
     "allow": [
-      "mcp__mcp-playground__*"
+      "Bash(playground find-example:*)",
+      "Bash(playground status)",
+      "Bash(playground connector status:*)",
+      "Bash(playground container logs:*)"
     ]
-  },
-  "env": {
-    "MCP_TIMEOUT": "120000"
   }
 }

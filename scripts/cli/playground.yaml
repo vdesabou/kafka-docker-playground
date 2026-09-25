@@ -19,7 +19,8 @@ subcommands:
         🗺️ Show a status
         
         A single screen answering "what is running right now, and is it healthy":
-        the example currently running and its documentation link, the version of
+        the example currently running and its documentation link, the state of
+        every container (flagging the exited or restarting ones), the version of
         every connector, the status and configuration of each of them, the topics
         that exist, and whether an EC2 instance of yours is still up.
         
@@ -1275,6 +1276,37 @@ subcommands:
         editing before it runs, so you can change a --tag or add a flag on the way.
     usage: playground history
     options: []
+    subcommands:
+
+  - name: find-example
+    description: | 
+        🔎 Find examples matching a free-text query, without the interactive picker
+        
+        Searches every runnable example script (connect/, ccloud/, ksqldb/,
+        flink/, reproduction-models/, ...) by path, connector class, README title
+        and script body. Every word of the query must match somewhere; matches in
+        the path and connector class rank higher than matches in the body.
+        
+        Prints the ready-to-paste 'playground run -f' command for each hit, best
+        first. Use 'playground run' instead to browse examples interactively.
+    usage: playground find-example QUERY [OPTIONS] [--] [MORE QUERY WORDS...]
+    options:
+    - names:
+      - --category
+      argument: [connect, ccloud, ksqldb, flink, schema-registry, rest-proxy, multi-data-center, other, operator, academy, environment, reproduction-models]
+      description: | 
+        📂 Restrict the search to one top-level folder
+        
+        Allowed values: connect, ccloud, ksqldb, flink, schema-registry, rest-proxy, multi-data-center, other, operator, academy, environment, reproduction-models
+        
+    - names:
+      - --limit
+      argument: 10
+      description: | 
+        🔢 Maximum number of hits (default 10)
+        
+        Default value: 10
+        
     subcommands:
 
   - name: switch-ccloud
@@ -3601,6 +3633,63 @@ subcommands:
           argument: ""
           description: | 
             🕰️ Show logs from the previous pod instance (only relevant when --environment=cfk is used)
+            
+        - names:
+          - --since
+          argument: SINCE
+          description: | 
+            🕐 Only show logs newer than a relative duration (10m, 1h) or a timestamp (2026-09-24T16:00:00)
+            
+            Conflicts with: --open, --wait-for-log
+            
+        - names:
+          - --tail
+          argument: LINES
+          description: | 
+            🔢 Number of lines to show from the end of the logs, or "all"
+            
+            Default is 200, or all when --since, --errors, or --grep with --no-follow is used
+            
+            Conflicts with: --open, --wait-for-log
+            
+        - names:
+          - --no-follow
+          argument: ""
+          description: | 
+            🛑 Print the logs and exit instead of following them
+            
+            🎓 Tip: use it in scripts and from AI agents, which otherwise never get the command back
+            
+            Conflicts with: --open, --wait-for-log
+            
+        - names:
+          - --errors
+          argument: ""
+          description: | 
+            🔥 Only show a digest of ERROR/FATAL records, then exit
+            
+            Repeated records are de-duplicated with an occurrence count, stack
+            traces are collapsed to the exception chain ("Caused by:") plus a few
+            frames of the deepest cause. Records logged at INFO/DEBUG/TRACE are
+            never reported, even when their message contains "Error" or "Exception".
+            
+            Scans the whole log unless --since or --tail narrow it.
+            
+            Conflicts with: --open, --wait-for-log, --grep
+            
+        - names:
+          - --include-warnings
+          argument: ""
+          description: | 
+            🟠 With --errors, also report WARN records
+            
+        - names:
+          - --max-findings
+          argument: 40
+          description: | 
+            ✂️ With --errors, maximum number of distinct records to show (default 40)
+            
+            Default value: 40
             
       - name: display-error-all
         description: | 

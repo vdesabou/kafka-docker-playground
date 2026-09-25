@@ -50,7 +50,8 @@ commands:
     🗺️ Show a status
 
     A single screen answering "what is running right now, and is it healthy":
-    the example currently running and its documentation link, the version of
+    the example currently running and its documentation link, the state of
+    every container (flagging the exited or restarting ones), the version of
     every connector, the status and configuration of each of them, the topics
     that exist, and whether an EC2 instance of yours is still up.
 
@@ -1742,6 +1743,57 @@ commands:
     editing before it runs, so you can change a --tag or add a flag on the way.
   dependencies:
     fzf: visit https://github.com/junegunn/fzf#installation to install
+
+- name: find-example
+  group: Run
+  help: |-
+    🔎 Find examples matching a free-text query, without the interactive picker
+
+    Searches every runnable example script (connect/, ccloud/, ksqldb/,
+    flink/, reproduction-models/, ...) by path, connector class, README title
+    and script body. Every word of the query must match somewhere; matches in
+    the path and connector class rank higher than matches in the body.
+
+    Prints the ready-to-paste 'playground run -f' command for each hit, best
+    first. Use 'playground run' instead to browse examples interactively.
+  args:
+  - name: query
+    required: true
+    help: |-
+      🔤 Free-text query, e.g. "oracle cdc ssl", "fully managed s3 sink" or "jdbc source proxy"
+  catch_all:
+    label: more query words
+    help: extra words are appended to the query, so quoting it is optional
+  flags:
+  - long: --category
+    arg: category
+    required: false
+    allowed:
+    - connect
+    - ccloud
+    - ksqldb
+    - flink
+    - schema-registry
+    - rest-proxy
+    - multi-data-center
+    - other
+    - operator
+    - academy
+    - environment
+    - reproduction-models
+    help: |-
+      📂 Restrict the search to one top-level folder
+  - long: --limit
+    arg: limit
+    required: false
+    validate: integer
+    default: "10"
+    help: |-
+      🔢 Maximum number of hits (default 10)
+  examples:
+  - playground find-example "s3 sink proxy"
+  - playground find-example debezium postgres fully managed
+  - playground find-example "oracle cdc ssl" --category connect --limit 3
 
 - name: start-environment
   private: true
@@ -3934,8 +3986,64 @@ commands:
         required: false
         help: |-
           🕰️ Show logs from the previous pod instance (only relevant when --environment=cfk is used)
+
+      - long: --since
+        arg: since
+        required: false
+        validate: not_empty
+        help: |-
+          🕐 Only show logs newer than a relative duration (10m, 1h) or a timestamp (2026-09-24T16:00:00)
+        conflicts: [--open, --wait-for-log]
+
+      - long: --tail
+        arg: lines
+        required: false
+        help: |-
+          🔢 Number of lines to show from the end of the logs, or "all"
+
+          Default is 200, or all when --since, --errors, or --grep with --no-follow is used
+        conflicts: [--open, --wait-for-log]
+
+      - long: --no-follow
+        required: false
+        help: |-
+          🛑 Print the logs and exit instead of following them
+
+          🎓 Tip: use it in scripts and from AI agents, which otherwise never get the command back
+        conflicts: [--open, --wait-for-log]
+
+      - long: --errors
+        required: false
+        help: |-
+          🔥 Only show a digest of ERROR/FATAL records, then exit
+
+          Repeated records are de-duplicated with an occurrence count, stack
+          traces are collapsed to the exception chain ("Caused by:") plus a few
+          frames of the deepest cause. Records logged at INFO/DEBUG/TRACE are
+          never reported, even when their message contains "Error" or "Exception".
+
+          Scans the whole log unless --since or --tail narrow it.
+        conflicts: [--open, --wait-for-log, --grep]
+
+      - long: --include-warnings
+        required: false
+        help: |-
+          🟠 With --errors, also report WARN records
+        needs: [--errors]
+
+      - long: --max-findings
+        arg: max_findings
+        required: false
+        validate: integer
+        default: "40"
+        help: |-
+          ✂️ With --errors, maximum number of distinct records to show (default 40)
       examples:
       - playground container logs --container connect
+      - playground container logs -c connect --errors
+      - playground container logs -c connect --errors --since 10m --include-warnings
+      - playground container logs -c connect --grep "Caused by" --no-follow
+      - playground container logs -c connect --no-follow --tail 500
       - playground container logs -c connect --open
       - playground container logs -c connect --wait-for-log "StackOverflowError"
       - playground container logs -c connect -c broker

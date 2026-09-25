@@ -14,35 +14,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 User docs: https://kafka-docker-playground.io/ (generated from this repo, see "Docs generation").
 
-## 🥇 Use the `mcp-playground` MCP server first
+## 🥇 Agent-friendly `playground` commands
 
-When it is connected, reach for the `mcp-playground` tools **before** grepping the repo or shelling
-out to `docker` / `playground`. They are indexed and summarised for exactly these questions, so they
-answer in one call what otherwise takes several `grep`/`ls`/`Read` round-trips, and they keep tens of
-thousands of log lines out of context.
+These answer the most common questions in one bounded, non-interactive call — reach for them **before**
+grepping the repo or reading raw logs. They keep tens of thousands of log lines and dozens of grep hits
+out of context.
 
-| Question | Tool | Instead of |
+| Question | Command | Instead of |
 | --- | --- | --- |
-| "is there an example that does X?" | `playground_find_example` | `grep -ril` over `connect/`, `ccloud/`, `reproduction-models/`… |
-| "how does example X work / what does it post?" | `playground_example_details` | reading the `.sh` + its `docker-compose.*.yml` + sibling variants one by one |
-| "what is running right now?" | `playground_status` | `docker ps`, `playground status`, reading `playground.ini` |
-| "what is the state of the connectors?" | `playground_connectors` | `playground connector status`, curl on the Connect REST API |
-| "why did it fail?" | `playground_logs` (default `errors` mode) | `docker logs connect`, `playground container logs` |
+| "is there an example that does X?" | `playground find-example "oracle cdc ssl"` (`--category ccloud`, `--limit 5`) | `grep -ril` over `connect/`, `ccloud/`, `reproduction-models/`… |
+| "what is running right now?" | `playground status` (lists containers, flags exited/restarting ones) | `docker ps`, reading `playground.ini` |
+| "what is the state of the connectors?" | `playground connector status` | curl on the Connect REST API |
+| "why did it fail?" | `playground container logs -c connect --errors` (`--since 10m`, `--include-warnings`) | `docker logs connect`, scrolling raw logs |
+| "show me recent raw lines" | `playground container logs -c connect --no-follow --tail 500` / `--grep "Caused by" --no-follow` | `docker logs connect \| tail` |
 
-`playground_find_example` searches connector class, script path, README title and script body across
-all ~2000 example scripts — including the private `reproduction-models/` submodule — and returns the
-ready-to-paste `playground run -f <script>` command for each hit.
-
-Two caveats:
-
-- It is tuned for precision: it often returns a **single best hit**. When the ask is "show me
-  *everything* about X" (an inventory, all variants of a pattern, every file touching a config key),
-  follow up with `grep -ril` — the MCP search will not give you the full neighbourhood.
-- `connector_classes` / `environment` can come back empty for fully-managed repro scripts that build
-  their connector class inside a heredoc. Absent metadata is not a sign the example is wrong.
-
-If the server is listed as failed to connect, say so rather than silently falling back — then use the
-grep/`docker`/`playground` equivalents in the right-hand column above.
+- `playground find-example` searches connector class, script path, README title and script body of every
+  runnable example — including the private `reproduction-models/` submodule — and prints the
+  ready-to-paste `playground run -f <script>` for each hit, best first. It is tuned for ranking, so
+  when the ask is "show me *everything* about X" (an inventory, every file touching a config key),
+  follow up with `grep -ril`.
+- `--errors` de-duplicates ERROR/FATAL records with an occurrence count and collapses stack traces to
+  their `Caused by:` chain. Records logged at INFO/DEBUG/TRACE are never reported.
+- **`playground container logs` follows the logs by default and never returns** — always pass
+  `--errors`, `--no-follow` or `--wait-for-log` when running it non-interactively.
+- To understand one example, read its `.sh` and `ls` its folder (compose overrides, sibling variants).
 
 ## 🥈 Use the `playground` CLI, not raw `docker` / `curl` / `kafka-*`
 
@@ -56,7 +51,7 @@ environments where the raw command only works on `plaintext`.
 | --- | --- |
 | `docker compose up/down`, `docker compose -f ...` | `playground start-environment` / `playground stop` |
 | `docker ps`, checking what runs | `playground status` |
-| `docker logs <c>`, `docker logs -f <c> \| grep X` | `playground container logs -c <c>` (`--wait-for-log "X" --max-wait 120`, `--open`, `--grep`) |
+| `docker logs <c>`, `docker logs -f <c> \| grep X` | `playground container logs -c <c>` (`--errors`, `--no-follow --tail N`, `--since 10m`, `--grep X --no-follow`, `--wait-for-log "X" --max-wait 120`, `--open`) |
 | `docker exec <c> <cmd>` | `playground container exec -c <c> --command "<cmd>"` (`--root`, `--shell`) |
 | `docker restart <c>`, `docker kill $(docker ps -q)` | `playground container restart\|recreate\|kill\|kill-all -c <c>` |
 | `docker cp` | `playground container cp` |

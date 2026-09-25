@@ -56,6 +56,7 @@ playground_usage() {
   printf "  %s   ⚡ Simply re-run last example you ran with <playground run>\n" "$(green "re-run")                                    "
   printf "  %s   🤖 get CI result for current example\n" "$(green "get-ci-result")                             "
   printf "  %s   🏰 Get an history of the examples which were run with run command and run it again\n" "$(green "history")                                   "
+  printf "  %s   🔎 Find examples matching a free-text query, without the interactive picker\n" "$(green "find-example")                              "
   printf "  %s   🌩️  Switch to ccloud environment.\n" "$(green "switch-ccloud")                             "
   printf "  %s   💺  Switch back from previous environment before switch-ccloud was called.\n" "$(green "switch-back")                               "
   printf "  %s   ✨ Update current confluent platform components (all with --tag or only connect with --connect-tag) or connector(s) with new version(s)\n" "$(green "update-version")                            "
@@ -286,7 +287,7 @@ playground_help_usage() {
 playground_status_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground status\n\n"
-    printf "  🗺️ Show a status\n  \n  A single screen answering \"what is running right now, and is it healthy\":\n  the example currently running and its documentation link, the version of\n  every connector, the status and configuration of each of them, the topics\n  that exist, and whether an EC2 instance of yours is still up.\n  \n  Everything comes from the running containers and from playground.ini, so\n  it is also the quickest way to get back your bearings after a break.\n\n"
+    printf "  🗺️ Show a status\n  \n  A single screen answering \"what is running right now, and is it healthy\":\n  the example currently running and its documentation link, the state of\n  every container (flagging the exited or restarting ones), the version of\n  every connector, the status and configuration of each of them, the topics\n  that exist, and whether an EC2 instance of yours is still up.\n  \n  Everything comes from the running containers and from playground.ini, so\n  it is also the quickest way to get back your bearings after a break.\n\n"
   else
     printf "playground status - 🗺️ Show a status\n\n"
   fi
@@ -3457,6 +3458,65 @@ playground_history_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_find_example_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground find-example\n\n"
+    printf "  🔎 Find examples matching a free-text query, without the interactive picker\n  \n  Searches every runnable example script (connect/, ccloud/, ksqldb/,\n  flink/, reproduction-models/, ...) by path, connector class, README title\n  and script body. Every word of the query must match somewhere; matches in\n  the path and connector class rank higher than matches in the body.\n  \n  Prints the ready-to-paste 'playground run -f' command for each hit, best\n  first. Use 'playground run' instead to browse examples interactively.\n\n"
+  else
+    printf "playground find-example - 🔎 Find examples matching a free-text query, without the interactive picker\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground find-example QUERY [OPTIONS] [--] [MORE QUERY WORDS...]\n"
+  printf "  playground find-example --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--category CATEGORY")"
+    printf "    📂 Restrict the search to one top-level folder\n"
+    printf "    %s\n" "Allowed: connect, ccloud, ksqldb, flink, schema-registry, rest-proxy, multi-data-center, other, operator, academy, environment, reproduction-models"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--limit LIMIT")"
+    printf "    🔢 Maximum number of hits (default 10)\n"
+    printf "    %s\n" "Default: 10"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "QUERY")"
+    printf "    🔤 Free-text query, e.g. \"oracle cdc ssl\", \"fully managed s3 sink\" or \"jdbc\n    source proxy\"\n"
+    echo
+
+    echo "  MORE QUERY WORDS..."
+    printf "    extra words are appended to the query, so quoting it is optional\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground find-example \"s3 sink proxy\"\n"
+    printf "  playground find-example debezium postgres fully managed\n"
+    printf "  playground find-example \"oracle cdc ssl\" --category connect --limit 3\n"
     echo
 
   fi
@@ -6681,6 +6741,42 @@ playground_container_logs_usage() {
     printf "    🕰️ Show logs from the previous pod instance (only relevant when\n    --environment=cfk is used)\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--since SINCE")"
+    printf "    🕐 Only show logs newer than a relative duration (10m, 1h) or a timestamp\n    (2026-09-24T16:00:00)\n"
+    printf "    %s\n" "Conflicts: --open, --wait-for-log"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--tail LINES")"
+    printf "    🔢 Number of lines to show from the end of the logs, or \"all\"\n    \n    Default is 200, or all when --since, --errors, or --grep with --no-follow is\n    used\n"
+    printf "    %s\n" "Conflicts: --open, --wait-for-log"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-follow")"
+    printf "    🛑 Print the logs and exit instead of following them\n    \n    🎓 Tip: use it in scripts and from AI agents, which otherwise never get the\n    command back\n"
+    printf "    %s\n" "Conflicts: --open, --wait-for-log"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--errors")"
+    printf "    🔥 Only show a digest of ERROR/FATAL records, then exit\n    \n    Repeated records are de-duplicated with an occurrence count, stack\n    traces are collapsed to the exception chain (\"Caused by:\") plus a few\n    frames of the deepest cause. Records logged at INFO/DEBUG/TRACE are\n    never reported, even when their message contains \"Error\" or \"Exception\".\n    \n    Scans the whole log unless --since or --tail narrow it.\n"
+    printf "    %s\n" "Conflicts: --open, --wait-for-log, --grep"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--include-warnings")"
+    printf "    🟠 With --errors, also report WARN records\n"
+    printf "    %s\n" "Needs: --errors"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-findings MAX_FINDINGS")"
+    printf "    ✂️ With --errors, maximum number of distinct records to show (default 40)\n"
+    printf "    %s\n" "Default: 40"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -6689,6 +6785,10 @@ playground_container_logs_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground container logs --container connect\n"
+    printf "  playground container logs -c connect --errors\n"
+    printf "  playground container logs -c connect --errors --since 10m --include-warnings\n"
+    printf "  playground container logs -c connect --grep \"Caused by\" --no-follow\n"
+    printf "  playground container logs -c connect --no-follow --tail 500\n"
     printf "  playground container logs -c connect --open\n"
     printf "  playground container logs -c connect --wait-for-log \"StackOverflowError\"\n"
     printf "  playground container logs -c connect -c broker\n"
@@ -13123,6 +13223,221 @@ function install_confluent_plugin() {
     log "✅ Confluent kubectl plugin installed successfully!"
 }
 
+# Reads container logs on stdin and prints de-duplicated ERROR/FATAL records
+# (optionally WARN), each with an occurrence count, the exception chain and a
+# few frames of the deepest cause, instead of tens of thousands of raw lines.
+# $1: max number of findings to print, $2: non-empty to include WARN records
+function summarize_log_errors() {
+    local max_findings="${1:-40}"
+    local include_warnings="${2:-}"
+
+    awk -v max_findings="$max_findings" -v include_warnings="$include_warnings" '
+    # anything that does not look like the continuation of a stack trace or of a
+    # multi-line message (indented line, "Caused by:", exception line) starts a record
+    function is_continuation(line) {
+        return line ~ /^[ \t]/ ||
+               line ~ /^Caused by:/ ||
+               line ~ /^[A-Za-z0-9_$]+(\.[A-Za-z0-9_$]+)+(Exception|Error|Throwable)(:|$)/
+    }
+    function level_of(head,    h, lvl) {
+        h = substr(head, 1, 200)
+        if (match(h, /(^|[^A-Za-z])(TRACE|DEBUG|INFO|WARN|WARNING|ERROR|FATAL|SEVERE)([^A-Za-z]|$)/)) {
+            lvl = substr(h, RSTART, RLENGTH)
+            gsub(/[^A-Z]/, "", lvl)
+            if (lvl == "FATAL" || lvl == "SEVERE") return "FATAL"
+            if (lvl == "ERROR") return "ERROR"
+            if (lvl == "WARN" || lvl == "WARNING") return "WARN"
+            # an explicit INFO/DEBUG/TRACE level wins over "Error"/"Exception" words in the message
+            return ""
+        }
+        # level-less line (stderr, raw stack trace, non-java containers): an exception or an explicit failure
+        if (h ~ /[A-Za-z0-9_$]+(Exception|Error|Throwable)(:|[ \t]|$)/) return "ERROR"
+        if (tolower(h) ~ /(^|[^a-z])(error|failed|failure)([^a-z]|$)/) return "ERROR"
+        return ""
+    }
+    function short(s) {
+        return length(s) > 300 ? substr(s, 1, 300) "..." : s
+    }
+    function flush(    lvl, key, i, chain, frames, nframes, line, cause) {
+        if (nlines == 0) return
+        lvl = level_of(rec[1])
+        if (lvl == "" || (lvl == "WARN" && include_warnings == "")) { nlines = 0; return }
+
+        # exception chain: first exception line plus every "Caused by:", then frames of the deepest cause
+        chain = ""
+        cause = ""
+        nframes = 0
+        for (i = 2; i <= nlines; i++) {
+            line = rec[i]
+            if (line ~ /^[ \t]*at /) {
+                if (nframes < 3) { sub(/^[ \t]*/, "", line); frames = frames "\n        " short(line); nframes++ }
+                continue
+            }
+            if (line ~ /^[ \t]*\.\.\. [0-9]+ (more|common frames omitted)/) continue
+            if (line ~ /^Caused by:/ || (chain == "" && line ~ /(Exception|Error|Throwable)(:|[ \t]*$)/)) {
+                chain = chain "\n    " short(line)
+                cause = line
+                frames = ""
+                nframes = 0
+            }
+        }
+        if (chain == "" && rec[1] !~ /(Exception|Error|Throwable)(:|[ \t]|$)/) frames = ""
+
+        # same message and same deepest cause = same finding, whatever the timestamps and ids
+        key = rec[1]
+        sub(/^\[?[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][ T][0-9:,.]*\]?[ \t]*/, "", key)
+        key = lvl ":" substr(key, 1, 200) "|" substr(cause, 1, 200)
+        gsub(/[0-9]+/, "#", key)
+
+        total_occurrences++
+        nlines = 0
+        if (key in count) {
+            count[key]++
+            last_seen[key] = rec_line
+            return
+        }
+        count[key] = 1
+        first_seen[key] = rec_line
+        last_seen[key] = rec_line
+        level[key] = lvl
+        order[++nkeys] = key
+        text[key] = short(rec[1]) chain frames
+    }
+    {
+        gsub(/\033\[[0-9;]*m/, "")
+        sub(/\r$/, "")
+        if (!is_continuation($0) || nlines == 0 || nlines >= 400) {
+            flush()
+            rec_line = NR
+        }
+        rec[++nlines] = $0
+    }
+    END {
+        flush()
+        if (nkeys == 0) {
+            printf "✅ no %s record found in %d lines\n", (include_warnings == "" ? "ERROR/FATAL" : "ERROR/FATAL/WARN"), NR
+            exit 0
+        }
+        printf "🔎 %d distinct record(s), %d occurrence(s), in %d lines\n", nkeys, total_occurrences, NR
+        shown = 0
+        split("FATAL ERROR WARN", severities, " ")
+        for (s = 1; s <= 3; s++) {
+            for (i = 1; i <= nkeys && shown < max_findings; i++) {
+                k = order[i]
+                if (level[k] != severities[s]) continue
+                icon = (level[k] == "WARN") ? "🟠" : "🔴"
+                printf "\n%s %s x%d (first seen line %d, last seen line %d)\n%s\n", icon, level[k], count[k], first_seen[k], last_seen[k], text[k]
+                shown++
+            }
+        }
+        if (shown < nkeys) printf "\n✂️ %d more distinct record(s) not shown, increase --max-findings or narrow with --since\n", nkeys - shown
+    }'
+}
+
+# Ranked search over every runnable example script (a .sh sourcing scripts/utils.sh).
+# Each query term must match somewhere; path and connector class matches weigh
+# more than the script body or README.
+# $1: query, $2: limit, $3: optional top-level category
+function find_examples() {
+    local query="$1"
+    local limit="${2:-10}"
+    local category="$3"
+    local categories="connect ccloud ksqldb flink schema-registry rest-proxy multi-data-center other operator academy environment reproduction-models"
+
+    if [[ -n "$category" ]]
+    then
+        categories="$category"
+    fi
+
+    local dirs=()
+    local c
+    for c in $categories
+    do
+        if [ -d "$root_folder/$c" ]
+        then
+            dirs+=("$root_folder/$c")
+        fi
+    done
+    if [ ${#dirs[@]} -eq 0 ]
+    then
+        return 0
+    fi
+
+    find "${dirs[@]}" -maxdepth 5 -type f -name "*.sh" ! -name "stop.sh" -print0 2>/dev/null \
+        | xargs -0 grep -l "scripts/utils.sh" 2>/dev/null \
+        | awk -v query="$query" -v root="$root_folder/" '
+        function readme_title(dir,    file, line, title) {
+            if (dir in titles) return titles[dir]
+            title = ""
+            readme[dir] = ""
+            file = dir "/README.md"
+            while ((getline line < file) > 0) {
+                if (title == "" && line ~ /^#[ \t]+/) { title = line; sub(/^#[ \t]+/, "", title) }
+                if (length(readme[dir]) < 8000) readme[dir] = readme[dir] "\n" tolower(line)
+            }
+            close(file)
+            titles[dir] = title
+            return title
+        }
+        BEGIN {
+            nterms = split(tolower(query), raw, /[^a-z0-9.+_-]+/)
+            n = 0
+            for (i = 1; i <= nterms; i++) if (length(raw[i]) > 1) terms[++n] = raw[i]
+            nterms = n
+        }
+        {
+            file = $0
+            rel = substr(file, length(root) + 1)
+            dir = file
+            sub(/\/[^\/]*$/, "", dir)
+            name = file
+            sub(/^.*\//, "", name)
+            sub(/\.sh$/, "", name)
+            title = readme_title(dir)
+
+            body = ""
+            classes = ""
+            env = ""
+            while ((getline line < file) > 0) {
+                if (length(body) < 8000) body = body "\n" tolower(line)
+                if (match(line, /"connector\.class"[ \t]*:[ \t]*"[^"$]+"/)) {
+                    cls = substr(line, RSTART, RLENGTH)
+                    sub(/^"connector\.class"[ \t]*:[ \t]*"/, "", cls)
+                    sub(/"$/, "", cls)
+                    if (index(" " classes " ", " " cls " ") == 0) classes = (classes == "" ? cls : classes " " cls)
+                }
+                if (env == "" && match(line, /PLAYGROUND_ENVIRONMENT:-"?[A-Za-z0-9_-]+/)) {
+                    env = substr(line, RSTART, RLENGTH)
+                    sub(/^PLAYGROUND_ENVIRONMENT:-"?/, "", env)
+                }
+            }
+            close(file)
+
+            lrel = tolower(rel)
+            lclasses = tolower(classes)
+            ltitle = tolower(title)
+            haystack = lrel "\n" ltitle "\n" lclasses "\n" body readme[dir]
+
+            score = 0
+            for (i = 1; i <= nterms; i++) {
+                t = terms[i]
+                in_path = index(lrel, t) > 0
+                in_class = index(lclasses, t) > 0
+                in_title = index(ltitle, t) > 0
+                in_body = index(haystack, t) > 0
+                if (!in_path && !in_class && !in_title && !in_body) { score = -1; break }
+                score += in_path * 10 + in_class * 6 + in_title * 4 + in_body
+            }
+            if (score < 0 || nterms == 0) next
+            # prefer the canonical variant of a family over its many derivatives
+            score -= split(name, parts, "-") * 0.1
+
+            printf "%.1f\t%s\t%s\t%s\t%s\n", score, rel, title, classes, env
+        }' \
+        | sort -t "$(printf '\t')" -k1,1nr -k2,2 \
+        | head -n "$limit"
+}
+
 # src/lib/colors.sh
 print_in_color() {
   local color="$1"
@@ -18773,6 +19088,21 @@ playground_status_command() {
   echo $last_two_folders/$filename
 
   playground open-docs --only-show-url
+
+  get_environment_used
+  log "🐳 Containers"
+  if [[ "$environment" == "cfk" ]]
+  then
+      kubectl -n confluent get pods
+  else
+      docker ps -a --filter "label=com.docker.compose.project" --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
+      unhealthy=$(docker ps -a --filter "label=com.docker.compose.project" --format "{{.Names}} ({{.Status}})" | grep -E "Exited|Restarting|Dead|unhealthy" || true)
+      if [[ -n "$unhealthy" ]]
+      then
+          logwarn "💀 some containers are not running or not healthy, check them with 'playground container logs --container <container> --errors':"
+          echo "$unhealthy"
+      fi
+  fi
 
   if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
   then
@@ -24508,6 +24838,48 @@ playground_history_command() {
   fi
 
   $res
+}
+
+# :command.function
+playground_find_example_command() {
+
+  # src/commands/find-example.sh
+  query="${args[query]}"
+  category="${args[--category]}"
+  limit="${args[--limit]}"
+
+  if [ ${#other_args[@]} -gt 0 ]
+  then
+      query="$query ${other_args[*]}"
+  fi
+
+  hits=$(find_examples "$query" "$limit" "$category")
+
+  if [ -z "$hits" ]
+  then
+      logwarn "❌ no example matches all the words of \"$query\"${category:+ in $category/}"
+      exit 1
+  fi
+
+  log "🔎 examples matching \"$query\"${category:+ in $category/}, best first"
+  while IFS=$'\t' read -r score script title classes environment
+  do
+      details="$title"
+      if [[ -n "$classes" ]]
+      then
+          details="${details:+$details · }$classes"
+      fi
+      if [[ -n "$environment" ]]
+      then
+          details="${details:+$details · }$environment"
+      fi
+      echo "playground run -f $root_folder/$script"
+      if [[ -n "$details" ]]
+      then
+          echo "    ${details}"
+      fi
+  done <<< "$hits"
+
 }
 
 # :command.function
@@ -30758,15 +31130,92 @@ playground_container_logs_command() {
   grep="${args[--grep]}"
   max_wait="${args[--max-wait]}"
   previous="${args[--previous]}"
+  since="${args[--since]}"
+  tail_lines="${args[--tail]}"
+  no_follow="${args[--no-follow]}"
+  errors="${args[--errors]}"
+  include_warnings="${args[--include-warnings]}"
+  max_findings="${args[--max-findings]}"
 
   get_environment_used
+
+  if [[ -n "$tail_lines" ]] && [[ "$tail_lines" != "all" ]] && ! [[ "$tail_lines" =~ ^[0-9]+$ ]]
+  then
+      logerror "❌ --tail must be a number of lines or \"all\", got \"$tail_lines\""
+      exit 1
+  fi
+
+  if [[ -n "$errors" ]] && [[ -n "$grep" ]]
+  then
+      logerror "❌ --errors and --grep cannot be used together"
+      exit 1
+  fi
+
+  # the digest needs the whole (bounded) log, so it never follows
+  if [[ -n "$errors" ]]
+  then
+      no_follow=1
+  fi
+
+  if [[ -z "$tail_lines" ]]
+  then
+      if [[ -n "$since" ]] || [[ -n "$errors" ]] || { [[ -n "$grep" ]] && [[ -n "$no_follow" ]]; }
+      then
+          tail_lines="all"
+      else
+          tail_lines="200"
+      fi
+  fi
+
+  follow_opt=()
+  if [[ -z "$no_follow" ]]
+  then
+      follow_opt=(-f)
+  fi
+
+  since_opt=()
+  if [[ -n "$since" ]]
+  then
+      since_opt=(--since "$since")
+  fi
+
+  kubectl_tail="$tail_lines"
+  if [[ "$kubectl_tail" == "all" ]]
+  then
+      kubectl_tail="-1"
+  fi
 
   # Convert space-separated string to array
   IFS=' ' read -ra container_array <<< "$containers"
 
+  # Followed logs of several containers are streamed in parallel; otherwise one after the other
+  run_in_background=""
+  if [ ${#container_array[@]} -gt 1 ] && [[ -z "$no_follow" ]]
+  then
+      run_in_background=1
+  fi
+
   for container in "${container_array[@]}"
   do
       resolved_container=$(resolve_container_name_for_environment "$container")
+
+      if [[ -n "$errors" ]]
+      then
+          log "🔥 ERROR/FATAL digest for $container logs${since:+ since $since}"
+          if [[ "$environment" == "cfk" ]]
+          then
+              maybe_previous=""
+              if [[ -n "$previous" ]]
+              then
+                  maybe_previous="--previous"
+              fi
+              kubectl -n confluent logs "$resolved_container" --all-containers=true $maybe_previous "${since_opt[@]}" --tail="$kubectl_tail" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings"
+          else
+              docker container logs "${since_opt[@]}" --tail "$tail_lines" "$resolved_container" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings"
+          fi
+          continue
+      fi
+
       if [[ "$environment" == "cfk" ]]
       then
           maybe_previous=""
@@ -30808,16 +31257,20 @@ playground_container_logs_command() {
               done
           elif [[ -n "$grep" ]]
           then
-              if [ ${#container_array[@]} -gt 1 ]; then
-                  kubectl -n confluent logs --tail=200 $maybe_previous -f "$resolved_container" 2>&1 | grep --line-buffered "$grep" | sed "s/^/[$container] /" &
+              if [[ -n "$run_in_background" ]]; then
+                  kubectl -n confluent logs --tail="$kubectl_tail" "${since_opt[@]}" $maybe_previous "${follow_opt[@]}" "$resolved_container" 2>&1 | grep --line-buffered "$grep" | sed "s/^/[$container] /" &
+              elif [ ${#container_array[@]} -gt 1 ]; then
+                  kubectl -n confluent logs --tail="$kubectl_tail" "${since_opt[@]}" $maybe_previous "${follow_opt[@]}" "$resolved_container" 2>&1 | grep --line-buffered "$grep" | sed "s/^/[$container] /"
               else
-                  kubectl -n confluent logs --tail=200 $maybe_previous -f "$resolved_container" 2>&1 | grep --line-buffered "$grep"
+                  kubectl -n confluent logs --tail="$kubectl_tail" "${since_opt[@]}" $maybe_previous "${follow_opt[@]}" "$resolved_container" 2>&1 | grep --line-buffered "$grep"
               fi
           else
-              if [ ${#container_array[@]} -gt 1 ]; then
-                  kubectl -n confluent logs --tail=200 $maybe_previous -f "$resolved_container" 2>&1 | sed "s/^/[$container] /" &
+              if [[ -n "$run_in_background" ]]; then
+                  kubectl -n confluent logs --tail="$kubectl_tail" "${since_opt[@]}" $maybe_previous "${follow_opt[@]}" "$resolved_container" 2>&1 | sed "s/^/[$container] /" &
+              elif [ ${#container_array[@]} -gt 1 ]; then
+                  kubectl -n confluent logs --tail="$kubectl_tail" "${since_opt[@]}" $maybe_previous "${follow_opt[@]}" "$resolved_container" 2>&1 | sed "s/^/[$container] /"
               else
-                  kubectl -n confluent logs --tail=200 $maybe_previous -f "$resolved_container"
+                  kubectl -n confluent logs --tail="$kubectl_tail" "${since_opt[@]}" $maybe_previous "${follow_opt[@]}" "$resolved_container"
               fi
           fi
           continue
@@ -30842,29 +31295,32 @@ playground_container_logs_command() {
           wait_for_log "$log" "$resolved_container" "$max_wait"
       elif [[ -n "$grep" ]]
       then
-          if [ ${#container_array[@]} -gt 1 ]; then
+          if [[ -n "$run_in_background" ]]; then
               # For multiple containers, filter and prefix each stream in parallel.
-              docker container logs --tail=200 -f "$resolved_container" 2>&1 | grep --line-buffered "$grep" | sed "s/^/[$container] /" &
+              docker container logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | grep --line-buffered "$grep" | sed "s/^/[$container] /" &
+          elif [ ${#container_array[@]} -gt 1 ]; then
+              docker container logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | grep --line-buffered "$grep" | sed "s/^/[$container] /"
           else
-              docker container logs --tail=200 -f "$resolved_container" 2>&1 | grep --line-buffered "$grep"
+              docker container logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | grep --line-buffered "$grep"
           fi
       else
-
-          # For multiple containers, run docker logs in parallel in background
-          if [ ${#container_array[@]} -gt 1 ]; then
+          if [[ -n "$run_in_background" ]]; then
               # Add container prefix to distinguish logs from different containers
-              docker container logs --tail=200 -f "$resolved_container" 2>&1 | sed "s/^/[$container] /" &
+              docker container logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | sed "s/^/[$container] /" &
+          elif [ ${#container_array[@]} -gt 1 ]; then
+              docker container logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container" 2>&1 | sed "s/^/[$container] /"
           else
               # For single container, use normal behavior without prefix
-              docker container logs --tail=200 -f "$resolved_container"
+              docker container logs --tail "$tail_lines" "${since_opt[@]}" "${follow_opt[@]}" "$resolved_container"
           fi
       fi
   done
 
-  # If multiple containers, wait for all background processes
-  if [ ${#container_array[@]} -gt 1 ]; then
+  # If multiple containers were followed in parallel, wait for all background processes
+  if [[ -n "$run_in_background" ]]; then
       wait
   fi
+
 }
 
 # :command.function
@@ -42209,6 +42665,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    find-example)
+      action="find-example"
+      shift
+      playground_find_example_parse_requirements "$@"
+      shift $#
+      ;;
+
     start-environment)
       action="start-environment"
       shift
@@ -48906,6 +49369,123 @@ playground_history_parse_requirements() {
 
     esac
   done
+
+}
+
+# :command.parse_requirements
+playground_find_example_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_find_example_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="find-example"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --category)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--category']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--category requires an argument: --category CATEGORY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --limit)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--limit']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--limit requires an argument: --limit LIMIT" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        other_args+=("$@")
+        break
+        ;;
+
+      -?*)
+        other_args+=("$1")
+        shift
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_catch_all
+        # :argument.case
+        if [[ -z ${args['query']+x} ]]; then
+          args['query']=$1
+          shift
+        else
+          other_args+=("$1")
+          shift
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['query']+x} ]]; then
+    printf "missing required argument: QUERY\nusage: playground find-example QUERY [OPTIONS] [--] [MORE QUERY WORDS...]\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground find-example \"s3 sink proxy\"\n" >&2
+    printf "  playground find-example debezium postgres fully managed\n" >&2
+    printf "  playground find-example \"oracle cdc ssl\" --category connect --limit 3\n" >&2
+
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--limit']:-} ]] || args['--limit']="10"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--limit'] ]]; then
+    validation_output="$(validate_integer "${args['--limit']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--limit LIMIT" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--category']:-} ]] && [[ ! ${args['--category']:-} =~ ^(connect|ccloud|ksqldb|flink|schema-registry|rest-proxy|multi-data-center|other|operator|academy|environment|reproduction-models)$ ]]; then
+    printf "%s\n" "--category must be one of: connect, ccloud, ksqldb, flink, schema-registry, rest-proxy, multi-data-center, other, operator, academy, environment, reproduction-models" >&2
+    exit 1
+  fi
 
 }
 
@@ -56152,6 +56732,100 @@ playground_container_logs_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --since)
+        # :flag.conflicts
+        for conflict in --open --wait-for-log; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--since']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--since requires an argument: --since SINCE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --tail)
+        # :flag.conflicts
+        for conflict in --open --wait-for-log; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--tail']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--tail requires an argument: --tail LINES" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-follow)
+        # :flag.conflicts
+        for conflict in --open --wait-for-log; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--no-follow']=1
+        shift
+        ;;
+
+      # :flag.case
+      --errors)
+        # :flag.conflicts
+        for conflict in --open --wait-for-log --grep; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--errors']=1
+        shift
+        ;;
+
+      # :flag.case
+      --include-warnings)
+
+        # :flag.case_no_arg
+        args['--include-warnings']=1
+        shift
+        ;;
+
+      # :flag.case
+      --max-findings)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-findings']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-findings requires an argument: --max-findings MAX_FINDINGS" >&2
+          exit 1
+        fi
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -56168,10 +56842,18 @@ playground_container_logs_parse_requirements() {
     esac
   done
 
+  # :command.needy_flags_filter
+  # :flag.needs
+  if [[ -n ${args['--include-warnings']+x} ]] && [[ -z "${args[--errors]:-}" ]]; then
+    printf "%s\n" "--include-warnings needs --errors" >&2
+    exit 1
+  fi
+
   # :command.default_assignments
   [[ -n ${args['--container']:-} ]] || args['--container']="connect"
   [[ -n ${args['--max-wait']:-} ]] || args['--max-wait']="600"
   [[ -n ${args['--grep']:-} ]] || args['--grep']=""
+  [[ -n ${args['--max-findings']:-} ]] || args['--max-findings']="40"
 
   # :command.validations
   # :flag.validations
@@ -56188,6 +56870,24 @@ playground_container_logs_parse_requirements() {
     validation_output="$(validate_integer "${args['--max-wait']:-}")"
     if [[ -n "${validation_output}" ]]; then
       printf "validation error in %s:\n%s\n" "--max-wait, -m MAX_WAIT" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--since'] ]]; then
+    validation_output="$(validate_not_empty "${args['--since']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--since SINCE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--max-findings'] ]]; then
+    validation_output="$(validate_integer "${args['--max-findings']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-findings MAX_FINDINGS" "$validation_output" >&2
       exit 1
     fi
   fi
@@ -64745,6 +65445,7 @@ run() {
     "re-run") playground_re_run_command ;;
     "get-ci-result") playground_get_ci_result_command ;;
     "history") playground_history_command ;;
+    "find-example") playground_find_example_command ;;
     "start-environment") playground_start_environment_command ;;
     "switch-ccloud") playground_switch_ccloud_command ;;
     "switch-back") playground_switch_back_command ;;

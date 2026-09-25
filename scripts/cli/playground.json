@@ -14,7 +14,7 @@
     },
     {
       "name": "status",
-      "description": "🗺️ Show a status\n\nA single screen answering \"what is running right now, and is it healthy\":\nthe example currently running and its documentation link, the version of\nevery connector, the status and configuration of each of them, the topics\nthat exist, and whether an EC2 instance of yours is still up.\n\nEverything comes from the running containers and from playground.ini, so\nit is also the quickest way to get back your bearings after a break.\n",
+      "description": "🗺️ Show a status\n\nA single screen answering \"what is running right now, and is it healthy\":\nthe example currently running and its documentation link, the state of\nevery container (flagging the exited or restarting ones), the version of\nevery connector, the status and configuration of each of them, the topics\nthat exist, and whether an EC2 instance of yours is still up.\n\nEverything comes from the running containers and from playground.ini, so\nit is also the quickest way to get back your bearings after a break.\n",
       "usage": "playground status",
       "options": [],
       "subcommands": null
@@ -836,6 +836,41 @@
       "description": "🏰 Get an history of the examples which were run with run command and run it again\n\nOpens a picker over every 'playground run' command you have executed,\nmost recent first and de-duplicated. The command you select is shown for\nediting before it runs, so you can change a --tag or add a flag on the way.\n",
       "usage": "playground history",
       "options": [],
+      "subcommands": null
+    },
+    {
+      "name": "find-example",
+      "description": "🔎 Find examples matching a free-text query, without the interactive picker\n\nSearches every runnable example script (connect/, ccloud/, ksqldb/,\nflink/, reproduction-models/, ...) by path, connector class, README title\nand script body. Every word of the query must match somewhere; matches in\nthe path and connector class rank higher than matches in the body.\n\nPrints the ready-to-paste 'playground run -f' command for each hit, best\nfirst. Use 'playground run' instead to browse examples interactively.\n",
+      "usage": "playground find-example QUERY [OPTIONS] [--] [MORE QUERY WORDS...]",
+      "options": [
+        {
+          "names": [
+            "--category"
+          ],
+          "argument": [
+            "connect",
+            "ccloud",
+            "ksqldb",
+            "flink",
+            "schema-registry",
+            "rest-proxy",
+            "multi-data-center",
+            "other",
+            "operator",
+            "academy",
+            "environment",
+            "reproduction-models"
+          ],
+          "description": "📂 Restrict the search to one top-level folder\n\nAllowed values: connect, ccloud, ksqldb, flink, schema-registry, rest-proxy, multi-data-center, other, operator, academy, environment, reproduction-models\n"
+        },
+        {
+          "names": [
+            "--limit"
+          ],
+          "argument": 10,
+          "description": "🔢 Maximum number of hits (default 10)\n\nDefault value: 10\n"
+        }
+      ],
       "subcommands": null
     },
     {
@@ -2516,6 +2551,48 @@
               ],
               "argument": "",
               "description": "🕰️ Show logs from the previous pod instance (only relevant when --environment=cfk is used)\n"
+            },
+            {
+              "names": [
+                "--since"
+              ],
+              "argument": "SINCE",
+              "description": "🕐 Only show logs newer than a relative duration (10m, 1h) or a timestamp (2026-09-24T16:00:00)\n\nConflicts with: --open, --wait-for-log\n"
+            },
+            {
+              "names": [
+                "--tail"
+              ],
+              "argument": "LINES",
+              "description": "🔢 Number of lines to show from the end of the logs, or \"all\"\n\nDefault is 200, or all when --since, --errors, or --grep with --no-follow is used\n\nConflicts with: --open, --wait-for-log\n"
+            },
+            {
+              "names": [
+                "--no-follow"
+              ],
+              "argument": "",
+              "description": "🛑 Print the logs and exit instead of following them\n\n🎓 Tip: use it in scripts and from AI agents, which otherwise never get the command back\n\nConflicts with: --open, --wait-for-log\n"
+            },
+            {
+              "names": [
+                "--errors"
+              ],
+              "argument": "",
+              "description": "🔥 Only show a digest of ERROR/FATAL records, then exit\n\nRepeated records are de-duplicated with an occurrence count, stack\ntraces are collapsed to the exception chain (\"Caused by:\") plus a few\nframes of the deepest cause. Records logged at INFO/DEBUG/TRACE are\nnever reported, even when their message contains \"Error\" or \"Exception\".\n\nScans the whole log unless --since or --tail narrow it.\n\nConflicts with: --open, --wait-for-log, --grep\n"
+            },
+            {
+              "names": [
+                "--include-warnings"
+              ],
+              "argument": "",
+              "description": "🟠 With --errors, also report WARN records\n"
+            },
+            {
+              "names": [
+                "--max-findings"
+              ],
+              "argument": 40,
+              "description": "✂️ With --errors, maximum number of distinct records to show (default 40)\n\nDefault value: 40\n"
             }
           ]
         },

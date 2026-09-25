@@ -22,6 +22,21 @@ echo $last_two_folders/$filename
 
 playground open-docs --only-show-url
 
+get_environment_used
+log "🐳 Containers"
+if [[ "$environment" == "cfk" ]]
+then
+    kubectl -n confluent get pods
+else
+    docker ps -a --filter "label=com.docker.compose.project" --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
+    unhealthy=$(docker ps -a --filter "label=com.docker.compose.project" --format "{{.Names}} ({{.Status}})" | grep -E "Exited|Restarting|Dead|unhealthy" || true)
+    if [[ -n "$unhealthy" ]]
+    then
+        logwarn "💀 some containers are not running or not healthy, check them with 'playground container logs --container <container> --errors':"
+        echo "$unhealthy"
+    fi
+fi
+
 if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
 then
     playground connector versions | grep -v "applying command to all connectors"
