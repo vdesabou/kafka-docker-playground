@@ -1315,10 +1315,10 @@ echo "# 🚀 below is a list of snippets that can help you to build your example
 echo "# 🚀 for full documentation, visit https://kafka-docker-playground.io/#/ !" >> $tmp_dir/tmp_file
 echo "#################################################################################################" >> $tmp_dir/tmp_file
 echo "" >> $tmp_dir/tmp_file
-if [[ "$base1" == *sink ]]
-then
-  cat $root_folder/scripts/cli/snippets/sink.sh | grep -v "#!/bin/bash" >> $tmp_dir/tmp_file
-fi
+# if [[ "$base1" == *sink ]]
+# then
+#   cat $root_folder/scripts/cli/snippets/sink.sh | grep -v "#!/bin/bash" >> $tmp_dir/tmp_file
+# fi
 
 mv $tmp_dir/tmp_file $repro_test_file
 
