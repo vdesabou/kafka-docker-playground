@@ -2464,3 +2464,218 @@ function install_confluent_plugin() {
     
     log "✅ Confluent kubectl plugin installed successfully!"
 }
+
+# Reads container logs on stdin and prints de-duplicated ERROR/FATAL records
+# (optionally WARN), each with an occurrence count, the exception chain and a
+# few frames of the deepest cause, instead of tens of thousands of raw lines.
+# $1: max number of findings to print, $2: non-empty to include WARN records
+function summarize_log_errors() {
+    local max_findings="${1:-40}"
+    local include_warnings="${2:-}"
+
+    awk -v max_findings="$max_findings" -v include_warnings="$include_warnings" '
+    # anything that does not look like the continuation of a stack trace or of a
+    # multi-line message (indented line, "Caused by:", exception line) starts a record
+    function is_continuation(line) {
+        return line ~ /^[ \t]/ ||
+               line ~ /^Caused by:/ ||
+               line ~ /^[A-Za-z0-9_$]+(\.[A-Za-z0-9_$]+)+(Exception|Error|Throwable)(:|$)/
+    }
+    function level_of(head,    h, lvl) {
+        h = substr(head, 1, 200)
+        if (match(h, /(^|[^A-Za-z])(TRACE|DEBUG|INFO|WARN|WARNING|ERROR|FATAL|SEVERE)([^A-Za-z]|$)/)) {
+            lvl = substr(h, RSTART, RLENGTH)
+            gsub(/[^A-Z]/, "", lvl)
+            if (lvl == "FATAL" || lvl == "SEVERE") return "FATAL"
+            if (lvl == "ERROR") return "ERROR"
+            if (lvl == "WARN" || lvl == "WARNING") return "WARN"
+            # an explicit INFO/DEBUG/TRACE level wins over "Error"/"Exception" words in the message
+            return ""
+        }
+        # level-less line (stderr, raw stack trace, non-java containers): an exception or an explicit failure
+        if (h ~ /[A-Za-z0-9_$]+(Exception|Error|Throwable)(:|[ \t]|$)/) return "ERROR"
+        if (tolower(h) ~ /(^|[^a-z])(error|failed|failure)([^a-z]|$)/) return "ERROR"
+        return ""
+    }
+    function short(s) {
+        return length(s) > 300 ? substr(s, 1, 300) "..." : s
+    }
+    function flush(    lvl, key, i, chain, frames, nframes, line, cause) {
+        if (nlines == 0) return
+        lvl = level_of(rec[1])
+        if (lvl == "" || (lvl == "WARN" && include_warnings == "")) { nlines = 0; return }
+
+        # exception chain: first exception line plus every "Caused by:", then frames of the deepest cause
+        chain = ""
+        cause = ""
+        nframes = 0
+        for (i = 2; i <= nlines; i++) {
+            line = rec[i]
+            if (line ~ /^[ \t]*at /) {
+                if (nframes < 3) { sub(/^[ \t]*/, "", line); frames = frames "\n        " short(line); nframes++ }
+                continue
+            }
+            if (line ~ /^[ \t]*\.\.\. [0-9]+ (more|common frames omitted)/) continue
+            if (line ~ /^Caused by:/ || (chain == "" && line ~ /(Exception|Error|Throwable)(:|[ \t]*$)/)) {
+                chain = chain "\n    " short(line)
+                cause = line
+                frames = ""
+                nframes = 0
+            }
+        }
+        if (chain == "" && rec[1] !~ /(Exception|Error|Throwable)(:|[ \t]|$)/) frames = ""
+
+        # same message and same deepest cause = same finding, whatever the timestamps and ids
+        key = rec[1]
+        sub(/^\[?[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][ T][0-9:,.]*\]?[ \t]*/, "", key)
+        key = lvl ":" substr(key, 1, 200) "|" substr(cause, 1, 200)
+        gsub(/[0-9]+/, "#", key)
+
+        total_occurrences++
+        nlines = 0
+        if (key in count) {
+            count[key]++
+            last_seen[key] = rec_line
+            return
+        }
+        count[key] = 1
+        first_seen[key] = rec_line
+        last_seen[key] = rec_line
+        level[key] = lvl
+        order[++nkeys] = key
+        text[key] = short(rec[1]) chain frames
+    }
+    {
+        gsub(/\033\[[0-9;]*m/, "")
+        sub(/\r$/, "")
+        if (!is_continuation($0) || nlines == 0 || nlines >= 400) {
+            flush()
+            rec_line = NR
+        }
+        rec[++nlines] = $0
+    }
+    END {
+        flush()
+        if (nkeys == 0) {
+            printf "✅ no %s record found in %d lines\n", (include_warnings == "" ? "ERROR/FATAL" : "ERROR/FATAL/WARN"), NR
+            exit 0
+        }
+        printf "🔎 %d distinct record(s), %d occurrence(s), in %d lines\n", nkeys, total_occurrences, NR
+        shown = 0
+        split("FATAL ERROR WARN", severities, " ")
+        for (s = 1; s <= 3; s++) {
+            for (i = 1; i <= nkeys && shown < max_findings; i++) {
+                k = order[i]
+                if (level[k] != severities[s]) continue
+                icon = (level[k] == "WARN") ? "🟠" : "🔴"
+                printf "\n%s %s x%d (first seen line %d, last seen line %d)\n%s\n", icon, level[k], count[k], first_seen[k], last_seen[k], text[k]
+                shown++
+            }
+        }
+        if (shown < nkeys) printf "\n✂️ %d more distinct record(s) not shown, increase --max-findings or narrow with --since\n", nkeys - shown
+    }'
+}
+
+# Ranked search over every runnable example script (a .sh sourcing scripts/utils.sh).
+# Each query term must match somewhere; path and connector class matches weigh
+# more than the script body or README.
+# $1: query, $2: limit, $3: optional top-level category
+function find_examples() {
+    local query="$1"
+    local limit="${2:-10}"
+    local category="$3"
+    local categories="connect ccloud ksqldb flink schema-registry rest-proxy multi-data-center other operator academy environment reproduction-models"
+
+    if [[ -n "$category" ]]
+    then
+        categories="$category"
+    fi
+
+    local dirs=()
+    local c
+    for c in $categories
+    do
+        if [ -d "$root_folder/$c" ]
+        then
+            dirs+=("$root_folder/$c")
+        fi
+    done
+    if [ ${#dirs[@]} -eq 0 ]
+    then
+        return 0
+    fi
+
+    find "${dirs[@]}" -maxdepth 5 -type f -name "*.sh" ! -name "stop.sh" -print0 2>/dev/null \
+        | xargs -0 grep -l "scripts/utils.sh" 2>/dev/null \
+        | awk -v query="$query" -v root="$root_folder/" '
+        function readme_title(dir,    file, line, title) {
+            if (dir in titles) return titles[dir]
+            title = ""
+            readme[dir] = ""
+            file = dir "/README.md"
+            while ((getline line < file) > 0) {
+                if (title == "" && line ~ /^#[ \t]+/) { title = line; sub(/^#[ \t]+/, "", title) }
+                if (length(readme[dir]) < 8000) readme[dir] = readme[dir] "\n" tolower(line)
+            }
+            close(file)
+            titles[dir] = title
+            return title
+        }
+        BEGIN {
+            nterms = split(tolower(query), raw, /[^a-z0-9.+_-]+/)
+            n = 0
+            for (i = 1; i <= nterms; i++) if (length(raw[i]) > 1) terms[++n] = raw[i]
+            nterms = n
+        }
+        {
+            file = $0
+            rel = substr(file, length(root) + 1)
+            dir = file
+            sub(/\/[^\/]*$/, "", dir)
+            name = file
+            sub(/^.*\//, "", name)
+            sub(/\.sh$/, "", name)
+            title = readme_title(dir)
+
+            body = ""
+            classes = ""
+            env = ""
+            while ((getline line < file) > 0) {
+                if (length(body) < 8000) body = body "\n" tolower(line)
+                if (match(line, /"connector\.class"[ \t]*:[ \t]*"[^"$]+"/)) {
+                    cls = substr(line, RSTART, RLENGTH)
+                    sub(/^"connector\.class"[ \t]*:[ \t]*"/, "", cls)
+                    sub(/"$/, "", cls)
+                    if (index(" " classes " ", " " cls " ") == 0) classes = (classes == "" ? cls : classes " " cls)
+                }
+                if (env == "" && match(line, /PLAYGROUND_ENVIRONMENT:-"?[A-Za-z0-9_-]+/)) {
+                    env = substr(line, RSTART, RLENGTH)
+                    sub(/^PLAYGROUND_ENVIRONMENT:-"?/, "", env)
+                }
+            }
+            close(file)
+
+            lrel = tolower(rel)
+            lclasses = tolower(classes)
+            ltitle = tolower(title)
+            haystack = lrel "\n" ltitle "\n" lclasses "\n" body readme[dir]
+
+            score = 0
+            for (i = 1; i <= nterms; i++) {
+                t = terms[i]
+                in_path = index(lrel, t) > 0
+                in_class = index(lclasses, t) > 0
+                in_title = index(ltitle, t) > 0
+                in_body = index(haystack, t) > 0
+                if (!in_path && !in_class && !in_title && !in_body) { score = -1; break }
+                score += in_path * 10 + in_class * 6 + in_title * 4 + in_body
+            }
+            if (score < 0 || nterms == 0) next
+            # prefer the canonical variant of a family over its many derivatives
+            score -= split(name, parts, "-") * 0.1
+
+            printf "%.1f\t%s\t%s\t%s\t%s\n", score, rel, title, classes, env
+        }' \
+        | sort -t "$(printf '\t')" -k1,1nr -k2,2 \
+        | head -n "$limit"
+}
