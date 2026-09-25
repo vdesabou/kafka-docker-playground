@@ -11,6 +11,26 @@ then
      exit 111
 fi
 
+# connector 16.0.0+ uses the Elasticsearch Java API Client and supports Elasticsearch 8.x and 9.x (7.x is no longer supported)
+# connector < 16.0.0 uses the High Level REST Client 7.17 and supports Elasticsearch 7.x and 8.x (compatibility mode)
+# CONNECTOR_TAG is not set with --connector-zip/--connector-jar, get the version from the artifact name in that case
+connector_version="$CONNECTOR_TAG"
+if [ -z "$connector_version" ] && [ ! -z "${CONNECTOR_ZIP}${CONNECTOR_JAR}" ]
+then
+     connector_version=$(basename "${CONNECTOR_ZIP:-$CONNECTOR_JAR}" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+fi
+
+if [ -z "$ELASTIC_VERSION" ]
+then
+     if [ -z "$connector_version" ] || version_gt $connector_version "15.99.99"
+     then
+          export ELASTIC_VERSION="9.3.0"
+     else
+          export ELASTIC_VERSION="8.18.2"
+     fi
+fi
+log "Connector version is ${connector_version:-unknown}, using Elasticsearch $ELASTIC_VERSION (set ELASTIC_VERSION to override)"
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

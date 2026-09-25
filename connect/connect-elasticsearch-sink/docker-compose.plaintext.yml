@@ -2,7 +2,7 @@
 services:
 
   elasticsearch:
-    image: elasticsearch:8.18.2
+    image: elasticsearch:${ELASTIC_VERSION:-9.3.0}
     hostname: elasticsearch
     container_name: elasticsearch
     ports:

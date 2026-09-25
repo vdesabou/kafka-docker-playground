@@ -17,6 +17,13 @@ Simply run:
 $ just use <playground run> command and search for elasticsearch-sink.sh in this folder
 ```
 
+The Elasticsearch version depends on the connector version:
+
+* connector 16.0.0 and later (Elasticsearch Java API Client, supports Elasticsearch 8.x and 9.x): Elasticsearch `9.3.0`
+* connector before 16.0.0 (High Level REST Client 7.17, supports Elasticsearch 7.x and 8.x): Elasticsearch `8.18.2`
+
+Set the `ELASTIC_VERSION` environment variable to use another Elasticsearch version.
+
 ## Details of what the script is doing
 
 The connector is created with:
