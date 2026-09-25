@@ -4175,6 +4175,80 @@ EOF
   fi
 }
 
+function delete_redshift_security_group_with_retry {
+  local CLUSTER_TO_DELETE=$1
+  aws redshift wait cluster-deleted --cluster-identifier "$CLUSTER_TO_DELETE" 2>/dev/null
+  log "Delete security group sg$CLUSTER_TO_DELETE, if required"
+  local SG_DELETE_RETRIES=${SG_DELETE_RETRIES:-5}
+  local sg_deleted=false
+  for sg_attempt in $(seq 1 "$SG_DELETE_RETRIES"); do
+      sleep 120
+      if aws ec2 delete-security-group --group-name sg$CLUSTER_TO_DELETE
+      then
+          sg_deleted=true
+          break
+      fi
+  done
+  if [ "$sg_deleted" != true ]
+  then
+      logwarn "Failed to delete security group sg$CLUSTER_TO_DELETE after cluster $CLUSTER_TO_DELETE was deleted - it will not be retried"
+  fi
+}
+
+# Deletes a Redshift cluster and, only if that succeeds, its security group (via
+# delete_redshift_security_group_with_retry - skipped on failure so callers don't block
+# on "aws redshift wait cluster-deleted" for a cluster that isn't actually being deleted).
+function delete_redshift_cluster {
+  local CLUSTER_TO_DELETE=$1
+  local error
+  error=$(aws redshift delete-cluster --cluster-identifier $CLUSTER_TO_DELETE --skip-final-cluster-snapshot 2>&1)
+  if [ $? -eq 0 ]
+  then
+      log "Cluster $CLUSTER_TO_DELETE deleted successfully"
+      # Once the cluster is gone it never reappears in a future describe-clusters scan,
+      # so this is the only chance the reaper gets to clean up its security group.
+      delete_redshift_security_group_with_retry "$CLUSTER_TO_DELETE"
+      return 0
+  else
+      logwarn "Failed to delete cluster $CLUSTER_TO_DELETE: $error"
+      return 1
+  fi
+}
+
+# Scans for this script's own Redshift clusters (by REAP_PREFIX) older than
+# REDSHIFT_REAP_MAX_AGE_HOURS (env override, default 6) and reaps each one via
+# delete_redshift_cluster. Call once, before creating this run's own cluster.
+function reap_stale_redshift_clusters {
+  local REAP_PREFIX=$1
+  local REDSHIFT_REAP_MAX_AGE_HOURS=${REDSHIFT_REAP_MAX_AGE_HOURS:-6}
+  log "Reap AWS Redshift clusters matching ${REAP_PREFIX}* older than ${REDSHIFT_REAP_MAX_AGE_HOURS}h, if any"
+  set +e
+  local NOW_EPOCH=$(date -u +%s)
+  local STALE_CLUSTERS=$(aws redshift describe-clusters --query "Clusters[?starts_with(ClusterIdentifier, '${REAP_PREFIX}')].[ClusterIdentifier,ClusterCreateTime]" --output text)
+  if [ -n "$STALE_CLUSTERS" ]
+  then
+      local STALE_NAME STALE_CREATE_TIME STALE_CREATE_EPOCH AGE_HOURS
+      while IFS=$'\t' read -r STALE_NAME STALE_CREATE_TIME
+      do
+          [ -z "$STALE_NAME" ] && continue
+          if [[ "$OSTYPE" == "darwin"* ]]
+          then
+              STALE_CREATE_EPOCH=$(date -j -u -f "%Y-%m-%dT%H:%M:%S" "${STALE_CREATE_TIME%%.*}" +%s 2>/dev/null)
+          else
+              STALE_CREATE_EPOCH=$(date -u -d "$STALE_CREATE_TIME" +%s 2>/dev/null)
+          fi
+          [ -z "$STALE_CREATE_EPOCH" ] && continue
+          AGE_HOURS=$(( (NOW_EPOCH - STALE_CREATE_EPOCH) / 3600 ))
+          if [ "$AGE_HOURS" -ge "$REDSHIFT_REAP_MAX_AGE_HOURS" ]
+          then
+              logwarn "Reaping orphaned Redshift cluster $STALE_NAME (age ${AGE_HOURS}h)"
+              delete_redshift_cluster "$STALE_NAME"
+          fi
+      done <<< "$STALE_CLUSTERS"
+  fi
+  set -e
+}
+
 function wait_for_end_of_hibernation () {
      MAX_WAIT=600
      CUR_WAIT=0
