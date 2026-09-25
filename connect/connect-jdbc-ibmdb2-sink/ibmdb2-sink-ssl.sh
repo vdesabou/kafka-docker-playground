@@ -20,7 +20,7 @@ EOF
 
     if (( SECONDS - start_time >= max_wait_seconds )); then
       logerror "Timed out waiting for DB2 sample database readiness after ${max_wait_seconds}s"
-      playground container logs --container ibmdb2 --tail 200 || true
+      playground container logs --container ibmdb2 --no-follow --tail 200 || true
       exit 1
     fi
 
