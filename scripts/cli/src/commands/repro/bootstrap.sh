@@ -1289,21 +1289,54 @@ done
 cat $repro_test_file > $tmp_dir/tmp_file
 echo "" >> $tmp_dir/tmp_file
 
-echo "#################################################################################################" >> $tmp_dir/tmp_file
-echo "# 🧠 below is a list of cli commands that are helpful at the end of an example" >> $tmp_dir/tmp_file
-echo "# 🧠 for full documentation, visit https://kafka-docker-playground.io/#/cli !" >> $tmp_dir/tmp_file
-echo "#################################################################################################" >> $tmp_dir/tmp_file
-echo "" >> $tmp_dir/tmp_file
-echo "# 🕵️ to check logs (see https://kafka-docker-playground.io/#/cli?id=%f0%9f%95%b5%ef%b8%8f-logs)" >> $tmp_dir/tmp_file
-echo "# Example: check logs" >> $tmp_dir/tmp_file
-echo "# playground container logs --container connect" >> $tmp_dir/tmp_file
-echo "# playground container logs --container connect --open" >> $tmp_dir/tmp_file
-echo "" >> $tmp_dir/tmp_file
-echo "# 😴 use this command if you want to wait for a specific message to appear in logs" >> $tmp_dir/tmp_file
-echo "# playground container logs --container connect --wait-for-log \"<text to search>\" --max-wait 600" >> $tmp_dir/tmp_file
-echo "" >> $tmp_dir/tmp_file
-echo "# 🐢 use this command if you want to wait for connector consumer lag to be zero" >> $tmp_dir/tmp_file
-echo "# playground connector show-lag" >> $tmp_dir/tmp_file
+cat >> $tmp_dir/tmp_file << 'EOF'
+#################################################################################################
+# 🧠 below is a list of cli commands that are helpful at the end of an example
+# 🧠 for full documentation, visit https://kafka-docker-playground.io/#/cli !
+#################################################################################################
+
+# 🕵️ to check logs (see https://kafka-docker-playground.io/#/cli?id=%f0%9f%95%b5%ef%b8%8f-logs)
+# playground container logs --container connect
+# playground container logs --container connect --open
+# playground container logs --container connect --errors                # de-duplicated ERRORs + Caused by chain
+# playground container logs --container connect --errors --since 10m
+# playground container logs --container connect --grep "Caused by" --no-follow
+
+# 😴 use this command if you want to wait for a specific message to appear in logs
+# playground container logs --container connect --wait-for-log "<text to search>" --max-wait 600
+
+# 🔌 connector state, config and errors
+# playground connector status
+# playground connector show-config
+# playground connector error-recommendations
+# playground connector restart
+# playground connector offsets get
+
+# 🐢 use this command if you want to wait for connector consumer lag to be zero
+# playground connector show-lag
+
+# 🔢 check data in topics
+# playground topic get-number-records --topic <topic>
+# playground topic consume --topic <topic> --min-expected-messages 10 --timeout 60
+# playground topic display-consumer-offsets
+
+# 🐛 increase log level on the fly
+# playground debug log-level set --package <package> --level TRACE
+
+# 💥 simulate network or component failures
+# playground debug block-traffic --container connect --destination broker --action start   # then --action stop
+# playground container restart --container connect
+# playground container kill --container broker
+
+# 🩺 collect diagnostics
+# playground debug thread-dump --container connect
+# playground debug heap-dump --container connect
+# playground debug generate-diagnostics
+# playground debug tcp-dump --container connect --port 9092 --duration 60
+
+# 🔄 check if the issue reproduces with another CP or connector version
+# playground update-version --tag 8.2.0 --connector-tag <version>
+EOF
 
 
 echo "exit 0" >> $tmp_dir/tmp_file
