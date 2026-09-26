@@ -35,40 +35,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 CLUSTER_NAME=pg${USER}jdbcredshift${GITHUB_RUN_NUMBER}${TAG_BASE}
 CLUSTER_NAME=${CLUSTER_NAME//[-._]/}
 
-log "Delete AWS Redshift cluster, if required"
-set +e
-RETRIES=3
-# Set the retry interval in seconds
-RETRY_INTERVAL=60
-# Attempt to delete the cluster
-for i in $(seq 1 $RETRIES); do
-    log "Attempt $i to delete cluster $CLUSTER_NAME"
-    if aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
-    then
-        log "Waiting for cluster $CLUSTER_NAME to be fully deleted"
-        # Redshift delete is async; wait for it rather than a fixed sleep that
-        # raced create-cluster (ClusterAlreadyExists) and SG delete.
-        aws redshift wait cluster-deleted --cluster-identifier $CLUSTER_NAME
-        log "Cluster $CLUSTER_NAME deleted successfully"
-        log "Delete security group sg$CLUSTER_NAME, if required"
-        aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
-        break
-    else
-        error=$(aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot 2>&1)
-        if [[ $error == *"InvalidClusterState"* ]]
-        then
-            logwarn "InvalidClusterState error encountered. Retrying in $RETRY_INTERVAL seconds..."
-            sleep $RETRY_INTERVAL
-        else
-            logwarn "Error deleting cluster $CLUSTER_NAME: $error"
-        fi
-    fi
-done
-log "Delete security group sg$CLUSTER_NAME, if required"
-aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
-# Safety net: wait out any same-named cluster left mid-deletion by a prior run.
-aws redshift wait cluster-deleted --cluster-identifier $CLUSTER_NAME 2>/dev/null || true
-set -e
+reap_stale_redshift_clusters "pg${USER}jdbcredshift"
 
 log "Create AWS Redshift cluster"
 # https://docs.aws.amazon.com/redshift/latest/mgmt/getting-started-cli.html
@@ -78,9 +45,7 @@ function cleanup_cloud_resources {
   set +e
   log "Delete AWS Redshift cluster $CLUSTER_NAME"
   check_if_continue
-  aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
-  log "Delete security group sg$CLUSTER_NAME, if required"
-  aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
+  delete_redshift_cluster $CLUSTER_NAME
 }
 trap cleanup_cloud_resources EXIT
 
