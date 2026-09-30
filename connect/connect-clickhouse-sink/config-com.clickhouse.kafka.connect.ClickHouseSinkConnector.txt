@@ -136,6 +136,15 @@ suppress table existence exception. default: false
 	 - Importance: A comma-separated list of topic=table mappings
 	 - Required: LOW
 
+🔘 retryOnSocketException
+
+Retry the batch when the ClickHouse client fails with a java.net.SocketException (connection reset, broken pipe, connection refused) instead of failing the task. The task keeps retrying while the condition persists. default: false
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 🔘 customInsertFormat
 
 enable custom insert format only for org.apache.kafka.connect.storage.StringConverter. default: false
@@ -342,6 +351,24 @@ Report only successfully inserted offsets in preCommit. default: false
 	 - Default: STRING
 	 - Importance: Override the SNI hostname sent in the client handshake. When set, the client will explicitly include the specified name as the server_name extension in the TLS ClientHello.This is useful to avoid handshake failure when routing TLS traffic through a proxy, where the proxy hostname and the server hostname may differ. Default: ''
 	 - Required: LOW
+
+🔘 enableReplicaPinning
+
+Enable pinning requests to a single ClickHouse replica using X-ClickHouse-Replica-Tag header when retrying after failure. default: false
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 setCompressionMethod
+
+Whether to set network compression method on the ClickHouse client. default: true
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 DDL
