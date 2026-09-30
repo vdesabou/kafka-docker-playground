@@ -17,13 +17,25 @@ for component in QueuesGettingStarted
 do
      set +e
      log "🏗 Building jar for ${component}"
-     docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${PWD}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "${PWD}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
-     if [ $? != 0 ]
-     then
-          logerror "❌ failed to build java component $component"
-          tail -100 /tmp/result.log
-          exit 1
-     fi
+     # Maven Central occasionally rate-limits (HTTP 429) dependency resolution for this build
+     # (see CC-44847, CC-45112) - retry with backoff before treating it as a real failure.
+     MAX_BUILD_ATTEMPTS=3
+     for attempt in $(seq 1 $MAX_BUILD_ATTEMPTS)
+     do
+          docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${PWD}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "${PWD}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
+          if [ $? == 0 ]
+          then
+               break
+          fi
+          if [ $attempt == $MAX_BUILD_ATTEMPTS ]
+          then
+               logerror "❌ failed to build java component $component after $MAX_BUILD_ATTEMPTS attempts"
+               tail -100 /tmp/result.log
+               exit 1
+          fi
+          logwarn "⚠️ failed to build java component $component (attempt $attempt/$MAX_BUILD_ATTEMPTS), retrying in case it's transient (e.g. Maven Central rate-limiting)"
+          sleep $((attempt * 15))
+     done
      set -e
 done
 cd -
