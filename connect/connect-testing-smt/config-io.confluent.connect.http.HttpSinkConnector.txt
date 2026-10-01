@@ -1,34 +1,43 @@
 ==========================
-Transforms: handleTombstones
+Transforms: timestampRouter
 ==========================
-🔘 transforms.handleTombstones.type
+🔘 transforms.timestampRouter.type
 
-Class for the 'handleTombstones' transformation.
+Class for the 'timestampRouter' transformation.
 
 	 - Type: CLASS
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 transforms.handleTombstones.plugin.version
+🔘 transforms.timestampRouter.plugin.version
 
-Version of the 'handleTombstones' transformation.
+Version of the 'timestampRouter' transformation.
 
 	 - Type: STRING
-	 - Default: undefined
+	 - Default: 8.3.2-ce
 	 - Importance: HIGH
 	 - Required: false
 
-🔘 transforms.handleTombstones.behavior
+🔘 transforms.timestampRouter.timestamp.format
 
-How to handle tombstone records.If set to 'ignore', then the record will be ignored silently, with a DEBUG messagewritten to log.If set to 'warn', then the record will be ignored silently, with a WARN messagewritten to log.If set to 'fail', then the execution will fail, and a org.apache.kafka.connect.errors.DataException will be thrown, with aDEBUG message written to log.
+Format string for the timestamp that is compatible with <code>java.text.SimpleDateFormat</code>.
 
 	 - Type: STRING
-	 - Default: WARN
-	 - Importance: MEDIUM
+	 - Default: yyyyMMdd
+	 - Importance: HIGH
 	 - Required: false
 
-🔘 transforms.handleTombstones.negate
+🔘 transforms.timestampRouter.topic.format
+
+Format string which can contain <code>${topic}</code> and <code>${timestamp}</code> as placeholders for the topic and timestamp, respectively.
+
+	 - Type: STRING
+	 - Default: ${topic}-${timestamp}
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 transforms.timestampRouter.negate
 
 Whether the configured predicate should be negated.
 
@@ -37,7 +46,7 @@ Whether the configured predicate should be negated.
 	 - Importance: MEDIUM
 	 - Required: false
 
-🔘 transforms.handleTombstones.predicate
+🔘 transforms.timestampRouter.predicate
 
 The alias of a predicate used to determine whether to apply this transformation.
 
