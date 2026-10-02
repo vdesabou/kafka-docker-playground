@@ -1164,10 +1164,10 @@ The time in milliseconds to delay a timestamp-based pagination request to avoid 
 
 🔘 api1.is.next.page.token.absolute.url
 
-Whether next page token is an absolute url or not.
+Whether the next page token is a complete URL. Only applicable when you set ``http.offset.mode`` to ``CURSOR_PAGINATION``. When set to ``true``, the connector uses the token as the request URL for the next page and does not append the configured request parameters, so ``http.initial.offset`` must be a complete URL or left unset.
 
 	 - Type: BOOLEAN
-	 - Default: true
+	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1548,10 +1548,10 @@ The time in milliseconds to delay a timestamp-based pagination request to avoid 
 
 🔘 api2.is.next.page.token.absolute.url
 
-Whether next page token is an absolute url or not.
+Whether the next page token is a complete URL. Only applicable when you set ``http.offset.mode`` to ``CURSOR_PAGINATION``. When set to ``true``, the connector uses the token as the request URL for the next page and does not append the configured request parameters, so ``http.initial.offset`` must be a complete URL or left unset.
 
 	 - Type: BOOLEAN
-	 - Default: true
+	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -1932,10 +1932,10 @@ The time in milliseconds to delay a timestamp-based pagination request to avoid 
 
 🔘 api3.is.next.page.token.absolute.url
 
-Whether next page token is an absolute url or not.
+Whether the next page token is a complete URL. Only applicable when you set ``http.offset.mode`` to ``CURSOR_PAGINATION``. When set to ``true``, the connector uses the token as the request URL for the next page and does not append the configured request parameters, so ``http.initial.offset`` must be a complete URL or left unset.
 
 	 - Type: BOOLEAN
-	 - Default: true
+	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2316,10 +2316,10 @@ The time in milliseconds to delay a timestamp-based pagination request to avoid 
 
 🔘 api4.is.next.page.token.absolute.url
 
-Whether next page token is an absolute url or not.
+Whether the next page token is a complete URL. Only applicable when you set ``http.offset.mode`` to ``CURSOR_PAGINATION``. When set to ``true``, the connector uses the token as the request URL for the next page and does not append the configured request parameters, so ``http.initial.offset`` must be a complete URL or left unset.
 
 	 - Type: BOOLEAN
-	 - Default: true
+	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -2700,10 +2700,10 @@ The time in milliseconds to delay a timestamp-based pagination request to avoid 
 
 🔘 api5.is.next.page.token.absolute.url
 
-Whether next page token is an absolute url or not.
+Whether the next page token is a complete URL. Only applicable when you set ``http.offset.mode`` to ``CURSOR_PAGINATION``. When set to ``true``, the connector uses the token as the request URL for the next page and does not append the configured request parameters, so ``http.initial.offset`` must be a complete URL or left unset.
 
 	 - Type: BOOLEAN
-	 - Default: true
+	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3084,10 +3084,10 @@ The time in milliseconds to delay a timestamp-based pagination request to avoid 
 
 🔘 api6.is.next.page.token.absolute.url
 
-Whether next page token is an absolute url or not.
+Whether the next page token is a complete URL. Only applicable when you set ``http.offset.mode`` to ``CURSOR_PAGINATION``. When set to ``true``, the connector uses the token as the request URL for the next page and does not append the configured request parameters, so ``http.initial.offset`` must be a complete URL or left unset.
 
 	 - Type: BOOLEAN
-	 - Default: true
+	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3468,10 +3468,10 @@ The time in milliseconds to delay a timestamp-based pagination request to avoid 
 
 🔘 api7.is.next.page.token.absolute.url
 
-Whether next page token is an absolute url or not.
+Whether the next page token is a complete URL. Only applicable when you set ``http.offset.mode`` to ``CURSOR_PAGINATION``. When set to ``true``, the connector uses the token as the request URL for the next page and does not append the configured request parameters, so ``http.initial.offset`` must be a complete URL or left unset.
 
 	 - Type: BOOLEAN
-	 - Default: true
+	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -3852,10 +3852,10 @@ The time in milliseconds to delay a timestamp-based pagination request to avoid 
 
 🔘 api8.is.next.page.token.absolute.url
 
-Whether next page token is an absolute url or not.
+Whether the next page token is a complete URL. Only applicable when you set ``http.offset.mode`` to ``CURSOR_PAGINATION``. When set to ``true``, the connector uses the token as the request URL for the next page and does not append the configured request parameters, so ``http.initial.offset`` must be a complete URL or left unset.
 
 	 - Type: BOOLEAN
-	 - Default: true
+	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4236,10 +4236,10 @@ The time in milliseconds to delay a timestamp-based pagination request to avoid 
 
 🔘 api9.is.next.page.token.absolute.url
 
-Whether next page token is an absolute url or not.
+Whether the next page token is a complete URL. Only applicable when you set ``http.offset.mode`` to ``CURSOR_PAGINATION``. When set to ``true``, the connector uses the token as the request URL for the next page and does not append the configured request parameters, so ``http.initial.offset`` must be a complete URL or left unset.
 
 	 - Type: BOOLEAN
-	 - Default: true
+	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -4620,10 +4620,10 @@ The time in milliseconds to delay a timestamp-based pagination request to avoid 
 
 🔘 api10.is.next.page.token.absolute.url
 
-Whether next page token is an absolute url or not.
+Whether the next page token is a complete URL. Only applicable when you set ``http.offset.mode`` to ``CURSOR_PAGINATION``. When set to ``true``, the connector uses the token as the request URL for the next page and does not append the configured request parameters, so ``http.initial.offset`` must be a complete URL or left unset.
 
 	 - Type: BOOLEAN
-	 - Default: true
+	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -5004,10 +5004,10 @@ The time in milliseconds to delay a timestamp-based pagination request to avoid 
 
 🔘 api11.is.next.page.token.absolute.url
 
-Whether next page token is an absolute url or not.
+Whether the next page token is a complete URL. Only applicable when you set ``http.offset.mode`` to ``CURSOR_PAGINATION``. When set to ``true``, the connector uses the token as the request URL for the next page and does not append the configured request parameters, so ``http.initial.offset`` must be a complete URL or left unset.
 
 	 - Type: BOOLEAN
-	 - Default: true
+	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -5388,10 +5388,10 @@ The time in milliseconds to delay a timestamp-based pagination request to avoid 
 
 🔘 api12.is.next.page.token.absolute.url
 
-Whether next page token is an absolute url or not.
+Whether the next page token is a complete URL. Only applicable when you set ``http.offset.mode`` to ``CURSOR_PAGINATION``. When set to ``true``, the connector uses the token as the request URL for the next page and does not append the configured request parameters, so ``http.initial.offset`` must be a complete URL or left unset.
 
 	 - Type: BOOLEAN
-	 - Default: true
+	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -5772,10 +5772,10 @@ The time in milliseconds to delay a timestamp-based pagination request to avoid 
 
 🔘 api13.is.next.page.token.absolute.url
 
-Whether next page token is an absolute url or not.
+Whether the next page token is a complete URL. Only applicable when you set ``http.offset.mode`` to ``CURSOR_PAGINATION``. When set to ``true``, the connector uses the token as the request URL for the next page and does not append the configured request parameters, so ``http.initial.offset`` must be a complete URL or left unset.
 
 	 - Type: BOOLEAN
-	 - Default: true
+	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -6156,10 +6156,10 @@ The time in milliseconds to delay a timestamp-based pagination request to avoid 
 
 🔘 api14.is.next.page.token.absolute.url
 
-Whether next page token is an absolute url or not.
+Whether the next page token is a complete URL. Only applicable when you set ``http.offset.mode`` to ``CURSOR_PAGINATION``. When set to ``true``, the connector uses the token as the request URL for the next page and does not append the configured request parameters, so ``http.initial.offset`` must be a complete URL or left unset.
 
 	 - Type: BOOLEAN
-	 - Default: true
+	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -6540,10 +6540,10 @@ The time in milliseconds to delay a timestamp-based pagination request to avoid 
 
 🔘 api15.is.next.page.token.absolute.url
 
-Whether next page token is an absolute url or not.
+Whether the next page token is a complete URL. Only applicable when you set ``http.offset.mode`` to ``CURSOR_PAGINATION``. When set to ``true``, the connector uses the token as the request URL for the next page and does not append the configured request parameters, so ``http.initial.offset`` must be a complete URL or left unset.
 
 	 - Type: BOOLEAN
-	 - Default: true
+	 - Default: false
 	 - Importance: MEDIUM
 	 - Required: false
 
