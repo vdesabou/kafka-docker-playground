@@ -88,14 +88,32 @@ The network selection strategy for connecting to a Couchbase Server cluster that
 ==========================
 Security
 ==========================
-🔘 couchbase.trust.store.password
+🔘 couchbase.client.certificate.path
 
-Password for accessing the trust store.
+If you supply a value for this config property, the `couchbase.username` and `couchbase.password` properties will be ignored.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Absolute filesystem path to a Java keystore or PKCS12 bundle holding the private key and certificate chain to use for client certificate authentication (mutual TLS).
+	 - Required: MEDIUM
+
+🔘 couchbase.client.certificate.password
+
+Password for accessing the client certificate.
 
 	 - Type: PASSWORD
 	 - Default: [hidden]
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 couchbase.cipher.suites
+
+Note that this config is considered advanced, please only customize the cipher list if you know what you are doing (for example if you want to shrink the cipher list down to a very specific subset for security or compliance reasons).
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: The custom list of ciphers to use when connecting to Couchbase using regular or DCP clients.
+	 - Required: MEDIUM
 
 🔘 couchbase.enable.tls
 
@@ -133,32 +151,14 @@ If you want to use a Java keystore instead of a PEM file, specify `couchbase.tru
 	 - Importance: Absolute filesystem path to the PEM file containing the CA certificate used by Couchbase Server.
 	 - Required: MEDIUM
 
-🔘 couchbase.client.certificate.path
+🔘 couchbase.trust.store.password
 
-If you supply a value for this config property, the `couchbase.username` and `couchbase.password` properties will be ignored.
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Absolute filesystem path to a Java keystore or PKCS12 bundle holding the private key and certificate chain to use for client certificate authentication (mutual TLS).
-	 - Required: MEDIUM
-
-🔘 couchbase.client.certificate.password
-
-Password for accessing the client certificate.
+Password for accessing the trust store.
 
 	 - Type: PASSWORD
 	 - Default: [hidden]
 	 - Importance: MEDIUM
 	 - Required: false
-
-🔘 couchbase.cipher.suites
-
-Note that this config is considered advanced, please only customize the cipher list if you know what you are doing (for example if you want to shrink the cipher list down to a very specific subset for security or compliance reasons).
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: The custom list of ciphers to use when connecting to Couchbase using regular or DCP clients.
-	 - Required: MEDIUM
 
 ==========================
 Logging
