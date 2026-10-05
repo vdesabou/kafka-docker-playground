@@ -15529,6 +15529,32 @@ retrycmd() {
     printf "\n"
 }
 
+# Build a java component, e.g. build_java_component_with_retry "${component}" docker run ... mvn ... package
+# Maven Central occasionally rate-limits (HTTP 429) dependency resolution,
+# so retry with backoff before treating it as a real failure.
+function build_java_component_with_retry() {
+  local component="$1"
+  shift
+  local max_attempts=3
+  local attempt
+
+  for attempt in $(seq 1 $max_attempts)
+  do
+    if "$@" > /tmp/result.log 2>&1
+    then
+      return 0
+    fi
+    if [ $attempt == $max_attempts ]
+    then
+      logerror "❌ failed to build java component $component after $max_attempts attempts"
+      tail -100 /tmp/result.log
+      exit 1
+    fi
+    logwarn "⚠️ failed to build java component $component (attempt $attempt/$max_attempts), retrying in case it's transient (e.g. Maven Central rate-limiting)"
+    sleep $((attempt * 15))
+  done
+}
+
 # for RBAC, taken from cp-demo
 function host_check_kafka_cluster_registered() {
   KAFKA_CLUSTER_ID=$(docker container exec zookeeper zookeeper-shell zookeeper:2181 get /cluster/id 2> /dev/null | grep \"version\" | jq -r .id)
@@ -27076,13 +27102,7 @@ for component in $list
 do
     set +e
     log "🏗 Building jar for \${component}"
-    docker run -i --rm -e KAFKA_CLIENT_TAG=\$KAFKA_CLIENT_TAG -e TAG=\$TAG_BASE -v "\${DIR}/\${component}":/usr/src/mymaven -v "\$HOME/.m2":/root/.m2 -v "\$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "\${DIR}/\${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn -s /tmp/settings.xml -Dkafka.tag=\$TAG -Dkafka.client.tag=\$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
-    if [ \$? != 0 ]
-    then
-        logerror "❌ failed to build java component $component"
-        tail -100 /tmp/result.log
-        exit 1
-    fi
+    build_java_component_with_retry "\${component}" docker run -i --rm -e KAFKA_CLIENT_TAG=\$KAFKA_CLIENT_TAG -e TAG=\$TAG_BASE -v "\${DIR}/\${component}":/usr/src/mymaven -v "\$HOME/.m2":/root/.m2 -v "\$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "\${DIR}/\${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn -s /tmp/settings.xml -Dkafka.tag=\$TAG -Dkafka.client.tag=\$KAFKA_CLIENT_TAG package
     set -e
 done
 
@@ -27273,13 +27293,7 @@ for component in $custom_smt_name
 do
     set +e
     log "🏗 Building jar for \${component}"
-    docker run -i --rm -e KAFKA_CLIENT_TAG=\$KAFKA_CLIENT_TAG -e TAG=\$TAG_BASE -v "\${DIR}/\${component}":/usr/src/mymaven -v "\$HOME/.m2":/root/.m2 -v "\$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "\${DIR}/\${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-17 mvn -s /tmp/settings.xml -Dkafka.tag=\$TAG -Dkafka.client.tag=\$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
-    if [ \$? != 0 ]
-    then
-        logerror "❌ failed to build java component $component"
-        tail -100 /tmp/result.log
-        exit 1
-    fi
+    build_java_component_with_retry "\${component}" docker run -i --rm -e KAFKA_CLIENT_TAG=\$KAFKA_CLIENT_TAG -e TAG=\$TAG_BASE -v "\${DIR}/\${component}":/usr/src/mymaven -v "\$HOME/.m2":/root/.m2 -v "\$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "\${DIR}/\${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-17 mvn -s /tmp/settings.xml -Dkafka.tag=\$TAG -Dkafka.client.tag=\$KAFKA_CLIENT_TAG package
     set -e
 done
 
@@ -29237,13 +29251,7 @@ playground_tools_redos_check_command() {
   timeout="${args[--timeout]}"
 
   log "🏗 Building jar for redos-check"
-  docker run -i --rm -v "${root_folder}/scripts/cli/src/redos-check":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "${root_folder}/scripts/cli/src/redos-check/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn -s /tmp/settings.xml package > /tmp/result.log 2>&1
-  if [ $? != 0 ]
-  then
-      logerror "❌ failed to build java component redos-check"
-      tail -100 /tmp/result.log
-      exit 1
-  fi
+  build_java_component_with_retry "redos-check" docker run -i --rm -v "${root_folder}/scripts/cli/src/redos-check":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "${root_folder}/scripts/cli/src/redos-check/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn -s /tmp/settings.xml package
   set -e
 
   log "🚀 Executing redos-check with topic regex: $regex and timeout: ${timeout:-1}s"
@@ -34926,13 +34934,7 @@ playground_topic_produce_command() {
           exit 1
       fi
       log "🏗 Building jar for schema-validator"
-      docker run -i --rm -e TAG=$tag -v "${root_folder}/scripts/cli/src/schema-validator":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "${root_folder}/scripts/cli/src/schema-validator/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn -s /tmp/settings.xml -Dkafka.tag=$tag package > /tmp/result.log 2>&1
-      if [ $? != 0 ]
-      then
-          logerror "❌ failed to build java component schema-validator"
-          tail -100 /tmp/result.log
-          exit 1
-      fi
+      build_java_component_with_retry "schema-validator" docker run -i --rm -e TAG=$tag -v "${root_folder}/scripts/cli/src/schema-validator":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "${root_folder}/scripts/cli/src/schema-validator/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn -s /tmp/settings.xml -Dkafka.tag=$tag package
       set -e
 
       playground container cp --source ${root_folder}/scripts/cli/src/schema-validator/target/schema-validator-1.0.0-jar-with-dependencies.jar --destination connect:/tmp/schema-validator-1.0.0-jar-with-dependencies.jar > /dev/null 2>&1

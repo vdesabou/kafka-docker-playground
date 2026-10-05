@@ -1016,6 +1016,32 @@ retrycmd() {
     printf "\n"
 }
 
+# Build a java component, e.g. build_java_component_with_retry "${component}" docker run ... mvn ... package
+# Maven Central occasionally rate-limits (HTTP 429) dependency resolution,
+# so retry with backoff before treating it as a real failure.
+function build_java_component_with_retry() {
+  local component="$1"
+  shift
+  local max_attempts=3
+  local attempt
+
+  for attempt in $(seq 1 $max_attempts)
+  do
+    if "$@" > /tmp/result.log 2>&1
+    then
+      return 0
+    fi
+    if [ $attempt == $max_attempts ]
+    then
+      logerror "❌ failed to build java component $component after $max_attempts attempts"
+      tail -100 /tmp/result.log
+      exit 1
+    fi
+    logwarn "⚠️ failed to build java component $component (attempt $attempt/$max_attempts), retrying in case it's transient (e.g. Maven Central rate-limiting)"
+    sleep $((attempt * 15))
+  done
+}
+
 # for RBAC, taken from cp-demo
 function host_check_kafka_cluster_registered() {
   KAFKA_CLUSTER_ID=$(docker container exec zookeeper zookeeper-shell zookeeper:2181 get /cluster/id 2> /dev/null | grep \"version\" | jq -r .id)

@@ -2,13 +2,7 @@ regex="${args[--topic-regex]}"
 timeout="${args[--timeout]}"
 
 log "🏗 Building jar for redos-check"
-docker run -i --rm -v "${root_folder}/scripts/cli/src/redos-check":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "${root_folder}/scripts/cli/src/redos-check/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn -s /tmp/settings.xml package > /tmp/result.log 2>&1
-if [ $? != 0 ]
-then
-    logerror "❌ failed to build java component redos-check"
-    tail -100 /tmp/result.log
-    exit 1
-fi
+build_java_component_with_retry "redos-check" docker run -i --rm -v "${root_folder}/scripts/cli/src/redos-check":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "${root_folder}/scripts/cli/src/redos-check/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn -s /tmp/settings.xml package
 set -e
 
 log "🚀 Executing redos-check with topic regex: $regex and timeout: ${timeout:-1}s"

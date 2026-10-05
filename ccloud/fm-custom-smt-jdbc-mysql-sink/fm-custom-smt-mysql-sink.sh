@@ -23,19 +23,13 @@ then
     fi
     set +e
     log "🏗 Building InsertUuid SMT JAR with Maven (skipping tests)"
-    docker run -i --rm \
+    build_java_component_with_retry "kafka-connect-insert-uuid" docker run -i --rm \
         -v "$UUID_REPO_DIR":/usr/src/project \
         -v "$HOME/.m2":/root/.m2 \
         -v "$PWD/../../scripts/settings.xml:/tmp/settings.xml" \
         -w /usr/src/project \
         maven:3.9.11-eclipse-temurin-17 \
-        mvn -s /tmp/settings.xml package -DskipTests > /tmp/insert-uuid-build.log 2>&1
-    if [ $? -ne 0 ]
-    then
-        logerror "❌ Maven build failed"
-        tail -100 /tmp/insert-uuid-build.log
-        exit 1
-    fi
+        mvn -s /tmp/settings.xml package -DskipTests
     set -e
     log "✅ JAR built: $UUID_JAR"
 fi

@@ -42,13 +42,7 @@ AWS_STS_ROLE_ARN=${AWS_STS_ROLE_ARN:-""}
 
 log "Building jar for awscredentialsprovider-v2-irsa"
 set +e
-docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${PWD}/awscredentialsprovider-v2-irsa":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "${PWD}/awscredentialsprovider-v2-irsa/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
-if [ $? != 0 ]
-then
-    logerror "Failed to build java component"
-    tail -100 /tmp/result.log
-    exit 1
-fi
+build_java_component_with_retry "awscredentialsprovider-v2-irsa" docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${PWD}/awscredentialsprovider-v2-irsa":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "${PWD}/awscredentialsprovider-v2-irsa/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package
 set -e
 cp ${PWD}/awscredentialsprovider-v2-irsa/target/awscredentialsprovider-irsa-1.0.0-jar-with-dependencies.jar ../../confluent-hub/confluentinc-kafka-connect-s3/lib/awscredentialsprovider-irsa-1.0.0-jar-with-dependencies.jar
 
