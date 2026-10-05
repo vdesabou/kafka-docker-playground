@@ -96,7 +96,7 @@ How should we connect to Salesforce?
 ==========================
 🔘 salesforce.grant.type
 
-Grant type the connector uses for Salesforce authentication: PASSWORD, CLIENT_CREDENTIALS, or JWT_BEARER
+Grant type the connector uses for Salesforce authentication: PASSWORD, CLIENT_CREDENTIALS, or JWT_BEARER. Note: Salesforce is retiring the username-password OAuth flow in Spring '27; please consider migrating to other supported authentication methods.
 
 	 - Type: STRING
 	 - Default: PASSWORD
