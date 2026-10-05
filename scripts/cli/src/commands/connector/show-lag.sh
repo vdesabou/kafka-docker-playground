@@ -53,6 +53,9 @@ function show_output () {
     prev_lag=${prev_lags["${topic}_${partition}"]}
     compare_line=""
     compare_action=""
+    # lag is "-" when the consumer group has not committed any offset yet for this partition
+    bar=""
+    inverse_percentage=0
 
     if [ "$topic" != "$prev_topic" ] && [ "$prev_topic" != "" ]
     then
@@ -258,7 +261,7 @@ do
 
     if [ ! -z "$lag_not_set" ]
     then
-      logwarn "🐢 consumer lag for $connector_type connector ${connector}${maybe_id} is not available"
+      logwarn "🐢 consumer lag for $connector_type connector ${connector}${maybe_id} is not available (no offset committed yet), check the connector status if this persists"
       show_output
       sleep $interval
       cur_wait=$(( cur_wait+interval ))
