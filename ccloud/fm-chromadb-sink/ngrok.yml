@@ -1,0 +1,5 @@
+version: 2
+tunnels:
+  chromadb:
+    addr: chromadb:8000
+    proto: tcp
