@@ -11,7 +11,7 @@ _playground_completions() {
   local -a completion_add_args=()
 
   if (( CURRENT > 2 )); then
-    completion_words=("${words[2,$((CURRENT - 1))]}")
+    completion_words=("${(@)words[2,$((CURRENT - 1))]}")
   fi
 
   completion_output="$("$completion_command" __complete "${completion_words[@]}" "$completion_current")"
