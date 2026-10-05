@@ -1,0 +1,1764 @@
+==========================
+Which topics do you want to get data from?
+==========================
+🔘 topics.regex
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: A regular expression that matches the names of the topics to consume from. This is useful when you want to consume from multiple topics that match a certain pattern without having to list them all individually.
+	 - Required: LOW
+
+🔘 topics
+
+
+
+	 - Type: true
+	 - Default: LIST
+	 - Importance: Identifies the topic name or a comma-separated list of topic names.
+	 - Required: HIGH
+
+🔘 errors.deadletterqueue.topic.name
+
+The name of the topic to be used as the dead letter queue (DLQ) for messages that result in an error when processed by this sink connector, or its transformations or converters. Defaults to 'dlq-${connector}' if not set. The DLQ topic will be created automatically if it does not exist. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: dlq-${connector}
+	 - Importance: LOW
+	 - Required: false
+
+🔘 reporter.result.topic.name
+
+The name of the topic to produce records to after successfully processing a sink record. Defaults to 'success-${connector}' if not set. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: success-${connector}
+	 - Importance: LOW
+	 - Required: false
+
+🔘 reporter.error.topic.name
+
+The name of the topic to produce records to after each unsuccessful record sink attempt. Defaults to 'error-${connector}' if not set. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: error-${connector}
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Schema Config
+==========================
+🔘 schema.context.name
+
+Add a schema context name. A schema context represents an independent scope in Schema Registry. It is a separate sub-schema tied to topics in different Kafka clusters that share the same Schema Registry instance. If not used, the connector uses the default schema configured for Schema Registry in your Confluent Cloud environment.
+
+	 - Type: STRING
+	 - Default: default
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Input messages
+==========================
+🔘 input.data.format
+
+Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, JSON, BYTES or STRING. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
+	 - Required: true
+
+==========================
+How should we connect to your data?
+==========================
+🔘 connector.class
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: 
+	 - Required: HIGH
+
+🔘 name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Sets a name for your connector.
+	 - Required: HIGH
+
+==========================
+Kafka Cluster credentials
+==========================
+🔘 kafka.auth.mode
+
+Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It defaults to KAFKA_API_KEY mode, whenever possible.
+
+	 - Type: STRING
+	 - Default: ${connect.regional.connector}
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kafka.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Service Account that will be used to generate the API keys to communicate with Kafka Cluster.
+	 - Required: HIGH
+
+🔘 kafka.api.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Kafka API Key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+🔘 kafka.api.secret
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: Secret associated with Kafka API key. Required when kafka.auth.mode==KAFKA_API_KEY.
+	 - Required: HIGH
+
+==========================
+Consumer configuration
+==========================
+🔘 max.poll.interval.ms
+
+The maximum delay between subsequent consume requests to Kafka. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 300000 milliseconds (5 minutes).
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 max.poll.records
+
+The maximum number of records to consume from Kafka in a single request. This configuration property may be used to improve the performance of the connector, if the connector cannot send records to the sink system. Defaults to 500 records.
+
+	 - Type: LONG
+	 - Default: 500
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Number of tasks for this connector
+==========================
+🔘 tasks.max
+
+
+
+	 - Type: true
+	 - Default: INT
+	 - Importance: Maximum number of tasks for the connector.
+	 - Required: HIGH
+
+==========================
+ChromaDB Connection
+==========================
+🔘 chromadb.endpoint
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The ChromaDB API endpoint URL. For example: ``https://api.trychroma.com:8000``.
+	 - Required: HIGH
+
+🔘 chromadb.api.key
+
+
+
+	 - Type: true
+	 - Default: PASSWORD
+	 - Importance: API key for authenticating with ChromaDB Cloud.
+	 - Required: HIGH
+
+🔘 chromadb.tenant
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The ChromaDB tenant ID. For self-hosted single-tenant deployments, use ``default_tenant``. For ChromaDB Cloud, use the tenant ID from the Cloud console.
+	 - Required: HIGH
+
+🔘 chromadb.database
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The ChromaDB database name. For self-hosted deployments, use ``default_database``. For ChromaDB Cloud, use the database name from the Cloud console.
+	 - Required: HIGH
+
+==========================
+Embedding
+==========================
+🔘 chromadb.auto.embed
+
+When enabled, the connector calls an external OpenAI-compatible embedding API to generate vector embeddings from the document text. When disabled, embeddings must be provided in each Kafka record. Each collection declares its own embedding endpoint, model, and API key under its Collection {i} configuration section. There is no shared global embedding configuration.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Collections
+==========================
+🔘 collections.num
+
+The number of ChromaDB collections to write to. Each collection maps to a set of Kafka topics. Valid values are ``1`` to ``15``. Defaults to ``1``.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 chromadb.auto.create.collection
+
+Whether to automatically create collections if they do not exist.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 chromadb.distance.metric
+
+The distance metric for newly created collections.
+
+	 - Type: STRING
+	 - Default: cosine
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Collection 1 configuration
+==========================
+🔘 collection1.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the ChromaDB collection to write to.
+	 - Required: HIGH
+
+🔘 collection1.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka topic to pull data from for this collection.
+	 - Required: HIGH
+
+🔘 collection1.batch.size
+
+Maximum number of records per upsert request for this collection.
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 collection1.behavior.on.null.values
+
+How to handle Kafka tombstone records (non-null key and null value). ``IGNORE`` skips the record. ``FAIL`` stops the connector.
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 collection1.embedding.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Full URL of the OpenAI-compatible embedding API for this collection (for example, ``https://api.openai.com/v1/embeddings``). Each collection declares its own. There is no shared global fallback. This field is required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection1.embedding.model
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Embedding model for this collection (for example, ``text-embedding-3-small``, ``nomic-embed-text``). Each collection's vectors are dimensioned by its model. Mixing dimensions in one collection would be rejected by ChromaDB. This field is required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection1.embedding.api.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: API key for the embedding service (for example, OpenAI or Azure OpenAI).
+	 - Required: HIGH
+
+🔘 collection1.embedding.batch.size
+
+Number of texts to embed per API call for this collection. Higher values improve throughput but use more memory.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Collection 2 configuration
+==========================
+🔘 collection2.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the ChromaDB collection to write to.
+	 - Required: HIGH
+
+🔘 collection2.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka topic to pull data from for this collection.
+	 - Required: HIGH
+
+🔘 collection2.batch.size
+
+Maximum number of records per upsert request for this collection.
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 collection2.behavior.on.null.values
+
+How to handle Kafka tombstone records (non-null key + null value). ``IGNORE`` skips the record, ``FAIL`` stops the connector.
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 collection2.embedding.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Full URL of the OpenAI-compatible embedding API for this collection (e.g., ``https://api.openai.com/v1/embeddings``). Each collection declares its own — there is no shared global fallback. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection2.embedding.model
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Embedding model for this collection (e.g., ``text-embedding-3-small``, ``nomic-embed-text``). Each collection's vectors are dimensioned by its model — mixing dimensions in one collection would be rejected by ChromaDB. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection2.embedding.api.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: API key for the embedding service (e.g., OpenAI or Azure OpenAI).
+	 - Required: HIGH
+
+🔘 collection2.embedding.batch.size
+
+Number of texts to embed per API call for this collection. Higher values improve throughput but use more memory.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Collection 3 configuration
+==========================
+🔘 collection3.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the ChromaDB collection to write to.
+	 - Required: HIGH
+
+🔘 collection3.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka topic to pull data from for this collection.
+	 - Required: HIGH
+
+🔘 collection3.batch.size
+
+Maximum number of records per upsert request for this collection.
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 collection3.behavior.on.null.values
+
+How to handle Kafka tombstone records (non-null key + null value). ``IGNORE`` skips the record, ``FAIL`` stops the connector.
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 collection3.embedding.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Full URL of the OpenAI-compatible embedding API for this collection (e.g., ``https://api.openai.com/v1/embeddings``). Each collection declares its own — there is no shared global fallback. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection3.embedding.model
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Embedding model for this collection (e.g., ``text-embedding-3-small``, ``nomic-embed-text``). Each collection's vectors are dimensioned by its model — mixing dimensions in one collection would be rejected by ChromaDB. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection3.embedding.api.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: API key for the embedding service (e.g., OpenAI or Azure OpenAI).
+	 - Required: HIGH
+
+🔘 collection3.embedding.batch.size
+
+Number of texts to embed per API call for this collection. Higher values improve throughput but use more memory.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Collection 4 configuration
+==========================
+🔘 collection4.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the ChromaDB collection to write to.
+	 - Required: HIGH
+
+🔘 collection4.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka topic to pull data from for this collection.
+	 - Required: HIGH
+
+🔘 collection4.batch.size
+
+Maximum number of records per upsert request for this collection.
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 collection4.behavior.on.null.values
+
+How to handle Kafka tombstone records (non-null key + null value). ``IGNORE`` skips the record, ``FAIL`` stops the connector.
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 collection4.embedding.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Full URL of the OpenAI-compatible embedding API for this collection (e.g., ``https://api.openai.com/v1/embeddings``). Each collection declares its own — there is no shared global fallback. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection4.embedding.model
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Embedding model for this collection (e.g., ``text-embedding-3-small``, ``nomic-embed-text``). Each collection's vectors are dimensioned by its model — mixing dimensions in one collection would be rejected by ChromaDB. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection4.embedding.api.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: API key for the embedding service (e.g., OpenAI or Azure OpenAI).
+	 - Required: HIGH
+
+🔘 collection4.embedding.batch.size
+
+Number of texts to embed per API call for this collection. Higher values improve throughput but use more memory.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Collection 5 configuration
+==========================
+🔘 collection5.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the ChromaDB collection to write to.
+	 - Required: HIGH
+
+🔘 collection5.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka topic to pull data from for this collection.
+	 - Required: HIGH
+
+🔘 collection5.batch.size
+
+Maximum number of records per upsert request for this collection.
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 collection5.behavior.on.null.values
+
+How to handle Kafka tombstone records (non-null key + null value). ``IGNORE`` skips the record, ``FAIL`` stops the connector.
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 collection5.embedding.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Full URL of the OpenAI-compatible embedding API for this collection (e.g., ``https://api.openai.com/v1/embeddings``). Each collection declares its own — there is no shared global fallback. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection5.embedding.model
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Embedding model for this collection (e.g., ``text-embedding-3-small``, ``nomic-embed-text``). Each collection's vectors are dimensioned by its model — mixing dimensions in one collection would be rejected by ChromaDB. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection5.embedding.api.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: API key for the embedding service (e.g., OpenAI or Azure OpenAI).
+	 - Required: HIGH
+
+🔘 collection5.embedding.batch.size
+
+Number of texts to embed per API call for this collection. Higher values improve throughput but use more memory.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Collection 6 configuration
+==========================
+🔘 collection6.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the ChromaDB collection to write to.
+	 - Required: HIGH
+
+🔘 collection6.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka topic to pull data from for this collection.
+	 - Required: HIGH
+
+🔘 collection6.batch.size
+
+Maximum number of records per upsert request for this collection.
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 collection6.behavior.on.null.values
+
+How to handle Kafka tombstone records (non-null key + null value). ``IGNORE`` skips the record, ``FAIL`` stops the connector.
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 collection6.embedding.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Full URL of the OpenAI-compatible embedding API for this collection (e.g., ``https://api.openai.com/v1/embeddings``). Each collection declares its own — there is no shared global fallback. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection6.embedding.model
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Embedding model for this collection (e.g., ``text-embedding-3-small``, ``nomic-embed-text``). Each collection's vectors are dimensioned by its model — mixing dimensions in one collection would be rejected by ChromaDB. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection6.embedding.api.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: API key for the embedding service (e.g., OpenAI or Azure OpenAI).
+	 - Required: HIGH
+
+🔘 collection6.embedding.batch.size
+
+Number of texts to embed per API call for this collection. Higher values improve throughput but use more memory.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Collection 7 configuration
+==========================
+🔘 collection7.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the ChromaDB collection to write to.
+	 - Required: HIGH
+
+🔘 collection7.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka topic to pull data from for this collection.
+	 - Required: HIGH
+
+🔘 collection7.batch.size
+
+Maximum number of records per upsert request for this collection.
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 collection7.behavior.on.null.values
+
+How to handle Kafka tombstone records (non-null key + null value). ``IGNORE`` skips the record, ``FAIL`` stops the connector.
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 collection7.embedding.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Full URL of the OpenAI-compatible embedding API for this collection (e.g., ``https://api.openai.com/v1/embeddings``). Each collection declares its own — there is no shared global fallback. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection7.embedding.model
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Embedding model for this collection (e.g., ``text-embedding-3-small``, ``nomic-embed-text``). Each collection's vectors are dimensioned by its model — mixing dimensions in one collection would be rejected by ChromaDB. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection7.embedding.api.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: API key for the embedding service (e.g., OpenAI or Azure OpenAI).
+	 - Required: HIGH
+
+🔘 collection7.embedding.batch.size
+
+Number of texts to embed per API call for this collection. Higher values improve throughput but use more memory.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Collection 8 configuration
+==========================
+🔘 collection8.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the ChromaDB collection to write to.
+	 - Required: HIGH
+
+🔘 collection8.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka topic to pull data from for this collection.
+	 - Required: HIGH
+
+🔘 collection8.batch.size
+
+Maximum number of records per upsert request for this collection.
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 collection8.behavior.on.null.values
+
+How to handle Kafka tombstone records (non-null key + null value). ``IGNORE`` skips the record, ``FAIL`` stops the connector.
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 collection8.embedding.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Full URL of the OpenAI-compatible embedding API for this collection (e.g., ``https://api.openai.com/v1/embeddings``). Each collection declares its own — there is no shared global fallback. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection8.embedding.model
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Embedding model for this collection (e.g., ``text-embedding-3-small``, ``nomic-embed-text``). Each collection's vectors are dimensioned by its model — mixing dimensions in one collection would be rejected by ChromaDB. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection8.embedding.api.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: API key for the embedding service (e.g., OpenAI or Azure OpenAI).
+	 - Required: HIGH
+
+🔘 collection8.embedding.batch.size
+
+Number of texts to embed per API call for this collection. Higher values improve throughput but use more memory.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Collection 9 configuration
+==========================
+🔘 collection9.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the ChromaDB collection to write to.
+	 - Required: HIGH
+
+🔘 collection9.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka topic to pull data from for this collection.
+	 - Required: HIGH
+
+🔘 collection9.batch.size
+
+Maximum number of records per upsert request for this collection.
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 collection9.behavior.on.null.values
+
+How to handle Kafka tombstone records (non-null key + null value). ``IGNORE`` skips the record, ``FAIL`` stops the connector.
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 collection9.embedding.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Full URL of the OpenAI-compatible embedding API for this collection (e.g., ``https://api.openai.com/v1/embeddings``). Each collection declares its own — there is no shared global fallback. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection9.embedding.model
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Embedding model for this collection (e.g., ``text-embedding-3-small``, ``nomic-embed-text``). Each collection's vectors are dimensioned by its model — mixing dimensions in one collection would be rejected by ChromaDB. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection9.embedding.api.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: API key for the embedding service (e.g., OpenAI or Azure OpenAI).
+	 - Required: HIGH
+
+🔘 collection9.embedding.batch.size
+
+Number of texts to embed per API call for this collection. Higher values improve throughput but use more memory.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Collection 10 configuration
+==========================
+🔘 collection10.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the ChromaDB collection to write to.
+	 - Required: HIGH
+
+🔘 collection10.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka topic to pull data from for this collection.
+	 - Required: HIGH
+
+🔘 collection10.batch.size
+
+Maximum number of records per upsert request for this collection.
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 collection10.behavior.on.null.values
+
+How to handle Kafka tombstone records (non-null key + null value). ``IGNORE`` skips the record, ``FAIL`` stops the connector.
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 collection10.embedding.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Full URL of the OpenAI-compatible embedding API for this collection (e.g., ``https://api.openai.com/v1/embeddings``). Each collection declares its own — there is no shared global fallback. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection10.embedding.model
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Embedding model for this collection (e.g., ``text-embedding-3-small``, ``nomic-embed-text``). Each collection's vectors are dimensioned by its model — mixing dimensions in one collection would be rejected by ChromaDB. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection10.embedding.api.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: API key for the embedding service (e.g., OpenAI or Azure OpenAI).
+	 - Required: HIGH
+
+🔘 collection10.embedding.batch.size
+
+Number of texts to embed per API call for this collection. Higher values improve throughput but use more memory.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Collection 11 configuration
+==========================
+🔘 collection11.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the ChromaDB collection to write to.
+	 - Required: HIGH
+
+🔘 collection11.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka topic to pull data from for this collection.
+	 - Required: HIGH
+
+🔘 collection11.batch.size
+
+Maximum number of records per upsert request for this collection.
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 collection11.behavior.on.null.values
+
+How to handle Kafka tombstone records (non-null key + null value). ``IGNORE`` skips the record, ``FAIL`` stops the connector.
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 collection11.embedding.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Full URL of the OpenAI-compatible embedding API for this collection (e.g., ``https://api.openai.com/v1/embeddings``). Each collection declares its own — there is no shared global fallback. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection11.embedding.model
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Embedding model for this collection (e.g., ``text-embedding-3-small``, ``nomic-embed-text``). Each collection's vectors are dimensioned by its model — mixing dimensions in one collection would be rejected by ChromaDB. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection11.embedding.api.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: API key for the embedding service (e.g., OpenAI or Azure OpenAI).
+	 - Required: HIGH
+
+🔘 collection11.embedding.batch.size
+
+Number of texts to embed per API call for this collection. Higher values improve throughput but use more memory.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Collection 12 configuration
+==========================
+🔘 collection12.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the ChromaDB collection to write to.
+	 - Required: HIGH
+
+🔘 collection12.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka topic to pull data from for this collection.
+	 - Required: HIGH
+
+🔘 collection12.batch.size
+
+Maximum number of records per upsert request for this collection.
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 collection12.behavior.on.null.values
+
+How to handle Kafka tombstone records (non-null key + null value). ``IGNORE`` skips the record, ``FAIL`` stops the connector.
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 collection12.embedding.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Full URL of the OpenAI-compatible embedding API for this collection (e.g., ``https://api.openai.com/v1/embeddings``). Each collection declares its own — there is no shared global fallback. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection12.embedding.model
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Embedding model for this collection (e.g., ``text-embedding-3-small``, ``nomic-embed-text``). Each collection's vectors are dimensioned by its model — mixing dimensions in one collection would be rejected by ChromaDB. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection12.embedding.api.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: API key for the embedding service (e.g., OpenAI or Azure OpenAI).
+	 - Required: HIGH
+
+🔘 collection12.embedding.batch.size
+
+Number of texts to embed per API call for this collection. Higher values improve throughput but use more memory.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Collection 13 configuration
+==========================
+🔘 collection13.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the ChromaDB collection to write to.
+	 - Required: HIGH
+
+🔘 collection13.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka topic to pull data from for this collection.
+	 - Required: HIGH
+
+🔘 collection13.batch.size
+
+Maximum number of records per upsert request for this collection.
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 collection13.behavior.on.null.values
+
+How to handle Kafka tombstone records (non-null key + null value). ``IGNORE`` skips the record, ``FAIL`` stops the connector.
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 collection13.embedding.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Full URL of the OpenAI-compatible embedding API for this collection (e.g., ``https://api.openai.com/v1/embeddings``). Each collection declares its own — there is no shared global fallback. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection13.embedding.model
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Embedding model for this collection (e.g., ``text-embedding-3-small``, ``nomic-embed-text``). Each collection's vectors are dimensioned by its model — mixing dimensions in one collection would be rejected by ChromaDB. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection13.embedding.api.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: API key for the embedding service (e.g., OpenAI or Azure OpenAI).
+	 - Required: HIGH
+
+🔘 collection13.embedding.batch.size
+
+Number of texts to embed per API call for this collection. Higher values improve throughput but use more memory.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Collection 14 configuration
+==========================
+🔘 collection14.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the ChromaDB collection to write to.
+	 - Required: HIGH
+
+🔘 collection14.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka topic to pull data from for this collection.
+	 - Required: HIGH
+
+🔘 collection14.batch.size
+
+Maximum number of records per upsert request for this collection.
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 collection14.behavior.on.null.values
+
+How to handle Kafka tombstone records (non-null key + null value). ``IGNORE`` skips the record, ``FAIL`` stops the connector.
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 collection14.embedding.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Full URL of the OpenAI-compatible embedding API for this collection (e.g., ``https://api.openai.com/v1/embeddings``). Each collection declares its own — there is no shared global fallback. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection14.embedding.model
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Embedding model for this collection (e.g., ``text-embedding-3-small``, ``nomic-embed-text``). Each collection's vectors are dimensioned by its model — mixing dimensions in one collection would be rejected by ChromaDB. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection14.embedding.api.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: API key for the embedding service (e.g., OpenAI or Azure OpenAI).
+	 - Required: HIGH
+
+🔘 collection14.embedding.batch.size
+
+Number of texts to embed per API call for this collection. Higher values improve throughput but use more memory.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Collection 15 configuration
+==========================
+🔘 collection15.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the ChromaDB collection to write to.
+	 - Required: HIGH
+
+🔘 collection15.topic
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Kafka topic to pull data from for this collection.
+	 - Required: HIGH
+
+🔘 collection15.batch.size
+
+Maximum number of records per upsert request for this collection.
+
+	 - Type: INT
+	 - Default: 50
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 collection15.behavior.on.null.values
+
+How to handle Kafka tombstone records (non-null key + null value). ``IGNORE`` skips the record, ``FAIL`` stops the connector.
+
+	 - Type: STRING
+	 - Default: IGNORE
+	 - Importance: LOW
+	 - Required: false
+
+🔘 collection15.embedding.endpoint
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Full URL of the OpenAI-compatible embedding API for this collection (e.g., ``https://api.openai.com/v1/embeddings``). Each collection declares its own — there is no shared global fallback. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection15.embedding.model
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Embedding model for this collection (e.g., ``text-embedding-3-small``, ``nomic-embed-text``). Each collection's vectors are dimensioned by its model — mixing dimensions in one collection would be rejected by ChromaDB. Required when Auto-Generate Embeddings is enabled.
+	 - Required: HIGH
+
+🔘 collection15.embedding.api.key
+
+
+
+	 - Type: false
+	 - Default: PASSWORD
+	 - Importance: API key for the embedding service (e.g., OpenAI or Azure OpenAI).
+	 - Required: HIGH
+
+🔘 collection15.embedding.batch.size
+
+Number of texts to embed per API call for this collection. Higher values improve throughput but use more memory.
+
+	 - Type: INT
+	 - Default: 10
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Behavior on error
+==========================
+🔘 behavior.on.error
+
+Error handling behavior for failed HTTP requests. ``FAIL`` stops the connector on the first error after retries are exhausted. ``IGNORE`` reports the failed batch to the error topic and continues with the next batch. Both modes route batches to the configured error topic through the reporter. ``IGNORE`` does not silently drop records.
+
+	 - Type: STRING
+	 - Default: FAIL
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+CSFLE
+==========================
+🔘 csfle.enabled
+
+Determines whether the connector honours CSFLE rules or not
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sr.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
+	 - Required: HIGH
+
+🔘 csfle.onFailure
+
+Configures the behavior for decryption failures. If set to ERROR, the connector will behave as configured for error behaviour. If set to NONE, the connector will ignore the decryption failure and proceed to write the data in its encrypted form.
+
+	 - Type: STRING
+	 - Default: ERROR
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Additional Configs
+==========================
+🔘 value.converter.value.schema.id.deserializer
+
+The class name of the schema ID deserializer for values. This is used to deserialize schema IDs from the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.flatten.unions
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to flatten unions (oneofs). Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.optional.for.proto2
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether proto2 optionals are supported. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 consumer.override.isolation.level
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Controls how to read messages written transactionally. If set to read_committed, consumer.poll() will only return transactional messages which have been committed. If set to read_uncommitted (the default), consumer.poll() will return all messages, even transactional messages which have been aborted. Non-transactional messages will be returned unconditionally in either mode.  More details: https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#isolation-level
+	 - Required: LOW
+
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values. Input messages must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.generate.struct.for.nulls
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to generate a struct variable for null values. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.wrapper.for.nullables
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether nullable fields should use primitive wrapper messages. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.wrapper.for.raw.primitives
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether a wrapper message should be interpreted as a raw primitive at root level. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 key.converter.use.schema.guid
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
+
+🔘 value.converter.int.for.enums
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to represent enums as integers. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.latest.compatibility.strict
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Verify latest subject version is backward compatible when `use.latest.version` is `true`.
+	 - Required: LOW
+
+🔘 value.converter.auto.register.schemas
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Specify if the Serializer should attempt to register the Schema.
+	 - Required: LOW
+
+🔘 value.converter.connect.meta.data
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow the Connect converter to add its metadata to the output schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.use.latest.version
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Use latest version of schema in subject for serialization when auto.register.schemas is false.
+	 - Required: LOW
+
+🔘 value.converter.value.subject.name.strategy
+
+Determines how to construct the subject name under which the value schema is registered with Schema Registry.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.enhanced.avro.schema.support
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Enable enhanced schema support to preserve package information and Enums. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 key.converter.key.subject.name.strategy
+
+How to construct the subject name for key schema registration.
+
+	 - Type: STRING
+	 - Default: TopicNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.use.optional.for.nonrequired
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to set non-required properties to be optional. Applicable for JSON_SR Converters.
+	 - Required: LOW
+
+🔘 consumer.override.auto.offset.reset
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Defines the behavior of the consumer when there is no committed position (which occurs when the group is first initialized) or when an offset is out of range. You can choose either to reset the position to the “earliest” offset (the default) or the “latest” offset. You can also select “none” if you would rather set the initial offset yourself and you are willing to handle out of range errors manually. More details: https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#auto-offset-reset
+	 - Required: LOW
+
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 header.converter
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The converter class for the headers. This is used to serialize and deserialize the headers of the messages.
+	 - Required: LOW
+
+🔘 value.converter.reference.subject.name.strategy
+
+Set the subject reference name strategy for value. Valid entries are DefaultReferenceSubjectNameStrategy or QualifiedReferenceSubjectNameStrategy. Note that the subject reference name strategy can be selected only for PROTOBUF format with the default strategy being DefaultReferenceSubjectNameStrategy.
+
+	 - Type: STRING
+	 - Default: DefaultReferenceSubjectNameStrategy
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.use.schema.id
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
+
+🔘 errors.tolerance
+
+Use this property if you would like to configure the connector's error handling behavior. WARNING: This property should be used with CAUTION for SOURCE CONNECTORS as it may lead to dataloss. If you set this property to 'all', the connector will not fail on errant records, but will instead log them (and send to DLQ for Sink Connectors) and continue processing. If you set this property to 'none', the connector task will fail on errant records.
+
+	 - Type: STRING
+	 - Default: all
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.ignore.default.for.nullables
+
+When set to true, this property ensures that the corresponding record in Kafka is NULL, instead of showing the default column value. Applicable for AVRO,PROTOBUF and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.key.schema.id.deserializer
+
+The class name of the schema ID deserializer for keys. This is used to deserialize schema IDs from the message headers.
+
+	 - Type: STRING
+	 - Default: io.confluent.kafka.serializers.schema.id.DualSchemaIdDeserializer
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.generate.index.for.unions
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to generate an index suffix for unions. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.decimal.format
+
+Specify the JSON/JSON_SR serialization format for Connect DECIMAL logical type values with two allowed literals:
+
+	 - Type: STRING
+	 - Default: BASE64
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.object.additional.properties
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to allow additional properties for object schemas. Applicable for JSON_SR Converters.
+	 - Required: LOW
+
+🔘 value.converter.allow.optional.map.keys
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Allow optional string map key when converting from Connect Schema to Avro Schema. Applicable for Avro Converters.
+	 - Required: LOW
+
+🔘 value.converter.use.schema.guid
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The schema GUID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema GUID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
+
+🔘 value.converter.optional.for.nullables
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether nullable fields should be specified with an optional label. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.flatten.singleton.unions
+
+Whether to flatten singleton unions. Applicable for Avro and JSON_SR Converters.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 value.converter.enhanced.protobuf.schema.support
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Enable enhanced schema support to preserve package information. Applicable for Protobuf Converters.
+	 - Required: LOW
+
+🔘 value.converter.scrub.invalid.names
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
+	 - Required: LOW
+
+🔘 key.converter.use.schema.id
+
+
+
+	 - Type: false
+	 - Default: INT
+	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
+	 - Required: LOW
+
+==========================
+Auto-restart policy
+==========================
+🔘 auto.restart.on.user.error
+
+Enable connector to automatically restart on user-actionable errors.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+Egress allowlist
+==========================
+🔘 connector.egress.whitelist
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: List a comma-separated list of FQDNs, IPs, or CIDR ranges for secure, restricted network egress.
+	 - Required: HIGH
+
