@@ -19,16 +19,19 @@ export PATH=/path/to/kafka-docker-playground/scripts/cli:$PATH
 
 ### ⚡ Setup completion
 
-A Bash completion file is also available in `scripts/cli/completions.bash`.
+Completion files are available in `scripts/cli/completions.bash` (bash) and `scripts/cli/completions.zsh` (zsh). They forward each completion request to `playground __complete`, so the `playground` command must be in your `PATH`.
 
-In order to be able to use completion with the CLI, you just need to add this in your `~/.bashrc` or `~/.zshrc`:
+Add the line matching your shell to your `~/.bashrc` or `~/.zshrc`:
 
 ```bash
+# bash
 source /path/to/kafka-docker-playground/scripts/cli/completions.bash
 ```
 
-> [!NOTE]
-> If you use ZSH, but **not** `Oh-My-Zsh`, please check [this](https://bashly.dannyb.co/advanced/bash-completion/#completions-in-zsh).
+```zsh
+# zsh (after compinit)
+source /path/to/kafka-docker-playground/scripts/cli/completions.zsh
+```
 
 ### 🪄 Setup Shell Script Command Completion Visual Studio Code extension
 

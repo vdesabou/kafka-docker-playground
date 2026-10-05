@@ -91,7 +91,8 @@ alias to it.
   needs: [--other-flag]
   validate: validate_not_empty
   completions:
-    - $(playground get-connector-list)
+    dynamic:
+    - playground get-connector-list
   help: |-
     🔗 Connector name
 
@@ -142,8 +143,15 @@ one per line:
 ```
 
 Those taking `cur` receive the partial word being completed, for fzf-style
-filtering. Reference them from any flag with
-`completions: [$(playground get-connector-list)]`.
+filtering. Reference them from any arg/flag with (bashly 2.x format):
+
+```yaml
+completions:
+  dynamic:
+  - playground get-ec2-instance-list "$completion_current"
+  # static: [a, b]                 # literal candidates
+  # options: [files, no-space]     # files | directories | no-space
+```
 
 Some completion sources are cached files at `scripts/cli/` — `tag-list.txt`,
 `connect-tag-list.txt`, `confluent-hub-plugin-list.txt`,

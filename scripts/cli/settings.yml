@@ -55,3 +55,7 @@ usage_colors:
   arg: blue
   flag: magenta
   environment_variable: cyan
+
+# Generate native runtime completions (bashly >= 2.0): the script answers
+# `playground __complete <words>` and send_completions prints the shell adapters
+completions: bash,zsh

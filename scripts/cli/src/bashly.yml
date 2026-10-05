@@ -646,7 +646,8 @@ commands:
       help: 🔑 Environment variable name
       validate: secret_name
       completions:
-      - $(playground get-secret-list)
+        dynamic:
+        - playground get-secret-list
     flags:
     - long: --value
       arg: value
@@ -677,7 +678,8 @@ commands:
       required: false
       help: 🗂️ Secrets profile to use (default is the active one)
       completions:
-      - $(playground get-secret-profile-list)
+        dynamic:
+        - playground get-secret-profile-list
     examples:
     - playground secrets set SALESFORCE_PASSWORD
     - playground secrets set NGROK_AUTH_TOKEN --value 2abcDEF...
@@ -697,7 +699,8 @@ commands:
       help: 🔑 Environment variable name
       validate: secret_name
       completions:
-      - $(playground get-secret-list)
+        dynamic:
+        - playground get-secret-list
     flags:
     - long: --reveal
       required: false
@@ -729,7 +732,8 @@ commands:
       help: 🔑 Environment variable name
       validate: secret_name
       completions:
-      - $(playground get-secret-list)
+        dynamic:
+        - playground get-secret-list
     flags:
     - *secret-profile
     examples:
@@ -781,7 +785,8 @@ commands:
       help: 🔑 Environment variable name
       validate: secret_name
       completions:
-      - $(playground get-secret-list)
+        dynamic:
+        - playground get-secret-list
     - name: reference
       required: true
       help: |-
@@ -820,7 +825,8 @@ commands:
       help: 📄 Example script (default is the last example ran)
       validate: file_exists_with_trick
       completions:
-      - $(playground get-examples-list-with-fzf)
+        dynamic:
+        - playground get-examples-list-with-fzf
     - *secret-profile
     examples:
     - playground secrets check
@@ -856,7 +862,8 @@ commands:
       help: 📄 Example script (default is the last example ran)
       validate: file_exists_with_trick
       completions:
-      - $(playground get-examples-list-with-fzf)
+        dynamic:
+        - playground get-examples-list-with-fzf
     - long: --all
       required: false
       help: 📦 Export the whole profile, not only what the example needs
@@ -963,7 +970,8 @@ commands:
       help: 🔑 Push only this variable (default is the whole profile)
       validate: secret_name
       completions:
-      - $(playground get-secret-list)
+        dynamic:
+        - playground get-secret-list
     flags:
     - long: --repo
       arg: repo
@@ -1076,7 +1084,8 @@ commands:
       required: false
       help: 🗂️ Profile to activate
       completions:
-      - $(playground get-secret-profile-list)
+        dynamic:
+        - playground get-secret-profile-list
     examples:
     - playground secrets profile
     - playground secrets profile customer-123456
@@ -1413,7 +1422,8 @@ commands:
     validate: file_exists_with_trick
     arg: file
     completions:
-      - $(playground get-examples-list-with-fzf "$cur")
+      dynamic:
+      - playground get-examples-list-with-fzf "$completion_current"
     help: |-
       🔖 Example file to run
 
@@ -1430,7 +1440,8 @@ commands:
     arg: tag
     required: false
     completions:
-      - $(playground get-tag-list "$cur")
+      dynamic:
+      - playground get-tag-list "$completion_current"
     help: |-
       🎯 Confluent Platform (CP) version to use. Applies to all components (broker, connect, schema registry, ksqlDB, etc...)
 
@@ -1444,7 +1455,8 @@ commands:
     arg: connect_tag
     required: false
     completions:
-      - $(playground get-tag-list "$cur" --connect-only)
+      dynamic:
+      - playground get-tag-list "$completion_current" --connect-only
     help: |-
       🔗 Confluent Platform (CP) version to use. Applies to connect only.
 
@@ -1473,7 +1485,8 @@ commands:
     required: false
     validate: file_exists_with_trick
     completions:
-      - $(playground get-zip-or-jar-with-fzf --type zip "$cur")
+      dynamic:
+      - playground get-zip-or-jar-with-fzf --type zip "$completion_current"
     conflicts: [--connector-tag]
     help: |- 
       🤐 Connector zip to use
@@ -1491,7 +1504,8 @@ commands:
     required: false
     validate: file_exists_with_trick
     completions:
-      - $(playground get-zip-or-jar-with-fzf --type jar "$cur")
+      dynamic:
+      - playground get-zip-or-jar-with-fzf --type jar "$completion_current"
     help: |-
       🤎 Connector jar to use
 
@@ -1626,7 +1640,8 @@ commands:
     
     arg: cluster-region
     completions:
-      - $(playground get-kafka-region-list "$cur")
+      dynamic:
+      - playground get-kafka-region-list "$completion_current"
     help: |-
       🗺 The Cloud region. 
       
@@ -1640,7 +1655,8 @@ commands:
     arg: cluster-environment
     validate: not_empty
     completions:
-      - $(playground get-ccloud-environment-list "$cur")
+      dynamic:
+      - playground get-ccloud-environment-list "$completion_current"
     help: |-
       🌐 The environment id where want your new cluster (example: txxxxx)
 
@@ -1655,7 +1671,8 @@ commands:
     
     validate: not_empty
     completions:
-      - $(playground get-ccloud-cluster-list "$cur")
+      dynamic:
+      - playground get-ccloud-cluster-list "$completion_current"
     arg: cluster-name
     help: |-
       🎰 The cluster name. 
@@ -1962,7 +1979,8 @@ commands:
     validate: file_exists_with_trick
     arg: file
     completions:
-      - $(playground get-any-file-with-fzf "$cur")
+      dynamic:
+      - playground get-any-file-with-fzf "$completion_current"
     help: |-
       🔎 Search any file and open it.
       
@@ -2019,7 +2037,8 @@ commands:
       required: false
       arg: version
       completions:
-        - $(docker image ls | grep confluentinc | grep -v "<none>" | awk '{print $2}' | sort | uniq)
+        dynamic:
+        - docker image ls | grep confluentinc | grep -v "<none>" | awk '{print $2}' | sort | uniq
       help: |-
         🔢 Specific version to remove
 
@@ -2037,7 +2056,8 @@ commands:
       required: true
       arg: version
       completions:
-        - $(docker image ls | grep confluentinc | grep -v "<none>" | awk '{print $2}' | sort | uniq)
+        dynamic:
+        - docker image ls | grep confluentinc | grep -v "<none>" | awk '{print $2}' | sort | uniq
       help: |-
         🔢 Specific version to pull 
 
@@ -2196,7 +2216,8 @@ commands:
       required: false
       validate: file_exists_with_trick
       completions:
-        - $(playground get-playground-repro-export-with-fzf "$cur")
+        dynamic:
+        - playground get-playground-repro-export-with-fzf "$completion_current"
       help: |- 
         🤐 playground_repro_export.tgz file
 
@@ -2219,7 +2240,8 @@ commands:
       validate: file_exists_with_trick
       arg: file
       completions:
-        - $(playground get-examples-list-with-fzf --without-repro "$cur")
+        dynamic:
+        - playground get-examples-list-with-fzf --without-repro "$completion_current"
       help: |-
         🔖 Example file to use as basis, if not set, currently running example is used
         
@@ -2291,7 +2313,8 @@ commands:
       repeatable: true
       arg: connector-plugin
       completions:
-        - $(playground get-connector-plugin "$cur" "onprem")
+        dynamic:
+        - playground get-connector-plugin "$completion_current" "onprem"
       help: |-
         🔌 Add Connector plugin to CONNECT_PLUGIN_PATH
 
@@ -2304,7 +2327,8 @@ commands:
       conflicts: [--producer]
       repeatable: true
       completions:
-        - $(playground get-examples-list-with-fzf --without-repro --sink-only "$cur")
+        dynamic:
+        - playground get-examples-list-with-fzf --without-repro --sink-only "$completion_current"
       help: |-
         🔖 Sink example file to use for creating a pipeline. multiple --pipeline flags can be used to create a pipeline with multiple sinks.
         
@@ -2372,7 +2396,8 @@ commands:
         conflicts:
           - "id"
         completions:
-          - $(playground get-subject-list)
+          dynamic:
+          - playground get-subject-list
         help: |-
           📛 Subject name
 
@@ -2435,14 +2460,16 @@ commands:
         required: true
         arg: subject
         completions:
-          - $(playground get-subject-list)
+          dynamic:
+          - playground get-subject-list
         help: |-
           📛 Subject name
       - *verbose
       - long: --schema
         arg: schema
         completions:
-          - $(playground get-predefined-schemas "$cur")
+          dynamic:
+          - playground get-predefined-schemas "$completion_current"
         default: "-"
         required: false
         help: |- 
@@ -2695,7 +2722,8 @@ commands:
       required: false
       arg: subject
       completions:
-        - $(playground get-subject-list)
+        dynamic:
+        - playground get-subject-list
       help: |-
         📛 Subject name to delete:
           
@@ -2777,7 +2805,8 @@ commands:
       required: true
       arg: subject
       completions:
-        - $(playground get-subject-list)
+        dynamic:
+        - playground get-subject-list
       help: |-
         📛 Subject name
     - long: --alias
@@ -2805,7 +2834,8 @@ commands:
       required: true
       arg: alias
       completions:
-        - $(playground get-subject-list)
+        dynamic:
+        - playground get-subject-list
       help: |-
         🔯 Alias name
     - *verbose
@@ -2846,7 +2876,8 @@ commands:
         arg: hostname
         required: true
         completions:
-          - $(playground get-container-list)
+          dynamic:
+          - playground get-container-list
         help: |-
           Hostname used by the tcp proxy to forward request
       - long: --port
@@ -2854,7 +2885,8 @@ commands:
         validate: integer
         required: true
         completions:
-          - $(playground get-docker-ports)
+          dynamic:
+          - playground get-docker-ports
         help: |-
           Port used by the tcp proxy to forward request
       - &throttle-service-response
@@ -2910,7 +2942,8 @@ commands:
       - &connection-id
         long: --connection-id
         completions:
-          - $(playground get-zazkia-connection-list)
+          dynamic:
+          - playground get-zazkia-connection-list
         arg: connection-id
         validate: integer
         required: false
@@ -3106,7 +3139,8 @@ commands:
       short: -f
       required: false
       completions:
-        - $(playground get-specific-file-extension "$cur" --extension "avro")
+        dynamic:
+        - playground get-specific-file-extension "$completion_current" --extension "avro"
       validate: file_exists_and_avro
       arg: file
       help: |-
@@ -3128,7 +3162,8 @@ commands:
       short: -f
       required: false
       completions:
-        - $(playground get-specific-file-extension "$cur" --extension "parquet")
+        dynamic:
+        - playground get-specific-file-extension "$completion_current" --extension "parquet"
       validate: file_exists_and_parquet
       arg: file
       help: |-
@@ -3260,7 +3295,8 @@ commands:
         arg: container
         repeatable: true
         completions:
-          - $(playground get-container-list)
+          dynamic:
+          - playground get-container-list
         help: |-
           🐳 container name (or pod name when cfk environment is used)
 
@@ -3365,7 +3401,8 @@ commands:
         short: -f
         required: true
         completions:
-          - $(playground get-specific-file-extension "$cur" --extension "hprof")
+          dynamic:
+          - playground get-specific-file-extension "$completion_current" --extension "hprof"
         validate: file_exists_and_hprof
         arg: file
         help: |-
@@ -3416,7 +3453,8 @@ commands:
         arg: file
         validate: file_exists_and_log
         completions:
-          - $(playground get-specific-file-extension "$cur" --extension "log")
+          dynamic:
+          - playground get-specific-file-extension "$completion_current" --extension "log"
         help: |-
           🗒️  GC log file to analyze
 
@@ -3430,7 +3468,8 @@ commands:
         required: false
         arg: container
         completions:
-          - $(playground get-container-list)
+          dynamic:
+          - playground get-container-list
         help: |-
           🐳 Container name (or pod name when cfk environment is used) to extract GC log from
 
@@ -3489,7 +3528,8 @@ commands:
         validate: integer
         required: false
         completions:
-          - $(playground get-docker-ports)
+          dynamic:
+          - playground get-docker-ports
         help: |-
           Port on which tcp dump should be done, if not set sniffing is done on every port
       - long: --duration
@@ -3525,7 +3565,8 @@ commands:
         validate: integer
         required: false
         completions:
-          - $(playground get-docker-ports)
+          dynamic:
+          - playground get-docker-ports
         help: |-
           Port on which tcp traffic should be blocked
       - &action_start_stop
@@ -4341,7 +4382,8 @@ commands:
         required: false
         arg: topic
         completions:
-          - $(playground get-topic-list)
+          dynamic:
+          - playground get-topic-list
         help: |-
           🗳 Topic name
       - long: --isolation-level
@@ -4493,7 +4535,8 @@ commands:
         required: false
         arg: key-subject
         completions:
-          - $(playground get-subject-list)
+          dynamic:
+          - playground get-subject-list
         help: |-
           📛 Subject for key in schema-registry to use (useful when data was produced with --key-subject-name-strategy other than TopicNameStrategy)
           
@@ -4503,7 +4546,8 @@ commands:
         required: false
         arg: value-subject
         completions:
-          - $(playground get-subject-list)
+          dynamic:
+          - playground get-subject-list
         help: |-
           📛 Subject for value in schema-registry to use (useful when data was produced with --value-subject-name-strategy other than TopicNameStrategy)
           
@@ -4562,7 +4606,8 @@ commands:
         arg: key
         required: false
         completions:
-          - $(playground get-predefined-schemas "$cur")
+          dynamic:
+          - playground get-predefined-schemas "$completion_current"
         help: |-
           🗝️ Key to use. If not set, no key is used.
 
@@ -4594,7 +4639,8 @@ commands:
       - long: --value
         arg: value
         completions:
-          - $(playground get-predefined-schemas "$cur")
+          dynamic:
+          - playground get-predefined-schemas "$completion_current"
         default: "-"
         required: false
         help: |- 
@@ -4622,7 +4668,8 @@ commands:
         required: true
         arg: topic
         completions:
-          - $(playground get-topic-list)
+          dynamic:
+          - playground get-topic-list
         help: |-
           🗳 Topic name
       - long: --nb-messages
@@ -4837,7 +4884,8 @@ commands:
         required: false
         repeatable: true
         completions:
-          - $(playground get-predefined-schemas "$cur")
+          dynamic:
+          - playground get-predefined-schemas "$completion_current"
 
       - long: --validate-config
         arg: validate-config
@@ -5405,7 +5453,8 @@ commands:
         required: true
         arg: topic
         completions:
-          - $(playground get-topic-list)
+          dynamic:
+          - playground get-topic-list
         help: |-
           🗳 Topic name or regex pattern (full match)
 
@@ -5431,7 +5480,8 @@ commands:
         required: true
         arg: topic
         completions:
-          - $(playground get-topic-list)
+          dynamic:
+          - playground get-topic-list
         help: |-
           🗳 Topic name
       catch_all:
@@ -5500,7 +5550,8 @@ commands:
           required: true
           arg: tag
           completions:
-            - $(playground get-catalog-tag-list)
+            dynamic:
+            - playground get-catalog-tag-list
           help: |-
             🏷️ Tag name
         - *verbose
@@ -5517,7 +5568,8 @@ commands:
           required: true
           arg: topic
           completions:
-            - $(playground get-topic-list)
+            dynamic:
+            - playground get-topic-list
           help: |-
             🗳 Topic name
         - *catalog-tag
@@ -5602,7 +5654,8 @@ commands:
         required: false
         arg: group
         completions:
-          - $(playground get-consumer-group-list)
+          dynamic:
+          - playground get-consumer-group-list
         help: |-
           👥 Consumer group name
 
@@ -5660,7 +5713,8 @@ commands:
       required: true
       arg: connector-plugin
       completions:
-        - $(playground get-connector-plugin "$cur" "onprem")
+        dynamic:
+        - playground get-connector-plugin "$completion_current" "onprem"
       help: |-
         🔌 Connector plugin name
 
@@ -5736,7 +5790,8 @@ commands:
         required: true
         arg: connector-plugin
         completions:
-          - $(playground get-connector-plugin "$cur" "all")
+          dynamic:
+          - playground get-connector-plugin "$completion_current" "all"
         help: |-
           🔌 Connector plugin name
 
@@ -5872,7 +5927,8 @@ commands:
       required: false
       arg: connector
       completions:
-        - $(playground get-connector-list)
+        dynamic:
+        - playground get-connector-list
       help: |-
         🔗 Connector name
 
@@ -6475,7 +6531,8 @@ commands:
       required: true
       arg: connector-plugin
       completions:
-        - $(playground get-connector-plugin "$cur" "fm")
+        dynamic:
+        - playground get-connector-plugin "$completion_current" "fm"
       help: |-
         🔌 Connector plugin name
 
@@ -6569,7 +6626,8 @@ commands:
       required: true
       arg: connector
       completions:
-        - $(playground get-connector-list)
+        dynamic:
+        - playground get-connector-list
       help: |-
         🔗 Connector name
     - long: --level
@@ -6809,7 +6867,8 @@ commands:
         arg: instance
         validate: not_empty
         completions:
-          - $(playground get-ec2-cloudformation-list $cur)
+          dynamic:
+          - playground get-ec2-cloudformation-list $completion_current
         help: |-
           🌀 ec2 instance cloudformation (need to use completion to get all required details)
 
@@ -6836,7 +6895,8 @@ commands:
         arg: instance
         validate: not_empty
         completions:
-          - $(playground get-ec2-instance-list $cur)
+          dynamic:
+          - playground get-ec2-instance-list $completion_current
         help: |-
           🖥️ ec2 instance (need to use completion to get all required details)
 
@@ -6956,7 +7016,8 @@ commands:
         required: false
         help: 🗂️ Secrets profile to use (default is the active one)
         completions:
-        - $(playground get-secret-profile-list)
+          dynamic:
+          - playground get-secret-profile-list
       - long: --dry-run
         required: false
         help: 🔍 List what would be sent, change nothing

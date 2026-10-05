@@ -21,7 +21,7 @@ regeneration silently discards it.
 | File | Produced by |
 | --- | --- |
 | `scripts/cli/playground` (~50k lines) | `bashly generate` |
-| `scripts/cli/completions.bash` | `bashly add completions_script` + a post-processing fix |
+| `scripts/cli/completions.bash` / `completions.zsh` | `send_completions bash\|zsh` (generated function, `completions: bash,zsh` in `settings.yml`) |
 | `scripts/cli/playground.yaml` | `bashly render templates/shell-script-command-completion .` |
 | `scripts/cli/playground.json` | `yq -o=json playground.yaml` |
 | `docs/cli.md` and friends | `playground update-docs` |
@@ -108,8 +108,8 @@ here (anchors, validators, filters, groups, completions). The essentials:
 - **`private: true`** hides a command from help and docs. Used for the
   `get-*-list` completion providers and for internal commands like
   `bashly-reload` and `state`.
-- **Completions** call those private commands:
-  `completions: [$(playground get-connector-list)]`.
+- **Completions** call those private commands (bashly 2.x hash format):
+  `completions: { dynamic: [playground get-connector-list] }`.
 - **`filters:`** declare preconditions (`docker_running`,
   `connect_running`, `not_mdc_environment`, `ccloud_environment`, …).
 - **`validate:`** attaches a validator to an arg/flag (`validate_not_empty`,
@@ -119,12 +119,12 @@ here (anchors, validators, filters, groups, completions). The essentials:
 
 - **Docker must be running** for `bashly-reload`, `update-docs`, and the
   `docker_running` filter.
-- `bashly-reload` applies a `perl` fix to `completions.bash` because Bashly
-  escapes `"$cur"` in some completion helpers, and it fails loudly if the fix
-  didn't take. Don't patch `completions.bash` by hand — fix it in
-  `bashly-reload.sh` if it regresses.
-- To test completions after a change:
-  `source scripts/cli/completions.bash`.
+- Completions are answered at runtime by `playground __complete <words>`
+  (bashly ≥ 2.0); `completions.bash`/`.zsh` are thin adapters forwarding to it.
+  Inside a `dynamic` command the partial word is `$completion_current`
+  (not `$cur`), and candidates not starting with it are filtered out.
+- To test completions after a change, no re-sourcing is needed:
+  `scripts/cli/playground __complete connector st`.
 - A partial whose path doesn't match the command tree is silently never called.
 - Private commands produce no documentation, so `update-docs` won't show them.
 - Renaming or removing a flag is a breaking change for the ~300 example scripts

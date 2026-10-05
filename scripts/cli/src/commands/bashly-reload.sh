@@ -5,21 +5,15 @@ set -e
 
 cd "$root_folder/scripts/cli"
 docker run --rm -it --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly generate | grep -v "skipped"
-rm -f $root_folder/scripts/cli/completions.bash
-docker run --rm -it --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly add completions_script --quiet
-# Bashly currently escapes "$cur" as \"$cur\" in some completion helpers.
-# Normalize those callsites so fzf receives raw input (xxx instead of "xxx").
-perl -0pi -e 's/\\"\$cur\\"/"\$cur"/g; s/\\\\\"\$cur\\\\\"/"\$cur"/g' "$root_folder/scripts/cli/completions.bash"
+# Since bashly 2.0, completions are answered at runtime by `playground __complete <words>`.
+# The adapters below only forward to it, they only need to be regenerated when bashly is upgraded.
+"$BASH" -c 'source ./playground && send_completions bash' > "$root_folder/scripts/cli/completions.bash"
+"$BASH" -c 'source ./playground && send_completions zsh' > "$root_folder/scripts/cli/completions.zsh"
 
-if rg -q '\\"\$cur\\"|\\\\\"\$cur\\\\\"' "$root_folder/scripts/cli/completions.bash"
-then
-	logerror "❌ completions.bash still contains escaped \"\$cur\" after normalization"
-	exit 1
-fi
-
-log 🎱 "if you updated bahsly.yml with new commands or modified fags, you can reload completions file using:"
+log 🎱 "if completions are not set up yet, you can load them using:"
 echo ""
-echo "source $root_folder/scripts/cli/completions.bash"
+echo "source $root_folder/scripts/cli/completions.bash   # bash"
+echo "source $root_folder/scripts/cli/completions.zsh    # zsh"
 echo ""
 
 docker run --rm -it --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly render templates/shell-script-command-completion .
