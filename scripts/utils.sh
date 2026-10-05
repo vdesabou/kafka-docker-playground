@@ -1506,3 +1506,4 @@ fi
 
 determine_kraft_mode
 get_ccs_or_ce_specifics
+determine_confluent_telemetry

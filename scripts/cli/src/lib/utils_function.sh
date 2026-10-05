@@ -578,6 +578,33 @@ function get_ccs_or_ce_specifics() {
   fi
 }
 
+function determine_confluent_telemetry() {
+  export TELEMETRY_DOCKER_COMPOSE_FILE_OVERRIDE=""
+  if [ -z "$CONFLUENT_CLOUD_API_KEY" ] || [ -z "$CONFLUENT_CLOUD_API_SECRET" ]
+  then
+    return
+  fi
+
+  if [[ $CP_KAFKA_IMAGE == *"cp-kafka" ]] || [[ $CP_CONNECT_IMAGE == *"cp-kafka-"* ]]
+  then
+    logwarn "📡 Confluent Telemetry Reporter (proactive support) is not enabled as community images are used"
+    return
+  fi
+
+  if ! version_gt $TAG_BASE "5.9.99"
+  then
+    logwarn "📡 Confluent Telemetry Reporter (proactive support) is not enabled as it requires CP version >= 6.0"
+    return
+  fi
+
+  log "📡 Enabling Confluent Telemetry Reporter (proactive support) as CONFLUENT_CLOUD_API_KEY and CONFLUENT_CLOUD_API_SECRET environment variables are set"
+  export TELEMETRY_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DIR_UTILS}/../environment/plaintext/docker-compose-telemetry.yml"
+  if [ "$ENABLE_KRAFT" == "true" ]
+  then
+    export TELEMETRY_DOCKER_COMPOSE_FILE_OVERRIDE="${TELEMETRY_DOCKER_COMPOSE_FILE_OVERRIDE} -f ${DIR_UTILS}/../environment/plaintext/docker-compose-telemetry-kraft.yml"
+  fi
+}
+
 function determine_kraft_mode() {
   TAG_BASE=$(echo $TAG | cut -d "-" -f1)
   first_version=${TAG_BASE}

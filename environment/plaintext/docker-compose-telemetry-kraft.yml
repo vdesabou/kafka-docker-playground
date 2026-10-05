@@ -1,0 +1,10 @@
+---
+# Confluent Telemetry Reporter (proactive support / Health+) for the KRaft controller
+# Automatically added by environment start.sh scripts when CONFLUENT_CLOUD_API_KEY and CONFLUENT_CLOUD_API_SECRET are set and KRaft mode is used
+services:
+
+  controller:
+    environment:
+      KAFKA_CONFLUENT_TELEMETRY_ENABLED: 'true'
+      KAFKA_CONFLUENT_TELEMETRY_API_KEY: ${CONFLUENT_CLOUD_API_KEY}
+      KAFKA_CONFLUENT_TELEMETRY_API_SECRET: ${CONFLUENT_CLOUD_API_SECRET}
