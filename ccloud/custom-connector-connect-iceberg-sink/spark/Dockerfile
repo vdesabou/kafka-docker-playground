@@ -52,9 +52,10 @@ ENV SPARK_VERSION=3.5.8
 ENV SPARK_MAJOR_VERSION=3.5
 ENV ICEBERG_VERSION=1.5.0
 
-# Download spark
+# Download spark (dlcdn is fast but only hosts current releases, archive.apache.org has everything but is heavily throttled)
 RUN mkdir -p ${SPARK_HOME} \
-    && curl https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop3.tgz -o spark-${SPARK_VERSION}-bin-hadoop3.tgz \
+    && (curl -fL --retry 3 https://dlcdn.apache.org/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop3.tgz -o spark-${SPARK_VERSION}-bin-hadoop3.tgz \
+    || curl -fL --retry 3 https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop3.tgz -o spark-${SPARK_VERSION}-bin-hadoop3.tgz) \
     && tar xvzf spark-${SPARK_VERSION}-bin-hadoop3.tgz --directory /opt/spark --strip-components 1 \
     && rm -rf spark-${SPARK_VERSION}-bin-hadoop3.tgz
 
