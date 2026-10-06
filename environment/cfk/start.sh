@@ -291,8 +291,16 @@ function import_image_into_k3d() {
   : > "$import_log"
   log "📦 Importing image $image_to_import into k3d cluster $K3D_CLUSTER_NAME"
 
+  # podman lists images by their fully qualified name (docker.io/library/alpine:latest)
+  # and k3d matches the name literally, so a short name is "not found in the runtime"
+  k3d_import_ref="$image_to_import"
+  if container_engine_is_podman
+  then
+    k3d_import_ref="$normalized_image"
+  fi
+
   set +e
-  run_with_timeout "$timeout_seconds" k3d image import --cluster "$K3D_CLUSTER_NAME" "$image_to_import" >> "$import_log" 2>&1
+  run_with_timeout "$timeout_seconds" k3d image import --cluster "$K3D_CLUSTER_NAME" "$k3d_import_ref" >> "$import_log" 2>&1
   import_ret=$?
   set -e
 

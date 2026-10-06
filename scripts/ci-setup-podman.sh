@@ -65,6 +65,11 @@ sudo systemctl stop podman.service || true
 sudo systemctl enable podman.socket
 sudo systemctl restart podman.socket
 
+# containers that mount /var/run/docker.sock (the k3d registry cache of environment/cfk,
+# the datadog agent) must reach podman, not the docker daemon stopped above: same
+# link as the podman-docker package and podman machine set up
+sudo ln -sf "${podman_socket}" /var/run/docker.sock
+
 export DOCKER_HOST="unix://${podman_socket}"
 if [ -n "$GITHUB_ENV" ]
 then
