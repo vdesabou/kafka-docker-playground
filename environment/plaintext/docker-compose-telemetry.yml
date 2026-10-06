@@ -31,6 +31,10 @@ services:
 
   connect:
     environment:
+      # in secured environments (CONNECT_SECURITY_PROTOCOL != PLAINTEXT), the image runs 'ub/cub kafka-ready --config kafka-connect.properties',
+      # which then instantiates metric.reporters: add the telemetry jars to its classpath, otherwise it fails with ClassNotFoundException
+      UB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-java-micro/*
+      CUB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-new/*
       CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
       CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'true'
       CONNECT_CONFLUENT_TELEMETRY_API_KEY: ${CONFLUENT_CLOUD_API_KEY}
@@ -38,6 +42,8 @@ services:
 
   connect2:
     environment:
+      UB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-java-micro/*
+      CUB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-new/*
       CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
       CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'true'
       CONNECT_CONFLUENT_TELEMETRY_API_KEY: ${CONFLUENT_CLOUD_API_KEY}
@@ -45,6 +51,8 @@ services:
 
   connect3:
     environment:
+      UB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-java-micro/*
+      CUB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-new/*
       CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
       CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'true'
       CONNECT_CONFLUENT_TELEMETRY_API_KEY: ${CONFLUENT_CLOUD_API_KEY}
