@@ -49,17 +49,8 @@ fi
 
 salesforce_ensure_jwt_keystore "$PWD" > /dev/null
 
-# The PushTopic name must be unique per test: salesforce-pushtopic-source,
-# salesforce-sobject-sink and salesforce-bulkapi-sink-with-bulkapi-source all
-# create a Lead PushTopic and delete any existing one of the same name first.
-# Sharing one name means that, when these tests run concurrently against the same
-# Salesforce org, one test deletes the PushTopic another is still using.
-# The discriminator is a prefix so it survives the 25-character truncation below.
-PUSH_TOPICS_NAME=ptsrcLead${TAG}
-PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME//[-._]/}
-if [ ${#PUSH_TOPICS_NAME} -gt 25 ]; then
-  PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME:0:25}
-fi
+# unique per script and environment, see salesforce_push_topic_name
+PUSH_TOPICS_NAME=$(salesforce_push_topic_name ptsrcLead)
 
 sed -e "s|:PUSH_TOPIC_NAME:|$PUSH_TOPICS_NAME|g" \
     ../../connect/connect-salesforce-pushtopics-source/MyLeadPushTopics-template.apex > ../../connect/connect-salesforce-pushtopics-source/MyLeadPushTopics.apex

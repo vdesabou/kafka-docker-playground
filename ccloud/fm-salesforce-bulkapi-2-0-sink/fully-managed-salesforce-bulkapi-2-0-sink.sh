@@ -69,8 +69,8 @@ then
      exit 1
 fi
 
-PUSH_TOPICS_NAME=MyLeadPushTopicsV2${TAG}
-PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME//[-._]/}
+# unique per script and environment, see salesforce_push_topic_name
+PUSH_TOPICS_NAME=$(salesforce_push_topic_name fmbulk2Lead)
 
 sed -e "s|:PUSH_TOPIC_NAME:|$PUSH_TOPICS_NAME|g" \
     ../../ccloud/fm-salesforce-pushtopics-source/MyLeadPushTopics-template.apex > ../../ccloud/fm-salesforce-pushtopics-source/MyLeadPushTopics.apex

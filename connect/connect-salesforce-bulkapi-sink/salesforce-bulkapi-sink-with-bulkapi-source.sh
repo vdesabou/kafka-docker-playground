@@ -68,11 +68,8 @@ fi
 
 # Unique per test - see the comment in salesforce-pushtopic-source.sh. Sharing
 # one PushTopic name across tests breaks concurrent runs against the same org.
-PUSH_TOPICS_NAME=bulksinkLead${TAG}
-PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME//[-._]/}
-if [ ${#PUSH_TOPICS_NAME} -gt 25 ]; then
-  PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME:0:25}
-fi
+# unique per script and environment, see salesforce_push_topic_name
+PUSH_TOPICS_NAME=$(salesforce_push_topic_name bulksinkLead)
 
 sed -e "s|:PUSH_TOPIC_NAME:|$PUSH_TOPICS_NAME|g" \
      ../../connect/connect-salesforce-bulkapi-sink/MyLeadPushTopics-template.apex > ../../connect/connect-salesforce-bulkapi-sink/MyLeadPushTopics.apex

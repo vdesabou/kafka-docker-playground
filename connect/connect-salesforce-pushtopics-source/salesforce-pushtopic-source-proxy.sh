@@ -47,11 +47,8 @@ fi
 
 salesforce_ensure_jwt_keystore "$PWD" > /dev/null
 
-PUSH_TOPICS_NAME=MyLeadPushTopics${TAG}
-PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME//[-._]/}
-if [ ${#PUSH_TOPICS_NAME} -gt 25 ]; then
-  PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME:0:25}
-fi
+# unique per script and environment, see salesforce_push_topic_name
+PUSH_TOPICS_NAME=$(salesforce_push_topic_name ptpxLead)
 
 sed -e "s|:PUSH_TOPIC_NAME:|$PUSH_TOPICS_NAME|g" \
     ../../connect/connect-salesforce-pushtopics-source/MyLeadPushTopics-template.apex > ../../connect/connect-salesforce-pushtopics-source/MyLeadPushTopics.apex

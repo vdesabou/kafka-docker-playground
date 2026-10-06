@@ -611,6 +611,25 @@ function salesforce_use_test_creds() {
   fi
 }
 
+# Name of a test's Lead PushTopic, unique per script and per environment.
+#
+# Every PushTopic test deletes any existing PushTopic of its name before creating its own, so
+# two runs sharing a name in the same org break each other. CI runs the plaintext and cfk jobs,
+# and the ccloud fm-* jobs, at the same time against one org, and several scripts used to share
+# MyLeadPushTopics${TAG}. The prefix identifies the script, followed by the environment and the
+# CP version; Salesforce caps PushTopic names at 25 characters.
+#
+#   PUSH_TOPICS_NAME=$(salesforce_push_topic_name ptsrcLead)   # ptsrcLeadcfk832 on cfk
+function salesforce_push_topic_name() {
+  local prefix="$1"
+  local environment="${PLAYGROUND_ENVIRONMENT:-plaintext}"
+  local name=""
+
+  environment="${environment//[^a-zA-Z0-9]/}"
+  name="${prefix}${environment:0:4}${TAG//[^a-zA-Z0-9]/}"
+  echo "${name:0:25}"
+}
+
 # Wait until a streaming source task (PushTopic, CDC, Platform Events) has subscribed to its
 # channel, before the test creates the record or event it expects to receive.
 #
