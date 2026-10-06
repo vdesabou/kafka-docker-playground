@@ -12,6 +12,9 @@
 # write into bind mounts (certificates, keystores, ...) to subuids the runner cannot read.
 set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+# sourcing utils.sh already calls playground, which must be on the PATH
+# (the Build and Test step does the same)
+export PATH="$PATH:${DIR}/cli"
 source ${DIR}/utils.sh
 
 podman_socket="/run/podman/podman.sock"
