@@ -131,24 +131,32 @@ then
     else
         # ask the daemon the docker CLI really talks to: on Linux a bare `podman`
         # run by a regular user reports its own rootless setup, not the rootful
-        # daemon behind DOCKER_HOST
-        podman_cli=(podman)
-        if [[ "${DOCKER_HOST:-}" == unix://* ]]
+        # daemon behind DOCKER_HOST. Without DOCKER_HOST, the endpoint may come
+        # from a docker context; with neither, `docker` is the podman-docker shim
+        # and a bare `podman` is the same thing
+        engine_endpoint="${DOCKER_HOST:-}"
+        if [ -z "$engine_endpoint" ]
         then
-            podman_cli=(podman --url "$DOCKER_HOST")
+            engine_endpoint=$(docker context inspect --format '{{.Endpoints.docker.Host}}' 2>/dev/null)
+        fi
+        podman_cli=(podman)
+        if [[ "$engine_endpoint" == unix://* ]]
+        then
+            podman_cli=(podman --url "$engine_endpoint")
+            log "🔎 podman checks are run against ${engine_endpoint}"
+        else
+            log "🔎 podman checks are run against the default podman connection"
         fi
 
         # -- rootless or rootful ---------------------------------------------
         rootless=$("${podman_cli[@]}" info --format '{{.Host.Security.Rootless}}' 2>/dev/null)
         if [ "$rootless" = "true" ]
         then
-            doctor_warn "podman is running rootless"
-            logwarn "the playground writes generated certificates and secrets into bind mounts and reads"
-            logwarn "them back from the host. Rootless podman maps container UIDs to subuids, so those"
-            logwarn "files can end up unreadable from the host. If you hit permission errors, use rootful"
-            logwarn "podman, or add ':U' to the failing mount."
-            logwarn "the following are known not to work rootless: connect-jdbc-ibmdb2-*, connect-mapr-sink,"
-            logwarn "ccloud/haproxy (privileged: true) and environment/cfk (kind needs the engine socket)"
+            doctor_warn "podman is running rootless, the playground is tested with rootful podman"
+            logwarn "containers write generated certificates and secrets into bind mounts, and the host"
+            logwarn "reads them back: rootless podman maps container UIDs to subuids, so those files can"
+            logwarn "end up unreadable from the host, and privileged: true containers may not start."
+            logwarn "👉 rootful setup: https://kafka-docker-playground.io/#/podman"
         elif [ "$rootless" = "false" ]
         then
             doctor_ok "podman is running rootful"

@@ -404,6 +404,14 @@ function container_engine_is_podman()
 if [[ "${DOCKER_HOST:-}" == *podman* ]] || [ "${PLAYGROUND_CONTAINER_ENGINE:-}" = "podman" ]
 then
   export DOCKER_BUILDKIT=0
+# podman reached through a docker context instead: only pay for `docker context
+# inspect` (a local file read, no engine round trip) when a context is in use
+elif [ -z "${DOCKER_HOST:-}" ] && { [ -n "${DOCKER_CONTEXT:-}" ] || grep -q '"currentContext"' "${DOCKER_CONFIG:-$HOME/.docker}/config.json" 2>/dev/null; }
+then
+  if docker context inspect --format '{{.Endpoints.docker.Host}}' 2>/dev/null | grep -q podman
+  then
+    export DOCKER_BUILDKIT=0
+  fi
 fi
 
 # 📂 host paths for bind mounts
