@@ -19515,7 +19515,9 @@ playground_doctor_command() {
   else
       log "🐳 engine detected: docker"
   fi
-  playground state set run.container_engine "$engine" > /dev/null 2>&1 || true
+  # in a subshell: the playground() wrapper exits when it cannot find the CLI, and
+  # remembering the engine must never end the checks
+  ( playground state set run.container_engine "$engine" ) > /dev/null 2>&1 || true
 
   if ! docker_info_error=$(docker info 2>&1 > /dev/null)
   then
@@ -19634,6 +19636,27 @@ playground_doctor_command() {
               else
                   doctor_ok "podman ${podman_version}"
               fi
+          fi
+
+          # -- OCI runtime -----------------------------------------------------
+          # podman writes pids.limit=0 ("no limit") for containers created by docker run;
+          # runc 1.5 hands it to systemd as TasksMax=1, so nothing can fork in them
+          # ("bash: fork: Resource temporarily unavailable"). That runc is the one of
+          # docker's containerd.io package, which podman falls back to without crun
+          oci_runtime=$("${podman_cli[@]}" info --format '{{.Host.OCIRuntime.Name}}' 2>/dev/null)
+          oci_runtime_version=$("${podman_cli[@]}" info --format '{{.Host.OCIRuntime.Version}}' 2>/dev/null | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1)
+          if [ "$oci_runtime" = "runc" ] && [ -n "$oci_runtime_version" ] && ! version_gt "1.5.0" "$oci_runtime_version"
+          then
+              doctor_error "podman uses runc ${oci_runtime_version}: containers started with docker run cannot create any process"
+              logerror "install crun, podman's usual runtime: once installed, podman picks it over runc"
+              logerror "  sudo apt-get install -y crun        # or: sudo dnf install -y crun"
+              logerror "  sudo systemctl stop podman.service  # restarted on the next connection, with crun"
+          elif [ "$oci_runtime" = "runc" ]
+          then
+              doctor_warn "podman uses runc ${oci_runtime_version}, the playground is tested with crun"
+          elif [ -n "$oci_runtime" ]
+          then
+              doctor_ok "podman runtime is ${oci_runtime} ${oci_runtime_version}"
           fi
 
           # -- rootless or rootful ---------------------------------------------

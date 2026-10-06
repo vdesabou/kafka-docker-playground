@@ -28,7 +28,11 @@ log "🦭 Installing podman, netavark and aardvark-dns"
 # netavark + aardvark-dns: compose services resolve each other by name (broker,
 # connect, ...), which the legacy cni backend cannot do without extra plugins
 sudo apt-get update -qq
-sudo apt-get install -y -qq podman netavark aardvark-dns > /dev/null
+# crun: podman's usual runtime, picked over runc once installed. Without it podman falls
+# back to the runc of docker's containerd.io package, and runc 1.5 turns the "no limit"
+# pids.limit=0 that podman writes for docker run containers into TasksMax=1: nothing can
+# fork in them. runtime = "crun" below makes the choice explicit
+sudo apt-get install -y -qq podman netavark aardvark-dns crun > /dev/null
 podman --version
 
 log "⚙️ Configuring podman"
@@ -36,6 +40,9 @@ sudo mkdir -p /etc/containers/containers.conf.d /etc/containers/registries.conf.
 sudo tee /etc/containers/containers.conf.d/99-playground.conf > /dev/null << EOF
 [network]
 network_backend = "netavark"
+
+[engine]
+runtime = "crun"
 EOF
 # the docker compat API resolves short names (postgres:14) to docker.io on recent
 # versions; make native podman and older versions do the same

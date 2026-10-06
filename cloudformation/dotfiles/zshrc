@@ -131,5 +131,5 @@ if [ -f ~/.playground-secrets.properties ]
 then
     #set -o allexport;source ~/.playground-secrets.properties;set +o allexport
     echo "secrets are present in ~/.playground-secrets.properties, use pgenv to load them in shell"
-    alias pgenv="source <(playground secrets env --all)"
+    alias pgenv="set -o allexport;source ~/.playground-secrets.properties;set +o allexport"
 fi
