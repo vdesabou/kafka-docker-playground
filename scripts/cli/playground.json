@@ -20,6 +20,13 @@
       "subcommands": null
     },
     {
+      "name": "doctor",
+      "description": "🩺 Check that the container engine is ready for the playground\n\nReports which engine the 'docker' CLI is really talking to — 🐳 Docker or\n🦭 Podman — and checks what has to be right before any example can start:\nthe engine is reachable, compose v2 is there, there is enough memory, and,\nwith podman, that short image names resolve, that privileged ports can be\npublished and that bind mounts will be readable from the host.\n\nThis is the one command that still runs when the engine is down, so it is\nwhat to run first when an example fails before a single container starts.\n\nExits 1 if it found a blocking problem, 0 otherwise.\n\n👉 Check documentation https://kafka-docker-playground.io/#/podman\n",
+      "usage": "playground doctor",
+      "options": [],
+      "subcommands": null
+    },
+    {
       "name": "config",
       "description": "⚙️ Configure CLI\n\nYour preferences, kept between sessions:\n\n  editor <name>                      the editor every command opens files\n                                     with (code, vi, nano...)\n  folder_zip_or_jar <dir>...         where to look for connector zips and\n                                     jars, in addition to the current\n                                     folder\n  clipboard true|false               copy connector config to the\n                                     clipboard (macOS only)\n  container-kill-all-before-run      kill every container before each run,\n                                     or just stop the example\n  check-and-update-repo-version      warn when your clone is out of date\n  open-ccloud-connector-in-browser   open fully managed connectors, and in\n  open-grafana-in-browser            which browser\n",
       "usage": "playground config COMMAND",

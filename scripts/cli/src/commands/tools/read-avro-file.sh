@@ -5,6 +5,9 @@ then
   file=$(echo "$file" | cut -d "@" -f 2)
 fi
 
+# a file under /tmp is only reachable by the engine through its resolved path on macOS
+file=$(host_path "$file")
+
 filename=$(basename $file)
 
 log "🔖 ${filename}.avro metadata"

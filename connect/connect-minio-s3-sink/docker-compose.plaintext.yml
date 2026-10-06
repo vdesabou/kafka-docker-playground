@@ -54,7 +54,7 @@ services:
     depends_on:
       - minio
     volumes:
-        - /tmp:/tmp
+        - ${PLAYGROUND_HOST_TMP_DIR:-/tmp}:/tmp
     entrypoint: >
       /bin/sh -c "
         /usr/bin/mc alias set myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY;

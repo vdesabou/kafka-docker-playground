@@ -1,3 +1,10 @@
+if container_engine_is_podman
+then
+    log "🦭 Container engine: podman"
+else
+    log "🐳 Container engine: docker"
+fi
+
 test_file=$(playground state get run.test_file)
 
 if [ ! -f $test_file ]

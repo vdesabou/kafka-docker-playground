@@ -99,7 +99,7 @@ function yq() {
   verbose_begin
   if [[ $(type -f yq 2>&1) =~ "not found" ]]
   then
-    docker run --quiet  -u0 -v /tmp:/tmp --rm -i mikefarah/yq "$@"
+    docker run --quiet  -u0 -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp --rm -i mikefarah/yq "$@"
   else
     $(type -f yq | awk '{print $3}') "$@"
   fi
@@ -348,13 +348,126 @@ EOF
 }
 
 
+# 🐳 / 🦭 container engine
+#
+# The playground always drives the container engine through the `docker` CLI, so
+# podman is supported the docker-compatible way: either DOCKER_HOST points at the
+# podman socket, or `docker` is the shim from the podman-docker package. Nothing
+# below changes what is executed, it only tells the user which engine they landed
+# on so the error messages and `playground doctor` can be specific.
+function get_container_engine()
+{
+  if [ ! -z "${PLAYGROUND_CONTAINER_ENGINE:-}" ]
+  then
+    echo "$PLAYGROUND_CONTAINER_ENGINE"
+    return 0
+  fi
+
+  # every test below is inside an if, so it is safe under set -e and this function
+  # must not touch the errexit state of its caller.
+  # the two local checks come first so that the usual podman setups never pay for
+  # a round trip to the engine
+  local engine="docker"
+  if [[ "${DOCKER_HOST:-}" == *podman* ]]
+  then
+    engine="podman"
+  # podman-docker installs a `docker` shim whose --version says "podman version x.y.z"
+  elif docker --version 2>/dev/null | grep -qi "podman"
+  then
+    engine="podman"
+  # docker CLI talking to a podman socket: the compat /version endpoint advertises
+  # a "Podman Engine" component
+  elif docker version --format '{{json .Server}}' 2>/dev/null | grep -qi "podman"
+  then
+    engine="podman"
+  elif docker info --format '{{json .}}' 2>/dev/null | grep -qi "podman"
+  then
+    engine="podman"
+  fi
+
+  export PLAYGROUND_CONTAINER_ENGINE="$engine"
+  echo "$engine"
+}
+
+function container_engine_is_podman()
+{
+  [ "$(get_container_engine)" = "podman" ]
+}
+
+# with podman, `docker build` and `docker compose build` go through buildx, which
+# runs BuildKit in its own container: it pulls FROM images from the registry instead
+# of using podman's local ones (so images patched by maybe_create_image are ignored),
+# and with that driver the result is never loaded back, it stays in the build cache.
+# The classic builder goes through podman's own /build endpoint and has neither issue.
+# Only the cheap DOCKER_HOST test here, this runs every time the file is sourced;
+# `playground doctor` covers the other ways of reaching podman.
+if [[ "${DOCKER_HOST:-}" == *podman* ]] || [ "${PLAYGROUND_CONTAINER_ENGINE:-}" = "podman" ]
+then
+  export DOCKER_BUILDKIT=0
+fi
+
+# 📂 host paths for bind mounts
+#
+# the docker CLI sends a bind mount source verbatim, and the engine resolves it on
+# its side. On macOS /tmp is a symlink to /private/tmp: Docker Desktop shares both,
+# but a podman machine cannot share /tmp (its VM needs its own), so `-v ${PLAYGROUND_HOST_TMP_DIR}:/tmp`
+# silently mounts the VM's tmpfs, which the container cannot even write to.
+# /private is shared by both, so always mount the resolved path. On Linux it is /tmp.
+# Exported so that docker compose files can use ${PLAYGROUND_HOST_TMP_DIR:-/tmp}.
+export PLAYGROUND_HOST_TMP_DIR="$(cd /tmp && pwd -P)"
+
+# same thing for a path coming from a flag or a variable, which may live under /tmp:
+# resolve its symlinks before using it as a bind mount source
+function host_path()
+{
+  local path="$1"
+  if [ -d "$path" ]
+  then
+    (cd "$path" && pwd -P)
+  elif [ -d "$(dirname "$path")" ]
+  then
+    echo "$(cd "$(dirname "$path")" && pwd -P)/$(basename "$path")"
+  else
+    echo "$path"
+  fi
+}
+
+# printed whenever the engine is unreachable, tailored to what is installed.
+# pass any argument to drop the "run playground doctor" hint (doctor itself uses it)
+function log_container_engine_not_running()
+{
+  logerror "Cannot connect to the container engine."
+  if [ ! -z "${DOCKER_HOST:-}" ]
+  then
+    logerror "DOCKER_HOST is set to ${DOCKER_HOST}, make sure that socket is up."
+  fi
+  if command -v podman >/dev/null 2>&1 || [ "$(get_container_engine)" = "podman" ]
+  then
+    logerror "the playground talks to podman through the docker-compatible socket:"
+    if [[ "$OSTYPE" == "darwin"* ]]
+    then
+      logerror "  podman machine start"
+      logerror "  export DOCKER_HOST=\"unix://\$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')\""
+    else
+      logerror "  systemctl --user enable --now podman.socket"
+      logerror "  export DOCKER_HOST=\"unix://\${XDG_RUNTIME_DIR}/podman/podman.sock\""
+    fi
+  else
+    logerror "Is the docker daemon running?"
+  fi
+  if [ -z "${1:-}" ]
+  then
+    logerror "👉 run 'playground doctor' for a full check of the container engine"
+  fi
+}
+
 function verify_docker_and_memory()
 {
   set +e
   docker info > /dev/null 2>&1
   if [[ $? -ne 0 ]]
   then
-    logerror "Cannot connect to the Docker daemon. Is the docker daemon running?"
+    log_container_engine_not_running
     exit 1
   fi
   set -e
@@ -877,9 +990,9 @@ EOF
       # log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
       if [ -f $aws_tmp_dir/config ]
       then
-        docker run --quiet --rm -iv $aws_tmp_dir/config:/root/.aws/config -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
+        docker run --quiet --rm -iv $aws_tmp_dir/config:/root/.aws/config -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" -v $(pwd):/aws -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp amazon/aws-cli "$@"
       else
-        docker run --quiet --rm -iv $HOME/.aws/config:/root/.aws/config -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
+        docker run --quiet --rm -iv $HOME/.aws/config:/root/.aws/config -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" -v $(pwd):/aws -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp amazon/aws-cli "$@"
       fi
     else
       if [ ! -f $HOME/.aws/credentials ]
@@ -887,7 +1000,7 @@ EOF
         logerror "❌ $HOME/.aws/credentials does not exist"
       else
         # log "💭 AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
-        docker run --quiet --rm -iv $HOME/.aws:/root/.aws -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
+        docker run --quiet --rm -iv $HOME/.aws:/root/.aws -v $(pwd):/aws -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp amazon/aws-cli "$@"
       fi
     fi
 }
@@ -940,7 +1053,7 @@ function get_connect_image() {
 }
 
 function az() {
-  docker run --quiet --rm -v /tmp:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli:azurelinux3.0 az "$@"
+  docker run --quiet --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli:azurelinux3.0 az "$@"
 }
 
 function retry() {

@@ -730,7 +730,7 @@ done
 if [[ -n "$timestamp_field" ]]
 then
   log "Plot data using gnuplot, see ${latency_png}"
-  docker run --quiet --rm -i -v /tmp/latency:/work remuslazar/gnuplot -e \
+  docker run --quiet --rm -i -v ${PLAYGROUND_HOST_TMP_DIR}/latency:/work remuslazar/gnuplot -e \
   "
   set grid;
   set datafile separator ',';

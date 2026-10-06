@@ -521,7 +521,7 @@ then
           log "Downloading parquet file: $PARQUET_FILE"
           aws s3 cp s3://${S3_BUCKET_NAME}/${PARQUET_FILE} /tmp/iceberg_validation.parquet
           log "Reading parquet file contents:"
-          docker run --rm -v /tmp/iceberg_validation.parquet:/tmp/iceberg_validation.parquet python:3.11-slim bash -c "
+          docker run --rm -v ${PLAYGROUND_HOST_TMP_DIR}/iceberg_validation.parquet:/tmp/iceberg_validation.parquet python:3.11-slim bash -c "
                pip install pyarrow --quiet --no-warn-script-location 2>/dev/null
                python3 -c \"
 import pyarrow.parquet as pq

@@ -58,7 +58,7 @@ services:
     ports:
       - "9191:9191"
     volumes:
-      - /tmp/zazkia:/data
+      - ${PLAYGROUND_HOST_TMP_DIR:-/tmp}/zazkia:/data
     environment:
       DUMMY: $RANDOM
 EOF

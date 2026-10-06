@@ -58,6 +58,25 @@ commands:
     Everything comes from the running containers and from playground.ini, so
     it is also the quickest way to get back your bearings after a break.
 
+- name: doctor
+  help: |-
+    🩺 Check that the container engine is ready for the playground
+
+    Reports which engine the 'docker' CLI is really talking to — 🐳 Docker or
+    🦭 Podman — and checks what has to be right before any example can start:
+    the engine is reachable, compose v2 is there, there is enough memory, and,
+    with podman, that short image names resolve, that privileged ports can be
+    published and that bind mounts will be readable from the host.
+
+    This is the one command that still runs when the engine is down, so it is
+    what to run first when an example fails before a single container starts.
+
+    Exits 1 if it found a blocking problem, 0 otherwise.
+
+    👉 Check documentation https://kafka-docker-playground.io/#/podman
+  examples:
+  - playground doctor
+
 ### private commands for completion
 - name: get-docker-ports
   help: Return some completion for docker ports

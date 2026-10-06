@@ -114,7 +114,7 @@ log "Listing objects of in GCS"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud storage ls gs://$GCS_BUCKET_NAME/topics/gcs-topic/partition=0/
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-docker run -i --volumes-from gcloud-config -v /tmp:/tmp/ google/cloud-sdk:latest gcloud storage cp gs://$GCS_BUCKET_NAME/topics/gcs-topic/partition=0/gcs-topic+0+0000000000.avro /tmp/gcs-topic+0+0000000000.avro
+docker run -i --volumes-from gcloud-config -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp/ google/cloud-sdk:latest gcloud storage cp gs://$GCS_BUCKET_NAME/topics/gcs-topic/partition=0/gcs-topic+0+0000000000.avro /tmp/gcs-topic+0+0000000000.avro
 
 playground  tools read-avro-file --file /tmp/gcs-topic+0+0000000000.avro
 

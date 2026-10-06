@@ -40,7 +40,7 @@ fi
 
 analyzer_dir="$root_folder/cfk-analysis"
 
-bundle_abs=$(cd "$(dirname "$bundle")" && pwd)/$(basename "$bundle")
+bundle_abs=$(cd "$(dirname "$bundle")" && pwd -P)/$(basename "$bundle")
 bundle_container="/tmp/input/$(basename "$bundle")"
 
 # ── Build CLI args ─────────────────────────────────────────────────────────
@@ -69,7 +69,7 @@ html_out_container=""
 if [[ -n "$html" ]]; then
     : "${output_dir:=./cfk-reports}"
     mkdir -p "$output_dir"
-    output_dir_abs=$(cd "$output_dir" && pwd)
+    output_dir_abs=$(cd "$output_dir" && pwd -P)
 
     bundle_basename=$(basename "$bundle")
     # strip common archive suffixes for a clean filename

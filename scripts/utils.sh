@@ -1434,7 +1434,7 @@ else
               cp $CONNECTOR_ZIP /tmp/
 
               log "🎱 Installing connector from zip $connector_zip_name"
-              install_command="docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components -v /tmp:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c \"confluent-hub install --no-prompt /tmp/${connector_zip_name} && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components\""
+              install_command="docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} bash -c \"confluent-hub install --no-prompt /tmp/${connector_zip_name} && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components\""
               if ! install_connector_with_retry "$install_command"
               then
                   logerror "❌ failed to install connector from zip $connector_zip_name"

@@ -1207,7 +1207,19 @@ function filter_connect_running() {
 }
 
 function filter_docker_running() {
-  docker info >/dev/null 2>&1 || logerror "docker must be running"
+  # doctor is precisely the command you run when the engine is down, and a bare
+  # `playground` should still be able to print its help, so do not gate those.
+  # state and config only read and write playground.ini, they never talk to the
+  # engine, and several commands call them recursively - gating them only turned
+  # one failure into two identical error messages.
+  # $action is the sub-command, set by bashly before the filters are evaluated.
+  # nested commands set it to "state get", "config set", ... hence the globs.
+  case "${action:-}" in
+    doctor|help|""|state|state\ *|config|config\ *)
+      return 0
+    ;;
+  esac
+  docker info >/dev/null 2>&1 || logerror "container engine must be running - run 'playground doctor'"
 }
 
 function filter_aws_ec2_permissions() {

@@ -417,7 +417,7 @@ EOF
         then
             cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
     volumes:
-      - /tmp/:/tmp/
+      - ${PLAYGROUND_HOST_TMP_DIR:-/tmp}/:/tmp/
 EOF
         fi
     done

@@ -41,8 +41,8 @@ if ! docker images | grep -q "heap-analyzer"; then
 fi
 
 # Get absolute paths
-heap_file_abs=$(cd "$(dirname "$heap_file")" && pwd)/$(basename "$heap_file")
-output_dir_abs=$(mkdir -p "$output_dir" && cd "$output_dir" && pwd)
+heap_file_abs=$(cd "$(dirname "$heap_file")" && pwd -P)/$(basename "$heap_file")
+output_dir_abs=$(mkdir -p "$output_dir" && cd "$output_dir" && pwd -P)
 
 log "📊 Analyzing heap dump..."
 

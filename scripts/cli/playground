@@ -39,6 +39,7 @@ playground_usage() {
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   Show help about a command\n" "$(green "help")                                      "
   printf "  %s   🗺️ Show a status\n" "$(green "status")                                    "
+  printf "  %s   🩺 Check that the container engine is ready for the playground\n" "$(green "doctor")                                    "
   printf "  %s   ⚙️ Configure CLI\n" "$(green "config")                                    "
   printf "  %s   💰  Retrieve ccloud costs for a range of dates\n" "$(green "ccloud-costs")                              "
   printf "  %s   👛  Retrieve ccloud costs for each month since last year\n" "$(green "ccloud-costs-history")                      "
@@ -305,6 +306,38 @@ playground_status_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_doctor_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground doctor\n\n"
+    printf "  🩺 Check that the container engine is ready for the playground\n  \n  Reports which engine the 'docker' CLI is really talking to — 🐳 Docker or\n  🦭 Podman — and checks what has to be right before any example can start:\n  the engine is reachable, compose v2 is there, there is enough memory, and,\n  with podman, that short image names resolve, that privileged ports can be\n  published and that bind mounts will be readable from the host.\n  \n  This is the one command that still runs when the engine is down, so it is\n  what to run first when an example fails before a single container starts.\n  \n  Exits 1 if it found a blocking problem, 0 otherwise.\n  \n  👉 Check documentation https://kafka-docker-playground.io/#/podman\n\n"
+  else
+    printf "playground doctor - 🩺 Check that the container engine is ready for the playground\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground doctor\n"
+  printf "  playground doctor --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground doctor\n"
     echo
 
   fi
@@ -11930,7 +11963,19 @@ function filter_connect_running() {
 }
 
 function filter_docker_running() {
-  docker info >/dev/null 2>&1 || logerror "docker must be running"
+  # doctor is precisely the command you run when the engine is down, and a bare
+  # `playground` should still be able to print its help, so do not gate those.
+  # state and config only read and write playground.ini, they never talk to the
+  # engine, and several commands call them recursively - gating them only turned
+  # one failure into two identical error messages.
+  # $action is the sub-command, set by bashly before the filters are evaluated.
+  # nested commands set it to "state get", "config set", ... hence the globs.
+  case "${action:-}" in
+    doctor|help|""|state|state\ *|config|config\ *)
+      return 0
+    ;;
+  esac
+  docker info >/dev/null 2>&1 || logerror "container engine must be running - run 'playground doctor'"
 }
 
 function filter_aws_ec2_permissions() {
@@ -14615,7 +14660,7 @@ function yq() {
   verbose_begin
   if [[ $(type -f yq 2>&1) =~ "not found" ]]
   then
-    docker run --quiet  -u0 -v /tmp:/tmp --rm -i mikefarah/yq "$@"
+    docker run --quiet  -u0 -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp --rm -i mikefarah/yq "$@"
   else
     $(type -f yq | awk '{print $3}') "$@"
   fi
@@ -14862,13 +14907,126 @@ EOF
   set -e
 }
 
+# 🐳 / 🦭 container engine
+#
+# The playground always drives the container engine through the `docker` CLI, so
+# podman is supported the docker-compatible way: either DOCKER_HOST points at the
+# podman socket, or `docker` is the shim from the podman-docker package. Nothing
+# below changes what is executed, it only tells the user which engine they landed
+# on so the error messages and `playground doctor` can be specific.
+function get_container_engine()
+{
+  if [ ! -z "${PLAYGROUND_CONTAINER_ENGINE:-}" ]
+  then
+    echo "$PLAYGROUND_CONTAINER_ENGINE"
+    return 0
+  fi
+
+  # every test below is inside an if, so it is safe under set -e and this function
+  # must not touch the errexit state of its caller.
+  # the two local checks come first so that the usual podman setups never pay for
+  # a round trip to the engine
+  local engine="docker"
+  if [[ "${DOCKER_HOST:-}" == *podman* ]]
+  then
+    engine="podman"
+  # podman-docker installs a `docker` shim whose --version says "podman version x.y.z"
+  elif docker --version 2>/dev/null | grep -qi "podman"
+  then
+    engine="podman"
+  # docker CLI talking to a podman socket: the compat /version endpoint advertises
+  # a "Podman Engine" component
+  elif docker version --format '{{json .Server}}' 2>/dev/null | grep -qi "podman"
+  then
+    engine="podman"
+  elif docker info --format '{{json .}}' 2>/dev/null | grep -qi "podman"
+  then
+    engine="podman"
+  fi
+
+  export PLAYGROUND_CONTAINER_ENGINE="$engine"
+  echo "$engine"
+}
+
+function container_engine_is_podman()
+{
+  [ "$(get_container_engine)" = "podman" ]
+}
+
+# with podman, `docker build` and `docker compose build` go through buildx, which
+# runs BuildKit in its own container: it pulls FROM images from the registry instead
+# of using podman's local ones (so images patched by maybe_create_image are ignored),
+# and with that driver the result is never loaded back, it stays in the build cache.
+# The classic builder goes through podman's own /build endpoint and has neither issue.
+# Only the cheap DOCKER_HOST test here, this runs every time the file is sourced;
+# `playground doctor` covers the other ways of reaching podman.
+if [[ "${DOCKER_HOST:-}" == *podman* ]] || [ "${PLAYGROUND_CONTAINER_ENGINE:-}" = "podman" ]
+then
+  export DOCKER_BUILDKIT=0
+fi
+
+# 📂 host paths for bind mounts
+#
+# the docker CLI sends a bind mount source verbatim, and the engine resolves it on
+# its side. On macOS /tmp is a symlink to /private/tmp: Docker Desktop shares both,
+# but a podman machine cannot share /tmp (its VM needs its own), so `-v ${PLAYGROUND_HOST_TMP_DIR}:/tmp`
+# silently mounts the VM's tmpfs, which the container cannot even write to.
+# /private is shared by both, so always mount the resolved path. On Linux it is /tmp.
+# Exported so that docker compose files can use ${PLAYGROUND_HOST_TMP_DIR:-/tmp}.
+export PLAYGROUND_HOST_TMP_DIR="$(cd /tmp && pwd -P)"
+
+# same thing for a path coming from a flag or a variable, which may live under /tmp:
+# resolve its symlinks before using it as a bind mount source
+function host_path()
+{
+  local path="$1"
+  if [ -d "$path" ]
+  then
+    (cd "$path" && pwd -P)
+  elif [ -d "$(dirname "$path")" ]
+  then
+    echo "$(cd "$(dirname "$path")" && pwd -P)/$(basename "$path")"
+  else
+    echo "$path"
+  fi
+}
+
+# printed whenever the engine is unreachable, tailored to what is installed.
+# pass any argument to drop the "run playground doctor" hint (doctor itself uses it)
+function log_container_engine_not_running()
+{
+  logerror "Cannot connect to the container engine."
+  if [ ! -z "${DOCKER_HOST:-}" ]
+  then
+    logerror "DOCKER_HOST is set to ${DOCKER_HOST}, make sure that socket is up."
+  fi
+  if command -v podman >/dev/null 2>&1 || [ "$(get_container_engine)" = "podman" ]
+  then
+    logerror "the playground talks to podman through the docker-compatible socket:"
+    if [[ "$OSTYPE" == "darwin"* ]]
+    then
+      logerror "  podman machine start"
+      logerror "  export DOCKER_HOST=\"unix://\$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')\""
+    else
+      logerror "  systemctl --user enable --now podman.socket"
+      logerror "  export DOCKER_HOST=\"unix://\${XDG_RUNTIME_DIR}/podman/podman.sock\""
+    fi
+  else
+    logerror "Is the docker daemon running?"
+  fi
+  if [ -z "${1:-}" ]
+  then
+    logerror "👉 run 'playground doctor' for a full check of the container engine"
+  fi
+}
+
 function verify_docker_and_memory()
 {
   set +e
   docker info > /dev/null 2>&1
   if [[ $? -ne 0 ]]
   then
-    logerror "Cannot connect to the Docker daemon. Is the docker daemon running?"
+    log_container_engine_not_running
     exit 1
   fi
   set -e
@@ -15390,9 +15548,9 @@ EOF
       # log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
       if [ -f $aws_tmp_dir/config ]
       then
-        docker run --quiet --rm -iv $aws_tmp_dir/config:/root/.aws/config -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
+        docker run --quiet --rm -iv $aws_tmp_dir/config:/root/.aws/config -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" -v $(pwd):/aws -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp amazon/aws-cli "$@"
       else
-        docker run --quiet --rm -iv $HOME/.aws/config:/root/.aws/config -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
+        docker run --quiet --rm -iv $HOME/.aws/config:/root/.aws/config -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" -v $(pwd):/aws -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp amazon/aws-cli "$@"
       fi
     else
       if [ ! -f $HOME/.aws/credentials ]
@@ -15400,7 +15558,7 @@ EOF
         logerror "❌ $HOME/.aws/credentials does not exist"
       else
         # log "💭 AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
-        docker run --quiet --rm -iv $HOME/.aws:/root/.aws -v $(pwd):/aws -v /tmp:/tmp amazon/aws-cli "$@"
+        docker run --quiet --rm -iv $HOME/.aws:/root/.aws -v $(pwd):/aws -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp amazon/aws-cli "$@"
       fi
     fi
 }
@@ -15453,7 +15611,7 @@ function get_connect_image() {
 }
 
 function az() {
-  docker run --quiet --rm -v /tmp:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli:azurelinux3.0 az "$@"
+  docker run --quiet --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli:azurelinux3.0 az "$@"
 }
 
 function retry() {
@@ -18871,6 +19029,80 @@ function couchbase_capella_ensure_cluster_on () {
   log "✅ Capella cluster ${COUCHBASE_CAPELLA_CLUSTER_ID} is healthy"
 }
 
+# Databricks SQL warehouses auto stop after some inactivity (10 minutes minimum)
+# usage: databricks_ensure_sql_warehouse_running <server hostname> <token> <http path>
+function databricks_ensure_sql_warehouse_running () {
+  local host="${1#https://}"
+  host="${host%%/*}"
+  local token="$2"
+  local http_path="$3"
+
+  if [ -z "$host" ] || [ -z "$token" ] || [ -z "$http_path" ]
+  then
+    logwarn "🧱 Databricks hostname, token or http path is not set, not checking if SQL warehouse is running"
+    return 0
+  fi
+
+  if [[ "$http_path" != *"/warehouses/"* ]]
+  then
+    logwarn "🧱 Databricks http path $http_path is not a SQL warehouse, not checking if it is running"
+    return 0
+  fi
+
+  local warehouse_id="${http_path##*/}"
+  local url="https://${host}/api/2.0/sql/warehouses/${warehouse_id}"
+
+  local max_wait=900
+  local cur_wait=0
+  local start_requested=0
+  local state=""
+  while true
+  do
+    local response
+    response=$(curl -s -H "Authorization: Bearer ${token}" "$url")
+    state=$(echo "$response" | jq -r '.state // empty' 2>/dev/null)
+    if [ -z "$state" ]
+    then
+      logwarn "🧱 could not get Databricks SQL warehouse ${warehouse_id} state, not checking if it is running: $response"
+      return 0
+    fi
+    log "🧱 Databricks SQL warehouse ${warehouse_id} state is ${state}"
+
+    case "$state" in
+      RUNNING)
+        break
+        ;;
+      STOPPED)
+        if [ $start_requested -eq 0 ]
+        then
+          log "🔌 Starting Databricks SQL warehouse ${warehouse_id}"
+          local http_code
+          http_code=$(curl -s -o /tmp/databricks_warehouse_start.txt -w '%{http_code}' -X POST -H "Authorization: Bearer ${token}" "${url}/start")
+          if [ "$http_code" != "200" ]
+          then
+            logwarn "🧱 failed to start Databricks SQL warehouse ${warehouse_id} (http code $http_code), not waiting for it: $(cat /tmp/databricks_warehouse_start.txt)"
+            return 0
+          fi
+          start_requested=1
+        fi
+        ;;
+      DELETING|DELETED)
+        logerror "❌ Databricks SQL warehouse ${warehouse_id} is ${state}"
+        exit 1
+        ;;
+    esac
+
+    if [[ "$cur_wait" -ge "$max_wait" ]]
+    then
+      logerror "❌ Databricks SQL warehouse ${warehouse_id} is still ${state} after $max_wait seconds"
+      exit 1
+    fi
+    sleep 10
+    cur_wait=$(( cur_wait+10 ))
+  done
+  log "✅ Databricks SQL warehouse ${warehouse_id} is running"
+}
+
 function connect_cp_version_greater_than_8 () {
   if [ ! -z "$CP_CONNECT_TAG" ] && version_gt $CP_CONNECT_TAG "7.9.99"
   then
@@ -19165,6 +19397,13 @@ playground_help_command() {
 playground_status_command() {
 
   # src/commands/status.sh
+  if container_engine_is_podman
+  then
+      log "🦭 Container engine: podman"
+  else
+      log "🐳 Container engine: docker"
+  fi
+
   test_file=$(playground state get run.test_file)
 
   if [ ! -f $test_file ]
@@ -19218,6 +19457,241 @@ playground_status_command() {
   playground topic list
 
   check_for_ec2_instance_running
+}
+
+# :command.function
+playground_doctor_command() {
+
+  # src/commands/doctor.sh
+  nb_errors=0
+  nb_warnings=0
+
+  function doctor_ok() {
+      log "✅ $@"
+  }
+
+  function doctor_warn() {
+      nb_warnings=$((nb_warnings+1))
+      logwarn "$@"
+  }
+
+  function doctor_error() {
+      nb_errors=$((nb_errors+1))
+      logerror "$@"
+  }
+
+  log "🩺 Checking the container engine"
+
+  # the docker CLI itself
+  if ! command -v docker >/dev/null 2>&1
+  then
+      doctor_error "the 'docker' CLI is not in your PATH"
+      logerror "the playground always drives the engine through the 'docker' CLI, including with podman"
+      logerror "  with docker  : https://docs.docker.com/get-docker"
+      logerror "  with podman  : install the podman-docker package, which provides a 'docker' shim"
+      exit 1
+  fi
+  doctor_ok "'docker' CLI found: $(docker --version 2>/dev/null)"
+
+  # which engine is behind it, and is it reachable
+  engine=$(get_container_engine)
+  if [ "$engine" = "podman" ]
+  then
+      log "🦭 engine detected: podman"
+  else
+      log "🐳 engine detected: docker"
+  fi
+  playground state set run.container_engine "$engine" > /dev/null 2>&1 || true
+
+  if ! docker info > /dev/null 2>&1
+  then
+      doctor_error "the engine is not reachable"
+      log_container_engine_not_running "no-doctor-hint"
+      exit 1
+  fi
+  doctor_ok "engine is reachable"
+
+  if [ ! -z "${DOCKER_HOST:-}" ]
+  then
+      log "🔌 DOCKER_HOST is ${DOCKER_HOST}"
+  fi
+
+  # compose
+  compose_version=$(docker compose version --short 2>/dev/null)
+  if [ -z "$compose_version" ]
+  then
+      doctor_error "'docker compose' is not available, every environment of the playground is started with it"
+      logerror "install the compose v2 plugin: https://docs.docker.com/compose/install"
+  else
+      if version_gt "2.0.0" "$compose_version"
+      then
+          doctor_error "'docker compose' is ${compose_version}, the playground needs 2.0.0 or greater"
+      else
+          doctor_ok "'docker compose' is ${compose_version}"
+      fi
+  fi
+
+  if docker compose version 2>/dev/null | grep -qi "podman-compose"
+  then
+      doctor_warn "'docker compose' is backed by podman-compose"
+      logwarn "podman-compose is a separate reimplementation with partial support for profiles and build,"
+      logwarn "which the playground relies on heavily. Prefer the real compose v2 plugin pointed at the"
+      logwarn "podman socket with DOCKER_HOST."
+  fi
+
+  # memory
+  mem_total=$(docker info --format '{{.MemTotal}}' 2>/dev/null)
+  if [[ "$mem_total" =~ ^[0-9]+$ ]] && [ "$mem_total" -gt 0 ]
+  then
+      mem_gb=$((mem_total/1024/1024/1024))
+      if [ "$mem_gb" -lt 8 ]
+      then
+          doctor_warn "the engine only has ${mem_gb}GB of memory, the playground needs at least 8GB"
+          if [ "$engine" = "podman" ]
+          then
+              logwarn "recreate the machine with more memory, for example:"
+              logwarn "  podman machine stop && podman machine rm"
+              logwarn "  podman machine init --cpus 4 --memory 12288 --disk-size 100 && podman machine start"
+          else
+              logwarn "raise it in Docker Desktop > Settings > Resources"
+          fi
+      else
+          doctor_ok "engine memory is ${mem_gb}GB"
+      fi
+  fi
+
+  # podman specific checks
+  #
+  # these use the native podman CLI when it is available: the docker compat API
+  # does not expose the registry, rootless or machine information we need
+  if [ "$engine" = "podman" ]
+  then
+      # -- builder --------------------------------------------------------------
+      # utils_function.sh only sets it when DOCKER_HOST mentions podman
+      if [ "${DOCKER_BUILDKIT:-}" = "0" ]
+      then
+          doctor_ok "builds use the classic builder (DOCKER_BUILDKIT=0)"
+      else
+          doctor_error "builds would go through buildx, which ignores podman's local images and discards its result"
+          logerror "the connect image would never get its extra tools (openssl, ...) and every SSL environment fails."
+          logerror "the playground sets it automatically when DOCKER_HOST points at podman, otherwise:"
+          logerror "  export DOCKER_BUILDKIT=0"
+      fi
+
+      if ! command -v podman >/dev/null 2>&1
+      then
+          logwarn "the native 'podman' CLI is not in the PATH, skipping the podman specific checks"
+      else
+          # -- rootless or rootful ---------------------------------------------
+          rootless=$(podman info --format '{{.Host.Security.Rootless}}' 2>/dev/null)
+          if [ "$rootless" = "true" ]
+          then
+              doctor_warn "podman is running rootless"
+              logwarn "the playground writes generated certificates and secrets into bind mounts and reads"
+              logwarn "them back from the host. Rootless podman maps container UIDs to subuids, so those"
+              logwarn "files can end up unreadable from the host. If you hit permission errors, use rootful"
+              logwarn "podman, or add ':U' to the failing mount."
+              logwarn "the following are known not to work rootless: connect-jdbc-ibmdb2-*, connect-mapr-sink,"
+              logwarn "ccloud/haproxy (privileged: true) and environment/cfk (kind needs the engine socket)"
+          elif [ "$rootless" = "false" ]
+          then
+              doctor_ok "podman is running rootful"
+          fi
+
+          # -- unqualified image names -----------------------------------------
+          # every image: in the compose files is a short name (postgres:14,
+          # osixia/openldap:1.3.0, ...). The playground pulls through the docker
+          # compat API, which resolves short names to docker.io by itself
+          # (compat_api_enforce_docker_hub in containers.conf, true by default),
+          # so registries.conf only matters for native `podman pull`: warn, never fail
+          search_registries=$(podman info --format '{{range .Registries.search}}{{.}} {{end}}' 2>/dev/null)
+          if ! echo "$search_registries" | grep -q "docker.io"
+          then
+              doctor_warn "docker.io is not in podman unqualified-search-registries (${search_registries:-none})"
+              logwarn "the playground is not affected, the docker compat API resolves short names to docker.io,"
+              logwarn "unless compat_api_enforce_docker_hub = false is set in containers.conf."
+              logwarn "native 'podman pull postgres:14' will fail or prompt, to fix it add to registries.conf:"
+              logwarn "  unqualified-search-registries = [\"docker.io\"]"
+          else
+              doctor_ok "docker.io is in the podman search registries"
+          fi
+
+          # -- macOS machine ----------------------------------------------------
+          # the docker CLI sends bind mount sources verbatim, so the VM must expose
+          # host paths at the same path. podman refuses /tmp as a mount destination
+          # (the VM needs its own), but macOS /tmp is a symlink to /private/tmp and
+          # the default machine shares /Users, /private and /var/folders
+          if [[ "$OSTYPE" == "darwin"* ]]
+          then
+              # `podman machine inspect` does not list the mounts on every version,
+              # so ask the VM which host folders it really has (virtiofs)
+              machine_mounts=$(podman machine ssh -- findmnt -rn -t virtiofs -o TARGET 2>/dev/null | tr -d '\r')
+              # /private matters for /tmp: bind mounts use PLAYGROUND_HOST_TMP_DIR=/private/tmp
+              for shared in "$HOME" /private /var/folders
+              do
+                  # a mount covers $shared if it is $shared or one of its parents
+                  covered=0
+                  for target in $machine_mounts
+                  do
+                      case "$shared/" in
+                          "${target%/}/"*) covered=1 ;;
+                      esac
+                  done
+                  if [ "$covered" = "1" ]
+                  then
+                      doctor_ok "the podman machine shares ${shared}"
+                  else
+                      doctor_warn "the podman machine does not share ${shared}"
+                      logwarn "bind mounts under ${shared} will silently mount an empty directory of the VM instead."
+                      logwarn "recreate the machine without any -v flag, the defaults share /Users, /private and /var/folders"
+                  fi
+              done
+          fi
+      fi
+
+      # -- privileged ports ----------------------------------------------------
+      # the ldap-* and kerberos environments publish 220, 389, 636 and 749
+      if [[ "$OSTYPE" != "darwin"* ]] && [ "$rootless" = "true" ]
+      then
+          port_start=$(sysctl -n net.ipv4.ip_unprivileged_port_start 2>/dev/null)
+          if [[ "$port_start" =~ ^[0-9]+$ ]] && [ "$port_start" -gt 220 ]
+          then
+              doctor_warn "net.ipv4.ip_unprivileged_port_start is ${port_start}"
+              logwarn "the ldap-* and kerberos environments publish ports 220, 389, 636 and 749, which"
+              logwarn "rootless podman cannot bind. Lower it with:"
+              logwarn "  sudo sysctl net.ipv4.ip_unprivileged_port_start=0"
+          else
+              doctor_ok "privileged ports can be published"
+          fi
+      fi
+
+      # -- SELinux --------------------------------------------------------------
+      if command -v getenforce >/dev/null 2>&1 && [ "$(getenforce 2>/dev/null)" = "Enforcing" ]
+      then
+          doctor_warn "SELinux is Enforcing"
+          logwarn "the compose files of the playground do not label their bind mounts, which produces"
+          logwarn "avc denials. Either run with 'setenforce 0' while using the playground, or add"
+          logwarn "  --security-opt label=disable"
+          logwarn "to the engine defaults in ~/.config/containers/containers.conf"
+      fi
+  fi
+
+  # summary
+  echo ""
+  if [ "$nb_errors" -gt 0 ]
+  then
+      logerror "🩺 ${nb_errors} problem(s) and ${nb_warnings} warning(s) found"
+      exit 1
+  fi
+
+  if [ "$nb_warnings" -gt 0 ]
+  then
+      logwarn "🩺 no blocking problem, but ${nb_warnings} warning(s) found"
+      exit 0
+  fi
+
+  log "🩺 all good, the ${engine} engine is ready for the playground"
+
 }
 
 # :command.function
@@ -28772,7 +29246,7 @@ services:
     ports:
       - "9191:9191"
     volumes:
-      - /tmp/zazkia:/data
+      - ${PLAYGROUND_HOST_TMP_DIR:-/tmp}/zazkia:/data
     environment:
       DUMMY: $RANDOM
 EOF
@@ -29231,6 +29705,9 @@ playground_tools_read_avro_file_command() {
     file=$(echo "$file" | cut -d "@" -f 2)
   fi
 
+  # a file under /tmp is only reachable by the engine through its resolved path on macOS
+  file=$(host_path "$file")
+
   filename=$(basename $file)
 
   log "🔖 ${filename}.avro metadata"
@@ -29254,6 +29731,9 @@ playground_tools_read_parquet_file_command() {
   then
     file=$(echo "$file" | cut -d "@" -f 2)
   fi
+
+  # a file under /tmp is only reachable by the engine through its resolved path on macOS
+  file=$(host_path "$file")
 
   filename=$(basename $file)
 
@@ -29777,8 +30257,8 @@ playground_debug_heap_analyze_command() {
   fi
 
   # Get absolute paths
-  heap_file_abs=$(cd "$(dirname "$heap_file")" && pwd)/$(basename "$heap_file")
-  output_dir_abs=$(mkdir -p "$output_dir" && cd "$output_dir" && pwd)
+  heap_file_abs=$(cd "$(dirname "$heap_file")" && pwd -P)/$(basename "$heap_file")
+  output_dir_abs=$(mkdir -p "$output_dir" && cd "$output_dir" && pwd -P)
 
   log "📊 Analyzing heap dump..."
 
@@ -30635,7 +31115,7 @@ playground_debug_cfk_cfk_bundle_analyze_command() {
 
   analyzer_dir="$root_folder/cfk-analysis"
 
-  bundle_abs=$(cd "$(dirname "$bundle")" && pwd)/$(basename "$bundle")
+  bundle_abs=$(cd "$(dirname "$bundle")" && pwd -P)/$(basename "$bundle")
   bundle_container="/tmp/input/$(basename "$bundle")"
 
   # ── Build CLI args ─────────────────────────────────────────────────────────
@@ -30664,7 +31144,7 @@ playground_debug_cfk_cfk_bundle_analyze_command() {
   if [[ -n "$html" ]]; then
       : "${output_dir:=./cfk-reports}"
       mkdir -p "$output_dir"
-      output_dir_abs=$(cd "$output_dir" && pwd)
+      output_dir_abs=$(cd "$output_dir" && pwd -P)
 
       bundle_basename=$(basename "$bundle")
       # strip common archive suffixes for a clean filename
@@ -32809,7 +33289,7 @@ EOF
           then
               cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
     volumes:
-      - /tmp/:/tmp/
+      - ${PLAYGROUND_HOST_TMP_DIR:-/tmp}/:/tmp/
 EOF
           fi
       done
@@ -34057,7 +34537,7 @@ playground_topic_consume_command() {
   if [[ -n "$timestamp_field" ]]
   then
     log "Plot data using gnuplot, see ${latency_png}"
-    docker run --quiet --rm -i -v /tmp/latency:/work remuslazar/gnuplot -e \
+    docker run --quiet --rm -i -v ${PLAYGROUND_HOST_TMP_DIR}/latency:/work remuslazar/gnuplot -e \
     "
     set grid;
     set datafile separator ',';
@@ -34997,7 +35477,7 @@ playground_topic_produce_command() {
       then
           log "✨ also validating with https://raw.githubusercontent.com/conan-goldsmith/Python-Scripts/main/json_type_validator.py"
           curl -s -L https://raw.githubusercontent.com/conan-goldsmith/Python-Scripts/main/json_type_validator.py -o /tmp/json_type_validator.py
-          docker run -i --rm -v "/tmp/json_type_validator.py:/tmp/json_type_validator.py" -v "$value_schema_file:/tmp/schema" python:3.7-slim python /tmp/json_type_validator.py -f /tmp/schema
+          docker run -i --rm -v "${PLAYGROUND_HOST_TMP_DIR}/json_type_validator.py:/tmp/json_type_validator.py" -v "$value_schema_file:/tmp/schema" python:3.7-slim python /tmp/json_type_validator.py -f /tmp/schema
       fi
 
       set +e
@@ -35456,16 +35936,16 @@ playground_topic_produce_command() {
                               if [[ -n "$verbose" ]]
                               then
                                   log "🐞 CLI command used to produce data"
-                                  echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.schema.file=\"/tmp/key_schema_file\" $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                                  echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.schema.file=\"/tmp/key_schema_file\" $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
                               fi
-                              head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.schema.file="/tmp/key_schema_file" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                              head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.schema.file="/tmp/key_schema_file" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                           else
                               if [[ -n "$verbose" ]]
                               then
                                   log "🐞 CLI command used to produce data"
-                                  echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                                  echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
                               fi
-                              head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                              head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                           fi
                       else
                           if [ "$key_schema_type" = "avro" ] || [ "$key_schema_type" = "protobuf" ] || [ "$key_schema_type" = "json-schema" ]
@@ -35473,16 +35953,16 @@ playground_topic_produce_command() {
                               if [[ -n "$verbose" ]]
                               then
                                   log "🐞 CLI command used to produce data"
-                                  echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.schema.file=\"/tmp/key_schema_file\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                                  echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.schema.file=\"/tmp/key_schema_file\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
                               fi
-                              head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.schema.file="/tmp/key_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                              head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.schema.file="/tmp/key_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                           else
                               if [[ -n "$verbose" ]]
                               then
                                   log "🐞 CLI command used to produce data"
-                                  echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                                  echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
                               fi
-                              head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                              head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                           fi
                       fi
                   else
@@ -35491,16 +35971,16 @@ playground_topic_produce_command() {
                           if [[ -n "$verbose" ]]
                           then
                               log "🐞 CLI command used to produce data"
-                              echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                              echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
                           fi
-                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                       else
                           if [[ -n "$verbose" ]]
                           then
                               log "🐞 CLI command used to produce data"
-                              echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
+                              echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
                           fi
-                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v /tmp:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
+                          head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
                       fi
                   fi
               else
@@ -42475,6 +42955,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    doctor)
+      action="doctor"
+      shift
+      playground_doctor_parse_requirements "$@"
+      shift $#
+      ;;
+
     get-docker-ports)
       action="get-docker-ports"
       shift
@@ -43129,6 +43616,66 @@ playground_status_parse_requirements() {
 
   # :command.command_filter
   action="status"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_doctor_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_doctor_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="doctor"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -69187,6 +69734,11 @@ playground_completion() {
         playground_status_completion "$completion_current" "$@"
         return
         ;;
+      doctor)
+        shift
+        playground_doctor_completion "$completion_current" "$@"
+        return
+        ;;
       config)
         shift
         playground_config_completion "$completion_current" "$@"
@@ -69396,7 +69948,7 @@ playground_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" help status config secrets cloud-resources ccloud-costs ccloud-costs-history run re-run get-ci-result history find-example switch-ccloud switch-back update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cleanup-cloud-resources repro get-docker-compose schema tcp-proxy tools debug get-jmx-metrics container pod topic consumer-group connector-plugin connector ec2
+  completion_candidates "$completion_current" help status doctor config secrets cloud-resources ccloud-costs ccloud-costs-history run re-run get-ci-result history find-example switch-ccloud switch-back update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cleanup-cloud-resources repro get-docker-compose schema tcp-proxy tools debug get-jmx-metrics container pod topic consumer-group connector-plugin connector ec2
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -69438,6 +69990,29 @@ playground_help_completion() {
 
 # :command.completion_function
 playground_status_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_doctor_completion() {
   local completion_current="$1"
   shift
 
@@ -81409,6 +81984,7 @@ run() {
   case "$action" in
     "help") playground_help_command ;;
     "status") playground_status_command ;;
+    "doctor") playground_doctor_command ;;
     "get-docker-ports") playground_get_docker_ports_command ;;
     "get-container-list") playground_get_container_list_command ;;
     "get-connector-list") playground_get_connector_list_command ;;
