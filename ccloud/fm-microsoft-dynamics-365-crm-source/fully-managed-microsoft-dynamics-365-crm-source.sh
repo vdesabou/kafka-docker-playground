@@ -101,7 +101,8 @@ then
 else
     if [ -n "$GITHUB_RUN_NUMBER" ]
     then
-        logerror "❌ automatic provisioning of a Power Platform environment requires a user login, set DYNAMICS365_URL, DYNAMICS365_TENANT_ID, DYNAMICS365_CLIENT_ID and DYNAMICS365_CLIENT_SECRET"
+        logerror "❌ automatic provisioning of a Power Platform environment requires a user login, set GitHub variables DYNAMICS365_URL, DYNAMICS365_TENANT_ID, DYNAMICS365_CLIENT_ID and secret DYNAMICS365_CLIENT_SECRET"
+        logerror "❌ to get them, run the example locally once with DYNAMICS365_KEEP_RESOURCES=1"
         exit 1
     fi
     login_and_maybe_set_azure_subscription
