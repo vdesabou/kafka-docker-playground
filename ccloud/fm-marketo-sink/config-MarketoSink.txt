@@ -28,23 +28,14 @@ The name of the topic to be used as the dead letter queue (DLQ) for messages tha
 	 - Importance: LOW
 	 - Required: false
 
-🔘 reporter.result.topic.name
-
-The name of the topic to produce records to after successfully processing a sink record. Defaults to 'success-${connector}' if not set. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
-
-	 - Type: STRING
-	 - Default: success-${connector}
-	 - Importance: LOW
-	 - Required: false
-
 🔘 reporter.error.topic.name
 
-The name of the topic to produce records to after each unsuccessful record sink attempt. Defaults to 'error-${connector}' if not set. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
 
-	 - Type: STRING
-	 - Default: error-${connector}
-	 - Importance: LOW
-	 - Required: false
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the topic to produce records to after each unsuccessful record sink attempt. Disabled by default. Set a topic name to enable error reporting. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+	 - Required: LOW
 
 ==========================
 Schema Config
@@ -63,12 +54,12 @@ Input messages
 ==========================
 🔘 input.data.format
 
+Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF or JSON. BYTES is not supported since this connector cannot extract fields from a raw byte value. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
 
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Sets the input Kafka record value format. Valid entries are AVRO, JSON_SR and PROTOBUF. Note that you need to have Confluent Cloud Schema Registry configured
-	 - Required: HIGH
+	 - Type: STRING
+	 - Default: JSON
+	 - Importance: HIGH
+	 - Required: false
 
 ==========================
 How should we connect to your data?
@@ -131,105 +122,42 @@ Kafka Authentication mode. It can be one of KAFKA_API_KEY or SERVICE_ACCOUNT. It
 	 - Required: HIGH
 
 ==========================
-How should we connect to Salesforce?
+How should we connect to Marketo?
 ==========================
-🔘 salesforce.grant.type
-
-Grant type the connector uses for Salesforce authentication: PASSWORD, CLIENT_CREDENTIALS, JWT_BEARER, or OAUTH2_AUTH_CODE_BYOA (OAuth 2.0 Authorization Code with your own connected app). Note: Salesforce is retiring the username-password OAuth flow in Spring '27; please consider migrating to other supported authentication methods.
-
-	 - Type: STRING
-	 - Default: PASSWORD
-	 - Importance: HIGH
-	 - Required: false
-
-🔘 salesforce.instance
-
-Salesforce endpoint URL the connector uses for API requests. For CLIENT_CREDENTIALS and the OAuth 2.0 Authorization Code grant, set this to your org's My Domain URL (for example https://MyDomainName.my.salesforce.com). Defaults to https://login.salesforce.com.
-
-	 - Type: STRING
-	 - Default: https://login.salesforce.com
-	 - Importance: HIGH
-	 - Required: false
-
-🔘 salesforce.username
+🔘 marketo.munchkin.id
 
 
 
-	 - Type: false
+	 - Type: true
 	 - Default: STRING
-	 - Importance: Salesforce username for connector authentication
+	 - Importance: The Marketo Munchkin ID, used to construct the Marketo REST API base URL (``https://<munchkin-id>.mktorest.com``), for example, ``123-ABC-456``.
 	 - Required: HIGH
 
-🔘 salesforce.password
+🔘 marketo.client.id
 
 
 
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Salesforce account password for connector authentication
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The OAuth2 client ID for Marketo API authentication.
 	 - Required: HIGH
 
-🔘 salesforce.password.token
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Security token associated with the Salesforce username
-	 - Required: HIGH
-
-🔘 salesforce.consumer.key
+🔘 marketo.client.secret
 
 
 
 	 - Type: true
 	 - Default: PASSWORD
-	 - Importance: Client ID (consumer key) for the Salesforce connected app
+	 - Importance: The OAuth2 client secret for Marketo API authentication.
 	 - Required: HIGH
 
-🔘 salesforce.consumer.secret
+🔘 marketo.operation
 
 
 
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Client secret (consumer secret) for the Salesforce connected app
-	 - Required: MEDIUM
-
-🔘 salesforce.jwt.keystore.file
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Keystore file that stores the private key for JWT authentication
-	 - Required: MEDIUM
-
-🔘 salesforce.jwt.keystore.password
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Password that unlocks the JWT keystore file
-	 - Required: MEDIUM
-
-🔘 salesforce.platform.event.num
-
-The number of Salesforce platform events to write to. Must be between 1 and 5.
-
-	 - Type: INT
-	 - Default: 1
-	 - Importance: HIGH
-	 - Required: false
-
-🔘 oauth.refresh.token
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: OAuth 2.0 refresh token. Populated by Confluent Cloud after authorization.
+	 - Type: true
+	 - Default: LIST
+	 - Importance: Comma-separated list of Marketo operations this task supports. Each record must carry an ``operation`` field naming one of the configured operations, and the connector routes it accordingly.
 	 - Required: HIGH
 
 ==========================
@@ -263,137 +191,23 @@ Configures the behavior for decryption failures. If set to ERROR, the connector 
 	 - Required: false
 
 ==========================
-Platform Event 1 configuration
+How should we handle errors?
 ==========================
-🔘 salesforce.platform.event1.name
+🔘 marketo.retry.max.attempts
 
+Maximum number of retry attempts for transient errors (rate limits, server errors, token expiry). Default: ``5``. The minimum value is ``1`` and the maximum is ``20``.
 
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Salesforce platform event 1 to publish to. The Event name should end with __e suffix. For example: LoginEvent__e.
-	 - Required: HIGH
-
-🔘 salesforce.platform.event1.topics
-
-
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics to be used for platform event 1.
-	 - Required: HIGH
-
-==========================
-Platform Event 2 configuration
-==========================
-🔘 salesforce.platform.event2.name
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Salesforce platform event 2 to publish to. The Event name should end with __e suffix. For example: LoginEvent__e.
-	 - Required: HIGH
-
-🔘 salesforce.platform.event2.topics
-
-
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics to be used for platform event 2.
-	 - Required: HIGH
-
-==========================
-Platform Event 3 configuration
-==========================
-🔘 salesforce.platform.event3.name
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Salesforce platform event 3 to publish to. The Event name should end with __e suffix. For example: LoginEvent__e.
-	 - Required: HIGH
-
-🔘 salesforce.platform.event3.topics
-
-
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics to be used for platform event 3.
-	 - Required: HIGH
-
-==========================
-Platform Event 4 configuration
-==========================
-🔘 salesforce.platform.event4.name
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Salesforce platform event 4 to publish to. The Event name should end with __e suffix. For example: LoginEvent__e.
-	 - Required: HIGH
-
-🔘 salesforce.platform.event4.topics
-
-
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics to be used for platform event 4.
-	 - Required: HIGH
-
-==========================
-Platform Event 5 configuration
-==========================
-🔘 salesforce.platform.event5.name
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: The name of the Salesforce platform event 5 to publish to. The Event name should end with __e suffix. For example: LoginEvent__e.
-	 - Required: HIGH
-
-🔘 salesforce.platform.event5.topics
-
-
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: List of topics to be used for platform event 5.
-	 - Required: HIGH
-
-==========================
-Connection details
-==========================
-🔘 connection.timeout
-
-The amount of time to wait in milliseconds while connecting to the Salesforce streaming endpoint.
-
-	 - Type: LONG
-	 - Default: 30000
+	 - Type: INT
+	 - Default: 5
 	 - Importance: LOW
 	 - Required: false
 
-🔘 request.max.retries.time.ms
+🔘 marketo.retry.backoff.ms
 
-Maximum time in milliseconds until the connector stops retrying failed Salesforce requests. Default is 30000 and minimum is 1000.
+Initial backoff duration in milliseconds for exponential retry. Subsequent retries double this value with jitter. Default: ``30000``. The minimum value is ``1000``.
 
 	 - Type: LONG
 	 - Default: 30000
-	 - Importance: LOW
-	 - Required: false
-
-🔘 behavior.on.api.errors
-
-Error handling behavior config for any Salesforce API errors.
-
-	 - Type: STRING
-	 - Default: ignore
 	 - Importance: LOW
 	 - Required: false
 
@@ -433,6 +247,15 @@ Number of tasks for this connector
 ==========================
 Additional Configs
 ==========================
+🔘 value.converter.replace.null.with.default
+
+Whether to replace fields that have a default value and that are null to the default value. When set to true, the default value is used, otherwise null is used. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
 🔘 value.converter.value.schema.id.deserializer
 
 The class name of the schema ID deserializer for values. This is used to deserialize schema IDs from the message headers.
@@ -495,6 +318,15 @@ Set the subject reference name strategy for value. Valid entries are DefaultRefe
 	 - Default: INT
 	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message values. Only applicable when value.converter.value.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 	 - Required: LOW
+
+🔘 value.converter.schemas.enable
+
+Include schemas within each of the serialized values. Input messages must contain `schema` and `payload` fields and may not contain additional fields. For plain JSON data, set this to `false`. Applicable for JSON Converter.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
 
 🔘 value.converter.generate.struct.for.nulls
 
@@ -738,6 +570,24 @@ Whether to flatten singleton unions. Applicable for Avro and JSON_SR Converters.
 	 - Default: INT
 	 - Importance: The schema ID to use for deserialization when using ConfigSchemaIdDeserializer. This allows you to specify a fixed schema ID to be used for deserializing message keys. Only applicable when key.converter.key.schema.id.deserializer is set to ConfigSchemaIdDeserializer.
 	 - Required: LOW
+
+🔘 marketo.flush.interval.ms
+
+Interval in milliseconds at which buffered records are flushed to Marketo. Default: ``60000``. The minimum value is ``1000``.
+
+	 - Type: LONG
+	 - Default: 60000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 marketo.batch.size
+
+Maximum number of records sent to the Marketo API in a single call. Default: ``300``. The minimum value is ``1`` and the maximum is ``300``.
+
+	 - Type: INT
+	 - Default: 300
+	 - Importance: MEDIUM
+	 - Required: false
 
 ==========================
 Auto-restart policy
