@@ -15014,8 +15014,8 @@ function log_container_engine_not_running()
       logerror "  podman machine start"
       logerror "  export DOCKER_HOST=\"unix://\$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')\""
     else
-      logerror "  systemctl --user enable --now podman.socket"
-      logerror "  export DOCKER_HOST=\"unix://\${XDG_RUNTIME_DIR}/podman/podman.sock\""
+      logerror "  sudo systemctl enable --now podman.socket   (rootful, see https://kafka-docker-playground.io/#/podman)"
+      logerror "  export DOCKER_HOST=\"unix:///run/podman-api/podman.sock\""
     fi
   else
     logerror "Is the docker daemon running?"
@@ -19509,9 +19509,11 @@ playground_doctor_command() {
   fi
   playground state set run.container_engine "$engine" > /dev/null 2>&1 || true
 
-  if ! docker info > /dev/null 2>&1
+  if ! docker_info_error=$(docker info 2>&1 > /dev/null)
   then
       doctor_error "the engine is not reachable"
+      # "permission denied" and "no such file" call for different fixes, show which one
+      echo "$docker_info_error" | grep -v '^\s*$' | tail -3
       log_container_engine_not_running "no-doctor-hint"
       exit 1
   fi

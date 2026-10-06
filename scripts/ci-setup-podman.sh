@@ -12,12 +12,17 @@
 # write into bind mounts (certificates, keystores, ...) to subuids the runner cannot read.
 set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-# sourcing utils.sh already calls playground, which must be on the PATH
-# (the Build and Test step does the same)
+# doctor calls playground recursively, which must be on the PATH (the Build and Test
+# step does the same)
 export PATH="$PATH:${DIR}/cli"
-source ${DIR}/utils.sh
+# only the function library, for log: sourcing scripts/utils.sh also picks the CP
+# version and rebuilds the connect image, on the docker engine that is about to stop
+source ${DIR}/cli/src/lib/utils_function.sh
 
-podman_socket="/run/podman/podman.sock"
+# not the default /run/podman/podman.sock: podman's tmpfiles.d creates /run/podman
+# as 0700 root, so the runner could never reach a socket in there, whatever its mode.
+# systemd creates this directory itself, with DirectoryMode below
+podman_socket="/run/podman-api/podman.sock"
 
 log "🦭 Installing podman, netavark and aardvark-dns"
 # netavark + aardvark-dns: compose services resolve each other by name (broker,
@@ -44,19 +49,36 @@ sudo systemctl stop docker.socket docker.service containerd.service || true
 
 log "🔌 Starting the rootful podman socket, readable by $(id -un)"
 sudo mkdir -p /etc/systemd/system/podman.socket.d
+# the empty ListenStream= drops the default one before adding ours
 sudo tee /etc/systemd/system/podman.socket.d/99-playground.conf > /dev/null << EOF
 [Socket]
+ListenStream=
+ListenStream=${podman_socket}
 SocketMode=0660
+SocketUser=$(id -un)
 SocketGroup=$(id -gn)
+DirectoryMode=0755
 EOF
 sudo systemctl daemon-reload
-sudo systemctl enable --now podman.socket
+# a service already activated by the previous socket keeps its old file descriptor
+sudo systemctl stop podman.service || true
+sudo systemctl enable podman.socket
 sudo systemctl restart podman.socket
 
 export DOCKER_HOST="unix://${podman_socket}"
 if [ -n "$GITHUB_ENV" ]
 then
     echo "DOCKER_HOST=${DOCKER_HOST}" >> "$GITHUB_ENV"
+fi
+
+if ! docker version > /dev/null 2>&1
+then
+    logerror "❌ the docker CLI cannot reach podman on ${DOCKER_HOST}"
+    docker version 2>&1 | tail -5 || true
+    ls -ld "$(dirname "${podman_socket}")" "${podman_socket}" || true
+    sudo systemctl --no-pager status podman.socket podman.service || true
+    sudo journalctl --no-pager -u podman.socket -u podman.service | tail -30 || true
+    exit 1
 fi
 
 # fail the job here rather than in the middle of the first example

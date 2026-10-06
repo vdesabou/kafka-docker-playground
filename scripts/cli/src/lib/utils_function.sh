@@ -449,8 +449,8 @@ function log_container_engine_not_running()
       logerror "  podman machine start"
       logerror "  export DOCKER_HOST=\"unix://\$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')\""
     else
-      logerror "  systemctl --user enable --now podman.socket"
-      logerror "  export DOCKER_HOST=\"unix://\${XDG_RUNTIME_DIR}/podman/podman.sock\""
+      logerror "  sudo systemctl enable --now podman.socket   (rootful, see https://kafka-docker-playground.io/#/podman)"
+      logerror "  export DOCKER_HOST=\"unix:///run/podman-api/podman.sock\""
     fi
   else
     logerror "Is the docker daemon running?"

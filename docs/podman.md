@@ -59,15 +59,26 @@ sudo apt-get install -y podman netavark aardvark-dns    # or: sudo dnf install -
 
 # rootful socket, made accessible to your user's group
 sudo mkdir -p /etc/systemd/system/podman.socket.d
-printf '[Socket]\nSocketMode=0660\nSocketGroup=%s\n' "$(id -gn)" | sudo tee /etc/systemd/system/podman.socket.d/99-playground.conf
+sudo tee /etc/systemd/system/podman.socket.d/99-playground.conf << EOF
+[Socket]
+ListenStream=
+ListenStream=/run/podman-api/podman.sock
+SocketMode=0660
+SocketGroup=$(id -gn)
+DirectoryMode=0755
+EOF
 sudo systemctl daemon-reload
+sudo systemctl stop podman.service
 sudo systemctl enable --now podman.socket
+sudo systemctl restart podman.socket
 
-export DOCKER_HOST="unix:///run/podman/podman.sock"
+export DOCKER_HOST="unix:///run/podman-api/podman.sock"
 
 playground doctor
 ```
 
+- The socket is moved out of `/run/podman`, which Podman creates as `0700 root`: a socket in there
+  stays unreachable for a regular user whatever its own permissions.
 - Use the **real compose v2 plugin**, not `podman-compose`. `podman-compose` is a separate
   reimplementation with only partial support for `profiles:` and `build:`, which the playground relies
   on heavily.

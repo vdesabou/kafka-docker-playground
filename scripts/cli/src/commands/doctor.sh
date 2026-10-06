@@ -42,9 +42,11 @@ else
 fi
 playground state set run.container_engine "$engine" > /dev/null 2>&1 || true
 
-if ! docker info > /dev/null 2>&1
+if ! docker_info_error=$(docker info 2>&1 > /dev/null)
 then
     doctor_error "the engine is not reachable"
+    # "permission denied" and "no such file" call for different fixes, show which one
+    echo "$docker_info_error" | grep -v '^\s*$' | tail -3
     log_container_engine_not_running "no-doctor-hint"
     exit 1
 fi
