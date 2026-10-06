@@ -68,6 +68,33 @@ playground state set run.environment "cfk"
 
 # Map CFK version to helm chart version
 # Reference: https://docs.confluent.io/operator/current/co-plan.html#co-long-image-tags
+# envsubst does not understand docker compose default values (${VAR:-default}, ${VAR-default})
+# and leaves them untouched (e.g. image elasticsearch:${ELASTIC_VERSION:-9.3.0} -> InvalidImageName),
+# so resolve those first, then let envsubst handle plain $VAR / ${VAR}
+function compose_envsubst() {
+  local value
+  value="$(cat)"
+  local re='\$\{([A-Za-z_][A-Za-z0-9_]*)(:?)-([^}]*)\}'
+  local match name colon default replacement
+
+  while [[ "$value" =~ $re ]]
+  do
+    match="${BASH_REMATCH[0]}"
+    name="${BASH_REMATCH[1]}"
+    colon="${BASH_REMATCH[2]}"
+    default="${BASH_REMATCH[3]}"
+    if { [[ -n "$colon" ]] && [[ -z "${!name}" ]]; } || { [[ -z "$colon" ]] && [[ -z "${!name+x}" ]]; }
+    then
+      replacement="$default"
+    else
+      replacement="${!name}"
+    fi
+    value="${value%%"$match"*}${replacement}${value#*"$match"}"
+  done
+
+  printf '%s\n' "$value" | envsubst
+}
+
 function get_cfk_helm_chart_version() {
   local cfk_version="$1"
   
@@ -668,8 +695,8 @@ function generate_connect_mounted_volumes_from_compose() {
 
     source_path="${parsed_volume%%|*}"
     target_path="${parsed_volume#*|}"
-    source_path=$(echo "$source_path" | envsubst)
-    target_path=$(echo "$target_path" | envsubst)
+    source_path=$(echo "$source_path" | compose_envsubst)
+    target_path=$(echo "$target_path" | compose_envsubst)
 
     if [[ "$source_path" = /* ]]
     then
@@ -773,7 +800,7 @@ EOF
 
       source_path="${parsed_volume%%|*}"
       target_path="${parsed_volume#*|}"
-      source_path=$(echo "$source_path" | envsubst)
+      source_path=$(echo "$source_path" | compose_envsubst)
 
       if [[ "$source_path" = /* ]]
       then
@@ -937,7 +964,7 @@ function generate_connect_env_patch_from_compose() {
       env_value="${!env_key}"
     fi
 
-    env_value=$(echo "$env_value" | envsubst)
+    env_value=$(echo "$env_value" | compose_envsubst)
 
     if [[ "$env_key" == "CONNECT_PLUGIN_PATH" ]]
     then
@@ -1505,7 +1532,7 @@ function generate_extra_pods_from_compose_override() {
 
     if [[ -n "$image" ]]
     then
-      image=$(echo "$image" | envsubst)
+      image=$(echo "$image" | compose_envsubst)
       if [[ -n "$platform" ]]
       then
         platform_arch="$(normalize_arch_name "${platform##*/}")"
@@ -1560,7 +1587,7 @@ function generate_extra_pods_from_compose_override() {
       fi
     elif [[ -n "$build_context" ]]
     then
-      build_context=$(echo "$build_context" | envsubst)
+      build_context=$(echo "$build_context" | compose_envsubst)
       if [[ "$build_context" = /* ]]
       then
         build_context_abs="$build_context"
@@ -1601,8 +1628,8 @@ function generate_extra_pods_from_compose_override() {
 
         source_path="${parsed_volume%%|*}"
         target_path="${parsed_volume#*|}"
-        source_path=$(echo "$source_path" | envsubst)
-        target_path=$(echo "$target_path" | envsubst)
+        source_path=$(echo "$source_path" | compose_envsubst)
+        target_path=$(echo "$target_path" | compose_envsubst)
 
         if [[ "$source_path" = /* ]]
         then
@@ -1667,7 +1694,7 @@ function generate_extra_pods_from_compose_override() {
         fi
 
         tmpfs_path="${tmpfs_item%%:*}"
-        tmpfs_path=$(echo "$tmpfs_path" | envsubst)
+        tmpfs_path=$(echo "$tmpfs_path" | compose_envsubst)
         tmpfs_path=$(echo "$tmpfs_path" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
         if [[ -z "$tmpfs_path" ]]
         then
