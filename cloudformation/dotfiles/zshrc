@@ -112,7 +112,7 @@ zstyle :bracketed-paste-magic paste-init pasteinit
 zstyle :bracketed-paste-magic paste-finish pastefinish
 
 # Load bash completion functions
-source ~/kafka-docker-playground/scripts/cli/completions.bash
+source ~/kafka-docker-playground/scripts/cli/completions.zsh
 
 eval "$(starship init zsh)"
 
