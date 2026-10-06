@@ -611,6 +611,31 @@ function salesforce_use_test_creds() {
   fi
 }
 
+# Wait until a streaming source task (PushTopic, CDC, Platform Events) has subscribed to its
+# channel, before the test creates the record or event it expects to receive.
+#
+# These connectors use salesforce.initial.start=latest (replayId=-1), so an event published
+# before the subscription is active is never delivered. A fixed `sleep 5` after creating the
+# connector was enough on plaintext, where create-or-update returns once the task is RUNNING,
+# but not on cfk: the Connector CR reports ready before the task has even started. In CI the
+# task subscribed 10 seconds after "CFK connector ... is ready", after the Lead was created,
+# and the test then waited for a topic that never got a record (#8838, #8866, #8867).
+#
+#   salesforce_wait_for_subscription "$PUSH_TOPICS_NAME"
+#   salesforce_wait_for_subscription ContactChangeEvent
+#
+# A timeout only warns: the consume step that follows is the real assertion.
+function salesforce_wait_for_subscription() {
+  local channel="$1"
+
+  if ! playground container logs --container connect --wait-for-log "Subscribing to .*${channel}" --max-wait 120
+  then
+    logwarn "⚠️ did not see the subscription to $channel in connect logs, the event may be missed"
+  fi
+  # The log line is written when the subscribe request is sent, give Salesforce time to ack it.
+  sleep 5
+}
+
 function salesforce_cleanup_records() {
   local u="$1" k="$2" i="$3"
   shift 3

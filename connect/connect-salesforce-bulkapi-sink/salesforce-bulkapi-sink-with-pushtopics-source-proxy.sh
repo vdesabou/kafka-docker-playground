@@ -144,7 +144,7 @@ salesforce_create_connector_with_retry salesforce-pushtopic-source << EOF
 }
 EOF
 
-sleep 5
+salesforce_wait_for_subscription "$PUSH_TOPICS_NAME"
 
 LEAD_FIRSTNAME=John_$RANDOM
 LEAD_LASTNAME=Doe_$RANDOM

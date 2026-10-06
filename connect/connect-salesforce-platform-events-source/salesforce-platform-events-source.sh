@@ -76,7 +76,7 @@ salesforce_create_connector_with_retry salesforce-platform-events-source << EOF
 }
 EOF
 
-sleep 5
+salesforce_wait_for_subscription MyPlatformEvent__e
 
 log "Login with sfdx CLI"
 salesforce_sfdx_login "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE"

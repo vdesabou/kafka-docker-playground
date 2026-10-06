@@ -175,7 +175,7 @@ EOF
 # 	salesforce.username = vsaboulin@confluent.io.sumup
 # 	salesforce.version = latest
 
-sleep 5
+salesforce_wait_for_subscription "$PUSH_TOPICS_NAME"
 
 
 LEAD_FIRSTNAME=John_$RANDOM
