@@ -144,7 +144,7 @@ Resources:
 
                       mkdir -p ~/.config/
                       
-                      wget -q https://github.com/vdesabou/kafka-docker-playground/raw/master/cloudformation/dotfiles/starship.toml -o ~/.config/starship.toml
+                      wget -q https://github.com/vdesabou/kafka-docker-playground/raw/master/cloudformation/dotfiles/starship.toml -O ~/.config/starship.toml
                       
                       wget -q https://github.com/vdesabou/kafka-docker-playground/raw/master/cloudformation/dotfiles/zshrc ~/zshrc
 
@@ -161,7 +161,9 @@ Resources:
                       curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
                       curl -fsSL -o kubectl "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+
                       chmod +x kubectl
+
                       sudo mv kubectl /usr/local/bin/kubectl
 
                       curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4 | bash
@@ -184,7 +186,7 @@ Resources:
               zsh: []
               jq: []
               expect: []
-              awscli: []
+              unzip: []
               fzf: []
               bat: []
               default-jre: []
@@ -208,6 +210,13 @@ Resources:
                 containerd.io
                 sudo curl -SL https://github.com/docker/compose/releases/download/v2.13.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
                 sudo chmod a+x /usr/local/bin/docker-compose
+            03b_install_aws_cli:
+              # no awscli apt package since Ubuntu 24.04: official AWS CLI v2 installer
+              command: |
+                curl -fsSL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o /tmp/awscliv2.zip \
+                && unzip -q -o /tmp/awscliv2.zip -d /tmp \
+                && sudo /tmp/aws/install --update \
+                && rm -rf /tmp/aws /tmp/awscliv2.zip
             04_enable_and_start_docker:
               command: |
                 sudo systemctl enable docker && sudo systemctl start docker
