@@ -23,7 +23,7 @@ docker compose build
 docker compose down -v --remove-orphans
 docker compose up -d --quiet-pull
 
-playground container logs --container ibmdb2 --wait-for-log "Setup has completed" --max-wait 600
+playground container logs --container ibmdb2 --wait-for-log "Setup has completed" --max-wait 900
 log "ibmdb2 DB has started!"
 
 log "Waiting for ngrok to start"

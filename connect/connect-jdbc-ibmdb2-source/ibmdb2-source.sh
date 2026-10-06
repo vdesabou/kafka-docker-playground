@@ -57,7 +57,7 @@ cp db2jcc4.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/db2jcc4.j
 cd -
 
 
-playground container logs --container ibmdb2 --wait-for-log "Setup has completed" --max-wait 600
+playground container logs --container ibmdb2 --wait-for-log "Setup has completed" --max-wait 900
 log "ibmdb2 DB has started!"
 ibmdb2-wait-sample-db-ready
 

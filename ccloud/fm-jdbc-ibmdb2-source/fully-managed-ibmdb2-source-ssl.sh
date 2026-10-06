@@ -23,7 +23,7 @@ docker compose -f docker-compose.ssl.yml build
 docker compose -f docker-compose.ssl.yml down -v --remove-orphans
 docker compose -f docker-compose.ssl.yml up -d --quiet-pull
 
-playground container logs --container ibmdb2 --wait-for-log "Setup has completed" --max-wait 600
+playground container logs --container ibmdb2 --wait-for-log "Setup has completed" --max-wait 900
 log "ibmdb2 DB has started!"
 
 log "Enable SSL on DB2"
