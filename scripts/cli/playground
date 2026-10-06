@@ -18810,6 +18810,67 @@ function wait_for_end_of_hibernation () {
      set -e
 }
 
+# free tier Capella clusters are turned off after 72 hours of inactivity
+# set COUCHBASE_CAPELLA_FREE_TIER=false for a paid cluster
+function couchbase_capella_ensure_cluster_on () {
+  if [ -z "$COUCHBASE_CAPELLA_API_KEY" ] || [ -z "$COUCHBASE_CAPELLA_ORG_ID" ] || [ -z "$COUCHBASE_CAPELLA_PROJECT_ID" ] || [ -z "$COUCHBASE_CAPELLA_CLUSTER_ID" ]
+  then
+    logwarn "🛋️ COUCHBASE_CAPELLA_API_KEY, COUCHBASE_CAPELLA_ORG_ID, COUCHBASE_CAPELLA_PROJECT_ID or COUCHBASE_CAPELLA_CLUSTER_ID is not set, not checking if Capella cluster is turned on"
+    return 0
+  fi
+
+  local cluster_path="clusters/${COUCHBASE_CAPELLA_CLUSTER_ID}"
+  if [ "${COUCHBASE_CAPELLA_FREE_TIER:-true}" == "true" ]
+  then
+    cluster_path="clusters/freeTier/${COUCHBASE_CAPELLA_CLUSTER_ID}"
+  fi
+  local url="https://cloudapi.cloud.couchbase.com/v4/organizations/${COUCHBASE_CAPELLA_ORG_ID}/projects/${COUCHBASE_CAPELLA_PROJECT_ID}/${cluster_path}"
+
+  local response
+  response=$(curl -s -H "Authorization: Bearer ${COUCHBASE_CAPELLA_API_KEY}" "$url")
+  local state
+  state=$(echo "$response" | jq -r '.currentState // empty' 2>/dev/null)
+  if [ -z "$state" ]
+  then
+    logerror "❌ could not get Capella cluster ${COUCHBASE_CAPELLA_CLUSTER_ID} state: $response"
+    exit 1
+  fi
+  log "🛋️ Capella cluster ${COUCHBASE_CAPELLA_CLUSTER_ID} state is ${state}"
+  if [ "$state" == "healthy" ]
+  then
+    return 0
+  fi
+
+  if [ "$state" == "turnedOff" ]
+  then
+    log "🔌 Turning on Capella cluster ${COUCHBASE_CAPELLA_CLUSTER_ID}"
+    local http_code
+    http_code=$(curl -s -o /tmp/capella_turn_on.txt -w '%{http_code}' -X POST -H "Authorization: Bearer ${COUCHBASE_CAPELLA_API_KEY}" -H "Content-Type: application/json" "${url}/activationState")
+    if [ "$http_code" != "202" ]
+    then
+      logerror "❌ failed to turn on Capella cluster ${COUCHBASE_CAPELLA_CLUSTER_ID} (http code $http_code): $(cat /tmp/capella_turn_on.txt)"
+      exit 1
+    fi
+  fi
+
+  local max_wait=900
+  local cur_wait=0
+  log "⌛ Waiting up to $max_wait seconds for Capella cluster ${COUCHBASE_CAPELLA_CLUSTER_ID} to be healthy"
+  while [ "$state" != "healthy" ]
+  do
+    sleep 30
+    cur_wait=$(( cur_wait+30 ))
+    if [[ "$cur_wait" -gt "$max_wait" ]]
+    then
+      logerror "❌ Capella cluster ${COUCHBASE_CAPELLA_CLUSTER_ID} is still ${state} after $max_wait seconds"
+      exit 1
+    fi
+    state=$(curl -s -H "Authorization: Bearer ${COUCHBASE_CAPELLA_API_KEY}" "$url" | jq -r '.currentState // empty' 2>/dev/null)
+    log "⏳ Capella cluster ${COUCHBASE_CAPELLA_CLUSTER_ID} state is ${state}"
+  done
+  log "✅ Capella cluster ${COUCHBASE_CAPELLA_CLUSTER_ID} is healthy"
+}
+
 function connect_cp_version_greater_than_8 () {
   if [ ! -z "$CP_CONNECT_TAG" ] && version_gt $CP_CONNECT_TAG "7.9.99"
   then
@@ -24942,6 +25003,11 @@ playground_start_environment_command() {
     test_file="$root_folder/environment/$environment/start.sh"
   fi
   test_file_directory="$(dirname "${test_file}")"
+
+  # a new environment invalidates any previous switch-ccloud, otherwise create-or-update
+  # and get-connector-list keep resolving the stale environment
+  playground state del run.environment_before_switch
+  playground state del run.connector_type_before_switch
 
   if [[ ! -n "$no_stop" ]]
   then

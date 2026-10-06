@@ -13,6 +13,11 @@ else
 fi
 test_file_directory="$(dirname "${test_file}")"
 
+# a new environment invalidates any previous switch-ccloud, otherwise create-or-update
+# and get-connector-list keep resolving the stale environment
+playground state del run.environment_before_switch
+playground state del run.connector_type_before_switch
+
 if [[ ! -n "$no_stop" ]]
 then
     set +e
