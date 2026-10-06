@@ -68,18 +68,6 @@ This config key only applies to data preview requests and governs whether the da
 	 - Required: false
 
 ==========================
-Which topic do you want to send data to?
-==========================
-🔘 kafka.topic
-
-
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: Identifies the topic name to write the data to.
-	 - Required: HIGH
-
-==========================
 Schema Config
 ==========================
 🔘 schema.context.name
@@ -92,206 +80,11 @@ Add a schema context name. A schema context represents an independent scope in S
 	 - Required: false
 
 ==========================
-How should we connect to Salesforce?
-==========================
-🔘 salesforce.grant.type
-
-Grant type the connector uses for Salesforce authentication: PASSWORD, CLIENT_CREDENTIALS, JWT_BEARER, or OAUTH2_AUTH_CODE_BYOA (OAuth 2.0 Authorization Code with your own connected app). Note: Salesforce is retiring the username-password OAuth flow in Spring '27; please consider migrating to other supported authentication methods.
-
-	 - Type: STRING
-	 - Default: PASSWORD
-	 - Importance: HIGH
-	 - Required: false
-
-🔘 salesforce.instance
-
-Salesforce endpoint URL the connector uses for API requests. For CLIENT_CREDENTIALS and the OAuth 2.0 Authorization Code grant, set this to your org's My Domain URL (for example https://MyDomainName.my.salesforce.com). Defaults to https://login.salesforce.com.
-
-	 - Type: STRING
-	 - Default: https://login.salesforce.com
-	 - Importance: HIGH
-	 - Required: false
-
-🔘 salesforce.username
-
-
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Salesforce username for connector authentication
-	 - Required: HIGH
-
-🔘 salesforce.password
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Salesforce account password for connector authentication
-	 - Required: HIGH
-
-🔘 salesforce.password.token
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Security token associated with the Salesforce username
-	 - Required: HIGH
-
-🔘 salesforce.consumer.key
-
-
-
-	 - Type: true
-	 - Default: PASSWORD
-	 - Importance: Client ID (consumer key) for the Salesforce connected app
-	 - Required: HIGH
-
-🔘 salesforce.consumer.secret
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Client secret (consumer secret) for the Salesforce connected app
-	 - Required: MEDIUM
-
-🔘 salesforce.jwt.keystore.file
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Keystore file that stores the private key for JWT authentication
-	 - Required: MEDIUM
-
-🔘 salesforce.jwt.keystore.password
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: Password that unlocks the JWT keystore file
-	 - Required: MEDIUM
-
-🔘 salesforce.object
-
-
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: The Salesforce object to create topic for
-	 - Required: HIGH
-
-🔘 salesforce.push.topic.name
-
-
-
-	 - Type: true
-	 - Default: STRING
-	 - Importance: The Salesforce PushTopic to subscribe to. If `salesforce.push.topic.create` is set to true, a PushTopic with this name will be created.
-	 - Required: HIGH
-
-🔘 salesforce.push.topic.create
-
-Flag to determine if the PushTopic should be created if it does not exist.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: LOW
-	 - Required: false
-
-🔘 salesforce.push.topic.notify.create
-
-Flag to determine if the Salesforce PushTopic should respond to creates. This config is used when `salesforce.push.topic.create` is set to true.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: LOW
-	 - Required: false
-
-🔘 salesforce.push.topic.notify.delete
-
-Flag to determine if the Salesforce PushTopic should respond to deletes. This config is used when `salesforce.push.topic.create` is set to true.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: LOW
-	 - Required: false
-
-🔘 salesforce.push.topic.notify.undelete
-
-Flag to determine if the Salesforce PushTopic should respond to undeletes. This config is used when `salesforce.push.topic.create` is set to true.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: LOW
-	 - Required: false
-
-🔘 salesforce.push.topic.notify.update
-
-Flag to determine if the Salesforce PushTopic should respond to updates. This config is used when `salesforce.push.topic.create` is set to true.
-
-	 - Type: BOOLEAN
-	 - Default: true
-	 - Importance: LOW
-	 - Required: false
-
-🔘 oauth.refresh.token
-
-
-
-	 - Type: false
-	 - Default: PASSWORD
-	 - Importance: OAuth 2.0 refresh token. Populated by Confluent Cloud after authorization.
-	 - Required: HIGH
-
-==========================
-Connection details
-==========================
-🔘 salesforce.initial.start
-
-Specify the initial starting point for the connector. Allowed values are
-
-	 - Type: STRING
-	 - Default: latest
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 connection.timeout
-
-The amount of time to wait in milliseconds while connecting to the Salesforce streaming endpoint.
-
-	 - Type: LONG
-	 - Default: 30000
-	 - Importance: LOW
-	 - Required: false
-
-🔘 request.max.retries.time.ms
-
-Maximum time in milliseconds until the connector stops retrying failed Salesforce requests. Default is 30000 and minimum is 1000.
-
-	 - Type: LONG
-	 - Default: 30000
-	 - Importance: LOW
-	 - Required: false
-
-🔘 salesforce.version
-
-The version of Salesforce API to use.
-
-	 - Type: STRING
-	 - Default: 67.0
-	 - Importance: LOW
-	 - Required: false
-
-==========================
 Output messages
 ==========================
 🔘 output.data.format
 
-Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, or JSON. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF
+Output Kafka record value format. Only ``JSON`` is supported. If Dynamics 365 adds a column after the connector starts, the connector picks it up automatically.
 
 	 - Type: STRING
 	 - Default: JSON
@@ -309,6 +102,111 @@ Number of tasks for this connector
 	 - Default: INT
 	 - Importance: Maximum number of tasks for the connector.
 	 - Required: HIGH
+
+==========================
+Authentication
+==========================
+🔘 dynamics365.url
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The URL of the Dynamics 365 (Dataverse) environment to read data from. For example: ``https://myorg.crm.dynamics.com``. Find it in the [Power Platform admin center](https://admin.powerplatform.microsoft.com/environments) under Environments.
+	 - Required: HIGH
+
+🔘 oauth2.token.url
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The Microsoft Entra ID endpoint for fetching the OAuth2 token. For example: ``https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/token``. To register the app and find its token endpoint, see Microsoft's [app registration quickstart](https://learn.microsoft.com/entra/identity-platform/quickstart-register-app). Supported grant type is ``client_credentials``.
+	 - Required: HIGH
+
+🔘 oauth2.client.id
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The application (client) ID of the Microsoft Entra app registration used by the connector, displayed on the Overview page as a GUID. Link the app registration to a Dynamics 365 Application User with read access to the selected entities. For details, see Microsoft's guide on [server-to-server authentication](https://learn.microsoft.com/power-apps/developer/data-platform/use-single-tenant-server-server-authentication).
+	 - Required: HIGH
+
+🔘 oauth2.client.secret
+
+
+
+	 - Type: true
+	 - Default: PASSWORD
+	 - Importance: The client secret of the Microsoft Entra app registration. Use the secret ``Value`` from Certificates & secrets, not the ``Secret ID``, and copy it when created because it is shown only once. Client secrets expire, so the connector fails to authenticate after the secret lapses.
+	 - Required: HIGH
+
+==========================
+Entities
+==========================
+🔘 entities.num
+
+The number of Dynamics 365 entities to fetch data from.
+
+	 - Type: INT
+	 - Default: 1
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 dynamics365.topic.prefix
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: Prefix added to the start of every topic name. The topic name is ``{prefix}{entity}`` with nothing in between, so prefix ``crm`` and entity ``accounts`` give the topic ``crmaccounts``.
+	 - Required: HIGH
+
+==========================
+Polling configurations
+==========================
+🔘 poll.interval.ms
+
+How often, in milliseconds, the connector polls Dynamics 365 for new or changed records. Applies to every entity. Lower values mean fresher data but more requests against Dynamics 365 service protection limits.
+
+	 - Type: INT
+	 - Default: 1000
+	 - Importance: MEDIUM
+	 - Required: true
+
+🔘 page.size
+
+The number of records the connector requests per API call, applied to every entity. Valid range is ``1`` to ``5000`` — Dynamics 365 silently caps anything higher at ``5000``.
+
+	 - Type: INT
+	 - Default: 2500
+	 - Importance: MEDIUM
+	 - Required: true
+
+==========================
+Retry configurations
+==========================
+🔘 max.retries
+
+The maximum number of times a failed API request is retried before the task fails. Higher values help the connector ride out longer periods of Dynamics 365 rate limiting.
+
+	 - Type: INT
+	 - Default: 5
+	 - Importance: MEDIUM
+	 - Required: true
+
+==========================
+Reporter
+==========================
+🔘 reporter.error.topic.name
+
+The name of the topic to produce errant records after each unsuccessful API operation. Defaults to 'error-${connector}' if not set. You can provide ``${connector}`` in the value to use it as a placeholder for the logical cluster ID.
+
+	 - Type: STRING
+	 - Default: error-${connector}
+	 - Importance: LOW
+	 - Required: false
 
 ==========================
 Additional Configs
@@ -600,6 +498,177 @@ The class name of the schema ID serializer for values. This is used to serialize
 	 - Default: BOOLEAN
 	 - Importance: Whether to scrub invalid names by replacing invalid characters with valid characters. Applicable for Avro and Protobuf Converters.
 	 - Required: LOW
+
+==========================
+Entity - 1 configurations
+==========================
+🔘 entity1.name
+
+
+
+	 - Type: true
+	 - Default: STRING
+	 - Importance: The Dataverse entity-set name to read, for example ``accounts`` or ``contacts``. Select ``CUSTOM`` to enter the entity-set name of a custom entity.
+	 - Required: HIGH
+
+🔘 entity1.custom.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The entity-set name of a custom Dataverse entity, for example ``cr2bf_mytables``. Only used when the Entity field is set to ``CUSTOM``.
+	 - Required: MEDIUM
+
+🔘 entity1.change.tracking.enabled
+
+Enable this only if change tracking is already turned on for this table in Dynamics 365. When off, deletes are not captured.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: true
+
+==========================
+Entity - 2 configurations
+==========================
+🔘 entity2.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Dataverse entity-set name to read, for example ``accounts`` or ``contacts``. Select ``CUSTOM`` to enter the entity-set name of a custom entity.
+	 - Required: HIGH
+
+🔘 entity2.custom.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The entity-set name of a custom Dataverse entity, for example ``cr2bf_mytables``. Only used when the Entity field is set to ``CUSTOM``.
+	 - Required: MEDIUM
+
+🔘 entity2.change.tracking.enabled
+
+Enable this only if change tracking is already turned on for this table in Dynamics 365. When off, deletes are not captured.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: true
+
+==========================
+Entity - 3 configurations
+==========================
+🔘 entity3.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Dataverse entity-set name to read, for example ``accounts`` or ``contacts``. Select ``CUSTOM`` to enter the entity-set name of a custom entity.
+	 - Required: HIGH
+
+🔘 entity3.custom.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The entity-set name of a custom Dataverse entity, for example ``cr2bf_mytables``. Only used when the Entity field is set to ``CUSTOM``.
+	 - Required: MEDIUM
+
+🔘 entity3.change.tracking.enabled
+
+Enable this only if change tracking is already turned on for this table in Dynamics 365. When off, deletes are not captured.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: true
+
+==========================
+Entity - 4 configurations
+==========================
+🔘 entity4.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Dataverse entity-set name to read, for example ``accounts`` or ``contacts``. Select ``CUSTOM`` to enter the entity-set name of a custom entity.
+	 - Required: HIGH
+
+🔘 entity4.custom.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The entity-set name of a custom Dataverse entity, for example ``cr2bf_mytables``. Only used when the Entity field is set to ``CUSTOM``.
+	 - Required: MEDIUM
+
+🔘 entity4.change.tracking.enabled
+
+Enable this only if change tracking is already turned on for this table in Dynamics 365. When off, deletes are not captured.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: true
+
+==========================
+Entity - 5 configurations
+==========================
+🔘 entity5.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The Dataverse entity-set name to read, for example ``accounts`` or ``contacts``. Select ``CUSTOM`` to enter the entity-set name of a custom entity.
+	 - Required: HIGH
+
+🔘 entity5.custom.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The entity-set name of a custom Dataverse entity, for example ``cr2bf_mytables``. Only used when the Entity field is set to ``CUSTOM``.
+	 - Required: MEDIUM
+
+🔘 entity5.change.tracking.enabled
+
+Enable this only if change tracking is already turned on for this table in Dynamics 365. When off, deletes are not captured.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: true
+
+==========================
+CSFLE
+==========================
+🔘 csfle.enabled
+
+Determines whether the connector honours CSFLE rules or not
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 sr.service.account.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select the service account that has appropriate permissions to schemas and encryption keys in the Schema Registry.
+	 - Required: HIGH
 
 ==========================
 Auto-restart policy
