@@ -19617,6 +19617,25 @@ playground_doctor_command() {
               log "🔎 podman checks are run against the default podman connection"
           fi
 
+          # -- version ---------------------------------------------------------
+          # 4.9 is the oldest version the playground has run on (Ubuntu 24.04, CI).
+          # 3.x has no netavark at all, which Ubuntu 22.04 still ships
+          podman_version=$("${podman_cli[@]}" version --format '{{.Server.Version}}' 2>/dev/null)
+          if [ -n "$podman_version" ]
+          then
+              if version_gt "4.0.0" "$podman_version"
+              then
+                  doctor_error "podman ${podman_version} is too old, the playground needs podman 4.9 or later"
+                  logerror "it predates netavark, which containers need to resolve each other by name."
+                  logerror "Ubuntu 22.04 only ships podman 3.4: use Ubuntu 24.04 or later (playground ec2 does)"
+              elif version_gt "4.9.0" "$podman_version"
+              then
+                  doctor_warn "podman ${podman_version} is older than 4.9, the oldest version the playground was tested with"
+              else
+                  doctor_ok "podman ${podman_version}"
+              fi
+          fi
+
           # -- rootless or rootful ---------------------------------------------
           rootless=$("${podman_cli[@]}" info --format '{{.Host.Security.Rootless}}' 2>/dev/null)
           if [ "$rootless" = "true" ]
