@@ -27,6 +27,8 @@ then
      exit 1
 fi
 
+couchbase_capella_ensure_cluster_on
+
 bootstrap_ccloud_environment
 
 set +e
