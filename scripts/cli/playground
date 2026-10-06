@@ -1308,6 +1308,11 @@ playground_start_ci_usage() {
     printf "\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--podman")"
+    printf "\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -1325,6 +1330,7 @@ playground_start_ci_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground start-ci --cfk --all-failing\n"
     printf "  playground start-ci --cfk --test-list\n  \"connect/connect-cdc-xstream-oracle19-source\"\n"
+    printf "  playground start-ci --podman --test-list \"connect/connect-gcp-gcs-sink\"\n"
     echo
 
   fi
@@ -19582,8 +19588,17 @@ playground_doctor_command() {
       then
           logwarn "the native 'podman' CLI is not in the PATH, skipping the podman specific checks"
       else
+          # ask the daemon the docker CLI really talks to: on Linux a bare `podman`
+          # run by a regular user reports its own rootless setup, not the rootful
+          # daemon behind DOCKER_HOST
+          podman_cli=(podman)
+          if [[ "${DOCKER_HOST:-}" == unix://* ]]
+          then
+              podman_cli=(podman --url "$DOCKER_HOST")
+          fi
+
           # -- rootless or rootful ---------------------------------------------
-          rootless=$(podman info --format '{{.Host.Security.Rootless}}' 2>/dev/null)
+          rootless=$("${podman_cli[@]}" info --format '{{.Host.Security.Rootless}}' 2>/dev/null)
           if [ "$rootless" = "true" ]
           then
               doctor_warn "podman is running rootless"
@@ -19598,13 +19613,28 @@ playground_doctor_command() {
               doctor_ok "podman is running rootful"
           fi
 
+          # -- network backend -------------------------------------------------
+          # compose services reach each other by name (broker, connect, ...): that
+          # needs netavark + aardvark-dns, the legacy cni backend has no DNS by default
+          network_backend=$("${podman_cli[@]}" info --format '{{.Host.NetworkBackend}}' 2>/dev/null)
+          if [ "$network_backend" = "cni" ]
+          then
+              doctor_error "podman uses the cni network backend, containers will not resolve each other by name"
+              logerror "install netavark and aardvark-dns, set this in /etc/containers/containers.conf and run 'podman system reset':"
+              logerror "  [network]"
+              logerror "  network_backend = \"netavark\""
+          elif [ -n "$network_backend" ]
+          then
+              doctor_ok "podman network backend is ${network_backend}"
+          fi
+
           # -- unqualified image names -----------------------------------------
           # every image: in the compose files is a short name (postgres:14,
           # osixia/openldap:1.3.0, ...). The playground pulls through the docker
           # compat API, which resolves short names to docker.io by itself
           # (compat_api_enforce_docker_hub in containers.conf, true by default),
           # so registries.conf only matters for native `podman pull`: warn, never fail
-          search_registries=$(podman info --format '{{range .Registries.search}}{{.}} {{end}}' 2>/dev/null)
+          search_registries=$("${podman_cli[@]}" info --format '{{range .Registries.search}}{{.}} {{end}}' 2>/dev/null)
           if ! echo "$search_registries" | grep -q "docker.io"
           then
               doctor_warn "docker.io is not in podman unqualified-search-registries (${search_registries:-none})"
@@ -20971,6 +21001,7 @@ playground_start_ci_command() {
   test_list="${args[--test-list]:-}"
   all_failing="${args[--all-failing]:-}"
   cfk="${args[--cfk]:-}"
+  podman="${args[--podman]:-}"
 
   if ! command -v gh >/dev/null 2>&1
   then
@@ -21019,11 +21050,19 @@ playground_start_ci_command() {
   then
   	workflow_args+=(-f playground_environment="$playground_environment")
   fi
+  if [[ -n "$podman" ]]
+  then
+  	workflow_args+=(-f container_engine=podman)
+  fi
 
   log "Triggering CI workflow with test_name=$test_list"
   if [[ -n "$playground_environment" ]]
   then
   	log "Using playground_environment=$playground_environment"
+  fi
+  if [[ -n "$podman" ]]
+  then
+  	log "Using container_engine=podman"
   fi
 
   gh "${workflow_args[@]}"
@@ -46077,6 +46116,14 @@ playground_start_ci_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --podman)
+
+        # :flag.case_no_arg
+        args['--podman']=1
+        shift
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -71014,6 +71061,11 @@ playground_start_ci_completion() {
 
         shift
         ;;
+      --podman)
+        completion_blocked_flags["--podman"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -71025,6 +71077,7 @@ playground_start_ci_completion() {
     completion_flag_candidates --test-list "$completion_current" --test-list
     completion_flag_candidates --all-failing "$completion_current" --all-failing
     completion_flag_candidates --cfk "$completion_current" --cfk
+    completion_flag_candidates --podman "$completion_current" --podman
   fi
 
 }

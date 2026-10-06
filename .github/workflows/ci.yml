@@ -18,6 +18,14 @@ on:
         description: 'override PLAYGROUND_ENVIRONMENT (example cfk, ccloud, plaintext)'
         required: false
         default: 'plaintext'
+      container_engine:
+        description: 'container engine: docker, or rootful podman driven through the docker CLI (see docs/podman.md)'
+        required: false
+        type: choice
+        options:
+          - docker
+          - podman
+        default: 'docker'
 
 jobs:
   pre-build:
@@ -99,7 +107,7 @@ jobs:
     if: ${{ github.event.inputs.test_name == '' }}
     runs-on: ubuntu-latest
     needs: pre-build
-    name: ${{ matrix.tag }} ${{ matrix.test_list }} ${{ matrix.playground_environment }}
+    name: ${{ matrix.tag }} ${{ matrix.test_list }} ${{ matrix.playground_environment }} ${{ github.event.inputs.container_engine == 'podman' && '🦭' || '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -232,6 +240,12 @@ jobs:
             export PATH=$PATH:/usr/local/bin
             sudo apt-get update
             sudo apt-get install expect fzf coreutils -y
+
+      # after "Free up disk space", which prunes docker, and before "Set up credentials",
+      # so that docker login goes to the engine the tests use
+      - name: Switch to podman
+        if: github.event.inputs.container_engine == 'podman'
+        run: bash scripts/ci-setup-podman.sh
 
       - name: Set up credentials
         run: |
@@ -427,7 +441,7 @@ jobs:
   execute_one_test:
     if: ${{ github.event.inputs.test_name != '' }}
     runs-on: ubuntu-latest
-    name: ${{ matrix.tag }} ${{ matrix.test_list }} ${{ matrix.playground_environment }}
+    name: ${{ matrix.tag }} ${{ matrix.test_list }} ${{ matrix.playground_environment }} ${{ github.event.inputs.container_engine == 'podman' && '🦭' || '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -516,6 +530,12 @@ jobs:
             sudo apt-get update
             sudo apt-get install expect fzf coreutils -y
             
+      # after "Free up disk space", which prunes docker, and before "Set up credentials",
+      # so that docker login goes to the engine the tests use
+      - name: Switch to podman
+        if: github.event.inputs.container_engine == 'podman'
+        run: bash scripts/ci-setup-podman.sh
+
       - name: Set up credentials
         run: |
           mkdir -p $HOME/.aws

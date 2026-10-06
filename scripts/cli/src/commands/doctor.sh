@@ -127,8 +127,17 @@ then
     then
         logwarn "the native 'podman' CLI is not in the PATH, skipping the podman specific checks"
     else
+        # ask the daemon the docker CLI really talks to: on Linux a bare `podman`
+        # run by a regular user reports its own rootless setup, not the rootful
+        # daemon behind DOCKER_HOST
+        podman_cli=(podman)
+        if [[ "${DOCKER_HOST:-}" == unix://* ]]
+        then
+            podman_cli=(podman --url "$DOCKER_HOST")
+        fi
+
         # -- rootless or rootful ---------------------------------------------
-        rootless=$(podman info --format '{{.Host.Security.Rootless}}' 2>/dev/null)
+        rootless=$("${podman_cli[@]}" info --format '{{.Host.Security.Rootless}}' 2>/dev/null)
         if [ "$rootless" = "true" ]
         then
             doctor_warn "podman is running rootless"
@@ -143,13 +152,28 @@ then
             doctor_ok "podman is running rootful"
         fi
 
+        # -- network backend -------------------------------------------------
+        # compose services reach each other by name (broker, connect, ...): that
+        # needs netavark + aardvark-dns, the legacy cni backend has no DNS by default
+        network_backend=$("${podman_cli[@]}" info --format '{{.Host.NetworkBackend}}' 2>/dev/null)
+        if [ "$network_backend" = "cni" ]
+        then
+            doctor_error "podman uses the cni network backend, containers will not resolve each other by name"
+            logerror "install netavark and aardvark-dns, set this in /etc/containers/containers.conf and run 'podman system reset':"
+            logerror "  [network]"
+            logerror "  network_backend = \"netavark\""
+        elif [ -n "$network_backend" ]
+        then
+            doctor_ok "podman network backend is ${network_backend}"
+        fi
+
         # -- unqualified image names -----------------------------------------
         # every image: in the compose files is a short name (postgres:14,
         # osixia/openldap:1.3.0, ...). The playground pulls through the docker
         # compat API, which resolves short names to docker.io by itself
         # (compat_api_enforce_docker_hub in containers.conf, true by default),
         # so registries.conf only matters for native `podman pull`: warn, never fail
-        search_registries=$(podman info --format '{{range .Registries.search}}{{.}} {{end}}' 2>/dev/null)
+        search_registries=$("${podman_cli[@]}" info --format '{{range .Registries.search}}{{.}} {{end}}' 2>/dev/null)
         if ! echo "$search_registries" | grep -q "docker.io"
         then
             doctor_warn "docker.io is not in podman unqualified-search-registries (${search_registries:-none})"

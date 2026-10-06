@@ -1,6 +1,7 @@
 test_list="${args[--test-list]:-}"
 all_failing="${args[--all-failing]:-}"
 cfk="${args[--cfk]:-}"
+podman="${args[--podman]:-}"
 
 if ! command -v gh >/dev/null 2>&1
 then
@@ -49,11 +50,19 @@ if [[ -n "$playground_environment" ]]
 then
 	workflow_args+=(-f playground_environment="$playground_environment")
 fi
+if [[ -n "$podman" ]]
+then
+	workflow_args+=(-f container_engine=podman)
+fi
 
 log "Triggering CI workflow with test_name=$test_list"
 if [[ -n "$playground_environment" ]]
 then
 	log "Using playground_environment=$playground_environment"
+fi
+if [[ -n "$podman" ]]
+then
+	log "Using container_engine=podman"
 fi
 
 gh "${workflow_args[@]}"

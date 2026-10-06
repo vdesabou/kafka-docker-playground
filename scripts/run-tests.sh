@@ -20,6 +20,10 @@ IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../scripts/utils.sh
 
+# results of a podman run are stored with a -podman suffix, like -cfk: they must neither
+# overwrite nor be reused for the docker results that drive the README badges
+container_engine=$(get_container_engine)
+
 # go to root folder
 cd ${DIR}/..
 
@@ -121,6 +125,10 @@ do
             then
                 file="$file-$PLAYGROUND_ENVIRONMENT"
             fi
+            if [ "$container_engine" = "podman" ]
+            then
+                file="$file-podman"
+            fi
             rm -f $file
             touch $file
             echo "|$(date +%s)|skipped|$GITHUB_RUN_ID" > $file
@@ -180,6 +188,10 @@ do
         if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
         then
             file="$file-$PLAYGROUND_ENVIRONMENT"
+        fi
+        if [ "$container_engine" = "podman" ]
+        then
+            file="$file-podman"
         fi
         s3_file="s3://kafka-docker-playground/ci/$file"
         set +e
@@ -295,6 +307,10 @@ do
         then
             file_output="$file_output-$PLAYGROUND_ENVIRONMENT"
         fi
+        if [ "$container_engine" = "podman" ]
+        then
+            file_output="$file_output-podman"
+        fi
         file_output="$file_output.log"
         rm -f $file_output
         touch $file_output
@@ -308,6 +324,10 @@ do
         if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
         then
             file="$file-$PLAYGROUND_ENVIRONMENT"
+        fi
+        if [ "$container_engine" = "podman" ]
+        then
+            file="$file-podman"
         fi
         rm -f $file
         touch $file

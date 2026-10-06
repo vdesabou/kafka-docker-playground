@@ -351,9 +351,12 @@ commands:
       required: false
     - long: --cfk
       required: false
+    - long: --podman
+      required: false
   examples:
     - playground start-ci --cfk --all-failing
     - playground start-ci --cfk --test-list "connect/connect-cdc-xstream-oracle19-source"
+    - playground start-ci --podman --test-list "connect/connect-gcp-gcs-sink"
 
 - name: update-docs
   private: true
