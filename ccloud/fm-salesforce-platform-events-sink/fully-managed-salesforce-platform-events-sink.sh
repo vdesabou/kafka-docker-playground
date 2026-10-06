@@ -52,7 +52,7 @@ base64_truststore=$(salesforce_get_jwt_keystore_base64 "$PWD")
 
 sleep 5
 
-connector_name="SalesforcePlatformEventSource_$USER"
+connector_name="SalesforcePlatformEventSourceForSink_$USER"
 set +e
 playground connector delete --connector $connector_name > /dev/null 2>&1
 set -e
@@ -92,6 +92,11 @@ sleep 10
 log "Verifying topic sfdc-platform-events"
 playground topic consume --topic sfdc-platform-events --min-expected-messages 2 --timeout 60
 
+
+# Pause the source before the sink publishes into the same platform event. Otherwise the
+# source picks up the sink's events, the sink publishes them again, and the loop runs until
+# teardown, broadcasting every round to all other MyPlatformEvent__e subscribers in the org.
+playground connector pause --connector $connector_name
 
 connector_name2="SalesforcePlatformEventSink_$USER"
 set +e

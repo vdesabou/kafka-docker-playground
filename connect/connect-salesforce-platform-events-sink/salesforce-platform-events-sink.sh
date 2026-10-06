@@ -90,6 +90,11 @@ sleep 10
 log "Verify we have received the data in sfdc-platform-events topic"
 playground topic consume --topic sfdc-platform-events --min-expected-messages 2 --timeout 60
 
+# Pause the source before the sink publishes into the same platform event. Otherwise the
+# source picks up the sink's events, the sink publishes them again, and the loop runs until
+# teardown, broadcasting every round to all other MyPlatformEvent__e subscribers in the org.
+playground connector pause --connector salesforce-platform-events-source
+
 log "Creating Salesforce Platform Events Sink connector"
 salesforce_create_connector_with_retry salesforce-platform-events-sink << EOF
 {

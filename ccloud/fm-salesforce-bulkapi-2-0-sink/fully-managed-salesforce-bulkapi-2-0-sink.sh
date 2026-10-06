@@ -144,6 +144,21 @@ LEAD_LASTNAME=Doe_$RANDOM
 log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
 docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
 
+# Remove the records this test created, so repeated runs do not accumulate data in a
+# shared Salesforce org. Only the exact records created above are matched (stop.sh used to
+# bulk-delete every Lead, which wiped the records of tests running concurrently). An EXIT
+# trap, so cleanup also happens when an assertion fails.
+cleanup_salesforce_test_data() {
+  set +e
+  salesforce_cleanup_records "$SALESFORCE_USERNAME" "$SALESFORCE_CONSUMER_KEY_WITH_JWT" "$SALESFORCE_INSTANCE" \
+    "Lead:FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'" \
+    "PushTopic:Name = '$PUSH_TOPICS_NAME'"
+  salesforce_cleanup_records "$SALESFORCE_USERNAME_ACCOUNT2" "$SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2" "$SALESFORCE_INSTANCE_ACCOUNT2" \
+    "Lead:FirstName = '$LEAD_FIRSTNAME' AND LastName = '$LEAD_LASTNAME'"
+  set -e
+}
+trap cleanup_salesforce_test_data EXIT
+
 sleep 30
 
 log "Verify we have received the data in sfdc-pushtopic-leads-bulk-sink-v2 topic"
