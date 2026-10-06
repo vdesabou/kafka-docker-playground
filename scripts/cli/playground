@@ -19693,17 +19693,14 @@ playground_doctor_command() {
           # osixia/openldap:1.3.0, ...). The playground pulls through the docker
           # compat API, which resolves short names to docker.io by itself
           # (compat_api_enforce_docker_hub in containers.conf, true by default),
-          # so registries.conf only matters for native `podman pull`: warn, never fail
+          # so registries.conf only matters for native `podman pull` (verified on 4.9.3
+          # and 6.1.3, library and non-library images)
           search_registries=$("${podman_cli[@]}" info --format '{{range .Registries.search}}{{.}} {{end}}' 2>/dev/null)
-          if ! echo "$search_registries" | grep -q "docker.io"
+          if echo "$search_registries" | grep -q "docker.io"
           then
-              doctor_warn "docker.io is not in podman unqualified-search-registries (${search_registries:-none})"
-              logwarn "the playground is not affected, the docker compat API resolves short names to docker.io,"
-              logwarn "unless compat_api_enforce_docker_hub = false is set in containers.conf."
-              logwarn "native 'podman pull postgres:14' will fail or prompt, to fix it add to registries.conf:"
-              logwarn "  unqualified-search-registries = [\"docker.io\"]"
-          else
               doctor_ok "docker.io is in the podman search registries"
+          else
+              log "ℹ️  short image names resolve to docker.io through the docker compat API, nothing to configure"
           fi
 
           # -- macOS machine ----------------------------------------------------
