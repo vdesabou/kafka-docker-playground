@@ -35,7 +35,7 @@ services:
       # which then instantiates metric.reporters: add the telemetry jars to its classpath, otherwise it fails with ClassNotFoundException
       UB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-java-micro/*
       CUB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-new/*
-      CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
+      CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter,org.apache.kafka.common.metrics.JmxReporter
       CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'true'
       CONNECT_CONFLUENT_TELEMETRY_API_KEY: ${CONFLUENT_CLOUD_API_KEY}
       CONNECT_CONFLUENT_TELEMETRY_API_SECRET: ${CONFLUENT_CLOUD_API_SECRET}
@@ -44,7 +44,7 @@ services:
     environment:
       UB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-java-micro/*
       CUB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-new/*
-      CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
+      CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter,org.apache.kafka.common.metrics.JmxReporter
       CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'true'
       CONNECT_CONFLUENT_TELEMETRY_API_KEY: ${CONFLUENT_CLOUD_API_KEY}
       CONNECT_CONFLUENT_TELEMETRY_API_SECRET: ${CONFLUENT_CLOUD_API_SECRET}
@@ -53,7 +53,7 @@ services:
     environment:
       UB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-java-micro/*
       CUB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-new/*
-      CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
+      CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter,org.apache.kafka.common.metrics.JmxReporter
       CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'true'
       CONNECT_CONFLUENT_TELEMETRY_API_KEY: ${CONFLUENT_CLOUD_API_KEY}
       CONNECT_CONFLUENT_TELEMETRY_API_SECRET: ${CONFLUENT_CLOUD_API_SECRET}
