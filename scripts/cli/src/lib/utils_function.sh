@@ -4390,6 +4390,80 @@ function couchbase_capella_ensure_cluster_on () {
   log "✅ Capella cluster ${COUCHBASE_CAPELLA_CLUSTER_ID} is healthy"
 }
 
+# Databricks SQL warehouses auto stop after some inactivity (10 minutes minimum)
+# usage: databricks_ensure_sql_warehouse_running <server hostname> <token> <http path>
+function databricks_ensure_sql_warehouse_running () {
+  local host="${1#https://}"
+  host="${host%%/*}"
+  local token="$2"
+  local http_path="$3"
+
+  if [ -z "$host" ] || [ -z "$token" ] || [ -z "$http_path" ]
+  then
+    logwarn "🧱 Databricks hostname, token or http path is not set, not checking if SQL warehouse is running"
+    return 0
+  fi
+
+  if [[ "$http_path" != *"/warehouses/"* ]]
+  then
+    logwarn "🧱 Databricks http path $http_path is not a SQL warehouse, not checking if it is running"
+    return 0
+  fi
+
+  local warehouse_id="${http_path##*/}"
+  local url="https://${host}/api/2.0/sql/warehouses/${warehouse_id}"
+
+  local max_wait=900
+  local cur_wait=0
+  local start_requested=0
+  local state=""
+  while true
+  do
+    local response
+    response=$(curl -s -H "Authorization: Bearer ${token}" "$url")
+    state=$(echo "$response" | jq -r '.state // empty' 2>/dev/null)
+    if [ -z "$state" ]
+    then
+      logwarn "🧱 could not get Databricks SQL warehouse ${warehouse_id} state, not checking if it is running: $response"
+      return 0
+    fi
+    log "🧱 Databricks SQL warehouse ${warehouse_id} state is ${state}"
+
+    case "$state" in
+      RUNNING)
+        break
+        ;;
+      STOPPED)
+        if [ $start_requested -eq 0 ]
+        then
+          log "🔌 Starting Databricks SQL warehouse ${warehouse_id}"
+          local http_code
+          http_code=$(curl -s -o /tmp/databricks_warehouse_start.txt -w '%{http_code}' -X POST -H "Authorization: Bearer ${token}" "${url}/start")
+          if [ "$http_code" != "200" ]
+          then
+            logwarn "🧱 failed to start Databricks SQL warehouse ${warehouse_id} (http code $http_code), not waiting for it: $(cat /tmp/databricks_warehouse_start.txt)"
+            return 0
+          fi
+          start_requested=1
+        fi
+        ;;
+      DELETING|DELETED)
+        logerror "❌ Databricks SQL warehouse ${warehouse_id} is ${state}"
+        exit 1
+        ;;
+    esac
+
+    if [[ "$cur_wait" -ge "$max_wait" ]]
+    then
+      logerror "❌ Databricks SQL warehouse ${warehouse_id} is still ${state} after $max_wait seconds"
+      exit 1
+    fi
+    sleep 10
+    cur_wait=$(( cur_wait+10 ))
+  done
+  log "✅ Databricks SQL warehouse ${warehouse_id} is running"
+}
+
 function connect_cp_version_greater_than_8 () {
   if [ ! -z "$CP_CONNECT_TAG" ] && version_gt $CP_CONNECT_TAG "7.9.99"
   then

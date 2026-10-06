@@ -80,6 +80,8 @@ cd ../../connect/connect-databricks-delta-lake-sink
 mkdir -p ../../confluent-hub/confluentinc-kafka-connect-databricks-delta-lake/lib/
 cp ../../connect/connect-databricks-delta-lake-sink/SparkJDBC42.jar ../../confluent-hub/confluentinc-kafka-connect-databricks-delta-lake/lib/SparkJDBC42.jar
 cd -
+databricks_ensure_sql_warehouse_running "$DATABRICKS_SERVER_HOSTNAME" "$DATABRICKS_TOKEN" "$DATABRICKS_HTTP_PATH"
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

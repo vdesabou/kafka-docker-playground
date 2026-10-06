@@ -33,6 +33,8 @@ cd ../../connect/connect-jdbc-databricks-source
 mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/
 cp ../../connect/connect-jdbc-databricks-source/DatabricksJDBC42.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/DatabricksJDBC42.jar
 cd -
+databricks_ensure_sql_warehouse_running "$DATABRICKS_HOST" "$DATABRICKS_TOKEN" "$DATABRICKS_HTTP_PATH"
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 

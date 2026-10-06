@@ -56,6 +56,8 @@ then
 fi
 
 
+databricks_ensure_sql_warehouse_running "$DATABRICKS_SERVER_HOSTNAME" "$DATABRICKS_TOKEN" "$DATABRICKS_HTTP_PATH"
+
 bootstrap_ccloud_environment
 
 
