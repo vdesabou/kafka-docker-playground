@@ -48,20 +48,11 @@ net.snowflake.client.jdbc.SnowflakeSQLLoggedException: JDBC driver internal erro
 
 logwarn "upgrading driver fixes this issue, but then we get another issue with timestamp column, see below JDBC type 2014 (TIMESTAMPTZ) not currently supported"
 
-username=$(whoami)
-uppercase_username=$(echo $username | tr '[:lower:]' '[:upper:]')
-
-PLAYGROUND_DB=PG_DB_${uppercase_username}${TAG}
-PLAYGROUND_DB=${PLAYGROUND_DB//[-._]/}
-
-PLAYGROUND_WAREHOUSE=PG_WH_${uppercase_username}${TAG}
-PLAYGROUND_WAREHOUSE=${PLAYGROUND_WAREHOUSE//[-._]/}
-
-PLAYGROUND_CONNECTOR_ROLE=PG_ROLE_${uppercase_username}${TAG}
-PLAYGROUND_CONNECTOR_ROLE=${PLAYGROUND_CONNECTOR_ROLE//[-._]/}
-
-PLAYGROUND_USER=PG_USER_${uppercase_username}${TAG}
-PLAYGROUND_USER=${PLAYGROUND_USER//[-._]/}
+# unique per script and environment, see snowflake_object_name
+PLAYGROUND_DB=$(snowflake_object_name PG_DB JDBCSRC)
+PLAYGROUND_WAREHOUSE=$(snowflake_object_name PG_WH JDBCSRC)
+PLAYGROUND_CONNECTOR_ROLE=$(snowflake_object_name PG_ROLE JDBCSRC)
+PLAYGROUND_USER=$(snowflake_object_name PG_USER JDBCSRC)
 
 cd ../../connect/connect-jdbc-snowflake-source
 if [ ! -f ${PWD}/snowflake-jdbc-3.24.2.jar ]

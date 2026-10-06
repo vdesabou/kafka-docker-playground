@@ -9,17 +9,11 @@ source ${DIR}/../../scripts/utils.sh
 username=$(whoami)
 uppercase_username=$(echo $username | tr '[:lower:]' '[:upper:]')
 
-PLAYGROUND_DB=PG_DB_${uppercase_username}${TAG}_streaming
-PLAYGROUND_DB=${PLAYGROUND_DB//[-._]/}
-
-PLAYGROUND_WAREHOUSE=PG_WH_${uppercase_username}${TAG}_streaming
-PLAYGROUND_WAREHOUSE=${PLAYGROUND_WAREHOUSE//[-._]/}
-
-PLAYGROUND_CONNECTOR_ROLE=PG_ROLE_${uppercase_username}${TAG}_streaming
-PLAYGROUND_CONNECTOR_ROLE=${PLAYGROUND_CONNECTOR_ROLE//[-._]/}
-
-PLAYGROUND_USER=PG_USER_${uppercase_username}${TAG}_streaming
-PLAYGROUND_USER=${PLAYGROUND_USER//[-._]/}
+# unique per script and environment, see snowflake_object_name
+PLAYGROUND_DB=$(snowflake_object_name PG_DB ICEBERGEXT)
+PLAYGROUND_WAREHOUSE=$(snowflake_object_name PG_WH ICEBERGEXT)
+PLAYGROUND_CONNECTOR_ROLE=$(snowflake_object_name PG_ROLE ICEBERGEXT)
+PLAYGROUND_USER=$(snowflake_object_name PG_USER ICEBERGEXT)
 
 SNOWFLAKE_ACCOUNT_NAME=${SNOWFLAKE_ACCOUNT_NAME:-$1}
 SNOWFLAKE_USERNAME=${SNOWFLAKE_USERNAME:-$2}

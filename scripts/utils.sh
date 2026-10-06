@@ -630,6 +630,27 @@ function salesforce_push_topic_name() {
   echo "${name:0:25}"
 }
 
+# Name of a test's Snowflake object (database, warehouse, role, user), unique per script and per
+# environment.
+#
+# Every Snowflake test drops and recreates its user with the RSA public key it just generated, so
+# two runs sharing a user in the same account break each other with "JWT token is invalid". CI runs
+# the plaintext and cfk jobs, and the ccloud fm-* jobs, at the same time against one account, and
+# several scripts used to share PG_USER_${uppercase_username}${TAG} (#8903). The script id comes
+# after the OS user and the CP version, followed by the environment.
+#
+#   PLAYGROUND_USER=$(snowflake_object_name PG_USER JDBCSINK)   # PGUSERRUNNER832JDBCSINKCFK on cfk
+function snowflake_object_name() {
+  local prefix="$1"
+  local script_id="$2"
+  local environment="${PLAYGROUND_ENVIRONMENT:-plaintext}"
+  local name=""
+
+  name="${prefix}$(whoami)${TAG}${script_id}${environment}"
+  name="${name//[^a-zA-Z0-9]/}"
+  echo "$name" | tr '[:lower:]' '[:upper:]'
+}
+
 # Wait until a streaming source task (PushTopic, CDC, Platform Events) has subscribed to its
 # channel, before the test creates the record or event it expects to receive.
 #
