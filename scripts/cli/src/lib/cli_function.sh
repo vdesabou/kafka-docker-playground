@@ -1864,6 +1864,9 @@ function cleanup_confluent_cloud_resources () {
   #     fi
   # done
 
+  cluster_id=$(get_ccloud_kafka_cluster_id)
+  # dlq/success/error topics of the connectors deleted below
+  connector_related_topics=""
   for row in $(confluent connect cluster list --output json | jq -r '.[] | @base64'); do
       _jq() {
       echo ${row} | base64 -d | jq -r ${1}
@@ -1874,6 +1877,8 @@ function cleanup_confluent_cloud_resources () {
 
       if [[ $name = *_${user}* ]]
       then
+          connector_config=$(confluent connect cluster describe $id --output json 2>/dev/null | jq -c '(.configs // []) | map({(.config): .value}) | add // {}' 2>/dev/null)
+          connector_related_topics="$connector_related_topics $(get_ccloud_connector_related_topics "$id" "$connector_config")"
           log "deleting connector $id ($name)"
           check_if_skip "confluent connect cluster delete $id --force || true"
       fi
@@ -1894,10 +1899,33 @@ function cleanup_confluent_cloud_resources () {
       fi
   done
 
-  for topic in $(confluent kafka topic list | awk '{if(NR>2) print $1}')
+  existing_topics=$(confluent kafka topic list | awk '{if(NR>2) print $1}')
+  if [ ! -z "$GITHUB_RUN_NUMBER" ] || [[ $CLUSTER_NAME = pg-${user}-* ]]
+  then
+    # cluster created by the playground for this user (or CI): nobody else uses it
+    topics_to_delete="$existing_topics"
+  else
+    # cluster provided with CLUSTER_NAME, possibly shared with other people: only delete
+    # topics created by this user's playground runs and by this user's connectors
+    logwarn "🤝 cluster $CLUSTER_NAME was not created by the playground for user $user, it may be shared: only deleting topics recorded as created by your runs, and dlq/success/error topics of your connectors"
+    logwarn "🎓 to delete topics anyway, use: playground topic delete --topic <topic or regex>"
+    topics_to_delete=$( { get_ccloud_recorded_topics "$cluster_id"; echo "$connector_related_topics" | tr ' ' '\n'; } | grep -v '^$' | sort -u | grep -Fx -f <(echo "$existing_topics"))
+  fi
+
+  for topic in $topics_to_delete
   do
       log "delete topic $topic"
       check_if_skip "confluent kafka topic delete \"$topic\" --force || true"
+  done
+
+  # forget recorded topics that are gone (deleted above or by someone else)
+  existing_topics=$(confluent kafka topic list | awk '{if(NR>2) print $1}')
+  for topic in $(get_ccloud_recorded_topics "$cluster_id")
+  do
+      if ! echo "$existing_topics" | grep -qFx -- "$topic"
+      then
+          forget_ccloud_recorded_topic "$cluster_id" "$topic"
+      fi
   done
 
   if [ ! -z "$GITHUB_RUN_NUMBER" ]

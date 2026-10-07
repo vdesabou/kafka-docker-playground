@@ -610,7 +610,7 @@ function create_topic()
   if [[ $? == 0 ]]; then
     log "Create topic $topic"
     log "confluent kafka topic create $topic --partitions 1"
-    confluent kafka topic create "$topic" --partitions 1 || true
+    confluent kafka topic create "$topic" --partitions 1 && record_ccloud_created_topic "$topic" || true
   else
     log "Topic $topic already exists"
   fi
@@ -628,6 +628,77 @@ function delete_topic()
   else
     log "Topic $topic does not exist"
   fi
+}
+
+# Confluent Cloud topics created by this user are recorded in a local ledger, one
+# "<kafka cluster id> <topic>" per line, so that 'playground cleanup-cloud-resources' can
+# delete only them when the cluster is shared with other people (topic names are generic,
+# they can't be matched on the username). Kept out of .ccloud, which
+# 'playground cleanup-cloud-details' wipes.
+function get_ccloud_created_topics_file () {
+  get_kafka_docker_playground_dir
+  ccloud_created_topics_file="$KAFKA_DOCKER_PLAYGROUND_DIR/playground-ccloud-created-topics"
+}
+
+function get_ccloud_kafka_cluster_id () {
+  get_kafka_docker_playground_dir
+  grep "KAFKA CLUSTER ID" $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta 2>/dev/null | cut -d " " -f 5
+}
+
+function record_ccloud_created_topic () {
+  local topic="$1"
+  local cluster_id
+  cluster_id=$(get_ccloud_kafka_cluster_id)
+  if [ -z "$cluster_id" ]
+  then
+    return 0
+  fi
+  get_ccloud_created_topics_file
+  if ! grep -qFx "$cluster_id $topic" "$ccloud_created_topics_file" 2>/dev/null
+  then
+    echo "$cluster_id $topic" >> "$ccloud_created_topics_file"
+  fi
+}
+
+function get_ccloud_recorded_topics () {
+  local cluster_id="$1"
+  get_ccloud_created_topics_file
+  if [ -f "$ccloud_created_topics_file" ]
+  then
+    awk -v c="$cluster_id" '$1 == c {print $2}' "$ccloud_created_topics_file" | sort -u
+  fi
+}
+
+function forget_ccloud_recorded_topic () {
+  local cluster_id="$1"
+  local topic="$2"
+  get_ccloud_created_topics_file
+  if [ -f "$ccloud_created_topics_file" ]
+  then
+    grep -vFx "$cluster_id $topic" "$ccloud_created_topics_file" > "$ccloud_created_topics_file.tmp"
+    mv "$ccloud_created_topics_file.tmp" "$ccloud_created_topics_file"
+  fi
+}
+
+# Topics a fully managed connector creates on its own: dead letter queue and, for connectors
+# with a reporter (HTTP, Lambda, Azure Functions, ServiceNow...), success and error topics.
+# Defaults are dlq-<lcc id>, success-<lcc id> and error-<lcc id>, the config can override them
+# and use ${connector} as a placeholder for the lcc id.
+# $1 = connector id (lcc-xxxx), $2 = connector config as a JSON object
+function get_ccloud_connector_related_topics () {
+  local connector_id="$1"
+  local config="$2"
+
+  if [ -z "$connector_id" ]
+  then
+    return 0
+  fi
+  {
+    echo "dlq-$connector_id"
+    echo "success-$connector_id"
+    echo "error-$connector_id"
+    echo "$config" | jq -r '.["errors.deadletterqueue.topic.name", "reporter.error.topic.name", "reporter.result.topic.name"] // empty' 2>/dev/null | sed "s/\${connector}/$connector_id/g"
+  } | grep -v '^$' | sort -u
 }
 
 function version_gt() {

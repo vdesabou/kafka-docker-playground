@@ -3978,7 +3978,7 @@ playground_open_changelog_usage() {
 playground_cleanup_cloud_resources_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cleanup-cloud-resources\n\n"
-    printf "  🧹 Cleanup cloud resources that were created by running examples from the\n  playground\n  \n  ❗it will remove all resources created by the playground, including topics,\n  connectors, clusters, buckets, redshift cluster, etc...\n  \n  Examples that talk to a real cloud create real, billable resources, and an\n  interrupted run leaves them behind. This sweeps them, scoped to the ones\n  whose name contains your username, across AWS, GCP, Azure, Confluent Cloud\n  and Salesforce. Restrict the scope with --resource, and run it regularly.\n  \n  You are asked to confirm every deletion, unless --force is given.\n  \n  ☢️ Deletions are permanent. Use a dedicated cloud account for the\n     playground rather than one that also hosts resources you care about.\n\n"
+    printf "  🧹 Cleanup cloud resources that were created by running examples from the\n  playground\n  \n  ❗it will remove all resources created by the playground, including topics,\n  connectors, clusters, buckets, redshift cluster, etc...\n  \n  Examples that talk to a real cloud create real, billable resources, and an\n  interrupted run leaves them behind. This sweeps them, scoped to the ones\n  whose name contains your username, across AWS, GCP, Azure, Confluent Cloud\n  and Salesforce. Restrict the scope with --resource, and run it regularly.\n  \n  Confluent Cloud: connectors whose name contains your username are deleted,\n  with their dlq, success and error topics. All topics of the cluster are\n  deleted only when the cluster was created by the playground for you\n  (pg-<user>-*). On a cluster you provided with CLUSTER_NAME, which may be\n  shared with your team, only the topics recorded as created by your own\n  runs (playground topic create / produce, local file\n  playground-ccloud-created-topics) are deleted.\n  \n  You are asked to confirm every deletion, unless --force is given.\n  \n  ☢️ Deletions are permanent. Use a dedicated cloud account for the\n     playground rather than one that also hosts resources you care about.\n\n"
   else
     printf "playground cleanup-cloud-resources - 🧹 Cleanup cloud resources that were created by running examples from the playground\n\n"
   fi
@@ -9429,7 +9429,7 @@ playground_connector_resume_usage() {
 playground_connector_delete_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector delete\n\n"
-    printf "  🗑️  Delete connector\n  \n  Removes the connector and its configuration. Its offsets survive in the\n  Kafka internal topics, so re-creating it under the same name resumes\n  where it stopped rather than starting over.\n\n"
+    printf "  🗑️  Delete connector\n  \n  Removes the connector and its configuration. Its offsets survive in the\n  Kafka internal topics, so re-creating it under the same name resumes\n  where it stopped rather than starting over.\n  \n  For a fully managed or custom connector, the topics the connector\n  created on its own are deleted as well: dead letter queue and, for\n  connectors with a reporter, success and error topics (dlq-lcc-xxxx,\n  success-lcc-xxxx, error-lcc-xxxx, or the names set in the config with\n  errors.deadletterqueue.topic.name, reporter.error.topic.name and\n  reporter.result.topic.name). Keep them with --keep-related-topics.\n\n"
   else
     printf "playground connector delete - 🗑️  Delete connector\n\n"
   fi
@@ -9453,6 +9453,11 @@ playground_connector_delete_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--keep-related-topics")"
+    printf "    🔰 Do not delete the dlq, success and error topics of a fully managed or\n    custom connector\n"
     echo
 
     # :command.usage_fixed_flags
@@ -12661,6 +12666,9 @@ function cleanup_confluent_cloud_resources () {
   #     fi
   # done
 
+  cluster_id=$(get_ccloud_kafka_cluster_id)
+  # dlq/success/error topics of the connectors deleted below
+  connector_related_topics=""
   for row in $(confluent connect cluster list --output json | jq -r '.[] | @base64'); do
       _jq() {
       echo ${row} | base64 -d | jq -r ${1}
@@ -12671,6 +12679,8 @@ function cleanup_confluent_cloud_resources () {
 
       if [[ $name = *_${user}* ]]
       then
+          connector_config=$(confluent connect cluster describe $id --output json 2>/dev/null | jq -c '(.configs // []) | map({(.config): .value}) | add // {}' 2>/dev/null)
+          connector_related_topics="$connector_related_topics $(get_ccloud_connector_related_topics "$id" "$connector_config")"
           log "deleting connector $id ($name)"
           check_if_skip "confluent connect cluster delete $id --force || true"
       fi
@@ -12691,10 +12701,33 @@ function cleanup_confluent_cloud_resources () {
       fi
   done
 
-  for topic in $(confluent kafka topic list | awk '{if(NR>2) print $1}')
+  existing_topics=$(confluent kafka topic list | awk '{if(NR>2) print $1}')
+  if [ ! -z "$GITHUB_RUN_NUMBER" ] || [[ $CLUSTER_NAME = pg-${user}-* ]]
+  then
+    # cluster created by the playground for this user (or CI): nobody else uses it
+    topics_to_delete="$existing_topics"
+  else
+    # cluster provided with CLUSTER_NAME, possibly shared with other people: only delete
+    # topics created by this user's playground runs and by this user's connectors
+    logwarn "🤝 cluster $CLUSTER_NAME was not created by the playground for user $user, it may be shared: only deleting topics recorded as created by your runs, and dlq/success/error topics of your connectors"
+    logwarn "🎓 to delete topics anyway, use: playground topic delete --topic <topic or regex>"
+    topics_to_delete=$( { get_ccloud_recorded_topics "$cluster_id"; echo "$connector_related_topics" | tr ' ' '\n'; } | grep -v '^$' | sort -u | grep -Fx -f <(echo "$existing_topics"))
+  fi
+
+  for topic in $topics_to_delete
   do
       log "delete topic $topic"
       check_if_skip "confluent kafka topic delete \"$topic\" --force || true"
+  done
+
+  # forget recorded topics that are gone (deleted above or by someone else)
+  existing_topics=$(confluent kafka topic list | awk '{if(NR>2) print $1}')
+  for topic in $(get_ccloud_recorded_topics "$cluster_id")
+  do
+      if ! echo "$existing_topics" | grep -qFx -- "$topic"
+      then
+          forget_ccloud_recorded_topic "$cluster_id" "$topic"
+      fi
   done
 
   if [ ! -z "$GITHUB_RUN_NUMBER" ]
@@ -15197,7 +15230,7 @@ function create_topic()
   if [[ $? == 0 ]]; then
     log "Create topic $topic"
     log "confluent kafka topic create $topic --partitions 1"
-    confluent kafka topic create "$topic" --partitions 1 || true
+    confluent kafka topic create "$topic" --partitions 1 && record_ccloud_created_topic "$topic" || true
   else
     log "Topic $topic already exists"
   fi
@@ -15215,6 +15248,77 @@ function delete_topic()
   else
     log "Topic $topic does not exist"
   fi
+}
+
+# Confluent Cloud topics created by this user are recorded in a local ledger, one
+# "<kafka cluster id> <topic>" per line, so that 'playground cleanup-cloud-resources' can
+# delete only them when the cluster is shared with other people (topic names are generic,
+# they can't be matched on the username). Kept out of .ccloud, which
+# 'playground cleanup-cloud-details' wipes.
+function get_ccloud_created_topics_file () {
+  get_kafka_docker_playground_dir
+  ccloud_created_topics_file="$KAFKA_DOCKER_PLAYGROUND_DIR/playground-ccloud-created-topics"
+}
+
+function get_ccloud_kafka_cluster_id () {
+  get_kafka_docker_playground_dir
+  grep "KAFKA CLUSTER ID" $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta 2>/dev/null | cut -d " " -f 5
+}
+
+function record_ccloud_created_topic () {
+  local topic="$1"
+  local cluster_id
+  cluster_id=$(get_ccloud_kafka_cluster_id)
+  if [ -z "$cluster_id" ]
+  then
+    return 0
+  fi
+  get_ccloud_created_topics_file
+  if ! grep -qFx "$cluster_id $topic" "$ccloud_created_topics_file" 2>/dev/null
+  then
+    echo "$cluster_id $topic" >> "$ccloud_created_topics_file"
+  fi
+}
+
+function get_ccloud_recorded_topics () {
+  local cluster_id="$1"
+  get_ccloud_created_topics_file
+  if [ -f "$ccloud_created_topics_file" ]
+  then
+    awk -v c="$cluster_id" '$1 == c {print $2}' "$ccloud_created_topics_file" | sort -u
+  fi
+}
+
+function forget_ccloud_recorded_topic () {
+  local cluster_id="$1"
+  local topic="$2"
+  get_ccloud_created_topics_file
+  if [ -f "$ccloud_created_topics_file" ]
+  then
+    grep -vFx "$cluster_id $topic" "$ccloud_created_topics_file" > "$ccloud_created_topics_file.tmp"
+    mv "$ccloud_created_topics_file.tmp" "$ccloud_created_topics_file"
+  fi
+}
+
+# Topics a fully managed connector creates on its own: dead letter queue and, for connectors
+# with a reporter (HTTP, Lambda, Azure Functions, ServiceNow...), success and error topics.
+# Defaults are dlq-<lcc id>, success-<lcc id> and error-<lcc id>, the config can override them
+# and use ${connector} as a placeholder for the lcc id.
+# $1 = connector id (lcc-xxxx), $2 = connector config as a JSON object
+function get_ccloud_connector_related_topics () {
+  local connector_id="$1"
+  local config="$2"
+
+  if [ -z "$connector_id" ]
+  then
+    return 0
+  fi
+  {
+    echo "dlq-$connector_id"
+    echo "success-$connector_id"
+    echo "error-$connector_id"
+    echo "$config" | jq -r '.["errors.deadletterqueue.topic.name", "reporter.error.topic.name", "reporter.result.topic.name"] // empty' 2>/dev/null | sed "s/\${connector}/$connector_id/g"
+  } | grep -v '^$' | sort -u
 }
 
 function version_gt() {
@@ -36339,6 +36443,7 @@ playground_topic_create_command() {
           fi
           get_connect_image
           docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-topics --create --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --partitions $nb_partitions ${other_args[*]}
+          record_ccloud_created_topic "$topic"
       elif [[ "$environment" == "cfk" ]]
       then
           if [[ -z "$nb_partitions" ]]
@@ -36465,6 +36570,7 @@ playground_topic_delete_command() {
       then
           get_connect_image
           docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
+          forget_ccloud_recorded_topic "$(get_ccloud_kafka_cluster_id)" "$topic"
       elif [[ "$environment" == "cfk" ]]
       then
           kubectl -n confluent delete kafkatopic $topic
@@ -39453,6 +39559,7 @@ playground_connector_delete_command() {
   # src/commands/connector/delete.sh
   verbose="${args[--verbose]}"
   connector="${args[--connector]}"
+  keep_related_topics="${args[--keep-related-topics]}"
 
   connector_type=$(playground state get run.connector_type)
   environment=$(playground state get run.environment)
@@ -39480,7 +39587,34 @@ playground_connector_delete_command() {
       if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
       then
           get_ccloud_connect
+          related_topics=""
+          if [[ -z "$keep_related_topics" ]]
+          then
+              # resolve dlq/success/error topics while the connector still exists
+              if handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors?expand=id\" --header \"authorization: Basic $authorization\"" > /dev/null 2>&1
+              then
+                  connector_id=$(echo "$curl_output" | jq -r --arg name "$connector" '.[$name].id.id // empty' 2>/dev/null)
+                  connector_config="{}"
+                  if handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config\" --header \"authorization: Basic $authorization\"" > /dev/null 2>&1
+                  then
+                      connector_config="$curl_output"
+                  fi
+                  related_topics=$(get_ccloud_connector_related_topics "$connector_id" "$connector_config")
+              fi
+          fi
           handle_ccloud_connect_rest_api "curl -s --request DELETE \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector\" --header \"authorization: Basic $authorization\""
+          if [ -n "$related_topics" ]
+          then
+              existing_topics=$(playground get-topic-list)
+              for topic in $related_topics
+              do
+                  if echo "$existing_topics" | grep -qFx -- "$topic"
+                  then
+                      log "🧹 Deleting topic $topic created by connector $connector (use --keep-related-topics to keep it)"
+                      playground topic delete --topic "$topic"
+                  fi
+              done
+          fi
       elif [[ "$environment" == "cfk" ]]
       then
           log "☸️ kubectl -n confluent delete connector $connector --ignore-not-found=true"
@@ -66647,6 +66781,14 @@ playground_connector_delete_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --keep-related-topics)
+
+        # :flag.case_no_arg
+        args['--keep-related-topics']=1
+        shift
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -80664,6 +80806,11 @@ playground_connector_delete_completion() {
         completion_blocked_flags["--connector"]=1
 
         ;;
+      --keep-related-topics)
+        completion_blocked_flags["--keep-related-topics"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -80674,6 +80821,7 @@ playground_connector_delete_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --keep-related-topics "$completion_current" --keep-related-topics
   fi
 
 }

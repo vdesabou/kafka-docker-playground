@@ -1605,6 +1605,14 @@ subcommands:
         whose name contains your username, across AWS, GCP, Azure, Confluent Cloud
         and Salesforce. Restrict the scope with --resource, and run it regularly.
         
+        Confluent Cloud: connectors whose name contains your username are deleted,
+        with their dlq, success and error topics. All topics of the cluster are
+        deleted only when the cluster was created by the playground for you
+        (pg-<user>-*). On a cluster you provided with CLUSTER_NAME, which may be
+        shared with your team, only the topics recorded as created by your own
+        runs (playground topic create / produce, local file
+        playground-ccloud-created-topics) are deleted.
+        
         You are asked to confirm every deletion, unless --force is given.
         
         ☢️ Deletions are permanent. Use a dedicated cloud account for the
@@ -5571,6 +5579,13 @@ subcommands:
             Removes the connector and its configuration. Its offsets survive in the
             Kafka internal topics, so re-creating it under the same name resumes
             where it stopped rather than starting over.
+            
+            For a fully managed or custom connector, the topics the connector
+            created on its own are deleted as well: dead letter queue and, for
+            connectors with a reporter, success and error topics (dlq-lcc-xxxx,
+            success-lcc-xxxx, error-lcc-xxxx, or the names set in the config with
+            errors.deadletterqueue.topic.name, reporter.error.topic.name and
+            reporter.result.topic.name). Keep them with --keep-related-topics.
         usage: playground connector delete [OPTIONS]
         options:
         - names:
@@ -5588,6 +5603,12 @@ subcommands:
             🔗 Connector name
             
             🎓 Tip: If not specified, the command will apply to all connectors
+            
+        - names:
+          - --keep-related-topics
+          argument: ""
+          description: | 
+            🔰 Do not delete the dlq, success and error topics of a fully managed or custom connector
             
       - name: show-lag
         description: | 

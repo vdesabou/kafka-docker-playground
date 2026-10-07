@@ -1050,7 +1050,7 @@
     },
     {
       "name": "cleanup-cloud-resources",
-      "description": "🧹 Cleanup cloud resources that were created by running examples from the playground\n\n❗it will remove all resources created by the playground, including topics, connectors, clusters, buckets, redshift cluster, etc...\n\nExamples that talk to a real cloud create real, billable resources, and an\ninterrupted run leaves them behind. This sweeps them, scoped to the ones\nwhose name contains your username, across AWS, GCP, Azure, Confluent Cloud\nand Salesforce. Restrict the scope with --resource, and run it regularly.\n\nYou are asked to confirm every deletion, unless --force is given.\n\n☢️ Deletions are permanent. Use a dedicated cloud account for the\n   playground rather than one that also hosts resources you care about.\n",
+      "description": "🧹 Cleanup cloud resources that were created by running examples from the playground\n\n❗it will remove all resources created by the playground, including topics, connectors, clusters, buckets, redshift cluster, etc...\n\nExamples that talk to a real cloud create real, billable resources, and an\ninterrupted run leaves them behind. This sweeps them, scoped to the ones\nwhose name contains your username, across AWS, GCP, Azure, Confluent Cloud\nand Salesforce. Restrict the scope with --resource, and run it regularly.\n\nConfluent Cloud: connectors whose name contains your username are deleted,\nwith their dlq, success and error topics. All topics of the cluster are\ndeleted only when the cluster was created by the playground for you\n(pg-<user>-*). On a cluster you provided with CLUSTER_NAME, which may be\nshared with your team, only the topics recorded as created by your own\nruns (playground topic create / produce, local file\nplayground-ccloud-created-topics) are deleted.\n\nYou are asked to confirm every deletion, unless --force is given.\n\n☢️ Deletions are permanent. Use a dedicated cloud account for the\n   playground rather than one that also hosts resources you care about.\n",
       "usage": "playground cleanup-cloud-resources [OPTIONS]",
       "options": [
         {
@@ -4087,7 +4087,7 @@
         },
         {
           "name": "delete",
-          "description": "🗑️  Delete connector\n  \n  Removes the connector and its configuration. Its offsets survive in the\n  Kafka internal topics, so re-creating it under the same name resumes\n  where it stopped rather than starting over.\n",
+          "description": "🗑️  Delete connector\n  \n  Removes the connector and its configuration. Its offsets survive in the\n  Kafka internal topics, so re-creating it under the same name resumes\n  where it stopped rather than starting over.\n  \n  For a fully managed or custom connector, the topics the connector\n  created on its own are deleted as well: dead letter queue and, for\n  connectors with a reporter, success and error topics (dlq-lcc-xxxx,\n  success-lcc-xxxx, error-lcc-xxxx, or the names set in the config with\n  errors.deadletterqueue.topic.name, reporter.error.topic.name and\n  reporter.result.topic.name). Keep them with --keep-related-topics.\n",
           "usage": "playground connector delete [OPTIONS]",
           "options": [
             {
@@ -4105,6 +4105,13 @@
               ],
               "argument": "CONNECTOR",
               "description": "🔗 Connector name\n\n🎓 Tip: If not specified, the command will apply to all connectors\n"
+            },
+            {
+              "names": [
+                "--keep-related-topics"
+              ],
+              "argument": "",
+              "description": "🔰 Do not delete the dlq, success and error topics of a fully managed or custom connector\n"
             }
           ]
         },
