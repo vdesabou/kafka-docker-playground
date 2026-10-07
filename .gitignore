@@ -70,6 +70,7 @@ github_ssh_key_file
 confluent-hub
 *.jfr
 playground-run-history
+playground-ccloud-created-topics
 playground.ini
 playground_config.ini
 .ccloud
