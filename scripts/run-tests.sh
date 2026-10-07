@@ -208,7 +208,7 @@ do
         exists=$(aws s3 ls $s3_file --region us-east-1)
         if [ -z "$exists" ]; then
             log "$s3_file does not exist on the bucket, run the test"
-            debug_log "no prior S3 result for $dir/$script, scheduling execution"
+            log "no prior S3 result for $dir/$script, scheduling execution"
             :
         else
             aws s3 cp $s3_file /tmp/ --region us-east-1
