@@ -44,6 +44,10 @@ fi
 
 playground config container-kill-all-before-run true
 
+# list prior results for this tag once, instead of one aws s3 ls per test
+# if empty (listing failed or no result yet), fall back to aws s3 ls per test
+s3_existing_results=$(aws s3 ls "s3://kafka-docker-playground/ci/$TAG-" --region us-east-1 2>/dev/null | awk '{print $NF}')
+
 for dir in $test_list
 do
     if [ ! -d $dir ]
@@ -207,7 +211,12 @@ do
         fi
         s3_file="s3://kafka-docker-playground/ci/$file"
         set +e
-        exists=$(aws s3 ls $s3_file --region us-east-1)
+        if [ -n "$s3_existing_results" ]
+        then
+            exists=$(echo "$s3_existing_results" | grep -Fx "$file")
+        else
+            exists=$(aws s3 ls $s3_file --region us-east-1)
+        fi
         if [ -z "$exists" ]; then
             log "$s3_file does not exist on the bucket, run the test"
             log "no prior S3 result for $dir/$script, scheduling execution"
