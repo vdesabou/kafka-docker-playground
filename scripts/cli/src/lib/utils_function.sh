@@ -631,7 +631,7 @@ function delete_topic()
 }
 
 # Confluent Cloud topics created by this user are recorded in a local ledger, one
-# "<kafka cluster id> <topic>" per line, so that 'playground cleanup-cloud-resources' can
+# "<kafka cluster id> <topic>" (or "<kafka cluster id> prefix:<topic prefix>") per line, so that 'playground cleanup-cloud-resources' can
 # delete only them when the cluster is shared with other people (topic names are generic,
 # they can't be matched on the username). Kept out of .ccloud, which
 # 'playground cleanup-cloud-details' wipes.
@@ -667,6 +667,48 @@ function get_ccloud_recorded_topics () {
   then
     awk -v c="$cluster_id" '$1 == c {print $2}' "$ccloud_created_topics_file" | sort -u
   fi
+}
+
+# Recorded topics of a cluster that exist in $2 (list of existing topics): exact entries, plus
+# every existing topic starting with a recorded prefix
+function get_ccloud_recorded_topics_matching () {
+  local cluster_id="$1"
+  local existing_topics="$2"
+  local entry
+  for entry in $(get_ccloud_recorded_topics "$cluster_id")
+  do
+    if [[ $entry == prefix:* ]]
+    then
+      echo "$existing_topics" | awk -v p="${entry#prefix:}" 'index($0, p) == 1'
+    else
+      echo "$existing_topics" | grep -Fx -- "$entry"
+    fi
+  done | sort -u
+}
+
+# Topics a fully managed or custom source connector writes to, as set in its config: recorded
+# as exact names (kafka.topic, api1.topics, table1.topic...) or as prefixes (topic.prefix,
+# dynamics365.topic.prefix, database.server.name). Names with a ${...} template are skipped,
+# they can't be resolved without the source system.
+# $1 = connector config as a JSON object
+function record_ccloud_connector_output_topics () {
+  local config="$1"
+  local topic
+  local prefix
+  for topic in $(echo "$config" | jq -r 'to_entries[] | select(.key | test("^(kafka\\.topic|couchbase\\.topic|redo\\.log\\.topic\\.name|state\\.topic\\.name|[a-z]+[0-9]+\\.topics?)$")) | .value | strings' 2>/dev/null | tr ',' '\n' | tr -d ' ')
+  do
+    if [[ $topic != *'${'* ]]
+    then
+      record_ccloud_created_topic "$topic"
+    fi
+  done
+  for prefix in $(echo "$config" | jq -r 'to_entries[] | select(.key | test("^(topic\\.prefix|[a-z0-9]+\\.topic\\.prefix|database\\.server\\.name)$")) | .value | strings' 2>/dev/null | tr -d ' ')
+  do
+    if [[ $prefix != *'${'* ]]
+    then
+      record_ccloud_created_topic "prefix:$prefix"
+    fi
+  done
 }
 
 function forget_ccloud_recorded_topic () {

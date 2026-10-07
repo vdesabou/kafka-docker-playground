@@ -2149,8 +2149,10 @@ commands:
     deleted only when the cluster was created by the playground for you
     (pg-<user>-*). On a cluster you provided with CLUSTER_NAME, which may be
     shared with your team, only the topics recorded as created by your own
-    runs (playground topic create / produce, local file
-    playground-ccloud-created-topics) are deleted.
+    runs are deleted (local file playground-ccloud-created-topics): topics
+    created with playground topic create / produce, and topics your fully
+    managed source connectors write to, as set in their config (kafka.topic,
+    api1.topics, topic.prefix...).
 
     You are asked to confirm every deletion, unless --force is given.
 

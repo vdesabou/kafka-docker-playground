@@ -1907,9 +1907,9 @@ function cleanup_confluent_cloud_resources () {
   else
     # cluster provided with CLUSTER_NAME, possibly shared with other people: only delete
     # topics created by this user's playground runs and by this user's connectors
-    logwarn "🤝 cluster $CLUSTER_NAME was not created by the playground for user $user, it may be shared: only deleting topics recorded as created by your runs, and dlq/success/error topics of your connectors"
+    logwarn "🤝 cluster $CLUSTER_NAME was not created by the playground for user $user, it may be shared: only deleting topics recorded as created by your runs and connectors, and dlq/success/error topics of your connectors"
     logwarn "🎓 to delete topics anyway, use: playground topic delete --topic <topic or regex>"
-    topics_to_delete=$( { get_ccloud_recorded_topics "$cluster_id"; echo "$connector_related_topics" | tr ' ' '\n'; } | grep -v '^$' | sort -u | grep -Fx -f <(echo "$existing_topics"))
+    topics_to_delete=$( { get_ccloud_recorded_topics_matching "$cluster_id" "$existing_topics"; echo "$connector_related_topics" | tr ' ' '\n' | grep -Fx -f <(echo "$existing_topics"); } | grep -v '^$' | sort -u)
   fi
 
   for topic in $topics_to_delete
@@ -1920,11 +1920,17 @@ function cleanup_confluent_cloud_resources () {
 
   # forget recorded topics that are gone (deleted above or by someone else)
   existing_topics=$(confluent kafka topic list | awk '{if(NR>2) print $1}')
-  for topic in $(get_ccloud_recorded_topics "$cluster_id")
+  for entry in $(get_ccloud_recorded_topics "$cluster_id")
   do
-      if ! echo "$existing_topics" | grep -qFx -- "$topic"
+      if [[ $entry == prefix:* ]]
       then
-          forget_ccloud_recorded_topic "$cluster_id" "$topic"
+          if ! echo "$existing_topics" | awk -v p="${entry#prefix:}" 'index($0, p) == 1 {found=1} END {exit !found}'
+          then
+              forget_ccloud_recorded_topic "$cluster_id" "$entry"
+          fi
+      elif ! echo "$existing_topics" | grep -qFx -- "$entry"
+      then
+          forget_ccloud_recorded_topic "$cluster_id" "$entry"
       fi
   done
 
