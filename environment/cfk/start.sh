@@ -390,6 +390,9 @@ function wait_for_kubernetes_apiserver() {
   # sleeps alone silently became ~17 minutes
   local deadline=$(( SECONDS + max_wait_seconds ))
 
+  local fallback_after=$(( SECONDS + 20 ))
+  local fallback_tried=""
+
   log "⌛ waiting up to ${max_wait_seconds}s for the Kubernetes API server"
   while [[ "$SECONDS" -lt "$deadline" ]]
   do
@@ -398,11 +401,42 @@ function wait_for_kubernetes_apiserver() {
       return 0
     fi
 
+    # podman on Linux (CI): the API port published by the k3d load balancer has been
+    # seen to drop connections from the host while k3s itself is healthy. The host
+    # reaches container IPs of a rootful bridge directly, so try the server node
+    if [[ -z "$fallback_tried" ]] && [[ "$SECONDS" -ge "$fallback_after" ]] && container_engine_is_podman && [[ "$(uname -s)" == "Linux" ]]
+    then
+      fallback_tried="true"
+      use_k3d_server_ip_for_kubernetes_api || true
+      continue
+    fi
+
     sleep "$wait_interval"
   done
 
   dump_kubernetes_apiserver_diagnostics
   return 1
+}
+
+# point kubectl straight at the k3s server container instead of the load balancer's
+# published port. TLS is still verified, against "kubernetes", which k3s always puts
+# in its certificate. Returns 1, without touching the kubeconfig, if that fails too
+function use_k3d_server_ip_for_kubernetes_api() {
+  local server_ip=""
+  local kube_cluster="k3d-${K3D_CLUSTER_NAME}"
+  server_ip=$(docker inspect "k3d-${K3D_CLUSTER_NAME}-server-0" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' 2>/dev/null | tr -d '[:space:]')
+  if [[ ! "$server_ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]
+  then
+    return 1
+  fi
+  if ! kubectl --request-timeout=5s --server "https://${server_ip}:6443" --tls-server-name kubernetes get --raw='/readyz' >/dev/null 2>&1
+  then
+    logwarn "⚠️ the k3d server node ${server_ip}:6443 does not answer either"
+    return 1
+  fi
+  logwarn "⚠️ the Kubernetes API port published by the k3d load balancer does not answer from this host (podman),"
+  logwarn "   using the k3d server node directly: https://${server_ip}:6443"
+  kubectl config set-cluster "$kube_cluster" --server "https://${server_ip}:6443" --tls-server-name kubernetes >/dev/null
 }
 
 # what to look at when the API server never answers: where kubectl is pointed,
@@ -417,6 +451,26 @@ function dump_kubernetes_apiserver_diagnostics() {
     logerror "🔎 curl ${server_url}/readyz:"
     curl -sk --max-time 5 -o /dev/null -w "   http_code=%{http_code} connect=%{time_connect}s\n" "${server_url}/readyz" 2>&1
   fi
+  if [[ "$server_url" =~ ^https://[^:/]+:([0-9]+) ]]
+  then
+    local api_port="${BASH_REMATCH[1]}"
+    logerror "🔎 curl https://127.0.0.1:${api_port}/readyz:"
+    curl -sk --max-time 5 -o /dev/null -w "   http_code=%{http_code} connect=%{time_connect}s\n" "https://127.0.0.1:${api_port}/readyz" 2>&1
+    if [[ "$(uname -s)" == "Linux" ]]
+    then
+      logerror "🔎 nat rules for port ${api_port}:"
+      sudo -n iptables -t nat -S 2>/dev/null | grep -E -- "${api_port}|NETAVARK-HOSTPORT|DOCKER " | head -12 | sed 's/^/   /'
+      logerror "🔎 route_localnet: all=$(sysctl -n net.ipv4.conf.all.route_localnet 2>/dev/null) ip_forward=$(sysctl -n net.ipv4.ip_forward 2>/dev/null)"
+    fi
+  fi
+  local node
+  for node in "k3d-${K3D_CLUSTER_NAME}-serverlb" "k3d-${K3D_CLUSTER_NAME}-server-0"
+  do
+    local node_ip
+    node_ip=$(docker inspect "$node" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' 2>/dev/null | tr -d '[:space:]')
+    logerror "🔎 curl ${node} directly (https://${node_ip:-?}:6443/readyz):"
+    [[ -n "$node_ip" ]] && curl -sk --max-time 5 -o /dev/null -w "   http_code=%{http_code} connect=%{time_connect}s\n" "https://${node_ip}:6443/readyz" 2>&1
+  done
   logerror "🔎 last kubectl error:"
   kubectl --request-timeout=5s get --raw='/readyz' < /dev/null 2>&1 | tail -3
   logerror "🔎 k3d containers:"
