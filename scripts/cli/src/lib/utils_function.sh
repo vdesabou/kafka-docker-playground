@@ -2324,22 +2324,6 @@ function check_expected_ccloud_details () {
   fi
 }
 
-# same result as 'playground state get <section>.<key>', but reads playground.ini directly instead of
-# spawning the generated CLI (~150ms per call)
-function playground_state_get_fast () {
-  local section="${1%%.*}"
-  local key="${1#*.}"
-  local ini_file="$KAFKA_DOCKER_PLAYGROUND_DIR/playground.ini"
-
-  if [ -f "$ini_file" ]
-  then
-    awk -v section="[$section]" -v key="$key" '
-      /^\[.+\]/ { in_section = ($0 == section); next }
-      in_section && index($0, key " = ") == 1 { print substr($0, length(key) + 4); exit }
-    ' "$ini_file"
-  fi
-}
-
 function bootstrap_ccloud_environment () {
 
   local expected_cloud="$1"
@@ -2381,7 +2365,7 @@ function bootstrap_ccloud_environment () {
   playground ccloud-costs-history > /tmp/ccloud-costs-history.txt &
 
   suggest_use_previous_example_ccloud=1
-  test_file=$(playground_state_get_fast run.test_file)
+  test_file=$(playground state get run.test_file)
 
   if [ -f "$test_file" ]
   then
@@ -2440,7 +2424,7 @@ function bootstrap_ccloud_environment () {
   
   for item in {ENVIRONMENT,CLUSTER_NAME,CLUSTER_CLOUD,CLUSTER_REGION,CLUSTER_CREDS}
   do
-      i=$(playground_state_get_fast "ccloud.${item}")
+      i=$(playground state get "ccloud.${item}")
       if [ "$i" == "" ]
       then
         # at least one mandatory field is missing
@@ -2451,13 +2435,13 @@ function bootstrap_ccloud_environment () {
 
   if [ ! -z "$CLUSTER_NAME" ]
   then
-    if [ "$(playground_state_get_fast "ccloud.CLUSTER_NAME")" == "$CLUSTER_NAME" ]
+    if [ "$(playground state get "ccloud.CLUSTER_NAME")" == "$CLUSTER_NAME" ]
     then
       suggest_use_previous_example_ccloud=0
     fi
   fi
 
-  if [ "$(playground_state_get_fast "ccloud.suggest_use_previous_example_ccloud")" == "0" ]
+  if [ "$(playground state get "ccloud.suggest_use_previous_example_ccloud")" == "0" ]
   then
     suggest_use_previous_example_ccloud=0
   fi
@@ -2465,20 +2449,20 @@ function bootstrap_ccloud_environment () {
   if [ $suggest_use_previous_example_ccloud -eq 1 ] && [ -z "$GITHUB_RUN_NUMBER" ]
   then
     log "🙋 Use previously used ccloud cluster:"
-    log "  🌐 ENVIRONMENT=$(playground_state_get_fast ccloud.ENVIRONMENT)"
-    log "  🎰 CLUSTER_NAME=$(playground_state_get_fast ccloud.CLUSTER_NAME)"
-    log "  🌤  CLUSTER_CLOUD=$(playground_state_get_fast ccloud.CLUSTER_CLOUD)"
-    log "  🗺  CLUSTER_REGION=$(playground_state_get_fast ccloud.CLUSTER_REGION)"
+    log "  🌐 ENVIRONMENT=$(playground state get ccloud.ENVIRONMENT)"
+    log "  🎰 CLUSTER_NAME=$(playground state get ccloud.CLUSTER_NAME)"
+    log "  🌤  CLUSTER_CLOUD=$(playground state get ccloud.CLUSTER_CLOUD)"
+    log "  🗺  CLUSTER_REGION=$(playground state get ccloud.CLUSTER_REGION)"
 
     read -p "Continue (y/n)?" choice
     case "$choice" in
     y|Y ) 
-      ENVIRONMENT=$(playground_state_get_fast ccloud.ENVIRONMENT)
-      CLUSTER_NAME=$(playground_state_get_fast ccloud.CLUSTER_NAME)
-      CLUSTER_CLOUD=$(playground_state_get_fast ccloud.CLUSTER_CLOUD)
-      CLUSTER_REGION=$(playground_state_get_fast ccloud.CLUSTER_REGION)
-      CLUSTER_CREDS=$(playground_state_get_fast ccloud.CLUSTER_CREDS)
-      SCHEMA_REGISTRY_CREDS=$(playground_state_get_fast ccloud.SCHEMA_REGISTRY_CREDS)
+      ENVIRONMENT=$(playground state get ccloud.ENVIRONMENT)
+      CLUSTER_NAME=$(playground state get ccloud.CLUSTER_NAME)
+      CLUSTER_CLOUD=$(playground state get ccloud.CLUSTER_CLOUD)
+      CLUSTER_REGION=$(playground state get ccloud.CLUSTER_REGION)
+      CLUSTER_CREDS=$(playground state get ccloud.CLUSTER_CREDS)
+      SCHEMA_REGISTRY_CREDS=$(playground state get ccloud.SCHEMA_REGISTRY_CREDS)
       ;;
     n|N ) 
       playground state del ccloud.ENVIRONMENT
@@ -4090,22 +4074,53 @@ function check_arm64_support() {
   set -e
 }
 
+# print the value of <section>.<key> from an ini file written by ini_save, same result as ini_load
+function ini_file_get () {
+  local ini_file="$1"
+  local section="${2%%.*}"
+  local key="${2#*.}"
+
+  awk -v section="[$section]" -v key="$key" '
+    /^\[.+\]/ { in_section = ($0 == section); next }
+    in_section && index($0, key " = ") == 1 { print substr($0, length(key) + 4); exit }
+  ' "$ini_file"
+}
+
 function playground() {
   verbose_begin
+  local playground_cli
   if [[ $(type -f playground 2>&1) =~ "not found" ]]
   then
     if [ -f ../../scripts/cli/playground ]
     then
-      ../../scripts/cli/playground "$@"
+      playground_cli=../../scripts/cli/playground
     elif [ -f ../../../scripts/cli/playground ]
     then
-      ../../../scripts/cli/playground "$@"
+      playground_cli=../../../scripts/cli/playground
     else
       logerror "🔍 playground command not found, add it to your PATH https://kafka-docker-playground.io/#/cli?id=🦶-setup-path"
       exit 1
     fi
   else
-    $(which playground) "$@"
+    playground_cli=$(which playground)
+  fi
+
+  # 'state get' and 'config get' are called very often: read the ini file directly instead of spawning the
+  # generated CLI (~130ms per call, mostly spent parsing the script)
+  local ini_file=""
+  if [ $# -eq 3 ] && [ "$2" == "get" ] && [[ "$3" == *.* ]]
+  then
+    case "$1" in
+      state) ini_file="${playground_cli%/*}/../../playground.ini" ;;
+      config) ini_file="${playground_cli%/*}/../../playground_config.ini" ;;
+    esac
+  fi
+
+  if [ -n "$ini_file" ] && [ -f "$ini_file" ]
+  then
+    ini_file_get "$ini_file" "$3"
+  else
+    "$playground_cli" "$@"
   fi
   verbose_end
 }
