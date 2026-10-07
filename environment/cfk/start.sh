@@ -384,10 +384,14 @@ function resolve_cfk_connector_archive_host() {
 
 function wait_for_kubernetes_apiserver() {
   local max_wait_seconds="${1:-120}"
-  local waited=0
   local wait_interval=2
+  # wall clock, not a sum of the sleeps: when the API server is unreachable each
+  # kubectl call also burns its 5s request timeout, and a 300s budget counted in
+  # sleeps alone silently became ~17 minutes
+  local deadline=$(( SECONDS + max_wait_seconds ))
 
-  while [[ "$waited" -lt "$max_wait_seconds" ]]
+  log "⌛ waiting up to ${max_wait_seconds}s for the Kubernetes API server"
+  while [[ "$SECONDS" -lt "$deadline" ]]
   do
     if kubectl --request-timeout=5s get --raw='/readyz' >/dev/null 2>&1
     then
@@ -395,10 +399,31 @@ function wait_for_kubernetes_apiserver() {
     fi
 
     sleep "$wait_interval"
-    waited=$(( waited + wait_interval ))
   done
 
+  dump_kubernetes_apiserver_diagnostics
   return 1
+}
+
+# what to look at when the API server never answers: where kubectl is pointed,
+# whether that address answers at all, and the state of the k3d containers
+function dump_kubernetes_apiserver_diagnostics() {
+  local server_url=""
+  set +e
+  server_url=$(kubectl config view --minify --output 'jsonpath={.clusters[0].cluster.server}' 2>/dev/null)
+  logerror "🔎 kubeconfig server: ${server_url:-<none>}"
+  if [[ -n "$server_url" ]]
+  then
+    logerror "🔎 curl ${server_url}/readyz:"
+    curl -sk --max-time 5 -o /dev/null -w "   http_code=%{http_code} connect=%{time_connect}s\n" "${server_url}/readyz" 2>&1
+  fi
+  logerror "🔎 last kubectl error:"
+  kubectl --request-timeout=5s get --raw='/readyz' < /dev/null 2>&1 | tail -3
+  logerror "🔎 k3d containers:"
+  docker ps -a --filter "name=k3d-${K3D_CLUSTER_NAME}" --format '   {{.Names}}\t{{.Status}}\t{{.Ports}}' 2>&1
+  logerror "🔎 last lines of k3d-${K3D_CLUSTER_NAME}-server-0:"
+  docker logs --tail 40 "k3d-${K3D_CLUSTER_NAME}-server-0" 2>&1 | sed 's/^/   /'
+  set -e
 }
 
 function verify_build_archive_urls_reachable_from_cluster() {
