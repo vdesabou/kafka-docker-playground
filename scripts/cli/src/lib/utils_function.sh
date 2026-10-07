@@ -286,8 +286,13 @@ COPY --from=pm / /
 RUN ldconfig
 USER appuser
 EOF
-      DOCKER_BUILDKIT=0 docker build -t ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $pm_tmp_dir
-      rm -rf $pm_tmp_dir
+      # legacy builder calls every credHelpers entry of ~/.docker/config.json (e.g. ECR/SSO prompts):
+      # build with an empty docker config, keeping the current context endpoint
+      pm_docker_host=$(docker context inspect --format '{{.Endpoints.docker.Host}}' 2>/dev/null)
+      pm_docker_config=$(mktemp -d -t pg-pm-config-XXXXXXXXXX)
+      echo '{}' > $pm_docker_config/config.json
+      DOCKER_HOST=${DOCKER_HOST:-$pm_docker_host} DOCKER_CONFIG=$pm_docker_config DOCKER_BUILDKIT=0 docker build -t ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $pm_tmp_dir
+      rm -rf $pm_tmp_dir $pm_docker_config
     fi
   fi
   log "🧰 Checking if Docker image ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} contains additional tools"
