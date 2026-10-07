@@ -1876,6 +1876,7 @@ then
       cat /tmp/ccloud-costs-history.txt
     fi
     log "👀 if you want more details, run <playground ccloud-costs-history --detailed>"
+    display_ccloud_leftovers
   elif [[ $test_file == *"aws"* ]]
   then
     echo ""

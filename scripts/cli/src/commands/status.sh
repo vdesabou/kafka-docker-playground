@@ -56,4 +56,9 @@ playground connector show-config-parameters --only-show-file-path | grep -v "app
 
 playground topic list
 
+if [[ "$environment" == "ccloud" ]]
+then
+    display_ccloud_leftovers
+fi
+
 check_for_ec2_instance_running

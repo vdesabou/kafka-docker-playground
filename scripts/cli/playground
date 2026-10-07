@@ -12759,6 +12759,66 @@ function cleanup_confluent_cloud_resources () {
   fi
 }
 
+# Remind the user what is still alive (and billed) on the Confluent Cloud cluster: connectors
+# named *_<user> and the topics 'playground cleanup-cloud-resources' would delete
+function display_ccloud_leftovers () {
+  local user="${USER}"
+  local max_names=5
+  get_kafka_docker_playground_dir
+  local delta="$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta"
+  if [ ! -f "$delta" ]
+  then
+    return 0
+  fi
+  local environment_id
+  local cluster_id
+  local cluster_name
+  environment_id=$(grep "ENVIRONMENT ID" "$delta" | cut -d " " -f 4)
+  cluster_id=$(get_ccloud_kafka_cluster_id)
+  cluster_name=$(playground state get ccloud.CLUSTER_NAME)
+  if [ -z "$environment_id" ] || [ -z "$cluster_id" ]
+  then
+    return 0
+  fi
+
+  local connectors
+  local existing_topics
+  local topics
+  local connectors_json
+  connectors_json=$(confluent connect cluster list --environment "$environment_id" --cluster "$cluster_id" --output json 2>/dev/null | jq -c --arg u "_$user" '[.[] | select(.name | contains($u))]' 2>/dev/null)
+  connectors=$(echo "$connectors_json" | jq -r '.[].name' 2>/dev/null | sort)
+  existing_topics=$(confluent kafka topic list --environment "$environment_id" --cluster "$cluster_id" --output json 2>/dev/null | jq -r '.[].name' 2>/dev/null | grep -v '^_')
+  if [[ $cluster_name = pg-${user}-* ]]
+  then
+    # cluster created by the playground for this user: every topic is theirs
+    topics="$existing_topics"
+  else
+    # recorded topics, plus default dlq/success/error topics of the connectors above
+    topics=$( { get_ccloud_recorded_topics_matching "$cluster_id" "$existing_topics"; for id in $(echo "$connectors_json" | jq -r '.[].id' 2>/dev/null); do get_ccloud_connector_related_topics "$id" "" | grep -Fx -f <(echo "$existing_topics"); done; } | grep -v '^$' | sort -u)
+  fi
+
+  local nb_connectors
+  local nb_topics
+  nb_connectors=$(echo "$connectors" | grep -c . )
+  nb_topics=$(echo "$topics" | grep -c . )
+  if [ "$nb_connectors" -eq 0 ] && [ "$nb_topics" -eq 0 ]
+  then
+    log "✨ no connector or topic of yours left on cluster $cluster_name ($cluster_id)"
+    return 0
+  fi
+
+  logwarn "🧹 still alive on cluster $cluster_name ($cluster_id):"
+  if [ "$nb_connectors" -gt 0 ]
+  then
+    logwarn "   🔗 $nb_connectors connector(s), billed while they exist: $(echo "$connectors" | head -$max_names | paste -sd ',' - | sed 's/,/, /g')$( [ "$nb_connectors" -gt $max_names ] && echo ', ...')"
+  fi
+  if [ "$nb_topics" -gt 0 ]
+  then
+    logwarn "   📝 $nb_topics topic(s): $(echo "$topics" | head -$max_names | paste -sd ',' - | sed 's/,/, /g')$( [ "$nb_topics" -gt $max_names ] && echo ', ...')"
+  fi
+  logwarn "🧹 delete them with <playground cleanup-cloud-resources --resource ccloud>"
+}
+
 function get_zazkia_id_list () {
   handle_onprem_connect_rest_api "curl -s -X GET -H \"Content-Type: application/json\" \"http://localhost:9191/links/\""
   if [[ $(echo "$curl_output" | jq -r '.[].links[]') != "" ]]
@@ -19681,6 +19741,11 @@ playground_status_command() {
 
   playground topic list
 
+  if [[ "$environment" == "ccloud" ]]
+  then
+      display_ccloud_leftovers
+  fi
+
   check_for_ec2_instance_running
 }
 
@@ -25599,6 +25664,7 @@ playground_run_command() {
         cat /tmp/ccloud-costs-history.txt
       fi
       log "👀 if you want more details, run <playground ccloud-costs-history --detailed>"
+      display_ccloud_leftovers
     elif [[ $test_file == *"aws"* ]]
     then
       echo ""
