@@ -2324,11 +2324,28 @@ function check_expected_ccloud_details () {
   fi
 }
 
+# same result as 'playground state get <section>.<key>', but reads playground.ini directly instead of
+# spawning the generated CLI (~150ms per call)
+function playground_state_get_fast () {
+  local section="${1%%.*}"
+  local key="${1#*.}"
+  local ini_file="$KAFKA_DOCKER_PLAYGROUND_DIR/playground.ini"
+
+  if [ -f "$ini_file" ]
+  then
+    awk -v section="[$section]" -v key="$key" '
+      /^\[.+\]/ { in_section = ($0 == section); next }
+      in_section && index($0, key " = ") == 1 { print substr($0, length(key) + 4); exit }
+    ' "$ini_file"
+  fi
+}
+
 function bootstrap_ccloud_environment () {
 
   local expected_cloud="$1"
   local expected_region="$2"
   local connect_migration_utility="$3"
+  local ccloud_cluster_list=""
 
   DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
   get_kafka_docker_playground_dir
@@ -2338,8 +2355,18 @@ function bootstrap_ccloud_environment () {
   then
     # not running with CI
     verify_installed "confluent"
+    # list clusters in the background while the version is checked: the output is used both to verify the
+    # CLI is logged in and to detect that CLUSTER_NAME is already the current cluster
+    ccloud_cluster_list=$(mktemp)
+    confluent kafka cluster list --output json > "$ccloud_cluster_list" 2>&1 &
+    local ccloud_cluster_list_pid=$!
     check_confluent_version 4.32.0 || exit 1
-    verify_confluent_login  "confluent kafka cluster list"
+    wait $ccloud_cluster_list_pid || true
+    if grep -q -e "You must login to run that command" -e "Your session has expired" "$ccloud_cluster_list"
+    then
+      logerror "This script requires confluent CLI to be logged in. Please execute 'confluent login' and run again."
+      exit 1
+    fi
   else
     if [ ! -f /usr/local/bin/confluent ]
     then
@@ -2354,7 +2381,7 @@ function bootstrap_ccloud_environment () {
   playground ccloud-costs-history > /tmp/ccloud-costs-history.txt &
 
   suggest_use_previous_example_ccloud=1
-  test_file=$(playground state get run.test_file)
+  test_file=$(playground_state_get_fast run.test_file)
 
   if [ -f "$test_file" ]
   then
@@ -2413,7 +2440,7 @@ function bootstrap_ccloud_environment () {
   
   for item in {ENVIRONMENT,CLUSTER_NAME,CLUSTER_CLOUD,CLUSTER_REGION,CLUSTER_CREDS}
   do
-      i=$(playground state get "ccloud.${item}")
+      i=$(playground_state_get_fast "ccloud.${item}")
       if [ "$i" == "" ]
       then
         # at least one mandatory field is missing
@@ -2424,13 +2451,13 @@ function bootstrap_ccloud_environment () {
 
   if [ ! -z "$CLUSTER_NAME" ]
   then
-    if [ "$(playground state get "ccloud.CLUSTER_NAME")" == "$CLUSTER_NAME" ]
+    if [ "$(playground_state_get_fast "ccloud.CLUSTER_NAME")" == "$CLUSTER_NAME" ]
     then
       suggest_use_previous_example_ccloud=0
     fi
   fi
 
-  if [ "$(playground state get "ccloud.suggest_use_previous_example_ccloud")" == "0" ]
+  if [ "$(playground_state_get_fast "ccloud.suggest_use_previous_example_ccloud")" == "0" ]
   then
     suggest_use_previous_example_ccloud=0
   fi
@@ -2438,20 +2465,20 @@ function bootstrap_ccloud_environment () {
   if [ $suggest_use_previous_example_ccloud -eq 1 ] && [ -z "$GITHUB_RUN_NUMBER" ]
   then
     log "🙋 Use previously used ccloud cluster:"
-    log "  🌐 ENVIRONMENT=$(playground state get ccloud.ENVIRONMENT)"
-    log "  🎰 CLUSTER_NAME=$(playground state get ccloud.CLUSTER_NAME)"
-    log "  🌤  CLUSTER_CLOUD=$(playground state get ccloud.CLUSTER_CLOUD)"
-    log "  🗺  CLUSTER_REGION=$(playground state get ccloud.CLUSTER_REGION)"
+    log "  🌐 ENVIRONMENT=$(playground_state_get_fast ccloud.ENVIRONMENT)"
+    log "  🎰 CLUSTER_NAME=$(playground_state_get_fast ccloud.CLUSTER_NAME)"
+    log "  🌤  CLUSTER_CLOUD=$(playground_state_get_fast ccloud.CLUSTER_CLOUD)"
+    log "  🗺  CLUSTER_REGION=$(playground_state_get_fast ccloud.CLUSTER_REGION)"
 
     read -p "Continue (y/n)?" choice
     case "$choice" in
     y|Y ) 
-      ENVIRONMENT=$(playground state get ccloud.ENVIRONMENT)
-      CLUSTER_NAME=$(playground state get ccloud.CLUSTER_NAME)
-      CLUSTER_CLOUD=$(playground state get ccloud.CLUSTER_CLOUD)
-      CLUSTER_REGION=$(playground state get ccloud.CLUSTER_REGION)
-      CLUSTER_CREDS=$(playground state get ccloud.CLUSTER_CREDS)
-      SCHEMA_REGISTRY_CREDS=$(playground state get ccloud.SCHEMA_REGISTRY_CREDS)
+      ENVIRONMENT=$(playground_state_get_fast ccloud.ENVIRONMENT)
+      CLUSTER_NAME=$(playground_state_get_fast ccloud.CLUSTER_NAME)
+      CLUSTER_CLOUD=$(playground_state_get_fast ccloud.CLUSTER_CLOUD)
+      CLUSTER_REGION=$(playground_state_get_fast ccloud.CLUSTER_REGION)
+      CLUSTER_CREDS=$(playground_state_get_fast ccloud.CLUSTER_CREDS)
+      SCHEMA_REGISTRY_CREDS=$(playground_state_get_fast ccloud.SCHEMA_REGISTRY_CREDS)
       ;;
     n|N ) 
       playground state del ccloud.ENVIRONMENT
@@ -2473,6 +2500,10 @@ function bootstrap_ccloud_environment () {
     #
     # CLUSTER_NAME is not set
     #
+    if [ -n "$ccloud_cluster_list" ]
+    then
+      rm -f "$ccloud_cluster_list"
+    fi
     log "🛠👷‍♀️ CLUSTER_NAME is not set, a new Confluent Cloud cluster will be created..."
     log "🎓 If you wanted to use an existing cluster, set CLUSTER_NAME, ENVIRONMENT, CLUSTER_CLOUD, CLUSTER_REGION and CLUSTER_CREDS (also optionnaly SCHEMA_REGISTRY_CREDS)"
 
@@ -2538,33 +2569,31 @@ function bootstrap_ccloud_environment () {
 
     log "💡 if you notice that the playground is using unexpected ccloud details, use <playground cleanup-cloud-details> to remove all caching and re-launch the example"
     
-    for row in $(confluent kafka cluster list --output json | jq -r '.[] | @base64'); do
-        _jq() {
-        echo ${row} | base64 -d | jq -r ${1}
-        }
-        
-        is_current=$(echo $(_jq '.is_current'))
-        name=$(echo $(_jq '.name'))
+    if [ -z "$ccloud_cluster_list" ]
+    then
+      ccloud_cluster_list=$(mktemp)
+      confluent kafka cluster list --output json > "$ccloud_cluster_list"
+    fi
+    is_current=$(jq -r --arg name "$CLUSTER_NAME" 'any(.[]; .is_current == true and .name == $name)' "$ccloud_cluster_list" 2>/dev/null || echo false)
+    rm -f "$ccloud_cluster_list"
 
-        if [ "$is_current" == "true" ] && [ "$name" == "$CLUSTER_NAME" ]
+    if [ "$is_current" == "true" ]
+    then
+      if [ -f $DELTA_CONFIGS_ENV ]
+      then
+        source $DELTA_CONFIGS_ENV
+        log "🌱 cluster $CLUSTER_NAME is ready to be used!"
+
+        if [[ ! -n "$connect_migration_utility" ]]
         then
-          if [ -f $DELTA_CONFIGS_ENV ]
-          then
-            source $DELTA_CONFIGS_ENV
-            log "🌱 cluster $CLUSTER_NAME is ready to be used!"
-
-			if [[ ! -n "$connect_migration_utility" ]]
-			then
-				# trick
-				playground state set run.environment "ccloud"
-			fi
-            return
-          else
-            logwarn "$DELTA_CONFIGS_ENV has not been generated, doing it now..."
-            break
-          fi
+          # trick
+          playground state set run.environment "ccloud"
         fi
-    done
+        return
+      else
+        logwarn "$DELTA_CONFIGS_ENV has not been generated, doing it now..."
+      fi
+    fi
 
     export WARMUP_TIME=0
   fi
