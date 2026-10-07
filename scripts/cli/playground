@@ -17518,7 +17518,30 @@ function validate_ccloud_connector_up() {
   fi
   set -e
 
-  confluent connect cluster list -o json | jq -e 'map(select(.name == "'"$1"'" and .status == "RUNNING")) | .[]' > /dev/null 2>&1
+  connector_status=$(confluent connect cluster list -o json 2>/dev/null | jq -r 'map(select(.name == "'"$connector"'")) | .[0].status // empty' 2>/dev/null)
+  if [ "$connector_status" == "RUNNING" ]
+  then
+    return 0
+  fi
+
+  if [ "$connector_status" == "FAILED" ]
+  then
+    # re-applying an identical config does not restart a failed connector or task, so a transient
+    # failure at startup (e.g. 401 API_KEY_NOT_FOUND from Schema Registry right after provisioning)
+    # would stay FAILED until the end of the wait: restart it explicitly
+    set +e
+    echo "🔄 connector $connector is FAILED, restarting it"
+    playground connector restart --connector "$connector" > /dev/null 2>&1
+    connector_id=$(get_ccloud_connector_lcc "$connector")
+    for task_id in $(confluent connect cluster describe "$connector_id" -o json 2>/dev/null | jq -r '.tasks[]? | select(.state == "FAILED") | .task_id' 2>/dev/null)
+    do
+      echo "🔄 task $task_id of connector $connector is FAILED, restarting it"
+      playground connector restart --connector "$connector" --task-id "$task_id" > /dev/null 2>&1
+    done
+    set -e
+  fi
+
+  return 1
 }
 
 function get_ccloud_connector_lcc() {
