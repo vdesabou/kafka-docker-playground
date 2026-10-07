@@ -69,6 +69,16 @@ do
     then
         title="🔥 ${dir} ($PLAYGROUND_ENVIRONMENT)"
     fi
+    # podman failures have their own issues (see update-readme): "(podman)", "(cfk, podman)"
+    if [ "$container_engine" = "podman" ]
+    then
+        if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
+        then
+            title="🔥 ${dir} (cfk, podman)"
+        else
+            title="🔥 ${dir} (podman)"
+        fi
+    fi
     set +e
     issue_number=$(gh issue list --state open --limit 500 --json number,title --jq ".[] | select(.title == \"$title\") | .number" 2>/dev/null | head -1)
     if [ -n "$issue_number" ]

@@ -23,13 +23,20 @@ then
 	then
 		issue_args+=(--label cfk)
 	fi
+	# podman failures have their own issues, titled "(podman)" or "(cfk, podman)":
+	# --podman re-runs those, and a docker re-run leaves them out
+	if [[ -n "$podman" ]]
+	then
+		issue_args+=(--label podman)
+	fi
 
 	issues_json=$(gh "${issue_args[@]}")
-	test_list=$(printf '%s\n' "$issues_json" | jq -r '
+	test_list=$(printf '%s\n' "$issues_json" | jq -r --arg podman "$podman" '
 		.[]
 		| .title
+		| select(if $podman == "" then (test("podman\\)$") | not) else true end)
 		| sub("^🔥[[:space:]]+"; "")
-		| sub("[[:space:]]*\\(cfk\\)$"; "")
+		| sub("[[:space:]]*\\((cfk|podman|cfk, podman)\\)$"; "")
 	' | awk 'NF && !seen[$0]++' | paste -sd ' ' -)
 fi
 

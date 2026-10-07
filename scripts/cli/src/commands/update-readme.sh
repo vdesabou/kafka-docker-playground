@@ -49,13 +49,38 @@ nb_connector_tests=0
 nb_total_fail=0
 nb_total_success=0
 
-# Loop through environments: regular CI and CfK
-for environment_suffix in "" "-cfk"
+# podman results (container_engine=podman in CI) are stored with a -podman suffix
+if ls "${ci_folder}"/*-podman > /dev/null 2>&1
+then
+  gh label create "podman" --description "fails when run with podman" --color "892CA0" > /dev/null 2>&1 || true
+fi
+
+# Loop through environments: regular CI and CfK, then the same on podman. The podman
+# passes only manage GH issues: badges, README and the totals stay docker only
+for environment_suffix in "" "-cfk" "-podman" "-cfk-podman"
 do
   environment_label="ci"
-  if [ "$environment_suffix" = "-cfk" ]
+  issue_title_suffix=""
+  extra_labels=()
+  case "$environment_suffix" in
+    -cfk)        environment_label="ci_cfk";        issue_title_suffix=" (cfk)";         extra_labels=("cfk") ;;
+    -podman)     environment_label="ci_podman";     issue_title_suffix=" (podman)";      extra_labels=("podman") ;;
+    -cfk-podman) environment_label="ci_cfk_podman"; issue_title_suffix=" (cfk, podman)"; extra_labels=("cfk" "podman") ;;
+  esac
+  issue_create_labels=()
+  issue_edit_labels=()
+  for extra_label in "${extra_labels[@]}"
+  do
+    issue_create_labels+=(--label "$extra_label")
+    issue_edit_labels+=(--add-label "$extra_label")
+  done
+  is_podman_pass=""
+  if [[ "$environment_suffix" == *podman ]]
   then
-    environment_label="ci_cfk"
+    is_podman_pass="true"
+    saved_nb_total_tests=$nb_total_tests
+    saved_nb_total_fail=$nb_total_fail
+    saved_nb_total_success=$nb_total_success
   fi
   log "⏱️  Processing $environment_label results"
 
@@ -166,6 +191,15 @@ do
       testdir=$(echo "$test" | sed 's/\//-/g')
       ci_file="${ci_folder}/${image_version}-${testdir}-${version}-${script_name}${environment_suffix}"
       ci_output_file="${ci_output_folder}/${image_version}-${testdir}-${version}-${script_name}${environment_suffix}.log"
+
+      # most tests never ran on podman: without a result file, counting them would reuse
+      # the status and html_url of the previous test, and open or close issues for nothing
+      if [ -n "$is_podman_pass" ] && [ ! -f ${ci_file} ]
+      then
+        let "nb_tests--"
+        let "nb_total_tests--"
+        continue
+      fi
 
       if [ -f ${ci_file} ]
       then
@@ -286,7 +320,7 @@ do
   if [[ ! -n "$generate_for_kb" ]]
   then
     # GH issues
-    if [ "$html_url" != "" ]
+    if [ "$html_url" != "" ] && { [ -z "$is_podman_pass" ] || [ ${nb_tests} -gt 0 ]; }
     then
       MAX_SIZE=65000
       # Check if the file exists and is larger than the limit
@@ -297,11 +331,7 @@ do
           head -c $MAX_SIZE "$gh_msg_file" > "$gh_msg_file.tmp" && mv "$gh_msg_file.tmp" "$gh_msg_file"
       fi
       t=$(echo ${testdir} | sed 's/-/\//')
-      title="🔥 ${t}"
-      if [ "$environment_suffix" = "-cfk" ]
-      then
-        title="🔥 ${t} (cfk)"
-      fi
+      title="🔥 ${t}${issue_title_suffix}"
       issue_number=$(gh issue list --state open --limit 500 --json number,title | jq -r --arg title "$title" '.[] | select(.title == $title) | .number' | head -1)
       log "Number of successful tests: $nb_success/${nb_tests}"
       if [ ${nb_fail} -gt 0 ]
@@ -312,12 +342,7 @@ do
           cat ${gh_msg_file_intro} >> ${gh_msg_file_final}
           cat ${gh_msg_file} >> ${gh_msg_file_final}
           log "Creating GH issue with title $title"
-          if [ "$environment_suffix" = "-cfk" ]
-          then
-            gh issue create --title "$title" --body-file "$gh_msg_file_final" --assignee vdesabou --label "new 🆕" --label "cfk"
-          else
-            gh issue create --title "$title" --body-file "$gh_msg_file_final" --assignee vdesabou --label "new 🆕"
-          fi
+          gh issue create --title "$title" --body-file "$gh_msg_file_final" --assignee vdesabou --label "new 🆕" "${issue_create_labels[@]}"
           issue_number=$(gh issue list --state open --limit 500 --json number,title | jq -r --arg title "$title" '.[] | select(.title == $title) | .number' | head -1)
         else
           echo -e "🤦‍♂️💥 Still failing !\n" >> ${gh_msg_file_intro}
@@ -331,12 +356,7 @@ do
                 log "🐛 Skipping as test has an opened GH issue (${issue_number} $title) with label 'CI ignore ⏭️'"
             else
                 gh issue comment ${issue_number} --body-file "$gh_msg_file_final"
-                if [ "$environment_suffix" = "-cfk" ]
-                then
-                  gh issue edit ${issue_number} --add-label "CI failing 🔥" --add-label "cfk" --remove-label "new 🆕"
-                else
-                  gh issue edit ${issue_number} --add-label "CI failing 🔥" --remove-label "new 🆕"
-                fi
+                gh issue edit ${issue_number} --add-label "CI failing 🔥" "${issue_edit_labels[@]}" --remove-label "new 🆕"
             fi
         fi
         gh_issue_number="$issue_number"
@@ -355,6 +375,11 @@ do
           gh issue close ${issue_number}
         fi
       fi
+    fi
+
+    if [ -n "$is_podman_pass" ]
+    then
+      continue
     fi
 
     ci=""
@@ -526,6 +551,12 @@ do
     fi
   fi
 done #end test_list
+  if [ -n "$is_podman_pass" ]
+  then
+    nb_total_tests=$saved_nb_total_tests
+    nb_total_fail=$saved_nb_total_fail
+    nb_total_success=$saved_nb_total_success
+  fi
 done #end environment_suffix loop
 
 cp_version_tested=""
