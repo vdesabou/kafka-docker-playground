@@ -244,3 +244,35 @@ block, and never include customer-sensitive data.
 - ccloud examples start with `bootstrap_ccloud_environment "<cloud>" "<region>"` instead of `start-environment`, and name connectors `<TYPE>_$USER`.
 - Examples are deliberately minimal — optimised for automated testing and fast reproduction, not production hardening.
 - **Use the `playground` CLI, not raw `docker` / `curl` / `kafka-*`** — see the 🥈 section above for the full mapping table. The CLI owns the compose-file/profile assembly and the state in `playground.ini`.
+
+## Contributing: issues and pull requests
+
+The upstream repository is `vdesabou/kafka-docker-playground`. Track each feature or bug fix with a GitHub
+issue and deliver it as a pull request linked to that issue.
+
+- **Ask the user before creating an issue, and again before opening a PR** (or pushing new commits to an
+  existing PR branch). Agreeing to one does not cover the next.
+- **Avoid duplicates and redundant work.** Search first with
+  `gh issue list --state all --search "<keywords>"`, and check `git log origin/master`, since the change may
+  already be there.
+- **Issue:**
+  - Title: emoji prefix + short sentence, matching existing issues: `🐛 …` bug, `🧠 …` CLI improvement,
+    `🧹 …` cleanup, `👾 Add … Fully Managed Connector example`, `⭐ …` big feature.
+  - Labels: `enhancement ✨` for features and `bug 🐛` for fixes, written exactly like that (emoji
+    included). Add `cfk` if the change is specific to the cfk environment. Never use `new 🆕`,
+    `CI failing 🔥` or `CI ignore ⏭️`: they are reserved for CI-generated issues.
+  - No milestone.
+  - Body: a short, standalone description of the problem and the change.
+- **Commit:** same title as the issue, ending with ` #<issue number>`. Commit only the files of the change:
+  - never the private `reproduction-models` submodule
+  - never `playground.ini`, `playground-run-history`, `.ccloud/`, `secrets.properties` or key files
+  - never hand edits to generated files (`scripts/cli/playground`, `docs/cli.md`, `docs/content.md`…).
+    Regenerate them instead (see above).
+- **Pull request:**
+  - Branch off `master` with a descriptive name (for example `fix-<issue>-<slug>`). Push to your fork if
+    you don't have write access to the upstream repository.
+  - Open it with `gh pr create --base master`, using the issue title. The body must contain
+    `Fixes #<issue number>`.
+  - Use the same labels as the issue, and no milestone.
+- **CI:** a new example only runs in CI once its directory is added to a 🚀 line of the `test_list` matrix
+  in `.github/workflows/ci.yml` (see Testing).
