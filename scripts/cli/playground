@@ -19738,6 +19738,22 @@ playground_doctor_command() {
           # the default machine shares /Users, /private and /var/folders
           if [[ "$OSTYPE" == "darwin"* ]]
           then
+              # amd64-only images (SQL Server, Oracle, DB2, ...) on Apple silicon: without
+              # Rosetta the machine falls back to QEMU user emulation, under which SQL Server
+              # hangs right after its banner. Docker Desktop uses Rosetta
+              if [ "$(uname -m)" = "arm64" ]
+              then
+                  if [ "$(podman machine inspect --format '{{.Rosetta}}' 2>/dev/null)" = "true" ]
+                  then
+                      doctor_ok "the podman machine runs amd64 images with Rosetta"
+                  else
+                      doctor_warn "the podman machine runs amd64 images with QEMU, not Rosetta"
+                      logwarn "amd64-only images such as SQL Server hang or crash under QEMU. Enable Rosetta:"
+                      logwarn "  printf '[machine]\\\\nrosetta = true\\\\n' >> ~/.config/containers/containers.conf"
+                      logwarn "  podman machine stop && podman machine start"
+                  fi
+              fi
+
               # `podman machine inspect` does not list the mounts on every version,
               # so ask the VM which host folders it really has (virtiofs)
               machine_mounts=$(podman machine ssh -- findmnt -rn -t virtiofs -o TARGET 2>/dev/null | tr -d '\r')
