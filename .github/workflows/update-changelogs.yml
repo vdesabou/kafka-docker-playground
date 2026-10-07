@@ -30,7 +30,23 @@ jobs:
         with:
           query: "milestone:${{ github.event.milestone.title }}"
           token: ${{ secrets.GITHUB_TOKEN }}
-          
+
+      # the GitHub API is eventually consistent: right after closing them, the release notes generator
+      # can still see the issues as open and silently leave them out
+      - name: Wait for closed issues to be visible
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MILESTONE_NUMBER: ${{ github.event.milestone.number }}
+        run: |
+          for i in $(seq 1 30); do
+            open=$(gh api "repos/${GITHUB_REPOSITORY}/issues?milestone=${MILESTONE_NUMBER}&state=open&per_page=100" --jq 'length')
+            echo "open issues in milestone ${MILESTONE_NUMBER}: ${open}"
+            [ "${open}" = "0" ] && break
+            sleep 5
+          done
+          # list endpoints can lag behind each other, give the generator's query some extra margin
+          sleep 20
+
       - name: Create Release Notes
         uses: vdesabou/release-notes-generator-action@1.0.3
         id: Changelog
