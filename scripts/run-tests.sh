@@ -17,6 +17,8 @@ then
 fi
 
 IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
+# not exported on purpose: each example sources utils.sh again and builds the connect image only if it really runs
+SKIP_MAYBE_CREATE_IMAGE=true
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../scripts/utils.sh
 

@@ -1003,7 +1003,10 @@ then
       export CP_KSQL_CLI_TAG="$TAG"
     fi
     set_kafka_client_tag
-    maybe_create_image
+    if [ -z "$SKIP_MAYBE_CREATE_IMAGE" ]
+    then
+      maybe_create_image
+    fi
 else
     if [ -z "$CP_KAFKA_IMAGE" ]
     then
@@ -1166,7 +1169,10 @@ else
         fi
     fi
     set_kafka_client_tag
-    maybe_create_image
+    if [ -z "$SKIP_MAYBE_CREATE_IMAGE" ]
+    then
+      maybe_create_image
+    fi
 fi
 
 # Setting grafana agent based  
