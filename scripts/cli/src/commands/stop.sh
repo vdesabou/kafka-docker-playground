@@ -39,6 +39,11 @@ then
     exit 0
 fi
 
+if [[ "$environment" == "ccloud" ]] && [ -z "$PG_SKIP_CCLOUD_RUN_CLEANUP" ]
+then
+    maybe_cleanup_ccloud_run_resources
+fi
+
 docker_command=$(playground state get run.docker_command)
 echo "$docker_command" > $tmp_dir/tmp
 

@@ -277,6 +277,7 @@ then
 
     # Deploy using Terraform
     deploy_connector_with_terraform "$connector" "$json_content" "$environment" "$cluster"
+    record_ccloud_created_connector "$connector"
     record_ccloud_connector_output_topics "$json_content"
     terraform_dir="$TERRAFORM_DEPLOY_DIR"
 
@@ -336,7 +337,8 @@ then
     else
         handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config"
     fi
-    # so that 'playground cleanup-cloud-resources' can delete them on a shared cluster
+    # so that 'playground cleanup-cloud-resources' and the end-of-run cleanup can delete them
+    record_ccloud_created_connector "$connector"
     record_ccloud_connector_output_topics "$json_content"
 else
     if [[ -n "$offsets" ]]

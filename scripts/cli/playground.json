@@ -28,7 +28,7 @@
     },
     {
       "name": "config",
-      "description": "⚙️ Configure CLI\n\nYour preferences, kept between sessions:\n\n  editor <name>                      the editor every command opens files\n                                     with (code, vi, nano...)\n  folder_zip_or_jar <dir>...         where to look for connector zips and\n                                     jars, in addition to the current\n                                     folder\n  clipboard true|false               copy connector config to the\n                                     clipboard (macOS only)\n  container-kill-all-before-run      kill every container before each run,\n                                     or just stop the example\n  check-and-update-repo-version      warn when your clone is out of date\n  open-ccloud-connector-in-browser   open fully managed connectors, and in\n  open-grafana-in-browser            which browser\n",
+      "description": "⚙️ Configure CLI\n\nYour preferences, kept between sessions:\n\n  editor <name>                      the editor every command opens files\n                                     with (code, vi, nano...)\n  folder_zip_or_jar <dir>...         where to look for connector zips and\n                                     jars, in addition to the current\n                                     folder\n  clipboard true|false               copy connector config to the\n                                     clipboard (macOS only)\n  container-kill-all-before-run      kill every container before each run,\n                                     or just stop the example\n  cleanup-ccloud-resources-after-run delete the Confluent Cloud connectors\n                                     and topics of the last ccloud run on\n                                     stop and before the next run\n                                     (ask, true or false)\n  check-and-update-repo-version      warn when your clone is out of date\n  open-ccloud-connector-in-browser   open fully managed connectors, and in\n  open-grafana-in-browser            which browser\n",
       "usage": "playground config COMMAND",
       "options": [],
       "subcommands": [
@@ -66,6 +66,12 @@
           "name": "container-kill-all-before-run",
           "description": "when running an example, always call playground container kill-all first. If set to false, it will call playground stop instead.\n  \n",
           "usage": "playground config container-kill-all-before-run [ENABLED]",
+          "options": []
+        },
+        {
+          "name": "cleanup-ccloud-resources-after-run",
+          "description": "🧹 delete the Confluent Cloud resources left by the last ccloud example\n  \n  Connectors and topics created by a ccloud 'playground run' are recorded\n  with the run. On 'playground stop', and at the start of the next\n  'playground run', the ones still alive are listed and deleted:\n  \n    ask     list them and ask for confirmation (default)\n    true    delete them without asking\n    false   never delete them\n  \n  Fully managed connectors are billed while they exist, and an\n  interrupted example never reaches its final 'playground connector\n  delete'. Resources of older runs, or created outside a run, are left\n  alone: use 'playground cleanup-cloud-resources --resource ccloud'.\n",
+          "usage": "playground config cleanup-ccloud-resources-after-run [MODE]",
           "options": []
         },
         {
@@ -969,7 +975,7 @@
     },
     {
       "name": "stop",
-      "description": "🛑 Stop currently running example\n\nTears down every container of the environment and of the example, and\nremoves their volumes, by replaying the docker compose command stored in\nplayground.ini. Nothing is left behind, so the next example starts clean.\n\n❕ Data is not kept: topics, connectors and the content of the databases\n   started by the example are gone.\n",
+      "description": "🛑 Stop currently running example\n\nTears down every container of the environment and of the example, and\nremoves their volumes, by replaying the docker compose command stored in\nplayground.ini. Nothing is left behind, so the next example starts clean.\n\n❕ Data is not kept: topics, connectors and the content of the databases\n   started by the example are gone.\n\nFor a Confluent Cloud example, the connectors and topics it created are\nlisted and deleted too, after asking for confirmation. Change this with\n'playground config cleanup-ccloud-resources-after-run ask|true|false'.\n",
       "usage": "playground stop",
       "options": [],
       "subcommands": null

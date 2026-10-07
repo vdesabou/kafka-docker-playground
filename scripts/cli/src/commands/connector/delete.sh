@@ -44,6 +44,7 @@ do
             fi
         fi
         handle_ccloud_connect_rest_api "curl -s --request DELETE \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector\" --header \"authorization: Basic $authorization\""
+        forget_ccloud_recorded_topic "$(get_ccloud_kafka_cluster_id)" "connector:$connector"
         if [ -n "$related_topics" ]
         then
             existing_topics=$(playground get-topic-list)

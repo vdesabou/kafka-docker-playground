@@ -119,6 +119,10 @@ then
 fi
 
 set +e
+# resources left by the previous ccloud run (e.g. interrupted before its final connector delete)
+maybe_cleanup_ccloud_run_resources
+# already done, don't do it again in the 'playground stop' below
+export PG_SKIP_CCLOUD_RUN_CLEANUP=1
 container_kill_all_before_run=$(playground config get container-kill-all-before-run)
 if [ "$container_kill_all_before_run" == "" ]
 then
@@ -132,6 +136,7 @@ then
 else
   playground stop
 fi
+unset PG_SKIP_CCLOUD_RUN_CLEANUP
 set -e
 
 playground state set run.test_file "$test_file"
@@ -1630,6 +1635,12 @@ fi
 
 playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
 playground state set run.test_file "$test_file"
+if [[ $test_file == *"ccloud"* ]]
+then
+  # Confluent Cloud resources created by this run are recorded with this id, see maybe_cleanup_ccloud_run_resources
+  export PG_CCLOUD_RUN_ID="$(date +%s)"
+  playground state set run.ccloud_run_id "$PG_CCLOUD_RUN_ID"
+fi
 echo "" >> "$root_folder/playground-run-history"
 echo "playground run -f $test_file $flag_list" >> "$root_folder/playground-run-history"
 

@@ -630,11 +630,14 @@ function delete_topic()
   fi
 }
 
-# Confluent Cloud topics created by this user are recorded in a local ledger, one
-# "<kafka cluster id> <topic>" (or "<kafka cluster id> prefix:<topic prefix>") per line, so that 'playground cleanup-cloud-resources' can
-# delete only them when the cluster is shared with other people (topic names are generic,
-# they can't be matched on the username). Kept out of .ccloud, which
-# 'playground cleanup-cloud-details' wipes.
+# Confluent Cloud resources created by this user are recorded in a local ledger, one
+# "<kafka cluster id> <entry> <run id>" per line, where <entry> is a topic name,
+# "prefix:<topic prefix>" or "connector:<connector name>", and <run id> identifies the
+# 'playground run' that created it (empty for lines written before run ids existed).
+# 'playground cleanup-cloud-resources' uses it to delete only the user's topics when the cluster
+# is shared with other people (topic names are generic, they can't be matched on the username),
+# and the end-of-run cleanup to delete only what the last run created.
+# Kept out of .ccloud, which 'playground cleanup-cloud-details' wipes.
 function get_ccloud_created_topics_file () {
   get_kafka_docker_playground_dir
   ccloud_created_topics_file="$KAFKA_DOCKER_PLAYGROUND_DIR/playground-ccloud-created-topics"
@@ -645,37 +648,62 @@ function get_ccloud_kafka_cluster_id () {
   grep "KAFKA CLUSTER ID" $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta 2>/dev/null | cut -d " " -f 5
 }
 
+function get_ccloud_environment_id () {
+  get_kafka_docker_playground_dir
+  grep "ENVIRONMENT ID" $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta 2>/dev/null | cut -d " " -f 4
+}
+
+# $1 = topic, "prefix:<topic prefix>" or "connector:<connector name>"
 function record_ccloud_created_topic () {
-  local topic="$1"
+  local entry="$1"
   local cluster_id
+  local run_id
   cluster_id=$(get_ccloud_kafka_cluster_id)
   if [ -z "$cluster_id" ]
   then
     return 0
   fi
+  # set by 'playground run' for the example script, otherwise the last ccloud run
+  run_id="${PG_CCLOUD_RUN_ID:-$(playground state get run.ccloud_run_id 2>/dev/null)}"
   get_ccloud_created_topics_file
-  if ! grep -qFx "$cluster_id $topic" "$ccloud_created_topics_file" 2>/dev/null
-  then
-    echo "$cluster_id $topic" >> "$ccloud_created_topics_file"
-  fi
+  # re-recording moves the entry to the current run
+  forget_ccloud_recorded_topic "$cluster_id" "$entry"
+  echo "$cluster_id $entry $run_id" >> "$ccloud_created_topics_file"
 }
 
-function get_ccloud_recorded_topics () {
+function record_ccloud_created_connector () {
+  record_ccloud_created_topic "connector:$1"
+}
+
+# Recorded entries of a cluster, optionally only those of run $2
+function get_ccloud_recorded_entries () {
   local cluster_id="$1"
+  local run_id="$2"
   get_ccloud_created_topics_file
   if [ -f "$ccloud_created_topics_file" ]
   then
-    awk -v c="$cluster_id" '$1 == c {print $2}' "$ccloud_created_topics_file" | sort -u
+    awk -v c="$cluster_id" -v r="$run_id" '$1 == c && (r == "" || $3 == r) {print $2}' "$ccloud_created_topics_file" | sort -u
   fi
 }
 
-# Recorded topics of a cluster that exist in $2 (list of existing topics): exact entries, plus
-# every existing topic starting with a recorded prefix
+# Recorded topics and topic prefixes of a cluster, optionally only those of run $2
+function get_ccloud_recorded_topics () {
+  get_ccloud_recorded_entries "$1" "$2" | grep -v '^connector:'
+}
+
+# Recorded connectors of a cluster, optionally only those of run $2
+function get_ccloud_recorded_connectors () {
+  get_ccloud_recorded_entries "$1" "$2" | grep '^connector:' | sed 's/^connector://'
+}
+
+# Recorded topics of a cluster (optionally only those of run $3) that exist in $2 (list of
+# existing topics): exact entries, plus every existing topic starting with a recorded prefix
 function get_ccloud_recorded_topics_matching () {
   local cluster_id="$1"
   local existing_topics="$2"
+  local run_id="$3"
   local entry
-  for entry in $(get_ccloud_recorded_topics "$cluster_id")
+  for entry in $(get_ccloud_recorded_topics "$cluster_id" "$run_id")
   do
     if [[ $entry == prefix:* ]]
     then
@@ -713,11 +741,11 @@ function record_ccloud_connector_output_topics () {
 
 function forget_ccloud_recorded_topic () {
   local cluster_id="$1"
-  local topic="$2"
+  local entry="$2"
   get_ccloud_created_topics_file
   if [ -f "$ccloud_created_topics_file" ]
   then
-    grep -vFx "$cluster_id $topic" "$ccloud_created_topics_file" > "$ccloud_created_topics_file.tmp"
+    awk -v c="$cluster_id" -v e="$entry" '!($1 == c && $2 == e)' "$ccloud_created_topics_file" > "$ccloud_created_topics_file.tmp"
     mv "$ccloud_created_topics_file.tmp" "$ccloud_created_topics_file"
   fi
 }

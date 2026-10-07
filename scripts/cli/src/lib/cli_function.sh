@@ -1918,21 +1918,12 @@ function cleanup_confluent_cloud_resources () {
       check_if_skip "confluent kafka topic delete \"$topic\" --force || true"
   done
 
-  # forget recorded topics that are gone (deleted above or by someone else)
-  existing_topics=$(confluent kafka topic list | awk '{if(NR>2) print $1}')
-  for entry in $(get_ccloud_recorded_topics "$cluster_id")
-  do
-      if [[ $entry == prefix:* ]]
-      then
-          if ! echo "$existing_topics" | awk -v p="${entry#prefix:}" 'index($0, p) == 1 {found=1} END {exit !found}'
-          then
-              forget_ccloud_recorded_topic "$cluster_id" "$entry"
-          fi
-      elif ! echo "$existing_topics" | grep -qFx -- "$entry"
-      then
-          forget_ccloud_recorded_topic "$cluster_id" "$entry"
-      fi
-  done
+  # forget recorded topics and connectors that are gone (deleted above or by someone else)
+  # only when both listings succeed, an empty list would forget everything
+  if topics_json=$(confluent kafka topic list --output json) && connectors_json=$(confluent connect cluster list --output json)
+  then
+    prune_ccloud_recorded_entries "$cluster_id" "$(echo "$topics_json" | jq -r '.[].name')" "$(echo "$connectors_json" | jq -r '.[].name')"
+  fi
 
   if [ ! -z "$GITHUB_RUN_NUMBER" ]
   then
@@ -2015,6 +2006,170 @@ function display_ccloud_leftovers () {
     logwarn "   📝 $nb_topics topic(s): $(echo "$topics" | head -$max_names | paste -sd ',' - | sed 's/,/, /g')$( [ "$nb_topics" -gt $max_names ] && echo ', ...')"
   fi
   logwarn "🧹 delete them with <playground cleanup-cloud-resources --resource ccloud>"
+}
+
+# Forget recorded entries of a cluster that match nothing anymore: topics not in $2, prefixes
+# no topic of $2 starts with, connectors not in $3 (lists of existing topic and connector names)
+function prune_ccloud_recorded_entries () {
+  local cluster_id="$1"
+  local existing_topics="$2"
+  local existing_connectors="$3"
+  local entry
+  for entry in $(get_ccloud_recorded_entries "$cluster_id")
+  do
+      if [[ $entry == connector:* ]]
+      then
+          if ! echo "$existing_connectors" | grep -qFx -- "${entry#connector:}"
+          then
+              forget_ccloud_recorded_topic "$cluster_id" "$entry"
+          fi
+      elif [[ $entry == prefix:* ]]
+      then
+          if ! echo "$existing_topics" | awk -v p="${entry#prefix:}" 'index($0, p) == 1 {found=1} END {exit !found}'
+          then
+              forget_ccloud_recorded_topic "$cluster_id" "$entry"
+          fi
+      elif ! echo "$existing_topics" | grep -qFx -- "$entry"
+      then
+          forget_ccloud_recorded_topic "$cluster_id" "$entry"
+      fi
+  done
+}
+
+# Delete the Confluent Cloud connectors and topics created by the last ccloud 'playground run'
+# (recorded with its run id in playground-ccloud-created-topics). Called by 'playground stop'
+# and at the start of the next 'playground run', so interrupted examples don't leave billed
+# connectors behind. Each run is handled once: deleted, or kept when the user says no.
+# Behaviour: 'playground config cleanup-ccloud-resources-after-run ask|true|false' (default ask)
+function maybe_cleanup_ccloud_run_resources () {
+  if [ ! -z "$GITHUB_RUN_NUMBER" ]
+  then
+    # CI runs a full cleanup-cloud-resources
+    return 0
+  fi
+  if [ "$(playground state get run.environment)" != "ccloud" ]
+  then
+    return 0
+  fi
+  local run_id
+  run_id=$(playground state get run.ccloud_run_id)
+  if [ -z "$run_id" ] || [ "$(playground state get run.ccloud_run_cleaned)" == "$run_id" ]
+  then
+    return 0
+  fi
+  local mode
+  mode=$(playground config get cleanup-ccloud-resources-after-run)
+  mode=${mode:-ask}
+  if [ "$mode" == "false" ]
+  then
+    return 0
+  fi
+  if ! command -v confluent > /dev/null 2>&1
+  then
+    return 0
+  fi
+  local cluster_id
+  local environment_id
+  cluster_id=$(get_ccloud_kafka_cluster_id)
+  environment_id=$(get_ccloud_environment_id)
+  if [ -z "$cluster_id" ] || [ -z "$environment_id" ]
+  then
+    return 0
+  fi
+  local run_connectors
+  run_connectors=$(get_ccloud_recorded_connectors "$cluster_id" "$run_id")
+  if [ -z "$run_connectors" ] && [ -z "$(get_ccloud_recorded_topics "$cluster_id" "$run_id")" ]
+  then
+    playground state set run.ccloud_run_cleaned "$run_id"
+    return 0
+  fi
+
+  local cluster_flags="--environment $environment_id --cluster $cluster_id"
+  local topics_json
+  local connectors_json
+  if ! topics_json=$(confluent kafka topic list $cluster_flags --output json 2>/dev/null) || ! connectors_json=$(confluent connect cluster list $cluster_flags --output json 2>/dev/null)
+  then
+    logwarn "🧹 could not list resources of cluster $cluster_id (logged out of Confluent Cloud?), skipping cleanup of the last ccloud run"
+    return 0
+  fi
+  local existing_topics
+  existing_topics=$(echo "$topics_json" | jq -r '.[].name' 2>/dev/null)
+
+  # connectors of the run that still exist, as "<lcc id> <name>", and the topics they created
+  local connectors_to_delete=""
+  local topics_to_delete
+  local related_topics=""
+  local name
+  local id
+  local connector_config
+  for name in $run_connectors
+  do
+      id=$(echo "$connectors_json" | jq -r --arg n "$name" '.[] | select(.name == $n) | .id' 2>/dev/null)
+      if [ -n "$id" ]
+      then
+          connectors_to_delete="$connectors_to_delete$id $name"$'\n'
+          connector_config=$(confluent connect cluster describe $id $cluster_flags --output json 2>/dev/null | jq -c '(.configs // []) | map({(.config): .value}) | add // {}' 2>/dev/null)
+          related_topics="$related_topics $(get_ccloud_connector_related_topics "$id" "$connector_config")"
+      fi
+  done
+  connectors_to_delete=$(echo "$connectors_to_delete" | grep -v '^$')
+  topics_to_delete=$( { get_ccloud_recorded_topics_matching "$cluster_id" "$existing_topics" "$run_id"; echo "$related_topics" | tr ' ' '\n' | grep -Fx -f <(echo "$existing_topics"); } | grep -v '^$' | sort -u)
+
+  if [ -z "$connectors_to_delete" ] && [ -z "$topics_to_delete" ]
+  then
+    prune_ccloud_recorded_entries "$cluster_id" "$existing_topics" "$(echo "$connectors_json" | jq -r '.[].name' 2>/dev/null)"
+    playground state set run.ccloud_run_cleaned "$run_id"
+    return 0
+  fi
+
+  log "🧹 the last ccloud example ($(basename "$(playground state get run.test_file)")) left these on cluster $(playground state get ccloud.CLUSTER_NAME) ($cluster_id):"
+  if [ -n "$connectors_to_delete" ]
+  then
+    log "   🔗 connector(s), billed while they exist: $(echo "$connectors_to_delete" | awk '{print $2}' | paste -sd ',' - | sed 's/,/, /g')"
+  fi
+  if [ -n "$topics_to_delete" ]
+  then
+    log "   📝 topic(s): $(echo "$topics_to_delete" | paste -sd ',' - | sed 's/,/, /g')"
+  fi
+
+  if [ "$mode" != "true" ]
+  then
+    if [ ! -t 0 ]
+    then
+      logwarn "🧹 not running interactively, keeping them. Delete them with <playground cleanup-cloud-resources --resource ccloud>, or set <playground config cleanup-ccloud-resources-after-run true>"
+      return 0
+    fi
+    local reply
+    read -p "🧹 Delete them? (y/n) " reply
+    if [[ ! "$reply" =~ ^[yY] ]]
+    then
+      log "🧹 keeping them. Never ask again with <playground config cleanup-ccloud-resources-after-run false>, always delete with <playground config cleanup-ccloud-resources-after-run true>"
+      playground state set run.ccloud_run_cleaned "$run_id"
+      return 0
+    fi
+  fi
+
+  local topic
+  while read -r id name
+  do
+      if [ -n "$id" ]
+      then
+          log "❌ deleting connector $name ($id)"
+          confluent connect cluster delete $id $cluster_flags --force > /dev/null 2>&1 || logwarn "❌ failed to delete connector $name ($id)"
+      fi
+  done <<< "$connectors_to_delete"
+  for topic in $topics_to_delete
+  do
+      log "❌ deleting topic $topic"
+      confluent kafka topic delete "$topic" $cluster_flags --force > /dev/null 2>&1 || logwarn "❌ failed to delete topic $topic"
+  done
+
+  # only when both listings succeed, an empty list would forget everything
+  if topics_json=$(confluent kafka topic list $cluster_flags --output json 2>/dev/null) && connectors_json=$(confluent connect cluster list $cluster_flags --output json 2>/dev/null)
+  then
+    prune_ccloud_recorded_entries "$cluster_id" "$(echo "$topics_json" | jq -r '.[].name' 2>/dev/null)" "$(echo "$connectors_json" | jq -r '.[].name' 2>/dev/null)"
+  fi
+  playground state set run.ccloud_run_cleaned "$run_id"
 }
 
 function get_zazkia_id_list () {
