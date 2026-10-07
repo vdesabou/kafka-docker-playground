@@ -11324,6 +11324,9 @@ function get_security_broker() {
   if [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
   then
       container="client"
+      # the GSSAPI client builds the broker principal from the bootstrap host: a short
+      # name only becomes the FQDN through Docker's reverse DNS, not podman's
+      bootstrap_server="${broker_container}.kerberos-demo.local:9092"
       security="$config_file_name /etc/kafka/consumer.properties"
 
       docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
@@ -12324,6 +12327,16 @@ function add_connector_config_based_on_environment () {
     ;;
 
     kerberos)
+      # the connector's own GSSAPI clients build the broker principal from the bootstrap
+      # host: point them at the FQDN, a short name only works through Docker's reverse DNS
+      get_broker_container
+      for key in confluent.topic.bootstrap.servers redo.log.consumer.bootstrap.servers database.history.kafka.bootstrap.servers schema.history.internal.kafka.bootstrap.servers reporter.bootstrap.servers
+      do
+        if echo "$json_content" | jq -e ". | has(\"$key\")" > /dev/null 2>&1
+        then
+          json_content=$(echo "$json_content" | jq ".[\"$key\"] = \"${broker_container}.kerberos-demo.local:9092\"")
+        fi
+      done
 
       for prefix in {"confluent.topic","redo.log.consumer"}
       do
@@ -12370,6 +12383,16 @@ function add_connector_config_based_on_environment () {
     ;;
 
     ssl_kerberos)
+      # the connector's own GSSAPI clients build the broker principal from the bootstrap
+      # host: point them at the FQDN, a short name only works through Docker's reverse DNS
+      get_broker_container
+      for key in confluent.topic.bootstrap.servers redo.log.consumer.bootstrap.servers database.history.kafka.bootstrap.servers schema.history.internal.kafka.bootstrap.servers reporter.bootstrap.servers
+      do
+        if echo "$json_content" | jq -e ". | has(\"$key\")" > /dev/null 2>&1
+        then
+          json_content=$(echo "$json_content" | jq ".[\"$key\"] = \"${broker_container}.kerberos-demo.local:9092\"")
+        fi
+      done
 
       for prefix in {"confluent.topic","redo.log.consumer"}
       do
@@ -33629,7 +33652,7 @@ playground_topic_get_number_records_command() {
           then
               get_security_broker "--consumer.config"
               set +e
-              docker exec "$container" timeout 15 kafka-console-consumer --bootstrap-server "$broker_container":9092 --topic "$topic" $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
+              docker exec "$container" timeout 15 kafka-console-consumer --bootstrap-server "$bootstrap_server" --topic "$topic" $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
               set -e
           else
               class_name="kafka.tools.GetOffsetShell"
@@ -33643,7 +33666,10 @@ playground_topic_get_number_records_command() {
                   parameter_for_list_broker="--broker-list"
               fi
 
-              docker exec "$broker_container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$broker_container":9092 $security --topic "$topic" --time -1 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum}'
+              # container and bootstrap come from get_security_broker: the broker container and
+              # broker:9092 by default, but the kerberized client container and the broker FQDN
+              # with kerberos, whose client config needs a ticket and the real principal host
+              docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -1 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum}'
           fi
       fi
   done
@@ -33977,7 +34003,9 @@ playground_topic_consume_command() {
   elif [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
   then
     get_broker_container
-    bootstrap_server="$broker_container:9092"
+    # the GSSAPI client builds the broker principal from the bootstrap host: a short
+    # name only becomes the FQDN through Docker's reverse DNS, not podman's
+    bootstrap_server="${broker_container}.kerberos-demo.local:9092"
     get_connect_container
     container=$connect_container
       container="client"
@@ -34829,7 +34857,9 @@ playground_topic_produce_command() {
   elif [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
   then
       get_broker_container
-      bootstrap_server="$broker_container:9092"
+      # the GSSAPI client builds the broker principal from the bootstrap host: a short
+      # name only becomes the FQDN through Docker's reverse DNS, not podman's
+      bootstrap_server="${broker_container}.kerberos-demo.local:9092"
       get_connect_container
       container=$connect_container
       container="client"

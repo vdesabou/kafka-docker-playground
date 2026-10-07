@@ -148,7 +148,7 @@ do
         then
             get_security_broker "--consumer.config"
             set +e
-            docker exec "$container" timeout 15 kafka-console-consumer --bootstrap-server "$broker_container":9092 --topic "$topic" $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
+            docker exec "$container" timeout 15 kafka-console-consumer --bootstrap-server "$bootstrap_server" --topic "$topic" $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
             set -e
         else
             class_name="kafka.tools.GetOffsetShell"
@@ -162,7 +162,10 @@ do
                 parameter_for_list_broker="--broker-list"
             fi
             
-            docker exec "$broker_container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$broker_container":9092 $security --topic "$topic" --time -1 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum}'
+            # container and bootstrap come from get_security_broker: the broker container and
+            # broker:9092 by default, but the kerberized client container and the broker FQDN
+            # with kerberos, whose client config needs a ticket and the real principal host
+            docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -1 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum}'
         fi
     fi
 done

@@ -76,7 +76,9 @@ then
 elif [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
 then
   get_broker_container
-  bootstrap_server="$broker_container:9092"
+  # the GSSAPI client builds the broker principal from the bootstrap host: a short
+  # name only becomes the FQDN through Docker's reverse DNS, not podman's
+  bootstrap_server="${broker_container}.kerberos-demo.local:9092"
   get_connect_container
   container=$connect_container
     container="client"

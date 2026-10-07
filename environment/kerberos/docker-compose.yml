@@ -61,6 +61,10 @@ services:
       - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf
       - ../../environment/kerberos/kafka/broker.sasl.jaas.config:/etc/kafka/broker.sasl.jaas.config
     environment:
+      # bootstrap with the FQDN: the GSSAPI client builds the broker principal from the
+      # bootstrap host, and only Docker's reverse DNS turns a short name into
+      # broker.kerberos-demo.local (podman answers the bare container name)
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker.kerberos-demo.local:9092
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT${CONTROLLER_SECURITY_PROTOCOL_MAP}
       KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://broker.kerberos-demo.local:9092
@@ -136,7 +140,7 @@ services:
 
       # Confluent Metrics Reporter for Control Center Cluster Monitoring
       KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
-      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker2:9092
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker2.kerberos-demo.local:9092
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: GSSAPI
       CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_PLAINTEXT
@@ -194,7 +198,7 @@ services:
 
       # Confluent Metrics Reporter for Control Center Cluster Monitoring
       KAFKA_METRIC_REPORTERS: $KAFKA_METRIC_REPORTERS
-      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker3:9092
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker3.kerberos-demo.local:9092
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: GSSAPI
       CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_PLAINTEXT
@@ -216,6 +220,13 @@ services:
       - secret:/var/lib/secret
       - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf
     environment:
+      # bootstrap with the FQDN: the GSSAPI client builds the broker principal from the
+      # bootstrap host, and only Docker's reverse DNS turns a short name into
+      # broker.kerberos-demo.local (podman answers the bare container name)
+      CONNECT_BOOTSTRAP_SERVERS: broker.kerberos-demo.local:9092
+      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker.kerberos-demo.local:9092
+      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker.kerberos-demo.local:9092
+      CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: broker.kerberos-demo.local:9092
       # Configure the Connect workers to use SASL/GSSAPI.
       CONNECT_SASL_MECHANISM: GSSAPI
       CONNECT_SASL_KERBEROS_SERVICE_NAME: kafka
@@ -288,6 +299,13 @@ services:
       - secret:/var/lib/secret
       - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf
     environment:
+      # bootstrap with the FQDN: the GSSAPI client builds the broker principal from the
+      # bootstrap host, and only Docker's reverse DNS turns a short name into
+      # broker.kerberos-demo.local (podman answers the bare container name)
+      CONNECT_BOOTSTRAP_SERVERS: broker.kerberos-demo.local:9092
+      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker.kerberos-demo.local:9092
+      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker.kerberos-demo.local:9092
+      CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: broker.kerberos-demo.local:9092
       # Configure the Connect workers to use SASL/GSSAPI.
       CONNECT_SASL_MECHANISM: GSSAPI
       CONNECT_SASL_KERBEROS_SERVICE_NAME: kafka
@@ -359,6 +377,13 @@ services:
       - secret:/var/lib/secret
       - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf
     environment:
+      # bootstrap with the FQDN: the GSSAPI client builds the broker principal from the
+      # bootstrap host, and only Docker's reverse DNS turns a short name into
+      # broker.kerberos-demo.local (podman answers the bare container name)
+      CONNECT_BOOTSTRAP_SERVERS: broker.kerberos-demo.local:9092
+      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker.kerberos-demo.local:9092
+      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker.kerberos-demo.local:9092
+      CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: broker.kerberos-demo.local:9092
       # Configure the Connect workers to use SASL/GSSAPI.
       CONNECT_SASL_MECHANISM: GSSAPI
       CONNECT_SASL_KERBEROS_SERVICE_NAME: kafka
@@ -428,6 +453,10 @@ services:
       - secret:/var/lib/secret
       - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf
     environment:
+      # bootstrap with the FQDN: the GSSAPI client builds the broker principal from the
+      # bootstrap host, and only Docker's reverse DNS turns a short name into
+      # broker.kerberos-demo.local (podman answers the bare container name)
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker.kerberos-demo.local:9092
       SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SASL_PLAINTEXT
       SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: GSSAPI
       SCHEMA_REGISTRY_KAFKASTORE_SASL_KERBEROS_SERVICE_NAME: kafka
@@ -444,6 +473,10 @@ services:
       - secret:/var/lib/secret
       - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf
     environment:
+      # bootstrap with the FQDN: the GSSAPI client builds the broker principal from the
+      # bootstrap host, and only Docker's reverse DNS turns a short name into
+      # broker.kerberos-demo.local (podman answers the bare container name)
+      KSQL_BOOTSTRAP_SERVERS: broker.kerberos-demo.local:9092
       KSQL_SECURITY_PROTOCOL: SASL_PLAINTEXT
       KSQL_SASL_MECHANISM: GSSAPI
       KSQL_SASL_KERBEROS_SERVICE_NAME: kafka
@@ -463,7 +496,12 @@ services:
       - secret:/var/lib/secret
       - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf
     environment:
-      CONTROL_CENTER_BOOTSTRAP_SERVERS: "broker:9092"
+      # bootstrap with the FQDN: the GSSAPI client builds the broker principal from the
+      # bootstrap host, and only Docker's reverse DNS turns a short name into
+      # broker.kerberos-demo.local (podman answers the bare container name)
+      CONTROL_CENTER_KAFKA_BOOTSTRAP_SERVERS: broker.kerberos-demo.local:9092
+      CONTROL_CENTER_KAFKA_MYCLUSTER_BOOTSTRAP_SERVERS: broker.kerberos-demo.local:9092
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: broker.kerberos-demo.local:9092
       CONTROL_CENTER_STREAMS_SECURITY_PROTOCOL: SASL_PLAINTEXT
       CONTROL_CENTER_STREAMS_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
         useKeyTab=true \

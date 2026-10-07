@@ -560,6 +560,9 @@ function get_security_broker() {
   if [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
   then
       container="client"
+      # the GSSAPI client builds the broker principal from the bootstrap host: a short
+      # name only becomes the FQDN through Docker's reverse DNS, not podman's
+      bootstrap_server="${broker_container}.kerberos-demo.local:9092"
       security="$config_file_name /etc/kafka/consumer.properties"
 
       docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
@@ -1539,6 +1542,16 @@ function add_connector_config_based_on_environment () {
     ;;
 
     kerberos)
+      # the connector's own GSSAPI clients build the broker principal from the bootstrap
+      # host: point them at the FQDN, a short name only works through Docker's reverse DNS
+      get_broker_container
+      for key in confluent.topic.bootstrap.servers redo.log.consumer.bootstrap.servers database.history.kafka.bootstrap.servers schema.history.internal.kafka.bootstrap.servers reporter.bootstrap.servers
+      do
+        if echo "$json_content" | jq -e ". | has(\"$key\")" > /dev/null 2>&1
+        then
+          json_content=$(echo "$json_content" | jq ".[\"$key\"] = \"${broker_container}.kerberos-demo.local:9092\"")
+        fi
+      done
 
       for prefix in {"confluent.topic","redo.log.consumer"}
       do
@@ -1581,6 +1594,16 @@ function add_connector_config_based_on_environment () {
     ;;
 
     ssl_kerberos)
+      # the connector's own GSSAPI clients build the broker principal from the bootstrap
+      # host: point them at the FQDN, a short name only works through Docker's reverse DNS
+      get_broker_container
+      for key in confluent.topic.bootstrap.servers redo.log.consumer.bootstrap.servers database.history.kafka.bootstrap.servers schema.history.internal.kafka.bootstrap.servers reporter.bootstrap.servers
+      do
+        if echo "$json_content" | jq -e ". | has(\"$key\")" > /dev/null 2>&1
+        then
+          json_content=$(echo "$json_content" | jq ".[\"$key\"] = \"${broker_container}.kerberos-demo.local:9092\"")
+        fi
+      done
 
       for prefix in {"confluent.topic","redo.log.consumer"}
       do
