@@ -14875,13 +14875,8 @@ COPY --from=pm / /
 RUN ldconfig
 USER appuser
 EOF
-      # legacy builder calls every credHelpers entry of ~/.docker/config.json (e.g. ECR/SSO prompts):
-      # build with an empty docker config, keeping the current context endpoint
-      pm_docker_host=$(docker context inspect --format '{{.Endpoints.docker.Host}}' 2>/dev/null)
-      pm_docker_config=$(mktemp -d -t pg-pm-config-XXXXXXXXXX)
-      echo '{}' > $pm_docker_config/config.json
-      DOCKER_HOST=${DOCKER_HOST:-$pm_docker_host} DOCKER_CONFIG=$pm_docker_config DOCKER_BUILDKIT=0 docker build -t ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $pm_tmp_dir
-      rm -rf $pm_tmp_dir $pm_docker_config
+      (export_docker_config_without_cred_helpers; DOCKER_BUILDKIT=0 docker build -t ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $pm_tmp_dir)
+      rm -rf $pm_tmp_dir
     fi
   fi
   log "🧰 Checking if Docker image ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} contains additional tools"
@@ -14987,6 +14982,40 @@ function container_engine_is_podman()
   [ "$(get_container_engine)" = "podman" ]
 }
 
+# the classic builder (DOCKER_BUILDKIT=0, for `docker build` and `docker compose build`)
+# does not know which registries a build will pull from, so it asks every credHelpers
+# entry of ~/.docker/config.json for credentials up front: with corporate helpers
+# (ECR through granted/SSO...) that means browser prompts and 403 errors on each build.
+# Point DOCKER_CONFIG at a mirror of the docker config without credHelpers: contexts,
+# cli-plugins, credsStore and auths are kept, the helpers are simply never called.
+function export_docker_config_without_cred_helpers()
+{
+  local src="${DOCKER_CONFIG:-$HOME/.docker}"
+  local dst="${TMPDIR:-/tmp}"
+  dst="${dst%/}/playground-docker-config-$(id -u)"
+
+  # already mirrored (DOCKER_CONFIG is inherited by nested playground calls)
+  if [ "$src" = "$dst" ] || [ ! -f "$src/config.json" ] || ! grep -q '"credHelpers"' "$src/config.json" || ! command -v jq > /dev/null 2>&1
+  then
+    return 0
+  fi
+
+  mkdir -p "$dst" || return 0
+  local f
+  for f in "$src"/* "$src"/.[!.]*
+  do
+    if [ -e "$f" ] && [ "$(basename "$f")" != "config.json" ]
+    then
+      ln -sfn "$f" "$dst/$(basename "$f")"
+    fi
+  done
+  if jq 'del(.credHelpers)' "$src/config.json" > "$dst/config.json.tmp" 2>/dev/null
+  then
+    mv "$dst/config.json.tmp" "$dst/config.json"
+    export DOCKER_CONFIG="$dst"
+  fi
+}
+
 # with podman, `docker build` and `docker compose build` go through buildx, which
 # runs BuildKit in its own container: it pulls FROM images from the registry instead
 # of using podman's local ones (so images patched by maybe_create_image are ignored),
@@ -14997,6 +15026,7 @@ function container_engine_is_podman()
 if [[ "${DOCKER_HOST:-}" == *podman* ]] || [ "${PLAYGROUND_CONTAINER_ENGINE:-}" = "podman" ]
 then
   export DOCKER_BUILDKIT=0
+  export_docker_config_without_cred_helpers
 # podman reached through a docker context instead: only pay for `docker context
 # inspect` (a local file read, no engine round trip) when a context is in use
 elif [ -z "${DOCKER_HOST:-}" ] && { [ -n "${DOCKER_CONTEXT:-}" ] || grep -q '"currentContext"' "${DOCKER_CONFIG:-$HOME/.docker}/config.json" 2>/dev/null; }
@@ -15004,6 +15034,7 @@ then
   if docker context inspect --format '{{.Endpoints.docker.Host}}' 2>/dev/null | grep -q podman
   then
     export DOCKER_BUILDKIT=0
+    export_docker_config_without_cred_helpers
   fi
 fi
 
