@@ -4590,9 +4590,21 @@ function login_and_maybe_set_azure_subscription () {
       logerror "❌ CI Mode Error: GITHUB_RUN_NUMBER is set but Service Principal env vars (AZ_CLIENT_ID, etc.) are missing."
       exit 1
     fi
+  elif [ ! -z "$AZ_CLIENT_ID" ] && [ ! -z "$AZ_CLIENT_SECRET" ] && [ ! -z "$AZ_TENANT_ID" ]; then
+    # Local Mode with the same Service Principal as CI: no browser needed
+    log "🤖 Local detected with AZ_CLIENT_ID, AZ_CLIENT_SECRET and AZ_TENANT_ID set (env or playground secrets): Logging in via Service Principal (MFA-exempt)"
+    if ! az login --service-principal \
+             -u "$AZ_CLIENT_ID" \
+             -p "$AZ_CLIENT_SECRET" \
+             --tenant "$AZ_TENANT_ID" > /dev/null 2>&1
+    then
+      logerror "❌ Service Principal login failed, check AZ_CLIENT_ID, AZ_CLIENT_SECRET and AZ_TENANT_ID"
+      exit 1
+    fi
   else
     # Local Mode: Use Browser-based MFA login
     log "🫐 Local detected: Opening browser for interactive MFA login..."
+    log "💡 to skip it, set AZ_CLIENT_ID, AZ_CLIENT_SECRET and AZ_TENANT_ID (same Service Principal as CI) with <playground secrets set>"
     az login
   fi
 
