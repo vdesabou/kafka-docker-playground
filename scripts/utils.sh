@@ -651,6 +651,22 @@ function snowflake_object_name() {
   echo "$name" | tr '[:lower:]' '[:upper:]'
 }
 
+# Short environment id to put in the name of a test's cloud resources (Pub/Sub topic, GCS bucket,
+# Bigtable/Spanner instance, BigQuery dataset...).
+#
+# CI runs the plaintext and cfk jobs of a test at the same time, with the same TAG and
+# GITHUB_RUN_NUMBER, so names built only from those are shared by both runs: each one deletes the
+# other's resources before and after its own run. Lowercase letters and digits only, 4 characters
+# at most, so that it fits the naming rules and length limits of all of them.
+#
+#   GCS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${GITHUB_RUN_NUMBER}${TAG_BASE}$(cloud_resource_environment_id)   # ...cfk on cfk, ...plai on plaintext
+function cloud_resource_environment_id() {
+  local environment="${PLAYGROUND_ENVIRONMENT:-plaintext}"
+
+  environment="${environment//[^a-zA-Z0-9]/}"
+  echo "${environment:0:4}" | tr '[:upper:]' '[:lower:]'
+}
+
 # Wait until a streaming source task (PushTopic, CDC, Platform Events) has subscribed to its
 # channel, before the test creates the record or event it expects to receive.
 #

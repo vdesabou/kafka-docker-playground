@@ -18,7 +18,8 @@ then
 fi
 
 GCP_BIGTABLE_REGION=${1:-europe-west2-a}
-GCP_BIGTABLE_INSTANCE="pg${USER}bg${GITHUB_RUN_NUMBER}${TAG_BASE}"
+# unique per environment, see cloud_resource_environment_id
+GCP_BIGTABLE_INSTANCE="pg${USER}bg${GITHUB_RUN_NUMBER}${TAG_BASE}$(cloud_resource_environment_id)"
 GCP_BIGTABLE_INSTANCE=${GCP_BIGTABLE_INSTANCE//[-.]/}
 
 cd ../../connect/connect-gcp-bigtable-sink
