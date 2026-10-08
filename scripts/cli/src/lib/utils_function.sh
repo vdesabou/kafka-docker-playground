@@ -2523,7 +2523,6 @@ function bootstrap_ccloud_environment () {
     log "🗺  CLUSTER_REGION is set with $CLUSTER_REGION"
 
     export EXAMPLE=$(basename $PWD)
-    export WARMUP_TIME=15
     export QUIET=true
 
     log "💡 if you notice that the playground is using unexpected ccloud details, use <playground cleanup-cloud-details> to remove all caching and re-launch the example"
@@ -2578,8 +2577,6 @@ function bootstrap_ccloud_environment () {
         logwarn "$DELTA_CONFIGS_ENV has not been generated, doing it now..."
       fi
     fi
-
-    export WARMUP_TIME=0
   fi
 
   check_expected_ccloud_details "$expected_cloud" "$expected_region"
@@ -3146,10 +3143,10 @@ function ccloud::get_schema_registry() {
 function ccloud::find_credentials_resource() {
   SERVICE_ACCOUNT_ID=$1
   RESOURCE=$2
-  local FOUND_CRED=$(confluent api-key list -o json | jq -c -r 'map(select((.resource_id == "'"$RESOURCE"'") and (.owner_resource_id == "'"$SERVICE_ACCOUNT_ID"'")))')
+  local FOUND_CRED=$(confluent api-key list -o json | jq -c -r 'map(select((.resource == "'"$RESOURCE"'") and (.owner == "'"$SERVICE_ACCOUNT_ID"'")))')
   local FOUND_COUNT=$(echo "$FOUND_CRED" | jq 'length')
   [[ $FOUND_COUNT -ne 0 ]] && {
-      echo "$FOUND_CRED" | jq -r '.[0].api_key'
+      echo "$FOUND_CRED" | jq -r '.[0].key'
       return 0
     } || {
       return 1
@@ -3159,13 +3156,12 @@ function ccloud::create_credentials_resource() {
   SERVICE_ACCOUNT_ID=$1
   RESOURCE=$2
 
-  OUTPUT=$(confluent api-key create --service-account $SERVICE_ACCOUNT_ID --resource $RESOURCE -o json)
+  OUTPUT=$(confluent api-key create --service-account $SERVICE_ACCOUNT_ID --resource $RESOURCE ${ENVIRONMENT:+--environment $ENVIRONMENT} -o json)
   API_KEY_SA=$(echo "$OUTPUT" | jq -r ".api_key")
   API_SECRET_SA=$(echo "$OUTPUT" | jq -r ".api_secret")
   echo "${API_KEY_SA}:${API_SECRET_SA}"
 
-  # vinc
-  sleep 30
+  # no need to wait for the key to be propagated here: callers poll until it is usable
   return 0
 }
 #####################################################################
@@ -3231,23 +3227,45 @@ function ccloud::maybe_create_ksqldb_app() {
   return 0
 }
 
+function ccloud::create_acl() {
+  local -i curr_wait=0
+  local output
+
+  # retry: a service account created a few seconds ago may not be known by the cluster yet
+  until output=$(confluent kafka acl create --allow --cluster "$CLUSTER" "$@" 2>&1)
+  do
+    if (( curr_wait >= 120 ))
+    then
+      echo "ERROR: could not create ACL $*: $output"
+      return 1
+    fi
+    curr_wait=$((curr_wait+5))
+    sleep 5
+  done
+}
+
 function ccloud::create_acls_all_resources_full_access() {
   SERVICE_ACCOUNT_ID=$1
-  # Setting default QUIET=false to surface potential errors
-  QUIET="${QUIET:-false}"
-  [[ $QUIET == "true" ]] &&
-    local REDIRECT_TO="/dev/null" ||
-    local REDIRECT_TO="/dev/tty"
+  local pids=()
+  local pid
+  local failed=0
 
-  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operations CREATE,DELETE,WRITE,READ,DESCRIBE,DESCRIBE_CONFIGS --topic '*' &>"$REDIRECT_TO"
+  # the ACLs are independent: create them concurrently
+  ccloud::create_acl --service-account $SERVICE_ACCOUNT_ID --operations CREATE,DELETE,WRITE,READ,DESCRIBE,DESCRIBE_CONFIGS --topic '*' &
+  pids+=($!)
+  ccloud::create_acl --service-account $SERVICE_ACCOUNT_ID --operations READ,WRITE,CREATE,DESCRIBE --consumer-group '*' &
+  pids+=($!)
+  ccloud::create_acl --service-account $SERVICE_ACCOUNT_ID --operations DESCRIBE,WRITE --transactional-id '*' &
+  pids+=($!)
+  ccloud::create_acl --service-account $SERVICE_ACCOUNT_ID --operations IDEMPOTENT-WRITE,DESCRIBE --cluster-scope &
+  pids+=($!)
 
-  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operations READ,WRITE,CREATE,DESCRIBE --consumer-group '*' &>"$REDIRECT_TO"
+  for pid in "${pids[@]}"
+  do
+    wait $pid || failed=1
+  done
 
-  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operations DESCRIBE,WRITE --transactional-id '*' &>"$REDIRECT_TO"
-
-  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operations IDEMPOTENT-WRITE,DESCRIBE --cluster-scope &>"$REDIRECT_TO"
-
-  return 0
+  return $failed
 }
 
 function ccloud::delete_acls_ccloud_stack() {
@@ -3409,6 +3427,88 @@ function ccloud::validate_ccloud_cluster_ready() {
   return $?
 }
 
+# cluster is ready AND the API key in CLUSTER_CREDS is usable (propagated), which is what clients and
+# connectors need. Falls back to ccloud::validate_ccloud_cluster_ready when the key cannot be checked
+function ccloud::validate_ccloud_cluster_api_key_ready() {
+  local api_key="${CLUSTER_CREDS%%:*}"
+  local api_secret="${CLUSTER_CREDS#*:}"
+
+  if [ -z "$CLUSTER_REST_ENDPOINT" ] || [ -z "$api_secret" ]
+  then
+    ccloud::validate_ccloud_cluster_ready
+    return $?
+  fi
+
+  # 401 until the key is propagated; 403 means authenticated but no ACL yet, which is fine
+  local http_code=$(curl -s -o /dev/null -w '%{http_code}' -u "$api_key:$api_secret" "$CLUSTER_REST_ENDPOINT/kafka/v3/clusters/$CLUSTER/topics")
+  [ "$http_code" == "200" ] || [ "$http_code" == "403" ]
+}
+
+# runs in the background from ccloud::create_ccloud_stack: Schema Registry only depends on the environment
+# and the service account. Results are written as shell assignments in $1
+function ccloud::setup_schema_registry() {
+  local output_file="$1"
+  local need_role_binding="$2"
+  local sr_creds="$SCHEMA_REGISTRY_CREDS"
+  local sr_json=""
+  local -i curr_wait=0
+
+  # Schema Registry of a brand new environment may not be available right away
+  until sr_json=$(confluent schema-registry cluster describe --environment "$ENVIRONMENT" -o json 2>/dev/null) && [ -n "$(echo "$sr_json" | jq -r '.cluster // empty')" ]
+  do
+    if (( curr_wait >= 300 ))
+    then
+      echo "ERROR: Schema Registry of environment $ENVIRONMENT is not available after $curr_wait seconds"
+      return 1
+    fi
+    curr_wait=$((curr_wait+5))
+    sleep 5
+  done
+  local sr_cluster=$(echo "$sr_json" | jq -r '.cluster')
+  local sr_endpoint=$(echo "$sr_json" | jq -r '.endpoint_url')
+
+  if [[ -z "$sr_creds" ]]
+  then
+    # always a new key: the secret of an existing one cannot be retrieved, and looking for it means
+    # listing every key of the org (slow)
+    sr_creds=$(ccloud::create_credentials_resource $SERVICE_ACCOUNT_ID $sr_cluster)
+    if [[ -z "${sr_creds%%:*}" ]] || [[ "${sr_creds%%:*}" == "null" ]]
+    then
+      echo "ERROR: Could not create an API key for Schema Registry $sr_cluster"
+      return 1
+    fi
+  fi
+
+  if [ "$need_role_binding" == "1" ] && [ "$SERVICE_ACCOUNT_ID" != "" ]
+  then
+    log "Adding ResourceOwner RBAC role for all subjects"
+    confluent iam rbac role-binding create --principal User:$SERVICE_ACCOUNT_ID --role ResourceOwner --environment $ENVIRONMENT --schema-registry-cluster $sr_cluster --resource "Subject:*" || true
+  fi
+
+  if [[ -z "$SCHEMA_REGISTRY_CREDS" ]] && [[ -n "${sr_creds#*:}" ]]
+  then
+    # wait for the new API key to be propagated: 401 until then, 403 means authenticated but the role
+    # binding is not effective yet
+    curr_wait=0
+    until [[ "$(curl -s -o /dev/null -w '%{http_code}' -u "$sr_creds" "$sr_endpoint/subjects")" =~ ^(200|403)$ ]]
+    do
+      if (( curr_wait >= 300 ))
+      then
+        echo "ERROR: Schema Registry API key ${sr_creds%%:*} is not usable after $curr_wait seconds"
+        return 1
+      fi
+      curr_wait=$((curr_wait+5))
+      sleep 5
+    done
+  fi
+
+  {
+    printf 'SCHEMA_REGISTRY=%q\n' "$sr_cluster"
+    printf 'SCHEMA_REGISTRY_ENDPOINT=%q\n' "$sr_endpoint"
+    printf 'SCHEMA_REGISTRY_CREDS=%q\n' "$sr_creds"
+  } > "$output_file"
+}
+
 function ccloud::validate_topic_exists() {
   topic=$1
 
@@ -3464,7 +3564,7 @@ function ccloud::get_service_account() {
 
   local key="$1"
 
-  serviceAccount=$(confluent api-key list -o json | jq -r -c 'map(select((.api_key == "'"$key"'"))) | .[].owner_resource_id')
+  serviceAccount=$(confluent api-key list -o json | jq -r -c 'map(select((.key == "'"$key"'"))) | .[].owner')
   if [[ "$serviceAccount" == "" ]]; then
     echo "ERROR: Could not associate key $key to a service account. Verify your credentials, ensure the API key has a set resource type, and try again."
     exit 1
@@ -3580,7 +3680,7 @@ function ccloud::set_kafka_cluster_use_from_api_key() {
 
   local key="$1"
 
-  local kafkaCluster=$(confluent api-key list -o json | jq -r -c 'map(select((.api_key == "'"$key"'" and .resource_type == "kafka"))) | .[].resource_id')
+  local kafkaCluster=$(confluent api-key list -o json | jq -r -c 'map(select((.key == "'"$key"'" and .resource_type == "kafka"))) | .[].resource')
   if [[ "$kafkaCluster" == "" ]]; then
     echo "ERROR: Could not associate key $key to a Confluent Cloud Kafka cluster. Verify your credentials, ensure the API key has a set resource type, and try again."
     exit 1
@@ -3622,8 +3722,11 @@ function ccloud::create_ccloud_stack() {
   fi
 
   # VINC: added
-  if [[ -z "$CLUSTER_CREDS" ]]
+  # a service account is needed as soon as one of the API keys has to be created
+  local need_role_binding=0
+  if [[ -z "$CLUSTER_CREDS" ]] || [[ -z "$SCHEMA_REGISTRY_CREDS" ]]
   then
+    need_role_binding=1
     if [[ -z "$SERVICE_ACCOUNT_ID" ]]; then
       # Service Account is not received so it will be created
       local RANDOM_NUM=$((1 + RANDOM % 1000000))
@@ -3639,6 +3742,7 @@ function ccloud::create_ccloud_stack() {
     echo "Creating Confluent Cloud stack for service account $SERVICE_NAME, ID: $SERVICE_ACCOUNT_ID."
   fi
 
+  local environment_created=0
   if [[ -z "$ENVIRONMENT" ]];
   then
     # Environment is not received so it will be created
@@ -3651,15 +3755,27 @@ function ccloud::create_ccloud_stack() {
 
     ENVIRONMENT=$(ccloud::create_and_use_environment $ENVIRONMENT_NAME)
     (($? != 0)) && { echo "$ENVIRONMENT"; exit 1; }
+    environment_created=1
   else
     confluent environment use $ENVIRONMENT || exit 1
   fi
+
+  # Schema Registry does not depend on the Kafka cluster: set it up in the background meanwhile
+  local sr_output_file=$(mktemp)
+  ccloud::setup_schema_registry "$sr_output_file" $need_role_binding &
+  local sr_pid=$!
 
   CLUSTER_NAME=${CLUSTER_NAME:-"pg-${USER}-cluster-$SERVICE_ACCOUNT_ID"}
   CLUSTER_CLOUD="${CLUSTER_CLOUD:-aws}"
   CLUSTER_REGION="${CLUSTER_REGION:-us-west-2}"
   CLUSTER_TYPE="${CLUSTER_TYPE:-basic}"
-  CLUSTER=$(ccloud::maybe_create_and_use_cluster "$CLUSTER_NAME" $CLUSTER_CLOUD $CLUSTER_REGION $CLUSTER_TYPE)
+  if [ $environment_created -eq 1 ] && [[ -z "$CLUSTER_CREDS" ]]
+  then
+    # nothing to look for in a brand new environment
+    CLUSTER=$(ccloud::create_and_use_cluster "$CLUSTER_NAME" $CLUSTER_CLOUD $CLUSTER_REGION $CLUSTER_TYPE)
+  else
+    CLUSTER=$(ccloud::maybe_create_and_use_cluster "$CLUSTER_NAME" $CLUSTER_CLOUD $CLUSTER_REGION $CLUSTER_TYPE)
+  fi
   (($? != 0)) && { echo "$CLUSTER"; exit 1; }
   if [[ "$CLUSTER" == "" ]] ; then
     echo "Kafka cluster id is empty"
@@ -3667,68 +3783,54 @@ function ccloud::create_ccloud_stack() {
     exit 1
   fi
 
-  endpoint=$(confluent kafka cluster describe $CLUSTER -o json | jq -r ".endpoint")
+  local cluster_json=$(confluent kafka cluster describe $CLUSTER -o json)
+  endpoint=$(echo "$cluster_json" | jq -r ".endpoint")
   if [[ $endpoint == "SASL_SSL://"* ]]
   then
     BOOTSTRAP_SERVERS=$(echo "$endpoint" | cut -c 12-)
   else
     BOOTSTRAP_SERVERS="$endpoint"
   fi
+  # also used by ccloud::generate_configs
+  CLUSTER_REST_ENDPOINT=$(echo "$cluster_json" | jq -r ".rest_endpoint // empty")
 
   NEED_ACLS=0
-  NEED_SR_PERMISSION=0
   # VINC: added
   if [[ -z "$CLUSTER_CREDS" ]]
   then
-    CLUSTER_CREDS=$(ccloud::maybe_create_credentials_resource $SERVICE_ACCOUNT_ID $CLUSTER)
+    # always a new key: the secret of an existing one cannot be retrieved, and looking for it means
+    # listing every key of the org (slow)
+    CLUSTER_CREDS=$(ccloud::create_credentials_resource $SERVICE_ACCOUNT_ID $CLUSTER)
     NEED_ACLS=1
   fi
 
   MAX_WAIT=720
-  confluent kafka cluster use $CLUSTER
-  echo ""
-  echo "Waiting up to $MAX_WAIT seconds for Confluent Cloud cluster $CLUSTER to be ready"
-  ccloud::retry $MAX_WAIT ccloud::validate_ccloud_cluster_ready || exit 1
-
-  # VINC: added
   if [[ $NEED_ACLS -eq 1 ]]
   then
-    # Estimating another 80s wait still sometimes required
-    WARMUP_TIME=${WARMUP_TIME:-80}
-    echo "Sleeping an additional ${WARMUP_TIME} seconds to ensure propagation of all metadata"
-    sleep $WARMUP_TIME
+    echo ""
+    echo "Waiting up to $MAX_WAIT seconds for Confluent Cloud cluster $CLUSTER to be ready and its new API key to be usable"
+    ccloud::retry $MAX_WAIT ccloud::validate_ccloud_cluster_api_key_ready || exit 1
 
-    ccloud::create_acls_all_resources_full_access $SERVICE_ACCOUNT_ID
-  fi
-
-  SCHEMA_REGISTRY=$(ccloud::get_schema_registry)
-
-  # VINC: added
-  if [[ -z "$SCHEMA_REGISTRY_CREDS" ]]
+    ccloud::create_acls_all_resources_full_access $SERVICE_ACCOUNT_ID || exit 1
+  elif ! ccloud::validate_ccloud_cluster_api_key_ready
   then
-    NEED_SR_PERMISSION=1
-    if [[ -z "$SERVICE_ACCOUNT_ID" ]]; then
-      # Service Account is not received so it will be created
-      local RANDOM_NUM=$((1 + RANDOM % 1000000))
-      SERVICE_NAME=${SERVICE_NAME:-"pg-${USER}-app-$RANDOM_NUM"}
-      SERVICE_ACCOUNT_ID=$(ccloud::create_service_account $SERVICE_NAME)
-    fi
-    SCHEMA_REGISTRY_CREDS=$(ccloud::maybe_create_credentials_resource $SERVICE_ACCOUNT_ID $SCHEMA_REGISTRY)
+    echo ""
+    echo "Waiting up to $MAX_WAIT seconds for Confluent Cloud cluster $CLUSTER to be ready"
+    ccloud::retry $MAX_WAIT ccloud::validate_ccloud_cluster_ready || exit 1
   fi
 
-  SCHEMA_REGISTRY_ENDPOINT=$(confluent schema-registry cluster describe -o json | jq -r ".endpoint_url")
-
-  if [[ $NEED_ACLS -eq 1 ]] || [[ $NEED_SR_PERMISSION -eq 1 ]]
+  if ! wait $sr_pid
   then
-    # VINC
-    set +e
-    if [ "$SERVICE_ACCOUNT_ID" != "" ]
-    then
-      log "Adding ResourceOwner RBAC role for all subjects"
-      confluent iam rbac role-binding create --principal User:$SERVICE_ACCOUNT_ID --role ResourceOwner --environment $ENVIRONMENT --schema-registry-cluster $SCHEMA_REGISTRY --resource Subject:*
-    fi
-    set -e
+    rm -f "$sr_output_file"
+    echo "ERROR: Could not set up Schema Registry. Please troubleshoot."
+    exit 1
   fi
+  source "$sr_output_file"
+  rm -f "$sr_output_file"
+
+  # done after the background Schema Registry setup, so that no concurrent confluent CLI call can
+  # overwrite the active cluster in the CLI config
+  confluent kafka cluster use $CLUSTER
 
   if $enable_ksqldb ; then
     KSQLDB_NAME=${KSQLDB_NAME:-"demo-ksqldb-$SERVICE_ACCOUNT_ID"}
@@ -3828,7 +3930,7 @@ function ccloud::destroy_ccloud_stack() {
   confluent kafka cluster delete $cluster_id &> "$REDIRECT_TO"
 
   # Delete API keys associated to the service account
-  confluent api-key list --service-account $SERVICE_ACCOUNT_ID -o json | jq -r '.[].api_key' | xargs -I{} confluent api-key delete {} --force
+  confluent api-key list --service-account $SERVICE_ACCOUNT_ID -o json | jq -r '.[].key' | xargs -I{} confluent api-key delete {} --force
 
   # Delete service account
   confluent iam service-account delete $SERVICE_ACCOUNT_ID --force &>"$REDIRECT_TO"
@@ -3959,7 +4061,7 @@ EOF
 
   SCHEMA_REGISTRY_API_KEY=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | awk -F: '{print $1}')
   SCHEMA_REGISTRY_API_SECRET=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | awk -F: '{print $2}')
-  KAFKA_REST_ENDPOINT=$(confluent kafka cluster describe $CLUSTER -o json | jq -r ".rest_endpoint")
+  KAFKA_REST_ENDPOINT=${CLUSTER_REST_ENDPOINT:-$(confluent kafka cluster describe $CLUSTER -o json | jq -r ".rest_endpoint")}
 
   if [ -z $CONFLUENT_CLOUD_API_KEY ]
   then
