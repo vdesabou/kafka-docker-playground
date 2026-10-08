@@ -35,6 +35,7 @@ nb_test_failed=0
 nb_test_skipped=0
 failed_tests=""
 skipped_tests=""
+last_checked_connector_path=""
 
 test_list="$1"
 if [ "$1" = "ALL" ]
@@ -188,8 +189,13 @@ do
                     fi
                     
                     # check if newer connector plugin version is available on hub
-                    output=$(playground connector-plugin versions --connector-plugin "$owner/$name" --force-refresh --last 1)
-                    last_updated=$(echo "$output" | head -n 1 | grep -v "<unknown>" | cut -d "(" -f 2 | cut -d " " -f 1)
+                    # (only once per plugin: consecutive scripts and directories often use the same one)
+                    if [ "$connector_path" != "$last_checked_connector_path" ]
+                    then
+                        output=$(playground connector-plugin versions --connector-plugin "$owner/$name" --force-refresh --last 1)
+                        last_updated=$(echo "$output" | head -n 1 | grep -v "<unknown>" | cut -d "(" -f 2 | cut -d " " -f 1)
+                        last_checked_connector_path="$connector_path"
+                    fi
                     if [[ -n "$last_updated" ]]
                     then
                         last_updated_days=$(echo $last_updated | tr -d '[:space:]')

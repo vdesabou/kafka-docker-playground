@@ -1739,15 +1739,16 @@ function cleanup {
 }
 trap cleanup EXIT
 
-playground generate-fzf-find-files &
+# background jobs must not inherit stdout/stderr: 'playground run | tee' (run-tests.sh) would wait for them to exit
+playground generate-fzf-find-files > /dev/null 2>&1 &
 generate_connector_versions > /dev/null 2>&1 &
 
 if [[ $test_file == *"aws"* ]]
 then
-    playground cloud-resources aws costs-history > /tmp/aws-costs-history.txt &
+    playground cloud-resources aws costs-history > /tmp/aws-costs-history.txt 2>/dev/null &
 elif [[ $test_file == *"azure"* ]]
 then
-    playground cloud-resources azure costs-history > /tmp/azure-costs-history.txt &
+    playground cloud-resources azure costs-history > /tmp/azure-costs-history.txt 2>/dev/null &
 fi
 set +e
 
@@ -1765,7 +1766,7 @@ if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "
 then
   if [ ! -f ${connector_plugin_display_last_updated_file} ]
   then
-    playground connector-plugin display-last-updated --days 3 --vendor confluentinc > ${connector_plugin_display_last_updated_file} &
+    playground connector-plugin display-last-updated --days 3 --vendor confluentinc > ${connector_plugin_display_last_updated_file} 2>/dev/null &
   fi
 fi
 set -e

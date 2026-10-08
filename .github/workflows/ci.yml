@@ -6,7 +6,8 @@ on:
   #      - master
 
   schedule:
-      - cron: '0 18 * * *' # every day at 6 pm
+      # not on the hour: GitHub delays scheduled runs a lot at minute 0 (they started 2 to 5 hours late)
+      - cron: '17 18 * * *' # every day at 6 pm
 
   workflow_dispatch:
     inputs:
@@ -28,85 +29,9 @@ on:
         default: 'docker'
 
 jobs:
-  pre-build:
-    if: ${{ github.event.inputs.test_name == '' }}
-    name: Cleanup resources
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-        with:
-          repository: vdesabou/kafka-docker-playground
-          fetch-depth: 0
-
-      - name: "Install confluent CLI"
-        run: |
-            curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
-            export PATH=$PATH:/usr/local/bin
-
-      - name: Cleanup resources
-        run: |
-          cd ./scripts/cli
-          ./playground cleanup-cloud-resources --force
-          ./playground cleanup-cloud-resources --force --user vsaboulin --resource ccloud --resource aws --resource azure --resource gcp
-        env:
-          AZ_USER: ${{ vars.AZ_USER}}
-          AZ_CLIENT_ID: ${{ vars.AZ_CLIENT_ID}}
-          AZ_CLIENT_SECRET: ${{ secrets.AZ_CLIENT_SECRET}}
-          AZ_TENANT_ID: ${{ vars.AZ_TENANT_ID}}
-          AZURE_DATALAKE_CLIENT_ID: ${{ vars.AZURE_DATALAKE_CLIENT_ID}}
-          AZURE_DATALAKE_CLIENT_PASSWORD: ${{ secrets.AZURE_DATALAKE_CLIENT_PASSWORD}}
-          AZURE_COGNITIVE_APP_ID: ${{ vars.AZURE_COGNITIVE_APP_ID}}
-          AZURE_COGNITIVE_APP_PASSWORD: ${{ secrets.AZURE_COGNITIVE_APP_PASSWORD}}
-          AZURE_SUBSCRIPTION_NAME: ${{ vars.AZURE_SUBSCRIPTION_NAME}}
-          AZURE_LOGS_CLIENT_ID: ${{ vars.AZURE_LOGS_CLIENT_ID }}
-          AZURE_LOGS_CLIENT_SECRET: ${{ secrets.AZURE_LOGS_CLIENT_SECRET }}
-          AZURE_LOGS_SP_OBJECT_ID: ${{ vars.AZURE_LOGS_SP_OBJECT_ID }}
-          CONFLUENT_CLOUD_EMAIL: ${{ vars.CONFLUENT_CLOUD_EMAIL}}
-          CONFLUENT_CLOUD_PASSWORD: ${{ secrets.CONFLUENT_CLOUD_PASSWORD}}
-          ENVIRONMENT: ${{ vars.ENVIRONMENT}}
-          CLUSTER_NAME: ${{ vars.CLUSTER_NAME}}
-          CLUSTER_REGION: ${{ vars.CLUSTER_REGION}}
-          CLUSTER_CLOUD: ${{ vars.CLUSTER_CLOUD}}
-          CLUSTER_CREDS: ${{ secrets.CLUSTER_CREDS}}
-          AWS_DATABRICKS_CLUSTER_NAME: ${{ vars.AWS_DATABRICKS_CLUSTER_NAME}}
-          AWS_DATABRICKS_CLUSTER_REGION: ${{ vars.AWS_DATABRICKS_CLUSTER_REGION}}
-          AWS_DATABRICKS_CLUSTER_CLOUD: ${{ vars.AWS_DATABRICKS_CLUSTER_CLOUD}}
-          AWS_DATABRICKS_CLUSTER_CREDS: ${{ secrets.AWS_DATABRICKS_CLUSTER_CREDS}}
-          GCP_CLUSTER_NAME: ${{ vars.GCP_CLUSTER_NAME}}
-          GCP_CLUSTER_REGION: ${{ vars.GCP_CLUSTER_REGION}}
-          GCP_CLUSTER_CLOUD: ${{ vars.GCP_CLUSTER_CLOUD}}
-          GCP_CLUSTER_CREDS: ${{ secrets.GCP_CLUSTER_CREDS}}
-          AZURE_CLUSTER_NAME: ${{ vars.AZURE_CLUSTER_NAME}}
-          AZURE_CLUSTER_REGION: ${{ vars.AZURE_CLUSTER_REGION}}
-          AZURE_CLUSTER_CLOUD: ${{ vars.AZURE_CLUSTER_CLOUD}}
-          AZURE_CLUSTER_CREDS: ${{ secrets.AZURE_CLUSTER_CREDS}}
-          SCHEMA_REGISTRY_CREDS: ${{ secrets.SCHEMA_REGISTRY_CREDS}}
-          SNOWFLAKE_ACCOUNT_NAME: ${{ vars.SNOWFLAKE_ACCOUNT_NAME}}
-          SNOWFLAKE_USERNAME: ${{ vars.SNOWFLAKE_USERNAME}}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD}}
-          GCP_KEYFILE_CONTENT: ${{ secrets.GCP_KEYFILE_CONTENT}}
-          GCP_PROJECT: ${{ vars.GCP_PROJECT}}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          AWS_REGION: ${{ vars.AWS_REGION}}
-          CONFLUENT_CLOUD_API_KEY: ${{ secrets.CONFLUENT_CLOUD_API_KEY}}
-          CONFLUENT_CLOUD_API_SECRET: ${{ secrets.CONFLUENT_CLOUD_API_SECRET}}
-          SALESFORCE_USERNAME: ${{ vars.SALESFORCE_USERNAME}}
-          SALESFORCE_PASSWORD: ${{ secrets.SALESFORCE_PASSWORD}}
-          SALESFORCE_SECURITY_TOKEN: ${{ secrets.SALESFORCE_SECURITY_TOKEN}}
-          SALESFORCE_CONSUMER_KEY: ${{ secrets.SALESFORCE_CONSUMER_KEY}}
-          SALESFORCE_CONSUMER_PASSWORD: ${{ secrets.SALESFORCE_CONSUMER_PASSWORD}}
-          SALESFORCE_INSTANCE: ${{ vars.SALESFORCE_INSTANCE}}
-          SALESFORCE_USERNAME_ACCOUNT2: ${{ vars.SALESFORCE_USERNAME_ACCOUNT2}}
-          SALESFORCE_PASSWORD_ACCOUNT2: ${{ secrets.SALESFORCE_PASSWORD_ACCOUNT2}}
-          SALESFORCE_SECURITY_TOKEN_ACCOUNT2: ${{ secrets.SALESFORCE_SECURITY_TOKEN_ACCOUNT2}}
-          SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2}}
-
   build:
     if: ${{ github.event.inputs.test_name == '' }}
     runs-on: ubuntu-latest
-    needs: pre-build
     name: ${{ matrix.tag }} ${{ matrix.test_list }} ${{ matrix.playground_environment }} ${{ github.event.inputs.container_engine == 'podman' && '🦭' || '' }}
     strategy:
       fail-fast: false
@@ -162,6 +87,9 @@ jobs:
                       "🚀2️⃣ ccloud/fm-neo4j-sink ccloud/fm-influxdb2-sink ccloud/fm-influxdb3-sink ccloud/fm-influxdb2-source ccloud/fm-jdbc-oracle19-source ccloud/fm-jdbc-oracle19-sink ccloud/fm-cdc-oracle19-source ccloud/fm-cdc-xstream-oracle19-source ccloud/fm-rabbitmq-source ccloud/fm-zendesk-source ccloud/fm-splunk-sink ccloud/fm-rabbitmq-sink ccloud/fm-jdbc-mysql-sink ccloud/fm-sftp-source ccloud/fm-http-sink ccloud/fm-http-v2-sink ccloud/fm-http-source ccloud/fm-http-v2-source",
                       "🚀3️⃣ ccloud/fm-solace-sink ccloud/fm-solace-source ccloud/fm-opensearch-sink ccloud/fm-sftp-sink ccloud/fm-redis-sink ccloud/fm-redis-kafka-sink ccloud/fm-redis-kafka-source ccloud/fm-active-mq-source ccloud/fm-clickhouse-sink ccloud/fm-debezium-mariadb-source ccloud/fm-debezium-mongodb-source ccloud/fm-mongodb-source ccloud/fm-mongodb-sink"
                     ]
+    env:
+      # cfk only runs connect/ examples (see run-tests.sh): without any in the list, the job has nothing to do
+      SKIP_JOB: ${{ matrix.playground_environment == 'cfk' && !contains(matrix.test_list, 'connect/') }}
     steps:
 
       # - name: Maximize build space
@@ -175,15 +103,23 @@ jobs:
       #     remove-codeql: 'true'
 
       - name: Checkout code
+        if: env.SKIP_JOB != 'true'
         uses: actions/checkout@v5
         with:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
 
       - name: "Free up disk space"
-        if: contains(matrix.test_list, 'oracle')
+        if: contains(matrix.test_list, 'oracle') && env.SKIP_JOB != 'true'
         run: |
           df -h
+          # runners have ~85 GB free nowadays: the cleanup below takes 2 to 5 minutes, only do it when needed
+          avail_gb=$(df --output=avail -BG / | tail -1 | tr -dc '0-9')
+          if [ "$avail_gb" -ge 50 ]
+          then
+            echo "${avail_gb}G available on /, skipping cleanup"
+            exit 0
+          fi
           sudo apt-get -qq purge build-essential ghc*
           sudo apt-get clean
           sudo apt-get update
@@ -223,7 +159,7 @@ jobs:
           df -h
 
       - name: Install k3d and kubectl
-        if: matrix.playground_environment == 'cfk'
+        if: matrix.playground_environment == 'cfk' && env.SKIP_JOB != 'true'
         run: |
           curl -fsSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.9.0 bash
 
@@ -237,6 +173,7 @@ jobs:
           kubectl version --client
 
       - name: "Install confluent CLI and tools"
+        if: env.SKIP_JOB != 'true'
         run: |
             curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
             export PATH=$PATH:/usr/local/bin
@@ -246,10 +183,11 @@ jobs:
       # after "Free up disk space", which prunes docker, and before "Set up credentials",
       # so that docker login goes to the engine the tests use
       - name: Switch to podman
-        if: github.event.inputs.container_engine == 'podman'
+        if: github.event.inputs.container_engine == 'podman' && env.SKIP_JOB != 'true'
         run: bash scripts/ci-setup-podman.sh
 
       - name: Set up credentials
+        if: env.SKIP_JOB != 'true'
         run: |
           mkdir -p $HOME/.aws
           printf '%s\n' "$AWS_CREDENTIALS_WITH_ASSUMING_IAM_ROLE" > $HOME/.aws/credentials-with-assuming-iam-role
@@ -264,6 +202,7 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: Build and Test
+        if: env.SKIP_JOB != 'true'
         run: |
           export PATH=$PATH:$GITHUB_WORKSPACE/scripts/cli
           bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}" "${{ matrix.playground_environment }}"
@@ -389,7 +328,7 @@ jobs:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           
       - name: Commit connector config file if changed
-        if: always()
+        if: always() && env.SKIP_JOB != 'true'
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
@@ -452,6 +391,9 @@ jobs:
                       "🚀 ${{ github.event.inputs.test_name }}"
                     ]
         playground_environment: ["${{ github.event.inputs.playground_environment }}"]
+    env:
+      # cfk only runs connect/ examples (see run-tests.sh): without any in the list, the job has nothing to do
+      SKIP_JOB: ${{ matrix.playground_environment == 'cfk' && !contains(matrix.test_list, 'connect/') }}
     steps:
 
       # - name: Maximize build space
@@ -465,15 +407,23 @@ jobs:
       #     remove-codeql: 'true'
           
       - name: Checkout code
+        if: env.SKIP_JOB != 'true'
         uses: actions/checkout@v5
         with:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
 
       - name: "Free up disk space"
-        if: contains(matrix.test_list, 'oracle')
+        if: contains(matrix.test_list, 'oracle') && env.SKIP_JOB != 'true'
         run: |
           df -h
+          # runners have ~85 GB free nowadays: the cleanup below takes 2 to 5 minutes, only do it when needed
+          avail_gb=$(df --output=avail -BG / | tail -1 | tr -dc '0-9')
+          if [ "$avail_gb" -ge 50 ]
+          then
+            echo "${avail_gb}G available on /, skipping cleanup"
+            exit 0
+          fi
           sudo apt-get -qq purge build-essential ghc*
           sudo apt-get clean
           docker system prune -af
@@ -512,7 +462,7 @@ jobs:
           df -h
 
       - name: Install k3d and kubectl
-        if: matrix.playground_environment == 'cfk'
+        if: matrix.playground_environment == 'cfk' && env.SKIP_JOB != 'true'
         run: |
           curl -fsSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.9.0 bash
 
@@ -526,6 +476,7 @@ jobs:
           kubectl version --client
 
       - name: "Install confluent CLI and tools"
+        if: env.SKIP_JOB != 'true'
         run: |
             curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
             export PATH=$PATH:/usr/local/bin
@@ -535,10 +486,11 @@ jobs:
       # after "Free up disk space", which prunes docker, and before "Set up credentials",
       # so that docker login goes to the engine the tests use
       - name: Switch to podman
-        if: github.event.inputs.container_engine == 'podman'
+        if: github.event.inputs.container_engine == 'podman' && env.SKIP_JOB != 'true'
         run: bash scripts/ci-setup-podman.sh
 
       - name: Set up credentials
+        if: env.SKIP_JOB != 'true'
         run: |
           mkdir -p $HOME/.aws
           printf '%s\n' "$AWS_CREDENTIALS_WITH_ASSUMING_IAM_ROLE" > $HOME/.aws/credentials-with-assuming-iam-role
@@ -553,6 +505,7 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: Build and Test
+        if: env.SKIP_JOB != 'true'
         run: |
           export PATH=$PATH:$GITHUB_WORKSPACE/scripts/cli
           bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}" "${{ matrix.playground_environment }}"
@@ -678,7 +631,7 @@ jobs:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           
       - name: Commit connector config file if changed
-        if: always()
+        if: always() && env.SKIP_JOB != 'true'
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
@@ -730,11 +683,11 @@ jobs:
     #       from: ${{ vars.SALESFORCE_USERNAME }}
     #       body: file:///tmp/email_body.txt
 
-  post-build:
-    name: Cleanup resources and Update README
+  post-build-cleanup:
+    name: Cleanup resources
     runs-on: ubuntu-latest
     if: ${{ always() && github.event.inputs.test_name == '' }}
-    needs: [pre-build, build, execute_one_test]
+    needs: [build, execute_one_test]
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -818,6 +771,35 @@ jobs:
           SALESFORCE_CONSUMER_KEY_WITH_JWT: ${{ secrets.SALESFORCE_CONSUMER_KEY_WITH_JWT}}
           SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2}}
 
+  post-build:
+    # runs in parallel with post-build-cleanup, they don't depend on each other
+    name: Update README
+    runs-on: ubuntu-latest
+    if: ${{ always() && github.event.inputs.test_name == '' }}
+    needs: [build, execute_one_test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          repository: vdesabou/kafka-docker-playground
+          fetch-depth: 0
+          # submodules: recursive
+          # ssh-key: ${{ secrets.GH_SSH_KEY_FILE }}
+          ssh-strict: 'false'
+
+      - name: Log in to Docker Hub
+        run: |
+          mkdir -p $HOME/.confluent
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+        env:
+          DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME}}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
+
+      - name: "Install confluent CLI"
+        run: |
+            curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
+            export PATH=$PATH:/usr/local/bin
+            
       - name: Update DOCS
         run: |
           sudo gem install bashly

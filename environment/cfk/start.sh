@@ -2819,41 +2819,29 @@ function reset_cfk_namespace_state() {
 
     # Kick off a regular delete (may hang if finalizers present, that's fine — we fix it next)
     kubectl delete namespace "$namespace" --ignore-not-found=true --wait=false >/dev/null 2>&1 || true
+    # the namespace deletion otherwise waits for every pod's termination grace period (~30s+)
+    kubectl -n "$namespace" delete pods --all --grace-period=0 --force --wait=false >/dev/null 2>&1 || true
 
     # Repeatedly clear finalizers from all namespaced resources + namespace itself.
     # This mirrors manual recovery commands and is resilient to CFK resources reappearing.
     local ns_json_file
-    local all_resource_type=""
-    local all_resource_name=""
-    local cfk_resource_type=""
+    local all_resource_types=""
     local clear_pass=0
     for clear_pass in {1..4}
     do
       log "  Stripping resource finalizers (pass ${clear_pass}/4)..."
 
-      # Generic pass over every namespaced resource type.
-      while IFS= read -r all_resource_type
-      do
-        if [[ -z "$all_resource_type" ]]; then continue; fi
-        while IFS= read -r all_resource_name
-        do
-          if [[ -z "$all_resource_name" ]]; then continue; fi
-          kubectl -n "$namespace" patch "$all_resource_type" "$all_resource_name" \
+      # Every namespaced resource type (CFK ones included), listed with a single 'kubectl get' and
+      # patched in parallel: one get + one patch at a time per type took ~50s per pass.
+      # Events never have finalizers and can be numerous, metrics are read-only.
+      all_resource_types=$(kubectl api-resources --verbs=list,patch --namespaced=true -o name 2>/dev/null \
+        | grep -v -E '^events(\.events\.k8s\.io)?$|\.metrics\.k8s\.io$' | paste -sd, -)
+      if [[ -n "$all_resource_types" ]]
+      then
+        kubectl -n "$namespace" get "$all_resource_types" -o name --ignore-not-found 2>/dev/null \
+          | xargs -P 8 -I{} kubectl -n "$namespace" patch {} \
             --type=merge -p '{"metadata":{"finalizers":[]}}' >/dev/null 2>&1 || true
-        done < <(kubectl -n "$namespace" get "$all_resource_type" --no-headers 2>/dev/null | awk '{print $1}')
-      done < <(kubectl api-resources --verbs=list --namespaced=true -o name 2>/dev/null)
-
-      # Explicit CFK pass (same intent as the manual command shared by user).
-      while IFS= read -r cfk_resource_type
-      do
-        if [[ -z "$cfk_resource_type" ]]; then continue; fi
-        while IFS= read -r all_resource_name
-        do
-          if [[ -z "$all_resource_name" ]]; then continue; fi
-          kubectl -n "$namespace" patch "$cfk_resource_type" "$all_resource_name" \
-            --type=merge -p '{"metadata":{"finalizers":[]}}' >/dev/null 2>&1 || true
-        done < <(kubectl -n "$namespace" get "$cfk_resource_type" --no-headers 2>/dev/null | awk '{print $1}')
-      done < <(kubectl api-resources --api-group=platform.confluent.io --verbs=list --namespaced=true -o name 2>/dev/null)
+      fi
 
       # Namespace-level finalize call.
       ns_json_file=$(mktemp)
