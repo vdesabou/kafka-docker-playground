@@ -24778,6 +24778,20 @@ playground_run_command() {
       log "🙈 ignoring environment variable SCHEMA_REGISTRY_CREDS as one of the flags is set"
       unset SCHEMA_REGISTRY_CREDS
     fi
+    # bootstrap_ccloud_environment forces AWS_/GCP_/AZURE_/AWS_DATABRICKS_CLUSTER_NAME
+    # on fully managed examples, which would override the flags
+    for prefix in AWS_ GCP_ AZURE_ AWS_DATABRICKS_
+    do
+      for item in CLUSTER_NAME CLUSTER_CLOUD CLUSTER_REGION CLUSTER_CREDS
+      do
+        var="${prefix}${item}"
+        if [ ! -z "${!var}" ]
+        then
+          log "🙈 ignoring environment variable $var as one of the flags is set"
+          unset "$var"
+        fi
+      done
+    done
   else
     playground state set ccloud.suggest_use_previous_example_ccloud "1"
   fi
@@ -25040,7 +25054,7 @@ playground_run_command() {
       then
         # environment switched to ccloud in this menu: same variables as above, only
         # once (the menu can unset them) and never on top of --cluster-* flags
-        if [[ ! -n "$ccloud_secrets_loaded" ]] && [[ ! -n "$cluster_name" ]]
+        if [[ ! -n "$ccloud_secrets_loaded" ]] && [[ ! -n "$cluster_name" ]] && [[ ! -n "$cluster_type" ]] && [[ ! -n "$cluster_cloud" ]] && [[ ! -n "$cluster_region" ]]
         then
           load_secrets_env_vars $(get_ccloud_env_vars)
           ccloud_secrets_loaded=1
