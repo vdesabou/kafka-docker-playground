@@ -1982,6 +1982,37 @@ commands:
     'playground switch-ccloud', so the CLI talks to your local containers
     again.
 
+- name: switch-podman
+  group: Run
+  help: |-
+    🦭 Switch the container engine to Podman
+
+    Points the 'docker' CLI, 'docker compose' and the playground at the rootful
+    Podman socket, through a 'podman' docker context: the switch applies to your
+    current shell and to new ones, with nothing to export. On macOS the podman
+    machine is started if needed. Ends with 'playground doctor'.
+
+    Containers are not moved between engines: stop the running example first.
+
+    ❕ Podman must be set up once, see
+       https://kafka-docker-playground.io/#/how-to-use?id=🦭-using-podman-instead-of-docker
+       The docker context you were on is remembered for 'playground switch-docker'.
+  examples:
+  - playground switch-podman
+
+- name: switch-docker
+  group: Run
+  help: |-
+    🐳 Switch the container engine back to Docker
+
+    Restores the docker context that was active before 'playground switch-podman'
+    (Docker Desktop's 'desktop-linux', or 'default', if none was remembered).
+    Ends with 'playground doctor'.
+
+    Containers are not moved between engines: stop the running example first.
+  examples:
+  - playground switch-docker
+
 - name: update-version
   group: Run
   help: |-

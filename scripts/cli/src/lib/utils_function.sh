@@ -445,6 +445,9 @@ function export_docker_config_without_cred_helpers()
   then
     mv "$dst/config.json.tmp" "$dst/config.json"
     export DOCKER_CONFIG="$dst"
+    # the mirror is a snapshot: anything that must persist, like the current docker
+    # context set by switch-podman / switch-docker, has to be written to the original
+    export PLAYGROUND_DOCKER_CONFIG_ORIGINAL="$src"
   fi
 }
 

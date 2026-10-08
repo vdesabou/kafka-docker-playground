@@ -60,6 +60,8 @@ playground_usage() {
   printf "  %s   🔎 Find examples matching a free-text query, without the interactive picker\n" "$(green "find-example")                              "
   printf "  %s   🌩️  Switch to ccloud environment.\n" "$(green "switch-ccloud")                             "
   printf "  %s   💺  Switch back from previous environment before switch-ccloud was called.\n" "$(green "switch-back")                               "
+  printf "  %s   🦭 Switch the container engine to Podman\n" "$(green "switch-podman")                             "
+  printf "  %s   🐳 Switch the container engine back to Docker\n" "$(green "switch-docker")                             "
   printf "  %s   ✨ Update current confluent platform components (all with --tag or only connect with --connect-tag) or connector(s) with new version(s)\n" "$(green "update-version")                            "
   printf "  %s   👐 When --file is not provided, simply open last example you ran with <playground run>\n" "$(green "open")                                      "
   printf "  %s   🛑 Stop currently running example\n" "$(green "stop")                                      "
@@ -3706,6 +3708,70 @@ playground_switch_back_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_switch_podman_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground switch-podman\n\n"
+    printf "  🦭 Switch the container engine to Podman\n  \n  Points the 'docker' CLI, 'docker compose' and the playground at the rootful\n  Podman socket, through a 'podman' docker context: the switch applies to your\n  current shell and to new ones, with nothing to export. On macOS the podman\n  machine is started if needed. Ends with 'playground doctor'.\n  \n  Containers are not moved between engines: stop the running example first.\n  \n  ❕ Podman must be set up once, see\n    \n  https://kafka-docker-playground.io/#/how-to-use?id=🦭-using-podman-instead-of-docker\n     The docker context you were on is remembered for 'playground\n  switch-docker'.\n\n"
+  else
+    printf "playground switch-podman - 🦭 Switch the container engine to Podman\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground switch-podman\n"
+  printf "  playground switch-podman --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground switch-podman\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_switch_docker_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground switch-docker\n\n"
+    printf "  🐳 Switch the container engine back to Docker\n  \n  Restores the docker context that was active before 'playground switch-podman'\n  (Docker Desktop's 'desktop-linux', or 'default', if none was remembered).\n  Ends with 'playground doctor'.\n  \n  Containers are not moved between engines: stop the running example first.\n\n"
+  else
+    printf "playground switch-docker - 🐳 Switch the container engine back to Docker\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground switch-docker\n"
+  printf "  playground switch-docker --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground switch-docker\n"
     echo
 
   fi
@@ -12024,7 +12090,8 @@ function filter_connect_running() {
 }
 
 function filter_docker_running() {
-  # doctor is precisely the command you run when the engine is down, and a bare
+  # doctor is precisely the command you run when the engine is down (and the switch
+  # commands are how you leave an engine that is down), and a bare
   # `playground` should still be able to print its help, so do not gate those.
   # state and config only read and write playground.ini, they never talk to the
   # engine, and several commands call them recursively - gating them only turned
@@ -12032,7 +12099,7 @@ function filter_docker_running() {
   # $action is the sub-command, set by bashly before the filters are evaluated.
   # nested commands set it to "state get", "config set", ... hence the globs.
   case "${action:-}" in
-    doctor|help|""|state|state\ *|config|config\ *)
+    doctor|help|""|state|state\ *|config|config\ *|switch-podman|switch-docker)
       return 0
     ;;
   esac
@@ -13814,6 +13881,52 @@ function find_examples() {
         | head -n "$limit"
 }
 
+# shared by switch-podman / switch-docker: the docker context is what the docker CLI,
+# docker compose, k3d and the playground follow, unless DOCKER_HOST overrides it
+function warn_container_engine_switch() {
+  local leaving="$1"
+  if [ -n "${DOCKER_HOST:-}" ]
+  then
+    logwarn "DOCKER_HOST is set (${DOCKER_HOST}): it overrides the docker context in this shell"
+    logwarn "  unset DOCKER_HOST"
+  fi
+  local running
+  running=$(docker ps -q --filter "label=com.docker.compose.project" 2>/dev/null | wc -l | tr -d ' ')
+  if [ "${running:-0}" -gt 0 ]
+  then
+    logwarn "${running} container(s) are still running on ${leaving}: they are not moved to the other engine"
+    logwarn "  stop them first with 'playground stop', or switch back to reach them"
+  fi
+}
+
+# the user's docker config, even when DOCKER_CONFIG points at the mirror without
+# credHelpers (see export_docker_config_without_cred_helpers): `docker context use`
+# must land there, or the switch would only exist inside this playground call
+function docker_user_config_dir() {
+  echo "${PLAYGROUND_DOCKER_CONFIG_ORIGINAL:-${DOCKER_CONFIG:-$HOME/.docker}}"
+}
+
+# DOCKER_HOST and DOCKER_CONTEXT are ignored too: they override the configured context,
+# and `docker context show` would then report "default" instead of what is configured
+function docker_with_user_config() {
+  env -u DOCKER_HOST -u DOCKER_CONTEXT DOCKER_CONFIG="$(docker_user_config_dir)" docker "$@"
+}
+
+# values computed for the engine of the previous context, which the doctor run at the
+# end of a switch must not inherit: it detects the new engine from scratch, and
+# mirrors the docker config again if that engine needs it
+function reset_container_engine_detection() {
+  local user_config
+  user_config=$(docker_user_config_dir)
+  unset PLAYGROUND_CONTAINER_ENGINE DOCKER_BUILDKIT PLAYGROUND_DOCKER_CONFIG_ORIGINAL
+  if [ "$user_config" = "$HOME/.docker" ]
+  then
+    unset DOCKER_CONFIG
+  else
+    export DOCKER_CONFIG="$user_config"
+  fi
+}
+
 # src/lib/colors.sh
 print_in_color() {
   local color="$1"
@@ -15366,6 +15479,9 @@ function export_docker_config_without_cred_helpers()
   then
     mv "$dst/config.json.tmp" "$dst/config.json"
     export DOCKER_CONFIG="$dst"
+    # the mirror is a snapshot: anything that must persist, like the current docker
+    # context set by switch-podman / switch-docker, has to be written to the original
+    export PLAYGROUND_DOCKER_CONFIG_ORIGINAL="$src"
   fi
 }
 
@@ -26693,6 +26809,108 @@ playground_switch_back_command() {
 
   log "🚀 Running example "
   echo $last_two_folders/$filename
+}
+
+# :command.function
+playground_switch_podman_command() {
+
+  # src/commands/switch-podman.sh
+  context_name="podman"
+  docs_url="https://kafka-docker-playground.io/#/how-to-use?id=🦭-using-podman-instead-of-docker"
+
+  if ! command -v podman > /dev/null 2>&1
+  then
+      logerror "❌ podman is not installed"
+      logerror "👉 $docs_url"
+      exit 1
+  fi
+
+  # the rootful podman socket, as set up in the documentation
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+      if ! podman machine inspect > /dev/null 2>&1
+      then
+          logerror "❌ no podman machine found, create one first:"
+          logerror "  podman machine init --rootful --cpus 4 --memory 12288 --disk-size 100"
+          logerror "👉 $docs_url"
+          exit 1
+      fi
+      if [ "$(podman machine inspect --format '{{.State}}' 2>/dev/null)" != "running" ]
+      then
+          log "🚀 Starting the podman machine"
+          podman machine start > /dev/null
+      fi
+      podman_socket=$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}' 2>/dev/null)
+  else
+      podman_socket="/run/podman-api/podman.sock"
+  fi
+
+  if [ ! -S "$podman_socket" ]
+  then
+      logerror "❌ podman socket ${podman_socket:-<none>} does not exist, set up the rootful podman socket first"
+      logerror "👉 $docs_url"
+      exit 1
+  fi
+
+  current_context=$(docker_with_user_config context show 2>/dev/null)
+  if [ "$current_context" != "$context_name" ]
+  then
+      warn_container_engine_switch "${current_context:-docker}"
+      if [ -n "$current_context" ]
+      then
+          playground state set run.docker_context_before_podman "$current_context"
+      fi
+  fi
+
+  if docker_with_user_config context inspect "$context_name" > /dev/null 2>&1
+  then
+      docker_with_user_config context update "$context_name" --docker "host=unix://${podman_socket}" > /dev/null
+  else
+      docker_with_user_config context create "$context_name" --description "Podman (kafka-docker-playground)" --docker "host=unix://${podman_socket}" > /dev/null
+  fi
+  docker_with_user_config context use "$context_name" > /dev/null
+
+  log "🦭 Switched to podman: docker context '$context_name' (unix://${podman_socket})"
+  if [ -n "$current_context" ] && [ "$current_context" != "$context_name" ]
+  then
+      log "💺 'playground switch-docker' goes back to docker context '$current_context'"
+  fi
+
+  reset_container_engine_detection
+  playground doctor
+
+}
+
+# :command.function
+playground_switch_docker_command() {
+
+  # src/commands/switch-docker.sh
+  target_context=$(playground state get run.docker_context_before_podman)
+  if [ -z "$target_context" ] || ! docker_with_user_config context inspect "$target_context" > /dev/null 2>&1
+  then
+      # nothing remembered: Docker Desktop's context when it exists, the plain one otherwise
+      if docker_with_user_config context inspect desktop-linux > /dev/null 2>&1
+      then
+          target_context="desktop-linux"
+      else
+          target_context="default"
+      fi
+  fi
+
+  current_context=$(docker_with_user_config context show 2>/dev/null)
+  if [ "$current_context" = "$target_context" ]
+  then
+      log "🐳 Already on docker context '$target_context'"
+  else
+      warn_container_engine_switch "${current_context:-podman}"
+      docker_with_user_config context use "$target_context" > /dev/null
+      log "🐳 Switched to docker: docker context '$target_context'"
+  fi
+  playground state del run.docker_context_before_podman > /dev/null 2>&1 || true
+
+  reset_container_engine_detection
+  playground doctor
+
 }
 
 # :command.function
@@ -44442,6 +44660,20 @@ parse_requirements() {
       shift $#
       ;;
 
+    switch-podman)
+      action="switch-podman"
+      shift
+      playground_switch_podman_parse_requirements "$@"
+      shift $#
+      ;;
+
+    switch-docker)
+      action="switch-docker"
+      shift
+      playground_switch_docker_parse_requirements "$@"
+      shift $#
+      ;;
+
     update-version)
       action="update-version"
       shift
@@ -53012,6 +53244,126 @@ playground_switch_back_parse_requirements() {
 
   # :command.command_filter
   action="switch-back"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_switch_podman_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_switch_podman_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="switch-podman"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_switch_docker_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_switch_docker_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="switch-docker"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -71047,6 +71399,16 @@ playground_completion() {
         playground_switch_back_completion "$completion_current" "$@"
         return
         ;;
+      switch-podman)
+        shift
+        playground_switch_podman_completion "$completion_current" "$@"
+        return
+        ;;
+      switch-docker)
+        shift
+        playground_switch_docker_completion "$completion_current" "$@"
+        return
+        ;;
       update-version)
         shift
         playground_update_version_completion "$completion_current" "$@"
@@ -71196,7 +71558,7 @@ playground_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" help status doctor config secrets cloud-resources ccloud-costs ccloud-costs-history run re-run get-ci-result history find-example switch-ccloud switch-back update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cleanup-cloud-resources repro get-docker-compose schema tcp-proxy tools debug get-jmx-metrics container pod topic consumer-group connector-plugin connector ec2
+  completion_candidates "$completion_current" help status doctor config secrets cloud-resources ccloud-costs ccloud-costs-history run re-run get-ci-result history find-example switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cleanup-cloud-resources repro get-docker-compose schema tcp-proxy tools debug get-jmx-metrics container pod topic consumer-group connector-plugin connector ec2
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -74805,6 +75167,52 @@ playground_switch_ccloud_completion() {
 
 # :command.completion_function
 playground_switch_back_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_switch_podman_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_switch_docker_completion() {
   local completion_current="$1"
   shift
 
@@ -83382,6 +83790,8 @@ run() {
     "start-environment") playground_start_environment_command ;;
     "switch-ccloud") playground_switch_ccloud_command ;;
     "switch-back") playground_switch_back_command ;;
+    "switch-podman") playground_switch_podman_command ;;
+    "switch-docker") playground_switch_docker_command ;;
     "update-version") playground_update_version_command ;;
     "open") playground_open_command ;;
     "stop") playground_stop_command ;;
