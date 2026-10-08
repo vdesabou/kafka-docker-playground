@@ -1,8 +1,0 @@
-confluent-operator
-providers/aws.yaml
-kafka.properties
-aws-external-dns.yaml
-ns-without-finalizers.json
-external-dns.yaml
-certs/server-aws.json
-certs/component-certs

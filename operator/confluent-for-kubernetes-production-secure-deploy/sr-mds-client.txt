@@ -1,2 +1,0 @@
-username=sr
-password=sr-secret

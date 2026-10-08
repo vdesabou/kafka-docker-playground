@@ -1,3 +1,0 @@
-c3: c3-secret,Administrators
-admin: Developer1,Administrators
-admin1: Developer1,Administrators

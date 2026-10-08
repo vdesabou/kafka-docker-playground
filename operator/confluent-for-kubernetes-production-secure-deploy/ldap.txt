@@ -1,2 +1,0 @@
-username=cn=mds,dc=test,dc=com
-password=Developer!
