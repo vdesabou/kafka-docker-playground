@@ -11282,6 +11282,8 @@ function get_ccloud_connect() {
   environment=$(grep "ENVIRONMENT ID" $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta | cut -d " " -f 4)
   cluster=$(grep "KAFKA CLUSTER ID" $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta | cut -d " " -f 5)
 
+  load_secrets_env_vars CONFLUENT_CLOUD_API_KEY CONFLUENT_CLOUD_API_SECRET
+
   if [ -z $CONFLUENT_CLOUD_API_KEY ]
   then
     logerror "❌ environment variable CONFLUENT_CLOUD_API_KEY should be set to use $CONNECTOR_TYPE_FULLY_MANAGED or $CONNECTOR_TYPE_CUSTOM connector"
@@ -13443,6 +13445,7 @@ function check_terraform_installed() {
 
 # Check if required Confluent Cloud environment variables are set
 function check_confluent_cloud_terraform_env() {
+    load_secrets_env_vars CONFLUENT_CLOUD_API_KEY CONFLUENT_CLOUD_API_SECRET
     if [[ -z "$CONFLUENT_CLOUD_API_KEY" ]] || [[ -z "$CONFLUENT_CLOUD_API_SECRET" ]]
     then
         logerror "❌ Confluent Cloud API credentials not found"
@@ -14884,6 +14887,36 @@ function load_secrets_for_example () {
   then
     log "🔐 Loaded from secrets profile $profile:${loaded}"
   fi
+}
+
+#
+# Same idea for a CLI command run on its own (`playground connector status` on
+# a fully managed connector, ...): export the given variables from the store,
+# only into this process and only when they are not already set. This is what
+# lets a shell work without `source <(playground secrets env --all)`.
+#
+function load_secrets_env_vars () {
+  local profile
+  profile=$(get_active_secret_profile)
+
+  local name missing=""
+  for name in "$@"
+  do
+    [ -n "${!name:-}" ] || missing="${missing} ${name}"
+  done
+  [ -n "$missing" ] || return 0
+
+  secret_prefetch "$profile" $missing 2> /dev/null
+
+  local value
+  for name in $missing
+  do
+    if value=$(secret_get_from_store "$name" "$profile" 2> /dev/null)
+    then
+      export "$name=$value"
+    fi
+  done
+  return 0
 }
 
 # src/lib/utils_function.sh
@@ -18921,6 +18954,12 @@ EOF
   SCHEMA_REGISTRY_API_KEY=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | awk -F: '{print $1}')
   SCHEMA_REGISTRY_API_SECRET=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | awk -F: '{print $2}')
   KAFKA_REST_ENDPOINT=${CLUSTER_REST_ENDPOINT:-$(confluent kafka cluster describe $CLUSTER -o json | jq -r ".rest_endpoint")}
+
+  # example scripts source this file without the secrets library
+  if type load_secrets_env_vars > /dev/null 2>&1
+  then
+    load_secrets_env_vars CONFLUENT_CLOUD_API_KEY CONFLUENT_CLOUD_API_SECRET
+  fi
 
   if [ -z $CONFLUENT_CLOUD_API_KEY ]
   then

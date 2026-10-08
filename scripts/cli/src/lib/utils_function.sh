@@ -4063,6 +4063,12 @@ EOF
   SCHEMA_REGISTRY_API_SECRET=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | awk -F: '{print $2}')
   KAFKA_REST_ENDPOINT=${CLUSTER_REST_ENDPOINT:-$(confluent kafka cluster describe $CLUSTER -o json | jq -r ".rest_endpoint")}
 
+  # example scripts source this file without the secrets library
+  if type load_secrets_env_vars > /dev/null 2>&1
+  then
+    load_secrets_env_vars CONFLUENT_CLOUD_API_KEY CONFLUENT_CLOUD_API_SECRET
+  fi
+
   if [ -z $CONFLUENT_CLOUD_API_KEY ]
   then
     logwarn "❌ environment variable CONFLUENT_CLOUD_API_KEY should be set to use MCP confluent server for Confluent Cloud"
