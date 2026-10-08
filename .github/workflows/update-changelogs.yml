@@ -6,6 +6,9 @@ name: Update Change Logs
 on:
   milestone:
     types: [closed]
+  # refresh the change log as soon as an issue belonging to a milestone is closed
+  issues:
+    types: [closed]
   workflow_dispatch:
     inputs:
       milestoneId:
@@ -13,9 +16,17 @@ on:
         required: true
         default: '1'
 
+# every run pushes docs/changelog.md to the same docs repo: run them one at a time. When several issues are
+# closed in a row, the pending run is replaced by the newest one, which regenerates the whole milestone anyway
+concurrency:
+  group: update-changelogs
+  cancel-in-progress: false
+
 jobs:
   build:
     name: Update Change Logs
+    # on issues events, only for issues that belong to a milestone
+    if: github.event_name != 'issues' || github.event.issue.milestone != null
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -23,12 +34,13 @@ jobs:
         with:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
-      # github.event.milestone is only set on milestone events, resolve it from the input on workflow_dispatch
+      # github.event.milestone is only set on milestone events, github.event.issue.milestone on issues events,
+      # resolve it from the input on workflow_dispatch
       - name: Resolve milestone
         id: milestone
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MILESTONE_NUMBER: ${{ github.event.milestone.number || inputs.milestoneId }}
+          MILESTONE_NUMBER: ${{ github.event.milestone.number || github.event.issue.milestone.number || inputs.milestoneId }}
         run: |
           title=$(gh api "repos/${GITHUB_REPOSITORY}/milestones/${MILESTONE_NUMBER}" --jq '.title')
           echo "milestone ${MILESTONE_NUMBER}: ${title}"
@@ -36,8 +48,10 @@ jobs:
           echo "title=${title}" >> "$GITHUB_OUTPUT"
 
       # issues need to be closed to generate release notes
+      # only when the milestone itself is closed: closing one issue must not close the rest of the milestone
       - name: Close issues
         id: close_issues
+        if: github.event_name != 'issues'
         uses: lee-dohm/close-matching-issues@v2.1.0
         with:
           query: 'milestone:"${{ steps.milestone.outputs.title }}"'
@@ -45,14 +59,21 @@ jobs:
 
       # the GitHub API is eventually consistent: right after closing them, the release notes generator
       # can still see the issues as open and silently leave them out
+      # on issues events the rest of the milestone is legitimately still open, only wait for the closed issue
       - name: Wait for closed issues to be visible
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MILESTONE_NUMBER: ${{ steps.milestone.outputs.number }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           for i in $(seq 1 30); do
-            open=$(gh api "repos/${GITHUB_REPOSITORY}/issues?milestone=${MILESTONE_NUMBER}&state=open&per_page=100" --jq 'length')
-            echo "open issues in milestone ${MILESTONE_NUMBER}: ${open}"
+            if [ -n "${ISSUE_NUMBER}" ]; then
+              open=$(gh api "repos/${GITHUB_REPOSITORY}/issues?milestone=${MILESTONE_NUMBER}&state=open&per_page=100" --paginate --jq ".[] | select(.number == ${ISSUE_NUMBER}) | .number" | wc -l | tr -d ' ')
+              echo "issue #${ISSUE_NUMBER} still listed as open in milestone ${MILESTONE_NUMBER}: ${open}"
+            else
+              open=$(gh api "repos/${GITHUB_REPOSITORY}/issues?milestone=${MILESTONE_NUMBER}&state=open&per_page=100" --jq 'length')
+              echo "open issues in milestone ${MILESTONE_NUMBER}: ${open}"
+            fi
             [ "${open}" = "0" ] && break
             sleep 5
           done
@@ -128,4 +149,4 @@ jobs:
           destination_repo: 'vdesabou/kafka-docker-playground-docs'
           user_email: 'vincent.desaboulin@gmail.com'
           user_name: 'vdesabou'
-          commit_message: 'updating with milestone ${{ steps.milestone.outputs.title }}'
+          commit_message: "updating with milestone ${{ steps.milestone.outputs.title }}${{ github.event.issue.number && format(' (closed #{0})', github.event.issue.number) || '' }}"
