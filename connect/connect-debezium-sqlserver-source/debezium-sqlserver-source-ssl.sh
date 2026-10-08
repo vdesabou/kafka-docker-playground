@@ -91,6 +91,12 @@ EXEC sys.sp_cdc_enable_table @source_schema = 'dbo', @source_name = 'customers',
 GO
 EOF
 
+# on cfk, CI fails with "the trustAnchors parameter must be non-empty" (#8956): show what the connect
+# worker actually reads at database.trustStore
+log "Truststore mounted in connect at /tmp/truststore.jks"
+set +e
+playground container exec --container connect --command "ls -l /tmp/truststore.jks; keytool -list -keystore /tmp/truststore.jks -storepass confluent" < /dev/null
+set -e
 
 log "Creating Debezium SQL Server source connector"
 playground connector create-or-update --connector debezium-sqlserver-source-ssl  << EOF
