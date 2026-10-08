@@ -68,6 +68,8 @@ then
 else
      SUFFIX="$GITHUB_RUN_NUMBER"
 fi
+# unique per environment, see cloud_resource_environment_id
+SUFFIX="${SUFFIX}-$(cloud_resource_environment_id)"
 
 GCP_PUB_SUB_TOPIC="topic-1-gs-$SUFFIX"
 GCP_PUB_SUB_SUBSCRIPTION="subscription-1-gs-$SUFFIX"

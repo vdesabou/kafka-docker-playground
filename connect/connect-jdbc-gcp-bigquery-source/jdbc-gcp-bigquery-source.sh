@@ -43,7 +43,8 @@ else
 fi
 cd -
 
-DATASET=pg${USER}ds${GITHUB_RUN_NUMBER}${TAG_BASE}
+# unique per environment, see cloud_resource_environment_id
+DATASET=pg${USER}ds${GITHUB_RUN_NUMBER}${TAG_BASE}$(cloud_resource_environment_id)
 DATASET=${DATASET//[-._]/}
 
 log "Doing gsutil authentication"

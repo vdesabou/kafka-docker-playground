@@ -49,6 +49,8 @@ then
 else
      SUFFIX="$GITHUB_RUN_NUMBER"
 fi
+# unique per environment, see cloud_resource_environment_id
+SUFFIX="${SUFFIX}-$(cloud_resource_environment_id)"
 
 KAFKA_TOPIC="pubsub-topic-$SUFFIX"
 GCP_PUB_SUB_TOPIC="topic-1-$SUFFIX"
