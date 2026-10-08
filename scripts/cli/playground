@@ -14860,12 +14860,13 @@ function secret_delete_value () {
 #
 function load_secrets_for_example () {
   local test_file="$1"
+  local environment="$2"
   local profile
   profile=$(get_active_secret_profile)
   local loaded=""
 
   local names
-  names=$(get_mandatory_env_vars "$test_file")
+  names=$( { get_mandatory_env_vars "$test_file"; get_optional_env_vars "$test_file" "$environment"; } | sort -u)
   [ -n "$names" ] || return 0
 
   # one round trip for all of them instead of one per variable
@@ -19550,6 +19551,47 @@ function get_mandatory_env_vars () {
   } | awk 'NF' | sort -u
 }
 
+# Confluent Cloud variables read by bootstrap_ccloud_environment and the
+# fully managed connector commands. None of them is mandatory: without
+# CLUSTER_NAME a new cluster is created.
+function get_ccloud_env_vars () {
+  echo "CONFLUENT_CLOUD_API_KEY CONFLUENT_CLOUD_API_SECRET ENVIRONMENT SCHEMA_REGISTRY_CREDS"
+  local prefix
+  for prefix in "" AWS_ GCP_ AZURE_ AWS_DATABRICKS_
+  do
+    echo "${prefix}CLUSTER_NAME ${prefix}CLUSTER_CLOUD ${prefix}CLUSTER_REGION ${prefix}CLUSTER_CREDS"
+  done
+}
+
+#
+# Variables an example does not declare, because they are read by a shared
+# helper it calls and they are optional, but that should still come from the
+# secrets store when they are not exported. Without them, a fully managed
+# example would create a new ccloud cluster instead of using CLUSTER_NAME.
+#
+function get_optional_env_vars () {
+  local test_file="$1"
+  local environment="$2"
+  [ -f "$test_file" ] || return 0
+
+  {
+    if [[ "$test_file" == *"ccloud"* ]] || [ "$environment" == "ccloud" ] || grep -q "bootstrap_ccloud_environment" "$test_file"
+    then
+      get_ccloud_env_vars
+    fi
+
+    if grep -q "handle_aws_credentials" "$test_file"
+    then
+      echo "AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION"
+    fi
+
+    if grep -q "login_and_maybe_set_azure_subscription" "$test_file"
+    then
+      echo "AZ_USER AZ_PASS AZ_CLIENT_ID AZ_CLIENT_SECRET AZ_TENANT_ID AZURE_SUBSCRIPTION_NAME"
+    fi
+  } | tr ' ' '\n' | awk 'NF' | sort -u
+}
+
 function handle_aws_credentials () {
   rm -rf /tmp/aws_credentials
   export AWS_CREDENTIALS_FILE_NAME="/tmp/aws_credentials"
@@ -22642,7 +22684,9 @@ playground_secrets_env_command() {
           exit 1
       fi
 
-      names=$(get_mandatory_env_vars "$test_file")
+      mandatory_names=$(get_mandatory_env_vars "$test_file")
+      # the same optional variables `playground run` loads (ccloud cluster...)
+      names=$( { echo "$mandatory_names"; get_optional_env_vars "$test_file" "$(playground state get run.environment)"; } | awk 'NF' | sort -u)
       what="$(basename "$test_file")"
   fi
 
@@ -22681,7 +22725,8 @@ playground_secrets_env_command() {
           printf 'export '
           secret_shell_assignment "$name" "$value"
           nb=$((nb+1))
-      else
+      elif [[ -n "$all" ]] || echo "$mandatory_names" | grep -qx "$name"
+      then
           missing="${missing} ${name}"
           nb_missing=$((nb_missing+1))
       fi
@@ -24422,7 +24467,11 @@ playground_run_command() {
   # blanket 'set -o allexport' that would leak every credential into every
   # process for the rest of the session.
   #
-  load_secrets_for_example "$test_file"
+  load_secrets_for_example "$test_file" "${environment:-$PLAYGROUND_ENVIRONMENT}"
+  if [[ $test_file == *"ccloud"* ]] || [ "${environment:-$PLAYGROUND_ENVIRONMENT}" == "ccloud" ]
+  then
+    ccloud_secrets_loaded=1
+  fi
 
   #
   # 🔐 Pre-flight for non interactive runs. In interactive mode the fzf menu
@@ -24989,6 +25038,13 @@ playground_run_command() {
 
       if [[ $test_file == *"ccloud"* ]] || [ "$PLAYGROUND_ENVIRONMENT" == "ccloud" ]
       then
+        # environment switched to ccloud in this menu: same variables as above, only
+        # once (the menu can unset them) and never on top of --cluster-* flags
+        if [[ ! -n "$ccloud_secrets_loaded" ]] && [[ ! -n "$cluster_name" ]]
+        then
+          load_secrets_env_vars $(get_ccloud_env_vars)
+          ccloud_secrets_loaded=1
+        fi
         if [[ $test_file == *"fully-managed"* ]]
         then
           for((i=5;i<20;i++)); do

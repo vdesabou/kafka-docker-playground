@@ -947,12 +947,13 @@ function secret_delete_value () {
 #
 function load_secrets_for_example () {
   local test_file="$1"
+  local environment="$2"
   local profile
   profile=$(get_active_secret_profile)
   local loaded=""
 
   local names
-  names=$(get_mandatory_env_vars "$test_file")
+  names=$( { get_mandatory_env_vars "$test_file"; get_optional_env_vars "$test_file" "$environment"; } | sort -u)
   [ -n "$names" ] || return 0
 
   # one round trip for all of them instead of one per variable

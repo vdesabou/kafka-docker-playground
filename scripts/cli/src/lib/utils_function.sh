@@ -4664,6 +4664,47 @@ function get_mandatory_env_vars () {
   } | awk 'NF' | sort -u
 }
 
+# Confluent Cloud variables read by bootstrap_ccloud_environment and the
+# fully managed connector commands. None of them is mandatory: without
+# CLUSTER_NAME a new cluster is created.
+function get_ccloud_env_vars () {
+  echo "CONFLUENT_CLOUD_API_KEY CONFLUENT_CLOUD_API_SECRET ENVIRONMENT SCHEMA_REGISTRY_CREDS"
+  local prefix
+  for prefix in "" AWS_ GCP_ AZURE_ AWS_DATABRICKS_
+  do
+    echo "${prefix}CLUSTER_NAME ${prefix}CLUSTER_CLOUD ${prefix}CLUSTER_REGION ${prefix}CLUSTER_CREDS"
+  done
+}
+
+#
+# Variables an example does not declare, because they are read by a shared
+# helper it calls and they are optional, but that should still come from the
+# secrets store when they are not exported. Without them, a fully managed
+# example would create a new ccloud cluster instead of using CLUSTER_NAME.
+#
+function get_optional_env_vars () {
+  local test_file="$1"
+  local environment="$2"
+  [ -f "$test_file" ] || return 0
+
+  {
+    if [[ "$test_file" == *"ccloud"* ]] || [ "$environment" == "ccloud" ] || grep -q "bootstrap_ccloud_environment" "$test_file"
+    then
+      get_ccloud_env_vars
+    fi
+
+    if grep -q "handle_aws_credentials" "$test_file"
+    then
+      echo "AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION"
+    fi
+
+    if grep -q "login_and_maybe_set_azure_subscription" "$test_file"
+    then
+      echo "AZ_USER AZ_PASS AZ_CLIENT_ID AZ_CLIENT_SECRET AZ_TENANT_ID AZURE_SUBSCRIPTION_NAME"
+    fi
+  } | tr ' ' '\n' | awk 'NF' | sort -u
+}
+
 function handle_aws_credentials () {
   rm -rf /tmp/aws_credentials
   export AWS_CREDENTIALS_FILE_NAME="/tmp/aws_credentials"

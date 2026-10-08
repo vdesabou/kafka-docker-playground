@@ -44,7 +44,9 @@ else
         exit 1
     fi
 
-    names=$(get_mandatory_env_vars "$test_file")
+    mandatory_names=$(get_mandatory_env_vars "$test_file")
+    # the same optional variables `playground run` loads (ccloud cluster...)
+    names=$( { echo "$mandatory_names"; get_optional_env_vars "$test_file" "$(playground state get run.environment)"; } | awk 'NF' | sort -u)
     what="$(basename "$test_file")"
 fi
 
@@ -83,7 +85,8 @@ do
         printf 'export '
         secret_shell_assignment "$name" "$value"
         nb=$((nb+1))
-    else
+    elif [[ -n "$all" ]] || echo "$mandatory_names" | grep -qx "$name"
+    then
         missing="${missing} ${name}"
         nb_missing=$((nb_missing+1))
     fi

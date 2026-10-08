@@ -79,7 +79,11 @@ fi
 # blanket 'set -o allexport' that would leak every credential into every
 # process for the rest of the session.
 #
-load_secrets_for_example "$test_file"
+load_secrets_for_example "$test_file" "${environment:-$PLAYGROUND_ENVIRONMENT}"
+if [[ $test_file == *"ccloud"* ]] || [ "${environment:-$PLAYGROUND_ENVIRONMENT}" == "ccloud" ]
+then
+  ccloud_secrets_loaded=1
+fi
 
 #
 # 🔐 Pre-flight for non interactive runs. In interactive mode the fzf menu
@@ -646,6 +650,13 @@ then
 
     if [[ $test_file == *"ccloud"* ]] || [ "$PLAYGROUND_ENVIRONMENT" == "ccloud" ]
     then
+      # environment switched to ccloud in this menu: same variables as above, only
+      # once (the menu can unset them) and never on top of --cluster-* flags
+      if [[ ! -n "$ccloud_secrets_loaded" ]] && [[ ! -n "$cluster_name" ]]
+      then
+        load_secrets_env_vars $(get_ccloud_env_vars)
+        ccloud_secrets_loaded=1
+      fi
       if [[ $test_file == *"fully-managed"* ]]
       then
         for((i=5;i<20;i++)); do
