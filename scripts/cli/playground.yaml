@@ -1380,6 +1380,37 @@ subcommands:
     options: []
     subcommands:
 
+  - name: switch-podman
+    description: | 
+        🦭 Switch the container engine to Podman
+        
+        Points the 'docker' CLI, 'docker compose' and the playground at the rootful
+        Podman socket, through a 'podman' docker context: the switch applies to your
+        current shell and to new ones, with nothing to export. On macOS the podman
+        machine is started if needed. Ends with 'playground doctor'.
+        
+        Containers are not moved between engines: stop the running example first.
+        
+        ❕ Podman must be set up once, see
+           https://kafka-docker-playground.io/#/how-to-use?id=🦭-using-podman-instead-of-docker
+           The docker context you were on is remembered for 'playground switch-docker'.
+    usage: playground switch-podman
+    options: []
+    subcommands:
+
+  - name: switch-docker
+    description: | 
+        🐳 Switch the container engine back to Docker
+        
+        Restores the docker context that was active before 'playground switch-podman'
+        (Docker Desktop's 'desktop-linux', or 'default', if none was remembered).
+        Ends with 'playground doctor'.
+        
+        Containers are not moved between engines: stop the running example first.
+    usage: playground switch-docker
+    options: []
+    subcommands:
+
   - name: update-version
     description: | 
         ✨ Update current confluent platform components (all with --tag or only connect with --connect-tag) or connector(s) with new version(s)

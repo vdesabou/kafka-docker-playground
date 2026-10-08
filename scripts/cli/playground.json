@@ -901,6 +901,20 @@
       "subcommands": null
     },
     {
+      "name": "switch-podman",
+      "description": "🦭 Switch the container engine to Podman\n\nPoints the 'docker' CLI, 'docker compose' and the playground at the rootful\nPodman socket, through a 'podman' docker context: the switch applies to your\ncurrent shell and to new ones, with nothing to export. On macOS the podman\nmachine is started if needed. Ends with 'playground doctor'.\n\nContainers are not moved between engines: stop the running example first.\n\n❕ Podman must be set up once, see\n   https://kafka-docker-playground.io/#/how-to-use?id=🦭-using-podman-instead-of-docker\n   The docker context you were on is remembered for 'playground switch-docker'.\n",
+      "usage": "playground switch-podman",
+      "options": [],
+      "subcommands": null
+    },
+    {
+      "name": "switch-docker",
+      "description": "🐳 Switch the container engine back to Docker\n\nRestores the docker context that was active before 'playground switch-podman'\n(Docker Desktop's 'desktop-linux', or 'default', if none was remembered).\nEnds with 'playground doctor'.\n\nContainers are not moved between engines: stop the running example first.\n",
+      "usage": "playground switch-docker",
+      "options": [],
+      "subcommands": null
+    },
+    {
       "name": "update-version",
       "description": "✨ Update current confluent platform components (all with --tag or only connect with --connect-tag) or connector(s) with new version(s)\n\nRe-runs the example you are currently on with different versions, which is\nthe fastest way to answer \"does it still happen on 8.x?\" or \"is it fixed in\nconnector 10.6.0?\".\n\n  --tag            🔢 every Confluent Platform component\n  --connect-tag    🔗 only the connect container, other components untouched\n  --connector-tag  🧩 the connector, from Confluent Hub\n  --connector-zip  📦 the connector, from a local zip or a URL\n  --connector-jar  ☕ a single jar, dropped into the existing plugin\n\nWith no flag, you are prompted with the versions available. The versions\ncurrently running are read from the broker and connect containers, so the\nexample must be up.\n\n🎓 Tip: this is a version bisect tool. Keep the example running and call it\nrepeatedly until you find the version where the behaviour changes.\n",
       "usage": "playground update-version [OPTIONS]",

@@ -1212,7 +1212,8 @@ function filter_connect_running() {
 }
 
 function filter_docker_running() {
-  # doctor is precisely the command you run when the engine is down, and a bare
+  # doctor is precisely the command you run when the engine is down (and the switch
+  # commands are how you leave an engine that is down), and a bare
   # `playground` should still be able to print its help, so do not gate those.
   # state and config only read and write playground.ini, they never talk to the
   # engine, and several commands call them recursively - gating them only turned
@@ -1220,7 +1221,7 @@ function filter_docker_running() {
   # $action is the sub-command, set by bashly before the filters are evaluated.
   # nested commands set it to "state get", "config set", ... hence the globs.
   case "${action:-}" in
-    doctor|help|""|state|state\ *|config|config\ *)
+    doctor|help|""|state|state\ *|config|config\ *|switch-podman|switch-docker)
       return 0
     ;;
   esac
@@ -2965,4 +2966,50 @@ function find_examples() {
         }' \
         | sort -t "$(printf '\t')" -k1,1nr -k2,2 \
         | head -n "$limit"
+}
+
+# shared by switch-podman / switch-docker: the docker context is what the docker CLI,
+# docker compose, k3d and the playground follow, unless DOCKER_HOST overrides it
+function warn_container_engine_switch() {
+  local leaving="$1"
+  if [ -n "${DOCKER_HOST:-}" ]
+  then
+    logwarn "DOCKER_HOST is set (${DOCKER_HOST}): it overrides the docker context in this shell"
+    logwarn "  unset DOCKER_HOST"
+  fi
+  local running
+  running=$(docker ps -q --filter "label=com.docker.compose.project" 2>/dev/null | wc -l | tr -d ' ')
+  if [ "${running:-0}" -gt 0 ]
+  then
+    logwarn "${running} container(s) are still running on ${leaving}: they are not moved to the other engine"
+    logwarn "  stop them first with 'playground stop', or switch back to reach them"
+  fi
+}
+
+# the user's docker config, even when DOCKER_CONFIG points at the mirror without
+# credHelpers (see export_docker_config_without_cred_helpers): `docker context use`
+# must land there, or the switch would only exist inside this playground call
+function docker_user_config_dir() {
+  echo "${PLAYGROUND_DOCKER_CONFIG_ORIGINAL:-${DOCKER_CONFIG:-$HOME/.docker}}"
+}
+
+# DOCKER_HOST and DOCKER_CONTEXT are ignored too: they override the configured context,
+# and `docker context show` would then report "default" instead of what is configured
+function docker_with_user_config() {
+  env -u DOCKER_HOST -u DOCKER_CONTEXT DOCKER_CONFIG="$(docker_user_config_dir)" docker "$@"
+}
+
+# values computed for the engine of the previous context, which the doctor run at the
+# end of a switch must not inherit: it detects the new engine from scratch, and
+# mirrors the docker config again if that engine needs it
+function reset_container_engine_detection() {
+  local user_config
+  user_config=$(docker_user_config_dir)
+  unset PLAYGROUND_CONTAINER_ENGINE DOCKER_BUILDKIT PLAYGROUND_DOCKER_CONFIG_ORIGINAL
+  if [ "$user_config" = "$HOME/.docker" ]
+  then
+    unset DOCKER_CONFIG
+  else
+    export DOCKER_CONFIG="$user_config"
+  fi
 }
