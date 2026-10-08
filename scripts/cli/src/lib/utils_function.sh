@@ -268,6 +268,14 @@ function maybe_create_image()
   then
     return
   fi
+  # set below once the image is known to contain the tools: skips the docker run checks (~0.5s, utils.sh is
+  # sourced twice per run). A new pull of the tag drops the label
+  local tools_label="io.confluent.playground.tools"
+  if [ "$(docker image inspect -f "{{ index .Config.Labels \"$tools_label\" }}" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} 2> /dev/null)" == "1" ]
+  then
+    return
+  fi
+  local tools_ok="false"
   set +e
     if version_gt $TAG_BASE "8.2.99"
   then
@@ -293,8 +301,10 @@ EOF
   log "🧰 Checking if Docker image ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} contains additional tools"
   log "⏳ it can take a while if image is downloaded for the first time"
   docker run --quiet --rm ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} type unzip > /dev/null 2>&1
-  if [ $? != 0 ]
+  if [ $? == 0 ]
   then
+    tools_ok="true"
+  else
     if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
     then
       export CONNECT_USER="appuser"
@@ -342,7 +352,17 @@ USER ${CONNECT_USER}
 EOF
     log "👷📦 Re-building Docker image ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} to include additional tools"
     docker build -t ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $tmp_dir
+    if [ $? == 0 ]
+    then
+      tools_ok="true"
+    fi
     rm -rf $tmp_dir
+  fi
+
+  if [ "$tools_ok" == "true" ]
+  then
+    # metadata only layer
+    printf 'FROM %s\nLABEL %s="1"\n' "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" "$tools_label" | docker build --quiet -t ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} - > /dev/null 2>&1
   fi
   set -e
 }
@@ -816,6 +836,15 @@ function check_and_update_playground_version() {
 
   if [ "$check_repo_version" == "true" ] || [ "$check_repo_version" == "" ]
   then
+    # git fetch costs from 0.5s to several seconds (VPN...): do it at most every 6 hours
+    now=$(date +%s)
+    last_check=$(playground state get repo.last_version_check)
+    if [[ "$last_check" =~ ^[0-9]+$ ]] && [ $(( now - last_check )) -lt 21600 ]
+    then
+      return
+    fi
+    playground state set repo.last_version_check "$now"
+
     set +e
     X=3
     git fetch
@@ -903,6 +932,17 @@ function determine_confluent_telemetry() {
   fi
 }
 
+# brokers only export metrics to prometheus-c3-v2 (control-center profile) when Control Center is enabled.
+# Use the flag persisted by set_profiles rather than ENABLE_CONTROL_CENTER: it describes the running
+# environment, also when run.docker_command is replayed later (container recreate...) from another shell
+function determine_c3_telemetry() {
+  export C3_TELEMETRY_ENABLED="false"
+  if [ "$(playground state get flags.ENABLE_CONTROL_CENTER)" == "1" ]
+  then
+    export C3_TELEMETRY_ENABLED="true"
+  fi
+}
+
 function determine_kraft_mode() {
   TAG_BASE=$(echo $TAG | cut -d "-" -f1)
   first_version=${TAG_BASE}
@@ -980,6 +1020,7 @@ function set_profiles() {
     profile_control_center_command="--profile control-center"
     playground state set flags.ENABLE_CONTROL_CENTER 1
   fi
+  determine_c3_telemetry
 
   # Check if ENABLE_FLINK is set to true
   profile_flink=""
@@ -4194,6 +4235,42 @@ function ini_file_get () {
   ' "$ini_file"
 }
 
+# set (3 args) or delete (2 args) <section>.<key> in an ini file written by ini_save, same result as
+# ini_load + ini_save but without spawning the generated CLI. Values are passed through ENVIRON, as
+# awk -v would interpret backslashes
+function ini_file_update () {
+  local ini_file="$1"
+  local section="${2%%.*}"
+  local key="${2#*.}"
+  local delete="true"
+  if [ $# -eq 3 ]
+  then
+    delete="false"
+  fi
+  local tmp_file
+  touch "$ini_file"
+  tmp_file=$(mktemp "${ini_file}.XXXXXX") || return 1
+
+  INI_SECTION="[$section]" INI_KEY="$key" INI_VALUE="$3" INI_DELETE="$delete" awk '
+    BEGIN { section = ENVIRON["INI_SECTION"]; key = ENVIRON["INI_KEY"]; line = key " = " ENVIRON["INI_VALUE"]; done = (ENVIRON["INI_DELETE"] == "true") }
+    # blank lines separate sections: hold them so that a missing key is appended at the end of its section
+    /^[[:space:]]*$/ { blanks++; next }
+    /^\[.+\]/ {
+      if (in_section && !done) { print line; done = 1 }
+      for (; blanks > 0; blanks--) print ""
+      in_section = ($0 == section); seen = seen || in_section; print; next
+    }
+    in_section && index($0, key " = ") == 1 { if (!done) { print line; done = 1 } next }
+    { for (; blanks > 0; blanks--) print ""; print }
+    END {
+      if (!done) {
+        if (!seen) { if (NR > 0) print ""; print section }
+        print line
+      }
+    }
+  ' "$ini_file" > "$tmp_file" && mv "$tmp_file" "$ini_file"
+}
+
 function playground() {
   verbose_begin
   local playground_cli
@@ -4224,9 +4301,20 @@ function playground() {
     esac
   fi
 
+  # same for 'state set' and 'state del', called ~10 times by set_profiles alone
+  local state_update=""
+  if [ "$1" == "state" ] && [[ "$3" == *.* ]] && { { [ $# -eq 4 ] && [ "$2" == "set" ]; } || { [ $# -eq 3 ] && [ "$2" == "del" ]; }; }
+  then
+    state_update="${playground_cli%/*}/../../playground.ini"
+  fi
+
   if [ -n "$ini_file" ] && [ -f "$ini_file" ]
   then
     ini_file_get "$ini_file" "$3"
+  elif [ -n "$state_update" ] && [ -f "$state_update" ]
+  then
+    shift 2
+    ini_file_update "$state_update" "$@"
   else
     "$playground_cli" "$@"
   fi
