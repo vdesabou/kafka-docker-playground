@@ -41,6 +41,28 @@ rm -rf "$ci_output_folder"
 mkdir -p "$ci_output_folder"
 aws s3 cp --only-show-errors s3://kafka-docker-playground/ci_output/ "${ci_output_folder}/" --recursive --no-progress --region us-east-1
 
+# list open GH issues once instead of once or twice per test (several hundred calls), refreshed after create
+open_issues_file=$tmp_dir/open_issues.json
+gh_issues_available=""
+function refresh_open_issues () {
+  for i in {1..3}
+  do
+    if gh issue list --state open --limit 500 --json number,title > $open_issues_file 2>/dev/null && jq -e 'type == "array"' $open_issues_file > /dev/null 2>&1
+    then
+      gh_issues_available="true"
+      return
+    fi
+    sleep 5
+  done
+  # never manage issues from a stale or empty list: every failing test would get a duplicate issue
+  logerror "❌ could not list open GH issues, GH issues will not be created, commented or closed"
+  gh_issues_available=""
+}
+function get_open_issue_number () {
+  jq -r --arg title "$1" '.[] | select(.title == $title) | .number' $open_issues_file | head -1
+}
+refresh_open_issues
+
 test_list=$(grep "🚀" ${root_folder}/.github/workflows/ci.yml | cut -d '"' -f 2 | tr '\n' ' ')
 declare -a TEST_FAILED
 declare -a TEST_SUCCESS
@@ -332,9 +354,9 @@ do
       fi
       t=$(echo ${testdir} | sed 's/-/\//')
       title="🔥 ${t}${issue_title_suffix}"
-      issue_number=$(gh issue list --state open --limit 500 --json number,title | jq -r --arg title "$title" '.[] | select(.title == $title) | .number' | head -1)
+      issue_number=$(get_open_issue_number "$title")
       log "Number of successful tests: $nb_success/${nb_tests}"
-      if [ ${nb_fail} -gt 0 ]
+      if [ ${nb_fail} -gt 0 ] && [ -n "$gh_issues_available" ]
       then
         if [ -z "$issue_number" ]
         then
@@ -343,7 +365,8 @@ do
           cat ${gh_msg_file} >> ${gh_msg_file_final}
           log "Creating GH issue with title $title"
           gh issue create --title "$title" --body-file "$gh_msg_file_final" --assignee vdesabou --label "new 🆕" "${issue_create_labels[@]}"
-          issue_number=$(gh issue list --state open --limit 500 --json number,title | jq -r --arg title "$title" '.[] | select(.title == $title) | .number' | head -1)
+          refresh_open_issues
+          issue_number=$(get_open_issue_number "$title")
         else
           echo -e "🤦‍♂️💥 Still failing !\n" >> ${gh_msg_file_intro}
           cat ${gh_msg_file_intro} >> ${gh_msg_file_final}
@@ -361,10 +384,10 @@ do
         fi
         gh_issue_number="$issue_number"
       fi
-      if [ ${nb_success} -eq ${nb_tests} ]
+      if [ ${nb_success} -eq ${nb_tests} ] && [ -n "$gh_issues_available" ]
       then
         # if all scripts in tests are now successful, close the issue
-        issue_number=$(gh issue list --state open --limit 500 --json number,title | jq -r --arg title "$title" '.[] | select(.title == $title) | .number' | head -1)
+        issue_number=$(get_open_issue_number "$title")
         if [ -n "$issue_number" ]
         then
           echo -e "👍✅ Issue fixed !\n" >> ${gh_msg_file_intro}

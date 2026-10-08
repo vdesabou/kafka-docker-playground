@@ -48,6 +48,10 @@ playground config container-kill-all-before-run true
 # if empty (listing failed or no result yet), fall back to aws s3 ls per test
 s3_existing_results=$(aws s3 ls "s3://kafka-docker-playground/ci/$TAG-" --region us-east-1 2>/dev/null | awk '{print $NF}')
 
+# list open GH issues and the connector versions README once, instead of once per directory
+open_issues=$(gh issue list --state open --limit 500 --json number,title 2>/dev/null)
+curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o /tmp/README.txt
+
 for dir in $test_list
 do
     if [ ! -d $dir ]
@@ -86,7 +90,7 @@ do
         fi
     fi
     set +e
-    issue_number=$(gh issue list --state open --limit 500 --json number,title --jq ".[] | select(.title == \"$title\") | .number" 2>/dev/null | head -1)
+    issue_number=$(echo "$open_issues" | jq -r --arg title "$title" '.[] | select(.title == $title) | .number' 2>/dev/null | head -1)
     if [ -n "$issue_number" ]
     then
         gh issue view ${issue_number} --json labels --jq '.labels[].name' 2>/dev/null | grep -Fx "CI ignore ⏭️" > /dev/null 2>&1
@@ -103,7 +107,6 @@ do
     fi
     set -e
         
-    curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o /tmp/README.txt
     for script in *.sh
     do
         force_test_connector_plugin_version=0
