@@ -975,3 +975,33 @@ function load_secrets_for_example () {
     log "🔐 Loaded from secrets profile $profile:${loaded}"
   fi
 }
+
+#
+# Same idea for a CLI command run on its own (`playground connector status` on
+# a fully managed connector, ...): export the given variables from the store,
+# only into this process and only when they are not already set. This is what
+# lets a shell work without `source <(playground secrets env --all)`.
+#
+function load_secrets_env_vars () {
+  local profile
+  profile=$(get_active_secret_profile)
+
+  local name missing=""
+  for name in "$@"
+  do
+    [ -n "${!name:-}" ] || missing="${missing} ${name}"
+  done
+  [ -n "$missing" ] || return 0
+
+  secret_prefetch "$profile" $missing 2> /dev/null
+
+  local value
+  for name in $missing
+  do
+    if value=$(secret_get_from_store "$name" "$profile" 2> /dev/null)
+    then
+      export "$name=$value"
+    fi
+  done
+  return 0
+}
