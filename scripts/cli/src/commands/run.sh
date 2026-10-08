@@ -118,27 +118,9 @@ then
   verify_installed "confluent"
 fi
 
-set +e
-# resources left by the previous ccloud run (e.g. interrupted before its final connector delete)
-maybe_cleanup_ccloud_run_resources
-# already done, don't do it again in the 'playground stop' below
-export PG_SKIP_CCLOUD_RUN_CLEANUP=1
-container_kill_all_before_run=$(playground config get container-kill-all-before-run)
-if [ "$container_kill_all_before_run" == "" ]
-then
-    playground config set container-kill-all-before-run false
-fi
-
-if [ "$container_kill_all_before_run" == "true" ] || [ "$container_kill_all_before_run" == "" ]
-then
-  log "💀 kill all docker containers (disable with 'playground config container-kill-all-before-run false')"
-  playground container kill-all
-else
-  playground stop
-fi
-unset PG_SKIP_CCLOUD_RUN_CLEANUP
-set -e
-
+# 'playground stop' (below, once the example is really started) relies on the
+# previous run.test_file, which is overwritten right after
+previous_test_file=$(playground state get run.test_file)
 playground state set run.test_file "$test_file"
 test_file_directory="$(dirname "${test_file}")"
 filename=$(basename -- "$test_file")
@@ -1609,6 +1591,33 @@ then
     playground state set ccloud.suggest_use_previous_example_ccloud "1"
   fi
 fi # end of interactive_mode
+
+#
+# 💀 Only now that the example is really started (the interactive menu was not
+# cancelled), stop or kill what the previous run left behind
+#
+set +e
+# 'playground stop' stops the example recorded in run.test_file
+playground state set run.test_file "$previous_test_file"
+# resources left by the previous ccloud run (e.g. interrupted before its final connector delete)
+maybe_cleanup_ccloud_run_resources
+# already done, don't do it again in the 'playground stop' below
+export PG_SKIP_CCLOUD_RUN_CLEANUP=1
+container_kill_all_before_run=$(playground config get container-kill-all-before-run)
+if [ "$container_kill_all_before_run" == "" ]
+then
+    playground config set container-kill-all-before-run false
+fi
+
+if [ "$container_kill_all_before_run" == "true" ] || [ "$container_kill_all_before_run" == "" ]
+then
+  log "💀 kill all docker containers (disable with 'playground config container-kill-all-before-run false')"
+  playground container kill-all
+else
+  playground stop
+fi
+unset PG_SKIP_CCLOUD_RUN_CLEANUP
+set -e
 
 IFS=' ' flag_list="${array_flag_list[*]}"
 array_declaration=$(declare -p array_flag_list)
