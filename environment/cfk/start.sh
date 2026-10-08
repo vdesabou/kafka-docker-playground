@@ -2675,6 +2675,71 @@ EOF
   rm -f "$rendered_file"
 }
 
+# Apply JSON merge patches to the Connect CR of a CFK manifest, locally (same semantics as
+# 'kubectl patch connect connect --type merge' on the deployed CR, but before the first apply).
+function merge_connect_patches_into_manifest() {
+  local manifest_file="$1"
+  shift
+  local connect_doc_file
+  local other_docs_file
+  local patched_doc_file
+  local patch_file
+  local ret=0
+
+  connect_doc_file=$(mktemp)
+  other_docs_file=$(mktemp)
+  patched_doc_file=$(mktemp)
+
+  awk -v connect_out="$connect_doc_file" -v other_out="$other_docs_file" '
+    function emit_doc(d) {
+      if (d ~ /^[[:space:]]*$/) {
+        return
+      }
+      if (d ~ /kind:[[:space:]]*Connect([[:space:]]|$)/ && found_connect == 0) {
+        printf "%s", d > connect_out
+        found_connect = 1
+        return
+      }
+      if (emitted_docs > 0) {
+        print "---" > other_out
+      }
+      printf "%s", d > other_out
+      emitted_docs++
+    }
+    BEGIN { doc = ""; emitted_docs = 0; found_connect = 0 }
+    /^---[[:space:]]*$/ { emit_doc(doc); doc = ""; next }
+    { doc = doc $0 "\n" }
+    END { emit_doc(doc) }
+  ' "$manifest_file"
+
+  if [[ ! -s "$connect_doc_file" ]]
+  then
+    ret=1
+  else
+    for patch_file in "$@"
+    do
+      if ! kubectl patch --local -f "$connect_doc_file" --type merge --patch-file "$patch_file" -o yaml > "$patched_doc_file" 2>/dev/null \
+        || [[ ! -s "$patched_doc_file" ]]
+      then
+        ret=1
+        break
+      fi
+      cp "$patched_doc_file" "$connect_doc_file"
+    done
+  fi
+
+  if [[ "$ret" -eq 0 ]]
+  then
+    {
+      cat "$other_docs_file"
+      echo "---"
+      cat "$connect_doc_file"
+    } > "$manifest_file"
+  fi
+  rm -f "$connect_doc_file" "$other_docs_file" "$patched_doc_file"
+  return "$ret"
+}
+
 function log_unsupported_cfk_profile_options() {
   if [[ -n "$ENABLE_ZOOKEEPER" ]]
   then
@@ -2727,9 +2792,85 @@ CONNECT_MOUNT_RESOURCES_FILE=""
 CONNECT_MOUNT_PATCH_FILE=""
 CONNECT_ENV_PATCH_FILE=""
 
+# Delete everything in the namespace except the CFK operator (helm release), so that the next run
+# neither waits for the namespace deletion nor for the operator to be installed and started again.
+# Returns 1 when there is no operator to keep, or when the namespace could not be emptied in time.
+function reset_cfk_namespace_keeping_operator() {
+  local namespace="$1"
+  # resources of the helm release (and its release secret), operator replicaset and pod
+  local keep_selector='app.kubernetes.io/managed-by!=Helm,owner!=helm,app!=confluent-operator'
+  local workload_types="pods,services,deployments,statefulsets,replicasets,daemonsets,jobs,cronjobs,configmaps,secrets,serviceaccounts,roles,rolebindings,persistentvolumeclaims,ingresses,networkpolicies,poddisruptionbudgets"
+  local cfk_resource_types=""
+  local cfk_objects=""
+  local remaining=""
+  local wait_seconds=0
+  local pv_list=""
+  local pv_name=""
+
+  if ! kubectl -n "$namespace" get deployment confluent-operator >/dev/null 2>&1
+  then
+    return 1
+  fi
+
+  log "♻️ Emptying namespace $namespace, keeping the CFK operator"
+  set +e
+  # ~30 CFK resource types: list them once (~6s), then act on the objects by name
+  cfk_resource_types=$(kubectl api-resources --api-group=platform.confluent.io --verbs=list,delete --namespaced=true -o name 2>/dev/null | paste -sd, -)
+  if [[ -n "$cfk_resource_types" ]]
+  then
+    cfk_objects=$(kubectl -n "$namespace" get "$cfk_resource_types" -o name 2>/dev/null | paste -sd ' ' -)
+  fi
+  if [[ -n "$cfk_objects" ]]
+  then
+    # Mark CFK resources deleted, then drop their finalizers: the operator would otherwise try to
+    # clean up topics, schemas, connectors... of a cluster that is being wiped anyway.
+    kubectl -n "$namespace" delete $cfk_objects --ignore-not-found=true --wait=false >/dev/null 2>&1
+    echo $cfk_objects | tr ' ' '\n' \
+      | xargs -P 8 -I{} kubectl -n "$namespace" patch {} \
+        --type=merge -p '{"metadata":{"finalizers":[]}}' >/dev/null 2>&1
+  fi
+  kubectl -n "$namespace" delete "$workload_types" -l "$keep_selector" \
+    --ignore-not-found=true --wait=false --grace-period=0 --force >/dev/null 2>&1
+
+  # PVCs in particular must be gone: a new Kafka would otherwise reuse the previous run's data
+  while true
+  do
+    remaining=$(kubectl -n "$namespace" get pods,statefulsets,persistentvolumeclaims -l "$keep_selector" -o name 2>/dev/null)
+    if [[ -n "$cfk_objects" ]]
+    then
+      remaining="$remaining$(kubectl -n "$namespace" get $cfk_objects --ignore-not-found=true -o name 2>/dev/null)"
+    fi
+    if [[ -z "$remaining" ]]
+    then
+      break
+    fi
+    if [[ "$wait_seconds" -ge 90 ]]
+    then
+      logwarn "⚠️ Still present in namespace $namespace after ${wait_seconds}s: $(echo "$remaining" | paste -sd ' ' -)"
+      set -e
+      return 1
+    fi
+    # pods recreated by their controller before it was deleted would otherwise get the full grace period
+    kubectl -n "$namespace" delete pods -l "$keep_selector" --grace-period=0 --force --wait=false >/dev/null 2>&1
+    sleep 2
+    wait_seconds=$(( wait_seconds + 2 ))
+  done
+
+  pv_list=$(kubectl get pv -o jsonpath='{range .items[?(@.spec.claimRef.namespace=="'"$namespace"'")]}{.metadata.name}{"\n"}{end}' 2>/dev/null)
+  while IFS= read -r pv_name
+  do
+    if [[ -n "$pv_name" ]]
+    then
+      kubectl delete pv "$pv_name" --ignore-not-found=true --wait=false >/dev/null 2>&1
+    fi
+  done <<< "$pv_list"
+  set -e
+  return 0
+}
+
 function reset_cfk_namespace_state() {
   local namespace="confluent"
-  local reset_mode="${CFK_NAMESPACE_RESET_MODE:-namespace}"
+  local reset_mode="${CFK_NAMESPACE_RESET_MODE:-keep-operator}"
   local pv_list=""
   local pv_name=""
   local namespace_exists=1
@@ -2809,6 +2950,17 @@ function reset_cfk_namespace_state() {
     kubectl create namespace "$namespace" >/dev/null
     kubectl config set-context --current --namespace="$namespace" >/dev/null
     return
+  fi
+
+  if [[ "$reset_mode" == "keep-operator" ]]
+  then
+    if reset_cfk_namespace_keeping_operator "$namespace"
+    then
+      kubectl config set-context --current --namespace="$namespace" >/dev/null
+      return
+    fi
+    log "🔁 No CFK operator to keep, or namespace could not be emptied: doing a hard reset"
+    reset_mode="namespace"
   fi
 
   if [[ "$reset_mode" == "namespace" ]]
@@ -3166,22 +3318,29 @@ then
   reset_cfk_namespace_state
 fi
 
-log "🕸️ Add the Confluent for Kubernetes Helm repository"
-if ! helm repo list | awk 'NR>1 {print $1}' | grep -qx "confluentinc"
-then
-  helm repo add confluentinc https://packages.confluent.io/helm
-fi
-helm repo update confluentinc
-
-
 CFK_HELM_CHART_VERSION=$(get_cfk_helm_chart_version "$CFK_VERSION")
-log "🕸️ Install Confluent for Kubernetes version $CFK_VERSION (helm chart version $CFK_HELM_CHART_VERSION), you can change it by setting CFK_VERSION environment variable"
 if [[ -z "$CFK_HELM_CHART_VERSION" ]]
 then
   exit 1
 fi
-helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes --version "$CFK_HELM_CHART_VERSION"
-log "✅ Installed Confluent for Kubernetes CFK version $CFK_VERSION (helm chart version $CFK_HELM_CHART_VERSION)"
+
+# The operator is kept between runs (see reset_cfk_namespace_state): don't reinstall it when the same chart is deployed
+if helm -n confluent list --filter '^confluent-operator$' --deployed 2>/dev/null | grep -qE "[[:space:]]confluent-for-kubernetes-${CFK_HELM_CHART_VERSION//./\\.}[[:space:]]" \
+  && kubectl -n confluent get deployment confluent-operator >/dev/null 2>&1
+then
+  log "♻️ Reusing Confluent for Kubernetes CFK version $CFK_VERSION (helm chart version $CFK_HELM_CHART_VERSION) already installed"
+else
+  log "🕸️ Add the Confluent for Kubernetes Helm repository"
+  if ! helm repo list | awk 'NR>1 {print $1}' | grep -qx "confluentinc"
+  then
+    helm repo add confluentinc https://packages.confluent.io/helm
+  fi
+  helm repo update confluentinc
+
+  log "🕸️ Install Confluent for Kubernetes version $CFK_VERSION (helm chart version $CFK_HELM_CHART_VERSION), you can change it by setting CFK_VERSION environment variable"
+  helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes --version "$CFK_HELM_CHART_VERSION"
+  log "✅ Installed Confluent for Kubernetes CFK version $CFK_VERSION (helm chart version $CFK_HELM_CHART_VERSION)"
+fi
 
 log "Deploy Confluent Platform"
 CFK_MANIFEST_FILE=$(mktemp)
@@ -3190,7 +3349,38 @@ build_cfk_manifest "$CFK_MANIFEST_FILE"
 # then
 #   log_generated_yaml_file "📋 Generated CFK manifest:" "$CFK_MANIFEST_FILE"
 # fi
-kubectl apply -f "$CFK_MANIFEST_FILE"
+
+if [[ -n "$CONNECT_BUILD_PATCH_FILE" ]] && [[ -s "$CONNECT_BUILD_PATCH_FILE" ]]
+then
+  if ! verify_build_archive_urls_reachable_from_cluster "$CONNECT_BUILD_PATCH_FILE"
+  then
+    logerror "❌ Aborting: Connect build archive URLs are not reachable from cluster"
+    exit 1
+  fi
+fi
+
+# Connect patches, in the order they used to be applied on the running Connect CR
+connect_patch_files=()
+for connect_patch_file in "$CONNECT_MOUNT_PATCH_FILE" "$CONNECT_ENV_PATCH_FILE" "$CONNECT_BUILD_PATCH_FILE"
+do
+  if [[ -n "$connect_patch_file" ]] && [[ -s "$connect_patch_file" ]]
+  then
+    connect_patch_files+=("$connect_patch_file")
+  fi
+done
+# Merged into the manifest, connect-0 starts once with its final spec, instead of being
+# created, patched, then deleted. If the merge fails, fall back to patching after the apply.
+connect_patches_merged=0
+if [[ ${#connect_patch_files[@]} -gt 0 ]]
+then
+  if merge_connect_patches_into_manifest "$CFK_MANIFEST_FILE" "${connect_patch_files[@]}"
+  then
+    connect_patches_merged=1
+    log "🔀 Merged ${#connect_patch_files[@]} Connect patch(es) into the CFK manifest"
+  else
+    logwarn "⚠️ Could not merge Connect patches into the CFK manifest, applying them after the deployment instead"
+  fi
+fi
 
 if [[ -n "$CONNECT_MOUNT_RESOURCES_FILE" ]] && [[ -s "$CONNECT_MOUNT_RESOURCES_FILE" ]]
 then
@@ -3198,6 +3388,8 @@ then
   # Use server-side apply to avoid storing large last-applied annotations on Secrets.
   kubectl -n confluent apply --server-side --force-conflicts -f "$CONNECT_MOUNT_RESOURCES_FILE"
 fi
+
+kubectl apply -f "$CFK_MANIFEST_FILE"
 
 if [[ -n "$EXTRA_PODS_FILE" ]] && [[ -s "$EXTRA_PODS_FILE" ]]
 then
@@ -3207,7 +3399,7 @@ fi
 
 patched_connect_spec=0
 
-if [[ -n "$CONNECT_MOUNT_PATCH_FILE" ]] && [[ -s "$CONNECT_MOUNT_PATCH_FILE" ]]
+if [[ "$connect_patches_merged" -eq 0 ]] && [[ -n "$CONNECT_MOUNT_PATCH_FILE" ]] && [[ -s "$CONNECT_MOUNT_PATCH_FILE" ]]
 then
   log "Patch Connect mounted volumes from compose file mounts"
   connect_mount_patch_error_log="/tmp/cfk-connect-mount-patch.error.log"
@@ -3236,7 +3428,7 @@ then
   set -e
 fi
 
-if [[ -n "$CONNECT_ENV_PATCH_FILE" ]] && [[ -s "$CONNECT_ENV_PATCH_FILE" ]]
+if [[ "$connect_patches_merged" -eq 0 ]] && [[ -n "$CONNECT_ENV_PATCH_FILE" ]] && [[ -s "$CONNECT_ENV_PATCH_FILE" ]]
 then
   log "Patch Connect environment variables from compose override"
   patched_connect_env=0
@@ -3260,14 +3452,8 @@ then
   patched_connect_spec=1
 fi
 
-if [[ -n "$CONNECT_BUILD_PATCH_FILE" ]] && [[ -s "$CONNECT_BUILD_PATCH_FILE" ]]
+if [[ "$connect_patches_merged" -eq 0 ]] && [[ -n "$CONNECT_BUILD_PATCH_FILE" ]] && [[ -s "$CONNECT_BUILD_PATCH_FILE" ]]
 then
-  if ! verify_build_archive_urls_reachable_from_cluster "$CONNECT_BUILD_PATCH_FILE"
-  then
-    logerror "❌ Aborting: Connect build archive URLs are not reachable from cluster"
-    exit 1
-  fi
-
   log "Patch Connect build plugins from CONNECT_PLUGIN_PATH"
   patched_connect_build=0
   set +e
