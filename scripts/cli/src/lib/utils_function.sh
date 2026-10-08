@@ -4307,6 +4307,13 @@ function handle_onprem_connect_rest_api () {
         echo ""
         return
       fi
+      if [[ "$curl_output" == "<html>"* ]]
+      then
+        # Jetty serves an HTML error page while the connect REST resources are not registered yet (worker still starting)
+        title=$(echo "$curl_output" | sed -n 's:.*<title>\(.*\)</title>.*:\1:p' | head -1)
+        logerror "Command failed: connect REST API returned an HTML page ($title), the worker is probably still starting"
+        return 1
+      fi
       if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true 
       then
         error_code=$(echo "$curl_output" | jq -r .error_code)

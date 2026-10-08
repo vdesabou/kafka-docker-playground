@@ -19158,6 +19158,13 @@ function handle_onprem_connect_rest_api () {
         echo ""
         return
       fi
+      if [[ "$curl_output" == "<html>"* ]]
+      then
+        # Jetty serves an HTML error page while the connect REST resources are not registered yet (worker still starting)
+        title=$(echo "$curl_output" | sed -n 's:.*<title>\(.*\)</title>.*:\1:p' | head -1)
+        logerror "Command failed: connect REST API returned an HTML page ($title), the worker is probably still starting"
+        return 1
+      fi
       if echo "$curl_output" | jq '. | has("error_code")' 2> /dev/null | grep -q true
 
       then
@@ -34112,14 +34119,16 @@ playground_container_wait_for_connect_rest_api_ready_command() {
   else
     get_connect_url_and_security
     cur_wait=0
-    while ! handle_onprem_connect_rest_api "curl $security -s \"$connect_url\"" > /dev/null;
+    # poll /connectors rather than / : the root endpoint answers before the herder resources are registered
+    while ! handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors\"" > /dev/null 2>&1 || ! echo "$curl_output" | jq -e 'type == "array"' > /dev/null 2>&1;
     do
       sleep 1
       cur_wait=$(( cur_wait+1 ))
       if [[ "$cur_wait" -gt "$max_wait" ]]
       then
         logerror "❌ the connect REST API is still not ready after $max_wait seconds, see output"
-        handle_onprem_connect_rest_api "curl $security -s \"$connect_url\""
+        handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors\""
+        echo "$curl_output"
         return 1
       fi
     done

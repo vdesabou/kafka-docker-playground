@@ -20,14 +20,16 @@ then
 else
   get_connect_url_and_security
   cur_wait=0
-  while ! handle_onprem_connect_rest_api "curl $security -s \"$connect_url\"" > /dev/null;
+  # poll /connectors rather than / : the root endpoint answers before the herder resources are registered
+  while ! handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors\"" > /dev/null 2>&1 || ! echo "$curl_output" | jq -e 'type == "array"' > /dev/null 2>&1;
   do
     sleep 1
     cur_wait=$(( cur_wait+1 ))
     if [[ "$cur_wait" -gt "$max_wait" ]]
     then
       logerror "❌ the connect REST API is still not ready after $max_wait seconds, see output"
-      handle_onprem_connect_rest_api "curl $security -s \"$connect_url\""
+      handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors\""
+      echo "$curl_output"
       return 1
     fi
   done
