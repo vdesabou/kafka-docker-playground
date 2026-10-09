@@ -19507,8 +19507,24 @@ function handle_onprem_connect_rest_api () {
     log "🐞 curl command used"
     echo "$curl_request"
   fi
-  eval "curl_output=\$($curl_request)"
-  ret=$?
+  # a worker rebalance makes the connect REST API answer 409 "Cannot complete request because
+  # of a conflicting operation (e.g. worker rebalance)": retry it for up to a minute. Only
+  # rebalances, a 409 "Connector ... already exists" is final
+  local rebalance_attempt=1
+  local rebalance_max_attempts=12
+  while true
+  do
+    eval "curl_output=\$($curl_request)"
+    ret=$?
+    if [ $ret -eq 0 ] && [ $rebalance_attempt -lt $rebalance_max_attempts ] && echo "$curl_output" | jq -e '.error_code == 409 and (.message | test("rebalance"))' > /dev/null 2>&1
+    then
+      log "⌛ connect REST API is busy with a worker rebalance (409), retrying in 5 seconds ($rebalance_attempt/$rebalance_max_attempts)"
+      sleep 5
+      rebalance_attempt=$((rebalance_attempt + 1))
+      continue
+    fi
+    break
+  done
   if [ $ret -eq 0 ]
   then
       if [ "$curl_output" == "[]" ]
