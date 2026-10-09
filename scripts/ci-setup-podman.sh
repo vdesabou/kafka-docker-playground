@@ -10,6 +10,10 @@
 #
 # Rootful, like the recommended macOS setup: rootless would map the files containers
 # write into bind mounts (certificates, keystores, ...) to subuids the runner cannot read.
+#
+# podman runs use the ubuntu-26.04 runner (see runs-on in ci.yml): ubuntu-24.04 only
+# has podman 4.9, with which docker compose recreates every running container on each
+# new `up` (#9063). The `playground doctor` at the end fails the job on podman < 5.0.
 set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 # doctor calls playground recursively, which must be on the PATH (the Build and Test

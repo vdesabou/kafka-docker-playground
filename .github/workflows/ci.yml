@@ -31,7 +31,8 @@ on:
 jobs:
   build:
     if: ${{ github.event.inputs.test_name == '' }}
-    runs-on: ubuntu-latest
+    # podman runs need podman >= 5.0, ubuntu-24.04 (ubuntu-latest) only has 4.9 (#9063)
+    runs-on: ${{ github.event.inputs.container_engine == 'podman' && 'ubuntu-26.04' || 'ubuntu-latest' }}
     name: ${{ matrix.tag }} ${{ matrix.test_list }} ${{ matrix.playground_environment }} ${{ github.event.inputs.container_engine == 'podman' && '🦭' || '' }}
     strategy:
       fail-fast: false
@@ -380,7 +381,8 @@ jobs:
 
   execute_one_test:
     if: ${{ github.event.inputs.test_name != '' }}
-    runs-on: ubuntu-latest
+    # podman runs need podman >= 5.0, ubuntu-24.04 (ubuntu-latest) only has 4.9 (#9063)
+    runs-on: ${{ github.event.inputs.container_engine == 'podman' && 'ubuntu-26.04' || 'ubuntu-latest' }}
     name: ${{ matrix.tag }} ${{ matrix.test_list }} ${{ matrix.playground_environment }} ${{ github.event.inputs.container_engine == 'podman' && '🦭' || '' }}
     strategy:
       fail-fast: false

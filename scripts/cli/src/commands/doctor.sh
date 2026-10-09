@@ -151,19 +151,26 @@ then
         fi
 
         # -- version ---------------------------------------------------------
-        # 4.9 is the oldest version the playground has run on (Ubuntu 24.04, CI).
-        # 3.x has no netavark at all, which Ubuntu 22.04 still ships
+        # 3.x has no netavark at all, which Ubuntu 22.04 still ships.
+        # 4.x (4.9.3 is what Ubuntu 24.04 ships) returns the network name instead of its
+        # id in the NetworkID field of the container list API: docker compose then thinks
+        # every running container is on the wrong network and recreates it on each new
+        # `up`, which wipes the kdc principals and the oracle/ibmdb2 setup done between
+        # the two `up` (#9063). Fixed in 5.0
         podman_version=$("${podman_cli[@]}" version --format '{{.Server.Version}}' 2>/dev/null)
         if [ -n "$podman_version" ]
         then
             if version_gt "4.0.0" "$podman_version"
             then
-                doctor_error "podman ${podman_version} is too old, the playground needs podman 4.9 or later"
+                doctor_error "podman ${podman_version} is too old, the playground needs podman 5.0 or later"
                 logerror "it predates netavark, which containers need to resolve each other by name."
-                logerror "Ubuntu 22.04 only ships podman 3.4: use Ubuntu 24.04 or later (playground ec2 does)"
-            elif version_gt "4.9.0" "$podman_version"
+                logerror "Ubuntu 22.04 only ships podman 3.4 and Ubuntu 24.04 podman 4.9: use Ubuntu 26.04 or later"
+            elif version_gt "5.0.0" "$podman_version"
             then
-                doctor_warn "podman ${podman_version} is older than 4.9, the oldest version the playground was tested with"
+                doctor_error "podman ${podman_version} is too old, the playground needs podman 5.0 or later"
+                logerror "with podman 4.x, docker compose recreates every running container on each new 'up':"
+                logerror "kerberos environments lose their principals (CLIENT_NOT_FOUND) and databases restart mid-setup."
+                logerror "Ubuntu 24.04 only ships podman 4.9: use Ubuntu 26.04 or later"
             else
                 doctor_ok "podman ${podman_version}"
             fi
