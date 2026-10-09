@@ -175,14 +175,32 @@ Authentication
 	 - Importance: The OpenSearch instance URL. For example: `https://your-opensearch-instance.com/`.
 	 - Required: HIGH
 
-🔘 auth.type
+🔘 authentication.method
 
-Authentication type of the endpoint. Valid values are ``NONE``, ``BASIC``.
+Select ``IAM Roles`` to authenticate to your Amazon OpenSearch Service domain using AWS IAM AssumeRole through a Confluent provider integration (short-lived credentials, no static keys). Select ``BASIC`` for username/password authentication, or ``NONE`` for no endpoint authentication. This setting replaces the deprecated ``auth.type`` configuration; existing connectors that set ``auth.type`` are not impacted and continue to run unchanged.
 
 	 - Type: STRING
 	 - Default: BASIC
 	 - Importance: HIGH
 	 - Required: false
+
+🔘 provider.integration.id
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Select an existing integration that has access to your resource. In case you need to integrate a new IAM role, use provider integration
+	 - Required: HIGH
+
+🔘 aws.region
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The AWS region of your Amazon OpenSearch Service domain, for example ``us-east-1``. Used to sign requests with AWS Signature Version 4 (SigV4). Required when the authentication method is ``IAM Roles``.
+	 - Required: HIGH
 
 🔘 connection.user
 
