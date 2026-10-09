@@ -175,6 +175,8 @@ jobs:
       - name: "Install confluent CLI and tools"
         if: env.SKIP_JOB != 'true'
         run: |
+            # the installer runs "curl -n" and recent curl (8.18 on ubuntu 26.04) fails with "(26) .netrc error: no such file" when ~/.netrc is missing
+            sudo sh -c 'touch "$HOME/.netrc"'
             for i in 1 2 3 4 5; do
               curl -fsSL --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin && break
               echo "confluent CLI install failed (attempt $i/5), retrying in 10s..."
@@ -484,6 +486,8 @@ jobs:
       - name: "Install confluent CLI and tools"
         if: env.SKIP_JOB != 'true'
         run: |
+            # the installer runs "curl -n" and recent curl (8.18 on ubuntu 26.04) fails with "(26) .netrc error: no such file" when ~/.netrc is missing
+            sudo sh -c 'touch "$HOME/.netrc"'
             for i in 1 2 3 4 5; do
               curl -fsSL --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin && break
               echo "confluent CLI install failed (attempt $i/5), retrying in 10s..."
@@ -719,6 +723,8 @@ jobs:
 
       - name: "Install confluent CLI"
         run: |
+            # the installer runs "curl -n" and recent curl (8.18 on ubuntu 26.04) fails with "(26) .netrc error: no such file" when ~/.netrc is missing
+            sudo sh -c 'touch "$HOME/.netrc"'
             for i in 1 2 3 4 5; do
               curl -fsSL --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin && break
               echo "confluent CLI install failed (attempt $i/5), retrying in 10s..."
@@ -813,6 +819,8 @@ jobs:
 
       - name: "Install confluent CLI"
         run: |
+            # the installer runs "curl -n" and recent curl (8.18 on ubuntu 26.04) fails with "(26) .netrc error: no such file" when ~/.netrc is missing
+            sudo sh -c 'touch "$HOME/.netrc"'
             for i in 1 2 3 4 5; do
               curl -fsSL --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin && break
               echo "confluent CLI install failed (attempt $i/5), retrying in 10s..."
