@@ -17443,6 +17443,8 @@ function bootstrap_ccloud_environment () {
     if [ ! -f /usr/local/bin/confluent ]
     then
       log "🚚 installing confluent CLI"
+      # the installer runs "curl -n" and recent curl (8.18 on ubuntu 26.04) fails with "(26) .netrc error: no such file" when ~/.netrc is missing
+      sudo sh -c 'touch "$HOME/.netrc"'
       for i in 1 2 3 4 5
       do
         curl -fsSL --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin && break
