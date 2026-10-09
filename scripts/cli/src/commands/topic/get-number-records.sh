@@ -90,23 +90,18 @@ do
     set +e
     if [[ "$environment" == "ccloud" ]]
     then
-        # --- OFFSET MODE (Default) ---
-        # Note: We must explicitly call 'kcat' in the exec command now
-
+        # Count actual records rather than summing offsets: offsets overestimate the number of
+        # readable records with transaction markers or compaction, which makes
+        # 'playground topic consume' wait forever for records that never come
         if [ "$isolation_level" != "read_committed" ]
         then
-            offsets=$(docker exec "$kcat_container_name" kcat \
+            count=$(docker exec "$kcat_container_name" kcat \
                 -F /tmp/configuration/ccloud.properties \
                 -C -t "$topic" \
-                -o -1 -e -q \
-                -f '%o\n' 2>/dev/null)
-            
-            if [ -z "$offsets" ]; then
-                echo "0"
-            else
-                # Sum offsets + 1 (0-based index)
-                echo "$offsets" | awk '{s+=$1+1} END {print s}'
-            fi
+                -o beginning -e -q \
+                -f '%o\n' 2>/dev/null | wc -l | tr -d ' ')
+
+            echo "${count:-0}"
         else
             count=$(docker exec "$kcat_container_name" kcat \
                 -F /tmp/configuration/ccloud.properties \
