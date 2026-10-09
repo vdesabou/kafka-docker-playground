@@ -2,7 +2,11 @@
 services:
 
   mongodb:
-    image: mongo:latest
+    # Pinned below MongoDB 8.0: MongoDB 8.0+ deliberately refuses to start on Linux
+    # kernel 6.19+ (which this CI infra runs) due to a known TCMalloc/rseq
+    # incompatibility - see https://jira.mongodb.org/browse/SERVER-121912.
+    # Confirmed directly from mongod's own startup log via CI (CC-44953).
+    image: mongo:7.0.43
     hostname: mongodb
     container_name: mongodb
     ports:
