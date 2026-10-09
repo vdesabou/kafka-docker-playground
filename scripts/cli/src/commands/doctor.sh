@@ -205,7 +205,7 @@ then
             logwarn "containers write generated certificates and secrets into bind mounts, and the host"
             logwarn "reads them back: rootless podman maps container UIDs to subuids, so those files can"
             logwarn "end up unreadable from the host, and privileged: true containers may not start."
-            logwarn "👉 rootful setup: https://kafka-docker-playground.io/#/podman"
+            logwarn "👉 rootful setup: https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%a6%ad-using-podman-instead-of-docker"
         elif [ "$rootless" = "false" ]
         then
             doctor_ok "podman is running rootful"

@@ -1,6 +1,6 @@
 ## ✨ Features
 
-- 🔗 170+ onprem (or self-managed) connectors [examples](/content?id=🔗-connectors) (Docker Compose and CFK environments supported)
+- 🔗 150+ onprem (or self-managed) connectors [examples](/content?id=🔗-connectors) (Docker Compose and CFK environments supported)
 - 🌤️ 100+ fully-managed connectors [examples](/content?id=%f0%9f%a4%96-fully-managed-connectors)
 - 🔐 10+ secured [environments](/content?id=%F0%9F%94%90-environments) (SASL, RBAC, SSL...)
 - ☁️ Confluent Cloud [examples](/content?id=☁%EF%B8%8F-confluent-cloud)
@@ -10,7 +10,7 @@
 - 🧠 Easily run commands with playground [CLI](/cli)
 - 🎓 Learn how the playground [works](/how-it-works)
 - 👷‍♂️ Build your own reproduction models with [reusables](/reusables)
-- 🎩 Work remotely with VS Code using [AWS EC2 Alfred workflow](/how-to-use?id=%f0%9f%8e%a9-aws-ec2-alfred-workflow)
+- 🎩 Work remotely with VS Code on AWS EC2 instances using [playground ec2](/playground%20ec2) commands
 - 🤖 Automated testing using Github Actions [CI](/how-it-works?id=🤖-how-ci-works)
 - 👾 And even more [playgrounds](/content?id=👾-other-playgrounds)...
 

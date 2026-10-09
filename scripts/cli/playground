@@ -317,7 +317,7 @@ playground_status_usage() {
 playground_doctor_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground doctor\n\n"
-    printf "  🩺 Check that the container engine is ready for the playground\n  \n  Reports which engine the 'docker' CLI is really talking to — 🐳 Docker or\n  🦭 Podman — and checks what has to be right before any example can start:\n  the engine is reachable, compose v2 is there, there is enough memory, and,\n  with podman, that short image names resolve, that privileged ports can be\n  published and that bind mounts will be readable from the host.\n  \n  This is the one command that still runs when the engine is down, so it is\n  what to run first when an example fails before a single container starts.\n  \n  Exits 1 if it found a blocking problem, 0 otherwise.\n  \n  👉 Check documentation https://kafka-docker-playground.io/#/podman\n\n"
+    printf "  🩺 Check that the container engine is ready for the playground\n  \n  Reports which engine the 'docker' CLI is really talking to — 🐳 Docker or\n  🦭 Podman — and checks what has to be right before any example can start:\n  the engine is reachable, compose v2 is there, there is enough memory, and,\n  with podman, that short image names resolve, that privileged ports can be\n  published and that bind mounts will be readable from the host.\n  \n  This is the one command that still runs when the engine is down, so it is\n  what to run first when an example fails before a single container starts.\n  \n  Exits 1 if it found a blocking problem, 0 otherwise.\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/how-to-use?id=%%f0%%9f%%a6%%ad-using-podman-instead-of-docker\n\n"
   else
     printf "playground doctor - 🩺 Check that the container engine is ready for the playground\n\n"
   fi
@@ -7124,12 +7124,12 @@ playground_container_exec_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground exec -c connect -d \"date\"\n"
-    printf "  playground exec -c connect -d \"whoami\" --root\n"
-    printf "  playground exec --container connect --command \"whoami\" --shell sh\n"
-    printf "  playground exec -c broker -c connect -d \"ps aux\"\n"
-    printf "  playground exec --container schema-registry --container ksqldb-server\n  --command \"free -h\"\n"
-    printf "  playground exec -c connect -c broker -d \"netstat -tuln\" --root\n"
+    printf "  playground container exec -c connect --command \"date\"\n"
+    printf "  playground container exec -c connect --command \"whoami\" --root\n"
+    printf "  playground container exec --container connect --command \"whoami\" --shell sh\n"
+    printf "  playground container exec -c broker -c connect --command \"ps aux\"\n"
+    printf "  playground container exec --container schema-registry --container\n  ksqldb-server --command \"free -h\"\n"
+    printf "  playground container exec -c connect -c broker --command \"netstat -tuln\"\n  --root\n"
     echo
 
   fi
@@ -15564,7 +15564,7 @@ function log_container_engine_not_running()
       logerror "  podman machine start"
       logerror "  export DOCKER_HOST=\"unix://\$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')\""
     else
-      logerror "  sudo systemctl enable --now podman.socket   (rootful, see https://kafka-docker-playground.io/#/podman)"
+      logerror "  sudo systemctl enable --now podman.socket   (rootful, see https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%a6%ad-using-podman-instead-of-docker)"
       logerror "  export DOCKER_HOST=\"unix:///run/podman-api/podman.sock\""
     fi
   else
@@ -20693,7 +20693,7 @@ playground_doctor_command() {
               logwarn "containers write generated certificates and secrets into bind mounts, and the host"
               logwarn "reads them back: rootless podman maps container UIDs to subuids, so those files can"
               logwarn "end up unreadable from the host, and privileged: true containers may not start."
-              logwarn "👉 rootful setup: https://kafka-docker-playground.io/#/podman"
+              logwarn "👉 rootful setup: https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%a6%ad-using-podman-instead-of-docker"
           elif [ "$rootless" = "false" ]
           then
               doctor_ok "podman is running rootful"
@@ -22072,6 +22072,7 @@ playground_update_readme_command() {
   do
     cp_version_tested="$cp_version_tested%20$image_version"
   done
+  cp_version_tested="${cp_version_tested#%20}"
 
   tests_color="green"
   if [ $nb_total_fail -gt 0 ]; then
@@ -22085,6 +22086,10 @@ playground_update_readme_command() {
   fi
   last_run=${last_run// /%20}
   last_run=${last_run//-/--}
+
+  # remove placeholders of tests that have no CI result (not in the CI matrix), otherwise they are displayed as is
+  sed -E -e 's#:(ccloud|connect|environment|multi-data-center|other)/[A-Za-z0-9_./-]+:#\&nbsp;#g' $content_file > $content_file.tmp
+  mv $content_file.tmp $content_file
 
   # handle shields badges
   sed -e "s|:nb_total_success:|$nb_total_success|g" \
@@ -22238,6 +22243,14 @@ playground_update_docs_command() {
 
   cat ${root_folder}/scripts/cli/docs-template/cli-template.md > ${root_folder}/docs/cli.md
   cat ${root_folder}/scripts/cli/docs/index.md >> ${root_folder}/docs/cli.md
+
+  # list of CLI reference pages, indexed by the search plugin of the documentation website (see index.html in kafka-docker-playground-docs)
+  {
+    echo "// generated by 'playground update-docs' in https://github.com/vdesabou/kafka-docker-playground: list of CLI reference pages, indexed by the search plugin"
+    echo "window.KDP_CLI_PAGES = ["
+    ls ${root_folder}/scripts/cli/docs | grep '^playground .*\.md$' | sed -e 's/\.md$//' -e 's/ /%20/g' -e 's#.*#  "/&",#'
+    echo "];"
+  } > ${root_folder}/docs/cli-pages.js
 
   mv ${root_folder}/scripts/cli/docs/* ${root_folder}/docs/
 }
