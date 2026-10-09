@@ -3,7 +3,7 @@ services:
 
   mongodb:
     # https://jira.mongodb.org/browse/SERVER-72839
-    image: mongo:7.0.5
+    image: mongo:7.0.43
     hostname: mongodb
     container_name: mongodb
     ports:
