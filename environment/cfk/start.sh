@@ -3259,15 +3259,23 @@ for base_image in \
   "${CP_SCHEMA_REGISTRY_IMAGE}:${CP_SCHEMA_REGISTRY_TAG}" \
   "${CP_INIT_IMAGE}:${CP_INIT_TAG}"
 do
+  # Pull the image into the local daemon first so the docker image inspect gate below
+  # always succeeds — on a fresh CI runner these public images may not be cached yet,
+  # and k3s's routing to external registries is unreliable under podman+k3d.
+  docker pull "$base_image" 2>/dev/null || true
   if docker image inspect "$base_image" >/dev/null 2>&1
   then
     import_image_into_k3d "$base_image" "$(echo "$base_image" | tr '/:.' '_')" || true
   fi
 done
 
-if [[ -n "$ENABLE_CONTROL_CENTER" ]] && docker image inspect "${CP_CONTROL_CENTER_IMAGE}:${CP_CONTROL_CENTER_TAG}" >/dev/null 2>&1
+if [[ -n "$ENABLE_CONTROL_CENTER" ]]
 then
-  import_image_into_k3d "${CP_CONTROL_CENTER_IMAGE}:${CP_CONTROL_CENTER_TAG}" "control-center" || true
+  docker pull "${CP_CONTROL_CENTER_IMAGE}:${CP_CONTROL_CENTER_TAG}" 2>/dev/null || true
+  if docker image inspect "${CP_CONTROL_CENTER_IMAGE}:${CP_CONTROL_CENTER_TAG}" >/dev/null 2>&1
+  then
+    import_image_into_k3d "${CP_CONTROL_CENTER_IMAGE}:${CP_CONTROL_CENTER_TAG}" "control-center" || true
+  fi
 fi
 
 if [[ -n "$ENABLE_KSQLDB" ]] && docker image inspect "${CP_KSQL_IMAGE}:${CP_KSQL_TAG}" >/dev/null 2>&1
