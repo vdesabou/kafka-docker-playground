@@ -125,6 +125,27 @@ function get_connect_url_and_security() {
           fi
           sleep 1
         done
+
+        if [[ "$connect_reachable" != "1" ]]
+        then
+          # The existing port-forward process (if any) is stale — kill it and start a
+          # fresh one before giving up.  A broken background forward stays in ps,
+          # which would otherwise block a subsequent call from starting a new one.
+          pkill -f 'kubectl.*-n confluent.*port-forward.*connect' 2>/dev/null || true
+          sleep 1
+          log "🔀 Restarting CFK port-forward for Connect on localhost:8083"
+          kubectl -n confluent port-forward svc/connect 8083:8083 > /tmp/playground-cfk-connect-port-forward.log 2>&1 &
+          for _ in 1 2 3 4 5
+          do
+            if curl -s "http://localhost:8083" > /dev/null 2>&1
+            then
+              connect_reachable=1
+              connect_port="8083"
+              break
+            fi
+            sleep 1
+          done
+        fi
       fi
 
       connect_url="http://localhost:$connect_port"
