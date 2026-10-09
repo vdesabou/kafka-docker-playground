@@ -72,6 +72,16 @@ do
         continue
     fi
 
+    # Skip fully managed connector examples when using podman: the connector runs in Confluent Cloud,
+    # the container engine makes no difference
+    if [ "$container_engine" = "podman" ] && [[ "$dir" =~ ^ccloud/(fm-|fully-managed-|custom-connector-) ]]
+    then
+        log "####################################################"
+        log "⏭ skipping dir $dir, fully managed connector examples are not run with podman"
+        log "####################################################"
+        continue
+    fi
+
     cd $dir > /dev/null
 
     # 🤖 CI: ignore examples with github issues opened and with label 'CI ignore ⏭️' #7203
