@@ -596,6 +596,7 @@ commands:
 
 - name: secrets
   group: Secrets
+  expose: always
   help: |-
     🔐 Credentials required by examples
 

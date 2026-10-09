@@ -21,7 +21,7 @@
     },
     {
       "name": "doctor",
-      "description": "🩺 Check that the container engine is ready for the playground\n\nReports which engine the 'docker' CLI is really talking to — 🐳 Docker or\n🦭 Podman — and checks what has to be right before any example can start:\nthe engine is reachable, compose v2 is there, there is enough memory, and,\nwith podman, that short image names resolve, that privileged ports can be\npublished and that bind mounts will be readable from the host.\n\nThis is the one command that still runs when the engine is down, so it is\nwhat to run first when an example fails before a single container starts.\n\nExits 1 if it found a blocking problem, 0 otherwise.\n\n👉 Check documentation https://kafka-docker-playground.io/#/podman\n",
+      "description": "🩺 Check that the container engine is ready for the playground\n\nReports which engine the 'docker' CLI is really talking to — 🐳 Docker or\n🦭 Podman — and checks what has to be right before any example can start:\nthe engine is reachable, compose v2 is there, there is enough memory, and,\nwith podman, that short image names resolve, that privileged ports can be\npublished and that bind mounts will be readable from the host.\n\nThis is the one command that still runs when the engine is down, so it is\nwhat to run first when an example fails before a single container starts.\n\nExits 1 if it found a blocking problem, 0 otherwise.\n\n👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%a6%ad-using-podman-instead-of-docker\n",
       "usage": "playground doctor",
       "options": [],
       "subcommands": null
