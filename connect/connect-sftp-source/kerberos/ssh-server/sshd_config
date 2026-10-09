@@ -86,3 +86,5 @@ Subsystem sftp /usr/lib/openssh/sftp-server
 # PAM authentication, then enable this but set PasswordAuthentication
 # and ChallengeResponseAuthentication to 'no'.
 UsePAM yes
+# JSch builds the service principal from the reverse DNS name of the server (e.g. host/ssh-server with podman)
+GSSAPIStrictAcceptorCheck no

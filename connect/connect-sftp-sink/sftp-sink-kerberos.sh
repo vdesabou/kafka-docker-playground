@@ -24,6 +24,8 @@ log "Add kerberos principals"
 playground container exec --container kdc-server --command "kadmin.local" << EOF
 addprinc -randkey host/ssh-server.kerberos-demo.local@EXAMPLE.COM
 ktadd -k /sshserver.keytab host/ssh-server.kerberos-demo.local@EXAMPLE.COM
+addprinc -randkey host/ssh-server@EXAMPLE.COM
+ktadd -k /sshserver.keytab host/ssh-server@EXAMPLE.COM
 addprinc -randkey sshuser@EXAMPLE.COM
 ktadd -k /sshuser.keytab sshuser@EXAMPLE.COM
 listprincs
