@@ -7,7 +7,10 @@ on:
 
   schedule:
       # not on the hour: GitHub delays scheduled runs a lot at minute 0 (they started 2 to 5 hours late)
-      - cron: '17 18 * * *' # every day at 6 pm
+      - cron: '17 18 * * *' # every day at 6 pm, docker
+      # podman: 12 hours apart, not in parallel with the docker run (shared ccloud cluster and connector names)
+      # keep in sync with the github.event.schedule checks of the build job
+      - cron: '17 6 * * *' # every day at 6 am, podman
 
   workflow_dispatch:
     inputs:
@@ -32,8 +35,8 @@ jobs:
   build:
     if: ${{ github.event.inputs.test_name == '' }}
     # podman runs need podman >= 5.0, ubuntu-24.04 (ubuntu-latest) only has 4.9 (#9063)
-    runs-on: ${{ github.event.inputs.container_engine == 'podman' && 'ubuntu-26.04' || 'ubuntu-latest' }}
-    name: ${{ matrix.tag }} ${{ matrix.test_list }} ${{ matrix.playground_environment }} ${{ github.event.inputs.container_engine == 'podman' && '🦭' || '' }}
+    runs-on: ${{ (github.event.inputs.container_engine == 'podman' || github.event.schedule == '17 6 * * *') && 'ubuntu-26.04' || 'ubuntu-latest' }}
+    name: ${{ matrix.tag }} ${{ matrix.test_list }} ${{ matrix.playground_environment }} ${{ (github.event.inputs.container_engine == 'podman' || github.event.schedule == '17 6 * * *') && '🦭' || '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -190,7 +193,7 @@ jobs:
       # after "Free up disk space", which prunes docker, and before "Set up credentials",
       # so that docker login goes to the engine the tests use
       - name: Switch to podman
-        if: github.event.inputs.container_engine == 'podman' && env.SKIP_JOB != 'true'
+        if: (github.event.inputs.container_engine == 'podman' || github.event.schedule == '17 6 * * *') && env.SKIP_JOB != 'true'
         run: bash scripts/ci-setup-podman.sh
 
       - name: Set up credentials
