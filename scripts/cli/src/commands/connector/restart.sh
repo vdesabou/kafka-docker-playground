@@ -53,7 +53,7 @@ do
             kubectl annotate connector "$connector" -n confluent platform.confluent.io/restart-connector="true" --overwrite >/dev/null
         fi
     else
-            tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
+            tag=$(get_running_cp_tag)
             if [ $? != 0 ] || [ "$tag" == "" ]
             then
                 logerror "Could not find current CP version from docker ps"

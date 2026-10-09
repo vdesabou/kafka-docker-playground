@@ -542,6 +542,20 @@ function get_broker_container() {
   done
 }
 
+# CP version of the running environment, from the image tag of the connect container,
+# or of the broker when connect is disabled (other/filebeat-to-kafka, ...)
+function get_running_cp_tag() {
+  local images
+  local tag
+  images=$(docker ps --format '{{.Image}}')
+  tag=$(echo "$images" | grep -E 'confluentinc/cp-.*-connect.*:' | head -1 | awk -F':' '{print $2}')
+  if [ -z "$tag" ]
+  then
+    tag=$(echo "$images" | grep -E 'confluentinc/cp-(server|kafka):' | head -1 | awk -F':' '{print $2}')
+  fi
+  echo "$tag"
+}
+
 function get_security_broker() {
   config_file_name="$1"
   get_environment_used

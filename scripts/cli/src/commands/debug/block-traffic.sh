@@ -78,7 +78,7 @@ install_iptables_if_needed() {
 	playground --output-level ERROR container exec --container "$container" --command "type iptables" > /dev/null 2>&1
 	if [ $? != 0 ]
 	then
-		tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
+		tag=$(get_running_cp_tag)
 		if [ $? != 0 ] || [ "$tag" == "" ]
 		then
 			logerror "Could not find current CP version from docker ps"
