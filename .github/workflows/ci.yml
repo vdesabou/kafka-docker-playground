@@ -92,7 +92,8 @@ jobs:
                     ]
     env:
       # cfk only runs connect/ examples (see run-tests.sh): without any in the list, the job has nothing to do
-      SKIP_JOB: ${{ matrix.playground_environment == 'cfk' && !contains(matrix.test_list, 'connect/') }}
+      # podman skips fully managed connector tests (see run-tests.sh): lists with ccloud/fm- examples only hold those
+      SKIP_JOB: ${{ (matrix.playground_environment == 'cfk' && !contains(matrix.test_list, 'connect/')) || ((github.event.inputs.container_engine == 'podman' || github.event.schedule == '17 6 * * *') && contains(matrix.test_list, 'ccloud/fm-')) }}
     steps:
 
       # - name: Maximize build space
