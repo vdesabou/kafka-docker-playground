@@ -4204,6 +4204,34 @@ commands:
         know which component is at fault. It sweeps every container at once,
         so you do not have to guess where to look.
 
+        Each container gets the same digest as 'playground container logs
+        --errors': repeated records are de-duplicated with an occurrence count
+        and stack traces are collapsed to their "Caused by:" chain. The last
+        lines of connect are also shown raw, for failures that log no error.
+      flags:
+      - long: --since
+        arg: since
+        required: false
+        validate: not_empty
+        help: |-
+          🕐 Only scan logs newer than a relative duration (10m, 1h) or a timestamp (2026-09-24T16:00:00)
+
+      - long: --include-warnings
+        required: false
+        help: |-
+          🟠 Also report WARN records
+
+      - long: --max-findings
+        arg: max_findings
+        required: false
+        validate: integer
+        default: "15"
+        help: |-
+          ✂️ Maximum number of distinct records to show per container (default 15)
+      examples:
+      - playground container display-error-all
+      - playground container display-error-all --since 10m --include-warnings
+
     - name: ssh
       group: Container
       help: |-

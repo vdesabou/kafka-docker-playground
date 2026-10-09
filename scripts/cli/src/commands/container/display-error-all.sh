@@ -1,4 +1,14 @@
+since="${args[--since]}"
+include_warnings="${args[--include-warnings]}"
+max_findings="${args[--max-findings]}"
+
 get_environment_used
+
+since_opt=()
+if [[ -n "$since" ]]
+then
+    since_opt=(--since "$since")
+fi
 
 set +e
 if [[ "$environment" == "cfk" ]]
@@ -67,22 +77,26 @@ else
 
     while IFS= read -r container
     do
+        if [ -z "$container" ]; then
+            continue
+        fi
         log "####################################################"
-        log "$container logs"
+        log "🔥 ERROR/FATAL digest for $container logs${since:+ since $since}"
         if [[ "$environment" == "cfk" ]]
         then
-            if [[ "$container" == connect* ]]
-            then
-                kubectl -n confluent logs "$container" --tail=150
-            else
-                kubectl -n confluent logs "$container" 2>&1 | grep -E "ERROR|FATAL"
-            fi
+            kubectl -n confluent logs "$container" --all-containers=true "${since_opt[@]}" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings"
         else
-            if [[ "$container" == connect* ]]
+            docker container logs "${since_opt[@]}" "$container" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings"
+        fi
+        # a failed assertion (no record received, wrong count) usually logs no error at all
+        if [[ "$container" == connect* ]]
+        then
+            log "📜 last 50 lines of $container logs"
+            if [[ "$environment" == "cfk" ]]
             then
-                docker container logs --tail=150 "$container"
+                kubectl -n confluent logs "$container" --tail=50
             else
-                docker container logs "$container" 2>&1 | grep -E "ERROR|FATAL"
+                docker container logs --tail=50 "$container"
             fi
         fi
         log "####################################################"

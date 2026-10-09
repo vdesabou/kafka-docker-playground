@@ -6969,13 +6969,13 @@ playground_container_logs_usage() {
 playground_container_display_error_all_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground container display-error-all\n\n"
-    printf "  🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick\n  troubleshooting\n  \n  The first command to run when an example misbehaves and you do not yet\n  know which component is at fault. It sweeps every container at once,\n  so you do not have to guess where to look.\n\n"
+    printf "  🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick\n  troubleshooting\n  \n  The first command to run when an example misbehaves and you do not yet\n  know which component is at fault. It sweeps every container at once,\n  so you do not have to guess where to look.\n  \n  Each container gets the same digest as 'playground container logs\n  --errors': repeated records are de-duplicated with an occurrence count\n  and stack traces are collapsed to their \"Caused by:\" chain. The last\n  lines of connect are also shown raw, for failures that log no error.\n\n"
   else
     printf "playground container display-error-all - 🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick troubleshooting\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground container display-error-all\n"
+  printf "  playground container display-error-all [OPTIONS]\n"
   printf "  playground container display-error-all --help | -h\n"
   echo
 
@@ -6984,9 +6984,32 @@ playground_container_display_error_all_usage() {
     # :command.usage_options
     printf "%s\n" "$(bold "== Options ==")"
 
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--since SINCE")"
+    printf "    🕐 Only scan logs newer than a relative duration (10m, 1h) or a timestamp\n    (2026-09-24T16:00:00)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--include-warnings")"
+    printf "    🟠 Also report WARN records\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-findings MAX_FINDINGS")"
+    printf "    ✂️ Maximum number of distinct records to show per container (default 15)\n"
+    printf "    %s\n" "Default: 15"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground container display-error-all\n"
+    printf "  playground container display-error-all --since 10m --include-warnings\n"
     echo
 
   fi
@@ -33346,7 +33369,17 @@ playground_container_logs_command() {
 playground_container_display_error_all_command() {
 
   # src/commands/container/display-error-all.sh
+  since="${args[--since]}"
+  include_warnings="${args[--include-warnings]}"
+  max_findings="${args[--max-findings]}"
+
   get_environment_used
+
+  since_opt=()
+  if [[ -n "$since" ]]
+  then
+      since_opt=(--since "$since")
+  fi
 
   set +e
   if [[ "$environment" == "cfk" ]]
@@ -33415,22 +33448,26 @@ playground_container_display_error_all_command() {
 
       while IFS= read -r container
       do
+          if [ -z "$container" ]; then
+              continue
+          fi
           log "####################################################"
-          log "$container logs"
+          log "🔥 ERROR/FATAL digest for $container logs${since:+ since $since}"
           if [[ "$environment" == "cfk" ]]
           then
-              if [[ "$container" == connect* ]]
-              then
-                  kubectl -n confluent logs "$container" --tail=150
-              else
-                  kubectl -n confluent logs "$container" 2>&1 | grep -E "ERROR|FATAL"
-              fi
+              kubectl -n confluent logs "$container" --all-containers=true "${since_opt[@]}" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings"
           else
-              if [[ "$container" == connect* ]]
+              docker container logs "${since_opt[@]}" "$container" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings"
+          fi
+          # a failed assertion (no record received, wrong count) usually logs no error at all
+          if [[ "$container" == connect* ]]
+          then
+              log "📜 last 50 lines of $container logs"
+              if [[ "$environment" == "cfk" ]]
               then
-                  docker container logs --tail=150 "$container"
+                  kubectl -n confluent logs "$container" --tail=50
               else
-                  docker container logs "$container" 2>&1 | grep -E "ERROR|FATAL"
+                  docker container logs --tail=50 "$container"
               fi
           fi
           log "####################################################"
@@ -61656,6 +61693,41 @@ playground_container_display_error_all_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --since)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--since']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--since requires an argument: --since SINCE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --include-warnings)
+
+        # :flag.case_no_arg
+        args['--include-warnings']=1
+        shift
+        ;;
+
+      # :flag.case
+      --max-findings)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-findings']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-findings requires an argument: --max-findings MAX_FINDINGS" >&2
+          exit 1
+        fi
+        ;;
 
       --)
         shift
@@ -61685,6 +61757,28 @@ playground_container_display_error_all_parse_requirements() {
 
     esac
   done
+
+  # :command.default_assignments
+  [[ -n ${args['--max-findings']:-} ]] || args['--max-findings']="15"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--since'] ]]; then
+    validation_output="$(validate_not_empty "${args['--since']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--since SINCE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--max-findings'] ]]; then
+    validation_output="$(validate_integer "${args['--max-findings']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-findings MAX_FINDINGS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
 
 }
 
@@ -79060,6 +79154,31 @@ playground_container_display_error_all_completion() {
         completion_blocked_flags["--help"]=1
         shift
         ;;
+      --since)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--since"]=1
+
+        ;;
+      --include-warnings)
+        completion_blocked_flags["--include-warnings"]=1
+
+        shift
+        ;;
+      --max-findings)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-findings"]=1
+
+        ;;
       *)
         return
         ;;
@@ -79068,6 +79187,9 @@ playground_container_display_error_all_completion() {
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --since "$completion_current" --since
+    completion_flag_candidates --include-warnings "$completion_current" --include-warnings
+    completion_flag_candidates --max-findings "$completion_current" --max-findings
   fi
 
 }
