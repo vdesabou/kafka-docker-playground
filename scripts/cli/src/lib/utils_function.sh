@@ -2399,7 +2399,17 @@ function bootstrap_ccloud_environment () {
     if [ ! -f /usr/local/bin/confluent ]
     then
       log "🚚 installing confluent CLI"
-      curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
+      for i in 1 2 3 4 5
+      do
+        curl -fsSL --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin && break
+        logwarn "confluent CLI install failed (attempt $i/5), retrying in 10s..."
+        sleep 10
+      done
+      if [ ! -f /usr/local/bin/confluent ]
+      then
+        logerror "❌ failed to install confluent CLI after 5 attempts"
+        exit 1
+      fi
     fi
     export PATH=$PATH:/usr/local/bin
     log "⛺ log in to Confluent Cloud"

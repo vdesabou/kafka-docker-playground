@@ -175,7 +175,12 @@ jobs:
       - name: "Install confluent CLI and tools"
         if: env.SKIP_JOB != 'true'
         run: |
-            curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
+            for i in 1 2 3 4 5; do
+              curl -fsSL --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin && break
+              echo "confluent CLI install failed (attempt $i/5), retrying in 10s..."
+              sleep 10
+            done
+            test -x /usr/local/bin/confluent
             export PATH=$PATH:/usr/local/bin
             sudo apt-get update
             sudo apt-get install expect fzf coreutils -y
@@ -479,7 +484,12 @@ jobs:
       - name: "Install confluent CLI and tools"
         if: env.SKIP_JOB != 'true'
         run: |
-            curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
+            for i in 1 2 3 4 5; do
+              curl -fsSL --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin && break
+              echo "confluent CLI install failed (attempt $i/5), retrying in 10s..."
+              sleep 10
+            done
+            test -x /usr/local/bin/confluent
             export PATH=$PATH:/usr/local/bin
             sudo apt-get update
             sudo apt-get install expect fzf coreutils -y
@@ -709,7 +719,12 @@ jobs:
 
       - name: "Install confluent CLI"
         run: |
-            curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
+            for i in 1 2 3 4 5; do
+              curl -fsSL --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin && break
+              echo "confluent CLI install failed (attempt $i/5), retrying in 10s..."
+              sleep 10
+            done
+            test -x /usr/local/bin/confluent
             export PATH=$PATH:/usr/local/bin
             
       - name: Cleanup resources
@@ -798,7 +813,12 @@ jobs:
 
       - name: "Install confluent CLI"
         run: |
-            curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
+            for i in 1 2 3 4 5; do
+              curl -fsSL --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin && break
+              echo "confluent CLI install failed (attempt $i/5), retrying in 10s..."
+              sleep 10
+            done
+            test -x /usr/local/bin/confluent
             export PATH=$PATH:/usr/local/bin
             
       - name: Update DOCS
