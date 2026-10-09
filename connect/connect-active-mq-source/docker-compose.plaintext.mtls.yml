@@ -5,8 +5,8 @@ services:
     hostname: activemq
     container_name: activemq
     # rmohr/activemq:5.15.9 sets WORKDIR=/opt/activemq which already exists in the
-    # image layer; podman refuses to mkdir over it.  Override to / (always present).
-    working_dir: /
+    # image layer; podman refuses to mkdir over it. 
+    working_dir: /opt/activemq 
     volumes:
         - ../../connect/connect-active-mq-source/security/kafka.activemq.truststore.jks:/tmp/kafka.activemq.truststore.jks
         - ../../connect/connect-active-mq-source/security/kafka.activemq.keystore.jks:/tmp/kafka.activemq.keystore.jks
