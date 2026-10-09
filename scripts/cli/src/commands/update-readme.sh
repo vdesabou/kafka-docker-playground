@@ -587,6 +587,7 @@ for image_version in $tags
 do
   cp_version_tested="$cp_version_tested%20$image_version"
 done
+cp_version_tested="${cp_version_tested#%20}"
 
 tests_color="green"
 if [ $nb_total_fail -gt 0 ]; then
@@ -600,6 +601,10 @@ else
 fi
 last_run=${last_run// /%20}
 last_run=${last_run//-/--}
+
+# remove placeholders of tests that have no CI result (not in the CI matrix), otherwise they are displayed as is
+sed -E -e 's#:(ccloud|connect|environment|multi-data-center|other)/[A-Za-z0-9_./-]+:#\&nbsp;#g' $content_file > $content_file.tmp
+mv $content_file.tmp $content_file
 
 # handle shields badges
 sed -e "s|:nb_total_success:|$nb_total_success|g" \

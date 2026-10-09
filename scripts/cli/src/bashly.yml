@@ -73,7 +73,7 @@ commands:
 
     Exits 1 if it found a blocking problem, 0 otherwise.
 
-    👉 Check documentation https://kafka-docker-playground.io/#/podman
+    👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%a6%ad-using-podman-instead-of-docker
   examples:
   - playground doctor
 
@@ -4297,12 +4297,12 @@ commands:
           💾 Shell to use (default is bash)
 
       examples:
-      - playground exec -c connect -d "date"
-      - playground exec -c connect -d "whoami" --root
-      - playground exec --container connect --command "whoami" --shell sh
-      - playground exec -c broker -c connect -d "ps aux"
-      - playground exec --container schema-registry --container ksqldb-server --command "free -h"
-      - playground exec -c connect -c broker -d "netstat -tuln" --root
+      - playground container exec -c connect --command "date"
+      - playground container exec -c connect --command "whoami" --root
+      - playground container exec --container connect --command "whoami" --shell sh
+      - playground container exec -c broker -c connect --command "ps aux"
+      - playground container exec --container schema-registry --container ksqldb-server --command "free -h"
+      - playground container exec -c connect -c broker --command "netstat -tuln" --root
 
     - name: cp
       group: Container

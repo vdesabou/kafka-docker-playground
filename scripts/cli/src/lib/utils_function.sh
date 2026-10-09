@@ -516,7 +516,7 @@ function log_container_engine_not_running()
       logerror "  podman machine start"
       logerror "  export DOCKER_HOST=\"unix://\$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')\""
     else
-      logerror "  sudo systemctl enable --now podman.socket   (rootful, see https://kafka-docker-playground.io/#/podman)"
+      logerror "  sudo systemctl enable --now podman.socket   (rootful, see https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%a6%ad-using-podman-instead-of-docker)"
       logerror "  export DOCKER_HOST=\"unix:///run/podman-api/podman.sock\""
     fi
   else
