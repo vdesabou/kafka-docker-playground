@@ -29,9 +29,12 @@ source /path/to/kafka-docker-playground/scripts/cli/completions.bash
 ```
 
 ```zsh
-# zsh (after compinit)
+# zsh
 source /path/to/kafka-docker-playground/scripts/cli/completions.zsh
 ```
+
+> [!WARNING]
+> Zsh users who previously sourced `completions.bash` (through `bashcompinit`) must switch to `completions.zsh`: sourcing the bash file from zsh fails with `_playground_completions:read:21: bad option: -a`. `completions.bash` now detects zsh, loads `completions.zsh` instead and prints a reminder until `~/.zshrc` is updated. The `bashcompinit` lines are no longer needed.
 
 ### 🪄 Setup Shell Script Command Completion Visual Studio Code extension
 
