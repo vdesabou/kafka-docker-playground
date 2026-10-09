@@ -324,6 +324,15 @@ function import_image_into_k3d() {
 
   if [[ "$import_ret" -eq 0 ]]
   then
+    # After a direct ctr import the image is stored under whichever name the OCI
+    # manifest carries (often the fully-qualified docker.io/library/... form).  Tag
+    # both the short name and the fully-qualified form so that kubelet finds it
+    # regardless of which form the pod spec uses.
+    docker exec "$k3d_server_node" sh -lc "
+      ctr -n k8s.io images tag '${normalized_image}' '${image_to_import}' 2>/dev/null || true
+      ctr -n k8s.io images tag '${image_to_import}' '${normalized_image}' 2>/dev/null || true
+    " 2>/dev/null || true
+
     if image_present_in_k3d_node "$normalized_image" || image_present_in_k3d_node "$image_to_import"
     then
       log "✅ Imported image $image_to_import into k3d via fallback mode"
