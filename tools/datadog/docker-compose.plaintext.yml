@@ -41,8 +41,7 @@ services:
     build: ../../tools/datadog/datadog
     hostname: datadog
     container_name: datadog
-    links:
-     - zookeeper
+    depends_on:
      - broker
      - schema-registry
      - connect

@@ -21,7 +21,7 @@ services:
     ports:
       - 4040:4040
     restart: unless-stopped
-    links:
+    depends_on:
       - oracle
     command:
       - "start"

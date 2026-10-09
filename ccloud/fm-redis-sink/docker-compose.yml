@@ -11,8 +11,6 @@ services:
     container_name: redis-insight
     ports:
       - "5540:5540"
-    links:
-      - redis
     depends_on:
       - redis
     environment:
@@ -26,7 +24,7 @@ services:
     restart: unless-stopped
     ports:
       - 4040:4040
-    links:
+    depends_on:
       - redis
     command:
       - "start"

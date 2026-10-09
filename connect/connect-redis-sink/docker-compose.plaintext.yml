@@ -13,8 +13,6 @@ services:
     container_name: redis-insight
     ports:
       - "5540:5540"
-    links:
-      - redis
     depends_on:
       - redis
     environment:

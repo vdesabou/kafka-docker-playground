@@ -17,7 +17,7 @@ services:
     restart: unless-stopped
     ports:
       - 4040:4040
-    links:
+    depends_on:
       - sftp-server
     command:
       - "start"
