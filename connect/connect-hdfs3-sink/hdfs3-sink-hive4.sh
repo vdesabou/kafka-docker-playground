@@ -6,7 +6,13 @@ source ${DIR}/../../scripts/utils.sh
 
 log "Building Hadoop Docker image (replacing if exists)"
 cd ../../connect/connect-hdfs3-sink
-docker build --load -t kdp/hadoop:3.3.6 .
+# --load is needed with a container-driver buildx builder, but the classic builder (DOCKER_BUILDKIT=0, always used with podman) does not know it
+load_flag=""
+if [ "${DOCKER_BUILDKIT:-}" != "0" ]
+then
+     load_flag="--load"
+fi
+docker build $load_flag -t kdp/hadoop:3.3.6 .
 rm -f hadoop-config/hiveserver2.pid
 cd -
 
