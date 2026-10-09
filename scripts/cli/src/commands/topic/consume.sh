@@ -427,7 +427,8 @@ fi
     fi
   fi
 
-  if [ "$max_messages" != "10" ]
+  # only keep the timeout when --max-messages is left to its default value (100)
+  if [ "$max_messages" != "100" ]
   then
     nottailing2=""
   fi

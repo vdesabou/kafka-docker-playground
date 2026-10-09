@@ -34874,23 +34874,18 @@ playground_topic_get_number_records_command() {
       set +e
       if [[ "$environment" == "ccloud" ]]
       then
-          # --- OFFSET MODE (Default) ---
-          # Note: We must explicitly call 'kcat' in the exec command now
-
+          # Count actual records rather than summing offsets: offsets overestimate the number of
+          # readable records with transaction markers or compaction, which makes
+          # 'playground topic consume' wait forever for records that never come
           if [ "$isolation_level" != "read_committed" ]
           then
-              offsets=$(docker exec "$kcat_container_name" kcat \
+              count=$(docker exec "$kcat_container_name" kcat \
                   -F /tmp/configuration/ccloud.properties \
                   -C -t "$topic" \
-                  -o -1 -e -q \
-                  -f '%o\n' 2>/dev/null)
+                  -o beginning -e -q \
+                  -f '%o\n' 2>/dev/null | wc -l | tr -d ' ')
 
-              if [ -z "$offsets" ]; then
-                  echo "0"
-              else
-                  # Sum offsets + 1 (0-based index)
-                  echo "$offsets" | awk '{s+=$1+1} END {print s}'
-              fi
+              echo "${count:-0}"
           else
               count=$(docker exec "$kcat_container_name" kcat \
                   -F /tmp/configuration/ccloud.properties \
@@ -35636,7 +35631,8 @@ playground_topic_consume_command() {
       fi
     fi
 
-    if [ "$max_messages" != "10" ]
+    # only keep the timeout when --max-messages is left to its default value (100)
+    if [ "$max_messages" != "100" ]
     then
       nottailing2=""
     fi
