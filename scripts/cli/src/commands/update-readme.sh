@@ -84,10 +84,12 @@ do
   environment_label="ci"
   issue_title_suffix=""
   extra_labels=()
+  # CI job names end with "<playground_environment>" (+ " 🦭" on podman): the same test list runs in several jobs
+  job_name_end_regex=" plaintext ?$"
   case "$environment_suffix" in
-    -cfk)        environment_label="ci_cfk";        issue_title_suffix=" (cfk)";         extra_labels=("cfk") ;;
-    -podman)     environment_label="ci_podman";     issue_title_suffix=" (podman)";      extra_labels=("podman") ;;
-    -cfk-podman) environment_label="ci_cfk_podman"; issue_title_suffix=" (cfk, podman)"; extra_labels=("cfk" "podman") ;;
+    -cfk)        environment_label="ci_cfk";        issue_title_suffix=" (cfk)";         extra_labels=("cfk");           job_name_end_regex=" cfk ?$" ;;
+    -podman)     environment_label="ci_podman";     issue_title_suffix=" (podman)";      extra_labels=("podman");        job_name_end_regex=" plaintext 🦭$" ;;
+    -cfk-podman) environment_label="ci_cfk_podman"; issue_title_suffix=" (cfk, podman)"; extra_labels=("cfk" "podman"); job_name_end_regex=" cfk 🦭$" ;;
   esac
   issue_create_labels=()
   issue_edit_labels=()
@@ -245,12 +247,16 @@ do
         fi
         
         v=$(echo $image_version | sed -e 's/\./[.]/g')
-        for i in {1..10}
+        html_url=""
+        for job_name_regex in "${v}.*${test}.*${job_name_end_regex}" "${v}.*${test}"
         do
-          html_url=$(cat "$tmp_dir/${gh_run_id}_${i}.json" | jq ".jobs |= map(select(.name | test(\"${v}.*${test}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url' | sed -e 's/^"//' -e 's/"$//')
-          if [ "$html_url" != "" ] && [ "$html_url" != "null" ]; then 
-              break
-          fi
+          for i in {1..10}
+          do
+            html_url=$(jq -r --arg re "$job_name_regex" '[.jobs[]? | select(.name | test($re)) | .html_url][0]' "$tmp_dir/${gh_run_id}_${i}.json" 2>/dev/null)
+            if [ "$html_url" != "" ] && [ "$html_url" != "null" ]; then 
+                break 2
+            fi
+          done
         done
 
         if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
