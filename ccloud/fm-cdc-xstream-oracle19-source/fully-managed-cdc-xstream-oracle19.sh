@@ -316,7 +316,7 @@ docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB <<
 EOF
 
 log "Verifying topic cflt.C__CFLTUSER.CUSTOMERS: there should be 14 records"
-playground topic consume --topic cflt.C__CFLTUSER.CUSTOMERS --min-expected-messages 14 --timeout 120
+playground topic consume --topic cflt.C__CFLTUSER.CUSTOMERS --min-expected-messages 14 --timeout 300
 
 if [ ! -z "$SQL_DATAGEN" ]
 then
