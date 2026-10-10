@@ -269,11 +269,20 @@ do
                 fi
                 
                 v=$(echo $tag | sed -e 's/\./[.]/g')
-                for i in {1..10}; do
-                    html_url=$(cat "/tmp/${gh_run_id}_${i}.json" | jq ".jobs |= map(select(.name | test(\"${v}.*${dir}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url' | sed -e 's/^"//' -e 's/"$//')
-                    if [ "$html_url" != "" ] && [ "$html_url" != "null" ]; then 
-                        break
-                    fi
+                # CI job names end with "<playground_environment>" (+ " 🦭" on podman): the same test list runs in several jobs
+                job_name_end_regex=" ${environment:-plaintext} ?$"
+                if [ "$container_engine" = "podman" ]
+                then
+                    job_name_end_regex=" ${environment:-plaintext} 🦭$"
+                fi
+                html_url=""
+                for job_name_regex in "${v}.*${dir}.*${job_name_end_regex}" "${v}.*${dir}"; do
+                    for i in {1..10}; do
+                        html_url=$(jq -r --arg re "$job_name_regex" '[.jobs[]? | select(.name | test($re)) | .html_url][0]' "/tmp/${gh_run_id}_${i}.json" 2>/dev/null)
+                        if [ "$html_url" != "" ] && [ "$html_url" != "null" ]; then 
+                            break 2
+                        fi
+                    done
                 done
 
                 if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
