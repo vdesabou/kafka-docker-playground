@@ -2,7 +2,8 @@
 services:
 
   mongodb:
-    # https://jira.mongodb.org/browse/SERVER-72839
+    # https://jira.mongodb.org/browse/SERVER-72839: since 7.0.x TLS requires a chain of trust (--tlsCAFile),
+    # the self-signed certificate is its own CA, and clients (the connector) don't present a certificate
     image: mongo:7.0.43
     hostname: mongodb
     container_name: mongodb
@@ -10,10 +11,11 @@ services:
       - 27017:27017
     volumes:
       - ../../ccloud/fm-debezium-mongodb-source/ssl/mongo.pem:/tmp/mongo.pem
+      - ../../ccloud/fm-debezium-mongodb-source/ssl/mongo.crt:/tmp/mongo.crt
     environment:
       MONGO_INITDB_ROOT_USERNAME: debezium
       MONGO_INITDB_ROOT_PASSWORD: dbz
-    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "debezium","--tlsMode", "requireTLS","--tlsCertificateKeyFile", "/tmp/mongo.pem", "--tlsCertificateKeyFilePassword", "confluent"]
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "debezium","--tlsMode", "requireTLS","--tlsCertificateKeyFile", "/tmp/mongo.pem", "--tlsCertificateKeyFilePassword", "confluent", "--tlsCAFile", "/tmp/mongo.crt", "--tlsAllowConnectionsWithoutCertificates"]
       
 
   # https://ngrok.com/docs/using-ngrok-with/docker/
