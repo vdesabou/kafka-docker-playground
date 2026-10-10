@@ -3422,7 +3422,12 @@ then
   kubectl -n confluent apply --server-side --force-conflicts -f "$CONNECT_MOUNT_RESOURCES_FILE"
 fi
 
-kubectl apply -f "$CFK_MANIFEST_FILE"
+# remember the connect statefulset generation: when a previous run left connect-0 Ready and the
+# Connect CR changes, CFK rolls the pod a few seconds later (see the wait before wait_container_ready)
+connect_sts_generation_before=$(kubectl -n confluent get statefulset connect -o jsonpath='{.metadata.generation}' 2>/dev/null || true)
+
+cfk_manifest_apply_output=$(kubectl apply -f "$CFK_MANIFEST_FILE")
+echo "$cfk_manifest_apply_output"
 
 if [[ -n "$EXTRA_PODS_FILE" ]] && [[ -s "$EXTRA_PODS_FILE" ]]
 then
@@ -3515,6 +3520,23 @@ then
   # processed. Force-delete connect-0 so CFK recreates it from the updated spec.
   log "🔄 Restarting connect-0 to ensure patched Connect spec takes effect"
   kubectl -n confluent delete pod connect-0 --ignore-not-found=true >/dev/null 2>&1 || true
+elif [[ -n "$connect_sts_generation_before" ]] && echo "$cfk_manifest_apply_output" | grep -q "^connect.platform.confluent.io/connect configured"
+then
+  # connect-0 from the previous run is still Ready: without this, wait_container_ready returns at once
+  # and CFK replaces the pod right under the example (Connect REST API unreachable)
+  log "🔄 Connect spec changed, waiting for CFK to roll connect-0"
+  set +e
+  for _ in {1..12}
+  do
+    connect_sts_generation=$(kubectl -n confluent get statefulset connect -o jsonpath='{.metadata.generation}' 2>/dev/null)
+    if [[ -n "$connect_sts_generation" ]] && [[ "$connect_sts_generation" != "$connect_sts_generation_before" ]]
+    then
+      kubectl -n confluent rollout status statefulset/connect --timeout=300s >/dev/null 2>&1
+      break
+    fi
+    sleep 5
+  done
+  set -e
 fi
 
 wait_container_ready
