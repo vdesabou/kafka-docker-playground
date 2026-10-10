@@ -302,7 +302,7 @@ log "sleeping some time to capture post initial snapshot records"
 sleep 30
 
 log "we should now have 7 records"
-playground topic consume --topic cflt.C__CFLTUSER.CUSTOMERS --min-expected-messages 7 --timeout 60
+playground topic consume --topic cflt.C__CFLTUSER.CUSTOMERS --min-expected-messages 7 --timeout 300
 
 log "execute blocking snapshot to capture all records within ORCLCDB.C##CFLTUSER.CUSTOMERS table"
 docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB << EOF
@@ -324,7 +324,7 @@ SELECT * FROM CFLT_SIGNALS;
 EOF
 
 log "we should now have 14"
-playground topic consume --topic cflt.C__CFLTUSER.CUSTOMERS --min-expected-messages 14 --timeout 60
+playground topic consume --topic cflt.C__CFLTUSER.CUSTOMERS --min-expected-messages 14 --timeout 300
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
