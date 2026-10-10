@@ -277,6 +277,13 @@ function import_image_into_k3d() {
     return 1
   fi
 
+  # podman stores locally loaded/built images as localhost/<name> (e.g. the Oracle prebuilt image),
+  # which neither k3d nor kubelet resolve: give it the docker.io/library/<name> name the pod spec maps to
+  if container_engine_is_podman && [[ "$normalized_image" == docker.io/library/* ]] && ! docker image inspect "$normalized_image" >/dev/null 2>&1 && docker image inspect "localhost/${normalized_image#docker.io/library/}" >/dev/null 2>&1
+  then
+    docker tag "localhost/${normalized_image#docker.io/library/}" "$normalized_image"
+  fi
+
   k3d_server_node="k3d-${K3D_CLUSTER_NAME}-server-0"
   if [[ "$force_import" -ne 1 ]] && docker ps --format '{{.Names}}' | grep -qx "$k3d_server_node"
   then
@@ -318,7 +325,7 @@ function import_image_into_k3d() {
 
   logwarn "⚠️ Retrying image import using direct server-node stream (fallback mode)"
   set +e
-  import_image_into_server_node_direct "$image_to_import" "$k3d_server_node" >> "$import_log" 2>&1
+  import_image_into_server_node_direct "$k3d_import_ref" "$k3d_server_node" >> "$import_log" 2>&1
   import_ret=$?
   set -e
 
@@ -328,7 +335,9 @@ function import_image_into_k3d() {
     # manifest carries (often the fully-qualified docker.io/library/... form).  Tag
     # both the short name and the fully-qualified form so that kubelet finds it
     # regardless of which form the pod spec uses.
+    # podman saves images loaded locally as localhost/<name>.
     docker exec "$k3d_server_node" sh -lc "
+      ctr -n k8s.io images tag 'localhost/${image_to_import}' '${normalized_image}' 2>/dev/null || true
       ctr -n k8s.io images tag '${normalized_image}' '${image_to_import}' 2>/dev/null || true
       ctr -n k8s.io images tag '${image_to_import}' '${normalized_image}' 2>/dev/null || true
     " 2>/dev/null || true
