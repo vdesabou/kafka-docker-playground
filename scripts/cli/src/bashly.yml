@@ -1863,10 +1863,22 @@ commands:
     default: "10"
     help: |-
       🔢 Maximum number of hits (default 10)
+  - long: --json
+    required: false
+    help: |-
+      📗 Print the hits as a JSON array, best first, and nothing else
+
+      Each hit has script (absolute path), path (relative to the repository),
+      title (README), connector_classes, environment, score and run_command.
+      No hit prints [] and exits with code 1.
+
+      🎓 Tip: use it in scripts and from AI agents, for example with
+      jq -r '.[0].script'
   examples:
   - playground find-example "s3 sink proxy"
   - playground find-example debezium postgres fully managed
   - playground find-example "oracle cdc ssl" --category connect --limit 3
+  - playground find-example "http sink oauth" --json --limit 3 | jq -r '.[].script'
 
 - name: start-environment
   private: true

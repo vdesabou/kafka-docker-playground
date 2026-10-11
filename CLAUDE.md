@@ -22,7 +22,7 @@ out of context.
 
 | Question | Command | Instead of |
 | --- | --- | --- |
-| "is there an example that does X?" | `playground find-example "oracle cdc ssl"` (`--category ccloud`, `--limit 5`) | `grep -ril` over `connect/`, `ccloud/`, `reproduction-models/`… |
+| "is there an example that does X?" | `playground find-example "oracle cdc ssl"` (`--category ccloud`, `--limit 5`, `--json`) | `grep -ril` over `connect/`, `ccloud/`, `reproduction-models/`… |
 | "what is running right now?" | `playground status` (lists containers, flags exited/restarting ones) | `docker ps`, reading `playground.ini` |
 | "what is the state of the connectors?" | `playground connector status` | curl on the Connect REST API |
 | "why is this connector not working?" | `playground connector diagnose [--connector <c>]` (status + error digest + lag/offsets + next steps) | `status`, `container logs --errors`, `show-lag`, `offsets get` one by one |

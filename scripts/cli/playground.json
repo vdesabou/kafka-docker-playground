@@ -882,6 +882,13 @@
           ],
           "argument": 10,
           "description": "🔢 Maximum number of hits (default 10)\n\nDefault value: 10\n"
+        },
+        {
+          "names": [
+            "--json"
+          ],
+          "argument": "",
+          "description": "📗 Print the hits as a JSON array, best first, and nothing else\n\nEach hit has script (absolute path), path (relative to the repository),\ntitle (README), connector_classes, environment, score and run_command.\nNo hit prints [] and exits with code 1.\n\n🎓 Tip: use it in scripts and from AI agents, for example with\njq -r '.[0].script'\n"
         }
       ],
       "subcommands": null
