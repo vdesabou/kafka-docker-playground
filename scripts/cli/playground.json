@@ -3746,7 +3746,7 @@
     },
     {
       "name": "connector-plugin",
-      "description": "🔌 Connector-plugin commands\n\nQuestions about connector plugins on Confluent Hub, answered without a\nrunning environment:\n\n  versions              every released version of a plugin\n  display-last-updated  what was published recently, by vendor\n  search-jar            which jars ship in it, and which class is where\n  sourcecode            open the source on GitHub\n\n🎓 Tip: search-jar answers \"is this class really in the plugin, and with\nwhich signature\", which is the question behind most NoSuchMethodError and\nClassNotFoundException reports.\n",
+      "description": "🔌 Connector-plugin commands\n\nQuestions about connector plugins on Confluent Hub, answered without a\nrunning environment:\n\n  versions              every released version of a plugin\n  display-last-updated  what was published recently, by vendor\n  search-jar            which jars ship in it, and which class is where\n  config-key            what a config key does, its default, since when, who sets it\n  sourcecode            open the source on GitHub\n\n🎓 Tip: search-jar answers \"is this class really in the plugin, and with\nwhich signature\", which is the question behind most NoSuchMethodError and\nClassNotFoundException reports.\n",
       "usage": "playground connector-plugin COMMAND",
       "options": [],
       "subcommands": [
@@ -3826,6 +3826,36 @@
               ],
               "argument": "VENDOR",
               "description": "🏢 Only display results for this vendor\n"
+            }
+          ]
+        },
+        {
+          "name": "config-key",
+          "description": "🔑 Explain a connector configuration key: documentation, type, default, since when, and which examples set it\n  \n  Answers \"what does this key do, what is its default, since which\n  version does it exist, and how is it used\" in one call, without a\n  running environment.\n  \n  📗 Documentation, type, default, importance and group come from the\n  configuration reference that CI records for every tested connector,\n  self-managed and fully managed (the config-<class>.txt files next to\n  the examples, refreshed with the latest connector version).\n  \n  📅 The git history of that file tells when CI first saw the key, which\n  is when a new connector version introduced it. Versions you ran\n  locally (playground connector show-config-parameters cache) are also\n  checked one by one.\n  \n  🧪 Examples that set the key are listed with the value they use.\n  \n  Without --connector-class, every connector having the key is listed.\n  When the key is not found, similar keys are suggested.\n",
+          "usage": "playground connector-plugin config-key [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--key",
+                "-k"
+              ],
+              "argument": "KEY",
+              "description": "🔑 Exact configuration key, for example behavior.on.null.values\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--connector-class",
+                "-c"
+              ],
+              "argument": "CONNECTOR-CLASS",
+              "description": "🔌 Only this connector: part of its class name or fully managed type, case insensitive\n\nExamples: S3SinkConnector, io.confluent.connect.jdbc.JdbcSinkConnector, S3_SINK, jdbc\n"
+            },
+            {
+              "names": [
+                "--max-examples"
+              ],
+              "argument": 10,
+              "description": "🧪 Maximum number of examples to show (default 10)\n\nDefault value: 10\n"
             }
           ]
         },

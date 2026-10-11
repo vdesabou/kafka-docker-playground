@@ -5871,6 +5871,7 @@ commands:
       versions              every released version of a plugin
       display-last-updated  what was published recently, by vendor
       search-jar            which jars ship in it, and which class is where
+      config-key            what a config key does, its default, since when, who sets it
       sourcecode            open the source on GitHub
 
     🎓 Tip: search-jar answers "is this class really in the plugin, and with
@@ -5961,6 +5962,57 @@ commands:
         🏢 Only display results for this vendor
     examples: |
       playground connector-plugin display-last-updated --days 7
+  - name: config-key
+    help: |-
+      🔑 Explain a connector configuration key: documentation, type, default, since when, and which examples set it
+
+      Answers "what does this key do, what is its default, since which
+      version does it exist, and how is it used" in one call, without a
+      running environment.
+
+      📗 Documentation, type, default, importance and group come from the
+      configuration reference that CI records for every tested connector,
+      self-managed and fully managed (the config-<class>.txt files next to
+      the examples, refreshed with the latest connector version).
+
+      📅 The git history of that file tells when CI first saw the key, which
+      is when a new connector version introduced it. Versions you ran
+      locally (playground connector show-config-parameters cache) are also
+      checked one by one.
+
+      🧪 Examples that set the key are listed with the value they use.
+
+      Without --connector-class, every connector having the key is listed.
+      When the key is not found, similar keys are suggested.
+    flags:
+      - long: --key
+        short: -k
+        required: true
+        arg: key
+        validate: not_empty
+        help: |-
+          🔑 Exact configuration key, for example behavior.on.null.values
+      - long: --connector-class
+        short: -c
+        required: false
+        arg: connector-class
+        help: |-
+          🔌 Only this connector: part of its class name or fully managed type, case insensitive
+
+          Examples: S3SinkConnector, io.confluent.connect.jdbc.JdbcSinkConnector, S3_SINK, jdbc
+      - long: --max-examples
+        required: false
+        arg: max_examples
+        validate: integer
+        default: "10"
+        help: |-
+          🧪 Maximum number of examples to show (default 10)
+    examples:
+    - playground connector-plugin config-key --key behavior.on.null.values
+    - playground connector-plugin config-key --key behavior.on.null.values --connector-class S3SinkConnector
+    - playground connector-plugin config-key -k s3.part.size -c S3_SINK
+    - playground connector-plugin config-key -k errors.tolerance -c jdbc --max-examples 3
+
   - name: sourcecode
     help: |
       🧑‍💻 Open source code url in your browser (or in your editor when used with --open)
