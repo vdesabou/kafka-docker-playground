@@ -251,5 +251,11 @@ do
         printf "%-30s %-12s %-30s %-50s\n" "$connector" "$status_display" "$tasks" "$stacktrace"
         echo "-------------------------------------------------------------------------------------------------------------"
     fi
+
+    # only when something failed, and not when called in a loop (PG_SKIP_ERROR_RECOMMENDATIONS) or by diagnose itself
+    if [ -z "$PG_SKIP_DIAGNOSE_HINT" ] && [ -z "$PG_SKIP_ERROR_RECOMMENDATIONS" ] && echo "$curl_output" | jq -e '[.connector.state, .tasks[]?.state] | index("FAILED")' > /dev/null 2>&1
+    then
+        log "🩺 for the error digest, the progress and the next steps, run: playground connector diagnose --connector $connector"
+    fi
     set -e
 done

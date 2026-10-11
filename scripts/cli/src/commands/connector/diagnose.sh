@@ -43,7 +43,7 @@ do
 
     echo ""
     log "🗺️  1/4 status"
-    playground connector status --connector "$connector" $maybe_verbose
+    PG_SKIP_DIAGNOSE_HINT=1 playground connector status --connector "$connector" $maybe_verbose
 
     # sink or source, and state, from the status endpoint
     if [ $is_cloud -eq 1 ]
