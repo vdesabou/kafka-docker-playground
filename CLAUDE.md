@@ -29,6 +29,7 @@ out of context.
 | "why did it fail?" | `playground container logs -c connect --errors` (`--since 10m`, `--include-warnings`) | `docker logs connect`, scrolling raw logs |
 | "show me recent raw lines" | `playground container logs -c connect --no-follow --tail 500` / `--grep "Caused by" --no-follow` | `docker logs connect \| tail` |
 | "what is failing in these logs?" (customer bundle, CI artifact) | `playground debug analyze-logs -f <file\|folder\|.zip\|.tar.gz>` (`--include-warnings`, `--max-findings 10`) | `unzip` + `grep ERROR`, ad-hoc `python3` |
+| "is this example red in CI too, and why?" | `playground get-ci-result --test <dir> --logs` (`--environment cfk`, `--podman`) | reading the 🔥 issue, `gh run view --log` (it truncates long jobs) |
 | "where is the source code of connector X (version Y)?" | `playground connector-plugin sourcecode --connector-plugin confluentinc/<name> [--connector-tag Y] --only-show-url` | guessing repo / branch, GitHub code search |
 
 - `playground find-example` searches connector class, script path, README title and script body of every

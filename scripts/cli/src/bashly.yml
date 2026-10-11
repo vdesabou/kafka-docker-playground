@@ -1806,6 +1806,54 @@ commands:
     is probably not on your side. Reproduction models are always reported as
     fine, they are not part of the CI matrix.
 
+    🔥 With --logs, also tells why it is red: the latest failing CI job of the
+    example is located from its '🔥' GitHub issue, its full log is downloaded,
+    and for each failing script the last lines before the failure are shown
+    with a digest of the ERROR/FATAL records (same digest as 'playground
+    container logs --errors').
+
+    Use --test to ask about any example, without running it.
+  flags:
+  - long: --test
+    short: -t
+    required: false
+    arg: test
+    help: |-
+      📂 Example directory (or script) to check, instead of the current example
+
+      Examples: connect/connect-aws-s3-sink, other/connect-secret-registry
+  - long: --environment
+    required: false
+    arg: environment
+    allowed:
+    - plaintext
+    - cfk
+    help: |-
+      🔐 CI environment to check: plaintext or cfk
+
+      Default is the environment of the current example, or plaintext with --test
+  - long: --podman
+    required: false
+    help: |-
+      🦭 Check the podman CI run instead of the docker one
+  - long: --logs
+    required: false
+    help: |-
+      🔥 When CI is red, show why: tail and ERROR/FATAL digest of each failing script of the latest failing job
+  - long: --max-findings
+    arg: max_findings
+    required: false
+    validate: integer
+    default: "20"
+    needs: [--logs]
+    help: |-
+      ✂️ With --logs, maximum number of distinct records to show per failing script (default 20)
+  examples:
+  - playground get-ci-result
+  - playground get-ci-result --logs
+  - playground get-ci-result --test other/connect-secret-registry --logs
+  - playground get-ci-result --test connect/connect-mqtt-sink --environment cfk --podman --logs
+
 - name: history
   group: Run
   help: |-
