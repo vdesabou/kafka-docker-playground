@@ -839,9 +839,49 @@
     },
     {
       "name": "get-ci-result",
-      "description": "🤖 get CI result for current example\n\nTells you whether the example you are running is green in the nightly CI,\nboth for the default environment and for cfk, by reading the published\nbadges from kafka-docker-playground.io.\n\n👉 Useful before you spend time debugging: if CI is red too, the breakage\nis probably not on your side. Reproduction models are always reported as\nfine, they are not part of the CI matrix.\n",
-      "usage": "playground get-ci-result",
-      "options": [],
+      "description": "🤖 get CI result for current example\n\nTells you whether the example you are running is green in the nightly CI,\nboth for the default environment and for cfk, by reading the published\nbadges from kafka-docker-playground.io.\n\n👉 Useful before you spend time debugging: if CI is red too, the breakage\nis probably not on your side. Reproduction models are always reported as\nfine, they are not part of the CI matrix.\n\n🔥 With --logs, also tells why it is red: the latest failing CI job of the\nexample is located from its '🔥' GitHub issue, its full log is downloaded,\nand for each failing script the last lines before the failure are shown\nwith a digest of the ERROR/FATAL records (same digest as 'playground\ncontainer logs --errors').\n\nUse --test to ask about any example, without running it.\n",
+      "usage": "playground get-ci-result [OPTIONS]",
+      "options": [
+        {
+          "names": [
+            "--test",
+            "-t"
+          ],
+          "argument": "TEST",
+          "description": "📂 Example directory (or script) to check, instead of the current example\n\nExamples: connect/connect-aws-s3-sink, other/connect-secret-registry\n"
+        },
+        {
+          "names": [
+            "--environment"
+          ],
+          "argument": [
+            "plaintext",
+            "cfk"
+          ],
+          "description": "🔐 CI environment to check: plaintext or cfk\n\nDefault is the environment of the current example, or plaintext with --test\n\nAllowed values: plaintext, cfk\n"
+        },
+        {
+          "names": [
+            "--podman"
+          ],
+          "argument": "",
+          "description": "🦭 Check the podman CI run instead of the docker one\n"
+        },
+        {
+          "names": [
+            "--logs"
+          ],
+          "argument": "",
+          "description": "🔥 When CI is red, show why: tail and ERROR/FATAL digest of each failing script of the latest failing job\n"
+        },
+        {
+          "names": [
+            "--max-findings"
+          ],
+          "argument": 20,
+          "description": "✂️ With --logs, maximum number of distinct records to show per failing script (default 20)\n\nDefault value: 20\n"
+        }
+      ],
       "subcommands": null
     },
     {
