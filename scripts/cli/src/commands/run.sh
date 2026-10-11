@@ -1696,8 +1696,19 @@ fi
 increment_cli_metric nb_runs
 log "🚀 Number of examples ran so far: $(get_cli_metric nb_runs)"
 set +e
-playground get-ci-result
+ci_result=$(playground get-ci-result 2>&1)
 set -e
+if [ -n "$ci_result" ]
+then
+    echo "$ci_result"
+fi
+# red in CI too: say it now, and compare with the CI failure if the local run fails (not in CI itself)
+ci_red=0
+if [[ "$ci_result" == *"🔴"* ]] && [ -z "$GITHUB_RUN_NUMBER" ]
+then
+    ci_red=1
+    log "🔴 this example also fails in CI, see why with: playground get-ci-result --logs"
+fi
 log "####################################################"
 log "🚀 Executing $filename in dir $test_file_directory"
 log "####################################################"
@@ -1845,6 +1856,21 @@ else
     echo "playground container display-error-all"
     log "🧑‍🚒 open full logs with '<playground container logs --open --container <container>', example:"
     echo "playground container logs --open --container connect"
+  fi
+
+  # same example red in CI: show the CI failure to tell a local problem from a broken example
+  if [ $ci_red -eq 1 ] && [[ ! $(type -f gh 2>&1) =~ "not found" ]]
+  then
+    maybe_podman=""
+    if [ "$(get_container_engine)" == "podman" ]
+    then
+      maybe_podman="--podman"
+    fi
+    echo ""
+    log "🤖 this example also fails in CI, compare with its latest CI failure:"
+    set +e
+    playground get-ci-result --logs --max-findings 10 $maybe_podman
+    set -e
   fi
   exit $ret
 fi
