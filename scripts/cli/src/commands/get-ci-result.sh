@@ -110,18 +110,22 @@ repo="vdesabou/kafka-docker-playground"
 # CI issue titles, see scripts/run-tests.sh
 title="🔥 $dir2"
 job_suffix_regex=" plaintext ?$"
+job_label="plaintext"
 if [ "$environment" == "cfk" ] && [[ -n "$podman" ]]
 then
     title="🔥 $dir2 (cfk, podman)"
     job_suffix_regex=" cfk 🦭$"
+    job_label="cfk 🦭"
 elif [ "$environment" == "cfk" ]
 then
     title="🔥 $dir2 (cfk)"
     job_suffix_regex=" cfk ?$"
+    job_label="cfk"
 elif [[ -n "$podman" ]]
 then
     title="🔥 $dir2 (podman)"
     job_suffix_regex=" plaintext 🦭$"
+    job_label="plaintext 🦭"
 fi
 
 issue_number=$(gh issue list --repo "$repo" --state open --search "\"$title\" in:title" --json number,title --limit 50 2>/dev/null | jq -r --arg title "$title" '.[] | select(.title == $title) | .number' | head -1)
@@ -140,14 +144,17 @@ then
     exit 1
 fi
 run_id=$(echo "$job_url" | sed -E 's#.*/runs/([0-9]+)/job/.*#\1#')
-linked_job_id="${job_url##*/}"
 
 # issues often link a sibling job of the same run: pick the one running this example in this environment
 run_json=$(gh run view "$run_id" --repo "$repo" --json jobs,headSha,createdAt 2>/dev/null)
 job_id=$(echo "$run_json" | jq -r --arg dir "$dir2" --arg suffix "$job_suffix_regex" '[.jobs[] | select(.name | contains(" " + $dir + " ")) | select(.name | test($suffix))][0].databaseId // empty')
 if [ -z "$job_id" ]
 then
-    job_id="$linked_job_id"
+    # the linked job runs other examples: reading it would only show unrelated scripts
+    logwarn "🤷 issue #$issue_number links run $run_id, which has no '$job_label' job running $dir2: the issue may be stale (reported from another run's result)"
+    echo "   🔗 $job_url"
+    echo "   🐛 https://github.com/$repo/issues/$issue_number"
+    exit 0
 fi
 head_sha=$(echo "$run_json" | jq -r '.headSha // empty')
 run_date=$(echo "$run_json" | jq -r '.createdAt // empty')
