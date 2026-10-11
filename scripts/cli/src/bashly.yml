@@ -6052,6 +6052,7 @@ commands:
           🎓 Tip: you can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
       - long: --compile
         required: false
+        conflicts: [--checkout-only]
         help: |-
           🏗️ Checkout and compile code
 
@@ -6078,9 +6079,24 @@ commands:
         help: 🐞 Show output of compilation.
       - long: --open
         short: -o
+        conflicts: [--checkout-only]
         help: |- 
           🔖 Checkout the code and open with text editor set with playground config editor <editor> (default is code)
+      - long: --checkout-only
+        required: false
+        conflicts: [--open, --compile]
+        help: |-
+          📂 Checkout the code at the right tag and print the path of the folder, nothing else
+
+          No browser, no editor, no question: an existing checkout of the same
+          version in /tmp/connector-plugin-sourcecode is reused. The path is
+          the last line of the output.
+
+          🎓 Tip: use it in scripts and from AI agents, which can then read the code
     examples: |
+
+      # will checkout the latest version from hub and print the path of the folder
+      playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-hdfs --checkout-only
 
       # will open latest version from hub source code
       playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-hdfs

@@ -3891,7 +3891,7 @@
                 "--compile"
               ],
               "argument": "",
-              "description": "🏗️ Checkout and compile code\n\nYou must have git installed.\n\n💌 Confluent employees only: make sure to follow \"Maven FAQ\", you also need to be on Confluent VPN with proper AWS credentials set in order to be able to download proprietary dependencies.\n"
+              "description": "🏗️ Checkout and compile code\n\nYou must have git installed.\n\n💌 Confluent employees only: make sure to follow \"Maven FAQ\", you also need to be on Confluent VPN with proper AWS credentials set in order to be able to download proprietary dependencies.\n\nConflicts with: --checkout-only\n"
             },
             {
               "names": [
@@ -3920,7 +3920,14 @@
                 "-o"
               ],
               "argument": "",
-              "description": "🔖 Checkout the code and open with text editor set with playground config editor <editor> (default is code)\n"
+              "description": "🔖 Checkout the code and open with text editor set with playground config editor <editor> (default is code)\n\nConflicts with: --checkout-only\n"
+            },
+            {
+              "names": [
+                "--checkout-only"
+              ],
+              "argument": "",
+              "description": "📂 Checkout the code at the right tag and print the path of the folder, nothing else\n\nNo browser, no editor, no question: an existing checkout of the same\nversion in /tmp/connector-plugin-sourcecode is reused. The path is\nthe last line of the output.\n\n🎓 Tip: use it in scripts and from AI agents, which can then read the code\n\nConflicts with: --open, --compile\n"
             }
           ]
         }
