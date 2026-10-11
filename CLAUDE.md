@@ -68,6 +68,7 @@ environments where the raw command only works on `plaintext`.
 | `docker restart <c>`, `docker kill $(docker ps -q)` | `playground container restart\|recreate\|kill\|kill-all -c <c>` |
 | `docker cp` | `playground container cp` |
 | reading a `.properties` inside a container | `playground container get-properties -c <c>` |
+| grepping docs / `config-*.txt` / examples for a connector config key (doc, default, since when, values used) | `playground connector-plugin config-key --key <k> [--connector-class <class or FM type>]` (offline) |
 | `curl localhost:8083/connectors/...` | `playground connector status\|show-config\|logs\|pause\|resume\|restart\|delete\|update` |
 | `curl .../connectors/<c>/offsets` | `playground connector offsets get\|alter\|reset` |
 | `kafka-consumer-groups --describe` for a connector | `playground connector show-lag` |

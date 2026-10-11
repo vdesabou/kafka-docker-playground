@@ -195,6 +195,7 @@ playground_usage() {
   printf "  %s   ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "connector-plugin search-jar")               "
   printf "  %s   💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "connector-plugin versions")                 "
   printf "  %s   🆕 List last updated connector plugins from confluent hub https://www.confluent.io/hub/\n" "$(green "connector-plugin display-last-updated")     "
+  printf "  %s   🔑 Explain a connector configuration key: documentation, type, default, since when, and which examples set it\n" "$(green "connector-plugin config-key")               "
   printf "  %s   🧑‍💻 Open source code url in your browser (or in your editor when used with --open)\n" "$(green "connector-plugin sourcecode")               "
   echo
   printf "%s\n" "$(bold "Connector commands:")"
@@ -8648,7 +8649,7 @@ playground_consumer_group_describe_usage() {
 playground_connector_plugin_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector-plugin\n\n"
-    printf "  🔌 Connector-plugin commands\n  \n  Questions about connector plugins on Confluent Hub, answered without a\n  running environment:\n  \n    versions              every released version of a plugin\n    display-last-updated  what was published recently, by vendor\n    search-jar            which jars ship in it, and which class is where\n    sourcecode            open the source on GitHub\n  \n  🎓 Tip: search-jar answers \"is this class really in the plugin, and with\n  which signature\", which is the question behind most NoSuchMethodError and\n  ClassNotFoundException reports.\n\n"
+    printf "  🔌 Connector-plugin commands\n  \n  Questions about connector plugins on Confluent Hub, answered without a\n  running environment:\n  \n    versions              every released version of a plugin\n    display-last-updated  what was published recently, by vendor\n    search-jar            which jars ship in it, and which class is where\n    config-key            what a config key does, its default, since when, who\n  sets it\n    sourcecode            open the source on GitHub\n  \n  🎓 Tip: search-jar answers \"is this class really in the plugin, and with\n  which signature\", which is the question behind most NoSuchMethodError and\n  ClassNotFoundException reports.\n\n"
   else
     printf "playground connector-plugin - 🔌 Connector-plugin commands\n\n"
   fi
@@ -8662,6 +8663,7 @@ playground_connector_plugin_usage() {
   printf "  %s   ☕ List jars for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "search-jar")          "
   printf "  %s   💯 List versions for a connector plugin from confluent hub https://www.confluent.io/hub/\n" "$(green "versions")            "
   printf "  %s   🆕 List last updated connector plugins from confluent hub https://www.confluent.io/hub/\n" "$(green "display-last-updated")"
+  printf "  %s   🔑 Explain a connector configuration key: documentation, type, default, since when, and which examples set it\n" "$(green "config-key")          "
   printf "  %s   🧑‍💻 Open source code url in your browser (or in your editor when used with --open)\n" "$(green "sourcecode")          "
   echo
 
@@ -8815,6 +8817,58 @@ playground_connector_plugin_display_last_updated_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground connector-plugin display-last-updated --days 7\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_plugin_config_key_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector-plugin config-key\n\n"
+    printf "  🔑 Explain a connector configuration key: documentation, type, default, since\n  when, and which examples set it\n  \n  Answers \"what does this key do, what is its default, since which\n  version does it exist, and how is it used\" in one call, without a\n  running environment.\n  \n  📗 Documentation, type, default, importance and group come from the\n  configuration reference that CI records for every tested connector,\n  self-managed and fully managed (the config-<class>.txt files next to\n  the examples, refreshed with the latest connector version).\n  \n  📅 The git history of that file tells when CI first saw the key, which\n  is when a new connector version introduced it. Versions you ran\n  locally (playground connector show-config-parameters cache) are also\n  checked one by one.\n  \n  🧪 Examples that set the key are listed with the value they use.\n  \n  Without --connector-class, every connector having the key is listed.\n  When the key is not found, similar keys are suggested.\n\n"
+  else
+    printf "playground connector-plugin config-key - 🔑 Explain a connector configuration key: documentation, type, default, since when, and which examples set it\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector-plugin config-key [OPTIONS]\n"
+  printf "  playground connector-plugin config-key --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--key, -k KEY (required)")"
+    printf "    🔑 Exact configuration key, for example behavior.on.null.values\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-class, -c CONNECTOR-CLASS")"
+    printf "    🔌 Only this connector: part of its class name or fully managed type, case\n    insensitive\n    \n    Examples: S3SinkConnector, io.confluent.connect.jdbc.JdbcSinkConnector,\n    S3_SINK, jdbc\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-examples MAX_EXAMPLES")"
+    printf "    🧪 Maximum number of examples to show (default 10)\n"
+    printf "    %s\n" "Default: 10"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector-plugin config-key --key behavior.on.null.values\n"
+    printf "  playground connector-plugin config-key --key behavior.on.null.values\n  --connector-class S3SinkConnector\n"
+    printf "  playground connector-plugin config-key -k s3.part.size -c S3_SINK\n"
+    printf "  playground connector-plugin config-key -k errors.tolerance -c jdbc\n  --max-examples 3\n"
     echo
 
   fi
@@ -38485,6 +38539,265 @@ playground_connector_plugin_display_last_updated_command() {
 }
 
 # :command.function
+playground_connector_plugin_config_key_command() {
+
+  # src/commands/connector-plugin/config-key.sh
+  key="${args[--key]}"
+  connector_class_filter="${args[--connector-class]}"
+  max_examples="${args[--max-examples]}"
+
+  # prints the entry of $1 (a config-<class>.txt reference) for key $2: group, documentation, type, default...
+  function config_key_entry () {
+      awk -v key="$2" '
+      $0 == "==========================" { header = !header; next }
+      header { group = $0; next }
+      $0 == "🔘 " key { found = 1; print "group: " group; next }
+      found && /^🔘 / { exit }
+      found { print }
+      ' "$1"
+  }
+
+  # connector class (or fully managed type) of a config-<class>.txt or config-<class>-<version>.txt file
+  function config_key_class () {
+      local name
+      name=$(basename "$1" .txt)
+      echo "${name#config-}"
+  }
+
+  cd "$root_folder" > /dev/null
+
+  # configuration references recorded by CI, one per tested connector
+  reference_files=()
+  while IFS= read -r file
+  do
+      reference_files+=("$file")
+  done < <(git ls-files -- '*/config-*.txt' | sort)
+
+  if [ ${#reference_files[@]} -eq 0 ]
+  then
+      logerror "❌ no connector configuration reference (config-<class>.txt) found in $root_folder"
+      exit 1
+  fi
+
+  if [[ -n "$connector_class_filter" ]]
+  then
+      filtered=()
+      for file in "${reference_files[@]}"
+      do
+          if [[ "$(config_key_class "$file" | tr '[:upper:]' '[:lower:]')" == *"$(echo "$connector_class_filter" | tr '[:upper:]' '[:lower:]')"* ]]
+          then
+              filtered+=("$file")
+          fi
+      done
+      if [ ${#filtered[@]} -eq 0 ]
+      then
+          logerror "❌ no connector matching --connector-class $connector_class_filter, connectors with a configuration reference are:"
+          for file in "${reference_files[@]}"
+          do
+              config_key_class "$file"
+          done | sort -u | column -c 160
+          exit 1
+      fi
+      reference_files=("${filtered[@]}")
+  fi
+
+  # several examples of the same connector carry the same reference: keep one file per class
+  declare -A file_by_class=()
+  for file in "${reference_files[@]}"
+  do
+      class=$(config_key_class "$file")
+      if [ -z "${file_by_class[$class]}" ] && grep -q -x -F "🔘 $key" "$file"
+      then
+          file_by_class[$class]="$file"
+      fi
+  done
+
+  # key also searched in the versions cached locally by 'playground connector show-config-parameters'
+  cached_only_classes=""
+  if [ -d "$root_folder/.connector_config" ]
+  then
+      for file in $(grep -l -x -F "🔘 $key" "$root_folder"/.connector_config/config-*.txt 2>/dev/null)
+      do
+          class=$(config_key_class "$file")
+          class="${class%-*}"
+          if [[ -n "$connector_class_filter" ]] && [[ "$(echo "$class" | tr '[:upper:]' '[:lower:]')" != *"$(echo "$connector_class_filter" | tr '[:upper:]' '[:lower:]')"* ]]
+          then
+              continue
+          fi
+          if [ -z "${file_by_class[$class]}" ] && [[ " $cached_only_classes " != *" $class "* ]]
+          then
+              cached_only_classes="$cached_only_classes $class"
+          fi
+      done
+  fi
+
+  # keys handled by the Kafka Connect framework itself, common to every connector:
+  # self-managed plugins do not list them in their own configuration
+  framework_key_regex='^(name|connector\.class|tasks\.max|topics|topics\.regex|(key|value|header)\.converter(\..*)?|transforms(\..*)?|predicates(\..*)?|errors\..*|config\.action\.reload|(consumer|producer|admin)\.override\..*|exactly\.once\.support|transaction\.boundary(\..*)?|offsets\.storage\.topic|topic\.creation\..*)$'
+
+  key_found=1
+  if [ ${#file_by_class[@]} -eq 0 ] && [ -z "$cached_only_classes" ]
+  then
+      key_found=0
+  fi
+
+  if [ $key_found -eq 0 ] && [[ "$key" =~ $framework_key_regex ]]
+  then
+      log "🧩 $key is a Kafka Connect framework key, common to every connector${connector_class_filter:+: $connector_class_filter does not list it in its own configuration}"
+      echo "   📗 https://docs.confluent.io/platform/current/installation/configuration/connect/sink-connect-configs.html"
+      echo "   📗 https://docs.confluent.io/platform/current/installation/configuration/connect/source-connect-configs.html"
+      echo ""
+  elif [ $key_found -eq 0 ]
+  then
+      logwarn "🤷 key $key not found${connector_class_filter:+ for connector $connector_class_filter}"
+      suggestions=$(grep -h "^🔘 .*$(echo "$key" | sed 's/[][\.*^$/]/\\&/g')" "${reference_files[@]}" 2>/dev/null | sed 's/^🔘 //' | sort | uniq -c | sort -rn | head -10)
+      if [ -z "$suggestions" ]
+      then
+          # no key containing it: try with its last segment (s3.part.size -> size)
+          last_segment="${key##*.}"
+          suggestions=$(grep -h "^🔘 .*$(echo "$last_segment" | sed 's/[][\.*^$/]/\\&/g')" "${reference_files[@]}" 2>/dev/null | sed 's/^🔘 //' | sort | uniq -c | sort -rn | head -10)
+      fi
+      if [ -n "$suggestions" ]
+      then
+          log "💡 similar keys (number of connectors having it):"
+          echo "$suggestions"
+      fi
+  fi
+
+  classes=""
+  if [ ${#file_by_class[@]} -gt 0 ]
+  then
+      classes=$(printf '%s\n' "${!file_by_class[@]}" | sort)
+  fi
+  nb_classes=${#file_by_class[@]}
+
+  if [ $nb_classes -gt 1 ] && [[ ! -n "$connector_class_filter" ]]
+  then
+      log "🔌 $nb_classes connector(s) have key $key, use --connector-class to see the details of one"
+      rows=""
+      for class in $classes
+      do
+          entry=$(config_key_entry "${file_by_class[$class]}" "$key")
+          type=$(echo "$entry" | sed -n 's/^[[:space:]]*- Type: //p')
+          default=$(echo "$entry" | sed -n 's/^[[:space:]]*- Default: //p' | cut -c1-40)
+          importance=$(echo "$entry" | sed -n 's/^[[:space:]]*- Importance: //p')
+          rows="$rows$class|$type|$default|$importance"$'\n'
+      done
+      echo "   defaults: $(echo -n "$rows" | cut -d'|' -f3 | sort | uniq -c | sort -rn | awk '{ c = $1; $1 = ""; sub(/^ /, ""); printf "%s%s (x%d)", (NR > 1 ? ", " : ""), $0, c }')"
+      echo ""
+      { echo "CONNECTOR|TYPE|DEFAULT|IMPORTANCE"; echo -n "$rows" | head -20; } | column -t -s '|'
+      if [ $nb_classes -gt 20 ]
+      then
+          echo "✂️ $((nb_classes - 20)) more connector(s) not shown, use --connector-class to narrow"
+      fi
+      echo ""
+  fi
+
+  shown=0
+  for class in $classes
+  do
+      # without filter, details are only shown when a single connector has the key
+      if [ $nb_classes -gt 1 ] && [[ ! -n "$connector_class_filter" ]]
+      then
+          break
+      fi
+      file="${file_by_class[$class]}"
+      entry=$(config_key_entry "$file" "$key")
+      group=$(echo "$entry" | sed -n '1s/^group: //p')
+
+      log "🔑 $key in $class (group: $group)"
+      echo "$entry" | sed '1d' | sed '/^$/d' | sed -E 's/^[[:space:]]+- /- /' | fold -s -w 120 | sed 's/^/   /'
+      echo "   📄 $file"
+
+      # when did CI first record the key: the commit where it appeared in the reference
+      file_first=$(git log --reverse --format='%ad %h' --date=short -- "$file" | head -1)
+      key_first=$(git log --reverse --format='%ad %h' --date=short -S"🔘 $key" -- "$file" | head -1)
+      if [ -z "$key_first" ] || [ "$key_first" == "$file_first" ]
+      then
+          echo "   📅 present since CI first recorded this connector's configuration (${file_first%% *})"
+      else
+          echo "   📅 first recorded by CI on ${key_first%% *} (commit ${key_first##* }), absent from the earlier recordings since ${file_first%% *}: introduced by the connector version CI tested then"
+      fi
+
+      # versions run locally
+      if [ -d "$root_folder/.connector_config" ]
+      then
+          versions=""
+          for cached in $(ls "$root_folder"/.connector_config/config-"$class"-*.txt 2>/dev/null | sort -V)
+          do
+              version=$(config_key_class "$cached")
+              version="${version##*-}"
+              if grep -q -x -F "🔘 $key" "$cached"
+              then
+                  cached_default=$(config_key_entry "$cached" "$key" | sed -n 's/^[[:space:]]*- Default: //p')
+                  versions="$versions $version ✅ ($cached_default)"
+              else
+                  versions="$versions $version ❌"
+              fi
+          done
+          if [ -n "$versions" ]
+          then
+              echo "   🗂️  versions run locally (default):$versions"
+          fi
+      fi
+      echo ""
+      shown=$((shown+1))
+  done
+
+  # without filter, only worth mentioning when CI recorded the key for no connector
+  if [[ ! -n "$connector_class_filter" ]] && [ ${#file_by_class[@]} -gt 0 ]
+  then
+      cached_only_classes=""
+  fi
+  for class in $cached_only_classes
+  do
+      versions=""
+      for cached in $(ls "$root_folder"/.connector_config/config-"$class"-*.txt 2>/dev/null | sort -V)
+      do
+          version=$(config_key_class "$cached")
+          version="${version##*-}"
+          if grep -q -x -F "🔘 $key" "$cached"
+          then
+              versions="$versions $version ✅"
+          else
+              versions="$versions $version ❌"
+          fi
+      done
+      logwarn "🗂️  $key only found in versions of $class run locally, not in the configuration recorded by CI (removed, or connector not tested by CI):$versions"
+  done
+
+  # examples setting the key, with their value
+  examples=$(grep -rn -F "\"$key\"" --include="*.sh" connect ccloud ksqldb flink schema-registry rest-proxy multi-data-center other operator academy environment reproduction-models 2>/dev/null | grep -v "/stop.sh:" || true)
+  examples_all="$examples"
+  if [[ -n "$connector_class_filter" ]] && [ -n "$examples" ]
+  then
+      files_with_class=$(echo "$examples" | cut -d: -f1 | sort -u | xargs grep -l -i -F "$connector_class_filter" 2>/dev/null || true)
+      examples=""
+      if [ -n "$files_with_class" ]
+      then
+          examples=$(echo "$examples_all" | grep -F -f <(echo "$files_with_class" | sed 's/$/:/') 2>/dev/null || true)
+      fi
+  fi
+  if [ -z "$examples" ]
+  then
+      log "🧪 no example sets $key${connector_class_filter:+ with connector $connector_class_filter}"
+  else
+      nb_examples=$(echo "$examples" | wc -l | tr -d ' ')
+      log "🧪 $nb_examples line(s) in examples set $key${connector_class_filter:+ with connector $connector_class_filter}, values used (most frequent first):"
+      echo "$examples" | sed -E "s/^([^:]+:[0-9]+):.*\"$(echo "$key" | sed 's/[][\.*^$/]/\\&/g')\"[[:space:]]*:[[:space:]]*(\"[^\"]*\"|[^,}]*).*/\2|\1/" \
+          | awk -F'|' '{ count[$1]++; if (!($1 in where)) where[$1] = $2 } END { for (v in count) printf "%d|%s|%s\n", count[v], v, where[v] }' \
+          | sort -t'|' -k1,1 -rn | head -n "$max_examples" \
+          | awk -F'|' '{ printf "   %-30s x%-3d e.g. %s\n", $2, $1, $3 }'
+  fi
+
+  if [ $key_found -eq 0 ] && [ -z "$examples" ] && [[ ! "$key" =~ $framework_key_regex ]]
+  then
+      exit 1
+  fi
+
+}
+
+# :command.function
 playground_connector_plugin_sourcecode_command() {
 
   # src/commands/connector-plugin/sourcecode.sh
@@ -66039,6 +66352,13 @@ playground_connector_plugin_parse_requirements() {
       shift $#
       ;;
 
+    config-key)
+      action="config-key"
+      shift
+      playground_connector_plugin_config_key_parse_requirements "$@"
+      shift $#
+      ;;
+
     sourcecode)
       action="sourcecode"
       shift
@@ -66441,6 +66761,135 @@ playground_connector_plugin_display_last_updated_parse_requirements() {
     validation_output="$(validate_not_empty "${args['--vendor']:-}")"
     if [[ -n "${validation_output}" ]]; then
       printf "validation error in %s:\n%s\n" "--vendor VENDOR" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_connector_plugin_config_key_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_plugin_config_key_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector-plugin config-key"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --key | -k)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--key']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--key requires an argument: --key, -k KEY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector-class | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector-class']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-class requires an argument: --connector-class, -c CONNECTOR-CLASS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-examples)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-examples']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-examples requires an argument: --max-examples MAX_EXAMPLES" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--key']+x} ]]; then
+    printf "missing required flag: --key, -k KEY\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--max-examples']:-} ]] || args['--max-examples']="10"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--key'] ]]; then
+    validation_output="$(validate_not_empty "${args['--key']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--key, -k KEY" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--max-examples'] ]]; then
+    validation_output="$(validate_integer "${args['--max-examples']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-examples MAX_EXAMPLES" "$validation_output" >&2
       exit 1
     fi
   fi
@@ -81582,6 +82031,11 @@ playground_connector_plugin_completion() {
         playground_connector_plugin_display_last_updated_completion "$completion_current" "$@"
         return
         ;;
+      config-key)
+        shift
+        playground_connector_plugin_config_key_completion "$completion_current" "$@"
+        return
+        ;;
       sourcecode)
         shift
         playground_connector_plugin_sourcecode_completion "$completion_current" "$@"
@@ -81596,7 +82050,7 @@ playground_connector_plugin_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" search-jar versions display-last-updated sourcecode
+  completion_candidates "$completion_current" search-jar versions display-last-updated config-key sourcecode
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -81760,6 +82214,62 @@ playground_connector_plugin_display_last_updated_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --days "$completion_current" --days
     completion_flag_candidates --vendor "$completion_current" --vendor
+  fi
+
+}
+
+# :command.completion_function
+playground_connector_plugin_config_key_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --key | -k)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--key"]=1
+
+        ;;
+      --connector-class | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector-class"]=1
+
+        ;;
+      --max-examples)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-examples"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --key "$completion_current" --key -k
+    completion_flag_candidates --connector-class "$completion_current" --connector-class -c
+    completion_flag_candidates --max-examples "$completion_current" --max-examples
   fi
 
 }
@@ -84528,6 +85038,7 @@ run() {
     "connector-plugin search-jar") playground_connector_plugin_search_jar_command ;;
     "connector-plugin versions") playground_connector_plugin_versions_command ;;
     "connector-plugin display-last-updated") playground_connector_plugin_display_last_updated_command ;;
+    "connector-plugin config-key") playground_connector_plugin_config_key_command ;;
     "connector-plugin sourcecode") playground_connector_plugin_sourcecode_command ;;
     "connector") playground_connector_command ;;
     "connector status") playground_connector_status_command ;;
