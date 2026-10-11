@@ -143,6 +143,7 @@ playground_usage() {
   printf "  %s   🎯 Take a java thread dump\n" "$(green "debug thread-dump")                         "
   printf "  %s   👻 Take a heap dump\n" "$(green "debug heap-dump")                           "
   printf "  %s   🔬 Analyze a heap dump file using Eclipse MAT (Memory Analyzer Tool)\n" "$(green "debug heap-analyze")                        "
+  printf "  %s   🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n" "$(green "debug analyze-logs")                        "
   printf "  %s   📈 Analyze JVM Garbage Collection logs\n" "$(green "debug gc-analyze")                          "
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "debug tcp-dump")                            "
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "debug block-traffic")                       "
@@ -4316,8 +4317,13 @@ playground_repro_bootstrap_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--pipeline SINK_FILE (repeatable)")"
-    printf "    🔖 Sink example file to use for creating a pipeline. multiple --pipeline\n    flags can be used to create a pipeline with multiple sinks.\n    \n    ❕ It must be absolute full path. \n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🔖 Sink example file to use for creating a pipeline. multiple --pipeline\n    flags can be used to create a pipeline with multiple sinks.\n    \n    ❕ It must be absolute full path.\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     printf "    %s\n" "Conflicts: --producer"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-run")"
+    printf "    🛑 Only generate the reproduction model files, then exit\n    \n    Skips opening the generated file in the editor and running it, so\n    the running environment is left untouched.\n    \n    🎓 Tip: use it in scripts and from AI agents, together with --file and\n    --description\n"
     echo
 
     # :command.usage_fixed_flags
@@ -4328,6 +4334,7 @@ playground_repro_bootstrap_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground repro bootstrap (interactive mode)\n"
+    printf "  playground repro bootstrap -f \"$PWD/connect/connect-http-sink/http_no_auth.sh\"\n  -d \"123456 dlq not working\" --no-run\n"
     echo
 
   fi
@@ -5624,7 +5631,7 @@ playground_tools_redos_check_usage() {
 playground_debug_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground debug\n\n"
-    printf "  🐞 Debug commands\n  \n  The heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\n  the analysis tools are run inside the right container, installed on the\n  fly when missing, and their output is brought back to your machine.\n  \n  🐌 It hangs, or it is slow\n    thread-dump         what every thread is doing right now\n    flight-recorder     record the JVM over a period, open it in JMC\n    gc-analyze          GC pauses, heap trends and tuning advice\n  \n  💾 It eats memory\n    heap-dump           take a .hprof, optionally as a histogram\n    heap-analyze        run Eclipse MAT on it, leak suspects report\n  \n  🌐 It is a network or TLS problem\n    tcp-dump            capture traffic, open it in Wireshark\n    testssl             probe a TLS endpoint, locally or in the cloud\n    block-traffic       cut a route with iptables, to simulate an outage\n    java-debug          turn on the JVM SSL, Kerberos or class loading traces\n  \n  🔬 It is in the code\n    log-level set       raise the level of any package, without a restart\n    enable-remote-debugging   attach your IDE debugger to a container\n    jscissors           trace method calls, arguments and return values\n  \n  📦 Hand it over\n    generate-diagnostics   a support bundle for connect or broker\n\n"
+    printf "  🐞 Debug commands\n  \n  The heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\n  the analysis tools are run inside the right container, installed on the\n  fly when missing, and their output is brought back to your machine.\n  \n  🐌 It hangs, or it is slow\n    thread-dump         what every thread is doing right now\n    flight-recorder     record the JVM over a period, open it in JMC\n    gc-analyze          GC pauses, heap trends and tuning advice\n  \n  💾 It eats memory\n    heap-dump           take a .hprof, optionally as a histogram\n    heap-analyze        run Eclipse MAT on it, leak suspects report\n  \n  🌐 It is a network or TLS problem\n    tcp-dump            capture traffic, open it in Wireshark\n    testssl             probe a TLS endpoint, locally or in the cloud\n    block-traffic       cut a route with iptables, to simulate an outage\n    java-debug          turn on the JVM SSL, Kerberos or class loading traces\n  \n  🔬 It is in the code\n    log-level set       raise the level of any package, without a restart\n    enable-remote-debugging   attach your IDE debugger to a container\n    jscissors           trace method calls, arguments and return values\n  \n  🔥 It is in someone else's logs\n    analyze-logs        error digest of log files, folders or zip bundles\n  \n  📦 Hand it over\n    generate-diagnostics   a support bundle for connect or broker\n\n"
   else
     printf "playground debug - 🐞 Debug commands\n\n"
   fi
@@ -5642,6 +5649,7 @@ playground_debug_usage() {
   printf "  %s   🎯 Take a java thread dump\n" "$(green "thread-dump")             "
   printf "  %s   👻 Take a heap dump\n" "$(green "heap-dump")               "
   printf "  %s   🔬 Analyze a heap dump file using Eclipse MAT (Memory Analyzer Tool)\n" "$(green "heap-analyze")            "
+  printf "  %s   🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n" "$(green "analyze-logs")            "
   printf "  %s   📈 Analyze JVM Garbage Collection logs\n" "$(green "gc-analyze")              "
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "tcp-dump")                "
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "block-traffic")           "
@@ -5965,6 +5973,57 @@ playground_debug_heap_analyze_usage() {
     printf "  playground debug heap-analyze --file heap-dump-connect-2026-04-08.hprof\n"
     printf "  playground debug heap-analyze -f heap-dump-broker.hprof --output-dir\n  ./analysis\n"
     printf "  playground debug heap-analyze -f heap-dump-connect.hprof --report-type leaks\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_debug_analyze_logs_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground debug analyze-logs\n\n"
+    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Records logged at INFO/DEBUG/TRACE are\n  never reported.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped. Only files with findings are shown.\n\n"
+  else
+    printf "playground debug analyze-logs - 🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground debug analyze-logs [OPTIONS]\n"
+  printf "  playground debug analyze-logs --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file, -f FILE (required) (repeatable)")"
+    printf "    🗒️  Log file, folder, .zip, .tar(.gz) or .gz file to analyze\n    \n    🎓 Tip: can be set several times\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--include-warnings")"
+    printf "    🟠 Also report WARN records\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-findings MAX_FINDINGS")"
+    printf "    ✂️ Maximum number of distinct records to show per file (default 40)\n"
+    printf "    %s\n" "Default: 40"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground debug analyze-logs --file connect.log\n"
+    printf "  playground debug analyze-logs --file kafka-connect-logs-10-09-1200.zip\n  --include-warnings\n"
+    printf "  playground debug analyze-logs -f ./logs -f broker.log.gz --max-findings 10\n"
     echo
 
   fi
@@ -22327,8 +22386,15 @@ playground_bashly_reload_command() {
   docker pull dannyben/bashly > /dev/null 2>&1
   set -e
 
+  # -it only works when stdin is a terminal (not from scripts or AI agents)
+  maybe_tty=""
+  if [ -t 0 ]
+  then
+  	maybe_tty="-it"
+  fi
+
   cd "$root_folder/scripts/cli"
-  docker run --rm -it --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly generate | grep -v "skipped"
+  docker run --rm $maybe_tty --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly generate | grep -v "skipped"
   # Since bashly 2.0, completions are answered at runtime by `playground __complete <words>`.
   # The adapters below only forward to it, they only need to be regenerated when bashly is upgraded.
   "$BASH" -c 'source ./playground && send_completions bash' > /tmp/playground_completions.bash
@@ -22353,7 +22419,7 @@ playground_bashly_reload_command() {
   echo "source $root_folder/scripts/cli/completions.zsh    # zsh"
   echo ""
 
-  docker run --rm -it --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly render templates/shell-script-command-completion .
+  docker run --rm $maybe_tty --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly render templates/shell-script-command-completion .
   yq -o=json playground.yaml > playground.json
   cd - > /dev/null
 
@@ -28342,6 +28408,7 @@ playground_repro_bootstrap_command() {
 
   eval "connector_plugin_array=(${args[--connector-plugin]})"
 
+  no_run="${args[--no-run]}"
   schema_file_key="${args[--producer-schema-key]}"
   schema_file_value="${args[--producer-schema-value]}"
 
@@ -29685,10 +29752,14 @@ EOF
       fi
   fi
 
-  playground state set run.test_file "$repro_dir/$repro_test_filename"
-  playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
+  # with --no-run, keep the state of the example that is currently running
+  if [[ ! -n "$no_run" ]]
+  then
+    playground state set run.test_file "$repro_dir/$repro_test_filename"
+    playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
 
-  playground open --file "$repro_dir/$repro_test_filename"
+    playground open --file "$repro_dir/$repro_test_filename"
+  fi
 
   increment_cli_metric nb_reproduction_models
   log "👷 Number of repro models created so far: $(get_cli_metric nb_reproduction_models)"
@@ -29699,6 +29770,12 @@ EOF
 
   playground generate-fzf-find-files &
   playground open-docs --only-show-url
+
+  if [[ -n "$no_run" ]]
+  then
+    log "🛑 --no-run is set, not running the reproduction model"
+    exit 0
+  fi
 
   if [[ "$repro_test_filename" == *"perf"* ]]
   then
@@ -31781,6 +31858,125 @@ EOF
 
   log ""
   log "📄 Summary: $output_dir_abs/analysis-summary.txt"
+
+}
+
+# :command.function
+playground_debug_analyze_logs_command() {
+
+  # src/commands/debug/analyze-logs.sh
+  eval "file_array=(${args[--file]})"
+  include_warnings="${args[--include-warnings]}"
+  max_findings="${args[--max-findings]}"
+
+  for file in "${file_array[@]}"
+  do
+      if [ ! -e "$file" ]
+      then
+          logerror "❌ <$file> does not exist, please make sure to use absolute full path or correct relative path !"
+          exit 1
+      fi
+  done
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  nb_files=0
+  nb_files_with_findings=0
+  nb_skipped=0
+  nb_extracted=0
+
+  # prints the digest of one log, read on stdin, when it has findings
+  # $1: label to display
+  function analyze_logs_digest () {
+      label="$1"
+      output=$(summarize_log_errors "$max_findings" "$include_warnings")
+      nb_files=$((nb_files+1))
+      if [[ "$output" == "✅"* ]]
+      then
+          return
+      fi
+      nb_files_with_findings=$((nb_files_with_findings+1))
+      log "🔥 ERROR/FATAL digest for $label"
+      # there is no --since here
+      echo "$output" | sed 's/ or narrow with --since$//'
+      echo ""
+  }
+
+  # analyzes a file, a folder or an archive, recursively
+  # $1: path, $2: label to display
+  function analyze_logs_path () {
+      local path="$1"
+      local label="$2"
+      local extract_dir
+      local f
+
+      if [ -d "$path" ]
+      then
+          while IFS= read -r -d '' f
+          do
+              if [[ "$label" == *":" ]]
+              then
+                  analyze_logs_path "$f" "${label}${f#$path/}"
+              else
+                  analyze_logs_path "$f" "${label%/}/${f#$path/}"
+              fi
+          done < <(find "$path" -type f ! -path "*/__MACOSX/*" ! -name ".DS_Store" -print0 | sort -z)
+          return
+      fi
+
+      case "$path" in
+          *.zip|*.tar|*.tar.gz|*.tgz)
+              nb_extracted=$((nb_extracted+1))
+              extract_dir="$tmp_dir/$nb_extracted"
+              mkdir -p "$extract_dir"
+              case "$path" in
+                  *.zip) unzip -q -o "$path" -d "$extract_dir" > /dev/null 2>&1 ;;
+                  *) tar -xf "$path" -C "$extract_dir" > /dev/null 2>&1 ;;
+              esac
+              if [ $? -ne 0 ]
+              then
+                  logwarn "⚠️ could not fully extract $label"
+              fi
+              analyze_logs_path "$extract_dir" "$label:"
+              ;;
+          *.gz)
+              analyze_logs_digest "$label" < <(gzip -dc "$path" 2>/dev/null)
+              ;;
+          *)
+              if grep -Iq . "$path" 2>/dev/null
+              then
+                  analyze_logs_digest "$label" < "$path"
+              else
+                  nb_skipped=$((nb_skipped+1))
+              fi
+              ;;
+      esac
+  }
+
+  set +e
+  for file in "${file_array[@]}"
+  do
+      analyze_logs_path "${file%/}" "${file%/}"
+  done
+  set -e
+
+  levels="ERROR/FATAL"
+  if [[ -n "$include_warnings" ]]
+  then
+      levels="ERROR/FATAL/WARN"
+  fi
+  if [ $nb_files_with_findings -eq 0 ]
+  then
+      log "✅ no $levels record found in $nb_files file(s) (binary files skipped: $nb_skipped)"
+  else
+      log "📊 $nb_files_with_findings file(s) with findings out of $nb_files scanned (binary files skipped: $nb_skipped)"
+  fi
 
 }
 
@@ -54855,6 +55051,14 @@ playground_repro_bootstrap_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --no-run)
+
+        # :flag.case_no_arg
+        args['--no-run']=1
+        shift
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -58476,6 +58680,13 @@ playground_debug_parse_requirements() {
       shift $#
       ;;
 
+    analyze-logs)
+      action="analyze-logs"
+      shift
+      playground_debug_analyze_logs_parse_requirements "$@"
+      shift $#
+      ;;
+
     gc-analyze)
       action="gc-analyze"
       shift
@@ -59205,6 +59416,125 @@ playground_debug_heap_analyze_parse_requirements() {
   if [[ ${args['--report-type']:-} ]] && [[ ! ${args['--report-type']:-} =~ ^(all|leaks|overview|top-components)$ ]]; then
     printf "%s\n" "--report-type must be one of: all, leaks, overview, top-components" >&2
     exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_debug_analyze_logs_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_debug_analyze_logs_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="debug analyze-logs"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --file | -f)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--file']+x} ]]; then
+            args['--file']="$escaped"
+          else
+            args['--file']="${args['--file']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --include-warnings)
+
+        # :flag.case_no_arg
+        args['--include-warnings']=1
+        shift
+        ;;
+
+      # :flag.case
+      --max-findings)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-findings']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-findings requires an argument: --max-findings MAX_FINDINGS" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--file']+x} ]]; then
+    printf "missing required flag: --file, -f FILE\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--max-findings']:-} ]] || args['--max-findings']="40"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--max-findings'] ]]; then
+    validation_output="$(validate_integer "${args['--max-findings']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-findings MAX_FINDINGS" "$validation_output" >&2
+      exit 1
+    fi
   fi
 
 }
@@ -75990,6 +76320,11 @@ playground_repro_bootstrap_completion() {
         completion_blocked_flags["--producer"]=1
 
         ;;
+      --no-run)
+        completion_blocked_flags["--no-run"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -76003,6 +76338,7 @@ playground_repro_bootstrap_completion() {
     completion_flag_candidates --custom-smt "$completion_current" --custom-smt
     completion_flag_candidates --connector-plugin "$completion_current" --connector-plugin
     completion_flag_candidates --pipeline "$completion_current" --pipeline
+    completion_flag_candidates --no-run "$completion_current" --no-run
   fi
 
 }
@@ -77622,6 +77958,11 @@ playground_debug_completion() {
         playground_debug_heap_analyze_completion "$completion_current" "$@"
         return
         ;;
+      analyze-logs)
+        shift
+        playground_debug_analyze_logs_completion "$completion_current" "$@"
+        return
+        ;;
       gc-analyze)
         shift
         playground_debug_gc_analyze_completion "$completion_current" "$@"
@@ -77671,7 +78012,7 @@ playground_debug_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" enable-remote-debugging disable-remote-debugging testssl generate-diagnostics thread-dump heap-dump heap-analyze gc-analyze tcp-dump block-traffic java-debug jscissors flight-recorder log-level cfk
+  completion_candidates "$completion_current" enable-remote-debugging disable-remote-debugging testssl generate-diagnostics thread-dump heap-dump heap-analyze analyze-logs gc-analyze tcp-dump block-traffic java-debug jscissors flight-recorder log-level cfk
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -77967,6 +78308,56 @@ playground_debug_heap_analyze_completion() {
     completion_flag_candidates --file "$completion_current" --file -f
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
     completion_flag_candidates --report-type "$completion_current" --report-type -r
+  fi
+
+}
+
+# :command.completion_function
+playground_debug_analyze_logs_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --file | -f)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
+      --include-warnings)
+        completion_blocked_flags["--include-warnings"]=1
+
+        shift
+        ;;
+      --max-findings)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-findings"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --file "$completion_current" --file -f
+    completion_flag_candidates --include-warnings "$completion_current" --include-warnings
+    completion_flag_candidates --max-findings "$completion_current" --max-findings
   fi
 
 }
@@ -84072,6 +84463,7 @@ run() {
     "debug thread-dump") playground_debug_thread_dump_command ;;
     "debug heap-dump") playground_debug_heap_dump_command ;;
     "debug heap-analyze") playground_debug_heap_analyze_command ;;
+    "debug analyze-logs") playground_debug_analyze_logs_command ;;
     "debug gc-analyze") playground_debug_gc_analyze_command ;;
     "debug tcp-dump") playground_debug_tcp_dump_command ;;
     "debug block-traffic") playground_debug_block_traffic_command ;;

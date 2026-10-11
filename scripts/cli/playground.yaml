@@ -1855,13 +1855,24 @@ subcommands:
           description: | 
             🔖 Sink example file to use for creating a pipeline. multiple --pipeline flags can be used to create a pipeline with multiple sinks.
             
-            ❕ It must be absolute full path. 
+            ❕ It must be absolute full path.
             
             🎓 Tip: use <tab> completion to trigger fzf completion
             
             Repeatable: ✓ Yes
             
             Conflicts with: --producer
+            
+        - names:
+          - --no-run
+          argument: ""
+          description: | 
+            🛑 Only generate the reproduction model files, then exit
+            
+            Skips opening the generated file in the editor and running it, so
+            the running environment is left untouched.
+            
+            🎓 Tip: use it in scripts and from AI agents, together with --file and --description
             
 
   - name: get-docker-compose
@@ -2829,6 +2840,9 @@ subcommands:
           enable-remote-debugging   attach your IDE debugger to a container
           jscissors           trace method calls, arguments and return values
         
+        🔥 It is in someone else's logs
+          analyze-logs        error digest of log files, folders or zip bundles
+        
         📦 Hand it over
           generate-diagnostics   a support bundle for connect or broker
     usage: playground debug COMMAND
@@ -3020,6 +3034,51 @@ subcommands:
             Default value: all
             
             Allowed values: all, leaks, overview, top-components
+            
+      - name: analyze-logs
+        description: | 
+          🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles
+            
+            The offline counterpart of 'playground container logs --errors', for
+            logs that do not come from a running container: a customer support
+            bundle, a CI artifact, a log file you were sent.
+            
+            Repeated records are de-duplicated with an occurrence count, stack
+            traces are collapsed to the exception chain ("Caused by:") plus a few
+            frames of the deepest cause. Records logged at INFO/DEBUG/TRACE are
+            never reported.
+            
+            📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files
+            are extracted in a temporary folder, .gz files are decompressed on the
+            fly, binary files are skipped. Only files with findings are shown.
+        usage: playground debug analyze-logs [OPTIONS]
+        options:
+        - names:
+          - --file
+          - -f
+          argument: FILE
+          description: | 
+            🗒️  Log file, folder, .zip, .tar(.gz) or .gz file to analyze
+            
+            🎓 Tip: can be set several times
+            
+            Required: ✓ Yes
+            
+            Repeatable: ✓ Yes
+            
+        - names:
+          - --include-warnings
+          argument: ""
+          description: | 
+            🟠 Also report WARN records
+            
+        - names:
+          - --max-findings
+          argument: 40
+          description: | 
+            ✂️ Maximum number of distinct records to show per file (default 40)
+            
+            Default value: 40
             
       - name: gc-analyze
         description: | 

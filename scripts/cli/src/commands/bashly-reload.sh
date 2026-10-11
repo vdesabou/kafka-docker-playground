@@ -3,8 +3,15 @@ set +e
 docker pull dannyben/bashly > /dev/null 2>&1
 set -e
 
+# -it only works when stdin is a terminal (not from scripts or AI agents)
+maybe_tty=""
+if [ -t 0 ]
+then
+	maybe_tty="-it"
+fi
+
 cd "$root_folder/scripts/cli"
-docker run --rm -it --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly generate | grep -v "skipped"
+docker run --rm $maybe_tty --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly generate | grep -v "skipped"
 # Since bashly 2.0, completions are answered at runtime by `playground __complete <words>`.
 # The adapters below only forward to it, they only need to be regenerated when bashly is upgraded.
 "$BASH" -c 'source ./playground && send_completions bash' > /tmp/playground_completions.bash
@@ -29,7 +36,7 @@ echo "source $root_folder/scripts/cli/completions.bash   # bash"
 echo "source $root_folder/scripts/cli/completions.zsh    # zsh"
 echo ""
 
-docker run --rm -it --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly render templates/shell-script-command-completion .
+docker run --rm $maybe_tty --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly render templates/shell-script-command-completion .
 yq -o=json playground.yaml > playground.json
 cd - > /dev/null
 

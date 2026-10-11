@@ -2433,12 +2433,23 @@ commands:
       help: |-
         🔖 Sink example file to use for creating a pipeline. multiple --pipeline flags can be used to create a pipeline with multiple sinks.
         
-        ❕ It must be absolute full path. 
+        ❕ It must be absolute full path.
 
         🎓 Tip: use <tab> completion to trigger fzf completion
 
+    - long: --no-run
+      required: false
+      help: |-
+        🛑 Only generate the reproduction model files, then exit
+
+        Skips opening the generated file in the editor and running it, so
+        the running environment is left untouched.
+
+        🎓 Tip: use it in scripts and from AI agents, together with --file and --description
+
     examples:
     - playground repro bootstrap (interactive mode)
+    - playground repro bootstrap -f "$PWD/connect/connect-http-sink/http_no_auth.sh" -d "123456 dlq not working" --no-run
 
 - name: get-docker-compose
   group: Kafka
@@ -3377,6 +3388,9 @@ commands:
       enable-remote-debugging   attach your IDE debugger to a container
       jscissors           trace method calls, arguments and return values
 
+    🔥 It is in someone else's logs
+      analyze-logs        error digest of log files, folders or zip bundles
+
     📦 Hand it over
       generate-diagnostics   a support bundle for connect or broker
   commands:
@@ -3537,6 +3551,48 @@ commands:
     - playground debug heap-analyze --file heap-dump-connect-2026-04-08.hprof
     - playground debug heap-analyze -f heap-dump-broker.hprof --output-dir ./analysis
     - playground debug heap-analyze -f heap-dump-connect.hprof --report-type leaks
+
+  - name: analyze-logs
+    help: |-
+      🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles
+
+      The offline counterpart of 'playground container logs --errors', for
+      logs that do not come from a running container: a customer support
+      bundle, a CI artifact, a log file you were sent.
+
+      Repeated records are de-duplicated with an occurrence count, stack
+      traces are collapsed to the exception chain ("Caused by:") plus a few
+      frames of the deepest cause. Records logged at INFO/DEBUG/TRACE are
+      never reported.
+
+      📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files
+      are extracted in a temporary folder, .gz files are decompressed on the
+      fly, binary files are skipped. Only files with findings are shown.
+    flags:
+      - long: --file
+        short: -f
+        required: true
+        repeatable: true
+        arg: file
+        help: |-
+          🗒️  Log file, folder, .zip, .tar(.gz) or .gz file to analyze
+
+          🎓 Tip: can be set several times
+      - long: --include-warnings
+        required: false
+        help: |-
+          🟠 Also report WARN records
+      - long: --max-findings
+        arg: max_findings
+        required: false
+        validate: integer
+        default: "40"
+        help: |-
+          ✂️ Maximum number of distinct records to show per file (default 40)
+    examples:
+    - playground debug analyze-logs --file connect.log
+    - playground debug analyze-logs --file kafka-connect-logs-10-09-1200.zip --include-warnings
+    - playground debug analyze-logs -f ./logs -f broker.log.gz --max-findings 10
 
   - name: gc-analyze
     help: |-
