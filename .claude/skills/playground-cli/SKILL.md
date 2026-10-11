@@ -24,10 +24,16 @@ regeneration silently discards it.
 | `scripts/cli/completions.bash` / `completions.zsh` | `send_completions bash\|zsh` (generated function, `completions: bash,zsh` in `settings.yml`) |
 | `scripts/cli/playground.yaml` | `bashly render templates/shell-script-command-completion .` |
 | `scripts/cli/playground.json` | `yq -o=json playground.yaml` |
-| `docs/cli.md` and friends | `playground update-docs` |
 
 They are tracked in git, so a CLI change is only complete once they are
 regenerated **and** committed alongside the source edit.
+
+The CLI reference pages (`docs/cli.md`, `docs/playground <command>.md`,
+`docs/cli-pages.js`) are **not** tracked in this repository. `playground update-docs`
+writes them into `docs/`, and the nightly CI `post-build` job ("Update DOCS")
+generates and publishes them to the documentation site. A CLI change
+needs nothing for docs. If you ran `update-docs` locally, remove the untracked
+pages before committing (`git clean -n docs/` to check, then `git clean -f docs/`).
 
 ## The loop
 
@@ -36,10 +42,17 @@ regenerated **and** committed alongside the source edit.
 2. **Implement** it in `scripts/cli/src/commands/<command>/<subcommand>.sh` —
    one file per (sub)command, path mirroring the command tree exactly.
 3. **Regenerate**: `playground bashly-reload`
-   (requires Docker; pulls and runs `dannyben/bashly`).
+   (requires Docker; pulls and runs `dannyben/bashly`). In a git worktree, run the
+   worktree's own copy, `./scripts/cli/playground bashly-reload`: the `playground`
+   on `PATH` derives `root_folder` from its own location and would regenerate the
+   main checkout instead. Keep worktrees under `$HOME`, because Docker Desktop does not
+   share `/private/tmp`, so the bashly container sees an empty folder there
+   (`No such file or directory @ rb_sysopen - src/bashly.yml`).
 4. **Verify**: `playground <cmd> --help`, one success path, one error path.
-5. **Refresh docs** if user-facing help text changed: `playground update-docs`.
-6. Commit source **and** regenerated artifacts together.
+5. **Docs**: nothing to commit, CI publishes the CLI reference (see above).
+6. Commit source **and** regenerated artifacts together, and check that the
+   generated diff only contains your change (another uncommitted edit in the
+   checkout gets inlined too).
 
 Skipping step 3 is the classic failure: the flag exists in `bashly.yml`, the
 partial reads `${args[--new-flag]}`, and the CLI ignores it entirely because
