@@ -5804,6 +5804,55 @@ subcommands:
           description: | 
             🔰 Do not delete the dlq, success and error topics of a fully managed or custom connector
             
+      - name: diagnose
+        description: | 
+          🩺 Diagnose a connector in one call: status, errors and progress
+            
+            Chains the commands you would run one after the other when a connector
+            misbehaves, and returns:
+            
+              🗺️  status       connector and task states, with the trace of a failed task
+              🔥 errors       digest of the connect ERROR/FATAL records (self-managed),
+                              or Confluent Cloud error recommendations (fully managed)
+              🐢 progress     consumer lag of a sink, or offsets of a source
+              👉 next steps   the commands to dig further
+            
+            It never follows logs and never waits for the lag to reach 0, so it is
+            safe to use from scripts and AI agents.
+        usage: playground connector diagnose [OPTIONS]
+        options:
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+        - names:
+          - --connector
+          - -c
+          argument: CONNECTOR
+          description: | 
+            🔗 Connector name
+            
+            🎓 Tip: If not specified, the command will apply to all connectors
+            
+        - names:
+          - --since
+          argument: 1h
+          description: | 
+            🕐 Only look at connect logs newer than this (default 1h). Docker durations: 10m, 2h... (self-managed only)
+            
+            Default value: 1h
+            
+        - names:
+          - --max-findings
+          argument: 15
+          description: | 
+            ✂️ Maximum number of distinct error records to show (default 15)
+            
+            Default value: 15
+            
       - name: show-lag
         description: | 
           🐢 Show lag of sink connector
