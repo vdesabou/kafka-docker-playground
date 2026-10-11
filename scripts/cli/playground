@@ -3596,6 +3596,11 @@ playground_find_example_usage() {
     printf "    %s\n" "Default: 10"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📗 Print the hits as a JSON array, best first, and nothing else\n    \n    Each hit has script (absolute path), path (relative to the repository),\n    title (README), connector_classes, environment, score and run_command.\n    No hit prints [] and exits with code 1.\n    \n    🎓 Tip: use it in scripts and from AI agents, for example with\n    jq -r '.[0].script'\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -3618,6 +3623,7 @@ playground_find_example_usage() {
     printf "  playground find-example \"s3 sink proxy\"\n"
     printf "  playground find-example debezium postgres fully managed\n"
     printf "  playground find-example \"oracle cdc ssl\" --category connect --limit 3\n"
+    printf "  playground find-example \"http sink oauth\" --json --limit 3 | jq -r\n  '.[].script'\n"
     echo
 
   fi
@@ -26889,6 +26895,7 @@ playground_find_example_command() {
   query="${args[query]}"
   category="${args[--category]}"
   limit="${args[--limit]}"
+  json="${args[--json]}"
 
   if [ ${#other_args[@]} -gt 0 ]
   then
@@ -26896,6 +26903,27 @@ playground_find_example_command() {
   fi
 
   hits=$(find_examples "$query" "$limit" "$category")
+
+  if [[ -n "$json" ]]
+  then
+      # one object per hit, fields in the order printed by find_examples
+      if [ -z "$hits" ]
+      then
+          echo "[]"
+          exit 1
+      fi
+      echo "$hits" | jq -R -s --arg root "$root_folder" '
+          split("\n") | map(select(length > 0) | split("\t")) | map({
+              script: ($root + "/" + .[1]),
+              path: .[1],
+              title: .[2],
+              connector_classes: ((.[3] // "") | split(" ") | map(select(length > 0))),
+              environment: (.[4] // ""),
+              score: (.[0] | tonumber),
+              run_command: ("playground run -f " + $root + "/" + .[1])
+          })'
+      exit 0
+  fi
 
   if [ -z "$hits" ]
   then
@@ -53599,6 +53627,14 @@ playground_find_example_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
       --)
         shift
         other_args+=("$@")
@@ -53635,6 +53671,7 @@ playground_find_example_parse_requirements() {
     printf "  playground find-example \"s3 sink proxy\"\n" >&2
     printf "  playground find-example debezium postgres fully managed\n" >&2
     printf "  playground find-example \"oracle cdc ssl\" --category connect --limit 3\n" >&2
+    printf "  playground find-example \"http sink oauth\" --json --limit 3 | jq -r\n  '.[].script'\n" >&2
 
     exit 1
   fi
@@ -76036,6 +76073,11 @@ playground_find_example_completion() {
         completion_blocked_flags["--limit"]=1
 
         ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
       *)
         if [[ $completion_arg_index -ge 1 ]]; then
           return
@@ -76051,6 +76093,7 @@ playground_find_example_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --category "$completion_current" --category
     completion_flag_candidates --limit "$completion_current" --limit
+    completion_flag_candidates --json "$completion_current" --json
   fi
 
 }

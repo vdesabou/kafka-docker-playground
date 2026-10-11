@@ -1,6 +1,7 @@
 query="${args[query]}"
 category="${args[--category]}"
 limit="${args[--limit]}"
+json="${args[--json]}"
 
 if [ ${#other_args[@]} -gt 0 ]
 then
@@ -8,6 +9,27 @@ then
 fi
 
 hits=$(find_examples "$query" "$limit" "$category")
+
+if [[ -n "$json" ]]
+then
+    # one object per hit, fields in the order printed by find_examples
+    if [ -z "$hits" ]
+    then
+        echo "[]"
+        exit 1
+    fi
+    echo "$hits" | jq -R -s --arg root "$root_folder" '
+        split("\n") | map(select(length > 0) | split("\t")) | map({
+            script: ($root + "/" + .[1]),
+            path: .[1],
+            title: .[2],
+            connector_classes: ((.[3] // "") | split(" ") | map(select(length > 0))),
+            environment: (.[4] // ""),
+            score: (.[0] | tonumber),
+            run_command: ("playground run -f " + $root + "/" + .[1])
+        })'
+    exit 0
+fi
 
 if [ -z "$hits" ]
 then
