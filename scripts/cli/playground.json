@@ -4224,6 +4224,43 @@
           ]
         },
         {
+          "name": "diagnose",
+          "description": "🩺 Diagnose a connector in one call: status, errors and progress\n  \n  Chains the commands you would run one after the other when a connector\n  misbehaves, and returns:\n  \n    🗺️  status       connector and task states, with the trace of a failed task\n    🔥 errors       digest of the connect ERROR/FATAL records (self-managed),\n                    or Confluent Cloud error recommendations (fully managed)\n    🐢 progress     consumer lag of a sink, or offsets of a source\n    👉 next steps   the commands to dig further\n  \n  It never follows logs and never waits for the lag to reach 0, so it is\n  safe to use from scripts and AI agents.\n",
+          "usage": "playground connector diagnose [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            },
+            {
+              "names": [
+                "--connector",
+                "-c"
+              ],
+              "argument": "CONNECTOR",
+              "description": "🔗 Connector name\n\n🎓 Tip: If not specified, the command will apply to all connectors\n"
+            },
+            {
+              "names": [
+                "--since"
+              ],
+              "argument": "1h",
+              "description": "🕐 Only look at connect logs newer than this (default 1h). Docker durations: 10m, 2h... (self-managed only)\n\nDefault value: 1h\n"
+            },
+            {
+              "names": [
+                "--max-findings"
+              ],
+              "argument": 15,
+              "description": "✂️ Maximum number of distinct error records to show (default 15)\n\nDefault value: 15\n"
+            }
+          ]
+        },
+        {
           "name": "show-lag",
           "description": "🐢 Show lag of sink connector\n  \n  The consumer lag of the sink, refreshed every --interval seconds, so you\n  see whether it is catching up, standing still or falling behind. A lag\n  that does not move while the connector reports RUNNING means the tasks\n  are stuck rather than slow.\n  \n  It will run until all lag becomes 0 (press ctrl-c to exit)\n  \n",
           "usage": "playground connector show-lag [OPTIONS]",
