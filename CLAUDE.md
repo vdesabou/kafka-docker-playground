@@ -47,9 +47,10 @@ out of context.
 - `playground connector-plugin sourcecode --only-show-url` prints the GitHub URL at the exact tag, for
   self-managed plugins (`confluentinc/kafka-connect-hdfs`, Hub version) **and fully managed ones**
   (`confluentinc/SalesforceBulkApiV2Sink`, resolved through `cc-docker-connect` to a `v<ver>-cloud`
-  tag; `--connector-tag` is then the cc-connect image version and needs `GH_TOKEN` + VPN). Read the code
-  with `git fetch --tags && git show <tag>:<path>` in the local clone (or `git clone --depth 1 --branch
-  <tag>`). **Never pass `--open` or `--compile` non-interactively**: they open an editor and prompt.
+  tag; `--connector-tag` is then the cc-connect image version and needs `GH_TOKEN` + VPN). To read the
+  code, add **`--checkout-only`**: it clones that tag into `/tmp/connector-plugin-sourcecode/<repo>-<version>`
+  (reused on the next call) and prints the folder as the last line, without browser, editor or prompt.
+  Don't pass `--open` or `--compile` non-interactively: they open an editor.
 - To understand one example, read its `.sh` and `ls` its folder (compose overrides, sibling variants).
 
 ## 🥈 Use the `playground` CLI, not raw `docker` / `curl` / `kafka-*`

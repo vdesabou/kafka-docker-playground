@@ -6,6 +6,7 @@ compile_jdk_version="${args[--compile-jdk-version]}"
 verbose="${args[--compile-verbose]}"
 forced_url="${args[--forced-url]}"
 open="${args[--open]}"
+checkout_only="${args[--checkout-only]}"
 
 function get_version_from_cc_docker_connect_cache_versions_env () {
     arg_version="$1"
@@ -95,7 +96,7 @@ function check_if_ready_to_continue()
 
 function check_if_compile()
 {
-  if [ ! -z "$GITHUB_RUN_NUMBER" ]
+  if [ ! -z "$GITHUB_RUN_NUMBER" ] || [ ! -t 0 ]
   then
       recompile="0"
       # running with github actions, continue
@@ -111,7 +112,8 @@ function check_if_compile()
 
 function check_if_delete_folder()
 {
-    if [ ! -z "$GITHUB_RUN_NUMBER" ]
+    # no question without a terminal (read would get an empty answer forever): keep the folder
+    if [ ! -z "$GITHUB_RUN_NUMBER" ] || [ ! -t 0 ] || [[ -n "$checkout_only" ]]
     then
         return
     fi
@@ -131,13 +133,13 @@ function compile () {
 
     if [[ "$sourcecode_url" != *"github.com"* ]]
     then
-        logerror "❌ --compile or --open flag does not work when sourcecode is not hosted on github"
+        logerror "❌ --compile, --open or --checkout-only flag does not work when sourcecode is not hosted on github"
         exit 1
     fi
 
     if [[ $(type -f git 2>&1) =~ "not found" ]]
     then
-        logerror "❌ --compile or --open flag is set but git command is not installed"
+        logerror "❌ --compile, --open or --checkout-only flag is set but git command is not installed"
         exit 1
     fi
 
@@ -230,6 +232,13 @@ function compile () {
             repo_folder="${repo_folder}/${repo_name%-private}"
         fi
     fi
+    if [[ -n "$checkout_only" ]]
+    then
+        log "📂 sourcecode checked out in folder:"
+        echo "${repo_folder}"
+        return
+    fi
+
     if [[ -n "$compile" ]]
     then
         if [ ! -f "${repo_folder}/pom.xml" ]
@@ -732,7 +741,7 @@ else
     fi
 fi
 
-if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]] || [[ -n "$compile" ]] || [[ -n "$open" ]]
+if [[ -n "$only_show_url" ]] || [[ $(type -f open 2>&1) =~ "not found" ]] || [[ -n "$compile" ]] || [[ -n "$open" ]] || [[ -n "$checkout_only" ]]
 then
     log "🧑‍💻🌐 sourcecode for plugin $connector_plugin$additional_text is available at:"
     echo "$sourcecode_url"
@@ -743,7 +752,7 @@ fi
 
 if [ "$comparison_mode_versions" != "" ]
 then
-    if [[ -n "$compile" ]] || [[ -n "$open" ]]
+    if [[ -n "$compile" ]] || [[ -n "$open" ]] || [[ -n "$checkout_only" ]]
     then
         if [ "$connector_tag1" != "latest" ] && [[ "$original_sourcecode_url" == *"github.com"* ]]
         then
@@ -764,7 +773,7 @@ else
     #     sourcecode_url="$sourcecode_url/tree/$maybe_tag_prefix$connector_tag$maybe_tag_suffix"
     # fi
 
-    if [[ -n "$compile" ]] || [[ -n "$open" ]]
+    if [[ -n "$compile" ]] || [[ -n "$open" ]] || [[ -n "$checkout_only" ]]
     then
         compile "$connector_tag"
     fi
