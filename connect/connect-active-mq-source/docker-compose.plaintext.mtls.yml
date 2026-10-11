@@ -4,9 +4,9 @@ services:
     image: rmohr/activemq:5.15.9
     hostname: activemq
     container_name: activemq
-    # rmohr/activemq:5.15.9 sets WORKDIR=/opt/activemq which already exists in the
-    # image layer; podman refuses to mkdir over it. 
-    working_dir: /opt/activemq 
+    # in rmohr/activemq:5.15.9, WORKDIR /opt/activemq is an absolute symlink to /opt/apache-activemq-5.15.9:
+    # podman (CI) resolves it on the host and fails with "mkdir .../opt/activemq: file exists" (#9174)
+    working_dir: /opt/apache-activemq-5.15.9
     volumes:
         - ../../connect/connect-active-mq-source/security/kafka.activemq.truststore.jks:/tmp/kafka.activemq.truststore.jks
         - ../../connect/connect-active-mq-source/security/kafka.activemq.keystore.jks:/tmp/kafka.activemq.keystore.jks
