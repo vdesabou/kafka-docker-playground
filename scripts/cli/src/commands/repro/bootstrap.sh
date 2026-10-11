@@ -10,6 +10,7 @@ eval "pipeline_array=(${args[--pipeline]})"
 
 eval "connector_plugin_array=(${args[--connector-plugin]})"
 
+no_run="${args[--no-run]}"
 schema_file_key="${args[--producer-schema-key]}"
 schema_file_value="${args[--producer-schema-value]}"
 
@@ -1364,10 +1365,14 @@ then
     fi
 fi
 
-playground state set run.test_file "$repro_dir/$repro_test_filename"
-playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
+# with --no-run, keep the state of the example that is currently running
+if [[ ! -n "$no_run" ]]
+then
+  playground state set run.test_file "$repro_dir/$repro_test_filename"
+  playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
 
-playground open --file "$repro_dir/$repro_test_filename"
+  playground open --file "$repro_dir/$repro_test_filename"
+fi
 
 increment_cli_metric nb_reproduction_models
 log "👷 Number of repro models created so far: $(get_cli_metric nb_reproduction_models)"
@@ -1378,6 +1383,12 @@ log "🛠️ Number of repro models available: $(get_cli_metric nb_existing_repr
 
 playground generate-fzf-find-files &
 playground open-docs --only-show-url
+
+if [[ -n "$no_run" ]]
+then
+  log "🛑 --no-run is set, not running the reproduction model"
+  exit 0
+fi
 
 if [[ "$repro_test_filename" == *"perf"* ]]
 then

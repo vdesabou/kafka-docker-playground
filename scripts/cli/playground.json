@@ -1208,7 +1208,14 @@
                 "--pipeline"
               ],
               "argument": "SINK_FILE",
-              "description": "🔖 Sink example file to use for creating a pipeline. multiple --pipeline flags can be used to create a pipeline with multiple sinks.\n\n❕ It must be absolute full path. \n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRepeatable: ✓ Yes\n\nConflicts with: --producer\n"
+              "description": "🔖 Sink example file to use for creating a pipeline. multiple --pipeline flags can be used to create a pipeline with multiple sinks.\n\n❕ It must be absolute full path.\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRepeatable: ✓ Yes\n\nConflicts with: --producer\n"
+            },
+            {
+              "names": [
+                "--no-run"
+              ],
+              "argument": "",
+              "description": "🛑 Only generate the reproduction model files, then exit\n\nSkips opening the generated file in the editor and running it, so\nthe running environment is left untouched.\n\n🎓 Tip: use it in scripts and from AI agents, together with --file and --description\n"
             }
           ]
         }
@@ -1913,7 +1920,7 @@
     },
     {
       "name": "debug",
-      "description": "🐞 Debug commands\n\nThe heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\nthe analysis tools are run inside the right container, installed on the\nfly when missing, and their output is brought back to your machine.\n\n🐌 It hangs, or it is slow\n  thread-dump         what every thread is doing right now\n  flight-recorder     record the JVM over a period, open it in JMC\n  gc-analyze          GC pauses, heap trends and tuning advice\n\n💾 It eats memory\n  heap-dump           take a .hprof, optionally as a histogram\n  heap-analyze        run Eclipse MAT on it, leak suspects report\n\n🌐 It is a network or TLS problem\n  tcp-dump            capture traffic, open it in Wireshark\n  testssl             probe a TLS endpoint, locally or in the cloud\n  block-traffic       cut a route with iptables, to simulate an outage\n  java-debug          turn on the JVM SSL, Kerberos or class loading traces\n\n🔬 It is in the code\n  log-level set       raise the level of any package, without a restart\n  enable-remote-debugging   attach your IDE debugger to a container\n  jscissors           trace method calls, arguments and return values\n\n📦 Hand it over\n  generate-diagnostics   a support bundle for connect or broker\n",
+      "description": "🐞 Debug commands\n\nThe heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\nthe analysis tools are run inside the right container, installed on the\nfly when missing, and their output is brought back to your machine.\n\n🐌 It hangs, or it is slow\n  thread-dump         what every thread is doing right now\n  flight-recorder     record the JVM over a period, open it in JMC\n  gc-analyze          GC pauses, heap trends and tuning advice\n\n💾 It eats memory\n  heap-dump           take a .hprof, optionally as a histogram\n  heap-analyze        run Eclipse MAT on it, leak suspects report\n\n🌐 It is a network or TLS problem\n  tcp-dump            capture traffic, open it in Wireshark\n  testssl             probe a TLS endpoint, locally or in the cloud\n  block-traffic       cut a route with iptables, to simulate an outage\n  java-debug          turn on the JVM SSL, Kerberos or class loading traces\n\n🔬 It is in the code\n  log-level set       raise the level of any package, without a restart\n  enable-remote-debugging   attach your IDE debugger to a container\n  jscissors           trace method calls, arguments and return values\n\n🔥 It is in someone else's logs\n  analyze-logs        error digest of log files, folders or zip bundles\n\n📦 Hand it over\n  generate-diagnostics   a support bundle for connect or broker\n",
       "usage": "playground debug COMMAND",
       "options": [],
       "subcommands": [
@@ -2055,6 +2062,35 @@
               ],
               "argument": "all",
               "description": "📋 Type of report to generate\n\n- all: Generate all available reports\n- leaks: Leak suspects report only\n- overview: System overview report\n- top-components: Top memory consumers\n\nDefault value: all\n\nAllowed values: all, leaks, overview, top-components\n"
+            }
+          ]
+        },
+        {
+          "name": "analyze-logs",
+          "description": "🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Records logged at INFO/DEBUG/TRACE are\n  never reported.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped. Only files with findings are shown.\n",
+          "usage": "playground debug analyze-logs [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--file",
+                "-f"
+              ],
+              "argument": "FILE",
+              "description": "🗒️  Log file, folder, .zip, .tar(.gz) or .gz file to analyze\n\n🎓 Tip: can be set several times\n\nRequired: ✓ Yes\n\nRepeatable: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--include-warnings"
+              ],
+              "argument": "",
+              "description": "🟠 Also report WARN records\n"
+            },
+            {
+              "names": [
+                "--max-findings"
+              ],
+              "argument": 40,
+              "description": "✂️ Maximum number of distinct records to show per file (default 40)\n\nDefault value: 40\n"
             }
           ]
         },
