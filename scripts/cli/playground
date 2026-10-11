@@ -21734,6 +21734,12 @@ playground_update_readme_command() {
       # logwarn "####################################################"
       continue
     fi
+    # fully managed examples are not run with podman (see run-tests.sh): result files left from
+    # older podman runs are stale and would re-create closed issues (#9173)
+    if [ -n "$is_podman_pass" ] && [[ "$test" =~ ^ccloud/(fm-|fully-managed-|custom-connector-) ]]
+    then
+      continue
+    fi
     log "################################"
     log "### 📁 ${test}"
 
