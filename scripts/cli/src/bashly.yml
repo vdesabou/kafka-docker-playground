@@ -1421,6 +1421,9 @@ commands:
     🧰 Adding to the example
       --environment     run a connector example under another security setup
       --enable-<x>      add control-center, ksqldb, flink, grafana, kcat...
+      --connect-community-image, --kafka-community-image
+                        use community images instead of enterprise ones
+      --enable-kraft    KRaft instead of Zookeeper for CP 7.4 to 7.9
       --pipeline        chain a source example into a sink example
       --sql-datagen     continuous realistic data instead of a fixed batch
 
@@ -1669,6 +1672,47 @@ commands:
       🌪️ Enable SQL Datagen injection
 
       This only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium
+
+  - &connect-community-image
+    long: --connect-community-image
+    required: false
+
+    help: |-
+      🌱 Use the community connect image (confluentinc/cp-kafka-connect) instead of the enterprise one (confluentinc/cp-server-connect)
+
+      It sets CP_CONNECT_IMAGE environment variable
+
+      Monitoring interceptors are disabled, as they are not part of the community image
+  - &kafka-community-image
+    long: --kafka-community-image
+    required: false
+
+    help: |-
+      🌿 Use the community kafka image (confluentinc/cp-kafka) instead of the enterprise one (confluentinc/cp-server)
+
+      It sets CP_KAFKA_IMAGE environment variable
+
+      Confluent Metrics Reporter and Telemetry Reporter are disabled, as they are not part of the community image
+  - &enable-kraft
+    long: --enable-kraft
+    required: false
+
+    help: |-
+      🛰️ Start Confluent Platform in KRaft mode
+
+      It sets ENABLE_KRAFT environment variable
+
+      Only useful for CP versions from 7.4 to 7.9, where Zookeeper is used by default (KRaft is always used for CP >= 8)
+  - &enable-legacy-control-center
+    long: --enable-legacy-control-center
+    required: false
+
+    help: |-
+      👨‍🦳 Use legacy Control Center (confluentinc/cp-enterprise-control-center) instead of Control Center Next Gen
+
+      It sets ENABLE_LEGACY_CONTROL_CENTER environment variable
+
+      Legacy Control Center is not available for CP >= 8, use it with --enable-control-center
 
   - &cluster-cloud
     long: --cluster-cloud

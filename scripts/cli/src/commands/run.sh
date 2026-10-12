@@ -21,6 +21,10 @@ enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
 enable_jmx_grafana="${args[--enable-jmx-grafana]}"
 enable_kcat="${args[--enable-kcat]}"
 enable_sql_datagen="${args[--enable-sql-datagen]}"
+connect_community_image="${args[--connect-community-image]}"
+kafka_community_image="${args[--kafka-community-image]}"
+enable_kraft="${args[--enable-kraft]}"
+enable_legacy_c3="${args[--enable-legacy-control-center]}"
 
 cluster_type="${args[--cluster-type]}"
 cluster_cloud="${args[--cluster-cloud]}"
@@ -351,6 +355,45 @@ then
   fi
 fi
 
+if [[ -n "$connect_community_image" ]]
+then
+  if [[ $test_file == *"fully-managed"* ]]
+  then
+    logwarn "❌ --connect-community-image is not supported with fully managed connector examples"
+    exit 1
+  fi
+  array_flag_list+=("--connect-community-image")
+  export CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect
+fi
+
+if [[ -n "$kafka_community_image" ]]
+then
+  if [[ $test_file == *"ccloud"* ]]
+  then
+    logwarn "❌ --kafka-community-image is not supported with ccloud examples"
+    exit 1
+  fi
+  array_flag_list+=("--kafka-community-image")
+  export CP_KAFKA_IMAGE=confluentinc/cp-kafka
+fi
+
+if [[ -n "$enable_kraft" ]]
+then
+  if [[ $test_file == *"ccloud"* ]]
+  then
+    logwarn "❌ --enable-kraft is not supported with ccloud examples"
+    exit 1
+  fi
+  array_flag_list+=("--enable-kraft")
+  export ENABLE_KRAFT=true
+fi
+
+if [[ -n "$enable_legacy_c3" ]]
+then
+  array_flag_list+=("--enable-legacy-control-center")
+  export ENABLE_LEGACY_CONTROL_CENTER=true
+fi
+
 if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_name" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
 then
   playground state set ccloud.suggest_use_previous_example_ccloud "0"
@@ -589,6 +632,10 @@ then
   MENU_ENABLE_KCAT="🐈 Enabling kcat $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_ENABLE_KCAT})) ' ') --enable-kcat"
   MENU_ENABLE_SQL_DATAGEN="🌪️  Enable SQL Datagen injection $(printf '%*s' $((${MAX_LENGTH}-31-${#MENU_ENABLE_SQL_DATAGEN})) ' ') --enable-sql-datagen" #19
   MENU_ENABLE_FLINK="🐿️  Enable Flink $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_ENABLE_FLINK})) ' ') --enable-flink" #20
+  MENU_CONNECT_COMMUNITY_IMAGE="🌱 Use community connect image $(printf '%*s' $((${MAX_LENGTH}-30-${#MENU_CONNECT_COMMUNITY_IMAGE})) ' ') --connect-community-image" #42
+  MENU_KAFKA_COMMUNITY_IMAGE="🌿 Use community kafka image $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_KAFKA_COMMUNITY_IMAGE})) ' ') --kafka-community-image"
+  MENU_ENABLE_KRAFT="🛰️  Enable KRaft (CP 7.4 to 7.9) $(printf '%*s' $((${MAX_LENGTH}-31-${#MENU_ENABLE_KRAFT})) ' ') --enable-kraft"
+  MENU_ENABLE_LEGACY_C3="👨‍🦳 Use legacy Control Center (CP < 8) $(printf '%*s' $((${MAX_LENGTH}-36-${#MENU_ENABLE_LEGACY_C3})) ' ') --enable-legacy-control-center" #45
 
   readonly MENU_DISABLE_KSQLDB="❌🎏 Disable ksqlDB" #21
   readonly MENU_DISABLE_C3="❌💠 Disable Control Center"
@@ -600,6 +647,10 @@ then
   readonly MENU_DISABLE_KCAT="❌🐈 Disabling kcat"
   readonly MENU_DISABLE_SQL_DATAGEN="❌🌪️ Disable SQL Datagen injection" #29
   readonly MENU_DISABLE_FLINK="❌🐿️ Disable Flink" #30
+  readonly MENU_DISABLE_CONNECT_COMMUNITY_IMAGE="❌🌱 Use enterprise connect image" #46
+  readonly MENU_DISABLE_KAFKA_COMMUNITY_IMAGE="❌🌿 Use enterprise kafka image"
+  readonly MENU_DISABLE_KRAFT="❌🛰️ Disable KRaft"
+  readonly MENU_DISABLE_LEGACY_C3="❌👨‍🦳 Use Control Center Next Gen" #49
 
   readonly MENU_SEPARATOR_FEATURES="--------------------options-----------------------"
 
@@ -615,6 +666,7 @@ then
   MENU_UNSET_CLUSTER_NAME="❌🎰🎯 Unset cluster name (will also reset cloud region, cluster type and cloud provider)" #40
 
   readonly MENU_SEPARATOR_CLOUD="-----------------confluent cloud------------------" #41
+  readonly MENU_SEPARATOR_IMAGES="------------------images & modes------------------" #50
 
   readonly MENU_GO_BACK="🔙 Go back" #42
 
@@ -660,7 +712,7 @@ then
   while [ $stop != 1 ]
   do
     has_error=0
-    options=("$MENU_LETS_GO" "$MENU_PROBLEM" "$MENU_OPEN_FILE" "$MENU_OPEN_DOCS" "$MENU_SEPARATOR" "$MENU_TAG" "$MENU_CONNECT_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_ENVIRONMENT" "$MENU_SEPARATOR" "$MENU_ENABLE_KSQLDB" "$MENU_ENABLE_C3" "$MENU_ENABLE_CONDUKTOR" "$MENU_ENABLE_RP" "$MENU_ENABLE_GRAFANA" "$MENU_ENABLE_BROKERS" "$MENU_ENABLE_CONNECT_WORKERS" "$MENU_ENABLE_KCAT" "$MENU_ENABLE_SQL_DATAGEN" "$MENU_ENABLE_FLINK" "$MENU_DISABLE_KSQLDB" "$MENU_DISABLE_C3" "$MENU_DISABLE_CONDUKTOR" "$MENU_DISABLE_RP" "$MENU_DISABLE_GRAFANA" "$MENU_DISABLE_BROKERS" "$MENU_DISABLE_CONNECT_WORKERS" "$MENU_DISABLE_KCAT" "$MENU_DISABLE_SQL_DATAGEN" "$MENU_DISABLE_FLINK" "$MENU_SEPARATOR_FEATURES" "$MENU_CLUSTER_TYPE" "$MENU_CLUSTER_CLOUD" "$MENU_CLUSTER_REGION" "$MENU_CLUSTER_ENVIRONMENT" "$MENU_CLUSTER_NAME" "$MENU_CLUSTER_CREDS" "$MENU_CLUSTER_SR_CREDS" "$MENU_UNSET_CLUSTER_NAME" "$MENU_SEPARATOR_CLOUD" "$MENU_GO_BACK")
+    options=("$MENU_LETS_GO" "$MENU_PROBLEM" "$MENU_OPEN_FILE" "$MENU_OPEN_DOCS" "$MENU_SEPARATOR" "$MENU_TAG" "$MENU_CONNECT_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_ENVIRONMENT" "$MENU_SEPARATOR" "$MENU_ENABLE_KSQLDB" "$MENU_ENABLE_C3" "$MENU_ENABLE_CONDUKTOR" "$MENU_ENABLE_RP" "$MENU_ENABLE_GRAFANA" "$MENU_ENABLE_BROKERS" "$MENU_ENABLE_CONNECT_WORKERS" "$MENU_ENABLE_KCAT" "$MENU_ENABLE_SQL_DATAGEN" "$MENU_ENABLE_FLINK" "$MENU_DISABLE_KSQLDB" "$MENU_DISABLE_C3" "$MENU_DISABLE_CONDUKTOR" "$MENU_DISABLE_RP" "$MENU_DISABLE_GRAFANA" "$MENU_DISABLE_BROKERS" "$MENU_DISABLE_CONNECT_WORKERS" "$MENU_DISABLE_KCAT" "$MENU_DISABLE_SQL_DATAGEN" "$MENU_DISABLE_FLINK" "$MENU_SEPARATOR_FEATURES" "$MENU_CLUSTER_TYPE" "$MENU_CLUSTER_CLOUD" "$MENU_CLUSTER_REGION" "$MENU_CLUSTER_ENVIRONMENT" "$MENU_CLUSTER_NAME" "$MENU_CLUSTER_CREDS" "$MENU_CLUSTER_SR_CREDS" "$MENU_UNSET_CLUSTER_NAME" "$MENU_SEPARATOR_CLOUD" "$MENU_CONNECT_COMMUNITY_IMAGE" "$MENU_KAFKA_COMMUNITY_IMAGE" "$MENU_ENABLE_KRAFT" "$MENU_ENABLE_LEGACY_C3" "$MENU_DISABLE_CONNECT_COMMUNITY_IMAGE" "$MENU_DISABLE_KAFKA_COMMUNITY_IMAGE" "$MENU_DISABLE_KRAFT" "$MENU_DISABLE_LEGACY_C3" "$MENU_SEPARATOR_IMAGES" "$MENU_GO_BACK")
 
     if [[ $test_file == *"ccloud"* ]] || [ "$PLAYGROUND_ENVIRONMENT" == "ccloud" ]
     then
@@ -690,6 +742,19 @@ then
       unset 'options[26]'
       unset 'options[27]'
       unset 'options[28]'
+
+      # no local broker with ccloud
+      unset 'options[43]'
+      unset 'options[44]'
+      unset 'options[47]'
+      unset 'options[48]'
+      if [[ $test_file == *"fully-managed"* ]]
+      then
+        # no local connect either
+        for((i=42;i<51;i++)); do
+          unset "options[$i]"
+        done
+      fi
 
       if [ ! -z "$CLUSTER_NAME" ] || [[ -n "$cluster_name" ]]
       then
@@ -886,6 +951,30 @@ then
       unset 'options[21]'
     else
       unset 'options[31]'
+    fi
+    if [[ $CP_CONNECT_IMAGE == *"cp-kafka-connect"* ]]
+    then
+      unset 'options[42]'
+    else
+      unset 'options[46]'
+    fi
+    if [[ $CP_KAFKA_IMAGE == *"cp-kafka" ]]
+    then
+      unset 'options[43]'
+    else
+      unset 'options[47]'
+    fi
+    if [ ! -z $ENABLE_KRAFT ]
+    then
+      unset 'options[44]'
+    else
+      unset 'options[48]'
+    fi
+    if [ ! -z $ENABLE_LEGACY_CONTROL_CENTER ]
+    then
+      unset 'options[45]'
+    else
+      unset 'options[49]'
     fi
 
     missing_env=""
@@ -1237,6 +1326,58 @@ then
       fi
     fi
 
+    if [[ $res == *"$MENU_CONNECT_COMMUNITY_IMAGE"* ]]
+    then
+      array_flag_list+=("--connect-community-image")
+      export CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect
+      interactive_connect_community_image="true"
+    fi
+    if [[ $res == *"$MENU_DISABLE_CONNECT_COMMUNITY_IMAGE"* ]]
+    then
+      array_flag_list=("${array_flag_list[@]/"--connect-community-image"}")
+      unset CP_CONNECT_IMAGE
+      interactive_connect_community_image=""
+    fi
+
+    if [[ $res == *"$MENU_KAFKA_COMMUNITY_IMAGE"* ]]
+    then
+      array_flag_list+=("--kafka-community-image")
+      export CP_KAFKA_IMAGE=confluentinc/cp-kafka
+      interactive_kafka_community_image="true"
+    fi
+    if [[ $res == *"$MENU_DISABLE_KAFKA_COMMUNITY_IMAGE"* ]]
+    then
+      array_flag_list=("${array_flag_list[@]/"--kafka-community-image"}")
+      unset CP_KAFKA_IMAGE
+      interactive_kafka_community_image=""
+    fi
+
+    if [[ $res == *"$MENU_ENABLE_KRAFT"* ]]
+    then
+      array_flag_list+=("--enable-kraft")
+      export ENABLE_KRAFT=true
+      interactive_enable_kraft="true"
+    fi
+    if [[ $res == *"$MENU_DISABLE_KRAFT"* ]]
+    then
+      array_flag_list=("${array_flag_list[@]/"--enable-kraft"}")
+      unset ENABLE_KRAFT
+      interactive_enable_kraft=""
+    fi
+
+    if [[ $res == *"$MENU_ENABLE_LEGACY_C3"* ]]
+    then
+      array_flag_list+=("--enable-legacy-control-center")
+      export ENABLE_LEGACY_CONTROL_CENTER=true
+      interactive_enable_legacy_c3="true"
+    fi
+    if [[ $res == *"$MENU_DISABLE_LEGACY_C3"* ]]
+    then
+      array_flag_list=("${array_flag_list[@]/"--enable-legacy-control-center"}")
+      unset ENABLE_LEGACY_CONTROL_CENTER
+      interactive_enable_legacy_c3=""
+    fi
+
     if [[ $res == *"$MENU_ENVIRONMENT"* ]]
     then
       maybe_remove_flag "--environment"
@@ -1528,6 +1669,38 @@ then
     fi
   fi
 
+  if [ "$interactive_connect_community_image" == "true" ]
+  then
+    if [[ -n "$force_interactive_repro" ]]
+    then
+      force_enable --connect-community-image CP_CONNECT_IMAGE confluentinc/cp-kafka-connect
+    fi
+  fi
+
+  if [ "$interactive_kafka_community_image" == "true" ]
+  then
+    if [[ -n "$force_interactive_repro" ]]
+    then
+      force_enable --kafka-community-image CP_KAFKA_IMAGE confluentinc/cp-kafka
+    fi
+  fi
+
+  if [ "$interactive_enable_kraft" == "true" ]
+  then
+    if [[ -n "$force_interactive_repro" ]]
+    then
+      force_enable --enable-kraft ENABLE_KRAFT
+    fi
+  fi
+
+  if [ "$interactive_enable_legacy_c3" == "true" ]
+  then
+    if [[ -n "$force_interactive_repro" ]]
+    then
+      force_enable --enable-legacy-control-center ENABLE_LEGACY_CONTROL_CENTER
+    fi
+  fi
+
   if [ "$interactive_enable_sql" == "true" ]
   then
     if [[ $test_file != *"fully-managed"* ]]
@@ -1616,6 +1789,16 @@ then
     playground state set ccloud.suggest_use_previous_example_ccloud "1"
   fi
 fi # end of interactive_mode
+
+if [ ! -z "$ENABLE_LEGACY_CONTROL_CENTER" ] && [ ! -z "$ENABLE_CONTROL_CENTER" ]
+then
+  effective_tag=${TAG:-$(grep "# default tag" "$root_folder/scripts/utils.sh" | cut -d "=" -f 2 | cut -d " " -f 1)}
+  if version_gt "${effective_tag%%-*}" "7.9.99"
+  then
+    logerror "❌ --enable-legacy-control-center is not supported with CP version $effective_tag (legacy Control Center is only available for CP < 8), use --tag to select an older version"
+    exit 1
+  fi
+fi
 
 #
 # 💀 Only now that the example is really started (the interactive menu was not
