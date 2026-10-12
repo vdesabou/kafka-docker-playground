@@ -11,8 +11,10 @@ services:
       CONNECT_CONFIG_PROVIDERS_SECRET_CLASS: "io.confluent.connect.secretregistry.rbac.config.provider.InternalSecretConfigProvider"
       # the image startup check (ub kafka-ready --config kafka-connect.properties) loads the config providers,
       # its default classpath (/usr/share/java/cp-base-java-micro/*) does not contain the secret registry jars,
-      # nor connect-api (/usr/share/java/kafka) needed by ConnectSecretRegistryExtension (#9175)
-      UB_CLASSPATH: "/usr/share/java/cp-base-java-micro/*:/usr/share/java/kafka/*:/usr/share/java/confluent-security/connect/*"
+      # nor connect-api (/usr/share/java/kafka) needed by ConnectSecretRegistryExtension (#9175),
+      # and this override replaces the one of docker-compose-telemetry.yml: keep the telemetry jars,
+      # needed when CONNECT_METRIC_REPORTERS contains io.confluent.telemetry.reporter.TelemetryReporter (#9197)
+      UB_CLASSPATH: "/usr/share/java/confluent-telemetry/*:/usr/share/java/cp-base-java-micro/*:/usr/share/java/kafka/*:/usr/share/java/confluent-security/connect/*"
       CONNECT_CONFIG_PROVIDERS_SECRET_PARAM_MASTER_ENCRYPTION_KEY: my_master_key
       CONNECT_CONFIG_PROVIDERS_SECRET_PARAM_KAFKASTORE_BOOTSTRAP_SERVERS: SASL_PLAINTEXT://broker:10091
       CONNECT_CONFIG_PROVIDERS_SECRET_PARAM_KAFKASTORE_SECURITY_PROTOCOL: SASL_PLAINTEXT
