@@ -9,11 +9,12 @@ services:
       - 9001:9001
       - 8883:8883
     volumes:
-      - ../../connect/connect-mqtt-sink/mtls/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ../../connect/connect-mqtt-sink/mtls/mosquitto.conf:/etc/mosquitto/mosquitto.conf
       - ../../connect/connect-mqtt-sink/password:/etc/mosquitto/passwd
-      - ../../connect/connect-mqtt-sink/security/snakeoil-ca-1.crt:/tmp/ca.crt
-      - ../../connect/connect-mqtt-sink/security/mosquitto.certificate.pem:/tmp/server.crt
-      - ../../connect/connect-mqtt-sink/security/mosquitto.key:/tmp/server.key
+      - ../../connect/connect-mqtt-sink/security/snakeoil-ca-1.crt:/etc/mosquitto/certs/ca.crt
+      - ../../connect/connect-mqtt-sink/security/mosquitto.certificate.pem:/etc/mosquitto/certs/server.crt
+      - ../../connect/connect-mqtt-sink/security/mosquitto.key:/etc/mosquitto/certs/server.key
+    command: ["/usr/sbin/mosquitto", "-c", "/etc/mosquitto/mosquitto.conf"]
 
   connect:
     depends_on:
