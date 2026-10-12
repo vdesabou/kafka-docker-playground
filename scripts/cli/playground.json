@@ -625,7 +625,7 @@
     },
     {
       "name": "run",
-      "description": "🕹️ Run any example !\n\n🔥 It start an interactive mode where you'll be fully guided !\n\n  playground run                       🔍 pick an example, guided\n  playground run -f <example.sh>       🚀 run that one directly\n  playground re-run                    ⚡ same example, same flags\n\nEach run stops what was running, starts the environment the example asks\nfor, brings up its containers, creates the connector and produces data.\nCredentials the example needs are loaded from 'playground secrets'.\n\n🔢 Choosing versions\n  --tag             Confluent Platform version for every component\n  --connect-tag     Confluent Platform version for connect only\n  --connector-tag   connector version from Confluent Hub\n  --connector-zip   connector from a local zip or a URL\n  --connector-jar   a single jar, dropped into the existing plugin\n\n🧰 Adding to the example\n  --environment     run a connector example under another security setup\n  --enable-<x>      add control-center, ksqldb, flink, grafana, kcat...\n  --pipeline        chain a source example into a sink example\n  --sql-datagen     continuous realistic data instead of a fixed batch\n\n\n⛅ When running Confluent Cloud (ccloud) example:\n\n  All you have to do is to be already logged in with confluent CLI.\n\n  By default, a new Confluent Cloud environment with a Cluster will be created.\n\n  You can configure the new cluster by setting:\n\n  --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: basic, standard and dedicated, default basic)\n  --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: aws, gcp and azure, default aws)\n  --cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use confluent kafka region list to get the list, default eu-west-2 for aws, westeurope for azure and europe-west2 for gcp)\n  --cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: txxxxx) \n\n  In case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n  --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n  --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)\n  --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\n❗ this command will kill all containers using \"playground container kill-all\", you can disable this by running \"playground config container-kill-all-before-run false\"\n",
+      "description": "🕹️ Run any example !\n\n🔥 It start an interactive mode where you'll be fully guided !\n\n  playground run                       🔍 pick an example, guided\n  playground run -f <example.sh>       🚀 run that one directly\n  playground re-run                    ⚡ same example, same flags\n\nEach run stops what was running, starts the environment the example asks\nfor, brings up its containers, creates the connector and produces data.\nCredentials the example needs are loaded from 'playground secrets'.\n\n🔢 Choosing versions\n  --tag             Confluent Platform version for every component\n  --connect-tag     Confluent Platform version for connect only\n  --connector-tag   connector version from Confluent Hub\n  --connector-zip   connector from a local zip or a URL\n  --connector-jar   a single jar, dropped into the existing plugin\n\n🧰 Adding to the example\n  --environment     run a connector example under another security setup\n  --enable-<x>      add control-center, ksqldb, flink, grafana, kcat...\n  --connect-community-image, --kafka-community-image\n                    use community images instead of enterprise ones\n  --enable-kraft    KRaft instead of Zookeeper for CP 7.4 to 7.9\n  --pipeline        chain a source example into a sink example\n  --sql-datagen     continuous realistic data instead of a fixed batch\n\n\n⛅ When running Confluent Cloud (ccloud) example:\n\n  All you have to do is to be already logged in with confluent CLI.\n\n  By default, a new Confluent Cloud environment with a Cluster will be created.\n\n  You can configure the new cluster by setting:\n\n  --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster (possible values: basic, standard and dedicated, default basic)\n  --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider (possible values: aws, gcp and azure, default aws)\n  --cluster-region (or CLUSTER_REGION environment variable): The Cloud region (use confluent kafka region list to get the list, default eu-west-2 for aws, westeurope for azure and europe-west2 for gcp)\n  --cluster-environment (or ENVIRONMENT environment variable) (optional): The environment id where want your new cluster (example: txxxxx) \n\n  In case you want to use your own existing cluster, you need to setup, in addition to previous ones:\n\n  --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n  --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)\n  --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\n❗ this command will kill all containers using \"playground container kill-all\", you can disable this by running \"playground config container-kill-all-before-run false\"\n",
       "usage": "playground run [OPTIONS]",
       "options": [
         {
@@ -755,6 +755,34 @@
           ],
           "argument": "",
           "description": "🌪️ Enable SQL Datagen injection\n\nThis only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium\n"
+        },
+        {
+          "names": [
+            "--connect-community-image"
+          ],
+          "argument": "",
+          "description": "🌱 Use the community connect image (confluentinc/cp-kafka-connect) instead of the enterprise one (confluentinc/cp-server-connect)\n\nIt sets CP_CONNECT_IMAGE environment variable\n\nMonitoring interceptors are disabled, as they are not part of the community image\n"
+        },
+        {
+          "names": [
+            "--kafka-community-image"
+          ],
+          "argument": "",
+          "description": "🌿 Use the community kafka image (confluentinc/cp-kafka) instead of the enterprise one (confluentinc/cp-server)\n\nIt sets CP_KAFKA_IMAGE environment variable\n\nConfluent Metrics Reporter and Telemetry Reporter are disabled, as they are not part of the community image\n"
+        },
+        {
+          "names": [
+            "--enable-kraft"
+          ],
+          "argument": "",
+          "description": "🛰️ Start Confluent Platform in KRaft mode\n\nIt sets ENABLE_KRAFT environment variable\n\nOnly useful for CP versions from 7.4 to 7.9, where Zookeeper is used by default (KRaft is always used for CP >= 8)\n"
+        },
+        {
+          "names": [
+            "--enable-legacy-control-center"
+          ],
+          "argument": "",
+          "description": "👨‍🦳 Use legacy Control Center (confluentinc/cp-enterprise-control-center) instead of Control Center Next Gen\n\nIt sets ENABLE_LEGACY_CONTROL_CENTER environment variable\n\nLegacy Control Center is not available for CP >= 8, use it with --enable-control-center\n"
         },
         {
           "names": [

@@ -1,0 +1,8 @@
+---
+services:
+
+  # cp-kafka images declare an empty KAFKA_ADVERTISED_LISTENERS env variable, which is
+  # rendered as "advertised.listeners=": cp-server accepts it, but Apache Kafka >= 4.0
+  # (community cp-kafka image for CP >= 8) refuses to start a controller with it
+  controller:
+    command: bash -c "unset KAFKA_ADVERTISED_LISTENERS && exec /etc/confluent/docker/run"

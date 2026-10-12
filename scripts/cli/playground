@@ -3319,7 +3319,7 @@ playground_ccloud_costs_history_usage() {
 playground_run_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground run\n\n"
-    printf "  🕹️ Run any example !\n  \n  🔥 It start an interactive mode where you'll be fully guided !\n  \n    playground run                       🔍 pick an example, guided\n    playground run -f <example.sh>       🚀 run that one directly\n    playground re-run                    ⚡ same example, same flags\n  \n  Each run stops what was running, starts the environment the example asks\n  for, brings up its containers, creates the connector and produces data.\n  Credentials the example needs are loaded from 'playground secrets'.\n  \n  🔢 Choosing versions\n    --tag             Confluent Platform version for every component\n    --connect-tag     Confluent Platform version for connect only\n    --connector-tag   connector version from Confluent Hub\n    --connector-zip   connector from a local zip or a URL\n    --connector-jar   a single jar, dropped into the existing plugin\n  \n  🧰 Adding to the example\n    --environment     run a connector example under another security setup\n    --enable-<x>      add control-center, ksqldb, flink, grafana, kcat...\n    --pipeline        chain a source example into a sink example\n    --sql-datagen     continuous realistic data instead of a fixed batch\n  \n  \n  ⛅ When running Confluent Cloud (ccloud) example:\n  \n    All you have to do is to be already logged in with confluent CLI.\n  \n    By default, a new Confluent Cloud environment with a Cluster will be\n  created.\n  \n    You can configure the new cluster by setting:\n  \n    --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster\n  (possible values: basic, standard and dedicated, default basic)\n    --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider\n  (possible values: aws, gcp and azure, default aws)\n    --cluster-region (or CLUSTER_REGION environment variable): The Cloud region\n  (use confluent kafka region list to get the list, default eu-west-2 for aws,\n  westeurope for azure and europe-west2 for gcp)\n    --cluster-environment (or ENVIRONMENT environment variable) (optional): The\n  environment id where want your new cluster (example: txxxxx)\n  \n    In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n    --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n    --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key\n  and secret to use, it should be separated with colon (example:\n  <API_KEY>:<API_KEY_SECRET>)\n    --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable) (optional, if not set, new one will be created): The Schema Registry\n  api key and secret to use, it should be separated with colon (example:\n  <SR_API_KEY>:<SR_API_KEY_SECRET>)\n  \n  ❗ this command will kill all containers using \"playground container kill-all\",\n  you can disable this by running \"playground config\n  container-kill-all-before-run false\"\n\n"
+    printf "  🕹️ Run any example !\n  \n  🔥 It start an interactive mode where you'll be fully guided !\n  \n    playground run                       🔍 pick an example, guided\n    playground run -f <example.sh>       🚀 run that one directly\n    playground re-run                    ⚡ same example, same flags\n  \n  Each run stops what was running, starts the environment the example asks\n  for, brings up its containers, creates the connector and produces data.\n  Credentials the example needs are loaded from 'playground secrets'.\n  \n  🔢 Choosing versions\n    --tag             Confluent Platform version for every component\n    --connect-tag     Confluent Platform version for connect only\n    --connector-tag   connector version from Confluent Hub\n    --connector-zip   connector from a local zip or a URL\n    --connector-jar   a single jar, dropped into the existing plugin\n  \n  🧰 Adding to the example\n    --environment     run a connector example under another security setup\n    --enable-<x>      add control-center, ksqldb, flink, grafana, kcat...\n    --connect-community-image, --kafka-community-image\n                      use community images instead of enterprise ones\n    --enable-kraft    KRaft instead of Zookeeper for CP 7.4 to 7.9\n    --pipeline        chain a source example into a sink example\n    --sql-datagen     continuous realistic data instead of a fixed batch\n  \n  \n  ⛅ When running Confluent Cloud (ccloud) example:\n  \n    All you have to do is to be already logged in with confluent CLI.\n  \n    By default, a new Confluent Cloud environment with a Cluster will be\n  created.\n  \n    You can configure the new cluster by setting:\n  \n    --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster\n  (possible values: basic, standard and dedicated, default basic)\n    --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider\n  (possible values: aws, gcp and azure, default aws)\n    --cluster-region (or CLUSTER_REGION environment variable): The Cloud region\n  (use confluent kafka region list to get the list, default eu-west-2 for aws,\n  westeurope for azure and europe-west2 for gcp)\n    --cluster-environment (or ENVIRONMENT environment variable) (optional): The\n  environment id where want your new cluster (example: txxxxx)\n  \n    In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n    --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n    --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key\n  and secret to use, it should be separated with colon (example:\n  <API_KEY>:<API_KEY_SECRET>)\n    --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable) (optional, if not set, new one will be created): The Schema Registry\n  api key and secret to use, it should be separated with colon (example:\n  <SR_API_KEY>:<SR_API_KEY_SECRET>)\n  \n  ❗ this command will kill all containers using \"playground container kill-all\",\n  you can disable this by running \"playground config\n  container-kill-all-before-run false\"\n\n"
   else
     printf "playground run - 🕹️ Run any example !\n\n"
   fi
@@ -3427,6 +3427,26 @@ playground_run_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-sql-datagen")"
     printf "    🌪️ Enable SQL Datagen injection\n    \n    This only works for Oracle, MySql, Postgres and Microsoft Sql Server source\n    connector examples with JDBC and Debezium\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connect-community-image")"
+    printf "    🌱 Use the community connect image (confluentinc/cp-kafka-connect) instead of\n    the enterprise one (confluentinc/cp-server-connect)\n    \n    It sets CP_CONNECT_IMAGE environment variable\n    \n    Monitoring interceptors are disabled, as they are not part of the community\n    image\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--kafka-community-image")"
+    printf "    🌿 Use the community kafka image (confluentinc/cp-kafka) instead of the\n    enterprise one (confluentinc/cp-server)\n    \n    It sets CP_KAFKA_IMAGE environment variable\n    \n    Confluent Metrics Reporter and Telemetry Reporter are disabled, as they are\n    not part of the community image\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--enable-kraft")"
+    printf "    🛰️ Start Confluent Platform in KRaft mode\n    \n    It sets ENABLE_KRAFT environment variable\n    \n    Only useful for CP versions from 7.4 to 7.9, where Zookeeper is used by\n    default (KRaft is always used for CP >= 8)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--enable-legacy-control-center")"
+    printf "    👨‍🦳 Use legacy Control Center (confluentinc/cp-enterprise-control-center)\n    instead of Control Center Next Gen\n    \n    It sets ENABLE_LEGACY_CONTROL_CENTER environment variable\n    \n    Legacy Control Center is not available for CP >= 8, use it with\n    --enable-control-center\n"
     echo
 
     # :flag.usage
@@ -16306,6 +16326,10 @@ function determine_kraft_mode() {
     fi
     export ENABLE_KRAFT="true"
     export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DIR_UTILS}/../environment/plaintext/docker-compose-kraft.yml"
+    if [[ $CP_KAFKA_IMAGE == *"cp-kafka" ]] && version_gt $TAG_BASE "7.9.99"
+    then
+      KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ${DIR_UTILS}/../environment/plaintext/docker-compose-kraft-community.yml"
+    fi
     export MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DIR_UTILS}/../environment/mdc-plaintext/docker-compose-kraft.yml"
     export CONTROLLER_SECURITY_PROTOCOL_MAP=",CONTROLLER:PLAINTEXT"
     export KAFKA_AUTHORIZER_CLASS_NAME="org.apache.kafka.metadata.authorizer.StandardAuthorizer"
@@ -19646,6 +19670,7 @@ function playground() {
 function force_enable () {
   flag=$1
   env_variable=$2
+  env_value=${3:-true}
 
   logwarn "💪 Forcing $flag ($env_variable env variable)"
   line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh$' $test_file | cut -d ":" -f 1 | tail -n1)
@@ -19658,7 +19683,7 @@ else
 fi
   echo "# remove or comment those lines if you don't need it anymore" > $tmp_dir/tmp_force_enable
   echo "logwarn \"💪 Forcing $flag ($env_variable env variable) as it was set when reproduction model was created\"" >> $tmp_dir/tmp_force_enable
-  echo "export $env_variable=true" >> $tmp_dir/tmp_force_enable
+  echo "export $env_variable=$env_value" >> $tmp_dir/tmp_force_enable
   cp $test_file $tmp_dir/tmp_file
 
   { head -n $(($line_final_source+1)) $tmp_dir/tmp_file; cat $tmp_dir/tmp_force_enable; tail -n  +$(($line_final_source+1)) $tmp_dir/tmp_file; } > $test_file
@@ -24918,6 +24943,10 @@ playground_run_command() {
   enable_jmx_grafana="${args[--enable-jmx-grafana]}"
   enable_kcat="${args[--enable-kcat]}"
   enable_sql_datagen="${args[--enable-sql-datagen]}"
+  connect_community_image="${args[--connect-community-image]}"
+  kafka_community_image="${args[--kafka-community-image]}"
+  enable_kraft="${args[--enable-kraft]}"
+  enable_legacy_c3="${args[--enable-legacy-control-center]}"
 
   cluster_type="${args[--cluster-type]}"
   cluster_cloud="${args[--cluster-cloud]}"
@@ -25248,6 +25277,45 @@ playground_run_command() {
     fi
   fi
 
+  if [[ -n "$connect_community_image" ]]
+  then
+    if [[ $test_file == *"fully-managed"* ]]
+    then
+      logwarn "❌ --connect-community-image is not supported with fully managed connector examples"
+      exit 1
+    fi
+    array_flag_list+=("--connect-community-image")
+    export CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect
+  fi
+
+  if [[ -n "$kafka_community_image" ]]
+  then
+    if [[ $test_file == *"ccloud"* ]]
+    then
+      logwarn "❌ --kafka-community-image is not supported with ccloud examples"
+      exit 1
+    fi
+    array_flag_list+=("--kafka-community-image")
+    export CP_KAFKA_IMAGE=confluentinc/cp-kafka
+  fi
+
+  if [[ -n "$enable_kraft" ]]
+  then
+    if [[ $test_file == *"ccloud"* ]]
+    then
+      logwarn "❌ --enable-kraft is not supported with ccloud examples"
+      exit 1
+    fi
+    array_flag_list+=("--enable-kraft")
+    export ENABLE_KRAFT=true
+  fi
+
+  if [[ -n "$enable_legacy_c3" ]]
+  then
+    array_flag_list+=("--enable-legacy-control-center")
+    export ENABLE_LEGACY_CONTROL_CENTER=true
+  fi
+
   if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_name" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
   then
     playground state set ccloud.suggest_use_previous_example_ccloud "0"
@@ -25488,6 +25556,10 @@ playground_run_command() {
     MENU_ENABLE_KCAT="🐈 Enabling kcat $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_ENABLE_KCAT})) ' ') --enable-kcat"
     MENU_ENABLE_SQL_DATAGEN="🌪️  Enable SQL Datagen injection $(printf '%*s' $((${MAX_LENGTH}-31-${#MENU_ENABLE_SQL_DATAGEN})) ' ') --enable-sql-datagen" #19
     MENU_ENABLE_FLINK="🐿️  Enable Flink $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_ENABLE_FLINK})) ' ') --enable-flink" #20
+    MENU_CONNECT_COMMUNITY_IMAGE="🌱 Use community connect image $(printf '%*s' $((${MAX_LENGTH}-30-${#MENU_CONNECT_COMMUNITY_IMAGE})) ' ') --connect-community-image" #42
+    MENU_KAFKA_COMMUNITY_IMAGE="🌿 Use community kafka image $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_KAFKA_COMMUNITY_IMAGE})) ' ') --kafka-community-image"
+    MENU_ENABLE_KRAFT="🛰️  Enable KRaft (CP 7.4 to 7.9) $(printf '%*s' $((${MAX_LENGTH}-31-${#MENU_ENABLE_KRAFT})) ' ') --enable-kraft"
+    MENU_ENABLE_LEGACY_C3="👨‍🦳 Use legacy Control Center (CP < 8) $(printf '%*s' $((${MAX_LENGTH}-36-${#MENU_ENABLE_LEGACY_C3})) ' ') --enable-legacy-control-center" #45
 
     readonly MENU_DISABLE_KSQLDB="❌🎏 Disable ksqlDB" #21
     readonly MENU_DISABLE_C3="❌💠 Disable Control Center"
@@ -25499,6 +25571,10 @@ playground_run_command() {
     readonly MENU_DISABLE_KCAT="❌🐈 Disabling kcat"
     readonly MENU_DISABLE_SQL_DATAGEN="❌🌪️ Disable SQL Datagen injection" #29
     readonly MENU_DISABLE_FLINK="❌🐿️ Disable Flink" #30
+    readonly MENU_DISABLE_CONNECT_COMMUNITY_IMAGE="❌🌱 Use enterprise connect image" #46
+    readonly MENU_DISABLE_KAFKA_COMMUNITY_IMAGE="❌🌿 Use enterprise kafka image"
+    readonly MENU_DISABLE_KRAFT="❌🛰️ Disable KRaft"
+    readonly MENU_DISABLE_LEGACY_C3="❌👨‍🦳 Use Control Center Next Gen" #49
 
     readonly MENU_SEPARATOR_FEATURES="--------------------options-----------------------"
 
@@ -25514,6 +25590,7 @@ playground_run_command() {
     MENU_UNSET_CLUSTER_NAME="❌🎰🎯 Unset cluster name (will also reset cloud region, cluster type and cloud provider)" #40
 
     readonly MENU_SEPARATOR_CLOUD="-----------------confluent cloud------------------" #41
+    readonly MENU_SEPARATOR_IMAGES="------------------images & modes------------------" #50
 
     readonly MENU_GO_BACK="🔙 Go back" #42
 
@@ -25557,7 +25634,7 @@ playground_run_command() {
     while [ $stop != 1 ]
     do
       has_error=0
-      options=("$MENU_LETS_GO" "$MENU_PROBLEM" "$MENU_OPEN_FILE" "$MENU_OPEN_DOCS" "$MENU_SEPARATOR" "$MENU_TAG" "$MENU_CONNECT_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_ENVIRONMENT" "$MENU_SEPARATOR" "$MENU_ENABLE_KSQLDB" "$MENU_ENABLE_C3" "$MENU_ENABLE_CONDUKTOR" "$MENU_ENABLE_RP" "$MENU_ENABLE_GRAFANA" "$MENU_ENABLE_BROKERS" "$MENU_ENABLE_CONNECT_WORKERS" "$MENU_ENABLE_KCAT" "$MENU_ENABLE_SQL_DATAGEN" "$MENU_ENABLE_FLINK" "$MENU_DISABLE_KSQLDB" "$MENU_DISABLE_C3" "$MENU_DISABLE_CONDUKTOR" "$MENU_DISABLE_RP" "$MENU_DISABLE_GRAFANA" "$MENU_DISABLE_BROKERS" "$MENU_DISABLE_CONNECT_WORKERS" "$MENU_DISABLE_KCAT" "$MENU_DISABLE_SQL_DATAGEN" "$MENU_DISABLE_FLINK" "$MENU_SEPARATOR_FEATURES" "$MENU_CLUSTER_TYPE" "$MENU_CLUSTER_CLOUD" "$MENU_CLUSTER_REGION" "$MENU_CLUSTER_ENVIRONMENT" "$MENU_CLUSTER_NAME" "$MENU_CLUSTER_CREDS" "$MENU_CLUSTER_SR_CREDS" "$MENU_UNSET_CLUSTER_NAME" "$MENU_SEPARATOR_CLOUD" "$MENU_GO_BACK")
+      options=("$MENU_LETS_GO" "$MENU_PROBLEM" "$MENU_OPEN_FILE" "$MENU_OPEN_DOCS" "$MENU_SEPARATOR" "$MENU_TAG" "$MENU_CONNECT_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_ENVIRONMENT" "$MENU_SEPARATOR" "$MENU_ENABLE_KSQLDB" "$MENU_ENABLE_C3" "$MENU_ENABLE_CONDUKTOR" "$MENU_ENABLE_RP" "$MENU_ENABLE_GRAFANA" "$MENU_ENABLE_BROKERS" "$MENU_ENABLE_CONNECT_WORKERS" "$MENU_ENABLE_KCAT" "$MENU_ENABLE_SQL_DATAGEN" "$MENU_ENABLE_FLINK" "$MENU_DISABLE_KSQLDB" "$MENU_DISABLE_C3" "$MENU_DISABLE_CONDUKTOR" "$MENU_DISABLE_RP" "$MENU_DISABLE_GRAFANA" "$MENU_DISABLE_BROKERS" "$MENU_DISABLE_CONNECT_WORKERS" "$MENU_DISABLE_KCAT" "$MENU_DISABLE_SQL_DATAGEN" "$MENU_DISABLE_FLINK" "$MENU_SEPARATOR_FEATURES" "$MENU_CLUSTER_TYPE" "$MENU_CLUSTER_CLOUD" "$MENU_CLUSTER_REGION" "$MENU_CLUSTER_ENVIRONMENT" "$MENU_CLUSTER_NAME" "$MENU_CLUSTER_CREDS" "$MENU_CLUSTER_SR_CREDS" "$MENU_UNSET_CLUSTER_NAME" "$MENU_SEPARATOR_CLOUD" "$MENU_CONNECT_COMMUNITY_IMAGE" "$MENU_KAFKA_COMMUNITY_IMAGE" "$MENU_ENABLE_KRAFT" "$MENU_ENABLE_LEGACY_C3" "$MENU_DISABLE_CONNECT_COMMUNITY_IMAGE" "$MENU_DISABLE_KAFKA_COMMUNITY_IMAGE" "$MENU_DISABLE_KRAFT" "$MENU_DISABLE_LEGACY_C3" "$MENU_SEPARATOR_IMAGES" "$MENU_GO_BACK")
 
       if [[ $test_file == *"ccloud"* ]] || [ "$PLAYGROUND_ENVIRONMENT" == "ccloud" ]
       then
@@ -25587,6 +25664,19 @@ playground_run_command() {
         unset 'options[26]'
         unset 'options[27]'
         unset 'options[28]'
+
+        # no local broker with ccloud
+        unset 'options[43]'
+        unset 'options[44]'
+        unset 'options[47]'
+        unset 'options[48]'
+        if [[ $test_file == *"fully-managed"* ]]
+        then
+          # no local connect either
+          for((i=42;i<51;i++)); do
+            unset "options[$i]"
+          done
+        fi
 
         if [ ! -z "$CLUSTER_NAME" ] || [[ -n "$cluster_name" ]]
         then
@@ -25788,6 +25878,30 @@ playground_run_command() {
         unset 'options[21]'
       else
         unset 'options[31]'
+      fi
+      if [[ $CP_CONNECT_IMAGE == *"cp-kafka-connect"* ]]
+      then
+        unset 'options[42]'
+      else
+        unset 'options[46]'
+      fi
+      if [[ $CP_KAFKA_IMAGE == *"cp-kafka" ]]
+      then
+        unset 'options[43]'
+      else
+        unset 'options[47]'
+      fi
+      if [ ! -z $ENABLE_KRAFT ]
+      then
+        unset 'options[44]'
+      else
+        unset 'options[48]'
+      fi
+      if [ ! -z $ENABLE_LEGACY_CONTROL_CENTER ]
+      then
+        unset 'options[45]'
+      else
+        unset 'options[49]'
       fi
 
       missing_env=""
@@ -26141,6 +26255,58 @@ playground_run_command() {
         fi
       fi
 
+      if [[ $res == *"$MENU_CONNECT_COMMUNITY_IMAGE"* ]]
+      then
+        array_flag_list+=("--connect-community-image")
+        export CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect
+        interactive_connect_community_image="true"
+      fi
+      if [[ $res == *"$MENU_DISABLE_CONNECT_COMMUNITY_IMAGE"* ]]
+      then
+        array_flag_list=("${array_flag_list[@]/"--connect-community-image"}")
+        unset CP_CONNECT_IMAGE
+        interactive_connect_community_image=""
+      fi
+
+      if [[ $res == *"$MENU_KAFKA_COMMUNITY_IMAGE"* ]]
+      then
+        array_flag_list+=("--kafka-community-image")
+        export CP_KAFKA_IMAGE=confluentinc/cp-kafka
+        interactive_kafka_community_image="true"
+      fi
+      if [[ $res == *"$MENU_DISABLE_KAFKA_COMMUNITY_IMAGE"* ]]
+      then
+        array_flag_list=("${array_flag_list[@]/"--kafka-community-image"}")
+        unset CP_KAFKA_IMAGE
+        interactive_kafka_community_image=""
+      fi
+
+      if [[ $res == *"$MENU_ENABLE_KRAFT"* ]]
+      then
+        array_flag_list+=("--enable-kraft")
+        export ENABLE_KRAFT=true
+        interactive_enable_kraft="true"
+      fi
+      if [[ $res == *"$MENU_DISABLE_KRAFT"* ]]
+      then
+        array_flag_list=("${array_flag_list[@]/"--enable-kraft"}")
+        unset ENABLE_KRAFT
+        interactive_enable_kraft=""
+      fi
+
+      if [[ $res == *"$MENU_ENABLE_LEGACY_C3"* ]]
+      then
+        array_flag_list+=("--enable-legacy-control-center")
+        export ENABLE_LEGACY_CONTROL_CENTER=true
+        interactive_enable_legacy_c3="true"
+      fi
+      if [[ $res == *"$MENU_DISABLE_LEGACY_C3"* ]]
+      then
+        array_flag_list=("${array_flag_list[@]/"--enable-legacy-control-center"}")
+        unset ENABLE_LEGACY_CONTROL_CENTER
+        interactive_enable_legacy_c3=""
+      fi
+
       if [[ $res == *"$MENU_ENVIRONMENT"* ]]
       then
         maybe_remove_flag "--environment"
@@ -26432,6 +26598,38 @@ playground_run_command() {
       fi
     fi
 
+    if [ "$interactive_connect_community_image" == "true" ]
+    then
+      if [[ -n "$force_interactive_repro" ]]
+      then
+        force_enable --connect-community-image CP_CONNECT_IMAGE confluentinc/cp-kafka-connect
+      fi
+    fi
+
+    if [ "$interactive_kafka_community_image" == "true" ]
+    then
+      if [[ -n "$force_interactive_repro" ]]
+      then
+        force_enable --kafka-community-image CP_KAFKA_IMAGE confluentinc/cp-kafka
+      fi
+    fi
+
+    if [ "$interactive_enable_kraft" == "true" ]
+    then
+      if [[ -n "$force_interactive_repro" ]]
+      then
+        force_enable --enable-kraft ENABLE_KRAFT
+      fi
+    fi
+
+    if [ "$interactive_enable_legacy_c3" == "true" ]
+    then
+      if [[ -n "$force_interactive_repro" ]]
+      then
+        force_enable --enable-legacy-control-center ENABLE_LEGACY_CONTROL_CENTER
+      fi
+    fi
+
     if [ "$interactive_enable_sql" == "true" ]
     then
       if [[ $test_file != *"fully-managed"* ]]
@@ -26520,6 +26718,16 @@ playground_run_command() {
       playground state set ccloud.suggest_use_previous_example_ccloud "1"
     fi
   fi # end of interactive_mode
+
+  if [ ! -z "$ENABLE_LEGACY_CONTROL_CENTER" ] && [ ! -z "$ENABLE_CONTROL_CENTER" ]
+  then
+    effective_tag=${TAG:-$(grep "# default tag" "$root_folder/scripts/utils.sh" | cut -d "=" -f 2 | cut -d " " -f 1)}
+    if version_gt "${effective_tag%%-*}" "7.9.99"
+    then
+      logerror "❌ --enable-legacy-control-center is not supported with CP version $effective_tag (legacy Control Center is only available for CP < 8), use --tag to select an older version"
+      exit 1
+    fi
+  fi
 
   #
   # 💀 Only now that the example is really started (the interactive menu was not
@@ -53640,6 +53848,38 @@ playground_run_parse_requirements() {
         ;;
 
       # :flag.case
+      --connect-community-image)
+
+        # :flag.case_no_arg
+        args['--connect-community-image']=1
+        shift
+        ;;
+
+      # :flag.case
+      --kafka-community-image)
+
+        # :flag.case_no_arg
+        args['--kafka-community-image']=1
+        shift
+        ;;
+
+      # :flag.case
+      --enable-kraft)
+
+        # :flag.case_no_arg
+        args['--enable-kraft']=1
+        shift
+        ;;
+
+      # :flag.case
+      --enable-legacy-control-center)
+
+        # :flag.case_no_arg
+        args['--enable-legacy-control-center']=1
+        shift
+        ;;
+
+      # :flag.case
       --cluster-cloud)
 
         # :flag.case_arg
@@ -76571,6 +76811,26 @@ playground_run_completion() {
 
         shift
         ;;
+      --connect-community-image)
+        completion_blocked_flags["--connect-community-image"]=1
+
+        shift
+        ;;
+      --kafka-community-image)
+        completion_blocked_flags["--kafka-community-image"]=1
+
+        shift
+        ;;
+      --enable-kraft)
+        completion_blocked_flags["--enable-kraft"]=1
+
+        shift
+        ;;
+      --enable-legacy-control-center)
+        completion_blocked_flags["--enable-legacy-control-center"]=1
+
+        shift
+        ;;
       --cluster-cloud)
         shift
         if [[ $# -eq 0 ]]; then
@@ -76688,6 +76948,10 @@ playground_run_completion() {
     completion_flag_candidates --enable-jmx-grafana "$completion_current" --enable-jmx-grafana
     completion_flag_candidates --enable-kcat "$completion_current" --enable-kcat
     completion_flag_candidates --enable-sql-datagen "$completion_current" --enable-sql-datagen
+    completion_flag_candidates --connect-community-image "$completion_current" --connect-community-image
+    completion_flag_candidates --kafka-community-image "$completion_current" --kafka-community-image
+    completion_flag_candidates --enable-kraft "$completion_current" --enable-kraft
+    completion_flag_candidates --enable-legacy-control-center "$completion_current" --enable-legacy-control-center
     completion_flag_candidates --cluster-cloud "$completion_current" --cluster-cloud
     completion_flag_candidates --cluster-type "$completion_current" --cluster-type
     completion_flag_candidates --cluster-region "$completion_current" --cluster-region

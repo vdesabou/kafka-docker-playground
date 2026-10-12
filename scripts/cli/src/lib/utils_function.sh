@@ -968,6 +968,10 @@ function determine_kraft_mode() {
     fi
     export ENABLE_KRAFT="true"
     export KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DIR_UTILS}/../environment/plaintext/docker-compose-kraft.yml"
+    if [[ $CP_KAFKA_IMAGE == *"cp-kafka" ]] && version_gt $TAG_BASE "7.9.99"
+    then
+      KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} -f ${DIR_UTILS}/../environment/plaintext/docker-compose-kraft-community.yml"
+    fi
     export MDC_KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DIR_UTILS}/../environment/mdc-plaintext/docker-compose-kraft.yml"
     export CONTROLLER_SECURITY_PROTOCOL_MAP=",CONTROLLER:PLAINTEXT"
     export KAFKA_AUTHORIZER_CLASS_NAME="org.apache.kafka.metadata.authorizer.StandardAuthorizer"
@@ -4343,6 +4347,7 @@ function playground() {
 function force_enable () {
   flag=$1
   env_variable=$2
+  env_value=${3:-true}
 
   logwarn "💪 Forcing $flag ($env_variable env variable)"
   line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh$' $test_file | cut -d ":" -f 1 | tail -n1)
@@ -4355,7 +4360,7 @@ else
 fi
   echo "# remove or comment those lines if you don't need it anymore" > $tmp_dir/tmp_force_enable
   echo "logwarn \"💪 Forcing $flag ($env_variable env variable) as it was set when reproduction model was created\"" >> $tmp_dir/tmp_force_enable
-  echo "export $env_variable=true" >> $tmp_dir/tmp_force_enable
+  echo "export $env_variable=$env_value" >> $tmp_dir/tmp_force_enable
   cp $test_file $tmp_dir/tmp_file
 
   { head -n $(($line_final_source+1)) $tmp_dir/tmp_file; cat $tmp_dir/tmp_force_enable; tail -n  +$(($line_final_source+1)) $tmp_dir/tmp_file; } > $test_file
