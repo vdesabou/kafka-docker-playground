@@ -29,3 +29,14 @@ You can use ksqlDB with CLI using:
 ```bash
 $ docker exec -i ksqldb-cli ksql -u ksqlDBUser -p ksqlDBUser http://ksqldb-server:8088
 ```
+
+## Change permissions
+
+Role bindings and ACLs can be changed on the running environment with `playground rbac` (it calls the MDS REST API as `superUser`):
+
+```bash
+playground rbac role-binding create --principal User:alice --role DeveloperRead --resource Topic:orders
+playground rbac role-binding list --principal User:connectorSA
+playground rbac acl create --principal User:charlie --operation WRITE --operation DESCRIBE --resource Topic:orders
+playground rbac acl list
+```

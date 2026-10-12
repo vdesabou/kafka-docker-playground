@@ -6022,6 +6022,229 @@ commands:
       - playground consumer-group describe --group my-app --members
       - playground consumer-group describe --group my-app --state
 
+- name: rbac
+  expose: always
+  group: RBAC
+  filters:
+  - rbac_environment
+  help: |-
+    🛡️ RBAC commands (rbac-sasl-plain environment only)
+
+    Change permissions of the running rbac-sasl-plain environment without
+    opening a shell in a container: the commands call the MDS REST API
+    (http://localhost:8091) as superUser.
+
+      role-binding   create, delete and list role bindings
+      acl            create, delete and list ACLs (MDS centralized ACLs, or
+                     regular Kafka ACLs with --kafka-acls)
+
+    🎓 Tip: principals are User:<name> or Group:<name>, a bare name means User:<name>.
+  commands:
+
+    - name: role-binding
+      expose: always
+      group: RBAC
+      help: |-
+        🔐 Role binding commands
+      commands:
+
+        - name: create
+          group: RBAC
+          help: |-
+            🔐 Create a role binding
+
+            Without --resource, the role is bound on the whole cluster
+            (SystemAdmin, ClusterAdmin, SecurityAdmin, UserAdmin, AuditAdmin,
+            Operator). With --resource, it is bound on that resource
+            (ResourceOwner, DeveloperRead, DeveloperWrite, DeveloperManage).
+
+            The scope is deduced from the resource type when --scope is not set:
+            Subject is schema-registry, Connector is connect, KsqlCluster is
+            ksqldb, anything else is kafka.
+          flags:
+          - &rbac-principal-required
+            long: --principal
+            short: -p
+            required: true
+            arg: principal
+            help: |-
+              🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)
+          - &rbac-role
+            long: --role
+            short: -r
+            required: true
+            arg: role
+            allowed: [ResourceOwner, DeveloperRead, DeveloperWrite, DeveloperManage, SystemAdmin, ClusterAdmin, SecurityAdmin, UserAdmin, AuditAdmin, Operator]
+            help: |-
+              🎩 Role name
+          - &rbac-resource
+            long: --resource
+            required: false
+            arg: resource
+            help: |-
+              📦 Resource, <ResourceType>:<name>, for example Topic:orders, Group:my-app,
+              Subject:orders-value, Connector:my-sink, TransactionalId:my-tx, Cluster:kafka-cluster
+
+              ℹ️ If not set, the role is bound on the whole cluster
+          - &rbac-prefix
+            long: --prefix
+            required: false
+            help: |-
+              🔤 The resource name is a prefix (PREFIXED pattern) instead of a literal name
+          - &rbac-scope
+            long: --scope
+            required: false
+            arg: scope
+            allowed: [kafka, schema-registry, connect, ksqldb]
+            help: |-
+              🎯 Cluster the role binding applies to
+
+              ℹ️ If not set, it is deduced from the resource type (kafka when there is no resource)
+          - *verbose
+          examples:
+          - playground rbac role-binding create --principal User:alice --role DeveloperRead --resource Topic:orders
+          - playground rbac role-binding create --principal User:alice --role ResourceOwner --resource Topic:orders --prefix
+          - playground rbac role-binding create --principal User:connectorSA --role ResourceOwner --resource Subject:orders-value
+          - playground rbac role-binding create --principal Group:KafkaDevelopers --role SystemAdmin --scope connect
+
+        - name: delete
+          group: RBAC
+          help: |-
+            🗑️ Delete a role binding
+
+            Same flags as 'playground rbac role-binding create'.
+          flags:
+          - *rbac-principal-required
+          - *rbac-role
+          - *rbac-resource
+          - *rbac-prefix
+          - *rbac-scope
+          - *verbose
+          examples:
+          - playground rbac role-binding delete --principal User:alice --role DeveloperRead --resource Topic:orders
+          - playground rbac role-binding delete --principal User:alice --role SystemAdmin
+
+        - name: list
+          group: RBAC
+          help: |-
+            📋 List role bindings
+
+            Without --principal, every principal with a role binding is listed.
+          flags:
+          - &rbac-principal
+            long: --principal
+            short: -p
+            required: false
+            arg: principal
+            help: |-
+              🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)
+
+              ℹ️ If not set, role bindings of all principals are listed
+          - long: --scope
+            required: false
+            arg: scope
+            allowed: [kafka, schema-registry, connect, ksqldb]
+            help: |-
+              🎯 Only list role bindings of this cluster
+
+              ℹ️ If not set, all clusters are listed
+          - *verbose
+          examples:
+          - playground rbac role-binding list
+          - playground rbac role-binding list --principal User:connectorSA
+          - playground rbac role-binding list --scope schema-registry
+
+    - name: acl
+      expose: always
+      group: RBAC
+      help: |-
+        🚦 ACL commands
+
+        By default, ACLs are MDS centralized ACLs (stored in the
+        _confluent-metadata-auth topic and enforced by the CONFLUENT access rule
+        provider). With --kafka-acls, they are regular Kafka ACLs created with
+        kafka-acls (ZK_ACL or KRAFT_ACL access rule provider).
+      commands:
+
+        - name: create
+          group: RBAC
+          help: |-
+            🚦 Create ACLs, one per --operation
+          flags:
+          - *rbac-principal-required
+          - &rbac-operation
+            long: --operation
+            short: -o
+            required: true
+            repeatable: true
+            unique: true
+            arg: operation
+            allowed: [ALL, READ, WRITE, CREATE, DELETE, ALTER, DESCRIBE, CLUSTER_ACTION, DESCRIBE_CONFIGS, ALTER_CONFIGS, IDEMPOTENT_WRITE]
+            help: |-
+              ⚙️ Operation, can be set several times
+          - &rbac-acl-resource
+            long: --resource
+            required: true
+            arg: resource
+            help: |-
+              📦 Resource, <ResourceType>:<name> with ResourceType one of Topic, Group,
+              Cluster, TransactionalId, DelegationToken. Use Cluster:kafka-cluster for the cluster.
+          - *rbac-prefix
+          - &rbac-deny
+            long: --deny
+            required: false
+            help: |-
+              ⛔ DENY instead of ALLOW
+          - &rbac-host
+            long: --host
+            required: false
+            arg: host
+            help: |-
+              🖥️ Host the ACL applies to
+
+              ℹ️ If not set, all hosts (*)
+          - &rbac-kafka-acls
+            long: --kafka-acls
+            required: false
+            help: |-
+              🧰 Use regular Kafka ACLs (kafka-acls) instead of MDS centralized ACLs
+          - *verbose
+          examples:
+          - playground rbac acl create --principal User:charlie --operation WRITE --operation DESCRIBE --resource Topic:orders
+          - playground rbac acl create --principal User:charlie --operation READ --resource Group:my-app --prefix
+          - playground rbac acl create --principal User:charlie --operation READ --resource Topic:orders --kafka-acls
+
+        - name: delete
+          group: RBAC
+          help: |-
+            🗑️ Delete ACLs, one per --operation
+
+            Same flags as 'playground rbac acl create'.
+          flags:
+          - *rbac-principal-required
+          - *rbac-operation
+          - *rbac-acl-resource
+          - *rbac-prefix
+          - *rbac-deny
+          - *rbac-host
+          - *rbac-kafka-acls
+          - *verbose
+          examples:
+          - playground rbac acl delete --principal User:charlie --operation WRITE --resource Topic:orders
+
+        - name: list
+          group: RBAC
+          help: |-
+            📋 List ACLs
+
+            Lists both MDS centralized ACLs and regular Kafka ACLs.
+          flags:
+          - *rbac-principal
+          - *verbose
+          examples:
+          - playground rbac acl list
+          - playground rbac acl list --principal User:charlie
+
 - name: connector-plugin
   expose: always
   group: Connector-Plugin
