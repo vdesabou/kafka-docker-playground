@@ -43,7 +43,6 @@ services:
       - "10004:10001"
     volumes:
       - ../../environment/rbac-sasl-plain/conf:/tmp/conf
-      - ../../environment/rbac-sasl-plain/scripts/helper:/tmp/helper
       - ../../environment/rbac-sasl-plain/scripts/security/client_without_interceptors.config:/etc/kafka/secrets/client_without_interceptors.config
     environment:
       SCHEMA_REGISTRY_JMX_PORT: 10001
@@ -79,10 +78,6 @@ services:
       SCHEMA_REGISTRY_CONFLUENT_METADATA_BASIC_AUTH_USER_INFO: schemaregistryUser:schemaregistryUser
       # public key to verify tokens during authentication
       SCHEMA_REGISTRY_PUBLIC_KEY_PATH: /tmp/conf/public.pem
-
-  tools:
-    volumes:
-      - ../../other/rbac-with-sr-basic-auth-acl/scripts/create-role-bindings-acl.sh:/create-role-bindings-acl.sh
 
   ksqldb-server:
     environment:

@@ -1404,12 +1404,19 @@ function host_check_kafka_cluster_registered() {
 
 # for RBAC, taken from cp-demo
 function host_check_mds_up() {
-  docker container logs broker > /tmp/out.txt 2>&1
-  FOUND=$(cat /tmp/out.txt | grep "Started NetworkTrafficServerConnector")
-  if [ -z "$FOUND" ]; then
+  # MDS is ready to create role bindings once superUser (an LDAP user) is authenticated. Don't grep the broker
+  # logs for "Started NetworkTrafficServerConnector": podman sometimes drops that line, and start.sh then waits forever
+  local http_code=$(curl -s -o /dev/null -m 5 -w "%{http_code}" -u superUser:superUser http://localhost:8091/security/1.0/metadataClusterId)
+  if [ "$http_code" != "200" ]; then
     return 1
   fi
   return 0
+}
+
+function host_check_openldap_ready() {
+  # osixia/openldap loads the users with a temporary slapd, then restarts it with TLS: wait for the
+  # final one, on the LDAPS port used by the brokers, with the users loaded
+  docker exec openldap bash -c "LDAPTLS_REQCERT=never ldapsearch -x -H ldaps://localhost:636 -b ou=users,dc=confluentdemo,dc=io -D cn=admin,dc=confluentdemo,dc=io -w admin uid=admin uid" 2> /dev/null | grep -q "^uid: admin"
 }
 
 # for RBAC, taken from cp-demo

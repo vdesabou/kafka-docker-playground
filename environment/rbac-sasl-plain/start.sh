@@ -31,11 +31,11 @@ set_profiles
 if [ ! -z $ENABLE_KRAFT ]
 then
   # KRAFT mode
-  INITIAL_CONTAINER_LIST="controller broker tools openldap"
+  INITIAL_CONTAINER_LIST="controller broker openldap"
   KRAFT_RBAC_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DIR}/../../environment/rbac-sasl-plain/docker-compose-kraft.yml"
 else
   # Zookeeper mode
-  INITIAL_CONTAINER_LIST="zookeeper broker tools openldap"
+  INITIAL_CONTAINER_LIST="zookeeper broker openldap"
   KRAFT_RBAC_DOCKER_COMPOSE_FILE_OVERRIDE=""
 fi
 
@@ -63,6 +63,11 @@ docker run --quiet --rm -v $PWD:/tmp alpine/openssl req -new -x509 -days 365 -no
 log "LDAPS: Generate the LDAPS server key and certificate"
 docker run --quiet --rm -v $PWD:/tmp alpine/openssl req -new -nodes -out /tmp/server.csr -keyout /tmp/server.key -subj "/CN=openldap"
 docker run --quiet --rm -v $PWD:/tmp alpine/openssl x509 -req -in /tmp/server.csr -days 365 -CA /tmp/ca.crt -CAkey /tmp/ca.key -CAcreateserial -out /tmp/server.crt
+# otherwise openldap generates a 2048 bit safe prime at every start, which can take minutes on CI runners,
+# and the controller and brokers wait for openldap. ffdhe2048 is the RFC 7919 group, instantly available
+# (openldap's GnuTLS rejects the faster 'dhparam -dsaparam' parameters)
+log "LDAPS: Generate the DH parameters"
+docker run --quiet --rm -v $PWD:/tmp alpine/openssl genpkey -genparam -algorithm DH -pkeyopt group:ffdhe2048 -out /tmp/dhparam.pem
 log "LDAPS: Create a JKS truststore"
 rm -f ldap_truststore.jks
 # We import the test CA certificate
@@ -87,8 +92,8 @@ mkdir -p ../../environment/rbac-sasl-plain/conf
 cd ../../environment/rbac-sasl-plain/
 OLDDIR=$PWD
 mkdir -p conf
-docker run -v $PWD:/tmp -u0 alpine/openssl genrsa -out /tmp/conf/keypair.pem 2048
-docker run -v $PWD:/tmp -u0 alpine/openssl rsa -in /tmp/conf/keypair.pem -outform PEM -pubout -out /tmp/conf/public.pem
+docker run --rm -v $PWD:/tmp -u0 alpine/openssl genrsa -out /tmp/conf/keypair.pem 2048
+docker run --rm -v $PWD:/tmp -u0 alpine/openssl rsa -in /tmp/conf/keypair.pem -outform PEM -pubout -out /tmp/conf/public.pem
 cd conf
 if [[ "$OSTYPE" == "darwin"* ]]
 then
@@ -100,6 +105,12 @@ else
 fi
 cd -
 cd ${OLDDIR}
+
+# the controller and brokers authenticate SASL/PLAIN users (admin included) against LDAP: start openldap first
+docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} ${TELEMETRY_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/rbac-sasl-plain/docker-compose.yml ${KRAFT_RBAC_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} up -d --quiet-pull openldap
+MAX_WAIT=120
+log "⌛ Waiting up to $MAX_WAIT seconds for OpenLDAP to be ready"
+retrycmd $((MAX_WAIT / 5)) 5 host_check_openldap_ready || exit 1
 
 # Bring up base cluster and Confluent CLI
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
@@ -135,18 +146,31 @@ fi
 # Verify MDS has started
 MAX_WAIT=120
 log "⌛ Waiting up to $MAX_WAIT seconds for MDS to start"
-retrycmd $MAX_WAIT 5 host_check_mds_up || exit 1
+retrycmd $((MAX_WAIT / 5)) 5 host_check_mds_up || exit 1
 
 sleep 5
 
-log "Available LDAP users:"
-docker exec openldap ldapsearch -x -h localhost -b dc=confluentdemo,dc=io -D "cn=admin,dc=confluentdemo,dc=io" -w admin | grep uid:
+# playground rbac commands only run in the rbac-sasl-plain environment
+playground state set run.environment "rbac-sasl-plain"
 
-log "Creating role bindings for principals"
-docker exec -i tools bash -c "/tmp/helper/create-role-bindings.sh"
+log "🧑 Available LDAP users:"
+playground rbac user list
 
-log "Validate bindings"
-docker exec -i tools bash -c "/tmp/helper/validate_bindings.sh"
+log "🔐 Creating default role bindings from ${DIR}/role-bindings.txt"
+playground rbac role-binding create --file "${DIR}/role-bindings.txt"
+
+# role bindings of the example (playground start-environment --rbac-role-bindings-file), created
+# before connect, schema-registry, ksqldb and control-center start
+if [ -n "$RBAC_ROLE_BINDINGS_FILE" ]
+then
+  if [ ! -f "$RBAC_ROLE_BINDINGS_FILE" ]
+  then
+    logerror "❌ RBAC_ROLE_BINDINGS_FILE $RBAC_ROLE_BINDINGS_FILE does not exist"
+    exit 1
+  fi
+  log "🔐 Creating role bindings from $RBAC_ROLE_BINDINGS_FILE"
+  (source "$RBAC_ROLE_BINDINGS_FILE")
+fi
 
 docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} ${TELEMETRY_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/rbac-sasl-plain/docker-compose.yml ${KRAFT_RBAC_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE}  ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_conduktor_command} ${profile_kafka_nodes_command} ${profile_connect_nodes_command} build
 docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} ${TELEMETRY_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/rbac-sasl-plain/docker-compose.yml ${KRAFT_RBAC_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} ${profile_kafka_nodes_command} ${profile_connect_nodes_command} up -d --quiet-pull $SERVICES_ARGS

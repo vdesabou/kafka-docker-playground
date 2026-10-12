@@ -1,0 +1,83 @@
+# Default role bindings of the rbac-sasl-plain environment, created by start.sh with:
+#   playground rbac role-binding create --file role-bindings.txt
+#
+# One role binding per line: <principal> <role> <resource> [prefix] [scope=<scope>]
+#   resource  <ResourceType>:<name>, or - for a role bound on the whole cluster
+#   prefix    the resource name is a prefix (PREFIXED pattern)
+#   scope     kafka, schema-registry, connect or ksqldb. If not set, it is deduced from the resource type:
+#             Subject is schema-registry, Connector is connect, KsqlCluster is ksqldb, anything else is kafka
+#
+# Cluster names: kafka-cluster (Kafka), schema-registry, connect-cluster, ksql-cluster
+
+# super user
+User:superUser                      SystemAdmin     -
+User:superUser                      SystemAdmin     -                                   scope=schema-registry
+User:superUser                      SystemAdmin     -                                   scope=connect
+User:superUser                      SystemAdmin     -                                   scope=ksqldb
+
+# schema registry
+User:schemaregistryUser             SecurityAdmin   -                                   scope=schema-registry
+User:schemaregistryUser             ResourceOwner   Topic:_schemas
+User:schemaregistryUser             ResourceOwner   Group:schema-registry
+User:schemaregistryUser             DeveloperRead   Topic:_confluent-license
+User:schemaregistryUser             DeveloperWrite  Topic:_confluent-license
+User:schemaregistryUser             DeveloperRead   Topic:_confluent-command
+User:schemaregistryUser             DeveloperWrite  Topic:_confluent-command
+
+# connect workers
+User:connectAdmin                   SecurityAdmin   -                                   scope=connect
+User:connectAdmin                   ResourceOwner   Topic:connect-configs
+User:connectAdmin                   ResourceOwner   Topic:connect-offsets
+User:connectAdmin                   ResourceOwner   Topic:connect-status
+User:connectAdmin                   ResourceOwner   Group:connect-cluster
+User:connectAdmin                   ResourceOwner   Topic:_confluent-monitoring
+User:connectAdmin                   ResourceOwner   Topic:_confluent-command
+User:connectAdmin                   ResourceOwner   Topic:_confluent-secrets
+User:connectAdmin                   ResourceOwner   Group:secret-registry
+# exactly-once source connectors (KIP-618)
+User:connectAdmin                   ResourceOwner   TransactionalId:connect-cluster-connect-cluster
+# enable.idempotence=true requires IdempotentWrite
+User:connectAdmin                   DeveloperWrite  Cluster:kafka-cluster
+
+# connectors: connectorSubmitter creates them (Connect REST API), they run as connectorSA (principal.service.name)
+User:connectorSubmitter             ResourceOwner   Connector:*
+User:controlcenterAdmin             ResourceOwner   Connector:*
+User:connectorSA                    ResourceOwner   Group:*
+User:connectorSA                    ResourceOwner   Topic:*
+User:connectorSA                    ResourceOwner   Subject:*
+User:connectorSA                    ResourceOwner   TransactionalId:*
+
+# ksqlDB admin
+User:ksqlDBAdmin                    ResourceOwner   KsqlCluster:ksql-cluster
+User:ksqlDBAdmin                    DeveloperRead   Group:_confluent-ksql-ksql-cluster  prefix
+User:ksqlDBAdmin                    ResourceOwner   Topic:_confluent-ksql-ksql-cluster  prefix
+User:ksqlDBAdmin                    ResourceOwner   Subject:_confluent-ksql-ksql-cluster prefix
+User:ksqlDBAdmin                    ResourceOwner   Topic:_confluent-monitoring
+User:ksqlDBAdmin                    ResourceOwner   Topic:ksql-clusterksql_processing_log
+User:ksqlDBAdmin                    ResourceOwner   TransactionalId:ksql-cluster
+User:ksqlDBAdmin                    DeveloperWrite  Cluster:kafka-cluster
+
+# ksqlDB user
+User:ksqlDBUser                     DeveloperWrite  KsqlCluster:ksql-cluster
+User:ksqlDBUser                     DeveloperRead   Group:_confluent-ksql-ksql-cluster  prefix
+User:ksqlDBUser                     ResourceOwner   Topic:_confluent-ksql-ksql-cluster  prefix
+User:ksqlDBUser                     ResourceOwner   Subject:_confluent-ksql-ksql-cluster prefix
+User:ksqlDBUser                     DeveloperRead   Topic:ksql-clusterksql_processing_log
+User:ksqlDBUser                     DeveloperWrite  Cluster:kafka-cluster
+
+# ksqlDB server
+User:controlCenterAndKsqlDBServer   ResourceOwner   Topic:ksql-clusterksql_processing_log
+
+# control center
+User:controlcenterAdmin             SystemAdmin     -
+
+# avro console producer/consumer used by 'playground topic produce/consume'
+User:clientAvroCli                  ResourceOwner   Group:clientAvro                    prefix
+User:clientAvroCli                  ResourceOwner   Topic:*
+User:clientAvroCli                  ResourceOwner   Topic:_confluent-monitoring
+User:clientAvroCli                  ResourceOwner   Subject:*
+
+# users to try Control Center views
+User:alice                          SystemAdmin     -
+User:barnie                         ClusterAdmin    -
+User:charlie                        UserAdmin       -

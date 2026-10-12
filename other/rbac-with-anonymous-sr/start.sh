@@ -12,4 +12,4 @@ fi
 playground start-environment --environment rbac-sasl-plain --docker-compose-override-file "${PWD}/docker-compose.rbac-sasl-plain.yml"
 
 log "Creating role bindings for ANONYMOUS"
-docker exec -i tools bash -c "/create-role-bindings-anonymous.sh"
+playground rbac role-binding create --principal User:ANONYMOUS --role ResourceOwner --resource "Subject:*"

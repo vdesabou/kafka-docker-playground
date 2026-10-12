@@ -1204,6 +1204,262 @@ function filter_cfk_environment() {
   fi
 }
 
+function filter_rbac_environment() {
+  get_environment_used
+
+  if [[ "$environment" != "rbac-sasl-plain" ]]
+  then
+    logerror "environment should be rbac-sasl-plain with this command (it is $environment)!"
+  fi
+}
+
+# call the MDS REST API of the rbac-sasl-plain environment as superUser
+# usage: mds_request <method> <path> [json body]
+# sets mds_output (response body), returns 1 when MDS is not reachable or answers an error
+function mds_request() {
+  local method="$1"
+  local path="$2"
+  local body="$3"
+  local mds_url="http://localhost:8091"
+  local curl_args=(-s -w '\n%{http_code}' -u superUser:superUser -H "Content-Type: application/json" -X "$method" "$mds_url$path")
+
+  if [[ -n "$body" ]]
+  then
+    curl_args+=(-d "$body")
+  fi
+
+  if [[ -n "$verbose" ]]
+  then
+    log "🐞 curl command used"
+    echo "curl -X $method -u superUser:superUser -H \"Content-Type: application/json\" $mds_url$path${body:+ -d '$body'}"
+  fi
+
+  local response
+  response=$(curl "${curl_args[@]}")
+  if [ $? -ne 0 ]
+  then
+    logerror "❌ MDS is not reachable at $mds_url, is the rbac-sasl-plain environment running?"
+    return 1
+  fi
+  local http_code=$(tail -n 1 <<< "$response")
+  mds_output=$(sed '$d' <<< "$response")
+  if [[ "$http_code" != 2* ]]
+  then
+    logerror "❌ MDS answered HTTP $http_code to $method $path: $(jq -r '.message // .' <<< "$mds_output" 2> /dev/null || echo "$mds_output")"
+    return 1
+  fi
+}
+
+# usage: get_mds_scope <kafka|schema-registry|connect|ksqldb>
+# sets mds_scope, the MDS JSON scope of that cluster
+function get_mds_scope() {
+  local scope="${1:-kafka}"
+
+  if [[ -z "$mds_kafka_cluster_id" ]]
+  then
+    mds_request GET /security/1.0/metadataClusterId || return 1
+    mds_kafka_cluster_id="$mds_output"
+  fi
+
+  # cluster names used in environment/rbac-sasl-plain/docker-compose.yml
+  case "$scope" in
+    kafka)
+      mds_scope=$(jq -nc --arg k "$mds_kafka_cluster_id" '{clusters: {"kafka-cluster": $k}}')
+    ;;
+    schema-registry)
+      mds_scope=$(jq -nc --arg k "$mds_kafka_cluster_id" '{clusters: {"kafka-cluster": $k, "schema-registry-cluster": "schema-registry"}}')
+    ;;
+    connect)
+      mds_scope=$(jq -nc --arg k "$mds_kafka_cluster_id" '{clusters: {"kafka-cluster": $k, "connect-cluster": "connect-cluster"}}')
+    ;;
+    ksqldb)
+      mds_scope=$(jq -nc --arg k "$mds_kafka_cluster_id" '{clusters: {"kafka-cluster": $k, "ksql-cluster": "ksql-cluster"}}')
+    ;;
+    *)
+      logerror "❌ unknown scope $scope, it should be kafka, schema-registry, connect or ksqldb"
+      return 1
+    ;;
+  esac
+}
+
+# a bare name means User:<name>
+function normalize_rbac_principal() {
+  local principal="$1"
+  if [[ "$principal" != User:* ]] && [[ "$principal" != Group:* ]]
+  then
+    principal="User:$principal"
+  fi
+  echo "$principal"
+}
+
+# split <ResourceType>:<name> into resource_type and resource_name
+function parse_rbac_resource() {
+  local resource="$1"
+  if [[ "$resource" != *:* ]] || [[ -z "${resource%%:*}" ]] || [[ -z "${resource#*:}" ]]
+  then
+    logerror "❌ resource $resource should be <ResourceType>:<name>, for example Topic:orders"
+    return 1
+  fi
+  resource_type="${resource%%:*}"
+  resource_name="${resource#*:}"
+}
+
+# create or delete the role binding described by the --principal, --role,
+# --resource, --prefix and --scope flags
+# usage: mds_role_binding <POST|DELETE>
+function mds_role_binding() {
+  local method="$1"
+  local principal=$(normalize_rbac_principal "${args[--principal]}")
+  local role="${args[--role]}"
+  local resource="${args[--resource]}"
+  local prefix="${args[--prefix]}"
+  local scope="${args[--scope]}"
+  local pattern_type="LITERAL"
+  local action="Creating"
+  local resource_type=""
+  local resource_name=""
+
+  if [ "$method" == "DELETE" ]
+  then
+    action="Deleting"
+  fi
+
+  if [[ -n "$prefix" ]]
+  then
+    pattern_type="PREFIXED"
+  fi
+
+  if [[ -n "$resource" ]]
+  then
+    parse_rbac_resource "$resource" || return 1
+  elif [[ -n "$prefix" ]]
+  then
+    logerror "❌ --prefix requires --resource"
+    return 1
+  fi
+
+  if [[ -z "$scope" ]]
+  then
+    case "$resource_type" in
+      Subject) scope="schema-registry" ;;
+      Connector) scope="connect" ;;
+      KsqlCluster) scope="ksqldb" ;;
+      *) scope="kafka" ;;
+    esac
+  fi
+  get_mds_scope "$scope" || return 1
+
+  if [[ -z "$resource" ]]
+  then
+    log "🔐 $action role binding $role for $principal on $scope cluster"
+    mds_request "$method" "/security/1.0/principals/$principal/roles/$role" "$mds_scope" || return 1
+  else
+    local pattern_log=""
+    if [ "$pattern_type" == "PREFIXED" ]
+    then
+      pattern_log=" (prefixed)"
+    fi
+    log "🔐 $action role binding $role for $principal on $resource_type:$resource_name$pattern_log ($scope cluster)"
+    local body=$(jq -nc --argjson scope "$mds_scope" --arg type "$resource_type" --arg name "$resource_name" --arg pattern "$pattern_type" \
+      '{scope: $scope, resourcePatterns: [{resourceType: $type, name: $name, patternType: $pattern}]}')
+    mds_request "$method" "/security/1.0/principals/$principal/roles/$role/bindings" "$body" || return 1
+  fi
+}
+
+# create or delete the ACLs described by the --principal, --operation,
+# --resource, --prefix, --deny, --host and --kafka-acls flags
+# usage: mds_acl <create|delete>
+function mds_acl() {
+  local action="$1"
+  local principal=$(normalize_rbac_principal "${args[--principal]}")
+  local resource="${args[--resource]}"
+  local prefix="${args[--prefix]}"
+  local deny="${args[--deny]}"
+  local host="${args[--host]:-*}"
+  local kafka_acls="${args[--kafka-acls]}"
+  local pattern_type="LITERAL"
+  local permission="ALLOW"
+  local resource_type=""
+  local resource_name=""
+  eval "local operations=(${args[--operation]})"
+
+  if [[ -n "$prefix" ]]
+  then
+    pattern_type="PREFIXED"
+  fi
+  if [[ -n "$deny" ]]
+  then
+    permission="DENY"
+  fi
+
+  parse_rbac_resource "$resource" || return 1
+
+  local mds_resource_type=""
+  local kafka_acls_resource=""
+  case "$resource_type" in
+    Topic) mds_resource_type="TOPIC"; kafka_acls_resource="--topic $resource_name" ;;
+    Group) mds_resource_type="GROUP"; kafka_acls_resource="--group $resource_name" ;;
+    Cluster) mds_resource_type="CLUSTER"; kafka_acls_resource="--cluster" ;;
+    TransactionalId) mds_resource_type="TRANSACTIONAL_ID"; kafka_acls_resource="--transactional-id $resource_name" ;;
+    DelegationToken) mds_resource_type="DELEGATION_TOKEN"; kafka_acls_resource="--delegation-token $resource_name" ;;
+    *)
+      logerror "❌ resource type $resource_type is not supported for ACLs, it should be Topic, Group, Cluster, TransactionalId or DelegationToken"
+      return 1
+    ;;
+  esac
+
+  if [[ -n "$kafka_acls" ]]
+  then
+    local kafka_acls_args="--$action --$(tr '[:upper:]' '[:lower:]' <<< "$permission")-principal $principal --$(tr '[:upper:]' '[:lower:]' <<< "$permission")-host '$host' $kafka_acls_resource --resource-pattern-type $(tr '[:upper:]' '[:lower:]' <<< "$pattern_type")"
+    local operation
+    for operation in "${operations[@]}"
+    do
+      kafka_acls_args="$kafka_acls_args --operation $operation"
+    done
+    if [ "$action" == "remove" ]
+    then
+      kafka_acls_args="$kafka_acls_args --force"
+    fi
+    log "🧰 kafka-acls $kafka_acls_args"
+    playground container exec -c broker --command "kafka-acls --bootstrap-server broker:9092 --command-config /etc/kafka/secrets/client_without_interceptors.config $kafka_acls_args" || return 1
+    return 0
+  fi
+
+  get_mds_scope kafka || return 1
+  local operation
+  for operation in "${operations[@]}"
+  do
+    local entry=$(jq -nc --arg principal "$principal" --arg operation "$operation" --arg permission "$permission" --arg host "$host" \
+      '{principal: $principal, operation: $operation, permissionType: $permission, host: $host}')
+    local pattern=$(jq -nc --arg type "$mds_resource_type" --arg name "$resource_name" --arg pattern "$pattern_type" \
+      '{resourceType: $type, name: $name, patternType: $pattern}')
+    if [ "$action" == "add" ]
+    then
+      log "🚦 Creating ACL $permission $operation for $principal on $resource_type:$resource_name ($pattern_type)"
+      mds_request POST "/security/1.0/acls" "$(jq -nc --argjson scope "$mds_scope" --argjson pattern "$pattern" --argjson entry "$entry" '{scope: $scope, aclBinding: {pattern: $pattern, entry: $entry}}')" || return 1
+    else
+      log "🗑️ Deleting ACL $permission $operation for $principal on $resource_type:$resource_name ($pattern_type)"
+      mds_request DELETE "/security/1.0/acls" "$(jq -nc --argjson scope "$mds_scope" --argjson pattern "$pattern" --argjson entry "$entry" '{scope: $scope, aclBindingFilter: {patternFilter: $pattern, entryFilter: $entry}}')" || return 1
+    fi
+  done
+}
+
+rbac_ldap_base_dn="dc=confluentdemo,dc=io"
+
+# run an LDAP client command (ldapsearch, ldapadd, ldapmodify, ldapdelete) as LDAP admin in the
+# openldap container of rbac-sasl-plain, stdin is forwarded
+# usage: rbac_ldap <command> [arguments]
+function rbac_ldap() {
+  local ldap_command="$1"
+  shift
+  local output
+  output=$(playground container exec -c openldap --command "$ldap_command -x -H ldap://localhost -D cn=admin,$rbac_ldap_base_dn -w admin $*" 2>&1)
+  local ret=$?
+  # drop the "Executing command in container" line of playground container exec
+  grep -v "Executing command in container" <<< "$output"
+  return $ret
+}
+
 function filter_plaintext_or_ccloud_environment() {
   get_environment_used
 

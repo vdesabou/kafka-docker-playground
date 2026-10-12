@@ -4,6 +4,7 @@ environment="${args[--environment]}"
 docker_compose_override_file="${args[--docker-compose-override-file]}"
 wait_for_control_center="${args[--wait-for-control-center]}"
 no_stop="${args[--no-stop]}"
+rbac_role_bindings_file="${args[--rbac-role-bindings-file]}"
 
 if [ "$environment" = "ccloud" ]
 then
@@ -45,6 +46,16 @@ fi
 if [[ -n "$no_stop" ]]
 then
   export NO_STOP=1
+fi
+
+if [[ -n "$rbac_role_bindings_file" ]]
+then
+  if [ "$environment" != "rbac-sasl-plain" ]
+  then
+    logerror "❌ --rbac-role-bindings-file only works with --environment rbac-sasl-plain (it is $environment)"
+    exit 1
+  fi
+  export RBAC_ROLE_BINDINGS_FILE="$rbac_role_bindings_file"
 fi
 
 # Handle --service flag (can be passed multiple times)

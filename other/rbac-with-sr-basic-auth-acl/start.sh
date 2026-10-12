@@ -14,10 +14,8 @@ if version_gt $TAG_BASE "7.9.99"; then
   export JAAS_CONFIG_FILE="/tmp/jaas_config_8_plus.file"
 fi
 
-playground start-environment --environment rbac-sasl-plain --docker-compose-override-file "${PWD}/docker-compose.rbac-sasl-plain.yml"
-
-log "Creating role binding for ACL topics"
-docker exec -i tools bash -c "/create-role-bindings-acl.sh"
+# schema-registry needs the _schemas_acl topic at startup
+playground start-environment --environment rbac-sasl-plain --docker-compose-override-file "${PWD}/docker-compose.rbac-sasl-plain.yml" --rbac-role-bindings-file "${PWD}/role-bindings.sh"
 
 log "Creating initial ACLs"
 docker exec -i schema-registry bash -c "/tmp/create-acls.sh"

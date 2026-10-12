@@ -3848,6 +3848,489 @@
       ]
     },
     {
+      "name": "rbac",
+      "description": "🛡️ RBAC commands (rbac-sasl-plain environment only)\n\nChange permissions of the running rbac-sasl-plain environment without\nopening a shell in a container: the commands call the MDS REST API\n(http://localhost:8091) as superUser.\n\n  role-binding   create, delete and list role bindings\n  user           add, delete and list LDAP users and their groups\n  acl            create, delete and list ACLs (MDS centralized ACLs, or\n                 regular Kafka ACLs with --kafka-acls)\n\n🎓 Tip: principals are User:<name> or Group:<name>, a bare name means User:<name>.\n",
+      "usage": "playground rbac COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "role-binding",
+          "description": "🔐 Role binding commands\n",
+          "usage": "playground rbac role-binding COMMAND",
+          "options": []
+        },
+        {
+          "name": "user",
+          "description": "🧑 LDAP user commands\n  \n  Users live in the openldap container. They authenticate on the broker\n  with SASL/PLAIN (their LDAP password) and log in to MDS, Control\n  Center, Schema Registry and Connect REST API with basic auth.\n  Changes apply to the running environment, without restart.\n",
+          "usage": "playground rbac user COMMAND",
+          "options": []
+        },
+        {
+          "name": "acl",
+          "description": "🚦 ACL commands\n  \n  By default, ACLs are MDS centralized ACLs (stored in the\n  _confluent-metadata-auth topic and enforced by the CONFLUENT access rule\n  provider). With --kafka-acls, they are regular Kafka ACLs created with\n  kafka-acls (ZK_ACL or KRAFT_ACL access rule provider).\n",
+          "usage": "playground rbac acl COMMAND",
+          "options": []
+        }
+      ]
+    },
+    {
+      "name": "role-binding",
+      "description": "🔐 Role binding commands\n",
+      "usage": "playground rbac role-binding COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "create",
+          "description": "🔐 Create a role binding\n  \n  Without --resource, the role is bound on the whole cluster\n  (SystemAdmin, ClusterAdmin, SecurityAdmin, UserAdmin, AuditAdmin,\n  Operator). With --resource, it is bound on that resource\n  (ResourceOwner, DeveloperRead, DeveloperWrite, DeveloperManage).\n  \n  The scope is deduced from the resource type when --scope is not set:\n  Subject is schema-registry, Connector is connect, KsqlCluster is\n  ksqldb, anything else is kafka.\n",
+          "usage": "playground rbac role-binding create [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--principal",
+                "-p"
+              ],
+              "argument": "PRINCIPAL",
+              "description": "🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)\n\n❕ Required, unless --file is set\n"
+            },
+            {
+              "names": [
+                "--role",
+                "-r"
+              ],
+              "argument": [
+                "ResourceOwner",
+                "DeveloperRead",
+                "DeveloperWrite",
+                "DeveloperManage",
+                "SystemAdmin",
+                "ClusterAdmin",
+                "SecurityAdmin",
+                "UserAdmin",
+                "AuditAdmin",
+                "Operator"
+              ],
+              "description": "🎩 Role name\n\n❕ Required, unless --file is set\n\nAllowed values: ResourceOwner, DeveloperRead, DeveloperWrite, DeveloperManage, SystemAdmin, ClusterAdmin, SecurityAdmin, UserAdmin, AuditAdmin, Operator\n"
+            },
+            {
+              "names": [
+                "--resource"
+              ],
+              "argument": "RESOURCE",
+              "description": "📦 Resource, <ResourceType>:<name>, for example Topic:orders, Group:my-app,\nSubject:orders-value, Connector:my-sink, TransactionalId:my-tx, Cluster:kafka-cluster\n\nℹ️ If not set, the role is bound on the whole cluster\n"
+            },
+            {
+              "names": [
+                "--prefix"
+              ],
+              "argument": "",
+              "description": "🔤 The resource name is a prefix (PREFIXED pattern) instead of a literal name\n"
+            },
+            {
+              "names": [
+                "--scope"
+              ],
+              "argument": [
+                "kafka",
+                "schema-registry",
+                "connect",
+                "ksqldb"
+              ],
+              "description": "🎯 Cluster the role binding applies to\n\nℹ️ If not set, it is deduced from the resource type (kafka when there is no resource)\n\nAllowed values: kafka, schema-registry, connect, ksqldb\n"
+            },
+            {
+              "names": [
+                "--file"
+              ],
+              "argument": "FILE",
+              "description": "📄 Create all the role bindings of a file, one per line: <principal> <role> <resource or -> [prefix] [scope=<scope>]\n\nSee environment/rbac-sasl-plain/role-bindings.txt (the default role bindings) for the format.\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        },
+        {
+          "name": "delete",
+          "description": "🗑️ Delete a role binding\n  \n  Same flags as 'playground rbac role-binding create'.\n",
+          "usage": "playground rbac role-binding delete [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--principal",
+                "-p"
+              ],
+              "argument": "PRINCIPAL",
+              "description": "🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--role",
+                "-r"
+              ],
+              "argument": [
+                "ResourceOwner",
+                "DeveloperRead",
+                "DeveloperWrite",
+                "DeveloperManage",
+                "SystemAdmin",
+                "ClusterAdmin",
+                "SecurityAdmin",
+                "UserAdmin",
+                "AuditAdmin",
+                "Operator"
+              ],
+              "description": "🎩 Role name\n\nRequired: ✓ Yes\n\nAllowed values: ResourceOwner, DeveloperRead, DeveloperWrite, DeveloperManage, SystemAdmin, ClusterAdmin, SecurityAdmin, UserAdmin, AuditAdmin, Operator\n"
+            },
+            {
+              "names": [
+                "--resource"
+              ],
+              "argument": "RESOURCE",
+              "description": "📦 Resource, <ResourceType>:<name>, for example Topic:orders, Group:my-app,\nSubject:orders-value, Connector:my-sink, TransactionalId:my-tx, Cluster:kafka-cluster\n\nℹ️ If not set, the role is bound on the whole cluster\n"
+            },
+            {
+              "names": [
+                "--prefix"
+              ],
+              "argument": "",
+              "description": "🔤 The resource name is a prefix (PREFIXED pattern) instead of a literal name\n"
+            },
+            {
+              "names": [
+                "--scope"
+              ],
+              "argument": [
+                "kafka",
+                "schema-registry",
+                "connect",
+                "ksqldb"
+              ],
+              "description": "🎯 Cluster the role binding applies to\n\nℹ️ If not set, it is deduced from the resource type (kafka when there is no resource)\n\nAllowed values: kafka, schema-registry, connect, ksqldb\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        },
+        {
+          "name": "list",
+          "description": "📋 List role bindings\n  \n  Without --principal, every principal with a role binding is listed.\n",
+          "usage": "playground rbac role-binding list [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--principal",
+                "-p"
+              ],
+              "argument": "PRINCIPAL",
+              "description": "🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)\n\nℹ️ If not set, role bindings of all principals are listed\n"
+            },
+            {
+              "names": [
+                "--scope"
+              ],
+              "argument": [
+                "kafka",
+                "schema-registry",
+                "connect",
+                "ksqldb"
+              ],
+              "description": "🎯 Only list role bindings of this cluster\n\nℹ️ If not set, all clusters are listed\n\nAllowed values: kafka, schema-registry, connect, ksqldb\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "user",
+      "description": "🧑 LDAP user commands\n\nUsers live in the openldap container. They authenticate on the broker\nwith SASL/PLAIN (their LDAP password) and log in to MDS, Control\nCenter, Schema Registry and Connect REST API with basic auth.\nChanges apply to the running environment, without restart.\n",
+      "usage": "playground rbac user COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "add",
+          "description": "➕ Add an LDAP user\n  \n  The user can connect right away. MDS picks up new group\n  memberships (for Group:<name> role bindings) within its LDAP\n  refresh interval (60 seconds by default).\n",
+          "usage": "playground rbac user add [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--user",
+                "-u"
+              ],
+              "argument": "USER",
+              "description": "🧑 User name (principal User:<user>)\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--password"
+              ],
+              "argument": "PASSWORD",
+              "description": "🔑 Password\n\nℹ️ If not set, <user>-secret\n"
+            },
+            {
+              "names": [
+                "--group",
+                "-g"
+              ],
+              "argument": "GROUP",
+              "description": "👥 Group to add the user to (principal Group:<group>), created if it does not exist. Can be set several times.\n\nRepeatable: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        },
+        {
+          "name": "delete",
+          "description": "🗑️ Delete an LDAP user, and remove it from its groups\n  \n  Its role bindings and ACLs are not deleted.\n",
+          "usage": "playground rbac user delete [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--user",
+                "-u"
+              ],
+              "argument": "USER",
+              "description": "🧑 User name (principal User:<user>)\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        },
+        {
+          "name": "list",
+          "description": "📋 List LDAP users and their groups\n",
+          "usage": "playground rbac user list [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "acl",
+      "description": "🚦 ACL commands\n\nBy default, ACLs are MDS centralized ACLs (stored in the\n_confluent-metadata-auth topic and enforced by the CONFLUENT access rule\nprovider). With --kafka-acls, they are regular Kafka ACLs created with\nkafka-acls (ZK_ACL or KRAFT_ACL access rule provider).\n",
+      "usage": "playground rbac acl COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "create",
+          "description": "🚦 Create ACLs, one per --operation\n",
+          "usage": "playground rbac acl create [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--principal",
+                "-p"
+              ],
+              "argument": "PRINCIPAL",
+              "description": "🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--operation",
+                "-o"
+              ],
+              "argument": [
+                "ALL",
+                "READ",
+                "WRITE",
+                "CREATE",
+                "DELETE",
+                "ALTER",
+                "DESCRIBE",
+                "CLUSTER_ACTION",
+                "DESCRIBE_CONFIGS",
+                "ALTER_CONFIGS",
+                "IDEMPOTENT_WRITE"
+              ],
+              "description": "⚙️ Operation, can be set several times\n\nRequired: ✓ Yes\n\nRepeatable: ✓ Yes\n\nAllowed values: ALL, READ, WRITE, CREATE, DELETE, ALTER, DESCRIBE, CLUSTER_ACTION, DESCRIBE_CONFIGS, ALTER_CONFIGS, IDEMPOTENT_WRITE\n"
+            },
+            {
+              "names": [
+                "--resource"
+              ],
+              "argument": "RESOURCE",
+              "description": "📦 Resource, <ResourceType>:<name> with ResourceType one of Topic, Group,\nCluster, TransactionalId, DelegationToken. Use Cluster:kafka-cluster for the cluster.\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--prefix"
+              ],
+              "argument": "",
+              "description": "🔤 The resource name is a prefix (PREFIXED pattern) instead of a literal name\n"
+            },
+            {
+              "names": [
+                "--deny"
+              ],
+              "argument": "",
+              "description": "⛔ DENY instead of ALLOW\n"
+            },
+            {
+              "names": [
+                "--host"
+              ],
+              "argument": "HOST",
+              "description": "🖥️ Host the ACL applies to\n\nℹ️ If not set, all hosts (*)\n"
+            },
+            {
+              "names": [
+                "--kafka-acls"
+              ],
+              "argument": "",
+              "description": "🧰 Use regular Kafka ACLs (kafka-acls) instead of MDS centralized ACLs\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        },
+        {
+          "name": "delete",
+          "description": "🗑️ Delete ACLs, one per --operation\n  \n  Same flags as 'playground rbac acl create'.\n",
+          "usage": "playground rbac acl delete [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--principal",
+                "-p"
+              ],
+              "argument": "PRINCIPAL",
+              "description": "🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--operation",
+                "-o"
+              ],
+              "argument": [
+                "ALL",
+                "READ",
+                "WRITE",
+                "CREATE",
+                "DELETE",
+                "ALTER",
+                "DESCRIBE",
+                "CLUSTER_ACTION",
+                "DESCRIBE_CONFIGS",
+                "ALTER_CONFIGS",
+                "IDEMPOTENT_WRITE"
+              ],
+              "description": "⚙️ Operation, can be set several times\n\nRequired: ✓ Yes\n\nRepeatable: ✓ Yes\n\nAllowed values: ALL, READ, WRITE, CREATE, DELETE, ALTER, DESCRIBE, CLUSTER_ACTION, DESCRIBE_CONFIGS, ALTER_CONFIGS, IDEMPOTENT_WRITE\n"
+            },
+            {
+              "names": [
+                "--resource"
+              ],
+              "argument": "RESOURCE",
+              "description": "📦 Resource, <ResourceType>:<name> with ResourceType one of Topic, Group,\nCluster, TransactionalId, DelegationToken. Use Cluster:kafka-cluster for the cluster.\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--prefix"
+              ],
+              "argument": "",
+              "description": "🔤 The resource name is a prefix (PREFIXED pattern) instead of a literal name\n"
+            },
+            {
+              "names": [
+                "--deny"
+              ],
+              "argument": "",
+              "description": "⛔ DENY instead of ALLOW\n"
+            },
+            {
+              "names": [
+                "--host"
+              ],
+              "argument": "HOST",
+              "description": "🖥️ Host the ACL applies to\n\nℹ️ If not set, all hosts (*)\n"
+            },
+            {
+              "names": [
+                "--kafka-acls"
+              ],
+              "argument": "",
+              "description": "🧰 Use regular Kafka ACLs (kafka-acls) instead of MDS centralized ACLs\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        },
+        {
+          "name": "list",
+          "description": "📋 List ACLs\n  \n  Lists both MDS centralized ACLs and regular Kafka ACLs.\n",
+          "usage": "playground rbac acl list [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--principal",
+                "-p"
+              ],
+              "argument": "PRINCIPAL",
+              "description": "🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)\n\nℹ️ If not set, role bindings of all principals are listed\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "connector-plugin",
       "description": "🔌 Connector-plugin commands\n\nQuestions about connector plugins on Confluent Hub, answered without a\nrunning environment:\n\n  versions              every released version of a plugin\n  display-last-updated  what was published recently, by vendor\n  search-jar            which jars ship in it, and which class is where\n  config-key            what a config key does, its default, since when, who sets it\n  sourcecode            open the source on GitHub\n\n🎓 Tip: search-jar answers \"is this class really in the plugin, and with\nwhich signature\", which is the question behind most NoSuchMethodError and\nClassNotFoundException reports.\n",
       "usage": "playground connector-plugin COMMAND",
