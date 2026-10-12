@@ -1404,10 +1404,10 @@ function host_check_kafka_cluster_registered() {
 
 # for RBAC, taken from cp-demo
 function host_check_mds_up() {
-  # any HTTP answer (401 without credentials) means MDS is started. Don't grep the broker logs for
-  # "Started NetworkTrafficServerConnector": podman sometimes drops that line, and start.sh then waits forever
-  local http_code=$(curl -s -o /dev/null -m 5 -w "%{http_code}" http://localhost:8091/security/1.0/metadataClusterId)
-  if [ "$http_code" == "000" ]; then
+  # MDS is ready to create role bindings once superUser (an LDAP user) is authenticated. Don't grep the broker
+  # logs for "Started NetworkTrafficServerConnector": podman sometimes drops that line, and start.sh then waits forever
+  local http_code=$(curl -s -o /dev/null -m 5 -w "%{http_code}" -u superUser:superUser http://localhost:8091/security/1.0/metadataClusterId)
+  if [ "$http_code" != "200" ]; then
     return 1
   fi
   return 0

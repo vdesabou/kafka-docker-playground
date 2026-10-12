@@ -3890,7 +3890,7 @@
                 "-p"
               ],
               "argument": "PRINCIPAL",
-              "description": "🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)\n\nRequired: ✓ Yes\n"
+              "description": "🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)\n\n❕ Required, unless --file is set\n"
             },
             {
               "names": [
@@ -3909,7 +3909,7 @@
                 "AuditAdmin",
                 "Operator"
               ],
-              "description": "🎩 Role name\n\nRequired: ✓ Yes\n\nAllowed values: ResourceOwner, DeveloperRead, DeveloperWrite, DeveloperManage, SystemAdmin, ClusterAdmin, SecurityAdmin, UserAdmin, AuditAdmin, Operator\n"
+              "description": "🎩 Role name\n\n❕ Required, unless --file is set\n\nAllowed values: ResourceOwner, DeveloperRead, DeveloperWrite, DeveloperManage, SystemAdmin, ClusterAdmin, SecurityAdmin, UserAdmin, AuditAdmin, Operator\n"
             },
             {
               "names": [
@@ -3936,6 +3936,13 @@
                 "ksqldb"
               ],
               "description": "🎯 Cluster the role binding applies to\n\nℹ️ If not set, it is deduced from the resource type (kafka when there is no resource)\n\nAllowed values: kafka, schema-registry, connect, ksqldb\n"
+            },
+            {
+              "names": [
+                "--file"
+              ],
+              "argument": "FILE",
+              "description": "📄 Create all the role bindings of a file, one per line: <principal> <role> <resource or -> [prefix] [scope=<scope>]\n\nSee environment/rbac-sasl-plain/role-bindings.txt (the default role bindings) for the format.\n"
             },
             {
               "names": [

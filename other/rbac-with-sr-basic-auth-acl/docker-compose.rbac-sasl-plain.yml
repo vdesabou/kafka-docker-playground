@@ -43,7 +43,6 @@ services:
       - "10004:10001"
     volumes:
       - ../../environment/rbac-sasl-plain/conf:/tmp/conf
-      - ../../environment/rbac-sasl-plain/scripts/helper:/tmp/helper
       - ../../environment/rbac-sasl-plain/scripts/security/client_without_interceptors.config:/etc/kafka/secrets/client_without_interceptors.config
     environment:
       SCHEMA_REGISTRY_JMX_PORT: 10001

@@ -6077,21 +6077,23 @@ commands:
             Subject is schema-registry, Connector is connect, KsqlCluster is
             ksqldb, anything else is kafka.
           flags:
-          - &rbac-principal-required
-            long: --principal
+          - long: --principal
             short: -p
-            required: true
+            required: false
             arg: principal
             help: |-
               🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)
-          - &rbac-role
-            long: --role
+
+              ❕ Required, unless --file is set
+          - long: --role
             short: -r
-            required: true
+            required: false
             arg: role
             allowed: [ResourceOwner, DeveloperRead, DeveloperWrite, DeveloperManage, SystemAdmin, ClusterAdmin, SecurityAdmin, UserAdmin, AuditAdmin, Operator]
             help: |-
               🎩 Role name
+
+              ❕ Required, unless --file is set
           - &rbac-resource
             long: --resource
             required: false
@@ -6115,12 +6117,21 @@ commands:
               🎯 Cluster the role binding applies to
 
               ℹ️ If not set, it is deduced from the resource type (kafka when there is no resource)
+          - long: --file
+            required: false
+            validate: file_exists
+            arg: file
+            help: |-
+              📄 Create all the role bindings of a file, one per line: <principal> <role> <resource or -> [prefix] [scope=<scope>]
+
+              See environment/rbac-sasl-plain/role-bindings.txt (the default role bindings) for the format.
           - *verbose
           examples:
           - playground rbac role-binding create --principal User:alice --role DeveloperRead --resource Topic:orders
           - playground rbac role-binding create --principal User:alice --role ResourceOwner --resource Topic:orders --prefix
           - playground rbac role-binding create --principal User:connectorSA --role ResourceOwner --resource Subject:orders-value
           - playground rbac role-binding create --principal Group:KafkaDevelopers --role SystemAdmin --scope connect
+          - playground rbac role-binding create --file "$PWD/role-bindings.txt"
 
         - name: delete
           group: RBAC
@@ -6129,8 +6140,21 @@ commands:
 
             Same flags as 'playground rbac role-binding create'.
           flags:
-          - *rbac-principal-required
-          - *rbac-role
+          - &rbac-principal-required
+            long: --principal
+            short: -p
+            required: true
+            arg: principal
+            help: |-
+              🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)
+          - &rbac-role
+            long: --role
+            short: -r
+            required: true
+            arg: role
+            allowed: [ResourceOwner, DeveloperRead, DeveloperWrite, DeveloperManage, SystemAdmin, ClusterAdmin, SecurityAdmin, UserAdmin, AuditAdmin, Operator]
+            help: |-
+              🎩 Role name
           - *rbac-resource
           - *rbac-prefix
           - *rbac-scope

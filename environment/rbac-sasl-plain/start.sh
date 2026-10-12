@@ -31,11 +31,11 @@ set_profiles
 if [ ! -z $ENABLE_KRAFT ]
 then
   # KRAFT mode
-  INITIAL_CONTAINER_LIST="controller broker tools openldap"
+  INITIAL_CONTAINER_LIST="controller broker openldap"
   KRAFT_RBAC_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DIR}/../../environment/rbac-sasl-plain/docker-compose-kraft.yml"
 else
   # Zookeeper mode
-  INITIAL_CONTAINER_LIST="zookeeper broker tools openldap"
+  INITIAL_CONTAINER_LIST="zookeeper broker openldap"
   KRAFT_RBAC_DOCKER_COMPOSE_FILE_OVERRIDE=""
 fi
 
@@ -92,8 +92,8 @@ mkdir -p ../../environment/rbac-sasl-plain/conf
 cd ../../environment/rbac-sasl-plain/
 OLDDIR=$PWD
 mkdir -p conf
-docker run -v $PWD:/tmp -u0 alpine/openssl genrsa -out /tmp/conf/keypair.pem 2048
-docker run -v $PWD:/tmp -u0 alpine/openssl rsa -in /tmp/conf/keypair.pem -outform PEM -pubout -out /tmp/conf/public.pem
+docker run --rm -v $PWD:/tmp -u0 alpine/openssl genrsa -out /tmp/conf/keypair.pem 2048
+docker run --rm -v $PWD:/tmp -u0 alpine/openssl rsa -in /tmp/conf/keypair.pem -outform PEM -pubout -out /tmp/conf/public.pem
 cd conf
 if [[ "$OSTYPE" == "darwin"* ]]
 then
@@ -150,17 +150,14 @@ retrycmd $((MAX_WAIT / 5)) 5 host_check_mds_up || exit 1
 
 sleep 5
 
-log "Available LDAP users:"
-docker exec openldap ldapsearch -x -h localhost -b dc=confluentdemo,dc=io -D "cn=admin,dc=confluentdemo,dc=io" -w admin | grep uid:
-
-log "Creating role bindings for principals"
-docker exec -i tools bash -c "/tmp/helper/create-role-bindings.sh"
-
-log "Validate bindings"
-docker exec -i tools bash -c "/tmp/helper/validate_bindings.sh"
-
 # playground rbac commands only run in the rbac-sasl-plain environment
 playground state set run.environment "rbac-sasl-plain"
+
+log "🧑 Available LDAP users:"
+playground rbac user list
+
+log "🔐 Creating default role bindings from ${DIR}/role-bindings.txt"
+playground rbac role-binding create --file "${DIR}/role-bindings.txt"
 
 # role bindings of the example (playground start-environment --rbac-role-bindings-file), created
 # before connect, schema-registry, ksqldb and control-center start

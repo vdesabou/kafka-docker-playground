@@ -5388,7 +5388,7 @@ subcommands:
           description: | 
             🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)
             
-            Required: ✓ Yes
+            ❕ Required, unless --file is set
             
         - names:
           - --role
@@ -5397,7 +5397,7 @@ subcommands:
           description: | 
             🎩 Role name
             
-            Required: ✓ Yes
+            ❕ Required, unless --file is set
             
             Allowed values: ResourceOwner, DeveloperRead, DeveloperWrite, DeveloperManage, SystemAdmin, ClusterAdmin, SecurityAdmin, UserAdmin, AuditAdmin, Operator
             
@@ -5425,6 +5425,14 @@ subcommands:
             ℹ️ If not set, it is deduced from the resource type (kafka when there is no resource)
             
             Allowed values: kafka, schema-registry, connect, ksqldb
+            
+        - names:
+          - --file
+          argument: FILE
+          description: | 
+            📄 Create all the role bindings of a file, one per line: <principal> <role> <resource or -> [prefix] [scope=<scope>]
+            
+            See environment/rbac-sasl-plain/role-bindings.txt (the default role bindings) for the format.
             
         - names:
           - --verbose

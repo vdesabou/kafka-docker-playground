@@ -4,10 +4,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-cp $PWD/create-role-bindings-for-group.sh ../../environment/rbac-sasl-plain/scripts/helper/
 
 playground start-environment --environment rbac-sasl-plain
 
 
 log "Creating role bindings for group"
-docker exec -i tools bash -c "/tmp/helper/create-role-bindings-for-group.sh"
+for scope in kafka schema-registry connect ksqldb
+do
+    playground rbac role-binding create --principal Group:KafkaDevelopers --role SystemAdmin --scope $scope
+done
