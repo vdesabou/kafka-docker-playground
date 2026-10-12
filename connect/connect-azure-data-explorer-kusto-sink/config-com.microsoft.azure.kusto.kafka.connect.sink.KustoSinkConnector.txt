@@ -1,0 +1,201 @@
+==========================
+Connection
+==========================
+🔘 kusto.ingestion.url
+
+Kusto ingestion endpoint URL.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 kusto.query.url
+
+Kusto query endpoint URL.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 aad.auth.appkey
+
+Application Key for Azure Active Directory authentication.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 aad.auth.accesstoken
+
+Kusto Access Token for Azure Active Directory authentication
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 aad.auth.appid
+
+Application Id for Azure Active Directory authentication.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 aad.auth.authority
+
+Azure Active Directory tenant.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 kusto.validation.table.enable
+
+Enable table access validation at task start.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 aad.auth.strategy
+
+Strategy to authenticate against Azure Active Directory, either ``application`` (default) or ``managed_identity``.
+
+	 - Type: STRING
+	 - Default: APPLICATION
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 proxy.host
+
+Proxy host
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 proxy.port
+
+Proxy port
+
+	 - Type: INT
+	 - Default: -1
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+Writes
+==========================
+🔘 kusto.tables.topics.mapping
+
+A JSON array mapping ingestion from topic to table, e.g: [{'topic':'topic1','db':'kustoDb', 'table': 'table1', 'format': 'csv', 'mapping': 'csvMapping', 'streaming': 'false'}..].
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 tempdir.path
+
+Temp dir that will be used by kusto sink to buffer records. defaults to system temp dir.
+
+	 - Type: STRING
+	 - Default: /tmp
+	 - Importance: LOW
+	 - Required: false
+
+🔘 flush.size.bytes
+
+Kusto sink max buffer size (per topic+partition combo).
+
+	 - Type: LONG
+	 - Default: 1048576
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 flush.interval.ms
+
+Kusto sink max staleness in milliseconds (per topic+partition combo).
+
+	 - Type: LONG
+	 - Default: 30000
+	 - Importance: HIGH
+	 - Required: false
+
+==========================
+Error Handling and Retries
+==========================
+🔘 behavior.on.error
+
+Behavior on error setting for ingestion of records into Kusto table. Must be configured to one of the following:
+
+	 - Type: STRING
+	 - Default: FAIL
+	 - Importance: LOW
+	 - Required: false
+
+🔘 misc.deadletterqueue.bootstrap.servers
+
+
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: Configure this list to Kafka broker's address(es) to which the Connector should write records failed due to restrictions while writing to the file in `tempdir.path`, network interruptions or unavailability of Kusto cluster. This list should be in the form host-1:port-1,host-2:port-2,…host-n:port-n.
+	 - Required: LOW
+
+🔘 misc.deadletterqueue.topic.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Set this to the Kafka topic's name to which the Connector should write records failed due to restrictions while writing to the file in `tempdir.path`, network interruptions or unavailability of Kusto cluster.
+	 - Required: LOW
+
+🔘 errors.retry.max.time.ms
+
+Maximum time up to which the Connector should retry writing records to Kusto table in case of failures.
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 errors.retry.backoff.time.ms
+
+BackOff time between retry attempts the Connector makes to ingest records into Kusto table.
+
+	 - Type: LONG
+	 - Default: 10000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
