@@ -6027,7 +6027,7 @@ playground_debug_heap_analyze_usage() {
 playground_debug_analyze_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground debug analyze-logs\n\n"
-    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Records logged at INFO/DEBUG/TRACE are\n  never reported.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped. Only files with findings are shown.\n\n"
+    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped. Only files with findings are shown.\n\n"
   else
     printf "playground debug analyze-logs - 🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n\n"
   fi
@@ -7028,7 +7028,7 @@ playground_container_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--errors")"
-    printf "    🔥 Only show a digest of ERROR/FATAL records, then exit\n    \n    Repeated records are de-duplicated with an occurrence count, stack\n    traces are collapsed to the exception chain (\"Caused by:\") plus a few\n    frames of the deepest cause. Records logged at INFO/DEBUG/TRACE are\n    never reported, even when their message contains \"Error\" or \"Exception\".\n    \n    Scans the whole log unless --since or --tail narrow it.\n"
+    printf "    🔥 Only show a digest of ERROR/FATAL records, then exit\n    \n    Repeated records are de-duplicated with an occurrence count, stack\n    traces are collapsed to the exception chain (\"Caused by:\") plus a few\n    frames of the deepest cause. Only records with an explicit level are\n    reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n    uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n    level-less lines that merely contain \"error\" or \"failed\", never are.\n    \n    Scans the whole log unless --since or --tail narrow it.\n"
     printf "    %s\n" "Conflicts: --open, --wait-for-log, --grep"
     echo
 
@@ -7073,7 +7073,7 @@ playground_container_logs_usage() {
 playground_container_display_error_all_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground container display-error-all\n\n"
-    printf "  🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick\n  troubleshooting\n  \n  The first command to run when an example misbehaves and you do not yet\n  know which component is at fault. It sweeps every container at once,\n  so you do not have to guess where to look.\n  \n  Each container gets the same digest as 'playground container logs\n  --errors': repeated records are de-duplicated with an occurrence count\n  and stack traces are collapsed to their \"Caused by:\" chain. The last\n  lines of connect are also shown raw, for failures that log no error.\n\n"
+    printf "  🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick\n  troubleshooting\n  \n  The first command to run when an example misbehaves and you do not yet\n  know which component is at fault. It sweeps every container at once,\n  so you do not have to guess where to look.\n  \n  Each container gets the same digest as 'playground container logs\n  --errors': repeated records are de-duplicated with an occurrence count\n  and stack traces are collapsed to their \"Caused by:\" chain. Containers\n  without any finding are only listed in a final one-line summary. The\n  last lines of connect are always shown raw, for failures that log no\n  error.\n\n"
   else
     printf "playground container display-error-all - 🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick troubleshooting\n\n"
   fi
@@ -13976,20 +13976,31 @@ function summarize_log_errors() {
                line ~ /^Caused by:/ ||
                line ~ /^[A-Za-z0-9_$]+(\.[A-Za-z0-9_$]+)+(Exception|Error|Throwable)(:|$)/
     }
+    function severity(lvl) {
+        lvl = toupper(lvl)
+        if (lvl == "FATAL" || lvl == "SEVERE" || lvl == "PANIC" || lvl == "F") return "FATAL"
+        if (lvl == "ERROR" || lvl == "E") return "ERROR"
+        if (lvl == "WARN" || lvl == "WARNING" || lvl == "W") return "WARN"
+        # an explicit INFO/DEBUG/TRACE level wins over "Error"/"Exception"/"failed" words in the message
+        return ""
+    }
+    # only an explicit level counts: an uppercase level token as a whole word (" ERROR ", "[ERROR]",
+    # "\"ERROR\""), a logfmt or json level field (level=error, "level":"error") or a klog prefix (E1012)
     function level_of(head,    h, lvl) {
         h = substr(head, 1, 200)
-        if (match(h, /(^|[^A-Za-z])(TRACE|DEBUG|INFO|WARN|WARNING|ERROR|FATAL|SEVERE)([^A-Za-z]|$)/)) {
+        if (match(h, /(^|[] \t[("|])(TRACE|DEBUG|INFO|WARN|WARNING|ERROR|FATAL|SEVERE)([] \t:)"|]|$)/)) {
             lvl = substr(h, RSTART, RLENGTH)
             gsub(/[^A-Z]/, "", lvl)
-            if (lvl == "FATAL" || lvl == "SEVERE") return "FATAL"
-            if (lvl == "ERROR") return "ERROR"
-            if (lvl == "WARN" || lvl == "WARNING") return "WARN"
-            # an explicit INFO/DEBUG/TRACE level wins over "Error"/"Exception" words in the message
-            return ""
+            return severity(lvl)
         }
-        # level-less line (stderr, raw stack trace, non-java containers): an exception or an explicit failure
-        if (h ~ /[A-Za-z0-9_$]+(Exception|Error|Throwable)(:|[ \t]|$)/) return "ERROR"
-        if (tolower(h) ~ /(^|[^a-z])(error|failed|failure)([^a-z]|$)/) return "ERROR"
+        if (match(h, /(^|[^A-Za-z])"?level"?[=:][ \t]*"?[A-Za-z]+/)) {
+            lvl = substr(h, RSTART, RLENGTH)
+            sub(/^.*[=:][ \t]*"?/, "", lvl)
+            return severity(lvl)
+        }
+        if (match(h, /^[IWEF][0-9][0-9][0-9][0-9] [0-9][0-9]:/)) return severity(substr(h, 1, 1))
+        # level-less line (stderr, raw stack trace): only an uncaught java exception
+        if (h ~ /^Exception in thread / || h ~ /^([a-z][A-Za-z0-9_$]*\.)+[A-Z][A-Za-z0-9_$]*(Exception|Error|Throwable)(:|$)/) return "ERROR"
         return ""
     }
     function short(s) {
@@ -34085,20 +34096,32 @@ playground_container_display_error_all_command() {
       fi
       log "####################################################"
 
+      clean_containers=()
       while IFS= read -r container
       do
           if [ -z "$container" ]; then
               continue
           fi
-          log "####################################################"
-          log "🔥 ERROR/FATAL digest for $container logs${since:+ since $since}"
           if [[ "$environment" == "cfk" ]]
           then
-              kubectl -n confluent logs "$container" --all-containers=true "${since_opt[@]}" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings"
+              digest=$(kubectl -n confluent logs "$container" --all-containers=true "${since_opt[@]}" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings")
           else
-              docker container logs "${since_opt[@]}" "$container" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings"
+              digest=$(docker container logs "${since_opt[@]}" "$container" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings")
           fi
-          # a failed assertion (no record received, wrong count) usually logs no error at all
+          # a failed assertion (no record received, wrong count) usually logs no error at all, so connect tail is always shown
+          if [[ "$digest" == "✅"* ]] && [[ "$container" != connect* ]]
+          then
+              clean_containers+=("$container")
+              continue
+          fi
+          log "####################################################"
+          if [[ "$digest" == "✅"* ]]
+          then
+              clean_containers+=("$container")
+          else
+              log "🔥 ERROR/FATAL digest for $container logs${since:+ since $since}"
+              echo "$digest"
+          fi
           if [[ "$container" == connect* ]]
           then
               log "📜 last 50 lines of $container logs"
@@ -34111,6 +34134,10 @@ playground_container_display_error_all_command() {
           fi
           log "####################################################"
       done <<< "$containers"
+      if [ ${#clean_containers[@]} -gt 0 ]
+      then
+          log "✅ no $([[ -n "$include_warnings" ]] && echo "ERROR/FATAL/WARN" || echo "ERROR/FATAL") record${since:+ since $since} in: ${clean_containers[*]}"
+      fi
   fi
 }
 

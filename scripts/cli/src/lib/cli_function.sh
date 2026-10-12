@@ -2804,20 +2804,31 @@ function summarize_log_errors() {
                line ~ /^Caused by:/ ||
                line ~ /^[A-Za-z0-9_$]+(\.[A-Za-z0-9_$]+)+(Exception|Error|Throwable)(:|$)/
     }
+    function severity(lvl) {
+        lvl = toupper(lvl)
+        if (lvl == "FATAL" || lvl == "SEVERE" || lvl == "PANIC" || lvl == "F") return "FATAL"
+        if (lvl == "ERROR" || lvl == "E") return "ERROR"
+        if (lvl == "WARN" || lvl == "WARNING" || lvl == "W") return "WARN"
+        # an explicit INFO/DEBUG/TRACE level wins over "Error"/"Exception"/"failed" words in the message
+        return ""
+    }
+    # only an explicit level counts: an uppercase level token as a whole word (" ERROR ", "[ERROR]",
+    # "\"ERROR\""), a logfmt or json level field (level=error, "level":"error") or a klog prefix (E1012)
     function level_of(head,    h, lvl) {
         h = substr(head, 1, 200)
-        if (match(h, /(^|[^A-Za-z])(TRACE|DEBUG|INFO|WARN|WARNING|ERROR|FATAL|SEVERE)([^A-Za-z]|$)/)) {
+        if (match(h, /(^|[] \t[("|])(TRACE|DEBUG|INFO|WARN|WARNING|ERROR|FATAL|SEVERE)([] \t:)"|]|$)/)) {
             lvl = substr(h, RSTART, RLENGTH)
             gsub(/[^A-Z]/, "", lvl)
-            if (lvl == "FATAL" || lvl == "SEVERE") return "FATAL"
-            if (lvl == "ERROR") return "ERROR"
-            if (lvl == "WARN" || lvl == "WARNING") return "WARN"
-            # an explicit INFO/DEBUG/TRACE level wins over "Error"/"Exception" words in the message
-            return ""
+            return severity(lvl)
         }
-        # level-less line (stderr, raw stack trace, non-java containers): an exception or an explicit failure
-        if (h ~ /[A-Za-z0-9_$]+(Exception|Error|Throwable)(:|[ \t]|$)/) return "ERROR"
-        if (tolower(h) ~ /(^|[^a-z])(error|failed|failure)([^a-z]|$)/) return "ERROR"
+        if (match(h, /(^|[^A-Za-z])"?level"?[=:][ \t]*"?[A-Za-z]+/)) {
+            lvl = substr(h, RSTART, RLENGTH)
+            sub(/^.*[=:][ \t]*"?/, "", lvl)
+            return severity(lvl)
+        }
+        if (match(h, /^[IWEF][0-9][0-9][0-9][0-9] [0-9][0-9]:/)) return severity(substr(h, 1, 1))
+        # level-less line (stderr, raw stack trace): only an uncaught java exception
+        if (h ~ /^Exception in thread / || h ~ /^([a-z][A-Za-z0-9_$]*\.)+[A-Z][A-Za-z0-9_$]*(Exception|Error|Throwable)(:|$)/) return "ERROR"
         return ""
     }
     function short(s) {

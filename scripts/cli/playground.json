@@ -2114,7 +2114,7 @@
         },
         {
           "name": "analyze-logs",
-          "description": "🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Records logged at INFO/DEBUG/TRACE are\n  never reported.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped. Only files with findings are shown.\n",
+          "description": "🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped. Only files with findings are shown.\n",
           "usage": "playground debug analyze-logs [OPTIONS]",
           "options": [
             {
@@ -2688,7 +2688,7 @@
                 "--errors"
               ],
               "argument": "",
-              "description": "🔥 Only show a digest of ERROR/FATAL records, then exit\n\nRepeated records are de-duplicated with an occurrence count, stack\ntraces are collapsed to the exception chain (\"Caused by:\") plus a few\nframes of the deepest cause. Records logged at INFO/DEBUG/TRACE are\nnever reported, even when their message contains \"Error\" or \"Exception\".\n\nScans the whole log unless --since or --tail narrow it.\n\nConflicts with: --open, --wait-for-log, --grep\n"
+              "description": "🔥 Only show a digest of ERROR/FATAL records, then exit\n\nRepeated records are de-duplicated with an occurrence count, stack\ntraces are collapsed to the exception chain (\"Caused by:\") plus a few\nframes of the deepest cause. Only records with an explicit level are\nreported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\nuncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\nlevel-less lines that merely contain \"error\" or \"failed\", never are.\n\nScans the whole log unless --since or --tail narrow it.\n\nConflicts with: --open, --wait-for-log, --grep\n"
             },
             {
               "names": [
@@ -2708,7 +2708,7 @@
         },
         {
           "name": "display-error-all",
-          "description": "🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick troubleshooting\n  \n  The first command to run when an example misbehaves and you do not yet\n  know which component is at fault. It sweeps every container at once,\n  so you do not have to guess where to look.\n  \n  Each container gets the same digest as 'playground container logs\n  --errors': repeated records are de-duplicated with an occurrence count\n  and stack traces are collapsed to their \"Caused by:\" chain. The last\n  lines of connect are also shown raw, for failures that log no error.\n",
+          "description": "🔥 Display all ERROR/FATAL logs in all containers/pods. Useful for quick troubleshooting\n  \n  The first command to run when an example misbehaves and you do not yet\n  know which component is at fault. It sweeps every container at once,\n  so you do not have to guess where to look.\n  \n  Each container gets the same digest as 'playground container logs\n  --errors': repeated records are de-duplicated with an occurrence count\n  and stack traces are collapsed to their \"Caused by:\" chain. Containers\n  without any finding are only listed in a final one-line summary. The\n  last lines of connect are always shown raw, for failures that log no\n  error.\n",
           "usage": "playground container display-error-all [OPTIONS]",
           "options": [
             {
