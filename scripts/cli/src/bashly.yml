@@ -1414,6 +1414,8 @@ commands:
     🔢 Choosing versions
       --tag             Confluent Platform version for every component
       --connect-tag     Confluent Platform version for connect only
+      --schema-registry-tag, --ksqldb-tag, --control-center-tag
+                        version for that component only
       --connector-tag   connector version from Confluent Hub
       --connector-zip   connector from a local zip or a URL
       --connector-jar   a single jar, dropped into the existing plugin
@@ -1526,6 +1528,45 @@ commands:
       Must be greater or equal to 5.3.0
 
       🎓 Tip: use <tab> completion to trigger fzf completion
+  - long: --schema-registry-tag
+    arg: schema_registry_tag
+    required: false
+    completions:
+      dynamic:
+      - playground get-tag-list "$completion_current"
+    help: |-
+      🔰 Confluent Platform (CP) version to use for schema registry only
+
+      It sets CP_SCHEMA_REGISTRY_TAG environment variable
+
+      ❗ not supported with ccloud examples (schema registry is in Confluent Cloud)
+
+      🎓 Tip: use <tab> completion to trigger fzf completion
+  - long: --ksqldb-tag
+    arg: ksqldb_tag
+    required: false
+    completions:
+      dynamic:
+      - playground get-tag-list "$completion_current"
+    help: |-
+      🎏 Confluent Platform (CP) version to use for ksqlDB server and CLI only, with --enable-ksqldb
+
+      It sets CP_KSQL_TAG and CP_KSQL_CLI_TAG environment variables
+
+      ❗ not supported with ccloud examples
+
+      🎓 Tip: use <tab> completion to trigger fzf completion
+  - long: --control-center-tag
+    arg: control_center_tag
+    required: false
+    help: |-
+      💠 Control Center version to use, with --enable-control-center
+
+      It sets CP_CONTROL_CENTER_TAG environment variable
+
+      With Control Center Next Gen (default), this is the version of the confluentinc/cp-enterprise-control-center-next-gen image (for example 2.2.0, default is latest)
+
+      With --enable-legacy-control-center, this is a CP version (< 8), by default the one of --tag
   - &connector-tag
     long: --connector-tag
     arg: connector_tag
