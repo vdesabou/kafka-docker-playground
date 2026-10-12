@@ -4,4 +4,6 @@ services:
   schema-registry:
     environment:
       SCHEMA_REGISTRY_CONFLUENT_SCHEMA_REGISTRY_ANONYMOUS_PRINCIPAL: 'true'
-      SCHEMA_REGISTRY_AUTHENTICATION_SKIP_PATHS: '/*'
+      # '/*' (as in the documentation) does not work: it is the same path spec as the "authenticate everything"
+      # constraint, which wins, and anonymous requests get 401 Unauthorized. List the Schema Registry resources instead
+      SCHEMA_REGISTRY_AUTHENTICATION_SKIP_PATHS: '/subjects/*,/schemas/*,/config/*,/mode/*,/compatibility/*,/contexts/*'
