@@ -57,16 +57,36 @@ then
       fzf_option_rounded=""
     fi
   fi
-  readonly MENU_LETS_GO="🏭 Create the reproduction model !" #0
+  readonly MENU_LETS_GO="🏭 Create the reproduction model !"
 
-  MENU_ENABLE_CUSTOM_SMT="🔧 Add custom SMT $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_ENABLE_CUSTOM_SMT})) ' ') --custom-smt" #2
-  MENU_ADD_CONNECTOR_PLUGIN="🔌 Add connector plugin $(printf '%*s' $((${MAX_LENGTH}-23-${#MENU_ADD_CONNECTOR_PLUGIN})) ' ') --connector-plugin" #4
+  MENU_ENABLE_CUSTOM_SMT="🔧 Add custom SMT $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_ENABLE_CUSTOM_SMT})) ' ') --custom-smt"
+  MENU_ADD_CONNECTOR_PLUGIN="🔌 Add connector plugin $(printf '%*s' $((${MAX_LENGTH}-23-${#MENU_ADD_CONNECTOR_PLUGIN})) ' ') --connector-plugin"
 
-  readonly MENU_DISABLE_CUSTOM_SMT="❌🔧 Disable custom SMT" #3
-  readonly MENU_GO_BACK="🔙 Go back" #5
+  readonly MENU_DISABLE_CUSTOM_SMT="❌🔧 Disable custom SMT"
+  readonly MENU_GO_BACK="🔙 Go back"
 
   last_two_folders=$(basename $(dirname $(dirname $test_file)))/$(basename $(dirname $test_file))
-  example="$last_two_folders/$filename"
+  example="$last_two_folders/$(basename "$test_file")"
+
+  connector_example=0
+  get_connector_paths
+  if [ "$connector_paths" != "" ]
+  then
+    for connector_path in ${connector_paths//,/ }
+    do
+      full_connector_name=$(basename "$connector_path")
+      owner=$(echo "$full_connector_name" | cut -d'-' -f1)
+      name=$(echo "$full_connector_name" | cut -d'-' -f2-)
+
+      if [ "$owner" == "java" ] || [ "$name" == "hub-components" ] || [ "$owner" == "filestream" ]
+      then
+        # happens when plugin is not coming from confluent hub
+        continue
+      else
+        connector_example=1
+      fi
+    done
+  fi
 
   stop=0
   description=""
@@ -75,57 +95,39 @@ then
     length=${#pipeline_array[@]}
     if ((length > 0))
     then
-      MENU_PIPELINE="🔖 Add another sink to pipeline $(printf '%*s' $((${MAX_LENGTH}-32-${#MENU_PIPELINE})) ' ') --pipeline" #1
+      MENU_PIPELINE="🔖 Add another sink to pipeline $(printf '%*s' $((${MAX_LENGTH}-32-${#MENU_PIPELINE})) ' ') --pipeline"
     else
       MENU_PIPELINE="🔖 Create pipeline with sink $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_PIPELINE})) ' ') --pipeline"
     fi
 
-    options=("$MENU_LETS_GO" "$MENU_PIPELINE" "$MENU_ENABLE_CUSTOM_SMT" "$MENU_DISABLE_CUSTOM_SMT" "$MENU_ADD_CONNECTOR_PLUGIN" "$MENU_GO_BACK")
-
-    connector_example=0
-    get_connector_paths
-    if [ "$connector_paths" != "" ]
+    # an entry is only added when it applies to this example
+    options=("$MENU_LETS_GO")
+    if [ $connector_example == 1 ]
     then
-      for connector_path in ${connector_paths//,/ }
-      do
-        full_connector_name=$(basename "$connector_path")
-        owner=$(echo "$full_connector_name" | cut -d'-' -f1)
-        name=$(echo "$full_connector_name" | cut -d'-' -f2-)
-
-        if [ "$owner" == "java" ] || [ "$name" == "hub-components" ] || [ "$owner" == "filestream" ]
-        then
-          # happens when plugin is not coming from confluent hub
-          continue
-        else
-          connector_example=1
-        fi
-      done
-    fi
-
-    if [ $connector_example == 0 ]
-    then
-      for((i=1;i<5;i++)); do
-        unset "options[$i]"
-      done
-    else
-      if [[ $test_file == *"sink"* ]]
+      if [[ $test_file != *"sink"* ]]
       then
-        unset 'options[1]'
+        options+=("$MENU_PIPELINE")
       fi
+      if [ -z "$CUSTOM_SMT" ]
+      then
+        options+=("$MENU_ENABLE_CUSTOM_SMT")
+      else
+        options+=("$MENU_DISABLE_CUSTOM_SMT")
+      fi
+      options+=("$MENU_ADD_CONNECTOR_PLUGIN")
     fi
-
-    if [ ! -z $CUSTOM_SMT ]
-    then
-      unset 'options[2]'
-    else
-      unset 'options[3]'
-    fi
+    options+=("$MENU_GO_BACK")
 
     if [ "$description" == "" ]
     then
       maybe_remove_flag "--description"
       set +e
-      description=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="💭 " --header="enter a description for this repro model (it cannot be empty !)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_empty_pointer --print-query)
+      description=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="💭 " --header="enter a description for this repro model (it cannot be empty !, esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_empty_pointer --print-query)
+      if [ $? -eq 130 ]
+      then
+        # esc
+        exit 0
+      fi
       set -e
       if [ "$description" == "" ]
       then
@@ -146,8 +148,8 @@ then
 
     if [[ $res == *"$MENU_GO_BACK"* ]]
     then
-      stop=1
       playground repro bootstrap
+      exit $?
     fi
 
     if [[ $res == *"$MENU_ENABLE_CUSTOM_SMT"* ]]
@@ -186,6 +188,24 @@ then
       pipeline_array+=("$sink_file")
     fi
   done # end while loop stop
+fi
+
+if [ "$description" == "" ]
+then
+  # -f without -d (for example the 🧪 entry of the playground run menu)
+  set +e
+  description=$(echo "" | fzf --margin=1%,1%,1%,1% --info=inline --cycle --prompt="💭 " --header="enter a description for this repro model (it cannot be empty !, esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --print-query 2>/dev/null)
+  if [ $? -eq 130 ]
+  then
+    # esc
+    exit 0
+  fi
+  set -e
+  if [ "$description" == "" ]
+  then
+    logerror "❌ a description is required, use --description (-d)"
+    exit 1
+  fi
 fi
 
 if [[ $test_file == *"@"* ]]
