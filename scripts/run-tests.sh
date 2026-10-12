@@ -126,8 +126,8 @@ do
             continue
         fi
 
-        # check for ignored scripts in scripts/tests-ignored.txt
-        if grep "$script" ${DIR}/tests-ignored.txt > /dev/null
+        # check for ignored scripts in scripts/tests-ignored.txt (whole line: csv.sh must not match s3-csv.sh)
+        if grep -qxF "$script" ${DIR}/tests-ignored.txt
         then
             log "####################################################"
             log "⏭ skipping $script in dir $dir"
