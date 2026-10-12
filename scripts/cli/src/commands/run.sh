@@ -131,6 +131,9 @@ fi
 # previous run.test_file, which is overwritten right after
 previous_test_file=$(playground state get run.test_file)
 playground state set run.test_file "$test_file"
+# until the example is really started (menu validated, flags checked), quitting
+# (esc, ctrl-c, an invalid combination) must not leave run.test_file on it
+trap 'playground state set run.test_file "$previous_test_file"' EXIT
 test_file_directory="$(dirname "${test_file}")"
 filename=$(basename -- "$test_file")
 
@@ -1097,6 +1100,7 @@ then
 
     if [[ $res == *"$MENU_GO_BACK"* ]]
     then
+      trap - EXIT
       playground state set run.test_file "$previous_test_file"
       playground run
       exit $?
@@ -1110,6 +1114,7 @@ then
       if [ -n "$sibling_example" ]
       then
         # same flags, reopening the menu for the selected example
+        trap - EXIT
         playground state set run.test_file "$previous_test_file"
         IFS=' ' flag_list="${array_flag_list[*]}"
         playground run -f "$test_file_directory/$sibling_example" --force-interactive-re-run $flag_list
@@ -1119,6 +1124,7 @@ then
 
     if [[ $res == *"$MENU_REPRO_BOOTSTRAP"* ]]
     then
+      trap - EXIT
       playground state set run.test_file "$previous_test_file"
       playground repro bootstrap -f "$test_file"
       exit $?
@@ -1782,6 +1788,13 @@ then
   fi
 fi # end of interactive_mode
 
+if [[ " ${array_flag_list[*]} " == *" --enable-legacy-control-center "* ]] && [ -z "$ENABLE_CONTROL_CENTER" ]
+then
+  log "💠 enabling Control Center as --enable-legacy-control-center is set"
+  array_flag_list+=("--enable-control-center")
+  export ENABLE_CONTROL_CENTER=true
+fi
+
 if [ ! -z "$ENABLE_LEGACY_CONTROL_CENTER" ] && [ ! -z "$ENABLE_CONTROL_CENTER" ]
 then
   effective_tag=${TAG:-$(grep "# default tag" "$root_folder/scripts/utils.sh" | cut -d "=" -f 2 | cut -d " " -f 1)}
@@ -1797,6 +1810,7 @@ fi
 # cancelled), stop or kill what the previous run left behind
 #
 set +e
+trap - EXIT
 # 'playground stop' stops the example recorded in run.test_file
 playground state set run.test_file "$previous_test_file"
 # resources left by the previous ccloud run (e.g. interrupted before its final connector delete)

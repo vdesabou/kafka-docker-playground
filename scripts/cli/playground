@@ -3319,7 +3319,7 @@ playground_ccloud_costs_history_usage() {
 playground_run_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground run\n\n"
-    printf "  🕹️ Run any example !\n  \n  🔥 It start an interactive mode where you'll be fully guided !\n  \n    playground run                       🔍 pick an example, guided\n    playground run -f <example.sh>       🚀 run that one directly\n    playground re-run                    ⚡ same example, same flags\n  \n  Each run stops what was running, starts the environment the example asks\n  for, brings up its containers, creates the connector and produces data.\n  Credentials the example needs are loaded from 'playground secrets'.\n  \n  🔢 Choosing versions\n    --tag             Confluent Platform version for every component\n    --connect-tag     Confluent Platform version for connect only\n    --connector-tag   connector version from Confluent Hub\n    --connector-zip   connector from a local zip or a URL\n    --connector-jar   a single jar, dropped into the existing plugin\n  \n  🧰 Adding to the example\n    --environment     run a connector example under another security setup\n    --enable-<x>      add control-center, ksqldb, flink, grafana, kcat...\n    --connect-community-image, --kafka-community-image\n                      use community images instead of enterprise ones\n    --enable-kraft    KRaft instead of Zookeeper for CP 7.4 to 7.9\n    --pipeline        chain a source example into a sink example\n    --sql-datagen     continuous realistic data instead of a fixed batch\n  \n  \n  ⛅ When running Confluent Cloud (ccloud) example:\n  \n    All you have to do is to be already logged in with confluent CLI.\n  \n    By default, a new Confluent Cloud environment with a Cluster will be\n  created.\n  \n    You can configure the new cluster by setting:\n  \n    --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster\n  (possible values: basic, standard and dedicated, default basic)\n    --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider\n  (possible values: aws, gcp and azure, default aws)\n    --cluster-region (or CLUSTER_REGION environment variable): The Cloud region\n  (use confluent kafka region list to get the list, default eu-west-2 for aws,\n  westeurope for azure and europe-west2 for gcp)\n    --cluster-environment (or ENVIRONMENT environment variable) (optional): The\n  environment id where want your new cluster (example: txxxxx)\n  \n    In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n    --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n    --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key\n  and secret to use, it should be separated with colon (example:\n  <API_KEY>:<API_KEY_SECRET>)\n    --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable) (optional, if not set, new one will be created): The Schema Registry\n  api key and secret to use, it should be separated with colon (example:\n  <SR_API_KEY>:<SR_API_KEY_SECRET>)\n  \n  ❗ this command will kill all containers using \"playground container kill-all\",\n  you can disable this by running \"playground config\n  container-kill-all-before-run false\"\n\n"
+    printf "  🕹️ Run any example !\n  \n  🔥 It start an interactive mode where you'll be fully guided !\n  \n    playground run                       🔍 pick an example, guided\n    playground run -f <example.sh>       🚀 run that one directly\n    playground re-run                    ⚡ same example, same flags\n  \n  Each run stops what was running, starts the environment the example asks\n  for, brings up its containers, creates the connector and produces data.\n  Credentials the example needs are loaded from 'playground secrets'.\n  \n  🔢 Choosing versions\n    --tag             Confluent Platform version for every component\n    --connect-tag     Confluent Platform version for connect only\n    --connector-tag   connector version from Confluent Hub\n    --connector-zip   connector from a local zip or a URL\n    --connector-jar   a single jar, dropped into the existing plugin\n  \n  🧰 Adding to the example\n    --environment     run a connector example under another security setup\n    --enable-<x>      add control-center, ksqldb, flink, grafana, kcat...\n    --enable-sql-datagen\n                      continuous realistic data for CDC source examples\n    --connect-community-image, --kafka-community-image\n                      use community images instead of enterprise ones\n    --enable-kraft    KRaft instead of Zookeeper for CP 7.4 to 7.9\n    --connect-log-level\n                      log levels set on connect before the connector is created\n  \n  \n  ⛅ When running Confluent Cloud (ccloud) example:\n  \n    All you have to do is to be already logged in with confluent CLI.\n  \n    By default, a new Confluent Cloud environment with a Cluster will be\n  created.\n  \n    You can configure the new cluster by setting:\n  \n    --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster\n  (possible values: basic, standard and dedicated, default basic)\n    --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider\n  (possible values: aws, gcp and azure, default aws)\n    --cluster-region (or CLUSTER_REGION environment variable): The Cloud region\n  (use confluent kafka region list to get the list, default eu-west-2 for aws,\n  westeurope for azure and europe-west2 for gcp)\n    --cluster-environment (or ENVIRONMENT environment variable) (optional): The\n  environment id where want your new cluster (example: txxxxx)\n  \n    In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n    --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n    --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key\n  and secret to use, it should be separated with colon (example:\n  <API_KEY>:<API_KEY_SECRET>)\n    --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable) (optional, if not set, new one will be created): The Schema Registry\n  api key and secret to use, it should be separated with colon (example:\n  <SR_API_KEY>:<SR_API_KEY_SECRET>)\n  \n  ❗ this command will kill all containers using \"playground container kill-all\",\n  you can disable this by running \"playground config\n  container-kill-all-before-run false\"\n\n"
   else
     printf "playground run - 🕹️ Run any example !\n\n"
   fi
@@ -3446,7 +3446,7 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-legacy-control-center")"
-    printf "    👨‍🦳 Use legacy Control Center (confluentinc/cp-enterprise-control-center)\n    instead of Control Center Next Gen\n    \n    It sets ENABLE_LEGACY_CONTROL_CENTER environment variable\n    \n    Legacy Control Center is not available for CP >= 8, use it with\n    --enable-control-center\n"
+    printf "    👨‍🦳 Use legacy Control Center (confluentinc/cp-enterprise-control-center)\n    instead of Control Center Next Gen\n    \n    It sets ENABLE_LEGACY_CONTROL_CENTER environment variable\n    \n    Legacy Control Center is not available for CP >= 8. It implies\n    --enable-control-center\n"
     echo
 
     # :flag.usage
@@ -13082,7 +13082,14 @@ function display_interactive_menu_categories () {
     options=("$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_REPRO" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP" "$MENU_ACADEMY")
   fi
 
+  set +e
   res=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🚀" --header="select a category (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_pointer)
+  set -e
+  if [ -z "$res" ]
+  then
+    # esc or ctrl-c: an empty result would otherwise match the empty MENU_CURRENT_EXAMPLE below
+    exit 0
+  fi
 
   case "${res}" in
     "$MENU_CURRENT_EXAMPLE")
@@ -19734,18 +19741,19 @@ function force_enable () {
   logwarn "💪 Forcing $flag ($env_variable env variable)"
   line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh$' $test_file | cut -d ":" -f 1 | tail -n1)
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  if [ -z "$PG_VERBOSE_MODE" ]
-then
-    trap 'rm -rf $tmp_dir' EXIT
-else
-    log "🐛📂 not deleting tmp dir $tmp_dir"
-fi
   echo "# remove or comment those lines if you don't need it anymore" > $tmp_dir/tmp_force_enable
   echo "logwarn \"💪 Forcing $flag ($env_variable env variable) as it was set when reproduction model was created\"" >> $tmp_dir/tmp_force_enable
   echo "export $env_variable=$env_value" >> $tmp_dir/tmp_force_enable
   cp $test_file $tmp_dir/tmp_file
 
   { head -n $(($line_final_source+1)) $tmp_dir/tmp_file; cat $tmp_dir/tmp_force_enable; tail -n  +$(($line_final_source+1)) $tmp_dir/tmp_file; } > $test_file
+
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+    rm -rf $tmp_dir
+  else
+    log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
 }
 
 function load_env_variables () {
@@ -25125,6 +25133,9 @@ playground_run_command() {
   # previous run.test_file, which is overwritten right after
   previous_test_file=$(playground state get run.test_file)
   playground state set run.test_file "$test_file"
+  # until the example is really started (menu validated, flags checked), quitting
+  # (esc, ctrl-c, an invalid combination) must not leave run.test_file on it
+  trap 'playground state set run.test_file "$previous_test_file"' EXIT
   test_file_directory="$(dirname "${test_file}")"
   filename=$(basename -- "$test_file")
 
@@ -26095,6 +26106,7 @@ playground_run_command() {
 
       if [[ $res == *"$MENU_GO_BACK"* ]]
       then
+        trap - EXIT
         playground state set run.test_file "$previous_test_file"
         playground run
         exit $?
@@ -26108,6 +26120,7 @@ playground_run_command() {
         if [ -n "$sibling_example" ]
         then
           # same flags, reopening the menu for the selected example
+          trap - EXIT
           playground state set run.test_file "$previous_test_file"
           IFS=' ' flag_list="${array_flag_list[*]}"
           playground run -f "$test_file_directory/$sibling_example" --force-interactive-re-run $flag_list
@@ -26117,6 +26130,7 @@ playground_run_command() {
 
       if [[ $res == *"$MENU_REPRO_BOOTSTRAP"* ]]
       then
+        trap - EXIT
         playground state set run.test_file "$previous_test_file"
         playground repro bootstrap -f "$test_file"
         exit $?
@@ -26783,6 +26797,13 @@ playground_run_command() {
     fi
   fi # end of interactive_mode
 
+  if [[ " ${array_flag_list[*]} " == *" --enable-legacy-control-center "* ]] && [ -z "$ENABLE_CONTROL_CENTER" ]
+  then
+    log "💠 enabling Control Center as --enable-legacy-control-center is set"
+    array_flag_list+=("--enable-control-center")
+    export ENABLE_CONTROL_CENTER=true
+  fi
+
   if [ ! -z "$ENABLE_LEGACY_CONTROL_CENTER" ] && [ ! -z "$ENABLE_CONTROL_CENTER" ]
   then
     effective_tag=${TAG:-$(grep "# default tag" "$root_folder/scripts/utils.sh" | cut -d "=" -f 2 | cut -d " " -f 1)}
@@ -26798,6 +26819,7 @@ playground_run_command() {
   # cancelled), stop or kill what the previous run left behind
   #
   set +e
+  trap - EXIT
   # 'playground stop' stops the example recorded in run.test_file
   playground state set run.test_file "$previous_test_file"
   # resources left by the previous ccloud run (e.g. interrupted before its final connector delete)
