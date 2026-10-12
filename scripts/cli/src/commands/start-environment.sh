@@ -56,6 +56,22 @@ then
   export START_SERVICES
 fi
 
+# playground run --enable-multiple-connect-workers: connect2 and connect3 get the
+# connect configuration of the example, in a generated copy of its override file,
+# instead of editing the example's own file. Compose resolves relative paths from
+# the first -f file, so the copy can live anywhere; it keeps the <folder>/<example>
+# end of the path, which check_arm64_support relies on
+if [ -n "$ENABLE_CONNECT_NODES" ] && [ "$environment" != "cfk" ] && [ -f "$docker_compose_override_file" ]
+then
+  example_dir="$(dirname "$docker_compose_override_file")"
+  generated_override_dir="${PLAYGROUND_HOST_TMP_DIR:-/tmp}/playground-connect-workers/$(basename "$(dirname "$example_dir")")/$(basename "$example_dir")"
+  mkdir -p "$generated_override_dir"
+  generated_override_file="$generated_override_dir/$(basename "$docker_compose_override_file")"
+  yq '.services.connect2 = (.services.connect // {}) | .services.connect3 = (.services.connect // {})' "$docker_compose_override_file" > "$generated_override_file"
+  log "🥉 connect2 and connect3 use the connect configuration of $(basename "$docker_compose_override_file") (generated $generated_override_file)"
+  docker_compose_override_file="$generated_override_file"
+fi
+
 cd $test_file_directory
 if [ -f $docker_compose_override_file ]
 then

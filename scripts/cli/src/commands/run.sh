@@ -303,24 +303,8 @@ then
   fi
 
   array_flag_list+=("--enable-multiple-connect-workers")
+  # connect2 and connect3 get the connect configuration of the example in start-environment
   export ENABLE_CONNECT_NODES=true
-
-  # determining the docker-compose file from test_file (compute once)
-  if [ -z "${docker_compose_file:-}" ]
-  then
-    DCF=$(awk '/start-environment/ {val=$6} END {print val}' "$test_file")
-    DCF=${DCF%\"}
-    DCF=${DCF#\"}
-    DCF=${DCF#*/}
-    docker_compose_file="${test_file_directory}/${DCF}"
-  fi
-  if [[ "${PLAYGROUND_ENVIRONMENT:-$environment}" != "cfk" ]] && [ -f "$docker_compose_file" ]
-  then
-    cp "$docker_compose_file" /tmp/playground-backup-docker-compose.yml
-    yq -i '.services.connect2 = .services.connect' /tmp/playground-backup-docker-compose.yml
-    yq -i '.services.connect3 = .services.connect' /tmp/playground-backup-docker-compose.yml
-    cp /tmp/playground-backup-docker-compose.yml "$docker_compose_file"
-  fi
 fi
 
 if [[ -n "$enable_jmx_grafana" ]]
@@ -1284,25 +1268,10 @@ then
         array_flag_list+=("--enable-multiple-connect-workers")
         export ENABLE_CONNECT_NODES=true
         interactive_enable_connect="true"
-
-        # determining the docker-compose file from from test_file
-        docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
-        docker_compose_file="${test_file_directory}/${docker_compose_file}"
-        if [[ "${PLAYGROUND_ENVIRONMENT:-$environment}" != "cfk" ]] && [ -f $docker_compose_file ]
-        then
-          cp $docker_compose_file /tmp/playground-backup-docker-compose.yml
-          yq -i '.services.connect2 = .services.connect' /tmp/playground-backup-docker-compose.yml
-          yq -i '.services.connect3 = .services.connect' /tmp/playground-backup-docker-compose.yml
-          cp /tmp/playground-backup-docker-compose.yml $docker_compose_file
-        fi
       else
         array_flag_list=("${array_flag_list[@]/"--enable-multiple-connect-workers"}")
         unset ENABLE_CONNECT_NODES
         interactive_enable_connect=""
-        if [[ "${PLAYGROUND_ENVIRONMENT:-$environment}" != "cfk" ]] && [ -f /tmp/playground-backup-docker-compose.yml ]
-        then
-          mv /tmp/playground-backup-docker-compose.yml $docker_compose_file
-        fi
       fi
     fi
 
@@ -1944,13 +1913,6 @@ function cleanup {
   # 💡 Capture the original exit status immediately!
   local original_exit_status=$?
   set +e
-  if [[ -n "$enable_multiple_connect_workers" ]]
-  then
-    if [[ "${PLAYGROUND_ENVIRONMENT:-$environment}" != "cfk" ]] && [ -f /tmp/playground-backup-docker-compose.yml ]
-    then
-      mv /tmp/playground-backup-docker-compose.yml $docker_compose_file
-    fi
-  fi
   rm /tmp/playground-run-command-used
   echo ""
 
