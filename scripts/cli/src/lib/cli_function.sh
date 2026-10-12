@@ -1987,7 +1987,7 @@ function display_interactive_menu_categories () {
   MENU_KSQL="$(menu_label "🎏" "ksqlDB" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_ksql_only | awk '{print $1}') examples")"
   MENU_SR="$(menu_label "🔰" "Schema registry" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_schema_registry_only | awk '{print $1}') examples")"
   MENU_RP="$(menu_label "🧲" "Rest proxy" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_rest_proxy_only | awk '{print $1}') examples")"
-  MENU_ACADEMY="$(menu_label "🧑‍🎓" "Academy" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_academy_only | awk '{print $1}') examples")"
+  MENU_ACADEMY="$(menu_label "🎓" "Academy" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_academy_only | awk '{print $1}') examples")"
 
   if [ "$repro" == 1 ]
   then
