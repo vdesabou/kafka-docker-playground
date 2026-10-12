@@ -12986,20 +12986,46 @@ function add_menu_group () {
   options+=("$separator")
 }
 
-# playground run menu: if the toggle applies (1), queue its enable entry when the
-# current value is empty, its disable entry otherwise
+# playground run menu: if the toggle applies (1), queue its entry, checked when
+# the current value is set
 function add_menu_toggle () {
   local applies="$1"
   local current_value="$2"
+  local label="$3"
   if [ "$applies" != "1" ]
   then
     return
   fi
   if [ -z "$current_value" ]
   then
-    enable_group+=("$3")
+    toggle_group+=("[ ] $label")
   else
-    disable_group+=("$4")
+    toggle_group+=("[x] $label")
+  fi
+}
+
+# playground run menu: value of a flag in array_flag_list (--flag=value or --flag value)
+function get_menu_flag_value () {
+  local flag="$1"
+  local entry
+  for entry in "${array_flag_list[@]}"
+  do
+    case "$entry" in
+      "$flag="*) echo "${entry#*=}"; return ;;
+      "$flag "*) echo "${entry#* }"; return ;;
+    esac
+  done
+}
+
+# playground run menu: label followed by its current value, if any
+function menu_value_label () {
+  local label="$1"
+  local value="$2"
+  if [ -n "$value" ]
+  then
+    echo "$label  [$value]"
+  else
+    echo "$label"
   fi
 }
 
@@ -25640,35 +25666,20 @@ playground_run_command() {
 
     readonly MENU_SEPARATOR="--------------------------------------------------"
 
-    MENU_ENABLE_KSQLDB="🎏 Enable ksqlDB $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_ENABLE_KSQLDB})) ' ') --enable-ksqldb"
-    MENU_ENABLE_C3="💠 Enable Control Center $(printf '%*s' $((${MAX_LENGTH}-24-${#MENU_ENABLE_C3})) ' ') --enable-control-center"
-    MENU_ENABLE_CONDUKTOR="🐺 Enable Conduktor Platform $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_ENABLE_CONDUKTOR})) ' ') --enable-conduktor"
-    MENU_ENABLE_RP="🧲 Enable Rest Proxy $(printf '%*s' $((${MAX_LENGTH}-20-${#MENU_ENABLE_RP})) ' ') --enable-rest-proxy"
-    MENU_ENABLE_GRAFANA="📊 Enable Grafana $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_ENABLE_GRAFANA})) ' ') --enable-jmx-grafana"
-    MENU_ENABLE_BROKERS="3️⃣  Enabling multiple brokers $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_ENABLE_BROKERS})) ' ') --enable-multiple-brokers"
-    MENU_ENABLE_CONNECT_WORKERS="🥉 Enabling multiple connect workers $(printf '%*s' $((${MAX_LENGTH}-36-${#MENU_ENABLE_CONNECT_WORKERS})) ' ') --enable-multiple-connect-workers"
-    MENU_ENABLE_KCAT="🐈 Enabling kcat $(printf '%*s' $((${MAX_LENGTH}-16-${#MENU_ENABLE_KCAT})) ' ') --enable-kcat"
-    MENU_ENABLE_SQL_DATAGEN="🌪️  Enable SQL Datagen injection $(printf '%*s' $((${MAX_LENGTH}-31-${#MENU_ENABLE_SQL_DATAGEN})) ' ') --enable-sql-datagen"
-    MENU_ENABLE_FLINK="🐿️  Enable Flink $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_ENABLE_FLINK})) ' ') --enable-flink"
-    MENU_CONNECT_COMMUNITY_IMAGE="🌱 Use community connect image $(printf '%*s' $((${MAX_LENGTH}-30-${#MENU_CONNECT_COMMUNITY_IMAGE})) ' ') --connect-community-image"
-    MENU_KAFKA_COMMUNITY_IMAGE="🌿 Use community kafka image $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_KAFKA_COMMUNITY_IMAGE})) ' ') --kafka-community-image"
-    MENU_ENABLE_KRAFT="🛰️  Enable KRaft (CP 7.4 to 7.9) $(printf '%*s' $((${MAX_LENGTH}-31-${#MENU_ENABLE_KRAFT})) ' ') --enable-kraft"
-    MENU_ENABLE_LEGACY_C3="👨‍🦳 Use legacy Control Center (CP < 8) $(printf '%*s' $((${MAX_LENGTH}-36-${#MENU_ENABLE_LEGACY_C3})) ' ') --enable-legacy-control-center"
-
-    readonly MENU_DISABLE_KSQLDB="❌🎏 Disable ksqlDB"
-    readonly MENU_DISABLE_C3="❌💠 Disable Control Center"
-    readonly MENU_DISABLE_CONDUKTOR="❌🐺 Disable Conduktor Platform"
-    readonly MENU_DISABLE_RP="❌🧲 Disable Rest Proxy"
-    readonly MENU_DISABLE_GRAFANA="❌📊 Disable Grafana"
-    readonly MENU_DISABLE_BROKERS="❌3️⃣ Disabling multiple brokers"
-    readonly MENU_DISABLE_CONNECT_WORKERS="❌🥉 Disabling multiple connect workers"
-    readonly MENU_DISABLE_KCAT="❌🐈 Disabling kcat"
-    readonly MENU_DISABLE_SQL_DATAGEN="❌🌪️ Disable SQL Datagen injection"
-    readonly MENU_DISABLE_FLINK="❌🐿️ Disable Flink"
-    readonly MENU_DISABLE_CONNECT_COMMUNITY_IMAGE="❌🌱 Use enterprise connect image"
-    readonly MENU_DISABLE_KAFKA_COMMUNITY_IMAGE="❌🌿 Use enterprise kafka image"
-    readonly MENU_DISABLE_KRAFT="❌🛰️ Disable KRaft"
-    readonly MENU_DISABLE_LEGACY_C3="❌👨‍🦳 Use Control Center Next Gen"
+    MENU_KSQLDB="🎏 ksqlDB $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_KSQLDB})) ' ') --enable-ksqldb"
+    MENU_C3="💠 Control Center $(printf '%*s' $((${MAX_LENGTH}-21-${#MENU_C3})) ' ') --enable-control-center"
+    MENU_CONDUKTOR="🐺 Conduktor Platform $(printf '%*s' $((${MAX_LENGTH}-25-${#MENU_CONDUKTOR})) ' ') --enable-conduktor"
+    MENU_RP="🧲 Rest Proxy $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_RP})) ' ') --enable-rest-proxy"
+    MENU_GRAFANA="📊 Grafana $(printf '%*s' $((${MAX_LENGTH}-14-${#MENU_GRAFANA})) ' ') --enable-jmx-grafana"
+    MENU_BROKERS="3️⃣  Multiple brokers $(printf '%*s' $((${MAX_LENGTH}-23-${#MENU_BROKERS})) ' ') --enable-multiple-brokers"
+    MENU_CONNECT_WORKERS="🥉 Multiple connect workers $(printf '%*s' $((${MAX_LENGTH}-31-${#MENU_CONNECT_WORKERS})) ' ') --enable-multiple-connect-workers"
+    MENU_KCAT="🐈 kcat $(printf '%*s' $((${MAX_LENGTH}-11-${#MENU_KCAT})) ' ') --enable-kcat"
+    MENU_SQL_DATAGEN="🌪️  SQL Datagen injection $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_SQL_DATAGEN})) ' ') --enable-sql-datagen"
+    MENU_FLINK="🐿️  Flink $(printf '%*s' $((${MAX_LENGTH}-12-${#MENU_FLINK})) ' ') --enable-flink"
+    MENU_CONNECT_COMMUNITY_IMAGE="🌱 Community connect image $(printf '%*s' $((${MAX_LENGTH}-30-${#MENU_CONNECT_COMMUNITY_IMAGE})) ' ') --connect-community-image"
+    MENU_KAFKA_COMMUNITY_IMAGE="🌿 Community kafka image $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_KAFKA_COMMUNITY_IMAGE})) ' ') --kafka-community-image"
+    MENU_KRAFT="🛰️  KRaft (CP 7.4 to 7.9) $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_KRAFT})) ' ') --enable-kraft"
+    MENU_LEGACY_C3="👨‍🦳 Legacy Control Center (CP < 8) $(printf '%*s' $((${MAX_LENGTH}-36-${#MENU_LEGACY_C3})) ' ') --enable-legacy-control-center"
 
     readonly MENU_SEPARATOR_FEATURES="--------------------options-----------------------"
 
@@ -26000,50 +26011,62 @@ playground_run_command() {
       group=()
       if [ $is_fully_managed == 0 ]
       then
-        group+=("$MENU_TAG" "$MENU_CONNECT_TAG")
-        if [ $connector_example == 1 ]; then group+=("$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR"); fi
+        group+=("$(menu_value_label "$MENU_TAG" "$(get_menu_flag_value --tag)")")
+        group+=("$(menu_value_label "$MENU_CONNECT_TAG" "$(get_menu_flag_value --connect-tag)")")
+        if [ $connector_example == 1 ]
+        then
+          group+=("$(menu_value_label "$MENU_CONNECTOR_TAG" "$(get_menu_flag_value --connector-tag)")")
+          menu_connector_zip=$(get_menu_flag_value --connector-zip)
+          group+=("$(menu_value_label "$MENU_CONNECTOR_ZIP" "${menu_connector_zip##*/}")")
+          menu_connector_jar=$(get_menu_flag_value --connector-jar)
+          group+=("$(menu_value_label "$MENU_CONNECTOR_JAR" "${menu_connector_jar##*/}")")
+        fi
         # same rule as the --environment flag
-        if [ "$connector_paths" != "" ]; then group+=("$MENU_ENVIRONMENT"); fi
+        if [ "$connector_paths" != "" ]; then group+=("$(menu_value_label "$MENU_ENVIRONMENT" "$(get_menu_flag_value --environment)")"); fi
       fi
       add_menu_group "$MENU_SEPARATOR" "${group[@]}"
 
-      # enable entries first, then disable entries
-      enable_group=()
-      disable_group=()
-      add_menu_toggle $((1-is_fully_managed)) "$ENABLE_KSQLDB" "$MENU_ENABLE_KSQLDB" "$MENU_DISABLE_KSQLDB"
-      add_menu_toggle $((1-is_fully_managed)) "$ENABLE_CONTROL_CENTER" "$MENU_ENABLE_C3" "$MENU_DISABLE_C3"
-      add_menu_toggle $((1-is_fully_managed)) "$ENABLE_CONDUKTOR" "$MENU_ENABLE_CONDUKTOR" "$MENU_DISABLE_CONDUKTOR"
-      add_menu_toggle $((1-is_ccloud)) "$ENABLE_RESTPROXY" "$MENU_ENABLE_RP" "$MENU_DISABLE_RP"
-      add_menu_toggle $((1-is_ccloud)) "$ENABLE_JMX_GRAFANA" "$MENU_ENABLE_GRAFANA" "$MENU_DISABLE_GRAFANA"
-      add_menu_toggle $((1-is_ccloud)) "$ENABLE_KAFKA_NODES" "$MENU_ENABLE_BROKERS" "$MENU_DISABLE_BROKERS"
-      add_menu_toggle $((1-is_ccloud)) "$ENABLE_CONNECT_NODES" "$MENU_ENABLE_CONNECT_WORKERS" "$MENU_DISABLE_CONNECT_WORKERS"
-      add_menu_toggle $((1-is_fully_managed)) "$ENABLE_KCAT" "$MENU_ENABLE_KCAT" "$MENU_DISABLE_KCAT"
-      add_menu_toggle $sql_datagen "$SQL_DATAGEN" "$MENU_ENABLE_SQL_DATAGEN" "$MENU_DISABLE_SQL_DATAGEN"
-      add_menu_toggle $((1-is_fully_managed)) "$ENABLE_FLINK" "$MENU_ENABLE_FLINK" "$MENU_DISABLE_FLINK"
-      add_menu_group "$MENU_SEPARATOR_FEATURES" "${enable_group[@]}" "${disable_group[@]}"
+      toggle_group=()
+      add_menu_toggle $((1-is_fully_managed)) "$ENABLE_KSQLDB" "$MENU_KSQLDB"
+      add_menu_toggle $((1-is_fully_managed)) "$ENABLE_CONTROL_CENTER" "$MENU_C3"
+      add_menu_toggle $((1-is_fully_managed)) "$ENABLE_CONDUKTOR" "$MENU_CONDUKTOR"
+      add_menu_toggle $((1-is_ccloud)) "$ENABLE_RESTPROXY" "$MENU_RP"
+      add_menu_toggle $((1-is_ccloud)) "$ENABLE_JMX_GRAFANA" "$MENU_GRAFANA"
+      add_menu_toggle $((1-is_ccloud)) "$ENABLE_KAFKA_NODES" "$MENU_BROKERS"
+      add_menu_toggle $((1-is_ccloud)) "$ENABLE_CONNECT_NODES" "$MENU_CONNECT_WORKERS"
+      add_menu_toggle $((1-is_fully_managed)) "$ENABLE_KCAT" "$MENU_KCAT"
+      add_menu_toggle $sql_datagen "$SQL_DATAGEN" "$MENU_SQL_DATAGEN"
+      add_menu_toggle $((1-is_fully_managed)) "$ENABLE_FLINK" "$MENU_FLINK"
+      add_menu_group "$MENU_SEPARATOR_FEATURES" "${toggle_group[@]}"
 
       group=()
       if [ $is_ccloud == 1 ]
       then
-        group+=("$MENU_CLUSTER_TYPE" "$MENU_CLUSTER_CLOUD" "$MENU_CLUSTER_REGION" "$MENU_CLUSTER_ENVIRONMENT" "$MENU_CLUSTER_NAME" "$MENU_CLUSTER_CREDS" "$MENU_CLUSTER_SR_CREDS")
+        group+=("$(menu_value_label "$MENU_CLUSTER_TYPE" "$(get_menu_flag_value --cluster-type)")")
+        group+=("$(menu_value_label "$MENU_CLUSTER_CLOUD" "$(get_menu_flag_value --cluster-cloud)")")
+        group+=("$(menu_value_label "$MENU_CLUSTER_REGION" "$(get_menu_flag_value --cluster-region)")")
+        group+=("$(menu_value_label "$MENU_CLUSTER_ENVIRONMENT" "$(get_menu_flag_value --cluster-environment)")")
+        group+=("$(menu_value_label "$MENU_CLUSTER_NAME" "$(get_menu_flag_value --cluster-name)")")
+        # never display credentials
+        group+=("$(menu_value_label "$MENU_CLUSTER_CREDS" "$([ -n "$(get_menu_flag_value --cluster-creds)" ] && echo set)")")
+        group+=("$(menu_value_label "$MENU_CLUSTER_SR_CREDS" "$([ -n "$(get_menu_flag_value --cluster-schema-registry-creds)" ] && echo set)")")
         if [ ! -z "$CLUSTER_NAME" ] || [[ -n "$cluster_name" ]]; then group+=("$MENU_UNSET_CLUSTER_NAME"); fi
       fi
       add_menu_group "$MENU_SEPARATOR_CLOUD" "${group[@]}"
 
-      enable_group=()
-      disable_group=()
+      toggle_group=()
       is_connect_community_image=""
       if [[ $CP_CONNECT_IMAGE == *"cp-kafka-connect"* ]]; then is_connect_community_image=1; fi
       is_kafka_community_image=""
       if [[ $CP_KAFKA_IMAGE == *"cp-kafka" ]]; then is_kafka_community_image=1; fi
-      add_menu_toggle $((1-is_fully_managed)) "$is_connect_community_image" "$MENU_CONNECT_COMMUNITY_IMAGE" "$MENU_DISABLE_CONNECT_COMMUNITY_IMAGE"
-      add_menu_toggle $((1-is_ccloud)) "$is_kafka_community_image" "$MENU_KAFKA_COMMUNITY_IMAGE" "$MENU_DISABLE_KAFKA_COMMUNITY_IMAGE"
-      add_menu_toggle $((1-is_ccloud)) "$ENABLE_KRAFT" "$MENU_ENABLE_KRAFT" "$MENU_DISABLE_KRAFT"
-      add_menu_toggle $((1-is_fully_managed)) "$ENABLE_LEGACY_CONTROL_CENTER" "$MENU_ENABLE_LEGACY_C3" "$MENU_DISABLE_LEGACY_C3"
-      add_menu_group "$MENU_SEPARATOR_IMAGES" "${enable_group[@]}" "${disable_group[@]}"
+      add_menu_toggle $((1-is_fully_managed)) "$is_connect_community_image" "$MENU_CONNECT_COMMUNITY_IMAGE"
+      add_menu_toggle $((1-is_ccloud)) "$is_kafka_community_image" "$MENU_KAFKA_COMMUNITY_IMAGE"
+      add_menu_toggle $((1-is_ccloud)) "$ENABLE_KRAFT" "$MENU_KRAFT"
+      add_menu_toggle $((1-is_fully_managed)) "$ENABLE_LEGACY_CONTROL_CENTER" "$MENU_LEGACY_C3"
+      add_menu_group "$MENU_SEPARATOR_IMAGES" "${toggle_group[@]}"
 
       group=()
-      if [ $is_fully_managed == 0 ]; then group+=("$MENU_CONNECT_LOG_LEVEL"); fi
+      if [ $is_fully_managed == 0 ]; then group+=("$(menu_value_label "$MENU_CONNECT_LOG_LEVEL" "$(get_menu_flag_value --connect-log-level)")"); fi
       if [ -n "$sibling_examples" ]; then group+=("$MENU_SWITCH_EXAMPLE"); fi
       # not when already creating one
       if [[ ! -n "$force_interactive_repro" ]]; then group+=("$MENU_REPRO_BOOTSTRAP"); fi
@@ -26172,217 +26195,227 @@ playground_run_command() {
         fi
       fi
 
-      if [[ $res == *"$MENU_ENABLE_KSQLDB"* ]]
+      if [[ $res == *"$MENU_KSQLDB"* ]]
       then
-        array_flag_list+=("--enable-ksqldb")
-        export ENABLE_KSQLDB=true
-        interactive_enable_ksqldb="true"
-      fi
-      if [[ $res == *"$MENU_DISABLE_KSQLDB"* ]]
-      then
-        array_flag_list=("${array_flag_list[@]/"--enable-ksqldb"}")
-        unset ENABLE_KSQLDB
-        interactive_enable_ksqldb=""
-      fi
-
-      if [[ $res == *"$MENU_ENABLE_C3"* ]]
-      then
-        array_flag_list+=("--enable-control-center")
-        export ENABLE_CONTROL_CENTER=true
-        interactive_enable_c3="true"
-      fi
-      if [[ $res == *"$MENU_DISABLE_C3"* ]]
-      then
-        array_flag_list=("${array_flag_list[@]/"--enable-control-center"}")
-        unset ENABLE_CONTROL_CENTER
-        interactive_enable_c3=""
-      fi
-
-      if [[ $res == *"$MENU_ENABLE_FLINK"* ]]
-      then
-        array_flag_list+=("--enable-flink")
-        export ENABLE_FLINK=true
-        interactive_enable_flink="true"
-      fi
-      if [[ $res == *"$MENU_DISABLE_FLINK"* ]]
-      then
-        array_flag_list=("${array_flag_list[@]/"--enable-flink"}")
-        unset ENABLE_FLINK
-        interactive_enable_flink=""
-      fi
-
-      if [[ $res == *"$MENU_ENABLE_RP"* ]]
-      then
-        array_flag_list+=("--enable-rest-proxy")
-        export ENABLE_RESTPROXY=true
-        interactive_enable_rp="true"
-      fi
-      if [[ $res == *"$MENU_DISABLE_RP"* ]]
-      then
-        array_flag_list=("${array_flag_list[@]/"--enable-rest-proxy"}")
-        unset ENABLE_RESTPROXY
-        interactive_enable_rp=""
-      fi
-
-      if [[ $res == *"$MENU_ENABLE_CONDUKTOR"* ]]
-      then
-        array_flag_list+=("--enable-conduktor")
-        export ENABLE_CONDUKTOR=true
-        interactive_enable_conduktor="true"
-      fi
-
-      if [[ $res == *"$MENU_DISABLE_CONDUKTOR"* ]]
-      then
-        array_flag_list=("${array_flag_list[@]/"--enable-conduktor"}")
-        unset ENABLE_CONDUKTOR
-        interactive_enable_conduktor=""
-      fi
-
-      if [[ $res == *"$MENU_ENABLE_GRAFANA"* ]]
-      then
-        array_flag_list+=("--enable-jmx-grafana")
-        export ENABLE_JMX_GRAFANA=true
-        interactive_enable_grafana="true"
-
-      fi
-      if [[ $res == *"$MENU_DISABLE_GRAFANA"* ]]
-      then
-        array_flag_list=("${array_flag_list[@]/"--enable-jmx-grafana"}")
-        unset ENABLE_JMX_GRAFANA
-        interactive_enable_grafana=""
-      fi
-
-      if [[ $res == *"$MENU_ENABLE_BROKERS"* ]]
-      then
-        array_flag_list+=("--enable-multiple-brokers")
-        export ENABLE_KAFKA_NODES=true
-        interactive_enable_broker="true"
-      fi
-
-      if [[ $res == *"$MENU_DISABLE_BROKERS"* ]]
-      then
-        array_flag_list=("${array_flag_list[@]/"--enable-multiple-brokers"}")
-        unset ENABLE_KAFKA_NODES
-        interactive_enable_broker=""
-      fi
-
-      if [[ $res == *"$MENU_ENABLE_CONNECT_WORKERS"* ]]
-      then
-        array_flag_list+=("--enable-multiple-connect-workers")
-        export ENABLE_CONNECT_NODES=true
-        interactive_enable_connect="true"
-
-        # determining the docker-compose file from from test_file
-        docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
-        docker_compose_file="${test_file_directory}/${docker_compose_file}"
-        if [[ "${PLAYGROUND_ENVIRONMENT:-$environment}" != "cfk" ]] && [ -f $docker_compose_file ]
+        if [ -z "$ENABLE_KSQLDB" ]
         then
-          cp $docker_compose_file /tmp/playground-backup-docker-compose.yml
-          yq -i '.services.connect2 = .services.connect' /tmp/playground-backup-docker-compose.yml
-          yq -i '.services.connect3 = .services.connect' /tmp/playground-backup-docker-compose.yml
-          cp /tmp/playground-backup-docker-compose.yml $docker_compose_file
+          array_flag_list+=("--enable-ksqldb")
+          export ENABLE_KSQLDB=true
+          interactive_enable_ksqldb="true"
+        else
+          array_flag_list=("${array_flag_list[@]/"--enable-ksqldb"}")
+          unset ENABLE_KSQLDB
+          interactive_enable_ksqldb=""
         fi
       fi
 
-      if [[ $res == *"$MENU_DISABLE_CONNECT_WORKERS"* ]]
+      if [[ $res == *"$MENU_C3"* ]]
       then
-        array_flag_list=("${array_flag_list[@]/"--enable-multiple-connect-workers"}")
-        unset ENABLE_CONNECT_NODES
-        interactive_enable_connect=""
-        if [[ "${PLAYGROUND_ENVIRONMENT:-$environment}" != "cfk" ]] && [ -f /tmp/playground-backup-docker-compose.yml ]
+        if [ -z "$ENABLE_CONTROL_CENTER" ]
         then
-          mv /tmp/playground-backup-docker-compose.yml $docker_compose_file
+          array_flag_list+=("--enable-control-center")
+          export ENABLE_CONTROL_CENTER=true
+          interactive_enable_c3="true"
+        else
+          array_flag_list=("${array_flag_list[@]/"--enable-control-center"}")
+          unset ENABLE_CONTROL_CENTER
+          interactive_enable_c3=""
         fi
       fi
 
-      if [[ $res == *"$MENU_ENABLE_KCAT"* ]]
+      if [[ $res == *"$MENU_FLINK"* ]]
       then
-        array_flag_list+=("--enable-kcat")
-        export ENABLE_KCAT=true
-        interactive_enable_kcat="true"
-      fi
-
-      if [[ $res == *"$MENU_DISABLE_KCAT"* ]]
-      then
-        array_flag_list=("${array_flag_list[@]/"--enable-kcat"}")
-        unset ENABLE_KCAT
-        interactive_enable_kcat=""
-      fi
-
-      if [[ $res == *"$MENU_ENABLE_SQL_DATAGEN"* ]]
-      then
-        array_flag_list+=("--enable-sql-datagen")
-        export SQL_DATAGEN=true
-        interactive_enable_sql="true"
-
-        array_flag_list+=("--enable-jmx-grafana")
-        export ENABLE_JMX_GRAFANA=true
-        interactive_enable_grafana="true"
-      fi
-      if [[ $res == *"$MENU_DISABLE_SQL_DATAGEN"* ]]
-      then
-        array_flag_list=("${array_flag_list[@]/"--enable-sql-datagen"}")
-        unset SQL_DATAGEN
-        interactive_enable_sql=""
-
-        if [[ $test_file != *"fully-managed"* ]]
+        if [ -z "$ENABLE_FLINK" ]
         then
+          array_flag_list+=("--enable-flink")
+          export ENABLE_FLINK=true
+          interactive_enable_flink="true"
+        else
+          array_flag_list=("${array_flag_list[@]/"--enable-flink"}")
+          unset ENABLE_FLINK
+          interactive_enable_flink=""
+        fi
+      fi
+
+      if [[ $res == *"$MENU_RP"* ]]
+      then
+        if [ -z "$ENABLE_RESTPROXY" ]
+        then
+          array_flag_list+=("--enable-rest-proxy")
+          export ENABLE_RESTPROXY=true
+          interactive_enable_rp="true"
+        else
+          array_flag_list=("${array_flag_list[@]/"--enable-rest-proxy"}")
+          unset ENABLE_RESTPROXY
+          interactive_enable_rp=""
+        fi
+      fi
+
+      if [[ $res == *"$MENU_CONDUKTOR"* ]]
+      then
+        if [ -z "$ENABLE_CONDUKTOR" ]
+        then
+          array_flag_list+=("--enable-conduktor")
+          export ENABLE_CONDUKTOR=true
+          interactive_enable_conduktor="true"
+        else
+          array_flag_list=("${array_flag_list[@]/"--enable-conduktor"}")
+          unset ENABLE_CONDUKTOR
+          interactive_enable_conduktor=""
+        fi
+      fi
+
+      if [[ $res == *"$MENU_GRAFANA"* ]]
+      then
+        if [ -z "$ENABLE_JMX_GRAFANA" ]
+        then
+          array_flag_list+=("--enable-jmx-grafana")
+          export ENABLE_JMX_GRAFANA=true
+          interactive_enable_grafana="true"
+
+        else
           array_flag_list=("${array_flag_list[@]/"--enable-jmx-grafana"}")
           unset ENABLE_JMX_GRAFANA
           interactive_enable_grafana=""
         fi
       fi
 
+      if [[ $res == *"$MENU_BROKERS"* ]]
+      then
+        if [ -z "$ENABLE_KAFKA_NODES" ]
+        then
+          array_flag_list+=("--enable-multiple-brokers")
+          export ENABLE_KAFKA_NODES=true
+          interactive_enable_broker="true"
+        else
+          array_flag_list=("${array_flag_list[@]/"--enable-multiple-brokers"}")
+          unset ENABLE_KAFKA_NODES
+          interactive_enable_broker=""
+        fi
+      fi
+
+      if [[ $res == *"$MENU_CONNECT_WORKERS"* ]]
+      then
+        if [ -z "$ENABLE_CONNECT_NODES" ]
+        then
+          array_flag_list+=("--enable-multiple-connect-workers")
+          export ENABLE_CONNECT_NODES=true
+          interactive_enable_connect="true"
+
+          # determining the docker-compose file from from test_file
+          docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
+          docker_compose_file="${test_file_directory}/${docker_compose_file}"
+          if [[ "${PLAYGROUND_ENVIRONMENT:-$environment}" != "cfk" ]] && [ -f $docker_compose_file ]
+          then
+            cp $docker_compose_file /tmp/playground-backup-docker-compose.yml
+            yq -i '.services.connect2 = .services.connect' /tmp/playground-backup-docker-compose.yml
+            yq -i '.services.connect3 = .services.connect' /tmp/playground-backup-docker-compose.yml
+            cp /tmp/playground-backup-docker-compose.yml $docker_compose_file
+          fi
+        else
+          array_flag_list=("${array_flag_list[@]/"--enable-multiple-connect-workers"}")
+          unset ENABLE_CONNECT_NODES
+          interactive_enable_connect=""
+          if [[ "${PLAYGROUND_ENVIRONMENT:-$environment}" != "cfk" ]] && [ -f /tmp/playground-backup-docker-compose.yml ]
+          then
+            mv /tmp/playground-backup-docker-compose.yml $docker_compose_file
+          fi
+        fi
+      fi
+
+      if [[ $res == *"$MENU_KCAT"* ]]
+      then
+        if [ -z "$ENABLE_KCAT" ]
+        then
+          array_flag_list+=("--enable-kcat")
+          export ENABLE_KCAT=true
+          interactive_enable_kcat="true"
+        else
+          array_flag_list=("${array_flag_list[@]/"--enable-kcat"}")
+          unset ENABLE_KCAT
+          interactive_enable_kcat=""
+        fi
+      fi
+
+      if [[ $res == *"$MENU_SQL_DATAGEN"* ]]
+      then
+        if [ -z "$SQL_DATAGEN" ]
+        then
+          array_flag_list+=("--enable-sql-datagen")
+          export SQL_DATAGEN=true
+          interactive_enable_sql="true"
+
+          array_flag_list+=("--enable-jmx-grafana")
+          export ENABLE_JMX_GRAFANA=true
+          interactive_enable_grafana="true"
+        else
+          array_flag_list=("${array_flag_list[@]/"--enable-sql-datagen"}")
+          unset SQL_DATAGEN
+          interactive_enable_sql=""
+
+          if [[ $test_file != *"fully-managed"* ]]
+          then
+            array_flag_list=("${array_flag_list[@]/"--enable-jmx-grafana"}")
+            unset ENABLE_JMX_GRAFANA
+            interactive_enable_grafana=""
+          fi
+        fi
+      fi
+
       if [[ $res == *"$MENU_CONNECT_COMMUNITY_IMAGE"* ]]
       then
-        array_flag_list+=("--connect-community-image")
-        export CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect
-        interactive_connect_community_image="true"
-      fi
-      if [[ $res == *"$MENU_DISABLE_CONNECT_COMMUNITY_IMAGE"* ]]
-      then
-        array_flag_list=("${array_flag_list[@]/"--connect-community-image"}")
-        unset CP_CONNECT_IMAGE
-        interactive_connect_community_image=""
+        if [ -z "$is_connect_community_image" ]
+        then
+          array_flag_list+=("--connect-community-image")
+          export CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect
+          interactive_connect_community_image="true"
+        else
+          array_flag_list=("${array_flag_list[@]/"--connect-community-image"}")
+          unset CP_CONNECT_IMAGE
+          interactive_connect_community_image=""
+        fi
       fi
 
       if [[ $res == *"$MENU_KAFKA_COMMUNITY_IMAGE"* ]]
       then
-        array_flag_list+=("--kafka-community-image")
-        export CP_KAFKA_IMAGE=confluentinc/cp-kafka
-        interactive_kafka_community_image="true"
-      fi
-      if [[ $res == *"$MENU_DISABLE_KAFKA_COMMUNITY_IMAGE"* ]]
-      then
-        array_flag_list=("${array_flag_list[@]/"--kafka-community-image"}")
-        unset CP_KAFKA_IMAGE
-        interactive_kafka_community_image=""
-      fi
-
-      if [[ $res == *"$MENU_ENABLE_KRAFT"* ]]
-      then
-        array_flag_list+=("--enable-kraft")
-        export ENABLE_KRAFT=true
-        interactive_enable_kraft="true"
-      fi
-      if [[ $res == *"$MENU_DISABLE_KRAFT"* ]]
-      then
-        array_flag_list=("${array_flag_list[@]/"--enable-kraft"}")
-        unset ENABLE_KRAFT
-        interactive_enable_kraft=""
+        if [ -z "$is_kafka_community_image" ]
+        then
+          array_flag_list+=("--kafka-community-image")
+          export CP_KAFKA_IMAGE=confluentinc/cp-kafka
+          interactive_kafka_community_image="true"
+        else
+          array_flag_list=("${array_flag_list[@]/"--kafka-community-image"}")
+          unset CP_KAFKA_IMAGE
+          interactive_kafka_community_image=""
+        fi
       fi
 
-      if [[ $res == *"$MENU_ENABLE_LEGACY_C3"* ]]
+      if [[ $res == *"$MENU_KRAFT"* ]]
       then
-        array_flag_list+=("--enable-legacy-control-center")
-        export ENABLE_LEGACY_CONTROL_CENTER=true
-        interactive_enable_legacy_c3="true"
+        if [ -z "$ENABLE_KRAFT" ]
+        then
+          array_flag_list+=("--enable-kraft")
+          export ENABLE_KRAFT=true
+          interactive_enable_kraft="true"
+        else
+          array_flag_list=("${array_flag_list[@]/"--enable-kraft"}")
+          unset ENABLE_KRAFT
+          interactive_enable_kraft=""
+        fi
       fi
-      if [[ $res == *"$MENU_DISABLE_LEGACY_C3"* ]]
+
+      if [[ $res == *"$MENU_LEGACY_C3"* ]]
       then
-        array_flag_list=("${array_flag_list[@]/"--enable-legacy-control-center"}")
-        unset ENABLE_LEGACY_CONTROL_CENTER
-        interactive_enable_legacy_c3=""
+        if [ -z "$ENABLE_LEGACY_CONTROL_CENTER" ]
+        then
+          array_flag_list+=("--enable-legacy-control-center")
+          export ENABLE_LEGACY_CONTROL_CENTER=true
+          interactive_enable_legacy_c3="true"
+        else
+          array_flag_list=("${array_flag_list[@]/"--enable-legacy-control-center"}")
+          unset ENABLE_LEGACY_CONTROL_CENTER
+          interactive_enable_legacy_c3=""
+        fi
       fi
 
       if [[ $res == *"$MENU_ENVIRONMENT"* ]]

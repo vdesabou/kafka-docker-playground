@@ -1789,20 +1789,46 @@ function add_menu_group () {
   options+=("$separator")
 }
 
-# playground run menu: if the toggle applies (1), queue its enable entry when the
-# current value is empty, its disable entry otherwise
+# playground run menu: if the toggle applies (1), queue its entry, checked when
+# the current value is set
 function add_menu_toggle () {
   local applies="$1"
   local current_value="$2"
+  local label="$3"
   if [ "$applies" != "1" ]
   then
     return
   fi
   if [ -z "$current_value" ]
   then
-    enable_group+=("$3")
+    toggle_group+=("[ ] $label")
   else
-    disable_group+=("$4")
+    toggle_group+=("[x] $label")
+  fi
+}
+
+# playground run menu: value of a flag in array_flag_list (--flag=value or --flag value)
+function get_menu_flag_value () {
+  local flag="$1"
+  local entry
+  for entry in "${array_flag_list[@]}"
+  do
+    case "$entry" in
+      "$flag="*) echo "${entry#*=}"; return ;;
+      "$flag "*) echo "${entry#* }"; return ;;
+    esac
+  done
+}
+
+# playground run menu: label followed by its current value, if any
+function menu_value_label () {
+  local label="$1"
+  local value="$2"
+  if [ -n "$value" ]
+  then
+    echo "$label  [$value]"
+  else
+    echo "$label"
   fi
 }
 
