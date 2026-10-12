@@ -1776,6 +1776,36 @@ function get_example_connector_packages () {
   grep -ho '"connector.class"[[:space:]]*:[[:space:]]*"[^"]*"' "$example_file" | sed 's/.*"\([^"]*\)"$/\1/' | sed 's/\.[^.]*$//' | grep "\." | sort -u
 }
 
+# playground run menu: append the entries of a group to options, followed by the
+# group separator, only if the group is not empty
+function add_menu_group () {
+  local separator="$1"
+  shift
+  if [ $# -eq 0 ]
+  then
+    return
+  fi
+  options+=("$@")
+  options+=("$separator")
+}
+
+# playground run menu: if the toggle applies (1), queue its enable entry when the
+# current value is empty, its disable entry otherwise
+function add_menu_toggle () {
+  local applies="$1"
+  local current_value="$2"
+  if [ "$applies" != "1" ]
+  then
+    return
+  fi
+  if [ -z "$current_value" ]
+  then
+    enable_group+=("$3")
+  else
+    disable_group+=("$4")
+  fi
+}
+
 function display_interactive_menu_categories () {
   repro=$1
 
