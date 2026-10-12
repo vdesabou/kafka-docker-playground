@@ -56,6 +56,11 @@ User:ksqlDBAdmin                    ResourceOwner   Topic:_confluent-monitoring
 User:ksqlDBAdmin                    ResourceOwner   Topic:ksql-clusterksql_processing_log
 User:ksqlDBAdmin                    ResourceOwner   TransactionalId:ksql-cluster
 User:ksqlDBAdmin                    DeveloperWrite  Cluster:kafka-cluster
+# DescribeConfigs on the cluster, required by CREATE STREAM/TABLE
+User:ksqlDBAdmin                    DeveloperManage Cluster:kafka-cluster
+# queries run with the ksqlDB server principal: it needs every topic and subject used by the users
+User:ksqlDBAdmin                    ResourceOwner   Topic:*
+User:ksqlDBAdmin                    ResourceOwner   Subject:*
 
 # ksqlDB user
 User:ksqlDBUser                     DeveloperWrite  KsqlCluster:ksql-cluster
@@ -64,6 +69,9 @@ User:ksqlDBUser                     ResourceOwner   Topic:_confluent-ksql-ksql-c
 User:ksqlDBUser                     ResourceOwner   Subject:_confluent-ksql-ksql-cluster prefix
 User:ksqlDBUser                     DeveloperRead   Topic:ksql-clusterksql_processing_log
 User:ksqlDBUser                     DeveloperWrite  Cluster:kafka-cluster
+User:ksqlDBUser                     DeveloperManage Cluster:kafka-cluster
+User:ksqlDBUser                     ResourceOwner   Topic:*
+User:ksqlDBUser                     ResourceOwner   Subject:*
 
 # ksqlDB server
 User:controlCenterAndKsqlDBServer   ResourceOwner   Topic:ksql-clusterksql_processing_log

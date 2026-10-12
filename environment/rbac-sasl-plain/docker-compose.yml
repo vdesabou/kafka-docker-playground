@@ -281,6 +281,10 @@ services:
           KSQL_CONFLUENT_METADATA_HTTP_AUTH_CREDENTIALS_PROVIDER: BASIC
           KSQL_CONFLUENT_METADATA_BASIC_AUTH_CREDENTIALS_PROVIDER: USER_INFO
           KSQL_CONFLUENT_METADATA_BASIC_AUTH_USER_INFO: ksqlDBAdmin:ksqlDBAdmin
+          # Schema Registry client of ksqlDB: at startup it checks its permissions (/permissions endpoint) and
+          # exits with "Unauthorized; error code: 401" without credentials
+          KSQL_KSQL_SCHEMA_REGISTRY_BASIC_AUTH_CREDENTIALS_SOURCE: USER_INFO
+          KSQL_KSQL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: ksqlDBAdmin:ksqlDBAdmin
 
           # Enable OAuth for ksqlDB's embedded Kafka clients that access and manage consumer groups and topics
           KSQL_SECURITY_PROTOCOL: SASL_PLAINTEXT
