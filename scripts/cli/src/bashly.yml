@@ -2109,9 +2109,23 @@ commands:
         🔖 docker-compose override file
 
         ❕ It must be absolute full path
+    - long: --rbac-role-bindings-file
+      validate: file_exists
+      arg: rbac-role-bindings-file
+      help: |-
+        🔐 rbac-sasl-plain only: bash file sourced right after the default role bindings are created, before connect, schema-registry, ksqldb and control-center start.
+
+        Use it for role bindings or ACLs a component needs at startup, with 'playground rbac' commands, for example:
+
+        playground rbac role-binding create --principal User:schemaregistryUser --role ResourceOwner --resource Topic:_schemas_acl
+
+        🎓 Tip: anything not needed at startup can simply be run after 'playground start-environment'.
+
+        ❕ It must be absolute full path (also settable with RBAC_ROLE_BINDINGS_FILE environment variable)
   examples:
   - playground start-environment
   - playground start-environment --environment rbac-sasl-plain
+  - playground start-environment --environment rbac-sasl-plain --rbac-role-bindings-file "$PWD/role-bindings.sh"
 
 - name: switch-ccloud
   group: Run

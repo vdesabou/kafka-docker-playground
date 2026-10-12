@@ -40,3 +40,13 @@ playground rbac role-binding list --principal User:connectorSA
 playground rbac acl create --principal User:charlie --operation WRITE --operation DESCRIBE --resource Topic:orders
 playground rbac acl list
 ```
+
+If a component needs a role binding **at startup** (before connect, schema-registry, ksqldb and control-center start), put the `playground rbac` commands in a file and pass it to `start-environment`; it is sourced right after the default role bindings are created:
+
+```bash
+playground start-environment --environment rbac-sasl-plain \
+  --docker-compose-override-file "${PWD}/docker-compose.rbac-sasl-plain.yml" \
+  --rbac-role-bindings-file "${PWD}/role-bindings.sh"
+```
+
+See [other/rbac-with-sr-basic-auth-acl](../../other/rbac-with-sr-basic-auth-acl/) for an example.

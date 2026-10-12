@@ -135,7 +135,7 @@ fi
 # Verify MDS has started
 MAX_WAIT=120
 log "⌛ Waiting up to $MAX_WAIT seconds for MDS to start"
-retrycmd $MAX_WAIT 5 host_check_mds_up || exit 1
+retrycmd $((MAX_WAIT / 5)) 5 host_check_mds_up || exit 1
 
 sleep 5
 
@@ -147,6 +147,22 @@ docker exec -i tools bash -c "/tmp/helper/create-role-bindings.sh"
 
 log "Validate bindings"
 docker exec -i tools bash -c "/tmp/helper/validate_bindings.sh"
+
+# playground rbac commands only run in the rbac-sasl-plain environment
+playground state set run.environment "rbac-sasl-plain"
+
+# role bindings of the example (playground start-environment --rbac-role-bindings-file), created
+# before connect, schema-registry, ksqldb and control-center start
+if [ -n "$RBAC_ROLE_BINDINGS_FILE" ]
+then
+  if [ ! -f "$RBAC_ROLE_BINDINGS_FILE" ]
+  then
+    logerror "❌ RBAC_ROLE_BINDINGS_FILE $RBAC_ROLE_BINDINGS_FILE does not exist"
+    exit 1
+  fi
+  log "🔐 Creating role bindings from $RBAC_ROLE_BINDINGS_FILE"
+  (source "$RBAC_ROLE_BINDINGS_FILE")
+fi
 
 docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} ${TELEMETRY_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/rbac-sasl-plain/docker-compose.yml ${KRAFT_RBAC_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE}  ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_conduktor_command} ${profile_kafka_nodes_command} ${profile_connect_nodes_command} build
 docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} ${TELEMETRY_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/rbac-sasl-plain/docker-compose.yml ${KRAFT_RBAC_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_zookeeper_command}  ${profile_grafana_command} ${profile_kcat_command} ${profile_kafka_nodes_command} ${profile_connect_nodes_command} up -d --quiet-pull $SERVICES_ARGS

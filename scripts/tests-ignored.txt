@@ -45,3 +45,5 @@ s3-sink-irsa.sh
 # too flaky, not sure why
 salesforce-bulkapi-sink-with-pushtopics-source-proxy.sh
 salesforce-bulkapi-sink-with-bulkapi-source-proxy.sh
+# sourced by environment/rbac-sasl-plain/start.sh (playground start-environment --rbac-role-bindings-file), not a test:
+role-bindings.sh

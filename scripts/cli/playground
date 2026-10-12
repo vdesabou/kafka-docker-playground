@@ -3749,6 +3749,11 @@ playground_start_environment_usage() {
     printf "    🔖 docker-compose override file\n    \n    ❕ It must be absolute full path\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--rbac-role-bindings-file RBAC-ROLE-BINDINGS-FILE")"
+    printf "    🔐 rbac-sasl-plain only: bash file sourced right after the default role\n    bindings are created, before connect, schema-registry, ksqldb and\n    control-center start.\n    \n    Use it for role bindings or ACLs a component needs at startup, with\n    'playground rbac' commands, for example:\n    \n    playground rbac role-binding create --principal User:schemaregistryUser\n    --role ResourceOwner --resource Topic:_schemas_acl\n    \n    🎓 Tip: anything not needed at startup can simply be run after 'playground\n    start-environment'.\n    \n    ❕ It must be absolute full path (also settable with RBAC_ROLE_BINDINGS_FILE\n    environment variable)\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -3758,6 +3763,7 @@ playground_start_environment_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground start-environment\n"
     printf "  playground start-environment --environment rbac-sasl-plain\n"
+    printf "  playground start-environment --environment rbac-sasl-plain\n  --rbac-role-bindings-file \"$PWD/role-bindings.sh\"\n"
     echo
 
   fi
@@ -17699,9 +17705,10 @@ function host_check_kafka_cluster_registered() {
 
 # for RBAC, taken from cp-demo
 function host_check_mds_up() {
-  docker container logs broker > /tmp/out.txt 2>&1
-  FOUND=$(cat /tmp/out.txt | grep "Started NetworkTrafficServerConnector")
-  if [ -z "$FOUND" ]; then
+  # any HTTP answer (401 without credentials) means MDS is started. Don't grep the broker logs for
+  # "Started NetworkTrafficServerConnector": podman sometimes drops that line, and start.sh then waits forever
+  local http_code=$(curl -s -o /dev/null -m 5 -w "%{http_code}" http://localhost:8091/security/1.0/metadataClusterId)
+  if [ "$http_code" == "000" ]; then
     return 1
   fi
   return 0
@@ -28551,6 +28558,7 @@ playground_start_environment_command() {
   docker_compose_override_file="${args[--docker-compose-override-file]}"
   wait_for_control_center="${args[--wait-for-control-center]}"
   no_stop="${args[--no-stop]}"
+  rbac_role_bindings_file="${args[--rbac-role-bindings-file]}"
 
   if [ "$environment" = "ccloud" ]
   then
@@ -28592,6 +28600,16 @@ playground_start_environment_command() {
   if [[ -n "$no_stop" ]]
   then
     export NO_STOP=1
+  fi
+
+  if [[ -n "$rbac_role_bindings_file" ]]
+  then
+    if [ "$environment" != "rbac-sasl-plain" ]
+    then
+      logerror "❌ --rbac-role-bindings-file only works with --environment rbac-sasl-plain (it is $environment)"
+      exit 1
+    fi
+    export RBAC_ROLE_BINDINGS_FILE="$rbac_role_bindings_file"
   fi
 
   # Handle --service flag (can be passed multiple times)
@@ -55938,6 +55956,20 @@ playground_start_environment_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --rbac-role-bindings-file)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--rbac-role-bindings-file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--rbac-role-bindings-file requires an argument: --rbac-role-bindings-file RBAC-ROLE-BINDINGS-FILE" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -55976,6 +56008,15 @@ playground_start_environment_parse_requirements() {
     validation_output="$(validate_file_exists "${args['--docker-compose-override-file']:-}")"
     if [[ -n "${validation_output}" ]]; then
       printf "validation error in %s:\n%s\n" "--docker-compose-override-file, -f DOCKER-COMPOSE-OVERRIDE-FILE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--rbac-role-bindings-file'] ]]; then
+    validation_output="$(validate_file_exists "${args['--rbac-role-bindings-file']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--rbac-role-bindings-file RBAC-ROLE-BINDINGS-FILE" "$validation_output" >&2
       exit 1
     fi
   fi
@@ -79715,6 +79756,16 @@ playground_start_environment_completion() {
         completion_blocked_flags["--docker-compose-override-file"]=1
 
         ;;
+      --rbac-role-bindings-file)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--rbac-role-bindings-file"]=1
+
+        ;;
       *)
         return
         ;;
@@ -79726,6 +79777,7 @@ playground_start_environment_completion() {
     completion_flag_candidates --environment "$completion_current" --environment
     completion_flag_candidates --wait-for-control-center "$completion_current" --wait-for-control-center
     completion_flag_candidates --docker-compose-override-file "$completion_current" --docker-compose-override-file -f
+    completion_flag_candidates --rbac-role-bindings-file "$completion_current" --rbac-role-bindings-file
   fi
 
 }

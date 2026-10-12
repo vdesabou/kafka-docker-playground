@@ -80,10 +80,6 @@ services:
       # public key to verify tokens during authentication
       SCHEMA_REGISTRY_PUBLIC_KEY_PATH: /tmp/conf/public.pem
 
-  tools:
-    volumes:
-      - ../../other/rbac-with-sr-basic-auth-acl/scripts/create-role-bindings-acl.sh:/create-role-bindings-acl.sh
-
   ksqldb-server:
     environment:
         # Overrides for BASIC SR
