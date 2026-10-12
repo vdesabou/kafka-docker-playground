@@ -27042,7 +27042,13 @@ playground_get_ci_result_command() {
 
   # the latest CI occurrence: body or comment with a job url (human or triage comments have none)
   occurrence=$(gh issue view "$issue_number" --repo "$repo" --json body,comments -q '[.body] + [.comments[].body] | map(select(test("/actions/runs/[0-9]+/job/[0-9]+"))) | last')
-  job_url=$(echo "$occurrence" | grep -oE "https://github.com/$repo/actions/runs/[0-9]+/job/[0-9]+" | tail -1)
+  # the job url is on the '🔥 CP ...' header line: the embedded logs contain other job urls
+  # (e.g. '🐛 github issue: .../job/...' printed by playground run), never take the last one
+  job_url=$(echo "$occurrence" | grep -m1 -E "^🔥 CP " | grep -oE "https://github.com/$repo/actions/runs/[0-9]+/job/[0-9]+" | head -1)
+  if [ -z "$job_url" ]
+  then
+      job_url=$(echo "$occurrence" | grep -oE "https://github.com/$repo/actions/runs/[0-9]+/job/[0-9]+" | head -1)
+  fi
   if [ -z "$job_url" ]
   then
       logerror "❌ no CI job url found in issue #$issue_number (https://github.com/$repo/issues/$issue_number)"
