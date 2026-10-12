@@ -38,7 +38,8 @@ out of context.
   when the ask is "show me *everything* about X" (an inventory, every file touching a config key),
   follow up with `grep -ril`.
 - `--errors` de-duplicates ERROR/FATAL records with an occurrence count and collapses stack traces to
-  their `Caused by:` chain. Records logged at INFO/DEBUG/TRACE are never reported.
+  their `Caused by:` chain. Only explicit levels count (` ERROR `, `[ERROR]`, `level=error`, klog `E1012`)
+  plus uncaught java exceptions; INFO/DEBUG/TRACE records and loose "error"/"failed" words never do.
 - **`playground container logs` follows the logs by default and never returns** — always pass
   `--errors`, `--no-follow` or `--wait-for-log` when running it non-interactively.
 - `playground debug analyze-logs` is the same digest for offline logs: folders are scanned recursively,

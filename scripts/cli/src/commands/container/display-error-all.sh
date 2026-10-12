@@ -108,20 +108,32 @@ else
     fi
     log "####################################################"
 
+    clean_containers=()
     while IFS= read -r container
     do
         if [ -z "$container" ]; then
             continue
         fi
-        log "####################################################"
-        log "🔥 ERROR/FATAL digest for $container logs${since:+ since $since}"
         if [[ "$environment" == "cfk" ]]
         then
-            kubectl -n confluent logs "$container" --all-containers=true "${since_opt[@]}" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings"
+            digest=$(kubectl -n confluent logs "$container" --all-containers=true "${since_opt[@]}" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings")
         else
-            docker container logs "${since_opt[@]}" "$container" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings"
+            digest=$(docker container logs "${since_opt[@]}" "$container" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings")
         fi
-        # a failed assertion (no record received, wrong count) usually logs no error at all
+        # a failed assertion (no record received, wrong count) usually logs no error at all, so connect tail is always shown
+        if [[ "$digest" == "✅"* ]] && [[ "$container" != connect* ]]
+        then
+            clean_containers+=("$container")
+            continue
+        fi
+        log "####################################################"
+        if [[ "$digest" == "✅"* ]]
+        then
+            clean_containers+=("$container")
+        else
+            log "🔥 ERROR/FATAL digest for $container logs${since:+ since $since}"
+            echo "$digest"
+        fi
         if [[ "$container" == connect* ]]
         then
             log "📜 last 50 lines of $container logs"
@@ -134,4 +146,8 @@ else
         fi
         log "####################################################"
     done <<< "$containers"
+    if [ ${#clean_containers[@]} -gt 0 ]
+    then
+        log "✅ no $([[ -n "$include_warnings" ]] && echo "ERROR/FATAL/WARN" || echo "ERROR/FATAL") record${since:+ since $since} in: ${clean_containers[*]}"
+    fi
 fi

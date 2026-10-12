@@ -3622,8 +3622,10 @@ commands:
 
       Repeated records are de-duplicated with an occurrence count, stack
       traces are collapsed to the exception chain ("Caused by:") plus a few
-      frames of the deepest cause. Records logged at INFO/DEBUG/TRACE are
-      never reported.
+      frames of the deepest cause. Only records with an explicit level are
+      reported (" ERROR ", "[ERROR]", level=error, "level":"error"), plus
+      uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and
+      level-less lines that merely contain "error" or "failed", never are.
 
       📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files
       are extracted in a temporary folder, .gz files are decompressed on the
@@ -4277,8 +4279,10 @@ commands:
 
           Repeated records are de-duplicated with an occurrence count, stack
           traces are collapsed to the exception chain ("Caused by:") plus a few
-          frames of the deepest cause. Records logged at INFO/DEBUG/TRACE are
-          never reported, even when their message contains "Error" or "Exception".
+          frames of the deepest cause. Only records with an explicit level are
+          reported (" ERROR ", "[ERROR]", level=error, "level":"error"), plus
+          uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and
+          level-less lines that merely contain "error" or "failed", never are.
 
           Scans the whole log unless --since or --tail narrow it.
         conflicts: [--open, --wait-for-log, --grep]
@@ -4322,8 +4326,10 @@ commands:
 
         Each container gets the same digest as 'playground container logs
         --errors': repeated records are de-duplicated with an occurrence count
-        and stack traces are collapsed to their "Caused by:" chain. The last
-        lines of connect are also shown raw, for failures that log no error.
+        and stack traces are collapsed to their "Caused by:" chain. Containers
+        without any finding are only listed in a final one-line summary. The
+        last lines of connect are always shown raw, for failures that log no
+        error.
       flags:
       - long: --since
         arg: since
