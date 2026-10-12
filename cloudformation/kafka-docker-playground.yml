@@ -1,12 +1,12 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
-  kafka-docker-playground using Ubuntu 24.04 EC2 instance.
+  kafka-docker-playground using Ubuntu 26.04 EC2 instance.
 Parameters:
-  LatestUbuntuNobleAMI:
-    # Ubuntu 24.04 LTS: its podman 4.9 with netavark is what runs the playground on podman
-    # (22.04 only ships podman 3.4, without netavark). Noble AMIs are only published as gp3
+  LatestUbuntuResoluteAMI:
+    # Ubuntu 26.04 LTS, same as the CI runners: the playground on podman needs podman >= 5.0
+    # (24.04 only ships 4.9, see #9063). Resolute AMIs are only published as gp3
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-    Default: "/aws/service/canonical/ubuntu/server/noble/stable/current/amd64/hvm/ebs-gp3/ami-id"
+    Default: "/aws/service/canonical/ubuntu/server/resolute/stable/current/amd64/hvm/ebs-gp3/ami-id"
   KeyName:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
     Type: 'AWS::EC2::KeyPair::KeyName'
@@ -231,7 +231,7 @@ Resources:
             07_clone_repo:
               command: !Sub "sudo /tmp/clone.sh > /home/${LinuxUserName}/output.log 2>&1"
     Properties:
-      ImageId: !Ref LatestUbuntuNobleAMI
+      ImageId: !Ref LatestUbuntuResoluteAMI
       InstanceType:
         Ref: InstanceType
       Tags:
@@ -269,7 +269,7 @@ Resources:
           apt-get install -y python3-pip
           mkdir -p /opt/aws/bin
           wget -O /tmp/aws-cfn-bootstrap-py3-latest.tar.gz https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
-          # 24.04 refuses system-wide pip installs (PEP 668) unless told otherwise
+          # 24.04+ refuses system-wide pip installs (PEP 668) unless told otherwise
           python3 -m pip install --no-cache-dir --upgrade --break-system-packages /tmp/aws-cfn-bootstrap-py3-latest.tar.gz
           for cfn_bin in /usr/local/bin/cfn-* /usr/bin/cfn-*; do
             if [ -x "$cfn_bin" ]; then
