@@ -1807,6 +1807,47 @@ function add_menu_toggle () {
   fi
 }
 
+# playground run: known-bad combinations of the current flags / variables, one
+# "error|<message>" or "warning|<message>" line each. Errors would make the run
+# fail after the environment is started, warnings are combinations that run but
+# probably not as expected
+function get_run_flag_combination_problems () {
+  local effective_tag=${TAG:-$(grep "# default tag" "$root_folder/scripts/utils.sh" | cut -d "=" -f 2 | cut -d " " -f 1)}
+  local tag_base=${effective_tag%%-*}
+
+  # --enable-legacy-control-center implies --enable-control-center
+  if [ -n "$ENABLE_LEGACY_CONTROL_CENTER" ] && { [ -n "$ENABLE_CONTROL_CENTER" ] || [[ " ${array_flag_list[*]} " == *" --enable-legacy-control-center "* ]]; }
+  then
+    if version_gt "$tag_base" "7.9.99"
+    then
+      echo "error|legacy Control Center is only available for CP < 8, CP $effective_tag is selected: use --tag to select an older version"
+    fi
+  fi
+
+  if [ -n "$ENABLE_KRAFT" ]
+  then
+    if ! version_gt "$tag_base" "7.3.99"
+    then
+      echo "error|KRaft mode requires CP >= 7.4, CP $effective_tag is selected: use --tag to select a newer version or disable --enable-kraft"
+    elif version_gt "$tag_base" "7.9.99"
+    then
+      echo "warning|--enable-kraft has no effect with CP $effective_tag, KRaft is always used for CP >= 8"
+    fi
+  fi
+
+  if [ -n "$ENABLE_CONTROL_CENTER" ]
+  then
+    if [[ $CP_KAFKA_IMAGE == *"cp-kafka" ]]
+    then
+      echo "warning|Control Center with the community kafka image: Confluent Metrics Reporter is disabled, so broker metrics will be missing"
+    fi
+    if [[ $CP_CONNECT_IMAGE == *"cp-kafka-connect"* ]] && ! version_gt "$tag_base" "7.9.99"
+    then
+      echo "warning|Control Center with the community connect image: monitoring interceptors are disabled, so consumer lag and stream monitoring will be missing"
+    fi
+  fi
+}
+
 # playground run menu: value of a flag in array_flag_list (--flag=value or --flag value)
 function get_menu_flag_value () {
   local flag="$1"
