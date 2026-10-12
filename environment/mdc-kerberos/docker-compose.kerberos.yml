@@ -129,6 +129,11 @@ services:
         - secret:/var/lib/secret
         - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/krb5.conf
     environment:
+      # bootstrap with the FQDN: the GSSAPI client builds the broker principal from the
+      # bootstrap host, and only Docker's reverse DNS turns a short name into
+      # broker-us.kerberos-demo.local (podman answers the bare container name)
+      CONNECT_BOOTSTRAP_SERVERS: 'broker-us.kerberos-demo.local:9092'
+      CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: 'broker-us.kerberos-demo.local:9092'
       # Configure the Connect workers to use SASL/GSSAPI.
       CONNECT_SASL_MECHANISM: GSSAPI
       CONNECT_SASL_KERBEROS_SERVICE_NAME: kafka
@@ -174,6 +179,11 @@ services:
         - secret:/var/lib/secret
         - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/krb5.conf
     environment:
+      # bootstrap with the FQDN: the GSSAPI client builds the broker principal from the
+      # bootstrap host, and only Docker's reverse DNS turns a short name into
+      # broker-europe.kerberos-demo.local (podman answers the bare container name)
+      CONNECT_BOOTSTRAP_SERVERS: 'broker-europe.kerberos-demo.local:9092'
+      CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: 'broker-europe.kerberos-demo.local:9092'
       # Configure the Connect workers to use SASL/GSSAPI.
       CONNECT_SASL_MECHANISM: GSSAPI
       CONNECT_SASL_KERBEROS_SERVICE_NAME: kafka
