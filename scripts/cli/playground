@@ -16237,6 +16237,10 @@ function get_ccs_or_ce_specifics() {
 
 function determine_confluent_telemetry() {
   export TELEMETRY_DOCKER_COMPOSE_FILE_OVERRIDE=""
+  if type load_secrets_env_vars > /dev/null 2>&1
+  then
+    load_secrets_env_vars CONFLUENT_CLOUD_API_KEY CONFLUENT_CLOUD_API_SECRET
+  fi
   if [ -z "$CONFLUENT_CLOUD_API_KEY" ] || [ -z "$CONFLUENT_CLOUD_API_SECRET" ]
   then
     return

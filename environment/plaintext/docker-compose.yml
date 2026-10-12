@@ -57,6 +57,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_CONFLUENT_CLUSTER_LINK_METADATA_TOPIC_REPLICATION_FACTOR: 1
       # Confluent Telemetry Reporter (proactive support): enabled through docker-compose-telemetry.yml when CONFLUENT_CLOUD_API_KEY/CONFLUENT_CLOUD_API_SECRET are set
+      KAFKA_CONFLUENT_TELEMETRY_ENABLED: 'false'
       EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
       PYROSCOPE_APPLICATION_NAME: "broker"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
@@ -121,6 +122,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_CONFLUENT_CLUSTER_LINK_METADATA_TOPIC_REPLICATION_FACTOR: 1
       # Confluent Telemetry Reporter (proactive support): enabled through docker-compose-telemetry.yml when CONFLUENT_CLOUD_API_KEY/CONFLUENT_CLOUD_API_SECRET are set
+      KAFKA_CONFLUENT_TELEMETRY_ENABLED: 'false'
       EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
       PYROSCOPE_APPLICATION_NAME: "broker2"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
@@ -185,6 +187,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_CONFLUENT_CLUSTER_LINK_METADATA_TOPIC_REPLICATION_FACTOR: 1
       # Confluent Telemetry Reporter (proactive support): enabled through docker-compose-telemetry.yml when CONFLUENT_CLOUD_API_KEY/CONFLUENT_CLOUD_API_SECRET are set
+      KAFKA_CONFLUENT_TELEMETRY_ENABLED: 'false'
       EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
       PYROSCOPE_APPLICATION_NAME: "broker3"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
@@ -235,6 +238,7 @@ services:
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:9092
       # Confluent Telemetry Reporter (proactive support): enabled through docker-compose-telemetry.yml when CONFLUENT_CLOUD_API_KEY/CONFLUENT_CLOUD_API_SECRET are set
+      SCHEMA_REGISTRY_CONFLUENT_TELEMETRY_ENABLED: 'false'
       # https://github.com/confluentinc/schema-registry/issues/2213
       SCHEMA_REGISTRY_SCHEMA_PROVIDERS_AVRO_VALIDATE_DEFAULTS: "true"
       EXTRA_ARGS: ${GRAFANA_AGENT_SR}
@@ -289,6 +293,7 @@ services:
       # KIP-158 https://cwiki.apache.org/confluence/display/KAFKA/KIP-158%3A+Kafka+Connect+should+allow+source+connectors+to+set+topic-specific+settings+for+new+topics (6.x only)
       CONNECT_TOPIC_CREATION_ENABLE: 'true'
       # Confluent Telemetry Reporter (proactive support): enabled through docker-compose-telemetry.yml when CONFLUENT_CLOUD_API_KEY/CONFLUENT_CLOUD_API_SECRET are set
+      CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'false'
       CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
       CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
       # # https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging
@@ -364,6 +369,7 @@ services:
       # KIP-158 https://cwiki.apache.org/confluence/display/KAFKA/KIP-158%3A+Kafka+Connect+should+allow+source+connectors+to+set+topic-specific+settings+for+new+topics (6.x only)
       CONNECT_TOPIC_CREATION_ENABLE: 'true'
       # Confluent Telemetry Reporter (proactive support): enabled through docker-compose-telemetry.yml when CONFLUENT_CLOUD_API_KEY/CONFLUENT_CLOUD_API_SECRET are set
+      CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'false'
       CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
       CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
       # # https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging
@@ -439,6 +445,7 @@ services:
       # KIP-158 https://cwiki.apache.org/confluence/display/KAFKA/KIP-158%3A+Kafka+Connect+should+allow+source+connectors+to+set+topic-specific+settings+for+new+topics (6.x only)
       CONNECT_TOPIC_CREATION_ENABLE: 'true'
       # Confluent Telemetry Reporter (proactive support): enabled through docker-compose-telemetry.yml when CONFLUENT_CLOUD_API_KEY/CONFLUENT_CLOUD_API_SECRET are set
+      CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'false'
       CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
       CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
       # # https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging
@@ -499,6 +506,7 @@ services:
       # KSQL_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
       # KSQL_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
       # Confluent Telemetry Reporter (proactive support): enabled through docker-compose-telemetry.yml when CONFLUENT_CLOUD_API_KEY/CONFLUENT_CLOUD_API_SECRET are set
+      KSQL_CONFLUENT_TELEMETRY_ENABLED: 'false'
       EXTRA_ARGS: ${GRAFANA_AGENT_KSQLDB}
       PYROSCOPE_APPLICATION_NAME: "ksqldb-server"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
