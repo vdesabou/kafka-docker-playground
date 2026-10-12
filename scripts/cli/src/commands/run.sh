@@ -7,6 +7,9 @@ open="${args[--open]}"
 environment="${args[--environment]}"
 tag="${args[--tag]}"
 connect_tag="${args[--connect-tag]}"
+schema_registry_tag="${args[--schema-registry-tag]}"
+ksqldb_tag="${args[--ksqldb-tag]}"
+control_center_tag="${args[--control-center-tag]}"
 connector_tag="${args[--connector-tag]}"
 connector_zip="${args[--connector-zip]}"
 connector_jar="${args[--connector-jar]}"
@@ -163,6 +166,38 @@ then
   fi
   array_flag_list+=("--connect-tag=$connect_tag")
   export CP_CONNECT_TAG=$connect_tag
+fi
+
+if [[ -n "$schema_registry_tag" ]]
+then
+  if [[ $test_file == *"ccloud"* ]]
+  then
+    logwarn "❌ --schema-registry-tag is not supported with ccloud examples"
+    exit 1
+  fi
+  schema_registry_tag=${schema_registry_tag#*@}
+  array_flag_list+=("--schema-registry-tag=$schema_registry_tag")
+  export CP_SCHEMA_REGISTRY_TAG=$schema_registry_tag
+fi
+
+if [[ -n "$ksqldb_tag" ]]
+then
+  if [[ $test_file == *"ccloud"* ]]
+  then
+    logwarn "❌ --ksqldb-tag is not supported with ccloud examples"
+    exit 1
+  fi
+  ksqldb_tag=${ksqldb_tag#*@}
+  array_flag_list+=("--ksqldb-tag=$ksqldb_tag")
+  # same version for the CLI
+  export CP_KSQL_TAG=$ksqldb_tag
+  export CP_KSQL_CLI_TAG=$ksqldb_tag
+fi
+
+if [[ -n "$control_center_tag" ]]
+then
+  array_flag_list+=("--control-center-tag=$control_center_tag")
+  export CP_CONTROL_CENTER_TAG=$control_center_tag
 fi
 
 if [[ -n "$environment" ]]
@@ -614,6 +649,9 @@ then
 
   MENU_TAG="$(menu_label "🎯" "CP version (all components)" "--tag")"
   MENU_CONNECT_TAG="$(menu_label "🔗" "CP version (connect only)" "--connect-tag")"
+  MENU_SCHEMA_REGISTRY_TAG="$(menu_label "🔰" "CP version (schema registry only)" "--schema-registry-tag")"
+  MENU_KSQLDB_TAG="$(menu_label "🎏" "CP version (ksqlDB only)" "--ksqldb-tag")"
+  MENU_CONTROL_CENTER_TAG="$(menu_label "💠" "Control Center version" "--control-center-tag")"
   MENU_CONNECTOR_TAG="$(menu_label "🔌" "Connector version" "--connector-tag")"
   MENU_CONNECTOR_ZIP="$(menu_label "🤐" "Connector zip" "--connector-zip")"
   MENU_CONNECTOR_JAR="$(menu_label "🤎" "Connector jar" "--connector-jar")"
@@ -983,6 +1021,11 @@ then
     then
       group+=("$(menu_value_label "$MENU_TAG" "$(get_menu_flag_value --tag)")")
       group+=("$(menu_value_label "$MENU_CONNECT_TAG" "$(get_menu_flag_value --connect-tag)")")
+      # schema registry is in Confluent Cloud for ccloud examples
+      if [ $is_ccloud == 0 ]; then group+=("$(menu_value_label "$MENU_SCHEMA_REGISTRY_TAG" "$(get_menu_flag_value --schema-registry-tag)")"); fi
+      if [ -n "$ENABLE_KSQLDB" ]; then group+=("$(menu_value_label "$MENU_KSQLDB_TAG" "$(get_menu_flag_value --ksqldb-tag)")"); fi
+      # --enable-legacy-control-center implies --enable-control-center
+      if [ -n "$ENABLE_CONTROL_CENTER" ] || [[ " ${array_flag_list[*]} " == *" --enable-legacy-control-center "* ]]; then group+=("$(menu_value_label "$MENU_CONTROL_CENTER_TAG" "$(get_menu_flag_value --control-center-tag)")"); fi
       if [ $connector_example == 1 ]
       then
         group+=("$(menu_value_label "$MENU_CONNECTOR_TAG" "$(get_menu_flag_value --connector-tag)")")
@@ -1417,6 +1460,61 @@ then
       fi
       array_flag_list+=("--connect-tag=$connect_tag")
       export CP_CONNECT_TAG=$connect_tag
+    fi
+
+    if [[ $res == *"$MENU_SCHEMA_REGISTRY_TAG"* ]]
+    then
+      maybe_remove_flag "--schema-registry-tag"
+      schema_registry_tag=$(playground get-tag-list)
+      schema_registry_tag=${schema_registry_tag#*@}
+      schema_registry_tag=${schema_registry_tag%% *}
+      if [ -n "$schema_registry_tag" ]
+      then
+        array_flag_list+=("--schema-registry-tag=$schema_registry_tag")
+        export CP_SCHEMA_REGISTRY_TAG=$schema_registry_tag
+      else
+        unset CP_SCHEMA_REGISTRY_TAG
+      fi
+    fi
+
+    if [[ $res == *"$MENU_KSQLDB_TAG"* ]]
+    then
+      maybe_remove_flag "--ksqldb-tag"
+      ksqldb_tag=$(playground get-tag-list)
+      ksqldb_tag=${ksqldb_tag#*@}
+      ksqldb_tag=${ksqldb_tag%% *}
+      if [ -n "$ksqldb_tag" ]
+      then
+        array_flag_list+=("--ksqldb-tag=$ksqldb_tag")
+        export CP_KSQL_TAG=$ksqldb_tag
+        export CP_KSQL_CLI_TAG=$ksqldb_tag
+      else
+        unset CP_KSQL_TAG CP_KSQL_CLI_TAG
+      fi
+    fi
+
+    if [[ $res == *"$MENU_CONTROL_CENTER_TAG"* ]]
+    then
+      maybe_remove_flag "--control-center-tag"
+      if [ -n "$ENABLE_LEGACY_CONTROL_CENTER" ]
+      then
+        # legacy Control Center: CP versions
+        control_center_tag=$(playground get-tag-list)
+        control_center_tag=${control_center_tag#*@}
+        control_center_tag=${control_center_tag%% *}
+      else
+        # Control Center Next Gen has its own versions
+        set +e
+        control_center_tag=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="💠" --header="Enter the Control Center Next Gen version (for example 2.2.0), empty for latest" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_empty_pointer --print-query)
+        set -e
+      fi
+      if [ -n "$control_center_tag" ]
+      then
+        array_flag_list+=("--control-center-tag=$control_center_tag")
+        export CP_CONTROL_CENTER_TAG=$control_center_tag
+      else
+        unset CP_CONTROL_CENTER_TAG
+      fi
     fi
 
     if [[ $res == *"$MENU_CONNECTOR_TAG"* ]]

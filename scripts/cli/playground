@@ -3319,7 +3319,7 @@ playground_ccloud_costs_history_usage() {
 playground_run_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground run\n\n"
-    printf "  🕹️ Run any example !\n  \n  🔥 It start an interactive mode where you'll be fully guided !\n  \n    playground run                       🔍 pick an example, guided\n    playground run -f <example.sh>       🚀 run that one directly\n    playground re-run                    ⚡ same example, same flags\n  \n  Each run stops what was running, starts the environment the example asks\n  for, brings up its containers, creates the connector and produces data.\n  Credentials the example needs are loaded from 'playground secrets'.\n  \n  🔢 Choosing versions\n    --tag             Confluent Platform version for every component\n    --connect-tag     Confluent Platform version for connect only\n    --connector-tag   connector version from Confluent Hub\n    --connector-zip   connector from a local zip or a URL\n    --connector-jar   a single jar, dropped into the existing plugin\n  \n  🧰 Adding to the example\n    --environment     run a connector example under another security setup\n    --enable-<x>      add control-center, ksqldb, flink, grafana, kcat...\n    --enable-sql-datagen\n                      continuous realistic data for CDC source examples\n    --connect-community-image, --kafka-community-image\n                      use community images instead of enterprise ones\n    --enable-kraft    KRaft instead of Zookeeper for CP 7.4 to 7.9\n    --connect-log-level\n                      log levels set on connect before the connector is created\n  \n  \n  ⛅ When running Confluent Cloud (ccloud) example:\n  \n    All you have to do is to be already logged in with confluent CLI.\n  \n    By default, a new Confluent Cloud environment with a Cluster will be\n  created.\n  \n    You can configure the new cluster by setting:\n  \n    --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster\n  (possible values: basic, standard and dedicated, default basic)\n    --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider\n  (possible values: aws, gcp and azure, default aws)\n    --cluster-region (or CLUSTER_REGION environment variable): The Cloud region\n  (use confluent kafka region list to get the list, default eu-west-2 for aws,\n  westeurope for azure and europe-west2 for gcp)\n    --cluster-environment (or ENVIRONMENT environment variable) (optional): The\n  environment id where want your new cluster (example: txxxxx)\n  \n    In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n    --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n    --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key\n  and secret to use, it should be separated with colon (example:\n  <API_KEY>:<API_KEY_SECRET>)\n    --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable) (optional, if not set, new one will be created): The Schema Registry\n  api key and secret to use, it should be separated with colon (example:\n  <SR_API_KEY>:<SR_API_KEY_SECRET>)\n  \n  ❗ this command will kill all containers using \"playground container kill-all\",\n  you can disable this by running \"playground config\n  container-kill-all-before-run false\"\n\n"
+    printf "  🕹️ Run any example !\n  \n  🔥 It start an interactive mode where you'll be fully guided !\n  \n    playground run                       🔍 pick an example, guided\n    playground run -f <example.sh>       🚀 run that one directly\n    playground re-run                    ⚡ same example, same flags\n  \n  Each run stops what was running, starts the environment the example asks\n  for, brings up its containers, creates the connector and produces data.\n  Credentials the example needs are loaded from 'playground secrets'.\n  \n  🔢 Choosing versions\n    --tag             Confluent Platform version for every component\n    --connect-tag     Confluent Platform version for connect only\n    --schema-registry-tag, --ksqldb-tag, --control-center-tag\n                      version for that component only\n    --connector-tag   connector version from Confluent Hub\n    --connector-zip   connector from a local zip or a URL\n    --connector-jar   a single jar, dropped into the existing plugin\n  \n  🧰 Adding to the example\n    --environment     run a connector example under another security setup\n    --enable-<x>      add control-center, ksqldb, flink, grafana, kcat...\n    --enable-sql-datagen\n                      continuous realistic data for CDC source examples\n    --connect-community-image, --kafka-community-image\n                      use community images instead of enterprise ones\n    --enable-kraft    KRaft instead of Zookeeper for CP 7.4 to 7.9\n    --connect-log-level\n                      log levels set on connect before the connector is created\n  \n  \n  ⛅ When running Confluent Cloud (ccloud) example:\n  \n    All you have to do is to be already logged in with confluent CLI.\n  \n    By default, a new Confluent Cloud environment with a Cluster will be\n  created.\n  \n    You can configure the new cluster by setting:\n  \n    --cluster-type (or CLUSTER_TYPE environment variable): The type of cluster\n  (possible values: basic, standard and dedicated, default basic)\n    --cluster-cloud (or CLUSTER_CLOUD environment variable): The Cloud provider\n  (possible values: aws, gcp and azure, default aws)\n    --cluster-region (or CLUSTER_REGION environment variable): The Cloud region\n  (use confluent kafka region list to get the list, default eu-west-2 for aws,\n  westeurope for azure and europe-west2 for gcp)\n    --cluster-environment (or ENVIRONMENT environment variable) (optional): The\n  environment id where want your new cluster (example: txxxxx)\n  \n    In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n    --cluster-name (or CLUSTER_NAME environment variable): The cluster name\n    --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key\n  and secret to use, it should be separated with colon (example:\n  <API_KEY>:<API_KEY_SECRET>)\n    --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable) (optional, if not set, new one will be created): The Schema Registry\n  api key and secret to use, it should be separated with colon (example:\n  <SR_API_KEY>:<SR_API_KEY_SECRET>)\n  \n  ❗ this command will kill all containers using \"playground container kill-all\",\n  you can disable this by running \"playground config\n  container-kill-all-before-run false\"\n\n"
   else
     printf "playground run - 🕹️ Run any example !\n\n"
   fi
@@ -3360,6 +3360,21 @@ playground_run_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--connect-tag CONNECT_TAG")"
     printf "    🔗 Confluent Platform (CP) version to use. Applies to connect only.\n    \n    It sets CP_CONNECT_TAG environment variable\n    \n    Must be greater or equal to 5.3.0\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--schema-registry-tag SCHEMA_REGISTRY_TAG")"
+    printf "    🔰 Confluent Platform (CP) version to use for schema registry only\n    \n    It sets CP_SCHEMA_REGISTRY_TAG environment variable\n    \n    ❗ not supported with ccloud examples (schema registry is in Confluent Cloud)\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--ksqldb-tag KSQLDB_TAG")"
+    printf "    🎏 Confluent Platform (CP) version to use for ksqlDB server and CLI only,\n    with --enable-ksqldb\n    \n    It sets CP_KSQL_TAG and CP_KSQL_CLI_TAG environment variables\n    \n    ❗ not supported with ccloud examples\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--control-center-tag CONTROL_CENTER_TAG")"
+    printf "    💠 Control Center version to use, with --enable-control-center\n    \n    It sets CP_CONTROL_CENTER_TAG environment variable\n    \n    With Control Center Next Gen (default), this is the version of the\n    confluentinc/cp-enterprise-control-center-next-gen image (for example 2.2.0,\n    default is latest)\n    \n    With --enable-legacy-control-center, this is a CP version (< 8), by default\n    the one of --tag\n"
     echo
 
     # :flag.usage
@@ -13057,10 +13072,21 @@ function get_run_flag_combination_problems () {
   # --enable-legacy-control-center implies --enable-control-center
   if [ -n "$ENABLE_LEGACY_CONTROL_CENTER" ] && { [ -n "$ENABLE_CONTROL_CENTER" ] || [[ " ${array_flag_list[*]} " == *" --enable-legacy-control-center "* ]]; }
   then
-    if version_gt "$tag_base" "7.9.99"
+    # both the platform (--tag) and the legacy Control Center image (--control-center-tag, CP versions) must be < 8
+    local control_center_tag=${CP_CONTROL_CENTER_TAG:-$effective_tag}
+    if version_gt "$tag_base" "7.9.99" || version_gt "${control_center_tag%%-*}" "7.9.99"
     then
-      echo "error|legacy Control Center is only available for CP < 8, CP $effective_tag is selected: use --tag to select an older version"
+      echo "error|legacy Control Center is only available for CP < 8 (--tag $effective_tag, Control Center $control_center_tag): use --tag (and --control-center-tag) to select an older version"
     fi
+  fi
+
+  if [ -n "$(get_menu_flag_value --ksqldb-tag)" ] && [ -z "$ENABLE_KSQLDB" ]
+  then
+    echo "warning|--ksqldb-tag has no effect without --enable-ksqldb"
+  fi
+  if [ -n "$(get_menu_flag_value --control-center-tag)" ] && [ -z "$ENABLE_CONTROL_CENTER" ] && [[ " ${array_flag_list[*]} " != *" --enable-legacy-control-center "* ]]
+  then
+    echo "warning|--control-center-tag has no effect without --enable-control-center"
   fi
 
   if [ -n "$ENABLE_KRAFT" ]
@@ -25135,6 +25161,9 @@ playground_run_command() {
   environment="${args[--environment]}"
   tag="${args[--tag]}"
   connect_tag="${args[--connect-tag]}"
+  schema_registry_tag="${args[--schema-registry-tag]}"
+  ksqldb_tag="${args[--ksqldb-tag]}"
+  control_center_tag="${args[--control-center-tag]}"
   connector_tag="${args[--connector-tag]}"
   connector_zip="${args[--connector-zip]}"
   connector_jar="${args[--connector-jar]}"
@@ -25291,6 +25320,38 @@ playground_run_command() {
     fi
     array_flag_list+=("--connect-tag=$connect_tag")
     export CP_CONNECT_TAG=$connect_tag
+  fi
+
+  if [[ -n "$schema_registry_tag" ]]
+  then
+    if [[ $test_file == *"ccloud"* ]]
+    then
+      logwarn "❌ --schema-registry-tag is not supported with ccloud examples"
+      exit 1
+    fi
+    schema_registry_tag=${schema_registry_tag#*@}
+    array_flag_list+=("--schema-registry-tag=$schema_registry_tag")
+    export CP_SCHEMA_REGISTRY_TAG=$schema_registry_tag
+  fi
+
+  if [[ -n "$ksqldb_tag" ]]
+  then
+    if [[ $test_file == *"ccloud"* ]]
+    then
+      logwarn "❌ --ksqldb-tag is not supported with ccloud examples"
+      exit 1
+    fi
+    ksqldb_tag=${ksqldb_tag#*@}
+    array_flag_list+=("--ksqldb-tag=$ksqldb_tag")
+    # same version for the CLI
+    export CP_KSQL_TAG=$ksqldb_tag
+    export CP_KSQL_CLI_TAG=$ksqldb_tag
+  fi
+
+  if [[ -n "$control_center_tag" ]]
+  then
+    array_flag_list+=("--control-center-tag=$control_center_tag")
+    export CP_CONTROL_CENTER_TAG=$control_center_tag
   fi
 
   if [[ -n "$environment" ]]
@@ -25743,6 +25804,9 @@ playground_run_command() {
 
     MENU_TAG="$(menu_label "🎯" "CP version (all components)" "--tag")"
     MENU_CONNECT_TAG="$(menu_label "🔗" "CP version (connect only)" "--connect-tag")"
+    MENU_SCHEMA_REGISTRY_TAG="$(menu_label "🔰" "CP version (schema registry only)" "--schema-registry-tag")"
+    MENU_KSQLDB_TAG="$(menu_label "🎏" "CP version (ksqlDB only)" "--ksqldb-tag")"
+    MENU_CONTROL_CENTER_TAG="$(menu_label "💠" "Control Center version" "--control-center-tag")"
     MENU_CONNECTOR_TAG="$(menu_label "🔌" "Connector version" "--connector-tag")"
     MENU_CONNECTOR_ZIP="$(menu_label "🤐" "Connector zip" "--connector-zip")"
     MENU_CONNECTOR_JAR="$(menu_label "🤎" "Connector jar" "--connector-jar")"
@@ -26114,6 +26178,11 @@ playground_run_command() {
       then
         group+=("$(menu_value_label "$MENU_TAG" "$(get_menu_flag_value --tag)")")
         group+=("$(menu_value_label "$MENU_CONNECT_TAG" "$(get_menu_flag_value --connect-tag)")")
+        # schema registry is in Confluent Cloud for ccloud examples
+        if [ $is_ccloud == 0 ]; then group+=("$(menu_value_label "$MENU_SCHEMA_REGISTRY_TAG" "$(get_menu_flag_value --schema-registry-tag)")"); fi
+        if [ -n "$ENABLE_KSQLDB" ]; then group+=("$(menu_value_label "$MENU_KSQLDB_TAG" "$(get_menu_flag_value --ksqldb-tag)")"); fi
+        # --enable-legacy-control-center implies --enable-control-center
+        if [ -n "$ENABLE_CONTROL_CENTER" ] || [[ " ${array_flag_list[*]} " == *" --enable-legacy-control-center "* ]]; then group+=("$(menu_value_label "$MENU_CONTROL_CENTER_TAG" "$(get_menu_flag_value --control-center-tag)")"); fi
         if [ $connector_example == 1 ]
         then
           group+=("$(menu_value_label "$MENU_CONNECTOR_TAG" "$(get_menu_flag_value --connector-tag)")")
@@ -26548,6 +26617,61 @@ playground_run_command() {
         fi
         array_flag_list+=("--connect-tag=$connect_tag")
         export CP_CONNECT_TAG=$connect_tag
+      fi
+
+      if [[ $res == *"$MENU_SCHEMA_REGISTRY_TAG"* ]]
+      then
+        maybe_remove_flag "--schema-registry-tag"
+        schema_registry_tag=$(playground get-tag-list)
+        schema_registry_tag=${schema_registry_tag#*@}
+        schema_registry_tag=${schema_registry_tag%% *}
+        if [ -n "$schema_registry_tag" ]
+        then
+          array_flag_list+=("--schema-registry-tag=$schema_registry_tag")
+          export CP_SCHEMA_REGISTRY_TAG=$schema_registry_tag
+        else
+          unset CP_SCHEMA_REGISTRY_TAG
+        fi
+      fi
+
+      if [[ $res == *"$MENU_KSQLDB_TAG"* ]]
+      then
+        maybe_remove_flag "--ksqldb-tag"
+        ksqldb_tag=$(playground get-tag-list)
+        ksqldb_tag=${ksqldb_tag#*@}
+        ksqldb_tag=${ksqldb_tag%% *}
+        if [ -n "$ksqldb_tag" ]
+        then
+          array_flag_list+=("--ksqldb-tag=$ksqldb_tag")
+          export CP_KSQL_TAG=$ksqldb_tag
+          export CP_KSQL_CLI_TAG=$ksqldb_tag
+        else
+          unset CP_KSQL_TAG CP_KSQL_CLI_TAG
+        fi
+      fi
+
+      if [[ $res == *"$MENU_CONTROL_CENTER_TAG"* ]]
+      then
+        maybe_remove_flag "--control-center-tag"
+        if [ -n "$ENABLE_LEGACY_CONTROL_CENTER" ]
+        then
+          # legacy Control Center: CP versions
+          control_center_tag=$(playground get-tag-list)
+          control_center_tag=${control_center_tag#*@}
+          control_center_tag=${control_center_tag%% *}
+        else
+          # Control Center Next Gen has its own versions
+          set +e
+          control_center_tag=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="💠" --header="Enter the Control Center Next Gen version (for example 2.2.0), empty for latest" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_empty_pointer --print-query)
+          set -e
+        fi
+        if [ -n "$control_center_tag" ]
+        then
+          array_flag_list+=("--control-center-tag=$control_center_tag")
+          export CP_CONTROL_CENTER_TAG=$control_center_tag
+        else
+          unset CP_CONTROL_CENTER_TAG
+        fi
       fi
 
       if [[ $res == *"$MENU_CONNECTOR_TAG"* ]]
@@ -53967,6 +54091,48 @@ playground_run_parse_requirements() {
         ;;
 
       # :flag.case
+      --schema-registry-tag)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--schema-registry-tag']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--schema-registry-tag requires an argument: --schema-registry-tag SCHEMA_REGISTRY_TAG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --ksqldb-tag)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--ksqldb-tag']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--ksqldb-tag requires an argument: --ksqldb-tag KSQLDB_TAG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --control-center-tag)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--control-center-tag']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--control-center-tag requires an argument: --control-center-tag CONTROL_CENTER_TAG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --connector-tag)
         # :flag.conflicts
         if [[ -n "${args['--connector-zip']:-}" ]]; then
@@ -76997,6 +77163,42 @@ playground_run_completion() {
         completion_blocked_flags["--connect-tag"]=1
 
         ;;
+      --schema-registry-tag)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-tag-list "$completion_current"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--schema-registry-tag"]=1
+
+        ;;
+      --ksqldb-tag)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-tag-list "$completion_current"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--ksqldb-tag"]=1
+
+        ;;
+      --control-center-tag)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--control-center-tag"]=1
+
+        ;;
       --connector-tag)
         shift
         if [[ $# -eq 0 ]]; then
@@ -77219,6 +77421,9 @@ playground_run_completion() {
     completion_flag_candidates --open "$completion_current" --open -o
     completion_flag_candidates --tag "$completion_current" --tag
     completion_flag_candidates --connect-tag "$completion_current" --connect-tag
+    completion_flag_candidates --schema-registry-tag "$completion_current" --schema-registry-tag
+    completion_flag_candidates --ksqldb-tag "$completion_current" --ksqldb-tag
+    completion_flag_candidates --control-center-tag "$completion_current" --control-center-tag
     completion_flag_candidates --connector-tag "$completion_current" --connector-tag
     completion_flag_candidates --connector-zip "$completion_current" --connector-zip
     completion_flag_candidates --connector-jar "$completion_current" --connector-jar

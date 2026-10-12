@@ -1860,10 +1860,21 @@ function get_run_flag_combination_problems () {
   # --enable-legacy-control-center implies --enable-control-center
   if [ -n "$ENABLE_LEGACY_CONTROL_CENTER" ] && { [ -n "$ENABLE_CONTROL_CENTER" ] || [[ " ${array_flag_list[*]} " == *" --enable-legacy-control-center "* ]]; }
   then
-    if version_gt "$tag_base" "7.9.99"
+    # both the platform (--tag) and the legacy Control Center image (--control-center-tag, CP versions) must be < 8
+    local control_center_tag=${CP_CONTROL_CENTER_TAG:-$effective_tag}
+    if version_gt "$tag_base" "7.9.99" || version_gt "${control_center_tag%%-*}" "7.9.99"
     then
-      echo "error|legacy Control Center is only available for CP < 8, CP $effective_tag is selected: use --tag to select an older version"
+      echo "error|legacy Control Center is only available for CP < 8 (--tag $effective_tag, Control Center $control_center_tag): use --tag (and --control-center-tag) to select an older version"
     fi
+  fi
+
+  if [ -n "$(get_menu_flag_value --ksqldb-tag)" ] && [ -z "$ENABLE_KSQLDB" ]
+  then
+    echo "warning|--ksqldb-tag has no effect without --enable-ksqldb"
+  fi
+  if [ -n "$(get_menu_flag_value --control-center-tag)" ] && [ -z "$ENABLE_CONTROL_CENTER" ] && [[ " ${array_flag_list[*]} " != *" --enable-legacy-control-center "* ]]
+  then
+    echo "warning|--control-center-tag has no effect without --enable-control-center"
   fi
 
   if [ -n "$ENABLE_KRAFT" ]

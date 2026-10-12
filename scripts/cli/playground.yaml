@@ -956,6 +956,8 @@ subcommands:
         🔢 Choosing versions
           --tag             Confluent Platform version for every component
           --connect-tag     Confluent Platform version for connect only
+          --schema-registry-tag, --ksqldb-tag, --control-center-tag
+                            version for that component only
           --connector-tag   connector version from Confluent Hub
           --connector-zip   connector from a local zip or a URL
           --connector-jar   a single jar, dropped into the existing plugin
@@ -1061,6 +1063,42 @@ subcommands:
         Must be greater or equal to 5.3.0
         
         🎓 Tip: use <tab> completion to trigger fzf completion
+        
+    - names:
+      - --schema-registry-tag
+      argument: SCHEMA_REGISTRY_TAG
+      description: | 
+        🔰 Confluent Platform (CP) version to use for schema registry only
+        
+        It sets CP_SCHEMA_REGISTRY_TAG environment variable
+        
+        ❗ not supported with ccloud examples (schema registry is in Confluent Cloud)
+        
+        🎓 Tip: use <tab> completion to trigger fzf completion
+        
+    - names:
+      - --ksqldb-tag
+      argument: KSQLDB_TAG
+      description: | 
+        🎏 Confluent Platform (CP) version to use for ksqlDB server and CLI only, with --enable-ksqldb
+        
+        It sets CP_KSQL_TAG and CP_KSQL_CLI_TAG environment variables
+        
+        ❗ not supported with ccloud examples
+        
+        🎓 Tip: use <tab> completion to trigger fzf completion
+        
+    - names:
+      - --control-center-tag
+      argument: CONTROL_CENTER_TAG
+      description: | 
+        💠 Control Center version to use, with --enable-control-center
+        
+        It sets CP_CONTROL_CENTER_TAG environment variable
+        
+        With Control Center Next Gen (default), this is the version of the confluentinc/cp-enterprise-control-center-next-gen image (for example 2.2.0, default is latest)
+        
+        With --enable-legacy-control-center, this is a CP version (< 8), by default the one of --tag
         
     - names:
       - --connector-tag
