@@ -6049,6 +6049,7 @@ commands:
     (http://localhost:8091) as superUser.
 
       role-binding   create, delete and list role bindings
+      user           add, delete and list LDAP users and their groups
       acl            create, delete and list ACLs (MDS centralized ACLs, or
                      regular Kafka ACLs with --kafka-acls)
 
@@ -6167,6 +6168,75 @@ commands:
           - playground rbac role-binding list
           - playground rbac role-binding list --principal User:connectorSA
           - playground rbac role-binding list --scope schema-registry
+
+    - name: user
+      expose: always
+      group: RBAC
+      help: |-
+        🧑 LDAP user commands
+
+        Users live in the openldap container. They authenticate on the broker
+        with SASL/PLAIN (their LDAP password) and log in to MDS, Control
+        Center, Schema Registry and Connect REST API with basic auth.
+        Changes apply to the running environment, without restart.
+      commands:
+
+        - name: add
+          group: RBAC
+          help: |-
+            ➕ Add an LDAP user
+
+            The user can connect right away. MDS picks up new group
+            memberships (for Group:<name> role bindings) within its LDAP
+            refresh interval (60 seconds by default).
+          flags:
+          - &rbac-user
+            long: --user
+            short: -u
+            required: true
+            arg: user
+            help: |-
+              🧑 User name (principal User:<user>)
+          - long: --password
+            required: false
+            arg: password
+            help: |-
+              🔑 Password
+
+              ℹ️ If not set, <user>-secret
+          - long: --group
+            short: -g
+            required: false
+            repeatable: true
+            unique: true
+            arg: group
+            help: |-
+              👥 Group to add the user to (principal Group:<group>), created if it does not exist. Can be set several times.
+          - *verbose
+          examples:
+          - playground rbac user add --user bob
+          - playground rbac user add --user bob --password bob-pwd --group KafkaDevelopers
+
+        - name: delete
+          group: RBAC
+          help: |-
+            🗑️ Delete an LDAP user, and remove it from its groups
+
+            Its role bindings and ACLs are not deleted.
+          flags:
+          - *rbac-user
+          - *verbose
+          examples:
+          - playground rbac user delete --user bob
+
+        - name: list
+          group: RBAC
+          help: |-
+            📋 List LDAP users and their groups
+          flags:
+          - *verbose
+          examples:
+          - playground rbac user list
 
     - name: acl
       expose: always

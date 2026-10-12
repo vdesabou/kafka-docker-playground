@@ -75,15 +75,13 @@ services:
             KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO,io.confluent.rest-utils=DEBUG,io.confluent.rbacapi=DEBUG,io.confluent.tokenapi=DEBUG,io.confluent.security.auth=DEBUG,io.confluent.security.store=DEBUG,io.confluent.common.security.jetty=DEBUG"
             KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
 
+            # SASL/PLAIN users are the LDAP users (scripts/security/ldap_users), checked with their LDAP password.
+            # username/password below are only the credentials of the broker itself (inter-broker)
+            KAFKA_LISTENER_NAME_INTERNAL_PLAIN_SASL_SERVER_CALLBACK_HANDLER_CLASS: io.confluent.security.auth.provider.ldap.LdapAuthenticateCallbackHandler
             KAFKA_LISTENER_NAME_INTERNAL_PLAIN_SASL_JAAS_CONFIG: |
                     org.apache.kafka.common.security.plain.PlainLoginModule required \
                     username="admin" \
-                    password="admin-secret" \
-                    user_admin="admin-secret" \
-                    user_alice="alice-secret" \
-                    user_barnie="barnie-secret" \
-                    user_charlie="charlie-secret" \
-                    user_mds="mds-secret";
+                    password="admin-secret";
 
             KAFKA_ZOOKEEPER_SET_ACL: 'true'
 
@@ -161,12 +159,13 @@ services:
             KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO,io.confluent.rest-utils=DEBUG,io.confluent.rbacapi=DEBUG,io.confluent.tokenapi=DEBUG,io.confluent.security.auth=DEBUG,io.confluent.security.store=DEBUG,io.confluent.common.security.jetty=DEBUG"
             KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
 
+            # SASL/PLAIN users are the LDAP users (scripts/security/ldap_users), checked with their LDAP password.
+            # username/password below are only the credentials of the broker itself (inter-broker)
+            KAFKA_LISTENER_NAME_INTERNAL_PLAIN_SASL_SERVER_CALLBACK_HANDLER_CLASS: io.confluent.security.auth.provider.ldap.LdapAuthenticateCallbackHandler
             KAFKA_LISTENER_NAME_INTERNAL_PLAIN_SASL_JAAS_CONFIG: |
                     org.apache.kafka.common.security.plain.PlainLoginModule required \
                     username="admin" \
-                    password="admin-secret" \
-                    user_admin="admin-secret" \
-                    user_mds="mds-secret";
+                    password="admin-secret";
 
             KAFKA_ZOOKEEPER_SET_ACL: 'true'
 
@@ -244,12 +243,13 @@ services:
             KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO,io.confluent.rest-utils=DEBUG,io.confluent.rbacapi=DEBUG,io.confluent.tokenapi=DEBUG,io.confluent.security.auth=DEBUG,io.confluent.security.store=DEBUG,io.confluent.common.security.jetty=DEBUG"
             KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
 
+            # SASL/PLAIN users are the LDAP users (scripts/security/ldap_users), checked with their LDAP password.
+            # username/password below are only the credentials of the broker itself (inter-broker)
+            KAFKA_LISTENER_NAME_INTERNAL_PLAIN_SASL_SERVER_CALLBACK_HANDLER_CLASS: io.confluent.security.auth.provider.ldap.LdapAuthenticateCallbackHandler
             KAFKA_LISTENER_NAME_INTERNAL_PLAIN_SASL_JAAS_CONFIG: |
                     org.apache.kafka.common.security.plain.PlainLoginModule required \
                     username="admin" \
-                    password="admin-secret" \
-                    user_admin="admin-secret" \
-                    user_mds="mds-secret";
+                    password="admin-secret";
 
             KAFKA_ZOOKEEPER_SET_ACL: 'true'
 

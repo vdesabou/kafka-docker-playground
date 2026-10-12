@@ -5328,6 +5328,7 @@ subcommands:
         (http://localhost:8091) as superUser.
         
           role-binding   create, delete and list role bindings
+          user           add, delete and list LDAP users and their groups
           acl            create, delete and list ACLs (MDS centralized ACLs, or
                          regular Kafka ACLs with --kafka-acls)
         
@@ -5339,6 +5340,16 @@ subcommands:
         description: | 
           🔐 Role binding commands
         usage: playground rbac role-binding COMMAND
+        options: []
+      - name: user
+        description: | 
+          🧑 LDAP user commands
+            
+            Users live in the openldap container. They authenticate on the broker
+            with SASL/PLAIN (their LDAP password) and log in to MDS, Control
+            Center, Schema Registry and Connect REST API with basic auth.
+            Changes apply to the running environment, without restart.
+        usage: playground rbac user COMMAND
         options: []
       - name: acl
         description: | 
@@ -5507,6 +5518,94 @@ subcommands:
             
             Allowed values: kafka, schema-registry, connect, ksqldb
             
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+  - name: user
+    description: | 
+        🧑 LDAP user commands
+        
+        Users live in the openldap container. They authenticate on the broker
+        with SASL/PLAIN (their LDAP password) and log in to MDS, Control
+        Center, Schema Registry and Connect REST API with basic auth.
+        Changes apply to the running environment, without restart.
+    usage: playground rbac user COMMAND
+    options: []
+    subcommands:
+      - name: add
+        description: | 
+          ➕ Add an LDAP user
+            
+            The user can connect right away. MDS picks up new group
+            memberships (for Group:<name> role bindings) within its LDAP
+            refresh interval (60 seconds by default).
+        usage: playground rbac user add [OPTIONS]
+        options:
+        - names:
+          - --user
+          - -u
+          argument: USER
+          description: | 
+            🧑 User name (principal User:<user>)
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --password
+          argument: PASSWORD
+          description: | 
+            🔑 Password
+            
+            ℹ️ If not set, <user>-secret
+            
+        - names:
+          - --group
+          - -g
+          argument: GROUP
+          description: | 
+            👥 Group to add the user to (principal Group:<group>), created if it does not exist. Can be set several times.
+            
+            Repeatable: ✓ Yes
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+      - name: delete
+        description: | 
+          🗑️ Delete an LDAP user, and remove it from its groups
+            
+            Its role bindings and ACLs are not deleted.
+        usage: playground rbac user delete [OPTIONS]
+        options:
+        - names:
+          - --user
+          - -u
+          argument: USER
+          description: | 
+            🧑 User name (principal User:<user>)
+            
+            Required: ✓ Yes
+            
+        - names:
+          - --verbose
+          - -v
+          argument: ""
+          description: | 
+            🐞 Show command being ran.
+            
+      - name: list
+        description: | 
+          📋 List LDAP users and their groups
+        usage: playground rbac user list [OPTIONS]
+        options:
         - names:
           - --verbose
           - -v

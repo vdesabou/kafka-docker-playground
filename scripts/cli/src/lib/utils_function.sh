@@ -1413,6 +1413,12 @@ function host_check_mds_up() {
   return 0
 }
 
+function host_check_openldap_ready() {
+  # osixia/openldap loads the users with a temporary slapd, then restarts it with TLS: wait for the
+  # final one, on the LDAPS port used by the brokers, with the users loaded
+  docker exec openldap bash -c "LDAPTLS_REQCERT=never ldapsearch -x -H ldaps://localhost:636 -b ou=users,dc=confluentdemo,dc=io -D cn=admin,dc=confluentdemo,dc=io -w admin uid=admin uid" 2> /dev/null | grep -q "^uid: admin"
+}
+
 # for RBAC, taken from cp-demo
 function mds_login() {
   MDS_URL=$1

@@ -50,3 +50,15 @@ playground start-environment --environment rbac-sasl-plain \
 ```
 
 See [other/rbac-with-sr-basic-auth-acl](../../other/rbac-with-sr-basic-auth-acl/) for an example.
+
+## Users
+
+Users are the LDAP users of the `openldap` container (`scripts/security/ldap_users`). The brokers authenticate SASL/PLAIN clients against LDAP, so every LDAP user can connect on `broker:9092` with its LDAP password, and log in to MDS, Control Center, Schema Registry and the Connect REST API.
+
+```bash
+playground rbac user list
+playground rbac user add --user bob --password bob-secret --group KafkaDevelopers
+playground rbac user delete --user bob
+```
+
+Changes apply to the running environment, without restart. MDS picks up new group memberships (for `Group:<name>` role bindings) within its LDAP refresh interval (60 seconds by default).

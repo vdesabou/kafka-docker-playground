@@ -3849,7 +3849,7 @@
     },
     {
       "name": "rbac",
-      "description": "🛡️ RBAC commands (rbac-sasl-plain environment only)\n\nChange permissions of the running rbac-sasl-plain environment without\nopening a shell in a container: the commands call the MDS REST API\n(http://localhost:8091) as superUser.\n\n  role-binding   create, delete and list role bindings\n  acl            create, delete and list ACLs (MDS centralized ACLs, or\n                 regular Kafka ACLs with --kafka-acls)\n\n🎓 Tip: principals are User:<name> or Group:<name>, a bare name means User:<name>.\n",
+      "description": "🛡️ RBAC commands (rbac-sasl-plain environment only)\n\nChange permissions of the running rbac-sasl-plain environment without\nopening a shell in a container: the commands call the MDS REST API\n(http://localhost:8091) as superUser.\n\n  role-binding   create, delete and list role bindings\n  user           add, delete and list LDAP users and their groups\n  acl            create, delete and list ACLs (MDS centralized ACLs, or\n                 regular Kafka ACLs with --kafka-acls)\n\n🎓 Tip: principals are User:<name> or Group:<name>, a bare name means User:<name>.\n",
       "usage": "playground rbac COMMAND",
       "options": [],
       "subcommands": [
@@ -3857,6 +3857,12 @@
           "name": "role-binding",
           "description": "🔐 Role binding commands\n",
           "usage": "playground rbac role-binding COMMAND",
+          "options": []
+        },
+        {
+          "name": "user",
+          "description": "🧑 LDAP user commands\n  \n  Users live in the openldap container. They authenticate on the broker\n  with SASL/PLAIN (their LDAP password) and log in to MDS, Control\n  Center, Schema Registry and Connect REST API with basic auth.\n  Changes apply to the running environment, without restart.\n",
+          "usage": "playground rbac user COMMAND",
           "options": []
         },
         {
@@ -4034,6 +4040,90 @@
               ],
               "description": "🎯 Only list role bindings of this cluster\n\nℹ️ If not set, all clusters are listed\n\nAllowed values: kafka, schema-registry, connect, ksqldb\n"
             },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "user",
+      "description": "🧑 LDAP user commands\n\nUsers live in the openldap container. They authenticate on the broker\nwith SASL/PLAIN (their LDAP password) and log in to MDS, Control\nCenter, Schema Registry and Connect REST API with basic auth.\nChanges apply to the running environment, without restart.\n",
+      "usage": "playground rbac user COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "add",
+          "description": "➕ Add an LDAP user\n  \n  The user can connect right away. MDS picks up new group\n  memberships (for Group:<name> role bindings) within its LDAP\n  refresh interval (60 seconds by default).\n",
+          "usage": "playground rbac user add [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--user",
+                "-u"
+              ],
+              "argument": "USER",
+              "description": "🧑 User name (principal User:<user>)\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--password"
+              ],
+              "argument": "PASSWORD",
+              "description": "🔑 Password\n\nℹ️ If not set, <user>-secret\n"
+            },
+            {
+              "names": [
+                "--group",
+                "-g"
+              ],
+              "argument": "GROUP",
+              "description": "👥 Group to add the user to (principal Group:<group>), created if it does not exist. Can be set several times.\n\nRepeatable: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        },
+        {
+          "name": "delete",
+          "description": "🗑️ Delete an LDAP user, and remove it from its groups\n  \n  Its role bindings and ACLs are not deleted.\n",
+          "usage": "playground rbac user delete [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--user",
+                "-u"
+              ],
+              "argument": "USER",
+              "description": "🧑 User name (principal User:<user>)\n\nRequired: ✓ Yes\n"
+            },
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran.\n"
+            }
+          ]
+        },
+        {
+          "name": "list",
+          "description": "📋 List LDAP users and their groups\n",
+          "usage": "playground rbac user list [OPTIONS]",
+          "options": [
             {
               "names": [
                 "--verbose",

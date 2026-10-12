@@ -63,6 +63,11 @@ docker run --quiet --rm -v $PWD:/tmp alpine/openssl req -new -x509 -days 365 -no
 log "LDAPS: Generate the LDAPS server key and certificate"
 docker run --quiet --rm -v $PWD:/tmp alpine/openssl req -new -nodes -out /tmp/server.csr -keyout /tmp/server.key -subj "/CN=openldap"
 docker run --quiet --rm -v $PWD:/tmp alpine/openssl x509 -req -in /tmp/server.csr -days 365 -CA /tmp/ca.crt -CAkey /tmp/ca.key -CAcreateserial -out /tmp/server.crt
+# otherwise openldap generates a 2048 bit safe prime at every start, which can take minutes on CI runners,
+# and the controller and brokers wait for openldap. ffdhe2048 is the RFC 7919 group, instantly available
+# (openldap's GnuTLS rejects the faster 'dhparam -dsaparam' parameters)
+log "LDAPS: Generate the DH parameters"
+docker run --quiet --rm -v $PWD:/tmp alpine/openssl genpkey -genparam -algorithm DH -pkeyopt group:ffdhe2048 -out /tmp/dhparam.pem
 log "LDAPS: Create a JKS truststore"
 rm -f ldap_truststore.jks
 # We import the test CA certificate
@@ -100,6 +105,12 @@ else
 fi
 cd -
 cd ${OLDDIR}
+
+# the controller and brokers authenticate SASL/PLAIN users (admin included) against LDAP: start openldap first
+docker compose -f ../../environment/plaintext/docker-compose.yml ${KRAFT_DOCKER_COMPOSE_FILE_OVERRIDE} ${TELEMETRY_DOCKER_COMPOSE_FILE_OVERRIDE} -f ../../environment/rbac-sasl-plain/docker-compose.yml ${KRAFT_RBAC_DOCKER_COMPOSE_FILE_OVERRIDE} ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} up -d --quiet-pull openldap
+MAX_WAIT=120
+log "⌛ Waiting up to $MAX_WAIT seconds for OpenLDAP to be ready"
+retrycmd $((MAX_WAIT / 5)) 5 host_check_openldap_ready || exit 1
 
 # Bring up base cluster and Confluent CLI
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]

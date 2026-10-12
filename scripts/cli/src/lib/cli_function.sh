@@ -1444,6 +1444,22 @@ function mds_acl() {
   done
 }
 
+rbac_ldap_base_dn="dc=confluentdemo,dc=io"
+
+# run an LDAP client command (ldapsearch, ldapadd, ldapmodify, ldapdelete) as LDAP admin in the
+# openldap container of rbac-sasl-plain, stdin is forwarded
+# usage: rbac_ldap <command> [arguments]
+function rbac_ldap() {
+  local ldap_command="$1"
+  shift
+  local output
+  output=$(playground container exec -c openldap --command "$ldap_command -x -H ldap://localhost -D cn=admin,$rbac_ldap_base_dn -w admin $*" 2>&1)
+  local ret=$?
+  # drop the "Executing command in container" line of playground container exec
+  grep -v "Executing command in container" <<< "$output"
+  return $ret
+}
+
 function filter_plaintext_or_ccloud_environment() {
   get_environment_used
 
