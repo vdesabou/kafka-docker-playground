@@ -1832,6 +1832,23 @@ function get_example_supported_environments () {
   done
 }
 
+# fzf menus: "<emoji> <text>", padded so that the flags (or values) line up in a
+# column. Emojis are written so that the text starts at column 3: a 2-column emoji
+# is followed by one space, a 1-column one by two. <reserved> is for a prefix added
+# later (the "[x] " of toggles)
+function menu_label () {
+  local emoji="$1"
+  local text="$2"
+  local flag="$3"
+  local reserved="${4:-0}"
+  local padding=$((MAX_LENGTH - 3 - ${#text} - reserved))
+  if [ $padding -lt 1 ]
+  then
+    padding=1
+  fi
+  printf '%s %s %*s %s' "$emoji" "$text" "$padding" ' ' "$flag"
+}
+
 # playground run: known-bad combinations of the current flags / variables, one
 # "error|<message>" or "warning|<message>" line each. Errors would make the run
 # fail after the environment is started, warnings are combinations that run but
@@ -1949,17 +1966,17 @@ function display_interactive_menu_categories () {
     nb_repro=0
   fi
 
-  MENU_CONNECTOR="🔗 Connectors $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_CONNECTOR})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_connector_only | awk '{print $1}') examples"
-  MENU_CCLOUD="🌤️  Confluent cloud $(printf '%*s' $((${MAX_LENGTH}-18-${#MENU_CCLOUD})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only | awk '{print $1}') examples"
-  MENU_FULLY_MANAGED_CONNECTOR="🤖 Fully-Managed connectors $(printf '%*s' $((${MAX_LENGTH}-27-${#MENU_FULLY_MANAGED_CONNECTOR})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_fully_managed_connector_only | awk '{print $1}') examples"
-  MENU_REPRO="🛠  Reproduction models $(printf '%*s' $((${MAX_LENGTH}-22-${#MENU_REPRO})) ' ') $nb_repro examples"
-  MENU_OTHER="👾 Other playgrounds $(printf '%*s' $((${MAX_LENGTH}-20-${#MENU_OTHER})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_other_playgrounds_only | awk '{print $1}') examples"
-  MENU_ENVIRONMENTS="🔐 Environments $(printf '%*s' $((${MAX_LENGTH}-15-${#MENU_ENVIRONMENTS})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_environment_only | awk '{print $1}') examples"
-  MENU_ALL="🎲 All $(printf '%*s' $((${MAX_LENGTH}-6-${#MENU_ALL})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_all | awk '{print $1}') examples"
-  MENU_KSQL="🎏 ksqlDB $(printf '%*s' $((${MAX_LENGTH}-9-${#MENU_KSQL})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_ksql_only | awk '{print $1}') examples"
-  MENU_SR="🔰 Schema registry $(printf '%*s' $((${MAX_LENGTH}-18-${#MENU_SR})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_schema_registry_only | awk '{print $1}') examples"
-  MENU_RP="🧲 Rest proxy $(printf '%*s' $((${MAX_LENGTH}-13-${#MENU_RP})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_rest_proxy_only | awk '{print $1}') examples"
-  MENU_ACADEMY="🧑‍🎓 Academy $(printf '%*s' $((${MAX_LENGTH}-10-${#MENU_ACADEMY})) ' ') $(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_academy_only | awk '{print $1}') examples"
+  MENU_CONNECTOR="$(menu_label "🔗" "Connectors" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_connector_only | awk '{print $1}') examples")"
+  MENU_CCLOUD="$(menu_label "🌤️ " "Confluent cloud" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only | awk '{print $1}') examples")"
+  MENU_FULLY_MANAGED_CONNECTOR="$(menu_label "🤖" "Fully-Managed connectors" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_fully_managed_connector_only | awk '{print $1}') examples")"
+  MENU_REPRO="$(menu_label "🛠 " "Reproduction models" "$nb_repro examples")"
+  MENU_OTHER="$(menu_label "👾" "Other playgrounds" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_other_playgrounds_only | awk '{print $1}') examples")"
+  MENU_ENVIRONMENTS="$(menu_label "🔐" "Environments" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_environment_only | awk '{print $1}') examples")"
+  MENU_ALL="$(menu_label "🎲" "All" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_all | awk '{print $1}') examples")"
+  MENU_KSQL="$(menu_label "🎏" "ksqlDB" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_ksql_only | awk '{print $1}') examples")"
+  MENU_SR="$(menu_label "🔰" "Schema registry" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_schema_registry_only | awk '{print $1}') examples")"
+  MENU_RP="$(menu_label "🧲" "Rest proxy" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_rest_proxy_only | awk '{print $1}') examples")"
+  MENU_ACADEMY="$(menu_label "🧑‍🎓" "Academy" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_academy_only | awk '{print $1}') examples")"
 
   if [ "$repro" == 1 ]
   then
@@ -1985,7 +2002,7 @@ function display_interactive_menu_categories () {
 
     if [ $propose_current_example -eq 1 ]
     then
-      MENU_CURRENT_EXAMPLE="🕹️  Current example $(printf '%*s' $((${MAX_LENGTH}-18-${#MENU_CURRENT_EXAMPLE})) ' ') $current_file"
+      MENU_CURRENT_EXAMPLE="$(menu_label "🕹️ " "Current example" "$current_file")"
       options=("$MENU_CURRENT_EXAMPLE" "$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP" "$MENU_ACADEMY")
     else
       options=("$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP" "$MENU_ACADEMY")

@@ -59,8 +59,8 @@ then
   fi
   readonly MENU_LETS_GO="🏭 Create the reproduction model !"
 
-  MENU_ENABLE_CUSTOM_SMT="🔧 Add custom SMT $(printf '%*s' $((${MAX_LENGTH}-17-${#MENU_ENABLE_CUSTOM_SMT})) ' ') --custom-smt"
-  MENU_ADD_CONNECTOR_PLUGIN="🔌 Add connector plugin $(printf '%*s' $((${MAX_LENGTH}-23-${#MENU_ADD_CONNECTOR_PLUGIN})) ' ') --connector-plugin"
+  MENU_ENABLE_CUSTOM_SMT="$(menu_label "🔧" "Add custom SMT" "--custom-smt")"
+  MENU_ADD_CONNECTOR_PLUGIN="$(menu_label "🔌" "Add connector plugin" "--connector-plugin")"
 
   readonly MENU_DISABLE_CUSTOM_SMT="❌🔧 Disable custom SMT"
   readonly MENU_GO_BACK="🔙 Go back"
@@ -95,9 +95,9 @@ then
     length=${#pipeline_array[@]}
     if ((length > 0))
     then
-      MENU_PIPELINE="🔖 Add another sink to pipeline $(printf '%*s' $((${MAX_LENGTH}-32-${#MENU_PIPELINE})) ' ') --pipeline"
+      MENU_PIPELINE="$(menu_label "🔖" "Add another sink to pipeline" "--pipeline")"
     else
-      MENU_PIPELINE="🔖 Create pipeline with sink $(printf '%*s' $((${MAX_LENGTH}-28-${#MENU_PIPELINE})) ' ') --pipeline"
+      MENU_PIPELINE="$(menu_label "🔖" "Create pipeline with sink" "--pipeline")"
     fi
 
     # an entry is only added when it applies to this example
