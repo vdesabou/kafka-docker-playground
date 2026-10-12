@@ -1752,6 +1752,30 @@ function maybe_remove_flag () {
   done
 }
 
+# set the log levels of PLAYGROUND_CONNECT_LOG_LEVELS (playground run --connect-log-level), best effort
+function apply_connect_log_levels () {
+  if [ -z "$PLAYGROUND_CONNECT_LOG_LEVELS" ]
+  then
+    return
+  fi
+  local entry
+  set +e
+  for entry in ${PLAYGROUND_CONNECT_LOG_LEVELS//,/ }
+  do
+    if ! playground debug log-level set --package "${entry%%=*}" --level "${entry#*=}"
+    then
+      logwarn "🔊 could not set connect log level $entry, set it manually with 'playground debug log-level set'"
+    fi
+  done
+  set -e
+}
+
+# packages of the connector classes used by an example, for example io.confluent.connect.s3
+function get_example_connector_packages () {
+  local example_file="$1"
+  grep -ho '"connector.class"[[:space:]]*:[[:space:]]*"[^"]*"' "$example_file" | sed 's/.*"\([^"]*\)"$/\1/' | sed 's/\.[^.]*$//' | grep "\." | sort -u
+}
+
 function display_interactive_menu_categories () {
   repro=$1
 

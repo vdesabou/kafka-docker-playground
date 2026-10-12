@@ -63,3 +63,6 @@ then
 else
   $test_file
 fi
+
+# playground run --connect-log-level: connect is ready, the example has not created its connector yet
+apply_connect_log_levels

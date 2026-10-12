@@ -25,6 +25,7 @@ connect_community_image="${args[--connect-community-image]}"
 kafka_community_image="${args[--kafka-community-image]}"
 enable_kraft="${args[--enable-kraft]}"
 enable_legacy_c3="${args[--enable-legacy-control-center]}"
+connect_log_level="${args[--connect-log-level]}"
 
 cluster_type="${args[--cluster-type]}"
 cluster_cloud="${args[--cluster-cloud]}"
@@ -394,6 +395,17 @@ then
   export ENABLE_LEGACY_CONTROL_CENTER=true
 fi
 
+if [[ -n "$connect_log_level" ]]
+then
+  if [[ $test_file == *"fully-managed"* ]]
+  then
+    logwarn "❌ --connect-log-level is not supported with fully managed connector examples"
+    exit 1
+  fi
+  array_flag_list+=("--connect-log-level=$connect_log_level")
+  export PLAYGROUND_CONNECT_LOG_LEVELS="$connect_log_level"
+fi
+
 if [[ -n "$cluster_type" ]] || [[ -n "$cluster_cloud" ]] || [[ -n "$cluster_region" ]] || [[ -n "$cluster_environment" ]] || [[ -n "$cluster_name" ]] || [[ -n "$cluster_creds" ]] || [[ -n "$cluster_schema_registry_creds" ]]
 then
   playground state set ccloud.suggest_use_previous_example_ccloud "0"
@@ -667,6 +679,10 @@ then
 
   readonly MENU_SEPARATOR_CLOUD="-----------------confluent cloud------------------" #41
   readonly MENU_SEPARATOR_IMAGES="------------------images & modes------------------" #50
+  MENU_CONNECT_LOG_LEVEL="🔊 Connect log level(s) $(printf '%*s' $((${MAX_LENGTH}-23-${#MENU_CONNECT_LOG_LEVEL})) ' ') --connect-log-level" #51
+  readonly MENU_SWITCH_EXAMPLE="🔀 Switch to another example in the same folder"
+  readonly MENU_REPRO_BOOTSTRAP="🧪 Create a reproduction model from this example" #53
+  readonly MENU_SEPARATOR_ACTIONS="---------------------actions----------------------" #54
 
   readonly MENU_GO_BACK="🔙 Go back" #42
 
@@ -702,6 +718,9 @@ then
     sql_datagen=1
   fi
 
+  # other examples in the same folder (variants of this one)
+  sibling_examples=$(find "$test_file_directory" -maxdepth 1 -name "*.sh" ! -name "stop.sh" ! -name "$filename" -exec basename {} \; | sort)
+
   # Precompute mandatory env var names from the example (once)
   declare -a mandatory_env_vars=()
   while IFS= read -r __mev; do
@@ -712,7 +731,7 @@ then
   while [ $stop != 1 ]
   do
     has_error=0
-    options=("$MENU_LETS_GO" "$MENU_PROBLEM" "$MENU_OPEN_FILE" "$MENU_OPEN_DOCS" "$MENU_SEPARATOR" "$MENU_TAG" "$MENU_CONNECT_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_ENVIRONMENT" "$MENU_SEPARATOR" "$MENU_ENABLE_KSQLDB" "$MENU_ENABLE_C3" "$MENU_ENABLE_CONDUKTOR" "$MENU_ENABLE_RP" "$MENU_ENABLE_GRAFANA" "$MENU_ENABLE_BROKERS" "$MENU_ENABLE_CONNECT_WORKERS" "$MENU_ENABLE_KCAT" "$MENU_ENABLE_SQL_DATAGEN" "$MENU_ENABLE_FLINK" "$MENU_DISABLE_KSQLDB" "$MENU_DISABLE_C3" "$MENU_DISABLE_CONDUKTOR" "$MENU_DISABLE_RP" "$MENU_DISABLE_GRAFANA" "$MENU_DISABLE_BROKERS" "$MENU_DISABLE_CONNECT_WORKERS" "$MENU_DISABLE_KCAT" "$MENU_DISABLE_SQL_DATAGEN" "$MENU_DISABLE_FLINK" "$MENU_SEPARATOR_FEATURES" "$MENU_CLUSTER_TYPE" "$MENU_CLUSTER_CLOUD" "$MENU_CLUSTER_REGION" "$MENU_CLUSTER_ENVIRONMENT" "$MENU_CLUSTER_NAME" "$MENU_CLUSTER_CREDS" "$MENU_CLUSTER_SR_CREDS" "$MENU_UNSET_CLUSTER_NAME" "$MENU_SEPARATOR_CLOUD" "$MENU_CONNECT_COMMUNITY_IMAGE" "$MENU_KAFKA_COMMUNITY_IMAGE" "$MENU_ENABLE_KRAFT" "$MENU_ENABLE_LEGACY_C3" "$MENU_DISABLE_CONNECT_COMMUNITY_IMAGE" "$MENU_DISABLE_KAFKA_COMMUNITY_IMAGE" "$MENU_DISABLE_KRAFT" "$MENU_DISABLE_LEGACY_C3" "$MENU_SEPARATOR_IMAGES" "$MENU_GO_BACK")
+    options=("$MENU_LETS_GO" "$MENU_PROBLEM" "$MENU_OPEN_FILE" "$MENU_OPEN_DOCS" "$MENU_SEPARATOR" "$MENU_TAG" "$MENU_CONNECT_TAG" "$MENU_CONNECTOR_TAG" "$MENU_CONNECTOR_ZIP" "$MENU_CONNECTOR_JAR" "$MENU_ENVIRONMENT" "$MENU_SEPARATOR" "$MENU_ENABLE_KSQLDB" "$MENU_ENABLE_C3" "$MENU_ENABLE_CONDUKTOR" "$MENU_ENABLE_RP" "$MENU_ENABLE_GRAFANA" "$MENU_ENABLE_BROKERS" "$MENU_ENABLE_CONNECT_WORKERS" "$MENU_ENABLE_KCAT" "$MENU_ENABLE_SQL_DATAGEN" "$MENU_ENABLE_FLINK" "$MENU_DISABLE_KSQLDB" "$MENU_DISABLE_C3" "$MENU_DISABLE_CONDUKTOR" "$MENU_DISABLE_RP" "$MENU_DISABLE_GRAFANA" "$MENU_DISABLE_BROKERS" "$MENU_DISABLE_CONNECT_WORKERS" "$MENU_DISABLE_KCAT" "$MENU_DISABLE_SQL_DATAGEN" "$MENU_DISABLE_FLINK" "$MENU_SEPARATOR_FEATURES" "$MENU_CLUSTER_TYPE" "$MENU_CLUSTER_CLOUD" "$MENU_CLUSTER_REGION" "$MENU_CLUSTER_ENVIRONMENT" "$MENU_CLUSTER_NAME" "$MENU_CLUSTER_CREDS" "$MENU_CLUSTER_SR_CREDS" "$MENU_UNSET_CLUSTER_NAME" "$MENU_SEPARATOR_CLOUD" "$MENU_CONNECT_COMMUNITY_IMAGE" "$MENU_KAFKA_COMMUNITY_IMAGE" "$MENU_ENABLE_KRAFT" "$MENU_ENABLE_LEGACY_C3" "$MENU_DISABLE_CONNECT_COMMUNITY_IMAGE" "$MENU_DISABLE_KAFKA_COMMUNITY_IMAGE" "$MENU_DISABLE_KRAFT" "$MENU_DISABLE_LEGACY_C3" "$MENU_SEPARATOR_IMAGES" "$MENU_CONNECT_LOG_LEVEL" "$MENU_SWITCH_EXAMPLE" "$MENU_REPRO_BOOTSTRAP" "$MENU_SEPARATOR_ACTIONS" "$MENU_GO_BACK")
 
     if [[ $test_file == *"ccloud"* ]] || [ "$PLAYGROUND_ENVIRONMENT" == "ccloud" ]
     then
@@ -751,7 +770,7 @@ then
       if [[ $test_file == *"fully-managed"* ]]
       then
         # no local connect either
-        for((i=42;i<51;i++)); do
+        for((i=42;i<52;i++)); do
           unset "options[$i]"
         done
       fi
@@ -976,6 +995,15 @@ then
     else
       unset 'options[49]'
     fi
+    if [ -z "$sibling_examples" ]
+    then
+      unset 'options[52]'
+    fi
+    if [[ -n "$force_interactive_repro" ]]
+    then
+      # already creating one
+      unset 'options[53]'
+    fi
 
     missing_env=""
     declare -a missing_env_list=()
@@ -1164,8 +1192,67 @@ then
 
     if [[ $res == *"$MENU_GO_BACK"* ]]
     then
-      stop=1
+      playground state set run.test_file "$previous_test_file"
       playground run
+      exit $?
+    fi
+
+    if [[ $res == *"$MENU_SWITCH_EXAMPLE"* ]]
+    then
+      set +e
+      sibling_example=$(echo "$sibling_examples" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔀" --header="select another example in $(basename "$test_file_directory")" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
+      set -e
+      if [ -n "$sibling_example" ]
+      then
+        # same flags, reopening the menu for the selected example
+        playground state set run.test_file "$previous_test_file"
+        IFS=' ' flag_list="${array_flag_list[*]}"
+        playground run -f "$test_file_directory/$sibling_example" --force-interactive-re-run $flag_list
+        exit $?
+      fi
+    fi
+
+    if [[ $res == *"$MENU_REPRO_BOOTSTRAP"* ]]
+    then
+      playground state set run.test_file "$previous_test_file"
+      playground repro bootstrap -f "$test_file"
+      exit $?
+    fi
+
+    if [[ $res == *"$MENU_CONNECT_LOG_LEVEL"* ]]
+    then
+      set +e
+      log_level_package=$( (echo "❌ reset connect log level(s)"; get_example_connector_packages "$test_file"; echo "org.apache.kafka.connect.runtime"; echo "org.apache.kafka.clients") | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="📦" --header="select a package, or type one and use <option+enter>" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --bind "alt-enter:print-query")
+      set -e
+      if [[ "$log_level_package" == "❌"* ]]
+      then
+        maybe_remove_flag "--connect-log-level"
+        unset PLAYGROUND_CONNECT_LOG_LEVELS
+      elif [ -n "$log_level_package" ] && [[ ! "$log_level_package" =~ ^[A-Za-z0-9_.$-]+$ ]]
+      then
+        logwarn "❌ <$log_level_package> is not a valid package name, ignoring it"
+      elif [ -n "$log_level_package" ]
+      then
+        set +e
+        log_level=$(printf '%s\n' TRACE DEBUG INFO WARN | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔊" --header="select the log level for $log_level_package" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
+        set -e
+        if [ -n "$log_level" ]
+        then
+          # replace the level of the package if it was already set
+          connect_log_level=""
+          for entry in ${PLAYGROUND_CONNECT_LOG_LEVELS//,/ }
+          do
+            if [ "${entry%%=*}" != "$log_level_package" ]
+            then
+              connect_log_level="${connect_log_level:+$connect_log_level,}$entry"
+            fi
+          done
+          connect_log_level="${connect_log_level:+$connect_log_level,}$log_level_package=$log_level"
+          maybe_remove_flag "--connect-log-level"
+          array_flag_list+=("--connect-log-level=$connect_log_level")
+          export PLAYGROUND_CONNECT_LOG_LEVELS="$connect_log_level"
+        fi
+      fi
     fi
 
     if [[ $res == *"$MENU_ENABLE_KSQLDB"* ]]

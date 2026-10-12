@@ -1713,6 +1713,16 @@ commands:
       It sets ENABLE_LEGACY_CONTROL_CENTER environment variable
 
       Legacy Control Center is not available for CP >= 8, use it with --enable-control-center
+  - long: --connect-log-level
+    required: false
+    arg: connect-log-level
+    validate: connect_log_levels
+    help: |-
+      🔊 Log level(s) to set on connect, as a comma separated list of <package>=<level> (level is one of INFO, WARN, DEBUG, TRACE)
+
+      They are applied with 'playground debug log-level set' as soon as the environment is started and connect is ready, so before the example creates its connector
+
+      Example: --connect-log-level "io.confluent.connect.s3=TRACE,org.apache.kafka.connect.runtime.WorkerSinkTask=DEBUG"
 
   - &cluster-cloud
     long: --cluster-cloud
