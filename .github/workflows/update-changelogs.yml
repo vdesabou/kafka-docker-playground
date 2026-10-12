@@ -81,7 +81,7 @@ jobs:
           sleep 20
 
       - name: Create Release Notes
-        uses: vdesabou/release-notes-generator-action@1.0.3
+        uses: vdesabou/release-notes-generator-action@1.0.4
         id: Changelog
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
