@@ -1833,9 +1833,10 @@ function get_example_supported_environments () {
 }
 
 # fzf menus: "<emoji> <text>", padded so that the flags (or values) line up in a
-# column. Emojis are written so that the text starts at column 3: a 2-column emoji
-# is followed by one space, a 1-column one by two. <reserved> is for a prefix added
-# later (the "[x] " of toggles)
+# column. <emoji> must be a single 2-column code point (no U+FE0F variation selector,
+# no ZWJ sequence, no keycap): fzf and terminals disagree on the width of those, and
+# the shifted row leaves stale characters behind when fzf redraws it.
+# <reserved> is for a prefix added later (the "[x] " of toggles)
 function menu_label () {
   local emoji="$1"
   local text="$2"
@@ -1978,9 +1979,9 @@ function display_interactive_menu_categories () {
   fi
 
   MENU_CONNECTOR="$(menu_label "🔗" "Connectors" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_connector_only | awk '{print $1}') examples")"
-  MENU_CCLOUD="$(menu_label "🌤️ " "Confluent cloud" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only | awk '{print $1}') examples")"
+  MENU_CCLOUD="$(menu_label "⛅" "Confluent cloud" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_ccloud_only | awk '{print $1}') examples")"
   MENU_FULLY_MANAGED_CONNECTOR="$(menu_label "🤖" "Fully-Managed connectors" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_fully_managed_connector_only | awk '{print $1}') examples")"
-  MENU_REPRO="$(menu_label "🛠 " "Reproduction models" "$nb_repro examples")"
+  MENU_REPRO="$(menu_label "🔧" "Reproduction models" "$nb_repro examples")"
   MENU_OTHER="$(menu_label "👾" "Other playgrounds" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_other_playgrounds_only | awk '{print $1}') examples")"
   MENU_ENVIRONMENTS="$(menu_label "🔐" "Environments" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_environment_only | awk '{print $1}') examples")"
   MENU_ALL="$(menu_label "🎲" "All" "$(wc -l $root_folder/scripts/cli/get_examples_list_with_fzf_all | awk '{print $1}') examples")"
@@ -2013,7 +2014,7 @@ function display_interactive_menu_categories () {
 
     if [ $propose_current_example -eq 1 ]
     then
-      MENU_CURRENT_EXAMPLE="$(menu_label "🕹️ " "Current example" "$current_file")"
+      MENU_CURRENT_EXAMPLE="$(menu_label "🎮" "Current example" "$current_file")"
       options=("$MENU_CURRENT_EXAMPLE" "$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP" "$MENU_ACADEMY")
     else
       options=("$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP" "$MENU_ACADEMY")
@@ -2575,19 +2576,19 @@ function arm64_support() {
     grep "${base_test}" ${root_folder}/scripts/arm64-support-none.txt > /dev/null
     if [ $? = 0 ]
     then
-      echo "❌🖥️ this example is not working with ARM64 !"
-      echo "❌🖥️ it is highly recommended to use 'playground ec2 command' to run the example on ubuntu ec2 instance"
+      echo "❌💻 this example is not working with ARM64 !"
+      echo "❌💻 it is highly recommended to use 'playground ec2 command' to run the example on ubuntu ec2 instance"
       return
     fi
 
     grep "${base_test}" ${root_folder}/scripts/arm64-support-with-emulation.txt > /dev/null
     if [ $? = 0 ]
     then
-        echo "☑️🖥️ this example is working with ARM64 but requires emulation"
+        echo "🔶💻 this example is working with ARM64 but requires emulation"
         return
     fi
 
-    echo "✅🖥️ this example should work natively with ARM64"
+    echo "✅💻 this example should work natively with ARM64"
   fi
   set -e
 }

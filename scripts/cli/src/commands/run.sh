@@ -664,22 +664,22 @@ then
   MENU_CONDUKTOR="$(menu_label "🐺" "Conduktor Platform" "--enable-conduktor" 4)"
   MENU_RP="$(menu_label "🧲" "Rest Proxy" "--enable-rest-proxy" 4)"
   MENU_GRAFANA="$(menu_label "📊" "Grafana" "--enable-jmx-grafana" 4)"
-  MENU_BROKERS="$(menu_label "3️⃣ " "Multiple brokers" "--enable-multiple-brokers" 4)"
+  MENU_BROKERS="$(menu_label "🔢" "Multiple brokers" "--enable-multiple-brokers" 4)"
   MENU_CONNECT_WORKERS="$(menu_label "🥉" "Multiple connect workers" "--enable-multiple-connect-workers" 4)"
   MENU_KCAT="$(menu_label "🐈" "kcat" "--enable-kcat" 4)"
-  MENU_SQL_DATAGEN="$(menu_label "🌪️ " "SQL Datagen injection" "--enable-sql-datagen" 4)"
-  MENU_FLINK="$(menu_label "🐿️ " "Flink" "--enable-flink" 4)"
+  MENU_SQL_DATAGEN="$(menu_label "🌀" "SQL Datagen injection" "--enable-sql-datagen" 4)"
+  MENU_FLINK="$(menu_label "🐹" "Flink" "--enable-flink" 4)"
   MENU_CONNECT_COMMUNITY_IMAGE="$(menu_label "🌱" "Community connect image" "--connect-community-image" 4)"
   MENU_KAFKA_COMMUNITY_IMAGE="$(menu_label "🌿" "Community kafka image" "--kafka-community-image" 4)"
-  MENU_KRAFT="$(menu_label "🛰️ " "KRaft (CP 7.4 to 7.9)" "--enable-kraft" 4)"
+  MENU_KRAFT="$(menu_label "📡" "KRaft (CP 7.4 to 7.9)" "--enable-kraft" 4)"
   MENU_LEGACY_C3="$(menu_label "🧓" "Legacy Control Center (CP < 8)" "--enable-legacy-control-center" 4)"
 
 
   readonly MENU_SEPARATOR_FEATURES="--------------------options-----------------------"
 
   MENU_CLUSTER_TYPE="$(menu_label "🔋" "Cluster type" "--cluster-type")"
-  MENU_CLUSTER_CLOUD="$(menu_label "🌤 " "Cloud provider" "--cluster-cloud")"
-  MENU_CLUSTER_REGION="$(menu_label "🗺 " "Cloud region" "--cluster-region")"
+  MENU_CLUSTER_CLOUD="$(menu_label "⛅" "Cloud provider" "--cluster-cloud")"
+  MENU_CLUSTER_REGION="$(menu_label "🧭" "Cloud region" "--cluster-region")"
   MENU_CLUSTER_ENVIRONMENT="$(menu_label "🌐" "Environment id" "--cluster-environment")"
 
   MENU_CLUSTER_NAME="$(menu_label "🎰" "Cluster name" "--cluster-name")"
@@ -779,18 +779,18 @@ then
 
         if [ -z $CLUSTER_CLOUD ] 
         then
-          ccloud_preview="${ccloud_preview}❌  ${RED}🌤cluster-cloud is missing!${NC}\n"
+          ccloud_preview="${ccloud_preview}❌  ${RED}⛅ cluster-cloud is missing!${NC}\n"
           has_error=1
         else
-          ccloud_preview="${ccloud_preview}🌤  ${YELLOW}cluster-cloud=$CLUSTER_CLOUD${NC}\n"
+          ccloud_preview="${ccloud_preview}⛅ ${YELLOW}cluster-cloud=$CLUSTER_CLOUD${NC}\n"
         fi
         
         if [ -z $CLUSTER_REGION ] 
         then
-          ccloud_preview="${ccloud_preview}❌ ${RED}🗺cluster-region is missing!${NC}\n"
+          ccloud_preview="${ccloud_preview}❌ ${RED}🧭 cluster-region is missing!${NC}\n"
           has_error=1
         else
-          ccloud_preview="${ccloud_preview}🗺  ${YELLOW}cluster-region=$CLUSTER_REGION${NC}\n"
+          ccloud_preview="${ccloud_preview}🧭 ${YELLOW}cluster-region=$CLUSTER_REGION${NC}\n"
         fi
 
         if [ -z $CLUSTER_CREDS ] 
@@ -836,24 +836,24 @@ then
 
         if [ -z $CLUSTER_CLOUD ] && [[ ! -n "$cluster_cloud" ]]
         then
-          ccloud_preview="${ccloud_preview}🌤  ${CYAN}cluster-cloud is missing, aws will be used${NC}\n"
+          ccloud_preview="${ccloud_preview}⛅ ${CYAN}cluster-cloud is missing, aws will be used${NC}\n"
         else
           if [ ! -z "$CLUSTER_CLOUD" ]
           then
             cluster_cloud=$CLUSTER_CLOUD
           fi
-          ccloud_preview="${ccloud_preview}🌤 ${YELLOW}cluster-cloud=$cluster_cloud${NC}\n"
+          ccloud_preview="${ccloud_preview}⛅ ${YELLOW}cluster-cloud=$cluster_cloud${NC}\n"
         fi
         
         if [ -z $CLUSTER_REGION ] && [[ ! -n "$cluster_region" ]]
         then
-          ccloud_preview="${ccloud_preview}🗺  ${CYAN}cluster-region is missing, default region for provider will be used${NC}\n"
+          ccloud_preview="${ccloud_preview}🧭 ${CYAN}cluster-region is missing, default region for provider will be used${NC}\n"
         else
           if [ ! -z "$CLUSTER_REGION" ]
           then
             cluster_region=$CLUSTER_REGION
           fi
-          ccloud_preview="${ccloud_preview}🗺  ${YELLOW}cluster-region=$cluster_region${NC}\n"
+          ccloud_preview="${ccloud_preview}🧭 ${YELLOW}cluster-region=$cluster_region${NC}\n"
         fi
       fi
     fi # end of ccloud
@@ -990,7 +990,7 @@ then
     if [[ "$arm64_support" == *"❌"* ]]
     then
       has_error=1
-      MENU_PROBLEM="❌🖥️ this example is not working with ARM64 !"
+      MENU_PROBLEM="❌💻 this example is not working with ARM64 !"
     fi
 
     #
