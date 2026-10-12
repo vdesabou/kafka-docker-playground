@@ -78,7 +78,31 @@ az kusto cluster create \
     --resource-group $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
     --sku name="Dev(No SLA)_Standard_E2a_v4" tier="Basic" capacity=1 \
-    --tags cflt_managed_by=user cflt_managed_id="$USER" > /dev/null
+    --tags cflt_managed_by=user cflt_managed_id="$USER" \
+    --no-wait
+
+# poll the provisioning state rather than waiting on the create operation: it can fail with a transient
+# "(ServiceIsInMaintenance) [Conflict] Cluster is in process of maintenance" while the cluster is still being created
+MAX_WAIT=1800
+CUR_WAIT=0
+cluster_state=""
+while [ "$cluster_state" != "Succeeded" ]
+do
+    sleep 30
+    CUR_WAIT=$(( CUR_WAIT+30 ))
+    cluster_state=$(az kusto cluster show --cluster-name $AZURE_KUSTO_CLUSTER_NAME --resource-group $AZURE_RESOURCE_GROUP --query provisioningState -o tsv 2>/dev/null || true)
+    log "⏳ cluster $AZURE_KUSTO_CLUSTER_NAME provisioning state: $cluster_state"
+    if [ "$cluster_state" == "Failed" ]
+    then
+        logerror "❌ cluster $AZURE_KUSTO_CLUSTER_NAME creation failed"
+        exit 1
+    fi
+    if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]
+    then
+        logerror "❌ cluster $AZURE_KUSTO_CLUSTER_NAME is not ready after $MAX_WAIT seconds"
+        exit 1
+    fi
+done
 
 AZURE_KUSTO_QUERY_URL=$(az kusto cluster show --cluster-name $AZURE_KUSTO_CLUSTER_NAME --resource-group $AZURE_RESOURCE_GROUP --query uri -o tsv)
 AZURE_KUSTO_INGESTION_URL=$(az kusto cluster show --cluster-name $AZURE_KUSTO_CLUSTER_NAME --resource-group $AZURE_RESOURCE_GROUP --query dataIngestionUri -o tsv)
