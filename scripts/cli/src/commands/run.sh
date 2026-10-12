@@ -672,7 +672,7 @@ then
   MENU_CONNECT_COMMUNITY_IMAGE="$(menu_label "🌱" "Community connect image" "--connect-community-image" 4)"
   MENU_KAFKA_COMMUNITY_IMAGE="$(menu_label "🌿" "Community kafka image" "--kafka-community-image" 4)"
   MENU_KRAFT="$(menu_label "🛰️ " "KRaft (CP 7.4 to 7.9)" "--enable-kraft" 4)"
-  MENU_LEGACY_C3="$(menu_label "👨‍🦳" "Legacy Control Center (CP < 8)" "--enable-legacy-control-center" 4)"
+  MENU_LEGACY_C3="$(menu_label "🧓" "Legacy Control Center (CP < 8)" "--enable-legacy-control-center" 4)"
 
 
   readonly MENU_SEPARATOR_FEATURES="--------------------options-----------------------"
