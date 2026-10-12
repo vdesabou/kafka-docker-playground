@@ -1421,11 +1421,13 @@ commands:
     🧰 Adding to the example
       --environment     run a connector example under another security setup
       --enable-<x>      add control-center, ksqldb, flink, grafana, kcat...
+      --enable-sql-datagen
+                        continuous realistic data for CDC source examples
       --connect-community-image, --kafka-community-image
                         use community images instead of enterprise ones
       --enable-kraft    KRaft instead of Zookeeper for CP 7.4 to 7.9
-      --pipeline        chain a source example into a sink example
-      --sql-datagen     continuous realistic data instead of a fixed batch
+      --connect-log-level
+                        log levels set on connect before the connector is created
 
 
     ⛅ When running Confluent Cloud (ccloud) example:
@@ -1712,7 +1714,7 @@ commands:
 
       It sets ENABLE_LEGACY_CONTROL_CENTER environment variable
 
-      Legacy Control Center is not available for CP >= 8, use it with --enable-control-center
+      Legacy Control Center is not available for CP >= 8. It implies --enable-control-center
   - long: --connect-log-level
     required: false
     arg: connect-log-level

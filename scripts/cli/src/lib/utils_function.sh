@@ -4352,18 +4352,19 @@ function force_enable () {
   logwarn "💪 Forcing $flag ($env_variable env variable)"
   line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh$' $test_file | cut -d ":" -f 1 | tail -n1)
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  if [ -z "$PG_VERBOSE_MODE" ]
-then
-    trap 'rm -rf $tmp_dir' EXIT
-else
-    log "🐛📂 not deleting tmp dir $tmp_dir"
-fi
   echo "# remove or comment those lines if you don't need it anymore" > $tmp_dir/tmp_force_enable
   echo "logwarn \"💪 Forcing $flag ($env_variable env variable) as it was set when reproduction model was created\"" >> $tmp_dir/tmp_force_enable
   echo "export $env_variable=$env_value" >> $tmp_dir/tmp_force_enable
   cp $test_file $tmp_dir/tmp_file
 
   { head -n $(($line_final_source+1)) $tmp_dir/tmp_file; cat $tmp_dir/tmp_force_enable; tail -n  +$(($line_final_source+1)) $tmp_dir/tmp_file; } > $test_file
+
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+    rm -rf $tmp_dir
+  else
+    log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
 }
 
 function load_env_variables () {

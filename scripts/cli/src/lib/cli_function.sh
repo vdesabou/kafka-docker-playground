@@ -1885,7 +1885,14 @@ function display_interactive_menu_categories () {
     options=("$MENU_CONNECTOR" "$MENU_CCLOUD" "$MENU_FULLY_MANAGED_CONNECTOR" "$MENU_REPRO" "$MENU_OTHER" "$MENU_ENVIRONMENTS" "$MENU_ALL" "$MENU_KSQL" "$MENU_SR" "$MENU_RP" "$MENU_ACADEMY")
   fi
 
+  set +e
   res=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🚀" --header="select a category (ctrl-c or esc to quit)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_pointer)
+  set -e
+  if [ -z "$res" ]
+  then
+    # esc or ctrl-c: an empty result would otherwise match the empty MENU_CURRENT_EXAMPLE below
+    exit 0
+  fi
 
   case "${res}" in
     "$MENU_CURRENT_EXAMPLE")
