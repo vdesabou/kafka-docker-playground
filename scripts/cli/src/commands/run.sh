@@ -691,6 +691,9 @@ then
     sql_datagen=1
   fi
 
+  # environments the example can be run with (empty: it starts its own)
+  supported_environments=$(get_example_supported_environments "$test_file")
+
   # other examples in the same folder (variants of this one)
   sibling_examples=$(find "$test_file_directory" -maxdepth 1 -name "*.sh" ! -name "stop.sh" ! -name "$filename" -exec basename {} \; | sort)
 
@@ -988,8 +991,8 @@ then
         menu_connector_jar=$(get_menu_flag_value --connector-jar)
         group+=("$(menu_value_label "$MENU_CONNECTOR_JAR" "${menu_connector_jar##*/}")")
       fi
-      # same rule as the --environment flag
-      if [ "$connector_paths" != "" ]; then group+=("$(menu_value_label "$MENU_ENVIRONMENT" "$(get_menu_flag_value --environment)")"); fi
+      # same rule as the --environment flag, and only if the example lets you choose
+      if [ "$connector_paths" != "" ] && [ -n "$supported_environments" ]; then group+=("$(menu_value_label "$MENU_ENVIRONMENT" "$(get_menu_flag_value --environment)")"); fi
     fi
     add_menu_group "$MENU_SEPARATOR" "${group[@]}"
 
@@ -1374,7 +1377,8 @@ then
     then
       maybe_remove_flag "--environment"
 
-      options=(plaintext ccloud cfk 2way-ssl kerberos ldap-authorizer-sasl-plain ldap-sasl-plain rbac-sasl-plain sasl-plain sasl-scram sasl-ssl ssl_kerberos)
+      # only the environments this example supports
+      options=($supported_environments)
       environment=$(printf '%s\n' "${options[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔐" --header="select an environment" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
       
       array_flag_list+=("--environment=$environment")

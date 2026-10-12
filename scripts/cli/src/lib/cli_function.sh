@@ -1807,6 +1807,31 @@ function add_menu_toggle () {
   fi
 }
 
+# environments an example can be run with (playground run --environment), one per
+# line. Nothing when the example starts its own environment instead of
+# "${PLAYGROUND_ENVIRONMENT}", and no cfk when it skips cfk (exit 111)
+function get_example_supported_environments () {
+  local example_file="$1"
+  local environment_name
+  if ! grep -qE 'start-environment --environment "?\$\{?PLAYGROUND_ENVIRONMENT' "$example_file"
+  then
+    return
+  fi
+  local skips_cfk=0
+  if awk '/PLAYGROUND_ENVIRONMENT"? *==? *"cfk"/{inblock=1; next} inblock && /exit 111/{found=1} inblock && /^[[:space:]]*(fi|else)([[:space:]]|$)/{inblock=0} END{exit !found}' "$example_file"
+  then
+    skips_cfk=1
+  fi
+  for environment_name in plaintext ccloud cfk 2way-ssl kerberos ldap-authorizer-sasl-plain ldap-sasl-plain rbac-sasl-plain sasl-plain sasl-scram sasl-ssl ssl_kerberos
+  do
+    if [ "$environment_name" == "cfk" ] && [ $skips_cfk == 1 ]
+    then
+      continue
+    fi
+    echo "$environment_name"
+  done
+}
+
 # playground run: known-bad combinations of the current flags / variables, one
 # "error|<message>" or "warning|<message>" line each. Errors would make the run
 # fail after the environment is started, warnings are combinations that run but
@@ -1832,6 +1857,23 @@ function get_run_flag_combination_problems () {
     elif version_gt "$tag_base" "7.9.99"
     then
       echo "warning|--enable-kraft has no effect with CP $effective_tag, KRaft is always used for CP >= 8"
+    fi
+  fi
+
+  # --environment the example does not support: a warning only, the example
+  # handles it itself (exit 111 = skipped, which CI relies on)
+  local selected_environment
+  selected_environment=$(get_menu_flag_value --environment)
+  if [ -n "$selected_environment" ] && [ "$selected_environment" != "plaintext" ] && [ -f "$test_file" ]
+  then
+    local supported_environments
+    supported_environments=$(get_example_supported_environments "$test_file")
+    if [ -z "$supported_environments" ]
+    then
+      echo "warning|--environment $selected_environment has no effect, $(basename "$test_file") always starts its own environment"
+    elif ! echo "$supported_environments" | grep -qx "$selected_environment"
+    then
+      echo "warning|$(basename "$test_file") does not support --environment $selected_environment, it will be skipped (exit 111)"
     fi
   fi
 
