@@ -925,6 +925,20 @@ then
       fi
     fi
 
+    # known-bad combinations of the selected options
+    combination_preview=""
+    while IFS='|' read -r combination_level combination_message
+    do
+      if [ "$combination_level" == "error" ]
+      then
+        combination_preview="${combination_preview}❌ ${RED}${combination_message}${NC}\n"
+        has_error=1
+      elif [ "$combination_level" == "warning" ]
+      then
+        combination_preview="${combination_preview}⚠️  ${YELLOW}${combination_message}${NC}\n"
+      fi
+    done < <(get_run_flag_combination_problems)
+
     if [ ${#missing_env_list[@]} -gt 0 ]
     then
       oldifs=$IFS
@@ -1042,7 +1056,7 @@ then
     add_menu_group "$MENU_SEPARATOR_ACTIONS" "${group[@]}"
 
     options+=("$MENU_GO_BACK")
-    preview="${ccloud_preview}\n${missing_env}\n${arm64_support}\n🚀 number of examples ran so far: $(get_cli_metric nb_runs)\n\n⛳ flag list:\n$flag_string\n"
+    preview="${ccloud_preview}\n${combination_preview}${missing_env}\n${arm64_support}\n🚀 number of examples ran so far: $(get_cli_metric nb_runs)\n\n⛳ flag list:\n$flag_string\n"
     res=$(printf '%s\n' "${options[@]}" | fzf --multi --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🚀" --header="select option(s) for $example (use tab to select more than one)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --preview "echo -e \"$preview\"")
 
     if [[ $res == *"$MENU_LETS_GO"* ]]
@@ -1436,6 +1450,8 @@ then
     then
       maybe_remove_flag "--connector-zip"
       maybe_remove_flag "--connector-tag"
+      # utils.sh refuses CONNECTOR_TAG and CONNECTOR_ZIP together
+      unset CONNECTOR_ZIP CONNECTOR_TAG
       connector_tags=""
       if [ -z "${connector_paths:-}" ]; then get_connector_paths; fi
       for connector_path in ${connector_paths//,/ }
@@ -1470,6 +1486,7 @@ then
       maybe_remove_flag "--connector-zip"
       maybe_remove_flag "--connector-tag"
       maybe_remove_flag "--connector-jar"
+      unset CONNECTOR_ZIP CONNECTOR_TAG CONNECTOR_JAR
       cd $test_file_directory
       connector_zip=$(playground get-zip-or-jar-with-fzf --type zip)
       if [[ $connector_zip == *"@"* ]]
@@ -1484,6 +1501,7 @@ then
     then
       maybe_remove_flag "--connector-zip"
       maybe_remove_flag "--connector-jar"
+      unset CONNECTOR_ZIP CONNECTOR_JAR
       cd $test_file_directory
       connector_jar=$(playground get-zip-or-jar-with-fzf --type jar)
       if [[ $connector_jar == *"@"* ]]
@@ -1806,14 +1824,22 @@ then
   export ENABLE_CONTROL_CENTER=true
 fi
 
-if [ ! -z "$ENABLE_LEGACY_CONTROL_CENTER" ] && [ ! -z "$ENABLE_CONTROL_CENTER" ]
-then
-  effective_tag=${TAG:-$(grep "# default tag" "$root_folder/scripts/utils.sh" | cut -d "=" -f 2 | cut -d " " -f 1)}
-  if version_gt "${effective_tag%%-*}" "7.9.99"
+# known-bad combinations: fail now rather than after the running environment is killed
+combination_error=0
+while IFS='|' read -r combination_level combination_message
+do
+  if [ "$combination_level" == "error" ]
   then
-    logerror "❌ --enable-legacy-control-center is not supported with CP version $effective_tag (legacy Control Center is only available for CP < 8), use --tag to select an older version"
-    exit 1
+    logerror "❌ $combination_message"
+    combination_error=1
+  elif [ "$combination_level" == "warning" ]
+  then
+    logwarn "⚠️ $combination_message"
   fi
+done < <(get_run_flag_combination_problems)
+if [ $combination_error == 1 ]
+then
+  exit 1
 fi
 
 #
