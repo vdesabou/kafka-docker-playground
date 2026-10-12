@@ -144,28 +144,28 @@ wait_container_ready connect-europe
 
 
 # Adding ACLs for consumer and producer user:
-docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-us:9092 --command-config /etc/kafka/command-us.properties --add --allow-principal User:kafka_producer --producer --topic=*"
-docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-us:9092 --command-config /etc/kafka/command-us.properties --add --allow-principal User:kafka_consumer --consumer --topic=* --group=*"
+docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-us.kerberos-demo.local:9092 --command-config /etc/kafka/command-us.properties --add --allow-principal User:kafka_producer --producer --topic=*"
+docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-us.kerberos-demo.local:9092 --command-config /etc/kafka/command-us.properties --add --allow-principal User:kafka_consumer --consumer --topic=* --group=*"
 # Adding ACLs for connect user:
-docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-us:9092 --command-config /etc/kafka/command-us.properties --add --allow-principal User:connect --consumer --topic=* --group=*"
-docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-us:9092 --command-config /etc/kafka/command-us.properties --add --allow-principal User:connect --producer --topic=*"
+docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-us.kerberos-demo.local:9092 --command-config /etc/kafka/command-us.properties --add --allow-principal User:connect --consumer --topic=* --group=*"
+docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-us.kerberos-demo.local:9092 --command-config /etc/kafka/command-us.properties --add --allow-principal User:connect --producer --topic=*"
 # Adding ACLs for consumer and producer user:
-docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-europe:9092 --command-config /etc/kafka/command-europe.properties --add --allow-principal User:kafka_producer --producer --topic=*"
-docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-europe:9092 --command-config /etc/kafka/command-europe.properties --add --allow-principal User:kafka_consumer --consumer --topic=* --group=*"
+docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-europe.kerberos-demo.local:9092 --command-config /etc/kafka/command-europe.properties --add --allow-principal User:kafka_producer --producer --topic=*"
+docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-europe.kerberos-demo.local:9092 --command-config /etc/kafka/command-europe.properties --add --allow-principal User:kafka_consumer --consumer --topic=* --group=*"
 # Adding ACLs for connect user:
-docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-europe:9092 --command-config /etc/kafka/command-europe.properties --add --allow-principal User:connect --consumer --topic=* --group=*"
-docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-europe:9092 --command-config /etc/kafka/command-europe.properties --add --allow-principal User:connect --producer --topic=*"
+docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-europe.kerberos-demo.local:9092 --command-config /etc/kafka/command-europe.properties --add --allow-principal User:connect --consumer --topic=* --group=*"
+docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-europe.kerberos-demo.local:9092 --command-config /etc/kafka/command-europe.properties --add --allow-principal User:connect --producer --topic=*"
 # controlcenter is super user
 
 # Output example usage:
 log "-----------------------------------------"
 log "Example configuration to access kafka on US cluster:"
 log "-----------------------------------------"
-log "-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --bootstrap-server broker-us:9092 --topic test --producer.config /etc/kafka/producer-us.properties'"
-log "-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker-us:9092 --topic test --consumer.config /etc/kafka/consumer-us.properties --from-beginning'"
+log "-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --bootstrap-server broker-us.kerberos-demo.local:9092 --topic test --producer.config /etc/kafka/producer-us.properties'"
+log "-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker-us.kerberos-demo.local:9092 --topic test --consumer.config /etc/kafka/consumer-us.properties --from-beginning'"
 
 log "-----------------------------------------"
 log "Example configuration to access kafka on EUROPE cluster:"
 log "-----------------------------------------"
-log "-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --bootstrap-server broker-europe:9092 --topic test --producer.config /etc/kafka/producer-europe.properties'"
-log "-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker-europe:9092 --topic test --consumer.config /etc/kafka/consumer-europe.properties --from-beginning'"
+log "-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --bootstrap-server broker-europe.kerberos-demo.local:9092 --topic test --producer.config /etc/kafka/producer-europe.properties'"
+log "-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker-europe.kerberos-demo.local:9092 --topic test --consumer.config /etc/kafka/consumer-europe.properties --from-beginning'"
