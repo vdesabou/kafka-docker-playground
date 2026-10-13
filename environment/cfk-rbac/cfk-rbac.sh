@@ -57,8 +57,9 @@ function deploy_cfk_rbac_prerequisites() {
   local mds_token_dir
   mds_token_dir=$(mktemp -d)
   chmod 777 "$mds_token_dir"
-  docker run --quiet --rm -v "$mds_token_dir":/tmp -u0 alpine/openssl genrsa -out /tmp/keypair.pem 2048 > /dev/null 2>&1
-  docker run --quiet --rm -v "$mds_token_dir":/tmp -u0 alpine/openssl rsa -in /tmp/keypair.pem -outform PEM -pubout -out /tmp/public.pem > /dev/null 2>&1
+  # written as root in the container: readable by the host user only after the chmod (Linux)
+  docker run --quiet --rm -v "$mds_token_dir":/tmp -u0 --entrypoint sh alpine/openssl -c \
+    "openssl genrsa -out /tmp/keypair.pem 2048 && openssl rsa -in /tmp/keypair.pem -outform PEM -pubout -out /tmp/public.pem && chmod 644 /tmp/keypair.pem /tmp/public.pem" > /dev/null 2>&1
   if [[ ! -s "$mds_token_dir/public.pem" ]]
   then
     logerror "❌ Could not generate the MDS token key pair with alpine/openssl"
