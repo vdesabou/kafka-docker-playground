@@ -3544,6 +3544,7 @@ commands:
 
     🐌 It hangs, or it is slow
       thread-dump         what every thread is doing right now
+      thread-analyze      deadlocks, lock contention, stuck and CPU-hungry threads
       flight-recorder     record the JVM over a period, open it in JMC
       gc-analyze          GC pauses, failures, live set and leak trend
 
@@ -3644,15 +3645,104 @@ commands:
       The first thing to take when something is stuck: it shows the stack of
       every thread, and the deadlocks if any.
 
+      🔖 It sends kill -3 to the JVM, which prints the dump to the container logs: no JDK is needed in the image and the container is not restarted. It falls back to jstack -l when the dump does not reach the logs.
+
       🎓 Tip: take two or three dumps a few seconds apart. Threads that appear
-      in the same place every time are the ones that are really blocked.
+      in the same place every time are the ones that are really blocked. playground debug thread-analyze does it and analyzes them.
     flags:
       - *container
+      - long: --jstack
+        required: false
+        help: |-
+          🔧 Use jstack -l instead of kill -3: adds the owners of java.util.concurrent locks ("Locked ownable synchronizers"). Needs a JDK in the image (on cfk, a debug container is attached); the container is never restarted
     examples:
     - playground debug thread-dump
     - playground debug thread-dump --container broker
     - playground debug thread-dump -c connect -c broker
     - playground debug thread-dump --container schema-registry --container ksqldb-server
+    - playground debug thread-dump --container connect --jstack
+
+  - name: thread-analyze
+    help: |-
+      🧵 Analyze java thread dumps: deadlocks, lock contention, stuck and CPU-hungry threads
+
+      📊 Reads jstack / jcmd Thread.print / kill -3 output (JDK 8 to 25), several dumps per file and container logs included, and reports: thread states and pools, deadlocks, locks with their owner and waiters, the most common stacks, and with several dumps of the same JVM: threads stuck on the same frames, the CPU used by each thread between dumps, and growing thread pools. Kafka / Connect aware (task threads, herder, broker request handlers).
+
+      🐳 With --container (default: connect), it takes --count dumps --interval seconds apart with kill -3: the JVM prints them to the container logs, no JDK is needed in the image.
+
+      🔖 Use --html to generate a self-contained HTML report
+
+      🔖 Exit code is 0 when the analysis completed, 2 when no thread dump was found
+    flags:
+      - long: --file
+        short: -f
+        required: false
+        repeatable: true
+        arg: file
+        validate: file_or_dir_exists
+        completions:
+          dynamic:
+          - playground get-specific-file-extension "$completion_current" --extension "log"
+        help: |-
+          🗒️  Thread dump file or folder (repeat --file for several dumps of the same JVM)
+
+          ❕ Provide either --file or --container, not both
+
+          🎓 Tip: use <tab> completion to trigger fzf completion
+                  use <option+enter> to use the value you typed manually
+      - long: --container
+        short: -c
+        alias: [--pod, -p]
+        required: false
+        arg: container
+        completions:
+          dynamic:
+          - playground get-container-list
+        help: |-
+          🐳 Container name (or pod name when cfk environment is used) to take the thread dumps from (default: connect)
+      - long: --count
+        arg: count
+        required: false
+        default: "3"
+        validate: integer
+        help: |-
+          🔢 Number of thread dumps to take with --container (default: 3)
+      - long: --interval
+        arg: interval
+        required: false
+        default: "5"
+        validate: integer
+        help: |-
+          ⏱️  Seconds between two thread dumps with --container (default: 5)
+      - long: --output-dir
+        short: -o
+        arg: output_dir
+        required: false
+        default: "./thread-analysis-output"
+        help: |-
+          📂 Output directory for the thread dumps taken from a container and the HTML report (default: ./thread-analysis-output)
+      - long: --html
+        required: false
+        help: |-
+          🌐 Generate a self-contained HTML report (inline SVG charts, works offline)
+      - long: --json
+        required: false
+        help: |-
+          🗂️  Output JSON (skips the text report and the HTML)
+      - long: --top
+        arg: top
+        required: false
+        default: "10"
+        validate: integer
+        help: |-
+          📊 Number of rows per section (default: 10)
+    examples:
+    - playground debug thread-analyze
+    - playground debug thread-analyze --container broker --count 5 --interval 2 --html
+    - playground debug thread-analyze --file thread-dump-connect-2026-10-13.log
+    - playground debug thread-analyze -f dump1.txt -f dump2.txt -f dump3.txt --html
+    - playground debug thread-analyze -f ./customer-logs/connect-stdout.log
+    - playground debug thread-analyze -c connect --json
 
   - name: heap-dump
     help: |-
