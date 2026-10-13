@@ -1,15 +1,16 @@
-gc_file="${args[--file]}"
+eval "file_array=(${args[--file]})"
 container="${args[--container]}"
 output_dir="${args[--output-dir]}"
 html="${args[--html]}"
 json_out="${args[--json]}"
 top_pauses="${args[--top-pauses]}"
+run="${args[--run]}"
 
 set +e
 
 # ── Validate input: need --file OR --container ─────────────────────────────
-if [[ -z "$gc_file" && -z "$container" ]]; then
-    logerror "❌ Must provide either --file <gc-log-file> or --container <name>"
+if [[ ${#file_array[@]} -eq 0 && -z "$container" ]]; then
+    logerror "❌ Must provide either --file <gc-log-file-or-folder> or --container <name>"
     log ""
     log "Examples:"
     log "  playground debug gc-analyze --file kafkaServer-gc.log"
@@ -17,114 +18,117 @@ if [[ -z "$gc_file" && -z "$container" ]]; then
     exit 1
 fi
 
-if [[ -n "$gc_file" && -n "$container" ]]; then
+if [[ ${#file_array[@]} -gt 0 && -n "$container" ]]; then
     logerror "❌ Provide either --file or --container, not both"
     exit 1
 fi
 
-# ── Locate the analyzer script ─────────────────────────────────────────────
 analyzer="$root_folder/gc-analysis/gc_log_analyzer.py"
 if [[ ! -f "$analyzer" ]]; then
     logerror "❌ GC analyzer not found at: $analyzer"
-    logerror "   Make sure gc-analysis/gc_log_analyzer.py exists in the playground root"
     exit 1
 fi
 
-# ── Check Python3 ──────────────────────────────────────────────────────────
 if ! command -v python3 &>/dev/null; then
     logerror "❌ python3 is required but not found on PATH"
     exit 1
 fi
 
-# ── Container mode: find and extract the GC log ───────────────────────────
+# ── Container mode: find the GC log and copy it with its rotated files ─────
 if [[ -n "$container" ]]; then
-    log "🐳 Looking for GC log in container: $container"
+    log "🐳 Looking for the GC log in container: $container"
 
-    # 1. Try to read the GC log path from -Xlog:gc*:file=<path> (JDK 9+)
-    gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "sh -c \"ps aux 2>/dev/null | grep -oP '(?<=-Xlog:gc\\*:file=)[^:]+' | head -1\"" 2>/dev/null)
+    # path from the java command line: -Xlog:gc*:file=<path>:... (JDK 9+) or -Xloggc:<path> (JDK 8)
+    gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "cat /proc/[0-9]*/cmdline 2>/dev/null | tr '\\000' '\\n' | sed -n -e 's/^-Xlog:gc[^:]*:file=\"\\{0,1\\}\\([^:\"]*\\).*/\\1/p' -e 's/^-Xloggc:\\(.*\\)/\\1/p' | head -1" 2>/dev/null | tr -d '\r')
 
-    # 2. Try legacy -Xloggc:<path> flag (JDK 8)
     if [[ -z "$gc_log_path" ]]; then
-        gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "sh -c \"ps aux 2>/dev/null | grep -oP '(?<=-Xloggc:)\\S+' | head -1\"" 2>/dev/null)
-    fi
-
-    # 3. Try -Xlog:gc:file=<path> (simpler unified log variant)
-    if [[ -z "$gc_log_path" ]]; then
-        gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "sh -c \"ps aux 2>/dev/null | grep -oP '(?<=-Xlog:gc:file=)[^:]+' | head -1\"" 2>/dev/null)
-    fi
-
-    # 4. Fallback: search common locations
-    if [[ -z "$gc_log_path" ]]; then
-        log "🔍 No -Xlog/Xloggc flag found, searching common log locations..."
-          gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "sh -c \"find /tmp /var/log /opt /var/log/kafka /etc/kafka 2>/dev/null \\\n+             \\\( -name '*gc*.log' -o -name 'kafkaServer-gc.log' -o -name 'zookeeper-gc.log' \\\n+                -o -name 'connect-gc.log' -o -name 'schema-registry-gc.log' \\\) \\\n+             -type f | head -1\"" 2>/dev/null)
+        log "🔍 No -Xlog:gc / -Xloggc flag found, searching common log locations..."
+        gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "find /var/log /tmp /opt /home -maxdepth 4 -type f -name '*gc*.log*' 2>/dev/null | head -1" 2>/dev/null | tr -d '\r')
     fi
 
     if [[ -z "$gc_log_path" ]]; then
         logerror "❌ Could not locate a GC log in container '$container'"
         log ""
-        log "💡 To enable GC logging, add these JVM flags:"
-        log "   JDK 9+: -Xlog:gc*:file=/tmp/gc.log:time,uptime,level,tags:filecount=5,filesize=20m"
-        log "   JDK 8:  -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/tmp/gc.log"
-        log ""
-        log "   For Kafka, set in KAFKA_JVM_PERFORMANCE_OPTS or KAFKA_HEAP_OPTS"
+        log "💡 kafka-run-class only writes a GC log with -loggc: kafka-server-start passes it by default, but not when"
+        log "   EXTRA_ARGS is set (the playground environments set it, even empty), and connect-distributed never does."
+        log "   To enable it on a running example (this replaces the current KAFKA_OPTS value, if any):"
+        log "   playground container set-environment-variables --container $container --env \"KAFKA_OPTS: -Xlog:gc*:file=/tmp/gc.log:time,uptime,level,tags:filecount=5,filesize=20m\""
+        log "   JDK 8: -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps -Xloggc:/tmp/gc.log"
         exit 1
     fi
 
+    # rotated files: <path>, <path>.0..N (JDK 9+), <path>.N.current (JDK 8)
+    base="${gc_log_path%.current}"
+    base=$(echo "$base" | sed -E 's/\.[0-9]+$//')
     log "📄 Found GC log: $gc_log_path"
 
-    tmp_gc_file="/tmp/gc-log-${container}-$(date '+%Y%m%d-%H%M%S').log"
-    if ! playground container cp --source "${container}:${gc_log_path}" --destination "$tmp_gc_file" 2>/dev/null; then
-        logerror "❌ Failed to copy GC log from container '$container'"
+    tmp_dir="$output_dir/gc-logs-${container}-$(date '+%Y%m%d-%H%M%S')"
+    mkdir -p "$tmp_dir"
+    nb_copied=0
+    while read -r f
+    do
+        [[ -z "$f" ]] && continue
+        if playground --output-level ERROR container cp --source "${container}:${f}" --destination "$tmp_dir/$(basename "$f")" > /dev/null 2>&1; then
+            nb_copied=$((nb_copied+1))
+        fi
+    done < <(playground --output-level ERROR container exec --container "$container" --command "ls -1d ${base} ${base}.* 2>/dev/null" 2>/dev/null | tr -d '\r')
+
+    if [[ $nb_copied -eq 0 ]]; then
+        logerror "❌ Failed to copy the GC log from container '$container'"
         exit 1
     fi
-
-    log "✅ GC log copied to: $tmp_gc_file"
-    gc_file="$tmp_gc_file"
+    log "✅ $nb_copied GC log file(s) copied to: $tmp_dir"
+    file_array=("$tmp_dir")
 fi
 
 # Handle fzf @path trick
-if [[ $gc_file == *"@"* ]]; then
-    gc_file=$(echo "$gc_file" | cut -d "@" -f 2)
+for i in "${!file_array[@]}"
+do
+    if [[ ! -e "${file_array[$i]}" && "${file_array[$i]}" == *"@"* ]]; then
+        file_array[$i]=$(echo "${file_array[$i]}" | cut -d "@" -f 2)
+    fi
+done
+
+analyzer_args=("${file_array[@]}" --top-pauses "$top_pauses")
+if [[ -n "$run" ]]; then
+    analyzer_args+=(--run "$run")
 fi
 
-log "📈 Analyzing GC log: $gc_file"
-log ""
-
-# ── JSON mode: print and exit ──────────────────────────────────────────────
 if [[ -n "$json_out" ]]; then
-    python3 "$analyzer" "$gc_file" --json --top-pauses "$top_pauses"
+    python3 -I "$analyzer" "${analyzer_args[@]}" --json
     exit $?
 fi
 
-# ── Text analysis ──────────────────────────────────────────────────────────
-python3 "$analyzer" "$gc_file" --top-pauses "$top_pauses"
-text_exit=$?
+log "📈 Analyzing GC log: ${file_array[*]}"
+log ""
 
-# ── HTML report ────────────────────────────────────────────────────────────
-if [[ -n "$html" && $text_exit -eq 0 ]]; then
+html_out=""
+if [[ -n "$html" ]]; then
     mkdir -p "$output_dir"
     output_dir_abs=$(cd "$output_dir" && pwd)
+    first=$(basename "${file_array[0]}")
+    html_out="${output_dir_abs}/${first%.log}-gc-report.html"
+    analyzer_args+=(--html-out "$html_out")
+fi
 
-    basename_noext=$(basename "$gc_file" .log)
-    html_out="${output_dir_abs}/${basename_noext}-gc-report.html"
+python3 -I "$analyzer" "${analyzer_args[@]}"
+exit_code=$?
 
+if [[ $exit_code -ne 0 ]]; then
+    logerror "❌ GC log analysis failed (exit code $exit_code)"
+    exit $exit_code
+fi
+
+if [[ -n "$html_out" && -f "$html_out" ]]; then
     log ""
-    log "🌐 Generating HTML report..."
-    python3 "$analyzer" "$gc_file" --html-out "$html_out" --top-pauses "$top_pauses" > /dev/null 2>&1
-    html_exit=$?
-
-    if [[ $html_exit -eq 0 && -f "$html_out" ]]; then
-        log "✅ HTML report saved: $html_out"
-        log ""
-        if command -v open &>/dev/null; then
-            log "🌐 Opening report in browser..."
-            open "$html_out"
-        else
-            log "🔗 Open in browser: file://$html_out"
-        fi
+    log "✅ HTML report saved: $html_out"
+    # only open a browser in an interactive terminal
+    if [[ -t 1 ]] && command -v open &>/dev/null; then
+        log "🌐 Opening report in browser..."
+        open "$html_out"
     else
-        logwarn "⚠️  HTML report generation failed"
+        log "🔗 Open in browser: file://$html_out"
     fi
 fi
 
-exit $text_exit
+exit 0
