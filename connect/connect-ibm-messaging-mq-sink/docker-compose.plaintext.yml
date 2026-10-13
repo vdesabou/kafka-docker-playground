@@ -1,0 +1,21 @@
+---
+services:
+  ibmmq:
+    image: icr.io/ibm-messaging/mq:9.3.2.0-r2
+    hostname: ibmmq
+    container_name: ibmmq
+    platform: linux/amd64
+    environment:
+      LICENSE: accept
+      MQ_QMGR_NAME: QM1
+      MQ_ADMIN_PASSWORD: passw0rd
+      MQ_APP_PASSWORD: passw0rd
+    ports:
+      - '1414:1414'
+      - '9443:9443'
+
+  connect:
+    depends_on:
+      - ibmmq
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/ibm-messaging-kafka-connect-mq-sink
