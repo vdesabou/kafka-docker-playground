@@ -1,0 +1,393 @@
+==========================
+Exactly Once Support
+==========================
+🔘 exactly.once.support
+
+Permitted values are requested, required. If set to "required", forces a preflight check for the connector to ensure that it can provide exactly-once semantics with the given configuration. Some connectors may be capable of providing exactly-once semantics but not signal to Connect that they support this; in that case, documentation for the connector should be consulted carefully before creating it, and the value for this property should be set to "requested". Additionally, if the value is set to "required" but the worker that performs preflight validation does not have exactly-once support enabled for source connectors, requests to create or validate the connector will fail.
+
+	 - Type: STRING
+	 - Default: requested
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transaction.boundary
+
+Permitted values are: poll, interval, connector. If set to 'poll', a new producer transaction will be started and committed for every batch of records that each task from this connector provides to Connect. If set to 'connector', relies on connector-defined transaction boundaries; note that not all connectors are capable of defining their own transaction boundaries, and in that case, attempts to instantiate a connector with this value will fail. Finally, if set to 'interval', commits transactions only after a user-defined time interval has passed.
+
+	 - Type: STRING
+	 - Default: poll
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transaction.boundary.interval.ms
+
+If 'transaction.boundary' is set to 'interval', determines the interval for producer transaction commits by connector tasks. If unset, defaults to the value of the worker-level 'offset.flush.interval.ms' property. It has no effect if a different transaction.boundary is specified.
+
+	 - Type: LONG
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+mq
+==========================
+🔘 mq.queue.manager
+
+The name of the MQ queue manager.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 mq.connection.mode
+
+The connection mode - bindings or client.
+
+	 - Type: STRING
+	 - Default: client
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.connection.name.list
+
+A list of one or more host(port) entries for connecting to the queue manager. Entries are separated with a comma.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.channel.name
+
+The name of the server-connection channel.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.ccdt.url
+
+The CCDT URL to use to establish a connection to the queue manager.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.queue
+
+The name of the source MQ queue.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 mq.user.name
+
+The user name for authenticating with the queue manager.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.password
+
+The password for authenticating with the queue manager.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.record.builder
+
+The class used to build the Kafka Connect records.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 mq.message.body.jms
+
+Whether to interpret the message body as a JMS message type.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.record.builder.key.header
+
+The JMS message header to use as the Kafka record key.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.ssl.cipher.suite
+
+The name of the cipher suite for the TLS (SSL) connection.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.ssl.peer.name
+
+The distinguished name pattern of the TLS (SSL) peer.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.ssl.keystore.location
+
+The path to the JKS keystore to use for the TLS (SSL) connection.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.ssl.keystore.password
+
+The password of the JKS keystore to use for the TLS (SSL) connection.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.ssl.truststore.location
+
+The path to the JKS truststore to use for the TLS (SSL) connection.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.ssl.truststore.password
+
+The password of the JKS truststore to use for the TLS (SSL) connection.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.batch.size
+
+The maximum number of messages in a batch. A batch uses a single unit of work.
+
+	 - Type: INT
+	 - Default: 250
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.message.mqmd.read
+
+Whether to enable reading of all MQMD fields.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.user.authentication.mqcsp
+
+Whether to use MQ connection security parameters (MQCSP).
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.jms.properties.copy.to.kafka.headers
+
+Whether to copy JMS message properties to Kafka headers.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.ssl.use.ibm.cipher.mappings
+
+Whether to set system property to control use of IBM cipher mappings.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.exactly.once.state.queue
+
+The name of the MQ queue used to store state. Required to run with exactly-once processing.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 mq.max.poll.blocked.time.ms
+
+How long the SourceTask will wait for a previous batch of messages to be delivered to Kafka before starting a new poll.
+
+	 - Type: INT
+	 - Default: 2000
+	 - Importance: MEDIUM
+	 - Required: false
+
+==========================
+mq
+==========================
+🔘 mq.client.reconnect.options
+
+Options governing MQ reconnection.
+
+	 - Type: STRING
+	 - Default: ASDEF
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.message.receive.timeout
+
+How long the connector should wait (in milliseconds) for a message to arrive if no message is available immediately
+
+	 - Type: LONG
+	 - Default: 2000
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.receive.subsequent.timeout.ms
+
+How long (in milliseconds) the connector should wait for subsequent receives, defaults to 0 (no-wait) and uses receiveNoWait().
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.reconnect.delay.min.ms
+
+The minimum delay in milliseconds for reconnect attempts.
+
+	 - Type: LONG
+	 - Default: 64
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.reconnect.delay.max.ms
+
+The maximum delay in milliseconds for reconnect attempts.
+
+	 - Type: LONG
+	 - Default: 8192
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 errors.deadletterqueue.topic.name
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The name of the topic to be used as the dead letter queue (DLQ) for messages that result in an error when processed by this source connector, or its transformations or converters. The topic name is blank by default, which means that no messages are to be recorded in the DLQ.
+	 - Required: MEDIUM
+
+🔘 errors.deadletterqueue.context.headers.enable
+
+If true, add headers containing error context to the messages written to the dead letter queue. To avoid clashing with headers from the original record, all error context header keys, all error context header keys will start with <code>__connect.errors.</code>
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.receive.max.poll.time.ms
+
+Maximum time (in milliseconds) to poll for messages during a single Kafka Connect poll cycle. Acts as a hard upper bound on how long the task will try to accumulate a batch. If set to 0 or not defined, polling continues until either a message receive returns null or the batch size is met. Note: It is recommended to keep this value less than or equal to both 'mq.message.receive.timeout' and 'mq.receive.subsequent.timeout.ms' to avoid unexpected delays due to long blocking receive calls.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.record.builder.json.schemas.enable
+
+Include schemas within the Kafka messages produced by the JSON record builder.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.record.builder.json.schema.content
+
+When set, this is used as the schema for all messages. This must be a Kafka Connect schema, as used by JsonConverter.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 topic
+
+The name of the target Kafka topic.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 value.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+

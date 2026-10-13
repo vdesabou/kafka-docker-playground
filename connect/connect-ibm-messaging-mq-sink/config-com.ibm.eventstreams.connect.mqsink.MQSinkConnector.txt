@@ -1,0 +1,330 @@
+==========================
+mq
+==========================
+🔘 mq.queue.manager
+
+The name of the MQ queue manager.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 mq.connection.mode
+
+The connection mode - bindings or client.
+
+	 - Type: STRING
+	 - Default: client
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.connection.name.list
+
+A list of one or more host(port) entries for connecting to the queue manager. Entries are separated with a comma.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.channel.name
+
+The name of the server-connection channel.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.ccdt.url
+
+The CCDT URL to use to establish a connection to the queue manager.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.queue
+
+The name of the target MQ queue.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 mq.user.name
+
+The user name for authenticating with the queue manager.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.password
+
+The password for authenticating with the queue manager.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.message.builder
+
+The class used to build the MQ messages.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 mq.message.body.jms
+
+Whether to generate the message body as a JMS message type.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.time.to.live
+
+Time-to-live in milliseconds for messages sent to MQ.
+
+	 - Type: LONG
+	 - Default: 0
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.persistent
+
+Send persistent or non-persistent messages to MQ.
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.ssl.cipher.suite
+
+The name of the cipher suite for the TLS (SSL) connection.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.ssl.peer.name
+
+The distinguished name pattern of the TLS (SSL) peer.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.ssl.keystore.location
+
+The path to the JKS keystore to use for the TLS (SSL) connection.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.ssl.keystore.password
+
+The password of the JKS keystore to use for the TLS (SSL) connection.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.ssl.truststore.location
+
+The path to the JKS truststore to use for the TLS (SSL) connection.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.ssl.truststore.password
+
+The password of the JKS truststore to use for the TLS (SSL) connection.
+
+	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.message.builder.key.header
+
+The JMS message header to set from the Kafka record key.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 mq.message.builder.value.converter
+
+Prefix for configuring message builder's value converter.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.message.builder.topic.property
+
+The JMS message property to set from the Kafka topic.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.message.builder.partition.property
+
+The JMS message property to set from the Kafka partition.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.message.builder.offset.property
+
+The JMS message property to set from the Kafka offset.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.reply.queue
+
+The name of the reply-to queue, as a queue name or URI.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.user.authentication.mqcsp
+
+Whether to use MQ connection security parameters (MQCSP).
+
+	 - Type: BOOLEAN
+	 - Default: true
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.ssl.use.ibm.cipher.mappings
+
+Whether to set system property to control use of IBM cipher mappings.
+
+	 - Type: BOOLEAN
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.kafka.headers.copy.to.jms.properties
+
+Whether to copy Kafka headers to JMS message properties.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.retry.backoff.ms
+
+Time to wait, in milliseconds, before retrying after retriable exceptions
+
+	 - Type: LONG
+	 - Default: 60000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.retry.timeout.ms
+
+Maximum time in milliseconds to continue retrying after a retriable exception before the task is killed. A value of -1 means retry indefinitely.
+
+	 - Type: LONG
+	 - Default: 300000
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.exactly.once.state.queue
+
+The name of the MQ queue used to store the state of the connector when exactly-once delivery is enabled.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.message.mqmd.write
+
+This configuration option determines whether the MQMD structure will be written along with the message data. Enabling this option allows control information to accompany the application data during message transmission between sending and receiving applications. Disabling this option will exclude the MQMD structure from the message payload.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 mq.message.mqmd.context
+
+This configuration option specifies the context in which MQMD properties are applied. Certain properties require this context to be set appropriately for them to take effect. Valid options for WMQ_MQMD_MESSAGE_CONTEXT are IDENTITY for WMQ_MDCTX_SET_IDENTITY_CONTEXT or ALL for WMQ_MDCTX_SET_ALL_CONTEXT.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 value.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 value.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
