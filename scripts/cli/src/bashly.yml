@@ -2016,14 +2016,14 @@ commands:
          00:45:50 🔥 ####################################################
 
       17:24:17 ℹ️ 🔎 ERROR/FATAL digest of replicator-2way-ssl.sh in the CI job
-      🔎 5 distinct record(s), 7 occurrence(s), in 797 lines
+      🔎 4 distinct record(s), 4 occurrence(s), in 797 lines
 
       🔴 ERROR x1 (first seen line 717, last seen line 717)
       [2026-10-13 00:44:31,858] ERROR [duplicate-topic-ssl|task-0] Failed to start task duplicate-topic-ssl-0 (org.apache.kafka.connect.runtime.Worker:1005)
               org.apache.kafka.common.KafkaException: Failed to construct kafka producer
               at org.apache.kafka.common.config.AbstractConfig.getConfiguredInstance(AbstractConfig.java:429)
 
-      ✂️ 3 more distinct record(s) not shown, increase --max-findings
+      ✂️ 2 more distinct record(s) not shown, increase --max-findings
   footer: |-
     Example output:
       $ playground get-ci-result --test connect/connect-replicator --logs --max-findings 2
@@ -2038,14 +2038,14 @@ commands:
          00:45:50 🔥 ####################################################
 
       17:24:17 ℹ️ 🔎 ERROR/FATAL digest of replicator-2way-ssl.sh in the CI job
-      🔎 5 distinct record(s), 7 occurrence(s), in 797 lines
+      🔎 4 distinct record(s), 4 occurrence(s), in 797 lines
 
       🔴 ERROR x1 (first seen line 717, last seen line 717)
       [2026-10-13 00:44:31,858] ERROR [duplicate-topic-ssl|task-0] Failed to start task duplicate-topic-ssl-0 (org.apache.kafka.connect.runtime.Worker:1005)
               org.apache.kafka.common.KafkaException: Failed to construct kafka producer
               at org.apache.kafka.common.config.AbstractConfig.getConfiguredInstance(AbstractConfig.java:429)
 
-      ✂️ 3 more distinct record(s) not shown, increase --max-findings
+      ✂️ 2 more distinct record(s) not shown, increase --max-findings
 
 - name: history
   group: Run

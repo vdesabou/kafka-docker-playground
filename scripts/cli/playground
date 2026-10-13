@@ -3625,7 +3625,7 @@ playground_get_ci_result_usage() {
     echo
 
     # :command.footer
-    printf "Example output:\n  $ playground get-ci-result --test connect/connect-replicator --logs --max-findings 2\n  17:24:15 ℹ️ 🔥 latest failure reported in https://github.com/vdesabou/kafka-docker-playground/issues/9054\n     🔥 CP 8.3.2 🔢 Connector v7.3.2 (📅 release date 2023-02-25) 🕐 2026-10-13 00:45\n     🔗 https://github.com/vdesabou/kafka-docker-playground/actions/runs/38328314041/job/115072055973\n     🕐 run of 2026-10-13T00:39:22Z on commit 141b0aa0d\n\n  17:24:17 ℹ️ 🔥 replicator-2way-ssl.sh failed, last lines before the failure:\n     00:45:48 ❗ ❌ topic test-topic-ssl-duplicate does not exist, retrying in 1 second (elapsed time: 59 seconds), waiting max for 60 seconds\n     00:45:50 ❗ ❌ topic test-topic-ssl-duplicate does not exist !\n     00:45:50 🔥 ####################################################\n\n  17:24:17 ℹ️ 🔎 ERROR/FATAL digest of replicator-2way-ssl.sh in the CI job\n  🔎 5 distinct record(s), 7 occurrence(s), in 797 lines\n\n  🔴 ERROR x1 (first seen line 717, last seen line 717)\n  [2026-10-13 00:44:31,858] ERROR [duplicate-topic-ssl|task-0] Failed to start task duplicate-topic-ssl-0 (org.apache.kafka.connect.runtime.Worker:1005)\n          org.apache.kafka.common.KafkaException: Failed to construct kafka producer\n          at org.apache.kafka.common.config.AbstractConfig.getConfiguredInstance(AbstractConfig.java:429)\n\n  ✂️ 3 more distinct record(s) not shown, increase --max-findings\n"
+    printf "Example output:\n  $ playground get-ci-result --test connect/connect-replicator --logs --max-findings 2\n  17:24:15 ℹ️ 🔥 latest failure reported in https://github.com/vdesabou/kafka-docker-playground/issues/9054\n     🔥 CP 8.3.2 🔢 Connector v7.3.2 (📅 release date 2023-02-25) 🕐 2026-10-13 00:45\n     🔗 https://github.com/vdesabou/kafka-docker-playground/actions/runs/38328314041/job/115072055973\n     🕐 run of 2026-10-13T00:39:22Z on commit 141b0aa0d\n\n  17:24:17 ℹ️ 🔥 replicator-2way-ssl.sh failed, last lines before the failure:\n     00:45:48 ❗ ❌ topic test-topic-ssl-duplicate does not exist, retrying in 1 second (elapsed time: 59 seconds), waiting max for 60 seconds\n     00:45:50 ❗ ❌ topic test-topic-ssl-duplicate does not exist !\n     00:45:50 🔥 ####################################################\n\n  17:24:17 ℹ️ 🔎 ERROR/FATAL digest of replicator-2way-ssl.sh in the CI job\n  🔎 4 distinct record(s), 4 occurrence(s), in 797 lines\n\n  🔴 ERROR x1 (first seen line 717, last seen line 717)\n  [2026-10-13 00:44:31,858] ERROR [duplicate-topic-ssl|task-0] Failed to start task duplicate-topic-ssl-0 (org.apache.kafka.connect.runtime.Worker:1005)\n          org.apache.kafka.common.KafkaException: Failed to construct kafka producer\n          at org.apache.kafka.common.config.AbstractConfig.getConfiguredInstance(AbstractConfig.java:429)\n\n  ✂️ 2 more distinct record(s) not shown, increase --max-findings\n"
     echo
 
   fi
@@ -15360,6 +15360,8 @@ function summarize_log_errors() {
     }
     function flush(    lvl, key, i, chain, frames, nframes, line, cause) {
         if (nlines == 0) return
+        # header of a digest already printed in the log (CI logs contain "playground container logs --errors" output)
+        if (rec[1] ~ /^[^ ]+ (FATAL|ERROR|WARN) x[0-9]+ \(first seen line [0-9]+, last seen line [0-9]+\)$/) { nlines = 0; return }
         lvl = level_of(rec[1])
         if (lvl == "" || (lvl == "WARN" && include_warnings == "")) { nlines = 0; return }
 

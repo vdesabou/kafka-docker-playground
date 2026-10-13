@@ -3316,6 +3316,8 @@ function summarize_log_errors() {
     }
     function flush(    lvl, key, i, chain, frames, nframes, line, cause) {
         if (nlines == 0) return
+        # header of a digest already printed in the log (CI logs contain "playground container logs --errors" output)
+        if (rec[1] ~ /^[^ ]+ (FATAL|ERROR|WARN) x[0-9]+ \(first seen line [0-9]+, last seen line [0-9]+\)$/) { nlines = 0; return }
         lvl = level_of(rec[1])
         if (lvl == "" || (lvl == "WARN" && include_warnings == "")) { nlines = 0; return }
 
