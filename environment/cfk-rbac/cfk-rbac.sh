@@ -53,10 +53,22 @@ function deploy_cfk_rbac_prerequisites() {
   apply_cfk_rbac_secret credential-plain \
     "plain-jaas.conf=sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=\"admin\" password=\"admin-secret\" user_admin=\"admin-secret\";"
 
+  # key pair used by MDS to sign tokens, generated at every start like in rbac-sasl-plain (never committed)
+  local mds_token_dir
+  mds_token_dir=$(mktemp -d)
+  chmod 777 "$mds_token_dir"
+  docker run --quiet --rm -v "$mds_token_dir":/tmp -u0 alpine/openssl genrsa -out /tmp/keypair.pem 2048 > /dev/null 2>&1
+  docker run --quiet --rm -v "$mds_token_dir":/tmp -u0 alpine/openssl rsa -in /tmp/keypair.pem -outform PEM -pubout -out /tmp/public.pem > /dev/null 2>&1
+  if [[ ! -s "$mds_token_dir/public.pem" ]]
+  then
+    logerror "❌ Could not generate the MDS token key pair with alpine/openssl"
+    exit 1
+  fi
   kubectl -n confluent create secret generic mds-token \
-    --from-file=mdsPublicKey.pem="${RBAC_SASL_PLAIN_DIR}/conf/public.pem" \
-    --from-file=mdsTokenKeyPair.pem="${RBAC_SASL_PLAIN_DIR}/conf/keypair.pem" \
+    --from-file=mdsPublicKey.pem="$mds_token_dir/public.pem" \
+    --from-file=mdsTokenKeyPair.pem="$mds_token_dir/keypair.pem" \
     --dry-run=client -o yaml | kubectl -n confluent apply -f - > /dev/null
+  rm -rf "$mds_token_dir"
 
   # embedded REST proxy of Kafka, and KafkaRestClass used by CFK to manage topics and role bindings
   apply_cfk_rbac_secret mds-client-kafka-rest "bearer.txt=$(cfk_rbac_user_password_file admin admin-secret)"
