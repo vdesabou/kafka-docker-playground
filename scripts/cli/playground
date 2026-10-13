@@ -6612,7 +6612,7 @@ playground_debug_cfk_usage() {
 playground_debug_cfk_cfk_bundle_analyze_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground debug cfk cfk-bundle-analyze\n\n"
-    printf "  📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n  \n  🔍 Scans pod describes, events, component CRs, and logs for ~30 issue\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling, …) and prints concrete remediation steps per category.\n  \n  🔒 Sanitization (IPs / hostnames / emails / secrets) is ON by default — pass\n  --no-sanitize only for internal/test bundles.\n  \n  🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.\n  \n  🔖 Use --json to emit machine-readable output for downstream tooling.\n\n"
+    printf "  📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n  \n  🔍 Checks Warning events, pods (phase, waiting reasons, restarts, OOMKilled),\n  every platform.confluent.io custom resource (phase/state, ready replicas,\n  False conditions, failed connector tasks) and the ERROR/FATAL records of every\n  log (rotated and .gz included, with their Caused by chain and an occurrence\n  count), sorts them into ~30 categories (pod failures, TLS, auth, MDS/RBAC,\n  license, KRaft, replication, storage, scheduling, …) and prints concrete\n  remediation steps per category.\n  \n  ✅ Works offline on any bundle produced by kubectl confluent support-bundle (or\n  playground debug cfk generate-bundle): no cfk environment needed.\n  \n  🔒 Sanitization (secrets / IPs / hostnames / emails / LDAP DNs) is ON by\n  default. It is best effort: review the output before sharing it. Pass\n  --no-sanitize only for internal/test bundles.\n  \n  🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.\n  \n  🔖 Use --json to emit machine-readable output for downstream tooling.\n  \n  🔖 Exit code is 0 when the analysis completed (whatever was found, read the\n  summary), 64 for an invalid, unsafe or empty bundle.\n\n"
   else
     printf "playground debug cfk cfk-bundle-analyze - 📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n\n"
   fi
@@ -6656,6 +6656,11 @@ playground_debug_cfk_cfk_bundle_analyze_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--include-warnings")"
+    printf "    ⚠️  Also report WARN log records that match no known category (WARN records\n    matching a known category are always reported)\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--html")"
     printf "    🌐 Generate a self-contained HTML report and open it in the default browser\n    \n    ❕ No external CDN/network needed — single offline-viewable file you can\n    share.\n"
     echo
@@ -6679,6 +6684,7 @@ playground_debug_cfk_cfk_bundle_analyze_usage() {
     printf "  playground debug cfk cfk-bundle-analyze --bundle ./bundle.tar.gz --json >\n  report.json\n"
     printf "  playground debug cfk cfk-bundle-analyze -b ./bundle.tgz --html\n"
     printf "  playground debug cfk cfk-bundle-analyze -b ./bundle.tgz --html --output-dir\n  ./reports\n"
+    printf "  playground debug cfk cfk-bundle-analyze -b ./bundle.tgz --include-warnings\n"
     echo
 
   fi
@@ -34695,22 +34701,12 @@ playground_debug_cfk_cfk_bundle_analyze_command() {
   top="${args[--top]}"
   html="${args[--html]}"
   output_dir="${args[--output-dir]}"
+  include_warnings="${args[--include-warnings]}"
 
   set +e
 
-  # ── Validate input ─────────────────────────────────────────────────────────
-  if [[ -z "$bundle" ]]; then
-      logerror "❌ Must provide --bundle <path-to-cfk-support-bundle>"
-      log ""
-      log "Examples:"
-      log "  playground debug cfk-bundle-analyze --bundle ./customer-bundle.tar.gz"
-      log "  playground debug cfk-bundle-analyze --bundle ./extracted-bundle/"
-      log "  playground debug cfk-bundle-analyze --bundle ./bundle.zip --json > report.json"
-      exit 1
-  fi
-
-  # Handle fzf @path trick (mirrors gc-analyze convention)
-  if [[ "$bundle" == *"@"* ]]; then
+  # Handle fzf @path trick (mirrors gc-analyze convention), only when the path itself does not exist
+  if [[ ! -e "$bundle" && "$bundle" == *"@"* ]]; then
       bundle=$(echo "$bundle" | cut -d "@" -f 2)
   fi
 
@@ -34719,22 +34715,31 @@ playground_debug_cfk_cfk_bundle_analyze_command() {
       exit 1
   fi
 
-  # ── Locate the analyzer CLI ────────────────────────────────────────────────
-  analyzer_cli="$root_folder/cfk-analysis/analyzer_cli.py"
-  if [[ ! -f "$analyzer_cli" ]]; then
-      logerror "❌ CFK analyzer CLI not found at: $analyzer_cli"
-      logerror "   Make sure cfk-analysis/analyzer_cli.py exists in the playground root"
-      logerror "   (symlink cfk-bundle-analyzer/ as cfk-analysis/ in the playground root)"
+  analyzer_dir="$root_folder/cfk-analysis"
+  if [[ ! -f "$analyzer_dir/analyzer_cli.py" ]]; then
+      logerror "❌ CFK analyzer not found at: $analyzer_dir/analyzer_cli.py"
       exit 1
   fi
 
-  analyzer_dir="$root_folder/cfk-analysis"
+  # ── Analyzer image (dependencies baked once, code mounted at run time) ─────
+  # The tag changes when the Dockerfile or requirements change, so the image is rebuilt only then
+  image_tag=$(cat "$analyzer_dir/Dockerfile" "$analyzer_dir/requirements.txt" | cksum | cut -d ' ' -f 1)
+  image="cfk-bundle-analyzer:$image_tag"
+  if ! docker image inspect "$image" > /dev/null 2>&1; then
+      log "🏗️  Building $image (first run only)..."
+      build_log="/tmp/cfk-bundle-analyzer-build.log"
+      if ! docker build --load -t "$image" "$analyzer_dir" > "$build_log" 2>&1 && ! docker build -t "$image" "$analyzer_dir" >> "$build_log" 2>&1; then
+          logerror "❌ Failed to build $image, see $build_log"
+          tail -20 "$build_log"
+          exit 1
+      fi
+  fi
 
   bundle_abs=$(cd "$(dirname "$bundle")" && pwd -P)/$(basename "$bundle")
   bundle_container="/tmp/input/$(basename "$bundle")"
 
   # ── Build CLI args ─────────────────────────────────────────────────────────
-  cli_args=("$bundle")
+  cli_args=("$bundle_container")
 
   if [[ -n "$json_out" ]]; then
       cli_args+=(--json)
@@ -34753,9 +34758,20 @@ playground_debug_cfk_cfk_bundle_analyze_command() {
       cli_args+=(--top "$top")
   fi
 
+  if [[ -n "$include_warnings" ]]; then
+      cli_args+=(--include-warnings)
+  fi
+
+  # run as the current user: it can read the bundle and write the HTML report
+  docker_args=(
+      --rm
+      --user "$(id -u):$(id -g)"
+      -v "$analyzer_dir:/tmp/cfk-analysis:ro"
+      -v "$bundle_abs:$bundle_container:ro"
+  )
+
   # ── HTML output target ─────────────────────────────────────────────────────
   html_out=""
-  html_out_container=""
   if [[ -n "$html" ]]; then
       : "${output_dir:=./cfk-reports}"
       mkdir -p "$output_dir"
@@ -34769,8 +34785,8 @@ playground_debug_cfk_cfk_bundle_analyze_command() {
       bundle_basename="${bundle_basename%.zip}"
 
       html_out="${output_dir_abs}/${bundle_basename}-cfk-report-$(date '+%Y%m%d-%H%M%S').html"
-      html_out_container="/tmp/output/$(basename "$html_out")"
-      cli_args+=(--html-out "$html_out_container")
+      cli_args+=(--html-out "/tmp/output/$(basename "$html_out")")
+      docker_args+=( -v "$output_dir_abs:/tmp/output" )
   fi
 
   # ── Run the analyzer ───────────────────────────────────────────────────────
@@ -34779,27 +34795,17 @@ playground_debug_cfk_cfk_bundle_analyze_command() {
       log ""
   fi
 
-  docker_args=(
-      -i
-      --rm
-      -v "$analyzer_dir:/tmp/cfk-analysis:ro"
-      -v "$bundle_abs:$bundle_container:ro"
-  )
-
-  if [[ -n "$html_out" ]]; then
-      docker_args+=( -v "$output_dir_abs:/tmp/output" )
-  fi
-
-  container_cli_args=("$bundle_container")
-  if [[ ${#cli_args[@]} -gt 1 ]]; then
-      container_cli_args+=("${cli_args[@]:1}")
-  fi
-
-  docker run "${docker_args[@]}" python:3.7-slim sh -lc 'pip install -q -r /tmp/cfk-analysis/requirements.txt && python /tmp/cfk-analysis/analyzer_cli.py "$@"' sh "${container_cli_args[@]}"
+  docker run "${docker_args[@]}" "$image" "${cli_args[@]}"
   exit_code=$?
 
+  case $exit_code in
+      0) ;;
+      64) logerror "❌ Analysis failed — invalid, unsafe or empty bundle (see error above)." ;;
+      *) logerror "❌ Analyzer failed with exit code $exit_code." ;;
+  esac
+
   # ── Open HTML report in browser ────────────────────────────────────────────
-  if [[ -n "$html" && -f "$html_out" ]]; then
+  if [[ $exit_code -eq 0 && -n "$html" && -f "$html_out" ]]; then
       log ""
       log "🌐 HTML report saved: $html_out"
       if command -v open &>/dev/null; then
@@ -34811,17 +34817,6 @@ playground_debug_cfk_cfk_bundle_analyze_command() {
       else
           log "🔗 Open in browser: file://$html_out"
       fi
-  fi
-
-  if [[ -z "$json_out" ]]; then
-      log ""
-      case $exit_code in
-          0) log "✅ Analysis complete — no critical or high-severity issues found." ;;
-          1) logwarn "⚠️  Analysis complete — high-severity issues found. Review the report above." ;;
-          2) logerror "❌ Analysis complete — CRITICAL issues found. Act on the recommendations above." ;;
-          64) logerror "❌ Analysis failed — invalid bundle path or format." ;;
-          *) logerror "❌ Analyzer exited with code $exit_code." ;;
-      esac
   fi
 
   exit $exit_code
@@ -63755,13 +63750,6 @@ playground_debug_cfk_parse_requirements() {
     esac
   done
 
-  # :command.user_filter
-  filter_error=$(filter_cfk_environment)
-  if [[ -n $filter_error ]]; then
-    echo "$filter_error" >&2
-    exit 1
-  fi
-
 }
 
 # :command.parse_requirements
@@ -63848,6 +63836,14 @@ playground_debug_cfk_cfk_bundle_analyze_parse_requirements() {
           printf "%s\n" "--top requires an argument: --top N" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --include-warnings)
+
+        # :flag.case_no_arg
+        args['--include-warnings']=1
+        shift
         ;;
 
       # :flag.case
@@ -64026,6 +64022,13 @@ playground_debug_cfk_generate_bundle_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--follow-logs-duration FOLLOW-LOGS-DURATION" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_cfk_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
   fi
 
 }
@@ -83979,6 +83982,11 @@ playground_debug_cfk_cfk_bundle_analyze_completion() {
         completion_blocked_flags["--top"]=1
 
         ;;
+      --include-warnings)
+        completion_blocked_flags["--include-warnings"]=1
+
+        shift
+        ;;
       --html)
         completion_blocked_flags["--html"]=1
 
@@ -84007,6 +84015,7 @@ playground_debug_cfk_cfk_bundle_analyze_completion() {
     completion_flag_candidates --no-sanitize "$completion_current" --no-sanitize
     completion_flag_candidates --severity "$completion_current" --severity
     completion_flag_candidates --top "$completion_current" --top
+    completion_flag_candidates --include-warnings "$completion_current" --include-warnings
     completion_flag_candidates --html "$completion_current" --html
     completion_flag_candidates --output-dir "$completion_current" --output-dir
   fi

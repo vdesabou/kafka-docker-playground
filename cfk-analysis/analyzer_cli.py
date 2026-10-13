@@ -5,14 +5,19 @@ Wraps CFKBundleAnalyzer + DataSanitizer + recommendations for shell use.
 
 Usage:
   analyzer_cli.py <bundle-path> [--json] [--no-sanitize] [--severity LEVEL] [--top N]
+                  [--include-warnings] [--html-out FILE]
 
 <bundle-path> may be a directory or a .tar / .tar.gz / .tgz / .zip archive.
 Archives are extracted to a temp directory that is cleaned up on exit.
+
+Exit codes: 0 analysis done (whatever was found, see summary), 64 invalid or empty
+bundle, 1 unexpected failure.
 """
 
 import argparse
 import json
 import os
+import re
 import shutil
 import sys
 import tarfile
@@ -30,6 +35,10 @@ import html_report
 
 SEVERITY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 SEVERITY_GLYPH = {"critical": "[CRIT]", "high": "[HIGH]", "medium": "[MED ]", "low": "[LOW ]"}
+
+
+class BundleError(Exception):
+    """Invalid, unsafe or empty bundle (exit 64)"""
 
 
 def is_archive(path: str) -> bool:
@@ -55,12 +64,21 @@ def extracted_bundle(path: str):
 
     tmp = tempfile.mkdtemp(prefix="cfk-bundle-")
     try:
-        if path.lower().endswith(".zip"):
-            with zipfile.ZipFile(path, "r") as zf:
-                zf.extractall(tmp)
-        else:
-            with tarfile.open(path, "r:*") as tf:
-                tf.extractall(tmp)
+        try:
+            if path.lower().endswith(".zip"):
+                with zipfile.ZipFile(path, "r") as zf:
+                    for name in zf.namelist():
+                        _check_member_name(name)
+                    zf.extractall(tmp)
+            else:
+                with tarfile.open(path, "r:*") as tf:
+                    members = [m for m in tf.getmembers() if _safe_tar_member(m)]
+                    if hasattr(tarfile, "data_filter"):
+                        tf.extractall(tmp, members=members, filter="data")
+                    else:
+                        tf.extractall(tmp, members=members)
+        except (tarfile.TarError, zipfile.BadZipFile, EOFError, OSError) as e:
+            raise BundleError(f"Cannot extract {os.path.basename(path)}: {e}")
 
         # If the archive has a single top-level directory, descend into it
         entries = [e for e in os.listdir(tmp) if not e.startswith(".")]
@@ -70,6 +88,19 @@ def extracted_bundle(path: str):
             yield tmp
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+
+
+def _check_member_name(name: str):
+    """Reject absolute paths and `..` components (path traversal from a crafted archive)"""
+    norm = name.replace("\\", "/")
+    if norm.startswith("/") or re.match(r"^[A-Za-z]:", norm) or ".." in norm.split("/"):
+        raise BundleError(f"Refusing to extract unsafe archive member: {name}")
+
+
+def _safe_tar_member(member: tarfile.TarInfo) -> bool:
+    """Keep regular files and directories only; links and devices are skipped"""
+    _check_member_name(member.name)
+    return member.isfile() or member.isdir()
 
 
 def filter_by_severity(issues, minimum: Optional[str]):
@@ -92,20 +123,33 @@ def print_text_report(results, top: int):
     summary = results["summary"]
     issues = results["issues"]
 
+    coverage = results.get("coverage", {})
+
     print("=" * 72)
     print("CFK Bundle Analysis")
     print("=" * 72)
-    print(f"Files analyzed:   {summary['files_analyzed']}")
+    print(f"Files analyzed:   {summary['files_analyzed']}  "
+          f"({coverage.get('pods', 0)} pods, {coverage.get('custom_resources', 0)} CFK CRs, "
+          f"{coverage.get('events', 0)} events, {coverage.get('log_files', 0)} log/text files "
+          f"with {coverage.get('log_lines', 0)} lines, {coverage.get('skipped_files', 0)} skipped)")
+    if coverage.get("unparsable_files"):
+        print(f"Unparsable files: {len(coverage['unparsable_files'])} "
+              f"(e.g. {', '.join(coverage['unparsable_files'][:3])})")
     print(f"Analysis time:    {summary['analysis_time']:.2f}s")
     print(f"Total issues:     {summary['total_issues']}")
     print(f"  critical:       {summary['critical']}")
     print(f"  high:           {summary['high']}")
     print(f"  medium:         {summary['medium']}")
     print(f"  low:            {summary['low']}")
+    if results.get("redaction_summary"):
+        r = results["redaction_summary"]
+        print(f"Sanitized:        {r['secrets']} secrets, {r['ip_addresses']} IPs, {r['hostnames']} hostnames, "
+              f"{r['emails']} emails, {r['ldap_dns']} LDAP DNs (best effort, review before sharing)")
     print()
 
     if not issues:
-        print("No issues detected. Bundle looks clean.")
+        print("No issues detected in the scanned files.")
+        print("Only ERROR/FATAL log records, uncaught exceptions, Warning events, pod and CFK CR status are checked.")
         return
 
     grouped = group_by_category(issues)
@@ -128,11 +172,16 @@ def print_text_report(results, top: int):
             loc = issue["file"]
             if issue.get("line_number"):
                 loc += f":{issue['line_number']}"
+            if issue.get("count", 1) > 1:
+                loc += f"  (x{issue['count']})"
             msg = issue["message"]
             if len(msg) > 180:
                 msg = msg[:177] + "..."
             print(f"  {glyph} {loc}")
             print(f"         {msg}")
+            for cause in issue.get("caused_by") or []:
+                cause = cause if len(cause) <= 170 else cause[:167] + "..."
+                print(f"           Caused by: {cause}")
 
         if len(items) > top:
             print(f"  ... and {len(items) - top} more in this category")
@@ -150,8 +199,8 @@ def print_text_report(results, top: int):
     print("Notes")
     print("=" * 72)
     print("- This report combines pattern detection with category-level remediation.")
+    print("- Raw ERROR digest of every log in the bundle: playground debug analyze-logs -f <bundle>")
     print("- For JVM GC analysis on a specific component: playground debug gc-analyze")
-    print("- For full diagnostics: playground debug generate-diagnostics")
     print()
 
 
@@ -162,13 +211,25 @@ def run(
     top: int,
     as_json: bool,
     html_out: Optional[str] = None,
+    include_warnings: bool = False,
 ) -> int:
     with extracted_bundle(bundle_path) as bundle_dir:
-        analyzer = CFKBundleAnalyzer(bundle_dir)
+        analyzer = CFKBundleAnalyzer(bundle_dir, include_warnings=include_warnings)
         # analyzer.analyze() prints decode/parse warnings via print() to stdout.
         # Send those to stderr so --json mode produces clean JSON on stdout.
         with redirect_stdout(sys.stderr):
             results = analyzer.analyze()
+
+    coverage = results["coverage"]
+    if results["summary"]["files_analyzed"] == 0:
+        raise BundleError(
+            f"No log, event or YAML file could be analyzed in {os.path.basename(bundle_path)} "
+            f"({coverage['skipped_files']} files skipped). Is it a CFK support bundle?"
+        )
+    if not coverage["layout"] and coverage["pods"] == 0 and coverage["custom_resources"] == 0:
+        print("warning: no cluster-resources/ or operator/ folder, no Pod nor CFK custom resource found: "
+              "this does not look like a CFK support bundle (kubectl confluent support-bundle), "
+              "only log patterns were checked.", file=sys.stderr)
 
     if sanitize:
         results = DataSanitizer().sanitize_results(results)
@@ -186,24 +247,31 @@ def run(
         os.makedirs(os.path.dirname(os.path.abspath(html_out)), exist_ok=True)
         with open(html_out, "w", encoding="utf-8") as f:
             f.write(rendered)
-        print(html_out, file=sys.stderr)
 
     if as_json:
         for issue in results["issues"]:
             issue["recommendation"] = recommendations.for_category(issue["category"])
         json.dump(results, sys.stdout, indent=2, default=str)
         sys.stdout.write("\n")
-    elif not html_out:
+    else:
         # Text report by default; skip if user only asked for HTML.
-        print_text_report(results, top=top)
+        if not html_out:
+            print_text_report(results, top=top)
+        print_verdict(results)
 
-    crit = results["summary"]["critical"]
-    high = results["summary"]["high"]
-    if crit > 0:
-        return 2
-    if high > 0:
-        return 1
     return 0
+
+
+def print_verdict(results):
+    s = results["summary"]
+    if s["critical"]:
+        print(f"CRITICAL: {s['critical']} critical and {s['high']} high-severity issues, act on the recommendations above.")
+    elif s["high"]:
+        print(f"WARNING: {s['high']} high-severity issues, review the recommendations above.")
+    elif s["total_issues"]:
+        print(f"OK: no critical or high-severity issues ({s['total_issues']} medium/low).")
+    else:
+        print("OK: no issues found.")
 
 
 def main() -> int:
@@ -217,6 +285,7 @@ def main() -> int:
     p.add_argument("--severity", choices=["critical", "high", "medium", "low"], help="Minimum severity to include")
     p.add_argument("--top", type=int, default=5, help="Max issues to show per category in text mode (default: 5)")
     p.add_argument("--html-out", help="Write a self-contained HTML report to this path")
+    p.add_argument("--include-warnings", action="store_true", help="Also report WARN log records that match no known category")
     args = p.parse_args()
 
     try:
@@ -227,11 +296,9 @@ def main() -> int:
             top=max(1, args.top),
             as_json=args.json,
             html_out=args.html_out,
+            include_warnings=args.include_warnings,
         )
-    except FileNotFoundError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        return 64
-    except ValueError as e:
+    except (FileNotFoundError, ValueError, BundleError) as e:
         print(f"Error: {e}", file=sys.stderr)
         return 64
 
