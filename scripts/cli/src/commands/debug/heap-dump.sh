@@ -128,6 +128,7 @@ do
         then
             log "👻 heap dump is available at ${filename}"
             playground container cp --source ${resolved_container}:/tmp/${filename} --destination ${filename}
+            log "🔬 Analyze it with Eclipse MAT: playground debug heap-analyze --file ${filename}"
         else
             logerror "❌ Failed to take heap dump"
         fi
