@@ -175,8 +175,23 @@ if examples
   > ## Examples
   >
   examples.each do |example|
+    # examples escape $ as \$ so that --help does not expand it, show the real command
     > ```bash
-    > {{ example }}
+    > {{ example.gsub('\$', '$') }}
+    > ```
+    >
+  end
+end
+
+# === Example output (custom x_example_outputs key, docs only: not shown in --help)
+
+if options['x_example_outputs']
+  > ## Example output
+  >
+  options['x_example_outputs'].each do |example_output|
+    > ```text
+    > $ {{ example_output['command'] }}
+    > {{ example_output['output'] }}
     > ```
     >
   end

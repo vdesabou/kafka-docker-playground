@@ -11,6 +11,22 @@ then
 fi
 
 cd "$root_folder/scripts/cli"
+
+# examples and footers are printed with printf "..." in --help, so an unescaped $VAR, ${...} or $(...) is expanded (or run)
+# x_example_outputs (rendered in the docs only, see templates/markdown) must start with the name of their command
+bashly_yml_errors=$(yq -o=json src/bashly.yml | jq -r '
+def commands(p): (.commands // [])[] | (p + [.name]) as $q | ({path: ($q | join(" ")), examples: ((.examples // []) | if type == "string" then [.] else . end), footer, outputs: (.x_example_outputs // [])}), commands($q);
+commands(["playground"])
+| .path as $path
+| ((.examples[], (.footer // empty)) | split("\n")[] | select(test("(^|[^\\\\])\\$[A-Za-z_{(]")) | "\($path): unescaped $ in example or footer, use \\$: \(.)"),
+  (.outputs[] | select((.command // "" | startswith($path) | not) or ((.output // "") == "")) | "\($path): x_example_outputs entry needs an output and a command starting with \"\($path)\": \(.command)")')
+if [ -n "$bashly_yml_errors" ]
+then
+	logerror "❌ src/bashly.yml has errors:"
+	echo "$bashly_yml_errors"
+	exit 1
+fi
+
 docker run --rm $maybe_tty --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly generate | grep -v "skipped"
 # Since bashly 2.0, completions are answered at runtime by `playground __complete <words>`.
 # The adapters below only forward to it, they only need to be regenerated when bashly is upgraded.

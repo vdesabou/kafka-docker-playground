@@ -57,6 +57,38 @@ commands:
 
     Everything comes from the running containers and from playground.ini, so
     it is also the quickest way to get back your bearings after a break.
+  examples:
+  - playground status
+  x_example_outputs:
+  - command: playground status
+    output: |-
+      17:21:27 ℹ️ 🦭 Container engine: podman
+      17:21:27 ℹ️ 🚀 Running example
+      connect/connect-filestream-sink/filestream-sink.sh
+      17:21:28 ℹ️ 🐳 Containers
+      NAMES                STATUS          IMAGE
+      controller           Up 53 minutes   confluentinc/cp-server:8.3.2
+      broker               Up 53 minutes   confluentinc/cp-server:8.3.2
+      schema-registry      Up 53 minutes   confluentinc/cp-schema-registry:8.3.2
+      connect              Up 53 minutes   confluentinc/cp-server-connect:8.3.2
+      17:21:28 ℹ️ 🎯 Version currently used for confluent platform
+      8.3.2
+      17:21:29 ℹ️ 🧩 Displaying status for 🌎onprem connector filestream-sink
+      Name                           Status       Tasks                                                        Stack Trace
+      -------------------------------------------------------------------------------------------------------------
+      filestream-sink                ✅ RUNNING  0:🟢 RUNNING                 -
+      -------------------------------------------------------------------------------------------------------------
+      17:21:30 ℹ️ 🧰 Current config for 🌎onprem connector filestream-sink
+      playground connector create-or-update --connector filestream-sink << EOF
+      {
+        "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+        "file": "/tmp/output.json",
+        "tasks.max": "1",
+        "topics": "filestream"
+      }
+      EOF
+      17:21:31 ℹ️ 🔘 List of topics (internal topics are excluded)
+      filestream
 
 - name: doctor
   help: |-
@@ -76,6 +108,21 @@ commands:
     👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%a6%ad-using-podman-instead-of-docker
   examples:
   - playground doctor
+  x_example_outputs:
+  - command: playground doctor
+    output: |-
+      17:23:04 ℹ️ 🩺 Checking the container engine
+      17:23:04 ℹ️ ✅ 'docker' CLI found: Docker version 29.8.1, build 4a63305
+      17:23:04 ℹ️ 🦭 engine detected: podman
+      17:23:05 ℹ️ ✅ engine is reachable
+      17:23:05 ℹ️ ✅ 'docker compose' is 5.5.1
+      17:23:05 ℹ️ ✅ engine memory is 11GB
+      17:23:05 ℹ️ ✅ podman 6.1.3
+      17:23:06 ℹ️ ✅ podman is running rootful
+      17:23:06 ℹ️ ✅ docker.io is in the podman search registries
+      17:23:06 ℹ️ ✅ the podman machine shares ~
+
+      17:23:06 ℹ️ 🩺 all good, the podman engine is ready for the playground
 
 ### private commands for completion
 - name: get-docker-ports
@@ -1951,6 +1998,54 @@ commands:
   - playground get-ci-result --logs
   - playground get-ci-result --test other/connect-secret-registry --logs
   - playground get-ci-result --test connect/connect-mqtt-sink --environment cfk --podman --logs
+  x_example_outputs:
+  - command: playground get-ci-result --test connect/connect-http-sink
+    output: |-
+      17:23:20 ℹ️ 🤖CI status: 🟢 ok
+      🔗test url: https://github.com/vdesabou/kafka-docker-playground/actions/runs/37858925089/job/113589742349
+  - command: playground get-ci-result --test connect/connect-replicator --logs --max-findings 2
+    output: |-
+      17:24:15 ℹ️ 🔥 latest failure reported in https://github.com/vdesabou/kafka-docker-playground/issues/9054
+         🔥 CP 8.3.2 🔢 Connector v7.3.2 (📅 release date 2023-02-25) 🕐 2026-10-13 00:45
+         🔗 https://github.com/vdesabou/kafka-docker-playground/actions/runs/38328314041/job/115072055973
+         🕐 run of 2026-10-13T00:39:22Z on commit 141b0aa0d
+
+      17:24:17 ℹ️ 🔥 replicator-2way-ssl.sh failed, last lines before the failure:
+         00:45:48 ❗ ❌ topic test-topic-ssl-duplicate does not exist, retrying in 1 second (elapsed time: 59 seconds), waiting max for 60 seconds
+         00:45:50 ❗ ❌ topic test-topic-ssl-duplicate does not exist !
+         00:45:50 🔥 ####################################################
+
+      17:24:17 ℹ️ 🔎 ERROR/FATAL digest of replicator-2way-ssl.sh in the CI job
+      🔎 5 distinct record(s), 7 occurrence(s), in 797 lines
+
+      🔴 ERROR x1 (first seen line 717, last seen line 717)
+      [2026-10-13 00:44:31,858] ERROR [duplicate-topic-ssl|task-0] Failed to start task duplicate-topic-ssl-0 (org.apache.kafka.connect.runtime.Worker:1005)
+              org.apache.kafka.common.KafkaException: Failed to construct kafka producer
+              at org.apache.kafka.common.config.AbstractConfig.getConfiguredInstance(AbstractConfig.java:429)
+
+      ✂️ 3 more distinct record(s) not shown, increase --max-findings
+  footer: |-
+    Example output:
+      $ playground get-ci-result --test connect/connect-replicator --logs --max-findings 2
+      17:24:15 ℹ️ 🔥 latest failure reported in https://github.com/vdesabou/kafka-docker-playground/issues/9054
+         🔥 CP 8.3.2 🔢 Connector v7.3.2 (📅 release date 2023-02-25) 🕐 2026-10-13 00:45
+         🔗 https://github.com/vdesabou/kafka-docker-playground/actions/runs/38328314041/job/115072055973
+         🕐 run of 2026-10-13T00:39:22Z on commit 141b0aa0d
+
+      17:24:17 ℹ️ 🔥 replicator-2way-ssl.sh failed, last lines before the failure:
+         00:45:48 ❗ ❌ topic test-topic-ssl-duplicate does not exist, retrying in 1 second (elapsed time: 59 seconds), waiting max for 60 seconds
+         00:45:50 ❗ ❌ topic test-topic-ssl-duplicate does not exist !
+         00:45:50 🔥 ####################################################
+
+      17:24:17 ℹ️ 🔎 ERROR/FATAL digest of replicator-2way-ssl.sh in the CI job
+      🔎 5 distinct record(s), 7 occurrence(s), in 797 lines
+
+      🔴 ERROR x1 (first seen line 717, last seen line 717)
+      [2026-10-13 00:44:31,858] ERROR [duplicate-topic-ssl|task-0] Failed to start task duplicate-topic-ssl-0 (org.apache.kafka.connect.runtime.Worker:1005)
+              org.apache.kafka.common.KafkaException: Failed to construct kafka producer
+              at org.apache.kafka.common.config.AbstractConfig.getConfiguredInstance(AbstractConfig.java:429)
+
+      ✂️ 3 more distinct record(s) not shown, increase --max-findings
 
 - name: history
   group: Run
@@ -2025,6 +2120,37 @@ commands:
   - playground find-example debezium postgres fully managed
   - playground find-example "oracle cdc ssl" --category connect --limit 3
   - playground find-example "http sink oauth" --json --limit 3 | jq -r '.[].script'
+  x_example_outputs:
+  - command: 'playground find-example "oracle cdc ssl" --limit 2'
+    output: |-
+      17:22:22 ℹ️ 🔎 examples matching "oracle cdc ssl", best first
+      playground run -f ~/kafka-docker-playground/connect/connect-cdc-xstream-oracle19-source/cdc-xstream-oracle19-ssl.sh
+          Oracle XStream CDC Source (Oracle 19c) Source connector · io.confluent.connect.oracle.xstream.cdc.OracleXStreamSourceConnector · plaintext
+      playground run -f ~/kafka-docker-playground/connect/connect-cdc-oracle19-source/cdc-oracle19-cdb-table-ssl.sh
+          Oracle CDC Source (Oracle 19c) Source connector · io.confluent.connect.oracle.cdc.OracleCdcSourceConnector · plaintext
+  - command: 'playground find-example "s3 sink" --limit 1 --json'
+    output: |-
+      [
+        {
+          "script": "~/kafka-docker-playground/connect/connect-aws-s3-sink/s3-sink.sh",
+          "path": "connect/connect-aws-s3-sink/s3-sink.sh",
+          "title": "S3 Sink connector",
+          "connector_classes": [
+            "io.confluent.connect.s3.S3SinkConnector"
+          ],
+          "environment": "plaintext",
+          "score": 41.8,
+          "run_command": "playground run -f ~/kafka-docker-playground/connect/connect-aws-s3-sink/s3-sink.sh"
+        }
+      ]
+  footer: |-
+    Example output:
+      $ playground find-example "oracle cdc ssl" --limit 2
+      17:22:22 ℹ️ 🔎 examples matching "oracle cdc ssl", best first
+      playground run -f ~/kafka-docker-playground/connect/connect-cdc-xstream-oracle19-source/cdc-xstream-oracle19-ssl.sh
+          Oracle XStream CDC Source (Oracle 19c) Source connector · io.confluent.connect.oracle.xstream.cdc.OracleXStreamSourceConnector · plaintext
+      playground run -f ~/kafka-docker-playground/connect/connect-cdc-oracle19-source/cdc-oracle19-cdb-table-ssl.sh
+          Oracle CDC Source (Oracle 19c) Source connector · io.confluent.connect.oracle.cdc.OracleCdcSourceConnector · plaintext
 
 - name: start-environment
   private: true
@@ -2128,7 +2254,7 @@ commands:
   examples:
   - playground start-environment
   - playground start-environment --environment rbac-sasl-plain
-  - playground start-environment --environment rbac-sasl-plain --rbac-role-bindings-file "$PWD/role-bindings.sh"
+  - playground start-environment --environment rbac-sasl-plain --rbac-role-bindings-file "\$PWD/role-bindings.sh"
 
 - name: switch-ccloud
   group: Run
@@ -2623,7 +2749,7 @@ commands:
 
     examples:
     - playground repro bootstrap (interactive mode)
-    - playground repro bootstrap -f "$PWD/connect/connect-http-sink/http_no_auth.sh" -d "123456 dlq not working" --no-run
+    - playground repro bootstrap -f "\$PWD/connect/connect-http-sink/http_no_auth.sh" -d "123456 dlq not working" --no-run
 
 - name: get-docker-compose
   group: Kafka
@@ -3877,6 +4003,32 @@ commands:
     - playground debug analyze-logs --file connect.log
     - playground debug analyze-logs --file kafka-connect-logs-10-09-1200.zip --include-warnings
     - playground debug analyze-logs -f ./logs -f broker.log.gz --max-findings 10
+    x_example_outputs:
+    - command: playground debug analyze-logs -f connect.log
+      output: |-
+        17:23:19 ℹ️ 🔥 ERROR/FATAL digest for connect.log
+        🔎 1 distinct record(s), 2 occurrence(s), in 12 lines
+
+        🔴 ERROR x2 (first seen line 2, last seen line 10)
+        [2026-10-13 10:00:05,123] ERROR [http-sink|task-0] WorkerSinkTask{id=http-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:234)
+            org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+            Caused by: org.apache.kafka.connect.errors.ConnectException: Error while processing HTTP request with Url : http://httpserver:9006/api/messages, Status code : 500
+                at io.confluent.connect.http.writer.HttpWriterImpl.handleErrors(HttpWriterImpl.java:405)
+
+        17:23:19 ℹ️ 📊 1 file(s) with findings out of 1 scanned (binary files skipped: 0)
+    footer: |-
+      Example output:
+        $ playground debug analyze-logs -f connect.log
+        17:23:19 ℹ️ 🔥 ERROR/FATAL digest for connect.log
+        🔎 1 distinct record(s), 2 occurrence(s), in 12 lines
+
+        🔴 ERROR x2 (first seen line 2, last seen line 10)
+        [2026-10-13 10:00:05,123] ERROR [http-sink|task-0] WorkerSinkTask{id=http-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:234)
+            org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+            Caused by: org.apache.kafka.connect.errors.ConnectException: Error while processing HTTP request with Url : http://httpserver:9006/api/messages, Status code : 500
+                at io.confluent.connect.http.writer.HttpWriterImpl.handleErrors(HttpWriterImpl.java:405)
+
+        17:23:19 ℹ️ 📊 1 file(s) with findings out of 1 scanned (binary files skipped: 0)
 
   - name: gc-analyze
     help: |-
@@ -4332,6 +4484,24 @@ commands:
   - playground get-jmx-metrics -c connect -c broker
   - playground get-jmx-metrics --container schema-registry --container ksqldb-server --open
   - playground get-jmx-metrics -c broker -c connect --domain "kafka.server"
+  x_example_outputs:
+  - command: 'playground get-jmx-metrics -c connect --domain "kafka.connect"'
+    output: |-
+      17:24:01 ℹ️ 🪄 Copying files with docker cp
+      ####### domain kafka.connect ########
+      Welcome to JMX terminal. Type "help" for available commands.
+      #mbean = kafka.connect:client-id="connect:8083",type=app-info:
+      start-time-ms = 1791901690493;
+
+      commit-id = 328ff4d5ac3448d6;
+
+      version = 8.3.2-ce;
+
+      #mbean = kafka.connect:client-id=connect-adminclient-producer,node-id=node--1,type=connect-node-metrics:
+      request-rate = 0.0;
+
+      response-rate = 0.0;
+      ...
 
 - name: container
   expose: always
@@ -4380,6 +4550,21 @@ commands:
       - playground get-properties
       - playground get-properties --container broker
       - playground get-properties -c broker
+      x_example_outputs:
+      - command: playground container get-properties -c connect
+        output: |-
+          17:22:51 ℹ️ 📝 Displaying properties file for connect
+          bootstrap.servers=broker:9092
+          config.storage.topic=connect-configs
+          group.id=connect-cluster
+          key.converter=org.apache.kafka.connect.storage.StringConverter
+          offset.storage.topic=connect-offsets
+          plugin.path=/usr/share/filestream-connectors
+          rest.port=8083
+          status.storage.topic=connect-status
+          value.converter=io.confluent.connect.avro.AvroConverter
+          value.converter.schema.registry.url=http://schema-registry:8081
+          ...
 
     - name: recreate
       group: Container
@@ -4429,6 +4614,14 @@ commands:
         or when you are checking what a client actually connected to.
       examples:
       - playground get-ip-address-container
+      x_example_outputs:
+      - command: playground container get-ip-addresses
+        output: |-
+          17:22:19 ℹ️ Get IP address of running containers
+          /controller - 10.89.0.2
+          /broker - 10.89.0.4
+          /schema-registry - 10.89.0.6
+          /connect - 10.89.0.7
 
     - name: kill-all
       group: Container
@@ -4559,6 +4752,28 @@ commands:
       - playground container logs -c connect -c broker --wait-for-log "ERROR" --max-wait 120
       - playground container logs --container connect --grep "ERROR"
       - playground pod logs --previous
+      x_example_outputs:
+      - command: playground container logs -c connect --errors
+        output: |-
+          17:22:10 ℹ️ 🔥 ERROR/FATAL digest for connect logs
+          ✅ no ERROR/FATAL record found in 12523 lines
+      - command: playground container logs -c connect --errors --include-warnings --max-findings 2
+        output: |-
+          17:22:50 ℹ️ 🔥 ERROR/FATAL digest for connect logs
+          🔎 7 distinct record(s), 13 occurrence(s), in 12743 lines
+
+          🟠 WARN x7 (first seen line 108, last seen line 471)
+          [2026-10-13 14:27:56,953] WARN [AdminClient clientId=adminclient-1] Connection to node -1 (broker/10.89.0.4:9092) could not be established. Node may not be available. (org.apache.kafka.clients.NetworkClient:899)
+
+          🟠 WARN x1 (first seen line 737, last seen line 737)
+          WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+
+          ✂️ 5 more distinct record(s) not shown, increase --max-findings or narrow with --since
+      footer: |-
+        Example output:
+          $ playground container logs -c connect --errors
+          17:22:10 ℹ️ 🔥 ERROR/FATAL digest for connect logs
+          ✅ no ERROR/FATAL record found in 12523 lines
 
     - name: display-error-all
       group: Container
@@ -4896,6 +5111,11 @@ commands:
       examples:
       - playground get-number-records --topic a-topic
       - playground get-number-records -t a-topic
+      x_example_outputs:
+      - command: playground topic get-number-records --topic filestream
+        output: |-
+          17:22:53 ℹ️ 💯 Get number of records in topic filestream
+          5
 
     - name: get-offsets
       group: Topic
@@ -4911,6 +5131,13 @@ commands:
       - *verbose
       examples:
       - playground topic get-offsets --topic a-topic
+      x_example_outputs:
+      - command: playground topic get-offsets --topic filestream
+        output: |-
+          17:22:55 ℹ️ 📍 Earliest and latest offsets per partition of topic filestream
+          PARTITION  EARLIEST        LATEST          RECORDS
+          0          0               5               5
+          TOTAL                                      5
 
     - name: display-consumer-offsets
       group: Topic
@@ -4936,6 +5163,13 @@ commands:
         help: |-
           🫥 Display internal topics
         required: false
+      examples:
+      - playground topic list
+      x_example_outputs:
+      - command: playground topic list
+        output: |-
+          17:22:16 ℹ️ 🔘 List of topics (internal topics are excluded)
+          filestream
 
     - name: describe
       group: Topic
@@ -4948,6 +5182,14 @@ commands:
       flags:
       - *topic
       - *verbose
+      examples:
+      - playground topic describe --topic filestream
+      x_example_outputs:
+      - command: playground topic describe --topic filestream
+        output: |-
+          17:22:51 ℹ️ 🔎 Describing topic filestream
+          Topic: filestream  TopicId: ZTSM7bjsQxq2aigCM3C-8w  PartitionCount: 1  ReplicationFactor: 1  Configs: min.insync.replicas=1
+              Topic: filestream  Partition: 0  Leader: 1  Replicas: 1  Isr: 1  Offline:   Elr:   LastKnownElr:
 
     - name: set-schema-compatibility
       filters:
@@ -5073,6 +5315,17 @@ commands:
         help: |-
           🫥 The isolation level to use, see https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#isolation-level
           If not set, default is read_uncommitted
+      examples:
+      - playground topic consume --topic filestream --min-expected-messages 2 --timeout 30
+      x_example_outputs:
+      - command: playground topic consume --topic filestream --min-expected-messages 2 --timeout 30
+        output: |-
+          17:23:00 ℹ️ ✨ Display content of topic filestream, it contains 5 messages
+          17:23:00 ℹ️ 🔮🙅 topic is not using any schema for key
+          17:23:00 ℹ️ 🔮🙅 topic is not using any schema for value
+          CreateTime:2026-10-13 16:28:16.239|Partition:0|Offset:0|Headers:NO_HEADERS|Key:null|Value:{"id":1,"name":"Asha_Fadel50","email":"Euna.Anderson37@example.com","city":"Duluth","company":"Jacobson - Crooks"}
+          CreateTime:2026-10-13 16:28:16.243|Partition:0|Offset:1|Headers:NO_HEADERS|Key:null|Value:{"id":2,"name":"Clare50","email":"Pat4@example.net","city":"West Dinoboro","company":"Hodkiewicz, Effertz and Heidenreich"}
+          ...
           
     - name: produce
       filters:
@@ -6134,6 +6387,11 @@ commands:
       examples:
       - playground consumer-group list
       - playground consumer-group list --state
+      x_example_outputs:
+      - command: playground consumer-group list
+        output: |-
+          17:22:17 ℹ️ 👥 Listing consumer groups
+          connect-filestream-sink
 
     - name: describe
       group: Topic
@@ -6169,6 +6427,14 @@ commands:
       - playground consumer-group describe --group connect-http-sink
       - playground consumer-group describe --group my-app --members
       - playground consumer-group describe --group my-app --state
+      x_example_outputs:
+      - command: playground consumer-group describe --group connect-filestream-sink
+        output: |-
+          17:23:03 ℹ️ 🔬 Describing consumer group connect-filestream-sink
+
+          GROUP                   TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                               HOST            CLIENT-ID
+          connect-filestream-sink filestream      0          5               5               0               connector-consumer-filestream-sink-0-01fb326c-c344-4c45-ba76-b8c048b539f4 /10.89.0.7      connector-consumer-filestream-sink-0
+          17:23:04 ℹ️ 🏁 Total lag for consumer group connect-filestream-sink: 0
 
 - name: rbac
   expose: always
@@ -6266,7 +6532,7 @@ commands:
           - playground rbac role-binding create --principal User:alice --role ResourceOwner --resource Topic:orders --prefix
           - playground rbac role-binding create --principal User:connectorSA --role ResourceOwner --resource Subject:orders-value
           - playground rbac role-binding create --principal Group:KafkaDevelopers --role SystemAdmin --scope connect
-          - playground rbac role-binding create --file "$PWD/role-bindings.txt"
+          - playground rbac role-binding create --file "\$PWD/role-bindings.txt"
 
         - name: delete
           group: RBAC
@@ -6542,6 +6808,20 @@ commands:
         ☕ Java class name to search for in all jars
     examples: |
       playground connector-plugin search-jar --connector-plugin confluentinc/kafka-connect-s3 --class WebIdentityTokenCredentialsProvider
+    x_example_outputs:
+    - command: playground connector-plugin search-jar --connector-plugin confluentinc/kafka-connect-s3 --class WebIdentityTokenCredentialsProvider
+      output: |-
+        17:23:33 ℹ️ 🔌 Downloading connector plugin confluentinc/kafka-connect-s3:latest
+        17:23:49 ℹ️ 🤎 Listing jar files
+        accessors-smart-2.4.9.jar
+        aircompressor-2.0.3.jar
+        ...
+        17:23:49 ℹ️ Searching for java class WebIdentityTokenCredentialsProvider in all jars
+        17:23:57 ℹ️ 👉 method signatures from ./auth-2.28.23.jar jar for class software.amazon.awssdk.auth.credentials.WebIdentityTokenCredentialsProviderFactory
+        Compiled from "WebIdentityTokenCredentialsProviderFactory.java"
+        public interface software.amazon.awssdk.auth.credentials.WebIdentityTokenCredentialsProviderFactory {
+          public abstract software.amazon.awssdk.auth.credentials.AwsCredentialsProvider create(software.amazon.awssdk.auth.credentials.internal.WebIdentityTokenCredentialProperties);
+        }
 
   - name: versions
     help: |-
@@ -6566,6 +6846,14 @@ commands:
         🆕 Number of last versions to show
     examples: |
       playground connector-plugin versions --connector-plugin confluentinc/kafka-connect-s3
+    x_example_outputs:
+    - command: playground connector-plugin versions --connector-plugin confluentinc/kafka-connect-http --last 3
+      output: |-
+        17:23:19 ℹ️ 💯 Listing last 3 versions for connector plugin confluentinc/kafka-connect-http
+        🔢 v1.7.12 - 📅 release date: 2026-01-29 (256 days ago)
+        🔢 v1.7.13 - 📅 release date: 2026-05-05 (160 days ago)
+        🔢 v1.7.14 - 📅 release date: 2026-10-01 (11 days ago)
+        🌐 documentation: https://docs.confluent.io/kafka-connect-http/current/index.html
 
   - name: display-last-updated
     help: |-
@@ -6641,6 +6929,44 @@ commands:
     - playground connector-plugin config-key --key behavior.on.null.values --connector-class S3SinkConnector
     - playground connector-plugin config-key -k s3.part.size -c S3_SINK
     - playground connector-plugin config-key -k errors.tolerance -c jdbc --max-examples 3
+    x_example_outputs:
+    - command: playground connector-plugin config-key --key flush.size
+      output: |-
+        17:22:28 ℹ️ 🔌 12 connector(s) have key flush.size, use --connector-class to see the details of one
+           defaults: null (x7), 1000 (x5)
+
+        CONNECTOR                                                                TYPE  DEFAULT  IMPORTANCE
+        AzureBlobSink                                                            INT   1000     HIGH
+        GcsSink                                                                  INT   1000     HIGH
+        io.confluent.connect.gcs.GcsSinkConnector                                INT   null     HIGH
+        io.confluent.connect.hdfs.HdfsSinkConnector                              INT   null     HIGH
+        io.confluent.connect.s3.S3SinkConnector                                  INT   null     HIGH
+        S3_SINK                                                                  INT   1000     HIGH
+        ...
+
+        17:22:30 ℹ️ 🧪 427 line(s) in examples set flush.size, values used (most frequent first):
+           "3"                            x275 e.g. connect/connect-gcp-gcs-source/gcs-source-backup-and-restore.sh:98
+           "1000"                         x63  e.g. ccloud/fm-azure-data-lake-storage-gen2-sink/fully-managed-azure-data-lake-storage-gen2-sink.sh:134
+           "1"                            x14  e.g. connect/connect-ftps-sink/ftps-sink.sh:55
+    footer: |-
+      Example output:
+        $ playground connector-plugin config-key --key flush.size
+        17:22:28 ℹ️ 🔌 12 connector(s) have key flush.size, use --connector-class to see the details of one
+           defaults: null (x7), 1000 (x5)
+
+        CONNECTOR                                                                TYPE  DEFAULT  IMPORTANCE
+        AzureBlobSink                                                            INT   1000     HIGH
+        GcsSink                                                                  INT   1000     HIGH
+        io.confluent.connect.gcs.GcsSinkConnector                                INT   null     HIGH
+        io.confluent.connect.hdfs.HdfsSinkConnector                              INT   null     HIGH
+        io.confluent.connect.s3.S3SinkConnector                                  INT   null     HIGH
+        S3_SINK                                                                  INT   1000     HIGH
+        ...
+
+        17:22:30 ℹ️ 🧪 427 line(s) in examples set flush.size, values used (most frequent first):
+           "3"                            x275 e.g. connect/connect-gcp-gcs-source/gcs-source-backup-and-restore.sh:98
+           "1000"                         x63  e.g. ccloud/fm-azure-data-lake-storage-gen2-sink/fully-managed-azure-data-lake-storage-gen2-sink.sh:134
+           "1"                            x14  e.g. connect/connect-ftps-sink/ftps-sink.sh:55
 
   - name: sourcecode
     help: |
@@ -6750,6 +7076,12 @@ commands:
 
       # will open repository in your editor
       playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-hdfs --open
+    x_example_outputs:
+    - command: playground connector-plugin sourcecode --connector-plugin confluentinc/kafka-connect-s3 --only-show-url
+      output: |-
+        17:22:31 ℹ️ ✨ --connector-tag was not set, using latest version on hub 12.1.13
+        17:22:31 ℹ️ 🧑‍💻🌐 sourcecode for plugin confluentinc/kafka-connect-s3 for 12.1.13 version is available at:
+        https://github.com/confluentinc/kafka-connect-storage-cloud/tree/v12.1.13
 
 - name: connector
   expose: always
@@ -6815,6 +7147,16 @@ commands:
         🔗 Connector name
 
         🎓 Tip: If not specified, the command will apply to all connectors
+    examples:
+    - playground connector status
+    x_example_outputs:
+    - command: playground connector status
+      output: |-
+        17:22:05 ℹ️ 🧩 Displaying status for 🌎onprem connector filestream-sink
+        Name                           Status       Tasks                                                        Stack Trace
+        -------------------------------------------------------------------------------------------------------------
+        filestream-sink                ✅ RUNNING  0:🟢 RUNNING                 -
+        -------------------------------------------------------------------------------------------------------------
 
   - name: error-recommendations
     filters:
@@ -6913,6 +7255,25 @@ commands:
       flags:
       - *verbose
       - *connector
+      examples:
+      - playground connector offsets get
+      x_example_outputs:
+      - command: playground connector offsets get
+        output: |-
+          17:22:15 ℹ️ 🏹 Getting offsets for 🌎onprem  connector filestream-sink
+          {
+            "offsets": [
+              {
+                "partition": {
+                  "kafka_partition": 0,
+                  "kafka_topic": "filestream"
+                },
+                "offset": {
+                  "kafka_offset": 5
+                }
+              }
+            ]
+          }
     - name: reset
       help: |
         🆕 Reset offsets for source and sink connectors
@@ -7194,6 +7555,54 @@ commands:
     - playground connector diagnose
     - playground connector diagnose --connector http-sink
     - playground connector diagnose --connector http-sink --since 10m --max-findings 5
+    x_example_outputs:
+    - command: playground connector diagnose
+      output: |-
+        17:22:06 ℹ️ 🩺 diagnosing 🌎onprem connector filestream-sink
+
+        17:22:06 ℹ️ 🗺️  1/4 status
+        17:22:07 ℹ️ 🧩 Displaying status for 🌎onprem connector filestream-sink
+        Name                           Status       Tasks                                                        Stack Trace
+        -------------------------------------------------------------------------------------------------------------
+        filestream-sink                ✅ RUNNING  0:🟢 RUNNING                 -
+        -------------------------------------------------------------------------------------------------------------
+
+        17:22:07 ℹ️ 🔥 2/4 errors: digest of connect ERROR/FATAL records since 1h (whole worker, not only this connector)
+        ✅ no ERROR/FATAL record found in 12523 lines
+
+        17:22:07 ℹ️ 🐢 3/4 progress: consumer lag of sink filestream-sink
+        topic: filestream partition: 0   current-offset: 5          end-offset: 5          lag: 0          [🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹] 100% 🏁
+
+        17:22:10 ℹ️ 👉 4/4 next steps
+           🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move
+           playground connector show-config --connector filestream-sink
+           playground container logs -c connect --grep "filestream-sink" --no-follow --tail 200
+           playground debug log-level set --package <connector package> --level TRACE
+           playground debug thread-dump --container connect
+    footer: |-
+      Example output:
+        $ playground connector diagnose
+        17:22:06 ℹ️ 🩺 diagnosing 🌎onprem connector filestream-sink
+
+        17:22:06 ℹ️ 🗺️  1/4 status
+        17:22:07 ℹ️ 🧩 Displaying status for 🌎onprem connector filestream-sink
+        Name                           Status       Tasks                                                        Stack Trace
+        -------------------------------------------------------------------------------------------------------------
+        filestream-sink                ✅ RUNNING  0:🟢 RUNNING                 -
+        -------------------------------------------------------------------------------------------------------------
+
+        17:22:07 ℹ️ 🔥 2/4 errors: digest of connect ERROR/FATAL records since 1h (whole worker, not only this connector)
+        ✅ no ERROR/FATAL record found in 12523 lines
+
+        17:22:07 ℹ️ 🐢 3/4 progress: consumer lag of sink filestream-sink
+        topic: filestream partition: 0   current-offset: 5          end-offset: 5          lag: 0          [🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹] 100% 🏁
+
+        17:22:10 ℹ️ 👉 4/4 next steps
+           🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move
+           playground connector show-config --connector filestream-sink
+           playground container logs -c connect --grep "filestream-sink" --no-follow --tail 200
+           playground debug log-level set --package <connector package> --level TRACE
+           playground debug thread-dump --container connect
 
   - name: show-lag
     help: |
@@ -7221,6 +7630,13 @@ commands:
       default: "0"
       help: |- 
         ⏳ Max time in seconds to wait for lag to become 0. If set to 0 (default), it will run until all lag becomes 0.
+    examples:
+    - playground connector show-lag
+    x_example_outputs:
+    - command: playground connector show-lag
+      output: |-
+        17:22:14 ℹ️ 🏁 consumer lag for 🌎onprem connector filestream-sink is 0 ! took: 0min 2sec
+        topic: filestream partition: 0   current-offset: 5          end-offset: 5          lag: 0          [🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹] 100% 🏁
 
   - name: show-config
     help:  |

@@ -168,3 +168,32 @@ Container, Debug, EC2, Kafka, Repro, Run, Schema, TCP Proxy, Tools, Topic.
 `examples:` entries show up in `--help` and, because
 `show_examples_on_error: true`, also when the user gets the invocation wrong.
 Write them as full copy-pasteable invocations.
+
+Bashly prints examples (and `footer:`) with `printf "..."`: `"`, `` ` `` and `%`
+are escaped, but **`$` is not**. Write `\$PWD`, `\$schema`: an unescaped `$VAR`,
+`${...}` or `$(...)` would be expanded, or run, every time `--help` is shown.
+The markdown template turns `\$` back into `$` for the docs. Lines longer than
+78 characters are wrapped in `--help` (not in `footer:`).
+
+### Example output
+
+For read-only commands whose output helps understand them (`status`,
+`connector diagnose`, `topic get-offsets`, …), add a real, sanitized output
+(no colours, no user paths, no `reproduction-models/` names or case numbers,
+trimmed with `...`):
+
+```yaml
+  x_example_outputs:
+  - command: playground topic get-number-records --topic filestream
+    output: |-
+      17:22:53 ℹ️ 💯 Get number of records in topic filestream
+      5
+```
+
+`x_example_outputs` is a custom key rendered by `templates/markdown/markdown.gtx`
+on the documentation site only. For the few commands agents rely on most, also
+add a `footer:` (`Example output:` then the output indented) so that it shows at
+the end of `--help`; footers are not shown on usage errors. `playground
+bashly-reload` fails if an `x_example_outputs` command does not start with the
+full command name, or if an example or footer contains an unescaped `$`.
+Refresh the output when you change what the command prints.

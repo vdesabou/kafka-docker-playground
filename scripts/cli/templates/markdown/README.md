@@ -31,6 +31,24 @@ x_markdown_footer: |-
   Report issues at <https://github.com/lanalang/smallville>
 ```
 
+### Example output: `x_example_outputs`
+
+Show what a command prints, after its examples. Each entry is rendered as a
+`text` block starting with `$ <command>`. It only appears in the markdown
+documents, not in `--help` (use `footer` for that).
+`playground bashly-reload` checks that each `command` starts with the
+full name of the command it is declared on.
+
+#### Example
+
+```yaml
+x_example_outputs:
+- command: playground topic get-number-records --topic filestream
+  output: |-
+    17:22:53 ℹ️ 💯 Get number of records in topic filestream
+    5
+```
+
 ## Markdown server
 
 In order to view your markdown files in a browser, you can use the

@@ -333,6 +333,11 @@ playground_status_usage() {
     printf "    Show this help\n"
     echo
 
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground status\n"
+    echo
+
   fi
 }
 
@@ -3619,6 +3624,10 @@ playground_get_ci_result_usage() {
     printf "  playground get-ci-result --test connect/connect-mqtt-sink --environment cfk\n  --podman --logs\n"
     echo
 
+    # :command.footer
+    printf "Example output:\n  $ playground get-ci-result --test connect/connect-replicator --logs --max-findings 2\n  17:24:15 ℹ️ 🔥 latest failure reported in https://github.com/vdesabou/kafka-docker-playground/issues/9054\n     🔥 CP 8.3.2 🔢 Connector v7.3.2 (📅 release date 2023-02-25) 🕐 2026-10-13 00:45\n     🔗 https://github.com/vdesabou/kafka-docker-playground/actions/runs/38328314041/job/115072055973\n     🕐 run of 2026-10-13T00:39:22Z on commit 141b0aa0d\n\n  17:24:17 ℹ️ 🔥 replicator-2way-ssl.sh failed, last lines before the failure:\n     00:45:48 ❗ ❌ topic test-topic-ssl-duplicate does not exist, retrying in 1 second (elapsed time: 59 seconds), waiting max for 60 seconds\n     00:45:50 ❗ ❌ topic test-topic-ssl-duplicate does not exist !\n     00:45:50 🔥 ####################################################\n\n  17:24:17 ℹ️ 🔎 ERROR/FATAL digest of replicator-2way-ssl.sh in the CI job\n  🔎 5 distinct record(s), 7 occurrence(s), in 797 lines\n\n  🔴 ERROR x1 (first seen line 717, last seen line 717)\n  [2026-10-13 00:44:31,858] ERROR [duplicate-topic-ssl|task-0] Failed to start task duplicate-topic-ssl-0 (org.apache.kafka.connect.runtime.Worker:1005)\n          org.apache.kafka.common.KafkaException: Failed to construct kafka producer\n          at org.apache.kafka.common.config.AbstractConfig.getConfiguredInstance(AbstractConfig.java:429)\n\n  ✂️ 3 more distinct record(s) not shown, increase --max-findings\n"
+    echo
+
   fi
 }
 
@@ -3711,6 +3720,10 @@ playground_find_example_usage() {
     printf "  playground find-example \"http sink oauth\" --json --limit 3 | jq -r\n  '.[].script'\n"
     echo
 
+    # :command.footer
+    printf "Example output:\n  $ playground find-example \"oracle cdc ssl\" --limit 2\n  17:22:22 ℹ️ 🔎 examples matching \"oracle cdc ssl\", best first\n  playground run -f ~/kafka-docker-playground/connect/connect-cdc-xstream-oracle19-source/cdc-xstream-oracle19-ssl.sh\n      Oracle XStream CDC Source (Oracle 19c) Source connector · io.confluent.connect.oracle.xstream.cdc.OracleXStreamSourceConnector · plaintext\n  playground run -f ~/kafka-docker-playground/connect/connect-cdc-oracle19-source/cdc-oracle19-cdb-table-ssl.sh\n      Oracle CDC Source (Oracle 19c) Source connector · io.confluent.connect.oracle.cdc.OracleCdcSourceConnector · plaintext\n"
+    echo
+
   fi
 }
 
@@ -3765,7 +3778,7 @@ playground_start_environment_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground start-environment\n"
     printf "  playground start-environment --environment rbac-sasl-plain\n"
-    printf "  playground start-environment --environment rbac-sasl-plain\n  --rbac-role-bindings-file \"$PWD/role-bindings.sh\"\n"
+    printf "  playground start-environment --environment rbac-sasl-plain\n  --rbac-role-bindings-file \"\$PWD/role-bindings.sh\"\n"
     echo
 
   fi
@@ -4432,7 +4445,7 @@ playground_repro_bootstrap_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground repro bootstrap (interactive mode)\n"
-    printf "  playground repro bootstrap -f \"$PWD/connect/connect-http-sink/http_no_auth.sh\"\n  -d \"123456 dlq not working\" --no-run\n"
+    printf "  playground repro bootstrap -f\n  \"\$PWD/connect/connect-http-sink/http_no_auth.sh\" -d \"123456 dlq not working\"\n  --no-run\n"
     echo
 
   fi
@@ -6225,6 +6238,10 @@ playground_debug_analyze_logs_usage() {
     printf "  playground debug analyze-logs -f ./logs -f broker.log.gz --max-findings 10\n"
     echo
 
+    # :command.footer
+    printf "Example output:\n  $ playground debug analyze-logs -f connect.log\n  17:23:19 ℹ️ 🔥 ERROR/FATAL digest for connect.log\n  🔎 1 distinct record(s), 2 occurrence(s), in 12 lines\n\n  🔴 ERROR x2 (first seen line 2, last seen line 10)\n  [2026-10-13 10:00:05,123] ERROR [http-sink|task-0] WorkerSinkTask{id=http-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:234)\n      org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.\n      Caused by: org.apache.kafka.connect.errors.ConnectException: Error while processing HTTP request with Url : http://httpserver:9006/api/messages, Status code : 500\n          at io.confluent.connect.http.writer.HttpWriterImpl.handleErrors(HttpWriterImpl.java:405)\n\n  17:23:19 ℹ️ 📊 1 file(s) with findings out of 1 scanned (binary files skipped: 0)\n"
+    echo
+
   fi
 }
 
@@ -7233,6 +7250,10 @@ playground_container_logs_usage() {
     printf "  playground pod logs --previous\n"
     echo
 
+    # :command.footer
+    printf "Example output:\n  $ playground container logs -c connect --errors\n  17:22:10 ℹ️ 🔥 ERROR/FATAL digest for connect logs\n  ✅ no ERROR/FATAL record found in 12523 lines\n"
+    echo
+
   fi
 }
 
@@ -7894,6 +7915,11 @@ playground_topic_list_usage() {
     printf "    Show this help\n"
     echo
 
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground topic list\n"
+    echo
+
   fi
 }
 
@@ -7930,6 +7956,11 @@ playground_topic_describe_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground topic describe --topic filestream\n"
     echo
 
   fi
@@ -8076,6 +8107,11 @@ playground_topic_consume_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground topic consume --topic filestream --min-expected-messages 2\n  --timeout 30\n"
     echo
 
   fi
@@ -8994,7 +9030,7 @@ playground_rbac_role_binding_create_usage() {
     printf "  playground rbac role-binding create --principal User:alice --role\n  ResourceOwner --resource Topic:orders --prefix\n"
     printf "  playground rbac role-binding create --principal User:connectorSA --role\n  ResourceOwner --resource Subject:orders-value\n"
     printf "  playground rbac role-binding create --principal Group:KafkaDevelopers --role\n  SystemAdmin --scope connect\n"
-    printf "  playground rbac role-binding create --file \"$PWD/role-bindings.txt\"\n"
+    printf "  playground rbac role-binding create --file \"\$PWD/role-bindings.txt\"\n"
     echo
 
   fi
@@ -9728,6 +9764,10 @@ playground_connector_plugin_config_key_usage() {
     printf "  playground connector-plugin config-key -k errors.tolerance -c jdbc\n  --max-examples 3\n"
     echo
 
+    # :command.footer
+    printf "Example output:\n  $ playground connector-plugin config-key --key flush.size\n  17:22:28 ℹ️ 🔌 12 connector(s) have key flush.size, use --connector-class to see the details of one\n     defaults: null (x7), 1000 (x5)\n\n  CONNECTOR                                                                TYPE  DEFAULT  IMPORTANCE\n  AzureBlobSink                                                            INT   1000     HIGH\n  GcsSink                                                                  INT   1000     HIGH\n  io.confluent.connect.gcs.GcsSinkConnector                                INT   null     HIGH\n  io.confluent.connect.hdfs.HdfsSinkConnector                              INT   null     HIGH\n  io.confluent.connect.s3.S3SinkConnector                                  INT   null     HIGH\n  S3_SINK                                                                  INT   1000     HIGH\n  ...\n\n  17:22:30 ℹ️ 🧪 427 line(s) in examples set flush.size, values used (most frequent first):\n     \"3\"                            x275 e.g. connect/connect-gcp-gcs-source/gcs-source-backup-and-restore.sh:98\n     \"1000\"                         x63  e.g. ccloud/fm-azure-data-lake-storage-gen2-sink/fully-managed-azure-data-lake-storage-gen2-sink.sh:134\n     \"1\"                            x14  e.g. connect/connect-ftps-sink/ftps-sink.sh:55\n"
+    echo
+
   fi
 }
 
@@ -9915,6 +9955,11 @@ playground_connector_status_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector status\n"
     echo
 
   fi
@@ -10116,6 +10161,11 @@ playground_connector_offsets_get_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector offsets get\n"
     echo
 
   fi
@@ -10648,6 +10698,10 @@ playground_connector_diagnose_usage() {
     printf "  playground connector diagnose --connector http-sink --since 10m --max-findings\n  5\n"
     echo
 
+    # :command.footer
+    printf "Example output:\n  $ playground connector diagnose\n  17:22:06 ℹ️ 🩺 diagnosing 🌎onprem connector filestream-sink\n\n  17:22:06 ℹ️ 🗺️  1/4 status\n  17:22:07 ℹ️ 🧩 Displaying status for 🌎onprem connector filestream-sink\n  Name                           Status       Tasks                                                        Stack Trace\n  -------------------------------------------------------------------------------------------------------------\n  filestream-sink                ✅ RUNNING  0:🟢 RUNNING                 -\n  -------------------------------------------------------------------------------------------------------------\n\n  17:22:07 ℹ️ 🔥 2/4 errors: digest of connect ERROR/FATAL records since 1h (whole worker, not only this connector)\n  ✅ no ERROR/FATAL record found in 12523 lines\n\n  17:22:07 ℹ️ 🐢 3/4 progress: consumer lag of sink filestream-sink\n  topic: filestream partition: 0   current-offset: 5          end-offset: 5          lag: 0          [🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹] 100%% 🏁\n\n  17:22:10 ℹ️ 👉 4/4 next steps\n     🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move\n     playground connector show-config --connector filestream-sink\n     playground container logs -c connect --grep \"filestream-sink\" --no-follow --tail 200\n     playground debug log-level set --package <connector package> --level TRACE\n     playground debug thread-dump --container connect\n"
+    echo
+
   fi
 }
 
@@ -10696,6 +10750,11 @@ playground_connector_show_lag_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector show-lag\n"
     echo
 
   fi
@@ -23971,6 +24030,22 @@ playground_bashly_reload_command() {
   fi
 
   cd "$root_folder/scripts/cli"
+
+  # examples and footers are printed with printf "..." in --help, so an unescaped $VAR, ${...} or $(...) is expanded (or run)
+  # x_example_outputs (rendered in the docs only, see templates/markdown) must start with the name of their command
+  bashly_yml_errors=$(yq -o=json src/bashly.yml | jq -r '
+  def commands(p): (.commands // [])[] | (p + [.name]) as $q | ({path: ($q | join(" ")), examples: ((.examples // []) | if type == "string" then [.] else . end), footer, outputs: (.x_example_outputs // [])}), commands($q);
+  commands(["playground"])
+  | .path as $path
+  | ((.examples[], (.footer // empty)) | split("\n")[] | select(test("(^|[^\\\\])\\$[A-Za-z_{(]")) | "\($path): unescaped $ in example or footer, use \\$: \(.)"),
+    (.outputs[] | select((.command // "" | startswith($path) | not) or ((.output // "") == "")) | "\($path): x_example_outputs entry needs an output and a command starting with \"\($path)\": \(.command)")')
+  if [ -n "$bashly_yml_errors" ]
+  then
+  	logerror "❌ src/bashly.yml has errors:"
+  	echo "$bashly_yml_errors"
+  	exit 1
+  fi
+
   docker run --rm $maybe_tty --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly generate | grep -v "skipped"
   # Since bashly 2.0, completions are answered at runtime by `playground __complete <words>`.
   # The adapters below only forward to it, they only need to be regenerated when bashly is upgraded.
