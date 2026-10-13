@@ -57,6 +57,12 @@ echo ""
 
 docker run --rm $maybe_tty --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/bashly render templates/shell-script-command-completion .
 yq -o=json playground.yaml > playground.json
+# same schema checks as the VS Code extension: one invalid entry and "Load Command Spec" rejects the whole spec
+if ! jq -e '[.. | objects | select((has("subcommands") and (.subcommands | type) != "array") or (has("names") and (.argument | type) != "string"))] | length == 0' playground.json > /dev/null
+then
+	logerror "❌ playground.json is not a valid command spec for the VS Code extension (subcommands not a list, or argument not a string)"
+	exit 1
+fi
 cd - > /dev/null
 
 log "✅ all done !"
