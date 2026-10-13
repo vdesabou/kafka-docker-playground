@@ -3,3 +3,6 @@ services:
   connect:
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator
+      # the replicator plugin bundles its own io.confluent.telemetry.events classes: with the Telemetry Reporter
+      # (docker-compose-telemetry.yml), task producers fail with "EventHttpExporter is not an instance of Exporter"
+      CONNECT_METRIC_REPORTERS: org.apache.kafka.common.metrics.JmxReporter
