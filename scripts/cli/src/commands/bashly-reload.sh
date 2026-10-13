@@ -13,12 +13,15 @@ fi
 cd "$root_folder/scripts/cli"
 
 # examples and footers are printed with printf "..." in --help, so an unescaped $VAR, ${...} or $(...) is expanded (or run)
+# example lines starting with playground must call their command (or one of its aliases)
 # x_example_outputs (rendered in the docs only, see templates/markdown) must start with the name of their command
 bashly_yml_errors=$(yq -o=json src/bashly.yml | jq -r '
-def commands(p): (.commands // [])[] | (p + [.name]) as $q | ({path: ($q | join(" ")), examples: ((.examples // []) | if type == "string" then [.] else . end), footer, outputs: (.x_example_outputs // [])}), commands($q);
-commands(["playground"])
-| .path as $path
+def names: [.name] + ((.alias // []) | if type == "string" then [.] else . end);
+def commands(p; n): (.commands // [])[] | (p + [.name]) as $q | (n + [names]) as $m | ({path: ($q | join(" ")), names: $m, examples: ((.examples // []) | if type == "string" then [.] else . end), footer, outputs: (.x_example_outputs // [])}), commands($q; $m);
+commands(["playground"]; [["playground"]])
+| .path as $path | .names as $names
 | ((.examples[], (.footer // empty)) | split("\n")[] | select(test("(^|[^\\\\])\\$[A-Za-z_{(]")) | "\($path): unescaped $ in example or footer, use \\$: \(.)"),
+  (.examples[] | split("\n")[] | sub("^ +"; "") | select(startswith("playground ") or . == "playground") | (split(" ") | map(select(length > 0))) as $words | select([range($names | length) as $i | $names[$i] | index($words[$i]) == null] | any) | "\($path): example does not call \"\($path)\": \(.)"),
   (.outputs[] | select((.command // "" | startswith($path) | not) or ((.output // "") == "")) | "\($path): x_example_outputs entry needs an output and a command starting with \"\($path)\": \(.command)")')
 if [ -n "$bashly_yml_errors" ]
 then
@@ -57,3 +60,7 @@ yq -o=json playground.yaml > playground.json
 cd - > /dev/null
 
 log "✅ all done !"
+
+# this script was regenerated while it is running: exit now, otherwise bash goes on reading it
+# at the old byte offset of the new file and fails with "syntax error near unexpected token"
+exit 0
