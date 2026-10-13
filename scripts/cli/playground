@@ -5728,7 +5728,7 @@ playground_tools_redos_check_usage() {
 playground_debug_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground debug\n\n"
-    printf "  🐞 Debug commands\n  \n  The heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\n  the analysis tools are run inside the right container, installed on the\n  fly when missing, and their output is brought back to your machine.\n  \n  🐌 It hangs, or it is slow\n    thread-dump         what every thread is doing right now\n    flight-recorder     record the JVM over a period, open it in JMC\n    gc-analyze          GC pauses, heap trends and tuning advice\n  \n  💾 It eats memory\n    heap-dump           take a .hprof, optionally as a histogram\n    heap-analyze        run Eclipse MAT on it, leak suspects report\n  \n  🌐 It is a network or TLS problem\n    tcp-dump            capture traffic, open it in Wireshark\n    testssl             probe a TLS endpoint, locally or in the cloud\n    block-traffic       cut a route with iptables, to simulate an outage\n    java-debug          turn on the JVM SSL, Kerberos or class loading traces\n  \n  🔬 It is in the code\n    log-level set       raise the level of any package, without a restart\n    enable-remote-debugging   attach your IDE debugger to a container\n    jscissors           trace method calls, arguments and return values\n  \n  🔥 It is in someone else's logs\n    analyze-logs        error digest of log files, folders or zip bundles\n  \n  📦 Hand it over\n    generate-diagnostics   a support bundle for connect or broker\n\n"
+    printf "  🐞 Debug commands\n  \n  The heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\n  the analysis tools are run inside the right container, installed on the\n  fly when missing, and their output is brought back to your machine.\n  \n  🐌 It hangs, or it is slow\n    thread-dump         what every thread is doing right now\n    flight-recorder     record the JVM over a period, open it in JMC\n    gc-analyze          GC pauses, failures, live set and leak trend\n  \n  💾 It eats memory\n    heap-dump           take a .hprof, optionally as a histogram\n    heap-analyze        run Eclipse MAT on it, leak suspects report\n  \n  🌐 It is a network or TLS problem\n    tcp-dump            capture traffic, open it in Wireshark\n    testssl             probe a TLS endpoint, locally or in the cloud\n    block-traffic       cut a route with iptables, to simulate an outage\n    java-debug          turn on the JVM SSL, Kerberos or class loading traces\n  \n  🔬 It is in the code\n    log-level set       raise the level of any package, without a restart\n    enable-remote-debugging   attach your IDE debugger to a container\n    jscissors           trace method calls, arguments and return values\n  \n  🔥 It is in someone else's logs\n    analyze-logs        error digest of log files, folders or zip bundles\n  \n  📦 Hand it over\n    generate-diagnostics   a support bundle for connect or broker\n\n"
   else
     printf "playground debug - 🐞 Debug commands\n\n"
   fi
@@ -6142,7 +6142,7 @@ playground_debug_analyze_logs_usage() {
 playground_debug_gc_analyze_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground debug gc-analyze\n\n"
-    printf "  📈 Analyze JVM Garbage Collection logs\n  \n  📊 Parses GC logs from a local file or running container and generates a\n  detailed analysis with pause time statistics, heap trends, GC cause breakdown,\n  and concrete tuning recommendations.\n  \n  🔖 Supports JDK 7–21+ and all major collectors: G1GC, CMS, ZGC, Generational\n  ZGC, Shenandoah, ParallelGC, SerialGC\n  \n  🔖 Use --html to generate a self-contained HTML dashboard with interactive\n  Chart.js charts\n\n"
+    printf "  📈 Analyze JVM Garbage Collection logs\n  \n  📊 Parses GC logs from local files / folders or a running container: pause\n  statistics, Full GC and evacuation / concurrent mode failures, live set, heap\n  floor trend (leak), allocation stalls, GC causes, and recommendations backed\n  by a finding (Kafka-aware: compared with Kafka's own G1 settings).\n  \n  🔖 Supports JDK 7–21+ and all major collectors: G1GC, CMS, ZGC, Generational\n  ZGC, Shenandoah, ParallelGC, SerialGC, in legacy (-XX:+PrintGCDetails) and\n  unified (-Xlog:gc*) formats, any decoration\n  \n  🔄 Pass every rotated file (kafkaServer-gc.log, .log.0…, .gz) or their folder:\n  files are ordered by timestamp and split by JVM restart, the latest run is\n  analyzed (--run to pick another)\n  \n  🔖 Exit code is 0 when the analysis completed, 2 when no GC event was found\n  \n  🔖 Use --html to generate a self-contained HTML dashboard (inline SVG charts,\n  no external resource)\n\n"
   else
     printf "playground debug gc-analyze - 📈 Analyze JVM Garbage Collection logs\n\n"
   fi
@@ -6159,29 +6159,34 @@ playground_debug_gc_analyze_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--file, -f FILE")"
-    printf "    🗒️  GC log file to analyze\n    \n    ❕ Provide either --file or --container, not both\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n            use <option+enter> to use the value you typed manually\n"
+    printf "  %s\n" "$(magenta "--file, -f FILE (repeatable)")"
+    printf "    🗒️  GC log file or folder to analyze (repeat --file for the rotated files of\n    the same JVM)\n    \n    ❕ Provide either --file or --container, not both\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n            use <option+enter> to use the value you typed manually\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--container, -c, --pod, -p CONTAINER")"
-    printf "    🐳 Container name (or pod name when cfk environment is used) to extract GC\n    log from\n    \n    ❕ Provide either --file or --container, not both\n    \n    🔖 The GC log path is auto-detected from the container's Java process flags.\n         Falls back to searching common log locations (/tmp, /var/log, /opt).\n"
+    printf "    🐳 Container name (or pod name when cfk environment is used) to extract the\n    GC log from\n    \n    ❕ Provide either --file or --container, not both\n    \n    🔖 The GC log path is read from the java command line (-Xlog:gc*:file=… or\n    -Xloggc:…), and its rotated files are copied too.\n         Falls back to searching common log locations (/var/log, /tmp, /opt).\n         Connect containers have no GC log by default: the command prints how to\n    enable it.\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
-    printf "    📂 Output directory for the HTML report (default: ./gc-analysis-output)\n"
+    printf "    📂 Output directory for the HTML report and the GC logs copied from a\n    container (default: ./gc-analysis-output)\n"
     printf "    %s\n" "Default: ./gc-analysis-output"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--html")"
-    printf "    🌐 Generate a self-contained HTML report with interactive charts\n    \n    📊 Report includes: pause timeline, heap evolution, pause distribution,\n       GC type breakdown, KPI cards, detected JVM parameters, tuning flags,\n       and color-coded recommendations\n"
+    printf "    🌐 Generate a self-contained HTML report (inline SVG charts, works offline)\n    \n    📊 Report includes: pause timeline, heap before / after GC, pause\n    distribution,\n       GC types, KPI cards, JVM runs, recommendations with the flag to set\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
-    printf "    🗂️  Output raw JSON stats (skips text report and HTML)\n"
+    printf "    🗂️  Output JSON stats (skips text report and HTML)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--run RUN")"
+    printf "    🔄 JVM run to analyze when the log spans restarts (default: the latest, see\n    the \"JVM runs\" table)\n"
     echo
 
     # :flag.usage
@@ -6199,10 +6204,12 @@ playground_debug_gc_analyze_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground debug gc-analyze --file gc.log\n"
     printf "  playground debug gc-analyze --file /var/log/kafka/kafkaServer-gc.log --html\n"
+    printf "  playground debug gc-analyze --file kafkaServer-gc.log --file\n  kafkaServer-gc.log.0 --file kafkaServer-gc.log.1\n"
+    printf "  playground debug gc-analyze --file ./customer-logs/broker-1/\n"
     printf "  playground debug gc-analyze --container broker\n"
-    printf "  playground debug gc-analyze --container connect --html --output-dir\n  ./gc-reports\n"
+    printf "  playground debug gc-analyze --container broker --html --output-dir\n  ./gc-reports\n"
     printf "  playground debug gc-analyze -f kafkaServer-gc.log --json\n"
-    printf "  playground debug gc-analyze -f kafkaServer-gc.log --html --top-pauses 20\n"
+    printf "  playground debug gc-analyze -f kafkaServer-gc.log --run 1 --top-pauses 20\n"
     echo
 
   fi
@@ -21834,6 +21841,22 @@ validate_file_exists_with_trick() {
   fi
 }
 
+# src/lib/validations/validate_file_or_dir_exists.sh
+validate_file_or_dir_exists() {
+  file="$1"
+
+  real_file=$file
+  if [[ ! -e "$file" && $file == *"@"* ]]
+  then
+    real_file=$(echo "$file" | cut -d "@" -f 2)
+  fi
+
+  if [[ ! -e "$real_file" ]]; then
+    logerror "<$real_file> does not correspond to an existing file or folder, please make sure to use absolute full path or correct relative path !"
+    return
+  fi
+}
+
 # src/lib/validations/validate_integer.sh
 validate_integer() {
   if [[ "$1" == "-1" ]] || [[ "$1" =~ ^[0-9]+$ ]]
@@ -33945,18 +33968,19 @@ playground_debug_analyze_logs_command() {
 playground_debug_gc_analyze_command() {
 
   # src/commands/debug/gc-analyze.sh
-  gc_file="${args[--file]}"
+  eval "file_array=(${args[--file]})"
   container="${args[--container]}"
   output_dir="${args[--output-dir]}"
   html="${args[--html]}"
   json_out="${args[--json]}"
   top_pauses="${args[--top-pauses]}"
+  run="${args[--run]}"
 
   set +e
 
   # ── Validate input: need --file OR --container ─────────────────────────────
-  if [[ -z "$gc_file" && -z "$container" ]]; then
-      logerror "❌ Must provide either --file <gc-log-file> or --container <name>"
+  if [[ ${#file_array[@]} -eq 0 && -z "$container" ]]; then
+      logerror "❌ Must provide either --file <gc-log-file-or-folder> or --container <name>"
       log ""
       log "Examples:"
       log "  playground debug gc-analyze --file kafkaServer-gc.log"
@@ -33964,117 +33988,120 @@ playground_debug_gc_analyze_command() {
       exit 1
   fi
 
-  if [[ -n "$gc_file" && -n "$container" ]]; then
+  if [[ ${#file_array[@]} -gt 0 && -n "$container" ]]; then
       logerror "❌ Provide either --file or --container, not both"
       exit 1
   fi
 
-  # ── Locate the analyzer script ─────────────────────────────────────────────
   analyzer="$root_folder/gc-analysis/gc_log_analyzer.py"
   if [[ ! -f "$analyzer" ]]; then
       logerror "❌ GC analyzer not found at: $analyzer"
-      logerror "   Make sure gc-analysis/gc_log_analyzer.py exists in the playground root"
       exit 1
   fi
 
-  # ── Check Python3 ──────────────────────────────────────────────────────────
   if ! command -v python3 &>/dev/null; then
       logerror "❌ python3 is required but not found on PATH"
       exit 1
   fi
 
-  # ── Container mode: find and extract the GC log ───────────────────────────
+  # ── Container mode: find the GC log and copy it with its rotated files ─────
   if [[ -n "$container" ]]; then
-      log "🐳 Looking for GC log in container: $container"
+      log "🐳 Looking for the GC log in container: $container"
 
-      # 1. Try to read the GC log path from -Xlog:gc*:file=<path> (JDK 9+)
-      gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "sh -c \"ps aux 2>/dev/null | grep -oP '(?<=-Xlog:gc\\*:file=)[^:]+' | head -1\"" 2>/dev/null)
+      # path from the java command line: -Xlog:gc*:file=<path>:... (JDK 9+) or -Xloggc:<path> (JDK 8)
+      gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "cat /proc/[0-9]*/cmdline 2>/dev/null | tr '\\000' '\\n' | sed -n -e 's/^-Xlog:gc[^:]*:file=\"\\{0,1\\}\\([^:\"]*\\).*/\\1/p' -e 's/^-Xloggc:\\(.*\\)/\\1/p' | head -1" 2>/dev/null | tr -d '\r')
 
-      # 2. Try legacy -Xloggc:<path> flag (JDK 8)
       if [[ -z "$gc_log_path" ]]; then
-          gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "sh -c \"ps aux 2>/dev/null | grep -oP '(?<=-Xloggc:)\\S+' | head -1\"" 2>/dev/null)
-      fi
-
-      # 3. Try -Xlog:gc:file=<path> (simpler unified log variant)
-      if [[ -z "$gc_log_path" ]]; then
-          gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "sh -c \"ps aux 2>/dev/null | grep -oP '(?<=-Xlog:gc:file=)[^:]+' | head -1\"" 2>/dev/null)
-      fi
-
-      # 4. Fallback: search common locations
-      if [[ -z "$gc_log_path" ]]; then
-          log "🔍 No -Xlog/Xloggc flag found, searching common log locations..."
-            gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "sh -c \"find /tmp /var/log /opt /var/log/kafka /etc/kafka 2>/dev/null \\\n+             \\\( -name '*gc*.log' -o -name 'kafkaServer-gc.log' -o -name 'zookeeper-gc.log' \\\n+                -o -name 'connect-gc.log' -o -name 'schema-registry-gc.log' \\\) \\\n+             -type f | head -1\"" 2>/dev/null)
+          log "🔍 No -Xlog:gc / -Xloggc flag found, searching common log locations..."
+          gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "find /var/log /tmp /opt /home -maxdepth 4 -type f -name '*gc*.log*' 2>/dev/null | head -1" 2>/dev/null | tr -d '\r')
       fi
 
       if [[ -z "$gc_log_path" ]]; then
           logerror "❌ Could not locate a GC log in container '$container'"
           log ""
-          log "💡 To enable GC logging, add these JVM flags:"
-          log "   JDK 9+: -Xlog:gc*:file=/tmp/gc.log:time,uptime,level,tags:filecount=5,filesize=20m"
-          log "   JDK 8:  -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/tmp/gc.log"
-          log ""
-          log "   For Kafka, set in KAFKA_JVM_PERFORMANCE_OPTS or KAFKA_HEAP_OPTS"
+          log "💡 kafka-run-class only writes a GC log with -loggc: kafka-server-start passes it by default, but not when"
+          log "   EXTRA_ARGS is set (the playground environments set it, even empty), and connect-distributed never does."
+          log "   To enable it on a running example (this replaces the current KAFKA_OPTS value, if any):"
+          log "   playground container set-environment-variables --container $container --env \"KAFKA_OPTS: -Xlog:gc*:file=/tmp/gc.log:time,uptime,level,tags:filecount=5,filesize=20m\""
+          log "   JDK 8: -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps -Xloggc:/tmp/gc.log"
           exit 1
       fi
 
+      # rotated files: <path>, <path>.0..N (JDK 9+), <path>.N.current (JDK 8)
+      base="${gc_log_path%.current}"
+      base=$(echo "$base" | sed -E 's/\.[0-9]+$//')
       log "📄 Found GC log: $gc_log_path"
 
-      tmp_gc_file="/tmp/gc-log-${container}-$(date '+%Y%m%d-%H%M%S').log"
-      if ! playground container cp --source "${container}:${gc_log_path}" --destination "$tmp_gc_file" 2>/dev/null; then
-          logerror "❌ Failed to copy GC log from container '$container'"
+      tmp_dir="$output_dir/gc-logs-${container}-$(date '+%Y%m%d-%H%M%S')"
+      mkdir -p "$tmp_dir"
+      nb_copied=0
+      while read -r f
+      do
+          [[ -z "$f" ]] && continue
+          if playground --output-level ERROR container cp --source "${container}:${f}" --destination "$tmp_dir/$(basename "$f")" > /dev/null 2>&1; then
+              nb_copied=$((nb_copied+1))
+          fi
+      done < <(playground --output-level ERROR container exec --container "$container" --command "ls -1d ${base} ${base}.* 2>/dev/null" 2>/dev/null | tr -d '\r')
+
+      if [[ $nb_copied -eq 0 ]]; then
+          logerror "❌ Failed to copy the GC log from container '$container'"
           exit 1
       fi
-
-      log "✅ GC log copied to: $tmp_gc_file"
-      gc_file="$tmp_gc_file"
+      log "✅ $nb_copied GC log file(s) copied to: $tmp_dir"
+      file_array=("$tmp_dir")
   fi
 
   # Handle fzf @path trick
-  if [[ $gc_file == *"@"* ]]; then
-      gc_file=$(echo "$gc_file" | cut -d "@" -f 2)
+  for i in "${!file_array[@]}"
+  do
+      if [[ ! -e "${file_array[$i]}" && "${file_array[$i]}" == *"@"* ]]; then
+          file_array[$i]=$(echo "${file_array[$i]}" | cut -d "@" -f 2)
+      fi
+  done
+
+  analyzer_args=("${file_array[@]}" --top-pauses "$top_pauses")
+  if [[ -n "$run" ]]; then
+      analyzer_args+=(--run "$run")
   fi
 
-  log "📈 Analyzing GC log: $gc_file"
-  log ""
-
-  # ── JSON mode: print and exit ──────────────────────────────────────────────
   if [[ -n "$json_out" ]]; then
-      python3 "$analyzer" "$gc_file" --json --top-pauses "$top_pauses"
+      python3 -I "$analyzer" "${analyzer_args[@]}" --json
       exit $?
   fi
 
-  # ── Text analysis ──────────────────────────────────────────────────────────
-  python3 "$analyzer" "$gc_file" --top-pauses "$top_pauses"
-  text_exit=$?
+  log "📈 Analyzing GC log: ${file_array[*]}"
+  log ""
 
-  # ── HTML report ────────────────────────────────────────────────────────────
-  if [[ -n "$html" && $text_exit -eq 0 ]]; then
+  html_out=""
+  if [[ -n "$html" ]]; then
       mkdir -p "$output_dir"
       output_dir_abs=$(cd "$output_dir" && pwd)
+      first=$(basename "${file_array[0]}")
+      html_out="${output_dir_abs}/${first%.log}-gc-report.html"
+      analyzer_args+=(--html-out "$html_out")
+  fi
 
-      basename_noext=$(basename "$gc_file" .log)
-      html_out="${output_dir_abs}/${basename_noext}-gc-report.html"
+  python3 -I "$analyzer" "${analyzer_args[@]}"
+  exit_code=$?
 
+  if [[ $exit_code -ne 0 ]]; then
+      logerror "❌ GC log analysis failed (exit code $exit_code)"
+      exit $exit_code
+  fi
+
+  if [[ -n "$html_out" && -f "$html_out" ]]; then
       log ""
-      log "🌐 Generating HTML report..."
-      python3 "$analyzer" "$gc_file" --html-out "$html_out" --top-pauses "$top_pauses" > /dev/null 2>&1
-      html_exit=$?
-
-      if [[ $html_exit -eq 0 && -f "$html_out" ]]; then
-          log "✅ HTML report saved: $html_out"
-          log ""
-          if command -v open &>/dev/null; then
-              log "🌐 Opening report in browser..."
-              open "$html_out"
-          else
-              log "🔗 Open in browser: file://$html_out"
-          fi
+      log "✅ HTML report saved: $html_out"
+      # only open a browser in an interactive terminal
+      if [[ -t 1 ]] && command -v open &>/dev/null; then
+          log "🌐 Opening report in browser..."
+          open "$html_out"
       else
-          logwarn "⚠️  HTML report generation failed"
+          log "🔗 Open in browser: file://$html_out"
       fi
   fi
 
-  exit $text_exit
+  exit 0
 
 }
 
@@ -62585,7 +62612,12 @@ playground_debug_gc_analyze_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--file']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--file']+x} ]]; then
+            args['--file']="$escaped"
+          else
+            args['--file']="${args['--file']} $escaped"
+          fi
           shift
           shift
         else
@@ -62639,6 +62671,20 @@ playground_debug_gc_analyze_parse_requirements() {
         ;;
 
       # :flag.case
+      --run)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--run']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--run requires an argument: --run RUN" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --top-pauses)
 
         # :flag.case_arg
@@ -62688,9 +62734,22 @@ playground_debug_gc_analyze_parse_requirements() {
   # :command.validations
   # :flag.validations
   if [[ -v args['--file'] ]]; then
-    validation_output="$(validate_file_exists_and_log "${args['--file']:-}")"
+    values=''
+    eval "values=(${args['--file']})"
+    for value in "${values[@]}"; do
+      validation_output="$(validate_file_or_dir_exists "$value")"
+      if [[ -n "$validation_output" ]]; then
+        printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
+        exit 1
+      fi
+    done
+  fi
+
+  # :flag.validations
+  if [[ -v args['--run'] ]]; then
+    validation_output="$(validate_integer "${args['--run']:-}")"
     if [[ -n "${validation_output}" ]]; then
-      printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
+      printf "validation error in %s:\n%s\n" "--run RUN" "$validation_output" >&2
       exit 1
     fi
   fi
@@ -83390,7 +83449,6 @@ playground_debug_gc_analyze_completion() {
           return
         fi
         shift
-        completion_blocked_flags["--file"]=1
 
         ;;
       --container | -c | --pod | -p)
@@ -83426,6 +83484,16 @@ playground_debug_gc_analyze_completion() {
 
         shift
         ;;
+      --run)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--run"]=1
+
+        ;;
       --top-pauses)
         shift
         if [[ $# -eq 0 ]]; then
@@ -83449,6 +83517,7 @@ playground_debug_gc_analyze_completion() {
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
     completion_flag_candidates --html "$completion_current" --html
     completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --run "$completion_current" --run
     completion_flag_candidates --top-pauses "$completion_current" --top-pauses
   fi
 

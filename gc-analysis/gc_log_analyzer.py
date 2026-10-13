@@ -3,23 +3,31 @@
 JVM GC Log Analyzer — JDK 7 through JDK 21+
 
 Collectors : G1GC · CMS · ParallelGC · SerialGC · ZGC · GenZGC · Shenandoah
-Formats    : JDK 7/8 legacy (-XX:+PrintGCDetails)
-             JDK 9-10 transitional
-             JDK 9+   unified (-Xlog:gc*)
+Formats    : JDK 7/8 legacy (-XX:+PrintGCDetails / -XX:+PrintGC, multi-line records included)
+             JDK 9+   unified (-Xlog:gc*), any decoration (time, uptime, timemillis, uptimenanos…)
              JDK 21+  generational ZGC
+
+Input      : one or several files (rotated kafkaServer-gc.log, .log.0…, .gz) or folders.
+             Files are ordered by timestamp and split into JVM runs (restarts); the latest run is
+             analyzed unless --run is given.
+
+Exit codes : 0 analysis done, 2 no input / no GC event found, 1 usage error.
 """
 
-import re
-import sys
-import os
 import argparse
-import statistics
-import json
+import glob
+import gzip
 import html as _html
-from datetime import datetime
+import json
+import math
+import os
+import re
+import statistics
+import sys
 from collections import defaultdict
-from dataclasses import dataclass
-from typing import List, Dict, Tuple
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Dict, List, Optional, Tuple
 
 # ── Collector identifiers ─────────────────────────────────────────────────────
 G1GC       = "G1GC"
@@ -34,15 +42,74 @@ UNKNOWN    = "Unknown"
 FORMAT_LEGACY  = "legacy"
 FORMAT_UNIFIED = "unified-logging"
 
-# ── Extra-metric regex ────────────────────────────────────────────────────────
-_RE_HUMONGOUS   = re.compile(r'Humongous regions:\s*(\d+)->(\d+)')
-_RE_EVAC_FAIL   = re.compile(r'Evacuation Failure|to-space exhausted|To-space overflow', re.I)
-_RE_META_GC     = re.compile(r'Metadata GC Threshold|Metadata GC Clear', re.I)
-_RE_SYS_GC      = re.compile(r'\(System\.gc\(\)\)|\bSystem GC\b', re.I)
-_RE_CONC_MARK   = re.compile(r'Concurrent Mark Cycle|Concurrent Marking\b', re.I)
-_RE_CAUSE_PARENS = re.compile(r'\(([^)]+)\)')
+SEVERITIES = ("CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO", "OK")
 
-# ── HTML/CSS template (regular string — braces are literal CSS/JS, not f-string) ──
+# Kafka's own JVM settings (kafka-run-class.sh, KAFKA_JVM_PERFORMANCE_OPTS)
+KAFKA_G1_DEFAULTS = "-XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent"
+
+MIN_TREND_MINUTES = 30      # below this, no heap / pause trend and no leak verdict
+MIN_THROUGHPUT_SEC = 60     # below this, no throughput figure
+
+# ── Regex catalogue ───────────────────────────────────────────────────────────
+
+_SIZE = r'\d+(?:\.\d+)?[BKMG]'
+
+_VER_PATTERNS = [
+    re.compile(r'\bVersion:\s+(?P<v>\d+)[.+]'),
+    re.compile(r'\bJRE\s*\(1\.(?P<v>[5-9])\.\d'),
+    re.compile(r'\bJRE\s*\((?P<v>[1-9]\d)[.+]'),
+    re.compile(r'version\s+"1\.(?P<v>[5-9])\.', re.I),
+    re.compile(r'version\s+"(?P<v>[1-9]\d)[."]', re.I),
+]
+
+_RE_USING_GC = re.compile(
+    r'\bUsing\s+(?P<gc>The Z Garbage Collector|ZGC|G1|Shenandoah|Serial|Parallel(?:\s+GC)?)\b'
+)
+
+# unified logging: decorations then message
+_UL_LINE    = re.compile(r'^((?:\[[^\]]*\])+)\s*(.*)$')
+_UL_DECOR   = re.compile(r'\[([^\]]*)\]')
+_UL_GCID    = re.compile(r'^GC\((\d+)\)\s+(?:(?P<gen>[YOyo]):\s+)?(?P<body>.*)$')
+_UL_ZGC_LIVE = re.compile(r'^Live:\s+-\s+(\d+)M')
+_UL_PAUSE_HEAP = re.compile(
+    r'^(?P<type>Pause .+?)\s+(?P<b>\d+[KMG])->(?P<a>\d+[KMG])\((?P<t>\d+[KMG])\)\s+(?P<p>[\d.]+)ms\s*$')
+_UL_PAUSE_NOHP = re.compile(r'^(?P<type>Pause .+?)\s+(?P<p>[\d.]+)ms\s*$')
+# ZGC (JDK 11-17: "Garbage Collection (cause) 256M(25%)->128M(12%)"; JDK 21 GenZGC: "Major Collection (cause) A(p%)->B(q%) 0.127s")
+_UL_ZGC_SUMMARY = re.compile(
+    r'^(?P<kind>Garbage Collection|Major Collection|Minor Collection)\s+\((?P<cause>[^)]+)\)'
+    r'(?:\s+\((?P<gen>Minor|Major)\))?'
+    r'\s+(?P<b>[\d.]+[KMG])\(\d+%\)->(?P<a>[\d.]+[KMG])\(\d+%\)(?:\s+(?P<d>[\d.]+)s)?\s*$')
+_UL_CONC_HEAP = re.compile(
+    r'^(?P<type>Concurrent [a-z ]+?)(?:\s+\([^)]*\))*\s+(?P<b>\d+[KMG])->(?P<a>\d+[KMG])\((?P<t>\d+[KMG])\)\s+[\d.]+ms\s*$')
+_UL_CONC_CYCLE = re.compile(r'^Concurrent (?:Mark Cycle|Cycle)\s+[\d.]+ms')
+_UL_STALL = re.compile(r'^(?P<kind>Allocation|Relocation) Stall \((?P<thread>[^)]*)\)\s+(?P<ms>[\d.]+)ms')
+_RE_HUMONGOUS = re.compile(r'Humongous regions:\s*(\d+)->(\d+)')
+_RE_HEAP_MAX  = re.compile(r'^(?:Heap )?Max Capacity:\s*(\d+(?:\.\d+)?[KMG])')
+_RE_HEAP_ADDR = re.compile(r'Heap address: \S+, size: (\d+) MB')
+_RE_REGION    = re.compile(r'Heap [Rr]egion [Ss]ize:\s*(\d+[KMG])')
+_RE_XMX_FLAG  = re.compile(r'-XX:MaxHeapSize=(\d+)|-Xmx(\d+[kKmMgG]?)\b')
+
+# legacy: a record starts with "<date>: <uptime>: [GC" / "[Full GC"
+_L_HEADER = re.compile(
+    r'^(?:(?P<date>\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?[+-]\d{4}):\s*)?'
+    r'(?:(?P<uptime>\d+\.\d+):\s*)?'
+    r'(?P<rest>\[.*)$')
+_L_TIMESTAMPED = re.compile(r'^(?:\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d|\d+\.\d+: )')
+_L_TIMES   = re.compile(r'\[Times: user=(?P<user>[\d.]+) sys=(?P<sys>[\d.]+), real=(?P<real>[\d.]+) secs\]')
+_L_NOISE   = re.compile(r'\[(?:Metaspace|PSPermGen|CMS Perm\s*|Perm\s*|Class Space)\s*:[^\]]*\]'
+                        r'|\[CMS-concurrent[^\]]*\]|\[GC concurrent[^\]]*\]')
+_L_EMBED_TS = re.compile(r'\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?[+-]\d{4}:\s*|\b\d+\.\d+:\s+(?=\[)')
+_L_PAUSE   = re.compile(r'(\d+\.\d+)\s*secs\]')
+_L_G1_HEAP = re.compile(r'Heap:\s*(' + _SIZE + r')\((' + _SIZE + r')\)->(' + _SIZE + r')\((' + _SIZE + r')\)')
+_L_TRIPLE  = re.compile(r'(' + _SIZE + r')(?:\(' + _SIZE + r'\))?->(' + _SIZE + r')\((' + _SIZE + r')\)')
+_L_OCCUP   = re.compile(r'\s(' + _SIZE + r')\((' + _SIZE + r')\),\s*\d+\.\d+\s*secs\]')
+_L_CAUSE   = re.compile(r'^\[(?:Full GC|GC pause|GC)\s*\(([^)]*)\)')
+
+_RE_CAUSE_PARENS = re.compile(r'\(([^)]*)\)')
+_G1_KIND_TAGS = {"Normal", "Mixed", "Prepare Mixed", "Concurrent Start", "young", "mixed", "initial-mark"}
+_NOT_CAUSES = _G1_KIND_TAGS | {"Major", "Minor", "process weakrefs", "unload classes", "update refs", "Mark", "Outside of Cycle"}
+
+# ── HTML/CSS template (regular string — braces are literal CSS, not f-string) ──
 
 _HTML_CSS = """<style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -72,11 +139,11 @@ h2{font-size:1.05rem;font-weight:600;margin-bottom:12px;color:#334155}
 .kpi-label{font-size:.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
 .kpi-value{font-size:1.75rem;font-weight:700;margin:3px 0 2px}
 .kpi-unit{font-size:.73rem;color:#94a3b8}
-.charts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(500px,1fr));
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(560px,1fr));
              gap:18px;margin-bottom:22px}
 .chart-card{background:#fff;border-radius:10px;padding:18px 20px;
             box-shadow:0 1px 3px rgba(0,0,0,.07)}
-.chart-container{position:relative;height:255px}
+.chart-card svg{width:100%;height:auto;font-family:inherit}
 .section-title{font-size:1.05rem;font-weight:600;color:#334155;
                margin:0 0 12px;padding-top:4px}
 .recs-list{display:flex;flex-direction:column;gap:9px;margin-bottom:22px}
@@ -98,6 +165,8 @@ h2{font-size:1.05rem;font-weight:600;margin-bottom:12px;color:#334155}
 .rec-badge.info{background:#dbeafe;color:#2563eb}
 .rec-badge.ok{background:#cffafe;color:#0891b2}
 .rec-text{font-size:.88rem;flex:1;color:#334155}
+.rec-flag{display:block;margin-top:4px;font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.8rem;color:#1e293b}
+.warn-box{background:#fff7ed;border-left:5px solid #ea580c;border-radius:8px;padding:12px 16px;margin-bottom:22px;font-size:.88rem}
 .table-card{background:#fff;border-radius:10px;padding:18px 20px;
             box-shadow:0 1px 3px rgba(0,0,0,.07);overflow-x:auto;margin-bottom:22px}
 table{width:100%;border-collapse:collapse;font-size:.84rem}
@@ -108,112 +177,417 @@ tr:hover td{background:#f8fafc}
 .pause-hi{font-weight:700;color:#dc2626}
 .full-gc-row td{background:#fff1f2!important}
 .footer{text-align:center;font-size:.78rem;color:#94a3b8;padding:14px}
-.sev{display:inline-block;font-size:.68rem;font-weight:700;text-transform:uppercase;
-     padding:2px 8px;border-radius:20px;white-space:nowrap}
-.sev.high{background:#ffedd5;color:#ea580c}
-.sev.medium{background:#fef3c7;color:#d97706}
-.sev.info{background:#dbeafe;color:#2563eb}
-.sev.critical{background:#fee2e2;color:#dc2626}
 .flag-cell{font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
            font-size:.8rem;color:#1e293b;word-break:break-all}
-.params-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px}
-@media(max-width:900px){.params-grid{grid-template-columns:1fr}}
 </style>"""
 
-# Chart.js initialization — plain string, not f-string; braces are JavaScript syntax
-_HTML_CHARTS_JS = """<script>
-(function(){
-  var raw=document.getElementById('gc-chart-data');
-  if(!raw)return;
-  var D=JSON.parse(raw.textContent);
 
-  function mkChart(id,cfg){
-    var el=document.getElementById(id);
-    if(!el)return;
-    new Chart(el,cfg);
-  }
+# ── Data ──────────────────────────────────────────────────────────────────────
 
-  // Pause Timeline
-  var minorPts=D.pauseTimeline.filter(function(p){return !p.full;});
-  var fullPts =D.pauseTimeline.filter(function(p){return  p.full;});
-  mkChart('chartPause',{
-    type:'scatter',
-    data:{datasets:[
-      {label:'Minor/Concurrent',data:minorPts.map(function(p){return{x:p.x,y:p.y};}),
-       backgroundColor:'rgba(59,130,246,.65)',pointRadius:4},
-      {label:'Full GC',data:fullPts.map(function(p){return{x:p.x,y:p.y};}),
-       backgroundColor:'rgba(220,38,38,.85)',pointRadius:8,pointStyle:'triangle'}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'top',labels:{boxWidth:12}}},
-      scales:{
-        x:{title:{display:true,text:'Uptime (s)'}},
-        y:{title:{display:true,text:'Pause (ms)'},min:0}
-      }}
-  });
-
-  // Heap Evolution
-  mkChart('chartHeap',{
-    type:'line',
-    data:{
-      labels:D.heapEvolution.map(function(p){return p.x.toFixed(1);}),
-      datasets:[
-        {label:'Before GC',data:D.heapEvolution.map(function(p){return p.before;}),
-         borderColor:'#f97316',backgroundColor:'rgba(249,115,22,.07)',
-         fill:true,tension:.3,pointRadius:3},
-        {label:'After GC',data:D.heapEvolution.map(function(p){return p.after;}),
-         borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.07)',
-         fill:true,tension:.3,pointRadius:3}
-      ]
-    },
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'top',labels:{boxWidth:12}}},
-      scales:{
-        x:{title:{display:true,text:'Uptime (s)'}},
-        y:{title:{display:true,text:'Heap (MB)'},min:0}
-      }}
-  });
-
-  // Pause Distribution
-  mkChart('chartDist',{
-    type:'bar',
-    data:{
-      labels:D.pauseDist.labels,
-      datasets:[{label:'Events',data:D.pauseDist.values,
-        backgroundColor:['rgba(34,197,94,.75)','rgba(59,130,246,.75)',
-                         'rgba(234,179,8,.75)','rgba(249,115,22,.75)',
-                         'rgba(220,38,38,.75)']}]
-    },
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
-      scales:{y:{beginAtZero:true,title:{display:true,text:'Count'}}}}
-  });
-
-  // GC Type Doughnut
-  var PAL=['#3b82f6','#10b981','#f97316','#8b5cf6','#ec4899','#14b8a6','#f59e0b','#6366f1'];
-  mkChart('chartTypes',{
-    type:'doughnut',
-    data:{
-      labels:D.gcTypes.labels,
-      datasets:[{data:D.gcTypes.values,
-        backgroundColor:PAL.slice(0,D.gcTypes.labels.length),hoverOffset:6}]
-    },
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'right',labels:{boxWidth:13,font:{size:11}}}}}
-  });
-})();
-</script>"""
+@dataclass
+class GCEvent:
+    abs_ms:         Optional[float] = None   # wall clock (epoch ms) when the log has it
+    uptime_ms:      Optional[float] = None   # JVM uptime when the log has it
+    gc_id:          Optional[int]   = None
+    gc_type:        str   = ""
+    cause:          str   = ""
+    pause_ms:       float = 0.0              # 0 for a concurrent cycle
+    duration_ms:    float = 0.0              # concurrent cycle duration (ZGC)
+    is_full:        bool  = False
+    is_concurrent:  bool  = False
+    old_gen:        bool  = False            # collection that reclaims the old generation (live set)
+    heap_before_mb: float = 0.0
+    heap_after_mb:  float = 0.0
+    heap_total_mb:  float = 0.0
+    evac_failure:   bool  = False
+    cmf:            bool  = False            # CMS concurrent mode failure / promotion failed
+    degenerated:    bool  = False
+    cpu_user_s:     float = 0.0
+    cpu_real_s:     float = 0.0
+    src:            str   = ""
+    t_ms:           float = 0.0              # time since the start of its run (computed)
 
 
-# ── Regex catalogue ───────────────────────────────────────────────────────────
+@dataclass
+class Marker:
+    kind:      str                           # jvm_start, meta, stall, humongous, conc_cycle, conc_abort, to_space
+    abs_ms:    Optional[float] = None
+    uptime_ms: Optional[float] = None
+    data:      dict = field(default_factory=dict)
 
-_VER_PATTERNS = [
-    re.compile(r'\bVersion:\s+(?P<v>\d+)\.'),
-    re.compile(r'\bJRE\s*\(1\.(?P<v>[5-9])\.\d'),
-    re.compile(r'\bJRE\s*\((?P<v>[1-9]\d)\.\d'),
-    re.compile(r'version\s+"1\.(?P<v>[5-9])\.', re.I),
-    re.compile(r'version\s+"(?P<v>[1-9]\d)\.', re.I),
-]
+
+@dataclass
+class FileResult:
+    path:          str
+    log_format:    str = FORMAT_UNIFIED
+    items:         list = field(default_factory=list)
+    lines:         int = 0
+    candidates:    int = 0
+    parsed:        int = 0
+    unparsed:      list = field(default_factory=list)
+    collector:     str = UNKNOWN
+    error:         str = ""
+
+    def first_time(self) -> Tuple[Optional[float], Optional[float]]:
+        for it in self.items:
+            if it.abs_ms is not None or it.uptime_ms is not None:
+                return it.abs_ms, it.uptime_ms
+        return None, None
+
+
+@dataclass
+class Run:
+    index:      int = 0
+    events:     list = field(default_factory=list)
+    stalls:     list = field(default_factory=list)
+    meta:       dict = field(default_factory=dict)
+    humongous_max: int = 0
+    conc_cycles: int = 0
+    conc_aborts: int = 0
+    to_space_ids: set = field(default_factory=set)
+    zgc_live:   dict = field(default_factory=dict)   # gc_id -> {"Y": mb, "O": mb, "": mb}
+    has_start:  bool = False                 # starts at a JVM start header
+    files:      list = field(default_factory=list)
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+def size_mb(s: str) -> float:
+    m = re.match(r'([\d.]+)([BKMG])', s)
+    if not m:
+        return 0.0
+    v, u = float(m.group(1)), m.group(2)
+    return {"B": v / 1048576.0, "K": v / 1024.0, "M": v, "G": v * 1024.0}[u]
+
+
+def _parse_iso(ts: str) -> Optional[float]:
+    for fmt in ("%Y-%m-%dT%H:%M:%S.%f%z", "%Y-%m-%dT%H:%M:%S%z"):
+        try:
+            return datetime.strptime(ts, fmt).timestamp() * 1000
+        except ValueError:
+            pass
+    return None
+
+
+def _parse_decorations(decor: str) -> Tuple[Optional[float], Optional[float]]:
+    """Return (abs_ms, uptime_ms) from unified logging decorations ([time][uptime][level][tags]…)"""
+    abs_ms = uptime_ms = None
+    for d in _UL_DECOR.findall(decor):
+        d = d.strip()
+        if re.match(r'^\d{4}-\d\d-\d\dT', d):
+            abs_ms = _parse_iso(d)
+        elif re.match(r'^\d+(?:\.\d+)?s$', d):
+            uptime_ms = float(d[:-1]) * 1000
+        elif re.match(r'^\d+ms$', d):
+            v = float(d[:-2])
+            if v > 1e11:
+                abs_ms = v
+            else:
+                uptime_ms = v
+        elif re.match(r'^\d+ns$', d):
+            v = float(d[:-2])
+            if v > 1e17:
+                abs_ms = v / 1e6
+            else:
+                uptime_ms = v / 1e6
+    return abs_ms, uptime_ms
+
+
+def _percentile(sorted_values: list, p: float) -> float:
+    """Nearest-rank percentile"""
+    if not sorted_values:
+        return 0.0
+    k = max(0, min(len(sorted_values) - 1, math.ceil(len(sorted_values) * p) - 1))
+    return sorted_values[k]
+
+
+def _linreg_slope(xs: list, ys: list) -> float:
+    """Least-squares slope, centered on the first x (epoch-ms x values lose precision otherwise)"""
+    n = len(xs)
+    if n < 2:
+        return 0.0
+    x0 = xs[0]
+    xs = [x - x0 for x in xs]
+    mx, my = sum(xs) / n, sum(ys) / n
+    sxx = sum((x - mx) ** 2 for x in xs)
+    if not sxx:
+        return 0.0
+    return sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / sxx
+
+
+def _cause_and_label(gtype: str) -> Tuple[str, str, bool]:
+    """'Pause Young (Concurrent Start) (G1 Humongous Allocation) (Evacuation Failure)' ->
+       ('Pause Young (Concurrent Start)', 'G1 Humongous Allocation', evac_failure=True)"""
+    parens = _RE_CAUSE_PARENS.findall(gtype)
+    base = gtype.split(" (")[0].strip()
+    evac = any("Evacuation Failure" in p or "To-space" in p or "to-space" in p for p in parens)
+    kind = next((p for p in parens if p in _G1_KIND_TAGS), "")
+    label = f"{base} ({kind})" if kind else base
+    causes = [p for p in parens if p not in _NOT_CAUSES and "Evacuation Failure" not in p and "space" not in p]
+    return label, (causes[0] if causes else ""), evac
+
+
+def _read_lines(path: str) -> List[str]:
+    opener = gzip.open if path.endswith(".gz") else open
+    with opener(path, "rt", errors="replace") as fh:
+        return [l.rstrip("\n").rstrip("\r") for l in fh]
+
+
+def expand_inputs(paths: List[str]) -> Tuple[List[str], List[str]]:
+    """Files as given; folders expanded to their GC logs (name containing 'gc'). Returns (files, errors)."""
+    files, errors = [], []
+    for p in paths:
+        if os.path.isdir(p):
+            found = sorted(f for f in glob.glob(os.path.join(p, "**", "*"), recursive=True)
+                           if os.path.isfile(f) and "gc" in os.path.basename(f).lower()
+                           and re.search(r'\.(?:log|txt|current)(?:\.\d+)?(?:\.gz)?$|\.log\.\d+$|\.gz$', f))
+            if not found:
+                errors.append(f"No GC log (file name containing 'gc') found in folder {p}")
+            files.extend(found)
+        elif os.path.isfile(p):
+            files.append(p)
+        else:
+            errors.append(f"File not found: {p}")
+    return files, errors
+
+
+# ── Per-file parsing ──────────────────────────────────────────────────────────
+
+def detect_collector(lines: List[str]) -> str:
+    sample = lines[:400]
+    for line in sample:
+        m = _RE_USING_GC.search(line)
+        if m:
+            gc = m.group("gc").lower()
+            if "z garbage" in gc or gc == "zgc":
+                return ZGC_GEN if any("Generational" in l or "Minor Collection" in l or "Major Collection" in l
+                                      or re.search(r'\((?:Minor|Major)\)', l) for l in lines[:2000]) else ZGC
+            if "g1" in gc:
+                return G1GC
+            if "shenandoah" in gc:
+                return SHENANDOAH
+            if "serial" in gc:
+                return SERIAL
+            if "parallel" in gc:
+                return PARALLEL
+    text = "\n".join(lines[:3000])
+    if re.search(r'-XX:\+UseG1GC', text):
+        return G1GC
+    if re.search(r'-XX:\+UseConcMarkSweepGC|ParNew|CMS-initial-mark|\bCMS\b', text):
+        return CMS
+    if re.search(r'PSYoungGen|ParOldGen|-XX:\+UseParallelGC', text):
+        return PARALLEL
+    if re.search(r'DefNew|Tenured|-XX:\+UseSerialGC', text):
+        return SERIAL
+    if re.search(r'Pause Init Mark|Pause Final Mark|Concurrent evacuation', text):
+        return SHENANDOAH
+    if re.search(r'(?:Major|Minor) Collection \(', text):
+        return ZGC_GEN
+    if re.search(r'Garbage Collection \(.*?%\)', text):
+        return ZGC_GEN if re.search(r'\((?:Minor|Major)\)', text) else ZGC
+    if re.search(r'G1 Evacuation|Pause Young|Pause Mixed|Pause Remark|GC pause \(', text):
+        return G1GC
+    return UNKNOWN
+
+
+def parse_file(path: str) -> FileResult:
+    fr = FileResult(path=path)
+    try:
+        lines = _read_lines(path)
+    except (OSError, EOFError) as e:
+        fr.error = f"cannot read {path}: {e}"
+        return fr
+    fr.lines = len(lines)
+    nonempty = [l for l in lines[:300] if l.strip()]
+    unified = sum(1 for l in nonempty if re.match(r'^\[[^\]]+\]', l))
+    fr.log_format = FORMAT_UNIFIED if nonempty and unified > len(nonempty) * 0.5 else FORMAT_LEGACY
+    fr.collector = detect_collector(lines)
+    if fr.log_format == FORMAT_UNIFIED:
+        _parse_unified(fr, lines)
+    else:
+        _parse_legacy(fr, lines)
+    return fr
+
+
+def _unparsed(fr: FileResult, line_no: int, line: str):
+    fr.unparsed.append(f"{os.path.basename(fr.path)}:{line_no}: {line.strip()[:160]}")
+
+
+def _parse_unified(fr: FileResult, lines: List[str]):
+    col = fr.collector
+    seen = set()
+    for no, line in enumerate(lines, 1):
+        m = _UL_LINE.match(line)
+        if not m:
+            continue
+        abs_ms, uptime_ms = _parse_decorations(m.group(1))
+        msg = m.group(2).strip()
+        if not msg:
+            continue
+        g = _UL_GCID.match(msg)
+        if not g:
+            mu = _RE_USING_GC.match(msg)
+            if mu:
+                fr.items.append(Marker("jvm_start", abs_ms, uptime_ms, {"collector_line": msg}))
+                continue
+            data = {}
+            mv = re.search(r'\bVersion:\s+(\S+)', msg)
+            if mv:
+                data["jdk_str"] = mv.group(1)
+                data["jdk_version"] = int(re.match(r'\d+', mv.group(1)).group(0))
+            mh = _RE_HEAP_MAX.search(msg)
+            if mh:
+                data["xmx_mb"] = size_mb(mh.group(1))
+            ma = _RE_HEAP_ADDR.search(msg)
+            if ma:
+                data["xmx_mb"] = float(ma.group(1))
+            mr = _RE_REGION.search(msg)
+            if mr:
+                data["region_mb"] = size_mb(mr.group(1))
+            if data:
+                fr.items.append(Marker("meta", abs_ms, uptime_ms, data))
+                continue
+            ms = _UL_STALL.match(msg)
+            if ms:
+                fr.items.append(Marker("stall", abs_ms, uptime_ms,
+                                       {"kind": ms.group("kind"), "ms": float(ms.group("ms"))}))
+            continue
+
+        gc_id = int(g.group(1))
+        body = g.group("body").strip()
+
+        ml = _UL_ZGC_LIVE.match(body)
+        if ml:
+            fr.items.append(Marker("zgc_live", abs_ms, uptime_ms,
+                                   {"gc_id": gc_id, "gen": (g.group("gen") or "").upper(), "mb": float(ml.group(1))}))
+            continue
+
+        if body.startswith("Pause "):
+            if not re.search(r'[\d.]+ms\s*$', body):
+                continue  # gc,start line, the end line carries the figures
+            fr.candidates += 1
+            mp = _UL_PAUSE_HEAP.match(body)
+            mn = None if mp else _UL_PAUSE_NOHP.match(body)
+            mm = mp or mn
+            if not mm:
+                _unparsed(fr, no, line)
+                continue
+            gtype = mm.group("type").strip()
+            key = (gc_id, gtype, mm.group("p"))
+            if key in seen:
+                fr.candidates -= 1
+                continue
+            seen.add(key)
+            label, cause, evac = _cause_and_label(gtype)
+            base = label.split(" (")[0]
+            is_full = base == "Pause Full"
+            degenerated = "Degenerated" in base
+            old_gen = is_full or degenerated or label == "Pause Young (Mixed)"
+            ev = GCEvent(abs_ms=abs_ms, uptime_ms=uptime_ms, gc_id=gc_id, gc_type=label, cause=cause,
+                         pause_ms=float(mm.group("p")), is_full=is_full, old_gen=old_gen,
+                         evac_failure=evac, degenerated=degenerated,
+                         src=f"{os.path.basename(fr.path)}:{no}")
+            if mp:
+                ev.heap_before_mb = size_mb(mp.group("b"))
+                ev.heap_after_mb = size_mb(mp.group("a"))
+                ev.heap_total_mb = size_mb(mp.group("t"))
+            fr.items.append(ev)
+            fr.parsed += 1
+            continue
+
+        mz = _UL_ZGC_SUMMARY.match(body)
+        if mz:
+            fr.candidates += 1
+            gen = mz.group("gen") or ("Major" if mz.group("kind").startswith("Major")
+                                      else "Minor" if mz.group("kind").startswith("Minor") else "")
+            label = "ZGC Collection" + (f" ({gen})" if gen else "")
+            fr.items.append(GCEvent(
+                abs_ms=abs_ms, uptime_ms=uptime_ms, gc_id=gc_id, gc_type=label, cause=mz.group("cause"),
+                is_concurrent=True, old_gen=(gen != "Minor"),
+                duration_ms=float(mz.group("d")) * 1000 if mz.group("d") else 0.0,
+                heap_before_mb=size_mb(mz.group("b")), heap_after_mb=size_mb(mz.group("a")),
+                src=f"{os.path.basename(fr.path)}:{no}"))
+            fr.parsed += 1
+            continue
+
+        if body.startswith("Concurrent "):
+            mc = _UL_CONC_HEAP.match(body)
+            if mc and col == SHENANDOAH:
+                fr.items.append(GCEvent(
+                    abs_ms=abs_ms, uptime_ms=uptime_ms, gc_id=gc_id, gc_type=mc.group("type"),
+                    is_concurrent=True, old_gen=mc.group("type").startswith("Concurrent cleanup"),
+                    heap_before_mb=size_mb(mc.group("b")), heap_after_mb=size_mb(mc.group("a")),
+                    heap_total_mb=size_mb(mc.group("t")), src=f"{os.path.basename(fr.path)}:{no}"))
+            elif _UL_CONC_CYCLE.match(body):
+                fr.items.append(Marker("conc_cycle", abs_ms, uptime_ms))
+            elif body.startswith("Concurrent Mark Abort"):
+                fr.items.append(Marker("conc_abort", abs_ms, uptime_ms))
+            continue
+
+        if body.startswith("To-space exhausted"):
+            fr.items.append(Marker("to_space", abs_ms, uptime_ms, {"gc_id": gc_id}))
+            continue
+
+        mh = _RE_HUMONGOUS.search(body)
+        if mh:
+            fr.items.append(Marker("humongous", abs_ms, uptime_ms, {"regions": int(mh.group(1))}))
+
+
+def _parse_legacy(fr: FileResult, lines: List[str]):
+    """JDK 7/8 logs: group a record header with its continuation lines, then parse the record"""
+    record: Optional[Tuple[int, str, str, str]] = None   # (line_no, date, uptime, text)
+    file_created = False
+
+    def flush():
+        if record is not None:
+            _parse_legacy_record(fr, *record)
+
+    for no, line in enumerate(lines, 1):
+        if not line.strip():
+            continue
+        m = _L_HEADER.match(line) if _L_TIMESTAMPED.match(line) else None
+        if m:
+            rest = m.group("rest")
+            # concurrent phases are printed by another thread, often in the middle of a pause record:
+            # they never close the open record
+            if rest.startswith("[GC concurrent") or rest.startswith("[CMS-concurrent"):
+                times = _legacy_times(m.group("date"), m.group("uptime"))
+                if "concurrent-mark-end" in rest or rest.startswith("[CMS-concurrent-sweep:"):
+                    fr.items.append(Marker("conc_cycle", *times))
+                elif "concurrent-mark-abort" in rest:
+                    fr.items.append(Marker("conc_abort", *times))
+                continue
+            flush()
+            record = None
+            if rest.startswith("[GC") or rest.startswith("[Full GC"):
+                record = (no, m.group("date"), m.group("uptime"), rest)
+            continue
+        if "GC log file created" in line:
+            file_created = True
+        if record is not None:
+            record = (record[0], record[1], record[2], record[3] + " " + line.strip())
+            continue
+        # header lines before the first record
+        data = {}
+        v = _extract_jdk_version(line)
+        if v:
+            data["jdk_version"], data["jdk_str"] = v
+        if line.startswith("CommandLine flags:"):
+            mx = _RE_XMX_FLAG.search(line)
+            if mx:
+                data["xmx_mb"] = int(mx.group(1)) / 1048576.0 if mx.group(1) else size_mb(mx.group(2).upper())
+            mr = re.search(r'-XX:G1HeapRegionSize=(\d+)', line)
+            if mr:
+                data["region_mb"] = int(mr.group(1)) / 1048576.0
+            if not file_created:
+                fr.items.append(Marker("jvm_start", None, None, {"collector_line": "CommandLine flags"}))
+        if data:
+            fr.items.append(Marker("meta", None, None, data))
+    flush()
+
+
+def _legacy_times(date: Optional[str], uptime: Optional[str]) -> Tuple[Optional[float], Optional[float]]:
+    return (_parse_iso(date) if date else None), (float(uptime) * 1000 if uptime else None)
 
 
 def _extract_jdk_version(line: str):
@@ -222,1605 +596,918 @@ def _extract_jdk_version(line: str):
         if m:
             v = int(m.group("v"))
             if v > 1:
-                return v, line.strip()
-    return 0, ""
+                return v, line.strip()[:120]
+    return None
 
 
-_RE_USING_GC = re.compile(
-    r'Using\s+(?P<gc>The Z Garbage Collector|ZGC|G1|Shenandoah|Serial|Parallel\s+GC|Parallel)'
-)
-_RE_PERMGEN = re.compile(r'(?:PSPerm|PermGen|Perm\s*:)', re.I)
-_RE_ZGC_GEN = re.compile(r'\((?:Minor|Major)\)')
+def _parse_legacy_record(fr: FileResult, no: int, date: Optional[str], uptime: Optional[str], text: str):
+    abs_ms, uptime_ms = _legacy_times(date, uptime)
+    if "secs]" not in text:
+        return
+    fr.candidates += 1
+    cpu = _L_TIMES.search(text)
+    body = _L_TIMES.sub("", text)
+    body = _L_EMBED_TS.sub("", body)
+    body = _L_NOISE.sub("", body)
 
-_ULP = r'\[(?P<ts>[^\]]+)\](?:\[[^\]]+\])*\s+'
+    pauses = _L_PAUSE.findall(body)
+    if not pauses:
+        _unparsed(fr, no, text)
+        return
+    pause_ms = float(pauses[-1]) * 1000
 
-_UL_PAUSE_HEAP = re.compile(
-    _ULP +
-    r'GC\(\d+\)\s+(?P<type>Pause\s+\S+(?:\s+\([^)]+\))*)'
-    r'.*?(?P<before>\d+)M->(?P<after>\d+)M\((?P<heap>\d+)M\)'
-    r'\s+(?P<pause>[\d.]+)ms'
-)
-_UL_PAUSE_NOHP = re.compile(
-    _ULP +
-    r'GC\(\d+\)\s+(?P<type>Pause\s+(?:'
-    r'Remark|Cleanup'
-    r'|Mark Start|Mark End|Relocate Start'
-    r'|Init Mark|Final Mark|Init Update Refs|Final Update Refs'
-    r')(?:\s+\([^)]+\))?)\s+(?P<pause>[\d.]+)ms'
-)
-_UL_ZGC_SUMMARY = re.compile(
-    _ULP +
-    r'GC\(\d+\)\s+Garbage Collection\s+\([^)]+\)'
-    r'(?:\s+\((?P<gen>Minor|Major)\))?'
-    r'\s+(?P<before>[\d.]+)M\(\d+%\)->(?P<after>[\d.]+)M\(\d+%\)'
-)
-
-_LH = (
-    r'(?:(?P<ts>[\d]{4}-\d{2}-\d{2}T[\d:+.Z-]+):\s*)?'
-    r'(?P<uptime>[\d.]+):\s+'
-)
-
-_L_G1_PAUSE = re.compile(
-    _LH +
-    r'\[GC pause\s*\((?P<reason>[^)]+)\)\s*(?:\([^)]+\))?'
-    r'.*?(?P<before>\d+)M->(?P<after>\d+)M\((?P<heap>\d+)M\)'
-    r',?\s*(?P<pause>[\d.]+)\s*secs'
-)
-_L_G1_REMARK  = re.compile(_LH + r'\[GC remark.*?,\s*(?P<pause>[\d.]+)\s*secs')
-_L_G1_CLEANUP = re.compile(
-    _LH +
-    r'\[GC cleanup\s*(?:(?P<before>\d+)M->(?P<after>\d+)M\((?P<heap>\d+)M\))?'
-    r',?\s*(?P<pause>[\d.]+)\s*secs'
-)
-_L_G1_FULL = re.compile(
-    _LH +
-    r'\[Full GC\s*(?:\([^)]*\))?\s*'
-    r'(?:(?P<before>\d+)M->(?P<after>\d+)M\((?P<heap>\d+)M\))?'
-    r',?\s*(?P<pause>[\d.]+)\s*secs'
-)
-_L_PARALLEL = re.compile(
-    _LH +
-    r'\[GC\s*(?:\([^)]*\))?\s*'
-    r'\[PS(?:YoungGen|OldGen):[^\]]*\]'
-    r'\s*(?P<before>\d+)K->(?P<after>\d+)K\((?P<heap>\d+)K\)'
-    r',?\s*(?P<pause>[\d.]+)\s*secs'
-)
-_L_PARALLEL7 = re.compile(
-    _LH +
-    r'\[GC\s+\[PS(?:YoungGen|OldGen):[^\]]*\]'
-    r'\s*(?P<before>\d+)K->(?P<after>\d+)K\((?P<heap>\d+)K\)'
-    r',?\s*(?P<pause>[\d.]+)\s*secs'
-)
-_L_FULL_MULTI = re.compile(
-    _LH +
-    r'\[Full GC\s*(?:\([^)]*\))?\s*'
-    r'(?:\[[^\]]+\]\s*)+'
-    r'(?P<before>\d+)K->(?P<after>\d+)K\((?P<heap>\d+)K\)'
-    r'.*?,?\s*(?P<pause>[\d.]+)\s*secs'
-)
-_L_SERIAL = re.compile(
-    _LH +
-    r'\[(?P<type>GC|Full GC)\s*(?:\([^)]*\))?\s*'
-    r'\[(?:DefNew|Tenured):'
-    r'.*?(?P<before>\d+)K->(?P<after>\d+)K\((?P<heap>\d+)K\)'
-    r'.*?,?\s*(?P<pause>[\d.]+)\s*secs'
-)
-_L_PARNEW = re.compile(
-    _LH +
-    r'\[GC\s*(?:\([^)]*\))?\s*\[ParNew:'
-    r'.*?(?P<before>\d+)K->(?P<after>\d+)K\((?P<heap>\d+)K\)'
-    r',?\s*(?P<pause>[\d.]+)\s*secs'
-)
-_L_CMS_STW = re.compile(
-    _LH +
-    r'\[GC\s*\((?P<phase>CMS[^)]+)\)'
-    r'.*?(?P<before>\d+)K->(?P<after>\d+)K\((?P<heap>\d+)K\)'
-    r',?\s*(?P<pause>[\d.]+)\s*secs'
-)
-_L_CMS_FULL = re.compile(
-    _LH +
-    r'\[Full GC\s*(?:\([^)]*\))?\s*\[CMS:'
-    r'.*?(?P<before>\d+)K->(?P<after>\d+)K\((?P<heap>\d+)K\)'
-    r'.*?,?\s*(?P<pause>[\d.]+)\s*secs'
-)
-_L_GENERIC_KB = re.compile(
-    _LH +
-    r'\[(?P<type>GC|Full GC)\s*'
-    r'.*?(?P<before>\d+)K->(?P<after>\d+)K\((?P<heap>\d+)K\)'
-    r',?\s*(?P<pause>[\d.]+)\s*secs'
-)
-_CPU_TIMES = re.compile(
-    r'\[Times: user=(?P<user>[\d.]+) sys=(?P<sys>[\d.]+), real=(?P<real>[\d.]+) secs\]'
-)
-
-
-# ── Data ──────────────────────────────────────────────────────────────────────
-
-@dataclass
-class DetectedConfig:
-    jdk_version:  int  = 0
-    jdk_str:      str  = ""
-    collector:    str  = UNKNOWN
-    log_format:   str  = FORMAT_UNIFIED
-    has_perm_gen: bool = False
-
-
-@dataclass
-class GCEvent:
-    timestamp:      str   = ""
-    uptime_ms:      float = 0.0
-    gc_type:        str   = ""
-    collector:      str   = ""
-    pause_ms:       float = 0.0
-    is_full:        bool  = False
-    is_concurrent:  bool  = False
-    heap_before_mb: float = 0.0
-    heap_after_mb:  float = 0.0
-    heap_total_mb:  float = 0.0
-    gc_cause:       str   = ""
-    cpu_user_s:     float = 0.0
-    cpu_real_s:     float = 0.0
-
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
-def _to_mb(kb: str) -> float:
-    return float(kb) / 1024.0
-
-
-def _parse_ul_ts(ts: str) -> float:
-    ts = ts.strip()
-    if re.match(r'^\d+\.\d+s$', ts):
-        return float(ts[:-1]) * 1000
-    if re.match(r'^\d+ms$', ts):
-        return float(ts[:-2])
-    for fmt in ("%Y-%m-%dT%H:%M:%S.%f%z", "%Y-%m-%dT%H:%M:%S%z"):
-        try:
-            return datetime.strptime(ts, fmt).timestamp() * 1000
-        except ValueError:
-            pass
-    return 0.0
-
-
-def _is_full(gc_type: str) -> bool:
-    t = gc_type.lower()
-    return "full" in t or "compaction" in t
-
-
-def _linreg_slope(xs: list, ys: list) -> float:
-    n = len(xs)
-    if n < 2:
-        return 0.0
-    sx  = sum(xs); sy = sum(ys)
-    sxy = sum(x * y for x, y in zip(xs, ys))
-    sxx = sum(x * x for x in xs)
-    d   = n * sxx - sx * sx
-    return (n * sxy - sx * sy) / d if d else 0.0
-
-
-def _last_cause(gc_type: str) -> str:
-    """Return the last parenthesized group in a gc_type string as a cause label."""
-    matches = _RE_CAUSE_PARENS.findall(gc_type)
-    # filter out generational labels
-    for m in reversed(matches):
-        if m not in ("Minor", "Major", "young", "mixed"):
-            return m
-    return ""
-
-
-# ── Main class ────────────────────────────────────────────────────────────────
-
-class GCLogAnalyzer:
-    def __init__(self):
-        self.events:      List[GCEvent]  = []
-        self.config:      DetectedConfig = DetectedConfig()
-        self.total_lines: int            = 0
-        self._raw_lines:  List[str]      = []
-
-    # ── I/O ───────────────────────────────────────────────────────────────────
-
-    def parse_file(self, path: str):
-        with open(path, "r", errors="replace") as fh:
-            lines = fh.readlines()
-        self._raw_lines = [l.rstrip() for l in lines]
-        self._detect_config()
-        for line in self._raw_lines:
-            self.total_lines += 1
-            self._parse_line(line)
-
-    def parse_text(self, text: str):
-        self._raw_lines = text.splitlines()
-        self._detect_config()
-        for line in self._raw_lines:
-            self.total_lines += 1
-            self._parse_line(line)
-
-    # ── Config detection ──────────────────────────────────────────────────────
-
-    def _detect_config(self):
-        cfg    = self.config
-        sample = self._raw_lines[:200]
-
-        ul_count = sum(1 for l in sample if l.lstrip().startswith('['))
-        cfg.log_format = FORMAT_UNIFIED if ul_count > len(sample) * 0.3 else FORMAT_LEGACY
-
-        for line in sample:
-            v, raw = _extract_jdk_version(line)
-            if v:
-                cfg.jdk_version = v
-                cfg.jdk_str     = raw
-                break
-
-        for line in sample:
-            m = _RE_USING_GC.search(line)
-            if m:
-                gc = m.group("gc").lower()
-                if "z garbage" in gc or gc == "zgc":
-                    cfg.collector = ZGC
-                elif "g1" in gc:
-                    cfg.collector = G1GC
-                elif "shenandoah" in gc:
-                    cfg.collector = SHENANDOAH
-                elif "serial" in gc:
-                    cfg.collector = SERIAL
-                elif "parallel" in gc:
-                    cfg.collector = PARALLEL
-                break
-
-        if cfg.collector == UNKNOWN:
-            full_sample = "\n".join(sample)
-            if _RE_PERMGEN.search(full_sample):
-                cfg.has_perm_gen  = True
-                cfg.jdk_version   = 7
-            if re.search(r'PSYoungGen|ParOldGen', full_sample):
-                cfg.collector = PARALLEL
-            elif re.search(r'DefNew|Tenured', full_sample):
-                cfg.collector = SERIAL
-            elif re.search(r'\bCMS\b|ParNew', full_sample):
-                cfg.collector = CMS
-            elif re.search(r'Pause Init Mark|Pause Final Mark|Pause Init Update|Pause Final Update'
-                           r'|Concurrent evacuation', full_sample):
-                cfg.collector = SHENANDOAH
-            elif re.search(r'Garbage Collection.*?->.*?%\)', full_sample):
-                cfg.collector = ZGC_GEN if _RE_ZGC_GEN.search(full_sample) else ZGC
-            elif re.search(r'G1 Evacuation|Pause Young|Pause Mixed|Pause Remark', full_sample):
-                cfg.collector = G1GC
-            elif re.search(r'GC pause.*?G1', full_sample):
-                cfg.collector = G1GC
-
-        if cfg.collector == ZGC:
-            for l in sample:
-                if _RE_ZGC_GEN.search(l):
-                    cfg.collector = ZGC_GEN
-                    break
-
-        if cfg.jdk_version == 0:
-            if cfg.log_format == FORMAT_UNIFIED:
-                cfg.jdk_version = 9
-            elif cfg.collector in (ZGC, ZGC_GEN, SHENANDOAH):
-                cfg.jdk_version = 11
-            elif cfg.has_perm_gen:
-                cfg.jdk_version = 7
-            else:
-                cfg.jdk_version = 8
-
-    # ── Line dispatch ─────────────────────────────────────────────────────────
-
-    def _parse_line(self, line: str):
-        if not line.strip():
-            return
-        if self.config.log_format == FORMAT_UNIFIED:
-            self._parse_unified(line)
+    before = after = total = 0.0
+    hm = _L_G1_HEAP.search(body)
+    if hm:
+        before, after, total = size_mb(hm.group(1)), size_mb(hm.group(3)), size_mb(hm.group(4))
+    else:
+        triples = _L_TRIPLE.findall(body)
+        if triples:
+            b, a, t = triples[-1]
+            before, after, total = size_mb(b), size_mb(a), size_mb(t)
         else:
-            self._parse_legacy(line)
+            oc = _L_OCCUP.search(body)
+            if oc:
+                before = after = size_mb(oc.group(1))
+                total = size_mb(oc.group(2))
 
-    # ── Unified logging parsers ───────────────────────────────────────────────
+    head = body.lstrip()
+    mc = _L_CAUSE.match(head)
+    cause = mc.group(1) if mc else ""
+    low = body.lower()
+    is_full = head.startswith("[Full GC")
+    cmf = "concurrent mode failure" in low or "promotion failed" in low
+    evac = "to-space exhausted" in low or "to-space overflow" in low
+    old_gen = False
 
-    def _parse_unified(self, line: str):
-        col = self.config.collector
+    if head.startswith("[GC pause"):
+        kind = "Mixed" if "(mixed)" in low else "Young"
+        label = f"G1 {kind}" + (" (initial-mark)" if "initial-mark" in low else "")
+        old_gen = kind == "Mixed"
+    elif head.startswith("[GC remark"):
+        label, cause = "G1 Remark", ""
+    elif head.startswith("[GC cleanup"):
+        label, cause = "G1 Cleanup", ""
+    elif "CMS Initial Mark" in head:
+        label, cause = "CMS Initial Mark", ""
+    elif "CMS Final Remark" in head:
+        label, cause = "CMS Final Remark", ""
+    elif "ParNew" in body:
+        label = "ParNew (promotion failed)" if "promotion failed" in low else "ParNew"
+        if cmf:
+            is_full = True
+    elif is_full:
+        if "concurrent mode failure" in low:
+            label = "Full GC (concurrent mode failure)"
+        elif "[CMS" in body:
+            label = "Full GC (CMS)"
+        elif "PSYoungGen" in body or "ParOldGen" in body or "PSOldGen" in body:
+            label = "Full GC (Parallel)"
+        elif "Tenured" in body:
+            label = "Full GC (Serial)"
+        else:
+            label = "Full GC"
+    elif "PSYoungGen" in body:
+        label = "Parallel Young"
+    elif "DefNew" in body:
+        label = "Serial Young"
+    else:
+        label = "GC"
+    old_gen = old_gen or is_full
 
-        if col in (ZGC, ZGC_GEN):
-            m = _UL_ZGC_SUMMARY.search(line)
-            if m:
-                ts     = m.group("ts")
-                gen    = m.group("gen") or ""
-                cm     = re.search(r'Garbage Collection\s+\(([^)]+)\)', line)
-                cause  = cm.group(1) if cm else ""
-                label  = "ZGC Collection" + (" (" + gen + ")" if gen else "")
-                self.events.append(GCEvent(
-                    timestamp=ts, uptime_ms=_parse_ul_ts(ts),
-                    gc_type=label, collector=col,
-                    pause_ms=0.0, is_concurrent=True,
-                    heap_before_mb=float(m.group("before")),
-                    heap_after_mb=float(m.group("after")),
-                    gc_cause=cause,
-                ))
-                return
+    fr.items.append(GCEvent(
+        abs_ms=abs_ms, uptime_ms=uptime_ms, gc_type=label, cause=cause, pause_ms=pause_ms,
+        is_full=is_full, old_gen=old_gen, heap_before_mb=before, heap_after_mb=after, heap_total_mb=total,
+        evac_failure=evac, cmf=cmf,
+        cpu_user_s=float(cpu.group("user")) if cpu else 0.0,
+        cpu_real_s=float(cpu.group("real")) if cpu else 0.0,
+        src=f"{os.path.basename(fr.path)}:{no}"))
+    fr.parsed += 1
 
-        m = _UL_PAUSE_HEAP.search(line)
-        if m:
-            ts    = m.group("ts")
-            gtype = m.group("type").strip()
-            cause = _last_cause(gtype)
-            self.events.append(GCEvent(
-                timestamp=ts, uptime_ms=_parse_ul_ts(ts),
-                gc_type=gtype, collector=col,
-                pause_ms=float(m.group("pause")),
-                is_full=_is_full(gtype),
-                heap_before_mb=float(m.group("before")),
-                heap_after_mb=float(m.group("after")),
-                heap_total_mb=float(m.group("heap")),
-                gc_cause=cause,
-            ))
-            return
 
-        m = _UL_PAUSE_NOHP.search(line)
-        if m:
-            ts    = m.group("ts")
-            gtype = m.group("type").strip()
-            self.events.append(GCEvent(
-                timestamp=ts, uptime_ms=_parse_ul_ts(ts),
-                gc_type=gtype, collector=col,
-                pause_ms=float(m.group("pause")),
-            ))
-            return
+# ── Merging files and splitting JVM runs ──────────────────────────────────────
 
-    # ── Legacy parsers ────────────────────────────────────────────────────────
+def build_runs(results: List[FileResult]) -> Tuple[List[Run], List[str]]:
+    warnings = []
+    usable = [r for r in results if r.items]
+    have_abs = all(r.first_time()[0] is not None for r in usable)
+    if have_abs:
+        usable.sort(key=lambda r: r.first_time()[0])
+    elif len(usable) > 1:
+        usable.sort(key=lambda r: (r.first_time()[1] if r.first_time()[1] is not None else 0))
+        warnings.append("The files have no wall-clock timestamps: they are ordered by JVM uptime, "
+                        "which is ambiguous when they span several JVM runs.")
 
-    def _parse_legacy(self, line: str):
-        col  = self.config.collector
-        cpu  = _CPU_TIMES.search(line)
-        us   = float(cpu.group("user")) if cpu else 0.0
-        rs   = float(cpu.group("real")) if cpu else 0.0
+    runs: List[Run] = []
+    current = Run(index=1)
+    last_uptime = None
+    pending_meta: dict = {}
 
-        def _kb(m, gc_type, collector, is_full, cause="") -> GCEvent:
-            return GCEvent(
-                timestamp=m.group("ts") or "",
-                uptime_ms=float(m.group("uptime")) * 1000,
-                gc_type=gc_type, collector=collector,
-                pause_ms=float(m.group("pause")) * 1000,
-                is_full=is_full,
-                heap_before_mb=_to_mb(m.group("before")),
-                heap_after_mb=_to_mb(m.group("after")),
-                heap_total_mb=_to_mb(m.group("heap")),
-                gc_cause=cause, cpu_user_s=us, cpu_real_s=rs,
-            )
+    def new_run(has_start: bool):
+        nonlocal current, last_uptime
+        if current.events or current.stalls:
+            runs.append(current)
+            current = Run(index=len(runs) + 1)
+        current.has_start = current.has_start or has_start
+        last_uptime = None
 
-        def _mb(m, gc_type, collector, is_full, cause="") -> GCEvent:
-            heap = m.group("heap") if m.group("heap") else None
-            return GCEvent(
-                timestamp=m.group("ts") or "",
-                uptime_ms=float(m.group("uptime")) * 1000,
-                gc_type=gc_type, collector=collector,
-                pause_ms=float(m.group("pause")) * 1000,
-                is_full=is_full,
-                heap_before_mb=float(m.group("before")),
-                heap_after_mb=float(m.group("after")),
-                heap_total_mb=float(heap) if heap else 0.0,
-                gc_cause=cause, cpu_user_s=us, cpu_real_s=rs,
-            )
-
-        if col in (G1GC, UNKNOWN):
-            m = _L_G1_PAUSE.search(line)
-            if m:
-                reason   = m.group("reason")
-                is_mixed = "mixed" in line.lower()
-                phase    = "Mixed" if is_mixed else "Young"
-                self.events.append(_mb(m, f"G1 {phase} ({reason})", G1GC, False, reason))
-                return
-            m = _L_G1_FULL.search(line)
-            if m and m.group("before"):
-                cm = re.search(r'\(([^)]+)\)', line)
-                self.events.append(_mb(m, "Full GC (G1)", G1GC, True,
-                                       cm.group(1) if cm else ""))
-                return
-            m = _L_G1_REMARK.search(line)
-            if m:
-                self.events.append(GCEvent(
-                    timestamp=m.group("ts") or "",
-                    uptime_ms=float(m.group("uptime")) * 1000,
-                    gc_type="GC Remark", collector=G1GC,
-                    pause_ms=float(m.group("pause")) * 1000,
-                    cpu_user_s=us, cpu_real_s=rs,
-                ))
-                return
-            m = _L_G1_CLEANUP.search(line)
-            if m:
-                b = float(m.group("before")) if m.group("before") else 0.0
-                a = float(m.group("after"))  if m.group("after")  else 0.0
-                h = float(m.group("heap"))   if m.group("heap")   else 0.0
-                self.events.append(GCEvent(
-                    timestamp=m.group("ts") or "",
-                    uptime_ms=float(m.group("uptime")) * 1000,
-                    gc_type="GC Cleanup", collector=G1GC,
-                    pause_ms=float(m.group("pause")) * 1000,
-                    heap_before_mb=b, heap_after_mb=a, heap_total_mb=h,
-                    cpu_user_s=us, cpu_real_s=rs,
-                ))
-                return
-
-        if col in (CMS, UNKNOWN):
-            m = _L_CMS_STW.search(line)
-            if m:
-                self.events.append(_kb(m, f"CMS {m.group('phase')}", CMS, False,
-                                       m.group("phase")))
-                return
-            m = _L_PARNEW.search(line)
-            if m:
-                self.events.append(_kb(m, "CMS ParNew (young)", CMS, False))
-                return
-            m = _L_CMS_FULL.search(line)
-            if m:
-                self.events.append(_kb(m, "Full GC (CMS)", CMS, True,
-                                       "Promotion Failure"))
-                return
-
-        if "[Full GC" in line and "K->" in line:
-            m = _L_FULL_MULTI.search(line)
-            if m:
-                label = "Full GC (Parallel)" if col in (PARALLEL, UNKNOWN) else "Full GC"
-                cm    = re.search(r'Full GC\s*\(([^)]+)\)', line)
-                self.events.append(_kb(m, label, col or PARALLEL, True,
-                                       cm.group(1) if cm else ""))
-                return
-
-        if col in (PARALLEL, UNKNOWN):
-            m = _L_PARALLEL.search(line) or _L_PARALLEL7.search(line)
-            if m:
-                self.events.append(_kb(m, "Parallel Young GC", PARALLEL, False))
-                return
-
-        if col in (SERIAL, UNKNOWN):
-            m = _L_SERIAL.search(line)
-            if m:
-                is_f = "full" in m.group("type").lower()
-                self.events.append(_kb(m, f"Serial {'Full' if is_f else 'Young'} GC",
-                                       SERIAL, is_f))
-                return
-
-        m = _L_GENERIC_KB.search(line)
-        if m:
-            is_f = "full" in m.group("type").lower()
-            self.events.append(_kb(m, m.group("type"), col or UNKNOWN, is_f))
-
-    # ── Extra-metric scan ─────────────────────────────────────────────────────
-
-    def _scan_extra_metrics(self) -> dict:
-        evac_fail = 0
-        to_space  = 0
-        meta_gc   = 0
-        sys_gc    = 0
-        conc_mark = 0
-        hum_max   = 0
-
-        for line in self._raw_lines:
-            if _RE_EVAC_FAIL.search(line):
-                low = line.lower()
-                if "to-space exhausted" in low or "to-space overflow" in low:
-                    to_space += 1
-                else:
-                    evac_fail += 1
-            m = _RE_HUMONGOUS.search(line)
-            if m:
-                hum_max = max(hum_max, int(m.group(1)))
-            if _RE_META_GC.search(line):
-                meta_gc += 1
-            if _RE_SYS_GC.search(line):
-                sys_gc += 1
-            if _RE_CONC_MARK.search(line):
-                conc_mark += 1
-
-        return {
-            "evacuation_failure_count":  evac_fail,
-            "to_space_exhaustion_count": to_space,
-            "meta_gc_threshold_count":   meta_gc,
-            "sys_gc_count":              sys_gc,
-            "concurrent_mark_cycles":    conc_mark,
-            "humongous_max_regions":     hum_max,
-        }
-
-    # ── Detected JVM parameters ───────────────────────────────────────────────
-
-    def _extract_init_params(self) -> dict:
-        """Scan gc,init lines and infer JVM parameters from the log."""
-        params = {}
-        col = self.config.collector
-        _COL_FLAG = {
-            G1GC: "-XX:+UseG1GC", CMS: "-XX:+UseConcMarkSweepGC",
-            PARALLEL: "-XX:+UseParallelGC", SERIAL: "-XX:+UseSerialGC",
-            ZGC: "-XX:+UseZGC", ZGC_GEN: "-XX:+UseZGC -XX:+ZGenerational",
-            SHENANDOAH: "-XX:+UseShenandoahGC",
-        }
-        if col in _COL_FLAG:
-            params["Collector flag"] = _COL_FLAG[col]
-
-        for line in self._raw_lines:
-            if "gc,init" not in line and "gc,heap" not in line:
+    for fr in usable:
+        if fr.path not in current.files:
+            current.files.append(fr.path)
+        for it in fr.items:
+            if isinstance(it, Marker):
+                if it.kind == "jvm_start":
+                    new_run(True)
+                    current.files.append(fr.path) if fr.path not in current.files else None
+                    current.meta.update(pending_meta)
+                    pending_meta = {}
+                elif it.kind == "meta":
+                    current.meta.update(it.data)
+                elif it.kind == "stall":
+                    current.stalls.append(it)
+                elif it.kind == "humongous":
+                    current.humongous_max = max(current.humongous_max, it.data["regions"])
+                elif it.kind == "conc_cycle":
+                    current.conc_cycles += 1
+                elif it.kind == "conc_abort":
+                    current.conc_aborts += 1
+                elif it.kind == "to_space":
+                    current.to_space_ids.add(it.data["gc_id"])
+                elif it.kind == "zgc_live":
+                    current.zgc_live.setdefault(it.data["gc_id"], {})[it.data["gen"]] = it.data["mb"]
                 continue
-            m = re.search(r'Heap Max Capacity:\s*(\S+)', line)
-            if m: params["-Xmx"] = m.group(1)
-            m = re.search(r'Heap Initial Capacity:\s*(\S+)', line)
-            if m: params["-Xms"] = m.group(1)
-            m = re.search(r'Heap Region Size:\s*(\S+)', line)
-            if m: params["-XX:G1HeapRegionSize"] = m.group(1)
-            m = re.search(r'Workers\s+for\s+\S[^:]*:\s*(\d+)', line)
-            if m: params["-XX:ConcGCThreads (approx)"] = m.group(1)
+            # an uptime going backwards is a JVM restart even without header (rotated header lost)
+            if it.uptime_ms is not None and last_uptime is not None and it.uptime_ms + 1000 < last_uptime:
+                new_run(False)
+                current.files.append(fr.path)
+            if it.uptime_ms is not None:
+                last_uptime = it.uptime_ms
+            current.events.append(it)
+    if current.events or current.stalls:
+        runs.append(current)
 
-        # GC thread count from task lines
-        for line in self._raw_lines:
-            m = re.search(r'Using (\d+) workers of (\d+) for', line)
-            if m and "-XX:ParallelGCThreads" not in params:
-                params["-XX:ParallelGCThreads (detected)"] = m.group(2)
-                break
+    collectors = {r.collector for r in usable if r.collector != UNKNOWN}
+    for run in runs:
+        run.meta.setdefault("collector", sorted(collectors)[0] if len(collectors) == 1 else
+                            next((r.collector for r in usable if r.path in run.files and r.collector != UNKNOWN), UNKNOWN))
+        _compute_relative_times(run)
+    return runs, warnings
 
-        # Infer Xmx from heap total when not in init lines
-        if "-Xmx" not in params:
-            totals = [e.heap_total_mb for e in self.events if e.heap_total_mb > 0]
-            if totals:
-                params["-Xmx (inferred)"] = f"~{int(max(totals))}M"
 
-        if self.config.log_format == FORMAT_UNIFIED:
-            params["GC log format"] = "-Xlog:gc* (unified, JDK 9+)"
-        else:
-            params["GC log format"] = "-XX:+PrintGCDetails (legacy, JDK 8)"
+def _compute_relative_times(run: Run):
+    evs = run.events
+    if not evs:
+        return
+    if all(e.uptime_ms is not None for e in evs):
+        base = evs[0].uptime_ms
+        for e in evs:
+            e.t_ms = e.uptime_ms - base
+    elif all(e.abs_ms is not None for e in evs):
+        base = evs[0].abs_ms
+        for e in evs:
+            e.t_ms = e.abs_ms - base
+    else:
+        run.meta["no_time"] = True
 
-        if self.config.has_perm_gen:
-            params["-XX:MaxPermSize"] = "not detected (set explicitly)"
 
-        return params
+# ── Analysis of one run ───────────────────────────────────────────────────────
 
-    # ── Tuning recommendations (flag-level) ───────────────────────────────────
-
-    def _tuning_params(self, stats: dict) -> list:
-        """Return list of specific JVM flag recommendations based on analysis."""
-        col = stats.get("collector", UNKNOWN)
-        jdk = stats.get("jdk_version", 0)
-        h   = stats.get("heap_mb", {})
-        p   = stats.get("pause_ms", {})
-        tuning: list = []
-
-        def _add(flag, reason, category, severity="INFO"):
-            tuning.append({"flag": flag, "reason": reason,
-                           "category": category, "severity": severity})
-
-        # ── Heap sizing ───────────────────────────────────────────────────────
-        if h.get("configured"):
-            live = h["max_after"]
-            xmx  = h["configured"]
-            lr   = live / xmx
-            if lr > 0.60:
-                recommended = int((live * 2.5) / 256 + 1) * 256
-                sev = "HIGH" if lr > 0.80 else "MEDIUM"
-                _add(f"-Xmx{recommended}m",
-                     f"Live set {live:.0f}M = {lr*100:.0f}% of current {xmx:.0f}M. "
-                     "Target: Xmx ≥ 2.5× live set.",
-                     "Heap Sizing", sev)
-                _add(f"-Xms{recommended}m",
-                     "Match Xms to Xmx to prevent heap resize pauses on startup.",
-                     "Heap Sizing", "INFO")
-
-        # ── G1GC tuning ───────────────────────────────────────────────────────
-        if col == G1GC:
-            _add("-XX:MaxGCPauseMillis=200",
-                 "Set explicit pause target (default 200ms). "
-                 "Lower to 100ms for latency-sensitive workloads.",
-                 "G1GC", "INFO")
-
-            if stats.get("full_gc_count", 0) > 0:
-                _add("-XX:InitiatingHeapOccupancyPercent=35",
-                     "Default 45%. Trigger concurrent marking earlier so old gen is "
-                     "reclaimed before the heap fills, preventing Full GC.",
-                     "G1GC", "HIGH")
-                _add("-XX:G1ReservePercent=20",
-                     "Default 10%. Reserve more free space as an evacuation buffer "
-                     "to avoid to-space exhaustion during mixed GC.",
-                     "G1GC", "HIGH")
-
-            if stats.get("humongous_max_regions", 0) > 0:
-                _add("-XX:G1HeapRegionSize=16m",
-                     "Humongous objects (>50% of region size) bypass the young gen. "
-                     "Larger regions raise the threshold. Valid values: 1m–32m.",
-                     "G1GC", "MEDIUM")
-
-            if p.get("p99", 0) > 200:
-                _add("-XX:G1NewSizePercent=20",
-                     "Increase minimum young gen to reduce GC frequency.",
-                     "G1GC", "MEDIUM")
-                _add("-XX:G1MaxNewSizePercent=40",
-                     "Cap young gen size to keep pause durations bounded.",
-                     "G1GC", "MEDIUM")
-
-            _add("-XX:+G1UseAdaptiveIHOP",
-                 "Let G1 auto-tune IHOP based on observed marking times. "
-                 "Enabled by default in JDK 9+; verify it is not disabled.",
-                 "G1GC", "INFO")
-
-        # ── CMS tuning ────────────────────────────────────────────────────────
-        if col == CMS:
-            _add("-XX:CMSInitiatingOccupancyFraction=70",
-                 "Default ~92%. Trigger CMS collection earlier to avoid promotion failure.",
-                 "CMS", "HIGH")
-            _add("-XX:+UseCMSInitiatingOccupancyOnly",
-                 "Disable CMS adaptive triggering — use the fixed fraction above.",
-                 "CMS", "HIGH")
-            _add("-XX:+CMSScavengeBeforeRemark",
-                 "Run a minor GC before the CMS Remark pause to reduce promoted objects.",
-                 "CMS", "MEDIUM")
-
-        # ── ZGC tuning ────────────────────────────────────────────────────────
-        if col in (ZGC, ZGC_GEN):
-            if jdk and jdk >= 21 and col != ZGC_GEN:
-                _add("-XX:+UseZGC -XX:+ZGenerational",
-                     "Enable Generational ZGC (JDK 21+) for higher throughput "
-                     "and fewer allocation stalls.",
-                     "ZGC", "HIGH")
-            if h.get("configured"):
-                soft = int(h["configured"] * 0.9)
-                _add(f"-XX:SoftMaxHeapSize={soft}m",
-                     "ZGC soft limit: JVM tries to stay below this before the hard Xmx, "
-                     "leaving headroom for allocation bursts.",
-                     "ZGC", "INFO")
-
-        # ── Shenandoah tuning ─────────────────────────────────────────────────
-        if col == SHENANDOAH:
-            _add("-XX:ShenandoahGCHeuristics=adaptive",
-                 "Adaptive (default) balances frequency and duration. "
-                 "Use 'compact' if heap pressure is consistently high.",
-                 "Shenandoah", "INFO")
-
-        # ── ParallelGC migration ───────────────────────────────────────────────
-        if col == PARALLEL and jdk and jdk >= 11:
-            _add("-XX:+UseG1GC",
-                 "Switch from ParallelGC to G1GC for more predictable pauses "
-                 "on heap > 4GB.",
-                 "Collector", "HIGH")
-
-        # ── Metaspace ─────────────────────────────────────────────────────────
-        if stats.get("meta_gc_threshold_count", 0) > 0:
-            _add("-XX:MetaspaceSize=256m",
-                 "Pre-size Metaspace to eliminate GC cycles triggered by "
-                 "the initial small Metaspace commit threshold.",
-                 "Metaspace", "MEDIUM")
-            _add("-XX:MaxMetaspaceSize=512m",
-                 "Cap Metaspace growth (useful for frameworks that generate classes dynamically).",
-                 "Metaspace", "MEDIUM")
-
-        # ── System.gc() ───────────────────────────────────────────────────────
-        if stats.get("sys_gc_count", 0) > 0:
-            _add("-XX:+DisableExplicitGC",
-                 "Suppress System.gc() calls which force Full GC. "
-                 "Identify the caller first (jstack, JFR).",
-                 "General", "HIGH")
-
-        # ── GC logging ────────────────────────────────────────────────────────
-        if jdk and jdk >= 9:
-            _add("-Xlog:gc*:file=gc.log:time,uptime,level,tags:filecount=10,filesize=20m",
-                 "Comprehensive GC logging with auto-rotation (10 × 20MB). "
-                 "Essential for post-incident analysis.",
-                 "Logging", "INFO")
-        else:
-            _add("-XX:+PrintGCDetails -XX:+PrintGCDateStamps "
-                 "-XX:+PrintGCApplicationStoppedTime "
-                 "-Xloggc:/var/log/app/gc.log "
-                 "-XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 "
-                 "-XX:GCLogFileSize=20m",
-                 "Full GC logging with rotation for JDK 8.",
-                 "Logging", "INFO")
-
-        # ── JFR profiling ─────────────────────────────────────────────────────
-        if jdk and jdk >= 11:
-            _add("-XX:+FlightRecorder "
-                 "-XX:StartFlightRecording=duration=60s,filename=app.jfr",
-                 "JDK Flight Recorder: near-zero overhead profiling for GC, "
-                 "allocations, and CPU. Use JMC to analyse.",
-                 "Profiling", "INFO")
-
-        # Sort: HIGH first, then MEDIUM, INFO
-        order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "INFO": 3}
-        tuning.sort(key=lambda x: order.get(x["severity"], 4))
-        return tuning
-
-    # ── Health score ──────────────────────────────────────────────────────────
-
-    def _health_score(self, stats: dict) -> Tuple[int, str]:
-        score = 100
-
-        fgc = stats.get("full_gc_count", 0)
-        score -= min(40, fgc * 20)
-
-        thru = stats.get("throughput_pct", 100.0)
-        if thru < 90:   score -= 20
-        elif thru < 95: score -= 10
-
-        p99 = stats.get("pause_ms", {}).get("p99", 0)
-        if p99 > 500:   score -= 15
-        elif p99 > 200: score -= 8
-
-        h = stats.get("heap_mb", {})
-        if h.get("configured"):
-            lr = h["max_after"] / h["configured"]
-            if lr > 0.80:   score -= 10
-            elif lr > 0.60: score -= 5
-
-        if stats.get("evacuation_failure_count", 0) > 0: score -= 15
-        if stats.get("to_space_exhaustion_count", 0) > 0: score -= 20
-
-        jdk = stats.get("jdk_version", 0)
-        if jdk and jdk <= 7:  score -= 5
-        elif jdk == 8:        score -= 3
-
-        if stats.get("collector") == CMS and jdk and jdk >= 9:
-            score -= 5
-
-        trend = stats.get("heap_trend_mb_per_min", 0.0)
-        if trend > 100:   score -= 15
-        elif trend > 50:  score -= 8
-        elif trend > 20:  score -= 3
-
-        score = max(0, min(100, score))
-
-        if score >= 90:   label = "Excellent"
-        elif score >= 80: label = "Good"
-        elif score >= 60: label = "Needs Attention"
-        elif score >= 40: label = "Degraded"
-        else:             label = "Critical"
-
-        return score, label
-
-    # ── Analysis ──────────────────────────────────────────────────────────────
-
-    def analyze(self) -> dict:
-        if not self.events:
-            return {
-                "error":       "No GC events found",
-                "jdk_version": self.config.jdk_version,
-                "collector":   self.config.collector,
-                "log_format":  self.config.log_format,
-            }
-
-        cfg          = self.config
-        pause_events = [e for e in self.events if e.pause_ms > 0]
-        if not pause_events:
-            return {"error": "Events found but all have zero pause (concurrent-only log?)"}
-
-        pauses     = [e.pause_ms for e in pause_events]
-        full_gc    = [e for e in pause_events if e.is_full]
-        nonfull_gc = [e for e in pause_events if not e.is_full]
-
-        total_pause_ms = sum(pauses)
-        total_time_ms  = (self.events[-1].uptime_ms - self.events[0].uptime_ms) or 1
-        throughput_pct = max(0.0, (1 - total_pause_ms / total_time_ms) * 100)
-
-        heap_befores = [e.heap_before_mb for e in self.events if e.heap_before_mb]
-        heap_afters  = [e.heap_after_mb  for e in self.events if e.heap_after_mb]
-        heap_totals  = [e.heap_total_mb  for e in self.events if e.heap_total_mb]
-
-        alloc_rate = None
-        if len(self.events) >= 2:
-            total_alloc = sum(
-                max(0, self.events[i].heap_before_mb - self.events[i - 1].heap_after_mb)
-                for i in range(1, len(self.events))
-            )
-            alloc_rate = total_alloc / (total_time_ms / 1000)
-
-        gc_intervals = [
-            self.events[i].uptime_ms - self.events[i - 1].uptime_ms
-            for i in range(1, len(self.events))
-            if self.events[i].uptime_ms - self.events[i - 1].uptime_ms > 0
-        ]
-
-        sp = sorted(pauses)
-        buckets = {"<10": 0, "10-50": 0, "50-200": 0, "200-500": 0, ">500": 0}
-        for p in pauses:
-            if p < 10:      buckets["<10"]     += 1
-            elif p < 50:    buckets["10-50"]   += 1
-            elif p < 200:   buckets["50-200"]  += 1
-            elif p < 500:   buckets["200-500"] += 1
-            else:           buckets[">500"]    += 1
-
-        type_map: Dict[str, list] = defaultdict(list)
-        for e in pause_events:
-            type_map[e.gc_type.split("(")[0].strip()].append(e.pause_ms)
-
-        cpu_events    = [e for e in pause_events if e.cpu_user_s > 0]
-        cpu_efficiency = None
-        if cpu_events:
-            ratios = [e.cpu_real_s / e.cpu_user_s for e in cpu_events if e.cpu_user_s > 0]
-            cpu_efficiency = round(statistics.mean(ratios), 2) if ratios else None
-
-        # GC causes
-        causes_ctr: Dict[str, int] = defaultdict(int)
-        _GEN = {"Minor", "Major", "young", "mixed"}
-        for e in self.events:
-            cause = e.gc_cause
-            if not cause:
-                cause = _last_cause(e.gc_type)
-            if cause and cause not in _GEN:
-                causes_ctr[cause] += 1
-
-        # Heap growth trend (MB per minute)
-        htrend_pts = [(e.uptime_ms / 60000, e.heap_after_mb)
-                      for e in self.events if e.heap_after_mb > 0 and e.uptime_ms > 0]
-        heap_trend = 0.0
-        if len(htrend_pts) >= 3:
-            heap_trend = round(_linreg_slope(
-                [p[0] for p in htrend_pts], [p[1] for p in htrend_pts]), 2)
-
-        # Pause trend (ms per minute)
-        ptrend_pts = [(e.uptime_ms / 60000, e.pause_ms)
-                      for e in pause_events if e.uptime_ms > 0]
-        pause_trend = 0.0
-        if len(ptrend_pts) >= 3:
-            pause_trend = round(_linreg_slope(
-                [p[0] for p in ptrend_pts], [p[1] for p in ptrend_pts]), 2)
-
-        # Extra metrics
-        extra = self._scan_extra_metrics()
-
-        stats: dict = {
-            "jdk_version":        cfg.jdk_version,
-            "jdk_version_str":    cfg.jdk_str,
-            "collector":          cfg.collector,
-            "log_format":         cfg.log_format,
-            "has_perm_gen":       cfg.has_perm_gen,
-            "total_events":       len(self.events),
-            "pause_events":       len(pause_events),
-            "full_gc_count":      len(full_gc),
-            "nonfull_gc_count":   len(nonfull_gc),
-            "total_lines_parsed": self.total_lines,
-            "time_span_sec":      round(total_time_ms / 1000, 1),
-            "throughput_pct":     round(throughput_pct, 2),
-            "pause_ms": {
-                "min":       round(min(pauses), 2),
-                "max":       round(max(pauses), 2),
-                "mean":      round(statistics.mean(pauses), 2),
-                "median":    round(statistics.median(pauses), 2),
-                "p95":       round(sp[max(0, int(len(sp) * 0.95) - 1)], 2),
-                "p99":       round(sp[max(0, int(len(sp) * 0.99) - 1)], 2),
-                "total_sec": round(total_pause_ms / 1000, 2),
-            },
-            "pause_distribution": buckets,
-            "full_gc_pause_ms": {
-                "count": len(full_gc),
-                "max":   round(max((e.pause_ms for e in full_gc), default=0), 2),
-                "mean":  round(statistics.mean([e.pause_ms for e in full_gc]), 2)
-                         if full_gc else 0,
-            },
-            "heap_mb": {
-                "max_before": round(max(heap_befores), 1) if heap_befores else 0,
-                "min_after":  round(min(heap_afters),  1) if heap_afters  else 0,
-                "max_after":  round(max(heap_afters),  1) if heap_afters  else 0,
-                "configured": round(max(heap_totals),  1) if heap_totals  else 0,
-            },
-            "allocation_rate_mb_s": round(alloc_rate, 1) if alloc_rate else None,
-            "gc_interval_ms": {
-                "mean": round(statistics.mean(gc_intervals), 0) if gc_intervals else 0,
-                "min":  round(min(gc_intervals), 0)             if gc_intervals else 0,
-            },
-            "gc_type_breakdown": {
-                k: {"count": len(v), "mean_pause_ms": round(statistics.mean(v), 2)}
-                for k, v in sorted(type_map.items(), key=lambda x: -len(x[1]))
-            },
-            "gc_causes":              dict(sorted(causes_ctr.items(), key=lambda x: -x[1])),
-            "cpu_efficiency":         cpu_efficiency,
-            "heap_trend_mb_per_min":  heap_trend,
-            "pause_trend_ms_per_min": pause_trend,
-            **extra,
-        }
-
-        score, label = self._health_score(stats)
-        stats["health_score"] = score
-        stats["health_label"] = label
-        stats["detected_params"] = self._extract_init_params()
-        stats["tuning_params"]   = self._tuning_params(stats)
+def analyze_run(run: Run, coverage: dict) -> dict:
+    col = run.meta.get("collector", UNKNOWN)
+    evs = run.events
+    pause_events = [e for e in evs if e.pause_ms > 0]
+    stats: dict = {
+        "run": run.index,
+        "collector": col,
+        "jdk_version": run.meta.get("jdk_version", 0),
+        "jdk_version_str": run.meta.get("jdk_str", ""),
+        "xmx_mb": round(run.meta["xmx_mb"], 1) if run.meta.get("xmx_mb") else None,
+        "region_mb": run.meta.get("region_mb"),
+        "starts_at_jvm_start": run.has_start,
+        "files": [os.path.basename(f) for f in run.files],
+        "total_events": len(evs),
+        "pause_events": len(pause_events),
+        "coverage": coverage,
+    }
+    if not evs:
+        stats["error"] = "No GC events found in this run"
         return stats
 
-    # ── Recommendations ───────────────────────────────────────────────────────
+    first, last = evs[0], evs[-1]
+    stats["start"] = _fmt_abs(first.abs_ms)
+    stats["end"] = _fmt_abs(last.abs_ms)
+    span_ms = (last.t_ms + last.pause_ms - first.t_ms) if not run.meta.get("no_time") else 0
+    stats["time_span_sec"] = round(span_ms / 1000, 1)
 
-    def recommendations(self, stats: dict) -> list:
-        if "error" in stats:
-            return [f"[ERROR] {stats['error']}. Verify log flags and format."]
-
-        recs = []
-        p    = stats["pause_ms"]
-        heap = stats["heap_mb"]
-        jdk  = stats["jdk_version"]
-        col  = stats["collector"]
-        thru = stats["throughput_pct"]
-
-        # ── JDK version ───────────────────────────────────────────────────────
-        if jdk and jdk <= 7:
-            recs.append(
-                "[CRITICAL] JDK 7 is EOL (April 2015). Upgrade to JDK 21 LTS immediately "
-                "for security patches and access to G1GC, ZGC, Shenandoah."
-            )
-        elif jdk == 8:
-            recs.append(
-                "[HIGH] JDK 8 mainstream support ended March 2022. Plan migration to JDK 21 LTS. "
-                "Modern low-latency collectors (ZGC, Shenandoah) require JDK 11+."
-            )
-        elif 9 <= jdk <= 10:
-            recs.append("[MEDIUM] JDK 9/10 are non-LTS and EOL. Migrate to JDK 11 or 21 LTS.")
-        elif jdk == 11:
-            recs.append(
-                "[INFO] JDK 11 LTS is supported. JDK 21 adds generational ZGC and significant "
-                "G1GC improvements. Consider a planned upgrade."
-            )
-        elif jdk == 17:
-            recs.append(
-                "[INFO] JDK 17 LTS. JDK 21 adds generational ZGC for better low-latency. "
-                "Upgrade when ready."
-            )
-
-        # ── Collector ─────────────────────────────────────────────────────────
-        if col == CMS:
-            if jdk and jdk >= 14:
-                recs.append(
-                    "[CRITICAL] CMS was removed in JDK 14. If running JDK 14+, "
-                    "-XX:+UseConcMarkSweepGC may be silently ignored — verify active collector."
-                )
-            elif jdk and jdk >= 9:
-                recs.append(
-                    "[HIGH] CMS is deprecated since JDK 9 and removed in JDK 14. "
-                    "Migrate to G1GC (-XX:+UseG1GC) or ZGC (-XX:+UseZGC) now."
-                )
-            else:
-                recs.append(
-                    "[MEDIUM] CMS produces fragmentation and promotion failures over time. "
-                    "Consider migrating to G1GC for heap > 4 GB."
-                )
-
-        if col == PARALLEL:
-            if jdk and jdk >= 9:
-                recs.append(
-                    "[MEDIUM] ParallelGC maximises throughput but has long STW pauses. "
-                    "For latency-sensitive Kafka workloads switch to G1GC or ZGC."
-                )
-            else:
-                recs.append(
-                    "[MEDIUM] ParallelGC is the JDK 7/8 default — good for batch, "
-                    "but unpredictable Full GC pauses. For Kafka/Connect heap >4GB, use G1GC."
-                )
-
-        if col == SERIAL:
-            recs.append(
-                "[HIGH] SerialGC is single-threaded — only suitable for <256MB heaps. "
-                "Kafka/Connect needs at least ParallelGC or G1GC."
-            )
-
-        if col == G1GC:
-            if jdk and jdk >= 9:
-                recs.append(
-                    "[INFO] G1GC is the correct default. Key knobs: "
-                    "-XX:MaxGCPauseMillis (pause target), -XX:G1HeapRegionSize, "
-                    "-XX:G1NewSizePercent, -XX:InitiatingHeapOccupancyPercent."
-                )
-            else:
-                recs.append(
-                    "[INFO] G1GC in JDK 8 is mature for heap >4GB. "
-                    "Ensure JDK 8u40+ for critical G1 bug fixes."
-                )
-
-        if col == ZGC:
-            recs.append(
-                "[INFO] ZGC targets sub-millisecond pauses. "
-                "Upgrade to JDK 21 for generational ZGC (-XX:+ZGenerational) "
-                "which drastically reduces allocation stalls."
-            )
-
-        if col == ZGC_GEN:
-            recs.append(
-                "[INFO] Generational ZGC (JDK 21+) — excellent choice. "
-                "Ensure -XX:+UseZGC -XX:+ZGenerational and heap is 2-4× live set."
-            )
-
-        if col == SHENANDOAH:
-            recs.append(
-                "[INFO] Shenandoah: concurrent compaction with very low pauses. "
-                "Watch for 'Degenerated GC' events (fallback to STW) as a key health signal."
-            )
-
-        # ── Full GC ───────────────────────────────────────────────────────────
-        fgc = stats["full_gc_count"]
-        if fgc > 0:
-            recs.append(
-                f"[CRITICAL] {fgc} Full GC(s) detected "
-                f"(avg {stats['full_gc_pause_ms']['mean']}ms, "
-                f"max {stats['full_gc_pause_ms']['max']}ms). "
-                "Full GCs indicate heap pressure, fragmentation, to-space exhaustion, "
-                "or explicit System.gc() calls. Investigate root cause immediately."
-            )
-
-        # ── Evacuation failure / to-space exhaustion ──────────────────────────
-        ef = stats.get("evacuation_failure_count", 0)
-        ts = stats.get("to_space_exhaustion_count", 0)
-        if ts > 0:
-            recs.append(
-                f"[CRITICAL] {ts} to-space exhaustion event(s) — G1GC ran out of survivor/old "
-                "regions during evacuation. Symptoms: massive Full GC, application stall. "
-                "Fix: increase -Xmx, lower -XX:InitiatingHeapOccupancyPercent (try 35), "
-                "or reduce -XX:G1ReservePercent."
-            )
-        if ef > 0:
-            recs.append(
-                f"[HIGH] {ef} evacuation failure(s) detected. Old gen is too full to absorb "
-                "promoted objects. Increase heap or tune -XX:G1MixedGCCountTarget."
-            )
-
-        # ── System.gc() ───────────────────────────────────────────────────────
-        sgc = stats.get("sys_gc_count", 0)
-        if sgc > 0:
-            recs.append(
-                f"[HIGH] {sgc} explicit System.gc() call(s) found. These trigger Full GCs "
-                "regardless of heap state. Add -XX:+DisableExplicitGC to suppress them, "
-                "or use -XX:+ExplicitGCInvokesConcurrent to make them concurrent (G1/CMS)."
-            )
-
-        # ── Humongous allocations ──────────────────────────────────────────────
-        hum = stats.get("humongous_max_regions", 0)
-        if hum > 0:
-            recs.append(
-                f"[MEDIUM] Humongous object allocations detected (up to {hum} regions). "
-                "Objects >50% of G1 region size bypass the young gen and trigger major GCs. "
-                "Increase -XX:G1HeapRegionSize (up to 32M) or reduce large object allocations."
-            )
-
-        # ── Metadata GC threshold ──────────────────────────────────────────────
-        mgc = stats.get("meta_gc_threshold_count", 0)
-        if mgc > 0:
-            recs.append(
-                f"[MEDIUM] {mgc} Metadata GC threshold trigger(s). Metaspace is filling up, "
-                "causing GC cycles to reclaim class metadata. Set "
-                "-XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m to reduce thrashing."
-            )
-
-        # ── Pause SLO ─────────────────────────────────────────────────────────
-        p99 = p["p99"]
-        if p99 > 500:
-            if col in (ZGC, ZGC_GEN, SHENANDOAH):
-                recs.append(
-                    f"[HIGH] p99 pause {p99}ms is unexpectedly high for {col}. "
-                    "Check for allocation bursts, degenerated GC, or OS-level jitter (THP, swapping)."
-                )
-            else:
-                upgrade = ("Switch to ZGC/Shenandoah for sub-ms pauses."
-                           if jdk and jdk >= 11 else
-                           "Upgrade to JDK 11+ to access ZGC/Shenandoah.")
-                recs.append(
-                    f"[HIGH] p99 pause {p99}ms exceeds 500ms SLO. {upgrade}"
-                )
-        elif p99 > 200:
-            recs.append(
-                f"[MEDIUM] p99 pause {p99}ms. Tune -XX:MaxGCPauseMillis to match SLO. "
-                "Target <100ms for interactive/streaming workloads."
-            )
-
-        # ── Throughput ────────────────────────────────────────────────────────
-        if thru < 90:
-            recs.append(
-                f"[HIGH] GC throughput {thru}% — {100-thru:.1f}% of CPU time in GC. "
-                "Increase -Xmx, reduce allocation rate, or switch to a more efficient collector."
-            )
-        elif thru < 95:
-            recs.append(
-                f"[MEDIUM] GC throughput {thru}% (target ≥95%). "
-                "Consider increasing heap or tuning young gen sizing."
-            )
-
-        # ── Heap utilisation ──────────────────────────────────────────────────
-        if heap["configured"] > 0:
-            lr = heap["max_after"] / heap["configured"]
-            if lr > 0.80:
-                recs.append(
-                    f"[HIGH] Live set {heap['max_after']}M = {lr*100:.0f}% of -Xmx "
-                    f"({heap['configured']}M). Increase heap or investigate memory leak. "
-                    "Rule of thumb: live set should be <50% of Xmx."
-                )
-            elif lr > 0.60:
-                recs.append(
-                    f"[LOW] Live set {lr*100:.0f}% of heap. "
-                    "Add 30-50% headroom to reduce GC frequency."
-                )
-
-        # ── Heap growth trend (memory leak indicator) ──────────────────────────
-        trend = stats.get("heap_trend_mb_per_min", 0.0)
-        if trend > 100:
-            recs.append(
-                f"[CRITICAL] Heap growing at {trend}MB/min — strong memory leak signal. "
-                "Capture heap dump (jmap -dump:live,format=b,file=heap.hprof <pid>) "
-                "and analyse with Eclipse MAT or JVisualVM immediately."
-            )
-        elif trend > 50:
-            recs.append(
-                f"[HIGH] Heap growing at {trend}MB/min. Investigate object retention "
-                "and allocation patterns with async-profiler or JFR."
-            )
-        elif trend > 20:
-            recs.append(
-                f"[MEDIUM] Heap growing at {trend}MB/min. Monitor over a longer window "
-                "to confirm steady-state vs. genuine leak."
-            )
-
-        # ── Pause trend ────────────────────────────────────────────────────────
-        pt = stats.get("pause_trend_ms_per_min", 0.0)
-        if pt > 50:
-            recs.append(
-                f"[HIGH] GC pauses increasing at {pt}ms/min — heap filling over time. "
-                "Expand -Xmx or investigate long-lived object accumulation."
-            )
-
-        # ── Allocation rate ────────────────────────────────────────────────────
-        ar = stats.get("allocation_rate_mb_s")
-        if ar and ar > 500:
-            recs.append(
-                f"[MEDIUM] High allocation rate {ar}MB/s. Profile with "
-                "async-profiler (alloc mode) or JFR. Object pooling or off-heap "
-                "buffers (DirectByteBuffer) can reduce GC pressure."
-            )
-
-        # ── GC frequency ──────────────────────────────────────────────────────
-        mean_iv = stats["gc_interval_ms"]["mean"]
-        if mean_iv < 1000 and stats["pause_events"] > 10:
-            recs.append(
-                f"[MEDIUM] GC firing every {mean_iv:.0f}ms on average. "
-                "Increase Eden/young gen size or -XX:G1NewSizePercent to reduce frequency."
-            )
-
-        # ── PermGen ───────────────────────────────────────────────────────────
-        if stats.get("has_perm_gen"):
-            recs.append(
-                "[INFO] PermGen detected (JDK 7). Set -XX:MaxPermSize=256m to avoid OOM. "
-                "Upgrading to JDK 8+ replaces PermGen with auto-sizing Metaspace."
-            )
-
-        # ── GC causes ─────────────────────────────────────────────────────────
-        causes = stats.get("gc_causes", {})
-        if "Allocation Failure" in causes and causes["Allocation Failure"] > 5:
-            recs.append(
-                f"[MEDIUM] {causes['Allocation Failure']} Allocation Failure triggers. "
-                "Heap is consistently full when GC starts — increase -Xmx or tune "
-                "-XX:G1NewSizePercent/-XX:NewRatio."
-            )
-        if "Ergonomics" in causes:
-            recs.append(
-                "[INFO] GC triggered by Ergonomics (JVM auto-tuning). "
-                "This is normal but tuning -XX:MaxGCPauseMillis can improve predictability."
-            )
-
-        if not recs:
-            recs.append("[OK] No significant issues detected. GC behaviour looks healthy.")
-
-        return recs
-
-    # ── Text report ───────────────────────────────────────────────────────────
-
-    def report(self, stats: dict) -> str:
-        if "error" in stats:
-            return (
-                f"  JDK version : {stats.get('jdk_version', '?')}\n"
-                f"  Collector   : {stats.get('collector', '?')}\n"
-                f"  Error       : {stats['error']}\n"
-            )
-
-        recs = self.recommendations(stats)
-        jdk  = stats["jdk_version"]
-        col  = stats["collector"]
-        W    = 72
-
-        def _hdr(title):
-            return f"── {title} " + "─" * (W - len(title) - 4)
-
-        jdk_label = f"JDK {jdk}" if jdk else "unknown"
-        if stats.get("jdk_version_str"):
-            jdk_label += f"  ({stats['jdk_version_str'][:50]})"
-
-        lines = [
-            "=" * W,
-            "  JVM GC Log Analysis Report",
-            "=" * W,
-            f"  JDK version    : {jdk_label}",
-            f"  Collector      : {col}",
-            f"  Log format     : {stats['log_format']}",
-            f"  PermGen        : {'yes (JDK 7)' if stats.get('has_perm_gen') else 'no'}",
-            f"  Health score   : {stats.get('health_score', '?')}/100  "
-            f"({stats.get('health_label', '?')})",
-            "",
-            _hdr("Summary"),
-            f"  Total GC events    : {stats['total_events']}  "
-            f"(pausing={stats['pause_events']}, full={stats['full_gc_count']})",
-            f"  Log time span      : {stats['time_span_sec']}s",
-            f"  GC throughput      : {stats['throughput_pct']}%",
-        ]
-
-        if stats.get("evacuation_failure_count"):
-            lines.append(f"  Evacuation failures: {stats['evacuation_failure_count']}")
-        if stats.get("to_space_exhaustion_count"):
-            lines.append(f"  To-space exhaustion: {stats['to_space_exhaustion_count']}")
-        if stats.get("sys_gc_count"):
-            lines.append(f"  Explicit System.gc(): {stats['sys_gc_count']}")
-        if stats.get("humongous_max_regions"):
-            lines.append(f"  Humongous regions  : {stats['humongous_max_regions']} (max seen)")
-
-        p = stats["pause_ms"]
-        lines += [
-            "",
-            _hdr("Pause Times (ms)"),
-            f"  Min / Median / Mean : {p['min']} / {p['median']} / {p['mean']}",
-            f"  p95 / p99 / Max     : {p['p95']} / {p['p99']} / {p['max']}",
-            f"  Total pause time    : {p['total_sec']}s",
-        ]
-
-        if stats.get("heap_trend_mb_per_min") is not None:
-            lines.append(f"  Heap growth trend   : {stats['heap_trend_mb_per_min']}MB/min")
-        if stats.get("pause_trend_ms_per_min") is not None:
-            lines.append(f"  Pause trend         : {stats['pause_trend_ms_per_min']}ms/min")
-
-        lines += ["", _hdr("Pause Distribution")]
-        for bucket, count in stats["pause_distribution"].items():
-            bar = "█" * min(count, 40)
-            lines.append(f"  {bucket:>8}ms : {bar} {count}")
-
-        h = stats["heap_mb"]
-        if h["configured"]:
-            pct = h["max_after"] / h["configured"] * 100
-            lines += [
-                "",
-                _hdr("Heap"),
-                f"  Configured (Xmx)    : {h['configured']}M",
-                f"  Max live set (post) : {h['max_after']}M ({pct:.0f}% of Xmx)",
-                f"  Max before GC       : {h['max_before']}M",
-            ]
-        if stats.get("allocation_rate_mb_s"):
-            lines.append(f"  Allocation rate     : {stats['allocation_rate_mb_s']}MB/s")
-
-        causes = stats.get("gc_causes", {})
-        if causes:
-            lines += ["", _hdr("GC Causes")]
-            for cause, cnt in causes.items():
-                lines.append(f"  {cause:<45} {cnt}")
-
-        lines += ["", _hdr("GC Type Breakdown")]
-        for gtype, info in stats["gc_type_breakdown"].items():
-            lines.append(
-                f"  {gtype[:48]:<50} count={info['count']}  avg={info['mean_pause_ms']}ms"
-            )
-
-        lines += ["", _hdr("Recommendations")]
-        for r in recs:
-            lines.append(f"  {r}")
-
-        lines.append("=" * W)
-        return "\n".join(lines)
-
-    # ── HTML report ───────────────────────────────────────────────────────────
-
-    def generate_html(self, stats: dict, output_path: str,
-                      filename: str = "", top_n: int = 20) -> str:
-        """Write a self-contained HTML dashboard to output_path; return the path."""
-
-        if "error" in stats:
-            content = (
-                '<!DOCTYPE html><html><head><meta charset="UTF-8">'
-                '<title>GC Analysis Error</title></head>'
-                '<body style="font-family:sans-serif;padding:40px">'
-                '<h1 style="color:#dc2626">GC Analysis Error</h1>'
-                f'<p><b>File:</b> {_html.escape(filename)}</p>'
-                f'<p><b>Error:</b> {_html.escape(stats["error"])}</p>'
-                f'<p>JDK: {stats.get("jdk_version","?")} | '
-                f'Collector: {stats.get("collector","?")}</p>'
-                '</body></html>'
-            )
-            with open(output_path, "w", encoding="utf-8") as f:
-                f.write(content)
-            return output_path
-
-        recs   = self.recommendations(stats)
-        jdk    = stats.get("jdk_version", 0)
-        col    = stats.get("collector", UNKNOWN)
-        p      = stats.get("pause_ms", {})
-        h      = stats.get("heap_mb", {})
-        health = stats.get("health_score", 100)
-        hlabel = stats.get("health_label", "")
-        thru   = stats.get("throughput_pct", 0)
-
-        # ── Chart data ────────────────────────────────────────────────────────
-        chart_data = {
-            "pauseTimeline": [
-                {"x": round(e.uptime_ms / 1000, 3),
-                 "y": round(e.pause_ms, 2),
-                 "full": e.is_full}
-                for e in self.events if e.pause_ms > 0
-            ],
-            "heapEvolution": [
-                {"x": round(e.uptime_ms / 1000, 3),
-                 "before": round(e.heap_before_mb, 1),
-                 "after":  round(e.heap_after_mb, 1)}
-                for e in self.events if e.heap_before_mb > 0
-            ],
-            "pauseDist": {
-                "labels": [k + "ms" for k in stats.get("pause_distribution", {}).keys()],
-                "values": list(stats.get("pause_distribution", {}).values()),
-            },
-            "gcTypes": {
-                "labels": [k[:28] for k in stats.get("gc_type_breakdown", {}).keys()],
-                "values": [v["count"] for v in stats.get("gc_type_breakdown", {}).values()],
-            },
+    pauses = sorted(e.pause_ms for e in pause_events)
+    total_pause = sum(pauses)
+    full = [e for e in pause_events if e.is_full]
+    stats["full_gc_count"] = len(full)
+    stats["full_gc_causes"] = dict(sorted(_count(e.cause or e.gc_type for e in full).items(), key=lambda x: -x[1]))
+    stats["throughput_pct"] = (round(max(0.0, 100 * (1 - total_pause / span_ms)), 2)
+                               if span_ms >= MIN_THROUGHPUT_SEC * 1000 else None)
+    if pauses:
+        stats["pause_ms"] = {
+            "min": round(pauses[0], 2), "median": round(statistics.median(pauses), 2),
+            "mean": round(statistics.mean(pauses), 2), "p95": round(_percentile(pauses, 0.95), 2),
+            "p99": round(_percentile(pauses, 0.99), 2), "max": round(pauses[-1], 2),
+            "total_sec": round(total_pause / 1000, 2),
         }
+        stats["full_gc_pause_ms"] = {
+            "max": round(max((e.pause_ms for e in full), default=0), 2),
+            "mean": round(statistics.mean([e.pause_ms for e in full]), 2) if full else 0,
+        }
+    buckets = {"<10": 0, "10-50": 0, "50-200": 0, "200-500": 0, ">500": 0}
+    for p in pauses:
+        k = "<10" if p < 10 else "10-50" if p < 50 else "50-200" if p < 200 else "200-500" if p < 500 else ">500"
+        buckets[k] += 1
+    stats["pause_distribution"] = buckets
 
-        # ── Health badge color ────────────────────────────────────────────────
-        if health >= 80:   hcolor = "#16a34a"
-        elif health >= 60: hcolor = "#d97706"
-        elif health >= 40: hcolor = "#ea580c"
-        else:              hcolor = "#dc2626"
+    type_map: Dict[str, list] = defaultdict(list)
+    for e in evs:
+        type_map[e.gc_type].append(e.pause_ms if e.pause_ms else e.duration_ms)
+    stats["gc_type_breakdown"] = {
+        k: {"count": len(v), "mean_ms": round(statistics.mean(v), 2), "max_ms": round(max(v), 2),
+            "concurrent": all(e.is_concurrent for e in evs if e.gc_type == k)}
+        for k, v in sorted(type_map.items(), key=lambda x: -len(x[1]))
+    }
+    stats["gc_causes"] = dict(sorted(_count(e.cause for e in evs if e.cause).items(), key=lambda x: -x[1]))
 
-        # ── KPI cards ─────────────────────────────────────────────────────────
-        p99_v  = p.get("p99", 0)
-        fgc_n  = stats.get("full_gc_count", 0)
-        kpi_rows = [
-            ("Throughput",    f"{thru}",          "%",
-             "danger" if thru < 90 else "warn" if thru < 95 else "ok"),
-            ("Total Events",  str(stats.get("total_events", 0)), "events", ""),
-            ("Full GC",       str(fgc_n),          "events",
-             "danger" if fgc_n > 0 else "ok"),
-            ("p99 Pause",     str(p99_v),           "ms",
-             "danger" if p99_v > 500 else "warn" if p99_v > 200 else "ok"),
-            ("Max Pause",     str(p.get("max", 0)), "ms",
-             "warn" if p.get("max", 0) > 200 else ""),
-            ("Heap -Xmx",     str(h.get("configured", 0)), "MB", ""),
-        ]
-        kpi_html = '<div class="kpi-grid">\n'
-        for label, val, unit, cls in kpi_rows:
-            kpi_html += (
-                f'<div class="kpi-card {cls}">'
-                f'<div class="kpi-label">{_html.escape(label)}</div>'
-                f'<div class="kpi-value">{_html.escape(val)}</div>'
-                f'<div class="kpi-unit">{_html.escape(unit)}</div>'
-                f'</div>\n'
-            )
-        kpi_html += '</div>\n'
+    # heap
+    with_heap = [e for e in evs if e.heap_after_mb > 0 or e.heap_before_mb > 0]
+    heap: dict = {}
+    if with_heap:
+        heap["max_before"] = round(max(e.heap_before_mb for e in with_heap), 1)
+        heap["max_after"] = round(max(e.heap_after_mb for e in with_heap), 1)
+        heap["min_after"] = round(min(e.heap_after_mb for e in with_heap if e.heap_after_mb > 0) if
+                                  any(e.heap_after_mb > 0 for e in with_heap) else 0, 1)
+        heap["max_committed"] = round(max((e.heap_total_mb for e in with_heap), default=0), 1)
+        old = [e for e in with_heap if e.old_gen and e.heap_after_mb > 0]
+        # ZGC reports the live size itself; its heap "after" includes what was allocated during the cycle
+        zl = [v.get("") if "" in v else v["O"] + v.get("Y", 0) for v in run.zgc_live.values() if "" in v or "O" in v]
+        if zl:
+            zl = sorted(zl)
+            heap["live_set"] = round(statistics.median(zl), 1)
+            heap["live_set_max"] = round(zl[-1], 1)
+            heap["live_set_method"] = f"median live size reported by ZGC over {len(zl)} {'major ' if col == ZGC_GEN else ''}collections"
+            if stats["xmx_mb"]:
+                heap["live_set_pct_of_xmx"] = round(100 * heap["live_set"] / stats["xmx_mb"], 1)
+        elif old:
+            afters = sorted(e.heap_after_mb for e in old)
+            heap["live_set"] = round(statistics.median(afters), 1)
+            heap["live_set_max"] = round(afters[-1], 1)
+            heap["live_set_method"] = f"median heap after {len(old)} old-generation collections (Full / Mixed / Major)"
+            if stats["xmx_mb"]:
+                heap["live_set_pct_of_xmx"] = round(100 * heap["live_set"] / stats["xmx_mb"], 1)
+        else:
+            # no old-generation collection: the live set is only bounded by the post-GC floor
+            # (median of the per-window lowest heap after GC over the second half of the run)
+            half = [e for e in with_heap if e.heap_after_mb > 0 and e.t_ms >= (first.t_ms + last.t_ms) / 2]
+            floors = []
+            if half:
+                t0, t1 = half[0].t_ms, half[-1].t_ms
+                w = max(1.0, (t1 - t0) / 6)
+                for i in range(6):
+                    vals = [e.heap_after_mb for e in half if t0 + i * w <= e.t_ms < t0 + (i + 1) * w + (1 if i == 5 else 0)]
+                    if vals:
+                        floors.append(min(vals))
+            heap["live_set"] = None
+            heap["post_gc_floor"] = round(statistics.median(floors), 1) if floors else heap["min_after"]
+            heap["live_set_method"] = (f"not measured: no old-generation collection in the log, "
+                                       f"the live set is below the post-GC floor of {heap['post_gc_floor']}M")
+    stats["heap_mb"] = heap
 
-        # ── Recommendation cards ──────────────────────────────────────────────
-        recs_html = '<div class="recs-list">\n'
-        for rec in recs:
-            sev = "ok"
-            for tag in ("CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"):
-                if rec.startswith(f"[{tag}]"):
-                    sev = tag.lower()
-                    break
-            text = re.sub(r'^\[\w+\]\s*', '', rec)
-            recs_html += (
-                f'<div class="rec-card {sev}">'
-                f'<span class="rec-badge {sev}">{sev.upper()}</span>'
-                f'<span class="rec-text">{_html.escape(text)}</span>'
-                f'</div>\n'
-            )
-        recs_html += '</div>\n'
+    # allocation rate: heap growth between consecutive collections
+    seq = [e for e in with_heap if e.heap_before_mb > 0]
+    if len(seq) >= 2 and span_ms >= 10000:
+        alloc = sum(max(0.0, seq[i].heap_before_mb - seq[i - 1].heap_after_mb) for i in range(1, len(seq)))
+        stats["allocation_rate_mb_s"] = round(alloc / (span_ms / 1000), 1)
+    else:
+        stats["allocation_rate_mb_s"] = None
 
-        # ── Top pauses table ──────────────────────────────────────────────────
-        top = sorted(self.events, key=lambda e: e.pause_ms, reverse=True)[:top_n]
-        tbl = (
-            f'<div class="table-card">'
-            f'<h2>Top {top_n} Longest Pauses</h2>'
-            '<table><tr><th>Uptime (s)</th><th>GC Type</th><th>Pause (ms)</th>'
-            '<th>Heap Before</th><th>Heap After</th><th>Full GC</th></tr>\n'
-        )
+    # trends: per-window minimum of the heap after GC (the floor), only on long enough runs
+    stats["heap_trend_mb_per_hour"] = None
+    stats["pause_trend_ms_per_hour"] = None
+    if span_ms >= MIN_TREND_MINUTES * 60000 and with_heap:
+        windows = 12
+        w = span_ms / windows
+        floors = []
+        for i in range(windows):
+            vals = [e.heap_after_mb for e in with_heap if i * w <= e.t_ms - first.t_ms < (i + 1) * w and e.heap_after_mb > 0]
+            if vals:
+                floors.append(((i + 0.5) * w / 3600000, min(vals)))
+        if len(floors) >= 6:
+            stats["heap_trend_mb_per_hour"] = round(_linreg_slope([f[0] for f in floors], [f[1] for f in floors]), 1)
+            stats["heap_floor_first_last_mb"] = [round(floors[0][1], 1), round(floors[-1][1], 1)]
+        p95s = []
+        for i in range(windows):
+            vals = sorted(e.pause_ms for e in pause_events if i * w <= e.t_ms - first.t_ms < (i + 1) * w)
+            if vals:
+                p95s.append(((i + 0.5) * w / 3600000, _percentile(vals, 0.95)))
+        if len(p95s) >= 6:
+            stats["pause_trend_ms_per_hour"] = round(_linreg_slope([p[0] for p in p95s], [p[1] for p in p95s]), 1)
+
+    # extra findings, counted once per GC
+    stats["evacuation_failure_count"] = len({(e.gc_id, e.src) if e.gc_id is None else e.gc_id
+                                             for e in evs if e.evac_failure} | run.to_space_ids)
+    stats["concurrent_mode_failure_count"] = sum(1 for e in evs if e.cmf)
+    stats["degenerated_gc_count"] = sum(1 for e in evs if e.degenerated)
+    stats["sys_gc_count"] = sum(1 for e in evs if "System.gc" in e.cause)
+    stats["sys_gc_full_count"] = sum(1 for e in full if "System.gc" in e.cause)
+    stats["meta_gc_threshold_count"] = sum(1 for e in evs if "Metadata GC" in e.cause)
+    stats["meta_gc_full_count"] = sum(1 for e in full if "Metadata GC" in e.cause)
+    stats["humongous_max_regions"] = run.humongous_max
+    stats["humongous_triggered_count"] = sum(1 for e in evs if "Humongous" in e.cause)
+    stats["concurrent_mark_cycles"] = run.conc_cycles
+    stats["concurrent_mark_aborts"] = run.conc_aborts
+    alloc_stalls = [s.data["ms"] for s in run.stalls if s.data["kind"] == "Allocation"]
+    stats["allocation_stalls"] = {"count": len(alloc_stalls), "total_ms": round(sum(alloc_stalls), 1),
+                                  "max_ms": round(max(alloc_stalls), 2) if alloc_stalls else 0}
+    cpu = [e for e in pause_events if e.cpu_real_s > 0 and e.cpu_user_s > 0]
+    stats["cpu_parallelism"] = round(statistics.mean(e.cpu_user_s / e.cpu_real_s for e in cpu), 1) if cpu else None
+
+    score, label = health_score(stats)
+    stats["health_score"] = score
+    stats["health_label"] = label
+    stats["recommendations"] = recommendations(stats)
+    return stats
+
+
+def _count(values) -> Dict[str, int]:
+    c: Dict[str, int] = defaultdict(int)
+    for v in values:
+        c[v] += 1
+    return dict(c)
+
+
+def _fmt_abs(abs_ms: Optional[float]) -> Optional[str]:
+    if abs_ms is None:
+        return None
+    return datetime.fromtimestamp(abs_ms / 1000).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _concurrent_collector(col: str) -> bool:
+    return col in (G1GC, CMS, ZGC, ZGC_GEN, SHENANDOAH)
+
+
+def health_score(stats: dict) -> Tuple[Optional[int], str]:
+    cov = stats.get("coverage", {})
+    if cov.get("ratio", 1) < 0.8:
+        return None, "not scored: too many unparsed GC lines"
+    if not stats.get("pause_events") and not stats.get("total_events"):
+        return None, "not scored"
+    score = 100
+    col = stats["collector"]
+    if _concurrent_collector(col):
+        score -= min(40, stats.get("full_gc_count", 0) * 10)
+    score -= min(20, stats.get("evacuation_failure_count", 0) * 2)
+    score -= min(25, stats.get("concurrent_mode_failure_count", 0) * 5)
+    score -= min(20, stats.get("degenerated_gc_count", 0) * 5)
+    if stats["allocation_stalls"]["count"]:
+        score -= 15
+    thru = stats.get("throughput_pct")
+    if thru is not None:
+        score -= 20 if thru < 90 else 10 if thru < 95 else 0
+    p99 = stats.get("pause_ms", {}).get("p99", 0)
+    score -= 15 if p99 > 500 else 8 if p99 > 200 else 0
+    live_pct = stats.get("heap_mb", {}).get("live_set_pct_of_xmx")
+    if live_pct is not None:
+        score -= 10 if live_pct > 70 else 5 if live_pct > 50 else 0
+    if _leak_suspected(stats):
+        score -= 15
+    score = max(0, min(100, score))
+    label = ("Excellent" if score >= 90 else "Good" if score >= 80 else "Needs Attention" if score >= 60
+             else "Degraded" if score >= 40 else "Critical")
+    return score, label
+
+
+def _leak_suspected(stats: dict) -> bool:
+    trend = stats.get("heap_trend_mb_per_hour")
+    if trend is None or trend <= 0:
+        return False
+    hours = stats["time_span_sec"] / 3600
+    growth = trend * hours
+    ref = stats.get("xmx_mb") or stats.get("heap_mb", {}).get("max_committed") or 0
+    return ref > 0 and growth > 0.2 * ref
+
+
+# ── Recommendations (only when backed by a finding) ───────────────────────────
+
+def recommendations(stats: dict) -> List[dict]:
+    recs: List[dict] = []
+
+    def add(sev, text, flag=None):
+        recs.append({"severity": sev, "text": text, **({"flag": flag} if flag else {})})
+
+    col = stats["collector"]
+    jdk = stats.get("jdk_version") or 0
+    heap = stats.get("heap_mb", {})
+    p = stats.get("pause_ms", {})
+    xmx = stats.get("xmx_mb")
+
+    # collector
+    if col == CMS:
+        if jdk >= 14:
+            add("CRITICAL", "CMS was removed in JDK 14: verify which collector is really active.")
+        else:
+            add("MEDIUM", "CMS is deprecated (removed in JDK 14) and fragments the old generation over time. "
+                          "Move to G1 with Kafka's settings.", KAFKA_G1_DEFAULTS)
+    if col == SERIAL:
+        add("HIGH", "SerialGC is single-threaded, only suitable for very small heaps. Use G1 for Kafka components.",
+            KAFKA_G1_DEFAULTS)
+    if col == PARALLEL and (p.get("max", 0) > 200):
+        add("MEDIUM", f"ParallelGC pauses reach {p['max']}ms (every old-generation collection is a stop-the-world "
+                      "Full GC). Kafka components run G1 by default.", KAFKA_G1_DEFAULTS)
+    if jdk and jdk < 17:
+        add("INFO", f"JDK {jdk}: Kafka 4.x / Confluent Platform 8.x brokers, Connect and tools require Java 17 or later.")
+
+    # Full GC on a concurrent collector = fallback
+    fgc = stats.get("full_gc_count", 0)
+    if fgc and _concurrent_collector(col):
+        causes = ", ".join(f"{k} ×{v}" for k, v in stats.get("full_gc_causes", {}).items())
+        sev = "CRITICAL" if stats.get("full_gc_pause_ms", {}).get("max", 0) > 1000 or fgc >= 10 else "HIGH"
+        add(sev, f"{fgc} Full GC(s) with {col} (max {stats['full_gc_pause_ms']['max']}ms; causes: {causes}). "
+                 "A concurrent collector falling back to a Full GC means the old generation filled up before the "
+                 "concurrent cycle could reclaim it: heap too small for the live set, a leak, or explicit System.gc().")
+
+    # G1 evacuation failure / to-space exhausted
+    ef = stats.get("evacuation_failure_count", 0)
+    if ef:
+        add("HIGH" if ef < 10 else "CRITICAL",
+            f"{ef} evacuation failure(s) / to-space exhausted: G1 had no free region to copy live objects to. "
+            "Give the heap more headroom (raise -Xmx), keep more free regions in reserve (raise G1ReservePercent, "
+            "default 10), and check the humongous allocations below.",
+            "-XX:G1ReservePercent=20")
+
+    # CMS concurrent mode failure / promotion failed
+    cmf = stats.get("concurrent_mode_failure_count", 0)
+    if cmf:
+        add("CRITICAL" if cmf >= 5 else "HIGH",
+            f"{cmf} CMS concurrent mode failure(s) / promotion failure(s): the old generation filled before CMS "
+            "finished, each one is a long stop-the-world Full GC. Start CMS earlier and give it a fixed threshold, "
+            "add heap, or move to G1.",
+            "-XX:CMSInitiatingOccupancyFraction=70 -XX:+UseCMSInitiatingOccupancyOnly")
+
+    # Shenandoah / ZGC fallbacks
+    if stats.get("degenerated_gc_count"):
+        add("HIGH", f"{stats['degenerated_gc_count']} Shenandoah degenerated GC(s): the concurrent cycle could not "
+                    "keep up with allocation and fell back to a stop-the-world pause. Raise -Xmx or start cycles earlier.")
+    stalls = stats.get("allocation_stalls", {})
+    if stalls.get("count"):
+        add("HIGH", f"{stalls['count']} ZGC allocation stall(s), {stalls['total_ms']}ms in total (max {stalls['max_ms']}ms): "
+                    "application threads waited for memory because ZGC could not reclaim it fast enough. Raise -Xmx "
+                    "(ZGC needs headroom above the live set) or reduce the allocation rate.")
+
+    # explicit System.gc()
+    if stats.get("sys_gc_full_count"):
+        add("HIGH", f"{stats['sys_gc_full_count']} Full GC(s) triggered by System.gc(). Kafka sets "
+                    "-XX:+ExplicitGCInvokesConcurrent so that System.gc() runs a concurrent cycle instead: check that "
+                    "KAFKA_JVM_PERFORMANCE_OPTS was not overridden. Find the caller (thread dump, JFR) before "
+                    "considering -XX:+DisableExplicitGC, which can delay the release of direct buffers.",
+            "-XX:+ExplicitGCInvokesConcurrent")
+
+    # humongous allocations
+    hum_trig = stats.get("humongous_triggered_count", 0)
+    region = stats.get("region_mb")
+    if col == G1GC and (hum_trig >= 10 or (stats.get("humongous_max_regions") and xmx and region and
+                                           stats["humongous_max_regions"] * region > 0.1 * xmx)):
+        text = (f"Humongous allocations: {hum_trig} GC(s) triggered by G1 Humongous Allocation, up to "
+                f"{stats.get('humongous_max_regions', 0)} humongous regions. Objects of half a region or more "
+                f"(region size {region:g}M) go straight to the old generation. " if region else
+                f"Humongous allocations: {hum_trig} GC(s) triggered by G1 Humongous Allocation. ")
+        text += "With Kafka this usually means large batches or records (max.request.size, fetch sizes, message.max.bytes)."
+        flag = None
+        if region and region < 32:
+            text += (" A region must be at least twice the size of the large objects to keep them out of the "
+                     "humongous path (32m maximum before JDK 18).")
+            flag = "-XX:G1HeapRegionSize=16m (or 32m: 2x the largest batch / record)"
+        add("MEDIUM", text, flag)
+
+    # Metaspace
+    if stats.get("meta_gc_full_count") or stats.get("meta_gc_threshold_count", 0) > 3:
+        add("MEDIUM", f"{stats['meta_gc_threshold_count']} GC(s) triggered by Metadata GC Threshold "
+                      f"({stats.get('meta_gc_full_count', 0)} Full GC). Metaspace keeps growing past its high-water "
+                      "mark, typical of Connect workers loading many plugins: start with a larger threshold. Avoid "
+                      "capping it with MaxMetaspaceSize, which turns this into an OutOfMemoryError.",
+            "-XX:MetaspaceSize=256m")
+
+    # pauses
+    p99 = p.get("p99", 0)
+    if p99 > 500:
+        add("HIGH", f"p99 pause {p99}ms (max {p.get('max')}ms): long enough to expire broker sessions and "
+                    "consumer heartbeats. Look at the Full GC / evacuation failure findings above and at the heap "
+                    "sizing first; on JDK 21 Generational ZGC is an option for very large heaps.")
+    elif p99 > 200 and col == G1GC:
+        add("MEDIUM", f"p99 pause {p99}ms, well above the 20ms G1 target Kafka sets (MaxGCPauseMillis=20). "
+                      "Check the heap sizing and the young GC pause breakdown.")
+
+    # throughput
+    thru = stats.get("throughput_pct")
+    if thru is not None and thru < 95:
+        add("HIGH" if thru < 90 else "MEDIUM",
+            f"GC throughput {thru}%: {100 - thru:.1f}% of the wall-clock time is spent in GC pauses. "
+            "The heap is too small for the allocation rate or the live set.")
+
+    # live set
+    live_pct = heap.get("live_set_pct_of_xmx")
+    if live_pct is not None and live_pct > 50:
+        target = int(math.ceil(heap["live_set"] * 2.5 / 256.0) * 256)
+        add("HIGH" if live_pct > 70 else "MEDIUM",
+            f"Live set ~{heap['live_set']}M = {live_pct}% of -Xmx ({xmx:g}M). Keep the live set under half of the heap "
+            "so the collector has room to work.", f"-Xms{target}m -Xmx{target}m")
+
+    # leak
+    if _leak_suspected(stats):
+        f0, f1 = stats.get("heap_floor_first_last_mb", [0, 0])
+        add("HIGH", f"The heap floor after GC grows by {stats['heap_trend_mb_per_hour']}MB/hour over "
+                    f"{stats['time_span_sec'] / 60:.0f} minutes ({f0}M -> {f1}M): possible memory leak. Take two heap "
+                    "dumps some time apart and compare them: playground debug heap-dump, then "
+                    "playground debug heap-analyze --file <first> --compare <second>.")
+    pt = stats.get("pause_trend_ms_per_hour")
+    if pt is not None and pt * stats["time_span_sec"] / 3600 > 100:
+        add("MEDIUM", f"p95 pause grows by {pt}ms/hour over the run: pauses get longer as the run goes on.")
+
+    if not recs or all(r["severity"] == "INFO" for r in recs):
+        add("OK", "No GC problem found in this run.")
+    order = {s: i for i, s in enumerate(SEVERITIES)}
+    recs.sort(key=lambda r: order.get(r["severity"], 9))
+    return recs
+
+
+# ── Text report ───────────────────────────────────────────────────────────────
+
+def text_report(stats: dict, runs_summary: List[dict], warnings: List[str], top: List[GCEvent]) -> str:
+    W = 76
+
+    def hdr(title):
+        return f"── {title} " + "─" * max(0, W - len(title) - 4)
+
+    cov = stats["coverage"]
+    jdk = stats.get("jdk_version")
+    lines = ["=" * W, "  JVM GC Log Analysis", "=" * W]
+    lines.append(f"  Files          : {cov['files']} ({cov['lines']:,} lines, format {', '.join(cov['formats'])})")
+    lines.append(f"  Coverage       : {cov['parsed']:,} GC records parsed out of {cov['candidates']:,} candidate lines"
+                 + (f", {cov['candidates'] - cov['parsed']} unparsed" if cov['candidates'] > cov['parsed'] else ""))
+    for ex in cov.get("unparsed_examples", [])[:3]:
+        lines.append(f"                   unparsed: {ex}")
+    for w in warnings:
+        lines.append(f"  ⚠️  {w}")
+    if len(runs_summary) > 1:
+        lines += ["", hdr(f"JVM runs ({len(runs_summary)})")]
+        for r in runs_summary:
+            mark = "  ◀ analyzed" if r["run"] == stats["run"] else ""
+            lines.append(f"  #{r['run']:<3} {r['start'] or '?':<19}  {r['span']:>8}  {r['pauses']:>6} pauses  "
+                         f"{r['full']:>3} Full GC  max {r['max_pause']}ms{mark}")
+    lines += ["", hdr(f"Run #{stats['run']}")]
+    lines.append(f"  JDK / collector: {('JDK ' + str(jdk)) if jdk else 'JDK ?'}"
+                 f"{(' (' + stats['jdk_version_str'] + ')') if stats.get('jdk_version_str') else ''} / {stats['collector']}")
+    lines.append(f"  Heap (-Xmx)    : {str(stats['xmx_mb']) + 'M' if stats['xmx_mb'] else 'unknown (no JVM start header in the log)'}"
+                 + (f", region size {stats['region_mb']:g}M" if stats.get("region_mb") else ""))
+    if stats.get("start"):
+        lines.append(f"  Time           : {stats['start']} -> {stats['end']} ({stats['time_span_sec']}s)")
+    else:
+        lines.append(f"  Time span      : {stats['time_span_sec']}s")
+    hs = stats.get("health_score")
+    lines.append(f"  Health score   : {str(hs) + '/100' if hs is not None else '-'}  ({stats.get('health_label')})")
+
+    lines += ["", hdr("Summary")]
+    lines.append(f"  GC events          : {stats['total_events']} (pauses={stats['pause_events']}, full={stats['full_gc_count']})")
+    thru = stats.get("throughput_pct")
+    lines.append(f"  GC throughput      : {str(thru) + '%' if thru is not None else f'- (needs ≥ {MIN_THROUGHPUT_SEC}s of log)'}")
+    for key, label in (("evacuation_failure_count", "Evacuation failures"), ("concurrent_mode_failure_count", "CMS mode failures"),
+                       ("degenerated_gc_count", "Degenerated GCs"), ("sys_gc_count", "System.gc() GCs"),
+                       ("humongous_triggered_count", "Humongous-triggered"), ("concurrent_mark_cycles", "Concurrent cycles"),
+                       ("concurrent_mark_aborts", "Conc. mark aborts")):
+        if stats.get(key):
+            lines.append(f"  {label:<19}: {stats[key]}")
+    st = stats["allocation_stalls"]
+    if st["count"]:
+        lines.append(f"  Allocation stalls  : {st['count']} (total {st['total_ms']}ms, max {st['max_ms']}ms)")
+
+    p = stats.get("pause_ms")
+    if p:
+        lines += ["", hdr("Pause Times (ms)"),
+                  f"  Min / Median / Mean : {p['min']} / {p['median']} / {p['mean']}",
+                  f"  p95 / p99 / Max     : {p['p95']} / {p['p99']} / {p['max']}",
+                  f"  Total pause time    : {p['total_sec']}s"]
+        lines += ["", hdr("Pause Distribution")]
+        mx = max(stats["pause_distribution"].values()) or 1
+        for bucket, count in stats["pause_distribution"].items():
+            lines.append(f"  {bucket:>8}ms : {'█' * int(round(40 * count / mx)):<40} {count}")
+
+    h = stats.get("heap_mb")
+    if h:
+        lines += ["", hdr("Heap (MB)")]
+        if h.get("live_set") is not None:
+            lines.append(f"  Live set           : {h['live_set']}M ({h['live_set_method']})"
+                         + (f", {h['live_set_pct_of_xmx']}% of -Xmx" if h.get("live_set_pct_of_xmx") is not None else ""))
+        else:
+            lines.append(f"  Live set           : {h['live_set_method']}")
+        lines.append(f"  Heap after GC      : min {h['min_after']}M / max {h['max_after']}M, before GC max {h['max_before']}M")
+        if h.get("max_committed"):
+            lines.append(f"  Max committed      : {h['max_committed']}M")
+    if stats.get("allocation_rate_mb_s"):
+        lines.append(f"  Allocation rate    : {stats['allocation_rate_mb_s']}MB/s")
+    if stats.get("heap_trend_mb_per_hour") is not None:
+        lines.append(f"  Heap floor trend   : {stats['heap_trend_mb_per_hour']}MB/hour")
+    else:
+        lines.append(f"  Heap floor trend   : - (needs ≥ {MIN_TREND_MINUTES} min of log)")
+
+    causes = stats.get("gc_causes", {})
+    if causes:
+        lines += ["", hdr("GC Causes")]
+        for cause, cnt in list(causes.items())[:12]:
+            lines.append(f"  {cause[:52]:<54} {cnt}")
+
+    lines += ["", hdr("GC Type Breakdown")]
+    for gtype, info in stats["gc_type_breakdown"].items():
+        kind = "duration" if info["concurrent"] else "pause"
+        lines.append(f"  {gtype[:46]:<48} count={info['count']:<6} avg {kind}={info['mean_ms']}ms  max={info['max_ms']}ms")
+
+    if top:
+        lines += ["", hdr(f"Top {len(top)} longest pauses")]
         for e in top:
-            rc = "full-gc-row" if e.is_full else ""
-            pc = "pause-hi" if e.pause_ms > 500 else ""
-            tbl += (
-                f'<tr class="{rc}">'
-                f'<td>{e.uptime_ms/1000:.3f}</td>'
-                f'<td>{_html.escape(e.gc_type[:55])}</td>'
-                f'<td class="{pc}">{e.pause_ms:.2f}</td>'
-                f'<td>{e.heap_before_mb:.1f}M</td>'
-                f'<td>{e.heap_after_mb:.1f}M</td>'
-                f'<td>{"&#x2716;" if e.is_full else ""}</td>'
-                f'</tr>\n'
-            )
-        tbl += '</table></div>\n'
+            heap_s = f"  {e.heap_before_mb:.0f}M->{e.heap_after_mb:.0f}M" if e.heap_before_mb else ""
+            when = _fmt_abs(e.abs_ms) or (f"{e.uptime_ms / 1000:.3f}s" if e.uptime_ms is not None else "")
+            lines.append(f"  {e.pause_ms:>9.2f}ms  {e.gc_type[:34]:<34} {(e.cause or '')[:24]:<24}{heap_s}  {when}  {e.src}")
 
-        # ── GC causes table ───────────────────────────────────────────────────
-        causes    = stats.get("gc_causes", {})
-        cause_tbl = ""
-        if causes:
-            cause_tbl = (
-                '<div class="table-card">'
-                '<h2>GC Cause Breakdown</h2>'
-                '<table><tr><th>Cause</th><th>Count</th></tr>\n'
-            )
-            for cause, cnt in causes.items():
-                cause_tbl += f'<tr><td>{_html.escape(cause)}</td><td>{cnt}</td></tr>\n'
-            cause_tbl += '</table></div>\n'
+    lines += ["", hdr("Recommendations")]
+    for r in stats["recommendations"]:
+        lines.append(f"  [{r['severity']}] {r['text']}")
+        if r.get("flag"):
+            lines.append(f"      👉 {r['flag']}")
+    lines.append("=" * W)
+    return "\n".join(lines)
 
-        # ── Additional findings table ─────────────────────────────────────────
-        findings = {}
-        if stats.get("evacuation_failure_count"):
-            findings["Evacuation Failures"] = stats["evacuation_failure_count"]
-        if stats.get("to_space_exhaustion_count"):
-            findings["To-Space Exhaustion"] = stats["to_space_exhaustion_count"]
-        if stats.get("sys_gc_count"):
-            findings["Explicit System.gc() Calls"] = stats["sys_gc_count"]
-        if stats.get("meta_gc_threshold_count"):
-            findings["Metadata GC Threshold Triggers"] = stats["meta_gc_threshold_count"]
-        if stats.get("humongous_max_regions"):
-            findings["Humongous Regions (peak)"] = stats["humongous_max_regions"]
-        if stats.get("heap_trend_mb_per_min"):
-            findings["Heap Growth Trend"] = f"{stats['heap_trend_mb_per_min']} MB/min"
-        if stats.get("pause_trend_ms_per_min"):
-            findings["Pause Trend"] = f"{stats['pause_trend_ms_per_min']} ms/min"
-        if stats.get("concurrent_mark_cycles"):
-            findings["Concurrent Mark Cycles"] = stats["concurrent_mark_cycles"]
 
-        findings_html = ""
-        if findings:
-            findings_html = (
-                '<div class="table-card">'
-                '<h2>Additional Findings</h2>'
-                '<table><tr><th>Metric</th><th>Value</th></tr>\n'
-            )
-            for k, v in findings.items():
-                findings_html += f'<tr><td>{_html.escape(k)}</td><td>{_html.escape(str(v))}</td></tr>\n'
-            findings_html += '</table></div>\n'
+# ── HTML report (inline SVG charts, no external resource) ─────────────────────
 
-        # ── JVM Parameters section ────────────────────────────────────────────
-        detected = stats.get("detected_params", {})
-        tuning   = stats.get("tuning_params", [])
+def _e(s) -> str:
+    return _html.escape(str(s), quote=True)
 
-        detected_tbl = (
-            '<div class="table-card" style="margin-bottom:0">'
-            '<h2>Detected from Log</h2>'
-            '<table><tr><th>Parameter</th><th>Value</th></tr>\n'
-        )
-        for k, v in detected.items():
-            detected_tbl += (
-                f'<tr><td class="flag-cell">{_html.escape(k)}</td>'
-                f'<td>{_html.escape(str(v))}</td></tr>\n'
-            )
-        detected_tbl += '</table></div>'
 
-        tuning_tbl = (
-            '<div class="table-card" style="margin-bottom:0">'
-            '<h2>Recommended Tuning Flags</h2>'
-            '<table><tr><th>Severity</th><th>Category</th>'
-            '<th>Flag / Action</th><th>Why</th></tr>\n'
-        )
-        for t in tuning:
-            sev = t["severity"].lower()
-            tuning_tbl += (
-                f'<tr>'
-                f'<td><span class="sev {sev}">{t["severity"]}</span></td>'
-                f'<td>{_html.escape(t["category"])}</td>'
-                f'<td class="flag-cell">{_html.escape(t["flag"])}</td>'
-                f'<td style="font-size:.83rem;color:#475569">{_html.escape(t["reason"])}</td>'
-                f'</tr>\n'
-            )
-        tuning_tbl += '</table></div>'
+def _nice_ticks(lo: float, hi: float, n: int = 5) -> List[float]:
+    if hi <= lo:
+        hi = lo + 1
+    raw = (hi - lo) / n
+    mag = 10 ** math.floor(math.log10(raw))
+    step = next(m * mag for m in (1, 2, 2.5, 5, 10) if m * mag >= raw)
+    start = math.floor(lo / step) * step
+    ticks, v = [start], start
+    while v < hi - step * 1e-9:
+        v += step
+        ticks.append(round(v, 10))
+    return ticks
 
-        params_html = (
-            '<div class="section-title">JVM Parameters</div>'
-            '<div class="params-grid">'
-            + detected_tbl
-            + tuning_tbl
-            + '</div>\n'
-        )
 
-        # ── Header ────────────────────────────────────────────────────────────
-        jdk_label = f"JDK {jdk}" if jdk else "Unknown"
-        ts_now    = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+def _svg_frame(xmax: float, ymax: float, xlabel: str, ylabel: str, W=560, H=270, L=56, B=36, T=26, R=14):
+    xt, yt = _nice_ticks(0, xmax), _nice_ticks(0, ymax)
+    xmax, ymax = xt[-1] or 1, yt[-1] or 1
+    pw, ph = W - L - R, H - T - B
+    sx = lambda x: L + pw * x / xmax
+    sy = lambda y: T + ph * (1 - y / ymax)
+    out = [f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg">']
+    for y in yt:
+        out.append(f'<line x1="{L}" y1="{sy(y):.1f}" x2="{W - R}" y2="{sy(y):.1f}" stroke="#e2e8f0"/>'
+                   f'<text x="{L - 6}" y="{sy(y) + 4:.1f}" font-size="10" text-anchor="end" fill="#64748b">{y:g}</text>')
+    for x in xt:
+        out.append(f'<text x="{sx(x):.1f}" y="{H - B + 14}" font-size="10" text-anchor="middle" fill="#64748b">{x:g}</text>')
+    out.append(f'<line x1="{L}" y1="{T + ph}" x2="{W - R}" y2="{T + ph}" stroke="#94a3b8"/>')
+    out.append(f'<text x="{L + pw / 2}" y="{H - 4}" font-size="11" text-anchor="middle" fill="#475569">{_e(xlabel)}</text>')
+    out.append(f'<text x="12" y="{T + ph / 2}" font-size="11" text-anchor="middle" fill="#475569" '
+               f'transform="rotate(-90 12 {T + ph / 2})">{_e(ylabel)}</text>')
+    return out, sx, sy
 
-        header_html = (
-            '<div class="header">'
-            '<div>'
-            '<h1>JVM GC Log Analysis</h1>'
-            '<div class="header-meta">'
-            f'<span>&#128196; {_html.escape(filename or "stdin")}</span>'
-            f'<span>JDK: {_html.escape(jdk_label)}</span>'
-            f'<span>Collector: {_html.escape(col)}</span>'
-            f'<span>Format: {_html.escape(stats.get("log_format",""))}</span>'
-            f'<span>Events: {stats.get("total_events",0)}</span>'
-            f'<span>Span: {stats.get("time_span_sec",0)}s</span>'
-            f'<span>Generated: {ts_now}</span>'
-            '</div>'
-            '</div>'
-            '</div>\n'
-        )
 
-        charts_html = (
-            '<div class="charts-grid">'
-            '<div class="chart-card"><h2>GC Pause Timeline</h2>'
-            '<div class="chart-container"><canvas id="chartPause"></canvas></div></div>'
-            '<div class="chart-card"><h2>Heap Evolution (MB)</h2>'
-            '<div class="chart-container"><canvas id="chartHeap"></canvas></div></div>'
-            '<div class="chart-card"><h2>Pause Distribution</h2>'
-            '<div class="chart-container"><canvas id="chartDist"></canvas></div></div>'
-            '<div class="chart-card"><h2>GC Type Breakdown</h2>'
-            '<div class="chart-container"><canvas id="chartTypes"></canvas></div></div>'
-            '</div>\n'
-        )
+def _sample(points: list, limit: int, keep_key=None) -> list:
+    if len(points) <= limit:
+        return points
+    step = len(points) / limit
+    sampled = [points[int(i * step)] for i in range(limit)]
+    if keep_key:
+        sampled += sorted(points, key=keep_key, reverse=True)[: limit // 20]
+    return sampled
 
-        # ── Assemble ──────────────────────────────────────────────────────────
-        parts = [
-            '<!DOCTYPE html><html lang="en"><head>',
-            '<meta charset="UTF-8">',
-            '<meta name="viewport" content="width=device-width,initial-scale=1">',
-            f'<title>GC Report — {_html.escape(filename or "analysis")}</title>',
-            '<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">'
-            '</script>',
-            _HTML_CSS,
-            '</head><body><div class="page">',
-            header_html,
-            kpi_html,
-            charts_html,
-            params_html,
-            '<div class="section-title">Recommendations</div>',
-            recs_html,
-            findings_html,
-            cause_tbl,
-            tbl,
-            '<div class="footer">Generated by gc_log_analyzer.py</div>',
-            '</div>',
-            '<script id="gc-chart-data" type="application/json">',
-            json.dumps(chart_data, ensure_ascii=False),
-            '</script>',
-            _HTML_CHARTS_JS,
-            '</body></html>',
-        ]
 
-        html_content = "".join(parts)
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(html_content)
-        return output_path
+def svg_pause_timeline(events: List[GCEvent], x_unit: float, x_label: str) -> str:
+    pts = [(e.t_ms / x_unit, e.pause_ms, e.is_full or e.cmf or e.evac_failure) for e in events if e.pause_ms > 0]
+    if not pts:
+        return "<p>No pause.</p>"
+    pts = _sample(pts, 3000, keep_key=lambda p: p[1])
+    out, sx, sy = _svg_frame(max(p[0] for p in pts), max(p[1] for p in pts), x_label, "pause (ms)")
+    for x, y, bad in pts:
+        if not bad:
+            out.append(f'<circle cx="{sx(x):.1f}" cy="{sy(y):.1f}" r="2" fill="#3b82f6" fill-opacity=".55"/>')
+    for x, y, bad in pts:
+        if bad:
+            out.append(f'<circle cx="{sx(x):.1f}" cy="{sy(y):.1f}" r="3.5" fill="#dc2626"/>')
+    out.append('<text x="60" y="12" font-size="10" fill="#3b82f6">● pause</text>'
+               '<text x="115" y="12" font-size="10" fill="#dc2626">● Full GC / evacuation or mode failure</text></svg>')
+    return "".join(out)
+
+
+def svg_heap(events: List[GCEvent], x_unit: float, x_label: str, xmx: Optional[float]) -> str:
+    pts = [(e.t_ms / x_unit, e.heap_before_mb, e.heap_after_mb) for e in events if e.heap_after_mb > 0]
+    if not pts:
+        return "<p>No heap figure in this log.</p>"
+    pts = _sample(pts, 1500)
+    ymax = max(max(p[1] for p in pts), xmx or 0)
+    out, sx, sy = _svg_frame(max(p[0] for p in pts), ymax, x_label, "heap (MB)")
+    for idx, color in ((1, "#f97316"), (2, "#16a34a")):
+        path = " ".join(f"{'M' if i == 0 else 'L'}{sx(p[0]):.1f},{sy(p[idx]):.1f}" for i, p in enumerate(pts) if p[idx] > 0)
+        out.append(f'<path d="{path}" fill="none" stroke="{color}" stroke-width="1.2" stroke-opacity=".85"/>')
+    if xmx:
+        out.append(f'<line x1="{sx(0):.1f}" y1="{sy(xmx):.1f}" x2="{sx(pts[-1][0]):.1f}" y2="{sy(xmx):.1f}" '
+                   f'stroke="#dc2626" stroke-dasharray="4 3"/>')
+    out.append('<text x="60" y="12" font-size="10" fill="#f97316">— before GC</text>'
+               '<text x="140" y="12" font-size="10" fill="#16a34a">— after GC</text>'
+               + ('<text x="215" y="12" font-size="10" fill="#dc2626">- - -Xmx</text>' if xmx else "") + '</svg>')
+    return "".join(out)
+
+
+def svg_bars(labels: List[str], values: List[float], colors: List[str], ylabel: str) -> str:
+    W, H, L, B, T = 560, 290, 56, 60, 14
+    ymax = _nice_ticks(0, max(values) if values and max(values) > 0 else 1)[-1]
+    out, _, sy = _svg_frame(1, ymax, "", ylabel, W=W, H=H, L=L, B=B, T=T)
+    out = [o for o in out if 'text-anchor="middle" fill="#64748b"' not in o]  # no numeric x ticks
+    n = max(1, len(values))
+    pw = W - L - 14
+    bw = pw / n * 0.7
+    for i, (lab, v) in enumerate(zip(labels, values)):
+        x = L + pw / n * (i + 0.15)
+        out.append(f'<rect x="{x:.1f}" y="{sy(v):.1f}" width="{bw:.1f}" height="{max(0, sy(0) - sy(v)):.1f}" '
+                   f'fill="{colors[i % len(colors)]}"/>'
+                   f'<text x="{x + bw / 2:.1f}" y="{sy(v) - 3:.1f}" font-size="10" text-anchor="middle">{v:g}</text>'
+                   f'<text x="{x + bw / 2:.1f}" y="{H - B + 12}" font-size="9" text-anchor="end" fill="#475569" '
+                   f'transform="rotate(-25 {x + bw / 2:.1f} {H - B + 12})">{_e(lab.replace("Pause ", "")[:26])}</text>')
+    out.append("</svg>")
+    return "".join(out)
+
+
+def html_report(stats: dict, runs_summary: List[dict], warnings: List[str], run: Run, top: List[GCEvent],
+                title: str) -> str:
+    p = stats.get("pause_ms", {})
+    h = stats.get("heap_mb", {})
+    span = stats.get("time_span_sec", 0)
+    x_unit, x_label = (60000, "minutes since start") if span > 600 else (1000, "seconds since start")
+    health = stats.get("health_score")
+    hcolor = "#64748b" if health is None else "#16a34a" if health >= 80 else "#d97706" if health >= 60 else "#dc2626"
+
+    def kpi(label, val, unit, cls=""):
+        return (f'<div class="kpi-card {cls}"><div class="kpi-label">{_e(label)}</div>'
+                f'<div class="kpi-value">{_e(val)}</div><div class="kpi-unit">{_e(unit)}</div></div>')
+
+    thru = stats.get("throughput_pct")
+    kpis = "".join([
+        kpi("Throughput", thru if thru is not None else "-", "%", "" if thru is None else "danger" if thru < 90 else "warn" if thru < 95 else "ok"),
+        kpi("GC pauses", stats.get("pause_events", 0), "events"),
+        kpi("Full GC", stats.get("full_gc_count", 0), "events", "danger" if stats.get("full_gc_count") and _concurrent_collector(stats["collector"]) else "ok"),
+        kpi("p99 pause", p.get("p99", 0), "ms", "danger" if p.get("p99", 0) > 500 else "warn" if p.get("p99", 0) > 200 else "ok"),
+        kpi("Max pause", p.get("max", 0), "ms", "warn" if p.get("max", 0) > 200 else ""),
+        kpi("Live set", h.get("live_set") if h.get("live_set") is not None else f"≤{h.get('post_gc_floor', '-')}", f"MB{' of ' + format(stats['xmx_mb'], 'g') + ' MB Xmx' if stats.get('xmx_mb') else ''}"),
+    ])
+
+    recs = "".join(
+        f'<div class="rec-card {r["severity"].lower()}"><span class="rec-badge {r["severity"].lower()}">{_e(r["severity"])}</span>'
+        f'<span class="rec-text">{_e(r["text"])}{("<span class=rec-flag>" + _e(r["flag"]) + "</span>") if r.get("flag") else ""}</span></div>'
+        for r in stats["recommendations"])
+
+    cov = stats["coverage"]
+    warn_items = list(warnings)
+    if cov["candidates"] > cov["parsed"]:
+        warn_items.append(f"{cov['candidates'] - cov['parsed']} GC lines could not be parsed, e.g. "
+                          + "; ".join(cov.get("unparsed_examples", [])[:2]))
+    warn_html = ("<div class='warn-box'>" + "<br>".join(_e(w) for w in warn_items) + "</div>") if warn_items else ""
+
+    runs_html = ""
+    if len(runs_summary) > 1:
+        rows = "".join(f"<tr{' style=font-weight:700' if r['run'] == stats['run'] else ''}><td>#{r['run']}</td><td>{_e(r['start'] or '?')}</td>"
+                       f"<td>{_e(r['span'])}</td><td>{r['pauses']}</td><td>{r['full']}</td><td>{r['max_pause']}</td></tr>"
+                       for r in runs_summary)
+        runs_html = ("<div class='table-card'><h2>JVM runs (the analyzed one is in bold)</h2><table><tr><th>Run</th><th>Start</th>"
+                     "<th>Span</th><th>Pauses</th><th>Full GC</th><th>Max pause (ms)</th></tr>" + rows + "</table></div>")
+
+    dist = stats.get("pause_distribution", {})
+    types = list(stats.get("gc_type_breakdown", {}).items())[:8]
+    charts = (
+        "<div class='charts-grid'>"
+        f"<div class='chart-card'><h2>GC pause timeline</h2>{svg_pause_timeline(run.events, x_unit, x_label)}</div>"
+        f"<div class='chart-card'><h2>Heap before / after GC</h2>{svg_heap(run.events, x_unit, x_label, stats.get('xmx_mb'))}</div>"
+        f"<div class='chart-card'><h2>Pause distribution</h2>{svg_bars([k + 'ms' for k in dist], list(dist.values()), ['#22c55e', '#3b82f6', '#eab308', '#f97316', '#dc2626'], 'pauses')}</div>"
+        f"<div class='chart-card'><h2>GC types</h2>{svg_bars([k for k, _ in types], [v['count'] for _, v in types], ['#3b82f6', '#10b981', '#f97316', '#8b5cf6', '#ec4899', '#14b8a6', '#f59e0b', '#6366f1'], 'events')}</div>"
+        "</div>")
+
+    top_rows = "".join(
+        f"<tr class='{'full-gc-row' if e.is_full else ''}'><td>{_e(_fmt_abs(e.abs_ms) or round(e.t_ms / 1000, 3))}</td>"
+        f"<td>{_e(e.gc_type)}</td><td>{_e(e.cause)}</td><td class='{'pause-hi' if e.pause_ms > 500 else ''}'>{e.pause_ms:.2f}</td>"
+        f"<td>{e.heap_before_mb:.0f}M -&gt; {e.heap_after_mb:.0f}M</td><td class='flag-cell'>{_e(e.src)}</td></tr>" for e in top)
+    top_html = (f"<div class='table-card'><h2>Top {len(top)} longest pauses</h2><table><tr><th>When</th><th>Type</th>"
+                f"<th>Cause</th><th>Pause (ms)</th><th>Heap</th><th>Source</th></tr>{top_rows}</table></div>") if top else ""
+
+    causes = stats.get("gc_causes", {})
+    causes_html = ("<div class='table-card'><h2>GC causes</h2><table><tr><th>Cause</th><th>Count</th></tr>"
+                   + "".join(f"<tr><td>{_e(k)}</td><td>{v}</td></tr>" for k, v in causes.items()) + "</table></div>") if causes else ""
+
+    jdk = stats.get("jdk_version")
+    meta = [f"&#128196; {_e(title)}", f"Run #{stats['run']} of {len(runs_summary)}", f"JDK {jdk or '?'}",
+            f"Collector: {_e(stats['collector'])}", f"-Xmx: {_e(str(stats['xmx_mb']) + 'M' if stats.get('xmx_mb') else 'unknown')}",
+            f"Span: {span}s", f"Coverage: {cov['parsed']}/{cov['candidates']}",
+            f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"]
+    header = ("<div class='header'><div><h1>JVM GC Log Analysis</h1><div class='header-meta'>"
+              + "".join(f"<span>{m}</span>" for m in meta) + "</div></div>"
+              f"<div class='health-badge'><div class='health-score' style='color:{hcolor}'>{_e(health if health is not None else '-')}</div>"
+              f"<div class='health-label'>health</div><div class='health-name' style='color:{hcolor}'>{_e(stats.get('health_label', ''))}</div></div></div>")
+
+    return ("<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'>"
+            "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+            f"<title>GC Report — {_e(title)}</title>{_HTML_CSS}</head><body><div class='page'>"
+            + header + warn_html + f"<div class='kpi-grid'>{kpis}</div>" + charts
+            + "<div class='section-title'>Recommendations</div>" + f"<div class='recs-list'>{recs}</div>"
+            + runs_html + causes_html + top_html
+            + "<div class='footer'>Generated by playground debug gc-analyze (self-contained, no external resource)</div>"
+            "</div></body></html>")
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
-def main():
+def main() -> int:
     ap = argparse.ArgumentParser(
-        description=(
-            "Analyze JVM GC logs — JDK 7-21+\n"
-            "Collectors: G1GC, CMS, ParallelGC, SerialGC, ZGC, GenZGC, Shenandoah\n"
-            "Formats:    JDK 7/8 legacy (-XX:+PrintGCDetails)\n"
-            "            JDK 9+ unified (-Xlog:gc*)"
-        ),
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    ap.add_argument("files", nargs="+", help="GC log file(s)")
-    ap.add_argument("--json",       action="store_true", help="Output raw JSON stats")
-    ap.add_argument("--html",       action="store_true", help="Generate HTML report")
-    ap.add_argument("--html-out",   metavar="PATH",      help="HTML output path (default: <input>.html)")
-    ap.add_argument("--top-pauses", type=int, default=10, metavar="N",
-                    help="Show top N longest pauses in text/HTML report (default: 10)")
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("files", nargs="+", help="GC log file(s) or folder(s): rotated files of the same JVM go together")
+    ap.add_argument("--json", action="store_true", help="Output JSON stats")
+    ap.add_argument("--html", action="store_true", help="Generate HTML report next to the first input")
+    ap.add_argument("--html-out", metavar="PATH", help="HTML output path")
+    ap.add_argument("--top-pauses", type=int, default=10, metavar="N", help="Top N longest pauses (default: 10)")
+    ap.add_argument("--run", type=int, metavar="N", help="JVM run to analyze (default: the latest)")
     args = ap.parse_args()
 
-    for path in args.files:
-        if not os.path.exists(path):
-            print(f"File not found: {path}", file=sys.stderr)
-            continue
+    files, errors = expand_inputs(args.files)
+    for e in errors:
+        print(f"❌ {e}", file=sys.stderr)
+    if not files:
+        return 2
 
-        az    = GCLogAnalyzer()
-        az.parse_file(path)
-        stats = az.analyze()
+    results = [parse_file(f) for f in files]
+    for r in results:
+        if r.error:
+            print(f"❌ {r.error}", file=sys.stderr)
+    runs, warnings = build_runs(results)
 
+    coverage = {
+        "files": len(results),
+        "lines": sum(r.lines for r in results),
+        "formats": sorted({r.log_format for r in results}),
+        "candidates": sum(r.candidates for r in results),
+        "parsed": sum(r.parsed for r in results),
+        "unparsed_examples": [u for r in results for u in r.unparsed][:5],
+    }
+    coverage["ratio"] = round(coverage["parsed"] / coverage["candidates"], 3) if coverage["candidates"] else 0
+
+    if not runs:
+        msg = ("No GC event found in " + ", ".join(os.path.basename(f) for f in files)
+               + f" ({coverage['lines']} lines). Is it a GC log? Expected -Xlog:gc* (JDK 9+) or "
+                 "-XX:+PrintGCDetails (JDK 8) output.")
         if args.json:
-            print(json.dumps(stats, indent=2))
+            print(json.dumps({"error": msg, "coverage": coverage}, indent=2))
         else:
-            print(f"\nAnalyzing: {path}")
-            print(az.report(stats))
+            print(f"❌ {msg}", file=sys.stderr)
+        return 2
 
-            if args.top_pauses and az.events:
-                top = sorted(az.events, key=lambda e: e.pause_ms, reverse=True)[:args.top_pauses]
-                print(f"\n── Top {args.top_pauses} longest pauses " + "─" * 40)
-                for e in top:
-                    heap = (f"  {e.heap_before_mb:.0f}M->{e.heap_after_mb:.0f}M"
-                            if e.heap_before_mb else "")
-                    print(f"  {e.pause_ms:>9.2f}ms  {e.gc_type[:48]:<50}{heap}")
+    if args.run is not None and not 1 <= args.run <= len(runs):
+        print(f"❌ --run must be between 1 and {len(runs)}", file=sys.stderr)
+        return 1
+    run = runs[(args.run or len(runs)) - 1]
 
-        if args.html or args.html_out:
-            out = args.html_out or (os.path.splitext(path)[0] + ".html")
-            az.generate_html(stats, out, filename=os.path.basename(path),
-                             top_n=args.top_pauses)
-            print(f"HTML report: {out}")
+    runs_summary = []
+    for r in runs:
+        pz = [e.pause_ms for e in r.events if e.pause_ms > 0]
+        span = (r.events[-1].t_ms - r.events[0].t_ms) / 1000 if r.events else 0
+        runs_summary.append({
+            "run": r.index, "start": _fmt_abs(r.events[0].abs_ms) if r.events else None,
+            "span": f"{span:.0f}s" if span < 600 else f"{span / 60:.0f}min",
+            "pauses": len(pz), "full": sum(1 for e in r.events if e.is_full and e.pause_ms > 0),
+            "max_pause": round(max(pz), 1) if pz else 0, "files": [os.path.basename(f) for f in r.files],
+        })
+
+    stats = analyze_run(run, coverage)
+    top = sorted((e for e in run.events if e.pause_ms > 0), key=lambda e: e.pause_ms, reverse=True)[:max(0, args.top_pauses)]
+
+    if args.json:
+        print(json.dumps({**stats, "runs": runs_summary, "warnings": warnings}, indent=2, default=str))
+    else:
+        print(text_report(stats, runs_summary, warnings, top))
+
+    if args.html or args.html_out:
+        out = args.html_out or (os.path.splitext(files[0])[0] + "-gc-report.html")
+        title = os.path.basename(files[0]) + (f" (+{len(files) - 1} files)" if len(files) > 1 else "")
+        with open(out, "w", encoding="utf-8") as fh:
+            fh.write(html_report(stats, runs_summary, warnings, run, top, title))
+        print(f"HTML report: {out}", file=sys.stderr)
+
+    if "error" in stats:
+        return 2
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
