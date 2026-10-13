@@ -16,7 +16,13 @@ else
 
 	if [[ "$environment" == cfk* ]]
 	then
-		tag="8.3.0"
+		# CP version of the running connect pod
+		tag=$(kubectl -n confluent get pod "$container" -o jsonpath='{.spec.containers[?(@.name=="connect")].image}' 2>/dev/null | awk -F':' '{print $NF}')
+		if [ "$tag" == "" ]
+		then
+			logerror "Could not find current CP version from pod $container"
+			exit 1
+		fi
 	else
 		tag=$(get_running_cp_tag)
 		if [ $? != 0 ] || [ "$tag" == "" ]
