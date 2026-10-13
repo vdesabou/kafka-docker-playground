@@ -3833,7 +3833,8 @@ commands:
 
           🔖 The GC log path is read from the java command line (-Xlog:gc*:file=… or -Xloggc:…), and its rotated files are copied too.
                Falls back to searching common log locations (/var/log, /tmp, /opt).
-               Connect containers have no GC log by default: the command prints how to enable it.
+               The playground environments write a GC log for ZooKeeper, brokers, controllers, Schema Registry,
+               Connect (-loggc, /var/log/kafka/<name>-gc.log) and ksqlDB.
       - long: --output-dir
         short: -o
         arg: output_dir

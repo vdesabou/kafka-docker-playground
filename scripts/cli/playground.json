@@ -2230,7 +2230,7 @@
                 "-c"
               ],
               "argument": "CONTAINER",
-              "description": "🐳 Container name (or pod name when cfk environment is used) to extract the GC log from\n\n❕ Provide either --file or --container, not both\n\n🔖 The GC log path is read from the java command line (-Xlog:gc*:file=… or -Xloggc:…), and its rotated files are copied too.\n     Falls back to searching common log locations (/var/log, /tmp, /opt).\n     Connect containers have no GC log by default: the command prints how to enable it.\n"
+              "description": "🐳 Container name (or pod name when cfk environment is used) to extract the GC log from\n\n❕ Provide either --file or --container, not both\n\n🔖 The GC log path is read from the java command line (-Xlog:gc*:file=… or -Xloggc:…), and its rotated files are copied too.\n     Falls back to searching common log locations (/var/log, /tmp, /opt).\n     The playground environments write a GC log for ZooKeeper, brokers, controllers, Schema Registry,\n     Connect (-loggc, /var/log/kafka/<name>-gc.log) and ksqlDB.\n"
             },
             {
               "names": [
