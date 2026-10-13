@@ -2139,7 +2139,7 @@
         },
         {
           "name": "heap-analyze",
-          "description": "🔬 Analyze a heap dump file using Eclipse MAT (Memory Analyzer Tool)\n  \n  📊 Generates automated leak suspects report, top components, and memory usage analysis\n  \n  🔖 Analyzes .hprof files and generates HTML/ZIP reports with insights\n",
+          "description": "🔬 Analyze a heap dump with Eclipse Memory Analyzer (MAT), run headless in Docker\n  \n  🕵️ Prints a text digest: heap overview, MAT leak suspects (accumulation point and who holds it) and the top retained sizes by class (dominator tree), and saves the MAT HTML reports (Leak_Suspects, System_Overview, Top_Components) in --output-dir\n  \n  📈 Use --compare with a second dump of the same JVM, taken later under the same load, to see which classes grow\n  \n  🐳 MAT needs roughly as much memory as the used heap of the dump (1 to 1.5x the .hprof size): give Docker enough memory or use --max-memory\n  \n  🔖 Exit code is 0 when the analysis completed, non-zero when MAT could not parse the dump (truncated file, out of memory): never a \"healthy\" verdict on a failed parse\n",
           "usage": "playground debug heap-analyze [OPTIONS]",
           "options": [
             {
@@ -2148,7 +2148,7 @@
                 "-f"
               ],
               "argument": "FILE",
-              "description": "🔖 HPROF heap dump file to analyze\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n        use <option+enter> to use the value you typed manually\n\nRequired: ✓ Yes\n"
+              "description": "🔖 Heap dump to analyze (.hprof, or .hprof.gz as written by jcmd GC.heap_dump -gz)\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n        use <option+enter> to use the value you typed manually\n\nRequired: ✓ Yes\n"
             },
             {
               "names": [
@@ -2156,7 +2156,7 @@
                 "-o"
               ],
               "argument": "./heap-analysis",
-              "description": "📂 Output directory for analysis reports (default: ./heap-analysis)\n\nDefault value: ./heap-analysis\n"
+              "description": "📂 Output directory for the digest (summary.txt), the MAT HTML reports and mat.log (default: ./heap-analysis)\n\nDefault value: ./heap-analysis\n"
             },
             {
               "names": [
@@ -2164,7 +2164,21 @@
                 "-r"
               ],
               "argument": "all",
-              "description": "📋 Type of report to generate\n\n- all: Generate all available reports\n- leaks: Leak suspects report only\n- overview: System overview report\n- top-components: Top memory consumers\n\nDefault value: all\n\nAllowed values: all, leaks, overview, top-components\n"
+              "description": "📋 MAT HTML report(s) to generate (the text digest is always printed)\n\n- all: the three reports below\n- leaks: leak suspects (org.eclipse.mat.api:suspects)\n- overview: system overview (org.eclipse.mat.api:overview)\n- top-components: top components per class loader (org.eclipse.mat.api:top_components)\n\nDefault value: all\n\nAllowed values: all, leaks, overview, top-components\n"
+            },
+            {
+              "names": [
+                "--max-memory"
+              ],
+              "argument": "MAX_MEMORY",
+              "description": "🧠 Java heap given to MAT, e.g. 8g (default: 80% of the Docker memory)\n"
+            },
+            {
+              "names": [
+                "--compare"
+              ],
+              "argument": "FILE",
+              "description": "📈 Second heap dump of the same JVM, taken later: prints the classes whose instance count and shallow size grew\n"
             }
           ]
         },

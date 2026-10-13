@@ -1,121 +1,94 @@
 heap_file="${args[--file]}"
 output_dir="${args[--output-dir]}"
 report_type="${args[--report-type]}"
+max_memory="${args[--max-memory]}"
+compare_file="${args[--compare]}"
 
 set +e
 
-if [[ $heap_file == *"@"* ]]
+if [[ ! -f "$heap_file" && $heap_file == *"@"* ]]
 then
   heap_file=$(echo "$heap_file" | cut -d "@" -f 2)
 fi
+if [[ ! -f "$compare_file" && $compare_file == *"@"* ]]
+then
+  compare_file=$(echo "$compare_file" | cut -d "@" -f 2)
+fi
 
-# Check if heap dump file exists
-if [[ ! -f "$heap_file" ]]; then
-    logerror "❌ Heap dump file not found: $heap_file"
+for f in "$heap_file" $compare_file
+do
+    if [[ ! -f "$f" ]]; then
+        logerror "❌ Heap dump file not found: $f"
+        exit 1
+    fi
+done
+
+tools_dir="$root_folder/tools/heap-analyzer"
+if [ ! -f "$tools_dir/Dockerfile" ]; then
+    logerror "❌ $tools_dir not found"
     exit 1
 fi
 
-# Create output directory
-mkdir -p "$output_dir"
-
-log "🔬 Starting heap dump analysis for: $heap_file"
-log "📂 Reports will be saved to: $output_dir"
-
-# Check if heap analyzer container is available
-if ! docker images | grep -q "heap-analyzer"; then
-    log "📦 Building heap analyzer Docker image..."
-
-    # Build from tools/heap-analyzer directory
-    if [ -d "$root_folder/tools/heap-analyzer" ]; then
-        if docker build -t heap-analyzer "$root_folder/tools/heap-analyzer" > /tmp/heap-analyzer-build.log 2>&1; then
-            log "✅ Heap analyzer image built successfully"
-        else
-            logerror "❌ Failed to build heap analyzer image"
-            log "📋 Check build logs at: /tmp/heap-analyzer-build.log"
-            exit 1
-        fi
-    else
-        logerror "❌ tools/heap-analyzer directory not found"
+# ── Analyzer image: Eclipse MAT baked once, scripts mounted at run time ────
+# The tag changes when the Dockerfile changes (new MAT version), so the image is rebuilt only then
+image="heap-analyzer:$(cksum < "$tools_dir/Dockerfile" | cut -d ' ' -f 1)"
+if ! docker image inspect "$image" > /dev/null 2>&1; then
+    log "📦 Building $image with Eclipse MAT (first run only, downloads ~100 MB)..."
+    build_log=$(mktemp -t heap-analyzer-build-XXXXXXXXXX)
+    if ! docker build --load -t "$image" "$tools_dir" > "$build_log" 2>&1 && ! docker build -t "$image" "$tools_dir" >> "$build_log" 2>&1; then
+        logerror "❌ Failed to build $image, see $build_log"
+        tail -20 "$build_log"
         exit 1
     fi
+    rm -f "$build_log"
 fi
 
-# Get absolute paths
+mkdir -p "$output_dir"
 heap_file_abs=$(cd "$(dirname "$heap_file")" && pwd -P)/$(basename "$heap_file")
-output_dir_abs=$(mkdir -p "$output_dir" && cd "$output_dir" && pwd -P)
+output_dir_abs=$(cd "$output_dir" && pwd -P)
 
-log "📊 Analyzing heap dump..."
+docker_args=(
+    --rm
+    --user "$(id -u):$(id -g)"
+    -v "$tools_dir:/tools/heap-analyzer:ro"
+    -v "$heap_file_abs:/input/$(basename "$heap_file"):ro"
+    -v "$output_dir_abs:/output"
+)
+analyzer_args=(
+    --file "/input/$(basename "$heap_file")"
+    --output-dir /output
+    --report-type "$report_type"
+)
 
-# Run heap analysis in Docker container
-set -e
-if docker run --rm \
-    -v "$heap_file_abs:/analysis/heap.hprof:ro" \
-    -v "$output_dir_abs:/analysis/output" \
-    heap-analyzer \
-    --file /analysis/heap.hprof \
-    --output-dir /analysis/output \
-    --report-type "$report_type" \
-    > /tmp/heap-analysis.log 2>&1; then
-    log "✅ Analysis complete!"
-else
-    logwarn "⚠️  Analysis encountered issues (check /tmp/heap-analysis.log)"
+if [[ -n "$max_memory" ]]; then
+    analyzer_args+=(--max-memory "$max_memory")
 fi
 
-# Generate summary
-cat > "$output_dir_abs/analysis-summary.txt" << EOF
-    Heap Dump Analysis Summary
-    ==========================
-    Generated: $(date)
-    Heap Dump: $(basename "$heap_file")
-    File Size: $(du -h "$heap_file" | cut -f1)
-
-    Reports Generated:
-    - Location: $output_dir_abs
-    - Type: $report_type
-
-    Reports:
-    --------
-EOF
-
-# List generated files
-if [ -f "$output_dir_abs/analysis-report.html" ]; then
-    echo "- analysis-report.html (Main report)" >> "$output_dir_abs/analysis-summary.txt"
-fi
-if [ -f "$output_dir_abs/histogram.txt" ]; then
-    echo "- histogram.txt (Heap histogram)" >> "$output_dir_abs/analysis-summary.txt"
+if [[ -n "$compare_file" ]]; then
+    compare_file_abs=$(cd "$(dirname "$compare_file")" && pwd -P)/$(basename "$compare_file")
+    docker_args+=(-v "$compare_file_abs:/compare/$(basename "$compare_file"):ro")
+    analyzer_args+=(--compare "/compare/$(basename "$compare_file")")
 fi
 
-cat >> "$output_dir_abs/analysis-summary.txt" << EOF
+log "🔬 Analyzing heap dump $heap_file, reports in $output_dir_abs"
+docker run "${docker_args[@]}" "$image" "${analyzer_args[@]}"
+exit_code=$?
 
-    Next Steps:
-    -----------
-    1. Open analysis-report.html in your browser
-    2. Review top memory consumers
-    3. Check for unexpected object accumulation
+if [ $exit_code -ne 0 ]; then
+    logerror "❌ Heap dump analysis failed (exit code $exit_code), MAT log: $output_dir_abs/mat.log"
+    exit $exit_code
+fi
 
-    For deeper analysis:
-    - Use VisualVM: https://visualvm.github.io/
-    - Use Eclipse MAT: https://www.eclipse.org/mat/
-EOF
-
-log ""
-log "📁 Analysis reports available at:"
-log "   $output_dir_abs"
-log ""
-
-if [ -f "$output_dir_abs/analysis-report.html" ]; then
+log "📄 Digest saved in $output_dir_abs/summary.txt"
+report="$output_dir_abs/Leak_Suspects/index.html"
+[ -f "$report" ] || report=$(ls "$output_dir_abs"/*/index.html 2>/dev/null | head -1)
+# only open a browser in an interactive terminal
+if [[ -n "$report" && -t 1 ]]; then
     if [[ $(type -f open 2>&1) =~ "not found" ]]
     then
-        log "🔗 Cannot open browser, use url:"
-        echo "$output_dir_abs/analysis-report.html"
+        log "🔗 Cannot open browser, use url: $report"
     else
-        log "📊 opening report $output_dir_abs/analysis-report.html in default browser"
-        open "$output_dir_abs/analysis-report.html"
+        log "📊 Opening $report in default browser"
+        open "$report"
     fi
-else
-    logwarn "⚠️  HTML report not generated. Check /tmp/heap-analysis.log:"
-    cat /tmp/heap-analysis.log
 fi
-
-log ""
-log "📄 Summary: $output_dir_abs/analysis-summary.txt"

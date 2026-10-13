@@ -3680,11 +3680,15 @@ commands:
 
   - name: heap-analyze
     help: |-
-      🔬 Analyze a heap dump file using Eclipse MAT (Memory Analyzer Tool)
+      🔬 Analyze a heap dump with Eclipse Memory Analyzer (MAT), run headless in Docker
 
-      📊 Generates automated leak suspects report, top components, and memory usage analysis
+      🕵️ Prints a text digest: heap overview, MAT leak suspects (accumulation point and who holds it) and the top retained sizes by class (dominator tree), and saves the MAT HTML reports (Leak_Suspects, System_Overview, Top_Components) in --output-dir
 
-      🔖 Analyzes .hprof files and generates HTML/ZIP reports with insights
+      📈 Use --compare with a second dump of the same JVM, taken later under the same load, to see which classes grow
+
+      🐳 MAT needs roughly as much memory as the used heap of the dump (1 to 1.5x the .hprof size): give Docker enough memory or use --max-memory
+
+      🔖 Exit code is 0 when the analysis completed, non-zero when MAT could not parse the dump (truncated file, out of memory): never a "healthy" verdict on a failed parse
     flags:
       - long: --file
         short: -f
@@ -3695,9 +3699,7 @@ commands:
         validate: file_exists_and_hprof
         arg: file
         help: |-
-          🔖 HPROF heap dump file to analyze
-
-          ❕ It must be absolute full path
+          🔖 Heap dump to analyze (.hprof, or .hprof.gz as written by jcmd GC.heap_dump -gz)
 
           🎓 Tip: use <tab> completion to trigger fzf completion
                   use <option+enter> to use the value you typed manually
@@ -3707,7 +3709,7 @@ commands:
         required: false
         default: "./heap-analysis"
         help: |-
-          📂 Output directory for analysis reports (default: ./heap-analysis)
+          📂 Output directory for the digest (summary.txt), the MAT HTML reports and mat.log (default: ./heap-analysis)
       - long: --report-type
         short: -r
         arg: report_type
@@ -3715,16 +3717,32 @@ commands:
         required: false
         default: "all"
         help: |-
-          📋 Type of report to generate
+          📋 MAT HTML report(s) to generate (the text digest is always printed)
 
-          - all: Generate all available reports
-          - leaks: Leak suspects report only
-          - overview: System overview report
-          - top-components: Top memory consumers
+          - all: the three reports below
+          - leaks: leak suspects (org.eclipse.mat.api:suspects)
+          - overview: system overview (org.eclipse.mat.api:overview)
+          - top-components: top components per class loader (org.eclipse.mat.api:top_components)
+      - long: --max-memory
+        arg: max_memory
+        required: false
+        help: |-
+          🧠 Java heap given to MAT, e.g. 8g (default: 80% of the Docker memory)
+      - long: --compare
+        arg: file
+        required: false
+        completions:
+          dynamic:
+          - playground get-specific-file-extension "$completion_current" --extension "hprof"
+        validate: file_exists_and_hprof
+        help: |-
+          📈 Second heap dump of the same JVM, taken later: prints the classes whose instance count and shallow size grew
     examples:
     - playground debug heap-analyze --file heap-dump-connect-2026-04-08.hprof
     - playground debug heap-analyze -f heap-dump-broker.hprof --output-dir ./analysis
     - playground debug heap-analyze -f heap-dump-connect.hprof --report-type leaks
+    - playground debug heap-analyze -f heap-dump-connect-1.hprof --compare heap-dump-connect-2.hprof
+    - playground debug heap-analyze -f big-heap-dump.hprof --max-memory 12g
 
   - name: analyze-logs
     help: |-
