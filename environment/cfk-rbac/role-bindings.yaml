@@ -5,7 +5,8 @@
 # environment/rbac-sasl-plain/role-bindings.txt.
 #
 # Cluster ids: Kafka is found by CFK through the KafkaRestClass, connect is confluent.connect,
-# schema registry is id_schemaregistry_confluent
+# schema registry is id_schemaregistry_confluent, ksqlDB is confluent.ksqldb-server_
+# (ksqlDB and Control Center bindings are harmless when --enable-ksqldb / --enable-control-center are not used)
 ---
 # super user
 apiVersion: platform.confluent.io/v1beta1
@@ -44,6 +45,19 @@ spec:
   role: SystemAdmin
   clustersScopeByIds:
     connectClusterId: confluent.connect
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: superuser-systemadmin-ksqldb
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: superUser
+  role: SystemAdmin
+  clustersScopeByIds:
+    ksqlClusterId: confluent.ksqldb-server_
 ---
 # connect workers: CFK binds connectAdmin to the connect internal topics and group, it also needs the license
 # topic (Confluent connectors) and the secret registry
@@ -141,6 +155,108 @@ spec:
     - resourceType: Subject
       name: "*"
       patternType: LITERAL
+---
+# ksqlDB server (ksqlDBAdmin): CFK binds it to its internal topics, queries run with this principal so it needs
+# every topic and subject used by the users
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: ksqldbadmin-kafka
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: ksqlDBAdmin
+  role: ResourceOwner
+  resourcePatterns:
+    - resourceType: Topic
+      name: "*"
+      patternType: LITERAL
+    - resourceType: Group
+      name: "*"
+      patternType: LITERAL
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: ksqldbadmin-subjects
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: ksqlDBAdmin
+  role: ResourceOwner
+  clustersScopeByIds:
+    schemaRegistryClusterId: id_schemaregistry_confluent
+  resourcePatterns:
+    - resourceType: Subject
+      name: "*"
+      patternType: LITERAL
+---
+# ksqlDB user (ksqlDBUser): runs statements on the ksqlDB cluster
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: ksqldbuser-ksqldb
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: ksqlDBUser
+  role: DeveloperWrite
+  clustersScopeByIds:
+    ksqlClusterId: confluent.ksqldb-server_
+  resourcePatterns:
+    - resourceType: KsqlCluster
+      name: ksql-cluster
+      patternType: LITERAL
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: ksqldbuser-kafka
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: ksqlDBUser
+  role: ResourceOwner
+  resourcePatterns:
+    - resourceType: Topic
+      name: "*"
+      patternType: LITERAL
+    - resourceType: Group
+      name: "*"
+      patternType: LITERAL
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: ksqldbuser-subjects
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: ksqlDBUser
+  role: ResourceOwner
+  clustersScopeByIds:
+    schemaRegistryClusterId: id_schemaregistry_confluent
+  resourcePatterns:
+    - resourceType: Subject
+      name: "*"
+      patternType: LITERAL
+---
+# Control Center (controlcenterAdmin), users log in to Control Center with their own LDAP credentials
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: controlcenteradmin-systemadmin
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: controlcenterAdmin
+  role: SystemAdmin
 ---
 # users to try role bindings
 apiVersion: platform.confluent.io/v1beta1

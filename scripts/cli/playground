@@ -21251,6 +21251,12 @@ function get_optional_env_vars () {
     then
       echo "AZ_USER AZ_PASS AZ_CLIENT_ID AZ_CLIENT_SECRET AZ_TENANT_ID AZURE_SUBSCRIPTION_NAME"
     fi
+
+    # REST Proxy security plugins of cfk-rbac (--enable-rest-proxy)
+    if [ "$environment" == "cfk-rbac" ]
+    then
+      echo "CONFLUENT_LICENSE"
+    fi
   } | tr ' ' '\n' | awk 'NF' | sort -u
 }
 
