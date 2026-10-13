@@ -6992,9 +6992,9 @@ playground_container_get_properties_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground get-properties\n"
-    printf "  playground get-properties --container broker\n"
-    printf "  playground get-properties -c broker\n"
+    printf "  playground container get-properties\n"
+    printf "  playground container get-properties --container broker\n"
+    printf "  playground container get-properties -c broker\n"
     echo
 
   fi
@@ -7102,7 +7102,7 @@ playground_container_get_ip_addresses_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground get-ip-address-container\n"
+    printf "  playground container get-ip-addresses\n"
     echo
 
   fi
@@ -7347,11 +7347,11 @@ playground_container_ssh_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground ssh -c connect\n"
-    printf "  playground ssh -c connect -s sh\n"
-    printf "  playground ssh --container connect --shell sh\n"
-    printf "  playground ssh -c broker\n"
-    printf "  playground ssh --container schema-registry --shell zsh\n"
+    printf "  playground container ssh -c connect\n"
+    printf "  playground container ssh -c connect -s sh\n"
+    printf "  playground container ssh --container connect --shell sh\n"
+    printf "  playground container ssh -c broker\n"
+    printf "  playground container ssh --container schema-registry --shell zsh\n"
     echo
 
   fi
@@ -7396,7 +7396,7 @@ playground_container_change_jdk_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground change-jdk --container connect --version 17\n"
+    printf "  playground container change-jdk --container connect --version 17\n"
     echo
 
   fi
@@ -7802,8 +7802,8 @@ playground_topic_get_number_records_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground get-number-records --topic a-topic\n"
-    printf "  playground get-number-records -t a-topic\n"
+    printf "  playground topic get-number-records --topic a-topic\n"
+    printf "  playground topic get-number-records -t a-topic\n"
     echo
 
   fi
@@ -10425,7 +10425,7 @@ playground_connector_sourcecode_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  # will open current version source code for current running connector\n  # if you're a confluent employee (make sure to set your aws credentials), it\n  will also work on proprietary connectors and fully managed connectors\n  playground connector sourcecode\n  \n  # will ask you to select a version\n  playground connector sourcecode --connector-tag \" \"\n  \n  # comparison mode:\n  playground connector --connector-tag \"10.2.1\" --connector-tag \"10.2.0\"\n  \n  # comparison mode (with versions selection):\n  playground connector --connector-tag \" \" --connector-tag \" \"\n"
+    printf "  # will open current version source code for current running connector\n  # if you're a confluent employee (make sure to set your aws credentials), it\n  will also work on proprietary connectors and fully managed connectors\n  playground connector sourcecode\n  \n  # will ask you to select a version\n  playground connector sourcecode --connector-tag \" \"\n  \n  # comparison mode:\n  playground connector sourcecode --connector-tag \"10.2.1\" --connector-tag\n  \"10.2.0\"\n  \n  # comparison mode (with versions selection):\n  playground connector sourcecode --connector-tag \" \" --connector-tag \" \"\n"
     echo
 
   fi
@@ -24032,12 +24032,15 @@ playground_bashly_reload_command() {
   cd "$root_folder/scripts/cli"
 
   # examples and footers are printed with printf "..." in --help, so an unescaped $VAR, ${...} or $(...) is expanded (or run)
+  # example lines starting with playground must call their command (or one of its aliases)
   # x_example_outputs (rendered in the docs only, see templates/markdown) must start with the name of their command
   bashly_yml_errors=$(yq -o=json src/bashly.yml | jq -r '
-  def commands(p): (.commands // [])[] | (p + [.name]) as $q | ({path: ($q | join(" ")), examples: ((.examples // []) | if type == "string" then [.] else . end), footer, outputs: (.x_example_outputs // [])}), commands($q);
-  commands(["playground"])
-  | .path as $path
+  def names: [.name] + ((.alias // []) | if type == "string" then [.] else . end);
+  def commands(p; n): (.commands // [])[] | (p + [.name]) as $q | (n + [names]) as $m | ({path: ($q | join(" ")), names: $m, examples: ((.examples // []) | if type == "string" then [.] else . end), footer, outputs: (.x_example_outputs // [])}), commands($q; $m);
+  commands(["playground"]; [["playground"]])
+  | .path as $path | .names as $names
   | ((.examples[], (.footer // empty)) | split("\n")[] | select(test("(^|[^\\\\])\\$[A-Za-z_{(]")) | "\($path): unescaped $ in example or footer, use \\$: \(.)"),
+    (.examples[] | split("\n")[] | sub("^ +"; "") | select(startswith("playground ") or . == "playground") | (split(" ") | map(select(length > 0))) as $words | select([range($names | length) as $i | $names[$i] | index($words[$i]) == null] | any) | "\($path): example does not call \"\($path)\": \(.)"),
     (.outputs[] | select((.command // "" | startswith($path) | not) or ((.output // "") == "")) | "\($path): x_example_outputs entry needs an output and a command starting with \"\($path)\": \(.command)")')
   if [ -n "$bashly_yml_errors" ]
   then
@@ -24076,6 +24079,11 @@ playground_bashly_reload_command() {
   cd - > /dev/null
 
   log "✅ all done !"
+
+  # this script was regenerated while it is running: exit now, otherwise bash goes on reading it
+  # at the old byte offset of the new file and fails with "syntax error near unexpected token"
+  exit 0
+
 }
 
 # :command.function
@@ -35314,7 +35322,7 @@ playground_container_get_properties_command() {
   if [[ "$environment" == cfk* ]]
   then
   kubectl -n confluent exec -i "$resolved_container" -- sh << EOF
-ps -ef | grep properties | grep java | grep -v grep | awk '{ print \$NF }' > /tmp/propertie_file
+ps -ef | grep properties | grep java | grep -v grep | sed -e 's/[[:space:]]*\$//' -e 's/.*[[:space:]]//' > /tmp/propertie_file
 propertie_file=\$(cat /tmp/propertie_file)
 if [ ! -f \$propertie_file ]
 then
@@ -35325,11 +35333,11 @@ cat \$propertie_file | grep -v None | grep .
 EOF
   else
   docker exec -i "$resolved_container" sh << EOF
-ps -ef | grep properties | grep java | grep -v grep | awk '{ print \$NF }' > /tmp/propertie_file
+ps -ef | grep properties | grep java | grep -v grep | sed -e 's/[[:space:]]*\$//' -e 's/.*[[:space:]]//' > /tmp/propertie_file
 propertie_file=\$(cat /tmp/propertie_file)
 if [ ! -f \$propertie_file ]
 then
-  logerror 'ERROR: Could not determine properties file!'
+  echo 'ERROR: Could not determine properties file!'
   exit 1
 fi
 cat \$propertie_file | grep -v None | grep .

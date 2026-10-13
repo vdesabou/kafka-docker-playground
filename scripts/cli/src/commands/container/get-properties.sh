@@ -13,7 +13,7 @@ do
 if [[ "$environment" == cfk* ]]
 then
 kubectl -n confluent exec -i "$resolved_container" -- sh << EOF
-ps -ef | grep properties | grep java | grep -v grep | awk '{ print \$NF }' > /tmp/propertie_file
+ps -ef | grep properties | grep java | grep -v grep | sed -e 's/[[:space:]]*\$//' -e 's/.*[[:space:]]//' > /tmp/propertie_file
 propertie_file=\$(cat /tmp/propertie_file)
 if [ ! -f \$propertie_file ]
 then
@@ -24,11 +24,11 @@ cat \$propertie_file | grep -v None | grep .
 EOF
 else
 docker exec -i "$resolved_container" sh << EOF
-ps -ef | grep properties | grep java | grep -v grep | awk '{ print \$NF }' > /tmp/propertie_file
+ps -ef | grep properties | grep java | grep -v grep | sed -e 's/[[:space:]]*\$//' -e 's/.*[[:space:]]//' > /tmp/propertie_file
 propertie_file=\$(cat /tmp/propertie_file)
 if [ ! -f \$propertie_file ]
 then
-  logerror 'ERROR: Could not determine properties file!'
+  echo 'ERROR: Could not determine properties file!'
   exit 1
 fi
 cat \$propertie_file | grep -v None | grep .
