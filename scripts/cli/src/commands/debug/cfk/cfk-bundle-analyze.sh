@@ -112,7 +112,10 @@ esac
 if [[ $exit_code -eq 0 && -n "$html" && -f "$html_out" ]]; then
     log ""
     log "🌐 HTML report saved: $html_out"
-    if command -v open &>/dev/null; then
+    # only open a browser in an interactive terminal
+    if [[ ! -t 1 ]]; then
+        log "🔗 Open in browser: file://$html_out"
+    elif command -v open &>/dev/null; then
         log "🌐 Opening report in browser..."
         open "$html_out"
     elif command -v xdg-open &>/dev/null; then
