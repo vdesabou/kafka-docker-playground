@@ -31,7 +31,7 @@ playground open-docs --only-show-url
 
 get_environment_used
 log "🐳 Containers"
-if [[ "$environment" == "cfk" ]]
+if [[ "$environment" == cfk* ]]
 then
     kubectl -n confluent get pods
 else

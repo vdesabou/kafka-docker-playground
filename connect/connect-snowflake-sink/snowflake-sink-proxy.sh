@@ -108,7 +108,7 @@ EOF
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 SCHEMA_REGISTRY_URL="http://schema-registry:8081"
-if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
+if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
 then
   SCHEMA_REGISTRY_URL="http://schemaregistry.confluent.svc.cluster.local:8081"
 fi

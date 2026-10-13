@@ -4,7 +4,7 @@ connector_type=$(playground state get run.connector_type)
 get_environment_used
 
 is_cfk=0
-if [[ "$environment" == "cfk" ]] && [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
+if [[ "$environment" == cfk* ]] && [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
 then
     is_cfk=1
 fi

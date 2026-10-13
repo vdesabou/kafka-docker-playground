@@ -10,7 +10,7 @@ do
   resolved_container=$(resolve_container_name_for_environment "$container")
 	log "📝 Displaying properties file for $container"
 
-if [[ "$environment" == "cfk" ]]
+if [[ "$environment" == cfk* ]]
 then
 kubectl -n confluent exec -i "$resolved_container" -- sh << EOF
 ps -ef | grep properties | grep java | grep -v grep | awk '{ print \$NF }' > /tmp/propertie_file

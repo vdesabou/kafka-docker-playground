@@ -24,7 +24,7 @@ then
 fi
 for connector in "${items[@]}"
 do
-    if [[ "$environment" == "cfk" ]]
+    if [[ "$environment" == cfk* ]]
     then
         log "🧰 Current config for $connector_type connector $connector (using CFK Connector CR)"
         log "☸️ kubectl -n confluent get connector $connector -o json"

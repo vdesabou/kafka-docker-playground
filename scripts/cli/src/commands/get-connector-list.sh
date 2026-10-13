@@ -5,7 +5,7 @@ then
     environment=$(playground state get run.environment)
 fi
 
-if [ "$environment" = "cfk" ] && [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
+if [[ "$environment" == cfk* ]] && [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [ "$connector_type" != "$CONNECTOR_TYPE_CUSTOM" ]
 then
     set +e
     connectors=$(kubectl -n confluent get connectors.platform.confluent.io -o custom-columns=NAME:.metadata.name --no-headers 2>/dev/null)

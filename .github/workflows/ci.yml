@@ -19,7 +19,7 @@ on:
         required: false
         default: ''
       playground_environment:
-        description: 'override PLAYGROUND_ENVIRONMENT (example cfk, ccloud, plaintext)'
+        description: 'override PLAYGROUND_ENVIRONMENT (example cfk, cfk-rbac, ccloud, plaintext)'
         required: false
         default: 'plaintext'
       container_engine:
@@ -93,7 +93,7 @@ jobs:
     env:
       # cfk only runs connect/ examples (see run-tests.sh): without any in the list, the job has nothing to do
       # podman skips fully managed connector tests (see run-tests.sh): lists with ccloud/fm- examples only hold those
-      SKIP_JOB: ${{ (matrix.playground_environment == 'cfk' && !contains(matrix.test_list, 'connect/')) || ((github.event.inputs.container_engine == 'podman' || github.event.schedule == '17 6 * * *') && contains(matrix.test_list, 'ccloud/fm-')) }}
+      SKIP_JOB: ${{ (startsWith(matrix.playground_environment, 'cfk') && !contains(matrix.test_list, 'connect/')) || ((github.event.inputs.container_engine == 'podman' || github.event.schedule == '17 6 * * *') && contains(matrix.test_list, 'ccloud/fm-')) }}
     steps:
 
       # - name: Maximize build space
@@ -163,7 +163,7 @@ jobs:
           df -h
 
       - name: Install k3d and kubectl
-        if: matrix.playground_environment == 'cfk' && env.SKIP_JOB != 'true'
+        if: startsWith(matrix.playground_environment, 'cfk') && env.SKIP_JOB != 'true'
         run: |
           curl -fsSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.9.0 bash
 
@@ -405,7 +405,7 @@ jobs:
         playground_environment: ["${{ github.event.inputs.playground_environment }}"]
     env:
       # cfk only runs connect/ examples (see run-tests.sh): without any in the list, the job has nothing to do
-      SKIP_JOB: ${{ matrix.playground_environment == 'cfk' && !contains(matrix.test_list, 'connect/') }}
+      SKIP_JOB: ${{ startsWith(matrix.playground_environment, 'cfk') && !contains(matrix.test_list, 'connect/') }}
     steps:
 
       # - name: Maximize build space
@@ -474,7 +474,7 @@ jobs:
           df -h
 
       - name: Install k3d and kubectl
-        if: matrix.playground_environment == 'cfk' && env.SKIP_JOB != 'true'
+        if: startsWith(matrix.playground_environment, 'cfk') && env.SKIP_JOB != 'true'
         run: |
           curl -fsSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.9.0 bash
 

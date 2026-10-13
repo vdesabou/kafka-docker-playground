@@ -41,7 +41,7 @@ cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
 then
   log "CFK mode: singlestore is managed as a pod"
 else

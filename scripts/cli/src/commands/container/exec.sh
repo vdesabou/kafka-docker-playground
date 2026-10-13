@@ -111,7 +111,7 @@ ensure_cfk_root_for_container() {
 	local resource_name
 	local resource_ref
 
-	if [[ "$environment" != "cfk" ]]
+	if [[ "$environment" != cfk* ]]
 	then
 		return
 	fi
@@ -200,7 +200,7 @@ do
 	resolved_container=$(resolve_container_name_for_environment "$container")
 	root_resource_kind=""
 	root_resource_name=""
-	if [[ "$environment" == "cfk" ]]
+	if [[ "$environment" == cfk* ]]
 	then
 		if [[ -n "$root" ]]
 		then

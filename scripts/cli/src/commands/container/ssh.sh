@@ -10,7 +10,7 @@ for container in "${container_array[@]}"
 do
 	log "🛬 SSH into container: opening shell $shell on container $container"
 	resolved_container=$(resolve_container_name_for_environment "$container")
-	if [[ "$environment" == "cfk" ]]
+	if [[ "$environment" == cfk* ]]
 	then
 		kubectl -n confluent exec -it "$resolved_container" -- "$shell"
 	else

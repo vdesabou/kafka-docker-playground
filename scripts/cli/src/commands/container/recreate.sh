@@ -1,7 +1,7 @@
 ignore_current_versions="${args[--ignore-current-versions]}"
 
 get_environment_used
-if [[ "$environment" == "cfk" ]]
+if [[ "$environment" == cfk* ]]
 then
     logerror "❌ container recreate is not supported in cfk mode"
     exit 1

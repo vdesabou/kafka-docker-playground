@@ -2,7 +2,7 @@ max_wait="${args[--max-wait]}"
 
 get_environment_used
 
-if [[ "$environment" == "cfk" ]]
+if [[ "$environment" == cfk* ]]
 then
   connect_pod=$(resolve_container_name_for_environment "connect")
   cur_wait=0

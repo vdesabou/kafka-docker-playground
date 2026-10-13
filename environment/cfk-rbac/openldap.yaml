@@ -1,0 +1,86 @@
+# OpenLDAP of the cfk-rbac environment, the only source of users and groups, used by MDS and by the
+# SASL/PLAIN internal listener of Kafka. The users are the ones of environment/rbac-sasl-plain, loaded from
+# the openldap-ldifs ConfigMap (created by environment/cfk/start.sh from rbac-sasl-plain/scripts/security/ldap_users)
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: openldap
+  namespace: confluent
+spec:
+  replicas: 1
+  serviceName: openldap
+  selector:
+    matchLabels:
+      app: openldap
+  template:
+    metadata:
+      labels:
+        app: openldap
+    spec:
+      # plain copies of the LDIF files: osixia/openldap would also load the hidden ..<timestamp> copies of a ConfigMap volume
+      initContainers:
+        - name: copy-ldifs
+          image: ${OPENLDAP_IMAGE}
+          command: ["sh", "-c", "cp -L /ldifs/*.ldif /custom/"]
+          volumeMounts:
+            - mountPath: /ldifs
+              name: ldifs
+            - mountPath: /custom
+              name: custom-ldifs
+      containers:
+        - name: openldap
+          image: ${OPENLDAP_IMAGE}
+          args:
+            - --copy-service
+            - --loglevel
+            - info
+          ports:
+            - containerPort: 389
+              name: ldap
+          env:
+            - name: LDAP_ORGANISATION
+              value: "ConfluentDemo"
+            - name: LDAP_DOMAIN
+              value: "confluentdemo.io"
+            - name: LDAP_BASE_DN
+              value: "dc=confluentdemo,dc=io"
+            - name: LDAP_TLS
+              value: "false"
+          readinessProbe:
+            exec:
+              command:
+                - ldapsearch
+                - -x
+                - -H
+                - ldap://localhost
+                - -D
+                - cn=admin,dc=confluentdemo,dc=io
+                - -w
+                - admin
+                - -b
+                - cn=superUser,ou=users,dc=confluentdemo,dc=io
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - mountPath: /container/service/slapd/assets/config/bootstrap/ldif/custom
+              name: custom-ldifs
+      volumes:
+        - name: ldifs
+          configMap:
+            name: openldap-ldifs
+        - name: custom-ldifs
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openldap
+  namespace: confluent
+spec:
+  selector:
+    app: openldap
+  ports:
+    - name: ldap
+      port: 389
+      targetPort: 389

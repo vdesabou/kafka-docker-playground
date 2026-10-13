@@ -84,7 +84,7 @@ transform_for_environment() {
   local resolved_name
   resolved_name=$(resolve_container_name_for_environment "$name")
 
-  if [[ "$environment" == "cfk" ]]
+  if [[ "$environment" == cfk* ]]
   then
     echo "confluent/${resolved_name}:${path}"
   else
@@ -114,7 +114,7 @@ extract_remote_pod_name() {
   return 1
 }
 
-if [[ "$environment" == "cfk" ]]
+if [[ "$environment" == cfk* ]]
 then
   log "🪄 Copying files with kubectl cp"
   cp_remote_pod=""

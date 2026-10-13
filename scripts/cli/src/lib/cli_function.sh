@@ -12,7 +12,7 @@ function resolve_container_name_for_environment() {
     get_environment_used
   fi
 
-  if [[ "$environment" != "cfk" ]]
+  if [[ "$environment" != cfk* ]]
   then
     echo "$requested_name"
     return
@@ -90,7 +90,7 @@ function is_multiple_connect_workers_running() {
 function get_connect_url_and_security() {
   get_environment_used
 
-  if [[ "$environment" == "cfk" ]]
+  if [[ "$environment" == cfk* ]]
   then
       # CFK Connect is accessed through local port-forwards.
       # Prefer existing forwards first, then auto-start one on 8083 if needed.
@@ -150,6 +150,10 @@ function get_connect_url_and_security() {
 
       connect_url="http://localhost:$connect_port"
       security=""
+      if [[ "$environment" == "cfk-rbac" ]]
+      then
+          security="-u connectorSubmitter:connectorSubmitter"
+      fi
 
       if [[ "$connect_reachable" != "1" ]]
       then
@@ -520,12 +524,12 @@ function get_sr_url_and_security() {
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
       sr_security="--cert $DIR_CLI/../../environment/$environment/security/schema-registry.certificate.pem --key $DIR_CLI/../../environment/$environment/security/schema-registry.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  elif [[ "$environment" == "rbac-sasl-plain" ]]
+  elif [[ "$environment" == "rbac-sasl-plain" ]] || [[ "$environment" == "cfk-rbac" ]]
   then
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
       sr_security="-u superUser:superUser"
-    elif [[ "$environment" == "cfk" ]]
+    elif [[ "$environment" == cfk* ]]
     then
         # CFK Schema Registry is exposed as a Kubernetes service.
         # Commands executed from the local machine should use a local port-forward.
@@ -577,15 +581,23 @@ function get_running_cp_tag() {
   echo "$tag"
 }
 
+# kafka-* tools of the CLI run in connect-0 on cfk environments: on cfk-rbac they authenticate as admin
+# with this file, mounted from the playground-client secret (environment/cfk-rbac/cfk-rbac.sh)
+cfk_rbac_client_properties="/mnt/secrets/playground-client/client.properties"
+
 function get_security_broker() {
   config_file_name="$1"
   get_environment_used
 
-  if [[ "$environment" == "cfk" ]]
+  if [[ "$environment" == cfk* ]]
   then
       container="connect-0"
       bootstrap_server="kafka:9071"
       security=""
+      if [[ "$environment" == "cfk-rbac" ]]
+      then
+          security="$config_file_name $cfk_rbac_client_properties"
+      fi
       return
   fi
 
@@ -716,7 +728,7 @@ function run_kafka_admin_tool() {
       log "🐞 CLI command used"
       echo "$tool $* --bootstrap-server $bootstrap_server $security"
     fi
-    if [[ "$environment" == "cfk" ]]
+    if [[ "$environment" == cfk* ]]
     then
       kubectl -n confluent exec -i $container -- $tool "$@" --bootstrap-server $bootstrap_server $security
     else
@@ -1198,7 +1210,7 @@ function filter_ccloud_environment() {
 function filter_cfk_environment() {
   get_environment_used
 
-  if [[ "$environment" != "cfk" ]]
+  if [[ "$environment" != cfk* ]]
   then
     logerror "environment should be cfk with this command (it is $environment)!"
   fi
@@ -1207,13 +1219,14 @@ function filter_cfk_environment() {
 function filter_rbac_environment() {
   get_environment_used
 
-  if [[ "$environment" != "rbac-sasl-plain" ]]
+  if [[ "$environment" != "rbac-sasl-plain" ]] && [[ "$environment" != "cfk-rbac" ]]
   then
-    logerror "environment should be rbac-sasl-plain with this command (it is $environment)!"
+    logerror "environment should be rbac-sasl-plain or cfk-rbac with this command (it is $environment)!"
   fi
 }
 
-# call the MDS REST API of the rbac-sasl-plain environment as superUser
+# call the MDS REST API of the rbac-sasl-plain or cfk-rbac environment as superUser
+# (on cfk-rbac, localhost:8091 is a port-forward to the MDS of the kafka service)
 # usage: mds_request <method> <path> [json body]
 # sets mds_output (response body), returns 1 when MDS is not reachable or answers an error
 function mds_request() {
@@ -1238,7 +1251,7 @@ function mds_request() {
   response=$(curl "${curl_args[@]}")
   if [ $? -ne 0 ]
   then
-    logerror "❌ MDS is not reachable at $mds_url, is the rbac-sasl-plain environment running?"
+    logerror "❌ MDS is not reachable at $mds_url, is the rbac-sasl-plain or cfk-rbac environment running?"
     return 1
   fi
   local http_code=$(tail -n 1 <<< "$response")
@@ -1261,16 +1274,28 @@ function get_mds_scope() {
     mds_kafka_cluster_id="$mds_output"
   fi
 
-  # cluster names used in environment/rbac-sasl-plain/docker-compose.yml
+  # cluster names used in environment/rbac-sasl-plain/docker-compose.yml, or cluster ids set by CFK on cfk-rbac
+  local schema_registry_cluster="schema-registry"
+  local connect_cluster="connect-cluster"
+  # bashly filters run in a subshell: environment is not set by filter_rbac_environment
+  if [[ -z "$environment" ]]
+  then
+    get_environment_used
+  fi
+  if [[ "$environment" == "cfk-rbac" ]]
+  then
+    schema_registry_cluster="id_schemaregistry_confluent"
+    connect_cluster="confluent.connect"
+  fi
   case "$scope" in
     kafka)
       mds_scope=$(jq -nc --arg k "$mds_kafka_cluster_id" '{clusters: {"kafka-cluster": $k}}')
     ;;
     schema-registry)
-      mds_scope=$(jq -nc --arg k "$mds_kafka_cluster_id" '{clusters: {"kafka-cluster": $k, "schema-registry-cluster": "schema-registry"}}')
+      mds_scope=$(jq -nc --arg k "$mds_kafka_cluster_id" --arg c "$schema_registry_cluster" '{clusters: {"kafka-cluster": $k, "schema-registry-cluster": $c}}')
     ;;
     connect)
-      mds_scope=$(jq -nc --arg k "$mds_kafka_cluster_id" '{clusters: {"kafka-cluster": $k, "connect-cluster": "connect-cluster"}}')
+      mds_scope=$(jq -nc --arg k "$mds_kafka_cluster_id" --arg c "$connect_cluster" '{clusters: {"kafka-cluster": $k, "connect-cluster": $c}}')
     ;;
     ksqldb)
       mds_scope=$(jq -nc --arg k "$mds_kafka_cluster_id" '{clusters: {"kafka-cluster": $k, "ksql-cluster": "ksql-cluster"}}')
@@ -1939,7 +1964,7 @@ function add_connector_config_based_on_environment () {
       fi
     ;;
 
-    rbac-sasl-plain)
+    rbac-sasl-plain|cfk-rbac)
 
       echo "$json_content" > $tmp_dir/input.json
       jq ".[\"principal.service.name\"] = \"connectorSA\" | .[\"principal.service.password\"] = \"connectorSA\"" $tmp_dir/input.json > $tmp_dir/output.json
@@ -2065,7 +2090,7 @@ function add_menu_toggle () {
 
 # environments an example can be run with (playground run --environment), one per
 # line. Nothing when the example starts its own environment instead of
-# "${PLAYGROUND_ENVIRONMENT}", and no cfk when it skips cfk (exit 111)
+# "${PLAYGROUND_ENVIRONMENT}", and no cfk / cfk-rbac when it skips cfk (exit 111)
 function get_example_supported_environments () {
   local example_file="$1"
   local environment_name
@@ -2074,13 +2099,13 @@ function get_example_supported_environments () {
     return
   fi
   local skips_cfk=0
-  if awk '/PLAYGROUND_ENVIRONMENT"? *==? *"cfk"/{inblock=1; next} inblock && /exit 111/{found=1} inblock && /^[[:space:]]*(fi|else)([[:space:]]|$)/{inblock=0} END{exit !found}' "$example_file"
+  if awk '/PLAYGROUND_ENVIRONMENT"? *==? *"?cfk/{inblock=1; next} inblock && /exit 111/{found=1} inblock && /^[[:space:]]*(fi|else)([[:space:]]|$)/{inblock=0} END{exit !found}' "$example_file"
   then
     skips_cfk=1
   fi
-  for environment_name in plaintext ccloud cfk 2way-ssl kerberos ldap-authorizer-sasl-plain ldap-sasl-plain rbac-sasl-plain sasl-plain sasl-scram sasl-ssl ssl_kerberos
+  for environment_name in plaintext ccloud cfk cfk-rbac 2way-ssl kerberos ldap-authorizer-sasl-plain ldap-sasl-plain rbac-sasl-plain sasl-plain sasl-scram sasl-ssl ssl_kerberos
   do
-    if [ "$environment_name" == "cfk" ] && [ $skips_cfk == 1 ]
+    if [[ "$environment_name" == cfk* ]] && [ $skips_cfk == 1 ]
     then
       continue
     fi

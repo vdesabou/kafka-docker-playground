@@ -64,7 +64,17 @@ export CP_INIT_IMAGE
 
 export CFK_VERSION
 
-playground state set run.environment "cfk"
+# cfk-rbac (environment/cfk-rbac/start.sh) is this deployment with RBAC, see environment/cfk-rbac/cfk-rbac.sh
+CFK_ENVIRONMENT=${CFK_ENVIRONMENT:-cfk}
+export PLAYGROUND_ENVIRONMENT="$CFK_ENVIRONMENT"
+CFK_MANIFEST_TEMPLATE="${DIR}/confluent-platform.yaml"
+CFK_CONNECT_CURL_AUTH=""
+if [[ "$CFK_ENVIRONMENT" == "cfk-rbac" ]]
+then
+  source "${DIR}/../cfk-rbac/cfk-rbac.sh"
+fi
+
+playground state set run.environment "$CFK_ENVIRONMENT"
 
 # Map CFK version to helm chart version
 # Reference: https://docs.confluent.io/operator/current/co-plan.html#co-long-image-tags
@@ -2504,7 +2514,7 @@ function build_cfk_manifest() {
   rendered_file=$(mktemp)
   base_manifest_file=$(mktemp)
 
-  envsubst '${CP_SERVER_IMAGE} ${CP_SERVER_TAG} ${CP_CONNECT_IMAGE} ${CP_CONNECT_TAG} ${CP_SCHEMA_REGISTRY_IMAGE} ${CP_SCHEMA_REGISTRY_TAG} ${CP_CONTROL_CENTER_IMAGE} ${CP_CONTROL_CENTER_TAG} ${CP_INIT_IMAGE} ${CFK_VERSION}' < "${DIR}/confluent-platform.yaml" > "$rendered_file"
+  envsubst '${CP_SERVER_IMAGE} ${CP_SERVER_TAG} ${CP_CONNECT_IMAGE} ${CP_CONNECT_TAG} ${CP_SCHEMA_REGISTRY_IMAGE} ${CP_SCHEMA_REGISTRY_TAG} ${CP_CONTROL_CENTER_IMAGE} ${CP_CONTROL_CENTER_TAG} ${CP_INIT_IMAGE} ${CFK_VERSION}' < "$CFK_MANIFEST_TEMPLATE" > "$rendered_file"
 
   if [[ -n "$ENABLE_CONTROL_CENTER" ]]
   then
@@ -3303,6 +3313,18 @@ then
   fi
 fi
 
+if [[ -n "$OPENLDAP_IMAGE" ]]
+then
+  if ! docker image inspect "$OPENLDAP_IMAGE" >/dev/null 2>&1
+  then
+    docker pull "$OPENLDAP_IMAGE" 2>/dev/null || true
+  fi
+  if docker image inspect "$OPENLDAP_IMAGE" >/dev/null 2>&1
+  then
+    import_image_into_k3d "$OPENLDAP_IMAGE" "openldap" || true
+  fi
+fi
+
 if [[ -n "$ENABLE_KSQLDB" ]] && docker image inspect "${CP_KSQL_IMAGE}:${CP_KSQL_TAG}" >/dev/null 2>&1
 then
   import_image_into_k3d "${CP_KSQL_IMAGE}:${CP_KSQL_TAG}" "ksqldb" || true
@@ -3426,8 +3448,19 @@ fi
 # Connect CR changes, CFK rolls the pod a few seconds later (see the wait before wait_container_ready)
 connect_sts_generation_before=$(kubectl -n confluent get statefulset connect -o jsonpath='{.metadata.generation}' 2>/dev/null || true)
 
+if [[ "$CFK_ENVIRONMENT" == "cfk-rbac" ]]
+then
+  deploy_cfk_rbac_prerequisites
+  deploy_cfk_rbac_kafka_first "$CFK_MANIFEST_FILE"
+fi
+
 cfk_manifest_apply_output=$(kubectl apply -f "$CFK_MANIFEST_FILE")
 echo "$cfk_manifest_apply_output"
+
+if [[ "$CFK_ENVIRONMENT" == "cfk-rbac" ]]
+then
+  apply_cfk_rbac_role_bindings
+fi
 
 if [[ -n "$EXTRA_PODS_FILE" ]] && [[ -s "$EXTRA_PODS_FILE" ]]
 then
@@ -3541,6 +3574,11 @@ fi
 
 wait_container_ready
 
+if [[ "$CFK_ENVIRONMENT" == "cfk-rbac" ]]
+then
+  wait_cfk_rbac_role_bindings
+fi
+
 # When an on-demand build patch is applied, the Connect pod becomes Kubernetes-ready
 # while CFK is still downloading and installing plugins asynchronously.
 # Wait until the Connect CR's appState reaches "Running" to ensure plugins are loaded.
@@ -3562,7 +3600,7 @@ then
   fi
   while true
   do
-    connect_plugins_json=$(kubectl -n confluent exec connect-0 -- curl -fsS --max-time 5 http://localhost:8083/connector-plugins 2>/dev/null)
+    connect_plugins_json=$(kubectl -n confluent exec connect-0 -- curl -fsS $CFK_CONNECT_CURL_AUTH --max-time 5 http://localhost:8083/connector-plugins 2>/dev/null)
     connect_plugin_count_rest=$(printf '%s' "$connect_plugins_json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d))" 2>/dev/null)
     connect_plugin_classes_rest=$(printf '%s' "$connect_plugins_json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(' '.join(sorted({x.get('class','') for x in d if isinstance(x,dict) and x.get('class')})))" 2>/dev/null)
     connect_plugin_count_status=$(kubectl -n confluent get connect connect -o jsonpath='{.status.connectorPlugins[*].class}' 2>/dev/null | awk '{print NF}')
@@ -3643,7 +3681,7 @@ then
         log "  Expected plugin names from patch: ${CONNECT_BUILD_EXPECTED_PLUGIN_NAMES}"
       fi
       log "  Connect plugin classes from REST (if reachable):"
-      kubectl -n confluent exec connect-0 -- curl -fsS --max-time 5 http://localhost:8083/connector-plugins 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print('\n'.join(sorted({x.get('class','') for x in d if isinstance(x,dict) and x.get('class')})))" 2>/dev/null || true
+      kubectl -n confluent exec connect-0 -- curl -fsS $CFK_CONNECT_CURL_AUTH --max-time 5 http://localhost:8083/connector-plugins 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print('\n'.join(sorted({x.get('class','') for x in d if isinstance(x,dict) and x.get('class')})))" 2>/dev/null || true
       log "  Init container logs:"
       kubectl -n confluent logs connect-0 -c config-init-container 2>/dev/null | tail -30 || true
       log "  Connect container logs (tail 200):"
@@ -3676,6 +3714,7 @@ CONNECT2_PF_PID=""
 CONNECT3_PF_PID=""
 KSQLDB_PF_PID=""
 REST_PROXY_PF_PID=""
+MDS_PF_PID=""
 cleanup() {
   # Note: CONNECTOR_ZIP_SERVER_PID is intentionally NOT killed here
   # It continues running to support `playground container update` and similar operations
@@ -3891,6 +3930,12 @@ then
   REST_PROXY_PF_PID=$(start_port_forward_with_retry "restproxy" "8082" "8082" "/tmp/restproxy-port-forward.log" "REST Proxy" "120") || true
 fi
 
+if [[ "$CFK_ENVIRONMENT" == "cfk-rbac" ]]
+then
+  # same local port as the rbac-sasl-plain environment, used by the playground rbac commands
+  MDS_PF_PID=$(start_port_forward_with_retry "kafka" "8091" "8090" "/tmp/mds-port-forward.log" "MDS" "120") || true
+fi
+
 port_forward_logs="/tmp/schema-registry-port-forward.log, /tmp/connect-port-forward.log"
 port_forward_missing=0
 
@@ -3967,6 +4012,10 @@ fi
 if [[ -n "$REST_PROXY_PF_PID" ]]
 then
   log "📲 REST Proxy is reachable at http://127.0.0.1:8082"
+fi
+if [[ -n "$MDS_PF_PID" ]]
+then
+  log "🛡️ MDS is reachable at http://127.0.0.1:8091 (log in with superUser/superUser)"
 fi
 
 # Port-forward connect service ports declared in compose override (for listeners like syslog.port)

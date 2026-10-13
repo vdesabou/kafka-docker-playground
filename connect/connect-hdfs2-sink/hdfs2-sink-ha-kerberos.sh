@@ -11,7 +11,7 @@ then
 fi
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
-if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
 then
   logwarn "⚠️  HDFS 2 sink connector is not compatible with CFK (Confluent for Kubernetes)"
   logwarn "   HDFS requires persistent node registration that K8s Pods cannot maintain"

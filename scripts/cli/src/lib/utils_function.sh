@@ -1504,19 +1504,25 @@ function wait_for_datagen_connector_to_inject_data () {
   connector_name="$1"
   datagen_tasks="$2"
   prefix_cmd="$3"
+  # the Connect REST API of the RBAC environments needs credentials
+  connect_auth=""
+  if [[ "$PLAYGROUND_ENVIRONMENT" == "rbac-sasl-plain" ]] || [[ "$PLAYGROUND_ENVIRONMENT" == "cfk-rbac" ]]
+  then
+    connect_auth="-u connectorSubmitter:connectorSubmitter"
+  fi
   set +e
   # wait for all tasks to be FAILED with org.apache.kafka.connect.errors.ConnectException: Stopping connector: generated the configured xxx number of messages
   MAX_WAIT=3600
   CUR_WAIT=0
   log "⌛ Waiting up to $MAX_WAIT seconds for connector $connector_name to finish injecting requested load"
-  $prefix_cmd curl -s -X GET http://localhost:8083/connectors/datagen-${connector_name}/status | jq .tasks[].trace | grep "generated the configured" | wc -l > /tmp/out.txt 2>&1
+  $prefix_cmd curl -s $connect_auth -X GET http://localhost:8083/connectors/datagen-${connector_name}/status | jq .tasks[].trace | grep "generated the configured" | wc -l > /tmp/out.txt 2>&1
   while [[ ! $(cat /tmp/out.txt) =~ "${datagen_tasks}" ]]; do
     sleep 5
-    $prefix_cmd curl -s -X GET http://localhost:8083/connectors/datagen-${connector_name}/status | jq .tasks[].trace | grep "generated the configured" | wc -l > /tmp/out.txt 2>&1
+    $prefix_cmd curl -s $connect_auth -X GET http://localhost:8083/connectors/datagen-${connector_name}/status | jq .tasks[].trace | grep "generated the configured" | wc -l > /tmp/out.txt 2>&1
     CUR_WAIT=$(( CUR_WAIT+10 ))
     if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
       echo -e "\nERROR: Please troubleshoot'.\n"
-      $prefix_cmd curl -s -X GET http://localhost:8083/connectors/datagen-${connector_name}/status | jq
+      $prefix_cmd curl -s $connect_auth -X GET http://localhost:8083/connectors/datagen-${connector_name}/status | jq
       exit 1
     fi
   done
@@ -1596,7 +1602,7 @@ function wait_container_ready() {
     return
   fi
 
-  if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+  if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
   then
     if [ ! -z $WAIT_FOR_CONTROL_CENTER ]
     then
@@ -1668,7 +1674,7 @@ function wait_container_ready() {
 }
 
 function display_jmx_info() {
-  if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+  if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
   then
     log "📊 CFK JMX metrics endpoints are available inside each pod:"
     log "    - JMX      : 7203"
@@ -1721,7 +1727,7 @@ function get_jmx_metrics() {
   jmx_disabled_hint="See https://docs.confluent.io/operator/current/co-monitor-cp.html#jmx-metrics"
   jmx_exec() {
     local args="$1"
-    if [[ "$environment" == "cfk" ]]
+    if [[ "$environment" == cfk* ]]
     then
       kubectl -n confluent exec -i "$target_container" -- java -jar "$JMXTERM_UBER_JAR" -l "localhost:$port" -n $args
     else
@@ -1729,7 +1735,7 @@ function get_jmx_metrics() {
     fi
   }
 
-  if [[ "$environment" == "cfk" ]]
+  if [[ "$environment" == cfk* ]]
   then
     case "$container" in
       connect2)
@@ -1782,7 +1788,7 @@ function get_jmx_metrics() {
   * ) logerror "invalid container $container! it should be one of zookeeper, broker, schema-registry, connect, connect2, connect3 or connect-<n>";exit 1;;
   esac
 
-  if [[ "$environment" == "cfk" ]]
+  if [[ "$environment" == cfk* ]]
   then
     # CFK JMX defaults to 7203 on each component pod.
     port=7203

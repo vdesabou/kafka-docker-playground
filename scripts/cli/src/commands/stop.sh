@@ -21,7 +21,7 @@ fi
 
 log "🛑 Stopping example $filename in dir $test_file_directory"
 
-if [[ "$environment" == "cfk" ]] || [[ -z "$environment" && -n "$cfk_port_forward_pids" ]]
+if [[ "$environment" == cfk* ]] || [[ -z "$environment" && -n "$cfk_port_forward_pids" ]]
 then
     cfk_stop_script="$root_folder/environment/cfk/stop.sh"
     if [ -f "$cfk_stop_script" ]

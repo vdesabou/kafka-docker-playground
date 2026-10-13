@@ -68,11 +68,15 @@ fi
 
 sr_url_cli="http://schema-registry:8081"
 security=""
-if [[ "$environment" == "cfk" ]]
+if [[ "$environment" == cfk* ]]
 then
   bootstrap_server="kafka:9071"
   container="connect-0"
   sr_url_cli="http://schemaregistry:8081"
+  if [[ "$environment" == "cfk-rbac" ]]
+  then
+    security="$property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli $consumer_config_name $cfk_rbac_client_properties"
+  fi
 elif [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
 then
   get_broker_container
@@ -139,7 +143,7 @@ else
 fi
 
 run_local_consumer() {
-  if [[ "$environment" == "cfk" ]]
+  if [[ "$environment" == cfk* ]]
   then
     kubectl -n confluent exec "$container" -- "$@"
   else

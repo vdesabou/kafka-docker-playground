@@ -1,11 +1,12 @@
 DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR_UTILS}/../scripts/cli/src/lib/utils_function.sh
 
-if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]] 
+if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]] 
 then
-    # if GITHUB_RUN_NUMBER is set, append "cfk" to GITHUB_RUN_NUMBER, only if this is not appended already
-    if [[ -n "$GITHUB_RUN_NUMBER" && "$GITHUB_RUN_NUMBER" != *cfk* ]]; then
-        export GITHUB_RUN_NUMBER="${GITHUB_RUN_NUMBER}cfk"
+    # if GITHUB_RUN_NUMBER is set, append "cfk" (or "cfkrbac") to GITHUB_RUN_NUMBER, only if this is not appended already
+    cfk_run_suffix="${PLAYGROUND_ENVIRONMENT//-/}"
+    if [[ -n "$GITHUB_RUN_NUMBER" && "$GITHUB_RUN_NUMBER" != *$cfk_run_suffix ]]; then
+        export GITHUB_RUN_NUMBER="${GITHUB_RUN_NUMBER}$cfk_run_suffix"
     fi
 fi
 

@@ -30,7 +30,7 @@ if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_typ
 then
     :
 else
-    if [[ "$environment" == "cfk" ]]
+    if [[ "$environment" == cfk* ]]
     then
         cfk_connect_workers_count=$(kubectl -n confluent get pods -o name 2>/dev/null | sed 's#pod/##' | grep -E '^connect-[0-9]+$' | wc -l | tr -d '[:space:]')
         if [[ -n "$cfk_connect_workers_count" ]] && ((cfk_connect_workers_count > 1))
@@ -54,7 +54,7 @@ else
         fi
     fi
 
-    if [[ "$multiple_connect_workers_running" == true ]] && [[ "$environment" != "cfk" ]]
+    if [[ "$multiple_connect_workers_running" == true ]] && [[ "$environment" != cfk* ]]
     then
         leader_name=$(playground --output-level WARN connector display-leader-name)
         leader_name=$(echo "$leader_name" | tr -d '[:space:]')
@@ -65,7 +65,7 @@ do
     set +e
     maybe_id=""
     
-    if [[ "$environment" == "cfk" ]]
+    if [[ "$environment" == cfk* ]]
     then
         # Display kubectl get connector output
         log "☸️ kubectl -n confluent get connector $connector"

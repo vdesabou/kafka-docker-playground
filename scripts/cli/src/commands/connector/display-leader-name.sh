@@ -12,7 +12,7 @@ enable_connect_nodes=$(playground state get flags.ENABLE_CONNECT_NODES)
 
 # Build list of connect containers to try
 connect_containers=()
-if [[ "$environment" == "cfk" ]]
+if [[ "$environment" == cfk* ]]
 then
     # CFK uses numbered pods: connect-0, connect-1, connect-2, etc.
     connect_containers=("connect-0")

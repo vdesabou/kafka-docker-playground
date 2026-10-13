@@ -42,7 +42,7 @@ do
     playground --output-level ERROR container exec --container "$resolved_container" --command "type jmap" > /dev/null 2>&1
     if [ $? != 0 ]
     then
-        if [[ "$environment" == "cfk" ]]
+        if [[ "$environment" == cfk* ]]
         then
             logwarn "jmap is not available on pod $resolved_container, attaching debug container $debug_image"
             debug_stderr=$(mktemp -t pg-debug-XXXXXXXXXX)
@@ -82,7 +82,7 @@ do
         if [[ -n "$live" ]]
         then
             log "📊 Taking histo (with live option) heap dump on container ${container}"
-            if [[ "$environment" == "cfk" ]]
+            if [[ "$environment" == cfk* ]]
             then
                 kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -histo:live 1" > /tmp/${filename}
             else
@@ -90,7 +90,7 @@ do
             fi
         else
             log "📊 Taking histo (without live option) heap dump on container ${container}"
-            if [[ "$environment" == "cfk" ]]
+            if [[ "$environment" == cfk* ]]
             then
                 kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -histo 1" > /tmp/${filename}
             else
@@ -109,7 +109,7 @@ do
         if [[ -n "$live" ]]
         then
             log "🎯 Taking heap dump (with live option) on container ${container}"
-            if [[ "$environment" == "cfk" ]]
+            if [[ "$environment" == cfk* ]]
             then
                 kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -dump:live,format=b,file=/tmp/${filename} 1"
             else
@@ -117,7 +117,7 @@ do
             fi
         else
             log "🎯 Taking heap dump (without live option) on container ${container}"
-            if [[ "$environment" == "cfk" ]]
+            if [[ "$environment" == cfk* ]]
             then
                 kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jmap -dump:format=b,file=/tmp/${filename} 1"
             else

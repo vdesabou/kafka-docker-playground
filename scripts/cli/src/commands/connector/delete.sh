@@ -57,7 +57,7 @@ do
                 fi
             done
         fi
-    elif [[ "$environment" == "cfk" ]]
+    elif [[ "$environment" == cfk* ]]
     then
         log "☸️ kubectl -n confluent delete connector $connector --ignore-not-found=true"
         kubectl -n confluent delete connector "$connector" --ignore-not-found=true >/dev/null

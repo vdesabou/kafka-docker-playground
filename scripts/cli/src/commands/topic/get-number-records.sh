@@ -25,7 +25,7 @@ items=($topic)
 # Cache broker tag and container (non-ccloud) once
 cached_tag=""
 cached_broker_container=""
-if [[ "$environment" != "ccloud" ]] && [[ "$environment" != "cfk" ]]; then
+if [[ "$environment" != "ccloud" ]] && [[ "$environment" != cfk* ]]; then
     cached_tag=$(get_running_cp_tag)
     if [ -z "$cached_tag" ]; then
         logerror "Could not find current CP version from docker ps"
@@ -37,7 +37,7 @@ fi
 
 # Cache cfk tag once
 cached_cfk_tag=""
-if [[ "$environment" == "cfk" ]]; then
+if [[ "$environment" == cfk* ]]; then
     if [ -n "$CP_CONNECT_TAG" ]; then
         cached_cfk_tag="$CP_CONNECT_TAG"
     elif [ -n "$TAG" ]; then
@@ -113,7 +113,7 @@ do
             echo "${count:-0}"
         fi
 
-    elif [[ "$environment" == "cfk" ]]
+    elif [[ "$environment" == cfk* ]]
     then
         cfk_class_name="kafka.tools.GetOffsetShell"
         if version_gt "$cached_cfk_tag" "7.6.9"
@@ -127,7 +127,7 @@ do
             cfk_parameter_for_list_broker="--broker-list"
         fi
 
-        offsets=$(kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server --topic $topic --time -1 2>/dev/null")
+        offsets=$(kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server $security --topic $topic --time -1 2>/dev/null")
         if [ -z "$offsets" ]
         then
             echo "0"
