@@ -21,6 +21,7 @@ Check out [kafka-docker-playground.io](https://kafka-docker-playground.io/) to l
 - 🎓 Learn how the playground [works](https://kafka-docker-playground.io/#/how-it-works)
 - 👷‍♂️ Build your own examples or reproduction models with [reusables](https://kafka-docker-playground.io/#/reusables) section
 - ✨ Work remotely with VS Code using [playground ec2](https://kafka-docker-playground.io/#/playground%20ec2) CLI command
+- 🦭 Run examples with [Podman](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%a6%ad-using-podman-instead-of-docker) through its Docker-compatible API
 - 🤖 Automated testing using Github Actions [CI](https://kafka-docker-playground.io/#/how-it-works?id=🤖-how-ci-works)
 - ☸️ Run any onprem connector example using Confluent For Kubernetes (CFK) completely transparently using `--environment cfk` CLI option
 - 👾 And even more [playgrounds](https://kafka-docker-playground.io/#/content?id=👾-other-playgrounds)...
