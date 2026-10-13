@@ -2,7 +2,7 @@
 
 > **{{ full_name }}**
 >
-> {{ help.for_markdown }}
+> {{ help.for_kdp_markdown }}
 >
 
 attributes = version || alt.any? || default || extensible
@@ -55,7 +55,7 @@ if dependencies.any?
   dependencies.each do |dependency|
     > *{{ dependency.commands.join ', ' }}*
     >
-    > {{ dependency.help&.for_markdown }}
+    > {{ dependency.help&.for_kdp_markdown }}
     >
   end
 end
@@ -68,9 +68,9 @@ if public_environment_variables.any?
   public_environment_variables.each do |environment_variable|
     attributes = environment_variable.required || environment_variable.default
 
-    > #### *{{ environment_variable.name.upcase }}*
+    > #### `{{ environment_variable.name.upcase }}`
     >
-    > {{ environment_variable.help.for_markdown }}
+    > {{ environment_variable.help.for_kdp_markdown }}
     >
 
     if attributes
@@ -80,7 +80,7 @@ if public_environment_variables.any?
         > | Required:       | ✓ Yes
       end
       if environment_variable.default
-        > | Default Value:  | {{ environment_variable.default }}
+        > | Default Value:  | {{ KdpMarkdown.values(environment_variable.default) }}
       end
       >
     end
@@ -91,10 +91,10 @@ end
 
 if commands.any?
   grouped_commands.each do |group, commands|
-    > ### {{ group.gsub(/:$/, '') }}
+    > ### {{ group.gsub(/:$/, '').gsub(/\A=+\s*|\s*=+\z/, '') }}
     >
     commands.each do |subcommand|
-      > - [{{ subcommand.name }}]({{ subcommand.full_name.gsub(' ', '%20') }}) - {{ subcommand.summary.for_markdown }}
+      > - [{{ subcommand.name }}]({{ subcommand.full_name.gsub(' ', '%20') }}) - {{ subcommand.summary.for_kdp_inline }}
     end
     >
   end
@@ -108,9 +108,9 @@ if args.any?
   args.each do |arg|
     attributes = arg.required || arg.repeatable || arg.default || arg.allowed
 
-    > #### *{{ arg.name.upcase }}*
+    > #### `{{ arg.name.upcase }}`
     >
-    > {{ arg.help.for_markdown }}
+    > {{ arg.help.for_kdp_markdown }}
     >
 
     if attributes
@@ -123,10 +123,10 @@ if args.any?
         > | Repeatable:     |  ✓ Yes
       end
       if arg.default
-        > | Default Value:  | {{ arg.default }}
+        > | Default Value:  | {{ KdpMarkdown.values(arg.default) }}
       end
       if arg.allowed
-        > | Allowed Values: | {{ arg.allowed.join(', ') }}
+        > | Allowed Values: | {{ KdpMarkdown.values(arg.allowed) }}
       end
       >
     end
@@ -135,7 +135,7 @@ if args.any?
   if catch_all.label && catch_all.help
     > #### *{{ catch_all.label }}*
     >
-    > {{ catch_all.help&.for_markdown }}
+    > {{ catch_all.help&.for_kdp_markdown }}
     >
     if catch_all.required?
       > | Attributes | &nbsp;
@@ -154,9 +154,9 @@ if flags.any?
   flags.reject(&:private).each do |flag|
     attributes = flag.required || flag.repeatable || flag.default || flag.allowed || flag.conflicts
 
-    > #### *{{ flag.usage_string }}*
+    > #### `{{ flag.usage_string }}`
     >
-    > {{ flag.help.for_markdown }}
+    > {{ flag.help.for_kdp_markdown }}
     >
 
     if attributes
@@ -169,13 +169,13 @@ if flags.any?
         > | Repeatable:     |  ✓ Yes
       end
       if flag.default
-        > | Default Value:  | {{ flag.default }}
+        > | Default Value:  | {{ KdpMarkdown.values(flag.default) }}
       end
       if flag.allowed
-        > | Allowed Values: | {{ flag.allowed.join(', ') }}
+        > | Allowed Values: | {{ KdpMarkdown.values(flag.allowed) }}
       end
       if flag.conflicts
-        > | Conflicts With: | *{{ flag.conflicts.join(', ') }}*
+        > | Conflicts With: | {{ KdpMarkdown.values(flag.conflicts) }}
       end
       >
     end

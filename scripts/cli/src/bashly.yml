@@ -665,8 +665,8 @@ commands:
 
     A name containing PASSWORD, PASSPHRASE, SECRET, TOKEN, KEY, CREDS, PWD or
     LICENSE is treated as a credential, anything else as a plain variable
-    (GCP_PROJECT, AWS_REGION, an account name, a URL). Use 'secrets set
-    --secret' or '--plain' to decide yourself.
+    (GCP_PROJECT, AWS_REGION, an account name, a URL). Use --secret or
+    --plain with 'playground secrets set' to decide yourself.
 
     🏦 Backends
 

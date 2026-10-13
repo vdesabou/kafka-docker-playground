@@ -4,6 +4,9 @@ require 'gtx'
 # for previewing only (not needed for rendering)
 require 'tty-markdown'
 
+# Markdown formatting helpers of the help texts (for_kdp_markdown, KdpMarkdown.values)
+load "#{source}/kdp_markdown.rb"
+
 # Load the GTX template
 template = "#{source}/markdown.gtx"
 gtx = GTX.load_file template
