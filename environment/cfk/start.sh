@@ -35,16 +35,18 @@ function checksum_sha512() {
 : "${K3D_REGISTRY_CACHE_PORT:=5111}"
 : "${K3D_REGISTRY_CACHE_IMAGE:=ligfx/k3d-registry-dockerd:latest}"
 
+# versions: TAG and the CP_*_TAG set by scripts/utils.sh (default tag, --tag). The broker is CP_KAFKA_TAG there;
+# its image is always cp-server, CFK does not run the community cp-kafka image (--kafka-community-image)
 : "${CP_SERVER_IMAGE:=confluentinc/cp-server}"
-: "${CP_SERVER_TAG:=8.3.0}"
+: "${CP_SERVER_TAG:=${CP_KAFKA_TAG:-$TAG}}"
 : "${CP_CONNECT_IMAGE:=confluentinc/cp-server-connect}"
-: "${CP_CONNECT_TAG:=8.3.0}"
+: "${CP_CONNECT_TAG:=$TAG}"
 : "${CP_SCHEMA_REGISTRY_IMAGE:=confluentinc/cp-schema-registry}"
-: "${CP_SCHEMA_REGISTRY_TAG:=8.3.0}"
+: "${CP_SCHEMA_REGISTRY_TAG:=$TAG}"
 : "${CP_KSQL_IMAGE:=confluentinc/cp-ksqldb-server}"
-: "${CP_KSQL_TAG:=8.3.0}"
+: "${CP_KSQL_TAG:=$TAG}"
 : "${CP_REST_PROXY_IMAGE:=confluentinc/cp-kafka-rest}"
-: "${CP_REST_PROXY_TAG:=8.3.0}"
+: "${CP_REST_PROXY_TAG:=$TAG}"
 : "${CP_CONTROL_CENTER_IMAGE:=confluentinc/cp-enterprise-control-center-next-gen}"
 : "${CP_CONTROL_CENTER_TAG:=latest}"
 : "${CP_INIT_IMAGE:=confluentinc/confluent-init-container}"
