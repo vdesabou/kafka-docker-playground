@@ -2514,7 +2514,7 @@ function build_cfk_manifest() {
   rendered_file=$(mktemp)
   base_manifest_file=$(mktemp)
 
-  envsubst '${CP_SERVER_IMAGE} ${CP_SERVER_TAG} ${CP_CONNECT_IMAGE} ${CP_CONNECT_TAG} ${CP_SCHEMA_REGISTRY_IMAGE} ${CP_SCHEMA_REGISTRY_TAG} ${CP_CONTROL_CENTER_IMAGE} ${CP_CONTROL_CENTER_TAG} ${CP_INIT_IMAGE} ${CFK_VERSION}' < "$CFK_MANIFEST_TEMPLATE" > "$rendered_file"
+  envsubst '${CP_SERVER_IMAGE} ${CP_SERVER_TAG} ${CP_CONNECT_IMAGE} ${CP_CONNECT_TAG} ${CP_SCHEMA_REGISTRY_IMAGE} ${CP_SCHEMA_REGISTRY_TAG} ${CP_CONTROL_CENTER_IMAGE} ${CP_CONTROL_CENTER_TAG} ${CP_INIT_IMAGE} ${CFK_VERSION} ${CP_KSQL_IMAGE} ${CP_KSQL_TAG} ${CP_REST_PROXY_IMAGE} ${CP_REST_PROXY_TAG} ${CP_C3_PROMETHEUS_IMAGE} ${CP_C3_ALERTMANAGER_IMAGE}' < "$CFK_MANIFEST_TEMPLATE" > "$rendered_file"
 
   if [[ -n "$ENABLE_CONTROL_CENTER" ]]
   then
@@ -2547,8 +2547,28 @@ function build_cfk_manifest() {
     log "🥉 Connect replicas set to 3 for CFK deployment"
   fi
 
-  # Filter ControlCenter and patch Kafka/Connect replicas based on set_profiles options.
-  awk -v include_control_center="$include_control_center" -v kafka_replicas="$kafka_replicas" -v connect_replicas="$connect_replicas" '
+  local include_c3_next_gen=0
+  if [[ "$include_control_center" -eq 1 ]] && [[ -z "$ENABLE_LEGACY_CONTROL_CENTER" ]]
+  then
+    include_c3_next_gen=1
+  fi
+
+  # Filter ControlCenter (and the KsqlDB / KafkaRestProxy resources of cfk-rbac) and patch Kafka/Connect replicas
+  # based on set_profiles options. Lines between "# cfk-<feature>-begin" and "# cfk-<feature>-end" markers are
+  # removed when the feature is disabled.
+  awk -v include_control_center="$include_control_center" -v include_c3_next_gen="$include_c3_next_gen" -v include_ksqldb="$include_ksqldb" -v include_restproxy="$include_restproxy" -v include_license="${CFK_INCLUDE_LICENSE:-0}" -v kafka_replicas="$kafka_replicas" -v connect_replicas="$connect_replicas" '
+    function strip_block(d, feature,    n, lines, i, out, skipping) {
+      n = split(d, lines, "\n")
+      out = ""
+      skipping = 0
+      for (i = 1; i <= n; i++) {
+        if (lines[i] ~ ("# cfk-" feature "-begin")) { skipping = 1; continue }
+        if (lines[i] ~ ("# cfk-" feature "-end")) { skipping = 0; continue }
+        if (!skipping && (i < n || lines[i] != "")) { out = out lines[i] "\n" }
+      }
+      return out
+    }
+
     function emit_doc(d) {
       if (d ~ /^[[:space:]]*$/) {
         return
@@ -2556,6 +2576,26 @@ function build_cfk_manifest() {
 
       if (d ~ /kind:[[:space:]]*ControlCenter([[:space:]]|$)/ && include_control_center != 1) {
         return
+      }
+
+      if (d ~ /kind:[[:space:]]*KsqlDB([[:space:]]|$)/ && include_ksqldb != 1) {
+        return
+      }
+
+      if (d ~ /kind:[[:space:]]*KafkaRestProxy([[:space:]]|$)/ && include_restproxy != 1) {
+        return
+      }
+
+      if (include_c3_next_gen != 1) {
+        d = strip_block(d, "c3-next-gen")
+      }
+
+      if (include_ksqldb != 1) {
+        d = strip_block(d, "ksqldb")
+      }
+
+      if (include_license != 1) {
+        d = strip_block(d, "license")
       }
 
       if (d ~ /kind:[[:space:]]*Kafka([[:space:]]|$)/) {
@@ -2595,7 +2635,8 @@ function build_cfk_manifest() {
 
   cp "$base_manifest_file" "$output_file"
 
-  if [[ "$include_ksqldb" -eq 1 ]]
+  # cfk-rbac deploys ksqlDB and REST Proxy with the KsqlDB and KafkaRestProxy resources of its template
+  if [[ "$include_ksqldb" -eq 1 ]] && [[ "$CFK_ENVIRONMENT" != "cfk-rbac" ]]
   then
     cat >> "$output_file" << EOF
 ---
@@ -2650,7 +2691,7 @@ spec:
 EOF
   fi
 
-  if [[ "$include_restproxy" -eq 1 ]]
+  if [[ "$include_restproxy" -eq 1 ]] && [[ "$CFK_ENVIRONMENT" != "cfk-rbac" ]]
   then
     cat >> "$output_file" << EOF
 ---
@@ -3325,15 +3366,31 @@ then
   fi
 fi
 
-if [[ -n "$ENABLE_KSQLDB" ]] && docker image inspect "${CP_KSQL_IMAGE}:${CP_KSQL_TAG}" >/dev/null 2>&1
+optional_images=()
+if [[ -n "$ENABLE_KSQLDB" ]]
 then
-  import_image_into_k3d "${CP_KSQL_IMAGE}:${CP_KSQL_TAG}" "ksqldb" || true
+  optional_images+=("${CP_KSQL_IMAGE}:${CP_KSQL_TAG}")
 fi
-
-if [[ -n "$ENABLE_RESTPROXY" ]] && docker image inspect "${CP_REST_PROXY_IMAGE}:${CP_REST_PROXY_TAG}" >/dev/null 2>&1
+if [[ -n "$ENABLE_RESTPROXY" ]]
 then
-  import_image_into_k3d "${CP_REST_PROXY_IMAGE}:${CP_REST_PROXY_TAG}" "restproxy" || true
+  optional_images+=("${CP_REST_PROXY_IMAGE}:${CP_REST_PROXY_TAG}")
 fi
+# Prometheus and Alertmanager of Control Center Next Gen (cfk-rbac)
+if [[ -n "$ENABLE_CONTROL_CENTER" ]] && [[ -z "$ENABLE_LEGACY_CONTROL_CENTER" ]] && [[ -n "$CP_C3_PROMETHEUS_IMAGE" ]]
+then
+  optional_images+=("$CP_C3_PROMETHEUS_IMAGE" "$CP_C3_ALERTMANAGER_IMAGE")
+fi
+for optional_image in "${optional_images[@]}"
+do
+  if ! docker image inspect "$optional_image" >/dev/null 2>&1
+  then
+    docker pull "$optional_image" 2>/dev/null || true
+  fi
+  if docker image inspect "$optional_image" >/dev/null 2>&1
+  then
+    import_image_into_k3d "$optional_image" "$(echo "$optional_image" | tr '/:.' '_')" || true
+  fi
+done
 
 if [[ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]]
 then

@@ -10,8 +10,10 @@ The users are the ones of [rbac-sasl-plain](../rbac-sasl-plain/), so connectors,
 * 1 broker, with the Metadata Service (MDS) on `http://kafka.confluent.svc.cluster.local:8090` (`http://localhost:8091` on the host)
 * 1 OpenLDAP (`openldap-0`), the only source of users and groups
 * 1 connect, 1 schema-registry
-
-Control Center, ksqlDB and REST Proxy are not supported (`--enable-control-center`, `--enable-ksqldb` and `--enable-rest-proxy` are ignored).
+* optionally, with RBAC too:
+  * Control Center Next Gen with its Prometheus and Alertmanager (`--enable-control-center`, `ControlCenter` resource), on [http://127.0.0.1:9021](http://127.0.0.1:9021): log in with `superUser`/`superUser`, or another LDAP user below to see how the view changes with permissions. Legacy Control Center with `--enable-legacy-control-center`
+  * ksqlDB (`--enable-ksqldb`, `KsqlDB` resource), on `http://127.0.0.1:8088`
+  * REST Proxy (`--enable-rest-proxy`, `KafkaRestProxy` resource), on `http://127.0.0.1:8082`. Its security plugins need an Enterprise license, there is no trial period: set `CONFLUENT_LICENSE` (`playground secrets set CONFLUENT_LICENSE`), otherwise REST Proxy answers `HTTP 402 Invalid License!`
 
 Listeners of the broker:
 
@@ -46,6 +48,10 @@ Users are the LDAP users of [rbac-sasl-plain/scripts/security/ldap_users](../rba
 | `connectorSubmitter` | `connectorSubmitter` | creates connectors (`Connector` resources, Connect REST API, `playground connector`) |
 | `connectorSA` | `connectorSA` | connectors run as this principal (`principal.service.name`, added by `playground connector create-or-update`) |
 | `clientAvroCli` | `clientAvroCli` | Schema Registry access of `playground topic produce/consume` |
+| `controlcenterAdmin` | `controlcenterAdmin` | control-center |
+| `ksqlDBAdmin` | `ksqlDBAdmin` | ksqldb-server (queries run as this principal) |
+| `ksqlDBUser` | `ksqlDBUser` | runs ksqlDB statements (`DeveloperWrite` on the ksqlDB cluster) |
+| `restAdmin` | `restAdmin` | rest-proxy |
 | `alice`, `barnie`, `charlie` | `<user>-secret` | `SystemAdmin`, `ClusterAdmin`, `UserAdmin` |
 
 Secrets holding these credentials are created by [cfk-rbac.sh](cfk-rbac.sh).
@@ -59,7 +65,14 @@ kubectl -n confluent get confluentrolebinding
 playground rbac role-binding list --principal User:connectorSA
 ```
 
-Cluster ids used in role bindings: connect is `confluent.connect`, schema registry is `id_schemaregistry_confluent`.
+Cluster ids used in role bindings: connect is `confluent.connect`, schema registry is `id_schemaregistry_confluent`, ksqlDB is `confluent.ksqldb-server_`.
+
+ksqlDB, with the REST API:
+
+```bash
+curl -s -u ksqlDBUser:ksqlDBUser -X POST http://localhost:8088/ksql -H 'Content-Type: application/vnd.ksql.v1+json' \
+  -d '{"ksql":"SHOW STREAMS;","streamsProperties":{}}'
+```
 
 ## Change permissions
 

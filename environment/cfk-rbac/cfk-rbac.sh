@@ -14,14 +14,39 @@ CFK_MANIFEST_TEMPLATE="${CFK_RBAC_DIR}/confluent-platform.yaml"
 # kafka-* tools and curl calls made by start.sh inside connect-0
 CFK_CONNECT_CURL_AUTH="-u superUser:superUser"
 
-for cfk_rbac_unsupported_flag in ENABLE_CONTROL_CENTER ENABLE_KSQLDB ENABLE_RESTPROXY
-do
-  if [[ -n "${!cfk_rbac_unsupported_flag}" ]]
+# Prometheus and Alertmanager of Control Center Next Gen (same versions as environment/plaintext)
+: "${CP_C3_PROMETHEUS_IMAGE:=confluentinc/cp-enterprise-prometheus:2.0.0}"
+: "${CP_C3_ALERTMANAGER_IMAGE:=confluentinc/cp-enterprise-alertmanager:2.0.0}"
+export CP_C3_PROMETHEUS_IMAGE CP_C3_ALERTMANAGER_IMAGE
+
+# the security plugins of REST Proxy need an Enterprise license, there is no trial period (HTTP 402 otherwise).
+# Loaded by 'playground run', or from the secrets store with 'playground start-environment'
+CFK_INCLUDE_LICENSE=0
+if [[ -n "$ENABLE_RESTPROXY" ]]
+then
+  if [[ -z "$CONFLUENT_LICENSE" ]]
   then
-    logwarn "⚠️ $cfk_rbac_unsupported_flag is not supported with cfk-rbac environment, ignoring it"
-    unset "$cfk_rbac_unsupported_flag"
+    CONFLUENT_LICENSE=$(playground --output-level ERROR secrets get CONFLUENT_LICENSE --reveal 2> /dev/null || true)
   fi
-done
+  if [[ "$CONFLUENT_LICENSE" == eyJ* ]]
+  then
+    # an expired license makes CFK reject the whole KafkaRestProxy resource ("invalid license Token is expired")
+    cfk_rbac_license_payload=$(printf '%s' "$CONFLUENT_LICENSE" | cut -d. -f2 | tr '_-' '/+')
+    while (( ${#cfk_rbac_license_payload} % 4 != 0 ))
+    do
+      cfk_rbac_license_payload="${cfk_rbac_license_payload}="
+    done
+    cfk_rbac_license_exp=$(printf '%s' "$cfk_rbac_license_payload" | base64 -d 2> /dev/null | jq -r '.exp // empty' 2> /dev/null)
+    if [[ -n "$cfk_rbac_license_exp" ]] && (( cfk_rbac_license_exp < $(date +%s) ))
+    then
+      logwarn "⚠️ CONFLUENT_LICENSE expired on $(jq -rn --argjson e "$cfk_rbac_license_exp" '$e | todate'), not used: REST Proxy will answer HTTP 402"
+    else
+      CFK_INCLUDE_LICENSE=1
+    fi
+  else
+    logwarn "⚠️ CONFLUENT_LICENSE is not set: REST Proxy security plugins require an Enterprise license, REST Proxy will answer HTTP 402 (store it with 'playground secrets set CONFLUENT_LICENSE')"
+  fi
+fi
 
 # usage: apply_cfk_rbac_secret <name> <key>=<value> [<key>=<value>...]
 function apply_cfk_rbac_secret() {
@@ -41,7 +66,38 @@ function cfk_rbac_user_password_file() {
   printf 'username=%s\npassword=%s' "$1" "$2"
 }
 
+# CFK adds finalizers to the secrets used by its resources (secret.finalizers.platform.confluent.io/<kind>-<name>).
+# After the namespace reset of a previous run, such a secret can still be terminating: applying it again only
+# updates the terminating object, CFK then fails to add its finalizer ("no new finalizers can be added if the
+# object is being deleted") and Kafka never starts. Remove them for good before creating the secrets.
+function remove_terminating_cfk_rbac_secrets() {
+  local terminating_secrets
+  local secret
+  local wait_attempt
+  terminating_secrets=$(kubectl -n confluent get secret -o json 2> /dev/null | jq -r '.items[] | select(.metadata.deletionTimestamp != null) | .metadata.name')
+  if [[ -z "$terminating_secrets" ]]
+  then
+    return
+  fi
+  log "🧹 Removing secrets left terminating by the previous run: $(echo $terminating_secrets)"
+  for secret in $terminating_secrets
+  do
+    kubectl -n confluent patch secret "$secret" --type=merge -p '{"metadata":{"finalizers":[]}}' > /dev/null 2>&1 || true
+  done
+  for wait_attempt in {1..30}
+  do
+    if [[ -z "$(kubectl -n confluent get secret -o json 2> /dev/null | jq -r '.items[] | select(.metadata.deletionTimestamp != null) | .metadata.name')" ]]
+    then
+      return
+    fi
+    sleep 1
+  done
+  logwarn "⚠️ Some secrets are still terminating, the deployment may fail"
+}
+
 function deploy_cfk_rbac_prerequisites() {
+  remove_terminating_cfk_rbac_secrets
+
   log "🔐 Create the RBAC secrets (credentials of the LDAP users of environment/rbac-sasl-plain)"
 
   # admin: super user, inter-broker, metrics reporter, KRaft controller, playground CLI
@@ -80,6 +136,21 @@ function deploy_cfk_rbac_prerequisites() {
   apply_cfk_rbac_secret mds-client-connect "bearer.txt=$(cfk_rbac_user_password_file connectAdmin connectAdmin)"
   apply_cfk_rbac_secret kafka-client-sr "plain.txt=$(cfk_rbac_user_password_file schemaregistryUser schemaregistryUser)"
   apply_cfk_rbac_secret mds-client-sr "bearer.txt=$(cfk_rbac_user_password_file schemaregistryUser schemaregistryUser)"
+
+  # optional components: --enable-ksqldb, --enable-rest-proxy, --enable-control-center
+  apply_cfk_rbac_secret kafka-client-ksql "plain.txt=$(cfk_rbac_user_password_file ksqlDBAdmin ksqlDBAdmin)"
+  apply_cfk_rbac_secret mds-client-ksql "bearer.txt=$(cfk_rbac_user_password_file ksqlDBAdmin ksqlDBAdmin)"
+  apply_cfk_rbac_secret sr-client-ksql "basic.txt=$(cfk_rbac_user_password_file ksqlDBAdmin ksqlDBAdmin)"
+  apply_cfk_rbac_secret kafka-client-krp "plain.txt=$(cfk_rbac_user_password_file restAdmin restAdmin)"
+  apply_cfk_rbac_secret mds-client-krp "bearer.txt=$(cfk_rbac_user_password_file restAdmin restAdmin)"
+  apply_cfk_rbac_secret sr-client-krp "basic.txt=$(cfk_rbac_user_password_file restAdmin restAdmin)"
+  apply_cfk_rbac_secret kafka-client-c3 "plain.txt=$(cfk_rbac_user_password_file controlcenterAdmin controlcenterAdmin)"
+  apply_cfk_rbac_secret mds-client-c3 "bearer.txt=$(cfk_rbac_user_password_file controlcenterAdmin controlcenterAdmin)"
+
+  if [[ "$CFK_INCLUDE_LICENSE" -eq 1 ]]
+  then
+    apply_cfk_rbac_secret confluent-license "license.txt=license=$CONFLUENT_LICENSE"
+  fi
 
   # Connector resources created by 'playground connector create-or-update'
   apply_cfk_rbac_secret connector-submitter "bearer.txt=$(cfk_rbac_user_password_file connectorSubmitter connectorSubmitter)"
@@ -128,18 +199,13 @@ function deploy_cfk_rbac_kafka_first() {
   set +e
   while ! kubectl -n confluent wait --for=condition=Ready pod/kafka-0 --timeout=5s > /dev/null 2>&1
   do
-    # seen once after a namespace reset: the operator never reconciled the Kafka resource again, while the
-    # KRaft controller was ready. A change of annotation triggers a new reconciliation
-    if (( cur_wait > 0 && cur_wait % 60 == 0 )) && ! kubectl -n confluent get pod kafka-0 > /dev/null 2>&1
-    then
-      kubectl -n confluent annotate kafka kafka playground/reconcile="$(date +%s)" --overwrite > /dev/null 2>&1
-    fi
     cur_wait=$(( cur_wait + 10 ))
     if [[ "$cur_wait" -ge "$max_wait" ]]
     then
       logerror "❌ kafka-0 did not become ready in $max_wait seconds"
       kubectl -n confluent get pods || true
       kubectl -n confluent get kraftcontroller,kafka -o wide || true
+      kubectl -n confluent get kafka kafka -o jsonpath='{.status.conditions[*].message}' 2> /dev/null || true
       exit 1
     fi
     sleep 5

@@ -112,6 +112,10 @@ spec:
         type: bearer
         bearer:
           secretRef: mds-client-kafka-rest
+    # cfk-c3-next-gen-begin: removed by build_cfk_manifest without Control Center Next Gen
+    metricsClient:
+      url: http://controlcenter.confluent.svc.cluster.local:9090
+    # cfk-c3-next-gen-end
   configOverrides:
     server:
       - offsets.topic.replication.factor=1
@@ -239,3 +243,139 @@ spec:
         type: bearer
         bearer:
           secretRef: mds-client-sr
+---
+# --enable-ksqldb
+apiVersion: platform.confluent.io/v1beta1
+kind: KsqlDB
+metadata:
+  name: ksqldb-server
+  namespace: confluent
+spec:
+  replicas: 1
+  metrics: {}
+  image:
+    application: ${CP_KSQL_IMAGE}:${CP_KSQL_TAG}
+    init: ${CP_INIT_IMAGE}:${CFK_VERSION}
+  dataVolumeCapacity: 10Gi
+  internalTopicReplicationFactor: 1
+  authorization:
+    type: rbac
+  dependencies:
+    kafka:
+      bootstrapEndpoint: kafka.confluent.svc.cluster.local:9071
+      authentication:
+        type: plain
+        jaasConfig:
+          secretRef: kafka-client-ksql
+    mds:
+      endpoint: http://kafka.confluent.svc.cluster.local:8090
+      tokenKeyPair:
+        secretRef: mds-token
+      authentication:
+        type: bearer
+        bearer:
+          secretRef: mds-client-ksql
+    schemaRegistry:
+      url: http://schemaregistry.confluent.svc.cluster.local:8081
+      authentication:
+        type: basic
+        basic:
+          secretRef: sr-client-ksql
+---
+# --enable-rest-proxy
+apiVersion: platform.confluent.io/v1beta1
+kind: KafkaRestProxy
+metadata:
+  name: restproxy
+  namespace: confluent
+spec:
+  replicas: 1
+  metrics: {}
+  image:
+    application: ${CP_REST_PROXY_IMAGE}:${CP_REST_PROXY_TAG}
+    init: ${CP_INIT_IMAGE}:${CFK_VERSION}
+  authorization:
+    type: rbac
+  # cfk-license-begin: removed by build_cfk_manifest when CONFLUENT_LICENSE is not set
+  license:
+    secretRef: confluent-license
+  # cfk-license-end
+  dependencies:
+    kafka:
+      bootstrapEndpoint: kafka.confluent.svc.cluster.local:9071
+      authentication:
+        type: plain
+        jaasConfig:
+          secretRef: kafka-client-krp
+    mds:
+      endpoint: http://kafka.confluent.svc.cluster.local:8090
+      tokenKeyPair:
+        secretRef: mds-token
+      authentication:
+        type: bearer
+        bearer:
+          secretRef: mds-client-krp
+    schemaRegistry:
+      url: http://schemaregistry.confluent.svc.cluster.local:8081
+      authentication:
+        type: basic
+        basic:
+          secretRef: sr-client-krp
+---
+# --enable-control-center: Control Center Next Gen, with its Prometheus and Alertmanager (legacy Control Center
+# without them when ENABLE_LEGACY_CONTROL_CENTER is set). Users log in with their LDAP credentials.
+apiVersion: platform.confluent.io/v1beta1
+kind: ControlCenter
+metadata:
+  name: controlcenter
+  namespace: confluent
+spec:
+  replicas: 1
+  internalTopicReplicatorFactor: 1
+  metrics: {}
+  image:
+    application: ${CP_CONTROL_CENTER_IMAGE}:${CP_CONTROL_CENTER_TAG}
+    init: ${CP_INIT_IMAGE}:${CFK_VERSION}
+  dataVolumeCapacity: 10Gi
+  authorization:
+    type: rbac
+  # cfk-c3-next-gen-begin
+  services:
+    prometheus:
+      image: ${CP_C3_PROMETHEUS_IMAGE}
+      pvc:
+        dataVolumeCapacity: 10Gi
+    alertmanager:
+      image: ${CP_C3_ALERTMANAGER_IMAGE}
+  # cfk-c3-next-gen-end
+  dependencies:
+    # cfk-c3-next-gen-begin
+    prometheusClient:
+      url: http://controlcenter.confluent.svc.cluster.local:9090
+    alertManagerClient:
+      url: http://controlcenter.confluent.svc.cluster.local:9093
+    # cfk-c3-next-gen-end
+    kafka:
+      bootstrapEndpoint: kafka.confluent.svc.cluster.local:9071
+      authentication:
+        type: plain
+        jaasConfig:
+          secretRef: kafka-client-c3
+    mds:
+      endpoint: http://kafka.confluent.svc.cluster.local:8090
+      tokenKeyPair:
+        secretRef: mds-token
+      authentication:
+        type: bearer
+        bearer:
+          secretRef: mds-client-c3
+    schemaRegistry:
+      url: http://schemaregistry.confluent.svc.cluster.local:8081
+    connect:
+      - name: connect
+        url: http://connect.confluent.svc.cluster.local:8083
+    # cfk-ksqldb-begin: removed by build_cfk_manifest without ksqlDB
+    ksqldb:
+      - name: ksqldb
+        url: http://ksqldb-server.confluent.svc.cluster.local:8088
+    # cfk-ksqldb-end
