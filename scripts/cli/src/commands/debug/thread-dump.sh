@@ -40,7 +40,7 @@ do
     playground --output-level ERROR container exec --container "$resolved_container" --command "type jstack" > /dev/null 2>&1
     if [ $? != 0 ]
     then
-        if [[ "$environment" == "cfk" ]]
+        if [[ "$environment" == cfk* ]]
         then
             logwarn "jstack is not available on pod $resolved_container, attaching debug container $debug_image"
             debug_stderr=$(mktemp -t pg-debug-XXXXXXXXXX)
@@ -74,7 +74,7 @@ do
     fi
     set -e
     log "🎯 Taking thread dump on container ${container} for pid 1"
-    if [[ "$environment" == "cfk" ]]
+    if [[ "$environment" == cfk* ]]
     then
         kubectl -n confluent exec "$resolved_container" -c "$target_container_name" -- /bin/sh -c "cd /tmp/jdk-tools && ./bin/jstack 1" > "$filename" 2>&1
     else

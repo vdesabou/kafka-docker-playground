@@ -20,7 +20,7 @@ then
     fi
 fi
 
-if [[ "$environment" == "cfk" ]]
+if [[ "$environment" == cfk* ]]
 then
     cfk_enable_jscissors_mount="false"
     if [[ -n "$mount_jscissors_files" ]]

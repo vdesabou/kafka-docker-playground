@@ -76,7 +76,7 @@ do
     if [[ -n "$errors" ]]
     then
         log "🔥 ERROR/FATAL digest for $container logs${since:+ since $since}"
-        if [[ "$environment" == "cfk" ]]
+        if [[ "$environment" == cfk* ]]
         then
             maybe_previous=""
             if [[ -n "$previous" ]]
@@ -90,7 +90,7 @@ do
         continue
     fi
 
-    if [[ "$environment" == "cfk" ]]
+    if [[ "$environment" == cfk* ]]
     then
         maybe_previous=""
         if [[ -n "$previous" ]]

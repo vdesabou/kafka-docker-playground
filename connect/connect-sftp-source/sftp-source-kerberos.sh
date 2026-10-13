@@ -13,7 +13,7 @@ fi
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 
-if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
 then
      logwarn "Kerberos tests are not supported with cfk"
      exit 111

@@ -18,7 +18,7 @@ fi
 # The test uses docker run --network=host to send syslog messages to localhost:5454,
 # but in CFK, the Connect container runs in Kubernetes (not on host Docker network).
 # The syslog listener is inside a K8s pod and unreachable from the host.
-if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
 then
   logwarn "⚠️  Syslog source SSL example is not compatible with CFK (Confluent for Kubernetes)"
   logwarn "   Test uses docker run --network=host to send messages to localhost:5454"

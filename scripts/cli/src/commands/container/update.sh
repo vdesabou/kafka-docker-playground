@@ -27,7 +27,7 @@ fi
 
 edit_file="$tmp_dir/${resolved_container}.yaml"
 
-if [[ "$environment" == "cfk" ]]
+if [[ "$environment" == cfk* ]]
 then
   resource_kind="pod"
   resource_name="$resolved_container"

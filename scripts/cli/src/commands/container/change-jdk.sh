@@ -9,7 +9,7 @@ IFS=' ' read -ra container_array <<< "$containers"
 for container in "${container_array[@]}"
 do
     resolved_container=$(resolve_container_name_for_environment "$container")
-    if [[ "$environment" == "cfk" ]]
+    if [[ "$environment" == cfk* ]]
     then
         if [[ ! "$resolved_container" =~ ^connect(-[0-9]+)?$ ]]
         then
@@ -262,7 +262,7 @@ EOF
         else
             logerror "could not find java ${version} in alternatives list"
         fi
-        if [[ "$environment" == "cfk" ]]
+        if [[ "$environment" == cfk* ]]
         then
             logwarn "CFK mode: skipping pod restart because in-pod package changes are not persistent across restart"
             logwarn "Use a custom image to persist JDK ${version} after pod recreation"

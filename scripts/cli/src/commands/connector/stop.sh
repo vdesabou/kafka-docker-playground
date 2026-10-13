@@ -10,7 +10,7 @@ then
     exit 0
 fi
 
-if [[ "$environment" == "cfk" ]]
+if [[ "$environment" == cfk* ]]
 then
     log "ℹ️ CFK does not expose a dedicated stop endpoint; using REST API to stop the connector"
 fi
@@ -25,7 +25,7 @@ then
     fi
 fi
 
-if [[ "$environment" != "cfk" ]]
+if [[ "$environment" != cfk* ]]
 then
     tag=$(docker ps --format '{{.Image}}' | grep -E 'confluentinc/cp-.*-connect.*:' | awk -F':' '{print $2}')
     if [ $? != 0 ] || [ "$tag" == "" ]

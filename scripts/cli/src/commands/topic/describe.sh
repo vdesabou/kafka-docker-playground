@@ -7,9 +7,9 @@ get_environment_used
 if [[ ! -n "$topic" ]]
 then
     log "✨ --topic flag was not provided, applying command to all topics"
-    if [[ "$environment" == "cfk" ]]
+    if [[ "$environment" == cfk* ]]
     then
-        topic=$(kubectl -n confluent exec connect-0 -- kafka-topics --bootstrap-server kafka:9071 --list 2>/dev/null | grep -v '^_' | grep -v 'connect-')
+        topic=$(kubectl -n confluent exec connect-0 -- kafka-topics --bootstrap-server kafka:9071 $security --list 2>/dev/null | grep -v '^_' | grep -v 'connect-')
     else
         topic=$(playground get-topic-list --skip-internal-topics)
     fi
@@ -48,7 +48,7 @@ do
         fi
         get_connect_image
         docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
-    elif [[ "$environment" == "cfk" ]]
+    elif [[ "$environment" == cfk* ]]
     then
         if [[ -n "$verbose" ]]
         then
@@ -63,7 +63,7 @@ do
             log "🐞 CLI command used"
             echo "kafka-topics --describe --topic $topic --bootstrap-server $bootstrap_server"
         fi
-        kubectl -n confluent exec $container -- kafka-topics --describe --topic $topic --bootstrap-server $bootstrap_server
+        kubectl -n confluent exec $container -- kafka-topics --describe --topic $topic --bootstrap-server $bootstrap_server $security
     else
         if [[ -n "$verbose" ]]
         then

@@ -1,7 +1,7 @@
 get_environment_used
 
 log "💀 kill all docker containers (this also removes volumes)"
-if [[ "$environment" == "cfk" ]]
+if [[ "$environment" == cfk* ]]
 then
 	log "💀 stop local kubectl port-forward in confluent namespace"
 	pkill -f "kubectl -n confluent port-forward" > /dev/null 2>&1 || true

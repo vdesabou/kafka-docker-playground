@@ -11,7 +11,7 @@ then
 fi
 
 set +e
-if [[ "$environment" == "cfk" ]]
+if [[ "$environment" == cfk* ]]
 then
     containers=$(kubectl -n confluent get pods -o name 2>/dev/null | sed 's#pod/##')
 else
@@ -21,7 +21,7 @@ if [ -z "$containers" ]; then
     logwarn "💤 no running containers"
 else
     log "####################################################"
-    if [[ "$environment" == "cfk" ]]
+    if [[ "$environment" == cfk* ]]
     then
         log "☸️ kubectl get pods -o wide"
         kubectl -n confluent get pods -o wide
@@ -114,7 +114,7 @@ else
         if [ -z "$container" ]; then
             continue
         fi
-        if [[ "$environment" == "cfk" ]]
+        if [[ "$environment" == cfk* ]]
         then
             digest=$(kubectl -n confluent logs "$container" --all-containers=true "${since_opt[@]}" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings")
         else
@@ -137,7 +137,7 @@ else
         if [[ "$container" == connect* ]]
         then
             log "📜 last 50 lines of $container logs"
-            if [[ "$environment" == "cfk" ]]
+            if [[ "$environment" == cfk* ]]
             then
                 kubectl -n confluent logs "$container" --tail=50
             else

@@ -1459,13 +1459,14 @@ commands:
     required: false
     default: "plaintext"
     arg: environment
-    allowed: [ccloud, cfk, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain]
+    allowed: [ccloud, cfk, cfk-rbac, plaintext, sasl-ssl, sasl-plain, 2way-ssl, sasl-scram, kerberos, ssl_kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, rbac-sasl-plain]
     help: |-
       🔐 The environment to start when running a connector example 
       
       - plaintext
       - ccloud
       - cfk
+      - cfk-rbac
       - 2way-ssl
       - kerberos
       - ldap-authorizer-sasl-plain
@@ -2034,6 +2035,7 @@ commands:
     - ccloud
     - 2way-ssl
     - cfk
+    - cfk-rbac
     - kerberos
     - ldap-authorizer-sasl-plain
     - ldap-sasl-plain
@@ -2064,13 +2066,14 @@ commands:
       required: false
       default: "plaintext"
       arg: environment
-      allowed: [ccloud, 2way-ssl, cfk, kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
+      allowed: [ccloud, 2way-ssl, cfk, cfk-rbac, kerberos, ldap-authorizer-sasl-plain, ldap-sasl-plain, mdc-kerberos, mdc-plaintext, mdc-sasl-plain, plaintext, rbac-sasl-plain, sasl-plain, sasl-scram, sasl-ssl, ssl_kerberos]
       help: |-
         🔐 The environment to start . 
         
         - ccloud
         - 2way-ssl
         - cfk
+        - cfk-rbac
         - kerberos
         - ldap-authorizer-sasl-plain
         - ldap-sasl-plain
@@ -6042,11 +6045,12 @@ commands:
   filters:
   - rbac_environment
   help: |-
-    🛡️ RBAC commands (rbac-sasl-plain environment only)
+    🛡️ RBAC commands (rbac-sasl-plain and cfk-rbac environments only)
 
-    Change permissions of the running rbac-sasl-plain environment without
-    opening a shell in a container: the commands call the MDS REST API
-    (http://localhost:8091) as superUser.
+    Change permissions of the running rbac-sasl-plain or cfk-rbac environment
+    without opening a shell in a container: the commands call the MDS REST API
+    (http://localhost:8091, a port-forward to the kafka service on cfk-rbac) as
+    superUser.
 
       role-binding   create, delete and list role bindings
       user           add, delete and list LDAP users and their groups

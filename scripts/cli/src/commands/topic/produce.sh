@@ -159,11 +159,15 @@ fi
 
 sr_url_cli="http://schema-registry:8081"
 security=""
-if [[ "$environment" == "cfk" ]]
+if [[ "$environment" == cfk* ]]
 then
     bootstrap_server="kafka:9071"
     container="connect-0"
     sr_url_cli="http://schemaregistry:8081"
+    if [[ "$environment" == "cfk-rbac" ]]
+    then
+        security="$property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli $producer_config_name $cfk_rbac_client_properties"
+    fi
 elif [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
 then
     get_broker_container
@@ -1155,7 +1159,7 @@ function handle_signal {
 trap handle_signal SIGINT
 
 run_local_console_producer() {
-    if [[ "$environment" == "cfk" ]]
+    if [[ "$environment" == cfk* ]]
     then
         kubectl -n confluent exec -i connect-0 -- kafka-console-producer "$@"
     else
@@ -1167,7 +1171,7 @@ run_local_schema_console_producer() {
     local schema_type="$1"
     shift
 
-    if [[ "$environment" == "cfk" ]]
+    if [[ "$environment" == cfk* ]]
     then
         kubectl -n confluent exec -i connect-0 -- kafka-${schema_type}-console-producer "$@"
     else
@@ -1176,7 +1180,7 @@ run_local_schema_console_producer() {
 }
 
 print_local_console_producer_command() {
-    if [[ "$environment" == "cfk" ]]
+    if [[ "$environment" == cfk* ]]
     then
         echo "cat /tmp/verbose_input_file.txt | kubectl -n confluent exec -i connect-0 -- kafka-console-producer $*"
     else
@@ -1188,7 +1192,7 @@ print_local_schema_console_producer_command() {
     local schema_type="$1"
     shift
 
-    if [[ "$environment" == "cfk" ]]
+    if [[ "$environment" == cfk* ]]
     then
         echo "cat /tmp/verbose_input_file.txt | kubectl -n confluent exec -i connect-0 -- kafka-${schema_type}-console-producer $*"
     else
@@ -1412,7 +1416,7 @@ do
                 fi
             else
                 # 🧠 remove SLF4J traces from topic produce #6254
-                if [[ "$environment" == "cfk" ]]
+                if [[ "$environment" == cfk* ]]
                 then
                     playground --output-level ERROR container exec --command "rm -f /usr/share/java/schema-registry/slf4j-reload4j-1.7.36.jar > /dev/null 2>&1"
                 else

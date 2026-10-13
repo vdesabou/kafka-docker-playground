@@ -43,7 +43,7 @@ do
         else
             handle_ccloud_connect_rest_api "curl -s --request POST \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/restart\" --header \"authorization: Basic $authorization\""
         fi
-    elif [[ "$environment" == "cfk" ]]
+    elif [[ "$environment" == cfk* ]]
     then
         if [[ -n "$task_id" ]]; then
             log "☸️ kubectl annotate connector $connector -n confluent platform.confluent.io/restart-task=$task_id --overwrite"

@@ -64,7 +64,7 @@ do
         if [[ "$environment" == "ccloud" ]]
         then
             echo "kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
-        elif [[ "$environment" == "cfk" ]]
+        elif [[ "$environment" == cfk* ]]
         then
             echo "kubectl -n confluent delete kafkatopic $topic"
         else
@@ -77,7 +77,7 @@ do
         get_connect_image
         docker run --quiet --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-topics --delete --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
         forget_ccloud_recorded_topic "$(get_ccloud_kafka_cluster_id)" "$topic"
-    elif [[ "$environment" == "cfk" ]]
+    elif [[ "$environment" == cfk* ]]
     then
         kubectl -n confluent delete kafkatopic $topic
     else

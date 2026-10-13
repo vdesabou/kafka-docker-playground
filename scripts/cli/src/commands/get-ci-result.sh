@@ -60,7 +60,7 @@ curl -s -o $content_file  https://raw.githubusercontent.com/vdesabou/kafka-docke
 result_ok=""
 result_fail=""
 
-if [ "$environment" == "cfk" ]
+if [[ "$environment" == cfk* ]]
 then
     result_ok="$(grep "$dir2" $content_file | sed -n 's/.*\[CI_CFK \(ok\)\].*(\(https[^)]*\)).*/🤖CI status: 🟢 cfk ok\n🔗test url: \2/p')"
     result_fail="$(grep "$dir2" $content_file | sed -n 's/.*\[CI_CFK \(fail\)\].*(\(https[^)]*\)).*/🤖CI status: 🔴 cfk fail\n🐛 github issue: \2/p')"
@@ -111,12 +111,12 @@ repo="vdesabou/kafka-docker-playground"
 title="🔥 $dir2"
 job_suffix_regex=" plaintext ?$"
 job_label="plaintext"
-if [ "$environment" == "cfk" ] && [[ -n "$podman" ]]
+if [[ "$environment" == cfk* ]] && [[ -n "$podman" ]]
 then
     title="🔥 $dir2 (cfk, podman)"
     job_suffix_regex=" cfk 🦭$"
     job_label="cfk 🦭"
-elif [ "$environment" == "cfk" ]
+elif [[ "$environment" == cfk* ]]
 then
     title="🔥 $dir2 (cfk)"
     job_suffix_regex=" cfk ?$"

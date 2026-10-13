@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then
     # running with CI
-    if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+    if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
     then
         logwarn "skipping as failing on github ci with cfk"
         exit 111

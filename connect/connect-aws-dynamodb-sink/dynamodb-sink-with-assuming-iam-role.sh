@@ -17,7 +17,7 @@ then
      exit 111
 fi
 
-if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
 then
      logwarn "this test is not supported with cfk"
      exit 111

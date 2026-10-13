@@ -1,0 +1,177 @@
+# Default role bindings of the cfk-rbac environment, applied by environment/cfk/start.sh.
+#
+# CFK creates the role bindings of the component principals itself (connectAdmin for connect,
+# schemaregistryUser for schema-registry). These are the ones of the users, same as
+# environment/rbac-sasl-plain/role-bindings.txt.
+#
+# Cluster ids: Kafka is found by CFK through the KafkaRestClass, connect is confluent.connect,
+# schema registry is id_schemaregistry_confluent
+---
+# super user
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: superuser-systemadmin-kafka
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: superUser
+  role: SystemAdmin
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: superuser-systemadmin-schema-registry
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: superUser
+  role: SystemAdmin
+  clustersScopeByIds:
+    schemaRegistryClusterId: id_schemaregistry_confluent
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: superuser-systemadmin-connect
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: superUser
+  role: SystemAdmin
+  clustersScopeByIds:
+    connectClusterId: confluent.connect
+---
+# connect workers: CFK binds connectAdmin to the connect internal topics and group, it also needs the license
+# topic (Confluent connectors) and the secret registry
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: connectadmin-license-secrets
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: connectAdmin
+  role: ResourceOwner
+  resourcePatterns:
+    - resourceType: Topic
+      name: _confluent-command
+      patternType: LITERAL
+    - resourceType: Topic
+      name: _confluent-secrets
+      patternType: LITERAL
+    - resourceType: Group
+      name: secret-registry
+      patternType: LITERAL
+---
+# connectors: connectorSubmitter creates them (Connector CR, Connect REST API), they run as connectorSA (principal.service.name)
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: connectorsubmitter-connectors
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: connectorSubmitter
+  role: ResourceOwner
+  clustersScopeByIds:
+    connectClusterId: confluent.connect
+  resourcePatterns:
+    - resourceType: Connector
+      name: "*"
+      patternType: LITERAL
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: connectorsa-kafka
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: connectorSA
+  role: ResourceOwner
+  resourcePatterns:
+    - resourceType: Topic
+      name: "*"
+      patternType: LITERAL
+    - resourceType: Group
+      name: "*"
+      patternType: LITERAL
+    - resourceType: TransactionalId
+      name: "*"
+      patternType: LITERAL
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: connectorsa-subjects
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: connectorSA
+  role: ResourceOwner
+  clustersScopeByIds:
+    schemaRegistryClusterId: id_schemaregistry_confluent
+  resourcePatterns:
+    - resourceType: Subject
+      name: "*"
+      patternType: LITERAL
+---
+# avro console producer/consumer used by 'playground topic produce/consume' (Kafka access is done as admin)
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: clientavrocli-subjects
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: clientAvroCli
+  role: ResourceOwner
+  clustersScopeByIds:
+    schemaRegistryClusterId: id_schemaregistry_confluent
+  resourcePatterns:
+    - resourceType: Subject
+      name: "*"
+      patternType: LITERAL
+---
+# users to try role bindings
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: alice-systemadmin
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: alice
+  role: SystemAdmin
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: barnie-clusteradmin
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: barnie
+  role: ClusterAdmin
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: charlie-useradmin
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: charlie
+  role: UserAdmin

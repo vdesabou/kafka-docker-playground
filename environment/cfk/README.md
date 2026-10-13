@@ -5,7 +5,7 @@
 - starts minikube
 - installs CFK via Helm
 
-This is a deployment with no security:
+This is a deployment with no security (see [cfk-rbac](../cfk-rbac/) for the same deployment with RBAC):
 
 * 1 zookeeper
 * 1 broker

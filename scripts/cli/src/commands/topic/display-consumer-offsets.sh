@@ -14,7 +14,7 @@ else
         echo "kafka-console-consumer --bootstrap-server $bootstrap_server --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security"
     fi
 
-	if [[ "$environment" == "cfk" ]]
+	if [[ "$environment" == cfk* ]]
 	then
 		tag="8.3.0"
 	else
@@ -31,7 +31,7 @@ else
 		formatter="org.apache.kafka.tools.consumer.OffsetsMessageFormatter"
 	fi
 
-	if [[ "$environment" == "cfk" ]]
+	if [[ "$environment" == cfk* ]]
 	then
 		kubectl -n confluent exec -i $container -- kafka-console-consumer --bootstrap-server $bootstrap_server --topic __consumer_offsets --from-beginning --formatter "$formatter" $security | grep -v "_confluent-controlcenter"
 	else

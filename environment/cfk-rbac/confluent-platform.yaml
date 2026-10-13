@@ -1,0 +1,241 @@
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: KRaftController
+metadata:
+  name: kraftcontroller
+  namespace: confluent
+spec:
+  replicas: 1
+  dataVolumeCapacity: 10Gi
+  metrics: {}
+  image:
+    application: ${CP_SERVER_IMAGE}:${CP_SERVER_TAG}
+    init: ${CP_INIT_IMAGE}:${CFK_VERSION}
+  authorization:
+    type: rbac
+    superUsers:
+      - User:admin
+      - User:mds
+      - User:superUser
+  listeners:
+    controller:
+      authentication:
+        type: plain
+        jaasConfig:
+          secretRef: credential
+  dependencies:
+    mdsKafkaCluster:
+      bootstrapEndpoint: kafka.confluent.svc.cluster.local:9071
+      authentication:
+        type: plain
+        jaasConfig:
+          secretRef: credential
+  configOverrides:
+    server:
+      - default.replication.factor=1
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: Kafka
+metadata:
+  name: kafka
+  namespace: confluent
+spec:
+  replicas: 1
+  metrics: {}
+  image:
+    application: ${CP_SERVER_IMAGE}:${CP_SERVER_TAG}
+    init: ${CP_INIT_IMAGE}:${CFK_VERSION}
+  dataVolumeCapacity: 10Gi
+  metricReporter:
+    enabled: true
+    authentication:
+      type: plain
+      jaasConfig:
+        secretRef: credential
+  authorization:
+    type: rbac
+    superUsers:
+      - User:admin
+      - User:mds
+      - User:superUser
+  # internal: SASL/PLAIN checked against LDAP, any LDAP user with its LDAP password (playground CLI, connectors)
+  # replication: SASL/PLAIN with the user_ entries of the JAAS config (inter-broker)
+  # connect and schema-registry use the TOKEN listener CFK adds for RBAC (OAUTHBEARER with MDS tokens)
+  # Both use the PlainLoginModule JAAS of credential-plain: with the default FileBasedLoginModule of a plain
+  # listener, the LDAP callback handler of the internal listener is rejected ("CallbackHandler must be of type
+  # PlainServerCallbackHandler")
+  listeners:
+    internal:
+      authentication:
+        type: ldap
+        jaasConfigPassThrough:
+          secretRef: credential-plain
+    replication:
+      authentication:
+        type: plain
+        jaasConfigPassThrough:
+          secretRef: credential-plain
+  services:
+    mds:
+      tokenKeyPair:
+        secretRef: mds-token
+      provider:
+        type: ldap
+        ldap:
+          address: ldap://openldap.confluent.svc.cluster.local:389
+          authentication:
+            type: simple
+            simple:
+              secretRef: credential
+          # same LDAP layout as environment/rbac-sasl-plain
+          configurations:
+            groupNameAttribute: cn
+            groupObjectClass: posixGroup
+            groupMemberAttribute: memberUid
+            groupMemberAttributePattern: cn=(.*),ou=users,dc=confluentdemo,dc=io
+            groupSearchBase: ou=groups,dc=confluentdemo,dc=io
+            userNameAttribute: uid
+            userObjectClass: inetOrgPerson
+            userSearchBase: ou=users,dc=confluentdemo,dc=io
+  dependencies:
+    kRaftController:
+      controllerListener:
+        authentication:
+          type: plain
+          jaasConfig:
+            secretRef: credential
+      clusterRef:
+        name: kraftcontroller
+        namespace: confluent
+    kafkaRest:
+      authentication:
+        type: bearer
+        bearer:
+          secretRef: mds-client-kafka-rest
+  configOverrides:
+    server:
+      - offsets.topic.replication.factor=1
+      - transaction.state.log.replication.factor=1
+      - confluent.license.topic.replication.factor=1
+      - confluent.metadata.topic.replication.factor=1
+      - confluent.balancer.topic.replication.factor=1
+      - confluent.metrics.reporter.topic.replicas=1
+      - confluent.security.event.logger.exporter.kafka.topic.replicas=1
+      - auto.create.topics.enable=true
+      # same reason for the client side of the controller listener (FileBasedLoginModule otherwise)
+      - listener.name.controller.plain.sasl.jaas.config=${file:/mnt/secrets/credential-plain/plain-jaas.conf:sasl.jaas.config}
+---
+# used by CFK to create the KafkaTopic and ConfluentRolebinding resources, and the internal role bindings of the components
+apiVersion: platform.confluent.io/v1beta1
+kind: KafkaRestClass
+metadata:
+  name: default
+  namespace: confluent
+spec:
+  kafkaClusterRef:
+    name: kafka
+  kafkaRest:
+    authentication:
+      type: bearer
+      bearer:
+        secretRef: rest-credential
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: Connect
+metadata:
+  name: connect
+  namespace: confluent
+spec:
+  replicas: 1
+  metrics: {}
+  image:
+    application: ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
+    init: ${CP_INIT_IMAGE}:${CFK_VERSION}
+  podTemplate:
+    podSecurityContext:
+      fsGroup: 1000
+      runAsUser: 1000
+      runAsNonRoot: true
+  authorization:
+    type: rbac
+  # connectors run as their own principal (principal.service.name), added by 'playground connector create-or-update'
+  connectorOverridePolicy: All
+  # client.properties used by the kafka-* tools of the playground CLI, in /mnt/secrets/playground-client
+  mountedSecrets:
+    - secretRef: playground-client
+  dependencies:
+    kafka:
+      bootstrapEndpoint: kafka.confluent.svc.cluster.local:9071
+      authentication:
+        type: plain
+        jaasConfig:
+          secretRef: kafka-client-connect
+    mds:
+      endpoint: http://kafka.confluent.svc.cluster.local:8090
+      tokenKeyPair:
+        secretRef: mds-token
+      authentication:
+        type: bearer
+        bearer:
+          secretRef: mds-client-connect
+  configOverrides:
+    log4j2:
+      Configuration:
+        Loggers:
+          Logger:
+            - name: org.apache.kafka.connect.runtime.rest.RestServer
+              level: ERROR
+              additivity: false
+              AppenderRef:
+                - ref: stdout
+            - name: org.reflections
+              level: ERROR
+              additivity: false
+              AppenderRef:
+                - ref: stdout
+    server:
+      - offset.storage.replication.factor=1
+      - status.storage.replication.factor=1
+      - config.storage.replication.factor=1
+      - confluent.topic.replication.factor=1
+      - plugin.path=/usr/share/confluent-hub-components,/mnt/plugins,/usr/share/filestream-connectors
+
+      # no confluent.topic.bootstrap.servers: the license manager uses the TOKEN listener of bootstrap.servers,
+      # with the OAUTHBEARER credentials of the connector (principal.service.name)
+      - producer.enable.metrics.push=true
+
+      - key.converter=org.apache.kafka.connect.storage.StringConverter
+      - value.converter=io.confluent.connect.avro.AvroConverter
+      - value.converter.schemas.enable=false
+      - value.converter.schema.registry.url=http://schemaregistry:8081
+      - value.converter.basic.auth.credentials.source=USER_INFO
+      - value.converter.basic.auth.user.info=connectorSA:connectorSA
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: SchemaRegistry
+metadata:
+  name: schemaregistry
+  namespace: confluent
+spec:
+  replicas: 1
+  metrics: {}
+  image:
+    application: ${CP_SCHEMA_REGISTRY_IMAGE}:${CP_SCHEMA_REGISTRY_TAG}
+    init: ${CP_INIT_IMAGE}:${CFK_VERSION}
+  authorization:
+    type: rbac
+  dependencies:
+    kafka:
+      bootstrapEndpoint: kafka.confluent.svc.cluster.local:9071
+      authentication:
+        type: plain
+        jaasConfig:
+          secretRef: kafka-client-sr
+    mds:
+      endpoint: http://kafka.confluent.svc.cluster.local:8090
+      tokenKeyPair:
+        secretRef: mds-token
+      authentication:
+        type: bearer
+        bearer:
+          secretRef: mds-client-sr

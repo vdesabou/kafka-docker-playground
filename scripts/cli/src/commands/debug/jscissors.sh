@@ -41,7 +41,7 @@ do
         scissors_file=$(playground --output-level WARN container logs --container "${container}" --wait-for-log "Core Logger" | tail -1 | cut -d " " -f 4)
 
         log "✂️ jscissors file is available ${scissors_file}"
-        if [[ "$environment" == "cfk" ]]
+        if [[ "$environment" == cfk* ]]
         then
             local_scissors_file="/tmp/jscissors-${container}-$(date '+%Y-%m-%d-%H-%M-%S').log"
             playground --output-level WARN container cp --source "${container}:${scissors_file}" --destination "${local_scissors_file}"

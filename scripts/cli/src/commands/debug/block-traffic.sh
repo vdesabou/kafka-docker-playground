@@ -69,7 +69,7 @@ EOF
 install_iptables_if_needed() {
 	local container=$1
 
-	if [[ "$environment" == "cfk" ]]
+	if [[ "$environment" == cfk* ]]
 	then
 		return
 	fi
@@ -107,7 +107,7 @@ do
 done
 
 get_container_ip() {
-	if [[ "$environment" == "cfk" ]]
+	if [[ "$environment" == cfk* ]]
 	then
 		local pod_ip
 		pod_ip=$(kubectl -n confluent get pod "$1" -o jsonpath='{.status.podIP}' 2>/dev/null)
@@ -134,7 +134,7 @@ get_container_ip() {
 }
 
 get_service_endpoint_ips() {
-	if [[ "$environment" != "cfk" ]]
+	if [[ "$environment" != cfk* ]]
 	then
 		return
 	fi
@@ -225,7 +225,7 @@ do
 	do
 		if [[ -n "$port" ]]
 		then
-			if [[ "$environment" == "cfk" ]]
+			if [[ "$environment" == cfk* ]]
 			then
 					rule_cmd="iptables -${action} OUTPUT -p tcp -d ${ip} --dport ${port} -j DROP"
 					check_cmd="iptables -C OUTPUT -p tcp -d ${ip} --dport ${port} -j DROP"
@@ -238,7 +238,7 @@ do
 				docker exec --privileged --user root ${container} bash -c "iptables -${action} OUTPUT -p tcp -d ${ip} --dport ${port} -j DROP"
 			fi
 		else
-			if [[ "$environment" == "cfk" ]]
+			if [[ "$environment" == cfk* ]]
 			then
 					rule_cmd="iptables -${action} OUTPUT -d ${ip} -j DROP"
 					check_cmd="iptables -C OUTPUT -d ${ip} -j DROP"
@@ -254,7 +254,7 @@ do
 	done
 
 	log "Output of command iptables-save for container $container"
-	if [[ "$environment" == "cfk" ]]
+	if [[ "$environment" == cfk* ]]
 	then
 		run_cfk_netfilter_command "$container" "iptables-save" "true"
 	else

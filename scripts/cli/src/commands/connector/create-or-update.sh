@@ -89,7 +89,7 @@ then
 fi
 
 is_cfk=0
-if [[ "$environment" == "cfk" ]]
+if [[ "$environment" == cfk* ]]
 then
     is_cfk=1
 fi
@@ -392,6 +392,15 @@ else
             echo "  taskMax: $task_max"
             echo "  connectClusterRef:"
             echo "    name: connect"
+            if [[ "$environment" == "cfk-rbac" ]]
+            then
+                # CFK creates the connector as connectorSubmitter, it runs as connectorSA (principal.service.name)
+                echo "  connectRest:"
+                echo "    authentication:"
+                echo "      type: bearer"
+                echo "      bearer:"
+                echo "        secretRef: connector-submitter"
+            fi
             if [[ -n "$configs_yaml" ]]
             then
                 echo "  configs:"

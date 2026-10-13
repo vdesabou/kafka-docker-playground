@@ -64,7 +64,7 @@ do
     fi
 
     # Skip non-connect examples when using CfK environment
-    if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ] && [[ ! "$dir" =~ ^connect/ ]]
+    if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]] && [[ ! "$dir" =~ ^connect/ ]]
     then
         log "####################################################"
         log "⏭ skipping dir $dir, CfK environment only supports connect/ examples"
@@ -86,16 +86,16 @@ do
 
     # 🤖 CI: ignore examples with github issues opened and with label 'CI ignore ⏭️' #7203
     title="🔥 ${dir}"
-    if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
+    if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
     then
         title="🔥 ${dir} ($PLAYGROUND_ENVIRONMENT)"
     fi
     # podman failures have their own issues (see update-readme): "(podman)", "(cfk, podman)"
     if [ "$container_engine" = "podman" ]
     then
-        if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
+        if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
         then
-            title="🔥 ${dir} (cfk, podman)"
+            title="🔥 ${dir} ($PLAYGROUND_ENVIRONMENT, podman)"
         else
             title="🔥 ${dir} (podman)"
         fi
@@ -151,7 +151,7 @@ do
             log "####################################################"
             testdir=$(echo "$dir" | sed 's/\//-/g')
             file="/tmp/$TAG-$testdir--$script"
-            if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
+            if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
             then
                 file="$file-$PLAYGROUND_ENVIRONMENT"
             fi
@@ -220,7 +220,7 @@ do
 
         testdir=$(echo "$dir" | sed 's/\//-/g')
         file="$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
-        if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
+        if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
         then
             file="$file-$PLAYGROUND_ENVIRONMENT"
         fi
@@ -352,7 +352,7 @@ do
         SECONDS=0
         tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
         file_output="$tmp_dir/$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
-        if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
+        if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
         then
             file_output="$file_output-$PLAYGROUND_ENVIRONMENT"
         fi
@@ -370,7 +370,7 @@ do
         CUMULATED="cumulated time: $((($ELAPSED_TOTAL / 60) % 60))min $(($ELAPSED_TOTAL % 60))sec"
         testdir=$(echo "$dir" | sed 's/\//-/g')
         file="$tmp_dir/$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
-        if [ "$PLAYGROUND_ENVIRONMENT" = "cfk" ]
+        if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
         then
             file="$file-$PLAYGROUND_ENVIRONMENT"
         fi

@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 source ${DIR}/../../scripts/utils.sh
 
-if [[ "$PLAYGROUND_ENVIRONMENT" == "cfk" ]]
+if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
 then
      logwarn "this test is not supported with cfk"
      exit 111

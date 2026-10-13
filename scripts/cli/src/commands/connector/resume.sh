@@ -27,7 +27,7 @@ do
     then
         get_ccloud_connect
         handle_ccloud_connect_rest_api "curl -s --request PUT \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/resume\" --header \"authorization: Basic $authorization\""
-    elif [[ "$environment" == "cfk" ]]
+    elif [[ "$environment" == cfk* ]]
     then
         log "☸️ kubectl annotate connector $connector -n confluent platform.confluent.io/resume-connector=true --overwrite"
         kubectl annotate connector "$connector" -n confluent platform.confluent.io/resume-connector="true" --overwrite >/dev/null
