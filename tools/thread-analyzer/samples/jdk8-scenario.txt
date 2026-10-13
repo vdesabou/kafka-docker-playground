@@ -1,0 +1,482 @@
+2026-10-13 14:56:16
+Full thread dump OpenJDK 64-Bit Server VM (25.504-b01 mixed mode):
+
+"Attach Listener" #38 daemon prio=9 os_prio=0 tid=0x0000ffff64001000 nid=0x4f waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"pool-14-thread-1" #37 prio=5 os_prio=0 tid=0x0000ffff14021000 nid=0x3f waiting on condition [0x0000ffff06dfd000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at TdLoad.sleep(TdLoad.java:9)
+	at TdLoad.lambda$main$7(TdLoad.java:29)
+	at TdLoad$$Lambda$9/253949481.run(Unknown Source)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- <0x00000007824bd0f0> (a java.util.concurrent.ThreadPoolExecutor$Worker)
+
+"pool-13-thread-1" #36 prio=5 os_prio=0 tid=0x0000ffff1401f000 nid=0x2d waiting on condition [0x0000ffff06ffd000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at TdLoad.sleep(TdLoad.java:9)
+	at TdLoad.lambda$main$7(TdLoad.java:29)
+	at TdLoad$$Lambda$9/253949481.run(Unknown Source)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- <0x00000007824bcad8> (a java.util.concurrent.ThreadPoolExecutor$Worker)
+
+"pool-12-thread-1" #35 prio=5 os_prio=0 tid=0x0000ffff1401d000 nid=0x2c waiting on condition [0x0000ffff071fd000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at TdLoad.sleep(TdLoad.java:9)
+	at TdLoad.lambda$main$7(TdLoad.java:29)
+	at TdLoad$$Lambda$9/253949481.run(Unknown Source)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- <0x00000007824bc4c0> (a java.util.concurrent.ThreadPoolExecutor$Worker)
+
+"pool-11-thread-1" #34 prio=5 os_prio=0 tid=0x0000ffff1401b000 nid=0x2b waiting on condition [0x0000ffff073fd000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at TdLoad.sleep(TdLoad.java:9)
+	at TdLoad.lambda$main$7(TdLoad.java:29)
+	at TdLoad$$Lambda$9/253949481.run(Unknown Source)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- <0x00000007824bbea8> (a java.util.concurrent.ThreadPoolExecutor$Worker)
+
+"pool-10-thread-1" #33 prio=5 os_prio=0 tid=0x0000ffff14019000 nid=0x2a waiting on condition [0x0000ffff075fd000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at TdLoad.sleep(TdLoad.java:9)
+	at TdLoad.lambda$main$7(TdLoad.java:29)
+	at TdLoad$$Lambda$9/253949481.run(Unknown Source)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- <0x00000007824bb890> (a java.util.concurrent.ThreadPoolExecutor$Worker)
+
+"pool-9-thread-1" #32 prio=5 os_prio=0 tid=0x0000ffff14017000 nid=0x29 waiting on condition [0x0000ffff077fd000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at TdLoad.sleep(TdLoad.java:9)
+	at TdLoad.lambda$main$7(TdLoad.java:29)
+	at TdLoad$$Lambda$9/253949481.run(Unknown Source)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- <0x00000007824bb278> (a java.util.concurrent.ThreadPoolExecutor$Worker)
+
+"pool-8-thread-1" #31 prio=5 os_prio=0 tid=0x0000ffff14015000 nid=0x28 waiting on condition [0x0000ffff079fd000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at TdLoad.sleep(TdLoad.java:9)
+	at TdLoad.lambda$main$7(TdLoad.java:29)
+	at TdLoad$$Lambda$9/253949481.run(Unknown Source)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- <0x00000007824bac60> (a java.util.concurrent.ThreadPoolExecutor$Worker)
+
+"pool-7-thread-1" #30 prio=5 os_prio=0 tid=0x0000ffff14013000 nid=0x27 waiting on condition [0x0000ffff07bfd000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at TdLoad.sleep(TdLoad.java:9)
+	at TdLoad.lambda$main$7(TdLoad.java:29)
+	at TdLoad$$Lambda$9/253949481.run(Unknown Source)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- <0x00000007824ba648> (a java.util.concurrent.ThreadPoolExecutor$Worker)
+
+"pool-6-thread-1" #29 prio=5 os_prio=0 tid=0x0000ffff14010800 nid=0x26 waiting on condition [0x0000ffff07dfd000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at TdLoad.sleep(TdLoad.java:9)
+	at TdLoad.lambda$main$7(TdLoad.java:29)
+	at TdLoad$$Lambda$9/253949481.run(Unknown Source)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- <0x00000007824ba030> (a java.util.concurrent.ThreadPoolExecutor$Worker)
+
+"pool-5-thread-1" #28 prio=5 os_prio=0 tid=0x0000ffff1400e800 nid=0x25 waiting on condition [0x0000ffff07ffd000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at TdLoad.sleep(TdLoad.java:9)
+	at TdLoad.lambda$main$7(TdLoad.java:29)
+	at TdLoad$$Lambda$9/253949481.run(Unknown Source)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- <0x00000007824b9a18> (a java.util.concurrent.ThreadPoolExecutor$Worker)
+
+"pool-4-thread-1" #27 prio=5 os_prio=0 tid=0x0000ffff1400d000 nid=0x24 waiting on condition [0x0000ffff743fd000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at TdLoad.sleep(TdLoad.java:9)
+	at TdLoad.lambda$main$7(TdLoad.java:29)
+	at TdLoad$$Lambda$9/253949481.run(Unknown Source)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- <0x00000007824b9400> (a java.util.concurrent.ThreadPoolExecutor$Worker)
+
+"pool-3-thread-1" #26 prio=5 os_prio=0 tid=0x0000ffff1400b000 nid=0x23 waiting on condition [0x0000ffff745fd000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at TdLoad.sleep(TdLoad.java:9)
+	at TdLoad.lambda$main$7(TdLoad.java:29)
+	at TdLoad$$Lambda$9/253949481.run(Unknown Source)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- <0x00000007824b8de8> (a java.util.concurrent.ThreadPoolExecutor$Worker)
+
+"pool-2-thread-1" #25 prio=5 os_prio=0 tid=0x0000ffff14009800 nid=0x22 waiting on condition [0x0000ffff747fd000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at TdLoad.sleep(TdLoad.java:9)
+	at TdLoad.lambda$main$7(TdLoad.java:29)
+	at TdLoad$$Lambda$9/253949481.run(Unknown Source)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- <0x00000007824b87d0> (a java.util.concurrent.ThreadPoolExecutor$Worker)
+
+"pool-1-thread-1" #24 prio=5 os_prio=0 tid=0x0000ffff14008000 nid=0x21 waiting on condition [0x0000ffff749fd000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at TdLoad.sleep(TdLoad.java:9)
+	at TdLoad.lambda$main$7(TdLoad.java:29)
+	at TdLoad$$Lambda$9/253949481.run(Unknown Source)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- <0x00000007824b8128> (a java.util.concurrent.ThreadPoolExecutor$Worker)
+
+"leaker" #23 prio=5 os_prio=0 tid=0x0000ffff94357000 nid=0x20 waiting on condition [0x0000ffff74bfe000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at TdLoad.sleep(TdLoad.java:9)
+	at TdLoad.lambda$main$8(TdLoad.java:29)
+	at TdLoad$$Lambda$8/1096979270.run(Unknown Source)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- None
+
+"task-thread-my-sink-connector-0" #22 prio=5 os_prio=0 tid=0x0000ffff94352800 nid=0x1f runnable [0x0000ffff74dfd000]
+   java.lang.Thread.State: RUNNABLE
+	at java.net.SocketInputStream.socketRead0(Native Method)
+	at java.net.SocketInputStream.socketRead(SocketInputStream.java:116)
+	at java.net.SocketInputStream.read(SocketInputStream.java:171)
+	at java.net.SocketInputStream.read(SocketInputStream.java:141)
+	at java.net.SocketInputStream.read(SocketInputStream.java:224)
+	at TdLoad.lambda$main$6(TdLoad.java:25)
+	at TdLoad$$Lambda$7/990368553.run(Unknown Source)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- None
+
+"fake-server" #21 prio=5 os_prio=0 tid=0x0000ffff94351000 nid=0x1e waiting on condition [0x0000ffff74ffe000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at TdLoad.sleep(TdLoad.java:9)
+	at TdLoad.lambda$main$5(TdLoad.java:23)
+	at TdLoad$$Lambda$6/2003749087.run(Unknown Source)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- None
+
+"cpu-burner" #20 prio=5 os_prio=0 tid=0x0000ffff94348800 nid=0x1d runnable [0x0000ffff751fe000]
+   java.lang.Thread.State: RUNNABLE
+	at TdLoad.lambda$main$4(TdLoad.java:20)
+	at TdLoad$$Lambda$5/1044036744.run(Unknown Source)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- None
+
+"worker-7" #19 prio=5 os_prio=0 tid=0x0000ffff94346800 nid=0x1c waiting for monitor entry [0x0000ffff753fe000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+	at TdLoad.lambda$main$3(TdLoad.java:18)
+	- waiting to lock <0x0000000781f5bac0> (a java.lang.Object)
+	at TdLoad$$Lambda$4/142257191.run(Unknown Source)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- None
+
+"worker-6" #18 prio=5 os_prio=0 tid=0x0000ffff94344800 nid=0x1b waiting for monitor entry [0x0000ffff755fe000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+	at TdLoad.lambda$main$3(TdLoad.java:18)
+	- waiting to lock <0x0000000781f5bac0> (a java.lang.Object)
+	at TdLoad$$Lambda$4/142257191.run(Unknown Source)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- None
+
+"worker-5" #17 prio=5 os_prio=0 tid=0x0000ffff94342800 nid=0x1a waiting for monitor entry [0x0000ffff757fe000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+	at TdLoad.lambda$main$3(TdLoad.java:18)
+	- waiting to lock <0x0000000781f5bac0> (a java.lang.Object)
+	at TdLoad$$Lambda$4/142257191.run(Unknown Source)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- None
+
+"worker-4" #16 prio=5 os_prio=0 tid=0x0000ffff94340800 nid=0x19 waiting for monitor entry [0x0000ffff759fe000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+	at TdLoad.lambda$main$3(TdLoad.java:18)
+	- waiting to lock <0x0000000781f5bac0> (a java.lang.Object)
+	at TdLoad$$Lambda$4/142257191.run(Unknown Source)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- None
+
+"worker-3" #15 prio=5 os_prio=0 tid=0x0000ffff9433f000 nid=0x18 waiting for monitor entry [0x0000ffff75bfe000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+	at TdLoad.lambda$main$3(TdLoad.java:18)
+	- waiting to lock <0x0000000781f5bac0> (a java.lang.Object)
+	at TdLoad$$Lambda$4/142257191.run(Unknown Source)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- None
+
+"worker-2" #14 prio=5 os_prio=0 tid=0x0000ffff9433d000 nid=0x17 waiting for monitor entry [0x0000ffff75dfe000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+	at TdLoad.lambda$main$3(TdLoad.java:18)
+	- waiting to lock <0x0000000781f5bac0> (a java.lang.Object)
+	at TdLoad$$Lambda$4/142257191.run(Unknown Source)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- None
+
+"worker-1" #13 prio=5 os_prio=0 tid=0x0000ffff9433b800 nid=0x16 waiting for monitor entry [0x0000ffff75ffe000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+	at TdLoad.lambda$main$3(TdLoad.java:18)
+	- waiting to lock <0x0000000781f5bac0> (a java.lang.Object)
+	at TdLoad$$Lambda$4/142257191.run(Unknown Source)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- None
+
+"worker-0" #12 prio=5 os_prio=0 tid=0x0000ffff94339800 nid=0x15 waiting for monitor entry [0x0000ffff761fe000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+	at TdLoad.lambda$main$3(TdLoad.java:18)
+	- waiting to lock <0x0000000781f5bac0> (a java.lang.Object)
+	at TdLoad$$Lambda$4/142257191.run(Unknown Source)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- None
+
+"lock-holder" #11 prio=5 os_prio=0 tid=0x0000ffff94337800 nid=0x14 waiting on condition [0x0000ffff883fe000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at TdLoad.sleep(TdLoad.java:9)
+	at TdLoad.lambda$main$2(TdLoad.java:16)
+	- locked <0x0000000781f5bac0> (a java.lang.Object)
+	at TdLoad$$Lambda$3/135721597.run(Unknown Source)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- None
+
+"deadlock-2" #10 prio=5 os_prio=0 tid=0x0000ffff94336000 nid=0x13 waiting for monitor entry [0x0000ffff885fe000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+	at TdLoad.lambda$main$1(TdLoad.java:14)
+	- waiting to lock <0x0000000781f5baa0> (a java.lang.Object)
+	- locked <0x0000000781f5bab0> (a java.lang.Object)
+	at TdLoad$$Lambda$2/303563356.run(Unknown Source)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- None
+
+"deadlock-1" #9 prio=5 os_prio=0 tid=0x0000ffff94334000 nid=0x12 waiting for monitor entry [0x0000ffff887fe000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+	at TdLoad.lambda$main$0(TdLoad.java:13)
+	- waiting to lock <0x0000000781f5bab0> (a java.lang.Object)
+	- locked <0x0000000781f5baa0> (a java.lang.Object)
+	at TdLoad$$Lambda$1/471910020.run(Unknown Source)
+	at java.lang.Thread.run(Thread.java:750)
+
+   Locked ownable synchronizers:
+	- None
+
+"Service Thread" #8 daemon prio=9 os_prio=0 tid=0x0000ffff94249800 nid=0x10 runnable [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"C1 CompilerThread2" #7 daemon prio=9 os_prio=0 tid=0x0000ffff94245000 nid=0xf waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"C2 CompilerThread1" #6 daemon prio=9 os_prio=0 tid=0x0000ffff94243000 nid=0xe waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"C2 CompilerThread0" #5 daemon prio=9 os_prio=0 tid=0x0000ffff94240000 nid=0xd waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"Signal Dispatcher" #4 daemon prio=9 os_prio=0 tid=0x0000ffff9423a800 nid=0xc runnable [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+	- None
+
+"Finalizer" #3 daemon prio=8 os_prio=0 tid=0x0000ffff9420a800 nid=0xb in Object.wait() [0x0000ffff89dfe000]
+   java.lang.Thread.State: WAITING (on object monitor)
+	at java.lang.Object.wait(Native Method)
+	- waiting on <0x0000000781f08f00> (a java.lang.ref.ReferenceQueue$Lock)
+	at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:144)
+	- locked <0x0000000781f08f00> (a java.lang.ref.ReferenceQueue$Lock)
+	at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:165)
+	at java.lang.ref.Finalizer$FinalizerThread.run(Finalizer.java:188)
+
+   Locked ownable synchronizers:
+	- None
+
+"Reference Handler" #2 daemon prio=10 os_prio=0 tid=0x0000ffff94206000 nid=0xa in Object.wait() [0x0000ffff89ffe000]
+   java.lang.Thread.State: WAITING (on object monitor)
+	at java.lang.Object.wait(Native Method)
+	- waiting on <0x0000000781f06b98> (a java.lang.ref.Reference$Lock)
+	at java.lang.Object.wait(Object.java:502)
+	at java.lang.ref.Reference.tryHandlePending(Reference.java:191)
+	- locked <0x0000000781f06b98> (a java.lang.ref.Reference$Lock)
+	at java.lang.ref.Reference$ReferenceHandler.run(Reference.java:153)
+
+   Locked ownable synchronizers:
+	- None
+
+"main" #1 prio=5 os_prio=0 tid=0x0000ffff94009800 nid=0x4 waiting on condition [0x0000ffff9997e000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+	at java.lang.Thread.sleep(Native Method)
+	at TdLoad.sleep(TdLoad.java:9)
+	at TdLoad.main(TdLoad.java:30)
+
+   Locked ownable synchronizers:
+	- None
+
+"VM Thread" os_prio=0 tid=0x0000ffff941fc000 nid=0x9 runnable 
+
+"GC task thread#0 (ParallelGC)" os_prio=0 tid=0x0000ffff9401f800 nid=0x5 runnable 
+
+"GC task thread#1 (ParallelGC)" os_prio=0 tid=0x0000ffff94021800 nid=0x6 runnable 
+
+"GC task thread#2 (ParallelGC)" os_prio=0 tid=0x0000ffff94023000 nid=0x7 runnable 
+
+"GC task thread#3 (ParallelGC)" os_prio=0 tid=0x0000ffff94025000 nid=0x8 runnable 
+
+"VM Periodic Task Thread" os_prio=0 tid=0x0000ffff9424c800 nid=0x11 waiting on condition 
+
+JNI global references: 329
+
+
+Found one Java-level deadlock:
+=============================
+"deadlock-2":
+  waiting to lock monitor 0x0000ffff4c003b08 (object 0x0000000781f5baa0, a java.lang.Object),
+  which is held by "deadlock-1"
+"deadlock-1":
+  waiting to lock monitor 0x0000ffff4c002508 (object 0x0000000781f5bab0, a java.lang.Object),
+  which is held by "deadlock-2"
+
+Java stack information for the threads listed above:
+===================================================
+"deadlock-2":
+	at TdLoad.lambda$main$1(TdLoad.java:14)
+	- waiting to lock <0x0000000781f5baa0> (a java.lang.Object)
+	- locked <0x0000000781f5bab0> (a java.lang.Object)
+	at TdLoad$$Lambda$2/303563356.run(Unknown Source)
+	at java.lang.Thread.run(Thread.java:750)
+"deadlock-1":
+	at TdLoad.lambda$main$0(TdLoad.java:13)
+	- waiting to lock <0x0000000781f5bab0> (a java.lang.Object)
+	- locked <0x0000000781f5baa0> (a java.lang.Object)
+	at TdLoad$$Lambda$1/471910020.run(Unknown Source)
+	at java.lang.Thread.run(Thread.java:750)
+
+Found 1 deadlock.
+

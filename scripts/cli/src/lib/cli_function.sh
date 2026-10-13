@@ -3539,3 +3539,47 @@ function reset_container_engine_detection() {
     export DOCKER_CONFIG="$user_config"
   fi
 }
+
+# Takes thread dumps of a container with kill -3: the JVM prints them on its stdout, so they land in the container
+# logs. No JDK is needed in the image and the JVM is not restarted. The dumps are extracted from the logs (interleaved
+# log4j lines removed) into the output file.
+# $1: container (as given on the command line), $2: number of dumps, $3: seconds between dumps, $4: output file
+# Returns 0 when at least one dump was captured.
+function take_thread_dumps_with_kill_quit() {
+  local container="$1" count="$2" interval="$3" output_file="$4"
+  local resolved_container pid start since raw_file i
+
+  resolved_container=$(resolve_container_name_for_environment "$container")
+  pid=$(playground --output-level ERROR container exec --container "$resolved_container" --command "if ls -l /proc/1/exe 2>/dev/null | grep -q java; then echo 1; else for p in /proc/[0-9]*; do if tr '\\000' ' ' < \$p/cmdline 2>/dev/null | grep -q '^[^ ]*java '; then echo \${p#/proc/}; break; fi; done; fi" 2>/dev/null | tr -d '\r' | head -1)
+  if [[ -z "$pid" ]]
+  then
+    logwarn "no java process found in container $container"
+    return 1
+  fi
+
+  start=$(date +%s)
+  for i in $(seq 1 "$count")
+  do
+    playground --output-level ERROR container exec --container "$resolved_container" --command "kill -3 $pid" > /dev/null 2>&1
+    if [[ $i -lt $count ]]
+    then
+      sleep "$interval"
+    fi
+  done
+  sleep 2
+  since=$(( $(date +%s) - start + 5 ))
+  raw_file=$(mktemp -t pg-thread-dump-XXXXXXXXXX)
+  playground --output-level ERROR container logs --container "$container" --no-follow --since "${since}s" > "$raw_file" 2>&1
+
+  # keep each dump from its timestamp line to "JNI global refs", without the application log lines printed meanwhile
+  awk '
+    /^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/ { date = $0; next }
+    /Full thread dump/ { in_dump = 1; if (date != "") print date; date = "" }
+    in_dump && /^\[[0-9]{4}-[0-9]{2}-[0-9]{2}[ T]/ { next }
+    in_dump { print }
+    in_dump && /^JNI global ref/ { in_dump = 0; print "" }
+  ' "$raw_file" > "$output_file"
+  rm -f "$raw_file"
+
+  grep -q "Full thread dump" "$output_file"
+}
