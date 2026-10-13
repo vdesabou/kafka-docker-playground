@@ -90,6 +90,7 @@ certs-create.sh
 connector-plugin-sourcecode
 heap-analysis
 gc-analysis-output
+thread-analysis-output
 cfk-reports
 config.yaml
 .claude/*
