@@ -34,7 +34,7 @@ services:
       # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid"
       # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
-      EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
+      EXTRA_ARGS: -name kafkaServer -loggc ${GRAFANA_AGENT_BROKER}
       PYROSCOPE_APPLICATION_NAME: "kraft-controller"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 

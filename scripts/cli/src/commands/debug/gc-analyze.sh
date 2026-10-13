@@ -43,15 +43,16 @@ if [[ -n "$container" ]]; then
 
     if [[ -z "$gc_log_path" ]]; then
         log "🔍 No -Xlog:gc / -Xloggc flag found, searching common log locations..."
-        gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "find /var/log /tmp /opt /home -maxdepth 4 -type f -name '*gc*.log*' 2>/dev/null | head -1" 2>/dev/null | tr -d '\r')
+        gc_log_path=$(playground --output-level ERROR container exec --container "$container" --command "find /usr/logs /var/log /tmp /opt /home -maxdepth 4 -type f -name '*gc*.log*' 2>/dev/null | head -1" 2>/dev/null | tr -d '\r')
     fi
 
     if [[ -z "$gc_log_path" ]]; then
         logerror "❌ Could not locate a GC log in container '$container'"
         log ""
-        log "💡 kafka-run-class only writes a GC log with -loggc: kafka-server-start passes it by default, but not when"
-        log "   EXTRA_ARGS is set (the playground environments set it, even empty), and connect-distributed never does."
-        log "   To enable it on a running example (this replaces the current KAFKA_OPTS value, if any):"
+        log "💡 The playground environments pass -loggc to ZooKeeper, brokers, controllers, Schema Registry and Connect"
+        log "   (GC log in /var/log/kafka/<name>-gc.log, /usr/logs for Schema Registry), and ksqlDB writes one by default. If this container has none, it was"
+        log "   started before that change (playground re-run) or its EXTRA_ARGS is overridden by the example."
+        log "   To enable it on a running container (this replaces the current KAFKA_OPTS value, if any):"
         log "   playground container set-environment-variables --container $container --env \"KAFKA_OPTS: -Xlog:gc*:file=/tmp/gc.log:time,uptime,level,tags:filecount=5,filesize=20m\""
         log "   JDK 8: -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps -Xloggc:/tmp/gc.log"
         exit 1

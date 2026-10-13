@@ -202,6 +202,7 @@ class GCEvent:
     evac_failure:   bool  = False
     cmf:            bool  = False            # CMS concurrent mode failure / promotion failed
     degenerated:    bool  = False
+    pinned:         bool  = False            # JDK 22+ evacuation failure on pinned regions (benign)
     cpu_user_s:     float = 0.0
     cpu_real_s:     float = 0.0
     src:            str   = ""
@@ -320,11 +321,16 @@ def _cause_and_label(gtype: str) -> Tuple[str, str, bool]:
        ('Pause Young (Concurrent Start)', 'G1 Humongous Allocation', evac_failure=True)"""
     parens = _RE_CAUSE_PARENS.findall(gtype)
     base = gtype.split(" (")[0].strip()
-    evac = any("Evacuation Failure" in p or "To-space" in p or "to-space" in p for p in parens)
+    # "Evacuation Failure: Pinned" (JDK 22+ region pinning, JNI critical sections) is not a lack of free regions
+    evac = any(("Evacuation Failure" in p and "Pinned" not in p) or "To-space" in p or "to-space" in p for p in parens)
     kind = next((p for p in parens if p in _G1_KIND_TAGS), "")
     label = f"{base} ({kind})" if kind else base
     causes = [p for p in parens if p not in _NOT_CAUSES and "Evacuation Failure" not in p and "space" not in p]
     return label, (causes[0] if causes else ""), evac
+
+
+def _pinned(gtype: str) -> bool:
+    return "Evacuation Failure: Pinned" in gtype
 
 
 def _read_lines(path: str) -> List[str]:
@@ -485,7 +491,7 @@ def _parse_unified(fr: FileResult, lines: List[str]):
             old_gen = is_full or degenerated or label == "Pause Young (Mixed)"
             ev = GCEvent(abs_ms=abs_ms, uptime_ms=uptime_ms, gc_id=gc_id, gc_type=label, cause=cause,
                          pause_ms=float(mm.group("p")), is_full=is_full, old_gen=old_gen,
-                         evac_failure=evac, degenerated=degenerated,
+                         evac_failure=evac, degenerated=degenerated, pinned=_pinned(gtype),
                          src=f"{os.path.basename(fr.path)}:{no}")
             if mp:
                 ev.heap_before_mb = size_mb(mp.group("b"))
@@ -914,7 +920,10 @@ def analyze_run(run: Run, coverage: dict) -> dict:
     stats["degenerated_gc_count"] = sum(1 for e in evs if e.degenerated)
     stats["sys_gc_count"] = sum(1 for e in evs if "System.gc" in e.cause)
     stats["sys_gc_full_count"] = sum(1 for e in full if "System.gc" in e.cause)
+    stats["pinned_evacuation_count"] = sum(1 for e in evs if e.pinned)
     stats["meta_gc_threshold_count"] = sum(1 for e in evs if "Metadata GC" in e.cause)
+    # class loading at startup always crosses the initial Metaspace threshold a few times
+    stats["meta_gc_after_startup_count"] = sum(1 for e in evs if "Metadata GC" in e.cause and e.t_ms - first.t_ms > 300000)
     stats["meta_gc_full_count"] = sum(1 for e in full if "Metadata GC" in e.cause)
     stats["humongous_max_regions"] = run.humongous_max
     stats["humongous_triggered_count"] = sum(1 for e in evs if "Humongous" in e.cause)
@@ -1048,6 +1057,10 @@ def recommendations(stats: dict) -> List[dict]:
             "add heap, or move to G1.",
             "-XX:CMSInitiatingOccupancyFraction=70 -XX:+UseCMSInitiatingOccupancyOnly")
 
+    if stats.get("pinned_evacuation_count"):
+        add("INFO", f"{stats['pinned_evacuation_count']} young GC(s) with 'Evacuation Failure: Pinned': regions pinned by "
+                    "JNI critical sections (JDK 22+ region pinning) were kept in place. Harmless unless very frequent.")
+
     # Shenandoah / ZGC fallbacks
     if stats.get("degenerated_gc_count"):
         add("HIGH", f"{stats['degenerated_gc_count']} Shenandoah degenerated GC(s): the concurrent cycle could not "
@@ -1069,8 +1082,7 @@ def recommendations(stats: dict) -> List[dict]:
     # humongous allocations
     hum_trig = stats.get("humongous_triggered_count", 0)
     region = stats.get("region_mb")
-    if col == G1GC and (hum_trig >= 10 or (stats.get("humongous_max_regions") and xmx and region and
-                                           stats["humongous_max_regions"] * region > 0.1 * xmx)):
+    if col == G1GC and hum_trig >= 10:
         text = (f"Humongous allocations: {hum_trig} GC(s) triggered by G1 Humongous Allocation, up to "
                 f"{stats.get('humongous_max_regions', 0)} humongous regions. Objects of half a region or more "
                 f"(region size {region:g}M) go straight to the old generation. " if region else
@@ -1084,7 +1096,7 @@ def recommendations(stats: dict) -> List[dict]:
         add("MEDIUM", text, flag)
 
     # Metaspace
-    if stats.get("meta_gc_full_count") or stats.get("meta_gc_threshold_count", 0) > 3:
+    if stats.get("meta_gc_full_count") or stats.get("meta_gc_after_startup_count", 0) > 3:
         add("MEDIUM", f"{stats['meta_gc_threshold_count']} GC(s) triggered by Metadata GC Threshold "
                       f"({stats.get('meta_gc_full_count', 0)} Full GC). Metaspace keeps growing past its high-water "
                       "mark, typical of Connect workers loading many plugins: start with a larger threshold. Avoid "
@@ -1174,7 +1186,7 @@ def text_report(stats: dict, runs_summary: List[dict], warnings: List[str], top:
     lines.append(f"  GC events          : {stats['total_events']} (pauses={stats['pause_events']}, full={stats['full_gc_count']})")
     thru = stats.get("throughput_pct")
     lines.append(f"  GC throughput      : {str(thru) + '%' if thru is not None else f'- (needs ≥ {MIN_THROUGHPUT_SEC}s of log)'}")
-    for key, label in (("evacuation_failure_count", "Evacuation failures"), ("concurrent_mode_failure_count", "CMS mode failures"),
+    for key, label in (("evacuation_failure_count", "Evacuation failures"), ("pinned_evacuation_count", "Pinned evacuations"), ("concurrent_mode_failure_count", "CMS mode failures"),
                        ("degenerated_gc_count", "Degenerated GCs"), ("sys_gc_count", "System.gc() GCs"),
                        ("humongous_triggered_count", "Humongous-triggered"), ("concurrent_mark_cycles", "Concurrent cycles"),
                        ("concurrent_mark_aborts", "Conc. mark aborts")):

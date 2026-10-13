@@ -16,7 +16,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
       KAFKA_JMX_PORT: 9999
-      EXTRA_ARGS: ${GRAFANA_AGENT_ZK}
+      EXTRA_ARGS: -name zookeeper -loggc ${GRAFANA_AGENT_ZK}
       KAFKA_JMX_HOSTNAME: localhost
       # for 5.4.x:
       KAFKA_OPTS: -Dzookeeper.4lw.commands.whitelist=*
@@ -58,7 +58,7 @@ services:
       KAFKA_CONFLUENT_CLUSTER_LINK_METADATA_TOPIC_REPLICATION_FACTOR: 1
       # Confluent Telemetry Reporter (proactive support): enabled through docker-compose-telemetry.yml when CONFLUENT_CLOUD_API_KEY/CONFLUENT_CLOUD_API_SECRET are set
       KAFKA_CONFLUENT_TELEMETRY_ENABLED: 'false'
-      EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
+      EXTRA_ARGS: -name kafkaServer -loggc ${GRAFANA_AGENT_BROKER}
       PYROSCOPE_APPLICATION_NAME: "broker"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
@@ -123,7 +123,7 @@ services:
       KAFKA_CONFLUENT_CLUSTER_LINK_METADATA_TOPIC_REPLICATION_FACTOR: 1
       # Confluent Telemetry Reporter (proactive support): enabled through docker-compose-telemetry.yml when CONFLUENT_CLOUD_API_KEY/CONFLUENT_CLOUD_API_SECRET are set
       KAFKA_CONFLUENT_TELEMETRY_ENABLED: 'false'
-      EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
+      EXTRA_ARGS: -name kafkaServer -loggc ${GRAFANA_AGENT_BROKER}
       PYROSCOPE_APPLICATION_NAME: "broker2"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
@@ -188,7 +188,7 @@ services:
       KAFKA_CONFLUENT_CLUSTER_LINK_METADATA_TOPIC_REPLICATION_FACTOR: 1
       # Confluent Telemetry Reporter (proactive support): enabled through docker-compose-telemetry.yml when CONFLUENT_CLOUD_API_KEY/CONFLUENT_CLOUD_API_SECRET are set
       KAFKA_CONFLUENT_TELEMETRY_ENABLED: 'false'
-      EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
+      EXTRA_ARGS: -name kafkaServer -loggc ${GRAFANA_AGENT_BROKER}
       PYROSCOPE_APPLICATION_NAME: "broker3"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
@@ -241,7 +241,7 @@ services:
       SCHEMA_REGISTRY_CONFLUENT_TELEMETRY_ENABLED: 'false'
       # https://github.com/confluentinc/schema-registry/issues/2213
       SCHEMA_REGISTRY_SCHEMA_PROVIDERS_AVRO_VALIDATE_DEFAULTS: "true"
-      EXTRA_ARGS: ${GRAFANA_AGENT_SR}
+      EXTRA_ARGS: -name schemaRegistry -loggc ${GRAFANA_AGENT_SR}
       PYROSCOPE_APPLICATION_NAME: "schema-registry"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
@@ -304,7 +304,7 @@ services:
       # KAFKA_OPTS: '-verbose:class'
       KAFKA_OPTS: -Ddynamic.worker.config.file=/dev/null
       # Reduce Connect memory utilization
-      EXTRA_ARGS: ${GRAFANA_AGENT_CONNECT}
+      EXTRA_ARGS: -name connectDistributed -loggc ${GRAFANA_AGENT_CONNECT}
       # KAFKA_JVM_PERFORMANCE_OPTS: -server -XX:+UseG1GC -XX:GCTimeRatio=1
                   # -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20
                   # -XX:MaxGCPauseMillis=10000 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent
@@ -380,7 +380,7 @@ services:
       # KAFKA_OPTS: '-verbose:class'
       KAFKA_OPTS: -Ddynamic.worker.config.file=/dev/null
       # Reduce Connect memory utilization
-      EXTRA_ARGS: ${GRAFANA_AGENT_CONNECT}
+      EXTRA_ARGS: -name connectDistributed -loggc ${GRAFANA_AGENT_CONNECT}
       # KAFKA_JVM_PERFORMANCE_OPTS: -server -XX:+UseG1GC -XX:GCTimeRatio=1
                   # -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20
                   # -XX:MaxGCPauseMillis=10000 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent
@@ -456,7 +456,7 @@ services:
       # KAFKA_OPTS: '-verbose:class'
       KAFKA_OPTS: -Ddynamic.worker.config.file=/dev/null
       # Reduce Connect memory utilization
-      EXTRA_ARGS: ${GRAFANA_AGENT_CONNECT}
+      EXTRA_ARGS: -name connectDistributed -loggc ${GRAFANA_AGENT_CONNECT}
       # KAFKA_JVM_PERFORMANCE_OPTS: -server -XX:+UseG1GC -XX:GCTimeRatio=1
                   # -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20
                   # -XX:MaxGCPauseMillis=10000 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent
