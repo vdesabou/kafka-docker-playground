@@ -4547,9 +4547,9 @@ commands:
       flags:
       - *container
       examples:
-      - playground get-properties
-      - playground get-properties --container broker
-      - playground get-properties -c broker
+      - playground container get-properties
+      - playground container get-properties --container broker
+      - playground container get-properties -c broker
       x_example_outputs:
       - command: playground container get-properties -c connect
         output: |-
@@ -4613,7 +4613,7 @@ commands:
         you need when a component must be reached by IP rather than by name,
         or when you are checking what a client actually connected to.
       examples:
-      - playground get-ip-address-container
+      - playground container get-ip-addresses
       x_example_outputs:
       - command: playground container get-ip-addresses
         output: |-
@@ -4840,11 +4840,11 @@ commands:
           💾 Shell to use (default is bash)
 
       examples:
-      - playground ssh -c connect
-      - playground ssh -c connect -s sh
-      - playground ssh --container connect --shell sh
-      - playground ssh -c broker
-      - playground ssh --container schema-registry --shell zsh
+      - playground container ssh -c connect
+      - playground container ssh -c connect -s sh
+      - playground container ssh --container connect --shell sh
+      - playground container ssh -c broker
+      - playground container ssh --container schema-registry --shell zsh
 
     - name: change-jdk
       group: Container
@@ -4870,7 +4870,7 @@ commands:
           🤎 JDK version to use
 
       examples:
-      - playground change-jdk --container connect --version 17
+      - playground container change-jdk --container connect --version 17
 
     - name: exec
       group: Container
@@ -5109,8 +5109,8 @@ commands:
           🫥 The isolation level to use, see https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#isolation-level
           If not set, default is read_uncommitted
       examples:
-      - playground get-number-records --topic a-topic
-      - playground get-number-records -t a-topic
+      - playground topic get-number-records --topic a-topic
+      - playground topic get-number-records -t a-topic
       x_example_outputs:
       - command: playground topic get-number-records --topic filestream
         output: |-
@@ -7436,10 +7436,10 @@ commands:
       playground connector sourcecode --connector-tag " "
 
       # comparison mode:
-      playground connector --connector-tag "10.2.1" --connector-tag "10.2.0"
+      playground connector sourcecode --connector-tag "10.2.1" --connector-tag "10.2.0"
 
       # comparison mode (with versions selection):
-      playground connector --connector-tag " " --connector-tag " "
+      playground connector sourcecode --connector-tag " " --connector-tag " "
 
   - name: enable-remote-debugging
     dependencies:
