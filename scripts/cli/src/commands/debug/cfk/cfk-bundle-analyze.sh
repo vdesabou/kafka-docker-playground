@@ -5,22 +5,12 @@ severity="${args[--severity]}"
 top="${args[--top]}"
 html="${args[--html]}"
 output_dir="${args[--output-dir]}"
+include_warnings="${args[--include-warnings]}"
 
 set +e
 
-# ── Validate input ─────────────────────────────────────────────────────────
-if [[ -z "$bundle" ]]; then
-    logerror "❌ Must provide --bundle <path-to-cfk-support-bundle>"
-    log ""
-    log "Examples:"
-    log "  playground debug cfk-bundle-analyze --bundle ./customer-bundle.tar.gz"
-    log "  playground debug cfk-bundle-analyze --bundle ./extracted-bundle/"
-    log "  playground debug cfk-bundle-analyze --bundle ./bundle.zip --json > report.json"
-    exit 1
-fi
-
-# Handle fzf @path trick (mirrors gc-analyze convention)
-if [[ "$bundle" == *"@"* ]]; then
+# Handle fzf @path trick (mirrors gc-analyze convention), only when the path itself does not exist
+if [[ ! -e "$bundle" && "$bundle" == *"@"* ]]; then
     bundle=$(echo "$bundle" | cut -d "@" -f 2)
 fi
 
@@ -29,22 +19,31 @@ if [[ ! -e "$bundle" ]]; then
     exit 1
 fi
 
-# ── Locate the analyzer CLI ────────────────────────────────────────────────
-analyzer_cli="$root_folder/cfk-analysis/analyzer_cli.py"
-if [[ ! -f "$analyzer_cli" ]]; then
-    logerror "❌ CFK analyzer CLI not found at: $analyzer_cli"
-    logerror "   Make sure cfk-analysis/analyzer_cli.py exists in the playground root"
-    logerror "   (symlink cfk-bundle-analyzer/ as cfk-analysis/ in the playground root)"
+analyzer_dir="$root_folder/cfk-analysis"
+if [[ ! -f "$analyzer_dir/analyzer_cli.py" ]]; then
+    logerror "❌ CFK analyzer not found at: $analyzer_dir/analyzer_cli.py"
     exit 1
 fi
 
-analyzer_dir="$root_folder/cfk-analysis"
+# ── Analyzer image (dependencies baked once, code mounted at run time) ─────
+# The tag changes when the Dockerfile or requirements change, so the image is rebuilt only then
+image_tag=$(cat "$analyzer_dir/Dockerfile" "$analyzer_dir/requirements.txt" | cksum | cut -d ' ' -f 1)
+image="cfk-bundle-analyzer:$image_tag"
+if ! docker image inspect "$image" > /dev/null 2>&1; then
+    log "🏗️  Building $image (first run only)..."
+    build_log="/tmp/cfk-bundle-analyzer-build.log"
+    if ! docker build --load -t "$image" "$analyzer_dir" > "$build_log" 2>&1 && ! docker build -t "$image" "$analyzer_dir" >> "$build_log" 2>&1; then
+        logerror "❌ Failed to build $image, see $build_log"
+        tail -20 "$build_log"
+        exit 1
+    fi
+fi
 
 bundle_abs=$(cd "$(dirname "$bundle")" && pwd -P)/$(basename "$bundle")
 bundle_container="/tmp/input/$(basename "$bundle")"
 
 # ── Build CLI args ─────────────────────────────────────────────────────────
-cli_args=("$bundle")
+cli_args=("$bundle_container")
 
 if [[ -n "$json_out" ]]; then
     cli_args+=(--json)
@@ -63,9 +62,20 @@ if [[ -n "$top" ]]; then
     cli_args+=(--top "$top")
 fi
 
+if [[ -n "$include_warnings" ]]; then
+    cli_args+=(--include-warnings)
+fi
+
+# run as the current user: it can read the bundle and write the HTML report
+docker_args=(
+    --rm
+    --user "$(id -u):$(id -g)"
+    -v "$analyzer_dir:/tmp/cfk-analysis:ro"
+    -v "$bundle_abs:$bundle_container:ro"
+)
+
 # ── HTML output target ─────────────────────────────────────────────────────
 html_out=""
-html_out_container=""
 if [[ -n "$html" ]]; then
     : "${output_dir:=./cfk-reports}"
     mkdir -p "$output_dir"
@@ -79,8 +89,8 @@ if [[ -n "$html" ]]; then
     bundle_basename="${bundle_basename%.zip}"
 
     html_out="${output_dir_abs}/${bundle_basename}-cfk-report-$(date '+%Y%m%d-%H%M%S').html"
-    html_out_container="/tmp/output/$(basename "$html_out")"
-    cli_args+=(--html-out "$html_out_container")
+    cli_args+=(--html-out "/tmp/output/$(basename "$html_out")")
+    docker_args+=( -v "$output_dir_abs:/tmp/output" )
 fi
 
 # ── Run the analyzer ───────────────────────────────────────────────────────
@@ -89,27 +99,17 @@ if [[ -z "$json_out" ]]; then
     log ""
 fi
 
-docker_args=(
-    -i
-    --rm
-    -v "$analyzer_dir:/tmp/cfk-analysis:ro"
-    -v "$bundle_abs:$bundle_container:ro"
-)
-
-if [[ -n "$html_out" ]]; then
-    docker_args+=( -v "$output_dir_abs:/tmp/output" )
-fi
-
-container_cli_args=("$bundle_container")
-if [[ ${#cli_args[@]} -gt 1 ]]; then
-    container_cli_args+=("${cli_args[@]:1}")
-fi
-
-docker run "${docker_args[@]}" python:3.7-slim sh -lc 'pip install -q -r /tmp/cfk-analysis/requirements.txt && python /tmp/cfk-analysis/analyzer_cli.py "$@"' sh "${container_cli_args[@]}"
+docker run "${docker_args[@]}" "$image" "${cli_args[@]}"
 exit_code=$?
 
+case $exit_code in
+    0) ;;
+    64) logerror "❌ Analysis failed — invalid, unsafe or empty bundle (see error above)." ;;
+    *) logerror "❌ Analyzer failed with exit code $exit_code." ;;
+esac
+
 # ── Open HTML report in browser ────────────────────────────────────────────
-if [[ -n "$html" && -f "$html_out" ]]; then
+if [[ $exit_code -eq 0 && -n "$html" && -f "$html_out" ]]; then
     log ""
     log "🌐 HTML report saved: $html_out"
     if command -v open &>/dev/null; then
@@ -121,17 +121,6 @@ if [[ -n "$html" && -f "$html_out" ]]; then
     else
         log "🔗 Open in browser: file://$html_out"
     fi
-fi
-
-if [[ -z "$json_out" ]]; then
-    log ""
-    case $exit_code in
-        0) log "✅ Analysis complete — no critical or high-severity issues found." ;;
-        1) logwarn "⚠️  Analysis complete — high-severity issues found. Review the report above." ;;
-        2) logerror "❌ Analysis complete — CRITICAL issues found. Act on the recommendations above." ;;
-        64) logerror "❌ Analysis failed — invalid bundle path or format." ;;
-        *) logerror "❌ Analyzer exited with code $exit_code." ;;
-    esac
 fi
 
 exit $exit_code

@@ -254,9 +254,10 @@ RECOMMENDATIONS: Dict[str, Dict[str, object]] = {
         ],
     },
     "Component Status": {
-        "summary": "A Confluent component CR has a False condition.",
+        "summary": "A Confluent CR is not healthy: phase/state not RUNNING, ready replicas below spec, or a False condition.",
         "steps": [
-            "kubectl -n <ns> get <kind> <name> -o yaml | yq .status.conditions  — read the False condition's message.",
+            "kubectl -n <ns> get <kind> <name> -o yaml | yq .status  — read phase, readyReplicas and the False condition's message.",
+            "Ready replicas below spec: check the pods of that StatefulSet (Pod Failures / Scheduling / Volume categories above).",
             "Conditions to watch: Ready, RollingUpgrade, ConfigsUpToDate.",
             "If status is stale: confirm the operator is reconciling this CR (operator log + last reconcile timestamp).",
         ],
