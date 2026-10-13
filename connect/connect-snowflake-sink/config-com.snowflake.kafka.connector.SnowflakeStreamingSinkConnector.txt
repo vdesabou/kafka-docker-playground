@@ -96,7 +96,7 @@ Snowflake role: snowflake.role.name
 
 🔘 snowflake.authenticator
 
-Authenticator for JDBC and streaming ingest SDK. Valid values: snowflake_jwt, oauth.
+Authenticator for JDBC and streaming ingest SDK. Valid values: snowflake_jwt, oauth, spcs. Use spcs only when the connector runs inside Snowpark Container Services: Snowflake then supplies the credential, so no key pair or OAuth client is configured, and snowflake.url.name, snowflake.user.name, snowflake.database.name and snowflake.schema.name are filled in from the service environment if not set. snowflake.role.name is still required.
 
 	 - Type: STRING
 	 - Default: snowflake_jwt
