@@ -30,6 +30,8 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 AWS_BUCKET_NAME=pg-bucket-${USER}
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
+# one folder per environment: the plaintext and cfk CI jobs run at the same time and share the bucket
+TOPICS_DIR="quickstart-${PLAYGROUND_ENVIRONMENT}"
 
 log "Create bucket <$AWS_BUCKET_NAME>, if required"
 set +e
@@ -42,14 +44,14 @@ else
     aws s3api put-bucket-tagging --bucket $AWS_BUCKET_NAME --tagging "TagSet=[{Key=cflt_managed_by,Value=user},{Key=cflt_managed_id,Value=$USER}]"
 fi
 set -e
-log "Empty bucket <$AWS_BUCKET_NAME/quickstart>, if required"
+log "Empty bucket <$AWS_BUCKET_NAME/$TOPICS_DIR>, if required"
 set +e
-aws s3 rm s3://$AWS_BUCKET_NAME/quickstart --recursive --region $AWS_REGION
+aws s3 rm s3://$AWS_BUCKET_NAME/$TOPICS_DIR --recursive --region $AWS_REGION
 set -e
 
 
-log "Copy generalized.quickstart.json to bucket $AWS_BUCKET_NAME/quickstart"
-aws s3 cp generalized.quickstart.json s3://$AWS_BUCKET_NAME/quickstart/generalized.quickstart.json
+log "Copy generalized.quickstart.json to bucket $AWS_BUCKET_NAME/$TOPICS_DIR"
+aws s3 cp generalized.quickstart.json s3://$AWS_BUCKET_NAME/$TOPICS_DIR/generalized.quickstart.json
 
 log "Creating Generalized S3 Source connector with bucket name <$AWS_BUCKET_NAME>"
 playground connector create-or-update --connector s3-source-generalized  << EOF
@@ -65,7 +67,7 @@ playground connector create-or-update --connector s3-source-generalized  << EOF
     "value.converter.schemas.enable": "false",
     "confluent.license": "",
     "mode": "GENERIC",
-    "topics.dir": "quickstart",
+    "topics.dir": "$TOPICS_DIR",
     "topic.regex.list": "quick-start-topic:.*",
     "confluent.topic.bootstrap.servers": "broker:9092",
     "confluent.topic.replication.factor": "1",
