@@ -33,13 +33,20 @@ explains the symptom, what to do first, and how to say it to the customer.
 ## 2. Run the analyzer
 
 ```bash
-playground analyze oracle-xstream-report -f <report.html> [-f <later-report.html>] --json
+playground analyze oracle-xstream-report -f <report.html> [-f <later-report.html>] --json -p "<symptom and since when>"
 playground analyze oracle-xstream-report -f <report.html>          # same, human-readable
 playground analyze oracle-xstream-report -f <report.html> --output-dir /tmp/xstream   # + HTML page to attach to the case
 ```
 
+**Always pass the problem statement** with `-p` / `--problem` when the case says what is wrong, in the
+customer's words with the date (`-p "no records processed since 11th of OCT"`): the output then starts
+with a `problem` block (JSON) / `🎯 Problem` section that compares the date where the capture stopped
+(captured SCN as a time) with the date of the problem and lists the findings that explain it first. A
+digest read without the symptom misses what matters: a capture that is "ENABLED, WAITING FOR REDO" looks
+idle until you notice its position is two days old.
+
 To see what a finding looks like before a real case, `--sample synthetic_failures` (or `healthy`,
-`large_transaction`, `detached`, `older_script_version`) analyzes the reports shipped with the analyzer.
+`large_transaction`, `detached`, `older_script_version`, `missing_archived_log`) analyzes the reports shipped with the analyzer.
 
 Exit code `2` means the file is not an `orclcdc_diag` report (wrong attachment, or the readiness
 script `orclcdc_readiness.sql` instead of the diagnostics one).
@@ -52,6 +59,15 @@ a finding in its section: grep the `<h3>` title of the section rather than readi
 
 - **Latency on an idle database** grows without any backlog: capture `WAITING FOR REDO`, or a small
   gap between Captured SCN and Current SCN, means nothing to send. The analyzer downgrades it to INFO.
+- **…but `WAITING FOR REDO` is not always idle.** Read the file in the state
+  (`WAITING FOR REDO: FILE …, THREAD 2, SEQUENCE 1363287`) and the captured SCN time: waiting for an
+  archived log that is already registered and complete (pattern I, CRITICAL) means the capture cannot
+  read it, usually deleted (RMAN `DELETE … FORCE`, removed outside RMAN, FRA space pressure) or not
+  readable from the RAC instance running the capture. Latency is often empty then: nothing is captured,
+  so use the captured SCN time, Total Messages Captured `0` and the newest registered log instead. The
+  fix is a restore of the archived logs from that sequence (every thread), not a connector restart.
+- **Long running transactions that started after the captured SCN** do not explain a stuck position
+  (MEDIUM, `after_capture_position`); they only matter once the capture moves again.
 - **`MAX_SGA_SIZE = INFINITE`** is the default; "SGA allocated vs used" means nothing then, memory
   pressure shows in LogMiner memory %, queue spills and the streams pool advice.
 - **Spills of large or old transactions are by design** (`TXN_LCR_SPILL_THRESHOLD`, default 10,000 LCRs,

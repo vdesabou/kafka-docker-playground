@@ -4,6 +4,7 @@ container="${args[--container]}"
 output_dir="${args[--output-dir]}"
 json_out="${args[--json]}"
 top="${args[--top]}"
+problem="${args[--problem]}"
 
 set +e
 
@@ -67,6 +68,9 @@ do
 done
 
 analyzer_args=("${file_array[@]}" --top "$top")
+if [[ -n "$problem" ]]; then
+    analyzer_args+=(--problem "$problem")
+fi
 
 if [[ -n "$json_out" ]]; then
     python3 -I "$analyzer" "${analyzer_args[@]}" --json

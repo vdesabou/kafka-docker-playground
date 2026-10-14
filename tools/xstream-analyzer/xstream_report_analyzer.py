@@ -35,6 +35,11 @@ LARGE_TXN_LCRS = 100_000
 LONG_TXN_SECONDS = 3600
 OUTBOUND_IDLE_SECONDS = 300
 OPEN_TXN_WARN, OPEN_TXN_CRIT = 1_000, 10_000
+POSITION_STALE_SECONDS = 3600
+
+# WAITING FOR REDO: FILE <name>, THREAD 2, SEQUENCE 1363287, SCN 0x0000098136f478f7
+REDO_WAIT = re.compile(r"WAITING FOR REDO:\s*FILE\s+(?P<file>[^,]+),\s*THREAD\s+(?P<thread>\d+),\s*SEQUENCE\s+(?P<sequence>\d+)"
+                       r"(?:,\s*SCN\s+(?P<scn>0x[0-9a-fA-F]+|\d+))?")
 
 PATTERNS = {
     "A": "Undersized streams pool / SGA (spills, memory pressure)",
@@ -45,6 +50,7 @@ PATTERNS = {
     "F": "Overlapping capture processes",
     "G": "Database prerequisite missing (archivelog, supplemental logging)",
     "H": "XStream component disabled or aborted",
+    "I": "Capture stuck waiting for redo (archived log missing or unreadable)",
 }
 
 
@@ -232,6 +238,7 @@ class Analysis:
         self.summary: Dict[str, object] = {}
         self.prerequisites: List[dict] = []
         self.patterns: Dict[str, List[str]] = {}
+        self.problem: Optional[dict] = None
 
     def add(self, severity, section, message, evidence=None, pattern=None, action=None):
         f = {"severity": severity, "section": section, "message": message}
@@ -262,6 +269,19 @@ class Analysis:
         if t is None or self.r.generated is None:
             return None
         return (self.r.generated - t).total_seconds()
+
+    def scn_time(self, scn) -> Optional[datetime]:
+        """Time of an SCN, interpolated in the registered log file that contains it (None when no log contains it)."""
+        scn = _num(scn)
+        if not scn:
+            return None
+        for r in self.r.rows("Capture Process: Registered log files"):
+            a, b = _num(r.get("First SCN")), _num(r.get("Next SCN"))
+            ta, tb = _parse_time(r.get("First Time")), _parse_time(r.get("Next Time"))
+            if None in (a, b, ta, tb) or not a <= scn < b:
+                continue
+            return ta + (tb - ta) * ((scn - a) / (b - a))
+        return None
 
     def run(self):
         self.overview()
@@ -381,7 +401,13 @@ class Analysis:
                 "last_captured_time": s2.get("Last Captured Message Time"),
                 "startup_time": sx.get("Startup Time"),
                 "scn_gap": (self.current_scn - captured_scn) if self.current_scn and captured_scn else None,
+                "state_change_time": sx.get("State Change Time"),
+                "last_redo_flushed_time": s2.get("Last Redo Flushed Time"),
             }
+            # captured SCN as a time: where the capture really is, latency is often empty when nothing is captured
+            pos = self.scn_time(captured_scn)
+            cap["captured_scn_time"] = pos.strftime("%Y-%m-%d %H:%M:%S") if pos else None
+            cap["position_age_seconds"] = (self.r.generated - pos).total_seconds() if pos and self.r.generated else None
             captures.append(cap)
             section = "Capture Process: Status"
             if cap["status"] and cap["status"] != "ENABLED":
@@ -396,10 +422,11 @@ class Analysis:
             elif state and state != "CAPTURING CHANGES" and not state.startswith("WAITING FOR TRANSACTION") \
                     and not state.startswith("WAITING FOR REDO"):
                 self.add("MEDIUM", "Capture Process: Statistics", f"Capture {name} state is {state}", {"State": state})
+            self.redo_wait(cap)
             if latency is not None:
                 ev = {"Capture Latency (seconds)": _fmt_num(latency), "Last Captured Message Time": cap["last_captured_time"],
                       "Captured SCN": cap["captured_scn"], "Current SCN": self.summary["database"]["current_scn"]}
-                idle = state.startswith("WAITING FOR REDO")
+                idle = state.startswith("WAITING FOR REDO") and not cap.get("stuck")
                 if latency > LATENCY_CRIT:
                     self.add("INFO" if idle else "CRITICAL", "Capture Process: Statistics",
                              f"Capture {name} latency is {_fmt_seconds(latency)}" + (" while WAITING FOR REDO (idle database: no backlog)" if idle else " (> 300s)"), ev)
@@ -433,8 +460,66 @@ class Analysis:
         logs = self.r.rows("Capture Process: Registered log files")
         if logs:
             not_purgeable = [r for r in logs if r.get("Purgeable") == "NO"]
+            threads = []
+            for thread in sorted({r.get("Thread") for r in logs}, key=lambda t: _num(t) or 0):
+                rows = [r for r in logs if r.get("Thread") == thread and _num(r.get("Sequence")) is not None]
+                seqs = sorted({int(_num(r["Sequence"])) for r in rows})
+                if not seqs:
+                    continue
+                threads.append({"thread": thread, "first_sequence": seqs[0], "last_sequence": seqs[-1],
+                                "newest_next_time": max((r.get("Next Time") or "" for r in rows), default=None) or None,
+                                "missing_sequences": [[a + 1, b - 1] for a, b in zip(seqs, seqs[1:]) if b > a + 1]})
             self.summary["registered_logs"] = {"total": len(logs), "not_purgeable": len(not_purgeable),
-                                               "oldest_needed": min((r.get("First Time") or "" for r in not_purgeable), default=None)}
+                                               "oldest_needed": min((r.get("First Time") or "" for r in not_purgeable), default=None),
+                                               "newest": max((r.get("Next Time") or "" for r in logs), default=None) or None,
+                                               "threads": threads}
+
+    def redo_wait(self, cap):
+        """WAITING FOR REDO is idle on a quiet database, but not when the redo it waits for is old: the log is gone or unreadable."""
+        m = REDO_WAIT.search(cap["state"] or "")
+        if not m:
+            return
+        name = cap["name"]
+        scn = m.group("scn")
+        wait = {"file": m.group("file").strip(), "thread": m.group("thread"), "sequence": m.group("sequence"),
+                "scn": (int(scn, 16) if scn.lower().startswith("0x") else int(scn)) if scn else None}
+        log = next((r for r in self.r.rows("Capture Process: Registered log files")
+                    if r.get("Thread") == wait["thread"] and r.get("Sequence") == wait["sequence"]), None)
+        wait["registered"] = log is not None
+        wait["archived"] = bool(log and _num(log.get("Next SCN")))
+        if log:
+            wait["first_time"], wait["next_time"] = log.get("First Time"), log.get("Next Time")
+        cap["waiting_for_redo"] = wait
+        age = cap["position_age_seconds"]
+        ev = {"State": cap["state"], "State Change Time": cap["state_change_time"], "Startup Time": cap["startup_time"],
+              "Captured SCN": cap["captured_scn"], "Captured SCN time": cap["captured_scn_time"],
+              "behind the report": _fmt_seconds(age) if age is not None else None,
+              "Current SCN": self.summary["database"]["current_scn"], "SCN gap": _fmt_num(cap["scn_gap"]),
+              "Total Messages Captured": _fmt_num(cap["messages_captured"]), "Last Redo Flushed Time": cap["last_redo_flushed_time"]}
+        since = f" since {cap['state_change_time']}" if cap["state_change_time"] else ""
+        position = f" Captured SCN {_fmt_num(cap['captured_scn'])} ≈ {cap['captured_scn_time']} ({_fmt_seconds(age)} before the report)" if age is not None else ""
+        action = (f"[DBA] check that the file still exists and is readable from the instance running the capture: "
+                  f"SELECT thread#, sequence#, name, status, deleted, first_time FROM v$archived_log WHERE thread# = {wait['thread']} "
+                  f"AND sequence# >= {wait['sequence']} ORDER BY sequence#; and the alert log of that instance (ORA-00308, ORA-01291). "
+                  f"Restore it and the following logs of every thread from the backup (RMAN> RESTORE ARCHIVELOG FROM SEQUENCE {wait['sequence']} "
+                  f"THREAD {wait['thread']};): the capture resumes on its own. If the logs are gone for good, the capture cannot resume from "
+                  "this position: recreate the outbound server and take a new snapshot. Then keep archived logs until the capture has mined "
+                  "them (RMAN keeps them, RMAN-08137, unless DELETE ... FORCE, deletion outside RMAN or FRA space pressure)")
+        # a complete archived log is readable at once: still waiting for it a minute later means it cannot be read
+        waiting = self.age_seconds(cap["state_change_time"])
+        if wait["archived"] and (waiting is None or waiting > LATENCY_WARN):
+            cap["stuck"] = True
+            self.add("CRITICAL", "Capture Process: Statistics",
+                     f"Capture {name} is WAITING FOR REDO{since} on archived log thread {wait['thread']} sequence {wait['sequence']} "
+                     f"({wait.get('first_time')} → {wait.get('next_time')}), already registered and complete: the capture cannot read it "
+                     f"(deleted, or not readable from the capture instance) and captures nothing.{position}",
+                     dict(ev, **{"waiting for file": wait["file"]}), "I", action)
+        elif age is not None and age > POSITION_STALE_SECONDS:
+            cap["stuck"] = True
+            self.add("HIGH", "Capture Process: Statistics",
+                     f"Capture {name} is WAITING FOR REDO{since} on thread {wait['thread']} sequence {wait['sequence']} "
+                     f"while its position is {_fmt_seconds(age)} old: the redo after it is not available to the capture.{position}",
+                     dict(ev, **{"waiting for file": wait["file"]}), "I", action)
 
     # LogMiner
     def logminer(self):
@@ -493,7 +578,7 @@ class Analysis:
             if st == "ATTACHED" and idle is not None and idle > OUTBOUND_IDLE_SECONDS:
                 caps = [c for c in self.summary.get("captures", []) if c["name"] == srv["capture"]]
                 # nothing to send: the capture has no backlog (low latency, or waiting for redo)
-                cap_idle = bool(caps) and ((caps[0].get("state") or "").startswith("WAITING FOR REDO")
+                cap_idle = bool(caps) and not caps[0].get("stuck") and ((caps[0].get("state") or "").startswith("WAITING FOR REDO")
                                            or (caps[0].get("latency_seconds") is not None and caps[0]["latency_seconds"] <= LATENCY_WARN))
                 self.add("INFO" if cap_idle else "MEDIUM", "Outbound Server: Statistics",
                          f"Outbound server {name} sent its last LCR {_fmt_seconds(idle)} before the report"
@@ -641,14 +726,22 @@ class Analysis:
                     self.add("HIGH", section, f"Transaction {t['xid']} open in {where} for {_fmt_seconds(t['open_for_seconds'])}", t, "B",
                              "A long open transaction holds back the capture restart SCN: commit or roll it back")
         long_db = []
+        # a transaction that started after every captured SCN does not hold the capture back (yet)
+        captured = [_num(c.get("captured_scn")) for c in self.summary.get("captures", []) if _num(c.get("captured_scn"))]
         for r in self.r.rows("Miscellaneous: Long running transactions"):
             minutes = _num(r.get("Duration"))
+            scnb, scnw = _num(r.get("Start SCNB")), _num(r.get("Start SCNW"))
+            start_scn = int(scnw) * 2 ** 32 + int(scnb) if scnb is not None and scnw is not None else None
             long_db.append({"session": r.get("Session"), "xid": r.get("XID"), "status": r.get("Status"),
-                            "minutes": minutes, "username": r.get("Username"), "program": r.get("Program"), "module": r.get("Module")})
+                            "minutes": minutes, "username": r.get("Username"), "program": r.get("Program"), "module": r.get("Module"),
+                            "start_scn": start_scn,
+                            "after_capture_position": bool(start_scn and captured and start_scn > max(captured))})
         for t in sorted(long_db, key=lambda t: -(t["minutes"] or 0))[:self.top]:
             mins = t["minutes"] or 0
-            self.add("HIGH" if mins * 60 > LONG_TXN_SECONDS else "MEDIUM", "Miscellaneous: Long running transactions",
-                     f"Database transaction {t['xid']} ({t['username']}, {t['program']}) running for {_fmt_seconds(mins * 60)}", t, "B")
+            after = t["after_capture_position"]
+            self.add("MEDIUM" if after or mins * 60 <= LONG_TXN_SECONDS else "HIGH", "Miscellaneous: Long running transactions",
+                     f"Database transaction {t['xid']} ({t['username']}, {t['program']}) running for {_fmt_seconds(mins * 60)}"
+                     + (": started after the captured SCN, it is not what holds the capture position" if after else ""), t, "B")
         out["database_long_running"] = long_db
         self.summary["transactions"] = out
 
@@ -740,7 +833,8 @@ class Analysis:
         return {"file": self.r.path, "generated": str(self.r.generated) if self.r.generated else None,
                 "health": health(counts), "counts": counts, "summary": _jsonable(self.summary),
                 "prerequisites": self.prerequisites, "findings": _jsonable(self.findings),
-                "patterns": {k: {"name": PATTERNS[k], "evidence": v} for k, v in sorted(self.patterns.items())}}
+                "patterns": {k: {"name": PATTERNS[k], "evidence": v} for k, v in sorted(self.patterns.items())},
+                **({"problem": _jsonable(self.problem)} if self.problem else {})}
 
 
 def health(counts) -> str:
@@ -761,6 +855,81 @@ def _jsonable(o):
     if isinstance(o, datetime):
         return str(o)
     return o
+
+
+# ── problem statement: what the customer reports, matched against the report ──
+
+MONTHS = {m: i for i, m in enumerate(("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"), 1)}
+SYMPTOMS = {
+    "no data": (r"\bno (new )?(records?|data|messages?|events?|changes?|rows?)\b|\bnot (processing|capturing|receiving|streaming|producing|flowing)"
+                r"|\bnothing\b|\bstuck\b|\bstopp?ed\b|\bidle\b|\bhang|\bfrozen\b|\bzero\b|\bno longer\b", "IHDGCB"),
+    "lag": (r"\blag|\blatency\b|\bslow|\bdelay|\bbehind\b|\bthroughput\b", "CAEBI"),
+    "missing or skipped data": (r"\bmissing\b|\blost\b|\bskipp|\bgap\b", "GFIH"),
+    "duplicates": (r"\bduplicat", "H"),
+    "errors": (r"\berrors?\b|\bfail|\bORA-\d+|\bexception|\babort", "HGI"),
+    "memory": (r"\bmemory\b|\bspill|\bsga\b|\bpga\b|ORA-0403[01]", "AE"),
+}
+
+
+def parse_problem(text: str, ref: Optional[datetime]) -> dict:
+    """Symptoms and dates of a free-text problem statement (deterministic: keywords and date formats)."""
+    year = (ref or datetime.now()).year
+    dates = []
+    for m in re.finditer(r"\b(\d{4})-(\d{2})-(\d{2})\b", text):
+        dates.append((int(m.group(1)), int(m.group(2)), int(m.group(3))))
+    mon = r"(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?"
+    for m in re.finditer(rf"\b(\d{{1,2}})(?:st|nd|rd|th)?(?:\s+of)?[\s-]+{mon}(?:[\s,-]+(\d{{4}}))?", text, re.I):
+        dates.append((int(m.group(3) or year), MONTHS[m.group(2).lower()], int(m.group(1))))
+    for m in re.finditer(rf"\b{mon}\s+(\d{{1,2}})(?:st|nd|rd|th)?\b(?:,?\s+(\d{{4}}))?", text, re.I):
+        dates.append((int(m.group(3) or year), MONTHS[m.group(1).lower()], int(m.group(2))))
+    parsed = []
+    for y, mo, d in dates:
+        try:
+            parsed.append(datetime(y, mo, d))
+        except ValueError:
+            continue
+    symptoms = [k for k, (rx, _) in SYMPTOMS.items() if re.search(rx, text, re.I)]
+    return {"text": text, "dates": sorted(set(parsed)), "symptoms": symptoms}
+
+
+def correlate_problem(a: "Analysis", problem: dict) -> dict:
+    """Facts of the report that answer the problem statement, and the findings that explain it, most relevant first."""
+    facts = []
+    dates = problem["dates"]
+    for c in a.summary.get("captures", []):
+        line = f"capture {c['name']}: status={c.get('status')} state={c.get('state')}"
+        if c.get("state_change_time"):
+            line += f" since {c['state_change_time']}"
+        facts.append(line)
+        if c.get("captured_scn_time"):
+            pos = _parse_time(c["captured_scn_time"])
+            line = f"capture {c['name']} position: captured SCN {_fmt_num(c['captured_scn'])} ≈ {c['captured_scn_time']} " \
+                   f"({_fmt_seconds(c['position_age_seconds'])} before the report)"
+            for d in dates:
+                diff = abs((pos.date() - d.date()).days)
+                line += f"; {'✅ matches' if diff <= 1 else '❌ does not match'} the date of the problem ({d.date()})"
+            facts.append(line)
+        elif dates:
+            facts.append(f"capture {c['name']} position: the captured SCN is not in a registered log file, its time is NOT PRESENT IN REPORT")
+        facts.append(f"capture {c['name']}: {_fmt_num(c.get('messages_captured'))} messages captured, {_fmt_num(c.get('messages_enqueued'))} "
+                     f"enqueued since its startup at {c.get('startup_time') or '-'}")
+    for srv in a.summary.get("outbound_servers", []):
+        facts.append(f"outbound server {srv['name']}: status={srv.get('status')} state={srv.get('state')} LCRs sent={_fmt_num(srv.get('lcrs_sent'))} "
+                     f"last sent={srv.get('last_sent_lcr_time') or '-'}")
+    rl = a.summary.get("registered_logs") or {}
+    if rl.get("newest"):
+        facts.append(f"newest registered log file ends at {rl['newest']}")
+    wanted = "".join(SYMPTOMS[s][1] for s in problem["symptoms"])
+    order = {s: i for i, s in enumerate(SEVERITIES)}
+
+    def relevance(f):
+        p = f.get("pattern") or ""
+        return (0 if p and p in wanted else 1, order[f["severity"]], wanted.find(p) if p and p in wanted else 99)
+    explaining = [f for f in sorted(a.findings, key=relevance) if f["severity"] in ("CRITICAL", "HIGH", "MEDIUM")
+                  and (not wanted or (f.get("pattern") or "#") in wanted or f["severity"] == "CRITICAL")
+                  and not (isinstance(f.get("evidence"), dict) and f["evidence"].get("after_capture_position"))]
+    return {"text": problem["text"], "dates": [str(d.date()) for d in dates], "symptoms": problem["symptoms"],
+            "facts": facts, "explaining_findings": explaining[:5]}
 
 
 # ── comparison of several reports ─────────────────────────────────────────────
@@ -810,6 +979,20 @@ def print_text(a: Analysis, top: int):
           + "  ".join(f"{ICONS[s]} {d['counts'][s]} {s.lower()}" for s in SEVERITIES if d["counts"][s]))
     print()
 
+    if a.problem:
+        pb = a.problem
+        print(f"🎯 Problem: {pb['text']}")
+        print(f"   understood: symptoms={', '.join(pb['symptoms']) or 'none recognized'}  dates={', '.join(pb['dates']) or 'none recognized'}")
+        for fact in pb["facts"]:
+            print(f"   • {fact}")
+        if pb["explaining_findings"]:
+            print("   👉 findings that explain it, most relevant first:")
+            for f in pb["explaining_findings"]:
+                print(f"      {ICONS[f['severity']]} {f['severity']:<8} {f['message']}")
+        else:
+            print("   👉 no CRITICAL / HIGH / MEDIUM finding matches it: the cause may be outside the database (connector, network, Kafka)")
+        print()
+
     print("✅ Prerequisites")
     sicon = {"PASS": "✅", "FAIL": "❌", "WARNING": "⚠️ ", "CHECK": "🔎", "INFO": "ℹ️ ", "UNKNOWN": "❔"}
     for p in a.prerequisites:
@@ -828,9 +1011,21 @@ def print_text(a: Analysis, top: int):
         print(f"      SCN start={_fmt_num(c['start_scn'])} captured={_fmt_num(c['captured_scn'])} applied={_fmt_num(c['applied_scn'])} "
               f"gap to current={_fmt_num(c['scn_gap'])}  messages captured={_fmt_num(c['messages_captured'])} enqueued={_fmt_num(c['messages_enqueued'])}  "
               f"redo mined={_fmt_num(c['redo_mined_mb'])} MB")
+        if c.get("captured_scn_time"):
+            print(f"      captured SCN ≈ {c['captured_scn_time']} ({_fmt_seconds(c['position_age_seconds'])} before the report)"
+                  + ("  ⛔ stuck" if c.get("stuck") else ""))
+        w = c.get("waiting_for_redo")
+        if w:
+            print(f"      waiting for redo: thread {w['thread']} sequence {w['sequence']} since {c.get('state_change_time') or '-'}  "
+                  + (f"registered, archived {w.get('first_time')} → {w.get('next_time')}" if w["archived"] else
+                     "registered, not archived yet" if w["registered"] else "not registered (online redo log, or not archived yet)"))
     rl = a.summary.get("registered_logs")
     if rl:
-        print(f"   registered log files: {rl['total']} ({rl['not_purgeable']} still needed, oldest {rl['oldest_needed'] or '-'})")
+        print(f"   registered log files: {rl['total']} ({rl['not_purgeable']} still needed, oldest {rl['oldest_needed'] or '-'}, newest {rl.get('newest') or '-'})")
+        for t in rl.get("threads", []):
+            gaps = ", ".join(f"{a}-{b}" if a != b else str(a) for a, b in t["missing_sequences"][:top])
+            print(f"      thread {t['thread']}: sequences {t['first_sequence']} → {t['last_sequence']}, newest {t['newest_next_time'] or '-'}"
+                  + (f", not registered: {gaps}" if gaps else ""))
     for s in a.summary.get("logminer", []):
         mem = f"{_fmt_num(s.get('used_mb'))}/{_fmt_num(s.get('max_mb'))} MB ({_fmt_num(s.get('used_pct'))}%)" if s.get("max_mb") else "-"
         print(f"   LogMiner session {s.get('session_id')} ({s.get('capture')}): state={s.get('state', '-')} memory={mem}")
@@ -998,6 +1193,7 @@ def _html_one(a: "Analysis") -> str:
                 f'<div class="kpi-value">{_e(val)}</div><div class="kpi-unit">{_e(unit)}</div></div>')
 
     lat = max((c["latency_seconds"] for c in caps if c.get("latency_seconds") is not None), default=None)
+    pos_age = max((c["position_age_seconds"] for c in caps if c.get("position_age_seconds") is not None), default=None)
     lm_pct = max((s["used_pct"] for s in lm if s.get("used_pct") is not None), default=None)
     status = ", ".join(sorted(set(s["status"] or "-" for s in srvs))) or "NOT PRESENT"
     spilled = sum((r.get("spilled") or 0) for r in a.summary.get("apply_readers", []))
@@ -1006,6 +1202,8 @@ def _html_one(a: "Analysis") -> str:
         kpi("Capture", ", ".join(sorted(set((c.get("status") or "-") for c in caps))) or "NOT PRESENT",
             ", ".join(sorted(set((c.get("state") or "-") for c in caps))), "ok" if caps and all(c.get("status") == "ENABLED" for c in caps) else "danger"),
         kpi("Capture latency", _fmt_seconds(lat), "worst capture", "danger" if lat and lat > LATENCY_CRIT else "warn" if lat and lat > LATENCY_WARN else "ok"),
+        kpi("Capture position", _fmt_seconds(pos_age), "captured SCN before the report",
+            "danger" if any(c.get("stuck") for c in caps) else "warn" if pos_age > POSITION_STALE_SECONDS else "ok") if pos_age is not None else "",
         kpi("Outbound server", status, ", ".join(s["name"] or "" for s in srvs), "ok" if status == "ATTACHED" else "danger"),
         kpi("LogMiner memory", f"{lm_pct:.0f}%" if lm_pct is not None else "-", "of max", "danger" if lm_pct and lm_pct > LOGMINER_MEM_CRIT else "warn" if lm_pct and lm_pct > LOGMINER_MEM_WARN else "ok"),
         kpi("LCRs sent", _fmt_num(sum((s.get("lcrs_sent") or 0) for s in srvs)), "since outbound start"),
@@ -1024,13 +1222,25 @@ def _html_one(a: "Analysis") -> str:
                     + (f'<div class="rec-action">{_e(f["action"])}</div>' if f.get("action") else "")
                     + "</div></div>")
     findings = "".join(recs) or "<div class='rec-card info'><span class='rec-text'>No finding.</span></div>"
+    problem = ""
+    if a.problem:
+        pb = a.problem
+        problem = (f"<div class='section-title'>🎯 Problem: {_e(pb['text'])}</div><div class='table-card'>"
+                   f"<div class='rec-meta'>symptoms: {_e(', '.join(pb['symptoms']) or 'none recognized')} · "
+                   f"dates: {_e(', '.join(pb['dates']) or 'none recognized')}</div><ul style='margin-left:18px'>"
+                   + "".join(f"<li>{_e(x)}</li>" for x in pb["facts"]) + "</ul>"
+                   + ("<div class='rec-meta'>Findings that explain it, most relevant first:</div><ul style='margin-left:18px'>"
+                      + "".join(f"<li><b>{_e(f['severity'])}</b> {_e(f['message'])}</li>" for f in pb["explaining_findings"]) + "</ul>"
+                      if pb["explaining_findings"] else "<div class='rec-meta'>No CRITICAL / HIGH / MEDIUM finding matches it.</div>")
+                   + "</div>")
 
     prereq = _table("✅ Prerequisites", ["Check", "Value", "Status", "Note"],
                     [[_e(p["check"]), _e(p["value"]), f"<span class='st {_e(p['status'])}'>{_e(p['status'])}</span>", _e(p["note"])]
                      for p in a.prerequisites], raw=True)
-    capture_t = _table("📸 Capture", ["Name", "Status", "State", "Latency", "Start SCN", "Captured SCN", "Applied SCN", "Gap to current",
+    capture_t = _table("📸 Capture", ["Name", "Status", "State", "Latency", "Start SCN", "Captured SCN", "Captured SCN time", "Applied SCN", "Gap to current",
                                      "Captured / enqueued", "Redo mined (MB)", "SGA used / allocated / max (MB)"],
                        [[c["name"], c["status"], c["state"], _fmt_seconds(c["latency_seconds"]), _fmt_num(c["start_scn"]), _fmt_num(c["captured_scn"]),
+                         f"{c['captured_scn_time']} ({_fmt_seconds(c['position_age_seconds'])} before the report)" if c.get("captured_scn_time") else "-",
                          _fmt_num(c["applied_scn"]), _fmt_num(c["scn_gap"]), f"{_fmt_num(c['messages_captured'])} / {_fmt_num(c['messages_enqueued'])}",
                          _fmt_num(c["redo_mined_mb"]), f"{_fmt_num(c['sga_used_mb'])} / {_fmt_num(c['sga_allocated_mb'])} / "
                          + (_fmt_num(c["max_sga_size_mb"]) if c.get("max_sga_size_mb") else "INFINITE")] for c in caps])
@@ -1065,7 +1275,7 @@ def _html_one(a: "Analysis") -> str:
             f"<div class='header-meta'>{meta}</div>"
             + (f"<div class='header-meta'>{_e(db['version'])}</div>" if db.get("version") else "")
             + f"<div class='health {_e(d['health'].replace(' ', '-'))}'>Overall health: {_e(d['health'])}</div></div>"
-            f"<div class='kpi-grid'>{kpis}</div>"
+            f"<div class='kpi-grid'>{kpis}</div>{problem}"
             f"<div class='section-title'>🔎 Findings</div><div class='recs-list'>{findings}</div>"
             + (f"<div class='table-card'><h2>🧩 Matched patterns</h2><ul style='margin-left:18px'>{patterns}</ul></div>" if patterns else "")
             + prereq + capture_t + lm_t + out_t + apply_t + queue_t + pool + rules_t + long_t)
@@ -1106,6 +1316,7 @@ def main() -> int:
     ap.add_argument("--json", action="store_true", help="Output JSON")
     ap.add_argument("--top", type=int, default=10, metavar="N", help="Max rows per list (default: 10)")
     ap.add_argument("--html-out", metavar="PATH", help="Write a self-contained HTML report")
+    ap.add_argument("--problem", metavar="TEXT", help="Problem statement (symptom, since when): matched against the report")
     args = ap.parse_args()
 
     reports = []
@@ -1121,6 +1332,9 @@ def main() -> int:
         reports.append(r)
     reports.sort(key=lambda r: r.generated or datetime.min)
     analyses = [Analysis(r, args.top).run() for r in reports]
+    if args.problem and args.problem.strip():
+        for a in analyses:
+            a.problem = correlate_problem(a, parse_problem(args.problem.strip(), a.r.generated))
     deltas = compare(analyses)
 
     if args.json:

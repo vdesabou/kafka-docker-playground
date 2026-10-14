@@ -6085,7 +6085,7 @@ playground_analyze_gc_logs_usage() {
 playground_analyze_oracle_xstream_report_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze oracle-xstream-report\n\n"
-    printf "  🅾️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)\n  \n  📊 Reads the HTML report of the Confluent diagnostics script (the file support\n  asks for, orclcdc_diag_<date>.html) and reports: prerequisites (archivelog,\n  supplemental logging, streams_pool_size, MAX_SGA_SIZE), the state of the\n  capture process, LogMiner, outbound server, apply reader, buffered queue and\n  streams pool with thresholds, open and long running transactions, overlapping\n  capture rules, alerts and errors of the last 7 days, the findings sorted by\n  severity with the report section and the exact values, and the matched\n  root-cause patterns.\n  \n  📈 Give several reports of the same database (repeat --file) to see what moved\n  between them: captured SCN, messages captured, LCRs sent, latency, restarts.\n  \n  🐳 With --container (default: oracle), it runs 'playground connector\n  oracle-cdc-xstream generate-report' on the running example first, and analyzes\n  the result.\n  \n  🧪 With --sample, it analyzes the reports shipped in\n  tools/xstream-analyzer/samples: a quick way to see what it reports without an\n  Oracle database.\n  \n  🌐 Also writes a self-contained HTML report (findings, prerequisites,\n  components, streams pool advice chart, deltas between reports) in\n  --output-dir, to share in a case; opened in the browser in an interactive\n  terminal\n  \n  🔖 Exit code is 0 when the analysis completed, 2 when the file is not an\n  orclcdc_diag report\n  \n  👉 Check documentation\n  https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script\n\n"
+    printf "  🅾️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)\n  \n  📊 Reads the HTML report of the Confluent diagnostics script (the file support\n  asks for, orclcdc_diag_<date>.html) and reports: prerequisites (archivelog,\n  supplemental logging, streams_pool_size, MAX_SGA_SIZE), the state of the\n  capture process (its position as a date, and whether it waits for redo it\n  cannot read), LogMiner, outbound server, apply reader, buffered queue and\n  streams pool with thresholds, open and long running transactions, overlapping\n  capture rules, alerts and errors of the last 7 days, the findings sorted by\n  severity with the report section and the exact values, and the matched\n  root-cause patterns.\n  \n  📈 Give several reports of the same database (repeat --file) to see what moved\n  between them: captured SCN, messages captured, LCRs sent, latency, restarts.\n  \n  🎯 Describe the problem with --problem (\"no records since 11th of OCT\"): the\n  report is matched against it, the date where the capture stopped is compared\n  with yours, and the findings that explain it come first.\n  \n  🐳 With --container (default: oracle), it runs 'playground connector\n  oracle-cdc-xstream generate-report' on the running example first, and analyzes\n  the result.\n  \n  🧪 With --sample, it analyzes the reports shipped in\n  tools/xstream-analyzer/samples: a quick way to see what it reports without an\n  Oracle database.\n  \n  🌐 Also writes a self-contained HTML report (findings, prerequisites,\n  components, streams pool advice chart, deltas between reports) in\n  --output-dir, to share in a case; opened in the browser in an interactive\n  terminal\n  \n  🔖 Exit code is 0 when the analysis completed, 2 when the file is not an\n  orclcdc_diag report\n  \n  👉 Check documentation\n  https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script\n\n"
   else
     printf "playground analyze oracle-xstream-report - 🅾️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)\n\n"
   fi
@@ -6113,8 +6113,13 @@ playground_analyze_oracle_xstream_report_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--sample, -s SAMPLE (repeatable)")"
-    printf "    🧪 Sample report of tools/xstream-analyzer/samples (repeat --sample to\n    compare several)\n    \n      healthy                connector running, idle database\n      large_transaction      uncommitted 150,000-row insert\n      detached               connector deleted: outbound server DETACHED\n      older_script_version   report of an older orclcdc_diag.sql\n      synthetic_failures     NOARCHIVELOG, capture ABORTED, flow control,\n    LogMiner memory, spills, alerts\n"
-    printf "    %s\n" "Allowed: healthy, large_transaction, detached, older_script_version, synthetic_failures"
+    printf "    🧪 Sample report of tools/xstream-analyzer/samples (repeat --sample to\n    compare several)\n    \n      healthy                connector running, idle database\n      large_transaction      uncommitted 150,000-row insert\n      detached               connector deleted: outbound server DETACHED\n      older_script_version   report of an older orclcdc_diag.sql\n      synthetic_failures     NOARCHIVELOG, capture ABORTED, flow control,\n    LogMiner memory, spills, alerts\n      missing_archived_log   capture WAITING FOR REDO on an archived log it\n    cannot read: nothing captured\n"
+    printf "    %s\n" "Allowed: healthy, large_transaction, detached, older_script_version, synthetic_failures, missing_archived_log"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--problem, -p PROBLEM")"
+    printf "    🎯 Problem statement, in your own words: symptom and since when (example: \"no\n    records processed since 11th of OCT\")\n    \n    The symptoms (no data, lag, missing data, duplicates, errors, memory) and\n    dates it recognizes are matched against the report: capture position as a\n    date, messages captured and LCRs sent, and the findings that explain it,\n    most relevant first\n"
     echo
 
     # :flag.usage
@@ -6146,6 +6151,7 @@ playground_analyze_oracle_xstream_report_usage() {
     printf "  playground analyze oracle-xstream-report --sample large_transaction --json\n"
     printf "  playground analyze oracle-xstream-report -f orclcdc_diag_20261013_0912.html\n"
     printf "  playground analyze oracle-xstream-report -f day1.html -f day2.html\n"
+    printf "  playground analyze oracle-xstream-report -f orclcdc_diag_20261013_1826.html\n  --problem \"no records processed since 11th of OCT\"\n"
     printf "  playground analyze oracle-xstream-report --container oracle\n"
     echo
 
@@ -34628,6 +34634,7 @@ playground_analyze_oracle_xstream_report_command() {
   output_dir="${args[--output-dir]}"
   json_out="${args[--json]}"
   top="${args[--top]}"
+  problem="${args[--problem]}"
 
   set +e
 
@@ -34691,6 +34698,9 @@ playground_analyze_oracle_xstream_report_command() {
   done
 
   analyzer_args=("${file_array[@]}" --top "$top")
+  if [[ -n "$problem" ]]; then
+      analyzer_args+=(--problem "$problem")
+  fi
 
   if [[ -n "$json_out" ]]; then
       python3 -I "$analyzer" "${analyzer_args[@]}" --json
@@ -64359,6 +64369,20 @@ playground_analyze_oracle_xstream_report_parse_requirements() {
         ;;
 
       # :flag.case
+      --problem | -p)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--problem']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--problem requires an argument: --problem, -p PROBLEM" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --output-dir | -o)
 
         # :flag.case_arg
@@ -64462,8 +64486,8 @@ playground_analyze_oracle_xstream_report_parse_requirements() {
   input_array=''
   eval "input_array=(${args[--sample]})"
   for i in "${input_array[@]}"; do
-    if [[ ! $i =~ ^(healthy|large_transaction|detached|older_script_version|synthetic_failures)$ ]]; then
-      printf "%s\n" "--sample must be one of: healthy, large_transaction, detached, older_script_version, synthetic_failures" >&2
+    if [[ ! $i =~ ^(healthy|large_transaction|detached|older_script_version|synthetic_failures|missing_archived_log)$ ]]; then
+      printf "%s\n" "--sample must be one of: healthy, large_transaction, detached, older_script_version, synthetic_failures, missing_archived_log" >&2
       exit 1
     fi
   done
@@ -86838,12 +86862,23 @@ playground_analyze_oracle_xstream_report_completion() {
             "detached"
             "older_script_version"
             "synthetic_failures"
+            "missing_archived_log"
           )
           completion_candidates "$completion_current" "${completion_values[@]}"
 
           return
         fi
         shift
+
+        ;;
+      --problem | -p)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--problem"]=1
 
         ;;
       --output-dir | -o)
@@ -86882,6 +86917,7 @@ playground_analyze_oracle_xstream_report_completion() {
     completion_flag_candidates --file "$completion_current" --file -f
     completion_flag_candidates --container "$completion_current" --container -c
     completion_flag_candidates --sample "$completion_current" --sample -s
+    completion_flag_candidates --problem "$completion_current" --problem -p
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --top "$completion_current" --top
