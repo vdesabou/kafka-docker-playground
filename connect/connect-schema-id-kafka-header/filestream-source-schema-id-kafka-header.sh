@@ -6,8 +6,8 @@ source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "8.0.99"
 then
-     logerror "CP 8.1.1 is required to have support for value.converter.value.schema.id.serializer configuration property"
-     exit 1
+     logwarn "CP 8.1.1 is required to have support for value.converter.value.schema.id.serializer configuration property"
+     exit 111
 fi
 
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}

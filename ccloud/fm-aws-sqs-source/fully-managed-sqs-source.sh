@@ -34,7 +34,7 @@ then
 fi
 set -e
 
-log "Create a FIFO queue $QUEUE_NAME in region ${AWS_REGION}"
+log "Create a queue $QUEUE_NAME in region ${AWS_REGION}"
 aws sqs create-queue --queue-name $QUEUE_NAME --region ${AWS_REGION} --tags "cflt_managed_by=user,cflt_managed_id=$USER"
 
 function cleanup_cloud_resources {

@@ -188,4 +188,4 @@ User `C##MYUSER` is altered to be identified by the client certificate:
 ALTER USER C##MYUSER IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
 ```
 
-The connector does not set `connection.user` / `connection.password`. Note that, unlike the sink example, `oracle19-mtls-db-auth.sh` does not set `"connection.oracle.net.authentication_services": "(TCPS)"` on the connector.
+The connector does not set `connection.user` / `connection.password`, and sets `"connection.oracle.net.authentication_services": "(TCPS)"`.

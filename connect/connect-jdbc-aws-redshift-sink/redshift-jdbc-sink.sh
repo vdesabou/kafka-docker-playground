@@ -168,7 +168,7 @@ EOF
 sleep 10
 
 log "Verify data is in Redshift"
-docker run -i -e CLUSTER="$CLUSTER" -v "${DIR}/customers.sql":/tmp/customers.sql debezium/postgres:15-alpine psql -h "$CLUSTER" -U "masteruser" -d "dev" -p "5439" << EOF
+docker run -i -e CLUSTER="$CLUSTER" debezium/postgres:15-alpine psql -h "$CLUSTER" -U "masteruser" -d "dev" -p "5439" << EOF
 myPassword1
 SELECT * from orders;
 EOF

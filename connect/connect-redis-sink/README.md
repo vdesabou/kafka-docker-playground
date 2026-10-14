@@ -6,7 +6,7 @@ Quickly test the [Redis Sink](https://docs.confluent.io/kafka-connectors/redis/c
 
 ## Prerequisites
 
-With CP 8.x, a connector version greater than 0.0.7 is required (the script exits with code 111 otherwise).
+With CP 8.x, connector version 0.0.7 or later is required (the script exits with code 111 otherwise).
 
 ## How to run
 
@@ -19,13 +19,13 @@ The Redis UI can be accessed at [http://localhost:5540/](http://localhost:5540/)
 ## What the script does
 
 1. Starts the environment with a Redis container.
-2. Produces 3 messages with key `key1` to topic `users` with `playground topic produce`.
+2. Produces 3 messages (keys `key1` to `key3`, values `value1` to `value3`) to topic `users` with `playground topic produce`.
 3. Creates the Redis sink connector `redis-sink` (`redis.hosts=redis:6379`, string key and value converters).
-4. Runs `redis-cli COMMAND GETKEYS` for the data keys and for the offset key `__kafka.offset.users.0` stored by the connector.
+4. Checks that Redis database 1 (the connector default `redis.database`) contains the data keys and the offset key `__kafka.offset.users.0`, and that `key1` is `value1`.
 
-Note: `COMMAND GETKEYS` only extracts the key names from the given command, it does not read the stored data. To check the content, use for example:
+Note: the connector writes to database 1, so pass `-n 1` to `redis-cli`:
 
 ```bash
-playground container exec --container redis --command "redis-cli GET key1"
-playground container exec --container redis --command "redis-cli GET __kafka.offset.users.0"
+playground container exec --container redis --command "redis-cli -n 1 GET key1"
+playground container exec --container redis --command "redis-cli -n 1 GET __kafka.offset.users.0"
 ```

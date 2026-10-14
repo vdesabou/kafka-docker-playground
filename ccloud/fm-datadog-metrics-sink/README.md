@@ -42,4 +42,4 @@ playground run -f fully-managed-datadog-metrics-sink.sh
 3. Produces one Avro metric record `perf.metric` with `playground topic produce`.
 4. Verifies the `success-<connector id>` and `error-<connector id>` topics with `playground topic consume`, and the connector lag.
 5. Outside CI only: checks with `dogshell search query perf.metric` that the metric exists in Datadog.
-6. The connector is not deleted by the script.
+6. Asks before deleting the connector.

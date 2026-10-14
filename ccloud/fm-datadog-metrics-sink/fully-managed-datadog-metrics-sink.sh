@@ -136,3 +136,8 @@ then
     cat /tmp/result.log
     grep "perf.metric" /tmp/result.log
 fi
+
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground connector delete --connector $connector_name

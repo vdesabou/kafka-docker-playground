@@ -47,7 +47,7 @@ GCP_KEYFILE_CONTENT=$(cat keyfile.json | jq -aRs . | sed 's/^"//' | sed 's/"$//'
 playground run -f fully-managed-gcs-sink.sh
 ```
 
-The script takes an optional positional argument: the bucket region (default `europe-west2`, also used as Confluent Cloud region).
+The bucket region defaults to `europe-west2` (also used as Confluent Cloud region), override it with `GCS_BUCKET_REGION`.
 
 | Script | Description |
 | --- | --- |

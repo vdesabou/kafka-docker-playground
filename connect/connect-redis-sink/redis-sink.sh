@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if connect_cp_version_greater_than_8 && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "0.0.7"
+if connect_cp_version_greater_than_8 && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "0.0.6"
 then
      logwarn "minimal supported connector version is 0.0.7 for CP 8.0"
      logwarn "see https://docs.confluent.io/platform/8.0/connect/supported-connector-version.html#"
@@ -35,7 +35,10 @@ EOF
 sleep 10
 
 log "Verify data is in Redis"
-playground container exec --container redis --command "redis-cli COMMAND GETKEYS \"MSET\" \"key1\" \"value1\" \"key2\" \"value2\" \"key3\" \"value3\""
-playground container exec --container redis --command "redis-cli COMMAND GETKEYS \"MSET\" \"__kafka.offset.users.0\" \"{\\\"topic\\\":\\\"users\\\",\\\"partition\\\":0,\\\"offset\\\":2}\"" > /tmp/result.log  2>&1
+# the connector writes to redis database 1 by default (redis.database)
+playground container exec --container redis --command "redis-cli -n 1 KEYS '*'" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "__kafka.offset.users.0" /tmp/result.log
+playground container exec --container redis --command "redis-cli -n 1 GET key1" > /tmp/result.log  2>&1
+cat /tmp/result.log
+grep "value1" /tmp/result.log

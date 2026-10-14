@@ -53,9 +53,9 @@ az storage container create \
 bootstrap_ccloud_environment "azure" "$AZURE_REGION"
 
 set +e
-playground topic delete --topic quickstart
+playground topic delete --topic quick-start-topic
 sleep 3
-playground topic create --topic quickstart --nb-partitions 1
+playground topic create --topic quick-start-topic --nb-partitions 1
 set -e
 
 log "Copy generalized.quickstart.json to container $AZURE_CONTAINER_NAME quickstart/generalized.quickstart.json"

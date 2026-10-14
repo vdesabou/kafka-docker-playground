@@ -47,11 +47,12 @@ then
     AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --is-fallback-public-client false --sign-in-audience AzureADandPersonalMicrosoftAccount --query appId -o tsv)
     if [ $? != 0 ]
     then
-        log "Failed to create Azure AD App. Attempting to delete existing app and recreate."
+        log "Failed to create Azure AD App. Looking for an existing app with the same name."
         EXISTING_APP_ID=$(az ad app list --display-name "$AZURE_AD_APP_NAME" --query "[0].appId" -o tsv)
         if [ ! -z "$EXISTING_APP_ID" ]
         then
-            log "✅ Using pre-configured App ID: $AZURE_DATALAKE_CLIENT_ID"
+            AZURE_DATALAKE_CLIENT_ID=$EXISTING_APP_ID
+            log "✅ Using existing App ID: $AZURE_DATALAKE_CLIENT_ID"
         fi
     fi
     AZURE_DATALAKE_CLIENT_PASSWORD=$(az ad app credential reset --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.password')

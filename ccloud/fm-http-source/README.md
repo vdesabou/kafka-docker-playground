@@ -29,8 +29,8 @@ playground run -f fully-managed-http-source-simple-incrementing.sh
 | Script | Description |
 | --- | --- |
 | `fully-managed-http-source-simple-incrementing.sh` | `SIMPLE_INCREMENTING` offset mode, one record per page from `/wiki/rest/api/space` |
-| `fully-managed-http-source-chaining-offset.sh` | Despite its name, uses `CURSOR_PAGINATION` offset mode (`/storage/v1/b/test-bucket/o`, 15 records across 3 pages) |
-| `fully-managed-http-source-cursor-pagination.sh` | Despite its name, uses `CHAINING` offset mode (POST search on `/test-index/_search`) |
+| `fully-managed-http-source-cursor-pagination.sh` | `CURSOR_PAGINATION` offset mode (`/storage/v1/b/test-bucket/o`, 15 records across 3 pages) |
+| `fully-managed-http-source-chaining-offset.sh` | `CHAINING` offset mode (POST search on `/test-index/_search`) |
 | `fully-managed-http-source-oauth2.sh` | OAuth2 client credentials, `SIMPLE_INCREMENTING` offset mode |
 
 ## What the script does

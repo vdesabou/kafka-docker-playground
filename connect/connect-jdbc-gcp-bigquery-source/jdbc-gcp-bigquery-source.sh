@@ -41,6 +41,8 @@ else
         echo -e "$GCP_KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${GCP_KEYFILE}
     fi
 fi
+SERVICE_ACCOUNT_EMAIL=${SERVICE_ACCOUNT_EMAIL:-$(jq -r .client_email ${GCP_KEYFILE})}
+log "Using service account $SERVICE_ACCOUNT_EMAIL"
 cd -
 
 # unique per environment, see cloud_resource_environment_id

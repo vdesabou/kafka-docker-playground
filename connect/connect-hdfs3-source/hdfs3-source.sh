@@ -91,24 +91,6 @@ playground container cp --source namenode:/tmp/hdfs-topic+0+0000000000+000000000
 
 playground  tools read-avro-file --file /tmp/hdfs-topic+0+0000000000+0000000000.avro
 
-if version_gt $TAG_BASE "5.9.0" || [[ "$TAG" = *ubi8 ]]
-then
-     :
-else
-     sleep 60
-     log "Check data with beeline"
-playground container exec --container hive-server --command "beeline" > /tmp/result.log  2>&1 <<-EOF
-!connect jdbc:hive2://hive-server:10000/testhive
-hive
-hive
-show create table hdfs-topic;
-select * from hdfs-topic;
-EOF
-     cat /tmp/result.log
-     grep "value1" /tmp/result.log
-fi
-
-
 log "Creating HDFS Source connector"
 playground connector create-or-update --connector hdfs3-source  << EOF
 {

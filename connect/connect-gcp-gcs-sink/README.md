@@ -25,7 +25,7 @@ playground run -f gcs-sink.sh
 | --- | --- |
 | `gcs-sink.sh` | GCS sink writing Avro files with the default partitioner |
 
-The bucket is created in region `europe-west2` (first script argument). Requires connector version 10.3.3 or later with CP 8.x (the script exits with code 111 otherwise).
+The bucket is created in region `europe-west2` (override with `GCS_BUCKET_REGION`). Requires connector version 10.3.3 or later with CP 8.x (the script exits with code 111 otherwise).
 
 ## What the script does
 

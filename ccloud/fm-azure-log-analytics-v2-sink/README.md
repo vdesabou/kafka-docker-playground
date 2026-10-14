@@ -33,4 +33,4 @@ playground run -f fully-managed-azure-log-analytics-v2-sink.sh
 4. Produces 10 Avro records to topic `log_analytics_topic` with `playground topic produce`.
 5. Creates the fully managed `AzureLogAnalyticsSinkV2` connector (`topic.to.table.map`, `table.to.dcr.map`) and shows its lag.
 6. Outside CI only: waits 3 minutes (ingestion latency) and queries the table with `az monitor log-analytics query`.
-7. Deletes the connector and the resource group at the end of the run (the Entra app created locally is not deleted).
+7. Deletes the connector and the resource group at the end of the run. `stop.sh` also deletes the Entra app created locally.

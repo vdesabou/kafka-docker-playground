@@ -107,12 +107,12 @@ EOF
 sleep 5
 
 log "Verify we have received the data in MyKafkaTopicName topic"
-set +e
-# it fails as cp is installed manually on ibm mq base image..
-# but records should be in the topic anyway
-playground topic consume --topic MyKafkaTopicName --min-expected-messages 2 --timeout 60
-# 16:40:49 ℹ️ ✨ Display content of topic MyKafkaTopicName, it contains 2 messages
-# 16:40:49 ℹ️ 🔮🙅 topic is not using any schema for key
-# 16:40:49 ℹ️ 🔮🙅 topic is not using any schema for value
-# OCI runtime exec failed: exec failed: unable to start container process: exec: "kafka-console-consumer": executable file not found in $PATH
-exit 0
+# playground topic consume does not work here: the connect image is the IBM MQ base image, without the kafka tools
+# get-number-records runs in the broker container
+nb_records=$(playground topic get-number-records --topic MyKafkaTopicName | tail -1)
+log "MyKafkaTopicName contains $nb_records records"
+if [ "$nb_records" -lt 2 ]
+then
+     logerror "❌ expected at least 2 records in MyKafkaTopicName, got $nb_records"
+     exit 1
+fi

@@ -45,9 +45,9 @@ docker rm -f python-ccloud-consumer python-ccloud-producer
 set -e
 
 log "Starting AVRO producer"
-docker run --name python-ccloud-producer --rm -v ${DIR}/librdkafka.config:/tmp/librdkafka.config -e TAG=$TAG vdesabou/python-ccloud-example-docker ./producer.py -f /tmp/librdkafka.config -t client_python_avro_$TAG
+docker run --name python-ccloud-producer --rm -v ${DIR}/librdkafka.config:/tmp/librdkafka.config -e TAG=$TAG vdesabou/python-ccloud-example-docker ./producer_ccsr.py -f /tmp/librdkafka.config -t client_python_avro_$TAG
 
 log "Starting AVRO consumer. Logs are in /tmp/result.log"
-docker run --name python-ccloud-consumer --rm -i -v ${DIR}/librdkafka.config:/tmp/librdkafka.config -e TAG=$TAG vdesabou/python-ccloud-example-docker ./consumer.py -f /tmp/librdkafka.config -t client_python_avro_$TAG > /tmp/result.log
+docker run --name python-ccloud-consumer --rm -i -v ${DIR}/librdkafka.config:/tmp/librdkafka.config -e TAG=$TAG vdesabou/python-ccloud-example-docker ./consumer_ccsr.py -f /tmp/librdkafka.config -t client_python_avro_$TAG > /tmp/result.log
 cat /tmp/result.log
 grep "alice" /tmp/result.log

@@ -15,7 +15,7 @@ An active Google Cloud Platform (GCP) account with authorization to create resou
 | `GCP_PROJECT` | GCP project id |
 | `GCP_KEYFILE_CONTENT` | Service account key content, if `./keyfile.json` is not present (see below) |
 
-The BigTable instance is created in zone `europe-west2-a` (first positional argument of the script).
+The BigTable instance is created in zone `europe-west2-a` (override with `GCP_BIGTABLE_REGION`).
 
 ### Enabling Cloud BigTable Admin API
 

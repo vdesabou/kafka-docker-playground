@@ -5,11 +5,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.4.0"; then
-    logwarn "Audit logs is only available from Confluent Platform 5.4.1"
+    logwarn "Multi-Cluster Schema Registry is only available from Confluent Platform 5.4.1"
     exit 111
 fi
 
-playground start-environment --environment ccloud --docker-compose-override-file "${PWD}/docker-compose.yml"
+# get the Confluent Cloud cluster and Schema Registry details, the containers are started below on-premise
+bootstrap_ccloud_environment
 
 # generate sr.json config
 sed -e "s|:SCHEMA_REGISTRY_URL:|$SCHEMA_REGISTRY_URL|g" \

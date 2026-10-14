@@ -8,7 +8,6 @@ Quickly test the [JDBC Sink](https://docs.confluent.io/kafka-connectors/jdbc/cur
 
 * With CP 8.x, the JDBC connector version must be 10.8.0 or later (the scripts exit with code 111 otherwise).
 * `hive-jdbc-sink-datadirect.sh`: download and install the [Progress DataDirect JDBC driver for Apache Hive](https://documentation.progress.com/output/DataDirect/jdbcquickstarts/hivejdbc_quickstart/index.html#page/jdbchivequick%2Fquick-start-3a-progress-datadirect-for-jdbc-for-ap.html%23) manually and place it as `hive.jar` in this folder. The script exits if it is missing.
-* `hive-jsbc-sink.sh` also copies `hive.jar` into the connector `lib` folder, so it needs the file too.
 
 ## How to run
 
@@ -19,7 +18,7 @@ playground run -f hive-jdbc-sink-datadirect.sh
 | Script | Description |
 | --- | --- |
 | `hive-jdbc-sink-datadirect.sh` | JDBC sink using the Progress DataDirect driver (`jdbc:datadirect:hive://...`). Working version |
-| `hive-jsbc-sink.sh` | JDBC sink using the Apache Hive JDBC driver 3.1.2 (`jdbc:hive2://...`). **Not working**, see below |
+| `hive-jdbc-sink.sh` | JDBC sink using the Apache Hive JDBC driver 3.1.2 (`jdbc:hive2://...`). **Not working**, see below |
 
 ## What the script does
 

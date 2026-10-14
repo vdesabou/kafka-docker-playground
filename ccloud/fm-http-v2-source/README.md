@@ -36,7 +36,7 @@ playground run -f fully-managed-http-v2-source-simple-incrementing.sh
 ## What the script does
 
 1. Bootstraps the Confluent Cloud environment and starts the HTTP server and Ngrok.
-2. Recreates the target topic (`http-source-topic-v2` or `http-topic`).
+2. Recreates the target topic (`http-topic-spaces`, `http-source-topic-v2` or `http-topic`).
 3. Creates the `HttpSourceV2` fully managed connector with one API (`apis.num` 1) and the variant's offset mode.
 4. For the OAuth2 variant, gets a token from the local server and posts a message to `/api/messages`.
 5. Verifies that the expected number of records is in the topic (`playground topic consume`).

@@ -9,8 +9,8 @@ then
      exit 1
 fi
 
-GCP_FUNCTION_REGION=${1:-europe-west2}
-GCP_FUNCTION_FUNCTION=${2:-function-11}
+GCP_FUNCTION_REGION=${GCP_FUNCTION_REGION:-${1:-europe-west2}}
+GCP_FUNCTION_FUNCTION=${GCP_FUNCTION_FUNCTION:-${2:-function-11}}
 
 cd ../../ccloud/fm-gcp-cloud-functions-gen2-sink
 GCP_KEYFILE="${DIR}/keyfile.json"

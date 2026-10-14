@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 if [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "2.5.0"; then
     logwarn "this is available since version 2.5.1 only"
-    exit 1
+    exit 111
 fi
 
 if connect_cp_version_greater_than_8 && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "2.6.15"

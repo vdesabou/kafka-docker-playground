@@ -26,7 +26,7 @@ playground run -f gcs-source-backup-and-restore.sh
 | `gcs-source-backup-and-restore.sh` | Backup and Restore mode: GCS sink writes Avro files, GCS source reads them back into `copy_of_gcs-topic` |
 | `gcs-source-generalized.sh` | Generalized mode (`mode=GENERIC`): reads a JSON file uploaded to the bucket into `quick-start-topic` (requires connector 2.1.0+) |
 
-The bucket is created in region `europe-west2` (first script argument). Version guards (exit code 111): connector 2.0.0+ requires CP 6.0+, and CP 8.x requires connector 2.6.16+.
+The bucket is created in region `europe-west2` (override with `GCS_BUCKET_REGION`). Version guards (exit code 111): connector 2.0.0+ requires CP 6.0+, and CP 8.x requires connector 2.6.16+.
 
 ## What the scripts do
 

@@ -6,7 +6,7 @@ Quickly test writing the Schema Registry schema ID in a Kafka record header inst
 
 ## Prerequisites
 
-* CP 8.1.0 or later (support for `value.converter.value.schema.id.serializer`). The script exits with an error on older versions.
+* CP 8.1.0 or later (support for `value.converter.value.schema.id.serializer`). The script exits with code `111` on older versions.
 
 ## How to run
 

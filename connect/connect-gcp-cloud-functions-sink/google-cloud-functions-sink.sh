@@ -17,8 +17,8 @@ then
      exit 1
 fi
 
-GCP_FUNCTION_REGION=${1:-europe-west2}
-GCP_FUNCTION_FUNCTION=${2:-function-1}
+GCP_FUNCTION_REGION=${GCP_FUNCTION_REGION:-${1:-europe-west2}}
+GCP_FUNCTION_FUNCTION=${GCP_FUNCTION_FUNCTION:-${2:-function-1}}
 
 cd ../../connect/connect-gcp-cloud-functions-sink
 GCP_KEYFILE="${PWD}/keyfile.json"

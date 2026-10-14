@@ -76,7 +76,7 @@ cd ../../connect/connect-aws-lambda-sink/my-add-function
 rm -f add.zip
 zip add.zip add.py
 cp add.zip /tmp/
-aws lambda create-function --function-name "$LAMBDA_FUNCTION_NAME" --zip-file fileb:///tmp/add.zip --handler add.lambda_handler --runtime python3.8 --role "$LAMBDA_ROLE" --tags "cflt_managed_by=user,cflt_managed_id=$USER"
+aws lambda create-function --function-name "$LAMBDA_FUNCTION_NAME" --zip-file fileb:///tmp/add.zip --handler add.lambda_handler --runtime python3.12 --role "$LAMBDA_ROLE" --tags "cflt_managed_by=user,cflt_managed_id=$USER"
 cd -
 
 log "Attaching AWSLambdaBasicExecutionRole policy to $LAMBDA_ROLE_NAME (to be able to see logs in Cloudwatch)"

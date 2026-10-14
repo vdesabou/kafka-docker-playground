@@ -21,7 +21,7 @@ log "Creating fully managed connector"
 playground connector create-or-update --connector $connector_name << EOF
 {
      "connector.class": "DatagenSource",
-     "name": "DatagenSource",
+     "name": "$connector_name",
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",

@@ -177,7 +177,7 @@ cd ../../connect/connect-jdbc-snowflake-source
 
 # Copy JAR files to confluent-hub
 mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/
-cp ../../connect/connect-jdbc-snowflake-source/snowflake-jdbc-3.13.16.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/snowflake-jdbc-3.13.16.jar
+cp ../../connect/connect-jdbc-snowflake-source/snowflake-jdbc-3.24.2.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/snowflake-jdbc-3.24.2.jar
 cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"

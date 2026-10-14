@@ -9,7 +9,7 @@ set +e
 docker rm -f dotnet-ccloud-consumer dotnet-ccloud-producer
 set -e
 
-CORE_DOT_VERSION=${1:-3.1}
+CORE_DOT_VERSION=${CORE_DOT_VERSION:-${1:-3.1}}
 
 bootstrap_ccloud_environment
 

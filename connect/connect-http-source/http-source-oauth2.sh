@@ -2,6 +2,7 @@
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+source ${DIR}/../../scripts/utils.sh
 
 if connect_cp_version_greater_than_8 && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "0.1.99"
 then
@@ -9,8 +10,6 @@ then
      logwarn "see https://docs.confluent.io/platform/8.0/connect/supported-connector-version.html#"
      exit 111
 fi
-
-source ${DIR}/../../scripts/utils.sh
 
 
 cd ../../connect/connect-http-source/

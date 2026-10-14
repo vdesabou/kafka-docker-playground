@@ -32,7 +32,6 @@ cd ../../connect/connect-jdbc-hive-sink
 
 # Copy JAR files to confluent-hub
 mkdir -p ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/
-cp ../../connect/connect-jdbc-hive-sink/hive.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/hive.jar
 cp ../../connect/connect-jdbc-hive-sink/hive-jdbc-3.1.2-standalone.jar ../../confluent-hub/confluentinc-kafka-connect-jdbc/lib/hive-jdbc-3.1.2-standalone.jar
 cd -
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
