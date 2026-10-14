@@ -88,8 +88,17 @@ wait_for_ccloud_connector_up $connector_name 180
 sleep 10
 
 log "Verify data is in Redis"
-# list the keys of all redis databases (the database used depends on the connector)
-playground container exec --container redis --command "for db in \$(seq 0 15); do redis-cli -n \$db KEYS '*'; done" > /tmp/result.log  2>&1
+# list the keys of all redis databases (the database used depends on the connector), retry for up to 2 minutes
+for i in $(seq 1 24)
+do
+     playground --output-level WARN container exec --container redis --command "for db in \$(seq 0 15); do redis-cli -n \$db KEYS '*'; done" > /tmp/result.log  2>&1
+     if grep -q "redis_users" /tmp/result.log
+     then
+          break
+     fi
+     log "redis_users not found yet in redis, retrying in 5 seconds"
+     sleep 5
+done
 cat /tmp/result.log
 grep "redis_users" /tmp/result.log
 
