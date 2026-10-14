@@ -1,4 +1,4 @@
-# Runtime of playground debug heap-analyze: Eclipse Memory Analyzer (MAT), run headless.
+# Runtime of playground analyze heap-dump: Eclipse Memory Analyzer (MAT), run headless.
 # Only MAT is baked here; analyze-heap.sh and digest.py are mounted at run time.
 FROM eclipse-temurin:21-jre
 

@@ -1,4 +1,5 @@
 eval "file_array=(${args[--file]})"
+eval "sample_array=(${args[--sample]})"
 container="${args[--container]}"
 count="${args[--count]}"
 interval="${args[--interval]}"
@@ -9,13 +10,28 @@ top="${args[--top]}"
 
 set +e
 
-if [[ ${#file_array[@]} -gt 0 && -n "$container" ]]; then
-    logerror "❌ Provide either --file or --container, not both"
+nb_modes=0
+[[ ${#file_array[@]} -gt 0 ]] && nb_modes=$((nb_modes + 1))
+[[ ${#sample_array[@]} -gt 0 ]] && nb_modes=$((nb_modes + 1))
+[[ -n "$container" ]] && nb_modes=$((nb_modes + 1))
+if [[ $nb_modes -gt 1 ]]; then
+    logerror "❌ Provide only one of --file, --container and --sample"
     exit 1
 fi
-if [[ ${#file_array[@]} -eq 0 && -z "$container" ]]; then
+if [[ $nb_modes -eq 0 ]]; then
     container="connect"
 fi
+
+# ── Sample mode: dumps shipped with the analyzer ──
+samples_dir="$root_folder/tools/thread-analyzer/samples"
+for sample in "${sample_array[@]}"
+do
+    case "$sample" in
+        deadlock_jdk21) file_array+=("$samples_dir/jdk21-scenario-1.txt" "$samples_dir/jdk21-scenario-2.txt" "$samples_dir/jdk21-scenario-3.txt") ;;
+        deadlock_jdk8) file_array+=("$samples_dir/jdk8-scenario.txt") ;;
+        healthy_connect) file_array+=("$samples_dir/cp-8.3.2-connect-kill-3-logs.txt") ;;
+    esac
+done
 
 analyzer="$root_folder/tools/thread-analyzer/thread_dump_analyzer.py"
 if [[ ! -f "$analyzer" ]]; then

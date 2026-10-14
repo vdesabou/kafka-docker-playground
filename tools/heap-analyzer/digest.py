@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Text digest of an Eclipse MAT analysis, printed by playground debug heap-analyze.
+Text digest of an Eclipse MAT analysis, printed by playground analyze heap-dump.
 
 Reads what analyze-heap.sh left in the output directory:
   queries/overview.txt            heap_dump_overview query

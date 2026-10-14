@@ -1,6 +1,6 @@
 # xstream-analyzer
 
-Oracle XStream CDC diagnostics report analyzer behind `playground debug oracle-xstream-analyze`. Standard
+Oracle XStream CDC diagnostics report analyzer behind `playground analyze oracle-xstream-report`. Standard
 library only, runs with the host `python3` (3.9+), like `tools/thread-analyzer/` and `gc-analysis/`.
 
 ## What it reads
@@ -54,12 +54,12 @@ Exit codes: `0` analysis done, `2` not an `orclcdc_diag` report, `1` usage error
 Always go through the playground CLI:
 
 ```bash
-playground debug oracle-xstream-analyze --sample synthetic_failures --html                   # try it on a shipped sample
-playground debug oracle-xstream-analyze -s large_transaction -s detached                      # compare two samples
-playground debug oracle-xstream-analyze -f orclcdc_diag_20261013_0912.html                   # customer report
-playground debug oracle-xstream-analyze -f day1.html -f day2.html --html                      # what moved between two reports, as HTML
-playground debug oracle-xstream-analyze -c oracle                                             # running example: generate the report, then analyze
-playground debug oracle-xstream-analyze -f orclcdc_diag_20261013_0912.html --json             # for agents and scripts
+playground analyze oracle-xstream-report --sample synthetic_failures --html                   # try it on a shipped sample
+playground analyze oracle-xstream-report -s large_transaction -s detached                      # compare two samples
+playground analyze oracle-xstream-report -f orclcdc_diag_20261013_0912.html                   # customer report
+playground analyze oracle-xstream-report -f day1.html -f day2.html --html                      # what moved between two reports, as HTML
+playground analyze oracle-xstream-report -c oracle                                             # running example: generate the report, then analyze
+playground analyze oracle-xstream-report -f orclcdc_diag_20261013_0912.html --json             # for agents and scripts
 ```
 
 `--sample <name>` (repeatable) picks `samples/orclcdc_diag_<name>.html` (names below), from any directory.
@@ -80,4 +80,4 @@ be compared.
 | `samples/orclcdc_diag_synthetic_failures.html` | built from the healthy sample by `samples/make_synthetic_failures.py`: NOARCHIVELOG, no supplemental logging, capture ABORTED with ORA-01291, flow control, LogMiner memory at 97 %, streams pool advice with spills, alerts and events |
 
 To get a new reference report after `orclcdc_diag.sql` changes, run the example and
-`playground debug oracle-xstream-analyze -c oracle`.
+`playground analyze oracle-xstream-report -c oracle`.

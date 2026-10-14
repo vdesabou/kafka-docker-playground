@@ -1,10 +1,30 @@
 heap_file="${args[--file]}"
+sample="${args[--sample]}"
 output_dir="${args[--output-dir]}"
 report_type="${args[--report-type]}"
 max_memory="${args[--max-memory]}"
 compare_file="${args[--compare]}"
 
 set +e
+
+if [[ -n "$heap_file" && -n "$sample" ]]; then
+    logerror "❌ Provide either --file or --sample, not both"
+    exit 1
+fi
+if [[ -z "$heap_file" && -z "$sample" ]]; then
+    logerror "❌ Must provide --file <heap dump> (or --sample leak to try it)"
+    exit 1
+fi
+
+# ── Sample mode: dumps shipped with the analyzer (see tools/heap-analyzer/samples) ──
+samples_dir="$root_folder/tools/heap-analyzer/samples"
+case "$sample" in
+    leak) heap_file="$samples_dir/session-cache-leak-2.hprof.gz" ;;
+    leak_growth)
+        heap_file="$samples_dir/session-cache-leak-1.hprof.gz"
+        compare_file="$samples_dir/session-cache-leak-2.hprof.gz"
+    ;;
+esac
 
 if [[ ! -f "$heap_file" && $heap_file == *"@"* ]]
 then

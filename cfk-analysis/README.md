@@ -1,6 +1,6 @@
 # cfk-analysis
 
-Python tool that powers `playground debug cfk cfk-bundle-analyze`.
+Python tool that powers `playground analyze cfk-bundle`.
 
 It scans a Confluent for Kubernetes (CFK) support bundle (`kubectl confluent support-bundle`, or
 `playground debug cfk generate-bundle`), as a directory or a `.tar/.tar.gz/.tgz/.zip` archive, and sorts what
@@ -40,10 +40,23 @@ is a tool failure.
 Always go through the playground CLI:
 
 ```bash
-playground debug cfk cfk-bundle-analyze --bundle ./customer-bundle.tar.gz
-playground debug cfk cfk-bundle-analyze --bundle ./bundle.tgz --html
-playground debug cfk cfk-bundle-analyze --bundle ./bundle.tar.gz --json > report.json
+playground analyze cfk-bundle --sample synthetic          # try it on the sample below
+playground analyze cfk-bundle --bundle ./customer-bundle.tar.gz
+playground analyze cfk-bundle --bundle ./bundle.tgz --html
+playground analyze cfk-bundle --bundle ./bundle.tar.gz --json > report.json
 ```
 
-See `playground debug cfk cfk-bundle-analyze --help` for all flags. For a raw ERROR digest of every log in the
-bundle, `playground debug analyze-logs -f <bundle>` complements it.
+See `playground analyze cfk-bundle --help` for all flags. For a raw ERROR digest of every log in the
+bundle, `playground analyze logs -f <bundle>` complements it.
+
+## Sample
+
+`samples/cfk-support-bundle-synthetic.tar.gz` (`--sample synthetic`) is a synthetic bundle in the
+`kubectl confluent support-bundle` layout, built by `samples/make_synthetic_bundle.py` (deterministic: same
+bytes on every run). It tells one story: kafka-2 crash-looping on an expired TLS certificate with a pending
+PersistentVolumeClaim, connect-0 OOMKilled with a FAILED connector task, Schema Registry failing to
+authenticate, and operator reconcile errors (19 issues, 4 critical).
+
+```bash
+python3 -I cfk-analysis/samples/make_synthetic_bundle.py cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz
+```

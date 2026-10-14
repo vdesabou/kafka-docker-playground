@@ -344,5 +344,5 @@ then
 fi
 
 log "⚙️ You can use <playground connector oracle-cdc-xstream generate-report> to generate oracle cdc xstream connector diagnostics report"
-log "🔎 You can use <playground debug oracle-xstream-analyze -c oracle> to generate and analyze it"
+log "🔎 You can use <playground analyze oracle-xstream-report -c oracle> to generate and analyze it"
 log "🐞 You can use <playground connector oracle-cdc-xstream debug> to execute various SQL commands to debug xstream components"

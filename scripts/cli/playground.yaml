@@ -1895,26 +1895,430 @@ subcommands:
         Default is 1 second
 
         Default value: 1
+- name: analyze
+  description: "\U0001F50E Analyze commands\n\nTurn what you collected into findings:
+    each command reads a file (a\ndump, a log, a bundle, a report, yours or one a
+    customer sent) or takes\nit from a running container, and prints a digest with
+    what is wrong and\nwhat to do. They all work offline, and --sample runs them on
+    the samples\nshipped with the playground, to see what they report.\n\n  thread-dump
+    \            deadlocks, lock contention, stuck threads\n  gc-logs                 GC
+    pauses, failures, live set, leak trend\n  heap-dump               Eclipse MAT
+    leak suspects, retained sizes\n  logs                    ERROR/FATAL digest of
+    logs, folders, zips\n  oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n
+    \ cfk-bundle              CFK support bundle: pods, events, CRs, logs\n\nTo collect
+    them: playground debug thread-dump, heap-dump, flight-recorder,\nplayground connector
+    oracle-cdc-xstream generate-report,\nplayground debug cfk generate-bundle."
+  usage: playground analyze COMMAND
+  options: []
+  aliases:
+  - analyse
+  subcommands:
+  - name: thread-dump
+    description: "\U0001F9F5 Analyze java thread dumps: deadlocks, lock contention,
+      stuck and CPU-hungry threads\n\n\U0001F4CA Reads jstack / jcmd Thread.print
+      / kill -3 output (JDK 8 to 25), several dumps per file and container logs included,
+      and reports: thread states and pools, deadlocks, locks with their owner and
+      waiters, the most common stacks, and with several dumps of the same JVM: threads
+      stuck on the same frames, the CPU used by each thread between dumps, and growing
+      thread pools. Kafka / Connect aware (task threads, herder, broker request handlers).\n\n\U0001F433
+      With --container (default: connect), it takes --count dumps --interval seconds
+      apart with kill -3: the JVM prints them to the container logs, no JDK is needed
+      in the image.\n\n\U0001F516 Use --html to generate a self-contained HTML report\n\n\U0001F9EA
+      With --sample, it analyzes the samples shipped in tools/thread-analyzer/samples:
+      a quick way to see what it reports.\n\n\U0001F516 Exit code is 0 when the analysis
+      completed, 2 when no thread dump was found"
+    usage: playground analyze thread-dump [OPTIONS]
+    options:
+    - names:
+      - "--file"
+      - "-f"
+      argument: FILE
+      description: "\U0001F5D2️  Thread dump file or folder (repeat --file for several
+        dumps of the same JVM)\n\n❕ Provide only one of --file, --container and --sample\n\n\U0001F393
+        Tip: use <tab> completion to trigger fzf completion\n        use <option+enter>
+        to use the value you typed manually\n\nRepeatable: ✓ Yes"
+    - names:
+      - "--sample"
+      - "-s"
+      argument: SAMPLE
+      description: "\U0001F9EA Sample of tools/thread-analyzer/samples\n\n  deadlock_jdk21
+        \    3 jstack -l dumps of one JDK 21 JVM, 3 s apart: deadlock, blocked threads,
+        CPU-hot thread, stuck task, leaking pool\n  deadlock_jdk8      the same scenario,
+        one dump, JDK 8\n  healthy_connect    3 kill -3 dumps of a healthy CP 8.3.2
+        Connect worker, from its container logs\n\nRepeatable: ✓ Yes\nAllowed values:
+        deadlock_jdk21, deadlock_jdk8, healthy_connect"
+    - names:
+      - "--container"
+      - "-c"
+      - "--pod"
+      - "-p"
+      argument: CONTAINER
+      description: "\U0001F433 Container name (or pod name when cfk environment is
+        used) to take the thread dumps from (default: connect)"
+    - names:
+      - "--count"
+      argument: COUNT
+      description: "\U0001F522 Number of thread dumps to take with --container (default:
+        3)\n\nDefault value: 3"
+    - names:
+      - "--interval"
+      argument: INTERVAL
+      description: |-
+        ⏱️  Seconds between two thread dumps with --container (default: 5)
+
+        Default value: 5
+    - names:
+      - "--output-dir"
+      - "-o"
+      argument: OUTPUT_DIR
+      description: "\U0001F4C2 Output directory for the thread dumps taken from a
+        container and the HTML report (default: ./thread-analysis-output)\n\nDefault
+        value: ./thread-analysis-output"
+    - names:
+      - "--html"
+      argument: ''
+      description: "\U0001F310 Generate a self-contained HTML report (inline SVG charts,
+        works offline)"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F5C2️  Output JSON (skips the text report and the HTML)"
+    - names:
+      - "--top"
+      argument: TOP
+      description: "\U0001F4CA Number of rows per section (default: 10)\n\nDefault
+        value: 10"
+  - name: heap-dump
+    description: "\U0001F52C Analyze a heap dump with Eclipse Memory Analyzer (MAT),
+      run headless in Docker\n\n\U0001F575️ Prints a text digest: heap overview, MAT
+      leak suspects (accumulation point and who holds it) and the top retained sizes
+      by class (dominator tree), and saves the MAT HTML reports (Leak_Suspects, System_Overview,
+      Top_Components) in --output-dir\n\n\U0001F4C8 Use --compare with a second dump
+      of the same JVM, taken later under the same load, to see which classes grow\n\n\U0001F433
+      MAT needs roughly as much memory as the used heap of the dump (1 to 1.5x the
+      .hprof size): give Docker enough memory or use --max-memory\n\n\U0001F9EA With
+      --sample, it analyzes the samples shipped in tools/heap-analyzer/samples: a
+      quick way to see what it reports.\n\n\U0001F516 Exit code is 0 when the analysis
+      completed, non-zero when MAT could not parse the dump (truncated file, out of
+      memory): never a \"healthy\" verdict on a failed parse"
+    usage: playground analyze heap-dump [OPTIONS]
+    options:
+    - names:
+      - "--file"
+      - "-f"
+      argument: FILE
+      description: "\U0001F516 Heap dump to analyze (.hprof, or .hprof.gz as written
+        by jcmd GC.heap_dump -gz)\n\n\U0001F393 Tip: use <tab> completion to trigger
+        fzf completion\n        use <option+enter> to use the value you typed manually"
+    - names:
+      - "--sample"
+      - "-s"
+      argument: SAMPLE
+      description: "\U0001F9EA Sample of tools/heap-analyzer/samples\n\n  leak          heap
+        dump of a JVM with a session cache that is never evicted (MAT leak suspect)\n
+        \ leak_growth   two dumps of that JVM a few seconds apart: the later one is
+        compared with the earlier one\n\nAllowed values: leak, leak_growth"
+    - names:
+      - "--output-dir"
+      - "-o"
+      argument: OUTPUT_DIR
+      description: "\U0001F4C2 Output directory for the digest (summary.txt), the
+        MAT HTML reports and mat.log (default: ./heap-analysis)\n\nDefault value:
+        ./heap-analysis"
+    - names:
+      - "--report-type"
+      - "-r"
+      argument: REPORT_TYPE
+      description: "\U0001F4CB MAT HTML report(s) to generate (the text digest is
+        always printed)\n\n- all: the three reports below\n- leaks: leak suspects
+        (org.eclipse.mat.api:suspects)\n- overview: system overview (org.eclipse.mat.api:overview)\n-
+        top-components: top components per class loader (org.eclipse.mat.api:top_components)\n\nDefault
+        value: all\nAllowed values: all, leaks, overview, top-components"
+    - names:
+      - "--max-memory"
+      argument: MAX_MEMORY
+      description: "\U0001F9E0 Java heap given to MAT, e.g. 8g (default: 80% of the
+        Docker memory)"
+    - names:
+      - "--compare"
+      argument: FILE
+      description: "\U0001F4C8 Second heap dump of the same JVM, taken later: prints
+        the classes whose instance count and shallow size grew"
+  - name: logs
+    description: "\U0001F525 Show a digest of ERROR/FATAL records found in log files,
+      folders or zip bundles\n\nThe offline counterpart of 'playground container logs
+      --errors', for\nlogs that do not come from a running container: a customer support\nbundle,
+      a CI artifact, a log file you were sent.\n\nRepeated records are de-duplicated
+      with an occurrence count, stack\ntraces are collapsed to the exception chain
+      (\"Caused by:\") plus a few\nframes of the deepest cause. Only records with
+      an explicit level are\nreported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"),
+      plus\nuncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\nlevel-less
+      lines that merely contain \"error\" or \"failed\", never are.\n\n\U0001F4C2
+      Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\nare extracted
+      in a temporary folder, .gz files are decompressed on the\nfly, binary files
+      are skipped. Only files with findings are shown."
+    usage: playground analyze logs [OPTIONS]
+    options:
+    - names:
+      - "--file"
+      - "-f"
+      argument: FILE
+      description: "\U0001F5D2️  Log file, folder, .zip, .tar(.gz) or .gz file to
+        analyze\n\n\U0001F393 Tip: can be set several times\n\nRepeatable: ✓ Yes"
+    - names:
+      - "--sample"
+      - "-s"
+      argument: SAMPLE
+      description: "\U0001F9EA Sample of tools/log-analyzer/samples\n\n  connect_task_failure
+        \  Connect worker log: Oracle XStream connector with a wrong password, an
+        unknown\n                         outbound server, and a task failing after
+        the outbound server was stopped\n  support_bundle         .zip with that log
+        and a gzipped broker log\n\nRepeatable: ✓ Yes\nAllowed values: connect_task_failure,
+        support_bundle"
+    - names:
+      - "--include-warnings"
+      argument: ''
+      description: "\U0001F7E0 Also report WARN records"
+    - names:
+      - "--max-findings"
+      argument: MAX_FINDINGS
+      description: |-
+        ✂️ Maximum number of distinct records to show per file (default 40)
+
+        Default value: 40
+  - name: gc-logs
+    description: "\U0001F4C8 Analyze JVM Garbage Collection logs\n\n\U0001F4CA Parses
+      GC logs from local files / folders or a running container: pause statistics,
+      Full GC and evacuation / concurrent mode failures, live set, heap floor trend
+      (leak), allocation stalls, GC causes, and recommendations backed by a finding
+      (Kafka-aware: compared with Kafka's own G1 settings).\n\n\U0001F516 Supports
+      JDK 7–21+ and all major collectors: G1GC, CMS, ZGC, Generational ZGC, Shenandoah,
+      ParallelGC, SerialGC, in legacy (-XX:+PrintGCDetails) and unified (-Xlog:gc*)
+      formats, any decoration\n\n\U0001F504 Pass every rotated file (kafkaServer-gc.log,
+      .log.0…, .gz) or their folder: files are ordered by timestamp and split by JVM
+      restart, the latest run is analyzed (--run to pick another)\n\n\U0001F9EA With
+      --sample, it analyzes the samples shipped in gc-analysis/samples: a quick way
+      to see what it reports.\n\n\U0001F516 Exit code is 0 when the analysis completed,
+      2 when no GC event was found\n\n\U0001F516 Use --html to generate a self-contained
+      HTML dashboard (inline SVG charts, no external resource)"
+    usage: playground analyze gc-logs [OPTIONS]
+    options:
+    - names:
+      - "--file"
+      - "-f"
+      argument: FILE
+      description: "\U0001F5D2️  GC log file or folder to analyze (repeat --file for
+        the rotated files of the same JVM)\n\n❕ Provide only one of --file, --container
+        and --sample\n\n\U0001F393 Tip: use <tab> completion to trigger fzf completion\n
+        \       use <option+enter> to use the value you typed manually\n\nRepeatable:
+        ✓ Yes"
+    - names:
+      - "--sample"
+      - "-s"
+      argument: SAMPLE
+      description: "\U0001F9EA Sample of gc-analysis/samples (repeat --sample to analyze
+        several)\n\n  GC logs of JDK 7 to 21 and every collector, named <jdk>_<collector>[_real]\n
+        \ (_real: taken from a real Kafka / Connect JVM)\n\nRepeatable: ✓ Yes\nAllowed
+        values: jdk7_parallel, jdk8_cms, jdk8_cms_cmf_real, jdk8_g1gc, jdk8_g1gc_details_real,
+        jdk11_zgc, jdk17_g1gc, jdk17_shenandoah, jdk21_g1_kafka_real, jdk21_genzgc,
+        jdk21_genzgc_real"
+    - names:
+      - "--container"
+      - "-c"
+      - "--pod"
+      - "-p"
+      argument: CONTAINER
+      description: "\U0001F433 Container name (or pod name when cfk environment is
+        used) to extract the GC log from\n\n❕ Provide only one of --file, --container
+        and --sample\n\n\U0001F516 The GC log path is read from the java command line
+        (-Xlog:gc*:file=… or -Xloggc:…), and its rotated files are copied too.\n     Falls
+        back to searching common log locations (/var/log, /tmp, /opt).\n     The playground
+        environments write a GC log for ZooKeeper, brokers, controllers, Schema Registry,\n
+        \    Connect (-loggc, /var/log/kafka/<name>-gc.log) and ksqlDB."
+    - names:
+      - "--output-dir"
+      - "-o"
+      argument: OUTPUT_DIR
+      description: "\U0001F4C2 Output directory for the HTML report and the GC logs
+        copied from a container (default: ./gc-analysis-output)\n\nDefault value:
+        ./gc-analysis-output"
+    - names:
+      - "--html"
+      argument: ''
+      description: "\U0001F310 Generate a self-contained HTML report (inline SVG charts,
+        works offline)\n\n\U0001F4CA Report includes: pause timeline, heap before
+        / after GC, pause distribution,\n   GC types, KPI cards, JVM runs, recommendations
+        with the flag to set"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F5C2️  Output JSON stats (skips text report and HTML)"
+    - names:
+      - "--run"
+      argument: RUN
+      description: "\U0001F504 JVM run to analyze when the log spans restarts (default:
+        the latest, see the \"JVM runs\" table)"
+    - names:
+      - "--top-pauses"
+      argument: TOP_PAUSES
+      description: "\U0001F4CA Number of longest pauses to display in the report (default:
+        10)\n\nDefault value: 10"
+  - name: oracle-xstream-report
+    description: "\U0001F17E️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)\n\n\U0001F4CA
+      Reads the HTML report of the Confluent diagnostics script (the file support
+      asks for, orclcdc_diag_<date>.html) and reports: prerequisites (archivelog,
+      supplemental logging, streams_pool_size, MAX_SGA_SIZE), the state of the capture
+      process, LogMiner, outbound server, apply reader, buffered queue and streams
+      pool with thresholds, open and long running transactions, overlapping capture
+      rules, alerts and errors of the last 7 days, the findings sorted by severity
+      with the report section and the exact values, and the matched root-cause patterns.\n\n\U0001F4C8
+      Give several reports of the same database (repeat --file) to see what moved
+      between them: captured SCN, messages captured, LCRs sent, latency, restarts.\n\n\U0001F433
+      With --container (default: oracle), it runs 'playground connector oracle-cdc-xstream
+      generate-report' on the running example first, and analyzes the result.\n\n\U0001F9EA
+      With --sample, it analyzes the reports shipped in tools/xstream-analyzer/samples:
+      a quick way to see what it reports without an Oracle database.\n\n\U0001F516
+      Use --html to generate a self-contained HTML report, to share in a case\n\n\U0001F516
+      Exit code is 0 when the analysis completed, 2 when the file is not an orclcdc_diag
+      report\n\n\U0001F449 Check documentation https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script"
+    usage: playground analyze oracle-xstream-report [OPTIONS]
+    options:
+    - names:
+      - "--file"
+      - "-f"
+      argument: FILE
+      description: "\U0001F5D2️  orclcdc_diag HTML report (repeat --file for several
+        reports of the same database)\n\n❕ Provide only one of --file, --container
+        and --sample\n\n\U0001F393 Tip: use <tab> completion to trigger fzf completion\n
+        \       use <option+enter> to use the value you typed manually\n\nRepeatable:
+        ✓ Yes"
+    - names:
+      - "--container"
+      - "-c"
+      argument: CONTAINER
+      description: "\U0001F433 Oracle container of a running XStream example to generate
+        the report from (default: oracle)"
+    - names:
+      - "--sample"
+      - "-s"
+      argument: SAMPLE
+      description: "\U0001F9EA Sample report of tools/xstream-analyzer/samples (repeat
+        --sample to compare several)\n\n  healthy                connector running,
+        idle database\n  large_transaction      uncommitted 150,000-row insert\n  detached
+        \              connector deleted: outbound server DETACHED\n  older_script_version
+        \  report of an older orclcdc_diag.sql\n  synthetic_failures     NOARCHIVELOG,
+        capture ABORTED, flow control, LogMiner memory, spills, alerts\n\nRepeatable:
+        ✓ Yes\nAllowed values: healthy, large_transaction, detached, older_script_version,
+        synthetic_failures"
+    - names:
+      - "--output-dir"
+      - "-o"
+      argument: OUTPUT_DIR
+      description: "\U0001F4C2 Output directory for the report generated with --container
+        and the HTML report (default: ./xstream-analysis-output)\n\nDefault value:
+        ./xstream-analysis-output"
+    - names:
+      - "--html"
+      argument: ''
+      description: "\U0001F310 Generate a self-contained HTML report (findings, prerequisites,
+        components, streams pool advice chart, deltas between reports)"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F5C2️  Output JSON (findings, prerequisites, summary per
+        component, deltas between reports)"
+    - names:
+      - "--top"
+      argument: TOP
+      description: "\U0001F4CA Maximum number of rows per list: transactions, alerts,
+        errors, tables (default: 10)\n\nDefault value: 10"
+  - name: cfk-bundle
+    description: "\U0001F4E6 Analyze a Confluent for Kubernetes (CFK) support bundle\n\n\U0001F50D
+      Checks Warning events, pods (phase, waiting reasons, restarts, OOMKilled), every
+      platform.confluent.io custom resource (phase/state, ready replicas, False conditions,
+      failed connector tasks) and the ERROR/FATAL records of every log (rotated and
+      .gz included, with their Caused by chain and an occurrence count), sorts them
+      into ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,
+      storage, scheduling, …) and prints concrete remediation steps per category.\n\n✅
+      Works offline on any bundle produced by kubectl confluent support-bundle (or
+      playground debug cfk generate-bundle): no cfk environment needed.\n\n\U0001F512
+      Sanitization (secrets / IPs / hostnames / emails / LDAP DNs) is ON by default.
+      It is best effort: review the output before sharing it. Pass --no-sanitize only
+      for internal/test bundles.\n\n\U0001F516 Accepts a directory or a .tar / .tar.gz
+      / .tgz / .zip archive.\n\n\U0001F516 Use --json to emit machine-readable output
+      for downstream tooling.\n\n\U0001F9EA With --sample, it analyzes the samples
+      shipped in cfk-analysis/samples: a quick way to see what it reports.\n\n\U0001F516
+      Exit code is 0 when the analysis completed (whatever was found, read the summary),
+      64 for an invalid, unsafe or empty bundle."
+    usage: playground analyze cfk-bundle [OPTIONS]
+    options:
+    - names:
+      - "--bundle"
+      - "-b"
+      argument: PATH
+      description: "\U0001F5C2️  Path to the CFK support bundle (directory or .tar/.tar.gz/.tgz/.zip)"
+    - names:
+      - "--sample"
+      - "-s"
+      argument: SAMPLE
+      description: "\U0001F9EA Sample of cfk-analysis/samples\n\n  synthetic   CFK
+        bundle: kafka-2 crash-looping on an expired certificate, pending volume, OOMKilled
+        Connect\n              pod, failed connector task, Schema Registry authentication
+        failure, operator reconcile errors\n\nAllowed values: synthetic"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F4C4 Emit machine-readable JSON (includes per-issue recommendation)
+        instead of the text report"
+    - names:
+      - "--no-sanitize"
+      argument: ''
+      description: "⚠️  Disable sanitization of IPs, hostnames, emails, and credentials.\n\n\U0001F6AB
+        NEVER use this for customer bundles. Internal/test bundles only."
+    - names:
+      - "--severity"
+      argument: LEVEL
+      description: "\U0001F39A️  Filter issues by minimum severity (critical | high
+        | medium | low)\n\nAllowed values: critical, high, medium, low"
+    - names:
+      - "--top"
+      argument: "N"
+      description: "\U0001F522 Max number of issues to display per category in text
+        mode (default: 5)\n\nDefault value: 5"
+    - names:
+      - "--include-warnings"
+      argument: ''
+      description: "⚠️  Also report WARN log records that match no known category
+        (WARN records matching a known category are always reported)"
+    - names:
+      - "--html"
+      argument: ''
+      description: "\U0001F310 Generate a self-contained HTML report and open it in
+        the default browser\n\n❕ No external CDN/network needed — single offline-viewable
+        file you can share."
+    - names:
+      - "--output-dir"
+      argument: DIR
+      description: "\U0001F4C1 Directory for the HTML report (default: ./cfk-reports).
+        Only used with --html.\n\nDefault value: ./cfk-reports"
 - name: debug
   description: "\U0001F41E Debug commands\n\nThe heavy tooling, made usable: the JDK
     utilities, tcpdump, iptables and\nthe analysis tools are run inside the right
     container, installed on the\nfly when missing, and their output is brought back
     to your machine.\n\n\U0001F40C It hangs, or it is slow\n  thread-dump         what
-    every thread is doing right now\n  thread-analyze      deadlocks, lock contention,
-    stuck and CPU-hungry threads\n  flight-recorder     record the JVM over a period,
-    open it in JMC\n  gc-analyze          GC pauses, failures, live set and leak trend\n\n\U0001F4BE
-    It eats memory\n  heap-dump           take a .hprof, optionally as a histogram\n
-    \ heap-analyze        run Eclipse MAT on it, leak suspects report\n\n\U0001F310
-    It is a network or TLS problem\n  tcp-dump            capture traffic, open it
-    in Wireshark\n  testssl             probe a TLS endpoint, locally or in the cloud\n
-    \ block-traffic       cut a route with iptables, to simulate an outage\n  java-debug
-    \         turn on the JVM SSL, Kerberos or class loading traces\n\n\U0001F52C
-    It is in the code\n  log-level set       raise the level of any package, without
-    a restart\n  enable-remote-debugging   attach your IDE debugger to a container\n
-    \ jscissors           trace method calls, arguments and return values\n\n\U0001F525
-    It is in someone else's logs\n  analyze-logs        error digest of log files,
-    folders or zip bundles\n\n\U0001F4E6 Hand it over\n  generate-diagnostics   a
-    support bundle for connect or broker"
+    every thread is doing right now\n  flight-recorder     record the JVM over a period,
+    open it in JMC\n\n\U0001F4BE It eats memory\n  heap-dump           take a .hprof,
+    optionally as a histogram\n\n\U0001F310 It is a network or TLS problem\n  tcp-dump
+    \           capture traffic, open it in Wireshark\n  testssl             probe
+    a TLS endpoint, locally or in the cloud\n  block-traffic       cut a route with
+    iptables, to simulate an outage\n  java-debug          turn on the JVM SSL, Kerberos
+    or class loading traces\n\n\U0001F52C It is in the code\n  log-level set       raise
+    the level of any package, without a restart\n  enable-remote-debugging   attach
+    your IDE debugger to a container\n  jscissors           trace method calls, arguments
+    and return values\n\n\U0001F4E6 Hand it over\n  generate-diagnostics   a support
+    bundle for connect or broker\n\n\U0001F50E To analyze what you collected (thread
+    dumps, GC logs, heap dumps,\nlogs, Oracle XStream reports, CFK bundles): playground
+    analyze"
   usage: playground debug COMMAND
   options: []
   subcommands:
@@ -1983,7 +2387,7 @@ subcommands:
       in the image and the container is not restarted. It falls back to jstack -l
       when the dump does not reach the logs.\n\n\U0001F393 Tip: take two or three
       dumps a few seconds apart. Threads that appear\nin the same place every time
-      are the ones that are really blocked. playground debug thread-analyze does it
+      are the ones that are really blocked. playground analyze thread-dump does it
       and analyzes them."
     usage: playground debug thread-dump [OPTIONS]
     options:
@@ -2003,69 +2407,6 @@ subcommands:
         java.util.concurrent locks (\"Locked ownable synchronizers\"). Needs a JDK
         in the image (on cfk, a debug container is attached); the container is never
         restarted"
-  - name: thread-analyze
-    description: "\U0001F9F5 Analyze java thread dumps: deadlocks, lock contention,
-      stuck and CPU-hungry threads\n\n\U0001F4CA Reads jstack / jcmd Thread.print
-      / kill -3 output (JDK 8 to 25), several dumps per file and container logs included,
-      and reports: thread states and pools, deadlocks, locks with their owner and
-      waiters, the most common stacks, and with several dumps of the same JVM: threads
-      stuck on the same frames, the CPU used by each thread between dumps, and growing
-      thread pools. Kafka / Connect aware (task threads, herder, broker request handlers).\n\n\U0001F433
-      With --container (default: connect), it takes --count dumps --interval seconds
-      apart with kill -3: the JVM prints them to the container logs, no JDK is needed
-      in the image.\n\n\U0001F516 Use --html to generate a self-contained HTML report\n\n\U0001F516
-      Exit code is 0 when the analysis completed, 2 when no thread dump was found"
-    usage: playground debug thread-analyze [OPTIONS]
-    options:
-    - names:
-      - "--file"
-      - "-f"
-      argument: FILE
-      description: "\U0001F5D2️  Thread dump file or folder (repeat --file for several
-        dumps of the same JVM)\n\n❕ Provide either --file or --container, not both\n\n\U0001F393
-        Tip: use <tab> completion to trigger fzf completion\n        use <option+enter>
-        to use the value you typed manually\n\nRepeatable: ✓ Yes"
-    - names:
-      - "--container"
-      - "-c"
-      - "--pod"
-      - "-p"
-      argument: CONTAINER
-      description: "\U0001F433 Container name (or pod name when cfk environment is
-        used) to take the thread dumps from (default: connect)"
-    - names:
-      - "--count"
-      argument: COUNT
-      description: "\U0001F522 Number of thread dumps to take with --container (default:
-        3)\n\nDefault value: 3"
-    - names:
-      - "--interval"
-      argument: INTERVAL
-      description: |-
-        ⏱️  Seconds between two thread dumps with --container (default: 5)
-
-        Default value: 5
-    - names:
-      - "--output-dir"
-      - "-o"
-      argument: OUTPUT_DIR
-      description: "\U0001F4C2 Output directory for the thread dumps taken from a
-        container and the HTML report (default: ./thread-analysis-output)\n\nDefault
-        value: ./thread-analysis-output"
-    - names:
-      - "--html"
-      argument: ''
-      description: "\U0001F310 Generate a self-contained HTML report (inline SVG charts,
-        works offline)"
-    - names:
-      - "--json"
-      argument: ''
-      description: "\U0001F5C2️  Output JSON (skips the text report and the HTML)"
-    - names:
-      - "--top"
-      argument: TOP
-      description: "\U0001F4CA Number of rows per section (default: 10)\n\nDefault
-        value: 10"
   - name: heap-dump
     description: "\U0001F47B Take a heap dump\n\n\U0001F516 It will save output to
       a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/)
@@ -2091,222 +2432,6 @@ subcommands:
       - "--histo"
       argument: ''
       description: "\U0001F4CA print histogram of java object heap"
-  - name: heap-analyze
-    description: "\U0001F52C Analyze a heap dump with Eclipse Memory Analyzer (MAT),
-      run headless in Docker\n\n\U0001F575️ Prints a text digest: heap overview, MAT
-      leak suspects (accumulation point and who holds it) and the top retained sizes
-      by class (dominator tree), and saves the MAT HTML reports (Leak_Suspects, System_Overview,
-      Top_Components) in --output-dir\n\n\U0001F4C8 Use --compare with a second dump
-      of the same JVM, taken later under the same load, to see which classes grow\n\n\U0001F433
-      MAT needs roughly as much memory as the used heap of the dump (1 to 1.5x the
-      .hprof size): give Docker enough memory or use --max-memory\n\n\U0001F516 Exit
-      code is 0 when the analysis completed, non-zero when MAT could not parse the
-      dump (truncated file, out of memory): never a \"healthy\" verdict on a failed
-      parse"
-    usage: playground debug heap-analyze [OPTIONS]
-    options:
-    - names:
-      - "--file"
-      - "-f"
-      argument: FILE
-      description: "\U0001F516 Heap dump to analyze (.hprof, or .hprof.gz as written
-        by jcmd GC.heap_dump -gz)\n\n\U0001F393 Tip: use <tab> completion to trigger
-        fzf completion\n        use <option+enter> to use the value you typed manually\n\nRequired:
-        ✓ Yes"
-    - names:
-      - "--output-dir"
-      - "-o"
-      argument: OUTPUT_DIR
-      description: "\U0001F4C2 Output directory for the digest (summary.txt), the
-        MAT HTML reports and mat.log (default: ./heap-analysis)\n\nDefault value:
-        ./heap-analysis"
-    - names:
-      - "--report-type"
-      - "-r"
-      argument: REPORT_TYPE
-      description: "\U0001F4CB MAT HTML report(s) to generate (the text digest is
-        always printed)\n\n- all: the three reports below\n- leaks: leak suspects
-        (org.eclipse.mat.api:suspects)\n- overview: system overview (org.eclipse.mat.api:overview)\n-
-        top-components: top components per class loader (org.eclipse.mat.api:top_components)\n\nDefault
-        value: all\nAllowed values: all, leaks, overview, top-components"
-    - names:
-      - "--max-memory"
-      argument: MAX_MEMORY
-      description: "\U0001F9E0 Java heap given to MAT, e.g. 8g (default: 80% of the
-        Docker memory)"
-    - names:
-      - "--compare"
-      argument: FILE
-      description: "\U0001F4C8 Second heap dump of the same JVM, taken later: prints
-        the classes whose instance count and shallow size grew"
-  - name: analyze-logs
-    description: "\U0001F525 Show a digest of ERROR/FATAL records found in log files,
-      folders or zip bundles\n\nThe offline counterpart of 'playground container logs
-      --errors', for\nlogs that do not come from a running container: a customer support\nbundle,
-      a CI artifact, a log file you were sent.\n\nRepeated records are de-duplicated
-      with an occurrence count, stack\ntraces are collapsed to the exception chain
-      (\"Caused by:\") plus a few\nframes of the deepest cause. Only records with
-      an explicit level are\nreported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"),
-      plus\nuncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\nlevel-less
-      lines that merely contain \"error\" or \"failed\", never are.\n\n\U0001F4C2
-      Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\nare extracted
-      in a temporary folder, .gz files are decompressed on the\nfly, binary files
-      are skipped. Only files with findings are shown."
-    usage: playground debug analyze-logs [OPTIONS]
-    options:
-    - names:
-      - "--file"
-      - "-f"
-      argument: FILE
-      description: "\U0001F5D2️  Log file, folder, .zip, .tar(.gz) or .gz file to
-        analyze\n\n\U0001F393 Tip: can be set several times\n\nRequired: ✓ Yes\nRepeatable:
-        ✓ Yes"
-    - names:
-      - "--include-warnings"
-      argument: ''
-      description: "\U0001F7E0 Also report WARN records"
-    - names:
-      - "--max-findings"
-      argument: MAX_FINDINGS
-      description: |-
-        ✂️ Maximum number of distinct records to show per file (default 40)
-
-        Default value: 40
-  - name: gc-analyze
-    description: "\U0001F4C8 Analyze JVM Garbage Collection logs\n\n\U0001F4CA Parses
-      GC logs from local files / folders or a running container: pause statistics,
-      Full GC and evacuation / concurrent mode failures, live set, heap floor trend
-      (leak), allocation stalls, GC causes, and recommendations backed by a finding
-      (Kafka-aware: compared with Kafka's own G1 settings).\n\n\U0001F516 Supports
-      JDK 7–21+ and all major collectors: G1GC, CMS, ZGC, Generational ZGC, Shenandoah,
-      ParallelGC, SerialGC, in legacy (-XX:+PrintGCDetails) and unified (-Xlog:gc*)
-      formats, any decoration\n\n\U0001F504 Pass every rotated file (kafkaServer-gc.log,
-      .log.0…, .gz) or their folder: files are ordered by timestamp and split by JVM
-      restart, the latest run is analyzed (--run to pick another)\n\n\U0001F516 Exit
-      code is 0 when the analysis completed, 2 when no GC event was found\n\n\U0001F516
-      Use --html to generate a self-contained HTML dashboard (inline SVG charts, no
-      external resource)"
-    usage: playground debug gc-analyze [OPTIONS]
-    options:
-    - names:
-      - "--file"
-      - "-f"
-      argument: FILE
-      description: "\U0001F5D2️  GC log file or folder to analyze (repeat --file for
-        the rotated files of the same JVM)\n\n❕ Provide either --file or --container,
-        not both\n\n\U0001F393 Tip: use <tab> completion to trigger fzf completion\n
-        \       use <option+enter> to use the value you typed manually\n\nRepeatable:
-        ✓ Yes"
-    - names:
-      - "--container"
-      - "-c"
-      - "--pod"
-      - "-p"
-      argument: CONTAINER
-      description: "\U0001F433 Container name (or pod name when cfk environment is
-        used) to extract the GC log from\n\n❕ Provide either --file or --container,
-        not both\n\n\U0001F516 The GC log path is read from the java command line
-        (-Xlog:gc*:file=… or -Xloggc:…), and its rotated files are copied too.\n     Falls
-        back to searching common log locations (/var/log, /tmp, /opt).\n     The playground
-        environments write a GC log for ZooKeeper, brokers, controllers, Schema Registry,\n
-        \    Connect (-loggc, /var/log/kafka/<name>-gc.log) and ksqlDB."
-    - names:
-      - "--output-dir"
-      - "-o"
-      argument: OUTPUT_DIR
-      description: "\U0001F4C2 Output directory for the HTML report and the GC logs
-        copied from a container (default: ./gc-analysis-output)\n\nDefault value:
-        ./gc-analysis-output"
-    - names:
-      - "--html"
-      argument: ''
-      description: "\U0001F310 Generate a self-contained HTML report (inline SVG charts,
-        works offline)\n\n\U0001F4CA Report includes: pause timeline, heap before
-        / after GC, pause distribution,\n   GC types, KPI cards, JVM runs, recommendations
-        with the flag to set"
-    - names:
-      - "--json"
-      argument: ''
-      description: "\U0001F5C2️  Output JSON stats (skips text report and HTML)"
-    - names:
-      - "--run"
-      argument: RUN
-      description: "\U0001F504 JVM run to analyze when the log spans restarts (default:
-        the latest, see the \"JVM runs\" table)"
-    - names:
-      - "--top-pauses"
-      argument: TOP_PAUSES
-      description: "\U0001F4CA Number of longest pauses to display in the report (default:
-        10)\n\nDefault value: 10"
-  - name: oracle-xstream-analyze
-    description: "\U0001F17E️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)\n\n\U0001F4CA
-      Reads the HTML report of the Confluent diagnostics script (the file support
-      asks for, orclcdc_diag_<date>.html) and reports: prerequisites (archivelog,
-      supplemental logging, streams_pool_size, MAX_SGA_SIZE), the state of the capture
-      process, LogMiner, outbound server, apply reader, buffered queue and streams
-      pool with thresholds, open and long running transactions, overlapping capture
-      rules, alerts and errors of the last 7 days, the findings sorted by severity
-      with the report section and the exact values, and the matched root-cause patterns.\n\n\U0001F4C8
-      Give several reports of the same database (repeat --file) to see what moved
-      between them: captured SCN, messages captured, LCRs sent, latency, restarts.\n\n\U0001F433
-      With --container (default: oracle), it runs 'playground connector oracle-cdc-xstream
-      generate-report' on the running example first, and analyzes the result.\n\n\U0001F9EA
-      With --sample, it analyzes the reports shipped in tools/xstream-analyzer/samples:
-      a quick way to see what it reports without an Oracle database.\n\n\U0001F516
-      Use --html to generate a self-contained HTML report, to share in a case\n\n\U0001F516
-      Exit code is 0 when the analysis completed, 2 when the file is not an orclcdc_diag
-      report\n\n\U0001F449 Check documentation https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script"
-    usage: playground debug oracle-xstream-analyze [OPTIONS]
-    options:
-    - names:
-      - "--file"
-      - "-f"
-      argument: FILE
-      description: "\U0001F5D2️  orclcdc_diag HTML report (repeat --file for several
-        reports of the same database)\n\n❕ Provide only one of --file, --container
-        and --sample\n\n\U0001F393 Tip: use <tab> completion to trigger fzf completion\n
-        \       use <option+enter> to use the value you typed manually\n\nRepeatable:
-        ✓ Yes"
-    - names:
-      - "--container"
-      - "-c"
-      argument: CONTAINER
-      description: "\U0001F433 Oracle container of a running XStream example to generate
-        the report from (default: oracle)"
-    - names:
-      - "--sample"
-      - "-s"
-      argument: SAMPLE
-      description: "\U0001F9EA Sample report of tools/xstream-analyzer/samples (repeat
-        --sample to compare several)\n\n  healthy                connector running,
-        idle database\n  large_transaction      uncommitted 150,000-row insert\n  detached
-        \              connector deleted: outbound server DETACHED\n  older_script_version
-        \  report of an older orclcdc_diag.sql\n  synthetic_failures     NOARCHIVELOG,
-        capture ABORTED, flow control, LogMiner memory, spills, alerts\n\nRepeatable:
-        ✓ Yes\nAllowed values: healthy, large_transaction, detached, older_script_version,
-        synthetic_failures"
-    - names:
-      - "--output-dir"
-      - "-o"
-      argument: OUTPUT_DIR
-      description: "\U0001F4C2 Output directory for the report generated with --container
-        and the HTML report (default: ./xstream-analysis-output)\n\nDefault value:
-        ./xstream-analysis-output"
-    - names:
-      - "--html"
-      argument: ''
-      description: "\U0001F310 Generate a self-contained HTML report (findings, prerequisites,
-        components, streams pool advice chart, deltas between reports)"
-    - names:
-      - "--json"
-      argument: ''
-      description: "\U0001F5C2️  Output JSON (findings, prerequisites, summary per
-        component, deltas between reports)"
-    - names:
-      - "--top"
-      argument: TOP
-      description: "\U0001F4CA Maximum number of rows per list: transactions, alerts,
-        errors, tables (default: 10)\n\nDefault value: 10"
   - name: tcp-dump
     description: "\U0001F575️‍♂️ Take a tcp dump (sniffing network)\n\nCaptures the
       traffic in or out of a container for --duration seconds and\nbrings the capture
@@ -2526,67 +2651,6 @@ subcommands:
     usage: playground debug cfk COMMAND
     options: []
     subcommands:
-    - name: cfk-bundle-analyze
-      description: "\U0001F4E6 Analyze a Confluent for Kubernetes (CFK) support bundle\n\n\U0001F50D
-        Checks Warning events, pods (phase, waiting reasons, restarts, OOMKilled),
-        every platform.confluent.io custom resource (phase/state, ready replicas,
-        False conditions, failed connector tasks) and the ERROR/FATAL records of every
-        log (rotated and .gz included, with their Caused by chain and an occurrence
-        count), sorts them into ~30 categories (pod failures, TLS, auth, MDS/RBAC,
-        license, KRaft, replication, storage, scheduling, …) and prints concrete remediation
-        steps per category.\n\n✅ Works offline on any bundle produced by kubectl confluent
-        support-bundle (or playground debug cfk generate-bundle): no cfk environment
-        needed.\n\n\U0001F512 Sanitization (secrets / IPs / hostnames / emails / LDAP
-        DNs) is ON by default. It is best effort: review the output before sharing
-        it. Pass --no-sanitize only for internal/test bundles.\n\n\U0001F516 Accepts
-        a directory or a .tar / .tar.gz / .tgz / .zip archive.\n\n\U0001F516 Use --json
-        to emit machine-readable output for downstream tooling.\n\n\U0001F516 Exit
-        code is 0 when the analysis completed (whatever was found, read the summary),
-        64 for an invalid, unsafe or empty bundle."
-      usage: playground debug cfk cfk-bundle-analyze [OPTIONS]
-      options:
-      - names:
-        - "--bundle"
-        - "-b"
-        argument: PATH
-        description: "\U0001F5C2️  Path to the CFK support bundle (directory or .tar/.tar.gz/.tgz/.zip)\n\nRequired:
-          ✓ Yes"
-      - names:
-        - "--json"
-        argument: ''
-        description: "\U0001F4C4 Emit machine-readable JSON (includes per-issue recommendation)
-          instead of the text report"
-      - names:
-        - "--no-sanitize"
-        argument: ''
-        description: "⚠️  Disable sanitization of IPs, hostnames, emails, and credentials.\n\n\U0001F6AB
-          NEVER use this for customer bundles. Internal/test bundles only."
-      - names:
-        - "--severity"
-        argument: LEVEL
-        description: "\U0001F39A️  Filter issues by minimum severity (critical | high
-          | medium | low)\n\nAllowed values: critical, high, medium, low"
-      - names:
-        - "--top"
-        argument: "N"
-        description: "\U0001F522 Max number of issues to display per category in text
-          mode (default: 5)\n\nDefault value: 5"
-      - names:
-        - "--include-warnings"
-        argument: ''
-        description: "⚠️  Also report WARN log records that match no known category
-          (WARN records matching a known category are always reported)"
-      - names:
-        - "--html"
-        argument: ''
-        description: "\U0001F310 Generate a self-contained HTML report and open it
-          in the default browser\n\n❕ No external CDN/network needed — single offline-viewable
-          file you can share."
-      - names:
-        - "--output-dir"
-        argument: DIR
-        description: "\U0001F4C1 Directory for the HTML report (default: ./cfk-reports).
-          Only used with --html.\n\nDefault value: ./cfk-reports"
     - name: generate-bundle
       description: |-
         ⛑️ Generate a Support bundle
@@ -4226,7 +4290,7 @@ subcommands:
       say nothing about it.\n\n  debug             query the XStream views from the
       Oracle container\n  generate-report   run the official diagnostics script\n\nOnly
       available when an oracle container is running. To analyze a report\n(also one
-      sent by a customer), use 'playground debug oracle-xstream-analyze'."
+      sent by a customer), use 'playground analyze oracle-xstream-report'."
     usage: playground connector oracle-cdc-xstream COMMAND
     options: []
     subcommands:
@@ -4234,7 +4298,7 @@ subcommands:
       description: "⚙️ Generate and open oracle cdc xstream connector diagnostics\n\nRuns
         the diagnostics script Confluent support asks for, and opens the\nresult.
         This is the file to attach to a case rather than pasting\nindividual query
-        outputs.\n\n\U0001F50E 'playground debug oracle-xstream-analyze -c oracle'
+        outputs.\n\n\U0001F50E 'playground analyze oracle-xstream-report -c oracle'
         generates it and\nanalyzes it in one go.\n\nSee https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script"
       usage: playground connector oracle-cdc-xstream generate-report
       options: []

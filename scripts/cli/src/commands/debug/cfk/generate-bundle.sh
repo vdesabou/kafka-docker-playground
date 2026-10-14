@@ -72,7 +72,7 @@ if [[ $exit_code -eq 0 ]]; then
         log "📦 Bundle: $bundle_file"
         log ""
         log "📊 To analyze the bundle, run:"
-        log "   playground debug cfk cfk-bundle-analyze --bundle $bundle_file --html"
+        log "   playground analyze cfk-bundle --bundle $bundle_file --html"
         log ""
         log "📈 To extract the bundle, run:"
         log "   tar -xzf $bundle_file"
