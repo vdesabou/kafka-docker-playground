@@ -10,15 +10,6 @@ Password of the Couchbase user.
 	 - Importance: HIGH
 	 - Required: true
 
-🔘 couchbase.bucket
-
-This property is required unless using the experimental AnalyticsSinkHandler.
-
-	 - Type: false
-	 - Default: STRING
-	 - Importance: Name of the Couchbase bucket to use.
-	 - Required: HIGH
-
 🔘 couchbase.username
 
 Name of the Couchbase user to authenticate as.
@@ -27,6 +18,15 @@ Name of the Couchbase user to authenticate as.
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: true
+
+🔘 couchbase.bucket
+
+This property is required unless using the experimental AnalyticsSinkHandler.
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of the Couchbase bucket to use.
+	 - Required: HIGH
 
 🔘 couchbase.bootstrap.timeout
 
@@ -58,6 +58,15 @@ The network selection strategy for connecting to a Couchbase Server cluster that
 ==========================
 Security
 ==========================
+🔘 couchbase.trust.store.password
+
+Password for accessing the trust store.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.enable.tls
 
 Use secure connection to Couchbase Server.
@@ -120,15 +129,6 @@ Note that this config is considered advanced, please only customize the cipher l
 	 - Default: LIST
 	 - Importance: The custom list of ciphers to use when connecting to Couchbase using regular or DCP clients.
 	 - Required: MEDIUM
-
-🔘 couchbase.trust.store.password
-
-Password for accessing the trust store.
-
-	 - Type: PASSWORD
-	 - Default: [hidden]
-	 - Importance: MEDIUM
-	 - Required: false
 
 ==========================
 Logging
