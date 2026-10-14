@@ -2,64 +2,25 @@
 
 ## Objective
 
-Quickly test [JDBC Sybase](https://docs.confluent.io/current/connect/kafka-connect-jdbc/sink-connector/index.html#kconnect-long-jdbc-sink-connector) sink connector.
+Quickly test the [JDBC Sink](https://docs.confluent.io/kafka-connectors/jdbc/current/sink-connector/overview.html) connector with SAP Sybase ASE 15.7 (`ifnazar/sybase_15_7`), using the jTDS driver.
 
+## Prerequisites
+
+With CP 8.x, the JDBC connector version must be 10.8.0 or later (the script exits with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for sybase-sink.sh in this folder
-```
-
-## Details of what the script is doing
-
-Create JDBC Sybase sink connector
-
 ```bash
-playground connector create-or-update --connector sybase-sink  << EOF
-{
-               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-               "tasks.max": "1",
-               "connection.url": "jdbc:jtds:sybase://sybase:5000",
-               "connection.user": "sa",
-               "connection.password": "password",
-               "topics": "orders",
-               "auto.create": "true"
-          }
-EOF
-````
-
-Sending messages to topic orders
-
-```bash
-docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price","type": "float"}]}' << EOF
-{"id": 999, "product": "foo", "quantity": 100, "price": 50}
-EOF
+playground run -f sybase-sink.sh
 ```
 
-Show content of orders table:
+| Script | Description |
+| --- | --- |
+| `sybase-sink.sh` | JDBC sink writing Avro records to Sybase with `auto.create=true` |
 
-```bash
-docker exec -i sybase /sybase/isql -S -Usa -Ppassword << EOF
-select * from orders
-GO
-EOF
-```
+## What the script does
 
-```
- id         
-         product                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
-         quantity    price                       
- -----------
-         --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-         ----------- --------------------------- 
-         999
-         foo                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
-                 100                   50.000000 
-
-(1 row affected)
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+1. Starts a Sybase container (`dksybase`) alongside the plaintext environment and waits until `isql` can connect.
+2. Creates the `sybase-sink` connector (`jdbc:jtds:sybase://dksybase:5000`, user `sa`, `topics=orders`, `table.name.format=master.dbo.orders`, `auto.create=true`).
+3. Produces 2 Avro records (`id`, `product`, `quantity`, `price`) to topic `orders` with `playground topic produce`.
+4. Runs `select * from orders` with `isql` and checks that the `foo` row is present.

@@ -1,80 +1,34 @@
 # Kudu Source connector
 
-
-
 ## Objective
 
-Quickly test [Kudu Source](https://docs.confluent.io/current/connect/kafka-connect-kudu/source-connector/index.html#quick-start) connector.
+Quickly test the [Kudu Source](https://docs.confluent.io/current/connect/kafka-connect-kudu/source-connector/index.html) connector.
 
-N.B: if you're a Confluent employee, please check this [link](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900).
+## Prerequisites
 
-* Download Impala JDBC Driver `ImpalaJDBC42.jar`from this [page](https://www.oracle.com/technetwork/java/javase/jdbc/index.html) and place it in `./ImpalaJDBC42.jar`
+Download the Cloudera Impala JDBC driver `ImpalaJDBC42.jar` from this [page](https://www.cloudera.com/downloads/connectors/impala/jdbc.html) and place it in this folder.
+
+If you're a Confluent employee, the jar is downloaded automatically from the playground S3 bucket when AWS credentials are set (see this [link](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900)).
+
+Not supported with the `cfk` environment. With CP 8.x, the minimum supported connector version is 1.0.6 (the script exits with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for kudu-source.sh in this folder
-```
-
-## Details of what the script is doing
-
-Create Database test and table accounts in kudu
-
 ```bash
-$ docker exec -i kudu impala-shell -i localhost:21000 -l -u kudu --ldap_password_cmd="echo -n secret" --auth_creds_ok_in_clear << EOF
-CREATE DATABASE test;
-USE test;
-CREATE TABLE accounts (
-     id BIGINT,
-     name STRING,
-     PRIMARY KEY(id)
-     ) PARTITION BY HASH PARTITIONS 16 STORED AS KUDU TBLPROPERTIES ("kudu.master_addresses" = "127.0.0.1","kudu.num_tablet_replicas" = "1");
-INSERT INTO accounts (id, name) VALUES (1, 'alice');
-INSERT INTO accounts (id, name) VALUES (2, 'bob');
-EOF
+playground run -f kudu-source.sh
 ```
 
-The connector is created with:
+## What the script does
 
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-                    "connector.class": "io.confluent.connect.kudu.KuduSourceConnector",
-                    "tasks.max": "1",
-                    "impala.server": "kudu",
-                    "impala.port": "21050",
-                    "kudu.database": "test",
-                    "mode": "incrementing",
-                    "incrementing.column.name": "id",
-                    "topic.prefix": "test-kudu-",
-                    "table.whitelist": "accounts",
-                    "key.converter": "io.confluent.connect.avro.AvroConverter",
-                    "key.converter.schema.registry.url": "http://schema-registry:8081",
-                    "value.converter": "io.confluent.connect.avro.AvroConverter",
-                    "value.converter.schema.registry.url": "http://schema-registry:8081",
-                    "impala.ldap.password": "secret",
-                    "impala.ldap.user": "kudu",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/kudu-source/config | jq .
-```
+1. Copies `ImpalaJDBC42.jar` into the `confluentinc-kafka-connect-kudu` plugin `lib` folder.
+2. Starts the environment with a Kudu/Impala container (Impala LDAP authentication with user `kudu`).
+3. Creates database `test` and Kudu table `accounts` with `impala-shell`, and inserts 2 rows (`alice`, `bob`).
+4. Creates the Kudu source connector `kudu-source` (`mode=incrementing` on column `id`, `topic.prefix=test-kudu-`).
+5. Verifies that topic `test-kudu-accounts` receives 2 records with `playground topic consume`.
 
-Verify we have received the data in `test-kudu-accounts` topic:
-
-```bash
-playground topic consume --topic test-kudu-accounts --min-expected-messages 2 --timeout 60
-```
-
-Results:
+Example of records:
 
 ```json
 {"id":{"long":1},"name":{"string":"alice"}}
 {"id":{"long":2},"name":{"string":"bob"}}
 ```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

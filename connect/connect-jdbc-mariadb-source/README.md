@@ -1,56 +1,27 @@
 # JDBC MariaDB Source connector
 
-
-
 ## Objective
 
-Quickly test [JDBC Source](https://docs.confluent.io/current/connect/kafka-connect-jdbc/source-connector/index.html#kconnect-long-jdbc-source-connector) connector with MariaDB.
+Quickly test the [JDBC Source](https://docs.confluent.io/kafka-connectors/jdbc/current/source-connector/overview.html) connector with MariaDB, using the MariaDB JDBC driver (3.2.0).
 
+## Prerequisites
 
-
+With CP 8.x, the JDBC connector version must be 10.8.0 or later (the script exits with code 111 otherwise).
 
 ## How to run
 
-```
-$ just use <playground run> command and search for mariadb.sh in this folder
-```
-
-Creates the team table and insert some rows
-
 ```bash
-CREATE TABLE team (
-  id            INT          NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  name          VARCHAR(255) NOT NULL,
-  email         VARCHAR(255) NOT NULL,
-  last_modified DATETIME     NOT NULL
-);
-
-INSERT INTO team (
-  name,
-  email,
-  last_modified
-) VALUES (
-  'kafka',
-  'kafka@apache.org',
-  NOW()
-);
+playground run -f mariadb-jdbc-source.sh
 ```
 
-Creating MariaDB source connector
+| Script | Description |
+| --- | --- |
+| `mariadb-jdbc-source.sh` | JDBC source in `timestamp+incrementing` mode on a MariaDB table |
 
-```bash
-playground connector create-or-update --connector mariadb-source  << EOF
-{
-     "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-     "tasks.max": "1",
-     "connection.url": "jdbc:mariadb://mariadb:3306/db?user=user&password=password&useSSL=false",
-     "table.whitelist": "team",
-     "mode": "timestamp+incrementing",
-     "timestamp.column.name": "last_modified",
-     "incrementing.column.name": "id",
-     "topic.prefix": "mariadb-"
-}
-EOF
-```
+## What the script does
 
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+1. Downloads `mariadb-java-client-3.2.0.jar` if needed and copies it into the JDBC connector `lib` folder.
+2. Starts a MariaDB container alongside the plaintext environment.
+3. Creates the `team` table (`id` auto-increment, `last_modified` DATETIME) and inserts 2 rows.
+4. Creates the `mariadb-source` connector (`mode=timestamp+incrementing` on `last_modified` / `id`, `topic.prefix=mariadb-`).
+5. Verifies that 2 records land in topic `mariadb-team` with `playground topic consume`.

@@ -1,131 +1,50 @@
 # Oracle Weblogic Source connector
 
-
-
 ## Objective
 
-Quickly test [Oracle Weblogic Source](https://docs.confluent.io/kafka-connect-weblogic-source/current/index.html) connector.
+Quickly test the [Oracle Weblogic Source](https://docs.confluent.io/kafka-connect-weblogic-source/current/index.html) connector.
 
-Using Oracle WebLogic Server (Developer Tier, version `12.2.1.3`) Docker [image](https://container-registry.oracle.com). You need to register and acknoledge license terms and conditions to get the image.
+Uses the Oracle WebLogic Server (Developer Tier, version `12.2.1.3`) Docker image from [Oracle Container Registry](https://container-registry.oracle.com).
+
+## Prerequisites
+
+* CP 7.x or earlier: preview connectors are no longer supported with CP 8.0 (the scripts exit with code 111).
+* The image `container-registry.oracle.com/middleware/weblogic:12.2.1.3`. You need to register on [Oracle Container Registry](https://container-registry.oracle.com) and acknowledge the license terms and conditions to get it:
 
 ![image](screenshot3.jpg)
 
+If the image is not present locally, `weblogic-topic.sh` logs in and pulls it when these variables are set (`weblogic-queue.sh` only does this on CI, otherwise you must pull the image yourself):
+
+| Variable | Description |
+| --- | --- |
+| `ORACLE_CONTAINER_REGISTRY_USERNAME` | Oracle Container Registry username |
+| `ORACLE_CONTAINER_REGISTRY_PASSWORD` | Oracle Container Registry password |
+
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for weblogic-queue.sh in this folder
+```bash
+playground run -f weblogic-queue.sh
 ```
 
-or
+| Script | Description |
+| --- | --- |
+| `weblogic-queue.sh` | Reads from the JMS queue `MyDistributedQueue` |
+| `weblogic-topic.sh` | Reads from the JMS topic `MyDistributedTopic` with a durable subscription (`jms.subscription.name=sub1`) |
 
-```
-$ just use <playground run> command and search for weblogic-topic.sh in this folder
-```
-
-N.B: Weblogic console is reachable at [http://127.0.0.1:7001/console](http://127.0.0.1:7001/console]) (`weblogic`/`welcome1`)
-
-You can use it to see all JMS resources:
+The WebLogic console is reachable at [http://127.0.0.1:7001/console](http://127.0.0.1:7001/console) (`weblogic`/`welcome1`). You can use it to see all JMS resources:
 
 ![console](screenshot1.jpg)
 
-## Details of what the script is doing
+## What the script does
 
-### Queue example
+1. Builds the `weblogic-jms:latest` image with JMS resources configured (first run only, it can take a while), extracts `weblogic.jar` and `wlthint3client.jar` from it, and builds the `jms-sender` Java tool with Maven in Docker.
+2. Copies `wlthint3client.jar` into the connector `lib` folder and starts the environment.
+3. Creates the Weblogic Source connector (`t3://weblogic-jms:7001`, connection factory `myFactory`), writing to topic `from-weblogic-messages`.
+4. Sends one message with the `jms-sender` container.
+5. Verifies the message with `playground topic consume --topic from-weblogic-messages`.
 
-Creating JMS weblogic source connector
-
-```bash
-$ curl -X PUT \
-     -H "Conten```
-     t-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.weblogic.WeblogicSourceConnector",
-               "kafka.topic": "from-weblogic-messages",
-               "java.naming.factory.initial": "weblogic.jndi.WLInitialContextFactory",
-               "jms.destination.name": "myJMSServer/mySystemModule!myJMSServer@MyDistributedQueue",
-               "jms.destination.type": "QUEUE",
-               "java.naming.provider.url": "t3://weblogic-jms:7001",
-               "connection.factory.name": "myFactory",
-               "java.naming.security.principal": "weblogic",
-               "java.naming.security.credentials": "welcome1",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "tasks.max" : "1",
-               "batch.size": "1",
-               "max.pending.messages": "1",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/weblogic-queue-source/config | jq .
-```
-
-Sending one message in JMS queue myQueue
-
-```bash
-$ docker exec jms-sender bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlthint3client.jar:/jms-sender-1.0.0.jar" com.sample.jms.toolkit.JMSSender'
-```
-
-Verify we have received the data in `from-weblogic-messages` topic
-
-```bash
-playground topic consume --topic from-weblogic-messages --min-expected-messages 1 --timeout 60
-```
-
-Results:
+Example record (queue):
 
 ```
 Struct{messageID=ID:<576249.1618314788338.0>,messageType=text,timestamp=1618314788338,deliveryMode=2,destination=Struct{destinationType=queue,name=mySystemModule!myJMSServer@MyDistributedQueue},redelivered=false,expiration=0,priority=4,properties={JMS_BEA_DeliveryTime=Struct{propertyType=long,long=1618314788338}, JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=Hello Queue World!}
 ```
-
-### Topic example
-
-Creating JMS weblogic source connector
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.weblogic.WeblogicSourceConnector",
-               "kafka.topic": "from-weblogic-messages",
-               "java.naming.factory.initial": "weblogic.jndi.WLInitialContextFactory",
-               "jms.destination.name": "myJMSServer/mySystemModule!myJMSServer@MyDistributedTopic",
-               "jms.destination.type": "TOPIC",
-               "java.naming.provider.url": "t3://weblogic-jms:7001",
-               "connection.factory.name": "myFactory",
-               "java.naming.security.principal": "weblogic",
-               "java.naming.security.credentials": "welcome1",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "tasks.max" : "1",
-               "batch.size": "1",
-               "max.pending.messages": "1",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/weblogic-topic-source/config | jq .
-```
-
-Sending one message in JMS topic myTopic
-
-```bash
-$ docker exec jms-sender bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlthint3client.jar:/jms-sender-1.0.0.jar" com.sample.jms.toolkit.JMSSender'
-```
-
-Verify we have received the data in `from-weblogic-messages` topic
-
-```bash
-playground topic consume --topic from-weblogic-messages --min-expected-messages 1 --timeout 60
-```
-
-Results:
-
-```
-Struct{messageID=ID:<366463.1618317131446.0>,messageType=text,timestamp=1618317131446,deliveryMode=2,destination=Struct{destinationType=topic,name=mySystemModule!myJMSServer@MyDistributedTopic},redelivered=false,expiration=0,priority=4,properties={JMS_BEA_DeliveryTime=Struct{propertyType=long,long=1618317131446}, JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=Hello Topic World!}
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
-

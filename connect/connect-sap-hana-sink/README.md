@@ -1,75 +1,32 @@
 # SAP HANA Sink connector
 
-
-
 ## Objective
 
-Quickly test [Sap Hana Sink](https://github.com/SAP/kafka-connect-sap) connector.
+Quickly test the [SAP HANA Sink](https://github.com/SAP/kafka-connect-sap) connector.
 
+## Prerequisites
+
+* CP 6.0.0 or later. Not supported with the `cfk` environment.
+* The connector jar is built from source (tag `0.9.3`) with Maven in Docker on the first run, and the SAP HANA JDBC driver `ngdbc-2.12.9.jar` is downloaded from Maven Central.
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for sap-hana-sink.sh in this folder
-```
-
-## Details of what the script is doing
-
-Sending records to testtopic topic:
-
 ```bash
-docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic testtopic --property key.schema='{"type":"record","namespace": "io.confluent.connect.avro","name":"myrecordkey","fields":[{"name":"ID","type":"long"}]}' --property value.schema='{"type":"record","name":"myrecordvalue","fields":[{"name":"ID","type":"long"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
-"type": "float"}]}'  --property parse.key=true --property key.separator="|" << EOF
-{"ID": 111}|{"ID": 111,"product": "foo", "quantity": 100, "price": 50}
-{"ID": 222}|{"ID": 222,"product": "bar", "quantity": 100, "price": 50}
-EOF
+playground run -f sap-hana-sink.sh
 ```
 
-Creating SAP HANA Sink connector:
+## What the script does
 
-```bash
-playground connector create-or-update --connector sap-hana-sink  << EOF
-{
-               "tasks.max": "1",
-               "connector.class": "com.sap.kafka.connect.sink.hana.HANASinkConnector",
-               "topics": "testtopic",
-               "connection.url": "jdbc:sap://sap:39041/?databaseName=HXE&reconnect=true&statementCacheSize=512",
-               "connection.user": "LOCALDEV",
-               "connection.password" : "Localdev1",
-               "key.converter": "io.confluent.connect.avro.AvroConverter",
-               "key.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "auto.create": "true",
-               "testtopic.table.name": "\"LOCALDEV\".\"TEST\""
-          }
-EOF
-```
+1. Builds `kafka-connector-hana_2.13-0.9.3.jar` from [SAP/kafka-connect-sap](https://github.com/SAP/kafka-connect-sap) (if not already present) and downloads the JDBC driver.
+2. Starts the environment with a SAP HANA express container (`sap`) and waits for `Startup finished!` (up to 10 minutes).
+3. Creates the SAP HANA Sink connector reading topic `testtopic` (Avro key and value), with `auto.create=true` and target table `"LOCALDEV"."TEST"`.
+4. Produces 2 Avro records to `testtopic`.
+5. Queries `"LOCALDEV"."TEST"` with `hdbsql` in the `sap` container and checks the rows are present.
 
-Check data is in SAP HANA:
-
-```bash
-docker exec -i sap /usr/sap/HXE/HDB90/exe/hdbsql -i 90 -d HXE -u LOCALDEV -p Localdev1  > /tmp/result.log  2>&1 <<-EOF
-select * from LOCALDEV.TEST;
-EOF
-cat /tmp/result.log
-grep "foo" /tmp/result.log
-```
-
-Results:
+Expected result:
 
 ```
-Welcome to the SAP HANA Database interactive terminal.
-                                           
-Type:  \h for help with commands          
-       \q to quit                         
-
 ID,product,quantity,price
 111,"foo",100,50
 222,"bar",100,50
-2 rows selected (overall time 1145 usec; server time 251 usec)
 ```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

@@ -2,83 +2,25 @@
 
 ## Objective
 
-Quickly test [JDBC Sybase](https://docs.confluent.io/current/connect/kafka-connect-jdbc/source-connector/index.html#kconnect-long-jdbc-source-connector) connector.
+Quickly test the [JDBC Source](https://docs.confluent.io/kafka-connectors/jdbc/current/source-connector/overview.html) connector with SAP Sybase ASE 15.7 (`ifnazar/sybase_15_7`), using the jTDS driver.
 
+## Prerequisites
+
+With CP 8.x, the JDBC connector version must be 10.8.0 or later (the script exits with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for sybase-source.sh in this folder
-```
-
-## Details of what the script is doing
-
-Create the table and insert data.
-
 ```bash
-docker exec -i sybase /sybase/isql -S -Usa -Ppassword << EOF
-CREATE DATABASE testDB
-GO
-USE testDB
-
-CREATE TABLE customers(id INTEGER IDENTITY,first_name VARCHAR(255) NOT NULL,last_name VARCHAR(255) NOT NULL,email VARCHAR(255) NOT NULL,primary key( id ))
-GO
-INSERT INTO customers(first_name,last_name,email) VALUES ('Sally','Thomas','sally.thomas@acme.com')
-INSERT INTO customers(first_name,last_name,email) VALUES ('George','Bailey','gbailey@foobar.com')
-INSERT INTO customers(first_name,last_name,email) VALUES ('Edward','Walker','ed@walker.com')
-INSERT INTO customers(first_name,last_name,email) VALUES ('Anne','Kretchmar','annek@noanswer.org')
-GO
-EOF
+playground run -f sybase-source.sh
 ```
 
-Creating JDBC Sybase source connector
+| Script | Description |
+| --- | --- |
+| `sybase-source.sh` | JDBC source in `incrementing` mode on a Sybase table |
 
-```bash
-playground connector create-or-update --connector jdbc-sybase-source  << EOF
-{
-                "connector.class" : "io.confluent.connect.jdbc.JdbcSourceConnector",
-                "tasks.max" : "1",
-                "connection.url": "jdbc:jtds:sybase://sybase:5000/testDB",
-                "connection.user": "sa",
-                "connection.password": "password",
-                "table.whitelist": "customers",
-                "mode": "incrementing",
-                "incrementing.column.name": "id",
-                "topic.prefix": "sybase-",
-                "validate.non.null":"false",
-                "errors.log.enable": "true",
-                "errors.log.include.messages": "true"
-          }
-EOF
-```
+## What the script does
 
-Insert another record
-
-```bash
-docker exec -i sybase /sybase/isql -S -Usa -Ppassword << EOF
-USE testDB
-GO
-INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@office.com')
-GO
-EOF
-```
-
-Verifying topic sybase-customers
-
-```bash
-playground topic consume --topic sybase-customers --min-expected-messages 5 --timeout 60
-```
-
-Results:
-
-```json
-{"id":1,"first_name":"Sally","last_name":"Thomas","email":"sally.thomas@acme.com"}
-{"id":2,"first_name":"George","last_name":"Bailey","email":"gbailey@foobar.com"}
-{"id":3,"first_name":"Edward","last_name":"Walker","email":"ed@walker.com"}
-{"id":4,"first_name":"Anne","last_name":"Kretchmar","email":"annek@noanswer.org"}
-{"id":5,"first_name":"Pam","last_name":"Thomas","email":"pam@office.com"}
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+1. Starts a Sybase container (`dksybase`) alongside the plaintext environment and waits until `isql` can connect.
+2. Creates database `testDB` and table `customers` (identity `id`) with 4 rows.
+3. Creates the `jdbc-sybase-source` connector (`jdbc:jtds:sybase://dksybase:5000/testDB`, `mode=incrementing` on `id`, `topic.prefix=sybase-`).
+4. Inserts one more row, then verifies that 5 records land in topic `sybase-customers` with `playground topic consume`.

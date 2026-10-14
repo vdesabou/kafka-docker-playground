@@ -1,35 +1,33 @@
 # Solace Source connector
 
-
-
 ## Objective
 
-Quickly test [Solace Source](https://docs.confluent.io/current/connect/kafka-connect-solace/source/index.html#quick-start) connector.
+Quickly test the [Solace Source](https://docs.confluent.io/kafka-connectors/solace/source/current/overview.html) connector.
 
+## Prerequisites
 
-
+* With CP 8.x, connector version 1.2.0 or later.
+* The Solace JMS client `sol-jms-10.6.4.jar` is downloaded from Maven Central on the first run.
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for solace.sh in this folder
-```
-
-Solace UI is available at [127.0.0.1:8080](http://127.0.0.1:8080) `admin/admin`
-
-## Details of what the script is doing
-
-Create the queue `connector-quickstart` in the `default` Message VPN using CLI:
-
 ```bash
-$ docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd"
+playground run -f solace-source.sh
 ```
 
-Note: this could also be done manually using [Solace UI](http://127.0.0.1:8080)
+Solace UI is available at [127.0.0.1:8080](http://127.0.0.1:8080) (`admin`/`admin`).
 
-The solace commands executed in script `create_queue_cmd`are:
+## What the script does
+
+1. Starts a Solace PubSub+ broker and waits for it to be ready.
+2. Creates the queue `connector-quickstart` in the `default` Message VPN with the Solace CLI script `create_queue_cmd` (this could also be done in the Solace UI).
+3. Creates topic `from-solace-messages` with `message.timestamp.type=LogAppendTime` (to avoid `CreateTime:0` timestamps).
+4. Publishes 3 messages to the queue with the Solace REST endpoint (`http://localhost:9000/Queue/connector-quickstart`).
+5. Creates the Solace Source connector reading the queue and writing to `from-solace-messages`.
+6. Verifies 3 records with `playground topic consume --topic from-solace-messages`.
+7. Checks with the SEMP v2 monitoring API that the queue is empty, i.e. messages were acknowledged and deleted by the connector.
+
+The Solace CLI commands in `create_queue_cmd` are:
 
 ```
 enable
@@ -39,59 +37,3 @@ create queue connector-quickstart
 permission all consume
 no shutdown full
 ```
-
-Create topic with `LogAppendTime` to avoid `CreateTime:0` timestamps:
-
-```bash
-playground topic create --topic from-solace-messages --nb-partitions 1
-playground topic alter --topic from-solace-messages --add-config message.timestamp.type=LogAppendTime
-```
-
-Publish messages to the Solace queue using the REST endpoint
-
-```bash
-$ for i in 1000 1001 1002
-do
-     curl -X POST -d "m1" http://localhost:9000/Queue/connector-quickstart -H "Content-Type: text/plain" -H "Solace-Message-ID: $i"
-done
-```
-
-The connector is created with:
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.solace.SolaceSourceConnector",
-                    "tasks.max": "1",
-                    "kafka.topic": "from-solace-messages",
-                    "solace.host": "smf://solace:55555",
-                    "solace.username": "admin",
-                    "solace.password": "admin",
-                    "jms.destination.type": "queue",
-                    "jms.destination.name": "connector-quickstart",
-                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/solace-source/config | jq .
-```
-
-Verify topic
-
-```
-playground topic consume --topic from-solace-messages --min-expected-messages 3 --timeout 60
-Struct{messageID=1000,messageType=text,timestamp=0,deliveryMode=2,destination=Struct{destinationType=queue,name=connector-quickstart},redelivered=false,expiration=0,priority=0,properties={JMS_Solace_isXML=Struct{propertyType=boolean,boolean=false}, JMS_Solace_DeliverToOne=Struct{propertyType=boolean,boolean=false}, JMS_Solace_DeadMsgQueueEligible=Struct{propertyType=boolean,boolean=false}, JMS_Solace_ElidingEligible=Struct{propertyType=boolean,boolean=false}, Solace_JMS_Prop_IS_Reply_Message=Struct{propertyType=boolean,boolean=false}, JMS_Solace_HTTPContentType=Struct{propertyType=string,string=text/plain}, JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=m1}
-Struct{messageID=1001,messageType=text,timestamp=0,deliveryMode=2,destination=Struct{destinationType=queue,name=connector-quickstart},redelivered=false,expiration=0,priority=0,properties={JMS_Solace_isXML=Struct{propertyType=boolean,boolean=false}, JMS_Solace_DeliverToOne=Struct{propertyType=boolean,boolean=false}, JMS_Solace_DeadMsgQueueEligible=Struct{propertyType=boolean,boolean=false}, JMS_Solace_ElidingEligible=Struct{propertyType=boolean,boolean=false}, Solace_JMS_Prop_IS_Reply_Message=Struct{propertyType=boolean,boolean=false}, JMS_Solace_HTTPContentType=Struct{propertyType=string,string=text/plain}, JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=m1}
-Struct{messageID=1002,messageType=text,timestamp=0,deliveryMode=2,destination=Struct{destinationType=queue,name=connector-quickstart},redelivered=false,expiration=0,priority=0,properties={JMS_Solace_isXML=Struct{propertyType=boolean,boolean=false}, JMS_Solace_DeliverToOne=Struct{propertyType=boolean,boolean=false}, JMS_Solace_DeadMsgQueueEligible=Struct{propertyType=boolean,boolean=false}, JMS_Solace_ElidingEligible=Struct{propertyType=boolean,boolean=false}, Solace_JMS_Prop_IS_Reply_Message=Struct{propertyType=boolean,boolean=false}, JMS_Solace_HTTPContentType=Struct{propertyType=string,string=text/plain}, JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=m1}
-Processed a total of 3 messages
-```
-
-Assert that the Solace queue is empty after connector processing (tests `commitRecord` API):
-
-```text
-✅ SUCCESS: Solace queue connector-quickstart is empty - messages were successfully consumed and deleted
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

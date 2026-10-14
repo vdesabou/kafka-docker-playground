@@ -1,69 +1,39 @@
 # AMPS Source connector
 
-
-
 ## Objective
 
-Quickly test [AMPS Source](https://docs.confluent.io/current/connect/kafka-connect-amps/index.html#quick-start) connector.
+Quickly test the [AMPS Source](https://docs.confluent.io/kafka-connectors/amps/current/overview.html) connector.
 
 ## Prerequisites
 
-Create an account [here](https://www.crankuptheamps.com/developer) and download `AMPS Server v5.x.x / Linux (64 bit)`, then rename it to `AMPS.tar.gz` and put it into `docker-amps` directory
+- CP lower than 8.0.0: this preview connector is not supported with CP 8.0 (the script exits with code `111` otherwise).
+- AMPS server: create an account [here](https://www.crankuptheamps.com/developer) and download `AMPS Server v5.x.x / Linux (64 bit)`, then rename it to `AMPS.tar.gz` and put it into the `docker-amps` directory. Confluent employees with AWS credentials set get it automatically from the playground S3 bucket (see also this [Slack thread](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900)).
 
 ![Download](Screenshot1.png)
 
-N.B: if you're a Confluent employee, please check this [link](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900).
+The AMPS Java client (`amps_client.jar`) is downloaded automatically if missing.
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for amps-source.sh in this folder
-```
-
-## Details of what the script is doing
-
-Use the spark utility to quickly publish few records to the Orders topic
-
 ```bash
-$ docker exec -i amps /AMPS/bin/spark publish -server localhost:9007 -topic Orders -type json << EOF
-{"id": 1, "order": "Apples"}
-{"id": 2, "order": "Oranges"}
-EOF
+playground run -f amps-source.sh
 ```
 
-Creating AMPS source connector:
+| Script | Description |
+| --- | --- |
+| `amps-source.sh` | AMPS source connector with `sow_and_subscribe` on a SOW topic |
 
-```bash
-playground connector create-or-update --connector amps-source  << EOF
-{
-               "connector.class": "io.confluent.connect.amps.AmpsSourceConnector",
-               "tasks.max": "1",
-               "kafka.topic": "AMPS_Orders",
-               "amps.servers": "tcp://amps:9007",
-               "amps.topic": "Orders",
-               "amps.topic.type": "sow",
-               "amps.command": "sow_and_subscribe",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
-EOF
-```
+## What the script does
 
-
-Verify we have received the data in `AMPS_Orders` topic
-
-```bash
-playground topic consume --topic AMPS_Orders --min-expected-messages 2 --timeout 60
-```
+1. Builds the `amps:latest` Docker image from `docker-amps/AMPS.tar.gz` (first run only) and copies `amps_client.jar` into the connector `lib` folder.
+2. Starts the environment with an `amps` container.
+3. Publishes 2 JSON records to the AMPS `Orders` topic with the `spark` utility.
+4. Creates the AMPS source connector (`io.confluent.connect.amps.AmpsSourceConnector`, `amps.topic.type=sow`, `amps.command=sow_and_subscribe`) writing to `AMPS_Orders`.
+5. Verifies the 2 records are received in `AMPS_Orders` with `playground topic consume`.
 
 Results:
 
-```json
-8{"id": 1, "order": "Apples"}
-:{"id": 2, "order": "Oranges"}
-Processed a total of 2 messages
 ```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+{"id": 1, "order": "Apples"}
+{"id": 2, "order": "Oranges"}
+```

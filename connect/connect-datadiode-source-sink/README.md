@@ -1,77 +1,26 @@
 # Data Diode (Source & Sink) connector
 
-
-
 ## Objective
 
-Quickly test [ata Diode (Source & Sink)](https://docs.confluent.io/current/connect/kafka-connect-data-diode/index.html#data-diode-connector-source-and-sink-for-cp) connector.
+Quickly test the [Data Diode (Source & Sink)](https://docs.confluent.io/kafka-connectors/data-diode/current/index.html) connector.
 
+## Prerequisites
+
+With CP 8.x, the minimal supported connector version is 1.2.8 (the script exits with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for datadiode.sh in this folder
-```
-
-## Details of what the script is doing
-
-Creating DataDiode Source connector
-
 ```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.diode.source.DataDiodeSourceConnector",
-               "kafka.topic.prefix": "dest_",
-               "key.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
-               "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
-               "header.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
-               "diode.port": "3456",
-               "diode.encryption.password": "supersecretpassword",
-               "diode.encryption.salt": "secretsalt",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/datadiode-source/config | jq .
+playground run -f datadiode.sh
 ```
 
-Creating DataDiode Sink connector
+| Script | Description |
+| --- | --- |
+| `datadiode.sh` | Data Diode sink sends records over UDP to a Data Diode source running in the same Connect worker |
 
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.diode.sink.DataDiodeSinkConnector",
-               "tasks.max": "1",
-               "topics": "diode",
-               "key.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
-               "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
-               "header.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
-               "diode.host": "connect",
-               "diode.port": "3456",
-               "diode.encryption.password": "supersecretpassword",
-               "diode.encryption.salt": "secretsalt",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/datadiode-sink/config | jq .
-```
+## What the script does
 
-Send message to diode topic
-
-```bash
-$ seq -f "This is a message %g" 10 | docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic diode
-```
-
-Verifying topic dest_diode
-
-```bash
-playground topic consume --topic dest_diode --min-expected-messages 10 --timeout 60
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+1. Creates the `datadiode-source` connector, listening on port `3456` and writing to topics prefixed with `dest_` (encrypted with a password and salt).
+2. Creates the `datadiode-sink` connector, reading topic `diode` and sending records to `connect:3456`.
+3. Produces 10 string messages to topic `diode` with `playground topic produce`.
+4. Verifies that the 10 messages arrived in topic `dest_diode` with `playground topic consume`.

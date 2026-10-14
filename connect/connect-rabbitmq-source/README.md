@@ -1,70 +1,43 @@
 # RabbitMQ Source connector
 
-
-
 ## Objective
 
-Quickly test [RabbitMQ Source](https://docs.confluent.io/current/connect/kafka-connect-rabbitmq/index.html#quick-start) connector.
+Quickly test the [RabbitMQ Source](https://docs.confluent.io/kafka-connectors/rabbitmq-source/current/overview.html) connector.
 
+## Prerequisites
+
+With CP 8.x, the minimum supported connector version is 1.8.0 (the script exits with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for rabbitmq.sh in this folder
-```
-
-## Details of what the script is doing
-
-Send message to RabbitMQ in `myqueue`:
-
 ```bash
-$ docker exec rabbitmq-producer bash -c "python /producer.py myqueue 5"
+playground run -f rabbitmq-source.sh
 ```
 
-Creating RabbitMQ Source connector
+| Script | Description |
+| --- | --- |
+| `rabbitmq-source.sh` | Basic example |
+| `rabbitmq-source-ssl.sh` | Same, with SSL on port `5671` (`rabbitmq.security.protocol=SSL`, certificates generated with `playground tools certs-create`) |
 
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class" : "io.confluent.connect.rabbitmq.RabbitMQSourceConnector",
-               "tasks.max" : "1",
-               "kafka.topic" : "rabbitmq",
-               "rabbitmq.queue" : "myqueue",
-               "rabbitmq.host" : "rabbitmq",
-               "rabbitmq.username" : "myuser",
-               "rabbitmq.password" : "mypassword",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/rabbitmq-source/config | jq .
-```
+## What the script does
 
+1. Starts the environment with a RabbitMQ container and Python producer/consumer containers (`ssl` variant: first generates keystores, truststores and certificates for `connect` and `rabbitmq` in `security/`).
+2. Sends 5 messages to RabbitMQ queue `myqueue` with the `rabbitmq-producer` container (`python /producer.py myqueue 5`).
+3. Creates the RabbitMQ source connector `rabbitmq-source` (queue `myqueue` to topic `rabbitmq`).
+4. Verifies that topic `rabbitmq` receives 5 messages with `playground topic consume`.
+5. Asserts with `rabbitmqctl list_queues` that queue `myqueue` is empty, i.e. all messages were acknowledged and removed.
 
-Verify we have received the data in `rabbitmq` topic
+Example of records:
 
-```bash
-playground topic consume --topic rabbitmq --min-expected-messages 5 --timeout 60
-```
-
-Results:
-
-```
+```text
 "´\u0001{\"id\": 0, \"body\": \"010101010101010101010101010101010101010101010101010101010101010101010\"}"
 "´\u0001{\"id\": 1, \"body\": \"010101010101010101010101010101010101010101010101010101010101010101010\"}"
-"´\u0001{\"id\": 2, \"body\": \"010101010101010101010101010101010101010101010101010101010101010101010\"}"
-"´\u0001{\"id\": 3, \"body\": \"010101010101010101010101010101010101010101010101010101010101010101010\"}"
-"´\u0001{\"id\": 4, \"body\": \"010101010101010101010101010101010101010101010101010101010101010101010\"}"
 ```
 
-Note:
+## Notes
 
-Run the following command to consume all records in RabbitMQ queue `myqueue`
+To consume all records of RabbitMQ queue `myqueue`:
 
 ```bash
-$ docker exec -i rabbitmq-consumer bash -c "python /consumer.py myqueue"
+playground container exec --container rabbitmq-consumer --command "bash -c \"python /consumer.py myqueue\""
 ```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

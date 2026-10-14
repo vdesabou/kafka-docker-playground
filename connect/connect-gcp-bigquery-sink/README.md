@@ -1,22 +1,28 @@
 # GCP BigQuery Sink connector
 
-
-
 ## Objective
 
-Quickly test [GCP BigQuery Sink](https://docs.confluent.io/current/connect/kafka-connect-bigquery/index.html#kconnect-long-gcp-bigquery-sink-connector) connector.
+Quickly test the [GCP BigQuery Sink](https://docs.confluent.io/kafka-connectors/bigquery/current/overview.html) connector.
 
-* Active Google Cloud Platform (GCP) account with authorization to create resources
+## Prerequisites
 
-## GCP BigQuery Setup
+An active Google Cloud Platform (GCP) account with authorization to create resources.
 
-* Follow [Quickstart using the web UI in the GCP Console](https://cloud.google.com/bigquery/docs/quickstarts/quickstart-web-ui) to get familiar with GCP BigQuery
-* Create `Service Account` from IAM & Admin console:
+With CP 8.x, the minimal supported connector version is 2.5.0 (the script exits with code 111 otherwise).
+
+| Variable | Description |
+| --- | --- |
+| `GCP_PROJECT` | GCP project ID |
+| `GCP_KEYFILE_CONTENT` | Content of the service account key file (only if `keyfile.json` is not present in the example folder) |
+
+### GCP BigQuery setup
+
+* Follow [Quickstart using the web UI in the GCP Console](https://cloud.google.com/bigquery/docs/quickstarts/quickstart-web-ui) to get familiar with GCP BigQuery.
+* Create a `Service Account` from the IAM & Admin console.
 
 Set `Service account name`:
 
 ![Service Account setup](Screenshot1.png)
-
 
 Choose permission `BigQuery`->`BigQuery Admin`:
 
@@ -30,86 +36,27 @@ Download it as JSON:
 
 ![Service Account setup](Screenshot4.png)
 
-Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment variable `GCP_KEYFILE_CONTENT` with content generated with `GCP_KEYFILE_CONTENT=$(cat keyfile.json | jq -aRs . | sed 's/^"//' | sed 's/"$//')
+Rename it to `keyfile.json` and place it in the example folder, or set the environment variable `GCP_KEYFILE_CONTENT` with its content, generated with:
 
+```bash
+export GCP_KEYFILE_CONTENT=$(cat keyfile.json | jq -aRs . | sed 's/^"//' | sed 's/"$//')
+```
 
 ## How to run
 
-Simply run:
-
 ```bash
-$ just use <playground run> command and search for gcp-bigquery<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> .sh in this folder
+playground run -f gcp-bigquery-sink.sh
 ```
 
-## Details of what the script is doing
+| Script | Description |
+| --- | --- |
+| `gcp-bigquery-sink.sh` | Sink Avro records to a BigQuery table, auto-created in a dedicated dataset |
 
-Create dataset $GCP_PROJECT.$DATASET
+## What the script does
 
-```bash
-$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" mk --dataset --label cflt_managed_by:user --label cflt_managed_id:"$USER" --description "used by playground" "$DATASET"
-```
-
-Messages are sent to `kcbq-quickstart1` topic using:
-
-```bash
-playground topic produce -t kcbq-quickstart1 --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
-{
-  "type": "record",
-  "name": "myrecord",
-  "fields": [
-    {
-      "name": "f1",
-      "type": "string"
-    }
-  ]
-}
-EOF
-```
-
-The connector is created with:
-
-```bash
-playground connector create-or-update --connector gcp-bigquery-sink  << EOF
-{
-     "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
-     "tasks.max" : "1",
-     "topics" : "kcbq-quickstart1",
-     "sanitizeTopics" : "true",
-     "autoCreateTables" : "true",
-     "autoUpdateSchemas" : "true",
-     "schemaRetriever" : "com.wepay.kafka.connect.bigquery.retrieve.IdentitySchemaRetriever",
-     "defaultDataset" : "$DATASET",
-     "mergeIntervalMs": "5000",
-     "bufferSize": "100000",
-     "maxWriteSize": "10000",
-     "tableWriteWait": "1000",
-     "project" : "$GCP_PROJECT",
-     "keyfile" : "/tmp/keyfile.json",
-}
-EOF
-```
-
-
-
-After 120 seconds, data should be in GCP BigQuery:
-
-```bash
-$ bq --project_id "$GCP_PROJECT" query "SELECT * FROM $DATASET.kcbq_quickstart1;"
-Waiting on bqjob_r1bbecb24663a3f7c_0000016d825065f1_1 ... (0s) Current status: DONE
-+---------+
-|   f1    |
-+---------+
-| value1  |
-| value8  |
-| value5  |
-| value2  |
-| value7  |
-| value3  |
-| value10 |
-| value6  |
-| value9  |
-| value4  |
-+---------+
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+1. Authenticates with the service account in a `gcloud-config` container (`google/cloud-sdk` image).
+2. Drops (if present) and creates a dataset named after the user, run number and CP version.
+3. Creates the `gcp-bigquery-sink` connector (`autoCreateTables=true`, `sanitizeTopics=true`) for topic `products`.
+4. Produces 3 Avro records to topic `products` with `playground topic produce` (one of them with `name=notebooks`).
+5. Waits 125 seconds, then queries `SELECT * FROM <dataset>.products` with `bq` and checks that `notebooks` is present.
+6. On exit, drops the dataset.

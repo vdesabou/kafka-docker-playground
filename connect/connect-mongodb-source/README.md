@@ -1,101 +1,26 @@
 # MongoDB source connector
 
-
-
 ## Objective
 
-Quickly test [MongoDB](https://docs.mongodb.com/ecosystem/connectors/kafka/) connector.
-
-
-
+Quickly test the [MongoDB Kafka Source](https://www.mongodb.com/docs/kafka-connector/current/) connector.
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for mongo-source.sh in this folder
-```
-
-or with SSL encryption:
-
-```
-$ just use <playground run> command and search for mongo-source-ssl.sh in this folder
-```
-
-mongo-express UI is available at [http://localhost:18081/](http://localhost:18081/)
-
-## Details of what the script is doing
-
-
-Initialize MongoDB replica set
-
 ```bash
-$ docker exec -i mongodb mongosh --eval 'rs.initiate({_id: "myuser", members:[{_id: 0, host: "mongodb:27017"}]})'
+playground run -f mongo-source.sh
 ```
 
-Note: `mongodb:27017`is important here
+| Script | Description |
+| --- | --- |
+| `mongo-source.sh` | Basic example, with `output.format.value=schema` and `output.schema.infer.value=true` |
+| `mongo-source-ssl.sh` | Same, with TLS encryption between the connector and MongoDB (self-signed certificate, `connection.ssl.truststore`), default output format |
 
-Create a user profile
+With `mongo-source.sh`, the mongo-express UI is available at [http://localhost:18081/](http://localhost:18081/).
 
-```bash
-$ docker exec -i mongodb mongosh << EOF
-use admin
-db.createUser(
-{
-user: "myuser",
-pwd: "mypassword",
-roles: ["dbOwner"]
-}
-)
-```
+## What the script does
 
-Create the connector:
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class" : "com.mongodb.kafka.connect.MongoSourceConnector",
-                    "tasks.max" : "1",
-                    "connection.uri" : "mongodb://myuser:mypassword@mongodb:27017",
-                    "database":"inventory",
-                    "collection":"customers",
-                    "topic.prefix":"mongo"
-          }' \
-     http://localhost:8083/connectors/mongodb-source/config | jq .
-```
-
-Insert a record
-
-```bash
-$ docker exec -i mongodb mongosh << EOF
-use inventory
-db.customers.insert([
-{ _id : 1006, first_name : 'Bob', last_name : 'Hopper', email : 'thebob@example.com' }
-]);
-EOF
-```
-
-View the record
-
-```bash
-$ docker exec -i mongodb mongosh << EOF
-use inventory
-db.customers.find().pretty();
-EOF
-```
-
-Verifying topic `mongo.inventory.customers`:
-
-```bash
-playground topic consume --topic mongo.inventory.customers --min-expected-messages 1 --timeout 60
-```
-
-Result is:
-
-```json
-"{\"_id\": {\"_data\": \"825DEFAD7F000000022B022C0100296E5A100464FD9F727D5D40EC96C7C03D3B636406461E5F6964002B020004\", \"_typeBits\": {\"$binary\": \"QA==\", \"$type\": \"00\"}}, \"operationType\": \"insert\", \"clusterTime\": {\"$timestamp\": {\"t\": 1575988607, \"i\": 2}}, \"fullDocument\": {\"_id\": 1.0, \"first_name\": \"Bob\", \"last_name\": \"Hopper\", \"email\": \"thebob@example.com\"}, \"ns\": {\"db\": \"inventory\", \"coll\": \"customers\"}, \"documentKey\": {\"_id\": 1.0}}"
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+1. Starts the environment with a MongoDB container (`ssl` variant: first generates a self-signed certificate for `CN=mongodb` and a JKS truststore in `ssl/`).
+2. Initializes the MongoDB replica set (host `mongodb:27017` is important here) and creates user `myuser` with role `dbOwner`.
+3. Creates the MongoDB source connector `mongodb-source` (database `inventory`, collection `customers`, `topic.prefix=mongo`).
+4. Inserts a document in collection `inventory.customers` with `mongosh`.
+5. Verifies that topic `mongo.inventory.customers` receives the change event with `playground topic consume`.

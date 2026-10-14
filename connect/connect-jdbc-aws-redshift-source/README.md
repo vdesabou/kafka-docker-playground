@@ -2,121 +2,59 @@
 
 ## Objective
 
-Quickly test [JDBC Source](https://docs.confluent.io/current/connect/kafka-connect-jdbc/source-connector/index.html) connector with AWS Redshift.
+Quickly test the [JDBC Source](https://docs.confluent.io/kafka-connectors/jdbc/current/source-connector/overview.html) connector with AWS Redshift.
+
+## Prerequisites
+
+* AWS credentials: export `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_REGION`, or configure `~/.aws/credentials` and `~/.aws/config`.
+* The `aws` CLI must be installed. The credentials must allow creating and deleting Redshift clusters and EC2 security groups.
+* With CP 8.x, connector version 10.8.0 or later is required (older `--connector-tag` values exit with code 111).
+
+The Redshift JDBC driver (`redshift-jdbc42-2.1.0.17.jar`) is downloaded automatically if missing and copied into the JDBC connector `lib` folder.
 
 ## How to run
 
-Simply run:
-
 ```bash
-$ just use <playground run> command and search for redshift-jdbc-source.sh in this folder
-```
-## Details of what the script is doing
-
-Create AWS Redshift cluster
-
-```bash
-$ aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password myPassword1 --node-type ra3.large --cluster-type single-node --publicly-accessible --tags Key=cflt_managed_by,Value=user Key=cflt_managed_id,Value="$USER"
+playground run -f redshift-jdbc-source.sh
 ```
 
-Create a security group
+## What the script does
 
-```bash
-GROUP_ID=$(aws ec2 create-security-group --group-name sg$CLUSTER_NAME --description "playground aws redshift" | jq -r .GroupId)
-```
+1. Removes stale Redshift clusters from previous runs, then creates a single-node `ra3.large` Redshift cluster, publicly accessible, and waits until it is available.
+2. Creates a security group allowing ingress on port 5439 and attaches it to the cluster.
+3. Creates and populates table `CUSTOMERS` from `customers.sql` with `psql` (the `debezium/postgres` image).
+4. Creates the `redshift-jdbc-source` connector in `timestamp+incrementing` mode (`update_ts` / `id`) with topic prefix `redshift-`.
+5. Consumes topic `redshift-customers` with `playground topic consume` (expects at least 5 records).
+6. On exit, deletes the Redshift cluster.
 
-Allow ingress traffic from 0.0.0.0/0 on port 5439
-
-```bash
-aws ec2 authorize-security-group-ingress --group-id $GROUP_ID --protocol tcp --port 5439 --cidr "0.0.0.0/0"
-```
-
-Modify AWS Redshift cluster to use the security group $GROUP_ID
-
-```bash
-aws redshift modify-cluster --cluster-identifier $CLUSTER_NAME --vpc-security-group-ids $GROUP_ID
-```
-
-Getting cluster URL
-
-```bash
-$ CLUSTER=$(aws redshift describe-clusters --cluster-identifier $CLUSTER_NAME | jq -r '.Clusters[0].Endpoint.Address')
-```
-
-Create database in Redshift:
-
-```bash
-docker run -i -e CLUSTER="$CLUSTER" -v "${DIR}/customers.sql":/tmp/customers.sql debezium/postgres:15-alpine psql -h "$CLUSTER" -U "masteruser" -d "dev" -p "5439" -f "/tmp/customers.sql" << EOF
-myPassword1
-EOF
-```
-
-Verify data is in Redshift:
-
-```bash
-docker run -i -e CLUSTER="$CLUSTER" -v "${DIR}/customers.sql":/tmp/customers.sql debezium/postgres:15-alpine psql -h "$CLUSTER" -U "masteruser" -d "dev" -p "5439" << EOF
-myPassword1
-SELECT * from CUSTOMERS;
-EOF
-```
-
-Creating JDBC AWS Redshift source connector:
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-                "tasks.max": "1",
-                "connection.url": "jdbc:redshift://$CLUSTER:$PORT/dev?user=masteruser&password=myPassword1&ssl=false",
-                "table.whitelist": "customers",
-                "mode": "timestamp+incrementing",
-                "timestamp.column.name": "update_ts",
-                "incrementing.column.name": "id",
-                "topic.prefix": "redshift-",
-                "validate.non.null":"false",
-                "errors.log.enable": "true",
-                "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/redshift-jdbc-source/config | jq .
-```
-
-Verifying topic `redshift-customers`
-
-```bash
-playground topic consume --topic redshift-customers --min-expected-messages 5 --timeout 60
-```
-
-Result is:
+Example of record:
 
 ```json
 {
-    "club_status": {
-        "string": "bronze"
-    },
-    "comments": {
-        "string": "Universal optimal hierarchy"
-    },
-    "create_ts": {
-        "long": 1580230824909
-    },
-    "email": {
-        "string": "rblaisdell0@rambler.ru"
-    },
-    "first_name": {
-        "string": "Rica"
-    },
-    "gender": {
-        "string": "Female"
-    },
-    "id": 1,
-    "last_name": {
-        "string": "Blaisdell"
-    },
-    "update_ts": {
-        "long": 1580230824909
-    }
+  "club_status": {
+    "string": "bronze"
+  },
+  "comments": {
+    "string": "Universal optimal hierarchy"
+  },
+  "create_ts": {
+    "long": 1580230824909
+  },
+  "email": {
+    "string": "rblaisdell0@rambler.ru"
+  },
+  "first_name": {
+    "string": "Rica"
+  },
+  "gender": {
+    "string": "Female"
+  },
+  "id": 1,
+  "last_name": {
+    "string": "Blaisdell"
+  },
+  "update_ts": {
+    "long": 1580230824909
+  }
 }
 ```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

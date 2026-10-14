@@ -1,120 +1,52 @@
 # ActiveMQ Sink connector
 
-
-
 ## Objective
 
-Quickly test [ActiveMQ Sink](https://docs.confluent.io/current/connect/kafka-connect-activemq/sink/index.html#kconnect-long-activemq-sink-connector) connector.
+Quickly test the [ActiveMQ Sink](https://docs.confluent.io/kafka-connectors/activemq-sink/current/overview.html) connector.
 
-Using ActiveMQ Docker [image](https://hub.docker.com/r/rmohr/activemq/)
+ActiveMQ runs with the [rmohr/activemq](https://hub.docker.com/r/rmohr/activemq/) Docker image (`5.15.9`). The ActiveMQ UI is reachable at [http://127.0.0.1:8161](http://127.0.0.1:8161) (`admin/admin`).
 
+## Prerequisites
 
-
+With CP 8.0+, connector version 2.1.16 or later is required when `--connector-tag` is set (the scripts exit with code `111` otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for active-mq-sink.sh in this folder
-```
-
-with SSL encryption + Mutual TLS authentication:
-
-```
-$ just use <playground run> command and search for active-mq-sink-mtls.sh in this folder
-```
-
-
-## Details of what the script is doing
-
-ActiveMQ UI is reachable at [http://127.0.0.1:8161](http://127.0.0.1:8161]) (`admin/admin`)
-
-### Without SSL
-
-Sending messages to topic `sink-messages`
-
 ```bash
-$ docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic sink-messages << EOF
-This is my message
-EOF
+playground run -f active-mq-sink.sh
 ```
 
-The connector is created with:
+| Script | Description |
+| --- | --- |
+| `active-mq-sink.sh` | Plaintext connection (`tcp://activemq:61616`) |
+| `active-mq-sink-mtls.sh` | SSL encryption + mutual TLS authentication (`ssl://activemq:61617`) |
 
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.jms.ActiveMqSinkConnector",
-               "topics": "sink-messages",
-               "activemq.url": "tcp://activemq:61616",
-               "activemq.username": "admin",
-               "activemq.password": "admin",
-               "jms.destination.name": "DEV.QUEUE.1",
-               "jms.destination.type": "queue",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/active-mq-sink/config | jq .
-```
+## What the script does
 
-Get messages from DEV.QUEUE.1 JMS queue:
+1. (mTLS only) Generates keys and certificates for ActiveMQ and Connect with `security/certs-create.sh`.
+2. Starts the environment with an `activemq` container.
+3. Produces one message (`This is my message`) to topic `sink-messages` with `playground topic produce`.
+4. Creates the ActiveMQ sink connector (`io.confluent.connect.jms.ActiveMqSinkConnector`) writing to the JMS queue `DEV.QUEUE.1`.
+5. Reads the message from `DEV.QUEUE.1` with the ActiveMQ REST API (`http://localhost:8161/api/message/DEV.QUEUE.1?type=queue`) and verifies its content.
 
-```bash
-$ curl -XGET -u admin:admin -d "body=message" http://localhost:8161/api/message/DEV.QUEUE.1?type=queue
-```
+## mTLS setup details
 
-We get:
-
-```
-This is my message
-```
-
-### With SSL encryption + Mutual TLS auth
-
-Active QM is set with (file `/opt/apache-activemq-5.15.9/conf/activemq.xml`):
+ActiveMQ is configured with (`activemq.xml`, mounted as `/opt/apache-activemq-5.15.9/conf/activemq.xml`):
 
 ```xml
 <transportConnector name="ssl" uri="ssl://0.0.0.0:61617?trace=true&amp;needClientAuth=true" />
 ```
 
-and
-
 ```xml
-    <sslContext>
-        <sslContext keyStore="file:/tmp/kafka.activemq.keystore.jks" keyStorePassword="confluent" trustStore="file:/tmp/kafka.activemq.truststore.jks" trustStorePassword="confluent" />
-    </sslContext>
+<sslContext>
+    <sslContext keyStore="file:/tmp/kafka.activemq.keystore.jks" keyStorePassword="confluent" trustStore="file:/tmp/kafka.activemq.truststore.jks" trustStorePassword="confluent" />
+</sslContext>
 ```
 
-Connect is set with:
+The Connect worker is configured with:
 
-```yml
-      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/tmp/truststore.jks
-                  -Djavax.net.ssl.trustStorePassword=confluent
-                  -Djavax.net.ssl.keyStore=/tmp/keystore.jks
-                  -Djavax.net.ssl.keyStorePassword=confluent
+```yaml
+      KAFKA_OPTS: "-Djavax.net.ssl.trustStore=/tmp/truststore.jks -Djavax.net.ssl.trustStorePassword=confluent -Djavax.net.ssl.keyStore=/tmp/keystore.jks -Djavax.net.ssl.keyStorePassword=confluent"
 ```
 
-The connector is created with:
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.activemq.ActiveMQSourceConnector",
-               "kafka.topic": "MyKafkaTopicName",
-               "activemq.url": "ssl://activemq:61617",
-               "jms.destination.name": "DEV.QUEUE.1",
-               "jms.destination.type": "queue",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/active-mq-source-mtls/config | jq .
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+and the connector uses `"activemq.url": "ssl://activemq:61617"`.

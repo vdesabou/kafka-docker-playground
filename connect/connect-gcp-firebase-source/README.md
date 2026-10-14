@@ -1,29 +1,61 @@
 # GCP Firebase Source connector
 
-
-
 ## Objective
 
-Quickly test [GCP Firebase Source](https://docs.confluent.io/current/connect/kafka-connect-firebase/source/index.html#quick-start) connector.
+Quickly test the [GCP Firebase Source](https://docs.confluent.io/kafka-connectors/firebase/current/source/overview.html) connector.
 
+## Prerequisites
 
 * Active Google Cloud Platform (GCP) account with authorization to create resources
+* A service account key, either saved as `keyfile.json` in this folder or provided through `GCP_KEYFILE_CONTENT` (see [GCP Firebase setup](#gcp-firebase-setup))
+* A Firebase Realtime Database enabled in your GCP project
 
-## GCP Firebase Setup
+| Variable | Description |
+| --- | --- |
+| `GCP_PROJECT` | GCP project ID (required) |
+| `GCP_KEYFILE_CONTENT` | Content of the service account key, used when `keyfile.json` is not present |
+| `GCP_FIREBASE_REGION` | Region of the Realtime Database (default: `europe-west1`) |
 
-### Service Account setup
+`gcp.firebase.database.reference` is built from `GCP_PROJECT` and `GCP_FIREBASE_REGION`:
 
-Create `Service Account` from IAM & Admin console:
+* default: `https://<GCP_PROJECT>-default-rtdb.<GCP_FIREBASE_REGION>.firebasedatabase.app/musicBlog`
+* `GCP_FIREBASE_REGION=us-central1` (legacy databases): `https://<GCP_PROJECT>.firebaseio.com/musicBlog`
 
-Set `Service account name`:
+## How to run
+
+```bash
+export GCP_PROJECT=<your-gcp-project>
+playground run -f gcp-firebase-source.sh
+```
+
+| Script | Description |
+| --- | --- |
+| `gcp-firebase-source.sh` | Firebase Realtime Database source with snapshot enabled |
+
+Requires connector version 1.2.7 or later with CP 8.x (the script exits with code 111 otherwise).
+
+## What the script does
+
+1. Removes all data from the Realtime Database, then loads `musicBlog.json` with the `firebase-tools` CLI and displays it
+2. Starts the environment
+3. Creates the `firebase-source` connector on the `musicBlog` reference, with `gcp.firebase.snapshot=true`
+4. Verifies that records arrive in the `artists` and `songs` topics with `playground topic consume`
+
+## GCP Firebase setup
+
+### Service account
+
+Create a `Service Account` from the IAM & Admin console.
+
+Set the `Service account name`:
 
 ![Service Account setup](Screenshot1.png)
 
-Choose permission `Firebase`->`Firebase Realtime Database Viewer`
+Choose the permission `Firebase` -> `Firebase Realtime Database Viewer`:
 
 ![Service Account setup](Screenshot2.png)
 
-Create Key:
+Create a key:
 
 ![Service Account setup](Screenshot3.png)
 
@@ -31,43 +63,38 @@ Download it as JSON:
 
 ![Service Account setup](Screenshot4.png)
 
-Rename it to `keyfile.json` and place it in `./keyfile.json`
+Rename it to `keyfile.json` and place it in this folder, or export its content in `GCP_KEYFILE_CONTENT`:
 
+```bash
+export GCP_KEYFILE_CONTENT=$(cat keyfile.json | jq -aRs . | sed 's/^"//' | sed 's/"$//')
+```
 
-### Realtime Database setup
+Note: the script removes and reloads the database content, so the service account needs write access to the database for that step.
 
-Go to [Firebase console](https://console.firebase.google.com), click `Add Project` and choose your GCP project.
+### Realtime Database
 
-In your console, click `Database`on the left sidebar:
+Go to the [Firebase console](https://console.firebase.google.com), click `Add Project` and choose your GCP project.
+
+In the console, click `Database` on the left sidebar:
 
 ![Realtime Database setup](Screenshot5.png)
 
-Click on `Realtime Database`:
+Click `Realtime Database`:
 
 ![Realtime Database setup](Screenshot6.png)
 
-Click on `Enable`:
+Click `Enable`:
 
 ![Realtime Database setup](Screenshot7.png)
 
-Click on vertical dots on the right hand side and choose `Import JSON`:
+Optionally, import the sample data manually (the script also loads it): click the vertical dots on the right-hand side and choose `Import JSON`:
 
 ![Realtime Database setup](Screenshot8.png)
 
-Browse to file `./musicBlog.json` and import it
+Browse to `musicBlog.json` and import it:
 
 ![Realtime Database setup](Screenshot9.png)
 
 You should see:
 
 ![Realtime Database setup](Screenshot10.png)
-
-## How to run
-
-Simply run:
-
-```bash
-$ just use <playground run> command and search for gcp-firebase-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> .sh in this folder
-```
-
-`gcp.firebase.database.reference` is built from `GCP_PROJECT` and the `GCP_FIREBASE_REGION` environment variable (defaults to `europe-west1`), e.g. `https://<GCP_PROJECT>-default-rtdb.<GCP_FIREBASE_REGION>.firebasedatabase.app/musicBlog`. Set `GCP_FIREBASE_REGION` to `us-central1` for legacy databases using the `https://<GCP_PROJECT>.firebaseio.com/musicBlog` format instead.

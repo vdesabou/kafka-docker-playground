@@ -1,77 +1,47 @@
 # JDBC SQL Server sink connector
 
-
-
 ## Objective
 
-Quickly test [JDBC SQL Server](https://docs.confluent.io/current/connect/kafka-connect-jdbc/sink-connector/index.html#kconnect-long-jdbc-sink-connector) sink connector.
+Quickly test the [JDBC Sink](https://docs.confluent.io/kafka-connectors/jdbc/current/sink-connector/overview.html) connector with Microsoft SQL Server 2019, using either the jTDS or the Microsoft JDBC driver.
 
+## Prerequisites
 
-
+* With CP 8.x, the JDBC connector version must be 10.8.0 or later (the scripts exit with code 111 otherwise).
+* `sqlserver-jtds-sink-ssl.sh` exits with code 111 on CP 5.9.0 and older (non `ubi8` images), see [#1107](https://github.com/vdesabou/kafka-docker-playground/issues/1107).
 
 ## How to run
 
-Without SSL:
-
-```
-$ just use <playground run> command and search for sqlserver-jtds-sink.sh in this folder
-
-$ just use <playground run> command and search for sqlserver-microsoft-sink.sh in this folder
+```bash
+playground run -f sqlserver-microsoft-sink.sh
 ```
 
-with SSL encryption:
+| Script | Description |
+| --- | --- |
+| `sqlserver-jtds-sink.sh` | jTDS driver, no SSL |
+| `sqlserver-jtds-sink-ssl.sh` | jTDS driver, SSL encryption (`ssl=require`) |
+| `sqlserver-microsoft-sink.sh` | Microsoft driver, no SSL (`encrypt=false`) |
+| `sqlserver-microsoft-sink-ssl.sh` | Microsoft driver, SSL encryption with server certificate validation against a truststore |
 
-```
-$ just use <playground run> command and search for sqlserver-jtds-sink-ssl.sh in this folder
+## What the script does
 
-$ just use <playground run> command and search for sqlserver-microsoft-sink-ssl.sh in this folder
-```
+1. SSL variants only: creates a self-signed certificate for `CN=sqlserver` and a JKS truststore (see below).
+2. Starts the environment with a `sqlserver` container (`mcr.microsoft.com/mssql/server:2019-latest`).
+3. Creates the sink connector (`sqlserver-sink` or `sqlserver-sink-ssl`) on topic `orders` with user `sa` and `auto.create=true`.
+4. Produces 2 Avro records (`id`, `product`, `quantity`, `price`) to topic `orders` with `playground topic produce`.
+5. Runs `select * from orders` with `sqlcmd` and checks that the `foo` row is present.
 
-## Details of what the script is doing
+## SSL setup details
 
-### JTDS JDBC driver
-
-Creating JDBC SQL Server (with JTDS) source connector
-
-#### Without SSL
+Create a self-signed certificate and import it into a truststore:
 
 ```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-                    "tasks.max": "1",
-                    "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433/testDB",
-                    "connection.user": "sa",
-                    "connection.password": "Password!",
-                    "table.whitelist": "customers",
-                    "mode": "incrementing",
-                    "incrementing.column.name": "id",
-                    "topic.prefix": "sqlserver-",
-                    "validate.non.null":"false",
-                    "errors.log.enable": "true",
-                    "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/sqlserver-source/config | jq .
+openssl req -x509 -nodes -newkey rsa:2048 -subj '/CN=sqlserver' -keyout /tmp/mssql.key -out /tmp/mssql.pem -days 365
+keytool -importcert -alias MSSQLCACert -noprompt -file /tmp/mssql.pem -keystore /tmp/truststore.jks -storepass confluent
 ```
 
-#### with SSL encryption
+`ssl/mssql.conf` forces encryption on the server:
 
-Create a self-signed certificate:
-
-```bash
-$ openssl req -x509 -nodes -newkey rsa:2048 -subj '/CN=sqlserver' -keyout /tmp/mssql.key -out /tmp/mssql.pem -days 365
-```
-
-Creating JKS from pem files
-
-```bash
-$ keytool -importcert -alias MSSQLCACert -noprompt -file /tmp/mssql.pem -keystore /tmp/truststore.jks -storepass confluent
-```
-
-`mssql.conf` is set with:
-
-```conf
+```ini
 [network]
 tlscert = /tmp/mssql.pem
 tlskey = /tmp/mssql.key
@@ -79,106 +49,27 @@ tlsprotocols = 1.2
 forceencryption = 1
 ```
 
-With volumes on `sqlserver`:
+It is mounted in the `sqlserver` container with the certificate and key:
 
-```yml
-volumes:
-     - ../../connect/connect-jdbc-sqlserver-sink/ssl/mssql.conf:/var/opt/mssql/mssql.conf
-     - ../../connect/connect-jdbc-sqlserver-sink/ssl/mssql.pem:/tmp/mssql.pem
-     - ../../connect/connect-jdbc-sqlserver-sink/ssl/mssql.key:/tmp/mssql.key
+```yaml
+    volumes:
+      - ../../connect/connect-jdbc-sqlserver-sink/ssl/mssql.conf:/var/opt/mssql/mssql.conf
+      - ../../connect/connect-jdbc-sqlserver-sink/ssl/mssql.pem:/tmp/mssql.pem
+      - ../../connect/connect-jdbc-sqlserver-sink/ssl/mssql.key:/tmp/mssql.key
 ```
 
-On `connect` container we have:
+jTDS: the truststore is set at JVM level on the `connect` container (`docker-compose.plaintext.jtds-ssl.yml`):
 
-```yml
-KAFKA_OPTS: -Djavax.net.ssl.trustStore=/tmp/truststore.jks
-          -Djavax.net.ssl.trustStorePassword=confluent
+```yaml
+      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/tmp/truststore.jks -Djavax.net.ssl.trustStorePassword=confluent
 ```
 
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-                    "tasks.max": "1",
-                    "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433;ssl=require",
-                    "connection.user": "sa",
-                    "connection.password": "Password!",
-                    "topics": "orders",
-                    "auto.create": "true"
-          }' \
-     http://localhost:8083/connectors/sqlserver-sink-ssl/config | jq .
+```json
+"connection.url": "jdbc:jtds:sqlserver://sqlserver:1433;ssl=require"
 ```
 
-### Microsoft JDBC driver
+Microsoft driver: the truststore is set in the [connection URL](https://docs.microsoft.com/en-us/sql/connect/jdbc/connecting-with-ssl-encryption?view=sql-server-ver16):
 
-#### Without SSL
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-                    "tasks.max": "1",
-                    "connection.url": "jdbc:sqlserver://sqlserver:1433;databaseName=testDB;encrypt=false",
-                    "connection.user": "sa",
-                    "connection.password": "Password!",
-                    "table.whitelist": "customers",
-                    "mode": "incrementing",
-                    "incrementing.column.name": "id",
-                    "topic.prefix": "sqlserver-",
-                    "validate.non.null":"false",
-                    "errors.log.enable": "true",
-                    "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/sqlserver-source/config | jq .
-
+```json
+"connection.url": "jdbc:sqlserver://sqlserver:1433;encrypt=true;trustServerCertificate=false;trustStore=/tmp/truststore.jks;trustStorePassword=confluent;"
 ```
-
-#### with SSL encryption
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-               "tasks.max": "1",
-               "connection.url": "jdbc:sqlserver://sqlserver:1433;encrypt=true;trustServerCertificate=false;trustStore=/tmp/truststore.jks;trustStorePassword=confluent;",
-               "connection.user": "sa",
-               "connection.password": "Password!",
-               "topics": "orders",
-               "auto.create": "true"
-          }' \
-     http://localhost:8083/connectors/sqlserver-sink-ssl/config | jq .
-```
-
-Sending messages to topic orders
-
-```bash
-$ docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price","type": "float"}]}' << EOF
-{"id": 999, "product": "foo", "quantity": 100, "price": 50}
-EOF
-```
-
-Show content of `orders` table:
-
-```bash
-$ ocker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
-select * from orders
-GO
-EOF
-```
-
-
-Results:
-
-```
-product                                                                                                                                                                                                                                                          quantity    price          id
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ----------- -------------- -----------
-foo                                                                                                                                                                                                                                                                      100           50.0         999
-
-(1 rows affected)
-```
-
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

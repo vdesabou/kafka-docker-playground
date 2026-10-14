@@ -1,106 +1,40 @@
 # AWS Redshift Sink connector
 
-
-
 ## Objective
 
-Quickly test [AWS Redshift](https://docs.confluent.io/current/connect/kafka-connect-aws-redshift/index.html#kconnect-long-aws-redshift-sink-connector) connector.
+Quickly test the [AWS Redshift Sink](https://docs.confluent.io/kafka-connectors/aws-redshift/current/overview.html) connector.
 
-## AWS Setup
+## Prerequisites
 
-* Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
-* Set up [AWS Credentials](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html#aws-credentials)
+- An [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws), see also [AWS Credentials](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html#aws-credentials). The credentials must be allowed to create Redshift clusters and EC2 security groups.
+- AWS credentials: export `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_REGION`, or configure `~/.aws/credentials` and `~/.aws/config`.
+- With CP 8.0+, connector version 1.2.0 or later is required when `--connector-tag` is set (the scripts exit with code `111` otherwise).
+- `redshift-sink-with-assuming-iam-role.sh` only: file `$HOME/.aws/credentials-with-assuming-iam-role`, an AWS credentials file configured to assume the IAM role, mounted as `~/.aws/credentials` in the Connect container (with your `~/.aws/config`).
 
-You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or set files `~/.aws/credentials` and `~/.aws/config`.
-
+> [!WARNING]
+> The script creates a publicly accessible single-node `ra3.large` Redshift cluster and a security group allowing ingress from `0.0.0.0/0` on port `5439`. Creating the cluster takes several minutes.
 
 ## How to run
 
-Simply run:
-
 ```bash
-$ just use <playground run> command and search for redshift-sink.sh in this folder
+playground run -f redshift-sink.sh
 ```
 
-If you want to assume IAM roles:
+| Script | Description |
+| --- | --- |
+| `redshift-sink.sh` | Connector configured with `aws.access.key.id` / `aws.secret.key.id`; stale clusters of previous runs are reaped first |
+| `redshift-sink-with-assuming-iam-role.sh` | Default credentials provider chain, with an AWS credentials file that assumes an IAM role mounted in the Connect container (not supported with `cfk`) |
 
-```
-$ just use <playground run> command and search for redshift-sink-with-assuming-iam-role.sh in this folder
-```
+## What the script does
 
-## Details of what the script is doing
+1. Generates a random master password, stored in the `data` file and referenced by the connector with `${file:/data:password}`.
+2. Creates the Redshift cluster, waits until it is `available`, then creates a security group opening port `5439` and attaches it to the cluster.
+3. Produces 2 Avro records to topic `orders` with `playground topic produce`.
+4. Creates the AWS Redshift sink connector (`io.confluent.connect.aws.redshift.RedshiftSinkConnector`) with `auto.create=true` and `pk.mode=kafka`.
+5. Queries the `orders` table with `psql` (in a `postgres` container) and verifies the data is there.
+6. On exit, asks for confirmation and then deletes the Redshift cluster and the security group.
 
-Create AWS Redshift cluster
-
-```bash
-$ aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password myPassword1 --node-type ra3.large --cluster-type single-node --publicly-accessible --tags Key=cflt_managed_by,Value=user Key=cflt_managed_id,Value="$USER"
-```
-
-Create a security group
-
-```bash
-GROUP_ID=$(aws ec2 create-security-group --group-name sg$CLUSTER_NAME --description "playground aws redshift" | jq -r .GroupId)
-```
-
-Allow ingress traffic from 0.0.0.0/0 on port 5439
-
-```bash
-aws ec2 authorize-security-group-ingress --group-id $GROUP_ID --protocol tcp --port 5439 --cidr "0.0.0.0/0"
-```
-
-Modify AWS Redshift cluster to use the security group $GROUP_ID
-
-```bash
-aws redshift modify-cluster --cluster-identifier $CLUSTER_NAME --vpc-security-group-ids $GROUP_ID
-```
-
-Getting cluster URL
-
-```bash
-$ CLUSTER=$(aws redshift describe-clusters --cluster-identifier $CLUSTER_NAME | jq -r .Clusters[0].Endpoint.Address)
-```
-
-Sending messages to topic `orders`
-
-```bash
-$ docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price","type": "float"}]}' << EOF
-{"id": 999, "product": "foo", "quantity": 100, "price": 50}
-EOF
-```
-
-Creating AWS Redshift Sink connector with cluster url $CLUSTER
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.aws.redshift.RedshiftSinkConnector",
-               "tasks.max": "1",
-               "topics": "orders",
-               "aws.redshift.domain": "$CLUSTER",
-               "aws.redshift.port": "5439",
-               "aws.redshift.database": "dev",
-               "aws.redshift.user": "masteruser",
-               "aws.redshift.password": "myPassword1",
-               "auto.create": "true",
-               "pk.mode": "kafka",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/redshift-sink/config | jq .
-```
-
-Verify data is in Redshift
-
-```bash
-$ docker run -i debezium/postgres:15-alpine psql -h $CLUSTER -U masteruser -d dev -p 5439 << EOF
-myPassword1
-SELECT * from orders;
-EOF
-```
-
-Results:
+Example of results:
 
 ```
  __connect_topic |             product             | quantity | __connect_partition | __connect_offset | price | id
@@ -108,5 +42,3 @@ Results:
  orders          | foo                             |      100 |                   0 |                0 |    50 | 999
 (1 rows)
 ```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

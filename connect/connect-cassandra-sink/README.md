@@ -1,81 +1,36 @@
 # Cassandra Sink connector
 
-
-
 ## Objective
 
-Quickly test [Cassandra Sink](https://docs.confluent.io/current/connect/kafka-connect-cassandra/index.html#kconnect-long-cassandra-sink-connector) connector.
+Quickly test the [Cassandra Sink](https://docs.confluent.io/kafka-connectors/cassandra/current/overview.html) connector.
 
 Cassandra `3.0` is used.
 
+## Prerequisites
 
-
+With CP 8.0+, connector version 2.0.11 or later is required when `--connector-tag` is set (the script exits with code `111` otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for cassandra.sh in this folder
-```
-
-## Details of what the script is doing
-
-Getting value for cassandra.local.datacenter (2.0.x only), see https://docs.confluent.io/kafka-connect-cassandra/current/index.html#upgrading-to-version-2-0-x
-
 ```bash
-DATACENTER=$(docker exec cassandra cqlsh -e 'SELECT data_center FROM system.local;' | head -4 | tail -1 | tr -d ' ')
+playground run -f cassandra-sink.sh
 ```
 
-Sending messages to topic topic1
+| Script | Description |
+| --- | --- |
+| `cassandra-sink.sh` | Cassandra sink connector writing to keyspace `test` |
 
-```bash
-$ playground topic produce -t topic1 --nb-messages 10 --forced-value '{"f1": "value1"}' << 'EOF'
-{
-  "type": "record",
-  "name": "myrecord",
-  "fields": [
-    {
-      "name": "f1",
-      "type": "string"
-    }
-  ]
-}
-EOF
+## What the script does
+
+1. Starts the environment with a `cassandra` container and waits until `cqlsh` answers.
+2. Reads the data center name from `system.local`, required by `cassandra.local.datacenter` with connector 2.0.x (see [Upgrading to version 2.0.x](https://docs.confluent.io/kafka-connectors/cassandra/current/overview.html#upgrading-to-version-2-0-x)).
+3. Produces 10 Avro records to topic `topic1` with `playground topic produce`.
+4. Creates the Cassandra sink connector (`io.confluent.connect.cassandra.CassandraSinkConnector`), using a `ValueToKey` transform on field `f1` to build the primary key.
+5. Queries `test.topic1` with `cqlsh` and verifies the data is there.
+
+Example of results:
+
 ```
-
-Creating Cassandra Sink connector
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.cassandra.CassandraSinkConnector",
-                    "tasks.max": "1",
-                    "topics" : "topic1",
-                    "cassandra.contact.points" : "cassandra",
-                    "cassandra.keyspace" : "test",
-                    "cassandra.consistency.level": "ONE",
-                    "cassandra.local.datacenter":"$DATACENTER",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1",
-                    "transforms": "createKey",
-                    "transforms.createKey.fields": "f1",
-                    "transforms.createKey.type": "org.apache.kafka.connect.transforms.ValueToKey"
-          }' \
-     http://localhost:8083/connectors/cassandra-sink/config | jq .
-```
-
-Verify messages are in cassandra table test.topic1
-
-```bash
-$ docker exec cassandra cqlsh -e 'select * from test.topic1;'
-```
-
-Results:
-
-```bash
  f1
 ---------
   value7
@@ -91,5 +46,3 @@ Results:
 
 (10 rows)
 ```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

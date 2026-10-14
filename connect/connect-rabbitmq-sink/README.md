@@ -1,83 +1,41 @@
 # RabbitMQ Sink connector
 
-
-
 ## Objective
 
-Quickly test [RabbitMQ Sink](https://docs.confluent.io/current/connect/kafka-connect-rabbitmq/sink/index.html#rabbitmq-sink-connector-for-cp) connector.
+Quickly test the [RabbitMQ Sink](https://docs.confluent.io/kafka-connectors/rabbitmq-sink/current/overview.html) connector.
 
+## Prerequisites
+
+With CP 8.x, the minimum supported connector version is 1.8.0 (the script exits with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for rabbitmq.sh in this folder
-```
-
-## Details of what the script is doing
-
-Create RabbitMQ exchange, queue and binding:
-
 ```bash
-$ docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare exchange name=exchange1 type=direct
-$ docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare queue name=queue1 durable=true
-$ docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare binding source=exchange1 destination=queue1 routing_key=rkey1
+playground run -f rabbitmq-sink.sh
 ```
 
-Sending messages to topic `rabbitmq-messages`:
+| Script | Description |
+| --- | --- |
+| `rabbitmq-sink.sh` | Basic example |
+| `rabbitmq-sink-ssl.sh` | Same, with SSL on port `5671` (`rabbitmq.security.protocol=SSL`, certificates generated with `playground tools certs-create`) |
 
-```bash
-$ seq 10 | docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic rabbitmq-messages
-```
+## What the script does
 
-Creating RabbitMQ Sink connector:
+1. Starts the environment with a RabbitMQ container (`ssl` variant: first generates keystores, truststores and certificates for `connect` and `rabbitmq` in `security/`).
+2. Creates exchange `exchange1` (direct), queue `queue1` and a binding with routing key `rkey1` with `rabbitmqadmin`.
+3. Produces 10 messages to topic `rabbitmq-messages` with `playground topic produce`.
+4. Creates the RabbitMQ sink connector `rabbitmq-sink` (exchange `exchange1`, routing key `rkey1`, `PERSISTENT` delivery mode).
+5. Waits for the connector to consume all records with `playground connector show-lag`, then verifies with `rabbitmqadmin get queue=queue1` that the messages are in the queue.
 
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class" : "io.confluent.connect.rabbitmq.sink.RabbitMQSinkConnector",
-               "tasks.max" : "1",
-               "topics": "rabbitmq-messages",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
-               "rabbitmq.queue" : "myqueue",
-               "rabbitmq.host" : "rabbitmq",
-               "rabbitmq.username" : "myuser",
-               "rabbitmq.password" : "mypassword",
-               "rabbitmq.exchange": "exchange1",
-               "rabbitmq.routing.key": "rkey1",
-               "rabbitmq.delivery.mode": "PERSISTENT",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/rabbitmq-sink/config | jq .
-```
+Example of result:
 
-Check messages received in RabbitMQ:
-
-```bash
-$ docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword get queue=queue1 count=10
-```
-
-Results:
-
-```
+```text
 +-------------+-----------+---------------+---------+---------------+------------------+-------------+
 | routing_key | exchange  | message_count | payload | payload_bytes | payload_encoding | redelivered |
 +-------------+-----------+---------------+---------+---------------+------------------+-------------+
 | rkey1       | exchange1 | 9             | 1       | 1             | string           | False       |
 | rkey1       | exchange1 | 8             | 2       | 1             | string           | False       |
-| rkey1       | exchange1 | 7             | 3       | 1             | string           | False       |
-| rkey1       | exchange1 | 6             | 4       | 1             | string           | False       |
-| rkey1       | exchange1 | 5             | 5       | 1             | string           | False       |
-| rkey1       | exchange1 | 4             | 6       | 1             | string           | False       |
-| rkey1       | exchange1 | 3             | 7       | 1             | string           | False       |
-| rkey1       | exchange1 | 2             | 8       | 1             | string           | False       |
-| rkey1       | exchange1 | 1             | 9       | 1             | string           | False       |
+...
 | rkey1       | exchange1 | 0             | 10      | 2             | string           | False       |
 +-------------+-----------+---------------+---------+---------------+------------------+-------------+
 ```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

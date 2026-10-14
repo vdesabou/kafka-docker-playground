@@ -1,104 +1,35 @@
 # SFTP Source connector
 
-
-
 ## Objective
 
-Quickly test [SFTP Source](https://docs.confluent.io/current/connect/kafka-connect-sftp/source-connector/index.html#quick-start) connector.
+Quickly test the [SFTP Source](https://docs.confluent.io/kafka-connectors/sftp/current/source-connector/overview.html) connector.
 
+## Prerequisites
 
-
+* With CP 8.x, connector version 3.2.0 or later.
+* `ssh-keygen` and `openssl` on the host for the SSH key / PEM file variants.
+* `sftp-source-kerberos.sh` is not supported with the `cfk` environment.
 
 ## How to run
 
-* With CSV (no schema)
-
 ```bash
-$ just use <playground run> command and search for sftp-source-csv.sh in this folder
+playground run -f sftp-source-csv.sh
 ```
 
-* With CSV (with schema)
+| Script | Description |
+| --- | --- |
+| `sftp-source-csv.sh` | CSV file with header, schema generated (`SftpCsvSourceConnector`, `schema.generation.enabled=true`) |
+| `sftp-source-csv-with-schema.sh` | CSV file with explicit `key.schema` / `value.schema` |
+| `sftp-source-tsv.sh` | TSV file (`csv.separator.char=9`) |
+| `sftp-source-json.sh` | JSON file without schema (`SftpSchemaLessJsonSourceConnector`) |
+| `sftp-source-json-with-schema.sh` | JSON file with explicit `key.schema` / `value.schema` (`SftpJsonSourceConnector`) |
+| `sftp-source-ssh-key.sh` | CSV, SSH key authentication (`tls.private.key` / `tls.public.key` with a passphrase) |
+| `sftp-source-ssh-pem-file.sh` | CSV, SSH key authentication with a PEM file (`tls.pemfile`) |
+| `sftp-source-kerberos.sh` | CSV, Kerberos authentication (`kerberos.keytab.path`, `kerberos.user.principal`) against an SSH server with a KDC |
 
-```bash
-$ just use <playground run> command and search for sftp-source-csv-with-schema.sh in this folder
-```
+## What the script does
 
-* With TSV
-
-```bash
-$ just use <playground run> command and search for sftp-source-tsv.sh in this folder
-```
-
-* With JSON (no schema)
-
-```bash
-$ just use <playground run> command and search for sftp-source-json.sh in this folder
-```
-
-* With JSON (with schema)
-
-```bash
-$ just use <playground run> command and search for sftp-source-json-with-schema.sh in this folder
-```
-
-* With Kerberos:
-
-```bash
-$ just use <playground run> command and search for sftp-source-kerberos.sh in this folder
-```
-
-* With SSH key
-
-```bash
-$ just use <playground run> command and search for sftp-source-ssh-key.sh in this folder
-```
-
-* With SSH PEM file
-
-```bash
-$ just use <playground run> command and search for sftp-source-ssh-pem-file.sh in this folder
-```
-
-
-## Details of what the script is doing
-
-Creating CSV SFTP Source connector
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-        "topics": "test_sftp_sink",
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",
-               "cleanup.policy":"NONE",
-               "behavior.on.error":"IGNORE",
-               "input.path": "/home/foo/upload/input",
-               "error.path": "/home/foo/upload/error",
-               "finished.path": "/home/foo/upload/finished",
-               "input.file.pattern": ".*\\.csv",
-               "sftp.username":"foo",
-               "sftp.password":"pass",
-               "sftp.host":"sftp-server",
-               "sftp.port":"22",
-               "kafka.topic": "sftp-testing-topic",
-               "csv.first.row.as.header": "true",
-               "schema.generation.enabled": "true"
-          }' \
-     http://localhost:8083/connectors/sftp-source-csv/config | jq .
-```
-
-Verifying topic `sftp-testing-topic`
-
-```bash
-playground topic consume --topic sftp-testing-topic --min-expected-messages 2 --timeout 60
-```
-
-Results:
-
-```json
-{"id":{"string":"1"},"first_name":{"string":"Salmon"},"last_name":{"string":"Baitman"},"email":{"string":"sbaitman0@feedburner.com"},"gender":{"string":"Male"},"ip_address":{"string":"120.181.75.98"},"last_login":{"string":"2015-03-01T06:01:15Z"},"account_balance":{"string":"17462.66"},"country":{"string":"IT"},"favorite_color":{"string":"#f09bc0"}}
-{"id":{"string":"2"},"first_name":{"string":"Debby"},"last_name":{"string":"Brea"},"email":{"string":"dbrea1@icio.us"},"gender":{"string":"Female"},"ip_address":{"string":"153.239.187.49"},"last_login":{"string":"2018-10-21T12:27:12Z"},"account_balance":{"string":"14693.49"},"country":{"string":"CZ"},"favorite_color":{"string":"#73893a"}}
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+1. Starts an SFTP server (for the SSH key variants, an RSA key pair with passphrase `mypassword` is generated first; for Kerberos, principals and keytabs are created in the KDC and copied to `connect` and `ssh-server`).
+2. Creates the `upload/input`, `upload/error` and `upload/finished` folders and copies a 2-line input file in `upload/input`.
+3. Creates the SFTP Source connector (`cleanup.policy=NONE`) writing to topic `sftp-testing-topic`.
+4. Verifies 2 records with `playground topic consume --topic sftp-testing-topic`.

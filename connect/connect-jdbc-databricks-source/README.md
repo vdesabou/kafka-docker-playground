@@ -1,90 +1,43 @@
 # JDBC Databricks Source connector
 
-
-
 ## Objective
 
-Quickly test [JDBC Databricks Source](https://docs.confluent.io/current/connect/kafka-connect-jdbc/source-connector) connector.
+Quickly test the [JDBC Source](https://docs.confluent.io/kafka-connectors/jdbc/current/source-connector/overview.html) connector with a Databricks SQL warehouse, using the Databricks JDBC driver.
 
-## Register a trial account
+## Prerequisites
 
-Go to [Databricks](https://www.databricks.com/try-databricks) and register for a trial.
+### Register a trial account
 
-Once the trial instance is ready, login the portal 
-Navigate to the SQL Warehouses -> Connection details to collect the Server hostname, HTTP Path.
-Click on your Account on the top right corner, select Settings. Select Developer and generate a new Personal Access token.
+1. Go to [Databricks](https://www.databricks.com/try-databricks) and register for a trial.
+2. Once the trial instance is ready, log in to the portal and go to **SQL Warehouses** > **Connection details** to collect the server hostname and HTTP path.
+3. Click your account in the top right corner, select **Settings** > **Developer** and generate a personal access token.
 
-Export the below Environment vairables
+| Variable | Description |
+| --- | --- |
+| `DATABRICKS_HOST` | SQL warehouse server hostname (e.g. `dbc-xxxxxxxx-xxxx.cloud.databricks.com`) |
+| `DATABRICKS_TOKEN` | Personal access token |
+| `DATABRICKS_HTTP_PATH` | SQL warehouse HTTP path (e.g. `/sql/1.0/warehouses/<id>`) |
 
-DATABRICKS_HOST
-
-DATABRICKS_TOKEN
-
-DATABRICKS_HTTP_PATH
+With CP 8.x, the JDBC connector version must be 10.8.0 or later (the script exits with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for databricks-source.sh in this folder
-```
-
-## Details of what the script is doing
-
-Create table in Databricks:
-
 ```bash
-docker exec -i databricks-sql-cli-container bash -c "python databricks_sql_cli.py" <<EOF
-create or replace table CUSTOMERS ( id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, first_name VARCHAR(50), last_name VARCHAR(50), email VARCHAR(50), gender VARCHAR(50), club_status VARCHAR(20), comments VARCHAR(90), create_ts timestamp DEFAULT CURRENT_TIMESTAMP , update_ts timestamp DEFAULT CURRENT_TIMESTAMP ) TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported');
-
-insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Rica', 'Blaisdell', 'rblaisdell0@rambler.ru', 'Female', 'bronze', 'Universal optimal hierarchy');
-insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Ruthie', 'Brockherst', 'rbrockherst1@ow.ly', 'Female', 'platinum', 'Reverse-engineered tangible interface');
-insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Mariejeanne', 'Cocci', 'mcocci2@techcrunch.com', 'Female', 'bronze', 'Multi-tiered bandwidth-monitored capability');
-insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Hashim', 'Rumke', 'hrumke3@sohu.com', 'Male', 'platinum', 'Self-enabling 24/7 firmware');
-insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach');
-insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Robinet', 'Leheude', 'rleheude5@reddit.com', 'Female', 'platinum', 'Virtual upward-trending definition');
-insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Fay', 'Huc', 'fhuc6@quantcast.com', 'Female', 'bronze', 'Operative composite capacity');
-insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Patti', 'Rosten', 'prosten7@ihg.com', 'Female', 'silver', 'Integrated bandwidth-monitored instruction set');
-insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Even', 'Tinham', 'etinham8@facebook.com', 'Male', 'silver', 'Virtual full-range info-mediaries');
-insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Brena', 'Tollerton', 'btollerton9@furl.net', 'Female', 'silver', 'Diverse tangible methodology');
-
-select * from customers order by id;
-exit
-EOF
-
+export DATABRICKS_HOST="<server hostname>"
+export DATABRICKS_TOKEN="<personal access token>"
+export DATABRICKS_HTTP_PATH="<http path>"
+playground run -f databricks-jdbc-source.sh
 ```
 
-Creating Databricks JDBC Source connector:
+| Script | Description |
+| --- | --- |
+| `databricks-jdbc-source.sh` | JDBC source in `incrementing` mode on a Databricks table |
 
-```bash
-playground connector create-or-update --connector jdbc-databricks-source  << EOF
-{
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-               "mode": "incrementing",
-               "table.whitelist": "customers",
-               "incrementing.column.name": "id",
-               "connection.url": "jdbc:databricks://$DATABRICKS_HOST:443/default;transportMode=http;ssl=1;AuthMech=3;httpPath=$DATABRICKS_HTTP_PATH;IgnoreTransactions=1;",
-               "connection.user": "token",
-               "connection.password" : "$DATABRICKS_TOKEN",
-               "topic.prefix": "databricks-"
-          }
-EOF
-```
+## What the script does
 
-sleep 5
-
-Verifying topic databricks-CUSTOMERS:
-
-```bash
-playground topic consume --topic databricks-customers --min-expected-messages 1 --timeout 60
-```
-
-Results:
-
-```json
-{"id": {"long": 1},"first_name": {"string": "Rica"},"last_name": {"string": "Blaisdell"},"email": {"string": "rblaisdell0@rambler.ru"},"gender": {"string": "Female"},"club_status": {"string": "bronze"},"comments": {"string": "Universal optimal hierarchy"},"create_ts": {"long": 1748960479035},"update_ts": {"long": 1748960479036}}
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+1. Downloads the Databricks JDBC driver (`DatabricksJDBC42.jar`, 2.7.3) if needed and adds it to the JDBC connector `lib` folder.
+2. Starts the SQL warehouse if it is stopped and waits until it is running.
+3. Starts the environment with a `databricks-sql-cli-container` helper (Python SQL client built from `databricks/`).
+4. Creates the `CUSTOMERS` table (identity `id` column) and inserts 21 rows through the SQL client.
+5. Creates the `jdbc-databricks-source` connector (`mode=incrementing` on `id`, `topic.prefix=databricks-`).
+6. Verifies that records land in topic `databricks-customers` with `playground topic consume`.

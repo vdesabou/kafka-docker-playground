@@ -1,90 +1,41 @@
 # AWS Kinesis Source connector
 
-
-
 ## Objective
 
-Quickly test [Kinesis Connector](https://docs.confluent.io/current/connect/kafka-connect-kinesis/index.html#quick-start) connector.
+Quickly test the [Kinesis Source](https://docs.confluent.io/kafka-connectors/kinesis/current/overview.html) connector.
 
-## AWS Setup
+## Prerequisites
 
-* Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
-* Set up [AWS Credentials](https://docs.confluent.io/current/connect/kafka-connect-kinesis/index.html#aws-credentials)
+- An [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws), see also [AWS Credentials](https://docs.confluent.io/kafka-connectors/kinesis/current/overview.html#aws-credentials).
+- AWS credentials: export `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_REGION`, or configure `~/.aws/credentials` and `~/.aws/config`. The Kinesis stream is created in `AWS_REGION`, which is also used as `kinesis.region`.
+- Version guards (the scripts exit with code `111` otherwise): connector 1.3.15+ requires CP 6.0+, and with CP 8.0+ connector version 1.3.0 or later is required when `--connector-tag` is set.
 
-You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or set files `~/.aws/credentials` and `~/.aws/config`.
+Additional inputs for the IAM role variants:
 
-Example:
-
-```
-[default]
-aws_access_key_id=xxx
-aws_secret_access_key=xxx
-region=eu-west-3
-```
-
-Make sure that region corresponds to the one used by the test (eu-west-3 by default), otherwise the conector will fail to start with `Stream does not exist`.
+| Variable / file | Used by | Description |
+| --- | --- | --- |
+| `$HOME/.aws/credentials-with-assuming-iam-role` | `kinesis-source-with-assuming-iam-role.sh` | AWS credentials file configured to assume the IAM role, mounted as `~/.aws/credentials` in the Connect container (with your `~/.aws/config`) |
+| `AWS_STS_ROLE_ARN` | `kinesis-source-assuming-iam-role-with-custom-awscredentialsprovider.sh` | ARN of the IAM role to assume |
+| `AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID` | `kinesis-source-assuming-iam-role-with-custom-awscredentialsprovider.sh` | Access key of the account allowed to assume the role |
+| `AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY` | `kinesis-source-assuming-iam-role-with-custom-awscredentialsprovider.sh` | Secret key of the account allowed to assume the role |
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for kinesis-source.sh in this folder
+```bash
+playground run -f kinesis-source.sh
 ```
 
-If you want to assume IAM roles:
+| Script | Description |
+| --- | --- |
+| `kinesis-source.sh` | Static credentials (`aws.access.key.id` / `aws.secret.key.id`) |
+| `kinesis-source-proxy.sh` | Same, going through an nginx forward proxy (`kinesis.proxy.url=http://nginx-proxy:8888`) |
+| `kinesis-source-with-assuming-iam-role.sh` | Default credentials provider chain, with an AWS credentials file that assumes an IAM role mounted in the Connect container (not supported with `cfk`) |
+| `kinesis-source-assuming-iam-role-with-custom-awscredentialsprovider.sh` | AssumeRole with a custom AWS credentials provider (`com.github.vdesabou.AwsAssumeRoleCredentialsProvider`, built from `awscredentialsprovider` or `awscredentialsprovider-v2` for connector 2.x). ⚠️ The custom code is only an example and is not supported |
 
-```
-$ just use <playground run> command and search for kinesis-source-with-assuming-iam-role.sh in this folder
-```
+## What the script does
 
-or with AssumeRole using custom AWS credentials provider (⚠️ custom code is just an example, there is no support for it):
-
-```
-$ just use <playground run> command and search for kinesis-source-with-assuming-iam-role.sh in this folder
-```
-
-## Details of what the script is doing
-
-Create a Kinesis stream `kafka_docker_playground` in $AWS_REGION region:
-
-```
-$ aws kinesis create-stream --stream-name $KINESIS_STREAM_NAME --shard-count 1 --region $AWS_REGION --tags "cflt_managed_by=user,cflt_managed_id=$USER"
-```
-
-Insert records in Kinesis stream:
-
-```
-$ aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --data test-message-1 --region $AWS_REGION
-```
-
-The connector is created with:
-
-```
-playground connector create-or-update --connector kinesis-source  << EOF
-{
-        "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",
-               "tasks.max": "1",
-               "kafka.topic": "kinesis-topic",
-               "kinesis.stream": "$KINESIS_STREAM_NAME",
-               "confluent.license": "",
-               "name": "kinesis-source",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
-EOF
-```
-
-Verify we have received the data in kinesis-topic topic:
-
-```
-playground topic consume --topic kinesis-topic --min-expected-messages 1 --timeout 60
-```
-
-Delete your stream and clean up resources to avoid incurring any unintended charges:
-
-```
-aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME --region $AWS_REGION
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+1. Deletes any previous stream, then creates a Kinesis stream `pg<user><version>` with 1 shard in `AWS_REGION` and waits 60 seconds for it to be ready.
+2. Puts one record (partition key `123`, data `test-message-1`) into the stream with `aws kinesis put-record`.
+3. Creates topic `kinesis-topic` and the Kinesis source connector (`io.confluent.connect.kinesis.KinesisSourceConnector`).
+4. Verifies the record is received in `kinesis-topic` with `playground topic consume`.
+5. On exit, asks for confirmation and then deletes the Kinesis stream.

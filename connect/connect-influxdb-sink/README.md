@@ -1,78 +1,33 @@
 # InfluxDB Sink connector
 
-
-
 ## Objective
 
-Quickly test [InfluxDB Sink](https://docs.confluent.io/current/connect/kafka-connect-influxdb/influx-db-sink-connector/index.html#quick-start) connector.
+Quickly test the [InfluxDB Sink](https://docs.confluent.io/kafka-connectors/influxdb/current/influx-db-sink-connector/overview.html) connector.
 
+## Prerequisites
 
-
+With CP 8.x, connector version 1.2.0 or later is required (older `--connector-tag` values exit with code 111).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for influxdb-sink.sh in this folder
+```bash
+playground run -f influxdb-sink.sh
 ```
 
-## Details of what the script is doing
+| Script | Description |
+| --- | --- |
+| `influxdb-sink.sh` | Basic example: Avro records with a `measurement` field are written to InfluxDB |
+| `influxdb-sink-with-tags.sh` | Records with a `tags` map field; `InsertField` and `ReplaceField` SMTs add the `measurement` field and rename `product` to `name` |
 
-Sending messages to topic orders
+## What the script does
+
+1. Starts the environment with an InfluxDB container.
+2. Produces Avro records to topic `orders` (or `product` for the tags variant) with `playground topic produce`.
+3. Creates the `influxdb-sink` connector pointing to `http://influxdb:8086`.
+4. Queries InfluxDB with the `influx` CLI (`select * from orders` / `select * from product`) and checks the data is there.
+
+Example of query result for `influxdb-sink.sh`:
 
 ```bash
-$ docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"measurement","type":"string"},{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
-"type": "float"}]}' << EOF
-{"measurement": "orders", "id": 999, "product": "foo", "quantity": 100, "price": 50}
-EOF
+playground container exec --container influxdb --command "influx -database orders -execute 'select * from orders'"
 ```
-
-Creating InfluxDB sink connector
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.influxdb.InfluxDBSinkConnector",
-                    "tasks.max": "1",
-                    "influxdb.url": "http://influxdb:8086",
-                    "topics": "orders"
-          }' \
-     http://localhost:8083/connectors/influxdb-sink/config | jq .
-```
-
-Verify data is in InfluxDB
-
-```bash
-curl -G 'http://localhost:8086/query?pretty=true' --data-urlencode "db=orders" --data-urlencode "q=SELECT \"price\" FROM \"orders\""
-```
-
-Results:
-
-```json
-{
-    "results": [
-        {
-            "statement_id": 0,
-            "series": [
-                {
-                    "name": "orders",
-                    "columns": [
-                        "time",
-                        "price"
-                    ],
-                    "values": [
-                        [
-                            "2019-10-18T18:48:23.045Z",
-                            50
-                        ]
-                    ]
-                }
-            ]
-        }
-    ]
-}
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

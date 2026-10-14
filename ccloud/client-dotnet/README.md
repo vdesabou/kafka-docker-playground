@@ -2,91 +2,58 @@
 
 ## Objective
 
-Quickly test [.NET example](https://github.com/confluentinc/examples/tree/5.4.0-post/clients/cloud/csharp) client using Confluent Cloud
+Quickly test the [.NET example](https://github.com/confluentinc/examples/tree/5.4.0-post/clients/cloud/csharp) client using Confluent Cloud.
 
 ## Prerequisites
 
-See [here](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)
+See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).
 
 ## How to run
 
-1. Create `$HOME/.confluent/config`
+```bash
+playground run -f start.sh
+```
 
-On the host from which you are running Docker, ensure that you have properly initialized Confluent Cloud CLI and have a valid configuration file at `$HOME/.confluent/config`.
+| Script | Description |
+| --- | --- |
+| `start.sh` | .NET producer and consumer running in Docker containers against Confluent Cloud |
 
-Example:
+The script uses .NET Core 3.1 by default (`CCloud3.1.csproj`). Any other value as first argument (for example `./start.sh 2.2` when running the script directly) switches to .NET Core 2.2 (`CCloud2.2.csproj`).
+
+## What the script does
+
+1. Bootstraps the Confluent Cloud environment and generates `librdkafka.config` from `librdkafka.config.template` with the cluster bootstrap servers and API key.
+2. Recreates topic `client_dotnet_<TAG>` with `playground topic delete` / `playground topic create`.
+3. Builds the `vdesabou/dotnet-ccloud-example-docker` image.
+4. Runs the producer container `dotnet-ccloud-producer` (with `net.ipv4.tcp_keepalive_time=60` and `net.ipv4.tcp_keepalive_intvl=30` sysctls).
+5. Runs the consumer container `dotnet-ccloud-consumer` in the background, with logs in `/tmp/result.log`, and checks that the consumed records contain `alice`.
+
+## Notes on using Minikube with unsafe sysctls
+
+Run Minikube, with `kubelet.allowed-unsafe-sysctls` to allow unsafe sysctls:
 
 ```bash
-$ cat $HOME/.confluent/config
-bootstrap.servers=<BROKER ENDPOINT>
-ssl.endpoint.identification.algorithm=https
-security.protocol=SASL_SSL
-sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="<API KEY>" password="<API SECRET>";
+minikube start --cpus 4 --memory=8G --extra-config="kubelet.allowed-unsafe-sysctls=net.ipv4.tcp_keepalive_time,net.ipv4.tcp_keepalive_intvl"
+minikube dashboard
 ```
 
-2. Simply run:
-
-```
-$ just use <playground run> command and search for start<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> .sh in this folder
-```
-
-## Details of what the script is doing
-
-Building docker image
+Build the Docker image within Minikube (explanations [here](https://dzone.com/articles/running-local-docker-images-in-kubernetes-1)):
 
 ```bash
-$ docker build --build-arg CORE_RUNTIME_TAG=$CORE_RUNTIME_TAG --build-arg CORE_SDK_TAG=$CORE_SDK_TAG --build-arg CSPROJ_FILE=$CSPROJ_FILE -t vdesabou/dotnet-ccloud-example-docker .
+eval $(minikube docker-env)
+
+CORE_RUNTIME_TAG="3.1.2-bionic"
+CORE_SDK_TAG="3.1.102-bionic"
+CSPROJ_FILE="CCloud3.1.csproj"
+
+docker build --build-arg CORE_RUNTIME_TAG=$CORE_RUNTIME_TAG --build-arg CORE_SDK_TAG=$CORE_SDK_TAG --build-arg CSPROJ_FILE=$CSPROJ_FILE -t vdesabou/dotnet-ccloud-example-docker -f Dockerfile-Minikube .
 ```
 
-Starting producer
+Create the namespace and run the pod:
 
 ```bash
-$ docker run --name dotnet-ccloud-producer --sysctl net.ipv4.tcp_keepalive_time=60 --sysctl net.ipv4.tcp_keepalive_intvl=30 -v ${DIR}/librdkafka.config:/tmp/librdkafka.config -e TAG=$TAG vdesabou/dotnet-ccloud-example-docker produce client_dotnet_$TAG /tmp/librdkafka.config
-```
-
-Note: `librdkafka.config`is generated from your `$HOME/.confluent/config`
-
-Starting consumer. Logs are in /tmp/result.log
-
-```bash
-$ docker run --name dotnet-ccloud-consumer --sysctl net.ipv4.tcp_keepalive_time=60 --sysctl net.ipv4.tcp_keepalive_intvl=30 -v ${DIR}/librdkafka.config:/tmp/librdkafka.config -e TAG=$TAG vdesabou/dotnet-ccloud-example-docker consume client_dotnet_$TAG /tmp/librdkafka.config > /tmp/result.log 2>&1 &
-```
-
-## Notes on using Minikube with unsafe systctls
-
-Run Minikube:
-
-```bash
-$ minikube start --cpus 4 --memory=8G --extra-config="kubelet.allowed-unsafe-sysctls=net.ipv4.tcp_keepalive_time,net.ipv4.tcp_keepalive_intvl"
-$ minikube dashboard
-```
-
-Notice the config `kubelet.allowed-unsafe-sysctls`to allow unsafe sysctls.
-
-Build Docker image within minikube (explanations [here](https://dzone.com/articles/running-local-docker-images-in-kubernetes-1)):
-
-
-```bash
-$ eval $(minikube docker-env)
-
-$ CORE_RUNTIME_TAG="3.1.2-bionic"
-$ CORE_SDK_TAG="3.1.102-bionic"
-$ CSPROJ_FILE="CCloud3.1.csproj"
-
-$ docker build --build-arg CORE_RUNTIME_TAG=$CORE_RUNTIME_TAG --build-arg CORE_SDK_TAG=$CORE_SDK_TAG --build-arg CSPROJ_FILE=$CSPROJ_FILE -t vdesabou/dotnet-ccloud-example-docker -f Dockerfile-Minikube .
-```
-
-Create namespace:
-
-```bash
-$ kubectl create namespace dotnet-ccloud-example-docker
-```
-
-Run pod:
-
-```bash
-$ kubectl apply -f pod.yml --namespace=dotnet-ccloud-example-docker
+kubectl create namespace dotnet-ccloud-example-docker
+kubectl apply -f pod.yml --namespace=dotnet-ccloud-example-docker
 ```
 
 ## Notes on using Minikube with initContainers
@@ -94,31 +61,13 @@ $ kubectl apply -f pod.yml --namespace=dotnet-ccloud-example-docker
 Run Minikube:
 
 ```bash
-$ minikube start --cpus 4 --memory=8G
-$ minikube dashboard
+minikube start --cpus 4 --memory=8G
+minikube dashboard
 ```
 
-Build Docker image within minikube (explanations [here](https://dzone.com/articles/running-local-docker-images-in-kubernetes-1)):
-
-
-```bash
-$ eval $(minikube docker-env)
-
-$ CORE_RUNTIME_TAG="3.1.2-bionic"
-$ CORE_SDK_TAG="3.1.102-bionic"
-$ CSPROJ_FILE="CCloud3.1.csproj"
-
-$ docker build --build-arg CORE_RUNTIME_TAG=$CORE_RUNTIME_TAG --build-arg CORE_SDK_TAG=$CORE_SDK_TAG --build-arg CSPROJ_FILE=$CSPROJ_FILE -t vdesabou/dotnet-ccloud-example-docker -f Dockerfile-Minikube .
-```
-
-Create namespace:
+Build the Docker image within Minikube as above (`Dockerfile-Minikube`), then create the namespace and run the pod:
 
 ```bash
-$ kubectl create namespace dotnet-ccloud-example-docker
-```
-
-Run pod:
-
-```bash
-$ kubectl apply -f pod_initContainers.yml --namespace=dotnet-ccloud-example-docker
+kubectl create namespace dotnet-ccloud-example-docker
+kubectl apply -f pod_initContainers.yml --namespace=dotnet-ccloud-example-docker
 ```

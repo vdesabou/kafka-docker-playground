@@ -1,111 +1,33 @@
 # Solace Sink connector
 
-
-
 ## Objective
 
-Quickly test [Solace Sink](https://docs.confluent.io/current/connect/kafka-connect-solace/sink/index.html#quick-start) connector.
+Quickly test the [Solace Sink](https://docs.confluent.io/kafka-connectors/solace/sink/current/overview.html) connector.
 
+## Prerequisites
 
-
+* With CP 8.x, connector version 2.1.16 or later.
+* The Solace JMS client `sol-jms-10.6.4.jar` is downloaded from Maven Central on the first run and copied into the connector `lib` folder.
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for solace-sink.sh in this folder
-```
-
-Solace UI is available at [127.0.0.1:8080](http://127.0.0.1:8080) `admin/admin`
-
-## Details of what the script is doing
-
-
-Sending messages to topic `sink-messages`
-
 ```bash
-$ seq 10 | docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic sink-messages
+playground run -f solace-sink.sh
 ```
 
-The connector is created with:
+Solace UI is available at [127.0.0.1:8080](http://127.0.0.1:8080) (`admin`/`admin`).
 
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.jms.SolaceSinkConnector",
-                    "tasks.max": "1",
-                    "topics": "sink-messages",
-                    "solace.host": "smf://solace:55555",
-                    "solace.username": "admin",
-                    "solace.password": "admin",
-                    "solace.dynamic.durables": "true",
-                    "jms.destination.type": "queue",
-                    "jms.destination.name": "connector-quickstart",
-                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/SolaceSinkConnector/config | jq .
-```
+## What the script does
 
-Confirm the messages were delivered to the `connector-quickstart` queue in the `default` Message VPN using CLI:
+1. Starts a Solace PubSub+ broker and waits for it to be ready.
+2. Produces 10 string records to topic `sink-messages`.
+3. Creates the Solace Sink connector writing to the queue `connector-quickstart` (`solace.dynamic.durables=true`) on `smf://solace:55555`.
+4. Runs the Solace CLI script `show_queue_cmd` in the `solace` container and checks that the queue holds 10 messages.
 
-
-```bash
-$ docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/show_queue_cmd"
-```
-
-The solace commands executed in script `show_queue_cmd`are:
+The Solace CLI commands in `show_queue_cmd` are:
 
 ```
 enable
 show
 queue connector-quickstart
 ```
-
-Output is:
-
-```bash
-Solace PubSub+ Standard Version 9.1.0.77
-
-The Solace PubSub+ Standard is proprietary software of
-Solace Corporation. By accessing the Solace PubSub+ Standard
-you are agreeing to the license terms and conditions located at
-http://www.solace.com/license-software
-
-Copyright 2004-2019 Solace Corporation. All rights reserved.
-
-To purchase product support, please contact Solace at:
-https://solace.com/contact-us/
-
-Operating Mode: Message Routing Node
-
-
-solace> enable
-
-solace# show
-
-solace(show)> queue connector-quickstart
-
-Flags Legend:
-I - Ingress Admin State (U=Up, D=Down)
-E - Egress  Admin State (U=Up, D=Down)
-A - Access-Type         (E=Exclusive, N=Non-Exclusive)
-S - Selector            (Y=Yes, N=No)
-R - Redundancy          (P=Primary, B=Backup)
-D - Durability          (D=Durable, N=Non-Durable)
-P - Priority            (Y=Yes, N=No)
-
-Queue Name                   Messages      Spool             Bind Status
-Message VPN                   Spooled  Usage(MB)   HWM (MB) Count I E A S R D P
-------------------------- ----------- ---------- ---------- ----- -------------
-connector-quickstart
-default                            10       0.00       0.00     0 U U E N P D N
-```
-
-Note: this could also be verified manually using [Solace UI](http://127.0.0.1:8080)
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

@@ -1,89 +1,38 @@
 # Kudu Sink connector
 
-
-
 ## Objective
 
-Quickly test [Kudu Sink](https://docs.confluent.io/current/connect/kafka-connect-kudu/sink-connector/index.html#quick-start) connector.
+Quickly test the [Kudu Sink](https://docs.confluent.io/current/connect/kafka-connect-kudu/sink-connector/index.html) connector.
 
-N.B: if you're a Confluent employee, please check this [link](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900).
+## Prerequisites
 
-* Download Impala JDBC Driver `ImpalaJDBC42.jar`from this [page](https://www.oracle.com/technetwork/java/javase/jdbc/index.html) and place it in `./ImpalaJDBC42.jar`
+Download the Cloudera Impala JDBC driver `ImpalaJDBC42.jar` from this [page](https://www.cloudera.com/downloads/connectors/impala/jdbc.html) and place it in this folder.
+
+If you're a Confluent employee, the jar is downloaded automatically from the playground S3 bucket when AWS credentials are set (see this [link](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900)).
+
+Not supported with the `cfk` environment. With CP 8.x, the minimum supported connector version is 1.0.6 (the script exits with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for kudu-sink.sh in this folder
-```
-
-## Details of what the script is doing
-
-Create Database test in kudu:
-
 ```bash
-$ docker exec -i kudu impala-shell -i localhost:21000 -l -u kudu --ldap_password_cmd="echo -n secret" --auth_creds_ok_in_clear << EOF
-CREATE DATABASE test;
-EOF
+playground run -f kudu-sink.sh
 ```
 
-The connector is created with:
+## What the script does
 
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-                    "connector.class": "io.confluent.connect.kudu.KuduSinkConnector",
-                    "tasks.max": "1",
-                    "topics": "orders",
-                    "impala.server": "kudu",
-                    "impala.port": "21050",
-                    "kudu.database": "test",
-                    "auto.create": "true",
-                    "pk.mode":"record_value",
-                    "pk.fields":"id",
-                    "key.converter": "io.confluent.connect.avro.AvroConverter",
-                    "key.converter.schema.registry.url": "http://schema-registry:8081",
-                    "value.converter": "io.confluent.connect.avro.AvroConverter",
-                    "value.converter.schema.registry.url": "http://schema-registry:8081",
-                    "impala.ldap.password": "secret",
-                    "impala.ldap.user": "kudu",
-                    "kudu.tablet.replicas": "1",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/kudu-sink/config | jq .
-```
+1. Copies `ImpalaJDBC42.jar` into the `confluentinc-kafka-connect-kudu` plugin `lib` folder.
+2. Starts the environment with a Kudu/Impala container (Impala LDAP authentication with user `kudu`).
+3. Creates database `test` with `impala-shell`.
+4. Creates the Kudu sink connector `kudu-sink` (topic `orders`, `auto.create=true`, `pk.mode=record_value` on field `id`).
+5. Produces 2 Avro records to topic `orders` with `playground topic produce`.
+6. Verifies that the data is in table `test.orders` with `impala-shell`.
 
-Sending messages to topic orders:
+Example of result:
 
-```bash
-$ docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price","type": "float"}]}' << EOF
-{"id": 999, "product": "foo", "quantity": 100, "price": 50}
-EOF
-```
-
-
-Verify data is in kudu `orders` table:
-
-```bash
-$ docker exec -i kudu impala-shell -i localhost:21000 -l -u kudu --ldap_password_cmd="echo -n secret" --auth_creds_ok_in_clear << EOF
-USE test;
-SELECT * from orders;
-EOF
-```
-
-Results:
-
-```
+```text
 +-----+---------+----------+-------+
 | id  | product | quantity | price |
 +-----+---------+----------+-------+
-| 999 | foo     | 100      | 50    |
+| 2   | foo     | 2        | 0.87  |
 +-----+---------+----------+-------+
-Fetched 1 row(s) in 1.10s
 ```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

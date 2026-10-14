@@ -1,158 +1,48 @@
 # AWS Lambda Sink connector
 
-
-
 ## Objective
 
-Quickly test [AWS Lambda](https://docs.confluent.io/current/connect/kafka-connect-aws-lambda/index.html#kconnect-long-lambda-sink-connector) connector.
+Quickly test the [AWS Lambda Sink](https://docs.confluent.io/kafka-connectors/aws-lambda/current/overview.html) connector.
 
+## Prerequisites
 
+- An [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws), see also [AWS Credentials](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html#aws-credentials). The credentials must be allowed to create IAM roles and Lambda functions.
+- AWS credentials: export `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_REGION`, or configure `~/.aws/credentials` and `~/.aws/config`.
+- `zip` must be installed (used to package the Lambda function).
+- With CP 8.0+, connector version 2.0.13 or later is required when `--connector-tag` is set (the scripts exit with code `111` otherwise).
 
-## AWS Setup
+Additional inputs for the IAM role variants:
 
-* Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
-* Set up [AWS Credentials](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html#aws-credentials)
-
-You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or set files `~/.aws/credentials` and `~/.aws/config`.
+| Variable / file | Used by | Description |
+| --- | --- | --- |
+| `$HOME/.aws/credentials-with-assuming-iam-role` | `lambda-sink-with-assuming-iam-role.sh` | AWS credentials file configured to assume the IAM role, mounted as `~/.aws/credentials` in the Connect container (with your `~/.aws/config`) |
+| `AWS_STS_ROLE_ARN` | `lambda-sink-assuming-iam-role-with-custom-aws-credential-provider.sh` | ARN of the IAM role to assume |
+| `AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID` | `lambda-sink-assuming-iam-role-with-custom-aws-credential-provider.sh` | Access key of the account allowed to assume the role |
+| `AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY` | `lambda-sink-assuming-iam-role-with-custom-aws-credential-provider.sh` | Secret key of the account allowed to assume the role |
 
 ## How to run
 
-Simply run:
-
 ```bash
-$ just use <playground run> command and search for lambda.sh in this folder
+playground run -f lambda-sink.sh
 ```
 
-If you want to assume IAM roles:
+| Script | Description |
+| --- | --- |
+| `lambda-sink.sh` | Static credentials (`aws.access.key.id` / `aws.secret.access.key`) |
+| `lambda-sink-with-assuming-iam-role.sh` | Default credentials provider chain, with an AWS credentials file that assumes an IAM role mounted in the Connect container (not supported with `cfk`) |
+| `lambda-sink-assuming-iam-role-with-custom-aws-credential-provider.sh` | AssumeRole with a custom AWS credentials provider (`com.github.vdesabou.AwsAssumeRoleCredentialsProvider`, built from `awscredentialsprovider` or `awscredentialsprovider-v2` for connector 3.x). ⚠️ The custom code is only an example and is not supported |
 
-```
-$ just use <playground run> command and search for lambda-sink-with-assuming-iam-role.sh in this folder
-```
+## What the script does
 
-## Details of what the script is doing
+1. Creates an IAM role for Lambda (with the `AWSLambdaBasicExecutionRole` policy, to see the logs in CloudWatch) and a Lambda function (Python runtime) from `my-add-function/add.py`, which returns the sum of fields `a` and `b` of each record.
+2. Produces 10 Avro records (`a`, `b`) to topic `add-topic` with `playground topic produce`.
+3. Creates the AWS Lambda sink connector (`io.confluent.connect.aws.lambda.AwsLambdaSinkConnector`) with `aws.lambda.invocation.type=sync`, reporting results to `success-responses` and errors to `error-responses`.
+4. Verifies 10 results are received in `success-responses` (and checks `error-responses`) with `playground topic consume`.
+5. On exit, asks for confirmation and then deletes the IAM role and the Lambda function.
 
-Creating AWS role
-
-```bash
-LAMBDA_ROLE_NAME=playground_lambda_role$TAG
-LAMBDA_ROLE_NAME=${LAMBDA_ROLE_NAME//[-.]/}
-
-LAMBDA_ROLE=$(aws iam create-role --role-name $LAMBDA_ROLE_NAME --assume-role-policy-document '{"Version": "2012-10-17","Statement": [{ "Effect": "Allow", "Principal": {"Service": "lambda.amazonaws.com"}, "Action": "sts:AssumeRole"}]}' --output text --query 'Role.Arn')
-```
-
-Creating AWS Lambda function
-
-```bash
-LAMBDA_FUNCTION_NAME=playground_lambda_function$TAG
-LAMBDA_FUNCTION_NAME=${LAMBDA_FUNCTION_NAME//[-.]/}
-
-cd ${DIR}/my-add-function
-rm -f add.zip
-zip add.zip add.py
-cp add.zip /tmp/
-aws lambda create-function --function-name $LAMBDA_FUNCTION_NAME --zip-file fileb:///tmp/add.zip --handler add.lambda_handler --runtime python3.8 --role $LAMBDA_ROLE
-cd -
-```
-
-`./my-add-function/add.py` is the python function used:
-
-```python
-import json
-import logging
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-
-def lambda_handler(event, context):
-    result_list = []
-    for obj in event:
-
-        payload = obj["payload"]
-        logging.info(payload)
-
-        value = payload["value"]
-        num1 = value["a"]
-        num2 = value["b"]
-
-        timestamp = payload["timestamp"]
-        offset = payload["offset"]
-        partition = payload["partition"]
-        topic = payload["topic"]
-
-        payload_result = {}
-
-        payload_result["timestamp"] = timestamp
-        payload_result["offset"] = offset
-        payload_result["partition"] = partition
-        payload_result["topic"] = topic
-
-        result = {}
-        result["sum"] = num1 + num2
-        payload_result["result"] = result
-
-        final_result = {}
-        final_result["payload"] = payload_result
-
-        result_list.append(final_result)
-
-        logging.info(final_result)
-    return result_list
-```
-
-
-
-Sending messages to topic `add-topic`
-
-```bash
-$ seq -f "{\"a\": %g,\"b\": 1}" 10 | docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic add-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"a","type":"int"},{"name":"b","type":"int"}]}'
-```
-
-Creating AWS Lambda Sink connector
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class" : "io.confluent.connect.aws.lambda.AwsLambdaSinkConnector",
-               "tasks.max": "1",
-               "topics" : "add-topic",
-               "aws.lambda.function.name" : "$LAMBDA_FUNCTION_NAME",
-               "aws.lambda.invocation.type" : "sync",
-               "aws.lambda.batch.size" : "50",
-               "aws.lambda.region": "$AWS_REGION",
-               "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
-               "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
-               "behavior.on.error" : "fail",
-               "reporter.bootstrap.servers": "broker:9092",
-               "reporter.error.topic.name": "error-responses",
-               "reporter.error.topic.replication.factor": 1,
-               "reporter.result.topic.name": "success-responses",
-               "reporter.result.topic.replication.factor": 1,
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/aws-lambda/config | jq .
-```
-
-Verifying topic `add-topic-response`
-
-```bash
-playground topic consume --topic success-responses --min-expected-messages 10 --timeout 60
-```
-
-Results:
+Example of results in `success-responses`:
 
 ```json
 "{\"timestamp\":1598334450575,\"offset\":0,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":2}}"
 "{\"timestamp\":1598334450609,\"offset\":1,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":3}}"
-"{\"timestamp\":1598334450609,\"offset\":2,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":4}}"
-"{\"timestamp\":1598334450609,\"offset\":3,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":5}}"
-"{\"timestamp\":1598334450610,\"offset\":4,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":6}}"
-"{\"timestamp\":1598334450610,\"offset\":5,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":7}}"
-"{\"timestamp\":1598334450610,\"offset\":6,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":8}}"
-"{\"timestamp\":1598334450611,\"offset\":7,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":9}}"
-"{\"timestamp\":1598334450611,\"offset\":8,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":10}}"
-"{\"timestamp\":1598334450611,\"offset\":9,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":11}}"
 ```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

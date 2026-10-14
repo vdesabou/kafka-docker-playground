@@ -1,73 +1,35 @@
 # MQTT Source connector
 
-
-
 ## Objective
 
-Quickly test [MQTT Source](https://docs.confluent.io/kafka-connectors/mqtt/current/mqtt-source-connector/overview.html) connector.
+Quickly test the [MQTT Source](https://docs.confluent.io/kafka-connectors/mqtt/current/mqtt-source-connector/overview.html) connector with a Mosquitto broker.
 
+## Prerequisites
+
+With CP 8.x, the minimum supported connector version is 1.7.5 (the script exits with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for mqtt.sh in this folder
+```bash
+playground run -f mqtt-source.sh
 ```
 
-or with MTLS
+| Script | Description |
+| --- | --- |
+| `mqtt-source.sh` | Basic example, `tcp://mosquitto:1883` with username/password |
+| `mqtt-source-mtls.sh` | Same, with mTLS (`ssl://mosquitto:8883`, certificates generated with `playground tools certs-create`) |
 
-```
-$ just use <playground run> command and search for mqtt-source-mtls.sh in this folder
-```
+## What the script does
 
-## Details of what the script is doing
+1. Starts the environment with a Mosquitto container (`mtls` variant: first generates keystores, truststores and certificates for `connect` and `mosquitto` in `security/`).
+2. Creates the MQTT source connector `source-mqtt` (MQTT topic `my-mqtt-topic` to Kafka topic `mqtt-source-1`, `mqtt.qos=2`).
+3. Publishes message `sample-msg-1` to MQTT topic `my-mqtt-topic` with `mosquitto_pub`.
+4. Verifies that topic `mqtt-source-1` receives the message with `playground topic consume`.
 
-Note: The `./password` file was created with (`myuser/mypassword`) and command:
+## Notes
+
+The `password` file was created for user `myuser` (password `mypassword`) with:
 
 ```bash
-$ mosquitto_passwd -c password myuser
+mosquitto_passwd -c password myuser
 ```
-
-Creating MQTT Source connector
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.mqtt.MqttSourceConnector",
-                    "tasks.max": "1",
-                    "mqtt.server.uri": "tcp://mosquitto:1883",
-                    "mqtt.topics":"my-mqtt-topic",
-                    "kafka.topic":"mqtt-source-1",
-                    "mqtt.qos": "2",
-                    "mqtt.username": "myuser",
-                    "mqtt.password": "mypassword",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/source-mqtt/config | jq .
-```
-
-
-
-Send message to MQTT in my-mqtt-topic topic
-
-```bash
-$ docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-1"'
-```
-
-Verify we have received the data in mqtt-source-1 topic
-
-```bash
-playground topic consume --topic mqtt-source-1 --min-expected-messages 1 --timeout 60
-```
-
-Results:
-
-```
-sample-msg-1
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

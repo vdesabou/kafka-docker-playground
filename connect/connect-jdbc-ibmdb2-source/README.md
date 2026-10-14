@@ -2,85 +2,28 @@
 
 ## Objective
 
-Quickly test [JDBC IBM DB2](https://docs.confluent.io/current/connect/kafka-connect-jdbc/source-connector/index.html#kconnect-long-jdbc-source-connector) connector.
+Quickly test the [JDBC Source](https://docs.confluent.io/kafka-connectors/jdbc/current/source-connector/overview.html) connector with IBM DB2.
 
+## Prerequisites
+
+With CP 8.x, the JDBC connector version must be 10.8.0 or later (the scripts exit with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for ibmdb2-source.sh in this folder
-```
-
-with SSL Encryption:
-
-```
-$ just use <playground run> command and search for ibmdb2-source-ssl.sh in this folder
-```
-
-N.B: IBM DB2 Console is reachable at [https://localhost:9443/ibmmq/console/login.html (admin/passw0rd)](https://localhost:9443/ibmmq/console/login.html])
-
-## Details of what the script is doing
-
-`ibmdb2` container is configured with `SAMPLEDB: "true"`, so it is already populated with tables:
-
-```yml
-  ibmdb2:
-    image: icr.io/db2_community/db2:11.5.9.0
-    hostname: ibmdb2
-    container_name: ibmdb2
-    privileged: true
-removed
-    environment:
-      LICENSE: accept
-      DB2INST1_PASSWORD: passw0rd
-      DBNAME: testdb
-      ARCHIVE_LOGS: "false"
-      SAMPLEDB: "true"
-```
-
-List tables
-
 ```bash
-$ docker exec -i ibmdb2 bash << EOF
-su - db2inst1
-db2 connect to sample user db2inst1 using passw0rd
-db2 LIST TABLES
-EOF
+playground run -f ibmdb2-source.sh
 ```
 
-Creating JDBC IBM DB2 source connector
+| Script | Description |
+| --- | --- |
+| `ibmdb2-source.sh` | Plain JDBC connection on port 50000 |
+| `ibmdb2-source-ssl.sh` | Same, with SSL encryption (DB2 SSL listener on port 50002, truststore mounted in the Connect container) |
 
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-               "tasks.max": "1",
-               "connection.url":"jdbc:db2://ibmdb2:50000/sample",
-               "connection.user":"db2inst1",
-               "connection.password":"passw0rd",
-               "mode": "bulk",
-               "topic.prefix": "db2-",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/ibmdb2-source/config | jq .
-```
+## What the script does
 
-Verifying topic `db2-PURCHASEORDER`
-
-
-```bash
-playground topic consume --topic db2-PURCHASEORDER --min-expected-messages 2 --timeout 60
-```
-
-Results:
-
-```json
-{"POID":5000,"STATUS":"Unshipped","CUSTID":{"long":1002},"ORDERDATE":{"int":13197},"PORDER":{"string":"<PurchaseOrder PoNum=\"5000\" OrderDate=\"2006-02-18\" Status=\"Unshipped\"><item><partid>100-100-01</partid><name>Snow Shovel, Basic 22 inch</name><quantity>3</quantity><price>9.99</price></item><item><partid>100-103-01</partid><name>Snow Shovel, Super Deluxe 26 inch</name><quantity>5</quantity><price>49.99</price></item></PurchaseOrder>"},"COMMENTS":{"string":"THIS IS A NEW PURCHASE ORDER"}}
-{"POID":5001,"STATUS":"Shipped","CUSTID":{"long":1003},"ORDERDATE":{"int":12817},"PORDER":{"string":"<PurchaseOrder PoNum=\"5001\" OrderDate=\"2005-02-03\" Status=\"Shipped\"><item><partid>100-101-01</partid><name>Snow Shovel, Deluxe 24 inch</name><quantity>1</quantity><price>19.99</price></item><item><partid>100-103-01</partid><name>Snow Shovel, Super Deluxe 26 inch</name><quantity>2</quantity><price>49.99</price></item><item><partid>100-201-01</partid><name>Ice Scraper, Windshield 4 inch</name><quantity>1</quantity><price>3.99</price></item></PurchaseOrder>"},"COMMENTS":{"string":"THIS IS A NEW PURCHASE ORDER"}}
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+1. Starts the `ibmdb2` container first (configured with `SAMPLEDB: "true"`, so the [SAMPLE database](https://www.ibm.com/docs/en/db2/11.5?topic=samples-sample-database) is created) and copies its `db2jcc4.jar` driver into the JDBC connector `lib` folder.
+2. Waits for `Setup has completed` in the DB2 logs and for the `sample` database to accept connections.
+3. SSL variant only: creates a GSKit key database and self-signed certificate, enables the SSL listener on port 50002 (TLSv1.2), restarts DB2, and imports the server certificate into `security/truststore.jks`.
+4. Starts the rest of the environment and lists the tables of the `sample` database.
+5. Creates the `ibmdb2-source` connector (`mode=bulk`, `table.whitelist=PURCHASEORDER`, `topic.prefix=db2-`).
+6. Verifies that records land in topic `db2-PURCHASEORDER` with `playground topic consume`.

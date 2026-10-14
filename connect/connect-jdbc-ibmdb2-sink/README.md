@@ -2,101 +2,28 @@
 
 ## Objective
 
-Quickly test [JDBC IBM DB2](https://docs.confluent.io/current/connect/kafka-connect-jdbc/source-connector/index.html#kconnect-long-jdbc-sink-connector) connector.
+Quickly test the [JDBC Sink](https://docs.confluent.io/kafka-connectors/jdbc/current/sink-connector/overview.html) connector with IBM DB2.
 
+## Prerequisites
+
+With CP 8.x, the JDBC connector version must be 10.8.0 or later (the scripts exit with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for ibmdb2-sink.sh in this folder
-```
-
-with SSL Encryption:
-
-```
-$ just use <playground run> command and search for ibmdb2-sink-ssl.sh in this folder
-```
-
-N.B: IBM DB2 Console is reachable at [https://localhost:9443/ibmmq/console/login.html (admin/passw0rd)](https://localhost:9443/ibmmq/console/login.html])
-
-## Details of what the script is doing
-
-`ibmdb2` container is configured with `SAMPLEDB: "true"`, so it is already populated with tables:
-
-```yml
-  ibmdb2:
-    image: icr.io/db2_community/db2:11.5.9.0
-    hostname: ibmdb2
-    container_name: ibmdb2
-    privileged: true
-removed
-    environment:
-      LICENSE: accept
-      DB2INST1_PASSWORD: passw0rd
-      DBNAME: testdb
-      ARCHIVE_LOGS: "false"
-      SAMPLEDB: "true"
-```
-
-Sending messages to topic `ORDERS`:
-
 ```bash
-$ docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORDERS --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"ID","type":"int"},{"name":"PRODUCT", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price","type": "float"}]}' << EOF
-{"id": 999, "product": "foo", "quantity": 100, "price": 50}
-EOF
-
-Creating JDBC IBM DB2 sink connector:
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-               "tasks.max": "1",
-               "connection.url":"jdbc:db2://ibmdb2:50000/sample",
-               "connection.user":"db2inst1",
-               "connection.password":"passw0rd",
-               "topics": "ORDERS",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true",
-               "auto.create": "true"
-          }' \
-     http://localhost:8083/connectors/ibmdb2-sink/config | jq .
+playground run -f ibmdb2-sink.sh
 ```
 
-sleep 5
+| Script | Description |
+| --- | --- |
+| `ibmdb2-sink.sh` | Plain JDBC connection on port 50000 |
+| `ibmdb2-sink-ssl.sh` | Same, with SSL encryption (DB2 SSL listener on port 50002, truststore mounted in the Connect container) |
 
-Check data is in IBM DB2:
+## What the script does
 
-```bash
-docker exec -i ibmdb2 bash << EOF > /tmp/result.log
-su - db2inst1
-db2 connect to sample user db2inst1 using passw0rd
-db2 select ID,PRODUCT,QUANTITY,PRICE from ORDERS
-EOF
-cat /tmp/result.log
-grep "foo" /tmp/result.log
-```
-
-Results:
-
-```json
-Database Connection Information
-
- Database server        = DB2/LINUXX8664 11.5.6.0
- SQL authorization ID   = DB2INST1
- Local database alias   = SAMPLE
-
-
-ID PRODUCT      QUANTITY    PRICE
------------ -- ----------- ------
-999 foo        100   +5.00000000000000E+001
-
-  1 record(s) selected.
-
-Last login: Wed Sep  8 10:00:28 UTC 2021
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+1. Starts the `ibmdb2` container first (configured with `SAMPLEDB: "true"`, so the `sample` database is created) and copies its `db2jcc4.jar` driver into the JDBC connector `lib` folder.
+2. Waits for `Setup has completed` in the DB2 logs and for the `sample` database to accept connections.
+3. SSL variant only: creates a GSKit key database and self-signed certificate, enables the SSL listener on port 50002, restarts DB2, and imports the server certificate into `security/truststore.jks`.
+4. Starts the rest of the environment and produces 2 Avro records (`ID`, `PRODUCT`, `QUANTITY`, `PRICE`) to topic `ORDERS`.
+5. Creates the `ibmdb2-sink` connector (`jdbc:db2://ibmdb2:50000/sample`, user `db2inst1`, `auto.create=true`).
+6. Runs `db2 select ID,PRODUCT,QUANTITY,PRICE from ORDERS` in the DB2 container and checks that the `foo` row is present.

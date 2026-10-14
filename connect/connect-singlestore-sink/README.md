@@ -2,80 +2,22 @@
 
 ## Objective
 
-Quickly test [Singlestore](https://github.com/memsql/singlestore-kafka-connector) connector.
+Quickly test the [Singlestore](https://github.com/memsql/singlestore-kafka-connector) sink connector.
 
+## Prerequisites
+
+* The SingleStore JDBC client `singlestore-jdbc-client-1.0.1.jar` is downloaded from Maven Central on the first run and copied into the connector `lib` folder.
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for singlestore-sink.sh in this folder
-```
-
-## Details of what the script is doing
-
-
-Creating 'test' SingleStore database...
-
 ```bash
-docker exec singlestore memsql -u root -proot -e "create database if not exists test;"
+playground run -f singlestore-sink.sh
 ```
 
-Sending messages to topic mytable
+## What the script does
 
-```bash
-seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mytable --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
-```
-
-Creating Singlestore sink connector
-
-```bash
-playground connector create-or-update --connector singlestore-sink  << EOF
-{
-               "connector.class":"com.singlestore.kafka.SingleStoreSinkConnector",
-               "tasks.max":"1",
-               "topics":"mytable",
-               "connection.ddlEndpoint" : "singlestore:3306",
-               "connection.database" : "test",
-               "connection.user" : "root",
-               "connection.password" : "root"
-          }
-EOF
-```
-
-sleep 10
-
-Check data is in Singlestore
-
-```bash
-docker exec -i singlestore memsql -u root -proot > /tmp/result.log  2>&1 <<-EOF
-use test;
-show tables;
-select * from mytable;
-EOF
-```
-
-Results:
-
-```
-singlestore-client: [Warning] Using a password on the command line interface can be insecure.
-Tables_in_test
-kafka_connect_transaction_metadata
-mytable
-f1
-value1
-value10
-value2
-value3
-value4
-value5
-value6
-value7
-value8
-value9
-value1
-value10
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+1. Starts the environment with a SingleStore container and waits for it to accept queries.
+2. Creates the `test` database.
+3. Produces 3 Avro records (`{"f1":"value%g"}`) to topic `mytable`.
+4. Creates the Singlestore sink connector writing to database `test` on `singlestore:3306`.
+5. Queries `select * from mytable` with the `memsql` client and checks the data is present.

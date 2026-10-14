@@ -1,143 +1,60 @@
 # ServiceNow Sink connector
 
-
-
 ## Objective
 
-Quickly test [ServiceNow Sink](https://docs.confluent.io/current/connect/kafka-connect-servicenow/sink-connector/index.html#quick-start) connector.
+Quickly test the [ServiceNow Sink](https://docs.confluent.io/kafka-connectors/servicenow/current/sink-connector/overview.html) connector.
 
+## Prerequisites
 
+* A ServiceNow test instance (see [Register a test account](#register-a-test-account)) with a `test_table` table (see [Create the test_table](#create-the-test_table-in-servicenow)).
+* With CP 8.x, connector version 2.5.6 or later.
+
+| Variable | Description |
+| --- | --- |
+| `SERVICENOW_URL` | ServiceNow instance URL, ending with `/` (e.g. `https://dev12345.service-now.com/`) |
+| `SERVICENOW_PASSWORD` | Password of the ServiceNow `admin` user |
+
+## How to run
+
+```bash
+export SERVICENOW_URL="https://dev12345.service-now.com/"
+export SERVICENOW_PASSWORD="<admin password>"
+playground run -f servicenow-sink.sh
+```
+
+| Script | Description |
+| --- | --- |
+| `servicenow-sink.sh` | Basic example |
+| `servicenow-sink-proxy.sh` | Same, through an nginx forward proxy (`proxy.url=nginx-proxy:8888`) |
+
+## What the script does
+
+1. Produces 3 Avro records (`u_name`, `u_price`, `u_quantity`) to topic `test_table`.
+2. Creates the ServiceNow Sink connector writing to table `u_test_table` as user `admin`, with reporter topics `test-result` and `test-error`.
+3. Verifies 3 records in `test-result` with `playground topic consume`.
+4. Queries `${SERVICENOW_URL}/api/now/table/u_test_table` with the ServiceNow REST API and checks the records are there.
 
 ## Register a test account
 
 Go to [ServiceNow developer portal](https://developer.servicenow.com) and register an account.
-Click on `Manage`->`Instance` and register for an Australia instance. After some time (about one hour in my case) on the waiting list, you should receive an email with details of your test instance.
+Click on *Manage* -> *Instance* and register for an instance. After some time on the waiting list (about one hour), you should receive an email with the details of your test instance.
 
+## Verify user-level requirements
 
-## Verify User-Level Requirements
+The user account should have *Identity Type* set to `Machine`:
 
-The user account should have `Identity Type` set to `Machine`.
-
-* Navigate to `User Administration > Users`.
+* Navigate to *User Administration* > *Users*.
 * Search for and open the admin record.
-* Make sure `Identity Type` is set to `Machine`
+* Make sure *Identity Type* is set to `Machine`.
 
 ## Create the test_table in ServiceNow
 
-Search for `Tables` in the `All` menu and select the one from `System Definition`:
+Search for *Tables* in the *All* menu and select the one from *System Definition*:
 
 ![create table](screenshot2.png)
 
-Then click on `New` button to create a new table:
+Then click on the *New* button to create a new table:
 
 ![create table](Screenshot1.jpg)
 
-**Do not set ACL**
-
-## How to run
-
-Simply run:
-
-```bash
-$ just use <playground run> command and search for servicenow-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <SERVICENOW_URL> .sh in this folder
-```
-
-Note: you can also export these values as environment variable
-
-## Details of what the script is doing
-
-Creating ServiceNow Sink connector
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-                    "connector.class": "io.confluent.connect.servicenow.ServiceNowSinkConnector",
-                    "topics": "test_table",
-                    "servicenow.url": "$SERVICENOW_URL",
-                    "tasks.max": "1",
-                    "servicenow.table": "u_test_table",
-                    "servicenow.user": "admin",
-                    "servicenow.password": "$SERVICENOW_PASSWORD",
-                    "key.converter": "io.confluent.connect.avro.AvroConverter",
-                    "key.converter.schema.registry.url": "http://schema-registry:8081",
-                    "value.converter": "io.confluent.connect.avro.AvroConverter",
-                    "value.converter.schema.registry.url": "http://schema-registry:8081",
-                    "reporter.bootstrap.servers": "broker:9092",
-                    "reporter.error.topic.name": "test-error",
-                    "reporter.error.topic.replication.factor": 1,
-                    "reporter.error.topic.key.format": "string",
-                    "reporter.error.topic.value.format": "string",
-                    "reporter.result.topic.name": "test-result",
-                    "reporter.result.topic.key.format": "string",
-                    "reporter.result.topic.value.format": "string",
-                    "reporter.result.topic.replication.factor": 1,
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/servicenow-sink/config | jq .
-```
-
-Confirm that the messages were delivered to the ServiceNow table:
-
-```bash
-$ docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" connect \
-   curl -X GET \
-    "${SERVICENOW_URL}/api/now/table/u_test_table" \
-    --user admin:"$SERVICENOW_PASSWORD" \
-    -H 'Accept: application/json' \
-    -H 'Content-Type: application/json' \
-    -H 'cache-control: no-cache'
-```
-
-Results:
-
-```json
-{
-    "result": [
-        {
-            "sys_created_by": "admin",
-            "sys_created_on": "2020-01-31 15:09:12",
-            "sys_id": "7a91d5ffdb2a00107b7e5385ca96194b",
-            "sys_mod_count": "0",
-            "sys_tags": "",
-            "sys_updated_by": "admin",
-            "sys_updated_on": "2020-01-31 15:09:12",
-            "u_name": "tape",
-            "u_price": "0.99",
-            "u_quantity": "10"
-        },
-        {
-            "sys_created_by": "admin",
-            "sys_created_on": "2020-01-31 15:09:11",
-            "sys_id": "ba9195ffdb2a00107b7e5385ca961973",
-            "sys_mod_count": "0",
-            "sys_tags": "",
-            "sys_updated_by": "admin",
-            "sys_updated_on": "2020-01-31 15:09:11",
-            "u_name": "scissors",
-            "u_price": "2.75",
-            "u_quantity": "3"
-        },
-        {
-            "sys_created_by": "admin",
-            "sys_created_on": "2020-01-31 15:09:12",
-            "sys_id": "be9195ffdb2a00107b7e5385ca961975",
-            "sys_mod_count": "0",
-            "sys_tags": "",
-            "sys_updated_by": "admin",
-            "sys_updated_on": "2020-01-31 15:09:12",
-            "u_name": "notebooks",
-            "u_price": "1.99",
-            "u_quantity": "5"
-        }
-    ]
-}
-```
-
-Or using UI:
-
-![Results](Screenshot2.png)
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+**Do not set ACL.**

@@ -1,20 +1,28 @@
 # Jira Source connector
 
-
-
 ## Objective
 
-Quickly test [Jira Source](https://docs.confluent.io/current/connect/kafka-connect-jira/index.html#quick-start) connector.
+Quickly test the [Jira Source](https://docs.confluent.io/kafka-connectors/jira/current/overview.html) connector.
 
+## Prerequisites
 
-## Create an API token
+| Variable | Description |
+| --- | --- |
+| `JIRA_URL` | Jira instance URL (e.g. `https://<your-site>.atlassian.net`) |
+| `JIRA_USERNAME` | Jira user (email address) |
+| `JIRA_API_TOKEN` | API token of `JIRA_USERNAME` (see below) |
 
-If you want to create a developer account, create one [here](https://www.atlassian.com/try/cloud/signup?product=confluence.ondemand,jira-software.ondemand,jira-servicedesk.ondemand,jira-core.ondemand&developer=true)
-Go to your JIRA instance and select `Accounts Settings`:
+With CP 8.x, the Jira connector version must be 1.2.0 or later (the script exits with code 111 otherwise).
+
+### Create an API token
+
+If you need a developer account, create one [here](https://www.atlassian.com/try/cloud/signup?product=confluence.ondemand,jira-software.ondemand,jira-servicedesk.ondemand,jira-core.ondemand&developer=true).
+
+Go to your Jira instance and select `Account Settings`:
 
 ![Jira api token](Screenshot1.png)
 
-Click on `Security`->`Create and manage api tokens`:
+Click on `Security` > `Create and manage API tokens`:
 
 ![Jira api token](Screenshot2.png)
 
@@ -24,52 +32,19 @@ Create the API token:
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for jira-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <JIRA_URL> <JIRA_USERNAME> .sh in this folder
-```
-
-Note: you can also export these values as environment variable
-
-## Details of what the script is doing
-
-Creating Jira Source connector
-
 ```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-                    "connector.class": "io.confluent.connect.jira.JiraSourceConnector",
-                    "topic.name.pattern":"jira-topic-${entityName}",
-                    "tasks.max": "1",
-                    "jira.url": "$JIRA_URL",
-                    "jira.since": "$SINCE",
-                    "jira.username": "$JIRA_USERNAME",
-                    "jira.api.token": "$JIRA_API_TOKEN",
-                    "jira.tables": "project_categories",
-                    "key.converter": "io.confluent.connect.avro.AvroConverter",
-                    "key.converter.schema.registry.url":"http://schema-registry:8081",
-                    "value.converter": "io.confluent.connect.avro.AvroConverter",
-                    "value.converter.schema.registry.url":"http://schema-registry:8081",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/jira-source/config | jq .
+export JIRA_URL="https://<your-site>.atlassian.net"
+export JIRA_USERNAME="<email>"
+export JIRA_API_TOKEN="<api token>"
+playground run -f jira-source.sh
 ```
 
-Verify we have received the data in `jira-topic-project_categories` topic
+| Script | Description |
+| --- | --- |
+| `jira-source.sh` | Jira source fetching issues since `2021-01-01 00:00` |
 
-```
-playground topic consume --topic jira-topic-project_categories --min-expected-messages 1 --timeout 60
-```
+## What the script does
 
-Results:
-
-```json
-{"id":"project_categories_10000"}       {"type":"project_categories","data":{"self":"https://confluentinc.atlassian.net/rest/api/2/projectCategory/10000","id":"10000","description":"","name":"Engineering Projects"}}
-Processed a total of 1 messages
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+1. Starts the plaintext environment.
+2. Creates the `jira-source` connector (`jira.resources=issues`, `jira.since=2021-01-01 00:00`, `topic.name.pattern=jira-topic-${resourceName}`, JSON converters).
+3. Verifies that at least one record lands in topic `jira-topic-issues` with `playground topic consume`.

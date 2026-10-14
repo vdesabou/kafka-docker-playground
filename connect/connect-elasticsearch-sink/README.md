@@ -1,174 +1,35 @@
 # Elasticsearch Sink connector
 
-
-
 ## Objective
 
-Quickly test [Elasticsearch Sink](https://docs.confluent.io/current/connect/kafka-connect-elasticsearch/index.html) connector.
+Quickly test the [Elasticsearch Sink](https://docs.confluent.io/kafka-connectors/elasticsearch/current/overview.html) connector.
 
+## Prerequisites
 
-
-
-## How to run
-
-Simply run:
-
-```
-$ just use <playground run> command and search for elasticsearch-sink.sh in this folder
-```
+With CP 8.x, the minimal supported connector version is `14.1.0` (the script exits with code 111 otherwise).
 
 The Elasticsearch version depends on the connector version:
 
-* connector 16.0.0 and later (Elasticsearch Java API Client, supports Elasticsearch 8.x and 9.x): Elasticsearch `9.3.0`
-* connector before 16.0.0 (High Level REST Client 7.17, supports Elasticsearch 7.x and 8.x): Elasticsearch `8.18.2`
+- connector 16.0.0 and later (Elasticsearch Java API Client, supports Elasticsearch 8.x and 9.x): Elasticsearch `9.3.0`
+- connector before 16.0.0 (High Level REST Client 7.17, supports Elasticsearch 7.x and 8.x): Elasticsearch `8.18.2`
 
-Set the `ELASTIC_VERSION` environment variable to use another Elasticsearch version.
+| Variable | Description |
+| --- | --- |
+| `ELASTIC_VERSION` | Optional: Elasticsearch version to use instead of the default above |
 
-## Details of what the script is doing
+## How to run
 
-The connector is created with:
-
-```
-playground connector create-or-update --connector elasticsearch-sink  << EOF
-{
-        "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
-          "tasks.max": "1",
-          "topics": "test-elasticsearch-sink",
-          "key.ignore": "true",
-          "connection.url": "http://elasticsearch:9200",
-          "type.name": "kafka-connect",
-          "name": "elasticsearch-sink"
-          }
-EOF
+```bash
+playground run -f elasticsearch-sink.sh
 ```
 
-Messages are sent to `test-elasticsearch-sink` topic using:
+| Script | Description |
+| --- | --- |
+| `elasticsearch-sink.sh` | Elasticsearch Sink connector writing to a local Elasticsearch container |
 
-```
-$ playground topic produce -t test-elasticsearch-sink --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
-{
-  "type": "record",
-  "name": "myrecord",
-  "fields": [
-    {
-      "name": "f1",
-      "type": "string"
-    }
-  ]
-}
-EOF
-```
+## What the script does
 
-Check that the data is available in Elasticsearch:
-
-```
-$ curl -XGET 'http://localhost:9200/test-elasticsearch-sink/_search?pretty'
-{
-  "took" : 36,
-  "timed_out" : false,
-  "_shards" : {
-    "total" : 5,
-    "successful" : 5,
-    "skipped" : 0,
-    "failed" : 0
-  },
-  "hits" : {
-    "total" : 10,
-    "max_score" : 1.0,
-    "hits" : [
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+0",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value1"
-        }
-      },
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+9",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value10"
-        }
-      },
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+4",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value5"
-        }
-      },
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+5",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value6"
-        }
-      },
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+2",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value3"
-        }
-      },
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+6",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value7"
-        }
-      },
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+3",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value4"
-        }
-      },
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+7",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value8"
-        }
-      },
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+8",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value9"
-        }
-      },
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+1",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value2"
-        }
-      }
-    ]
-  }
-}
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+1. Picks the Elasticsearch version from the connector version (also detected from `--connector-zip` / `--connector-jar` file names) and starts the environment.
+2. Produces 10 Avro records to topic `test-elasticsearch-sink` with `playground topic produce`.
+3. Creates the `elasticsearch-sink` connector with `key.ignore=true` and `connection.url=http://elasticsearch:9200`.
+4. Queries `http://localhost:9200/test-elasticsearch-sink/_search` and checks that the records are indexed.

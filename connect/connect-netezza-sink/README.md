@@ -4,88 +4,54 @@
 
 Quickly test the [Netezza sink](https://github.com/confluentinc/kafka-connect-netezza) connector (`io.confluent.connect.netezza.NetezzaSinkConnector`) with an IBM Netezza (Netezza Performance Server / NPS) instance.
 
-## Important: there is no Netezza docker image
+The connector plugin is [published on Confluent Hub](https://www.confluent.io/hub/confluentinc/kafka-connect-netezza) as `confluentinc/kafka-connect-netezza` and is installed automatically, like any other connector.
 
-This test runs against an **external, already-provisioned Netezza instance**.
+## Prerequisites
 
-You need one of:
+### A reachable Netezza instance
+
+There is no Netezza docker image: this test runs against an **external, already-provisioned Netezza instance**. You need one of:
 
 - an **NPS-as-a-Service** instance (IBM Cloud / AWS / Azure), or
 - the **IBM Netezza Software Emulator** VM (VMware, free, for local runs).
 
 Make sure the instance is reachable and that port `5480` is open to the machine running this test.
 
-## Prerequisites
+| Variable | Description |
+| --- | --- |
+| `NETEZZA_HOST` | Netezza host (required) |
+| `NETEZZA_USER` | Netezza user (required) |
+| `NETEZZA_PASSWORD` | Netezza password (required) |
+| `NETEZZA_PORT` | Netezza port (optional, default `5480`) |
+| `NETEZZA_DB` | Netezza database (optional, default `SYSTEMTEST`) |
 
-1. A reachable Netezza instance (see above).
+### NPS Linux client tools
 
-2. The **connector plugin** is [published on Confluent Hub](https://www.confluent.io/hub/confluentinc/kafka-connect-netezza) as `confluentinc/kafka-connect-netezza`, so it is installed automatically (like any other connector) from the `CONNECT_PLUGIN_PATH` in `docker-compose.plaintext.yml`. No build step is required.
+The Netezza JDBC driver (`nzjdbc3.jar`) and the native SQL client (`nzsql`) are not bundled with the Confluent Hub package, and IBM does not publish them at a public URL (the driver is not on Maven Central). Both come from the NPS Linux client tools `nps-linuxclient-v11.3.1.2.tar.gz`.
 
-3. The **NPS Linux client tools** (`nps-linuxclient-v11.3.1.2.tar.gz`). Neither the **Netezza JDBC driver** (`nzjdbc3.jar`) nor the native SQL client (`nzsql`) is bundled with the Confluent Hub package, and IBM does **not** publish them at a public URL (the driver is not on Maven Central under `org.netezza` or `com.netezza`).
+The script downloads the tarball from the Confluent S3 bucket with `get_3rdparty_file` (only works for **Confluent employees** with valid AWS credentials set). Otherwise, obtain it from your Netezza client tools distribution and copy it into the git-ignored `nzclient/` folder:
 
-   For convenience the full client tarball is hosted on the Confluent S3 bucket, so the test script downloads it automatically via `get_3rdparty_file "nps-linuxclient-v11.3.1.2.tar.gz"` (this only works for **Confluent employees** with valid AWS credentials set. If it cannot be downloaded, obtain it from your Netezza client tools distribution and copy it into the git-ignored `nzclient/` folder as:
+```text
+connect/connect-netezza-sink/nzclient/nps-linuxclient-v11.3.1.2.tar.gz
+```
 
-   ```
-   connect/connect-netezza-sink/nzclient/nps-linuxclient-v11.3.1.2.tar.gz
-   ```
-
-4. Export the connection details as environment variables:
-
-   ```bash
-   export NETEZZA_HOST=<host>       # required
-   export NETEZZA_USER=<user>       # required
-   export NETEZZA_PASSWORD=<password> # required
-   export NETEZZA_PORT=5480         # optional, defaults to 5480
-   export NETEZZA_DB=SYSTEMTEST      # optional, defaults to SYSTEMTEST
-   ```
+With CP 8.x, the minimum supported connector version is 1.0.7 (the script exits with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for netezza-sink.sh in this folder
-```
-
-## Details of what the script is doing
-
-The `NetezzaSinkConnector` connects to Netezza over the `nzjdbc3.jar` driver copied into its plugin `lib` directory. The native `nzsql` client (from the same NPS client tools) is used to reset and read the target table, run via a helper (`run_nzsql`) that executes it in a throwaway `--platform=linux/amd64` `debian:bullseye-slim` container with the client mounted at `/opt/nz`.
-
-Sending messages to topic `orders`:
-
 ```bash
-$ playground topic produce -t orders --nb-messages 1 --forced-value '{"id":2,"product":"foo","quantity":2,"price":0.86583304}'
+export NETEZZA_HOST="<host>"
+export NETEZZA_USER="<user>"
+export NETEZZA_PASSWORD="<password>"
+playground run -f netezza-sink.sh
 ```
 
-Creating the Netezza sink connector:
+## What the script does
 
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.netezza.NetezzaSinkConnector",
-               "tasks.max": "1",
-               "connection.host": "<host>",
-               "connection.port": "5480",
-               "connection.database": "SYSTEMTEST",
-               "connection.user": "<user>",
-               "connection.password": "<password>",
-               "topics": "orders",
-               "auto.create": "true"
-          }' \
-     http://localhost:8083/connectors/netezza-sink/config | jq .
-```
+1. Extracts the NPS client tools into `nzclient/` and copies `nzjdbc3.jar` into the `confluentinc-kafka-connect-netezza` plugin `lib` folder.
+2. Starts the environment, and drops table `orders_<suffix>` if it exists (`<suffix>` is derived from the CP tag, so concurrent runs don't collide).
+3. Produces one Avro record with a unique `product` value to topic `orders_<suffix>` with `playground topic produce`.
+4. Creates the Netezza sink connector `netezza-sink` (`auto.create=true`).
+5. Verifies with `nzsql` that the unique value is in table `orders_<suffix>`, then drops the table (cleanup).
 
-Verify data is in Netezza 
-
-```bash
-run_nzsql > /tmp/result.log 2>&1 << EOF
-SELECT * FROM orders;
-EOF
-cat /tmp/result.log
-grep "foo" /tmp/result.log
-
-run_nzsql << EOF
-DROP TABLE orders;
-EOF
-```
+`nzsql` is run by a helper (`run_nzsql`) in a throwaway `--platform=linux/amd64` `debian:bullseye-slim` container with the client mounted at `/opt/nz`.
