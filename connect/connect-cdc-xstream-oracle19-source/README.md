@@ -54,4 +54,9 @@ When the `oracle` container is running:
 playground connector oracle-cdc-xstream generate-report
 # Execute various SQL commands to debug XStream components
 playground connector oracle-cdc-xstream debug
+# Generate the report and analyze it: findings with exact values, root-cause patterns
+playground debug oracle-xstream-analyze -c oracle
 ```
+
+`playground debug oracle-xstream-analyze -f orclcdc_diag_<date>.html` analyzes a report from anywhere (a
+customer one too), and compares several reports of the same database when `-f` is repeated.

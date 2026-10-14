@@ -1,0 +1,3253 @@
+<html>
+<br>
+<head> <title>Confluent Oracle XStream CDC Connector Diagnostics Script</title> </head>
+<br>
+<body> <style type="text/css">  body {    font-family: consolas, monospace;    font-size: 9pt;    background-color: #F5F4F4;  }  table, td, th {    border: 1px solid #808090;  }  table {    border-collapse: collapse;    margin-top: 1em;    margin-bottom: 1em;  }  th {    background: #062756;    color: #FFFFFF;    font-family: consolas, monospace;    font-size: 9pt;  }  td {    font-family: consolas, monospace;    font-size: 9pt;  }  h1 {    color: #201371;    font-size: 15pt;    margin-top: -10pt;    margin-bottom: 0pt;  }  h2 {    color: #332494;    font-size: 12pt;    margin-top: 0pt;    margin-bottom: 0pt;  }  h3 {    color: #4933D7;    font-size: 10pt;    margin-top: 0pt;    margin-bottom: 0pt;  }  ul {    line-height: 0.75em;    margin-top: 0pt;    margin-bottom: 0pt;  }   </style>
+<br>
+<h1>Confluent Oracle XStream CDC Connector Diagnostics Script</h1>
+<br>
+<ul>
+<br>
+<li><a href="#Overview"> Overview </a></li>
+<br>
+<li><a href="#Capture Process"> Capture Process </a></li>
+<br>
+<li><a href="#LogMiner"> LogMiner </a></li>
+<br>
+<li><a href="#Outbound Server"> Outbound Server </a></li>
+<br>
+<li><a href="#Apply Components"> Apply Components </a></li>
+<br>
+<li><a href="#Rules"> Rules </a></li>
+<br>
+<li><a href="#Queue"> Queue </a></li>
+<br>
+<li><a href="#Streams Pool"> Streams Pool </a></li>
+<br>
+<li><a href="#Downstream Capture"> Downstream Capture </a></li>
+<br>
+<li><a href="#Redo Log"> Redo Log </a></li>
+<br>
+<li><a href="#Alerts"> Alerts </a></li>
+<br>
+<li><a href="#Events"> Events </a></li>
+<br>
+<li><a href="#Miscellaneous"> Miscellaneous </a></li>
+<br>
+</ul>
+<br>
+<hr>
+<br>
+<h2><a name="Overview">Overview</a></h2>
+<br>
+<h3>Overview: Database</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Instance ID
+</th>
+<th scope="col">
+DB Name
+</th>
+<th scope="col">
+Unique DB Name
+</th>
+<th scope="col">
+Log Mode
+</th>
+<th scope="col">
+Open Mode
+</th>
+<th scope="col">
+DB Role
+</th>
+<th scope="col">
+Current SCN
+</th>
+<th scope="col">
+Supplemental Log
+<br>
+(MIN)
+</th>
+<th scope="col">
+Supplemental Log
+<br>
+(PK)
+</th>
+<th scope="col">
+Supplemental Log
+<br>
+(ALL)
+</th>
+<th scope="col">
+Minimum Required
+<br>
+Checkpoint SCN
+</th>
+<th scope="col">
+CDB
+</th>
+<th scope="col">
+Platform Name
+</th>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+ORCLCDB
+</td>
+<td>
+ORCLCDB
+</td>
+<td>
+NOARCHIVELOG
+</td>
+<td>
+READ WRITE
+</td>
+<td>
+PRIMARY
+</td>
+<td align="right">
+             1220790
+</td>
+<td>
+NO
+</td>
+<td>
+NO
+</td>
+<td>
+YES
+</td>
+<td align="right">
+             1183121
+</td>
+<td>
+YES
+</td>
+<td>
+Linux OS (AARCH64)
+</td>
+</tr>
+</table>
+<p>
+<h3>Overview: Database Version</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Instance ID
+</th>
+<th scope="col">
+Version Banner
+</th>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.19.0.0.0
+</td>
+</tr>
+</table>
+<p>
+<h3>Overview: Global database name</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Global DB Name
+</th>
+</tr>
+<tr>
+<td>
+ORCLCDB
+</td>
+</tr>
+</table>
+<p>
+<h3>Overview: Initialization parameters</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Instance ID
+</th>
+<th scope="col">
+Parameter Name
+</th>
+<th scope="col">
+Parameter Value
+</th>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+processes
+</td>
+<td>
+640
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+sessions
+</td>
+<td>
+990
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+sga_max_size
+</td>
+<td>
+8824815616
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+shared_pool_size
+</td>
+<td>
+0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+pga_aggregate_target
+</td>
+<td>
+2939158528
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+sga_target
+</td>
+<td>
+8824815616
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+memory_target
+</td>
+<td>
+0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+memory_max_target
+</td>
+<td>
+0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+streams_pool_size
+</td>
+<td>
+0
+</td>
+</tr>
+</table>
+<p>
+<hr>
+<br>
+<h2><a name="Capture Process">Capture Process</a></h2>
+<br>
+<h3>Capture Process: General</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Capture Name
+</th>
+<th scope="col">
+Capture User
+</th>
+<th scope="col">
+Capture Type
+</th>
+<th scope="col">
+Queue
+</th>
+<th scope="col">
+Positive
+<br>
+Ruleset
+</th>
+<th scope="col">
+Negative
+<br>
+Ruleset
+</th>
+<th scope="col">
+Checkpoint
+<br>
+Retention Time
+</th>
+<th scope="col">
+Logminer ID
+</th>
+<th scope="col">
+Source Database
+</th>
+</tr>
+<tr>
+<td>
+CAP$_XOUT_1
+</td>
+<td>
+C##CFLTADMIN
+</td>
+<td>
+LOCAL
+</td>
+<td>
+C##CFLTADMIN.Q$_XOUT_2
+</td>
+<td>
+C##CFLTADMIN.RULESET$_6
+</td>
+<td>
+&nbsp;
+</td>
+<td align="right">
+             60
+</td>
+<td align="right">
+              1
+</td>
+<td>
+ORCLCDB
+</td>
+</tr>
+</table>
+<p>
+<h3>Capture Process: Status</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Capture
+<br>
+Name
+</th>
+<th scope="col">
+Status
+</th>
+<th scope="col">
+Status
+<br>
+Change Time
+</th>
+<th scope="col">
+Outbound
+<br>
+Name
+</th>
+<th scope="col">
+Outbound
+<br>
+Status
+</th>
+<th scope="col">
+First SCN
+</th>
+<th scope="col">
+Start SCN
+</th>
+<th scope="col">
+Captured SCN
+</th>
+<th scope="col">
+Applied SCN
+</th>
+<th scope="col">
+Required
+<br>
+Checkpoint SCN
+</th>
+<th scope="col">
+Error Number
+</th>
+<th scope="col">
+Error Message
+</th>
+</tr>
+<tr>
+<td>
+CAP$_XOUT_1
+</td>
+<td>
+ABORTED
+</td>
+<td>
+2026-10-14 09:16:30
+</td>
+<td>
+XOUT
+</td>
+<td>
+ATTACHED
+</td>
+<td align="right">
+             1183121
+</td>
+<td align="right">
+             1183121
+</td>
+<td align="right">
+             1220736
+</td>
+<td align="right">
+             1183121
+</td>
+<td align="right">
+                   0
+</td>
+<td align="right">
+1291
+</td>
+<td>
+ORA-01291: missing logfile
+</td>
+</tr>
+</table>
+<p>
+<h3>Capture Process: Statistics</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Capture
+<br>
+Name
+</th>
+<th scope="col">
+State
+</th>
+<th scope="col">
+State
+<br>
+Change Time
+</th>
+<th scope="col">
+Startup Time
+</th>
+<th scope="col">
+Session
+<br>
+Restart SCN
+</th>
+<th scope="col">
+Capture Latency
+<br>
+(seconds)
+</th>
+<th scope="col">
+Redo Mined (MB)
+</th>
+<th scope="col">
+SGA Used (MB)
+</th>
+<th scope="col">
+SGA Allocated (MB)
+</th>
+</tr>
+<tr>
+<td>
+CAP$_XOUT_1
+</td>
+<td>
+PAUSED FOR FLOW CONTROL
+</td>
+<td>
+2026-10-14 09:20:07
+</td>
+<td>
+2026-10-14 09:16:14
+</td>
+<td>
+1183121
+</td>
+<td align="right">
+             17
+</td>
+<td align="right">
+         150.87
+</td>
+<td align="right">
+              6
+</td>
+<td align="right">
+             31
+</td>
+</tr>
+</table>
+<p>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Capture
+<br>
+Name
+</th>
+<th scope="col">
+Total
+<br>
+Messages Captured
+</th>
+<th scope="col">
+Total
+<br>
+Messages Enqueued
+</th>
+<th scope="col">
+Last Captured
+<br>
+Message SCN
+</th>
+<th scope="col">
+Last Captured
+<br>
+Message Time
+</th>
+<th scope="col">
+Last Enqueued
+<br>
+Message SCN
+</th>
+<th scope="col">
+Last Enqueued
+<br>
+Message Time
+</th>
+<th scope="col">
+Last Redo
+<br>
+Flushed SCN
+</th>
+<th scope="col">
+Last Redo
+<br>
+Flushed Time
+</th>
+</tr>
+<tr>
+<td>
+CAP$_XOUT_1
+</td>
+<td align="right">
+          32454
+</td>
+<td align="right">
+             61
+</td>
+<td align="right">
+             1220786
+</td>
+<td>
+2026-10-14 09:20:07
+</td>
+<td align="right">
+             1220698
+</td>
+<td>
+2026-10-14 09:19:50
+</td>
+<td align="right">
+             1220789
+</td>
+<td>
+2026-10-14 09:20:23
+</td>
+</tr>
+</table>
+<p>
+<h3>Capture Process: Parameters</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Capture Name
+</th>
+<th scope="col">
+Parameter Name
+</th>
+<th scope="col">
+Parameter Value
+</th>
+<th scope="col">
+Set By User?
+</th>
+</tr>
+<tr>
+<td>
+CAP$_XOUT_1
+</td>
+<td>
+DOWNSTREAM_REAL_TIME_MINE
+</td>
+<td>
+Y
+</td>
+<td>
+NO
+</td>
+</tr>
+<tr>
+<td>
+CAP$_XOUT_1
+</td>
+<td>
+MAX_SGA_SIZE
+</td>
+<td>
+INFINITE
+</td>
+<td>
+NO
+</td>
+</tr>
+<tr>
+<td>
+CAP$_XOUT_1
+</td>
+<td>
+PARALLELISM
+</td>
+<td>
+0
+</td>
+<td>
+NO
+</td>
+</tr>
+<tr>
+<td>
+CAP$_XOUT_1
+</td>
+<td>
+USE_RAC_SERVICE
+</td>
+<td>
+N
+</td>
+<td>
+NO
+</td>
+</tr>
+</table>
+<p>
+<h3>Capture Process: Registered log files</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Capture Name
+</th>
+<th scope="col">
+Thread
+</th>
+<th scope="col">
+Sequence
+</th>
+<th scope="col">
+Name
+</th>
+<th scope="col">
+First SCN
+</th>
+<th scope="col">
+First Time
+</th>
+<th scope="col">
+Next SCN
+</th>
+<th scope="col">
+Next Time
+</th>
+<th scope="col">
+Dictionary
+<br>
+Begin
+</th>
+<th scope="col">
+Dictionary
+<br>
+End
+</th>
+<th scope="col">
+Purgeable
+</th>
+</tr>
+<tr>
+<td>
+CAP$_XOUT_1
+</td>
+<td align="right">
+              1
+</td>
+<td align="right">
+              2
+</td>
+<td>
+/opt/oracle/product/19c/dbhome_1/dbs/arch1_2_1144424433.dbf
+</td>
+<td align="right">
+             1162165
+</td>
+<td>
+2023-08-09 15:43:28
+</td>
+<td align="right">
+             1183121
+</td>
+<td>
+2026-10-14 09:16:13
+</td>
+<td>
+NO
+</td>
+<td>
+NO
+</td>
+<td>
+NO
+</td>
+</tr>
+<tr>
+<td>
+CAP$_XOUT_1
+</td>
+<td align="right">
+              1
+</td>
+<td align="right">
+              3
+</td>
+<td>
+/opt/oracle/product/19c/dbhome_1/dbs/arch1_3_1144424433.dbf
+</td>
+<td align="right">
+             1183121
+</td>
+<td>
+2026-10-14 09:16:13
+</td>
+<td align="right">
+             1184384
+</td>
+<td>
+2026-10-14 09:16:14
+</td>
+<td>
+YES
+</td>
+<td>
+YES
+</td>
+<td>
+NO
+</td>
+</tr>
+</table>
+<p>
+<h3>Capture Process: Open transactions</h3>
+<br>
+<hr>
+<br>
+<h2><a name="LogMiner">LogMiner</a></h2>
+<br>
+<h3>LogMiner: Status</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Instance ID
+</th>
+<th scope="col">
+Session ID
+</th>
+<th scope="col">
+Session Name
+</th>
+<th scope="col">
+Session State
+</th>
+<th scope="col">
+Capture Name
+</th>
+<th scope="col">
+DB Name
+</th>
+<th scope="col">
+Reset SCN
+</th>
+<th scope="col">
+Reset Time
+</th>
+<th scope="col">
+Spill SCN
+</th>
+<th scope="col">
+Low
+<br>
+Watermark SCN
+</th>
+<th scope="col">
+Checkpoint Interval
+</th>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+              1
+</td>
+<td>
+CAP$_XOUT_1
+</td>
+<td>
+ACTIVE
+</td>
+<td>
+CAP$_XOUT_1
+</td>
+<td>
+ORCLCDB
+</td>
+<td align="right">
+             1141934
+</td>
+<td>
+2023-08-09 15:40:33
+</td>
+<td align="right">
+             1183121
+</td>
+<td align="right">
+             1220786
+</td>
+<td align="right">
+           1000
+</td>
+</tr>
+</table>
+<p>
+<h3>LogMiner: Statistics</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Instance ID
+</th>
+<th scope="col">
+Session ID
+</th>
+<th scope="col">
+Capture Name
+</th>
+<th scope="col">
+Used Memory (MB)
+</th>
+<th scope="col">
+Max Memory (MB)
+</th>
+<th scope="col">
+Used Memory (%)
+</th>
+<th scope="col">
+Available Txns
+</th>
+<th scope="col">
+Available
+<br>
+Committed Txns
+</th>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+              1
+</td>
+<td>
+CAP$_XOUT_1
+</td>
+<td align="right">
+           5.56
+</td>
+<td align="right">
+             30
+</td>
+<td align="right">
+          97.10
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+</table>
+<p>
+<hr>
+<br>
+<h2><a name="Outbound Server">Outbound Server</a></h2>
+<br>
+<h3>Outbound Server: General</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Outbound Name
+</th>
+<th scope="col">
+Status
+</th>
+<th scope="col">
+Connect User
+</th>
+<th scope="col">
+Capture Name
+</th>
+<th scope="col">
+Capture User
+</th>
+<th scope="col">
+Queue Name
+</th>
+<th scope="col">
+Source Database
+</th>
+<th scope="col">
+Source Root Name
+</th>
+<th scope="col">
+LCR ID Version
+</th>
+</tr>
+<tr>
+<td>
+XOUT
+</td>
+<td>
+ATTACHED
+</td>
+<td>
+C##CFLTUSER
+</td>
+<td>
+CAP$_XOUT_1
+</td>
+<td>
+C##CFLTADMIN
+</td>
+<td>
+C##CFLTADMIN.Q$_XOUT_2
+</td>
+<td>
+ORCLCDB
+</td>
+<td>
+ORCLCDB
+</td>
+<td align="right">
+              2
+</td>
+</tr>
+</table>
+<p>
+<h3>Outbound Server: Progress</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Outbound Name
+</th>
+<th scope="col">
+Processed Low Position
+</th>
+<th scope="col">
+Process Low SCN
+</th>
+<th scope="col">
+Oldest Position
+</th>
+<th scope="col">
+Oldest SCN
+</th>
+</tr>
+<tr>
+<td>
+XOUT
+</td>
+<td>
+0000000000129DB700000001000000010000000000129DB6000000050000000102
+</td>
+<td align="right">
+             1220022
+</td>
+<td>
+&nbsp;
+</td>
+<td align="right">
+                   0
+</td>
+</tr>
+</table>
+<p>
+<h3>Outbound Server: Statistics</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Instance ID
+</th>
+<th scope="col">
+Outbound Name
+</th>
+<th scope="col">
+State
+</th>
+<th scope="col">
+Startup Time
+</th>
+<th scope="col">
+XID
+</th>
+<th scope="col">
+Total
+<br>
+Transactions Sent
+</th>
+<th scope="col">
+Total
+<br>
+LCRs Sent
+</th>
+<th scope="col">
+Last Sent
+<br>
+LCR Time
+</th>
+<th scope="col">
+Last Sent
+<br>
+LCR SCN
+</th>
+<th scope="col">
+Last Sent
+<br>
+LCR Creation Time
+</th>
+<th scope="col">
+Last Sent
+<br>
+LCR Position
+</th>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+XOUT
+</td>
+<td>
+IDLE
+</td>
+<td>
+2026-10-14 09:16:22
+</td>
+<td>
+10.9.769
+</td>
+<td align="right">
+              5
+</td>
+<td align="right">
+             14
+</td>
+<td>
+2026-10-14 09:16:48
+</td>
+<td align="right">
+             1220023
+</td>
+<td>
+2026-10-14 09:16:46
+</td>
+<td>
+0000000000129DB700000001000000010000000000129DB7000000010000000102
+</td>
+</tr>
+</table>
+<p>
+<hr>
+<br>
+<h2><a name="Apply Components">Apply Components</a></h2>
+<br>
+<h3>Apply: General</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Apply Name
+</th>
+<th scope="col">
+Apply User
+</th>
+<th scope="col">
+Queue Name
+</th>
+<th scope="col">
+Positive
+<br>
+Ruleset
+</th>
+<th scope="col">
+Negative
+<br>
+Ruleset
+</th>
+</tr>
+<tr>
+<td>
+XOUT
+</td>
+<td>
+C##CFLTADMIN
+</td>
+<td>
+C##CFLTADMIN.Q$_XOUT_2
+</td>
+<td>
+C##CFLTADMIN.RULESET$_9
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+</table>
+<p>
+<h3>Apply: Status</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Apply Name
+</th>
+<th scope="col">
+Status
+</th>
+<th scope="col">
+Status
+<br>
+Change Time
+</th>
+<th scope="col">
+Error Number
+</th>
+<th scope="col">
+Error Message
+</th>
+</tr>
+<tr>
+<td>
+XOUT
+</td>
+<td>
+ENABLED
+</td>
+<td>
+2026-10-14 09:16:14
+</td>
+<td align="right">
+&nbsp;
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+</table>
+<p>
+<h3>Apply: Parameters</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Apply Name
+</th>
+<th scope="col">
+Parameter Name
+</th>
+<th scope="col">
+Parameter Value
+</th>
+<th scope="col">
+Set By User?
+</th>
+</tr>
+<tr>
+<td>
+XOUT
+</td>
+<td>
+MAX_SGA_SIZE
+</td>
+<td>
+INFINITE
+</td>
+<td>
+NO
+</td>
+</tr>
+<tr>
+<td>
+XOUT
+</td>
+<td>
+PARALLELISM
+</td>
+<td>
+1
+</td>
+<td>
+NO
+</td>
+</tr>
+<tr>
+<td>
+XOUT
+</td>
+<td>
+TXN_AGE_SPILL_THRESHOLD
+</td>
+<td>
+900
+</td>
+<td>
+NO
+</td>
+</tr>
+<tr>
+<td>
+XOUT
+</td>
+<td>
+TXN_LCR_SPILL_THRESHOLD
+</td>
+<td>
+10000
+</td>
+<td>
+NO
+</td>
+</tr>
+</table>
+<p>
+<h3>Apply: Open transactions</h3>
+<br>
+<h3>Apply: Spilled transactions</h3>
+<br>
+<h3>Apply Reader: Statistics</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Instance ID
+</th>
+<th scope="col">
+Apply Name
+</th>
+<th scope="col">
+State
+</th>
+<th scope="col">
+Total
+<br>
+Messages Dequeued
+</th>
+<th scope="col">
+Total
+<br>
+Messages Spilled
+</th>
+<th scope="col">
+Last LCR
+<br>
+Dequeue Time
+</th>
+<th scope="col">
+Last LCR
+<br>
+Dequeue SCN
+</th>
+<th scope="col">
+Last Dequeued LCR
+<br>
+Source Time
+</th>
+<th scope="col">
+Reader Latency
+<br>
+(seconds)
+</th>
+<th scope="col">
+SGA Used (MB)
+</th>
+<th scope="col">
+SGA Allocated (MB)
+</th>
+<th scope="col">
+Total
+<br>
+In-Memory LCRs
+</th>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+XOUT
+</td>
+<td>
+IDLE
+</td>
+<td align="right">
+             61
+</td>
+<td align="right">
+              0
+</td>
+<td>
+2026-10-14 09:19:53
+</td>
+<td align="right">
+             1220698
+</td>
+<td>
+2026-10-14 09:19:50
+</td>
+<td align="right">
+              3
+</td>
+<td align="right">
+           3.45
+</td>
+<td align="right">
+           3.57
+</td>
+<td align="right">
+              1
+</td>
+</tr>
+</table>
+<p>
+<h3>Apply Server: Statistics</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Instance ID
+</th>
+<th scope="col">
+Apply Name
+</th>
+<th scope="col">
+Apply
+<br>
+Process Number
+</th>
+<th scope="col">
+Parallel
+<br>
+Server Number
+</th>
+<th scope="col">
+State
+</th>
+<th scope="col">
+XID
+</th>
+<th scope="col">
+Last Message
+<br>
+Apply Time
+</th>
+<th scope="col">
+Last Message
+<br>
+SCN
+</th>
+<th scope="col">
+Last Message
+<br>
+Source Time
+</th>
+<th scope="col">
+Last Message
+<br>
+Position
+</th>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+XOUT
+</td>
+<td align="right">
+           1000
+</td>
+<td align="right">
+              2
+</td>
+<td>
+IDLE
+</td>
+<td>
+10.9.769
+</td>
+<td>
+2026-10-14 09:16:48
+</td>
+<td align="right">
+             1220023
+</td>
+<td>
+2026-10-14 09:16:46
+</td>
+<td>
+0000000000129DB700000001000000010000000000129DB7000000010000000102
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+XOUT
+</td>
+<td align="right">
+           1000
+</td>
+<td align="right">
+              1
+</td>
+<td>
+IDLE
+</td>
+<td>
+0.0.0
+</td>
+<td>
+&nbsp;
+</td>
+<td align="right">
+                   0
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+</table>
+<p>
+<hr>
+<br>
+<h2><a name="Rules">Rules</a></h2>
+<br>
+<h3>Rules: Capture process</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Capture Name
+</th>
+<th scope="col">
+Streams
+<br>
+Rule Type
+</th>
+<th scope="col">
+Ruleset
+<br>
+Name
+</th>
+<th scope="col">
+Ruleset
+<br>
+Type
+</th>
+<th scope="col">
+Rule Name
+</th>
+<th scope="col">
+Rule Type
+</th>
+<th scope="col">
+Rule Condition
+</th>
+<th scope="col">
+Schema Name
+</th>
+<th scope="col">
+Object Name
+</th>
+<th scope="col">
+Source
+<br>
+Database
+</th>
+<th scope="col">
+Source
+<br>
+Root Name
+</th>
+<th scope="col">
+Source
+<br>
+Container Name
+</th>
+</tr>
+<tr>
+<td>
+CAP$_XOUT_1
+</td>
+<td>
+TABLE
+</td>
+<td>
+C##CFLTADMIN.RULESET$_6
+</td>
+<td>
+POSITIVE
+</td>
+<td>
+C##CFLTADMIN.CUSTOMERS5
+</td>
+<td>
+DDL
+</td>
+<td>
+(((:ddl.get_object_owner() = 'C##CFLTUSER' and :ddl.get_object_name() = 'CUSTOMERS')or (:ddl.get_base_table_owner() = 'C##CFLTUSER' and :ddl.get_base_table_name() = 'CUSTOMERS')) and :ddl.get_root_name() = 'ORCLCDB' )
+</td>
+<td>
+C##CFLTUSER
+</td>
+<td>
+CUSTOMERS
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+ORCLCDB
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+CAP$_XOUT_1
+</td>
+<td>
+TABLE
+</td>
+<td>
+C##CFLTADMIN.RULESET$_6
+</td>
+<td>
+POSITIVE
+</td>
+<td>
+C##CFLTADMIN.CUSTOMERS4
+</td>
+<td>
+DML
+</td>
+<td>
+(((:dml.get_object_owner() = 'C##CFLTUSER' and :dml.get_object_name() = 'CUSTOMERS')) and :dml.get_root_name() = 'ORCLCDB' )
+</td>
+<td>
+C##CFLTUSER
+</td>
+<td>
+CUSTOMERS
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+ORCLCDB
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+</table>
+<p>
+<h3>Rules: Outbound server</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Outbound Name
+</th>
+<th scope="col">
+Streams
+<br>
+Rule Type
+</th>
+<th scope="col">
+Ruleset
+<br>
+Name
+</th>
+<th scope="col">
+Ruleset
+<br>
+Type
+</th>
+<th scope="col">
+Rule Name
+</th>
+<th scope="col">
+Rule Type
+</th>
+<th scope="col">
+Rule Condition
+</th>
+<th scope="col">
+Schema Name
+</th>
+<th scope="col">
+Object Name
+</th>
+<th scope="col">
+Source
+<br>
+Database
+</th>
+<th scope="col">
+Source
+<br>
+Root Name
+</th>
+<th scope="col">
+Source
+<br>
+Container Name
+</th>
+</tr>
+<tr>
+<td>
+XOUT
+</td>
+<td>
+TABLE
+</td>
+<td>
+C##CFLTADMIN.RULESET$_9
+</td>
+<td>
+POSITIVE
+</td>
+<td>
+C##CFLTADMIN.CUSTOMERS8
+</td>
+<td>
+DDL
+</td>
+<td>
+(((:ddl.get_object_owner() = 'C##CFLTUSER' and :ddl.get_object_name() = 'CUSTOMERS')or (:ddl.get_base_table_owner() = 'C##CFLTUSER' and :ddl.get_base_table_name() = 'CUSTOMERS')) and :ddl.get_root_name() = 'ORCLCDB' )
+</td>
+<td>
+C##CFLTUSER
+</td>
+<td>
+CUSTOMERS
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+ORCLCDB
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+<tr>
+<td>
+XOUT
+</td>
+<td>
+TABLE
+</td>
+<td>
+C##CFLTADMIN.RULESET$_9
+</td>
+<td>
+POSITIVE
+</td>
+<td>
+C##CFLTADMIN.CUSTOMERS7
+</td>
+<td>
+DML
+</td>
+<td>
+(((:dml.get_object_owner() = 'C##CFLTUSER' and :dml.get_object_name() = 'CUSTOMERS')) and :dml.get_root_name() = 'ORCLCDB' )
+</td>
+<td>
+C##CFLTUSER
+</td>
+<td>
+CUSTOMERS
+</td>
+<td>
+&nbsp;
+</td>
+<td>
+ORCLCDB
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+</table>
+<p>
+<hr>
+<br>
+<h2><a name="Queue">Queue</a></h2>
+<br>
+<h3>Queue: Buffered Queue</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Instance ID
+</th>
+<th scope="col">
+Queue Name
+</th>
+<th scope="col">
+Queue State
+</th>
+<th scope="col">
+Total
+<br>
+Messages
+</th>
+<th scope="col">
+Spilled
+<br>
+Messages
+</th>
+<th scope="col">
+Cumulative
+<br>
+Total Messages
+</th>
+<th scope="col">
+Cumulative
+<br>
+Spilled Messages
+</th>
+<th scope="col">
+Spill Ratio
+</th>
+<th scope="col">
+Queue Size (KB)
+</th>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+Q$_XOUT_2
+</td>
+<td>
+NORMAL
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+             61
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+           2.91
+</td>
+</tr>
+</table>
+<p>
+<hr>
+<br>
+<h2><a name="Streams Pool">Streams Pool</a></h2>
+<br>
+<h3>Streams Pool: Statistics</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Instance Id
+</th>
+<th scope="col">
+Total Allocated (MB)
+</th>
+<th scope="col">
+Current Size (MB)
+</th>
+<th scope="col">
+SGA Target Size (MB)
+</th>
+<th scope="col">
+Shrink Phase
+</th>
+<th scope="col">
+Advice Disabled
+</th>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+           18.5
+</td>
+<td align="right">
+             64
+</td>
+<td align="right">
+           8416
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+</table>
+<p>
+<h3>Streams Pool: Size advice</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Instance Id
+</th>
+<th scope="col">
+Pool Size
+<br>
+Estimate
+</th>
+<th scope="col">
+Pool Size
+<br>
+Factor
+</th>
+<th scope="col">
+Estimated
+<br>
+Spill Count
+</th>
+<th scope="col">
+Estimated
+<br>
+Spill Time
+</th>
+<th scope="col">
+Estimated
+<br>
+Unspill Count
+</th>
+<th scope="col">
+Estimated
+<br>
+Unspill Time
+</th>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+             64
+</td>
+<td align="right">
+              1
+</td>
+<td align="right">
+5000
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+            640
+</td>
+<td align="right">
+             10
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+            128
+</td>
+<td align="right">
+              2
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+            160
+</td>
+<td align="right">
+            2.5
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+            192
+</td>
+<td align="right">
+              3
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+            224
+</td>
+<td align="right">
+            3.5
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+            256
+</td>
+<td align="right">
+              4
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+            288
+</td>
+<td align="right">
+            4.5
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+            320
+</td>
+<td align="right">
+              5
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+            352
+</td>
+<td align="right">
+            5.5
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+            384
+</td>
+<td align="right">
+              6
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+            416
+</td>
+<td align="right">
+            6.5
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+            448
+</td>
+<td align="right">
+              7
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+            480
+</td>
+<td align="right">
+            7.5
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+            512
+</td>
+<td align="right">
+              8
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+            544
+</td>
+<td align="right">
+            8.5
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+            576
+</td>
+<td align="right">
+              9
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+            608
+</td>
+<td align="right">
+            9.5
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+             96
+</td>
+<td align="right">
+            1.5
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+</table>
+<p>
+<hr>
+<br>
+<h2><a name="Downstream Capture">Downstream Capture</a></h2>
+<br>
+<h3>Downstream Capture: Log Archive Parameters</h3>
+<br>
+<h3>Downstream Capture: Database Links</h3>
+<br>
+<h3>Downstream Capture: Archive Destinations</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Instance ID
+</th>
+<th scope="col">
+Dest ID
+</th>
+<th scope="col">
+Dest Name
+</th>
+<th scope="col">
+Status
+</th>
+<th scope="col">
+Destination
+</th>
+<th scope="col">
+Target
+</th>
+<th scope="col">
+DB Unique Name
+</th>
+<th scope="col">
+Valid Role
+</th>
+<th scope="col">
+Valid Type
+</th>
+<th scope="col">
+Valid Now
+</th>
+<th scope="col">
+Transmit Mod
+</th>
+<th scope="col">
+Archiver
+</th>
+<th scope="col">
+Process
+</th>
+<th scope="col">
+Mount ID
+</th>
+<th scope="col">
+Error
+</th>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td align="right">
+              1
+</td>
+<td>
+LOG_ARCHIVE_DEST_1
+</td>
+<td>
+VALID
+</td>
+<td>
+/opt/oracle/product/19c/dbhome_1/dbs/arch
+</td>
+<td>
+PRIMARY
+</td>
+<td>
+NONE
+</td>
+<td>
+ALL_ROLES
+</td>
+<td>
+ALL_LOGFILES
+</td>
+<td>
+YES
+</td>
+<td>
+SYNCHRONOUS
+</td>
+<td>
+ARCH
+</td>
+<td>
+ARCH
+</td>
+<td align="right">
+              0
+</td>
+<td>
+&nbsp;
+</td>
+</tr>
+</table>
+<p>
+<h3>Downstream Capture: Shipped Archived Logs</h3>
+<br>
+<h3>Downstream Capture: Standby Redo Logs</h3>
+<br>
+<h3>Downstream Capture: Foreign Archived Logs</h3>
+<br>
+<h3>Downstream Capture: Managed Standby Processes</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Instance ID
+</th>
+<th scope="col">
+Process
+</th>
+<th scope="col">
+Status
+</th>
+<th scope="col">
+Client Process
+</th>
+<th scope="col">
+Client PID
+</th>
+<th scope="col">
+Thread
+</th>
+<th scope="col">
+Sequence
+</th>
+<th scope="col">
+Block
+</th>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+ARCH
+</td>
+<td>
+CONNECTED
+</td>
+<td>
+ARCH
+</td>
+<td>
+201
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+ARCH
+</td>
+<td>
+CONNECTED
+</td>
+<td>
+ARCH
+</td>
+<td>
+209
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+ARCH
+</td>
+<td>
+CONNECTED
+</td>
+<td>
+ARCH
+</td>
+<td>
+207
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+              0
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+ARCH
+</td>
+<td>
+CLOSING
+</td>
+<td>
+ARCH
+</td>
+<td>
+205
+</td>
+<td align="right">
+              1
+</td>
+<td align="right">
+              2
+</td>
+<td align="right">
+         151552
+</td>
+</tr>
+</table>
+<p>
+<h3>Downstream Capture: Archive Gaps</h3>
+<br>
+<h3>Downstream Capture: Data Guard Stats</h3>
+<br>
+<h3>Downstream Capture: Archive Dest Status</h3>
+<br>
+<h3>Downstream Capture: Data Guard Status</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Instance ID
+</th>
+<th scope="col">
+Facility
+</th>
+<th scope="col">
+Severity
+</th>
+<th scope="col">
+Dest ID
+</th>
+<th scope="col">
+Message#
+</th>
+<th scope="col">
+Error Code
+</th>
+<th scope="col">
+Callout
+</th>
+<th scope="col">
+Timestamp
+</th>
+<th scope="col">
+Message
+</th>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+Log Transport Services
+</td>
+<td>
+Control
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+             17
+</td>
+<td align="right">
+              0
+</td>
+<td>
+YES
+</td>
+<td>
+2026-10-14 09:16:14
+</td>
+<td>
+Beginning to archive T-1.S-3 (SCN:0x0000000000120d91-SCN:0x0000000000121280)
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+Log Transport Services
+</td>
+<td>
+Control
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+             18
+</td>
+<td align="right">
+              0
+</td>
+<td>
+YES
+</td>
+<td>
+2026-10-14 09:16:14
+</td>
+<td>
+Completed archiving T-1.S-3 (SCN:0x0000000000120d91-SCN:0x0000000000121280)
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+Log Transport Services
+</td>
+<td>
+Control
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+             13
+</td>
+<td align="right">
+              0
+</td>
+<td>
+YES
+</td>
+<td>
+2026-10-14 09:16:13
+</td>
+<td>
+ALTER SYSTEM SWITCH ALL LOGFILE start
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+Log Transport Services
+</td>
+<td>
+Control
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+             14
+</td>
+<td align="right">
+              0
+</td>
+<td>
+YES
+</td>
+<td>
+2026-10-14 09:16:13
+</td>
+<td>
+ALTER SYSTEM SWITCH ALL LOGFILE complete
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+Log Transport Services
+</td>
+<td>
+Control
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+             15
+</td>
+<td align="right">
+              0
+</td>
+<td>
+YES
+</td>
+<td>
+2026-10-14 09:16:13
+</td>
+<td>
+Beginning to archive T-1.S-2 (SCN:0x000000000011bbb5-SCN:0x0000000000120d91)
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+Log Transport Services
+</td>
+<td>
+Control
+</td>
+<td align="right">
+              0
+</td>
+<td align="right">
+             16
+</td>
+<td align="right">
+              0
+</td>
+<td>
+YES
+</td>
+<td>
+2026-10-14 09:16:13
+</td>
+<td>
+Completed archiving T-1.S-2 (SCN:0x000000000011bbb5-SCN:0x0000000000120d91)
+</td>
+</tr>
+</table>
+<p>
+<hr>
+<br>
+<h2><a name="Redo Log">Redo Log</a></h2>
+<br>
+<h3>Redo Log: Summary</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Purgeable
+<br>
+Yes
+</th>
+<th scope="col">
+Purgeable
+<br>
+No
+</th>
+<th scope="col">
+Modified Time
+<br>
+Min
+</th>
+<th scope="col">
+Modified Time
+<br>
+Max
+</th>
+</tr>
+<tr>
+<td align="right">
+              0
+</td>
+<td align="right">
+              2
+</td>
+<td>
+2026-10-14 09:16:17
+</td>
+<td>
+2026-10-14 09:16:17
+</td>
+</tr>
+</table>
+<p>
+<hr>
+<br>
+<h2><a name="Alerts">Alerts</a></h2>
+<br>
+<h3>Alerts: In last 7 days</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr><th scope="col">Message Type</th><th scope="col">Creation Time</th><th scope="col">Module</th><th scope="col">Reason</th><th scope="col">Suggested<br>Action</th><th scope="col">Resolution</th></tr>
+<tr><td>Warning</td><td>2026-10-14 09:10:00</td><td>STREAMS</td><td>STREAMS capture process CAP$_XOUT_1 aborted with ORA-01291</td><td>Restore the missing archived log</td><td></td></tr>
+<tr><td>Warning</td><td>2026-10-14 09:15:00</td><td>STREAMS</td><td>STREAMS capture process CAP$_XOUT_1 aborted with ORA-01291</td><td>Restore the missing archived log</td><td></td></tr>
+</table>
+<p>
+<h3>Events: Recent history (last 7 days)</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr><th scope="col">Event Time</th><th scope="col">Streams Name</th><th scope="col">Event Name</th><th scope="col">Description</th><th scope="col">Error Number</th><th scope="col">Error Message</th></tr>
+<tr><td>2026-10-14 09:10:00</td><td>CAP$_XOUT_1</td><td>ABORT</td><td>capture aborted</td><td>1291</td><td>ORA-01291: missing logfile</td></tr>
+</table>
+<p>
+<h3>Miscellaneous: XStream administrators</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Username
+</th>
+<th scope="col">
+Privilege Type
+</th>
+<th scope="col">
+Grant
+<br>
+Select Privileges
+</th>
+<th scope="col">
+Create Time
+</th>
+</tr>
+<tr>
+<td>
+C##CFLTADMIN
+</td>
+<td>
+CAPTURE
+</td>
+<td>
+YES
+</td>
+<td>
+2026-10-14 09:16:11.413680
+</td>
+</tr>
+</table>
+<p>
+<h3>Miscellaneous: XStream sessions</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<th scope="col">
+Instance ID
+</th>
+<th scope="col">
+Session
+</th>
+<th scope="col">
+Logon Time
+</th>
+<th scope="col">
+Action
+</th>
+<th scope="col">
+Status
+</th>
+<th scope="col">
+Username
+</th>
+<th scope="col">
+Module
+</th>
+<th scope="col">
+OS Client
+<br>
+Process ID
+</th>
+<th scope="col">
+OS Program
+</th>
+<th scope="col">
+Server Type
+</th>
+<th scope="col">
+Event
+</th>
+<th scope="col">
+Last Call
+<br>
+Elapsed Time
+</th>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+5.57313
+</td>
+<td>
+2026-10-14 09:16:14
+</td>
+<td>
+XOUT - Apply Reader
+</td>
+<td>
+ACTIVE
+</td>
+<td>
+SYS
+</td>
+<td>
+XStream
+</td>
+<td>
+910
+</td>
+<td>
+oracle@oracle (AS01)
+</td>
+<td>
+DEDICATED
+</td>
+<td>
+REPL Capture/Apply: messages
+</td>
+<td align="right">
+            249
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+61.29307
+</td>
+<td>
+2026-10-14 09:16:14
+</td>
+<td>
+XOUT - Propagation Send/Rcv
+</td>
+<td>
+ACTIVE
+</td>
+<td>
+C##CFLTADMIN
+</td>
+<td>
+XStream
+</td>
+<td>
+912
+</td>
+<td>
+oracle@oracle (CX01)
+</td>
+<td>
+DEDICATED
+</td>
+<td>
+REPL Capture/Apply: messages
+</td>
+<td align="right">
+            249
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+940.3857
+</td>
+<td>
+2026-10-14 09:16:14
+</td>
+<td>
+CAP$_XOUT_1 - Capture
+</td>
+<td>
+ACTIVE
+</td>
+<td>
+C##CFLTADMIN
+</td>
+<td>
+XStream
+</td>
+<td>
+908
+</td>
+<td>
+oracle@oracle (CP01)
+</td>
+<td>
+DEDICATED
+</td>
+<td>
+LogMiner reader: redo (idle)
+</td>
+<td align="right">
+            249
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+338.62031
+</td>
+<td>
+2026-10-14 09:16:22
+</td>
+<td>
+XOUT - Apply Server
+</td>
+<td>
+ACTIVE
+</td>
+<td>
+C##CFLTUSER
+</td>
+<td>
+XStream
+</td>
+<td>
+1
+</td>
+<td>
+java@connect (TNS V1-V3)
+</td>
+<td>
+DEDICATED
+</td>
+<td>
+rdbms ipc message
+</td>
+<td align="right">
+              1
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+883.58942
+</td>
+<td>
+2026-10-14 09:16:14
+</td>
+<td>
+XOUT - Apply Coordinator
+</td>
+<td>
+ACTIVE
+</td>
+<td>
+SYS
+</td>
+<td>
+XStream
+</td>
+<td>
+906
+</td>
+<td>
+oracle@oracle (AP01)
+</td>
+<td>
+DEDICATED
+</td>
+<td>
+rdbms ipc message
+</td>
+<td align="right">
+            249
+</td>
+</tr>
+<tr>
+<td align="right">
+              1
+</td>
+<td>
+116.58605
+</td>
+<td>
+2026-10-14 09:16:14
+</td>
+<td>
+XOUT - Apply Server
+</td>
+<td>
+ACTIVE
+</td>
+<td>
+SYS
+</td>
+<td>
+XStream
+</td>
+<td>
+914
+</td>
+<td>
+oracle@oracle (AS02)
+</td>
+<td>
+DEDICATED
+</td>
+<td>
+rdbms ipc message
+</td>
+<td align="right">
+            249
+</td>
+</tr>
+</table>
+<p>
+<h3>Miscellaneous: Long running transactions</h3>
+<br>
+<p>
+<table border='1' width='90%' align='center'>
+<tr>
+<td>
+Report generated on instance: ORCLCDB at time: 2026-10-14 09:20:24
+</td>
+</tr>
+</table>
+<p>
+</body>
+<br>
+</html>
+<br>

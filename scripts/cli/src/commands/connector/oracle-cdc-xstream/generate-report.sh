@@ -24,10 +24,9 @@ playground container cp --source oracle:/home/oracle/orclcdc_diag.html --destina
 if [ -f /tmp/orclcdc_diag.html ]
 then
     log "⚙️ oracle cdc xstream connector diagnostics report is available at /tmp/orclcdc_diag.html"
-    if [[ $(type -f open 2>&1) =~ "not found" ]]
+    # only open a browser in an interactive terminal
+    if [[ -t 1 ]] && command -v open &>/dev/null
     then
-        :
-    else
         open "/tmp/orclcdc_diag.html"
     fi
 else

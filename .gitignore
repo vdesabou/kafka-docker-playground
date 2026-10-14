@@ -91,6 +91,7 @@ connector-plugin-sourcecode
 heap-analysis
 gc-analysis-output
 thread-analysis-output
+xstream-analysis-output
 cfk-reports
 config.yaml
 .claude/*
