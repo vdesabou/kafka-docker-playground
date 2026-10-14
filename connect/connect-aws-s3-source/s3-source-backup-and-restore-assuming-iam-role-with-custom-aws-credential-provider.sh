@@ -64,8 +64,10 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 AWS_BUCKET_NAME=pg-bucket-${USER}
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
+# one folder per environment: the plaintext and cfk CI jobs run at the same time and share the bucket
+TOPICS_DIR="${TAG}-${PLAYGROUND_ENVIRONMENT}"
 
-log "Empty bucket <$AWS_BUCKET_NAME/$TAG>, if required"
+log "Empty bucket <$AWS_BUCKET_NAME/$TOPICS_DIR>, if required"
 set +e
 if [ "$AWS_REGION" == "us-east-1" ]
 then
@@ -78,7 +80,7 @@ fi
 set -e
 log "Empty bucket <$AWS_BUCKET_NAME>, if required"
 set +e
-aws s3 rm s3://$AWS_BUCKET_NAME/$TAG --recursive --region $AWS_REGION
+aws s3 rm s3://$AWS_BUCKET_NAME/$TOPICS_DIR --recursive --region $AWS_REGION
 set -e
 
 log "Creating S3 Sink connector with bucket name <$AWS_BUCKET_NAME>"
@@ -89,7 +91,7 @@ playground connector create-or-update --connector s3-sink  << EOF
     "topics": "s3-topic",
     "s3.region": "$AWS_REGION",
     "s3.bucket.name": "$AWS_BUCKET_NAME",
-    "topics.dir": "$TAG",
+    "topics.dir": "$TOPICS_DIR",
     "s3.part.size": 5242880,
     "flush.size": "3",
     "s3.credentials.provider.class": "com.github.vdesabou.AwsAssumeRoleCredentialsProvider",
@@ -129,7 +131,7 @@ sleep 10
 # aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/$TAG/s3-topic/partition=0/s3-topic+0+0000000000.avro s3-topic+0+0000000000.avro
+aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/$TOPICS_DIR/s3-topic/partition=0/s3-topic+0+0000000000.avro s3-topic+0+0000000000.avro
 
 playground tools read-avro-file --file $PWD/s3-topic+0+0000000000.avro
 rm -f s3-topic+0+0000000000.avro
@@ -141,7 +143,7 @@ playground connector create-or-update --connector s3-source  << EOF
     "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
     "s3.region": "$AWS_REGION",
     "s3.bucket.name": "$AWS_BUCKET_NAME",
-    "topics.dir": "$TAG",
+    "topics.dir": "$TOPICS_DIR",
     "s3.credentials.provider.class": "com.github.vdesabou.AwsAssumeRoleCredentialsProvider",
     "s3.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
     "s3.credentials.provider.sts.role.session.name": "session-name",
