@@ -30,7 +30,7 @@ Set to true in order for Splunk software to ingest data using the the /raw HEC e
 
 🔘 splunk.hec.ack.enabled
 
-Valid settings are true or false. When set to true Splunk Connect for Kafka will poll event ACKs for POST events before check-pointing the Kafka offsets. This is used to prevent data loss, as this setting implements guaranteed delivery. By default, this setting is set to true.
+Valid settings are true or false. When set to true Splunk Connect for Kafka will poll event ACKs for POST events before check-pointing the Kafka offsets. This is used to prevent data loss, as this setting implements guaranteed delivery. By default, this setting is set to false.
 
 	 - Type: BOOLEAN
 	 - Default: false
@@ -52,7 +52,7 @@ Valid settings are true or false. When set to true Splunk Connect for Kafka will
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: Splunk event sourcetype metadata for Kafka topic data. The same configuration rules as indexes can be applied here. If left unconfigured, the default source binds to the HEC token. By default, this setting is emptythrough to splunk. Only use with JSON Event endpoint
+	 - Importance: Splunk event sourcetype metadata for Kafka topic data. The same configuration rules as indexes can be applied here. If left unconfigured, the connector uses the default sourcetype associated with the HEC token. By default, this setting is empty.
 	 - Required: MEDIUM
 
 🔘 splunk.sources
@@ -147,11 +147,20 @@ This setting is only applicable when splunk.hec.ack.enabled is set to true. Inte
 
 🔘 splunk.hec.ack.poll.threads
 
-This setting is used for performance tuning and is only applicable when splunk.hec.ack.enabled is set to true. It controls how many threads should be spawned to poll event ACKs. By default, this is set to 1.
+This setting is used for performance tuning and is only applicable when splunk.hec.ack.enabled is set to true. It controls how many threads should be spawned to poll event ACKs. By default, this is set to 2.
 
 	 - Type: INT
 	 - Default: 2
 	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 splunk.hec.ack.legacy.sticky.session.expiry.enabled
+
+Restores the deprecated behavior that treats every Set-Cookie response as a sticky-session expiry, resets the HEC channel, and retries its outstanding batches. This can disrupt deployments where a load balancer refreshes cookies on normal responses. By default, this setting is false.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
 	 - Required: false
 
 🔘 splunk.hec.max.http.connection.per.channel
@@ -273,7 +282,7 @@ Ensures events that are pre-formatted into the properly formatted HEC JSON forma
 
 🔘 splunk.hec.max.batch.size
 
-Maximum batch size when posting events to Splunk. The size is the actual number of Kafka events not the byte size. By default, this is set to 100.
+Maximum batch size when posting events to Splunk. The size is the actual number of Kafka events not the byte size. By default, this is set to 500.
 
 	 - Type: INT
 	 - Default: 500

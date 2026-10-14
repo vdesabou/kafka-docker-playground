@@ -9,6 +9,7 @@
     "splunk.header.sourcetype": "splunk.header.sourcetype",
     "splunk.header.support": "false",
     "splunk.hec.ack.enabled": "false",
+    "splunk.hec.ack.legacy.sticky.session.expiry.enabled": "false",
     "splunk.hec.ack.poll.interval": "10",
     "splunk.hec.ack.poll.threads": "2",
     "splunk.hec.auto.extract.timestamp": "",
