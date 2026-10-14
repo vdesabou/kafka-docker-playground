@@ -88,10 +88,19 @@ wait_for_ccloud_connector_up $connector_name 180
 sleep 10
 
 log "Verify data is in Redis"
-docker exec -i redis redis-cli COMMAND GETKEYS "MSET" "key1" "value1" "key2" "value2" "key3" "value3"
-docker exec -i redis redis-cli COMMAND GETKEYS "MSET" "__kafka.offset.users.0" "{\"topic\":\"users\",\"partition\":0,\"offset\":2}" > /tmp/result.log  2>&1
+# list the keys of all redis databases (the database used depends on the connector), retry for up to 2 minutes
+for i in $(seq 1 24)
+do
+     playground --output-level WARN container exec --container redis --command "for db in \$(seq 0 15); do redis-cli -n \$db KEYS '*'; done" > /tmp/result.log  2>&1
+     if grep -q "redis_users" /tmp/result.log
+     then
+          break
+     fi
+     log "redis_users not found yet in redis, retrying in 5 seconds"
+     sleep 5
+done
 cat /tmp/result.log
-grep "__kafka.offset.users.0" /tmp/result.log
+grep "redis_users" /tmp/result.log
 
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue

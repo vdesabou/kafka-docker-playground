@@ -73,6 +73,11 @@ playground container exec --container sql-datagen --command "bash -c \"java -jar
 
 You can increase throughput with `--maxPoolSize`.
 
+### Note on redo.log.row.fetch.size
+
+`redo.log.row.fetch.size` (default `10`) is the number of redo log rows fetched at a time. Some examples set it to `1` for demo purposes only, so that each change is fetched as soon as it is available (for example [`cdc-oracle21-pdb-table.sh`](../connect-cdc-oracle21-source/cdc-oracle21-pdb-table.sh)).
+If you're planning to inject more data (for example with `SQL_DATAGEN`), keep the default or increase it (for example `1000`), otherwise the connector will lag behind.
+
 ## TLS setup details
 
 The best resource found for Oracle DB and SSL is this [white paper](https://www.oracle.com/technetwork/topics/wp-oracle-jdbc-thin-ssl-130128.pdf).

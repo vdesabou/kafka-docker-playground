@@ -42,10 +42,12 @@ Note down the region (e.g. `us-central1`) and the function name (e.g. `function-
 playground run -f fully-managed-google-cloud-functions-gen2-sink.sh
 ```
 
-The script takes two optional positional arguments: the function region (default `europe-west2`, also used as Confluent Cloud region) and the function name (default `function-11`), e.g.:
+The function region defaults to `europe-west2` (also used as Confluent Cloud region) and the function name to `function-11`, override them with `GCP_FUNCTION_REGION` and `GCP_FUNCTION_FUNCTION`, e.g.:
 
 ```bash
-playground run -f fully-managed-google-cloud-functions-gen2-sink.sh us-central1 function-1
+export GCP_FUNCTION_REGION=us-central1
+export GCP_FUNCTION_FUNCTION=function-1
+playground run -f fully-managed-google-cloud-functions-gen2-sink.sh
 ```
 
 | Script | Description |

@@ -29,7 +29,7 @@ cd -
 
 GCS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${GITHUB_RUN_NUMBER}${TAG_BASE}
 GCS_BUCKET_NAME=${GCS_BUCKET_NAME//[-.]/}
-GCS_BUCKET_REGION=${1:-europe-west2}
+GCS_BUCKET_REGION=${GCS_BUCKET_REGION:-${1:-europe-west2}}
 
 bootstrap_ccloud_environment "gcp" "$GCS_BUCKET_REGION"
 

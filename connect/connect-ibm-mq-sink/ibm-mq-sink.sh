@@ -53,7 +53,7 @@ playground topic produce --topic sink-messages --nb-messages 1 << 'EOF'
 This is my message
 EOF
 
-log "Creating IBM MQ source connector"
+log "Creating IBM MQ sink connector"
 playground connector create-or-update --connector ibm-mq-sink  << EOF
 {
     "connector.class": "io.confluent.connect.jms.IbmMqSinkConnector",

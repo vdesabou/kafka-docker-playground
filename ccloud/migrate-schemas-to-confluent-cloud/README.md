@@ -26,7 +26,7 @@ playground run -f start.sh
 1. Starts the `ccloud` environment (local Schema Registry and Control Center) and fills the Replicator executable properties files with the Confluent Cloud bootstrap servers, API key and Schema Registry credentials.
 2. Deletes the `executable-products-value` subject on the destination Schema Registry, lists the remaining subjects and asks for confirmation.
 3. Sets the destination Schema Registry to `IMPORT` mode and (re)creates the `executable-products` topic in Confluent Cloud.
-4. Produces 3 Avro messages with `playground topic produce` to register a schema in the local Schema Registry.
+4. Produces 3 Avro messages to `executable-products` on the on-premise broker (`kafka-avro-console-producer` in the `connect` container), which registers `executable-products-value` in the local Schema Registry.
 5. Starts the Replicator executable container, which replicates the `_schemas` topic to Confluent Cloud.
 6. Lists the subjects of the destination Schema Registry to verify the schema was migrated.
 7. Sets the source Schema Registry to `READONLY` mode and the destination Schema Registry back to `READWRITE` mode.

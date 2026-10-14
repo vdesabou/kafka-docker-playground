@@ -33,4 +33,4 @@ playground run -f fully-managed-azure-service-bus-source.sh
 4. Sends messages to the queue with `QueuesGettingStarted`.
 5. Verifies that at least 5 records are in `servicebus-topic` with `playground topic consume`.
 6. Asserts that the queue is empty afterwards (messages are completed by the connector).
-7. Deletes the resource group at the end of the run (the connector is not deleted by the script).
+7. Asks before deleting the connector. `stop.sh` deletes the resource group.

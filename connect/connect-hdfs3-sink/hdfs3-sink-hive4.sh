@@ -104,26 +104,26 @@ SHOW DATABASES;
 -- Switch to testhive database
 USE testhive;
 
--- Check if hdfs-topic table exists
+-- Check if hdfs_topic table exists (the connector sanitizes the topic name: hdfs-topic -> hdfs_topic)
 SHOW TABLES;
 
 -- Show the table structure
-SHOW CREATE TABLE hdfs-topic;
+SHOW CREATE TABLE hdfs_topic;
 
 -- Describe the table schema
-DESCRIBE hdfs-topic;
+DESCRIBE hdfs_topic;
 
 -- Count total records
-SELECT COUNT(*) as total_records FROM hdfs-topic;
+SELECT COUNT(*) as total_records FROM hdfs_topic;
 
 -- Show sample data
-SELECT * FROM hdfs-topic LIMIT 10;
+SELECT * FROM hdfs_topic LIMIT 10;
 
 -- Show data grouped by partition
-SELECT partition, COUNT(*) as record_count FROM hdfs-topic GROUP BY partition;
+SELECT partition, COUNT(*) as record_count FROM hdfs_topic GROUP BY partition;
 
 -- Show the location of the table
-SHOW TBLPROPERTIES hdfs-topic;
+SHOW TBLPROPERTIES hdfs_topic;
 
 !quit
 EOF
@@ -132,21 +132,6 @@ log "Displaying beeline results"
 cat /tmp/result.log
 
 log "Verifying data was written correctly"
-if grep -q "value1" /tmp/result.log; then
-    log "✅ SUCCESS: Data found in Hive table"
-else
-    log "❌ ERROR: Data not found in Hive table"
-fi
-
-if grep -q "hdfs-topic" /tmp/result.log; then
-    log "✅ SUCCESS: Hive table created successfully"
-else
-    log "❌ ERROR: Hive table not found"
-fi
-
-if grep -q "testhive" /tmp/result.log; then
-    log "✅ SUCCESS: Hive database created successfully"
-else
-    log "❌ ERROR: Hive database not found"
-fi
-
+grep "testhive" /tmp/result.log
+grep "hdfs_topic" /tmp/result.log
+grep "value1" /tmp/result.log

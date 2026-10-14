@@ -25,7 +25,7 @@ playground run -f fully-managed-lambda-sink.sh
 
 ## What the script does
 
-1. Recreates IAM role `pg<USER>fmlambdabrole<TAG_BASE>` (with the `AWSLambdaBasicExecutionRole` policy) and Lambda function `pg<USER>fmlambdafn<TAG_BASE>` from `my-add-function/add.py` (runtime `python3.8`).
+1. Recreates IAM role `pg<USER>fmlambdabrole<TAG_BASE>` (with the `AWSLambdaBasicExecutionRole` policy) and Lambda function `pg<USER>fmlambdafn<TAG_BASE>` from `my-add-function/add.py` (runtime `python3.12`).
 2. Bootstraps the Confluent Cloud environment and recreates topic `add-topic`.
 3. Produces 10 Avro records with `playground topic produce`.
 4. Creates the fully managed connector `LambdaSink_<USER>` (`single` configuration mode, `sync` invocation) and waits for it to be running.

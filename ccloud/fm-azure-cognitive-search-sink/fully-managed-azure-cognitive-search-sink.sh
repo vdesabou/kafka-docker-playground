@@ -50,8 +50,9 @@ if [ -z "$GITHUB_RUN_NUMBER" ]
 then
     # not running with CI
     # https://docs.confluent.io/cloud/current/connectors/cc-azure-cognitive-search-sink.html#az-service-principal
-    appId=$(az ad sp create-for-rbac --name $AZURE_AD_APP --role Contributor --scopes /subscriptions/$subscriptionId/resourceGroups/$AZURE_RESOURCE_GROUP --output json | jq -r '.appId')
-    appPassword=$(az ad sp create-for-rbac --name $AZURE_AD_APP --role Contributor --scopes /subscriptions/$subscriptionId/resourceGroups/$AZURE_RESOURCE_GROUP --output json | jq -r '.password')
+    sp=$(az ad sp create-for-rbac --name $AZURE_AD_APP --role Contributor --scopes /subscriptions/$subscriptionId/resourceGroups/$AZURE_RESOURCE_GROUP --output json)
+    appId=$(echo "$sp" | jq -r '.appId')
+    appPassword=$(echo "$sp" | jq -r '.password')
 else
     appId=$AZURE_COGNITIVE_APP_ID
     appPassword=$AZURE_COGNITIVE_APP_PASSWORD

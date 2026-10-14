@@ -46,5 +46,5 @@ playground run -f fully-managed-redis-kafka-sink.sh
 2. Starts Redis, Redis Insight and ngrok locally.
 3. Produces 3 Avro records with key `key1` to topic `redis_users`.
 4. Creates the fully managed `RedisKafkaSink` connector (`redis.server.mode=Standalone`).
-5. Checks Redis with `redis-cli`.
+5. Lists the keys of all Redis databases with `redis-cli` and checks that `redis_users` is there.
 6. Asks whether to delete the connector.

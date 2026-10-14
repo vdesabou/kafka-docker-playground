@@ -13,10 +13,10 @@ bootstrap_ccloud_environment
 
 
 set +e
-playground topic delete --topic sqlserver_table
+playground topic delete --topic sqlserver-customers
 set -e
 
-playground topic create --topic sqlserver_table
+playground topic create --topic sqlserver-customers
 
 docker compose build
 docker compose down -v --remove-orphans

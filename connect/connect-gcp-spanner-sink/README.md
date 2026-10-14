@@ -20,7 +20,7 @@ Quickly test the [GCP Spanner Sink](https://docs.confluent.io/kafka-connectors/g
 export GCP_KEYFILE_CONTENT=$(cat keyfile.json | jq -aRs . | sed 's/^"//' | sed 's/"$//')
 ```
 
-The Spanner instance is created in region `europe-west2` by default; the script accepts another region as its first argument.
+The Spanner instance is created in region `europe-west2` by default (override with `GCP_SPANNER_REGION`).
 
 ## How to run
 

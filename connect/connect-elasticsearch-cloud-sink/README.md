@@ -25,6 +25,8 @@ Quickly test the [Elasticsearch Sink](https://docs.confluent.io/kafka-connectors
 | `ELASTICSEARCH_CLOUD_USERNAME` | Deployment username |
 | `ELASTICSEARCH_CLOUD_PASSWORD` | Deployment password |
 
+With CP 8.x, connector version 14.1.0 or later is required (the script exits with code 111 otherwise).
+
 ## How to run
 
 ```bash
@@ -41,6 +43,6 @@ playground run -f elasticsearch-cloud-sink.sh
 ## What the script does
 
 1. Starts the environment.
-2. Creates the `elasticsearch-cloud-sink` connector pointing to `ELASTICSEARCH_CLOUD_ENDPOINT` with basic authentication (`type.name=kafka-connect` is added for connector versions before 11.0.0).
+2. Creates the `elasticsearch-cloud-sink` connector pointing to `ELASTICSEARCH_CLOUD_ENDPOINT` with basic authentication.
 3. Produces 10 Avro records to topic `test-elasticsearch-sink` with `playground topic produce`.
 4. Queries `$ELASTICSEARCH_CLOUD_ENDPOINT/test-elasticsearch-sink/_search` and checks that the records are indexed.

@@ -13,7 +13,7 @@ Uses the Oracle WebLogic Server (Developer Tier, version `12.2.1.3`) Docker imag
 
 ![image](screenshot3.jpg)
 
-If the image is not present locally, `weblogic-topic.sh` logs in and pulls it when these variables are set (`weblogic-queue.sh` only does this on CI, otherwise you must pull the image yourself):
+If the image is not present locally, the scripts log in and pull it when these variables are set (otherwise you must pull the image yourself):
 
 | Variable | Description |
 | --- | --- |

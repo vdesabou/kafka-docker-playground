@@ -18,7 +18,7 @@ playground run -f start.sh
 | --- | --- |
 | `start.sh` | .NET producer and consumer running in Docker containers against Confluent Cloud |
 
-The script uses .NET Core 3.1 by default (`CCloud3.1.csproj`). Any other value as first argument (for example `./start.sh 2.2` when running the script directly) switches to .NET Core 2.2 (`CCloud2.2.csproj`).
+The script uses .NET Core 3.1 by default (`CCloud3.1.csproj`). Set `CORE_DOT_VERSION` to any other value (for example `export CORE_DOT_VERSION=2.2`) to switch to .NET Core 2.2 (`CCloud2.2.csproj`).
 
 ## What the script does
 

@@ -13,7 +13,7 @@ Quickly test the [JDBC Source](https://docs.confluent.io/kafka-connectors/jdbc/c
 | --- | --- |
 | `GCP_PROJECT` | GCP project ID (required) |
 | `GCP_KEYFILE_CONTENT` | Service account key content, only if `keyfile.json` is not present in this folder (see below) |
-| `SERVICE_ACCOUNT_EMAIL` | Service account email, injected into `OAuthServiceAcctEmail` of the JDBC URL (not set by the script) |
+| `SERVICE_ACCOUNT_EMAIL` | Optional: service account email injected into `OAuthServiceAcctEmail` of the JDBC URL (default: `client_email` of `keyfile.json`) |
 
 ### GCP BigQuery setup
 

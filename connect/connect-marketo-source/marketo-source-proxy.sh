@@ -14,6 +14,13 @@ then
      exit 111
 fi
 
+cd ../../connect/connect-marketo-source/
+if [ ! -f jcl-over-slf4j-2.0.7.jar ]
+then
+     wget -q https://repo1.maven.org/maven2/org/slf4j/jcl-over-slf4j/2.0.7/jcl-over-slf4j-2.0.7.jar
+fi
+cd -
+
 MARKETO_ENDPOINT_URL=${MARKETO_ENDPOINT_URL:-$1}
 MARKETO_CLIENT_ID=${MARKETO_CLIENT_ID:-$2}
 MARKETO_CLIENT_SECRET=${MARKETO_CLIENT_SECRET:-$3}
@@ -80,7 +87,7 @@ playground connector create-or-update --connector marketo-source  << EOF
                     "connector.class": "io.confluent.connect.marketo.MarketoSourceConnector",
                     "tasks.max": "1",
                     "poll.interval.ms": 1000,
-                    "topic.name.pattern": "marketo_${entityName}",
+                    "topic.name.pattern": "marketo_\${entityName}",
                     "marketo.url": "$MARKETO_ENDPOINT_URL",
                     "marketo.since": "$SINCE",
                     "entity.names": "leads",

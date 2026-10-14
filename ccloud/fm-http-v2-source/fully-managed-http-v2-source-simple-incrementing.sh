@@ -45,12 +45,12 @@ do
 done
 
 set +e
-playground topic delete --topic http-source-topic-v2
+playground topic delete --topic http-topic-spaces
 set -e
 
-log "Creating http-source-topic-v2 topic in Confluent Cloud"
+log "Creating http-topic-spaces topic in Confluent Cloud"
 set +e
-playground topic create --topic http-source-topic-v2
+playground topic create --topic http-topic-spaces
 set -e
 
 connector_name="HttpSourceV2_$USER"

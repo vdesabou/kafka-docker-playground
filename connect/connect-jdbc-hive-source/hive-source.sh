@@ -16,7 +16,7 @@ logerror "getCatalogName() method is not implemented on Hive, see https://issues
 if [ ! -f ${DIR}/hive-jdbc-3.1.2-standalone.jar ]
 then
      log "Getting hive-jdbc-3.1.2-standalone.jar"
-     wget -q https://repo1.maven.org/maven2/org/apache/hive/hive-jdbc/4.0.0-beta-1/hive-jdbc-4.0.0-beta-1.jar
+     wget -q https://repo1.maven.org/maven2/org/apache/hive/hive-jdbc/3.1.2/hive-jdbc-3.1.2-standalone.jar
 fi
 
 if [ ! -f ${DIR}/presto.jar ]

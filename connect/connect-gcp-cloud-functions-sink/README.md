@@ -15,7 +15,7 @@ With CP 8.x, the minimal supported connector version is 1.2.5 (the script exits 
 | `GCP_PROJECT` | GCP project ID |
 | `GCP_KEYFILE_CONTENT` | Content of the service account key file (only if `keyfile.json` is not present in the example folder) |
 
-The function region and name default to `europe-west2` and `function-1` (can be overridden with the first and second script arguments).
+The function region and name default to `europe-west2` and `function-1` (override with `GCP_FUNCTION_REGION` and `GCP_FUNCTION_FUNCTION`).
 
 ### Google Cloud Functions setup
 

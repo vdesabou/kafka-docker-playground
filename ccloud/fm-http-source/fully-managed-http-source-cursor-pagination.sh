@@ -74,24 +74,23 @@ playground connector create-or-update --connector $connector_name << EOF
     "kafka.api.secret": "$CLOUD_SECRET",
     "tasks.max" : "1",
     "output.data.format": "AVRO",
+    "url": "http://$NGROK_HOSTNAME:$NGROK_PORT/storage/v1/b/test-bucket/o",
     "topic.name.pattern":"http-topic-\${entityName}",
     "entity.names": "messages",
-    "url": "http://$NGROK_HOSTNAME:$NGROK_PORT/test-index/_search",
-    "http.offset.mode": "CHAINING",
-    "http.request.method": "POST",
-    "http.request.body": "{\\"size\\": 100, \\"sort\\": [{\\"@time\\": \\"asc\\"}], \\"search_after\\": [\${offset}]}",
-    "http.initial.offset": "1647948000000",
-    "http.response.data.json.pointer": "/hits/hits",
-    "http.offset.json.pointer": "/sort/0",
-    "request.interval.ms": "5000"
+    "http.offset.mode": "CURSOR_PAGINATION",
+    "http.request.method": "GET",
+    "http.request.parameters": "pageToken=\${offset}",
+    "http.response.data.json.pointer": "/items",
+    "http.next.page.json.pointer": "/nextPageToken",
+    "request.interval.ms": "1000"
 }
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-log "Wait 5 seconds for connector to start and fetch initial batch"
-sleep 5
+sleep 10
 
-playground topic consume --topic http-topic-messages --min-expected-messages 3 --timeout 10
+log "Verify we have received the data in http-topic-messages topic (expecting 15 messages across 3 pages)"
+playground topic consume --topic http-topic-messages --min-expected-messages 15 --timeout 60
 
 
 log "Do you want to delete the fully managed connector $connector_name ?"

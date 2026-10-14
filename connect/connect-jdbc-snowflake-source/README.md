@@ -35,7 +35,7 @@ playground run -f jdbc-snowflake-source.sh
 
 ## What the script does
 
-1. Copies `snowflake-jdbc-3.13.16.jar` into the JDBC connector `lib` folder.
+1. Downloads `snowflake-jdbc-3.24.2.jar` and copies it into the JDBC connector `lib` folder.
 2. Generates an encrypted RSA private key (`snowflake_key.p8`, PBE-SHA1-RC4-128) and its public key.
 3. With `snowsql`, (re)creates a database with schema `MYSCHEMA`, a role, an XSMALL warehouse and a user (with the RSA public key), all with names unique to your environment.
 4. Starts the environment, creates table `FOO (id, f1, update_ts)` with 3 rows, and a view `MYVIEWFORFOO` that converts `update_ts` to UTC.

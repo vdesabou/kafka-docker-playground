@@ -15,7 +15,7 @@ With CP 8.x, the minimal supported connector version is 2.0.0 (the scripts exit 
 | `GCP_PROJECT` | GCP project ID |
 | `GCP_KEYFILE_CONTENT` | Content of the service account key file (only if `keyfile.json` is not present in the example folder) |
 
-The BigTable instance is created in zone `europe-west2-a` (can be overridden with the first script argument).
+The BigTable instance is created in zone `europe-west2-a` (override with `GCP_BIGTABLE_REGION`).
 
 ### Enabling Cloud BigTable Admin API
 

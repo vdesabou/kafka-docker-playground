@@ -4,6 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if connect_cp_version_greater_than_8 && [ ! -z "$CONNECTOR_TAG" ] && ! version_gt $CONNECTOR_TAG "14.0.99"
+then
+     logwarn "minimal supported connector version is 14.1.0 for CP 8.0"
+     logwarn "see https://docs.confluent.io/platform/8.0/connect/supported-connector-version.html#"
+     exit 111
+fi
+
 ELASTICSEARCH_CLOUD_ENDPOINT=${ELASTICSEARCH_CLOUD_ENDPOINT:-$1}
 ELASTICSEARCH_CLOUD_USERNAME=${ELASTICSEARCH_CLOUD_USERNAME:-$2}
 ELASTICSEARCH_CLOUD_PASSWORD=${ELASTICSEARCH_CLOUD_PASSWORD:-$3}
@@ -26,52 +33,21 @@ then
      exit 1
 fi
 
-# As of version 11.0.0, the connector uses the Elasticsearch High Level REST Client (version 7.0.1),
-# which means only Elasticsearch 7.x is supported.
-
-export ELASTIC_VERSION="6.8.3"
-if version_gt $CONNECTOR_TAG "10.9.9"
-then
-    log "Connector version is > 11.0.0, using Elasticsearch 7.x"
-    export ELASTIC_VERSION="7.12.0"
-fi
-
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
-log "Creating Elasticsearch Sink connector (Elasticsearch version is $ELASTIC_VERSION)"
-if version_gt $CONNECTOR_TAG "10.9.9"
-then
-     # 7.x
-     curl -X PUT \
-          -H "Content-Type: application/json" \
-          --data '{
-               "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
-               "tasks.max": "1",
-               "topics": "test-elasticsearch-sink",
-               "key.ignore": "true",
-               "connection.url": "$ELASTICSEARCH_CLOUD_ENDPOINT",
-               "connection.username": "$ELASTICSEARCH_CLOUD_USERNAME",
-               "connection.password": "$ELASTICSEARCH_CLOUD_PASSWORD"
-               }' \
-          http://localhost:8083/connectors/elasticsearch-cloud-sink/config | jq .
-else
-     # 6.x
-     curl -X PUT \
-          -H "Content-Type: application/json" \
-          --data '{
-               "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
-               "tasks.max": "1",
-               "topics": "test-elasticsearch-sink",
-               "key.ignore": "true",
-               "connection.url": "$ELASTICSEARCH_CLOUD_ENDPOINT",
-               "connection.username": "$ELASTICSEARCH_CLOUD_USERNAME",
-               "connection.password": "$ELASTICSEARCH_CLOUD_PASSWORD",
-               "type.name": "kafka-connect"
-               }' \
-          http://localhost:8083/connectors/elasticsearch-cloud-sink/config | jq .
-fi
-
+log "Creating Elasticsearch Sink connector"
+playground connector create-or-update --connector elasticsearch-cloud-sink  << EOF
+{
+     "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+     "tasks.max": "1",
+     "topics": "test-elasticsearch-sink",
+     "key.ignore": "true",
+     "connection.url": "$ELASTICSEARCH_CLOUD_ENDPOINT",
+     "connection.username": "$ELASTICSEARCH_CLOUD_USERNAME",
+     "connection.password": "$ELASTICSEARCH_CLOUD_PASSWORD"
+}
+EOF
 
 log "Sending messages to topic test-elasticsearch-sink"
 playground topic produce -t test-elasticsearch-sink --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'

@@ -52,7 +52,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 # unique per environment, see cloud_resource_environment_id
 GCS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${GITHUB_RUN_NUMBER}${TAG_BASE}$(cloud_resource_environment_id)
 GCS_BUCKET_NAME=${GCS_BUCKET_NAME//[-.]/}
-GCS_BUCKET_REGION=${1:-europe-west2}
+GCS_BUCKET_REGION=${GCS_BUCKET_REGION:-${1:-europe-west2}}
 
 log "Doing gcloud authentication"
 set +e

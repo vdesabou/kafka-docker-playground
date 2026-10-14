@@ -37,7 +37,7 @@ Service account permissions:
 playground run -f fully-managed-gcp-firestore-sink.sh
 ```
 
-The script takes an optional positional argument: the GCP region (default `europe-west2`).
+The GCP region defaults to `europe-west2`, override it with `GCP_FIRESTORE_REGION`.
 
 | Script | Description |
 | --- | --- |

@@ -15,7 +15,7 @@ An active Google Cloud Platform (GCP) account with authorization to create resou
 | `GCP_PROJECT` | GCP project id |
 | `GCP_KEYFILE_CONTENT` | Service account key content, if `keyfile.json` is not present (see below) |
 
-The Spanner instance and the Confluent Cloud cluster are created in GCP region `europe-west2` (first positional argument of the script).
+The Spanner instance and the Confluent Cloud cluster are created in GCP region `europe-west2` (override with `GCP_SPANNER_REGION`).
 
 ### Setup credentials
 

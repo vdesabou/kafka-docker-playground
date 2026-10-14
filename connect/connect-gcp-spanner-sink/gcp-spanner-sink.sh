@@ -22,7 +22,7 @@ GCP_SPANNER_INSTANCE="pg${USER}si${GITHUB_RUN_NUMBER}${TAG_BASE}$(cloud_resource
 GCP_SPANNER_INSTANCE=${GCP_SPANNER_INSTANCE//[-.]/}
 GCP_SPANNER_DATABASE="pg${USER}sd${GITHUB_RUN_NUMBER}${TAG_BASE}$(cloud_resource_environment_id)"
 GCP_SPANNER_DATABASE=${GCP_SPANNER_DATABASE//[-.]/}
-GCP_SPANNER_REGION=${1:-europe-west2}
+GCP_SPANNER_REGION=${GCP_SPANNER_REGION:-${1:-europe-west2}}
 
 cd ../../connect/connect-gcp-spanner-sink
 GCP_KEYFILE="${PWD}/keyfile.json"
