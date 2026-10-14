@@ -2,169 +2,45 @@
 
 ## Objective
 
-Quickly test [Elasticsearch Sink](https://docs.confluent.io/current/connect/kafka-connect-elasticsearch/index.html) connector with [Elastic Cloud](https://www.elastic.co/cloud/).
+Quickly test the [Elasticsearch Sink](https://docs.confluent.io/kafka-connectors/elasticsearch/current/overview.html) connector with [Elastic Cloud](https://www.elastic.co/cloud/).
 
 ## Prerequisites
 
-* If you don't already have an account, create an account [here](https://info.elastic.co/elasticsearch-service-trial-by-invite-30d.html) for a 30 days trial.
+- If you don't already have an account, create one [here](https://info.elastic.co/elasticsearch-service-trial-by-invite-30d.html) for a 30 days trial.
+- Create a deployment:
 
-* Create a deployment:
+  ![Create deployment](screenshot1.jpg)
 
-![Create deployment](screenshot1.jpg)
+- Get your deployment credentials (used for `ELASTICSEARCH_CLOUD_USERNAME` and `ELASTICSEARCH_CLOUD_PASSWORD`):
 
-* Get your deployment credentials (used for `ELASTICSEARCH_CLOUD_USERNAME` and `ELASTICSEARCH_CLOUD_PASSWORD`, see below)
+  ![Get credentials](screenshot2.jpg)
 
-![Get credentials](screenshot2.jpg)
+- Get your Elasticsearch endpoint (used for `ELASTICSEARCH_CLOUD_ENDPOINT`):
 
-* Get your Elasticseach endpoint (used for `ELASTICSEARCH_CLOUD_ENDPOINT`, see below)
+  ![Get endpoint](screenshot3.jpg)
 
-![Get endpoint](screenshot3.jpg)
+| Variable | Description |
+| --- | --- |
+| `ELASTICSEARCH_CLOUD_ENDPOINT` | Elasticsearch endpoint of the deployment (`https://...`) |
+| `ELASTICSEARCH_CLOUD_USERNAME` | Deployment username |
+| `ELASTICSEARCH_CLOUD_PASSWORD` | Deployment password |
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for elasticsearch-cloud-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <ELASTICSEARCH_CLOUD_ENDPOINT> <ELASTICSEARCH_CLOUD_USERNAME> .sh in this folder
-```
-
-Note: you can also export these values as environment variable
-
-## Details of what the script is doing
-
-The connector is created with:
-
 ```bash
-$ curl -X PUT \
-    -H "Content-Type: application/json" \
-    --data '{
-          "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
-          "tasks.max": "1",
-          "topics": "test-elasticsearch-sink",
-          "key.ignore": "true",
-          "connection.url": "$ELASTICSEARCH_CLOUD_ENDPOINT",
-          "connection.username": "$ELASTICSEARCH_CLOUD_USERNAME",
-          "connection.password": "$ELASTICSEARCH_CLOUD_PASSWORD"
-          }' \
-    http://localhost:8083/connectors/elasticsearch-cloud-sink/config | jq .
+export ELASTICSEARCH_CLOUD_ENDPOINT="https://<deployment>.es.<region>.<cloud>.cloud.es.io"
+export ELASTICSEARCH_CLOUD_USERNAME="elastic"
+export ELASTICSEARCH_CLOUD_PASSWORD="<password>"
+playground run -f elasticsearch-cloud-sink.sh
 ```
 
-Messages are sent to `test-elasticsearch-sink` topic using:
+| Script | Description |
+| --- | --- |
+| `elasticsearch-cloud-sink.sh` | Elasticsearch Sink connector writing to an Elastic Cloud deployment |
 
-```bash
-$ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test-elasticsearch-sink --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
-```
+## What the script does
 
-Check that the data is available in Elasticsearch:
-
-```bash
-$ curl -u $ELASTICSEARCH_CLOUD_USERNAME:$ELASTICSEARCH_CLOUD_PASSWORD -XGET "$ELASTICSEARCH_CLOUD_ENDPOINT/test-elasticsearch-sink/_search?pretty"
-{
-  "took" : 36,
-  "timed_out" : false,
-  "_shards" : {
-    "total" : 5,
-    "successful" : 5,
-    "skipped" : 0,
-    "failed" : 0
-  },
-  "hits" : {
-    "total" : 10,
-    "max_score" : 1.0,
-    "hits" : [
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+0",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value1"
-        }
-      },
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+9",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value10"
-        }
-      },
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+4",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value5"
-        }
-      },
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+5",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value6"
-        }
-      },
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+2",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value3"
-        }
-      },
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+6",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value7"
-        }
-      },
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+3",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value4"
-        }
-      },
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+7",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value8"
-        }
-      },
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+8",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value9"
-        }
-      },
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "kafka-connect",
-        "_id" : "test-elasticsearch-sink+0+1",
-        "_score" : 1.0,
-        "_source" : {
-          "f1" : "value2"
-        }
-      }
-    ]
-  }
-}
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+1. Starts the environment.
+2. Creates the `elasticsearch-cloud-sink` connector pointing to `ELASTICSEARCH_CLOUD_ENDPOINT` with basic authentication (`type.name=kafka-connect` is added for connector versions before 11.0.0).
+3. Produces 10 Avro records to topic `test-elasticsearch-sink` with `playground topic produce`.
+4. Queries `$ELASTICSEARCH_CLOUD_ENDPOINT/test-elasticsearch-sink/_search` and checks that the records are indexed.

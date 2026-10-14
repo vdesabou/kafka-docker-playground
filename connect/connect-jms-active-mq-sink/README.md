@@ -1,70 +1,29 @@
 # JMS ActiveMQ Sink connector
 
-
-
 ## Objective
 
-Quickly test [JMS ActiveMQ Sink](https://docs.confluent.io/current/connect/kafka-connect-jms/sink/index.html#actvemq-quick-start) connector.
+Quickly test the [JMS Sink](https://docs.confluent.io/kafka-connectors/jms-sink/current/overview.html) connector with ActiveMQ, using the ActiveMQ Docker [image](https://hub.docker.com/r/rmohr/activemq/) and the `activemq-all` 5.15.4 client.
 
-Using ActiveMQ Docker [image](https://hub.docker.com/r/rmohr/activemq/)
+## Prerequisites
 
-
-
+With CP 8.x, the JMS Sink connector version must be 2.1.16 or later (the script exits with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for jms-active-mq-sink.sh in this folder
-```
-
-## Details of what the script is doing
-
-ActiveMQ UI is reachable at [http://127.0.0.1:8161](http://127.0.0.1:8161]) (`admin/admin`)
-
-Sending messages to topic `sink-messages`
-
 ```bash
-$ docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic sink-messages << EOF
-This is my message
-EOF
+playground run -f jms-active-mq-sink.sh
 ```
 
-The connector is created with:
+| Script | Description |
+| --- | --- |
+| `jms-active-mq-sink.sh` | JMS sink writing to ActiveMQ queue `DEV.QUEUE.1` |
 
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
-                    "topics": "sink-messages",
-                    "java.naming.factory.initial": "org.apache.activemq.jndi.ActiveMQInitialContextFactory",
-                    "java.naming.provider.url": "tcp://activemq:61616",
-                    "java.naming.security.principal": "admin",
-                    "java.naming.security.credentials": "admin",
-                    "connection.factory.name": "ConnectionFactory",
-                    "jms.destination.type": "queue",
-                    "jms.destination.name": "DEV.QUEUE.1",
-                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/jms-active-mq-sink/config | jq .
-```
+The ActiveMQ UI is reachable at [http://127.0.0.1:8161](http://127.0.0.1:8161) (`admin`/`admin`).
 
-Get messages from DEV.QUEUE.1 JMS queue:
+## What the script does
 
-```bash
-$ curl -XGET -u admin:admin -d "body=message" http://localhost:8161/api/message/DEV.QUEUE.1?type=queue
-```
-
-We get:
-
-```
-This is my message
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+1. Downloads `activemq-all-5.15.4.jar` if needed and copies it into the JMS Sink connector `lib` folder.
+2. Starts ActiveMQ alongside the plaintext environment.
+3. Produces the message `This is my message` to topic `sink-messages` with `playground topic produce`.
+4. Creates the `jms-active-mq-sink` connector (`java.naming.provider.url=tcp://activemq:61616`, `jms.destination.type=queue`, `jms.destination.name=DEV.QUEUE.1`, String converters).
+5. Reads a message from queue `DEV.QUEUE.1` through the ActiveMQ REST API (`http://localhost:8161/api/message/DEV.QUEUE.1?type=queue`) and checks that it is `This is my message`.

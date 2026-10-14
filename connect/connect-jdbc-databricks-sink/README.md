@@ -1,98 +1,44 @@
 # JDBC Databricks Sink connector
 
-
-
 ## Objective
 
-Quickly test [JDBC Databricks Sink](https://docs.confluent.io/current/connect/kafka-connect-jdbc/source-connector) connector.
+Quickly test the [JDBC Sink](https://docs.confluent.io/kafka-connectors/jdbc/current/sink-connector/overview.html) connector with a Databricks SQL warehouse, using the Databricks JDBC driver.
 
+## Prerequisites
 
-## Register a trial account
+### Register a trial account
 
-Go to [Databricks](https://www.databricks.com/try-databricks) and register for a trial.
+1. Go to [Databricks](https://www.databricks.com/try-databricks) and register for a trial.
+2. Once the trial instance is ready, log in to the portal and go to **SQL Warehouses** > **Connection details** to collect the server hostname and HTTP path.
+3. Click your account in the top right corner, select **Settings** > **Developer** and generate a personal access token.
 
-Once the trial instance is ready, login the portal 
-Navigate to the SQL Warehouses -> Connection details to collect the Server hostname, HTTP Path.
-Click on your Account on the top right corner, select Settings. Select Developer and generate a new Personal Access token.
+| Variable | Description |
+| --- | --- |
+| `DATABRICKS_HOST` | SQL warehouse server hostname (e.g. `dbc-xxxxxxxx-xxxx.cloud.databricks.com`) |
+| `DATABRICKS_TOKEN` | Personal access token |
+| `DATABRICKS_HTTP_PATH` | SQL warehouse HTTP path (e.g. `/sql/1.0/warehouses/<id>`) |
 
-Export the below Environment vairables
-
-DATABRICKS_HOST
-
-DATABRICKS_TOKEN
-
-DATABRICKS_HTTP_PATH
+With CP 8.x, the JDBC connector version must be 10.8.0 or later (the script exits with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for databricks-sink.sh in this folder
-```
-
-## Details of what the script is doing
-
-Create table in Databricks:
-
 ```bash
-docker exec -i databricks-sql-cli-container bash -c "python databricks_sql_cli.py" <<EOF
-CREATE OR REPLACE TABLE orders ( id INT, product STRING, quantity INT, price FLOAT )TBLPROPERTIES ('delta.feature.allowColumnDefaults' = 'supported');
-exit
-EOF
+export DATABRICKS_HOST="<server hostname>"
+export DATABRICKS_TOKEN="<personal access token>"
+export DATABRICKS_HTTP_PATH="<http path>"
+playground run -f databricks-jdbc-sink.sh
 ```
 
-Creating Databricks JDBC Sink connector:
+| Script | Description |
+| --- | --- |
+| `databricks-jdbc-sink.sh` | JDBC sink writing Avro records to a Databricks table |
 
-```bash
-playground connector create-or-update --connector databricks-sink << EOF
-{
-  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-  "tasks.max": "1",
-  "auto.create": "false",
-  "auto.evolve": "false",
-  "connection.url": "jdbc:databricks://$DATABRICKS_HOST:443/default;transportMode=http;ssl=1;AuthMech=3;httpPath=$DATABRICKS_HTTP_PATH;IgnoreTransactions=1;",
-  "connection.user": "token",
-  "connection.password" : "$DATABRICKS_TOKEN",
-  "topics": "orders"
-}
-EOF
-```
+## What the script does
 
-Send messages to the topic
-```bash
-playground topic produce -t orders --nb-messages 3 << 'EOF'
-{
-  "type": "record",
-  "name": "myrecord",
-  "fields": [
-    {
-      "name": "id",
-      "type": "int"
-    },
-    {
-      "name": "product",
-       "type":  "string"
-    },
-    {
-      "name": "quantity",
-      "type":  "int"
-    },
-    {
-      "name": "price",
-       "type": "float"
-    }
-  ]
-}
-EOF
-```
-
-Verify that the data is available in the orders table 
-```bash
-docker exec -i databricks-sql-cli-container bash -c "python databricks_sql_cli.py" <<EOF
-select count(*) from orders;
-exit
-EOF
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+1. Downloads the Databricks JDBC driver (`DatabricksJDBC42.jar`, 2.7.3) if needed and adds it to the JDBC connector `lib` folder.
+2. Starts the SQL warehouse if it is stopped and waits until it is running.
+3. Starts the environment with a `databricks-sql-cli-container` helper (Python SQL client built from `../connect-jdbc-databricks-source/databricks`).
+4. Pre-creates the `orders` table (otherwise the sink fails with `ConnectException: null (INT32) type doesn't have a mapping to the SQL database column type`).
+5. Creates the `databricks-sink` connector (`auto.create=false`, `connection.user=token`) on topic `orders`.
+6. Produces 4 Avro records to `orders` with `playground topic produce`.
+7. Runs `select count(*) from orders` through the SQL client to verify the rows landed.

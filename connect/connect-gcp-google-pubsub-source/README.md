@@ -1,27 +1,52 @@
 # Google Cloud Pub/Sub Group Kafka Connector Source connector
 
-
-
 ## Objective
 
-Quickly test [Google Cloud Pub/Sub Group Kafka Connector](https://github.com/googleapis/java-pubsub-group-kafka-connector) connector.
+Quickly test the [Google Cloud Pub/Sub Group Kafka Connector](https://github.com/googleapis/java-pubsub-group-kafka-connector) source connector (open source connector from Google, not the Confluent one).
+
+## Prerequisites
 
 * Active Google Cloud Platform (GCP) account with authorization to create resources
+* A service account key, either saved as `keyfile.json` in this folder or provided through `GCP_KEYFILE_CONTENT` (see [Service account setup](#service-account-setup))
 
-## GCP Pub/Sub Setup
+| Variable | Description |
+| --- | --- |
+| `GCP_PROJECT` | GCP project ID (required) |
+| `GCP_KEYFILE_CONTENT` | Content of the service account key, used when `keyfile.json` is not present |
 
-* Create `Service Account` from IAM & Admin console:
+## How to run
 
-Set `Service account name`:
+```bash
+export GCP_PROJECT=<your-gcp-project>
+playground run -f gcp-google-pubsub-source.sh
+```
+
+| Script | Description |
+| --- | --- |
+| `gcp-google-pubsub-source.sh` | `CloudPubSubSourceConnector` reading a Pub/Sub subscription into `pubsub-topic` |
+
+## What the script does
+
+1. Downloads `pubsub-group-kafka-connector-1.3.3.jar`, `grpc-netty-1.75.0.jar` and `grpc-rls-1.75.0.jar` from Maven Central if missing, and installs them as a plugin in `confluent-hub/pubsub-group-kafka-connector/`
+2. Starts the environment and authenticates `gcloud` with the service account key
+3. Creates a Pub/Sub topic `topic-1-g-<suffix>` and subscription `subscription-1-g-<suffix>` (ack deadline 60s), deleting them first if they exist
+4. Publishes three messages (`Peter`, `Megan`, `Erin`) to the Pub/Sub topic
+5. Creates the `pubsub-source` connector and verifies records arrive in `pubsub-topic` with `playground topic consume`
+6. On exit, deletes the Pub/Sub topic and subscription
+
+## Service account setup
+
+Create a `Service Account` from the IAM & Admin console.
+
+Set the `Service account name`:
 
 ![Service Account setup](Screenshot1.png)
 
-
-Choose permission `Pub/Sub`->`Pub/Sub Admin`
+Choose the permission `Pub/Sub` -> `Pub/Sub Admin`:
 
 ![Service Account setup](Screenshot2.png)
 
-Create Key:
+Create a key:
 
 ![Service Account setup](Screenshot3.png)
 
@@ -29,77 +54,8 @@ Download it as JSON:
 
 ![Service Account setup](Screenshot4.png)
 
-Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment variable `GCP_KEYFILE_CONTENT` with content generated with `GCP_KEYFILE_CONTENT=$(cat keyfile.json | jq -aRs . | sed 's/^"//' | sed 's/"$//')
-
-
-## How to run
-
-Simply run:
+Rename it to `keyfile.json` and place it in this folder, or export its content in `GCP_KEYFILE_CONTENT`:
 
 ```bash
-$ just use <playground run> command and search for gcp-google-pubsub-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> .sh in this folder
+export GCP_KEYFILE_CONTENT=$(cat keyfile.json | jq -aRs . | sed 's/^"//' | sed 's/"$//')
 ```
-
-## Details of what the script is doing
-
-Doing gsutil authentication
-
-```bash
-$ gcloud auth activate-service-account --key-file ${GCP_KEYFILE}
-```
-
-Create a Pub/Sub topic called $GCP_PUB_SUB_TOPIC
-
-```bash
-$ gcloud pubsub topics create $GCP_PUB_SUB_TOPIC
-```
-
-Create a Pub/Sub subscription called $GCP_PUB_SUB_SUBSCRIPTION
-
-```bash
-$ gcloud pubsub subscriptions create --topic $GCP_PUB_SUB_TOPIC $GCP_PUB_SUB_SUBSCRIPTION
-```
-
-Publish three messages to $GCP_PUB_SUB_TOPIC
-
-```bash
-$ gcloud pubsub topics publish $GCP_PUB_SUB_TOPIC --message "Peter"
-gcloud pubsub topics publish $GCP_PUB_SUB_TOPIC --message "Megan"
-gcloud pubsub topics publish $GCP_PUB_SUB_TOPIC --message "Erin"
-```
-
-Creating reating Google Cloud Pub/Sub Group Kafka Source connector
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class" : "com.google.pubsub.kafka.source.CloudPubSubSourceConnector",
-               "tasks.max" : "1",
-               "kafka.topic" : "pubsub-topic",
-               "cps.project" : "$GCP_PROJECT",
-               "cps.topic" : "$GCP_PUB_SUB_TOPIC",
-               "cps.subscription" : "$GCP_PUB_SUB_SUBSCRIPTION",
-               "gcp.credentials.file.path" : "/tmp/keyfile.json",
-               "errors.tolerance": "all",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/pubsub-source/config | jq .
-```
-
-Verify messages are in topic `pubsub-topic`
-
-```bash
-playground topic consume --topic pubsub-topic --min-expected-messages 3 --timeout 60
-```
-
-Results:
-
-```
-"Peter"
-"Erin"
-"Megan"
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

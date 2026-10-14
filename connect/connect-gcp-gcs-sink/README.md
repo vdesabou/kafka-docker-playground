@@ -1,28 +1,55 @@
 # GCS Sink connector
 
-
-
 ## Objective
 
-Quickly test [GCS Sink](https://docs.confluent.io/kafka-connect-gcs-sink/current/overview.html) connector.
+Quickly test the [GCS Sink](https://docs.confluent.io/kafka-connectors/gcs-sink/current/overview.html) connector.
+
+## Prerequisites
 
 * Active Google Cloud Platform (GCP) account with authorization to create resources
+* A service account key, either saved as `keyfile.json` in this folder or provided through `GCP_KEYFILE_CONTENT` (see [Service account setup](#service-account-setup))
 
-## Prepare a Bucket
+| Variable | Description |
+| --- | --- |
+| `GCP_PROJECT` | GCP project ID (required) |
+| `GCP_KEYFILE_CONTENT` | Content of the service account key, used when `keyfile.json` is not present |
 
-[Instructions](https://docs.confluent.io/current/connect/kafka-connect-gcs/index.html#prepare-a-bucket)
+## How to run
 
-* Create `Service Account` from IAM & Admin console:
+```bash
+export GCP_PROJECT=<your-gcp-project>
+playground run -f gcs-sink.sh
+```
 
-Set `Service account name`:
+| Script | Description |
+| --- | --- |
+| `gcs-sink.sh` | GCS sink writing Avro files with the default partitioner |
+
+The bucket is created in region `europe-west2` (first script argument). Requires connector version 10.3.3 or later with CP 8.x (the script exits with code 111 otherwise).
+
+## What the script does
+
+1. Starts the environment and authenticates `gcloud` with the service account key
+2. Creates the bucket `kafkadockerplaygroundbucket<user>...` if needed, labels it and removes existing objects under `topics/gcs-topic`
+3. Produces 10 Avro records to `gcs-topic`
+4. Creates the `gcs-sink` connector (`AvroFormat`, `flush.size=3`)
+5. Lists the objects in the bucket, downloads `gcs-topic+0+0000000000.avro` and displays it with `playground tools read-avro-file`
+
+## Service account setup
+
+See also [Prepare a bucket](https://docs.confluent.io/kafka-connectors/gcs-sink/current/overview.html).
+
+Create a `Service Account` from the IAM & Admin console.
+
+Set the `Service account name`:
 
 ![Service Account setup](Screenshot1.png)
 
-Choose permission `Storage Admin` (probably not required to have all of them):
+Choose the permission `Storage Admin` (probably more than required):
 
 ![Service Account setup](Screenshot2.png)
 
-Create Key:
+Create a key:
 
 ![Service Account setup](Screenshot3.png)
 
@@ -30,46 +57,8 @@ Download it as JSON:
 
 ![Service Account setup](Screenshot4.png)
 
-Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment variable `GCP_KEYFILE_CONTENT` with content generated with `GCP_KEYFILE_CONTENT=$(cat keyfile.json | jq -aRs . | sed 's/^"//' | sed 's/"$//')
-
-
-## How to run
-
-Simply run:
+Rename it to `keyfile.json` and place it in this folder, or export its content in `GCP_KEYFILE_CONTENT`:
 
 ```bash
-$ just use <playground run> command and search for gcs-sink<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> .sh in this folder
+export GCP_KEYFILE_CONTENT=$(cat keyfile.json | jq -aRs . | sed 's/^"//' | sed 's/"$//')
 ```
-
-Or using SASL_SSL:
-
-```bash
-$ just use <playground run> command and search for gcs-sink-sasl-ssl<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> .sh in this folder
-```
-
-Or using 2 way SSL authentication:
-
-```bash
-$ just use <playground run> command and search for gcs-sink-2way-ssl<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> .sh in this folder
-```
-
-
-Or using kerberos:
-
-```bash
-$ just use <playground run> command and search for gcs-sink-kerberos<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> .sh in this folder
-```
-
-Or using LDAP Authorizer with SASL/PLAIN:
-
-```bash
-$ just use <playground run> command and search for gcs-sink-ldap-authorizer-sasl-plain<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> .sh in this folder
-```
-
-Or using RBAC environment with SASL/PLAIN:
-
-```bash
-$ just use <playground run> command and search for gcs-sink-rbac-sasl-plain<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> .sh in this folder
-```
-
-Note: you can also export these values as environment variable

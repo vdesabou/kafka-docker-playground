@@ -1,133 +1,42 @@
-# Debezium MongoDB source connector
-
-
+# Fully Managed Debezium MongoDB source connector
 
 ## Objective
 
-Quickly test [Debezium MongoDB](https://docs.confluent.io/current/connect/debezium-connect-mongodb/index.html#quick-start) connector.
+Quickly test the [Fully Managed MongoDB CDC Source (Debezium)](https://docs.confluent.io/cloud/current/connectors/cc-mongodb-cdc-source/cc-mongodb-cdc-source-debezium.html) connector with a local MongoDB replica set.
 
+## Prerequisites
 
+See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).
 
+| Variable | Description |
+| --- | --- |
+| `NGROK_AUTH_TOKEN` | Required. [Ngrok](https://ngrok.com) auth token, used to expose the MongoDB port to the internet so that the fully managed connector can reach it ([sign up](https://dashboard.ngrok.com/signup), [get your token](https://dashboard.ngrok.com/get-started/your-authtoken)) |
+
+**🚨WARNING🚨** It is considered a security risk to run this example on your personal machine since you'll be exposing a TCP port over internet using [Ngrok](https://ngrok.com). It is strongly encouraged to run it on an AWS EC2 instance where you'll use [Confluent Static Egress IP Addresses](https://docs.confluent.io/cloud/current/networking/static-egress-ip-addresses.html#use-static-egress-ip-addresses-with-ccloud) (only available for public endpoints on AWS) to allow traffic from your Confluent Cloud cluster to your EC2 instance using an EC2 Security Group.
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for mongo.sh in this folder
-```
-
-mongo-express UI is available at [http://localhost:18081/](http://localhost:18081/)
-
-## Details of what the script is doing
-
-
-Initialize MongoDB replica set
-
 ```bash
-$ docker exec -i mongodb mongosh --eval "rs.initiate({_id: 'debezium', members:[{_id: 0, host: '<ngrok-host>:<ngrok-port>'}]})"
+export NGROK_AUTH_TOKEN=<your ngrok auth token>
+playground run -f fully-managed-debezium-mongodb-source.sh
 ```
 
-For the fully managed connector, the replica set member must advertise the public ngrok TCP endpoint, not `mongodb:27017`. Otherwise MongoDB returns the internal Docker hostname during topology discovery and the managed worker fails with `UnknownHostException: mongodb`.
+| Script | Description |
+| --- | --- |
+| `fully-managed-debezium-mongodb-source.sh` | Plaintext MongoDB 7.0 replica set |
+| `fully-managed-debezium-mongodb-source-ssl.sh` | Same with TLS: self-signed certificate, truststore passed inline to the connector (`mongodb.ssl.truststore`) |
 
-Create a user profile
+In the plaintext variant, the mongo-express UI is available at [http://localhost:18081/](http://localhost:18081/).
 
-```bash
-$ docker exec -i mongodb mongosh << EOF
-use admin
-db.createUser(
-{
-user: "debezium",
-pwd: "dbz",
-roles: ["dbOwner"]
-}
-)
-```
+## What the script does
 
-Insert a record
+1. Creates topic `dbserver1.inventory.customers`. The SSL variant also generates a self-signed certificate (`ssl/mongo.pem`) and a JKS truststore.
+2. Starts MongoDB and ngrok locally (`docker-compose.yml` or `docker-compose-ssl.yml`).
+3. Initializes the replica set `debezium`, creates user `debezium` (role `dbOwner`) and inserts one document in `inventory.customers`.
+4. Creates the fully managed `MongoDbCdcSource` connector with `mongodb.connection.string` pointing to the ngrok endpoint with `replicaSet=debezium&directConnection=true` (`topic.prefix` `dbserver1`, Avro output).
+5. Verifies the record in `dbserver1.inventory.customers` with `playground topic consume`.
+6. Deletes the connector at the end of the run.
 
-```bash
-$ docker exec -i mongodb mongosh << EOF
-use inventory
-db.customers.insert([
-{ _id : 1006, first_name : 'Bob', last_name : 'Hopper', email : 'thebob@example.com' }
-]);
-EOF
-```
+## Notes
 
-View the record
-
-```bash
-$ docker exec -i mongodb mongosh << EOF
-use inventory
-db.customers.find().pretty();
-EOF
-```
-
-Create the connector:
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class" : "io.debezium.connector.mongodb.MongoDbConnector",
-               "tasks.max" : "1",
-                   "_comment": "old version before 2.4.x",
-    "mongodb.hosts": "debezium/mongodb:27017",
-    "_comment": "new version since 2.4.x",
-    "mongodb.connection.string": "mongodb://mongodb:27017",
-
-               "_comment": "old version before 2.x",
-               "mongodb.name": "dbserver1",
-               "_comment": "new version since 2.x",
-               "topic.prefix": "dbserver1",
-
-               "mongodb.user" : "debezium",
-               "mongodb.password" : "dbz"
-          }' \
-     http://localhost:8083/connectors/debezium-mongodb-source/config | jq .
-```
-
-Verifying topic dbserver1.inventory.customers
-
-```bash
-playground topic consume --topic dbserver1.inventory.customers --min-expected-messages 1 --timeout 60
-```
-
-Result is:
-
-```json
-{
-    "after": {
-        "string": "{\"_id\" : 1006.0,\"first_name\" : \"Bob\",\"last_name\" : \"Hopper\",\"email\" : \"thebob@example.com\"}"
-    },
-    "patch": null,
-    "source": {
-        "version": {
-            "string": "0.9.5.Final"
-        },
-        "connector": {
-            "string": "mongodb"
-        },
-        "name": "dbserver1",
-        "rs": "debezium",
-        "ns": "inventory.customers",
-        "sec": 1570207101,
-        "ord": 2,
-        "h": {
-            "long": 0
-        },
-        "initsync": {
-            "boolean": true
-        }
-    },
-    "op": {
-        "string": "r"
-    },
-    "ts_ms": {
-        "long": 1570207105641
-    }
-}
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+`directConnection=true` is required: the replica set member is registered as `mongodb:27017`, which is not resolvable from Confluent Cloud, so the connector must not use the topology discovered from the replica set.

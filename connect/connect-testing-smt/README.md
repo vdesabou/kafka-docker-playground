@@ -1,8 +1,23 @@
 # Testing Single Message Transforms (SMTs)
 
+## Objective
+
 Each script exercises one SMT end-to-end to confirm it keeps working on a new Confluent Platform or Java version. Each script uses whichever Connector makes that SMT's effect easiest to observe: the self-managed HTTP Sink connector (verifying the result from the mock HTTP server body and/or the `success-responses` topic), a datagen source connector (verifying the record key, headers or target topic name by consuming the output topic), or a Debezium PostgreSQL source connector (for the Debezium SMTs). Because no `errors.tolerance` is set, a broken or incompatible SMT fails its task, so no records flow and the test goes red.
 
-Overrides:
+## Prerequisites
+
+* `gzipdecompress.sh` is not supported with the `cfk` environment.
+* Debezium scripts (`eventrouter.sh`, `timezoneconverter.sh`): Debezium connector 2.0.0+ requires CP 6.0.0 or later, and CP 8.x requires Debezium connector 2.5.0 or later.
+
+## How to run
+
+```bash
+playground run -f replacefield.sh
+```
+
+Every `*.sh` script below can be run the same way.
+
+## Docker Compose overrides
 
 - `docker-compose.plaintext.yml` - HTTP sink + `confluentinc-connect-transforms` (used by the Confluent SMT scripts).
 - `docker-compose.plaintext.builtin.yml` - HTTP sink only (used by the Apache built-in SMT scripts).

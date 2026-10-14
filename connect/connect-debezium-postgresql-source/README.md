@@ -1,181 +1,60 @@
 # Debezium PostgreSQL source connector
 
-
-
 ## Objective
 
-Quickly test [Debezium PostGreSQL](https://docs.confluent.io/current/connect/debezium-connect-postgres/index.html#quick-start) connector.
+Quickly test the [Debezium PostgreSQL](https://docs.confluent.io/kafka-connectors/debezium-postgres-source/current/overview.html) connector.
+
+## Prerequisites
+
+| Variable | Description |
+| --- | --- |
+| `SQL_DATAGEN` | Optional (`debezium-postgres-source.sh` only): when set, builds the `postgres-datagen` tool and injects data for 10 minutes at the end of the run |
+
+With CP 8.x, the minimal supported connector version is `2.5.0` (the script exits with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-Without SSL:
-
-```
-$ just use <playground run> command and search for debezium-postgres-source.sh in this folder
-```
-
-with SSL encryption:
-
-```
-$ just use <playground run> command and search for debezium-postgres-source-ssl.sh in this folder
-```
-
-with SSL encryption + Mutual TLS authentication:
-
-```
-$ just use <playground run> command and search for debezium-postgres-source-mtls.sh in this folder
-```
-
-## Details of what the script is doing
-
-Show content of CUSTOMERS table:
-
 ```bash
-$ docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM CUSTOMERS'"
+playground run -f debezium-postgres-source.sh
 ```
 
-Adding an element to the table
+| Script | Description |
+| --- | --- |
+| `debezium-postgres-source.sh` | Basic example, Avro converters and a `RegexRouter` SMT adding a `-raw` suffix to topic names |
+| `debezium-postgres-source-ssl.sh` | PostgreSQL with SSL encryption (`database.sslmode=verify-full`) |
+| `debezium-postgres-source-mtls.sh` | PostgreSQL with SSL encryption and mutual TLS authentication (no password) |
+| `debezium-postgres-source-partitioned-tables.sh` | Partitioned `CUSTOMERS` table captured through a `pgoutput` publication created with `publish_via_partition_root = true` |
+| `debezium-postgres-source-incremental-snapshot.sh` | Ad hoc incremental snapshot of a newly added table, triggered through the signaling table `public.debezium_signal` |
+| `debezium-postgres-source-incremental-snapshot-kafka-signal.sh` | Same, triggered through the Kafka signal topic `dbz-signals` |
 
-```bash
-$ docker exec postgres psql -U myuser -d postgres -c "insert into customers (id, first_name, last_name, email, gender, comments) values (21, 'Bernardo', 'Dudman', 'bdudmanb@lulu.com', 'Male', 'Robust bandwidth-monitored budgetary management');"
-```
+## What the script does
 
+`debezium-postgres-source.sh` (the SSL, mTLS and partitioned variants follow the same steps):
 
-Show content of CUSTOMERS table:
+1. Starts the environment with a PostgreSQL container (`debezium/postgres:15-alpine`).
+2. Creates table `CUSTOMERS`, inserts sample rows and adds one more row.
+3. Creates the `debezium-postgres-source` connector (`topic.prefix` `asgard`).
+4. Verifies that topic `asgard.public.customers-raw` contains the records with `playground topic consume`.
+5. If `SQL_DATAGEN` is set, injects data for 10 minutes.
 
-```bash
-$ docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM CUSTOMERS'"
-```
+The incremental snapshot variants:
 
-### Without SSL
+1. Create tables `customers` and `customers2` and the signaling table `debezium_signal`.
+2. Create the connector with `table.include.list=public.customers` and verify `asgard.public.customers`.
+3. Update the connector to also include `public.customers2`, insert a row: only this new row shows up in `asgard.public.customers2`.
+4. Send an `execute-snapshot` signal (insert into `debezium_signal`, or `playground topic produce` to `dbz-signals`) and verify that all 6 records are in `asgard.public.customers2`.
 
-Creating Debezium PostgreSQL source connector
+## SSL setup details
 
-```bash
-playground connector create-or-update --connector debezium-postgres-source  << EOF
-{
-                "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-                "tasks.max": "1",
-                "database.hostname": "postgres",
-                "database.port": "5432",
-                "database.user": "myuser",
-                "database.password": "mypassword",
-                "database.dbname" : "postgres",
-
-                "_comment": "old version before 2.x",
-                "database.server.name": "asgard",
-                "_comment": "new version since 2.x",
-                "topic.prefix": "asgard",
-
-                "key.converter" : "io.confluent.connect.avro.AvroConverter",
-                "key.converter.schema.registry.url": "http://schema-registry:8081",
-                "value.converter" : "io.confluent.connect.avro.AvroConverter",
-                "value.converter.schema.registry.url": "http://schema-registry:8081",
-                "transforms": "addTopicSuffix",
-                "transforms.addTopicSuffix.type":"org.apache.kafka.connect.transforms.RegexRouter",
-                "transforms.addTopicSuffix.regex":"(.*)",
-                "transforms.addTopicSuffix.replacement": "\$1-raw"
-          }
-EOF
-```
-
-Verifying topic asgard.public.customers-raw
-
-```bash
-playground topic consume --topic asgard.public.customers-raw --min-expected-messages 5 --timeout 60
-```
-
-Result is:
-
-```json
-{
-    "before": null,
-    "after": {
-        "asgard.public.customers.Value": {
-            "id": 5,
-            "first_name": {
-                "string": "Hansiain"
-            },
-            "last_name": {
-                "string": "Coda"
-            },
-            "email": {
-                "string": "hcoda4@senate.gov"
-            },
-            "gender": {
-                "string": "Male"
-            },
-            "club_status": {
-                "string": "platinum"
-            },
-            "comments": {
-                "string": "Centralized full-range approach"
-            },
-            "create_ts": {
-                "long": 1570208046048403
-            },
-            "update_ts": {
-                "long": 1570208046048403
-            }
-        }
-    },
-    "source": {
-        "version": {
-            "string": "0.9.5.Final"
-        },
-        "connector": {
-            "string": "postgresql"
-        },
-        "name": "asgard",
-        "db": "postgres",
-        "ts_usec": {
-            "long": 1570208093526000
-        },
-        "txId": {
-            "long": 580
-        },
-        "lsn": {
-            "long": 24523120
-        },
-        "schema": {
-            "string": "public"
-        },
-        "table": {
-            "string": "customers"
-        },
-        "snapshot": {
-            "boolean": true
-        },
-        "last_snapshot_record": {
-            "boolean": false
-        },
-        "xmin": null
-    },
-    "op": "r",
-    "ts_ms": {
-        "long": 1570208093526
-    }
-}
-```
-
-### With SSL
-
-Creating a Root Certificate Authority (CA)
+The SSL and mTLS scripts generate a root CA and the PostgreSQL server certificate with `openssl`:
 
 ```bash
 openssl req -new -x509 -days 365 -nodes -out /tmp/ca.crt -keyout /tmp/ca.key -subj "/CN=root-ca"
-```
-
-Generate the PostgreSQL server key and certificate
-
-```bash
 openssl req -new -nodes -out /tmp/server.csr -keyout /tmp/server.key -subj "/CN=postgres"
 openssl x509 -req -in /tmp/server.csr -days 365 -CA /tmp/ca.crt -CAkey /tmp/ca.key -CAcreateserial -out /tmp/server.crt
 ```
 
-Build custom image from `debezium/postgres:15-alpine`:
+A custom image is built from `debezium/postgres:15-alpine` (see `ssl/Dockerfile`):
 
 ```dockerfile
 FROM debezium/postgres:15-alpine
@@ -187,55 +66,49 @@ RUN chown postgres /var/lib/postgresql/server.key && \
     chmod 600 /var/lib/postgresql/server.key
 ```
 
-Enable ssl (`my-postgres.conf`):
+SSL is enabled in `my-postgres.conf`:
 
-```
+```properties
 ssl = on
 ssl_cert_file = '/var/lib/postgresql/server.crt'
 ssl_key_file = '/var/lib/postgresql/server.key'
 ssl_ca_file = '/var/lib/postgresql/ca.crt'
 ```
 
-Force SSL (`pg_hba.conf`):
+and forced in `pg_hba.conf`:
 
-```
-# force SSL
+```text
 hostssl all all all md5
 ```
 
-Connector config has:
+Connector config:
 
 ```json
-    "database.sslmode": "verify-full",
-    "database.sslrootcert": "/tmp/ca.crt",
+"database.sslmode": "verify-full",
+"database.sslrootcert": "/tmp/ca.crt"
 ```
 
-### With SSL encryption + Mutual TLS auth
+### Mutual TLS
 
-Generating the Client Key and Certificate
+The client key and certificate are generated too. The key must be converted to PKCS#8 DER, otherwise the JDBC driver fails to read it (see [this thread](https://coderanch.com/t/706596/databases/Connection-string-ssl-client-certificate)):
 
 ```bash
 openssl req -new -nodes -out /tmp/client.csr -keyout /tmp/client.key -subj "/CN=myuser"
 openssl x509 -req -in /tmp/client.csr -days 365 -CA /tmp/ca.crt -CAkey /tmp/ca.key -CAcreateserial -out /tmp/client.crt
-# need to use pk8, otherwise I got this issue https://coderanch.com/t/706596/databases/Connection-string-ssl-client-certificate
 openssl pkcs8 -topk8 -outform DER -in /tmp/client.key -out /tmp/client.key.pk8 -nocrypt
 ```
 
-Force SSL (`pg_hba.conf`), see `cert` option:
+`pg_hba.conf` uses the `cert` method:
 
-```
-# force SSL
-hostssl all all all cert clientcert=1
+```text
+hostssl all all all cert clientcert=verify-full
 ```
 
-Connector config has (`database.password` is not set anymore):
+Connector config (`database.password` is not set):
 
 ```json
-    "database.sslmode": "verify-full",
-    "database.sslrootcert": "/tmp/ca.crt",
-    "database.sslcert": "/tmp/client.crt",
-    "database.sslkey": "/tmp/client.key.pk8",
+"database.sslmode": "verify-full",
+"database.sslrootcert": "/tmp/ca.crt",
+"database.sslcert": "/tmp/client.crt",
+"database.sslkey": "/tmp/client.key.pk8"
 ```
-
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

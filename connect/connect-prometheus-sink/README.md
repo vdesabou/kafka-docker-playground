@@ -1,67 +1,30 @@
 # Prometheus Sink connector
 
-
-
 ## Objective
 
-Quickly test [Prometheus Sink](https://docs.confluent.io/current/connect/kafka-connect-prometheus-metrics/index.html#prometheus-metrics-sink-connector-for-cp) connector.
+Quickly test the [Prometheus Metrics Sink](https://docs.confluent.io/kafka-connectors/prometheus-metrics/current/overview.html) connector.
 
+## Prerequisites
+
+With CP 8.x, the minimum supported connector version is 2.0.4 (the script exits with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for prometheus-sink.sh in this folder
-```
-
-## Details of what the script is doing
-
-
-Sending messages to topic `test-topic`
-
 ```bash
-$ NOW=$(date +%s)
-$ docker exec -i -e NOW=$NOW connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test-topic --property value.schema='{"name": "metric","type": "record","fields": [{"name": "name","type": "string"},{"name": "type","type": "string"},{"name": "timestamp","type": "long"},{"name": "values","type": {"name": "values","type": "record","fields": [{"name":"doubleValue", "type": "double"}]}}]}' << EOF
-{"name":"kafka_gaugeMetric1", "type":"gauge","timestamp": $NOW,"values": {"doubleValue": 5.639623848362502}}
-{"name":"kafka_gaugeMetric2", "type":"gauge","timestamp": $NOW,"values": {"doubleValue": 5.639623848362502}}
-{"name":"kafka_gaugeMetric3", "type":"gauge","timestamp": $NOW,"values": {"doubleValue": 5.639623848362502}}
-EOF
+playground run -f prometheus-sink.sh
 ```
 
-Creating Prometheus sink connector
+Prometheus is reachable at [http://localhost:19090](http://localhost:19090).
 
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.prometheus.PrometheusMetricsSinkConnector",
-               "tasks.max": "1",
-               "confluent.topic.bootstrap.servers":"broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "prometheus.listener.url": "http://connect:8889/metrics",
-               "key.converter": "io.confluent.connect.avro.AvroConverter",
-               "key.converter.schema.registry.url":"http://schema-registry:8081",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url":"http://schema-registry:8081",
-               "key.converter.schemas.enable": "true",
-               "value.converter.schemas.enable": "true",
-               "reporter.bootstrap.servers": "broker:9092",
-               "reporter.error.topic.replication.factor": 1,
-               "reporter.result.topic.replication.factor": 1,
-               "behavior.on.error": "LOG",
-               "topics": "test-topic"
-          }' \
-     http://localhost:8083/connectors/prometheus-sink/config | jq .
-```
+## What the script does
 
-Verify data is in Prometheus
+1. Starts the environment with a Prometheus server scraping the connector endpoint `connect:8889`.
+2. Creates the Prometheus metrics sink connector `prometheus-sink` (`prometheus.listener.url=http://connect:8889/metrics`, `behavior.on.error=LOG`).
+3. Produces 6 Avro gauge metrics (`kafka_gaugeMetric1` to `kafka_gaugeMetric6`) to topic `test-topic` with `playground topic produce`.
+4. Waits for the connector to consume all records with `playground connector show-lag`.
+5. Verifies that metric `kafka_gaugeMetric1` is available with the Prometheus query API (skipped on CI).
 
-```bash
-$ curl 'http://localhost:19090/api/v1/query?query=kafka_gaugeMetric1'
-```
-
-Results:
+Example of result for `curl 'http://localhost:19090/api/v1/query?query=kafka_gaugeMetric1'`:
 
 ```json
 {
@@ -84,5 +47,3 @@ Results:
     "status": "success"
 }
 ```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

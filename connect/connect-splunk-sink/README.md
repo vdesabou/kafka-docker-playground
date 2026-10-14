@@ -1,80 +1,39 @@
 # Splunk Sink connector
 
-
-
 ## Objective
 
-Quickly test [Splunk Sink](https://docs.confluent.io/kafka-connect-splunk-sink/current/overview.html) connector.
+Quickly test the [Splunk Sink](https://docs.confluent.io/kafka-connect-splunk-sink/current/overview.html) connector.
 
+## Prerequisites
 
-
+* With CP 8.x, connector version 2.2.0 or later.
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for splunk-sink.sh in this folder
-```
-
-Splunk UI is available at [127.0.0.1:8000](http://127.0.0.1:8000) `admin/password`
-
-## Details of what the script is doing
-
-Create topic `splunk-qs`
-
 ```bash
-docker exec broker kafka-topics --create --topic splunk-qs --partitions 10 --replication-factor 1 --bootstrap-server broker:9092
+playground run -f splunk-sink.sh
 ```
 
-Creating Splunk sink connector
+Splunk UI is available at [127.0.0.1:8000](http://127.0.0.1:8000) (`admin`/`password`).
 
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "com.splunk.kafka.connect.SplunkSinkConnector",
-                    "tasks.max": "1",
-                    "topics": "splunk-qs",
-                    "splunk.indexes": "main",
-                    "splunk.hec.uri": "http://splunk:8088",
-                    "splunk.hec.token": "99582090-3ac3-4db1-9487-e17b17a05081",
-                    "splunk.sourcetypes": "my_sourcetype",
-                    "value.converter": "org.apache.kafka.connect.storage.StringConverter"
-          }' \
-     http://localhost:8083/connectors/splunk-sink/config | jq .
-```
+| Script | Description |
+| --- | --- |
+| `splunk-sink.sh` | JSON records sent as raw events (`JsonConverter`, schemaless) |
+| `splunk-sink-formatted.sh` | Records already in HEC event format (`splunk.hec.json.event.formatted=true`, `StringConverter`), with indexed fields |
 
-Note: The token `99582090-3ac3-4db1-9487-e17b17a05081` is coming from `./default.yml`:
+## What the script does
+
+1. Starts a Splunk container and waits for it to be ready.
+2. Produces 3 JSON records to topic `splunk-qs`.
+3. Creates the Splunk Sink connector sending to the HEC endpoint `http://splunk:8088`, index `main`.
+4. Waits 80 seconds, then runs a `splunk search` in the `splunk` container and checks the events are indexed.
+
+The HEC token `99582090-3ac3-4db1-9487-e17b17a05081` comes from `default.yml`:
 
 ```yaml
 hec_token: 99582090-3ac3-4db1-9487-e17b17a05081
 ```
 
-If you want to manually create the token using UI, follow steps from [Quick Start](https://docs.confluent.io/current/connect/kafka-connect-splunk/splunk-sink/index.html#quick-start)
+## Known issues
 
-Sending messages to topic splunk-qs
-
-```bash
-$ docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic splunk-qs << EOF
-This is a test with Splunk 1
-This is a test with Splunk 2
-This is a test with Splunk 3
-EOF
-```
-
-Verify data is in splunk (`FIXTHIS: it takes around 60 seconds to appear in Splunk`)
-
-```bash
-docker exec splunk bash -c 'sudo /opt/splunk/bin/splunk search "source=\"http:splunk_hec_token\"" -auth "admin:password"'
-```
-
-Results:
-
-```
-This is a test with Splunk 3
-This is a test with Splunk 2
-This is a test with Splunk 1
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+* `splunk-sink-formatted.sh`: multi-valued indexed fields (e.g. `"cust_id":["000013935","000013936"]`) require a fix for [splunk/kafka-connect-splunk#444](https://github.com/splunk/kafka-connect-splunk/issues/444), so that case is commented out in the script.

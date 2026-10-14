@@ -1,112 +1,32 @@
-# JDBC Singlestore sink connector
+# JDBC Singlestore source connector
 
 ## Objective
 
-Quickly test [JDBC Singlestore](https://docs.confluent.io/current/connect/kafka-connect-jdbc/source-connector/index.html#kconnect-long-jdbc-source-connector) connector.
+Quickly test the [JDBC Source](https://docs.confluent.io/kafka-connectors/jdbc/current/source-connector/overview.html) connector with [SingleStore](https://www.singlestore.com/), using the MySQL JDBC driver (5.1.45).
 
+## Prerequisites
+
+With CP 8.x, the JDBC connector version must be 10.8.0 or later (the script exits with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for jdbc-singlestore-sink.sh in this folder
-```
-
-## Details of what the script is doing
-
-
-Creating 'db' SingleStore database and table 'application':
-
 ```bash
-docker exec singlestore memsql -u root -proot -e "
-CREATE DATABASE IF NOT EXISTS db;  \
-USE db; \
-CREATE TABLE IF NOT EXISTS application ( \
-  id            INT          NOT NULL PRIMARY KEY AUTO_INCREMENT, \
-  name          VARCHAR(255) NOT NULL, \
-  team_email    VARCHAR(255) NOT NULL, \
-  last_modified DATETIME     NOT NULL \
-); \
-INSERT INTO application ( \
-  id, \
-  name, \
-  team_email, \
-  last_modified \
-) VALUES ( \
-  1, \
-  'kafka', \
-  'kafka@apache.org', \
-  NOW() \
-);"
+playground run -f jdbc-singlestore-source.sh
 ```
 
-Describing the application table in DB 'db':
+| Script | Description |
+| --- | --- |
+| `jdbc-singlestore-source.sh` | JDBC source in `timestamp+incrementing` mode on a SingleStore table |
 
-```bash
-docker exec singlestore memsql -u root -proot -e "USE db;describe application"
-```
+## What the script does
 
-Show content of application table::
+1. Downloads `mysql-connector-java-5.1.45.jar` if needed and copies it into the JDBC connector `lib` folder.
+2. Starts the environment with a `singlestore` container (`ghcr.io/singlestore-labs/singlestoredb-dev`) and waits until it accepts queries.
+3. Creates database `db` and table `application` (`id`, `name`, `team_email`, `last_modified`), and inserts 2 rows.
+4. Creates the `jdbc-singlestore-source` connector (`jdbc:mysql://singlestore:3306/db`, `mode=timestamp+incrementing` on `last_modified` / `id`, `topic.prefix=singlestore-`).
+5. Verifies that 2 records land in topic `singlestore-application` with `playground topic consume`:
 
-```bash
-docker exec singlestore memsql -u root -proot -e "USE db;select * from application"
-```
-
-Adding an element to the table:
-
-```bash
-docker exec singlestore memsql -u root -proot -e "USE db;
-INSERT INTO application (   \
-  id,   \
-  name, \
-  team_email,   \
-  last_modified \
-) VALUES (  \
-  2,    \
-  'another',  \
-  'another@apache.org',   \
-  NOW() \
-); "
-```
-
-Show content of application table::
-
-```bash
-docker exec singlestore memsql -u root -proot -e "USE db;select * from application"
-```
-
-Creating JDBC Singlestore source connector:
-
-```bash
-playground connector create-or-update --connector jdbc-singlestore-source  << EOF
-{
-               "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
-               "tasks.max":"1",
-               "connection.url":"jdbc:mysql://singlestore:3306/db?user=root&password=root&useSSL=false",
-               "table.whitelist":"application",
-               "mode":"timestamp+incrementing",
-               "timestamp.column.name":"last_modified",
-               "incrementing.column.name":"id",
-               "topic.prefix":"singlestore-"
-
-          }
-EOF
-```
-
-sleep 5
-
-Verifying topic singlestore-application:
-
-```bash
-playground topic consume --topic singlestore-application --min-expected-messages 2 --timeout 60
-```
-
-Results:
-
-```
+```json
 {"id":1,"name":"kafka","team_email":"kafka@apache.org","last_modified":1644341162000}
 {"id":2,"name":"another","team_email":"another@apache.org","last_modified":1644341163000}
 ```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

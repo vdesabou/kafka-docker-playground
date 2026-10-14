@@ -1,12 +1,47 @@
 # Salesforce CDC Source connector
 
-
-
 ## Objective
 
-Quickly test [Salesforce CDC Source](https://docs.confluent.io/current/connect/kafka-connect-salesforce/change-data-capture/index.html#salesforce-cdc-source-connector-for-cp) connector.
+Quickly test the [Salesforce CDC Source](https://docs.confluent.io/current/connect/kafka-connect-salesforce/change-data-capture/index.html#salesforce-cdc-source-connector-for-cp) connector.
 
+The connector authenticates with the OAuth JWT Bearer flow (`salesforce.grant.type=JWT_BEARER`).
 
+## Prerequisites
+
+* A Salesforce account (see [Register a test account](#register-a-test-account))
+* An External Client App with the JWT Bearer flow enabled (see [OAuth with JWT Bearer Flow](#oauth-with-jwt-bearer-flow))
+* Change Data Capture enabled for `Contact` (see [Enable Change Data Capture](#enable-change-data-capture))
+* CP 6.0.0 or later (the keystore was created with JDK 11). With CP 8.x, connector version 2.0.29 or later.
+* `salesforce-confluent.keystore.jks` (password `confluent`) in this folder. If it is missing, the script tries to download it from the playground S3 bucket (Confluent employees only, with AWS credentials set).
+
+| Variable | Description |
+| --- | --- |
+| `SALESFORCE_USERNAME` | Salesforce username |
+| `SALESFORCE_PASSWORD` | Salesforce password |
+| `SALESFORCE_SECURITY_TOKEN` | Salesforce security token |
+| `SALESFORCE_CONSUMER_KEY_WITH_JWT` | Consumer key of the External Client App with JWT Bearer flow enabled |
+| `SALESFORCE_INSTANCE` | Optional, defaults to `https://login.salesforce.com` |
+
+`salesforce-cdc-source.sh` also accepts test-specific overrides suffixed with `_KDP_CDC` (e.g. `SALESFORCE_USERNAME_KDP_CDC`), which take precedence over the shared variables when set.
+
+## How to run
+
+```bash
+playground run -f salesforce-cdc-source.sh
+```
+
+| Script | Description |
+| --- | --- |
+| `salesforce-cdc-source.sh` | Basic example |
+| `salesforce-cdc-source-proxy.sh` | Same, through an nginx forward proxy (`http.proxy=nginx-proxy:8888`); direct traffic from `connect` to Salesforce is blocked to make sure the proxy is used |
+
+## What the script does
+
+1. Starts the environment with an `sfdx-cli` container and the keystore mounted in `connect`.
+2. Creates the Salesforce CDC Source connector on channel `ContactChangeEvent`, writing to topic `sfdc-cdc-contacts` (JSON converter), and waits for the subscription.
+3. Logs in with the sfdx CLI (JWT) and creates a random Contact in Salesforce.
+4. Verifies the change event is received with `playground topic consume --topic sfdc-cdc-contacts`.
+5. Deletes the Contact created by the test on exit.
 
 ## Register a test account
 
@@ -14,11 +49,9 @@ Go to [Salesforce developer portal](https://developer.salesforce.com/signup/) an
 
 ## OAuth with JWT Bearer Flow
 
-### Generate a private Key and a Certificate
+### Generate a private key and a certificate
 
-The private key is used by the external app to sign the JWT and the digital certificate is used by Salesforce to validate the signature and issue an access token.
-
-Install OpenSSL and generate a private key and a digital certificate using the command line terminal.
+The private key is used by the external app to sign the JWT, and the digital certificate is used by Salesforce to validate the signature and issue an access token.
 
 For example:
 
@@ -53,57 +86,58 @@ keytool -importkeystore \
 
 ### Create a new External Client App
 
-Steps are:
-
-* Select the gear icon in the upper right hand corner and choose Setup.
-
+* Select the gear icon in the upper right hand corner and choose *Setup*.
 * Enter App in the Quick Find search box, and choose *External Client App Manager* in the filtered results.
-
 * Click the *New External Client App* button in the upper right corner of the Setup panel.
 
 ![Create a External Client App](../../connect/connect-salesforce-cdc-source/Screenshot2.png)
 
 * Supply a Connected App Name, API Name, and Contact Email. Distribution State can be set to Local. The API Name is automatically populated based on the Connected App Name.
-
-* Select *API (Enable OAuth Settings)* menu and click on *Enable OAuth* checkbox
-* Set the callback URL to `sfdc://oauth/jwt/success`
-* Selected OAuth Scopes : `Manage user data via APIs (api)` + `Perform requests at any time (refresh_token, offline_access)`
+* Select *API (Enable OAuth Settings)* menu and click on *Enable OAuth* checkbox.
+* Set the callback URL to `sfdc://oauth/jwt/success`.
+* Selected OAuth Scopes: `Manage user data via APIs (api)` + `Perform requests at any time (refresh_token, offline_access)`.
 * Select the *Enable JWT Bearer Flow* checkbox in *Flow Enablement* section.
-* Upload the digital certificate created in the previous step (`salesforce-confluent.crt` file)
-
+* Upload the digital certificate created in the previous step (`salesforce-confluent.crt` file).
 
 Example:
 
 ![Create a External Client app](../../connect/connect-salesforce-cdc-source/jwt-bearer-authentication1.png)
 
 * Save the External Client App, it takes between 2 and 10 minutes to be activated.
-* Look for the Consumer Key `SALESFORCE_CONSUMER_KEY_WITH_JWT` in the *Settings*/*OAuth Section*/*App Settings*/*Consumer Key and Secret* section. Save these so you can put them in the configuration for the Salesforce connector.
+* Look for the Consumer Key (`SALESFORCE_CONSUMER_KEY_WITH_JWT`) in the *Settings* / *OAuth Section* / *App Settings* / *Consumer Key and Secret* section.
 
-### Pre-Approve the External Client app with the User-Agent OAuth Flow
+### Pre-approve the External Client App with the User-Agent OAuth flow
 
-One way to pre-approve the External Client app is by using another simple OAuth Flow. We will use the User-Agent OAuth Flow in this example.
+One way to pre-approve the External Client App is by using another simple OAuth flow, the User-Agent OAuth flow.
 
-With your environment variables correctly set, do:
+With your environment variables set, run:
 
 ```bash
 echo "$SALESFORCE_INSTANCE/services/oauth2/authorize?response_type=token&client_id=$SALESFORCE_CONSUMER_KEY_WITH_JWT&redirect_uri=sfdc://oauth/jwt/success"
 ```
 
-Copy and paste this link in the browser
-
-Login to Salesforce and authorize the External Client app.
+Open this link in a browser, log in to Salesforce and authorize the External Client App.
 
 ![Approve External Client app](../../connect/connect-salesforce-cdc-source/jwt-bearer-authentication2.png)
 
 ### Relax IP restrictions
 
-Go to `External Client App Manager` and Relax IP restrictions:
+Go to *External Client App Manager* and relax IP restrictions:
 
-![Relax IP restrictions](jwt-bearer-authentication3.png)
+![Relax IP restrictions](../../connect/connect-salesforce-cdc-source/jwt-bearer-authentication3.png)
 
-### Troubleshooting
+## Find your security token
 
-* If it fails, check the logs in Salesforce: `Setup` -> `Login History` and look for the error message.
+Find your security token (emailed to you from Salesforce.com). To reset it, select *Settings* -> *My Personal Information* -> *Reset My Security Token* and follow the instructions.
 
+![security token](../../connect/connect-salesforce-cdc-source/Screenshot1.png)
 
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+## Enable Change Data Capture
+
+Search for *Change Data Capture* in Setup and select `Contact`:
+
+![Change Data Capture](../../connect/connect-salesforce-cdc-source/Screenshot5.png)
+
+## Troubleshooting
+
+* If authentication fails, check the logs in Salesforce: *Setup* -> *Login History* and look for the error message.

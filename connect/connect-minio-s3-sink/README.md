@@ -1,94 +1,45 @@
 # S3 Sink connector with Minio
 
-
-
 ## Objective
 
-Quickly test [S3 Sink](https://docs.confluent.io/current/connect/kafka-connect-s3/index.html#kconnect-long-amazon-s3-sink-connector) connector with [Minio](https://min.io).
+Quickly test the [S3 Sink](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html) connector with [Minio](https://min.io).
 
+## Prerequisites
 
+Not supported with the `cfk` environment. With CP 8.x, the minimum supported connector version is 10.6.0 (the script exits with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for minio-sink.sh in this folder
-```
-
-Minio UI is accessible at [http://127.0.0.1:9000](http://127.0.0.1:9000]) (`AKIAIOSFODNN7EXAMPLE`/`wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY`)
-
-## Details of what the script is doing
-
-The connector is created with:
-
 ```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.s3.S3SinkConnector",
-               "tasks.max": "1",
-               "topics": "minio-topic",
-               "s3.bucket.name": "mybucket",
-               "s3.part.size": 5242880,
-               "store.url": "http://minio:9000",
-               "flush.size": "3",
-               "storage.class": "io.confluent.connect.s3.storage.S3Storage",
-               "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
-               "schema.generator.class": "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator",
-               "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
-               "schema.compatibility": "NONE"
-          }' \
-     http://localhost:8083/connectors/minio-sink/config | jq .
+playground run -f minio-sink.sh
 ```
 
-Messages are sent to `minio-topic` topic using:
+Minio UI is accessible at [http://127.0.0.1:9000](http://127.0.0.1:9000), using the access key and secret key from the [`credentials`](credentials) file (AWS documentation placeholder keys).
 
-```bash
-$ playground topic produce -t minio-topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
-{
-  "type": "record",
-  "name": "myrecord",
-  "fields": [
-    {
-      "name": "f1",
-      "type": "string"
-    }
-  ]
-}
-EOF
-```
+## What the script does
 
-After a few seconds, Minio should contain files in bucket:
+1. Starts the environment with a Minio container, and creates bucket `mybucket` (helper container `create-buckets`).
+2. Creates the S3 sink connector `minio-sink` (`store.url=http://minio:9000`, Avro format, `flush.size=3`).
+3. Produces 10 Avro records to topic `minio-topic` with `playground topic produce`.
+4. Lists the objects of bucket `mybucket` (helper container `list-buckets`).
+5. Copies one of the Avro files locally (helper container `copy-files`) and displays its content with `playground tools read-avro-file`.
+
+After a few seconds, Minio should contain files in the bucket:
 
 ![Minio](Screenshot1.png)
 
+Example of listing:
 
-Listing objects of bucket `mybucket` in Minio:
-
-```bash
-$ docker container restart list-buckets
-$ docker container logs --tail=4 list-buckets
-```
-
-```
-Added `myminio` successfully.
+```text
 [2020-02-05 12:41:28 UTC]    213B topics/minio-topic/partition=0/minio-topic+0+0000000000.avro
 [2020-02-05 12:41:28 UTC]    213B topics/minio-topic/partition=0/minio-topic+0+0000000003.avro
 [2020-02-05 12:41:28 UTC]    213B topics/minio-topic/partition=0/minio-topic+0+0000000006.avro
 ```
 
-Getting one of the avro files locally and displaying content with avro-tools:
-
-```bash
-$ docker container restart copy-files
-$ docker container logs --tail=3 copy-files
-$ playground  tools read-avro-file --file /tmp/minio-topic+0+0000000000.avro
-```
+Content of `minio-topic+0+0000000000.avro`:
 
 ```json
 {"f1":"value1"}
 {"f1":"value2"}
 {"f1":"value3"}
 ```
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

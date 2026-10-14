@@ -1,85 +1,23 @@
 # Vertica sink connector
 
-
-
 ## Objective
 
-Quickly test [Vertica](https://docs.confluent.io/current/connect/kafka-connect-vertica/sink/index.html#quick-start) connector.
+Quickly test the [Vertica](https://docs.confluent.io/kafka-connectors/vertica/current/overview.html) sink connector.
 
+## Prerequisites
 
-
+* With CP 8.x, connector version 1.3.0 or later.
+* `vertica-jdbc.jar` is extracted from the Vertica client 10.0.1 package (downloaded from vertica.com) on the first run and copied into the connector `lib` folder.
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for vertica-sink.sh in this folder
-```
-
-## Details of what the script is doing
-
-
-Create the table and insert data.
-
 ```bash
-$ docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-create table mytable(f1 varchar(20));
-EOF
+playground run -f vertica-sink.sh
 ```
 
+## What the script does
 
-Sending messages to topic mytable
-
-```bash
-$ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mytable --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
-```
-
-Creating Vertica sink connector
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class" : "io.confluent.vertica.VerticaSinkConnector",
-                    "tasks.max" : "1",
-                    "vertica.database": "docker",
-                    "vertica.host": "vertica",
-                    "vertica.port": "5433",
-                    "vertica.username": "dbadmin",
-                    "vertica.password": "",
-                    "topics": "mytable",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/vertica-sink/config | jq .
-```
-
-
-Check data is in Vertica
-
-```bash
-$ docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-select * from mytable;
-EOF
-```
-
-Results:
-
-```
-   f1
----------
- value10
- value1
- value5
- value3
- value8
- value6
- value9
- value4
- value7
- value2
-(10 rows)
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+1. Starts a Vertica container and waits for `Vertica is now running`.
+2. Produces 10 Avro records (`{"f1":"value%g"}`) to topic `mytable`.
+3. Creates the Vertica sink connector writing to database `docker` on `vertica:5433` as `dbadmin`, with `auto.create=true`.
+4. Runs `select * from mytable;` with `vsql` in the `vertica` container and checks the rows are present.

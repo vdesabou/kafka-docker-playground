@@ -1,91 +1,38 @@
 # JDBC Vertica sink connector
 
-
-
 ## Objective
 
-Quickly test [JDBC Sink](https://docs.confluent.io/current/connect/kafka-connect-jdbc/sink-connector/index.html#jdbc-sink-connector-for-cp) connector with Vertica.
+Quickly test the [JDBC Sink](https://docs.confluent.io/kafka-connectors/jdbc/current/sink-connector/overview.html) connector with Vertica (`cjonesy/docker-vertica`), using the Vertica JDBC driver from the Vertica 10.0.1 client.
 
+## Prerequisites
 
-
+With CP 8.x, the JDBC connector version must be 10.8.0 or later (the script exits with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for vertica-sink.sh in this folder
-```
-
-## Details of what the script is doing
-
-
-Create the table and insert data.
-
 ```bash
-$ docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-create table mytable(f1 varchar(20));
-EOF
+playground run -f vertica-sink.sh
 ```
 
+| Script | Description |
+| --- | --- |
+| `vertica-sink.sh` | JDBC sink writing Avro records to a Vertica table |
 
-Sending messages to topic mytable
+## What the script does
 
-```bash
-$ playground topic produce -t mytable --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
-{
-  "type": "record",
-  "name": "myrecord",
-  "fields": [
-    {
-      "name": "f1",
-      "type": "string"
-    }
-  ]
-}
-EOF
-```
+1. Downloads the Vertica client and extracts `vertica-jdbc.jar` if needed, then copies it into the JDBC connector `lib` folder.
+2. Starts Vertica alongside the plaintext environment and waits for `Vertica is now running`.
+3. Creates table `docker.mytable (f1 varchar(20))` with `vsql`.
+4. Produces 10 Avro records (`{"f1":"value<n>"}`) to topic `mytable` with `playground topic produce`.
+5. Creates the `jdbc-vertica-sink` connector (`jdbc:vertica://vertica:5433/docker`, user `dbadmin`, `auto.create=true`).
+6. Runs `select * from docker.mytable;` with `vsql` and checks that `value1` is present:
 
-Creating JDBC Vertica sink connector
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class" : "io.confluent.connect.jdbc.JdbcSinkConnector",
-                    "tasks.max" : "1",
-                    "connection.url": "jdbc:vertica://vertica:5433/docker?user=dbadmin&password=",
-                    "auto.create": "true",
-                    "topics": "mytable"
-          }' \
-     http://localhost:8083/connectors/jdbc-vertica-sink/config | jq .
-```
-
-
-Check data is in Vertica
-
-```bash
-$ docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-select * from mytable;
-EOF
-```
-
-Results:
-
-```
+```text
    f1
 ---------
  value10
  value1
- value5
- value3
- value8
- value6
- value9
- value4
- value7
+ ...
  value2
 (10 rows)
 ```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

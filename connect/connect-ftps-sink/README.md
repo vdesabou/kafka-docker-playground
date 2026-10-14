@@ -1,96 +1,33 @@
 # FTPS Sink connector
 
-
-
 ## Objective
 
-Quickly test [FTPS Sink](https://docs.confluent.io/current/connect/kafka-connect-ftps/sink/index.html#ftps-sink-connector-for-cp) connector.
+Quickly test the [FTPS Sink](https://docs.confluent.io/current/connect/kafka-connect-ftps/sink/index.html#ftps-sink-connector-for-cp) connector.
 
+## Prerequisites
 
+This is a preview connector, not supported with CP 8.0 and later: the script exits with code 111 when CP 8.x is used (use `--tag 7.9.x` or earlier).
 
 ## How to run
 
-
-Simply run:
-
 ```bash
-$ just use <playground run> command and search for ftps-sink.sh in this folder
+playground run -f ftps-sink.sh --tag 7.9.0
 ```
 
+| Script | Description |
+| --- | --- |
+| `ftps-sink.sh` | Sink Avro records to a vsftpd FTPS server (explicit mode, port 220), one Avro file per record |
 
-## Details of what the script is doing
+## What the script does
 
-The connector is created with:
+1. Generates the keystore/truststore with `playground tools certs-create` and the vsftpd certificate with `openssl`.
+2. Creates the `ftps-sink` connector (`AvroFormat`, `flush.size=1`) connecting to `ftps-server` as user `bob`.
+3. Produces 10 Avro records to topic `test_ftps_sink` with `playground topic produce`.
+4. Lists `/home/vsftpd/bob/test_ftps_sink/partition=0/` on the FTPS server.
+5. Copies the first file locally with `playground container cp` and displays it with `playground tools read-avro-file`.
 
-Creating FTPS Sink connector
+Expected result:
 
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "tasks.max": "3",
-               "connector.class": "io.confluent.connect.ftps.FtpsSinkConnector",
-               "ftps.working.dir": "/",
-               "ftps.username":"bob",
-               "ftps.password":"test",
-               "ftps.host":"ftps-server",
-               "ftps.port":"220",
-               "ftps.security.mode": "EXPLICIT",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "ftps.ssl.truststore.location": "/etc/kafka/secrets/kafka.ftps-server.truststore.jks",
-               "ftps.ssl.truststore.password": "confluent",
-               "ftps.ssl.keystore.location": "/etc/kafka/secrets/kafka.ftps-server.keystore.jks",
-               "ftps.ssl.key.password": "confluent",
-               "ftps.ssl.keystore.password": "confluent",
-               "topics": "test_ftps_sink",
-               "key.converter": "io.confluent.connect.avro.AvroConverter",
-               "key.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "format.class": "io.confluent.connect.ftps.sink.format.avro.AvroFormat",
-               "flush.size": "1"
-          }' \
-     http://localhost:8083/connectors/ftps-sink/config | jq .
-```
-
-Sending messages to topic `test_ftps_sink`
-
-```bash
-$ playground topic produce -t test_ftps_sink --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
-{
-  "type": "record",
-  "name": "myrecord",
-  "fields": [
-    {
-      "name": "f1",
-      "type": "string"
-    }
-  ]
-}
-EOF
-```
-
-Listing content of `/home/vsftpd/bob/test_ftps_sink/partition\=0/`
-
-```bash
-$ docker exec sftp-server bash -c "ls /home/vsftpd/bob/test_ftps_sink/partition\=0/"
-test_ftps_sink+0+0000000000.avro
-test_ftps_sink+0+0000000001.avro
-test_ftps_sink+0+0000000002.avro
-test_ftps_sink+0+0000000003.avro
-test_ftps_sink+0+0000000004.avro
-test_ftps_sink+0+0000000005.avro
-test_ftps_sink+0+0000000006.avro
-test_ftps_sink+0+0000000007.avro
-test_ftps_sink+0+0000000008.avro
-test_ftps_sink+0+0000000009.avro
-```
-
-```bash
-playground  tools read-avro-file --file /tmp/test_ftps_sink+0+0000000000.avro
+```json
 {"f1":"value1"}
 ```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

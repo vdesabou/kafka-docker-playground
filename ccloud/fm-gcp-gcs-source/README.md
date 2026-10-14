@@ -1,45 +1,62 @@
 # Fully Managed GCS Source connector
 
-
-
 ## Objective
 
-Quickly test [Fully Managed GCS Source](https://docs.confluent.io/cloud/current/connectors/cc-gcs-source.html) connector.
-
-* Active Google Cloud Platform (GCP) account with authorization to create resources
+Quickly test the [Fully Managed GCS Source](https://docs.confluent.io/cloud/current/connectors/cc-gcs-source.html) connector.
 
 ## Prerequisites
 
-See [here](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)
+See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).
 
+You need an active Google Cloud Platform (GCP) account with authorization to create resources.
 
-## Prepare a Bucket
+| Variable | Description |
+| --- | --- |
+| `GCP_PROJECT` | GCP project id (required) |
+| `GCP_KEYFILE_CONTENT` | Service account key content, only needed if `keyfile.json` is not present in this folder |
 
-[Instructions](https://docs.confluent.io/current/connect/kafka-connect-gcs/index.html#prepare-a-bucket)
+GCP credentials: rename the service account key to `keyfile.json` and place it in this folder, or export `GCP_KEYFILE_CONTENT`, generated with:
 
-* Create `Service Account` from IAM & Admin console:
+```bash
+GCP_KEYFILE_CONTENT=$(cat keyfile.json | jq -aRs . | sed 's/^"//' | sed 's/"$//')
+```
 
-Set `Service account name`:
+### Service account setup
+
+[Instructions](https://docs.confluent.io/kafka-connect-gcs-sink/current/overview.html)
+
+* Create a `Service Account` from the IAM & Admin console and set the `Service account name`:
 
 ![Service Account setup](Screenshot1.png)
 
-Choose permission `Storage Admin` (probably not required to have all of them):
+* Choose permission `Storage Admin` (probably not all of them are required):
 
 ![Service Account setup](Screenshot2.png)
 
-Create Key:
+* Create a key:
 
 ![Service Account setup](Screenshot3.png)
 
-Download it as JSON:
+* Download it as JSON:
 
 ![Service Account setup](Screenshot4.png)
-
-Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment variable `GCP_KEYFILE_CONTENT` with content generated with `GCP_KEYFILE_CONTENT=$(cat keyfile.json | jq -aRs . | sed 's/^"//' | sed 's/"$//')
-
 
 ## How to run
 
 ```bash
-$ just use <playground run> 
+playground run -f fully-managed-gcs-source.sh
 ```
+
+The script takes an optional positional argument: the bucket region (default `europe-west2`, also used as Confluent Cloud region).
+
+| Script | Description |
+| --- | --- |
+| `fully-managed-gcs-source.sh` | Reads a JSON file from a GCS bucket (generalized mode) |
+
+## What the script does
+
+1. Bootstraps the Confluent Cloud environment on GCP and recreates topic `quick-start-topic`.
+2. Creates the bucket if needed, labels it, and uploads `generalized.quickstart.json` to `quickstart/`.
+3. Creates the `GcsSource` fully managed connector (`topics.dir` `quickstart`, `topic.regex.list` `quick-start-topic:.*`, JSON in and out).
+4. Verifies that at least 9 records are in `quick-start-topic` (`playground topic consume`).
+5. Asks before deleting the connector.

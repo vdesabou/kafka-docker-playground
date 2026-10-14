@@ -1,68 +1,35 @@
 # MQTT Sink connector
 
-
-
 ## Objective
 
-Quickly test [MQTT Sink](https://docs.confluent.io/kafka-connectors/mqtt/current/mqtt-sink-connector/overview.html) connector.
+Quickly test the [MQTT Sink](https://docs.confluent.io/kafka-connectors/mqtt/current/mqtt-sink-connector/overview.html) connector with a Mosquitto broker.
 
+## Prerequisites
+
+With CP 8.x, the minimum supported connector version is 1.7.5 (the script exits with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for mqtt-sink.sh in this folder
+```bash
+playground run -f mqtt-sink.sh
 ```
 
-or with mTLS:
+| Script | Description |
+| --- | --- |
+| `mqtt-sink.sh` | Basic example, `tcp://mosquitto:1883` with username/password |
+| `mqtt-sink-mtls.sh` | Same, with mTLS (`ssl://mosquitto:8883`, certificates generated with `playground tools certs-create`) |
 
-```
-$ just use <playground run> command and search for mqtt-sink-mtls.sh in this folder
-```
+## What the script does
 
-## Details of what the script is doing
+1. Starts the environment with a Mosquitto container (`mtls` variant: first generates keystores, truststores and certificates for `connect` and `mosquitto` in `security/`).
+2. Produces one message to topic `sink-messages` with `playground topic produce`.
+3. Creates the MQTT sink connector (`sink-mqtt` or `sink-mqtt-mtls`), with `mqtt.qos=2`.
+4. Verifies with `mosquitto_sub` that the message is received in MQTT topic `sink-messages`.
 
-Note: The `./password` file was created with (`myuser/mypassword`) and command:
+## Notes
+
+The `password` file was created for user `myuser` (password `mypassword`) with:
 
 ```bash
-$ mosquitto_passwd -c password myuser
+mosquitto_passwd -c password myuser
 ```
-
-Sending messages to topic sink-messages
-
-```bash
-$ docker exec -i broker kafka-console-producer --bootstrap-server broker:9092 --topic sink-messages << EOF
-This is my message
-EOF
-```
-
-Creating MQTT Sink connector
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.mqtt.MqttSinkConnector",
-                    "tasks.max": "1",
-                    "mqtt.server.uri": "tcp://mosquitto:1883",
-                    "topics":"sink-messages",
-                    "mqtt.qos": "2",
-                    "mqtt.username": "myuser",
-                    "mqtt.password": "mypassword",
-                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/sink-mqtt/config | jq .
-```
-
-Verify we have received messages in MQTT sink-messages topic
-
-```bash
-docker exec mosquitto sh -c 'mosquitto_sub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "sink-messages" -C 1'
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

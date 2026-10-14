@@ -1,32 +1,55 @@
 # Fully Managed Salesforce Bulk API 2.0 Sink connector
 
-
-
 ## Objective
 
-Quickly test [Fully Managed Salesforce Bulk API 2.0 Sink](https://docs.confluent.io/cloud/current/connectors/cc-salesforce-bulk-api-v2-sink.html) connector.
+Quickly test the [Salesforce Bulk API 2.0 Sink](https://docs.confluent.io/cloud/current/connectors/cc-salesforce-bulk-api-v2-sink.html) fully managed connector.
 
-
-
-## Register a test account
-
-Go to [Salesforce developer portal](https://developer.salesforce.com/signup/) and register an account.
-
-## OAuth with JWT Bearer Flow
-
-Follow instructions from [here](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-salesforce-cdc-source#oauth-with-jwt-bearer-flow) to create the External Client App with the JWT Bearer Flow.
-
-
-
-
-## How to run
-
-Simply run:
-
-```
-$ just use <playground run> command and search for salesforce-bukapi-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> .sh in this folder
-```
+Leads are captured from a first Salesforce account with the Salesforce PushTopic Source connector, then written to a second Salesforce account with the Bulk API 2.0 Sink connector. Both connectors use the OAuth JWT Bearer flow.
 
 ## Prerequisites
 
-See [here](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)
+See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).
+
+* Two Salesforce accounts, each with an External Client App using the JWT Bearer flow (see [Salesforce setup](#salesforce-setup))
+* `salesforce-confluent.keystore.jks` (password `confluent`, it contains the private key matching the certificate of the External Client App) in this folder. If it is missing, the script tries to download it from the playground S3 bucket (Confluent employees only).
+
+| Variable | Description |
+| --- | --- |
+| `SALESFORCE_USERNAME` | Username of account #1 (source) |
+| `SALESFORCE_PASSWORD` | Password of account #1 |
+| `SALESFORCE_SECURITY_TOKEN` | Security token of account #1 |
+| `SALESFORCE_CONSUMER_KEY_WITH_JWT` | Consumer key of the JWT External Client App of account #1 |
+| `SALESFORCE_INSTANCE` | Optional, defaults to `https://login.salesforce.com` |
+| `SALESFORCE_USERNAME_ACCOUNT2` | Username of account #2 (sink) |
+| `SALESFORCE_PASSWORD_ACCOUNT2` | Password of account #2 |
+| `SALESFORCE_SECURITY_TOKEN_ACCOUNT2` | Security token of account #2 |
+| `SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2` | Consumer key of the JWT External Client App of account #2 |
+| `SALESFORCE_INSTANCE_ACCOUNT2` | Optional, defaults to `https://login.salesforce.com` |
+
+## How to run
+
+```bash
+playground run -f fully-managed-salesforce-bulkapi-2-0-sink.sh
+```
+
+| Script | Description |
+| --- | --- |
+| `fully-managed-salesforce-bulkapi-2-0-sink.sh` | PushTopic Source on account #1, Bulk API 2.0 Sink to account #2 (Avro) |
+
+## What the script does
+
+1. Bootstraps the Confluent Cloud environment, recreates topic `sfdc-pushtopic-leads-bulk-sink-v2` and starts an `sfdx-cli` container.
+2. Logs in to account #1 with the sfdx CLI and (re)creates a Lead PushTopic with a name unique to the run.
+3. Creates the fully managed `SalesforcePushTopicSource` connector writing Leads to `sfdc-pushtopic-leads-bulk-sink-v2`.
+4. Creates a random Lead in account #1 and verifies it with `playground topic consume`.
+5. Creates the fully managed `SalesforceBulkApiV2Sink` connector writing the topic to the `Lead` object of account #2.
+6. Verifies the `success-<connector id>` topic and queries account #2 with the sfdx CLI to find the Lead.
+7. Deletes the created Leads and PushTopic on exit, and asks whether to delete the connectors.
+
+## Salesforce setup
+
+1. Register a test account on the [Salesforce developer portal](https://developer.salesforce.com/signup/).
+2. Create an External Client App with the OAuth JWT Bearer flow, following [OAuth with JWT Bearer Flow](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-salesforce-cdc-source#oauth-with-jwt-bearer-flow). Its consumer key is `SALESFORCE_CONSUMER_KEY_WITH_JWT`.
+3. Get your security token from *Settings* -> *My Personal Information* -> *Reset My Security Token*:
+
+![security token](Screenshot1.png)

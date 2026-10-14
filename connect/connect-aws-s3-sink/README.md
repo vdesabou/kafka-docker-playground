@@ -1,145 +1,45 @@
 # S3 Sink connector
 
-
-
 ## Objective
 
-Quickly test [S3 Sink](https://docs.confluent.io/current/connect/kafka-connect-s3/index.html#kconnect-long-amazon-s3-sink-connector) connector.
+Quickly test the [S3 Sink](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html) connector.
 
-## AWS Setup
+## Prerequisites
 
-* Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
-* Set up [AWS Credentials](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html#aws-credentials)
+- An [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws), see also [AWS Credentials](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html#aws-credentials).
+- AWS credentials: export `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_REGION`, or configure `~/.aws/credentials` and `~/.aws/config`.
+- Version guards (the scripts exit with code `111` otherwise): with CP 8.0+, connector version 10.6.0 or later is required when `--connector-tag` is set.
 
-You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or set files `~/.aws/credentials` and `~/.aws/config`.
+Additional inputs for the IAM role variants:
 
+| Variable / file | Used by | Description |
+| --- | --- | --- |
+| `$HOME/.aws/credentials-with-assuming-iam-role` | `s3-sink-with-assuming-iam-role.sh`, `s3-sink-proxy-with-assuming-iam-role.sh` | AWS credentials file configured to assume the IAM role, mounted as `~/.aws/credentials` in the Connect container (with your `~/.aws/config`) |
+| `AWS_STS_ROLE_ARN` | `s3-sink-with-assuming-iam-role-config.sh`, `s3-sink-assuming-iam-role-with-custom-aws-credential-provider.sh` (optional for `s3-sink-irsa.sh`) | ARN of the IAM role to assume |
+| `AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID` | `s3-sink-with-assuming-iam-role-config.sh`, `s3-sink-assuming-iam-role-with-custom-aws-credential-provider.sh` | Access key of the account allowed to assume the role |
+| `AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY` | `s3-sink-with-assuming-iam-role-config.sh`, `s3-sink-assuming-iam-role-with-custom-aws-credential-provider.sh` | Secret key of the account allowed to assume the role |
+| `AWS_ROLE_ARN` | `s3-sink-irsa.sh` | IAM role ARN associated with the EKS service account |
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for s3-sink.sh in this folder
-```
-
-If you want to assume IAM roles:
-
-```
-$ just use <playground run> command and search for s3-sink-with-assuming-iam-role.sh in this folder
-```
-
-or
-
-```
-$ just use <playground run> command and search for s3-sink-with-assuming-iam-role-config<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> .sh in this folder
-```
-
-or with AssumeRole using custom AWS credentials provider (⚠️ custom code is just an example, there is no support for it):
-
-```
-$ just use <playground run> command and search for s3-sink-assuming-iam-role-with-custom-aws-credential-provider.sh in this folder
-```
-
-Note: you can also export these values as environment variable
-
-## Details of what the script is doing
-
-Creating bucket name <$AWS_BUCKET_NAME>, if required
-
 ```bash
-$ if [ "$AWS_REGION" == "us-east-1" ]
-then
-    aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION
-    aws s3api put-bucket-tagging --bucket $AWS_BUCKET_NAME --tagging "TagSet=[{Key=cflt_managed_by,Value=user},{Key=cflt_managed_id,Value=$USER}]"
-else
-    aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
-    aws s3api put-bucket-tagging --bucket $AWS_BUCKET_NAME --tagging "TagSet=[{Key=cflt_managed_by,Value=user},{Key=cflt_managed_id,Value=$USER}]"
-fi
+playground run -f s3-sink.sh
 ```
 
-The connector is created with:
+| Script | Description |
+| --- | --- |
+| `s3-sink.sh` | Static credentials (`aws.access.key.id` / `aws.secret.access.key`) |
+| `s3-sink-proxy.sh` | Same, going through an nginx forward proxy (`s3.proxy.url=http://nginx-proxy:8888`) |
+| `s3-sink-proxy-basic-auth.sh` | Same, going through a squid forward proxy with basic authentication (`s3.proxy.user` / `s3.proxy.password`) |
+| `s3-sink-with-assuming-iam-role.sh` | Default credentials provider chain, with an AWS credentials file that assumes an IAM role mounted in the Connect container (not supported with `cfk`) |
+| `s3-sink-with-assuming-iam-role-config.sh` | Built-in `io.confluent.connect.s3.auth.AwsAssumeRoleCredentialsProvider` configured with `s3.credentials.provider.sts.role.arn`, using the assume-role account keys as `aws.access.key.id` / `aws.secret.access.key` |
+| `s3-sink-assuming-iam-role-with-custom-aws-credential-provider.sh` | AssumeRole with a custom AWS credentials provider (`com.github.vdesabou.AwsAssumeRoleCredentialsProvider`, built from `awscredentialsprovider` or `awscredentialsprovider-v2` for connector 11.x). ⚠️ The custom code is only an example and is not supported |
+| `s3-sink-irsa.sh` | Custom `com.github.vdesabou.AwsAssumeRoleIrsaCredentialsProvider` (built from `awscredentialsprovider-v2-irsa`) for IAM Roles for Service Accounts (IRSA) in EKS. ⚠️ Not supported; outside EKS the web identity token and `AWS_ROLE_ARN` are not injected in the Connect container |
+| `s3-sink-proxy-with-assuming-iam-role.sh` | Proxy + assuming IAM role: always exits with code `111`, it does not work because of [aws/aws-sdk-java#2558](https://github.com/aws/aws-sdk-java/issues/2558) |
 
-```
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.s3.S3SinkConnector",
-               "tasks.max": "1",
-               "topics": "s3-topic",
-               "s3.region": "$AWS_REGION",
-               "s3.bucket.name": "$AWS_BUCKET_NAME",
-               "s3.part.size": "52428801",
-               "flush.size": "3",
-               "storage.class": "io.confluent.connect.s3.storage.S3Storage",
-               "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
-               "schema.compatibility": "NONE"
-          }' \
-     http://localhost:8083/connectors/s3-sink/config | jq .
-```
+## What the script does
 
-Messages are sent to `s3-topic` topic using:
-
-```
-$ playground topic produce -t s3-topic --nb-messages 10 --forced-value '{"f1":"value%g"}' << 'EOF'
-{
-  "type": "record",
-  "name": "myrecord",
-  "fields": [
-    {
-      "name": "f1",
-      "type": "string"
-    }
-  ]
-}
-EOF
-```
-
-After a few seconds, S3 should contain files in bucket:
-
-```
-$ aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
-```
-
-Results:
-
-```json
-{
-    "Contents": [
-        {
-            "Key": "topics/s3-topic/partition=0/s3-topic+0+0000000000.avro",
-            "LastModified": "2020-09-09T10:00:02.000Z",
-            "ETag": "\"e3df080e778bf44ddef575a8b9157f7f-1\"",
-            "Size": 213,
-            "StorageClass": "STANDARD",
-            "Owner": {
-                "DisplayName": "aws-confluent-cops-root",
-                "ID": "9185230836bd0b811896b3dc97974c8cb986dbcbf58ed554d6e9e6412a237e60"
-            }
-        },
-        {
-            "Key": "topics/s3-topic/partition=0/s3-topic+0+0000000003.avro",
-            "LastModified": "2020-09-09T10:00:03.000Z",
-            "ETag": "\"5d5d23e9b245019ceeacb9e579fe1091-1\"",
-            "Size": 213,
-            "StorageClass": "STANDARD",
-            "Owner": {
-                "DisplayName": "aws-confluent-cops-root",
-                "ID": "9185230836bd0b811896b3dc97974c8cb986dbcbf58ed554d6e9e6412a237e60"
-            }
-        },
-        {
-            "Key": "topics/s3-topic/partition=0/s3-topic+0+0000000006.avro",
-            "LastModified": "2020-09-09T10:00:04.000Z",
-            "ETag": "\"3dceb80cbe9e6eb01b3a63395ef8c18a-1\"",
-            "Size": 213,
-            "StorageClass": "STANDARD",
-            "Owner": {
-                "DisplayName": "aws-confluent-cops-root",
-                "ID": "9185230836bd0b811896b3dc97974c8cb986dbcbf58ed554d6e9e6412a237e60"
-            }
-        }
-    ]
-}
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+1. Creates the bucket `pgbucket<user>` in `AWS_REGION` if required, and empties the per-run folder used as `topics.dir`.
+2. Creates the S3 sink connector (`io.confluent.connect.s3.S3SinkConnector`) with `AvroFormat` and `flush.size=3`.
+3. Produces 10 Avro records to topic `s3-topic` with `playground topic produce`.
+4. Downloads `s3-topic/partition=0/s3-topic+0+0000000000.avro` from the bucket and displays it with `playground tools read-avro-file`.

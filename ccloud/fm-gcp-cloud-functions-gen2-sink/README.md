@@ -1,18 +1,31 @@
 # Fully Managed Google Cloud Functions Gen 2 Sink connector
 
-
-
 ## Objective
 
-Quickly test [Fully Managed Google Cloud Functions Gen 2 Sink](https://docs.confluent.io/cloud/current/connectors/cc-google-cloud-functions-gen2-sink.html) connector.
+Quickly test the [Fully Managed Google Cloud Functions Gen 2 Sink](https://docs.confluent.io/cloud/current/connectors/cc-google-cloud-functions-gen2-sink.html) connector.
 
+## Prerequisites
 
-* Active Google Cloud Platform (GCP) account with authorization to create resources
+See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).
 
-## Google Cloud Functions Setup
+You need an active Google Cloud Platform (GCP) account with authorization to create resources.
 
-* Navigate to the [Google Cloud Console](https://console.cloud.google.com/)
+| Variable | Description |
+| --- | --- |
+| `GCP_PROJECT` | GCP project id (required) |
+| `GCP_KEYFILE_CONTENT` | Service account key content, only needed if `keyfile.json` is not present in this folder |
 
+GCP credentials: place the service account key as `keyfile.json` in this folder, or export `GCP_KEYFILE_CONTENT`, generated with:
+
+```bash
+GCP_KEYFILE_CONTENT=$(cat keyfile.json | jq -aRs . | sed 's/^"//' | sed 's/"$//')
+```
+
+The service account must have the `Cloud Run Invoker` role.
+
+### Google Cloud Functions setup
+
+* Navigate to the [Google Cloud Console](https://console.cloud.google.com/).
 * Go to the [Cloud Functions](https://console.cloud.google.com/functions) tab.
 
 ![Cloud functions setup](Screenshot1.png)
@@ -21,19 +34,29 @@ Quickly test [Fully Managed Google Cloud Functions Gen 2 Sink](https://docs.conf
 
 ![Cloud functions setup](Screenshot2.png)
 
-Note down the project id, the region (example `us-central1`), and the function name (example `function-1`) as they will be used later.
-
-N.B: make sure service account has `Cloud Run Invoker` role.
-
-## Prerequisites
-
-See [here](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)
-
+Note down the region (e.g. `us-central1`) and the function name (e.g. `function-1`): they are passed to the script.
 
 ## How to run
 
-Simply run:
+```bash
+playground run -f fully-managed-google-cloud-functions-gen2-sink.sh
+```
+
+The script takes two optional positional arguments: the function region (default `europe-west2`, also used as Confluent Cloud region) and the function name (default `function-11`), e.g.:
 
 ```bash
-$ just use <playground run> command and search for fully-managed-google-cloud-functions<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <GCP_FUNCTION_REGION> <GCP_FUNCTION_FUNCTION> .sh in this folder
+playground run -f fully-managed-google-cloud-functions-gen2-sink.sh us-central1 function-1
 ```
+
+| Script | Description |
+| --- | --- |
+| `fully-managed-google-cloud-functions-gen2-sink.sh` | Sends Avro records to a Google Cloud Function (Gen 2) |
+
+## What the script does
+
+1. Authenticates `gcloud` with the service account key.
+2. Bootstraps the Confluent Cloud environment on GCP in the function region.
+3. Recreates topic `functions-gen2-messages` and produces 10 Avro records.
+4. Creates the `GoogleCloudFunctionsGen2Sink` fully managed connector pointing to the function.
+5. Verifies that 10 records land in the `success-<connector id>` topic (`playground topic consume`).
+6. Asks before deleting the connector.

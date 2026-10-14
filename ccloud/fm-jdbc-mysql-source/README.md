@@ -1,51 +1,41 @@
 # Fully Managed JDBC MySQL Source connector
 
-
-
 ## Objective
 
-Quickly test [Fully Managed MySQL Source](https://docs.confluent.io/cloud/current/connectors/cc-mysql-source.html) connector with MySQL.
+Quickly test the [Fully Managed MySQL Source](https://docs.confluent.io/cloud/current/connectors/cc-mysql-source.html) connector.
 
-
-
-
-## How to run
-
-Without SSL:
-
-```
-$ just use <playground run> command and search for fully-managed-mysql.sh in this folder
-```
-
-with SSL encryption:
-
-```
-$ just use <playground run> command and search for fully-managed-mysql-ssl.sh in this folder
-```
-
-
-## Exposing docker container over internet
-
-**🚨WARNING🚨** It is considered a security risk to run this example on your personal machine since you'll be exposing a TCP port over internet using [Ngrok](https://ngrok.com). It is strongly encouraged to run it on a AWS EC2 instance where you'll use [Confluent Static Egress IP Addresses](https://docs.confluent.io/cloud/current/networking/static-egress-ip-addresses.html#use-static-egress-ip-addresses-with-ccloud) (only available for public endpoints on AWS) to allow traffic from your Confluent Cloud cluster to your EC2 instance using EC2 Security Group.
-
-Example in order to set EC2 Security Group with Confluent Static Egress IP Addresses and port 1414:
-
-```bash
-group=$(aws ec2 describe-instances --instance-id <$ec2-instance-id> --output=json | jq '.Reservations[] | .Instances[] | {SecurityGroups: .SecurityGroups}' | jq -r '.SecurityGroups[] | .GroupName')
-aws ec2 authorize-security-group-ingress --group-name $group --protocol tcp --port 1414 --cidr 13.36.88.88/32
-aws ec2 authorize-security-group-ingress --group-name $group --protocol tcp --port 1414 --cidr 13.36.88.89/32
-etc...
-```
-
-An [Ngrok](https://ngrok.com) auth token is necessary in order to expose the Docker Container port to internet, so that fully managed connector can reach it.
-
-You can sign up at https://dashboard.ngrok.com/signup
-If you have already signed up, make sure your auth token is setup by exporting environment variable `NGROK_AUTH_TOKEN`
-
-Your auth token is available on your dashboard: https://dashboard.ngrok.com/get-started/your-authtoken
-
-Ngrok web interface available at http://localhost:4551
+A local MySQL (`mysql:8.1`) is exposed to Confluent Cloud with Ngrok.
 
 ## Prerequisites
 
-See [here](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)
+See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).
+
+| Variable | Description |
+| --- | --- |
+| `NGROK_AUTH_TOKEN` | Ngrok auth token (can also be passed as first argument) |
+
+### Exposing the local container over the internet
+
+**🚨WARNING🚨** It is considered a security risk to run this example on your personal machine since you'll be exposing a TCP port over the internet using [Ngrok](https://ngrok.com). It is strongly encouraged to run it on an AWS EC2 instance where you'll use [Confluent Static Egress IP Addresses](https://docs.confluent.io/cloud/current/networking/static-egress-ip-addresses.html#use-static-egress-ip-addresses-with-ccloud) (only available for public endpoints on AWS) to allow traffic from your Confluent Cloud cluster to your EC2 instance using an EC2 Security Group.
+
+An Ngrok auth token is necessary so that the fully managed connector can reach the local Docker container. Sign up at https://dashboard.ngrok.com/signup; your auth token is available on https://dashboard.ngrok.com/get-started/your-authtoken. The Ngrok web interface is available at http://localhost:4040.
+
+## How to run
+
+```bash
+playground run -f fully-managed-mysql-source.sh
+```
+
+| Script | Description |
+| --- | --- |
+| `fully-managed-mysql-source.sh` | Plain connection |
+| `fully-managed-mysql-source-ssl.sh` | SSL (`ssl.mode` require, truststore built from the MySQL CA, user `userssl`) |
+
+## What the script does
+
+1. Bootstraps the Confluent Cloud environment and recreates topic `mysql-team`.
+2. Starts MySQL and Ngrok; the SSL variant copies the MySQL certificates and builds a JKS truststore and keystore.
+3. Creates table `team` in database `mydb` and inserts 2 rows.
+4. Creates the `MySqlSource` fully managed connector (timestamp column `last_modified`, incrementing column `id`, `topic.prefix` `mysql-`).
+5. Verifies that 2 records are in `mysql-team` (`playground topic consume`).
+6. Asks before deleting the connector.

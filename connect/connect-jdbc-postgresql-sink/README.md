@@ -1,93 +1,51 @@
 # JDBC PostgreSQL sink connector
 
-
-
 ## Objective
 
-Quickly test [JDBC PostGreSQL](https://docs.confluent.io/current/connect/kafka-connect-jdbc/sink-connector/index.html#kconnect-long-jdbc-sink-connector) connector.
+Quickly test the [JDBC Sink](https://docs.confluent.io/kafka-connectors/jdbc/current/sink-connector/overview.html) connector with PostgreSQL.
 
+## Prerequisites
 
-
+With CP 8.x, the JDBC connector version must be 10.8.0 or later (the scripts exit with code 111 otherwise).
 
 ## How to run
 
-Simply run:
-
-Without SSL:
-
-```
-$ just use <playground run> command and search for postgres-sink.sh in this folder
-```
-
-with SSL encryption:
-
-```
-$ just use <playground run> command and search for postgres-sink-ssl.sh in this folder
-```
-
-with SSL encryption + Mutual TLS authentication:
-
-```
-$ just use <playground run> command and search for postgres-sink-mtls.sh in this folder
-```
-
-## Details of what the script is doing
-
-### Without SSL
-
-Sending messages to topic orders
-
 ```bash
-$ docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price","type": "float"}]}' << EOF
-{"id": 999, "product": "foo", "quantity": 100, "price": 50}
-EOF
+playground run -f postgres-sink.sh
 ```
 
-Creating JDBC PostgreSQL sink connector
+| Script | Description |
+| --- | --- |
+| `postgres-sink.sh` | No SSL, PostgreSQL 15 |
+| `postgres-sink-ssl.sh` | SSL encryption with server certificate verification (`sslmode=verify-full`), custom PostgreSQL 10 image |
+| `postgres-sink-mtls.sh` | SSL encryption + mutual TLS: the client authenticates with a certificate instead of a password |
 
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-                    "tasks.max": "1",
-                    "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false",
-                    "topics": "orders",
-                    "auto.create": "true"
-          }' \
-     http://localhost:8083/connectors/postgres-sink/config | jq .
-```
+## What the script does
 
-Show content of ORDERS table:
+1. SSL / mTLS variants only: generates a root CA and the PostgreSQL server certificate (plus a client certificate for mTLS) with `openssl`, and builds a PostgreSQL image with SSL enabled (see below).
+2. Starts the environment with a `postgres` container.
+3. Creates the `postgres-sink` connector on topic `orders` with `auto.create=true`.
+4. Produces 2 Avro records (`id`, `product`, `quantity`, `price`) to topic `orders` with `playground topic produce`.
+5. Runs `SELECT * FROM ORDERS` with `psql` and checks that the `foo` row is present.
 
-```bash
-$ docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM ORDERS'"
-```
+## SSL setup details
 
-Results:
+### SSL encryption
 
-```
- product | quantity | price | id
----------+----------+-------+-----
- foo     |      100 |    50 | 999
- ```
-
-### With SSL
-
-Creating a Root Certificate Authority (CA)
+Create a root certificate authority (CA):
 
 ```bash
 openssl req -new -x509 -days 365 -nodes -out /tmp/ca.crt -keyout /tmp/ca.key -subj "/CN=root-ca"
 ```
 
-Generate the PostgreSQL server key and certificate
+Generate the PostgreSQL server key and certificate:
 
 ```bash
 openssl req -new -nodes -out /tmp/server.csr -keyout /tmp/server.key -subj "/CN=postgres"
 openssl x509 -req -in /tmp/server.csr -days 365 -CA /tmp/ca.crt -CAkey /tmp/ca.key -CAcreateserial -out /tmp/server.crt
 ```
 
-Build custom image from `postgres:10`:
+Custom image built from `postgres:10` (`ssl/Dockerfile`):
 
 ```dockerfile
 FROM postgres:10
@@ -99,9 +57,9 @@ RUN chown postgres /var/lib/postgresql/server.key && \
     chmod 600 /var/lib/postgresql/server.key
 ```
 
-Enable ssl (`my-postgres.conf`):
+Enable SSL (`my-postgres.conf`):
 
-```
+```text
 ssl = on
 ssl_cert_file = '/var/lib/postgresql/server.crt'
 ssl_key_file = '/var/lib/postgresql/server.key'
@@ -110,31 +68,34 @@ ssl_ca_file = '/var/lib/postgresql/ca.crt'
 
 Force SSL (`pg_hba.conf`):
 
-```
-# force SSL
+```text
 hostssl all all all md5
 ```
 
-`connection.url` is `"connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&sslmode=verify-full&sslrootcert=/tmp/ca.crt"`
+Connection URL:
 
-### With SSL encryption + Mutual TLS auth
+```json
+"connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&sslmode=verify-full&sslrootcert=/tmp/ca.crt"
+```
 
-Generating the Client Key and Certificate
+### SSL encryption + mutual TLS
+
+Generate the client key and certificate. The key must be converted to PKCS#8 DER, otherwise the driver fails (see [this thread](https://coderanch.com/t/706596/databases/Connection-string-ssl-client-certificate)):
 
 ```bash
 openssl req -new -nodes -out /tmp/client.csr -keyout /tmp/client.key -subj "/CN=myuser"
 openssl x509 -req -in /tmp/client.csr -days 365 -CA /tmp/ca.crt -CAkey /tmp/ca.key -CAcreateserial -out /tmp/client.crt
-# need to use pk8, otherwise I got this issue https://coderanch.com/t/706596/databases/Connection-string-ssl-client-certificate
 openssl pkcs8 -topk8 -outform DER -in /tmp/client.key -out /tmp/client.key.pk8 -nocrypt
 ```
 
-Force SSL (`pg_hba.conf`), see `cert` option:
+Force certificate authentication (`pg_hba.conf`):
 
-```
-# force SSL
+```text
 hostssl all all all cert clientcert=1
 ```
 
-`connection.url` is `"connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&sslmode=verify-full&sslrootcert=/tmp/ca.crt&sslcert=/tmp/client.crt&sslkey=/tmp/client.key.pk8"`
+Connection URL:
 
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+```json
+"connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&sslmode=verify-full&sslrootcert=/tmp/ca.crt&sslcert=/tmp/client.crt&sslkey=/tmp/client.key.pk8"
+```

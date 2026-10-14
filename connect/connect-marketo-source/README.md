@@ -1,11 +1,44 @@
 # Marketo Source connector
 
-
-
 ## Objective
 
-Quickly test [Marketo Source](https://docs.confluent.io/current/connect/kafka-connect-marketo/index.html#marketo-source-connector-for-cp) connector.
+Quickly test the [Marketo Source](https://docs.confluent.io/current/connect/kafka-connect-marketo/index.html) connector.
 
+## Prerequisites
+
+This is a preview connector, not supported with CP 8.0 and later (the script exits with code 111).
+
+| Variable | Description |
+| --- | --- |
+| `MARKETO_ENDPOINT_URL` | Marketo REST API endpoint URL, without the trailing `/rest` (e.g. `https://<instance-id>.mktorest.com`) |
+| `MARKETO_CLIENT_ID` | Client ID of the Marketo custom service |
+| `MARKETO_CLIENT_SECRET` | Client secret of the Marketo custom service |
+
+See [Marketo setup](#marketo-setup) below to get these values.
+
+## How to run
+
+```bash
+export MARKETO_ENDPOINT_URL="https://<instance-id>.mktorest.com"
+export MARKETO_CLIENT_ID="<client id>"
+export MARKETO_CLIENT_SECRET="<client secret>"
+playground run -f marketo-source.sh
+```
+
+| Script | Description |
+| --- | --- |
+| `marketo-source.sh` | Basic example |
+| `marketo-source-proxy.sh` | Same, through an nginx forward proxy (`http.proxy.host`/`http.proxy.port`). Currently skipped (exit 111) as it does not work |
+
+## What the script does
+
+1. Downloads `jcl-over-slf4j-2.0.7.jar` and copies it into the `confluentinc-kafka-connect-marketo` plugin `lib` folder.
+2. Gets an OAuth access token from `${MARKETO_ENDPOINT_URL}/identity/oauth/token` and creates 3 leads with the Marketo REST API.
+3. Creates topic `marketo-leads`.
+4. Creates the Marketo source connector `marketo-source` (`entity.names=leads`, `marketo.since` set to 8 days ago, `topic.name.pattern=marketo-${entityName}`).
+5. Verifies that topic `marketo-leads` receives at least one lead with `playground topic consume`.
+
+The proxy variant creates a single lead, blocks direct traffic from the `connect` container to Marketo (`playground debug block-traffic`) to make sure the proxy is used, and waits 10 minutes before checking topic `marketo_leads`, as leads are pulled with a delay of 5 minutes between consecutive pulls.
 
 ## Marketo setup
 
@@ -13,212 +46,24 @@ Go to your [Marketo portal](https://engage-ab.marketo.com) (there is no trial or
 
 ### Create REST API Role
 
-Click on `Admin`->`Security->Users & Roles` and create a new role which has all `Access API` selected (the connector itself only requires readonly privileges):
+Click on `Admin` -> `Security` -> `Users & Roles` and create a new role which has all `Access API` selected (the connector itself only requires read-only privileges):
 
 ![Marketo setup](Screenshot1.png)
 
 ### Create REST API User
 
-Click on `Admin`->`Security->Users & Roles` and create a new user and associates it with the REST API role that you created in previous step.
+Click on `Admin` -> `Security` -> `Users & Roles`, create a new user and associate it with the REST API role that you created in the previous step.
 
 ### Create custom service
 
-A Custom service is required to uniquely identify your client application. To create a custom application, go to the `Admin`->`LaunchPoint` screen and create a new service
-Provide the Display Name, choose "Custom" Service type, provide Description, and the user email address created in previous step.
-
+A custom service is required to uniquely identify your client application. To create a custom application, go to the `Admin` -> `LaunchPoint` screen and create a new service. Provide the Display Name, choose the "Custom" service type, provide a Description, and the user email address created in the previous step.
 
 ![Marketo setup](Screenshot2.png)
 
-Once created, by clicking on `View Details`, you can get values for `MARKETO_CLIENT_ID` and `MARKETO_CLIENT_SECRET`
+Once created, click on `View Details` to get the values for `MARKETO_CLIENT_ID` and `MARKETO_CLIENT_SECRET`.
 
 ### Getting endpoint URL
 
-The REST API Endpoint URL (`MARKETO_ENDPOINT_URL`) can be found within `Admin`->`Web Services` menu.
+The REST API endpoint URL (`MARKETO_ENDPOINT_URL`) can be found in the `Admin` -> `Web Services` menu.
 
 ![Marketo setup](Screenshot3.png)
-
-## How to run
-
-Simply run:
-
-```
-$ just use <playground run> command and search for marketo-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> <MARKETO_ENDPOINT_URL> <MARKETO_CLIENT_ID> .sh in this folder
-```
-
-Note: you can also export these values as environment variable
-
-## Details of what the script is doing
-
-Create one lead to Marketo
-
-```bash
-$ docker exec connect \
-   curl -X POST \
-    "${MARKETO_ENDPOINT_URL}/rest/v1/leads.json?access_token=$ACCESS_TOKEN" \
-    -H 'Accept: application/json' \
-    -H 'Content-Type: application/json' \
-    -H 'cache-control: no-cache' \
-    -d '{ "action":"createOrUpdate", "lookupField":"email", "input":[ { "lastName":"john", "firstName":"doe", "middleName":null, "email":"john.doe@email.com" } ]}'
-```
-
-Creating Marketo Source connector
-
-```bash
-# since last hour
-$ SINCE=$(date -v-1H  +%Y-%m-%dT%H:%M:%SZ)
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-                    "connector.class": "io.confluent.connect.marketo.MarketoSourceConnector",
-                    "tasks.max": "1",
-                    "poll.interval.ms": 1000,
-                    "topic.name.pattern": "marketo_${entityName}",
-                    "marketo.url": "$MARKETO_ENDPOINT_URL",
-                    "marketo.since": "$SINCE",
-                    "entity.names": "leads",
-                    "oauth2.client.id": "$MARKETO_CLIENT_ID",
-                    "oauth2.client.secret": "$MARKETO_CLIENT_SECRET",
-                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "value.converter.schemas.enable": "false",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/marketo-source/config | jq .
-```
-
-Verify we have received the data in `marketo_leads` topic
-
-```
-playground topic consume --topic marketo_leads --min-expected-messages 1 --timeout 60
-```
-
-Results:
-
-```json
-{
-  "leadStatus": "null",
-  "isLead": "true",
-  "mainPhone": "null",
-  "originalSourceType": "Web service API",
-  "kafkaCalculatorLead": "null",
-  "mktoDoNotCallCause": "null",
-  "registrationSourceType": "Web service API",
-  "billingCountry": "null",
-  "id": "1007633",
-  "state": "null",
-  "fax": "null",
-  "relativeUrgency": "null",
-  "inferredStateRegion": "null",
-  "originalSearchEngine": "null",
-  "originalSearchPhrase": "null",
-  "mktoIsCustomer": "false",
-  "facebookId": "null",
-  "mktoAcquisitionDate": "null",
-  "priority": "null",
-  "numberOfEmployees": "null",
-  "externalSalesPersonId": "null",
-  "isAnonymous": "false",
-  "externalCompanyId": "null",
-  "mobilePhone": "null",
-  "phone": "null",
-  "inferredPhoneAreaCode": "null",
-  "lastName": "john",
-  "gender": "null",
-  "city": "null",
-  "emailInvalidCause": "null",
-  "linkedInDisplayName": "null",
-  "twitterReferredEnrollments": "null",
-  "industry": "null",
-  "mktoCompanyNotes": "null",
-  "marketingSuspended": "false",
-  "cookies": "null",
-  "twitterId": "null",
-  "unsubscribedReason": "null",
-  "originalReferrer": "null",
-  "personTimeZone": "null",
-  "blackListedCause": "null",
-  "leadPerson": "1007633",
-  "emailSuspended": "null",
-  "leadRevenueStageId": "null",
-  "linkedInPhotoURL": "null",
-  "personType": "contact",
-  "email": "john.doe@email.com",
-  "website": "null",
-  "syndicationId": "null",
-  "address": "null",
-  "emailSuspendedCause": "null",
-  "dateOfBirth": "null",
-  "site": "null",
-  "unsubscribed": "false",
-  "relativeScore": "null",
-  "twitterProfileURL": "null",
-  "billingStreet": "null",
-  "sicCode": "null",
-  "twitterReferredVisits": "null",
-  "contactCompany": "1007633",
-  "country": "null",
-  "originalSourceInfo": "Web service API",
-  "mktoIsPartner": "false",
-  "postalCode": "null",
-  "inferredPostalCode": "null",
-  "rating": "null",
-  "facebookProfileURL": "null",
-  "lastReferredVisit": "null",
-  "mktoName": "doe john",
-  "linkedInProfileURL": "null",
-  "mktoPersonNotes": "null",
-  "inferredCompany": "null",
-  "createdAt": "2020-11-17T14:15:51Z",
-  "registrationSourceInfo": "Web service API",
-  "linkedInReferredVisits": "null",
-  "inferredMetropolitanArea": "null",
-  "anonymousIP": "null",
-  "updatedAt": "2020-11-17T14:15:51Z",
-  "leadRevenueCycleModelId": "null",
-  "inferredCity": "null",
-  "leadSource": "null",
-  "linkedInReferredEnrollments": "null",
-  "billingState": "null",
-  "facebookReach": "null",
-  "facebookReferredVisits": "null",
-  "firstName": "doe",
-  "doNotCall": "false",
-  "salutation": "null",
-  "annualRevenue": "null",
-  "marketingSuspendedCause": "null",
-  "leadScore": "null",
-  "personPrimaryLeadInterest": "1007633",
-  "twitterDisplayName": "null",
-  "twitterReach": "null",
-  "kFipaddress": "null",
-  "twitterPhotoURL": "null",
-  "title": "null",
-  "doNotCallReason": "null",
-  "facebookReferredEnrollments": "null",
-  "lastReferredEnrollment": "null",
-  "urgency": "null",
-  "emailSuspendedAt": "null",
-  "emailInvalid": "false",
-  "company": "null",
-  "totalReferredEnrollments": "null",
-  "department": "null",
-  "linkedInId": "null",
-  "kafkaCalculatorClustersize": "null",
-  "totalReferredVisits": "null",
-  "linkedInReach": "null",
-  "leadPartitionId": "1",
-  "blackListed": "false",
-  "leadRole": "null",
-  "facebookDisplayName": "null",
-  "acquisitionProgramId": "null",
-  "inferredCountry": "null",
-  "billingPostalCode": "null",
-  "facebookPhotoURL": "null",
-  "middleName": "null",
-  "billingCity": "null"
-}
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

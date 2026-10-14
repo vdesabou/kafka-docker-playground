@@ -1,158 +1,96 @@
-# JDBC Oracle 19 Source connector
+# JDBC Oracle 21c Source connector
 
 ## Objective
 
-Quickly test [JDBC Source](https://docs.confluent.io/current/connect/kafka-connect-jdbc/source-connector/index.html#kconnect-long-jdbc-source-connector) connector with Oracle 21c.
+Quickly test the [JDBC Source](https://docs.confluent.io/kafka-connectors/jdbc/current/source-connector/overview.html) connector with Oracle 21c.
 
-N.B: if you're a Confluent employee, please check this [link](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900) and also [here](https://confluent.slack.com/archives/C0116NM415F/p1636389483030900).
+## Prerequisites
 
+* With CP 8.x, the JDBC connector version must be 10.8.0 or later (the scripts exit with code 111 otherwise).
+* Oracle Database image: the scripts first try to download a prebuilt image from the playground S3 bucket (Confluent employees only, needs AWS credentials: see this [Slack thread](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900) and [this one](https://confluent.slack.com/archives/C0116NM415F/p1636389483030900)). Otherwise, download Oracle Database 21c (21.3) for Linux x86-64 `LINUX.X64_213000_db_home.zip` from this [page](https://www.oracle.com/database/technologies/oracle21c-linux-downloads.html) and place it in this folder. The first run then builds the image `oracle/database:21.3.0-ee` with the [oracle/docker-images](https://github.com/oracle/docker-images/blob/master/OracleDatabase/SingleInstance/README.md) project, which takes about 10 minutes.
 
-
-Download Oracle Database 21c (21.3) for Linux x86-64 `LINUX.X64_213000_db_home.zip`from this [page](https://www.oracle.com/database/technologies/oracle21c-linux-downloads.html) and place it in `./LINUX.X64_213000_db_home.zip`
-
-Note: The first time you'll run the script, it will build (using this [project](https://github.com/oracle/docker-images/blob/master/OracleDatabase/SingleInstance/README.md)) the docker image `oracle/database:21.3.0-ee`. It takes about 10 minutes.
-
-**Please make sure to increase Docker disk image size (96Gb is known to be working)**:
+**Make sure to increase the Docker disk image size (96 GB is known to work)**:
 
 ![Docker image disk](Screenshot1.png)
 
-## Performance testing
-
-You can set environment variable `SQL_DATAGEN` before running the example and it will use a Java based datagen tool:
-
-Example:
-
-```
-DURATION=10
-log "Injecting data for $DURATION minutes"
-docker exec sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username C##MYUSER --password mypassword --sidOrServerName sid --sidOrServerNameVal ORCLCDB --maxPoolSize 10 --durationTimeMin $DURATION"
-```
-
-You can increase throughput with `maxPoolSize`.
-
 ## How to run
 
-Without SSL:
-
-```
-$ just use <playground run> command and search for oracle21.sh in this folder
+```bash
+playground run -f oracle21.sh
 ```
 
-with SSL encryption:
+| Script | Description |
+| --- | --- |
+| `oracle21.sh` | No SSL (`jdbc:oracle:thin:@oracle:1521/ORCLCDB`). Supports `--enable-sql-datagen` |
+| `oracle21-ssl.sh` | SSL encryption (TCPS on port 1532), server DN verified |
+| `oracle21-mtls.sh` | SSL encryption + mutual TLS (case #3 in this [document](https://www.oracle.com/technetwork/topics/wp-oracle-jdbc-thin-ssl-130128.pdf)) |
+| `oracle21-mtls-db-auth.sh` | SSL encryption + mutual TLS + DB authentication with the client certificate (case #4 in the same document) |
 
-```
-$ just use <playground run> command and search for oracle21-ssl.sh in this folder
-```
+The [Oracle JDBC thin driver SSL white paper](https://www.oracle.com/technetwork/topics/wp-oracle-jdbc-thin-ssl-130128.pdf) is the best resource for Oracle DB and SSL.
 
-with SSL encryption + Mutual TLS (case #3 in this [document](https://www.oracle.com/technetwork/database/enterprise-edition/wp-oracle-jdbc-thin-ssl-130128.pdf)):
+### Performance testing
 
-```
-$ just use <playground run> command and search for oracle21-mtls.sh in this folder
-```
-
-with SSL encryption + Mutual TLS + DB authentication (case #4 in this [document](https://www.oracle.com/technetwork/database/enterprise-edition/wp-oracle-jdbc-thin-ssl-130128.pdf):
-
-```
-$ just use <playground run> command and search for oracle21-mtls-db-auth.sh in this folder
-```
-
-N.B: this is the [best resource](https://www.oracle.com/technetwork/topics/wp-oracle-jdbc-thin-ssl-130128.pdf) I found for Oracle DB and SSL.
-
-## Details of what the script is doing
-
-Build `oracle/database:21.3.0-ee` Docker image if required.
-
-Wait (up to 15 minutes) that Oracle DB is up
-
-### Without SSL
-
-Create the source connector with:
+`oracle21.sh` can inject data with a Java based SQL datagen tool (built from `oracle-datagen/`) for 10 minutes after the connector is created:
 
 ```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
-                    "tasks.max":"1",
-                    "connection.user": "myuser",
-                    "connection.password": "mypassword",
-                    "connection.url": "jdbc:oracle:thin:@oracle:1521/ORCLPDB1",
-                    "numeric.mapping":"best_fit",
-                    "mode":"timestamp",
-                    "poll.interval.ms":"1000",
-                    "validate.non.null":"false",
-                    "table.whitelist":"CUSTOMERS",
-                    "timestamp.column.name":"UPDATE_TS",
-                    "topic.prefix":"oracle-",
-                    "errors.log.enable": "true",
-                    "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/oracle-source/config | jq .
+playground run -f oracle21.sh --enable-sql-datagen
 ```
 
-Verify the topic `oracle-CUSTOMERS`:
+The datagen runs in the `sql-datagen` container:
 
 ```bash
-playground topic consume --topic oracle-CUSTOMERS --min-expected-messages 2 --timeout 60
+java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username C##MYUSER --password mypassword --sidOrServerName sid --sidOrServerNameVal ORCLCDB --maxPoolSize 10 --durationTimeMin 10
 ```
 
-Results:
+Increase `--maxPoolSize` to increase throughput.
 
-```json
-{"ID":1,"FIRST_NAME":{"string":"Rica"},"LAST_NAME":{"string":"Blaisdell"},"EMAIL":{"string":"rblaisdell0@rambler.ru"},"GENDER":{"string":"Female"},"CLUB_STATUS":{"string":"bronze"},"COMMENTS":{"string":"Universal optimal hierarchy"},"CREATE_TS":{"long":1571238426253},"UPDATE_TS":{"long":1571238426000}}
-{"ID":2,"FIRST_NAME":{"string":"Ruthie"},"LAST_NAME":{"string":"Brockherst"},"EMAIL":{"string":"rbrockherst1@ow.ly"},"GENDER":{"string":"Female"},"CLUB_STATUS":{"string":"platinum"},"COMMENTS":{"string":"Reverse-engineered tangible interface"},"CREATE_TS":{"long":1571238426260},"UPDATE_TS":{"long":1571238426000}}
-```
+## What the script does
 
-### With SSL encryption
+1. Gets or builds the Oracle Database image and starts it (alone first for the SSL variants), then waits for `DATABASE IS READY TO USE`.
+2. Creates user `C##MYUSER` with the `CONNECT`, `CREATE SESSION`, `CREATE TABLE`, `CREATE SEQUENCE` and `CREATE TRIGGER` privileges.
+3. SSL variants only: creates the Oracle wallets and the JKS stores, copies the `.ora` files from `ssl/` or `mtls/` into the container and restarts the listener (see below).
+4. Creates table `CUSTOMERS` (identity `ID`, trigger `TRG_CUSTOMERS_UPD` setting `UPDATE_TS` on insert/update) and inserts 5 rows.
+5. Creates the source connector (`oracle-source`, `oracle-source-ssl`, `oracle-source-mtls` or `oracle-source-mtls-db-auth`) in `timestamp` mode on `UPDATE_TS`, with `numeric.mapping=best_fit`, `schema.pattern=C##MYUSER`, `table.whitelist=CUSTOMERS` and `topic.prefix=oracle-`.
+6. Verifies that records land in topic `oracle-CUSTOMERS` with `playground topic consume`.
+7. `oracle21.sh` with `--enable-sql-datagen`: runs the SQL datagen for 10 minutes.
 
-`oracle` container is started first in order to get generated certificates from wallet.
+## SSL setup details
 
-wallet `/tmp/server` is created with:
+### SSL encryption
+
+The `oracle` container is started first to generate the certificates in Oracle wallets. Wallet `/tmp/server` is created with:
 
 ```bash
 # Create a wallet for the test CA
-
-$ docker exec oracle bash -c "orapki wallet create -wallet /tmp/root -pwd WalletPasswd123"
+orapki wallet create -wallet /tmp/root -pwd WalletPasswd123
 # Add a self-signed certificate to the wallet
-$ docker exec oracle bash -c "orapki wallet add -wallet /tmp/root -dn CN=root_test,C=US -keysize 2048 -self_signed -validity 3650 -pwd WalletPasswd123"
+orapki wallet add -wallet /tmp/root -dn CN=root_test,C=US -keysize 2048 -self_signed -validity 3650 -pwd WalletPasswd123
 # Export the certificate
-$ docker exec oracle bash -c "orapki wallet export -wallet /tmp/root -dn CN=root_test,C=US -cert /tmp/root/b64certificate.txt -pwd WalletPasswd123"
+orapki wallet export -wallet /tmp/root -dn CN=root_test,C=US -cert /tmp/root/b64certificate.txt -pwd WalletPasswd123
 
-# Create a wallet for the Oracle server
-
-# Create an empty wallet with auto login enabled
-$ docker exec oracle bash -c "orapki wallet create -wallet /tmp/server -pwd WalletPasswd123 -auto_login"
-# Add a user In the wallet (a new pair of private/public keys is created)
-$ docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -dn CN=server,C=US -pwd WalletPasswd123 -keysize 2048"
+# Create a wallet for the Oracle server, with auto login enabled
+orapki wallet create -wallet /tmp/server -pwd WalletPasswd123 -auto_login
+# Add a user in the wallet (a new pair of private/public keys is created)
+orapki wallet add -wallet /tmp/server -dn CN=server,C=US -pwd WalletPasswd123 -keysize 2048
 # Export the certificate request to a file
-$ docker exec oracle bash -c "orapki wallet export -wallet /tmp/server -dn CN=server,C=US -pwd WalletPasswd123 -request /tmp/server/creq.txt"
+orapki wallet export -wallet /tmp/server -dn CN=server,C=US -pwd WalletPasswd123 -request /tmp/server/creq.txt
 # Using the test CA, sign the certificate request
-$ docker exec oracle bash -c "orapki cert create -wallet /tmp/root -request /tmp/server/creq.txt -cert /tmp/server/cert.txt -validity 3650 -pwd WalletPasswd123"
-# You now have the following files under the /tmp/server directory
-$ docker exec oracle ls /tmp/server
-# View the signed certificate:
-$ docker exec oracle bash -c "orapki cert display -cert /tmp/server/cert.txt -complete"
+orapki cert create -wallet /tmp/root -request /tmp/server/creq.txt -cert /tmp/server/cert.txt -validity 3650 -pwd WalletPasswd123
 # Add the test CA's trusted certificate to the wallet
-$ docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -trusted_cert -cert /tmp/root/b64certificate.txt -pwd WalletPasswd123"
-# add the user certificate to the wallet:
-$ docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -user_cert -cert /tmp/server/cert.txt -pwd WalletPasswd123"
+orapki wallet add -wallet /tmp/server -trusted_cert -cert /tmp/root/b64certificate.txt -pwd WalletPasswd123
+# Add the user certificate to the wallet
+orapki wallet add -wallet /tmp/server -user_cert -cert /tmp/server/cert.txt -pwd WalletPasswd123
 ```
 
-`truststore.jks` is created with:
+`truststore.jks` is created by importing the test CA certificate:
 
 ```bash
-# We import the test CA certificate
-$ keytool -import -v -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/truststore.jks -storetype JKS -storepass 'welcome123' -noprompt
-log "Displaying truststore"
-$ keytool -list -keystore /tmp/truststore.jks -storepass 'welcome123' -v
+keytool -import -v -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/truststore.jks -storetype JKS -storepass 'welcome123' -noprompt
 ```
 
+The Oracle listener is reconfigured with a TCPS endpoint, using `ssl/listener.ora`:
 
-Oracle DB is updated to use new `.ora` files, with TCPS config:
-
-listener.ora:
-
-```
+```text
 SSL_CLIENT_AUTHENTICATION = FALSE
 
 WALLET_LOCATION =
@@ -178,9 +116,9 @@ DEDICATED_THROUGH_BROKER_LISTENER=ON
 DIAG_ADR_ENABLED = off
 ```
 
-sqlnet.ora:
+`ssl/sqlnet.ora`:
 
-```
+```text
 NAME.DIRECTORY_PATH= (TNSNAMES, EZCONNECT, HOSTNAME)
 WALLET_LOCATION =
    (SOURCE =
@@ -194,9 +132,9 @@ SSL_CLIENT_AUTHENTICATION = FALSE
 SSL_CIPHER_SUITES = (SSL_ECDHE_RSA_WITH_AES_256_GCM_SHA384, SSL_DHE_RSA_WITH_AES_256_GCM_SHA384, SSL_ECDHE_RSA_WITH_AES_128_GCM_SHA256, SSL_DHE_RSA_WITH_AES_128_GCM_SHA256, SSL_RSA_WITH_AES_256_GCM_SHA384, SSL_RSA_WITH_AES_128_GCM_SHA256)
 ```
 
-tnsnames.ora:
+`ssl/tnsnames.ora`:
 
-```
+```text
 ORCLPDB1=
   (DESCRIPTION =
     (ADDRESS = (PROTOCOL = TCPS)(HOST = 0.0.0.0)(PORT = 1532))
@@ -207,75 +145,54 @@ ORCLPDB1=
   )
 ```
 
-`connect` container is configured with truststore:
+The `connect` container is configured with the truststore at JVM level (`docker-compose.plaintext.ssl.yml`):
 
-```
-      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/tmp/truststore.jks
-                  -Djavax.net.ssl.trustStorePassword=welcome123
-```
-
-`connection.url` is set to
-
-```
-jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLCDB))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))
+```yaml
+      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/tmp/truststore.jks -Djavax.net.ssl.trustStorePassword=welcome123 -Doracle.net.ssl_server_dn_match=true
 ```
 
-Note that we force the driver to verify that the server’s DN matches with `"connection.oracle.net.ssl_server_dn_match": "true"` (note that for JDBC connector version lower than 10.x, this property have to be set at JVM level)
-
-### With SSL encryption + Mutual TLS (case #3 in this [document](https://www.oracle.com/technetwork/database/enterprise-edition/wp-oracle-jdbc-thin-ssl-130128.pdf))
-
-`truststore.jks` is same as before.
-
-`keystore.jks` is created with:
-
-```bash
-$ keytool -genkey -alias testclient -dname 'CN=connect,C=US' -storepass 'welcome123' -storetype JKS -keystore /tmp/keystore.jks -keyalg RSA
-# Generate a CSR (Certificate Signing Request):
-$ keytool -certreq -alias testclient -file /tmp/csr.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
-# Sign the client certificate using the test CA (root)
-playground container cp --source csr.txt --destination oracle:/tmp/csr.txt
-docker exec oracle bash -c "orapki cert create -wallet /tmp/root -request /tmp/csr.txt -cert /tmp/cert.txt -validity 3650 -pwd WalletPasswd123"
-# import the test CA's certificate:
-playground container cp --source oracle:/tmp/root/b64certificate.txt --destination b64certificate.txt
-$ keytool -import -v -noprompt -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
-# Import the signed certificate
-playground container cp --source oracle:/tmp/cert.txt --destination cert.txt
-$ keytool -import -v -alias testclient -file /tmp/cert.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
-log "Displaying keystore"
-$ keytool -list -keystore /tmp/keystore.jks -storepass 'welcome123' -v
-```
-
-`.ora` files are same as before except that we set `SSL_CLIENT_AUTHENTICATION = TRUE`.
-
-
-`connect` container is configured with truststore **and** keystore:
-
-```
-      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/tmp/truststore.jks
-                  -Djavax.net.ssl.trustStorePassword=welcome123
-                  -Djavax.net.ssl.keyStore=/tmp/keystore.jks
-                  -Djavax.net.ssl.keyStorePassword=welcome123
-```
-### With SSL encryption + Mutual TLS + DB authentication (case #4 in this [document](https://www.oracle.com/technetwork/database/enterprise-edition/wp-oracle-jdbc-thin-ssl-130128.pdf)
-
-`.ora` files are same as before except that we set TCPS as authentication `SQLNET.AUTHENTICATION_SERVICES = (TCPS,NTS,BEQ)`.
-
-Connector is set with `"connection.oracle.net.authentication_services": "(TCPS)"` (note that for JDBC connector version lower than 10.x, this property have to be set at JVM level):
+The connector uses the TCPS URL and forces the driver to verify that the server DN matches:
 
 ```json
-"connection.oracle.net.authentication_services": "(TCPS)",
-"connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLCDB))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))",
+"connection.oracle.net.ssl_server_dn_match": "true",
+"connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLCDB))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))"
 ```
 
-N.B: `connection.user` and `connection.password` are not set.
+With JDBC connector versions lower than 10.x, `connection.oracle.net.*` properties are not supported and must be set at JVM level instead.
 
-We also need to alter user `myuser` in order to be identified as `CN=connect,C=US`
+### SSL encryption + mutual TLS
+
+`truststore.jks` is the same as above. A client `keystore.jks` is created and its certificate signed by the test CA:
 
 ```bash
-$ docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLCDB as sysdba <<- EOF
-	ALTER USER C##MYUSER IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
-	exit;
-EOF
+keytool -genkey -alias testclient -dname 'CN=connect,C=US' -storepass 'welcome123' -storetype JKS -keystore /tmp/keystore.jks -keyalg RSA
+# Generate a CSR (Certificate Signing Request)
+keytool -certreq -alias testclient -file /tmp/csr.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
+# Sign the client certificate using the test CA (inside the oracle container)
+orapki cert create -wallet /tmp/root -request /tmp/csr.txt -cert /tmp/cert.txt -validity 3650 -pwd WalletPasswd123
+# Import the test CA certificate, then the signed certificate
+keytool -import -v -noprompt -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
+keytool -import -v -alias testclient -file /tmp/cert.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
 ```
 
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+The `.ora` files in `mtls/` are the same as above except `SSL_CLIENT_AUTHENTICATION = TRUE` (and `SQLNET.AUTHENTICATION_SERVICES = (TCPS,NTS,BEQ)` in `sqlnet.ora`, used by the DB authentication variant).
+
+The `connect` container is configured with the truststore **and** the keystore (`docker-compose.plaintext.mtls.yml`):
+
+```yaml
+      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/tmp/truststore.jks -Djavax.net.ssl.trustStorePassword=welcome123 -Djavax.net.ssl.keyStore=/tmp/keystore.jks -Djavax.net.ssl.keyStorePassword=welcome123 -Doracle.net.ssl_server_dn_match=true
+```
+
+### SSL encryption + mutual TLS + DB authentication
+
+User `C##MYUSER` is altered to be identified by the client certificate:
+
+```sql
+ALTER USER C##MYUSER IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
+```
+
+The connector does not set `connection.user` / `connection.password`. TCPS authentication is enabled at JVM level (`docker-compose.plaintext.mtls-db-auth.yml`):
+
+```yaml
+      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/tmp/truststore.jks -Djavax.net.ssl.trustStorePassword=welcome123 -Djavax.net.ssl.keyStore=/tmp/keystore.jks -Djavax.net.ssl.keyStorePassword=welcome123 -Doracle.net.ssl_server_dn_match=true -Doracle.net.authentication_services="(TCPS)"
+```

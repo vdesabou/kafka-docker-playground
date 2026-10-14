@@ -1,15 +1,26 @@
 # Fully Managed Github Source connector
 
-
-
 ## Objective
 
-Quickly test [Fully Managed Github Source](https://docs.confluent.io/cloud/current/connectors/cc-github-source.html) connector.
+Quickly test the [Fully Managed Github Source](https://docs.confluent.io/cloud/current/connectors/cc-github-source.html) connector.
 
+## Prerequisites
 
-## Create a personal access token
+See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).
 
-Go to your Github account and select `Settings`:
+| Variable | Description |
+| --- | --- |
+| `CONNECTOR_GITHUB_ACCESS_TOKEN` | GitHub personal access token (required, can also be passed as first argument) |
+| `CONNECTOR_GITHUB_REPOSITORIES` | Optional: comma-separated repositories to monitor (default `vdesabou/kafka-docker-playground`) |
+
+```bash
+export CONNECTOR_GITHUB_ACCESS_TOKEN=<your_personal_access_token>
+export CONNECTOR_GITHUB_REPOSITORIES=confluentinc/examples,confluentinc/kafka-connect-github
+```
+
+### Create a personal access token
+
+Go to your GitHub account and select `Settings`:
 
 ![Github api token](Screenshot1.png)
 
@@ -21,33 +32,22 @@ Click on `Personal access tokens`:
 
 ![Github api token](Screenshot3.png)
 
-Generate new token with `repo` and `user` selected:
+Generate a new token with `repo` and `user` selected:
 
 ![Github api token](Screenshot4.png)
 
-Set environment variable `CONNECTOR_GITHUB_ACCESS_TOKEN` with your personal access token:
-
-```bash
-export CONNECTOR_GITHUB_ACCESS_TOKEN=<your_personal_access_token>
-```
-
-Also set environment variable `CONNECTOR_GITHUB_REPOSITORIES` with the repositories you want to monitor **which are in your github org**, for example:
-
-```bash
-export CONNECTOR_GITHUB_REPOSITORIES=confluentinc/examples,confluentinc/kafka-connect-github
-```
-
-## Prerequisites
-
-See [here](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples)
-
-
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for github-source<use tab key to activate fzf completion (see https://kafka-docker-playground.io/#/cli?id=%e2%9a%a1-setup-completion), otherwise use full path, or correct relative path> .sh in this folder
+```bash
+playground run -f fully-managed-github-source.sh
 ```
 
-Note: you can also export these values as environment variable
+| Script | Description |
+| --- | --- |
+| `fully-managed-github-source.sh` | Reads the `stargazers` resource of the configured repositories |
+
+## What the script does
+
+1. Bootstraps the Confluent Cloud environment and recreates topic `github-topic-stargazers`.
+2. Creates the `GithubSource` fully managed connector (resource `stargazers`, since `2019-01-01`, Avro output).
+3. Verifies that at least one record is in `github-topic-stargazers` (`playground topic consume`).

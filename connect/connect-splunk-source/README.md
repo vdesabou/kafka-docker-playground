@@ -1,73 +1,27 @@
 # Splunk Source connector
 
-
-
 ## Objective
 
-Quickly test [Splunk Source](https://docs.confluent.io/current/connect/kafka-connect-splunk/splunk-source/index.html#quick-start) connector.
+Quickly test the [Splunk Source](https://docs.confluent.io/kafka-connectors/splunk-source/current/overview.html) connector.
 
+## Prerequisites
+
+* With CP 8.x, connector version 1.1.6 or later.
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for splunk.sh in this folder
-```
-
-## Details of what the script is doing
-
-Creating Splunk source connector
-
 ```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.SplunkHttpSourceConnector",
-                    "tasks.max": "1",
-                    "kafka.topic": "splunk-source",
-                    "splunk.collector.index.default": "default-index",
-                    "splunk.port": "8889",
-                    "splunk.ssl.key.store.path": "/tmp/keystore.jks",
-                    "splunk.ssl.key.store.password": "confluent",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/splunk-source/config | jq .
+playground run -f splunk-source.sh
 ```
 
-Simulate an application sending data to the connector
+## What the script does
 
-```bash
-$ curl -k -X POST https://localhost:8889/services/collector/event -d '{"event":"from curl"}'
-```
+1. Generates a keystore for the connector HTTPS listener with `playground tools certs-create` (in `security/`).
+2. Creates the Splunk Source connector listening on port `8889` (HTTPS), writing to topic `splunk-source`.
+3. Simulates an application sending an event to the HEC-compatible endpoint:
 
-Verifying topic `splunk-source`
+   ```bash
+   curl -k -X POST https://localhost:8889/services/collector/event -d '{"event":"from curl"}'
+   ```
 
-```bash
-playground topic consume --topic splunk-source --min-expected-messages 1 --timeout 60
-```
-
-Results:
-
-```json
-{
-    "event": {
-        "string": "from curl"
-    },
-    "host": {
-        "string": "172.20.0.1"
-    },
-    "index": {
-        "string": "default-index"
-    },
-    "source": null,
-    "sourcetype": null,
-    "time": {
-        "long": 1571932581452
-    }
-}
-```
-
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+4. Verifies the event with `playground topic consume --topic splunk-source`.

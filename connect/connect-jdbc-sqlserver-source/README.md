@@ -1,83 +1,54 @@
 # JDBC SQL Server source connector
 
-
-
 ## Objective
 
-Quickly test [JDBC SQL Server](https://docs.confluent.io/current/connect/kafka-connect-jdbc/source-connector/index.html#kconnect-long-jdbc-source-connector) connector.
+Quickly test the [JDBC Source](https://docs.confluent.io/kafka-connectors/jdbc/current/source-connector/overview.html) connector with Microsoft SQL Server 2019, using either the jTDS or the Microsoft JDBC driver.
 
+## Prerequisites
 
-
+* With CP 8.x, the JDBC connector version must be 10.8.0 or later (the scripts exit with code 111 otherwise).
+* `sqlserver-jtds-ssl.sh` exits with code 111 on CP 5.9.0 and older (non `ubi8` images), see [#1107](https://github.com/vdesabou/kafka-docker-playground/issues/1107).
 
 ## How to run
 
-Without SSL:
-
-```
-$ just use <playground run> command and search for sqlserver-jtds.sh in this folder
-
-$ just use <playground run> command and search for sqlserver-microsoft.sh in this folder
+```bash
+playground run -f sqlserver-microsoft.sh
 ```
 
-with SSL encryption:
+| Script | Description |
+| --- | --- |
+| `sqlserver-jtds.sh` | jTDS driver, no SSL. Supports `--enable-sql-datagen` |
+| `sqlserver-jtds-ssl.sh` | jTDS driver, SSL encryption (`ssl=require`) |
+| `sqlserver-microsoft.sh` | Microsoft driver, no SSL (`encrypt=false`). Supports `--enable-sql-datagen` |
+| `sqlserver-microsoft-ssl.sh` | Microsoft driver, SSL encryption with server certificate validation against a truststore |
 
-```
-$ just use <playground run> command and search for sqlserver-jtds-ssl.sh in this folder
-
-$ just use <playground run> command and search for sqlserver-microsoft-ssl.sh in this folder
-```
-
-## Details of what the script is doing
-
-Load inventory.sql to SQL Server
+To inject data for 10 minutes with the Java SQL datagen (built from `sqlserver-datagen/`) after the records are verified:
 
 ```bash
-$ cat ../../connect/connect-jdbc-sqlserver-source/inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password!'
+playground run -f sqlserver-microsoft.sh --enable-sql-datagen
 ```
 
-### JTDS JDBC driver
+## What the script does
 
-Creating JDBC SQL Server (with JTDS) source connector
+1. SSL variants only: creates a self-signed certificate for `CN=sqlserver` and a JKS truststore (see below).
+2. Starts the environment with a `sqlserver` container (`mcr.microsoft.com/mssql/server:2019-latest`).
+3. Creates database `testDB` and table `customers` (identity `id` starting at 1001) with 4 rows.
+4. Creates the source connector (`sqlserver-source` or `sqlserver-source-ssl`) in `incrementing` mode on `id`, with `topic.prefix=sqlserver-`.
+5. Inserts one more row, then verifies that 5 records land in topic `sqlserver-customers` with `playground topic consume`.
+6. Non-SSL variants with `--enable-sql-datagen`: runs the SQL datagen for 10 minutes.
 
-#### Without SSL
+## SSL setup details
+
+Create a self-signed certificate and import it into a truststore:
 
 ```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-                    "tasks.max": "1",
-                    "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433/testDB",
-                    "connection.user": "sa",
-                    "connection.password": "Password!",
-                    "table.whitelist": "customers",
-                    "mode": "incrementing",
-                    "incrementing.column.name": "id",
-                    "topic.prefix": "sqlserver-jtds-",
-                    "validate.non.null":"false",
-                    "errors.log.enable": "true",
-                    "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/sqlserver-source/config | jq .
+openssl req -x509 -nodes -newkey rsa:2048 -subj '/CN=sqlserver' -keyout /tmp/mssql.key -out /tmp/mssql.pem -days 365
+keytool -importcert -alias MSSQLCACert -noprompt -file /tmp/mssql.pem -keystore /tmp/truststore.jks -storepass confluent
 ```
 
-#### with SSL encryption
+`ssl/mssql.conf` forces encryption on the server:
 
-Create a self-signed certificate:
-
-```bash
-$ openssl req -x509 -nodes -newkey rsa:2048 -subj '/CN=sqlserver' -keyout /tmp/mssql.key -out /tmp/mssql.pem -days 365
-```
-
-Creating JKS from pem files
-
-```bash
-$ keytool -importcert -alias MSSQLCACert -noprompt -file /tmp/mssql.pem -keystore /tmp/truststore.jks -storepass confluent
-```
-
-`mssql.conf` is set with:
-
-```conf
+```ini
 [network]
 tlscert = /tmp/mssql.pem
 tlskey = /tmp/mssql.key
@@ -85,115 +56,27 @@ tlsprotocols = 1.2
 forceencryption = 1
 ```
 
-With volumes on `sqlserver`:
+It is mounted in the `sqlserver` container with the certificate and key:
 
-```yml
-volumes:
-     - ../../connect/connect-jdbc-sqlserver-source/ssl/mssql.conf:/var/opt/mssql/mssql.conf
-     - ../../connect/connect-jdbc-sqlserver-source/ssl/mssql.pem:/tmp/mssql.pem
-     - ../../connect/connect-jdbc-sqlserver-source/ssl/mssql.key:/tmp/mssql.key
+```yaml
+    volumes:
+      - ../../connect/connect-jdbc-sqlserver-source/ssl/mssql.conf:/var/opt/mssql/mssql.conf
+      - ../../connect/connect-jdbc-sqlserver-source/ssl/mssql.pem:/tmp/mssql.pem
+      - ../../connect/connect-jdbc-sqlserver-source/ssl/mssql.key:/tmp/mssql.key
 ```
 
-On `connect` container we have:
+jTDS: the truststore is set at JVM level on the `connect` container (`docker-compose.plaintext.jtds-ssl.yml`, which also mounts `ssl/truststore.jks` at `/tmp/truststore.jks`):
 
-```yml
-KAFKA_OPTS: -Djavax.net.ssl.trustStore=/tmp/truststore.jks
-          -Djavax.net.ssl.trustStorePassword=confluent
+```yaml
+      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/tmp/truststore.jks -Djavax.net.ssl.trustStorePassword=confluent
 ```
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-               "tasks.max": "1",
-               "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433/testDB;ssl=require",
-               "connection.user": "sa",
-               "connection.password": "Password!",
-               "table.whitelist": "customers",
-               "mode": "incrementing",
-               "incrementing.column.name": "id",
-               "topic.prefix": "sqlserver-",
-               "validate.non.null":"false",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/sqlserver-source-ssl/config | jq .
-```
-
-### Microsoft JDBC driver
-
-#### Without SSL
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-                    "tasks.max": "1",
-                    "connection.url": "jdbc:sqlserver://sqlserver:1433;databaseName=testDB;encrypt=false",
-                    "connection.user": "sa",
-                    "connection.password": "Password!",
-                    "table.whitelist": "customers",
-                    "mode": "incrementing",
-                    "incrementing.column.name": "id",
-                    "topic.prefix": "sqlserver-",
-                    "validate.non.null":"false",
-                    "errors.log.enable": "true",
-                    "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/sqlserver-source/config | jq .
-
-```
-
-#### with SSL encryption
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-               "tasks.max": "1",
-               "connection.url": "jdbc:sqlserver://sqlserver:1433;databaseName=testDB;encrypt=true;trustServerCertificate=false;trustStore=/tmp/truststore.jks;trustStorePassword=confluent;",
-               "connection.user": "sa",
-               "connection.password": "Password!",
-               "table.whitelist": "customers",
-               "mode": "incrementing",
-               "incrementing.column.name": "id",
-               "topic.prefix": "sqlserver-",
-               "validate.non.null":"false",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/sqlserver-source-ssl/config | jq .
-```
-
-Insert one more row:
-
-```bash
-$ docker exec -i sqlserver /opt/mssql-tools18/bin/sqlcmd -C -No -U sa -P Password! << EOF
-USE testDB;
-INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@office.com');
-GO
-EOF
-```
-
-Verifying topic `sqlserver-customers`
-
-
-```bash
-playground topic consume --topic sqlserver-customers --min-expected-messages 5 --timeout 60
-```
-
-Results:
 
 ```json
-{"id":1001,"first_name":"Sally","last_name":"Thomas","email":"sally.thomas@acme.com"}
-{"id":1002,"first_name":"George","last_name":"Bailey","email":"gbailey@foobar.com"}
-{"id":1003,"first_name":"Edward","last_name":"Walker","email":"ed@walker.com"}
-{"id":1004,"first_name":"Anne","last_name":"Kretchmar","email":"annek@noanswer.org"}
-{"id":1005,"first_name":"Pam","last_name":"Thomas","email":"pam@office.com"}
+"connection.url": "jdbc:jtds:sqlserver://sqlserver:1433/testDB;ssl=require"
 ```
 
+Microsoft driver: the truststore is set in the [connection URL](https://docs.microsoft.com/en-us/sql/connect/jdbc/connecting-with-ssl-encryption?view=sql-server-ver16):
 
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+```json
+"connection.url": "jdbc:sqlserver://sqlserver:1433;databaseName=testDB;encrypt=true;trustServerCertificate=false;trustStore=/tmp/truststore.jks;trustStorePassword=confluent;"
+```

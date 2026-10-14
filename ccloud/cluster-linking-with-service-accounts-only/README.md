@@ -2,9 +2,10 @@
 
 This is the [quickstart](https://docs.confluent.io/cloud/current/multi-cloud/cluster-linking/quickstart.html) that is being followed here, but with requirement to use only service accounts (least privileges principle).
 
-❗ This is not an automated test, just some notes of the tests done. ❗
+> [!NOTE]
+> This is not an automated test (there is no script in this folder), just notes of the tests done. The `source.config`, `destination.config`, `consumer.offset.sync.all.json` and `acl.sync.all.json` files used below are in this folder.
 
-*EDIT*: there is a documented example with service accounts [here](https://docs.confluent.io/cloud/current/multi-cloud/cluster-linking/topic-data-sharing.html#share-data-across-clusters-regions-and-clouds) 
+There is also a documented example with service accounts [here](https://docs.confluent.io/cloud/current/multi-cloud/cluster-linking/topic-data-sharing.html#share-data-across-clusters-regions-and-clouds).
 
 - [Cluster Linking Quick Start with service account only](#cluster-linking-quick-start-with-service-account-only)
   - [🏁 Prerequisites](#-prerequisites)
@@ -18,16 +19,16 @@ This is the [quickstart](https://docs.confluent.io/cloud/current/multi-cloud/clu
       - [Source](#source)
   - [🔗 Creating Cluster Link](#-creating-cluster-link)
     - [Using `confluent` CLI (not working)](#using-confluent-cli-not-working)
-      - [Using `kafka-cluster-links` CLI (working)](#using-kafka-cluster-links-cli-working)
+    - [Using `kafka-cluster-links` CLI (working)](#using-kafka-cluster-links-cli-working)
   - [🪞 Create mirror topic on destination](#-create-mirror-topic-on-destination)
     - [Using `confluent` CLI](#using-confluent-cli)
     - [Using `kafka-mirrors` CLI](#using-kafka-mirrors-cli)
-- [✅ Verifications](#-verifications)
-  - [Consumer offsets](#consumer-offsets)
-  - [Update topic config](#update-topic-config)
-  - [ACLs sync](#acls-sync)
-  - [Deleting user account that created link and mirror topic](#deleting-user-account-that-created-link-and-mirror-topic)
-  - [Stop consumer offset sync for consumer group my-consumer-group](#stop-consumer-offset-sync-for-consumer-group-my-consumer-group)
+  - [✅ Verifications](#-verifications)
+    - [Consumer offsets](#consumer-offsets)
+    - [Update topic config](#update-topic-config)
+    - [ACLs sync](#acls-sync)
+    - [Deleting user account that created link and mirror topic](#deleting-user-account-that-created-link-and-mirror-topic)
+    - [Stop consumer offset sync for consumer group my-consumer-group](#stop-consumer-offset-sync-for-consumer-group-my-consumer-group)
 
 ## 🏁 Prerequisites
 ### Create source and destination clusters
@@ -40,7 +41,7 @@ confluent kafka cluster create VincentClusterLinkingSource --type basic --cloud 
 confluent kafka cluster create VincentClusterLinkingDestination --type dedicated --cloud aws --region us-east-1 --cku 1 --availability single-zone
 ```
 
-```
+```bash
 source_id=lkc-65176
 source_endpoint=pkc-pgq85.us-west-2.aws.confluent.cloud:9092
 destination_id=lkc-nz953
@@ -67,7 +68,7 @@ confluent iam service-account create SA-Source-ClusterLinking --description "SA 
 +-------------+-----------------------+
 ```
 
-```
+```bash
 source_service_account=sa-81g8qq
 ```
 
@@ -81,7 +82,7 @@ Save the API key and secret. The secret is not retrievable later.
 +---------+------------------------------------------------------------------+
 ```
 
-```
+```bash
 source_api_key="<SOURCE_SA_API_KEY>"
 source_api_secret="<SOURCE_SA_API_SECRET>"
 ```
@@ -97,7 +98,7 @@ confluent iam service-account create SA--Destination-ClusterLinking --descriptio
 +-------------+--------------------------------+
 ```
 
-```
+```bash
 destination_service_account=sa-k8jr62
 ```
 
@@ -111,7 +112,7 @@ Save the API key and secret. The secret is not retrievable later.
 +---------+------------------------------------------------------------------+
 ```
 
-```
+```bash
 destination_api_key="<DESTINATION_SA_API_KEY>"
 destination_api_secret="<DESTINATION_SA_API_SECRET>"
 ```
@@ -194,14 +195,14 @@ Setup CLI to use destination cluster
 
 ```bash
 confluent kafka cluster use $destination_id
-Set Kafka cluster "lkc-p80ym" as the active cluster for environment "t36311".
+Set Kafka cluster "lkc-nz953" as the active cluster for environment "t36311".
 ```
 
 Setup CLI to use destination api key
 
 ```bash
 confluent api-key use $destination_api_key --resource $destination_id
-Set API Key "<DESTINATION_SA_API_KEY>" as the active API key for "lkc-p80ym".
+Set API Key "<DESTINATION_SA_API_KEY>" as the active API key for "lkc-nz953".
 ```
 
 ```bash
@@ -217,7 +218,7 @@ Trying with context:
  confluent context create destination-using-sa-context --bootstrap $destination_endpoint --api-key $destination_api_key --api-secret $destination_api_secret 
 +------------+----------------------------------------------+
 | Name       | destination-using-sa-context                 |
-| Platform   | $destination_endpoint |
+| Platform   | <destination_endpoint>       |
 | Credential | api-key-<DESTINATION_SA_API_KEY>                     |
 +------------+----------------------------------------------+
 ```
@@ -232,11 +233,11 @@ confluent kafka link create my-link-with-confluent-cli --cluster $destination_id
 
 Getting:
 
-```
+```text
 Error: Kafka cluster not found or access forbidden: Kafka cluster not found or access forbidden: error describing kafka cluster: Forbidden Access
 ```
 
-#### Using `kafka-cluster-links` CLI (working)
+### Using `kafka-cluster-links` CLI (working)
 
 It seems to be required to use `kafka-cluster-links` when we want to use service accounts only:
 
@@ -323,36 +324,34 @@ Created mirror topic "topic-to-link".
 
 ### Using `kafka-mirrors` CLI
 
-We can also used `kafka-mirrors` CLI:
+We can also use the `kafka-mirrors` CLI:
 
 ```bash
 kafka-mirrors --create --mirror-topic topic-to-link --link my-link --bootstrap-server $destination_endpoint --command-config destination.config
 ```
 
-# ✅ Verifications
+## ✅ Verifications
 
-## Consumer offsets
+### Consumer offsets
 
-Read 2 messages from source cluster:
+Read 2 messages from the source cluster with consumer group `my-consumer-group` (the topic contains values `1` to `10`):
 
-```bash
-playground topic consume --topic topic-to-link --min-expected-messages 2 --timeout 60
+```text
 1
 2
 Processed a total of 2 messages
 ```
 
-Continue to read from destination cluster:
-
-PS: need to set ACLs to do that first:
+Continue to read from the destination cluster with the same consumer group. ACLs are needed first:
 
 ```bash
 confluent kafka acl create --allow --service-account $destination_service_account --operations READ --topic "topic-to-link" --cluster $destination_id
 confluent kafka acl create --allow --service-account $destination_service_account --operations READ --operations DESCRIBE --consumer-group "my-consumer-group" --cluster $destination_id
 ```
 
-```bash
-playground topic consume --topic topic-to-link --min-expected-messages 8 --timeout 60
+The consumer resumes from the synced offsets:
+
+```text
 3
 4
 5
@@ -363,12 +362,12 @@ playground topic consume --topic topic-to-link --min-expected-messages 8 --timeo
 10
 ```
 
-## Update topic config
+### Update topic config
 
 Updated `max.message.bytes` to `2097999` on source cluster, it was also updated on destination cluster.
 
 
-## ACLs sync
+### ACLs sync
 
 On source cluster create an ACL:
 
@@ -386,12 +385,12 @@ confluent kafka acl list | grep $source_service_account
   User:sa-81g8qq | ALLOW      | READ             | TOPIC        | test-acl-sync | LITERAL      
 ```
 
-## Deleting user account that created link and mirror topic
+### Deleting user account that created link and mirror topic
 
 I created a temp OrgAdmin user account and created link `confluent kafka link` and mirror topic using that account and `confluent` CLI.
 After deleting the temp OrgAdmin user account, the link is still active and present, and also mirror topic is still working.
 
-## Stop consumer offset sync for consumer group my-consumer-group
+### Stop consumer offset sync for consumer group my-consumer-group
 
 ```bash
 echo "consumer.offset.group.filters={\"groupFilters\": [ \

@@ -1,69 +1,33 @@
 # JDBC MariaDB Sink connector
 
-
-
 ## Objective
 
-Quickly test [JDBC Sink](https://docs.confluent.io/current/connect/kafka-connect-jdbc/sink-connector/index.html#quick-start) connector with MariaDB.
+Quickly test the [JDBC Sink](https://docs.confluent.io/kafka-connectors/jdbc/current/sink-connector/overview.html) connector with MariaDB, using the MariaDB JDBC driver (3.2.0).
+
+## Prerequisites
+
+With CP 8.x, the JDBC connector version must be 10.8.0 or later (the script exits with code 111 otherwise).
 
 ## How to run
 
-
-```
-$ just use <playground run> command and search for mariadb-sink.sh in this folder
-```
-
-## Details of what the script is doing
-
-Creating MariaDB sink connector
-
 ```bash
-playground connector create-or-update --connector mariadb-sink  << EOF
-{
-     "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-     "tasks.max": "1",
-     "connection.url": "jdbc:mariadb://mariadb:3306/db?user=user&password=password&useSSL=false",
-     "topics": "orders",
-     "auto.create": "true"
-}
+playground run -f mariadb-jdbc-sink.sh
 ```
 
-Sending messages to topic orders
+| Script | Description |
+| --- | --- |
+| `mariadb-jdbc-sink.sh` | JDBC sink writing Avro records to a MariaDB table |
 
-```bash
-$ docker exec -i connect kafka-avro-console-producer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price","type": "float"}]}' << EOF
-{"id": 999, "product": "foo", "quantity": 100, "price": 50}
-EOF
-```
+## What the script does
 
+1. Downloads `mariadb-java-client-3.2.0.jar` if needed and copies it into the JDBC connector `lib` folder.
+2. Starts a MariaDB container alongside the plaintext environment.
+3. Creates the `mariadb-sink` connector (`jdbc:mariadb://mariadb:3306/db`, `topics=orders`, `auto.create=true`).
+4. Produces 2 Avro records to topic `orders` with `playground topic produce`.
+5. Describes and selects the `orders` table in MariaDB to verify the data:
 
-Describing the `orders` table in DB `db`:
-
-```bash
-$ docker exec mariadb bash -c "mariadb --user=user --password=password db -e 'describe orders;'"
-```
-
-Results:
-```
-Field   Type    Null    Key     Default Extra
-id      int(11) NO              NULL
-product text    NO              NULL
-quantity        int(11) NO              NULL
-price   float   NO              NULL
-```
-
-Show content of `orders` table:
-
-```bash
-$ docker exec mariadb bash -c "mariadb --user=user --password=password db -e 'select * from orders;'"
-```
-
-Results:
-
-```
+```text
 id      product quantity        price
 1       Norwood 2       0.555599
 2       foo     2       0.865833
 ```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

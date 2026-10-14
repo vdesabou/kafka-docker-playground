@@ -1,32 +1,32 @@
 # TIBCO Source connector
 
-
-
 ## Objective
 
-Quickly test [TIBCO Source](https://docs.confluent.io/current/connect/kafka-connect-tibco/source/index.html#quick-start) connector.
+Quickly test the [TIBCO Source](https://docs.confluent.io/current/connect/kafka-connect-tibco/source/index.html#quick-start) connector.
 
-Using TIBCO Docker [image](https://github.com/mikeschippers/docker-tibco)
+TIBCO EMS runs in a Docker image built from [mikeschippers/docker-tibco](https://github.com/mikeschippers/docker-tibco).
 
-N.B: if you're a Confluent employee, please check this [link](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900).
+## Prerequisites
 
-* Download [TIBCO EMS Community Edition](https://www.tibco.com/resources/product-download/tibco-enterprise-message-service-community-edition--free-download) and put `TIB_ems-ce_8.5.1_linux_x86_64.zip`into `docker-file`directory
+* With CP 8.x, connector version 1.2.0 or later.
+* Download [TIBCO EMS Community Edition](https://www.tibco.com/resources/product-download/tibco-enterprise-message-service-community-edition--free-download) and put `TIB_ems-ce_8.5.1_linux_x86_64.zip` into the `docker-tibco` directory. If it is missing, the script tries to download it from the playground S3 bucket (Confluent employees only, with AWS credentials set). Confluent employees can also check this [link](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900).
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for tibco-ems.sh in this folder
+```bash
+playground run -f tibco-ems.sh
 ```
 
-## Details of what the script is doing
+## What the script does
 
-The queue `connector-quickstart` is not created using `tibemsadmin` as described in [Quick Start](https://docs.confluent.io/current/connect/kafka-connect-tibco/source/index.html#quick-start) because the `TIBCO Enterprise Message Service™ - Community Edition` does not contain it.
+1. Extracts `tibjms.jar` and `jms-2.0.jar` from the EMS zip (if not already present), copies `tibjms.jar` into the connector `lib` folder, and builds the `tibems:latest` Docker image (first run only, it can take a while).
+2. Sends 5 messages (`m1` to `m5`) to the EMS queue `connector-quickstart` with the TIBCO `tibjmsMsgProducer` Java sample in the `tibco-ems` container.
+3. Creates the TIBCO Source connector reading the queue on `tcp://tibco-ems:7222` and writing to topic `from-tibco-messages`.
+4. Verifies the messages with `playground topic consume --topic from-tibco-messages`.
 
-The queues is created by providing `./docker-tibco/queues.conf`file in `/home/tibusr`directory.
+## Queue creation
 
-This file contains:
+The queue `connector-quickstart` is not created with `tibemsadmin` as described in the Quick Start, because TIBCO Enterprise Message Service Community Edition does not contain it. Instead, the image ships `docker-tibco/queues.conf` in `/home/tibusr`, which contains:
 
 ```
 >
@@ -36,58 +36,3 @@ queue.sample
 
 connector-quickstart
 ```
-
-The connector is created with:
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.tibco.TibcoSourceConnector",
-                    "tasks.max": "1",
-                    "kafka.topic": "from-tibco-messages",
-                    "tibco.url": "tcp://tibco-ems:7222",
-                    "tibco.username": "admin",
-                    "tibco.password": "",
-                    "jms.destination.type": "queue",
-                    "jms.destination.name": "connector-quickstart",
-                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/tibco-ems-source/config | jq .
-```
-
-Messages are sent to TIBCO EMS using:
-
-```bash
-$ docker exec tibco-ems bash -c '
-cd /opt/tibco/ems/8.5/samples/java
-export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib
-CLASSPATH=${TIBEMS_JAVA}/jms-2.0.jar:${CLASSPATH}
-CLASSPATH=.:${TIBEMS_JAVA}/tibjms.jar:${TIBEMS_JAVA}/tibjmsadmin.jar:${CLASSPATH}
-export CLASSPATH
-javac *.java
-java tibjmsMsgProducer -user admin -queue connector-quickstart m1 m2 m3 m4 m5'
-```
-
-Verify we have received the data in `from-tibco-messages` topic:
-
-```bash
-playground topic consume --topic from-tibco-messages --min-expected-messages 2 --timeout 60
-```
-
-Results:
-
-```
-Struct{messageID=ID:E4EMS-SERVER.15D9DAA1E3:1,messageType=text,timestamp=1570613846774,deliveryMode=2,destination=Struct{destinationType=queue,name=connector-quickstart},redelivered=false,expiration=0,priority=4,properties={JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=m1}
-Struct{messageID=ID:E4EMS-SERVER.15D9DAA1E3:2,messageType=text,timestamp=1570613846775,deliveryMode=2,destination=Struct{destinationType=queue,name=connector-quickstart},redelivered=false,expiration=0,priority=4,properties={JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=m2}
-Processed a total of 2 messages
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
-
-## Credits
-
-[mikeschippers/docker-tibco](https://github.com/mikeschippers/docker-tibco)

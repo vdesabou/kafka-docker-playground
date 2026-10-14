@@ -1,117 +1,26 @@
 # SNMP Trap Source connector
 
-
-
 ## Objective
 
-Quickly test [SNMP Trap Source](https://docs.confluent.io/current/connect/kafka-connect-snmp-trap/index.html#snmp-trap-source-connector-for-cp) connector.
+Quickly test the [SNMP Trap Source](https://docs.confluent.io/kafka-connectors/snmp/current/overview.html) connector.
 
+## Prerequisites
+
+* With CP 8.x, connector version 1.3.3 or later.
 
 ## How to run
 
-Simply run:
-
-```
-$ just use <playground run> command and search for snmp-trap-source.sh in this folder
-```
-
-## Details of what the script is doing
-
-Creating SNMP Trap Source connector
-
 ```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "tasks.max": "1",
-                    "connector.class": "io.confluent.connect.snmp.SnmpTrapSourceConnector",
-                    "kafka.topic": "snmp-kafka-topic",
-                    "snmp.v3.enabled": "true",
-                    "snmp.batch.size": "50",
-                    "snmp.listen.address": "0.0.0.0",
-                    "snmp.listen.port": "10161",
-                    "auth.password":"myauthpassword",
-                    "privacy.password":"myprivacypassword",
-                    "security.name":"mysecurityname",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/snmp-source/config | jq .
+playground run -f snmp-trap-source.sh
 ```
 
-Test with SNMP v3 trap
+## What the script does
 
-```bash
-$ docker exec snmptrap snmptrap -v 3 -c public -u mysecurityname -l authPriv -a MD5 -A myauthpassword -x DES -X myprivacypassword connect:10161 '' 1.3.6.1.4.1.8072.2.3.0.1 1.3.6.1.4.1.8072.2.3.2.1 i 123456
-```
+1. Creates the SNMP Trap Source connector listening on `0.0.0.0:10161` with SNMP v3 enabled (user `mysecurityname`, MD5 authentication, DES privacy), writing to topic `snmp-kafka-topic`.
+2. Sends an SNMP v3 trap from the `snmptrap` container to `connect:10161`:
 
-Verify we have received the data in snmp-kafka-topic topic
+   ```bash
+   snmptrap -v 3 -c public -u mysecurityname -l authPriv -a MD5 -A myauthpassword -x DES -X myprivacypassword connect:10161 '' 1.3.6.1.4.1.8072.2.3.0.1 1.3.6.1.4.1.8072.2.3.2.1 i 123456
+   ```
 
-```bash
-playground topic consume --topic snmp-kafka-topic --min-expected-messages 1 --timeout 60
-```
-
-Results:
-
-```json
-{
-    "peerAddress": "172.19.0.5/46028",
-    "securityName": "mysecurityname",
-    "variables": [
-        {
-            "counter32": null,
-            "counter64": null,
-            "gauge32": null,
-            "integer": null,
-            "ipaddress": null,
-            "metadata": {
-                "string": "39243974"
-            },
-            "null": null,
-            "objectIdentifier": null,
-            "octetString": null,
-            "oid": "1.3.6.1.2.1.1.3.0",
-            "opaque": null,
-            "timeticks": null,
-            "type": "timeticks"
-        },
-        {
-            "counter32": null,
-            "counter64": null,
-            "gauge32": null,
-            "integer": null,
-            "ipaddress": null,
-            "metadata": {
-                "string": "1.3.6.1.4.1.8072.2.3.0.1"
-            },
-            "null": null,
-            "objectIdentifier": null,
-            "octetString": null,
-            "oid": "1.3.6.1.6.3.1.1.4.1.0",
-            "opaque": null,
-            "timeticks": null,
-            "type": "objectIdentifier"
-        },
-        {
-            "counter32": null,
-            "counter64": null,
-            "gauge32": null,
-            "integer": null,
-            "ipaddress": null,
-            "metadata": {
-                "string": "123456"
-            },
-            "null": null,
-            "objectIdentifier": null,
-            "octetString": null,
-            "oid": "1.3.6.1.4.1.8072.2.3.2.1",
-            "opaque": null,
-            "timeticks": null,
-            "type": "integer"
-        }
-    ]
-}
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+3. Verifies the trap is received with `playground topic consume --topic snmp-kafka-topic`.
