@@ -145,7 +145,7 @@ RECOMMENDATIONS: Dict[str, Dict[str, object]] = {
             "Identify which probe is failing in 'kubectl describe pod' — liveness restarts the container, readiness pulls it out of the Service.",
             "For Kafka: readiness uses a TCP check on the inter-broker listener — verify the port is listening.",
             "Tune spec.podTemplate.probe.{liveness,readiness}.{initialDelaySeconds,timeoutSeconds} for slow starts.",
-            "If a JVM is paused in long GC, readiness flaps — investigate GC (use 'playground debug gc-analyze').",
+            "If a JVM is paused in long GC, readiness flaps — investigate GC (use 'playground analyze gc-logs').",
             "Confirm probe HTTP path/port matches the listener configured on the CR.",
         ],
     },
@@ -213,7 +213,7 @@ RECOMMENDATIONS: Dict[str, Dict[str, object]] = {
         "steps": [
             "kubectl -n <ns> exec <zk-pod> -- echo ruok | nc localhost 2181  — expect 'imok'.",
             "Check ZK ensemble forms a quorum: 'echo stat | nc' on each node, look for one Leader + N Followers.",
-            "Long GC pauses on brokers cause session timeouts — run 'playground debug gc-analyze' on broker JVM.",
+            "Long GC pauses on brokers cause session timeouts — run 'playground analyze gc-logs' on broker JVM.",
             "If on a KRaft-supported CFK version, plan migration off Zookeeper.",
         ],
     },

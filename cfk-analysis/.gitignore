@@ -1,0 +1,2 @@
+# the repository ignores *.gz: keep the sample
+!samples/*.tar.gz

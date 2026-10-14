@@ -1,6 +1,6 @@
 # thread-analyzer
 
-Thread dump analyzer behind `playground debug thread-analyze`. Standard library only, runs with the host
+Thread dump analyzer behind `playground analyze thread-dump`. Standard library only, runs with the host
 `python3` (3.9+), like `gc-analysis/`.
 
 ## What it reads
@@ -34,10 +34,11 @@ Exit codes: `0` analysis done, `2` no thread dump found, `1` usage error.
 Always go through the playground CLI:
 
 ```bash
-playground debug thread-analyze                                   # 3 dumps of connect, 5 s apart (kill -3)
-playground debug thread-analyze --container broker --count 5 --interval 2 --html
-playground debug thread-analyze -f dump1.txt -f dump2.txt -f dump3.txt --html
-playground debug thread-analyze -f ./customer-logs/connect-stdout.log --json
+playground analyze thread-dump --sample deadlock_jdk21          # try it on the samples below
+playground analyze thread-dump                                   # 3 dumps of connect, 5 s apart (kill -3)
+playground analyze thread-dump --container broker --count 5 --interval 2 --html
+playground analyze thread-dump -f dump1.txt -f dump2.txt -f dump3.txt --html
+playground analyze thread-dump -f ./customer-logs/connect-stdout.log --json
 ```
 
 With `--container`, the command sends `kill -3` to the JVM (it prints the dump to its stdout, so to the
@@ -46,12 +47,14 @@ does not reach the logs.
 
 ## Samples
 
-| File | Content |
-| --- | --- |
-| `jdk21-scenario-{1,2,3}.txt` | 3 `jstack -l` dumps of `TdLoad` on JDK 21, 3 s apart: deadlock, 8 threads blocked on one monitor, a CPU-hot thread, a Connect-like task stuck on a socket read, a leaking pool |
-| `jdk8-scenario.txt` | the same scenario on JDK 8 (hex `nid`, no `cpu=`) |
-| `cp-8.3.2-connect-kill-3-logs.txt` | 3 `kill -3` dumps of a healthy CP 8.3.2 Connect worker, read from its container logs |
-| `TdLoad.java` | the scenario program |
+`--sample <name>` analyzes them (`--sample` can be repeated):
+
+| `--sample` | File | Content |
+| --- | --- | --- |
+| `deadlock_jdk21` | `jdk21-scenario-{1,2,3}.txt` | 3 `jstack -l` dumps of `TdLoad` on JDK 21, 3 s apart: deadlock, 8 threads blocked on one monitor, a CPU-hot thread, a Connect-like task stuck on a socket read, a leaking pool |
+| `deadlock_jdk8` | `jdk8-scenario.txt` | the same scenario on JDK 8 (hex `nid`, no `cpu=`) |
+| `healthy_connect` | `cp-8.3.2-connect-kill-3-logs.txt` | 3 `kill -3` dumps of a healthy CP 8.3.2 Connect worker, read from its container logs |
+| | `TdLoad.java` | the scenario program |
 
 ```bash
 python3 tools/thread-analyzer/thread_dump_analyzer.py tools/thread-analyzer/samples/jdk21-scenario-*.txt

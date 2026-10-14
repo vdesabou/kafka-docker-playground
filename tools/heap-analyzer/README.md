@@ -1,6 +1,6 @@
 # heap-analyzer
 
-Docker image behind `playground debug heap-analyze`: [Eclipse Memory Analyzer (MAT)](https://eclipse.dev/mat/)
+Docker image behind `playground analyze heap-dump`: [Eclipse Memory Analyzer (MAT)](https://eclipse.dev/mat/)
 run headless on a heap dump, plus a text digest of the result.
 
 ## What it does
@@ -43,16 +43,30 @@ gets 80% of the container memory (`-XX:MaxRAMPercentage=80`). Raise the Docker m
 Always go through the playground CLI:
 
 ```bash
-playground debug heap-dump --container connect          # prints the heap-analyze command to run next
-playground debug heap-analyze --file heap-dump-connect-2026-04-08.hprof
-playground debug heap-analyze -f heap-dump-connect-1.hprof --compare heap-dump-connect-2.hprof
-playground debug heap-analyze -f big-heap-dump.hprof --max-memory 12g --report-type leaks
+playground analyze heap-dump --sample leak               # try it on the samples below
+playground analyze heap-dump --sample leak_growth
+playground debug heap-dump --container connect          # prints the analyze command to run next
+playground analyze heap-dump --file heap-dump-connect-2026-04-08.hprof
+playground analyze heap-dump -f heap-dump-connect-1.hprof --compare heap-dump-connect-2.hprof
+playground analyze heap-dump -f big-heap-dump.hprof --max-memory 12g --report-type leaks
 ```
 
 For paths to GC roots, OQL or interactive browsing, open the `.hprof` in the MAT GUI.
+
+## Samples
+
+Two `jcmd <pid> GC.heap_dump -gz=9` dumps of `samples/SessionCacheLeak.java` (a session cache that is never
+evicted), taken a few seconds apart on JDK 21 with `-Xmx64m -XX:+UseSerialGC`, kept small on purpose (2 and 3 MB):
+
+| `--sample` | Files | Expected result |
+| --- | --- | --- |
+| `leak` | `session-cache-leak-2.hprof.gz` | MAT leak suspect: the class `SessionCacheLeak` holds ~80 % of the heap through one `HashMap` |
+| `leak_growth` | `session-cache-leak-1.hprof.gz`, compared with `session-cache-leak-2.hprof.gz` | the same suspect, and `SessionCacheLeak$Session` / `byte[]` grow between the two dumps |
+
+The repository ignores `*.gz`: `.gitignore` keeps `samples/*.hprof.gz`.
 
 ## Updating MAT
 
 Take the version, build date and SHA-512 sums of the `linux.gtk.x86_64` / `linux.gtk.aarch64` zips from
 <https://eclipse.dev/mat/download/>, update the `ARG`s of the `Dockerfile` and run a dump through
-`playground debug heap-analyze`.
+`playground analyze heap-dump`.

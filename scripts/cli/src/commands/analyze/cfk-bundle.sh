@@ -1,4 +1,5 @@
 bundle="${args[--bundle]}"
+sample="${args[--sample]}"
 json_out="${args[--json]}"
 no_sanitize="${args[--no-sanitize]}"
 severity="${args[--severity]}"
@@ -9,7 +10,20 @@ include_warnings="${args[--include-warnings]}"
 
 set +e
 
-# Handle fzf @path trick (mirrors gc-analyze convention), only when the path itself does not exist
+if [[ -n "$bundle" && -n "$sample" ]]; then
+    logerror "❌ Provide either --bundle or --sample, not both"
+    exit 1
+fi
+if [[ -z "$bundle" && -z "$sample" ]]; then
+    logerror "❌ Must provide --bundle <directory or archive> (or --sample synthetic to try it)"
+    exit 1
+fi
+# ── Sample mode: bundle shipped in cfk-analysis/samples (built by make_synthetic_bundle.py) ──
+if [[ "$sample" == "synthetic" ]]; then
+    bundle="$root_folder/cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz"
+fi
+
+# Handle fzf @path trick (mirrors gc-logs convention), only when the path itself does not exist
 if [[ ! -e "$bundle" && "$bundle" == *"@"* ]]; then
     bundle=$(echo "$bundle" | cut -d "@" -f 2)
 fi
@@ -30,11 +44,12 @@ fi
 image_tag=$(cat "$analyzer_dir/Dockerfile" "$analyzer_dir/requirements.txt" | cksum | cut -d ' ' -f 1)
 image="cfk-bundle-analyzer:$image_tag"
 if ! docker image inspect "$image" > /dev/null 2>&1; then
-    log "🏗️  Building $image (first run only)..."
+    # stderr: stdout must stay valid JSON with --json
+    log "🏗️  Building $image (first run only)..." >&2
     build_log="/tmp/cfk-bundle-analyzer-build.log"
     if ! docker build --load -t "$image" "$analyzer_dir" > "$build_log" 2>&1 && ! docker build -t "$image" "$analyzer_dir" >> "$build_log" 2>&1; then
         logerror "❌ Failed to build $image, see $build_log"
-        tail -20 "$build_log"
+        tail -20 "$build_log" >&2
         exit 1
     fi
 fi

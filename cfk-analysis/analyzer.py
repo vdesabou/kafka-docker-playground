@@ -26,7 +26,7 @@ from typing import Dict, List, Any, Optional
 _TEXT_FILE_RE = re.compile(r'\.(?:log|txt|out)(?:\.[\w-]+)?(?:\.gz)?$|\.log\.gz$', re.IGNORECASE)
 _YAML_FILE_RE = re.compile(r'\.(?:ya?ml|json)$', re.IGNORECASE)
 
-# Only lines with an explicit level count, like `playground debug analyze-logs`:
+# Only lines with an explicit level count, like `playground analyze logs`:
 # log4j ` ERROR ` / `[ERROR]`, logfmt `level=error`, JSON `"level":"error"`, klog `E1012 `.
 # The bare form is upper case only, so `Warning` rows of `kubectl get events` are not log records.
 _LEVEL_RE = re.compile(

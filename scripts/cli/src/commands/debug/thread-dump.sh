@@ -94,7 +94,7 @@ do
     if [[ -n "$done_ok" ]]
     then
         log "👻 thread dump is available at ${filename}"
-        log "🔬 Analyze it with: playground debug thread-analyze --file ${filename}"
+        log "🔬 Analyze it with: playground analyze thread-dump --file ${filename}"
         playground open --file "${filename}"
     else
         logerror "❌ failed to take thread dump on container $container"

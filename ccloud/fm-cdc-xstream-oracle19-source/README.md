@@ -56,4 +56,4 @@ playground run -f fully-managed-cdc-xstream-oracle19.sh
 
 - `playground connector oracle-cdc-xstream generate-report` generates the Oracle XStream CDC connector diagnostics report.
 - `playground connector oracle-cdc-xstream debug` runs various SQL commands to debug the XStream components.
-- `playground debug oracle-xstream-analyze -c oracle` generates the report and analyzes it (findings with exact values, root-cause patterns); `-f orclcdc_diag_<date>.html` analyzes an existing report.
+- `playground analyze oracle-xstream-report -c oracle` generates the report and analyzes it (findings with exact values, root-cause patterns); `-f orclcdc_diag_<date>.html` analyzes an existing report.

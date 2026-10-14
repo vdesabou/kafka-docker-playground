@@ -12,3 +12,6 @@ analysis/
 # Temporary files
 tmp/
 temp/
+
+# the repository ignores *.gz: keep the samples
+!samples/*.hprof.gz

@@ -1,6 +1,27 @@
 eval "file_array=(${args[--file]})"
+eval "sample_array=(${args[--sample]})"
 include_warnings="${args[--include-warnings]}"
 max_findings="${args[--max-findings]}"
+
+if [[ ${#file_array[@]} -gt 0 && ${#sample_array[@]} -gt 0 ]]
+then
+    logerror "❌ Provide either --file or --sample, not both"
+    exit 1
+fi
+if [[ ${#file_array[@]} -eq 0 && ${#sample_array[@]} -eq 0 ]]
+then
+    logerror "❌ Must provide --file <log file, folder or bundle> (or --sample connect_task_failure to try it)"
+    exit 1
+fi
+
+# ── Sample mode: logs shipped in tools/log-analyzer/samples ──
+for sample in "${sample_array[@]}"
+do
+    case "$sample" in
+        connect_task_failure) file_array+=("$root_folder/tools/log-analyzer/samples/connect-oracle-xstream-task-failure.log") ;;
+        support_bundle) file_array+=("$root_folder/tools/log-analyzer/samples/support-bundle.zip") ;;
+    esac
+done
 
 for file in "${file_array[@]}"
 do

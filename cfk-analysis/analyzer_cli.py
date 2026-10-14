@@ -199,8 +199,8 @@ def print_text_report(results, top: int):
     print("Notes")
     print("=" * 72)
     print("- This report combines pattern detection with category-level remediation.")
-    print("- Raw ERROR digest of every log in the bundle: playground debug analyze-logs -f <bundle>")
-    print("- For JVM GC analysis on a specific component: playground debug gc-analyze")
+    print("- Raw ERROR digest of every log in the bundle: playground analyze logs -f <bundle>")
+    print("- For JVM GC analysis on a specific component: playground analyze gc-logs")
     print()
 
 

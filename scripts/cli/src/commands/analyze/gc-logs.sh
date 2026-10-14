@@ -1,4 +1,5 @@
 eval "file_array=(${args[--file]})"
+eval "sample_array=(${args[--sample]})"
 container="${args[--container]}"
 output_dir="${args[--output-dir]}"
 html="${args[--html]}"
@@ -8,20 +9,30 @@ run="${args[--run]}"
 
 set +e
 
-# ── Validate input: need --file OR --container ─────────────────────────────
-if [[ ${#file_array[@]} -eq 0 && -z "$container" ]]; then
-    logerror "❌ Must provide either --file <gc-log-file-or-folder> or --container <name>"
+# ── Validate input: one of --file, --container or --sample ─────────────────
+nb_modes=0
+[[ ${#file_array[@]} -gt 0 ]] && nb_modes=$((nb_modes + 1))
+[[ ${#sample_array[@]} -gt 0 ]] && nb_modes=$((nb_modes + 1))
+[[ -n "$container" ]] && nb_modes=$((nb_modes + 1))
+if [[ $nb_modes -eq 0 ]]; then
+    logerror "❌ Must provide one of --file <gc-log-file-or-folder>, --container <name> or --sample <name>"
     log ""
     log "Examples:"
-    log "  playground debug gc-analyze --file kafkaServer-gc.log"
-    log "  playground debug gc-analyze --container broker"
+    log "  playground analyze gc-logs --file kafkaServer-gc.log"
+    log "  playground analyze gc-logs --container broker"
+    log "  playground analyze gc-logs --sample jdk21_g1_kafka_real"
+    exit 1
+fi
+if [[ $nb_modes -gt 1 ]]; then
+    logerror "❌ Provide only one of --file, --container and --sample"
     exit 1
 fi
 
-if [[ ${#file_array[@]} -gt 0 && -n "$container" ]]; then
-    logerror "❌ Provide either --file or --container, not both"
-    exit 1
-fi
+# ── Sample mode: GC logs shipped with the analyzer ──
+for sample in "${sample_array[@]}"
+do
+    file_array+=("$root_folder/gc-analysis/samples/${sample}.log")
+done
 
 analyzer="$root_folder/gc-analysis/gc_log_analyzer.py"
 if [[ ! -f "$analyzer" ]]; then
