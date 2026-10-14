@@ -2146,6 +2146,66 @@
           ]
         },
         {
+          "name": "oracle-xstream-analyze",
+          "description": "🅾️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)\n\n📊 Reads the HTML report of the Confluent diagnostics script (the file support asks for, orclcdc_diag_<date>.html) and reports: prerequisites (archivelog, supplemental logging, streams_pool_size, MAX_SGA_SIZE), the state of the capture process, LogMiner, outbound server, apply reader, buffered queue and streams pool with thresholds, open and long running transactions, overlapping capture rules, alerts and errors of the last 7 days, the findings sorted by severity with the report section and the exact values, and the matched root-cause patterns.\n\n📈 Give several reports of the same database (repeat --file) to see what moved between them: captured SCN, messages captured, LCRs sent, latency, restarts.\n\n🐳 With --container (default: oracle), it runs 'playground connector oracle-cdc-xstream generate-report' on the running example first, and analyzes the result.\n\n🧪 With --sample, it analyzes the reports shipped in tools/xstream-analyzer/samples: a quick way to see what it reports without an Oracle database.\n\n🔖 Use --html to generate a self-contained HTML report, to share in a case\n\n🔖 Exit code is 0 when the analysis completed, 2 when the file is not an orclcdc_diag report\n\n👉 Check documentation https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script",
+          "usage": "playground debug oracle-xstream-analyze [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--file",
+                "-f"
+              ],
+              "argument": "FILE",
+              "description": "🗒️  orclcdc_diag HTML report (repeat --file for several reports of the same database)\n\n❕ Provide only one of --file, --container and --sample\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n        use <option+enter> to use the value you typed manually\n\nRepeatable: ✓ Yes"
+            },
+            {
+              "names": [
+                "--container",
+                "-c"
+              ],
+              "argument": "CONTAINER",
+              "description": "🐳 Oracle container of a running XStream example to generate the report from (default: oracle)"
+            },
+            {
+              "names": [
+                "--sample",
+                "-s"
+              ],
+              "argument": "SAMPLE",
+              "description": "🧪 Sample report of tools/xstream-analyzer/samples (repeat --sample to compare several)\n\n  healthy                connector running, idle database\n  large_transaction      uncommitted 150,000-row insert\n  detached               connector deleted: outbound server DETACHED\n  older_script_version   report of an older orclcdc_diag.sql\n  synthetic_failures     NOARCHIVELOG, capture ABORTED, flow control, LogMiner memory, spills, alerts\n\nRepeatable: ✓ Yes\nAllowed values: healthy, large_transaction, detached, older_script_version, synthetic_failures"
+            },
+            {
+              "names": [
+                "--output-dir",
+                "-o"
+              ],
+              "argument": "OUTPUT_DIR",
+              "description": "📂 Output directory for the report generated with --container and the HTML report (default: ./xstream-analysis-output)\n\nDefault value: ./xstream-analysis-output"
+            },
+            {
+              "names": [
+                "--html"
+              ],
+              "argument": "",
+              "description": "🌐 Generate a self-contained HTML report (findings, prerequisites, components, streams pool advice chart, deltas between reports)"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🗂️  Output JSON (findings, prerequisites, summary per component, deltas between reports)"
+            },
+            {
+              "names": [
+                "--top"
+              ],
+              "argument": "TOP",
+              "description": "📊 Maximum number of rows per list: transactions, alerts, errors, tables (default: 10)\n\nDefault value: 10"
+            }
+          ]
+        },
+        {
           "name": "tcp-dump",
           "description": "🕵️‍♂️ Take a tcp dump (sniffing network)\n\nCaptures the traffic in or out of a container for --duration seconds and\nbrings the capture file back, ready to open in Wireshark. Narrow it with\n--port when you know which one you care about.\n\n❕ On an encrypted listener you will see the handshake and the failures,\n   but not the records themselves.",
           "usage": "playground debug tcp-dump [OPTIONS]",
@@ -4295,13 +4355,13 @@
         },
         {
           "name": "oracle-cdc-xstream",
-          "description": "🅾️ Specific Oracle CDC Xstream commands\n\nWith XStream, half of the interesting state lives in the database, not\nin Connect. A connector that shows RUNNING while no change arrives is\nalmost always a capture process or an outbound server that is stuck on\nthe Oracle side, and the connect logs say nothing about it.\n\n  debug             query the XStream views from the Oracle container\n  generate-report   run the official diagnostics script\n\nOnly available when an oracle container is running.",
+          "description": "🅾️ Specific Oracle CDC Xstream commands\n\nWith XStream, half of the interesting state lives in the database, not\nin Connect. A connector that shows RUNNING while no change arrives is\nalmost always a capture process or an outbound server that is stuck on\nthe Oracle side, and the connect logs say nothing about it.\n\n  debug             query the XStream views from the Oracle container\n  generate-report   run the official diagnostics script\n\nOnly available when an oracle container is running. To analyze a report\n(also one sent by a customer), use 'playground debug oracle-xstream-analyze'.",
           "usage": "playground connector oracle-cdc-xstream COMMAND",
           "options": [],
           "subcommands": [
             {
               "name": "generate-report",
-              "description": "⚙️ Generate and open oracle cdc xstream connector diagnostics\n\nRuns the diagnostics script Confluent support asks for, and opens the\nresult. This is the file to attach to a case rather than pasting\nindividual query outputs.\n\nSee https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script",
+              "description": "⚙️ Generate and open oracle cdc xstream connector diagnostics\n\nRuns the diagnostics script Confluent support asks for, and opens the\nresult. This is the file to attach to a case rather than pasting\nindividual query outputs.\n\n🔎 'playground debug oracle-xstream-analyze -c oracle' generates it and\nanalyzes it in one go.\n\nSee https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script",
               "usage": "playground connector oracle-cdc-xstream generate-report",
               "options": []
             },
