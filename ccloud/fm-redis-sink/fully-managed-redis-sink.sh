@@ -76,6 +76,8 @@ wait_for_ccloud_connector_up $connector_name 180
 
 sleep 10
 
+playground connector show-lag --connector $connector_name
+
 log "Verify data is in Redis"
 # list the keys of all redis databases (the database used depends on the connector), retry for up to 2 minutes
 for i in $(seq 1 24)
