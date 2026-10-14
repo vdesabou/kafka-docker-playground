@@ -2,7 +2,6 @@ eval "file_array=(${args[--file]})"
 eval "sample_array=(${args[--sample]})"
 container="${args[--container]}"
 output_dir="${args[--output-dir]}"
-html="${args[--html]}"
 json_out="${args[--json]}"
 top="${args[--top]}"
 
@@ -75,7 +74,8 @@ if [[ -n "$json_out" ]]; then
 fi
 
 html_out=""
-if [[ -n "$html" ]]; then
+# the HTML report is always written (not with --json: stdout must stay JSON)
+if [[ -z "$json_out" ]]; then
     first=$(basename "${file_array[${#file_array[@]}-1]}")
     html_out="${output_dir_abs}/${first%.*}-xstream-report.html"
     analyzer_args+=(--html-out "$html_out")

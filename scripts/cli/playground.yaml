@@ -1899,15 +1899,15 @@ subcommands:
   description: "\U0001F50E Analyze commands\n\nTurn what you collected into findings:
     each command reads a file (a\ndump, a log, a bundle, a report, yours or one a
     customer sent) or takes\nit from a running container, and prints a digest with
-    what is wrong and\nwhat to do. They all work offline, and --sample runs them on
-    the samples\nshipped with the playground, to see what they report.\n\n  thread-dump
-    \            deadlocks, lock contention, stuck threads\n  gc-logs                 GC
-    pauses, failures, live set, leak trend\n  heap-dump               Eclipse MAT
-    leak suspects, retained sizes\n  logs                    ERROR/FATAL digest of
-    logs, folders, zips\n  oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n
-    \ cfk-bundle              CFK support bundle: pods, events, CRs, logs\n\nTo collect
-    them: playground debug thread-dump, heap-dump, flight-recorder,\nplayground connector
-    oracle-cdc-xstream generate-report,\nplayground debug cfk generate-bundle."
+    what is wrong and\nwhat to do, plus an HTML report to share (opened in your browser).
+    They\nall work offline, and --sample runs them on the samples shipped with the\nplayground,
+    to see what they report.\n\n  thread-dump             deadlocks, lock contention,
+    stuck threads\n  gc-logs                 GC pauses, failures, live set, leak trend\n
+    \ heap-dump               Eclipse MAT leak suspects, retained sizes\n  logs                    ERROR/FATAL
+    digest of logs, folders, zips\n  oracle-xstream-report   Oracle XStream diagnostics
+    (orclcdc_diag)\n  cfk-bundle              CFK support bundle: pods, events, CRs,
+    logs\n\nTo collect them: playground debug thread-dump, heap-dump, flight-recorder,\nplayground
+    connector oracle-cdc-xstream generate-report,\nplayground debug cfk generate-bundle."
   usage: playground analyze COMMAND
   options: []
   aliases:
@@ -1923,8 +1923,9 @@ subcommands:
       thread pools. Kafka / Connect aware (task threads, herder, broker request handlers).\n\n\U0001F433
       With --container (default: connect), it takes --count dumps --interval seconds
       apart with kill -3: the JVM prints them to the container logs, no JDK is needed
-      in the image.\n\n\U0001F516 Use --html to generate a self-contained HTML report\n\n\U0001F9EA
-      With --sample, it analyzes the samples shipped in tools/thread-analyzer/samples:
+      in the image.\n\n\U0001F310 Also writes a self-contained HTML report (inline
+      SVG charts, works offline) in --output-dir, opened in the browser in an interactive
+      terminal\n\n\U0001F9EA With --sample, it analyzes the samples shipped in tools/thread-analyzer/samples:
       a quick way to see what it reports.\n\n\U0001F516 Exit code is 0 when the analysis
       completed, 2 when no thread dump was found"
     usage: playground analyze thread-dump [OPTIONS]
@@ -1975,14 +1976,9 @@ subcommands:
         container and the HTML report (default: ./thread-analysis-output)\n\nDefault
         value: ./thread-analysis-output"
     - names:
-      - "--html"
-      argument: ''
-      description: "\U0001F310 Generate a self-contained HTML report (inline SVG charts,
-        works offline)"
-    - names:
       - "--json"
       argument: ''
-      description: "\U0001F5C2️  Output JSON (skips the text report and the HTML)"
+      description: "\U0001F5C2️  Output JSON (no text report, no HTML report)"
     - names:
       - "--top"
       argument: TOP
@@ -2099,8 +2095,10 @@ subcommands:
       restart, the latest run is analyzed (--run to pick another)\n\n\U0001F9EA With
       --sample, it analyzes the samples shipped in gc-analysis/samples: a quick way
       to see what it reports.\n\n\U0001F516 Exit code is 0 when the analysis completed,
-      2 when no GC event was found\n\n\U0001F516 Use --html to generate a self-contained
-      HTML dashboard (inline SVG charts, no external resource)"
+      2 when no GC event was found\n\n\U0001F310 Also writes a self-contained HTML
+      dashboard (pause timeline, heap before / after GC, pause distribution, KPI cards,
+      recommendations; no external resource) in --output-dir, opened in the browser
+      in an interactive terminal"
     usage: playground analyze gc-logs [OPTIONS]
     options:
     - names:
@@ -2143,16 +2141,9 @@ subcommands:
         copied from a container (default: ./gc-analysis-output)\n\nDefault value:
         ./gc-analysis-output"
     - names:
-      - "--html"
-      argument: ''
-      description: "\U0001F310 Generate a self-contained HTML report (inline SVG charts,
-        works offline)\n\n\U0001F4CA Report includes: pause timeline, heap before
-        / after GC, pause distribution,\n   GC types, KPI cards, JVM runs, recommendations
-        with the flag to set"
-    - names:
       - "--json"
       argument: ''
-      description: "\U0001F5C2️  Output JSON stats (skips text report and HTML)"
+      description: "\U0001F5C2️  Output JSON stats (no text report, no HTML report)"
     - names:
       - "--run"
       argument: RUN
@@ -2177,9 +2168,11 @@ subcommands:
       With --container (default: oracle), it runs 'playground connector oracle-cdc-xstream
       generate-report' on the running example first, and analyzes the result.\n\n\U0001F9EA
       With --sample, it analyzes the reports shipped in tools/xstream-analyzer/samples:
-      a quick way to see what it reports without an Oracle database.\n\n\U0001F516
-      Use --html to generate a self-contained HTML report, to share in a case\n\n\U0001F516
-      Exit code is 0 when the analysis completed, 2 when the file is not an orclcdc_diag
+      a quick way to see what it reports without an Oracle database.\n\n\U0001F310
+      Also writes a self-contained HTML report (findings, prerequisites, components,
+      streams pool advice chart, deltas between reports) in --output-dir, to share
+      in a case; opened in the browser in an interactive terminal\n\n\U0001F516 Exit
+      code is 0 when the analysis completed, 2 when the file is not an orclcdc_diag
       report\n\n\U0001F449 Check documentation https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script"
     usage: playground analyze oracle-xstream-report [OPTIONS]
     options:
@@ -2218,11 +2211,6 @@ subcommands:
         and the HTML report (default: ./xstream-analysis-output)\n\nDefault value:
         ./xstream-analysis-output"
     - names:
-      - "--html"
-      argument: ''
-      description: "\U0001F310 Generate a self-contained HTML report (findings, prerequisites,
-        components, streams pool advice chart, deltas between reports)"
-    - names:
       - "--json"
       argument: ''
       description: "\U0001F5C2️  Output JSON (findings, prerequisites, summary per
@@ -2246,10 +2234,11 @@ subcommands:
       It is best effort: review the output before sharing it. Pass --no-sanitize only
       for internal/test bundles.\n\n\U0001F516 Accepts a directory or a .tar / .tar.gz
       / .tgz / .zip archive.\n\n\U0001F516 Use --json to emit machine-readable output
-      for downstream tooling.\n\n\U0001F9EA With --sample, it analyzes the samples
-      shipped in cfk-analysis/samples: a quick way to see what it reports.\n\n\U0001F516
-      Exit code is 0 when the analysis completed (whatever was found, read the summary),
-      64 for an invalid, unsafe or empty bundle."
+      for downstream tooling.\n\n\U0001F310 Also writes a self-contained HTML report
+      in --output-dir, opened in the browser in an interactive terminal.\n\n\U0001F9EA
+      With --sample, it analyzes the samples shipped in cfk-analysis/samples: a quick
+      way to see what it reports.\n\n\U0001F516 Exit code is 0 when the analysis completed
+      (whatever was found, read the summary), 64 for an invalid, unsafe or empty bundle."
     usage: playground analyze cfk-bundle [OPTIONS]
     options:
     - names:
@@ -2291,16 +2280,10 @@ subcommands:
       description: "⚠️  Also report WARN log records that match no known category
         (WARN records matching a known category are always reported)"
     - names:
-      - "--html"
-      argument: ''
-      description: "\U0001F310 Generate a self-contained HTML report and open it in
-        the default browser\n\n❕ No external CDN/network needed — single offline-viewable
-        file you can share."
-    - names:
       - "--output-dir"
       argument: DIR
-      description: "\U0001F4C1 Directory for the HTML report (default: ./cfk-reports).
-        Only used with --html.\n\nDefault value: ./cfk-reports"
+      description: "\U0001F4C1 Directory for the HTML report (default: ./cfk-reports)\n\nDefault
+        value: ./cfk-reports"
 - name: debug
   description: "\U0001F41E Debug commands\n\nThe heavy tooling, made usable: the JDK
     utilities, tcpdump, iptables and\nthe analysis tools are run inside the right

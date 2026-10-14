@@ -5747,7 +5747,7 @@ playground_tools_redos_check_usage() {
 playground_analyze_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze\n\n"
-    printf "  🔎 Analyze commands\n  \n  Turn what you collected into findings: each command reads a file (a\n  dump, a log, a bundle, a report, yours or one a customer sent) or takes\n  it from a running container, and prints a digest with what is wrong and\n  what to do. They all work offline, and --sample runs them on the samples\n  shipped with the playground, to see what they report.\n  \n    thread-dump             deadlocks, lock contention, stuck threads\n    gc-logs                 GC pauses, failures, live set, leak trend\n    heap-dump               Eclipse MAT leak suspects, retained sizes\n    logs                    ERROR/FATAL digest of logs, folders, zips\n    oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n    cfk-bundle              CFK support bundle: pods, events, CRs, logs\n  \n  To collect them: playground debug thread-dump, heap-dump, flight-recorder,\n  playground connector oracle-cdc-xstream generate-report,\n  playground debug cfk generate-bundle.\n\n"
+    printf "  🔎 Analyze commands\n  \n  Turn what you collected into findings: each command reads a file (a\n  dump, a log, a bundle, a report, yours or one a customer sent) or takes\n  it from a running container, and prints a digest with what is wrong and\n  what to do, plus an HTML report to share (opened in your browser). They\n  all work offline, and --sample runs them on the samples shipped with the\n  playground, to see what they report.\n  \n    thread-dump             deadlocks, lock contention, stuck threads\n    gc-logs                 GC pauses, failures, live set, leak trend\n    heap-dump               Eclipse MAT leak suspects, retained sizes\n    logs                    ERROR/FATAL digest of logs, folders, zips\n    oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n    cfk-bundle              CFK support bundle: pods, events, CRs, logs\n  \n  To collect them: playground debug thread-dump, heap-dump, flight-recorder,\n  playground connector oracle-cdc-xstream generate-report,\n  playground debug cfk generate-bundle.\n\n"
   else
     printf "playground analyze - 🔎 Analyze commands\n\n"
   fi
@@ -5785,7 +5785,7 @@ playground_analyze_usage() {
 playground_analyze_thread_dump_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze thread-dump\n\n"
-    printf "  🧵 Analyze java thread dumps: deadlocks, lock contention, stuck and CPU-hungry\n  threads\n  \n  📊 Reads jstack / jcmd Thread.print / kill -3 output (JDK 8 to 25), several\n  dumps per file and container logs included, and reports: thread states and\n  pools, deadlocks, locks with their owner and waiters, the most common stacks,\n  and with several dumps of the same JVM: threads stuck on the same frames, the\n  CPU used by each thread between dumps, and growing thread pools. Kafka /\n  Connect aware (task threads, herder, broker request handlers).\n  \n  🐳 With --container (default: connect), it takes --count dumps --interval\n  seconds apart with kill -3: the JVM prints them to the container logs, no JDK\n  is needed in the image.\n  \n  🔖 Use --html to generate a self-contained HTML report\n  \n  🧪 With --sample, it analyzes the samples shipped in\n  tools/thread-analyzer/samples: a quick way to see what it reports.\n  \n  🔖 Exit code is 0 when the analysis completed, 2 when no thread dump was found\n\n"
+    printf "  🧵 Analyze java thread dumps: deadlocks, lock contention, stuck and CPU-hungry\n  threads\n  \n  📊 Reads jstack / jcmd Thread.print / kill -3 output (JDK 8 to 25), several\n  dumps per file and container logs included, and reports: thread states and\n  pools, deadlocks, locks with their owner and waiters, the most common stacks,\n  and with several dumps of the same JVM: threads stuck on the same frames, the\n  CPU used by each thread between dumps, and growing thread pools. Kafka /\n  Connect aware (task threads, herder, broker request handlers).\n  \n  🐳 With --container (default: connect), it takes --count dumps --interval\n  seconds apart with kill -3: the JVM prints them to the container logs, no JDK\n  is needed in the image.\n  \n  🌐 Also writes a self-contained HTML report (inline SVG charts, works offline)\n  in --output-dir, opened in the browser in an interactive terminal\n  \n  🧪 With --sample, it analyzes the samples shipped in\n  tools/thread-analyzer/samples: a quick way to see what it reports.\n  \n  🔖 Exit code is 0 when the analysis completed, 2 when no thread dump was found\n\n"
   else
     printf "playground analyze thread-dump - 🧵 Analyze java thread dumps: deadlocks, lock contention, stuck and CPU-hungry threads\n\n"
   fi
@@ -5836,13 +5836,8 @@ playground_analyze_thread_dump_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--html")"
-    printf "    🌐 Generate a self-contained HTML report (inline SVG charts, works offline)\n"
-    echo
-
-    # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
-    printf "    🗂️  Output JSON (skips the text report and the HTML)\n"
+    printf "    🗂️  Output JSON (no text report, no HTML report)\n"
     echo
 
     # :flag.usage
@@ -5859,9 +5854,8 @@ playground_analyze_thread_dump_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground analyze thread-dump --sample deadlock_jdk21\n"
-    printf "  playground analyze thread-dump --sample deadlock_jdk21 --html\n"
     printf "  playground analyze thread-dump\n"
-    printf "  playground analyze thread-dump -c broker --count 5 --interval 2 --html\n"
+    printf "  playground analyze thread-dump -c broker --count 5 --interval 2\n"
     printf "  playground analyze thread-dump --file thread-dump-connect-2026-10-13.log\n"
     printf "  playground analyze thread-dump -f dump1.txt -f dump2.txt -f dump3.txt\n"
     printf "  playground analyze thread-dump -f ./customer-logs/connect-stdout.log\n"
@@ -6011,7 +6005,7 @@ playground_analyze_logs_usage() {
 playground_analyze_gc_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze gc-logs\n\n"
-    printf "  📈 Analyze JVM Garbage Collection logs\n  \n  📊 Parses GC logs from local files / folders or a running container: pause\n  statistics, Full GC and evacuation / concurrent mode failures, live set, heap\n  floor trend (leak), allocation stalls, GC causes, and recommendations backed\n  by a finding (Kafka-aware: compared with Kafka's own G1 settings).\n  \n  🔖 Supports JDK 7–21+ and all major collectors: G1GC, CMS, ZGC, Generational\n  ZGC, Shenandoah, ParallelGC, SerialGC, in legacy (-XX:+PrintGCDetails) and\n  unified (-Xlog:gc*) formats, any decoration\n  \n  🔄 Pass every rotated file (kafkaServer-gc.log, .log.0…, .gz) or their folder:\n  files are ordered by timestamp and split by JVM restart, the latest run is\n  analyzed (--run to pick another)\n  \n  🧪 With --sample, it analyzes the samples shipped in gc-analysis/samples: a\n  quick way to see what it reports.\n  \n  🔖 Exit code is 0 when the analysis completed, 2 when no GC event was found\n  \n  🔖 Use --html to generate a self-contained HTML dashboard (inline SVG charts,\n  no external resource)\n\n"
+    printf "  📈 Analyze JVM Garbage Collection logs\n  \n  📊 Parses GC logs from local files / folders or a running container: pause\n  statistics, Full GC and evacuation / concurrent mode failures, live set, heap\n  floor trend (leak), allocation stalls, GC causes, and recommendations backed\n  by a finding (Kafka-aware: compared with Kafka's own G1 settings).\n  \n  🔖 Supports JDK 7–21+ and all major collectors: G1GC, CMS, ZGC, Generational\n  ZGC, Shenandoah, ParallelGC, SerialGC, in legacy (-XX:+PrintGCDetails) and\n  unified (-Xlog:gc*) formats, any decoration\n  \n  🔄 Pass every rotated file (kafkaServer-gc.log, .log.0…, .gz) or their folder:\n  files are ordered by timestamp and split by JVM restart, the latest run is\n  analyzed (--run to pick another)\n  \n  🧪 With --sample, it analyzes the samples shipped in gc-analysis/samples: a\n  quick way to see what it reports.\n  \n  🔖 Exit code is 0 when the analysis completed, 2 when no GC event was found\n  \n  🌐 Also writes a self-contained HTML dashboard (pause timeline, heap before /\n  after GC, pause distribution, KPI cards, recommendations; no external\n  resource) in --output-dir, opened in the browser in an interactive terminal\n\n"
   else
     printf "playground analyze gc-logs - 📈 Analyze JVM Garbage Collection logs\n\n"
   fi
@@ -6050,13 +6044,8 @@ playground_analyze_gc_logs_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--html")"
-    printf "    🌐 Generate a self-contained HTML report (inline SVG charts, works offline)\n    \n    📊 Report includes: pause timeline, heap before / after GC, pause\n    distribution,\n       GC types, KPI cards, JVM runs, recommendations with the flag to set\n"
-    echo
-
-    # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
-    printf "    🗂️  Output JSON stats (skips text report and HTML)\n"
+    printf "    🗂️  Output JSON stats (no text report, no HTML report)\n"
     echo
 
     # :flag.usage
@@ -6078,13 +6067,13 @@ playground_analyze_gc_logs_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground analyze gc-logs --sample jdk21_g1_kafka_real\n"
-    printf "  playground analyze gc-logs --sample jdk8_cms_cmf_real --html\n"
+    printf "  playground analyze gc-logs --sample jdk8_cms_cmf_real\n"
     printf "  playground analyze gc-logs --file gc.log\n"
-    printf "  playground analyze gc-logs --file /var/log/kafka/kafkaServer-gc.log --html\n"
+    printf "  playground analyze gc-logs --file /var/log/kafka/kafkaServer-gc.log\n"
     printf "  playground analyze gc-logs -f gc.log -f gc.log.0 -f gc.log.1\n"
     printf "  playground analyze gc-logs --file ./customer-logs/broker-1/\n"
     printf "  playground analyze gc-logs --container broker\n"
-    printf "  playground analyze gc-logs --container broker --html --output-dir ./gc-reports\n"
+    printf "  playground analyze gc-logs --container broker --output-dir ./gc-reports\n"
     printf "  playground analyze gc-logs -f kafkaServer-gc.log --json\n"
     printf "  playground analyze gc-logs -f kafkaServer-gc.log --run 1 --top-pauses 20\n"
     echo
@@ -6096,7 +6085,7 @@ playground_analyze_gc_logs_usage() {
 playground_analyze_oracle_xstream_report_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze oracle-xstream-report\n\n"
-    printf "  🅾️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)\n  \n  📊 Reads the HTML report of the Confluent diagnostics script (the file support\n  asks for, orclcdc_diag_<date>.html) and reports: prerequisites (archivelog,\n  supplemental logging, streams_pool_size, MAX_SGA_SIZE), the state of the\n  capture process, LogMiner, outbound server, apply reader, buffered queue and\n  streams pool with thresholds, open and long running transactions, overlapping\n  capture rules, alerts and errors of the last 7 days, the findings sorted by\n  severity with the report section and the exact values, and the matched\n  root-cause patterns.\n  \n  📈 Give several reports of the same database (repeat --file) to see what moved\n  between them: captured SCN, messages captured, LCRs sent, latency, restarts.\n  \n  🐳 With --container (default: oracle), it runs 'playground connector\n  oracle-cdc-xstream generate-report' on the running example first, and analyzes\n  the result.\n  \n  🧪 With --sample, it analyzes the reports shipped in\n  tools/xstream-analyzer/samples: a quick way to see what it reports without an\n  Oracle database.\n  \n  🔖 Use --html to generate a self-contained HTML report, to share in a case\n  \n  🔖 Exit code is 0 when the analysis completed, 2 when the file is not an\n  orclcdc_diag report\n  \n  👉 Check documentation\n  https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script\n\n"
+    printf "  🅾️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)\n  \n  📊 Reads the HTML report of the Confluent diagnostics script (the file support\n  asks for, orclcdc_diag_<date>.html) and reports: prerequisites (archivelog,\n  supplemental logging, streams_pool_size, MAX_SGA_SIZE), the state of the\n  capture process, LogMiner, outbound server, apply reader, buffered queue and\n  streams pool with thresholds, open and long running transactions, overlapping\n  capture rules, alerts and errors of the last 7 days, the findings sorted by\n  severity with the report section and the exact values, and the matched\n  root-cause patterns.\n  \n  📈 Give several reports of the same database (repeat --file) to see what moved\n  between them: captured SCN, messages captured, LCRs sent, latency, restarts.\n  \n  🐳 With --container (default: oracle), it runs 'playground connector\n  oracle-cdc-xstream generate-report' on the running example first, and analyzes\n  the result.\n  \n  🧪 With --sample, it analyzes the reports shipped in\n  tools/xstream-analyzer/samples: a quick way to see what it reports without an\n  Oracle database.\n  \n  🌐 Also writes a self-contained HTML report (findings, prerequisites,\n  components, streams pool advice chart, deltas between reports) in\n  --output-dir, to share in a case; opened in the browser in an interactive\n  terminal\n  \n  🔖 Exit code is 0 when the analysis completed, 2 when the file is not an\n  orclcdc_diag report\n  \n  👉 Check documentation\n  https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script\n\n"
   else
     printf "playground analyze oracle-xstream-report - 🅾️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)\n\n"
   fi
@@ -6135,11 +6124,6 @@ playground_analyze_oracle_xstream_report_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--html")"
-    printf "    🌐 Generate a self-contained HTML report (findings, prerequisites,\n    components, streams pool advice chart, deltas between reports)\n"
-    echo
-
-    # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
     printf "    🗂️  Output JSON (findings, prerequisites, summary per component, deltas\n    between reports)\n"
     echo
@@ -6158,11 +6142,10 @@ playground_analyze_oracle_xstream_report_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground analyze oracle-xstream-report --sample synthetic_failures\n"
-    printf "  playground analyze oracle-xstream-report --sample synthetic_failures --html\n"
     printf "  playground analyze oracle-xstream-report -s large_transaction -s detached\n"
     printf "  playground analyze oracle-xstream-report --sample large_transaction --json\n"
     printf "  playground analyze oracle-xstream-report -f orclcdc_diag_20261013_0912.html\n"
-    printf "  playground analyze oracle-xstream-report -f day1.html -f day2.html --html\n"
+    printf "  playground analyze oracle-xstream-report -f day1.html -f day2.html\n"
     printf "  playground analyze oracle-xstream-report --container oracle\n"
     echo
 
@@ -6173,7 +6156,7 @@ playground_analyze_oracle_xstream_report_usage() {
 playground_analyze_cfk_bundle_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze cfk-bundle\n\n"
-    printf "  📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n  \n  🔍 Checks Warning events, pods (phase, waiting reasons, restarts, OOMKilled),\n  every platform.confluent.io custom resource (phase/state, ready replicas,\n  False conditions, failed connector tasks) and the ERROR/FATAL records of every\n  log (rotated and .gz included, with their Caused by chain and an occurrence\n  count), sorts them into ~30 categories (pod failures, TLS, auth, MDS/RBAC,\n  license, KRaft, replication, storage, scheduling, …) and prints concrete\n  remediation steps per category.\n  \n  ✅ Works offline on any bundle produced by kubectl confluent support-bundle (or\n  playground debug cfk generate-bundle): no cfk environment needed.\n  \n  🔒 Sanitization (secrets / IPs / hostnames / emails / LDAP DNs) is ON by\n  default. It is best effort: review the output before sharing it. Pass\n  --no-sanitize only for internal/test bundles.\n  \n  🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.\n  \n  🔖 Use --json to emit machine-readable output for downstream tooling.\n  \n  🧪 With --sample, it analyzes the samples shipped in cfk-analysis/samples: a\n  quick way to see what it reports.\n  \n  🔖 Exit code is 0 when the analysis completed (whatever was found, read the\n  summary), 64 for an invalid, unsafe or empty bundle.\n\n"
+    printf "  📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n  \n  🔍 Checks Warning events, pods (phase, waiting reasons, restarts, OOMKilled),\n  every platform.confluent.io custom resource (phase/state, ready replicas,\n  False conditions, failed connector tasks) and the ERROR/FATAL records of every\n  log (rotated and .gz included, with their Caused by chain and an occurrence\n  count), sorts them into ~30 categories (pod failures, TLS, auth, MDS/RBAC,\n  license, KRaft, replication, storage, scheduling, …) and prints concrete\n  remediation steps per category.\n  \n  ✅ Works offline on any bundle produced by kubectl confluent support-bundle (or\n  playground debug cfk generate-bundle): no cfk environment needed.\n  \n  🔒 Sanitization (secrets / IPs / hostnames / emails / LDAP DNs) is ON by\n  default. It is best effort: review the output before sharing it. Pass\n  --no-sanitize only for internal/test bundles.\n  \n  🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.\n  \n  🔖 Use --json to emit machine-readable output for downstream tooling.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal.\n  \n  🧪 With --sample, it analyzes the samples shipped in cfk-analysis/samples: a\n  quick way to see what it reports.\n  \n  🔖 Exit code is 0 when the analysis completed (whatever was found, read the\n  summary), 64 for an invalid, unsafe or empty bundle.\n\n"
   else
     printf "playground analyze cfk-bundle - 📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n\n"
   fi
@@ -6228,13 +6211,8 @@ playground_analyze_cfk_bundle_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--html")"
-    printf "    🌐 Generate a self-contained HTML report and open it in the default browser\n    \n    ❕ No external CDN/network needed — single offline-viewable file you can\n    share.\n"
-    echo
-
-    # :flag.usage
     printf "  %s\n" "$(magenta "--output-dir DIR")"
-    printf "    📁 Directory for the HTML report (default: ./cfk-reports). Only used with\n    --html.\n"
+    printf "    📁 Directory for the HTML report (default: ./cfk-reports)\n"
     printf "    %s\n" "Default: ./cfk-reports"
     echo
 
@@ -6246,12 +6224,11 @@ playground_analyze_cfk_bundle_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground analyze cfk-bundle --sample synthetic\n"
-    printf "  playground analyze cfk-bundle --sample synthetic --html\n"
     printf "  playground analyze cfk-bundle --bundle ./customer-bundle.tar.gz\n"
     printf "  playground analyze cfk-bundle --bundle ./extracted-bundle/\n"
     printf "  playground analyze cfk-bundle --bundle ./bundle.zip --severity high\n"
     printf "  playground analyze cfk-bundle --bundle ./bundle.tar.gz --json > report.json\n"
-    printf "  playground analyze cfk-bundle -b ./bundle.tgz --html --output-dir ./reports\n"
+    printf "  playground analyze cfk-bundle -b ./bundle.tgz --output-dir ./reports\n"
     printf "  playground analyze cfk-bundle -b ./bundle.tgz --include-warnings\n"
     echo
 
@@ -6555,13 +6532,8 @@ playground_debug_thread_analyze_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--html")"
-    printf "    🌐 Generate a self-contained HTML report (inline SVG charts, works offline)\n"
-    echo
-
-    # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
-    printf "    🗂️  Output JSON (skips the text report and the HTML)\n"
+    printf "    🗂️  Output JSON (no text report, no HTML report)\n"
     echo
 
     # :flag.usage
@@ -6771,13 +6743,8 @@ playground_debug_gc_analyze_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--html")"
-    printf "    🌐 Generate a self-contained HTML report (inline SVG charts, works offline)\n    \n    📊 Report includes: pause timeline, heap before / after GC, pause\n    distribution,\n       GC types, KPI cards, JVM runs, recommendations with the flag to set\n"
-    echo
-
-    # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
-    printf "    🗂️  Output JSON stats (skips text report and HTML)\n"
+    printf "    🗂️  Output JSON stats (no text report, no HTML report)\n"
     echo
 
     # :flag.usage
@@ -7264,13 +7231,8 @@ playground_debug_cfk_cfk_bundle_analyze_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--html")"
-    printf "    🌐 Generate a self-contained HTML report and open it in the default browser\n    \n    ❕ No external CDN/network needed — single offline-viewable file you can\n    share.\n"
-    echo
-
-    # :flag.usage
     printf "  %s\n" "$(magenta "--output-dir DIR")"
-    printf "    📁 Directory for the HTML report (default: ./cfk-reports). Only used with\n    --html.\n"
+    printf "    📁 Directory for the HTML report (default: ./cfk-reports)\n"
     printf "    %s\n" "Default: ./cfk-reports"
     echo
 
@@ -34124,7 +34086,6 @@ playground_analyze_thread_dump_command() {
   count="${args[--count]}"
   interval="${args[--interval]}"
   output_dir="${args[--output-dir]}"
-  html="${args[--html]}"
   json_out="${args[--json]}"
   top="${args[--top]}"
 
@@ -34210,7 +34171,8 @@ playground_analyze_thread_dump_command() {
   fi
 
   html_out=""
-  if [[ -n "$html" ]]; then
+  # the HTML report is always written (not with --json: stdout must stay JSON)
+  if [[ -z "$json_out" ]]; then
       first=$(basename "${file_array[0]}")
       html_out="${output_dir_abs}/${first%.*}-thread-report.html"
       analyzer_args+=(--html-out "$html_out")
@@ -34511,7 +34473,6 @@ playground_analyze_gc_logs_command() {
   eval "sample_array=(${args[--sample]})"
   container="${args[--container]}"
   output_dir="${args[--output-dir]}"
-  html="${args[--html]}"
   json_out="${args[--json]}"
   top_pauses="${args[--top-pauses]}"
   run="${args[--run]}"
@@ -34624,7 +34585,8 @@ playground_analyze_gc_logs_command() {
   log ""
 
   html_out=""
-  if [[ -n "$html" ]]; then
+  # the HTML report is always written (not with --json: stdout must stay JSON)
+  if [[ -z "$json_out" ]]; then
       mkdir -p "$output_dir"
       output_dir_abs=$(cd "$output_dir" && pwd)
       first=$(basename "${file_array[0]}")
@@ -34664,7 +34626,6 @@ playground_analyze_oracle_xstream_report_command() {
   eval "sample_array=(${args[--sample]})"
   container="${args[--container]}"
   output_dir="${args[--output-dir]}"
-  html="${args[--html]}"
   json_out="${args[--json]}"
   top="${args[--top]}"
 
@@ -34737,7 +34698,8 @@ playground_analyze_oracle_xstream_report_command() {
   fi
 
   html_out=""
-  if [[ -n "$html" ]]; then
+  # the HTML report is always written (not with --json: stdout must stay JSON)
+  if [[ -z "$json_out" ]]; then
       first=$(basename "${file_array[${#file_array[@]}-1]}")
       html_out="${output_dir_abs}/${first%.*}-xstream-report.html"
       analyzer_args+=(--html-out "$html_out")
@@ -34779,7 +34741,6 @@ playground_analyze_cfk_bundle_command() {
   no_sanitize="${args[--no-sanitize]}"
   severity="${args[--severity]}"
   top="${args[--top]}"
-  html="${args[--html]}"
   output_dir="${args[--output-dir]}"
   include_warnings="${args[--include-warnings]}"
 
@@ -34866,7 +34827,8 @@ playground_analyze_cfk_bundle_command() {
 
   # ── HTML output target ─────────────────────────────────────────────────────
   html_out=""
-  if [[ -n "$html" ]]; then
+  # the HTML report is always written (not with --json: stdout must stay JSON)
+  if [[ -z "$json_out" ]]; then
       : "${output_dir:=./cfk-reports}"
       mkdir -p "$output_dir"
       output_dir_abs=$(cd "$output_dir" && pwd -P)
@@ -34899,7 +34861,7 @@ playground_analyze_cfk_bundle_command() {
   esac
 
   # ── Open HTML report in browser ────────────────────────────────────────────
-  if [[ $exit_code -eq 0 && -n "$html" && -f "$html_out" ]]; then
+  if [[ $exit_code -eq 0 && -n "$html_out" && -f "$html_out" ]]; then
       log ""
       log "🌐 HTML report saved: $html_out"
       # only open a browser in an interactive terminal
@@ -35177,7 +35139,6 @@ playground_debug_thread_analyze_command() {
   count="${args[--count]}"
   interval="${args[--interval]}"
   output_dir="${args[--output-dir]}"
-  html="${args[--html]}"
   json_out="${args[--json]}"
   top="${args[--top]}"
 
@@ -35263,7 +35224,8 @@ playground_debug_thread_analyze_command() {
   fi
 
   html_out=""
-  if [[ -n "$html" ]]; then
+  # the HTML report is always written (not with --json: stdout must stay JSON)
+  if [[ -z "$json_out" ]]; then
       first=$(basename "${file_array[0]}")
       html_out="${output_dir_abs}/${first%.*}-thread-report.html"
       analyzer_args+=(--html-out "$html_out")
@@ -35706,7 +35668,6 @@ playground_debug_gc_analyze_command() {
   eval "sample_array=(${args[--sample]})"
   container="${args[--container]}"
   output_dir="${args[--output-dir]}"
-  html="${args[--html]}"
   json_out="${args[--json]}"
   top_pauses="${args[--top-pauses]}"
   run="${args[--run]}"
@@ -35819,7 +35780,8 @@ playground_debug_gc_analyze_command() {
   log ""
 
   html_out=""
-  if [[ -n "$html" ]]; then
+  # the HTML report is always written (not with --json: stdout must stay JSON)
+  if [[ -z "$json_out" ]]; then
       mkdir -p "$output_dir"
       output_dir_abs=$(cd "$output_dir" && pwd)
       first=$(basename "${file_array[0]}")
@@ -36455,7 +36417,6 @@ playground_debug_cfk_cfk_bundle_analyze_command() {
   no_sanitize="${args[--no-sanitize]}"
   severity="${args[--severity]}"
   top="${args[--top]}"
-  html="${args[--html]}"
   output_dir="${args[--output-dir]}"
   include_warnings="${args[--include-warnings]}"
 
@@ -36542,7 +36503,8 @@ playground_debug_cfk_cfk_bundle_analyze_command() {
 
   # ── HTML output target ─────────────────────────────────────────────────────
   html_out=""
-  if [[ -n "$html" ]]; then
+  # the HTML report is always written (not with --json: stdout must stay JSON)
+  if [[ -z "$json_out" ]]; then
       : "${output_dir:=./cfk-reports}"
       mkdir -p "$output_dir"
       output_dir_abs=$(cd "$output_dir" && pwd -P)
@@ -36575,7 +36537,7 @@ playground_debug_cfk_cfk_bundle_analyze_command() {
   esac
 
   # ── Open HTML report in browser ────────────────────────────────────────────
-  if [[ $exit_code -eq 0 && -n "$html" && -f "$html_out" ]]; then
+  if [[ $exit_code -eq 0 && -n "$html_out" && -f "$html_out" ]]; then
       log ""
       log "🌐 HTML report saved: $html_out"
       # only open a browser in an interactive terminal
@@ -36675,7 +36637,7 @@ playground_debug_cfk_generate_bundle_command() {
           log "📦 Bundle: $bundle_file"
           log ""
           log "📊 To analyze the bundle, run:"
-          log "   playground analyze cfk-bundle --bundle $bundle_file --html"
+          log "   playground analyze cfk-bundle --bundle $bundle_file"
           log ""
           log "📈 To extract the bundle, run:"
           log "   tar -xzf $bundle_file"
@@ -86502,11 +86464,6 @@ playground_analyze_thread_dump_completion() {
         completion_blocked_flags["--output-dir"]=1
 
         ;;
-      --html)
-        completion_blocked_flags["--html"]=1
-
-        shift
-        ;;
       --json)
         completion_blocked_flags["--json"]=1
 
@@ -86536,7 +86493,6 @@ playground_analyze_thread_dump_completion() {
     completion_flag_candidates --count "$completion_current" --count
     completion_flag_candidates --interval "$completion_current" --interval
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
-    completion_flag_candidates --html "$completion_current" --html
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --top "$completion_current" --top
   fi
@@ -86784,11 +86740,6 @@ playground_analyze_gc_logs_completion() {
         completion_blocked_flags["--output-dir"]=1
 
         ;;
-      --html)
-        completion_blocked_flags["--html"]=1
-
-        shift
-        ;;
       --json)
         completion_blocked_flags["--json"]=1
 
@@ -86826,7 +86777,6 @@ playground_analyze_gc_logs_completion() {
     completion_flag_candidates --sample "$completion_current" --sample -s
     completion_flag_candidates --container "$completion_current" --container -c --pod -p
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
-    completion_flag_candidates --html "$completion_current" --html
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --run "$completion_current" --run
     completion_flag_candidates --top-pauses "$completion_current" --top-pauses
@@ -86894,11 +86844,6 @@ playground_analyze_oracle_xstream_report_completion() {
         completion_blocked_flags["--output-dir"]=1
 
         ;;
-      --html)
-        completion_blocked_flags["--html"]=1
-
-        shift
-        ;;
       --json)
         completion_blocked_flags["--json"]=1
 
@@ -86926,7 +86871,6 @@ playground_analyze_oracle_xstream_report_completion() {
     completion_flag_candidates --container "$completion_current" --container -c
     completion_flag_candidates --sample "$completion_current" --sample -s
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
-    completion_flag_candidates --html "$completion_current" --html
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --top "$completion_current" --top
   fi
@@ -87010,11 +86954,6 @@ playground_analyze_cfk_bundle_completion() {
 
         shift
         ;;
-      --html)
-        completion_blocked_flags["--html"]=1
-
-        shift
-        ;;
       --output-dir)
         shift
         if [[ $# -eq 0 ]]; then
@@ -87040,7 +86979,6 @@ playground_analyze_cfk_bundle_completion() {
     completion_flag_candidates --severity "$completion_current" --severity
     completion_flag_candidates --top "$completion_current" --top
     completion_flag_candidates --include-warnings "$completion_current" --include-warnings
-    completion_flag_candidates --html "$completion_current" --html
     completion_flag_candidates --output-dir "$completion_current" --output-dir
   fi
 
@@ -87400,11 +87338,6 @@ playground_debug_thread_analyze_completion() {
         completion_blocked_flags["--output-dir"]=1
 
         ;;
-      --html)
-        completion_blocked_flags["--html"]=1
-
-        shift
-        ;;
       --json)
         completion_blocked_flags["--json"]=1
 
@@ -87434,7 +87367,6 @@ playground_debug_thread_analyze_completion() {
     completion_flag_candidates --count "$completion_current" --count
     completion_flag_candidates --interval "$completion_current" --interval
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
-    completion_flag_candidates --html "$completion_current" --html
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --top "$completion_current" --top
   fi
@@ -87730,11 +87662,6 @@ playground_debug_gc_analyze_completion() {
         completion_blocked_flags["--output-dir"]=1
 
         ;;
-      --html)
-        completion_blocked_flags["--html"]=1
-
-        shift
-        ;;
       --json)
         completion_blocked_flags["--json"]=1
 
@@ -87772,7 +87699,6 @@ playground_debug_gc_analyze_completion() {
     completion_flag_candidates --sample "$completion_current" --sample -s
     completion_flag_candidates --container "$completion_current" --container -c --pod -p
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
-    completion_flag_candidates --html "$completion_current" --html
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --run "$completion_current" --run
     completion_flag_candidates --top-pauses "$completion_current" --top-pauses
@@ -88366,11 +88292,6 @@ playground_debug_cfk_cfk_bundle_analyze_completion() {
 
         shift
         ;;
-      --html)
-        completion_blocked_flags["--html"]=1
-
-        shift
-        ;;
       --output-dir)
         shift
         if [[ $# -eq 0 ]]; then
@@ -88396,7 +88317,6 @@ playground_debug_cfk_cfk_bundle_analyze_completion() {
     completion_flag_candidates --severity "$completion_current" --severity
     completion_flag_candidates --top "$completion_current" --top
     completion_flag_candidates --include-warnings "$completion_current" --include-warnings
-    completion_flag_candidates --html "$completion_current" --html
     completion_flag_candidates --output-dir "$completion_current" --output-dir
   fi
 

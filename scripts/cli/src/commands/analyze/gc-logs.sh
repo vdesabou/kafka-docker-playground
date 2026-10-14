@@ -2,7 +2,6 @@ eval "file_array=(${args[--file]})"
 eval "sample_array=(${args[--sample]})"
 container="${args[--container]}"
 output_dir="${args[--output-dir]}"
-html="${args[--html]}"
 json_out="${args[--json]}"
 top_pauses="${args[--top-pauses]}"
 run="${args[--run]}"
@@ -115,7 +114,8 @@ log "📈 Analyzing GC log: ${file_array[*]}"
 log ""
 
 html_out=""
-if [[ -n "$html" ]]; then
+# the HTML report is always written (not with --json: stdout must stay JSON)
+if [[ -z "$json_out" ]]; then
     mkdir -p "$output_dir"
     output_dir_abs=$(cd "$output_dir" && pwd)
     first=$(basename "${file_array[0]}")
