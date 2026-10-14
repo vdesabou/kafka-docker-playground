@@ -1,13 +1,16 @@
 containers="${args[--container]}"
 port="${args[--port]}"
 duration="${args[--duration]}"
-filename="tcp-dump-$container-$port-$(date '+%Y-%m-%d-%H-%M-%S').pcap"
 
 # Convert space-separated string to array
 IFS=' ' read -ra container_array <<< "$containers"
 
+failed=0
+
 for container in "${container_array[@]}"
 do
+	# one capture file per container (with several --container, they must not overwrite each other)
+	filename="tcp-dump-${container}-${port:-all-ports}-$(date '+%Y-%m-%d-%H-%M-%S').pcap"
 	set +e
 	playground --output-level ERROR container exec --container "$container" --command "type tcpdump" > /dev/null 2>&1
 	if [ $? != 0 ]
@@ -26,7 +29,7 @@ do
 	echo "using rpm" > $output_install_log
 	docker exec --privileged --user root $container bash -c "rpm -i --nosignature https://rpmfind.net/linux/centos/8-stream/AppStream/aarch64/os/Packages/tcpdump-4.9.3-2.el8.aarch64.rpm" >> $output_install_log 2>&1
     # for 8.x install yum
-    playground container exec --root --command "microdnf -y install yum" > /dev/null 2>&1
+    playground container exec --container "$container" --root --command "microdnf -y install yum" > /dev/null 2>&1
 	echo "using yum" >> $output_install_log
 	docker exec --privileged --user root $container bash -c "yum update -y && yum install tcpdump -y" >> $output_install_log 2>&1
 
@@ -40,9 +43,12 @@ do
 	playground --output-level ERROR container exec --container "$container" --command "type tcpdump" > /dev/null 2>&1
 	if [ $? != 0 ]
 	then
-		logerror "❌ tcpdump could not be installed, see output below"
+		logerror "❌ tcpdump could not be installed on container $container, see output below"
 		cat $output_install_log
-		exit 1
+		# go on with the next containers, exit 1 at the end
+		failed=1
+		set -e
+		continue
 	fi
 	set -e
 
@@ -70,8 +76,8 @@ do
 		playground container cp --source ${container}:/tmp/${filename} --destination ${filename}
 		if [[ $(type -f wireshark 2>&1) =~ "not found" ]]
 		then
+			# no exit here: the next containers still have to be captured
 			logwarn "🦈 wireshark is not installed, grab it at https://www.wireshark.org/"
-			exit 0
 		else
 			log "🦈 Opening ${filename} with wireshark"
 			wireshark ${filename}
@@ -80,3 +86,8 @@ do
 		logerror "❌ Failed to take tcp dump"
 	fi
 done
+
+if [ $failed -eq 1 ]
+then
+	exit 1
+fi
