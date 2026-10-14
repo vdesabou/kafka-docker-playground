@@ -42,7 +42,7 @@ Always go through the playground CLI:
 ```bash
 playground analyze cfk-bundle --sample synthetic          # try it on the sample below
 playground analyze cfk-bundle --bundle ./customer-bundle.tar.gz
-playground analyze cfk-bundle --bundle ./bundle.tgz --html
+playground analyze cfk-bundle --bundle ./bundle.tgz --output-dir ./reports      # + HTML report in ./reports
 playground analyze cfk-bundle --bundle ./bundle.tar.gz --json > report.json
 ```
 

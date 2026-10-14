@@ -1818,7 +1818,7 @@
     },
     {
       "name": "analyze",
-      "description": "🔎 Analyze commands\n\nTurn what you collected into findings: each command reads a file (a\ndump, a log, a bundle, a report, yours or one a customer sent) or takes\nit from a running container, and prints a digest with what is wrong and\nwhat to do. They all work offline, and --sample runs them on the samples\nshipped with the playground, to see what they report.\n\n  thread-dump             deadlocks, lock contention, stuck threads\n  gc-logs                 GC pauses, failures, live set, leak trend\n  heap-dump               Eclipse MAT leak suspects, retained sizes\n  logs                    ERROR/FATAL digest of logs, folders, zips\n  oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n  cfk-bundle              CFK support bundle: pods, events, CRs, logs\n\nTo collect them: playground debug thread-dump, heap-dump, flight-recorder,\nplayground connector oracle-cdc-xstream generate-report,\nplayground debug cfk generate-bundle.",
+      "description": "🔎 Analyze commands\n\nTurn what you collected into findings: each command reads a file (a\ndump, a log, a bundle, a report, yours or one a customer sent) or takes\nit from a running container, and prints a digest with what is wrong and\nwhat to do, plus an HTML report to share (opened in your browser). They\nall work offline, and --sample runs them on the samples shipped with the\nplayground, to see what they report.\n\n  thread-dump             deadlocks, lock contention, stuck threads\n  gc-logs                 GC pauses, failures, live set, leak trend\n  heap-dump               Eclipse MAT leak suspects, retained sizes\n  logs                    ERROR/FATAL digest of logs, folders, zips\n  oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n  cfk-bundle              CFK support bundle: pods, events, CRs, logs\n\nTo collect them: playground debug thread-dump, heap-dump, flight-recorder,\nplayground connector oracle-cdc-xstream generate-report,\nplayground debug cfk generate-bundle.",
       "usage": "playground analyze COMMAND",
       "options": [],
       "aliases": [
@@ -1827,7 +1827,7 @@
       "subcommands": [
         {
           "name": "thread-dump",
-          "description": "🧵 Analyze java thread dumps: deadlocks, lock contention, stuck and CPU-hungry threads\n\n📊 Reads jstack / jcmd Thread.print / kill -3 output (JDK 8 to 25), several dumps per file and container logs included, and reports: thread states and pools, deadlocks, locks with their owner and waiters, the most common stacks, and with several dumps of the same JVM: threads stuck on the same frames, the CPU used by each thread between dumps, and growing thread pools. Kafka / Connect aware (task threads, herder, broker request handlers).\n\n🐳 With --container (default: connect), it takes --count dumps --interval seconds apart with kill -3: the JVM prints them to the container logs, no JDK is needed in the image.\n\n🔖 Use --html to generate a self-contained HTML report\n\n🧪 With --sample, it analyzes the samples shipped in tools/thread-analyzer/samples: a quick way to see what it reports.\n\n🔖 Exit code is 0 when the analysis completed, 2 when no thread dump was found",
+          "description": "🧵 Analyze java thread dumps: deadlocks, lock contention, stuck and CPU-hungry threads\n\n📊 Reads jstack / jcmd Thread.print / kill -3 output (JDK 8 to 25), several dumps per file and container logs included, and reports: thread states and pools, deadlocks, locks with their owner and waiters, the most common stacks, and with several dumps of the same JVM: threads stuck on the same frames, the CPU used by each thread between dumps, and growing thread pools. Kafka / Connect aware (task threads, herder, broker request handlers).\n\n🐳 With --container (default: connect), it takes --count dumps --interval seconds apart with kill -3: the JVM prints them to the container logs, no JDK is needed in the image.\n\n🌐 Also writes a self-contained HTML report (inline SVG charts, works offline) in --output-dir, opened in the browser in an interactive terminal\n\n🧪 With --sample, it analyzes the samples shipped in tools/thread-analyzer/samples: a quick way to see what it reports.\n\n🔖 Exit code is 0 when the analysis completed, 2 when no thread dump was found",
           "usage": "playground analyze thread-dump [OPTIONS]",
           "options": [
             {
@@ -1880,17 +1880,10 @@
             },
             {
               "names": [
-                "--html"
-              ],
-              "argument": "",
-              "description": "🌐 Generate a self-contained HTML report (inline SVG charts, works offline)"
-            },
-            {
-              "names": [
                 "--json"
               ],
               "argument": "",
-              "description": "🗂️  Output JSON (skips the text report and the HTML)"
+              "description": "🗂️  Output JSON (no text report, no HTML report)"
             },
             {
               "names": [
@@ -1993,7 +1986,7 @@
         },
         {
           "name": "gc-logs",
-          "description": "📈 Analyze JVM Garbage Collection logs\n\n📊 Parses GC logs from local files / folders or a running container: pause statistics, Full GC and evacuation / concurrent mode failures, live set, heap floor trend (leak), allocation stalls, GC causes, and recommendations backed by a finding (Kafka-aware: compared with Kafka's own G1 settings).\n\n🔖 Supports JDK 7–21+ and all major collectors: G1GC, CMS, ZGC, Generational ZGC, Shenandoah, ParallelGC, SerialGC, in legacy (-XX:+PrintGCDetails) and unified (-Xlog:gc*) formats, any decoration\n\n🔄 Pass every rotated file (kafkaServer-gc.log, .log.0…, .gz) or their folder: files are ordered by timestamp and split by JVM restart, the latest run is analyzed (--run to pick another)\n\n🧪 With --sample, it analyzes the samples shipped in gc-analysis/samples: a quick way to see what it reports.\n\n🔖 Exit code is 0 when the analysis completed, 2 when no GC event was found\n\n🔖 Use --html to generate a self-contained HTML dashboard (inline SVG charts, no external resource)",
+          "description": "📈 Analyze JVM Garbage Collection logs\n\n📊 Parses GC logs from local files / folders or a running container: pause statistics, Full GC and evacuation / concurrent mode failures, live set, heap floor trend (leak), allocation stalls, GC causes, and recommendations backed by a finding (Kafka-aware: compared with Kafka's own G1 settings).\n\n🔖 Supports JDK 7–21+ and all major collectors: G1GC, CMS, ZGC, Generational ZGC, Shenandoah, ParallelGC, SerialGC, in legacy (-XX:+PrintGCDetails) and unified (-Xlog:gc*) formats, any decoration\n\n🔄 Pass every rotated file (kafkaServer-gc.log, .log.0…, .gz) or their folder: files are ordered by timestamp and split by JVM restart, the latest run is analyzed (--run to pick another)\n\n🧪 With --sample, it analyzes the samples shipped in gc-analysis/samples: a quick way to see what it reports.\n\n🔖 Exit code is 0 when the analysis completed, 2 when no GC event was found\n\n🌐 Also writes a self-contained HTML dashboard (pause timeline, heap before / after GC, pause distribution, KPI cards, recommendations; no external resource) in --output-dir, opened in the browser in an interactive terminal",
           "usage": "playground analyze gc-logs [OPTIONS]",
           "options": [
             {
@@ -2032,17 +2025,10 @@
             },
             {
               "names": [
-                "--html"
-              ],
-              "argument": "",
-              "description": "🌐 Generate a self-contained HTML report (inline SVG charts, works offline)\n\n📊 Report includes: pause timeline, heap before / after GC, pause distribution,\n   GC types, KPI cards, JVM runs, recommendations with the flag to set"
-            },
-            {
-              "names": [
                 "--json"
               ],
               "argument": "",
-              "description": "🗂️  Output JSON stats (skips text report and HTML)"
+              "description": "🗂️  Output JSON stats (no text report, no HTML report)"
             },
             {
               "names": [
@@ -2062,7 +2048,7 @@
         },
         {
           "name": "oracle-xstream-report",
-          "description": "🅾️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)\n\n📊 Reads the HTML report of the Confluent diagnostics script (the file support asks for, orclcdc_diag_<date>.html) and reports: prerequisites (archivelog, supplemental logging, streams_pool_size, MAX_SGA_SIZE), the state of the capture process, LogMiner, outbound server, apply reader, buffered queue and streams pool with thresholds, open and long running transactions, overlapping capture rules, alerts and errors of the last 7 days, the findings sorted by severity with the report section and the exact values, and the matched root-cause patterns.\n\n📈 Give several reports of the same database (repeat --file) to see what moved between them: captured SCN, messages captured, LCRs sent, latency, restarts.\n\n🐳 With --container (default: oracle), it runs 'playground connector oracle-cdc-xstream generate-report' on the running example first, and analyzes the result.\n\n🧪 With --sample, it analyzes the reports shipped in tools/xstream-analyzer/samples: a quick way to see what it reports without an Oracle database.\n\n🔖 Use --html to generate a self-contained HTML report, to share in a case\n\n🔖 Exit code is 0 when the analysis completed, 2 when the file is not an orclcdc_diag report\n\n👉 Check documentation https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script",
+          "description": "🅾️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)\n\n📊 Reads the HTML report of the Confluent diagnostics script (the file support asks for, orclcdc_diag_<date>.html) and reports: prerequisites (archivelog, supplemental logging, streams_pool_size, MAX_SGA_SIZE), the state of the capture process, LogMiner, outbound server, apply reader, buffered queue and streams pool with thresholds, open and long running transactions, overlapping capture rules, alerts and errors of the last 7 days, the findings sorted by severity with the report section and the exact values, and the matched root-cause patterns.\n\n📈 Give several reports of the same database (repeat --file) to see what moved between them: captured SCN, messages captured, LCRs sent, latency, restarts.\n\n🐳 With --container (default: oracle), it runs 'playground connector oracle-cdc-xstream generate-report' on the running example first, and analyzes the result.\n\n🧪 With --sample, it analyzes the reports shipped in tools/xstream-analyzer/samples: a quick way to see what it reports without an Oracle database.\n\n🌐 Also writes a self-contained HTML report (findings, prerequisites, components, streams pool advice chart, deltas between reports) in --output-dir, to share in a case; opened in the browser in an interactive terminal\n\n🔖 Exit code is 0 when the analysis completed, 2 when the file is not an orclcdc_diag report\n\n👉 Check documentation https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script",
           "usage": "playground analyze oracle-xstream-report [OPTIONS]",
           "options": [
             {
@@ -2099,13 +2085,6 @@
             },
             {
               "names": [
-                "--html"
-              ],
-              "argument": "",
-              "description": "🌐 Generate a self-contained HTML report (findings, prerequisites, components, streams pool advice chart, deltas between reports)"
-            },
-            {
-              "names": [
                 "--json"
               ],
               "argument": "",
@@ -2122,7 +2101,7 @@
         },
         {
           "name": "cfk-bundle",
-          "description": "📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n\n🔍 Checks Warning events, pods (phase, waiting reasons, restarts, OOMKilled), every platform.confluent.io custom resource (phase/state, ready replicas, False conditions, failed connector tasks) and the ERROR/FATAL records of every log (rotated and .gz included, with their Caused by chain and an occurrence count), sorts them into ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication, storage, scheduling, …) and prints concrete remediation steps per category.\n\n✅ Works offline on any bundle produced by kubectl confluent support-bundle (or playground debug cfk generate-bundle): no cfk environment needed.\n\n🔒 Sanitization (secrets / IPs / hostnames / emails / LDAP DNs) is ON by default. It is best effort: review the output before sharing it. Pass --no-sanitize only for internal/test bundles.\n\n🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.\n\n🔖 Use --json to emit machine-readable output for downstream tooling.\n\n🧪 With --sample, it analyzes the samples shipped in cfk-analysis/samples: a quick way to see what it reports.\n\n🔖 Exit code is 0 when the analysis completed (whatever was found, read the summary), 64 for an invalid, unsafe or empty bundle.",
+          "description": "📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n\n🔍 Checks Warning events, pods (phase, waiting reasons, restarts, OOMKilled), every platform.confluent.io custom resource (phase/state, ready replicas, False conditions, failed connector tasks) and the ERROR/FATAL records of every log (rotated and .gz included, with their Caused by chain and an occurrence count), sorts them into ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication, storage, scheduling, …) and prints concrete remediation steps per category.\n\n✅ Works offline on any bundle produced by kubectl confluent support-bundle (or playground debug cfk generate-bundle): no cfk environment needed.\n\n🔒 Sanitization (secrets / IPs / hostnames / emails / LDAP DNs) is ON by default. It is best effort: review the output before sharing it. Pass --no-sanitize only for internal/test bundles.\n\n🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.\n\n🔖 Use --json to emit machine-readable output for downstream tooling.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal.\n\n🧪 With --sample, it analyzes the samples shipped in cfk-analysis/samples: a quick way to see what it reports.\n\n🔖 Exit code is 0 when the analysis completed (whatever was found, read the summary), 64 for an invalid, unsafe or empty bundle.",
           "usage": "playground analyze cfk-bundle [OPTIONS]",
           "options": [
             {
@@ -2178,17 +2157,10 @@
             },
             {
               "names": [
-                "--html"
-              ],
-              "argument": "",
-              "description": "🌐 Generate a self-contained HTML report and open it in the default browser\n\n❕ No external CDN/network needed — single offline-viewable file you can share."
-            },
-            {
-              "names": [
                 "--output-dir"
               ],
               "argument": "DIR",
-              "description": "📁 Directory for the HTML report (default: ./cfk-reports). Only used with --html.\n\nDefault value: ./cfk-reports"
+              "description": "📁 Directory for the HTML report (default: ./cfk-reports)\n\nDefault value: ./cfk-reports"
             }
           ]
         }

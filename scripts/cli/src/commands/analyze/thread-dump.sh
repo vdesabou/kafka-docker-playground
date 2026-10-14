@@ -4,7 +4,6 @@ container="${args[--container]}"
 count="${args[--count]}"
 interval="${args[--interval]}"
 output_dir="${args[--output-dir]}"
-html="${args[--html]}"
 json_out="${args[--json]}"
 top="${args[--top]}"
 
@@ -90,7 +89,8 @@ if [[ -n "$json_out" ]]; then
 fi
 
 html_out=""
-if [[ -n "$html" ]]; then
+# the HTML report is always written (not with --json: stdout must stay JSON)
+if [[ -z "$json_out" ]]; then
     first=$(basename "${file_array[0]}")
     html_out="${output_dir_abs}/${first%.*}-thread-report.html"
     analyzer_args+=(--html-out "$html_out")

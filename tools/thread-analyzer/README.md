@@ -36,10 +36,13 @@ Always go through the playground CLI:
 ```bash
 playground analyze thread-dump --sample deadlock_jdk21          # try it on the samples below
 playground analyze thread-dump                                   # 3 dumps of connect, 5 s apart (kill -3)
-playground analyze thread-dump --container broker --count 5 --interval 2 --html
-playground analyze thread-dump -f dump1.txt -f dump2.txt -f dump3.txt --html
+playground analyze thread-dump --container broker --count 5 --interval 2
+playground analyze thread-dump -f dump1.txt -f dump2.txt -f dump3.txt
 playground analyze thread-dump -f ./customer-logs/connect-stdout.log --json
 ```
+
+Besides the text digest, it writes a self-contained HTML report in `--output-dir` (default
+`./thread-analysis-output`), opened in a browser in an interactive terminal (not with `--json`).
 
 With `--container`, the command sends `kill -3` to the JVM (it prints the dump to its stdout, so to the
 container logs) and reads the logs back: no JDK is needed in the image. It falls back to `jstack` when the dump

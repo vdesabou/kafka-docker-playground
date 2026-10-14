@@ -3679,8 +3679,9 @@ commands:
     Turn what you collected into findings: each command reads a file (a
     dump, a log, a bundle, a report, yours or one a customer sent) or takes
     it from a running container, and prints a digest with what is wrong and
-    what to do. They all work offline, and --sample runs them on the samples
-    shipped with the playground, to see what they report.
+    what to do, plus an HTML report to share (opened in your browser). They
+    all work offline, and --sample runs them on the samples shipped with the
+    playground, to see what they report.
 
       thread-dump             deadlocks, lock contention, stuck threads
       gc-logs                 GC pauses, failures, live set, leak trend
@@ -3701,7 +3702,7 @@ commands:
 
       🐳 With --container (default: connect), it takes --count dumps --interval seconds apart with kill -3: the JVM prints them to the container logs, no JDK is needed in the image.
 
-      🔖 Use --html to generate a self-contained HTML report
+      🌐 Also writes a self-contained HTML report (inline SVG charts, works offline) in --output-dir, opened in the browser in an interactive terminal
 
       🧪 With --sample, it analyzes the samples shipped in tools/thread-analyzer/samples: a quick way to see what it reports.
 
@@ -3768,12 +3769,13 @@ commands:
           📂 Output directory for the thread dumps taken from a container and the HTML report (default: ./thread-analysis-output)
       - long: --html
         required: false
+        private: true
         help: |-
-          🌐 Generate a self-contained HTML report (inline SVG charts, works offline)
+          Deprecated: the HTML report is always written (kept so that existing commands keep working)
       - long: --json
         required: false
         help: |-
-          🗂️  Output JSON (skips the text report and the HTML)
+          🗂️  Output JSON (no text report, no HTML report)
       - long: --top
         arg: top
         required: false
@@ -3783,9 +3785,8 @@ commands:
           📊 Number of rows per section (default: 10)
     examples:
     - playground analyze thread-dump --sample deadlock_jdk21
-    - playground analyze thread-dump --sample deadlock_jdk21 --html
     - playground analyze thread-dump
-    - playground analyze thread-dump -c broker --count 5 --interval 2 --html
+    - playground analyze thread-dump -c broker --count 5 --interval 2
     - playground analyze thread-dump --file thread-dump-connect-2026-10-13.log
     - playground analyze thread-dump -f dump1.txt -f dump2.txt -f dump3.txt
     - playground analyze thread-dump -f ./customer-logs/connect-stdout.log
@@ -3969,7 +3970,7 @@ commands:
 
       🔖 Exit code is 0 when the analysis completed, 2 when no GC event was found
 
-      🔖 Use --html to generate a self-contained HTML dashboard (inline SVG charts, no external resource)
+      🌐 Also writes a self-contained HTML dashboard (pause timeline, heap before / after GC, pause distribution, KPI cards, recommendations; no external resource) in --output-dir, opened in the browser in an interactive terminal
     flags: &analyze_gc_logs_flags
       - long: --file
         short: -f
@@ -4024,15 +4025,13 @@ commands:
           📂 Output directory for the HTML report and the GC logs copied from a container (default: ./gc-analysis-output)
       - long: --html
         required: false
+        private: true
         help: |-
-          🌐 Generate a self-contained HTML report (inline SVG charts, works offline)
-
-          📊 Report includes: pause timeline, heap before / after GC, pause distribution,
-             GC types, KPI cards, JVM runs, recommendations with the flag to set
+          Deprecated: the HTML report is always written (kept so that existing commands keep working)
       - long: --json
         required: false
         help: |-
-          🗂️  Output JSON stats (skips text report and HTML)
+          🗂️  Output JSON stats (no text report, no HTML report)
       - long: --run
         arg: run
         required: false
@@ -4048,13 +4047,13 @@ commands:
           📊 Number of longest pauses to display in the report (default: 10)
     examples:
     - playground analyze gc-logs --sample jdk21_g1_kafka_real
-    - playground analyze gc-logs --sample jdk8_cms_cmf_real --html
+    - playground analyze gc-logs --sample jdk8_cms_cmf_real
     - playground analyze gc-logs --file gc.log
-    - playground analyze gc-logs --file /var/log/kafka/kafkaServer-gc.log --html
+    - playground analyze gc-logs --file /var/log/kafka/kafkaServer-gc.log
     - playground analyze gc-logs -f gc.log -f gc.log.0 -f gc.log.1
     - playground analyze gc-logs --file ./customer-logs/broker-1/
     - playground analyze gc-logs --container broker
-    - playground analyze gc-logs --container broker --html --output-dir ./gc-reports
+    - playground analyze gc-logs --container broker --output-dir ./gc-reports
     - playground analyze gc-logs -f kafkaServer-gc.log --json
     - playground analyze gc-logs -f kafkaServer-gc.log --run 1 --top-pauses 20
 
@@ -4070,7 +4069,7 @@ commands:
 
       🧪 With --sample, it analyzes the reports shipped in tools/xstream-analyzer/samples: a quick way to see what it reports without an Oracle database.
 
-      🔖 Use --html to generate a self-contained HTML report, to share in a case
+      🌐 Also writes a self-contained HTML report (findings, prerequisites, components, streams pool advice chart, deltas between reports) in --output-dir, to share in a case; opened in the browser in an interactive terminal
 
       🔖 Exit code is 0 when the analysis completed, 2 when the file is not an orclcdc_diag report
 
@@ -4121,8 +4120,9 @@ commands:
           📂 Output directory for the report generated with --container and the HTML report (default: ./xstream-analysis-output)
       - long: --html
         required: false
+        private: true
         help: |-
-          🌐 Generate a self-contained HTML report (findings, prerequisites, components, streams pool advice chart, deltas between reports)
+          Deprecated: the HTML report is always written (kept so that existing commands keep working)
       - long: --json
         required: false
         help: |-
@@ -4136,11 +4136,10 @@ commands:
           📊 Maximum number of rows per list: transactions, alerts, errors, tables (default: 10)
     examples:
     - playground analyze oracle-xstream-report --sample synthetic_failures
-    - playground analyze oracle-xstream-report --sample synthetic_failures --html
     - playground analyze oracle-xstream-report -s large_transaction -s detached
     - playground analyze oracle-xstream-report --sample large_transaction --json
     - playground analyze oracle-xstream-report -f orclcdc_diag_20261013_0912.html
-    - playground analyze oracle-xstream-report -f day1.html -f day2.html --html
+    - playground analyze oracle-xstream-report -f day1.html -f day2.html
     - playground analyze oracle-xstream-report --container oracle
 
   - name: cfk-bundle
@@ -4156,6 +4155,8 @@ commands:
       🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.
 
       🔖 Use --json to emit machine-readable output for downstream tooling.
+
+      🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal.
 
       🧪 With --sample, it analyzes the samples shipped in cfk-analysis/samples: a quick way to see what it reports.
 
@@ -4206,24 +4207,22 @@ commands:
           ⚠️  Also report WARN log records that match no known category (WARN records matching a known category are always reported)
       - long: --html
         required: false
+        private: true
         help: |-
-          🌐 Generate a self-contained HTML report and open it in the default browser
-
-          ❕ No external CDN/network needed — single offline-viewable file you can share.
+          Deprecated: the HTML report is always written (kept so that existing commands keep working)
       - long: --output-dir
         required: false
         arg: dir
         default: "./cfk-reports"
         help: |-
-          📁 Directory for the HTML report (default: ./cfk-reports). Only used with --html.
+          📁 Directory for the HTML report (default: ./cfk-reports)
     examples:
     - playground analyze cfk-bundle --sample synthetic
-    - playground analyze cfk-bundle --sample synthetic --html
     - playground analyze cfk-bundle --bundle ./customer-bundle.tar.gz
     - playground analyze cfk-bundle --bundle ./extracted-bundle/
     - playground analyze cfk-bundle --bundle ./bundle.zip --severity high
     - playground analyze cfk-bundle --bundle ./bundle.tar.gz --json > report.json
-    - playground analyze cfk-bundle -b ./bundle.tgz --html --output-dir ./reports
+    - playground analyze cfk-bundle -b ./bundle.tgz --output-dir ./reports
     - playground analyze cfk-bundle -b ./bundle.tgz --include-warnings
 
 - name: debug

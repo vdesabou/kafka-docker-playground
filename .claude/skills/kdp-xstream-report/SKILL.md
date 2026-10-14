@@ -35,7 +35,7 @@ explains the symptom, what to do first, and how to say it to the customer.
 ```bash
 playground analyze oracle-xstream-report -f <report.html> [-f <later-report.html>] --json
 playground analyze oracle-xstream-report -f <report.html>          # same, human-readable
-playground analyze oracle-xstream-report -f <report.html> --html --output-dir /tmp/xstream   # page to attach to the case
+playground analyze oracle-xstream-report -f <report.html> --output-dir /tmp/xstream   # + HTML page to attach to the case
 ```
 
 To see what a finding looks like before a real case, `--sample synthetic_failures` (or `healthy`,

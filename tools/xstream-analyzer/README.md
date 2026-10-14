@@ -28,7 +28,7 @@ The report is untrusted data: it is only parsed, nothing in it is executed.
 | Matched patterns | A undersized streams pool / SGA, B large or long transactions, C flow control, D outbound server detached, E LogMiner memory pressure, F overlapping captures, G database prerequisite missing, H component disabled or aborted |
 | Between reports | per capture: captured SCN, messages captured, latency, restart; per outbound server: status and LCRs sent |
 
-With `--html`, the same content as a self-contained page (no script, no external resource, every value from the
+The same content is also written as a self-contained HTML page in `--output-dir` (not with `--json`) (no script, no external resource, every value from the
 report escaped) to share in a case: findings first, then prerequisites, components, a chart of the streams pool
 advice (estimated spills per pool size) and the deltas between reports.
 
@@ -54,10 +54,10 @@ Exit codes: `0` analysis done, `2` not an `orclcdc_diag` report, `1` usage error
 Always go through the playground CLI:
 
 ```bash
-playground analyze oracle-xstream-report --sample synthetic_failures --html                   # try it on a shipped sample
+playground analyze oracle-xstream-report --sample synthetic_failures                          # try it on a shipped sample
 playground analyze oracle-xstream-report -s large_transaction -s detached                      # compare two samples
 playground analyze oracle-xstream-report -f orclcdc_diag_20261013_0912.html                   # customer report
-playground analyze oracle-xstream-report -f day1.html -f day2.html --html                      # what moved between two reports, as HTML
+playground analyze oracle-xstream-report -f day1.html -f day2.html                             # what moved between two reports
 playground analyze oracle-xstream-report -c oracle                                             # running example: generate the report, then analyze
 playground analyze oracle-xstream-report -f orclcdc_diag_20261013_0912.html --json             # for agents and scripts
 ```

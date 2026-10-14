@@ -4,7 +4,6 @@ json_out="${args[--json]}"
 no_sanitize="${args[--no-sanitize]}"
 severity="${args[--severity]}"
 top="${args[--top]}"
-html="${args[--html]}"
 output_dir="${args[--output-dir]}"
 include_warnings="${args[--include-warnings]}"
 
@@ -91,7 +90,8 @@ docker_args=(
 
 # ── HTML output target ─────────────────────────────────────────────────────
 html_out=""
-if [[ -n "$html" ]]; then
+# the HTML report is always written (not with --json: stdout must stay JSON)
+if [[ -z "$json_out" ]]; then
     : "${output_dir:=./cfk-reports}"
     mkdir -p "$output_dir"
     output_dir_abs=$(cd "$output_dir" && pwd -P)
@@ -124,7 +124,7 @@ case $exit_code in
 esac
 
 # ── Open HTML report in browser ────────────────────────────────────────────
-if [[ $exit_code -eq 0 && -n "$html" && -f "$html_out" ]]; then
+if [[ $exit_code -eq 0 && -n "$html_out" && -f "$html_out" ]]; then
     log ""
     log "🌐 HTML report saved: $html_out"
     # only open a browser in an interactive terminal
