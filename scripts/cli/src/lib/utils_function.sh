@@ -351,7 +351,7 @@ RUN ${CONNECT_3RDPARTY_INSTALL}
 USER ${CONNECT_USER}
 EOF
     log "👷📦 Re-building Docker image ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} to include additional tools"
-    docker build -t ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $tmp_dir
+    docker build --quiet -t ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $tmp_dir
     if [ $? == 0 ]
     then
       tools_ok="true"
