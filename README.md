@@ -18,6 +18,7 @@ Check out [kafka-docker-playground.io](https://kafka-docker-playground.io/) to l
 - ♻️ Cluster Linking, Replicator and MirrorMaker 2 [examples](https://kafka-docker-playground.io/#/content?id=🌍-multi-data-center-deployments)
 - 🎯 Run examples with any Confluent Platform or connector [versions](https://kafka-docker-playground.io/#/how-to-use?id=🪄-specify-versions)
 - 🧠 Easily run commands with playground [CLI](https://kafka-docker-playground.io/#/cli)
+- 🤖 Use it with [Claude Code](https://kafka-docker-playground.io/#/claude-code): project guide, skills to add examples, review PRs, change the CLI or analyze Oracle XStream reports
 - 🎓 Learn how the playground [works](https://kafka-docker-playground.io/#/how-it-works)
 - 👷‍♂️ Build your own examples or reproduction models with [reusables](https://kafka-docker-playground.io/#/reusables) section
 - ✨ Work remotely with VS Code using [playground ec2](https://kafka-docker-playground.io/#/playground%20ec2) CLI command
