@@ -143,4 +143,4 @@ log "Verify topic success-responses"
 playground topic consume --topic success-responses --min-expected-messages 2 --timeout 60
 
 log "Verify the connector reported no errors"
-salesforce_assert_topic_empty error-responses
+assert_topic_empty error-responses

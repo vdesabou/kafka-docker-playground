@@ -82,7 +82,7 @@ playground connector show-lag --connector $connector_name
 # records that fail (e.g. in the key converter) go to the DLQ and still commit their offsets: lag 0 does not mean they reached Redis
 connectorId=$(get_ccloud_connector_lcc $connector_name)
 log "Verifying topic dlq-$connectorId is empty"
-salesforce_assert_topic_empty "dlq-$connectorId"
+assert_topic_empty "dlq-$connectorId"
 
 log "Verify data is in Redis"
 # list the keys of all redis databases (the database used depends on the connector), retry for up to 2 minutes

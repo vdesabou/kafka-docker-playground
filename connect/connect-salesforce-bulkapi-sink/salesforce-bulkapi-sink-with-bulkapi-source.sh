@@ -229,7 +229,7 @@ log "Verify topic success-responses"
 playground topic consume --topic success-responses --min-expected-messages 1 --timeout 180
 
 log "Verify the connector reported no errors"
-salesforce_assert_topic_empty error-responses
+assert_topic_empty error-responses
 
 log "Login with sfdx CLI on the account #2"
 salesforce_sfdx_login "$SALESFORCE_USERNAME_ACCOUNT2" "$SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2" "$SALESFORCE_INSTANCE_ACCOUNT2"
