@@ -4601,7 +4601,7 @@
                     "--smt-jar"
                   ],
                   "argument": "SMT-JAR",
-                  "description": "☕ Jar with transforms to add for the test (custom SMT development)\n\nRepeatable: ✓ Yes"
+                  "description": "☕ Jar with transforms to add for the test (custom SMT development). Repeat it for the jars it depends on: they are loaded together, as one plugin\n\nRepeatable: ✓ Yes"
                 },
                 {
                   "names": [
@@ -4609,6 +4609,13 @@
                   ],
                   "argument": "",
                   "description": "📄 Print the steps as json"
+                },
+                {
+                  "names": [
+                    "--no-open"
+                  ],
+                  "argument": "",
+                  "description": "🚫 Do not open the html report in the browser (it is still written, and its path printed)"
                 }
               ]
             }

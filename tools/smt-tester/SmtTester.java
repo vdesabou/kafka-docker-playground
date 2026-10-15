@@ -574,7 +574,11 @@ public class SmtTester {
             return "schemaless";
         }
         if (schema.type() == Schema.Type.STRUCT) {
-            StringBuilder sb = new StringBuilder(schema.name() != null ? schema.name() : "struct").append(": ");
+            StringBuilder sb = new StringBuilder(schema.name() != null ? schema.name() : "struct");
+            if (schema.version() != null) {
+                sb.append(" v").append(schema.version());
+            }
+            sb.append(": ");
             List<String> fields = new ArrayList<>();
             for (Field f : schema.fields()) {
                 fields.add(f.name() + " " + typeName(f.schema()));

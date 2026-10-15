@@ -1,0 +1,18 @@
+{
+  "transforms": "castTypes,renameEmail,formatDate,setSchema",
+
+  "transforms.castTypes.type": "org.apache.kafka.connect.transforms.Cast$Value",
+  "transforms.castTypes.spec": "customer_id:int32,amount:float64",
+
+  "transforms.renameEmail.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+  "transforms.renameEmail.renames": "email:email_address",
+
+  "transforms.formatDate.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
+  "transforms.formatDate.field": "created_at",
+  "transforms.formatDate.target.type": "string",
+  "transforms.formatDate.format": "yyyy-MM-dd",
+
+  "transforms.setSchema.type": "org.apache.kafka.connect.transforms.SetSchemaMetadata$Value",
+  "transforms.setSchema.schema.name": "com.acme.Customer",
+  "transforms.setSchema.schema.version": "2"
+}

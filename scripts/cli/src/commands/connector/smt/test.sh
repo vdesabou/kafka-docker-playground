@@ -6,6 +6,7 @@ offset="${args[--offset]}"
 partition="${args[--partition]}"
 type="${args[--type]}"
 json="${args[--json]}"
+no_open="${args[--no-open]}"
 verbose="${args[--verbose]}"
 eval "cp_versions=(${args[--cp-version]:-})"
 eval "smt_plugins=(${args[--smt-plugin]:-})"
@@ -107,13 +108,14 @@ do
     dir=$(smt_tester_hub_plugin "$spec" "$hub_image") || exit 1
     plugin_dirs+=("$dir")
 done
-for jar in "${smt_jars[@]}"
-do
-    dir="$work/plugins/custom-$(basename "$jar" .jar)"
+# all the jars in one plugin, like the lib folder of a plugin: the transform and its dependencies
+if [ ${#smt_jars[@]} -gt 0 ]
+then
+    dir="$work/plugins/custom-smt"
     mkdir -p "$dir"
-    cp "$jar" "$dir/"
+    cp "${smt_jars[@]}" "$dir/"
     plugin_dirs+=("$dir")
-done
+fi
 
 harness_args=(--type "$type")
 [[ -n "$json" ]] && harness_args+=(--json)
@@ -193,7 +195,7 @@ function smt_report () {
     then
         [[ -n "$json" ]] && return
         log "📊 report: $report"
-        if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ]
+        if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ] && [[ ! -n "$no_open" ]]
         then
             if command -v open > /dev/null 2>&1
             then
