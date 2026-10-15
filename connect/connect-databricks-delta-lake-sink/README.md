@@ -36,7 +36,7 @@ playground run -f databricks-delta-lake-sink.sh
 
 ## What the script does
 
-1. Downloads the Simba Spark JDBC driver if needed and ensures the Databricks SQL warehouse is running.
+1. Downloads the Simba Spark JDBC driver if needed and ensures the Databricks SQL warehouse is running. Stops with the Databricks error if the warehouse start is refused (for example `denyReason: INACTIVE` when the workspace is deactivated).
 2. Empties the staging S3 bucket.
 3. Produces 100 Avro records to topic `pageviews` (datagen `pageviews` schema) with `playground topic produce`.
 4. Creates the `databricks-delta-lake-sink` connector, mapping topic `pageviews` to table `pageviews` (`delta.lake.table.auto.create=true`).

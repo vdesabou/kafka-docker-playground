@@ -5122,8 +5122,14 @@ function databricks_ensure_sql_warehouse_running () {
           http_code=$(curl -s -o /tmp/databricks_warehouse_start.txt -w '%{http_code}' -X POST -H "Authorization: Bearer ${token}" "${url}/start")
           if [ "$http_code" != "200" ]
           then
-            logwarn "🧱 failed to start Databricks SQL warehouse ${warehouse_id} (http code $http_code), not waiting for it: $(cat /tmp/databricks_warehouse_start.txt)"
-            return 0
+            # the connector would only fail minutes later with a JDBC "Communication link failure", fail now with the real reason
+            # (e.g. denyReason INACTIVE: Databricks blocks all compute in the workspace)
+            local message
+            message=$(jq -r '[.message // empty] + [.details[]?.metadata.denyReason // empty | "(denyReason: " + . + ")"] | join(" ")' /tmp/databricks_warehouse_start.txt 2>/dev/null)
+            logerror "❌ Databricks refused to start SQL warehouse ${warehouse_id} (http code $http_code): ${message:-$(cat /tmp/databricks_warehouse_start.txt)}"
+            cat /tmp/databricks_warehouse_start.txt
+            echo ""
+            exit 1
           fi
           start_requested=1
         fi
