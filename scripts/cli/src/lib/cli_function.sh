@@ -4061,3 +4061,105 @@ function benchmark_connector_tag_value () {
   done
   [ $found -eq 1 ] && echo "$value"
 }
+
+# ---- playground connector smt test ------------------------------------------------------------------------------
+
+SMT_TESTER_CACHE="$HOME/.playground-smt-tester"
+
+# java release to compile the harness for a jvm: 8, 11 or 17 (the harness is compiled with a jdk 17)
+function smt_tester_java_release () {
+  local version_line="$1" major
+  major=$(echo "$version_line" | sed -E 's/.*version "([0-9]+)(\.([0-9]+))?.*/\1 \3/')
+  set -- $major
+  if [ "$1" == "1" ]
+  then
+    major="$2"
+  else
+    major="$1"
+  fi
+  if [ "${major:-17}" -ge 17 ]
+  then
+    echo 17
+  elif [ "$major" -ge 11 ]
+  then
+    echo 11
+  else
+    echo 8
+  fi
+}
+
+# compiled SmtTester for the kafka jars of <jar dir> and a java <release>, cached: prints the classes folder
+function smt_tester_classes () {
+  local jar_dir="$1" release="$2" key source_file="$root_folder/tools/smt-tester/SmtTester.java" classes
+  key="$(basename "$jar_dir")-$release-$(shasum "$source_file" | cut -c1-10)"
+  classes="$SMT_TESTER_CACHE/classes/$key"
+  if [ ! -f "$classes/SmtTester.class" ]
+  then
+    mkdir -p "$classes" "$SMT_TESTER_CACHE/src"
+    cp "$source_file" "$SMT_TESTER_CACHE/src/SmtTester.java"
+    # compiled in a jdk container: the connect images have no compiler
+    if ! docker run --rm -v "$jar_dir:/jars" -v "$SMT_TESTER_CACHE/src:/src" -v "$classes:/out" eclipse-temurin:17-jdk javac --release "$release" -cp "/jars/*" -d /out /src/SmtTester.java > "$SMT_TESTER_CACHE/compile.log" 2>&1
+    then
+      logerror "❌ could not compile the smt tester, see $SMT_TESTER_CACHE/compile.log"
+      rm -rf "$classes"
+      return 1
+    fi
+  fi
+  echo "$classes"
+}
+
+# kafka jars of the running connect worker (the jars of the image are symlinks: copied with cp -L in the container),
+# cached by image id: prints the folder
+function smt_tester_jars_from_container () {
+  local container="$1" image_id dir
+  image_id=$(docker inspect -f '{{.Image}}' "$container" 2> /dev/null | sed 's/sha256://' | cut -c1-12)
+  dir="$SMT_TESTER_CACHE/jars/$image_id"
+  if [ ! -d "$dir" ] || [ -z "$(ls "$dir" 2> /dev/null)" ]
+  then
+    rm -rf "$dir"
+    mkdir -p "$SMT_TESTER_CACHE/jars"
+    playground --output-level ERROR container exec --container "$container" --command "rm -rf /tmp/smt-tester-jars && mkdir -p /tmp/smt-tester-jars && cp -L /usr/share/java/kafka/*.jar /tmp/smt-tester-jars/" > /dev/null 2>&1
+    playground --output-level ERROR container cp --source "$container:/tmp/smt-tester-jars" --destination "$dir" > /dev/null 2>&1
+  fi
+  echo "$dir"
+}
+
+# kafka jars of a cp-server-connect image, cached by image id: prints the folder
+function smt_tester_jars_from_image () {
+  local image="$1" image_id dir name
+  docker image inspect "$image" > /dev/null 2>&1 || docker pull -q "$image" > /dev/null 2>&1 || { logerror "❌ could not pull $image"; return 1; }
+  image_id=$(docker image inspect -f '{{.Id}}' "$image" | sed 's/sha256://' | cut -c1-12)
+  dir="$SMT_TESTER_CACHE/jars/$image_id"
+  if [ ! -d "$dir" ] || [ -z "$(ls "$dir" 2> /dev/null)" ]
+  then
+    rm -rf "$dir"
+    mkdir -p "$SMT_TESTER_CACHE/jars"
+    name="pg-smt-tester-jars-$$"
+    docker run --name "$name" --entrypoint sh "$image" -c "mkdir -p /tmp/smt-tester-jars && cp -L /usr/share/java/kafka/*.jar /tmp/smt-tester-jars/" > /dev/null 2>&1
+    docker cp "$name:/tmp/smt-tester-jars" "$dir" > /dev/null 2>&1
+    docker rm -f "$name" > /dev/null 2>&1
+  fi
+  echo "$dir"
+}
+
+# confluent hub plugin installed for the smt test only, cached: prints the plugin folder
+#   smt_tester_hub_plugin <owner/name:version> <connect image to run the confluent hub client>
+function smt_tester_hub_plugin () {
+  local spec="$1" image="$2" owner_name version dir
+  owner_name="${spec%%:*}"
+  version="${spec#*:}"
+  [ "$version" == "$spec" ] && version="latest"
+  dir="$SMT_TESTER_CACHE/plugins/${owner_name//\//-}-$version"
+  if [ -z "$(ls -d "$dir"/*/ 2> /dev/null)" ]
+  then
+    mkdir -p "$dir"
+    # same way as the examples install their connectors (scripts/utils.sh)
+    if ! docker run -u0 --rm -v "$dir:/usr/share/confluent-hub-components" "$image" bash -c "confluent-hub install --no-prompt $owner_name:$version && chown -R $(id -u):$(id -g) /usr/share/confluent-hub-components" > "$dir.log" 2>&1
+    then
+      logerror "❌ could not install $spec from confluent hub, see $dir.log"
+      rm -rf "$dir"
+      return 1
+    fi
+  fi
+  ls -d "$dir"/*/ | head -1 | sed 's#/$##'
+}

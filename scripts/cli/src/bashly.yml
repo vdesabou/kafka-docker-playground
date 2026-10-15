@@ -7429,6 +7429,7 @@ commands:
       show-lag                consumer lag of a sink, until it reaches zero
       benchmark               records per second, compared with the previous run
       offsets get             where the connector is reading or writing
+      smt test                what a transform chain does to a record, step by step
 
     🛠️ Change it
       create-or-update        create it, or apply a new config, from stdin
@@ -7601,6 +7602,110 @@ commands:
         Read it top to bottom when a connector is RUNNING but idle: a capture
         process not in CAPTURING CHANGES, or an SCN that never moves, tells
         you the problem is in the database and not in the connector.
+
+  - name: smt
+    help: |-
+      🧪 Single message transforms (SMT)
+
+        test                         apply a transform chain to a record, step by step
+    commands:
+    - name: test
+      help: |-
+        🧪 Apply the transform chain (SMT) of a connector to a record, step by step
+
+        Shows what each transform changes (topic, key, value, headers, schema field by field), the result of each predicate, a record dropped by a transform, and the transform that throws with its config and its error. No topic or connector is created: the chain runs in a small harness in the connect container, with the classpath and the plugin.path of the worker, so the transforms, predicates and converters are the same classes and versions as in the worker.
+
+        The transforms come from a running connector (--connector) or from a connector config on stdin (or --config @file). The record is a json (--record): schemaless, or {"schema": ..., "payload": ...} like the JsonConverter for a record with a schema. Or a real record of a topic (--from-topic, --offset), converted with the converters of the connector (avro, protobuf, json schema with schema registry).
+
+        --cp-version runs the same test with the built-in transforms of other CP versions (throwaway cp-server-connect containers), --smt-plugin installs a Confluent Hub plugin for the test only (the worker is not changed), --smt-jar adds a jar (custom SMT development).
+
+        An html report of the steps (the value after each step with the added, changed and removed fields highlighted, the schema diff, the predicates, the error with its stack trace, and with --cp-version a comparison of the versions) is written to /tmp/playground-smt-test, and opened in the browser in an interactive terminal.
+
+        🎓 Tip: the connector config can be a whole connector config: only transforms.*, predicates.* and the converters are used.
+      filters:
+      - docker_running
+      flags:
+      - *verbose
+      - long: --connector
+        short: -c
+        arg: connector
+        required: false
+        completions:
+          dynamic:
+          - playground get-connector-list
+        help: |-
+          🔗 Use the transforms, predicates and converters of this running connector
+      - long: --config
+        arg: config
+        required: false
+        help: |-
+          📄 Connector config with the transforms (json, or @file), instead of --connector or stdin
+      - long: --record
+        arg: record
+        required: false
+        help: |-
+          🧾 Record to transform (json, or @file): {"topic": "orders", "key": ..., "value": ..., "headers": {...}, "timestamp": <ms>}
+
+          key and value are schemaless json, or {"schema": ..., "payload": ...} for a record with a schema. Headers are typed like the SimpleHeaderConverter does (string, int64, float64, boolean, map, array), or {"schema": ..., "payload": ...}; give them as a list [{"key": ..., "value": ...}] for several headers with the same key. Default: a schemaless record with a value {"id": 1, "name": "foo"}
+      - long: --from-topic
+        arg: from-topic
+        required: false
+        completions:
+          dynamic:
+          - playground get-topic-list
+        help: |-
+          🗳 Read the record from this topic instead of --record, and convert it with the converters of the connector
+      - long: --offset
+        arg: offset
+        validate: integer
+        required: false
+        default: "0"
+        help: |-
+          📍 Offset of the record with --from-topic (default is 0)
+      - long: --partition
+        arg: partition
+        validate: integer
+        required: false
+        default: "0"
+        help: |-
+          🧩 Partition of the record with --from-topic (default is 0)
+      - long: --type
+        arg: type
+        required: false
+        allowed:
+          - sink
+          - source
+        help: |-
+          🔀 Build a sink or a source record (default: the type of --connector, sink otherwise)
+      - long: --cp-version
+        arg: cp-version
+        required: false
+        repeatable: true
+        help: |-
+          🔢 Run the test with the built-in transforms of these CP versions (repeat the flag), in throwaway cp-server-connect containers, to compare them. The plugins of the running worker are not available there, only --smt-plugin and --smt-jar
+      - long: --smt-plugin
+        arg: smt-plugin
+        required: false
+        repeatable: true
+        help: |-
+          🧩 Confluent Hub plugin with transforms, installed for the test only (owner/name:version), e.g. confluentinc/connect-transforms:1.6.2
+      - long: --smt-jar
+        arg: smt-jar
+        required: false
+        repeatable: true
+        validate: file_exists
+        help: |-
+          ☕ Jar with transforms to add for the test (custom SMT development)
+      - long: --json
+        required: false
+        help: |-
+          📄 Print the steps as json
+      examples:
+      - playground connector smt test --connector filestream-sink
+      - playground connector smt test --connector filestream-sink --record '{"topic":"filestream","key":"k1","value":{"id":1,"name":"foo"}}'
+      - playground connector smt test --connector my-sink --from-topic orders --offset 42
+      - playground connector smt test --record @record.json --config @transforms.json --cp-version 7.9.0 --cp-version 8.3.2
+      - playground connector smt test --connector my-sink --smt-plugin confluentinc/connect-transforms:1.6.2
 
   - name: offsets
     help: |

@@ -218,6 +218,7 @@ playground_usage() {
   printf "  %s   ⏳ Wait for connectors to reach a state\n" "$(green "connector wait")                            "
   printf "  %s   💡 Show error recommendations for fully managed connectors\n" "$(green "connector error-recommendations")           "
   printf "  %s   🅾️ Specific Oracle CDC Xstream commands\n" "$(green "connector oracle-cdc-xstream")              "
+  printf "  %s   🧪 Single message transforms (SMT)\n" "$(green "connector smt")                             "
   printf "  %s   💈 Handle source and sink connectors offsets\n" "$(green "connector offsets")                         "
   printf "  %s   🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n" "$(green "connector plugins")                         "
   printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")                           "
@@ -10402,7 +10403,7 @@ playground_connector_plugin_sourcecode_usage() {
 playground_connector_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector\n\n"
-    printf "  🔗 Connector commands\n  \n  Everything you would otherwise do with curl on the Connect REST API, with\n  the right host, port and credentials already figured out. The same\n  commands work whether the connector is self managed in the connect\n  container or fully managed in Confluent Cloud.\n  \n  🔍 Look at what is running\n    status                  is it RUNNING, and if not, the full stack trace\n    wait                    wait until it is RUNNING (or another state)\n    error-recommendations   suggested fixes for a failed fully managed connector\n    show-config             the configuration actually applied\n    logs                    tail connect logs, filtered and followed\n    show-lag                consumer lag of a sink, until it reaches zero\n    benchmark               records per second, compared with the previous run\n    offsets get             where the connector is reading or writing\n  \n  🛠️ Change it\n    create-or-update        create it, or apply a new config, from stdin\n    update                  edit the running config in your editor\n    pause / resume / stop / restart / delete\n    offsets alter / reset   rewind or fast-forward a connector\n  \n  🧑‍🔬 Understand it\n    show-config-parameters  every parameter the plugin accepts\n    select-config           pick parameters interactively\n    versions                installed version vs latest on Confluent Hub\n    sourcecode              open the source on GitHub, or diff two versions\n    open-docs               open the Confluent documentation\n    snippets                ready-to-paste converter and dlq config\n  \n  🐞 Dig deeper\n    log-level               raise connect log level for this connector\n    enable-remote-debugging attach a java debugger to the connector code\n    translate               self managed config to fully managed config\n  \n  Without --connector, commands apply to every connector of the example,\n  which is usually what you want since most examples run only one.\n\n"
+    printf "  🔗 Connector commands\n  \n  Everything you would otherwise do with curl on the Connect REST API, with\n  the right host, port and credentials already figured out. The same\n  commands work whether the connector is self managed in the connect\n  container or fully managed in Confluent Cloud.\n  \n  🔍 Look at what is running\n    status                  is it RUNNING, and if not, the full stack trace\n    wait                    wait until it is RUNNING (or another state)\n    error-recommendations   suggested fixes for a failed fully managed connector\n    show-config             the configuration actually applied\n    logs                    tail connect logs, filtered and followed\n    show-lag                consumer lag of a sink, until it reaches zero\n    benchmark               records per second, compared with the previous run\n    offsets get             where the connector is reading or writing\n    smt test                what a transform chain does to a record, step by\n  step\n  \n  🛠️ Change it\n    create-or-update        create it, or apply a new config, from stdin\n    update                  edit the running config in your editor\n    pause / resume / stop / restart / delete\n    offsets alter / reset   rewind or fast-forward a connector\n  \n  🧑‍🔬 Understand it\n    show-config-parameters  every parameter the plugin accepts\n    select-config           pick parameters interactively\n    versions                installed version vs latest on Confluent Hub\n    sourcecode              open the source on GitHub, or diff two versions\n    open-docs               open the Confluent documentation\n    snippets                ready-to-paste converter and dlq config\n  \n  🐞 Dig deeper\n    log-level               raise connect log level for this connector\n    enable-remote-debugging attach a java debugger to the connector code\n    translate               self managed config to fully managed config\n  \n  Without --connector, commands apply to every connector of the example,\n  which is usually what you want since most examples run only one.\n\n"
   else
     printf "playground connector - 🔗 Connector commands\n\n"
   fi
@@ -10417,6 +10418,7 @@ playground_connector_usage() {
   printf "  %s   ⏳ Wait for connectors to reach a state\n" "$(green "wait")                            "
   printf "  %s   💡 Show error recommendations for fully managed connectors\n" "$(green "error-recommendations")           "
   printf "  %s   🅾️ Specific Oracle CDC Xstream commands\n" "$(green "oracle-cdc-xstream")              "
+  printf "  %s   🧪 Single message transforms (SMT)\n" "$(green "smt")                             "
   printf "  %s   💈 Handle source and sink connectors offsets\n" "$(green "offsets")                         "
   printf "  %s   🎨 Show all connector plugins installed. You can also display transforms, converters and predicates using --all flag\n" "$(green "plugins")                         "
   printf "  %s   ⏸️  Pause connector\n" "$(green "pause")                           "
@@ -10702,6 +10704,137 @@ playground_connector_oracle_cdc_xstream_debug_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_smt_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector smt\n\n"
+    printf "  🧪 Single message transforms (SMT)\n  \n    test                         apply a transform chain to a record, step by\n  step\n\n"
+  else
+    printf "playground connector smt - 🧪 Single message transforms (SMT)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector smt COMMAND\n"
+  printf "  playground connector smt [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🧪 Apply the transform chain (SMT) of a connector to a record, step by step\n" "$(green "test")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_smt_test_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector smt test\n\n"
+    printf "  🧪 Apply the transform chain (SMT) of a connector to a record, step by step\n  \n  Shows what each transform changes (topic, key, value, headers, schema field by\n  field), the result of each predicate, a record dropped by a transform, and the\n  transform that throws with its config and its error. No topic or connector is\n  created: the chain runs in a small harness in the connect container, with the\n  classpath and the plugin.path of the worker, so the transforms, predicates and\n  converters are the same classes and versions as in the worker.\n  \n  The transforms come from a running connector (--connector) or from a connector\n  config on stdin (or --config @file). The record is a json (--record):\n  schemaless, or {\"schema\": ..., \"payload\": ...} like the JsonConverter for a\n  record with a schema. Or a real record of a topic (--from-topic, --offset),\n  converted with the converters of the connector (avro, protobuf, json schema\n  with schema registry).\n  \n  --cp-version runs the same test with the built-in transforms of other CP\n  versions (throwaway cp-server-connect containers), --smt-plugin installs a\n  Confluent Hub plugin for the test only (the worker is not changed), --smt-jar\n  adds a jar (custom SMT development).\n  \n  An html report of the steps (the value after each step with the added, changed\n  and removed fields highlighted, the schema diff, the predicates, the error\n  with its stack trace, and with --cp-version a comparison of the versions) is\n  written to /tmp/playground-smt-test, and opened in the browser in an\n  interactive terminal.\n  \n  🎓 Tip: the connector config can be a whole connector config: only\n  transforms.*, predicates.* and the converters are used.\n\n"
+  else
+    printf "playground connector smt test - 🧪 Apply the transform chain (SMT) of a connector to a record, step by step\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector smt test [OPTIONS]\n"
+  printf "  playground connector smt test --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Use the transforms, predicates and converters of this running connector\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--config CONFIG")"
+    printf "    📄 Connector config with the transforms (json, or @file), instead of\n    --connector or stdin\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--record RECORD")"
+    printf "    🧾 Record to transform (json, or @file): {\"topic\": \"orders\", \"key\": ...,\n    \"value\": ..., \"headers\": {...}, \"timestamp\": <ms>}\n    \n    key and value are schemaless json, or {\"schema\": ..., \"payload\": ...} for a\n    record with a schema. Headers are typed like the SimpleHeaderConverter does\n    (string, int64, float64, boolean, map, array), or {\"schema\": ..., \"payload\":\n    ...}; give them as a list [{\"key\": ..., \"value\": ...}] for several headers\n    with the same key. Default: a schemaless record with a value {\"id\": 1,\n    \"name\": \"foo\"}\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--from-topic FROM-TOPIC")"
+    printf "    🗳 Read the record from this topic instead of --record, and convert it with\n    the converters of the connector\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--offset OFFSET")"
+    printf "    📍 Offset of the record with --from-topic (default is 0)\n"
+    printf "    %s\n" "Default: 0"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--partition PARTITION")"
+    printf "    🧩 Partition of the record with --from-topic (default is 0)\n"
+    printf "    %s\n" "Default: 0"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--type TYPE")"
+    printf "    🔀 Build a sink or a source record (default: the type of --connector, sink\n    otherwise)\n"
+    printf "    %s\n" "Allowed: sink, source"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cp-version CP-VERSION (repeatable)")"
+    printf "    🔢 Run the test with the built-in transforms of these CP versions (repeat the\n    flag), in throwaway cp-server-connect containers, to compare them. The\n    plugins of the running worker are not available there, only --smt-plugin and\n    --smt-jar\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--smt-plugin SMT-PLUGIN (repeatable)")"
+    printf "    🧩 Confluent Hub plugin with transforms, installed for the test only\n    (owner/name:version), e.g. confluentinc/connect-transforms:1.6.2\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--smt-jar SMT-JAR (repeatable)")"
+    printf "    ☕ Jar with transforms to add for the test (custom SMT development)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📄 Print the steps as json\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector smt test --connector filestream-sink\n"
+    printf "  playground connector smt test --connector filestream-sink --record\n  '{\"topic\":\"filestream\",\"key\":\"k1\",\"value\":{\"id\":1,\"name\":\"foo\"}}'\n"
+    printf "  playground connector smt test --connector my-sink --from-topic orders --offset\n  42\n"
+    printf "  playground connector smt test --record @record.json --config @transforms.json\n  --cp-version 7.9.0 --cp-version 8.3.2\n"
+    printf "  playground connector smt test --connector my-sink --smt-plugin\n  confluentinc/connect-transforms:1.6.2\n"
     echo
 
   fi
@@ -16873,6 +17006,108 @@ function benchmark_connector_tag_value () {
     value="${value:+$value,}$current"
   done
   [ $found -eq 1 ] && echo "$value"
+}
+
+# ---- playground connector smt test ------------------------------------------------------------------------------
+
+SMT_TESTER_CACHE="$HOME/.playground-smt-tester"
+
+# java release to compile the harness for a jvm: 8, 11 or 17 (the harness is compiled with a jdk 17)
+function smt_tester_java_release () {
+  local version_line="$1" major
+  major=$(echo "$version_line" | sed -E 's/.*version "([0-9]+)(\.([0-9]+))?.*/\1 \3/')
+  set -- $major
+  if [ "$1" == "1" ]
+  then
+    major="$2"
+  else
+    major="$1"
+  fi
+  if [ "${major:-17}" -ge 17 ]
+  then
+    echo 17
+  elif [ "$major" -ge 11 ]
+  then
+    echo 11
+  else
+    echo 8
+  fi
+}
+
+# compiled SmtTester for the kafka jars of <jar dir> and a java <release>, cached: prints the classes folder
+function smt_tester_classes () {
+  local jar_dir="$1" release="$2" key source_file="$root_folder/tools/smt-tester/SmtTester.java" classes
+  key="$(basename "$jar_dir")-$release-$(shasum "$source_file" | cut -c1-10)"
+  classes="$SMT_TESTER_CACHE/classes/$key"
+  if [ ! -f "$classes/SmtTester.class" ]
+  then
+    mkdir -p "$classes" "$SMT_TESTER_CACHE/src"
+    cp "$source_file" "$SMT_TESTER_CACHE/src/SmtTester.java"
+    # compiled in a jdk container: the connect images have no compiler
+    if ! docker run --rm -v "$jar_dir:/jars" -v "$SMT_TESTER_CACHE/src:/src" -v "$classes:/out" eclipse-temurin:17-jdk javac --release "$release" -cp "/jars/*" -d /out /src/SmtTester.java > "$SMT_TESTER_CACHE/compile.log" 2>&1
+    then
+      logerror "❌ could not compile the smt tester, see $SMT_TESTER_CACHE/compile.log"
+      rm -rf "$classes"
+      return 1
+    fi
+  fi
+  echo "$classes"
+}
+
+# kafka jars of the running connect worker (the jars of the image are symlinks: copied with cp -L in the container),
+# cached by image id: prints the folder
+function smt_tester_jars_from_container () {
+  local container="$1" image_id dir
+  image_id=$(docker inspect -f '{{.Image}}' "$container" 2> /dev/null | sed 's/sha256://' | cut -c1-12)
+  dir="$SMT_TESTER_CACHE/jars/$image_id"
+  if [ ! -d "$dir" ] || [ -z "$(ls "$dir" 2> /dev/null)" ]
+  then
+    rm -rf "$dir"
+    mkdir -p "$SMT_TESTER_CACHE/jars"
+    playground --output-level ERROR container exec --container "$container" --command "rm -rf /tmp/smt-tester-jars && mkdir -p /tmp/smt-tester-jars && cp -L /usr/share/java/kafka/*.jar /tmp/smt-tester-jars/" > /dev/null 2>&1
+    playground --output-level ERROR container cp --source "$container:/tmp/smt-tester-jars" --destination "$dir" > /dev/null 2>&1
+  fi
+  echo "$dir"
+}
+
+# kafka jars of a cp-server-connect image, cached by image id: prints the folder
+function smt_tester_jars_from_image () {
+  local image="$1" image_id dir name
+  docker image inspect "$image" > /dev/null 2>&1 || docker pull -q "$image" > /dev/null 2>&1 || { logerror "❌ could not pull $image"; return 1; }
+  image_id=$(docker image inspect -f '{{.Id}}' "$image" | sed 's/sha256://' | cut -c1-12)
+  dir="$SMT_TESTER_CACHE/jars/$image_id"
+  if [ ! -d "$dir" ] || [ -z "$(ls "$dir" 2> /dev/null)" ]
+  then
+    rm -rf "$dir"
+    mkdir -p "$SMT_TESTER_CACHE/jars"
+    name="pg-smt-tester-jars-$$"
+    docker run --name "$name" --entrypoint sh "$image" -c "mkdir -p /tmp/smt-tester-jars && cp -L /usr/share/java/kafka/*.jar /tmp/smt-tester-jars/" > /dev/null 2>&1
+    docker cp "$name:/tmp/smt-tester-jars" "$dir" > /dev/null 2>&1
+    docker rm -f "$name" > /dev/null 2>&1
+  fi
+  echo "$dir"
+}
+
+# confluent hub plugin installed for the smt test only, cached: prints the plugin folder
+#   smt_tester_hub_plugin <owner/name:version> <connect image to run the confluent hub client>
+function smt_tester_hub_plugin () {
+  local spec="$1" image="$2" owner_name version dir
+  owner_name="${spec%%:*}"
+  version="${spec#*:}"
+  [ "$version" == "$spec" ] && version="latest"
+  dir="$SMT_TESTER_CACHE/plugins/${owner_name//\//-}-$version"
+  if [ -z "$(ls -d "$dir"/*/ 2> /dev/null)" ]
+  then
+    mkdir -p "$dir"
+    # same way as the examples install their connectors (scripts/utils.sh)
+    if ! docker run -u0 --rm -v "$dir:/usr/share/confluent-hub-components" "$image" bash -c "confluent-hub install --no-prompt $owner_name:$version && chown -R $(id -u):$(id -g) /usr/share/confluent-hub-components" > "$dir.log" 2>&1
+    then
+      logerror "❌ could not install $spec from confluent hub, see $dir.log"
+      rm -rf "$dir"
+      return 1
+    fi
+  fi
+  ls -d "$dir"/*/ | head -1 | sed 's#/$##'
 }
 
 # src/lib/colors.sh
@@ -45929,6 +46164,274 @@ EOF
     rule_type
     FROM ALL_XSTREAM_RULES;
 EOF
+}
+
+# :command.function
+playground_connector_smt_test_command() {
+
+  # src/commands/connector/smt/test.sh
+  connector="${args[--connector]}"
+  config_arg="${args[--config]}"
+  record_arg="${args[--record]}"
+  from_topic="${args[--from-topic]}"
+  offset="${args[--offset]}"
+  partition="${args[--partition]}"
+  type="${args[--type]}"
+  json="${args[--json]}"
+  verbose="${args[--verbose]}"
+  eval "cp_versions=(${args[--cp-version]:-})"
+  eval "smt_plugins=(${args[--smt-plugin]:-})"
+  eval "smt_jars=(${args[--smt-jar]:-})"
+
+  # docker desktop does not share every temporary folder: work under $HOME
+  mkdir -p "$SMT_TESTER_CACHE"
+  work=$(mktemp -d "$SMT_TESTER_CACHE/run-XXXXXX")
+  trap 'rm -rf "$work"' EXIT
+
+  connect_running=0
+  if docker inspect -f '{{.State.Running}}' connect 2> /dev/null | grep -q true
+  then
+      connect_running=1
+  fi
+  if [ $connect_running -eq 0 ] && [ ${#cp_versions[@]} -eq 0 ]
+  then
+      logerror "❌ the connect container is not running: start an example, or use --cp-version to test in throwaway cp-server-connect containers"
+      exit 1
+  fi
+
+  # ---- connector config: transforms, predicates, converters
+  if [[ -n "$connector" ]]
+  then
+      connector_type=$(playground state get run.connector_type)
+      if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+      then
+          logerror "❌ the transforms of a $connector_type connector run in Confluent Cloud: give its config with --config @file (the result on a self managed worker is indicative)"
+          exit 1
+      fi
+      get_connect_url_and_security
+      handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/config\""
+      echo "$curl_output" > "$work/config.json"
+      if [[ ! -n "$type" ]]
+      then
+          handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\""
+          type=$(echo "$curl_output" | jq -r '.type // "sink"')
+      fi
+  elif [[ -n "$config_arg" ]]
+  then
+      if [[ "$config_arg" == @* ]]
+      then
+          cp "${config_arg#@}" "$work/config.json" || exit 1
+      else
+          echo "$config_arg" > "$work/config.json"
+      fi
+  elif [ ! -t 0 ]
+  then
+      cat > "$work/config.json"
+  else
+      logerror "❌ no transforms: use --connector, --config, or give a connector config on stdin"
+      exit 1
+  fi
+  if ! jq -e 'type == "object"' "$work/config.json" > /dev/null 2>&1
+  then
+      logerror "❌ the connector config is not a json object"
+      exit 1
+  fi
+  if [ "$(jq -r '.transforms // empty' "$work/config.json")" == "" ]
+  then
+      logwarn "⚠️ the connector config has no transforms: the record goes through unchanged"
+  fi
+  type="${type:-sink}"
+
+  # ---- record
+  if [[ -n "$from_topic" ]]
+  then
+      jq -n --arg t "$from_topic" --argjson p "$partition" --argjson o "$offset" '{fromTopic: $t, partition: $p, offset: $o}' > "$work/record.json"
+  elif [[ -n "$record_arg" ]]
+  then
+      if [[ "$record_arg" == @* ]]
+      then
+          cp "${record_arg#@}" "$work/record.json" || exit 1
+      else
+          echo "$record_arg" > "$work/record.json"
+      fi
+      if ! jq -e 'type == "object"' "$work/record.json" > /dev/null 2>&1
+      then
+          logerror "❌ --record is not a json object"
+          exit 1
+      fi
+  else
+      # the first topic of a sink connector, if any
+      default_topic=$(jq -r '(.topics // "test-topic") | split(",")[0]' "$work/config.json")
+      jq -n --arg t "$default_topic" '{topic: $t, key: "k1", value: {id: 1, name: "foo"}}' > "$work/record.json"
+      log "🧾 no --record: using a schemaless record $(jq -c . "$work/record.json")"
+  fi
+
+  # ---- extra plugins for the test only
+  plugin_dirs=()
+  hub_image="confluentinc/cp-server-connect:${cp_versions[0]:-8.3.2}"
+  if [ $connect_running -eq 1 ]
+  then
+      hub_image=$(docker inspect -f '{{.Config.Image}}' connect)
+  fi
+  for spec in "${smt_plugins[@]}"
+  do
+      log "🧩 installing $spec for the test (the worker is not changed)"
+      dir=$(smt_tester_hub_plugin "$spec" "$hub_image") || exit 1
+      plugin_dirs+=("$dir")
+  done
+  for jar in "${smt_jars[@]}"
+  do
+      dir="$work/plugins/custom-$(basename "$jar" .jar)"
+      mkdir -p "$dir"
+      cp "$jar" "$dir/"
+      plugin_dirs+=("$dir")
+  done
+
+  harness_args=(--type "$type")
+  [[ -n "$json" ]] && harness_args+=(--json)
+
+  # ---- run in the connect worker
+  function run_in_worker () {
+      local jar_dir java_version release classes classpath worker_config plugin_path container_plugins=""
+      jar_dir=$(smt_tester_jars_from_container connect)
+      java_version=$(playground --output-level ERROR container exec --container connect --command "java -version 2>&1 | head -1" 2> /dev/null)
+      release=$(smt_tester_java_release "$java_version")
+      classes=$(smt_tester_classes "$jar_dir" "$release") || return 1
+      # the classpath and the properties file of the running worker jvm
+      classpath=$(playground --output-level ERROR container exec --container connect --command "tr '\\0' '\\n' < /proc/1/cmdline | grep -A1 '^-cp' | tail -1" 2> /dev/null)
+      worker_config=$(playground --output-level ERROR container exec --container connect --command "tr '\\0' '\\n' < /proc/1/cmdline | tail -1" 2> /dev/null)
+      plugin_path=$(playground --output-level ERROR container exec --container connect --command "grep -E '^plugin.path=' '$worker_config' | cut -d= -f2-" 2> /dev/null)
+      playground --output-level ERROR container exec --container connect --command "rm -rf /tmp/smt-tester && mkdir -p /tmp/smt-tester/plugins" > /dev/null 2>&1
+      playground --output-level ERROR container cp --source "$classes/SmtTester.class" --destination connect:/tmp/smt-tester/SmtTester.class > /dev/null 2>&1
+      playground --output-level ERROR container cp --source "$work/config.json" --destination connect:/tmp/smt-tester/config.json > /dev/null 2>&1
+      playground --output-level ERROR container cp --source "$work/record.json" --destination connect:/tmp/smt-tester/record.json > /dev/null 2>&1
+      local dir
+      for dir in "${plugin_dirs[@]}"
+      do
+          playground --output-level ERROR container cp --source "$dir" --destination "connect:/tmp/smt-tester/plugins/$(basename "$dir")" > /dev/null 2>&1
+          container_plugins="$container_plugins,/tmp/smt-tester/plugins/$(basename "$dir")"
+      done
+      # the test plugins are given apart: their classes win over the worker plugins
+      local priority="${container_plugins#,}"
+      local stderr_target="/dev/null"
+      [[ -n "$verbose" ]] && stderr_target="/dev/stderr"
+      playground --output-level ERROR container exec --container connect --command "SMT_TESTER_VERBOSE=${verbose} java -cp '/tmp/smt-tester:$classpath' SmtTester --config /tmp/smt-tester/config.json --record /tmp/smt-tester/record.json --worker-config '$worker_config' --plugin-path '$plugin_path' --priority-plugin-path '$priority' --label 'worker $(docker inspect -f '{{.Config.Image}}' connect)' --json-out /tmp/smt-tester/result.json ${harness_args[*]} 2> $stderr_target"
+      local ret=$?
+      playground --output-level ERROR container cp --source connect:/tmp/smt-tester/result.json --destination "$work/result-worker.json" > /dev/null 2>&1
+      return $ret
+  }
+
+  # ---- run in a throwaway cp-server-connect container of another version
+  function run_in_image () {
+      local version="$1" image="confluentinc/cp-server-connect:$1" jar_dir java_version release classes network="" mounts=() plugin_path="" dir
+      log "🔢 CP $version: throwaway $image"
+      jar_dir=$(smt_tester_jars_from_image "$image") || return 1
+      java_version=$(docker run --rm --entrypoint java "$image" -version 2>&1 | head -1)
+      release=$(smt_tester_java_release "$java_version")
+      classes=$(smt_tester_classes "$jar_dir" "$release") || return 1
+      if [ $connect_running -eq 1 ]
+      then
+          # same network and worker settings as the running example, for --from-topic and schema registry
+          network=$(docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}' connect | awk '{print $1}')
+          worker_config=$(playground --output-level ERROR container exec --container connect --command "tr '\\0' '\\n' < /proc/1/cmdline | tail -1" 2> /dev/null)
+          playground --output-level ERROR container cp --source "connect:$worker_config" --destination "$work/worker.properties" > /dev/null 2>&1
+      fi
+      [ -f "$work/worker.properties" ] || echo "bootstrap.servers=broker:9092" > "$work/worker.properties"
+      for dir in "${plugin_dirs[@]}"
+      do
+          mounts+=(-v "$dir:/smt-plugins/$(basename "$dir")")
+          plugin_path="$plugin_path,/smt-plugins/$(basename "$dir")"
+      done
+      plugin_path="${plugin_path#,}"
+      local stderr_target="/dev/null"
+      [[ -n "$verbose" ]] && stderr_target="/dev/stderr"
+      docker run --rm ${network:+--network "$network"} -e "SMT_TESTER_VERBOSE=${verbose}" -v "$classes:/smt-tester" -v "$work:/smt-work" "${mounts[@]}" --entrypoint java "$image" \
+          -cp "/smt-tester:/etc/kafka-connect/jars/*:/usr/share/java/confluent-security/connect/*:/usr/share/java/kafka/*:/usr/share/java/confluent-common/*:/usr/share/java/kafka-serde-tools/*:/usr/share/java/monitoring-interceptors/*" \
+          SmtTester --config /smt-work/config.json --record /smt-work/record.json --worker-config /smt-work/worker.properties --plugin-path "$plugin_path" --priority-plugin-path "$plugin_path" --label "CP $version" --json-out "/smt-work/result-$version.json" "${harness_args[@]}" 2> $stderr_target
+  }
+
+  # html report of the run(s), opened in the browser in an interactive terminal
+  function smt_report () {
+      local results=() file report_dir="/tmp/playground-smt-test" report title="SMT test"
+      for file in "$@"
+      do
+          [ -f "$file" ] && results+=(--result "$file")
+      done
+      [ ${#results[@]} -eq 0 ] && return
+      mkdir -p "$report_dir"
+      [[ -n "$connector" ]] && title="SMT test of $connector"
+      report="$report_dir/smt-test-${connector:-chain}-$(date +%Y%m%d-%H%M%S).html"
+      if python3 -I "$root_folder/tools/smt-tester/smt_report.py" "${results[@]}" --output "$report" --title "$title" > /dev/null
+      then
+          [[ -n "$json" ]] && return
+          log "📊 report: $report"
+          if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ]
+          then
+              if command -v open > /dev/null 2>&1
+              then
+                  open "$report"
+              elif command -v xdg-open > /dev/null 2>&1
+              then
+                  xdg-open "$report" > /dev/null 2>&1 || true
+              fi
+          fi
+      else
+          logwarn "⚠️ the html report could not be generated"
+      fi
+  }
+
+  ret=0
+  if [ ${#cp_versions[@]} -eq 0 ]
+  then
+      run_in_worker || ret=$?
+      smt_report "$work/result-worker.json"
+      exit $ret
+  fi
+
+  for version in "${cp_versions[@]}"
+  do
+      echo ""
+      run_in_image "$version" || ret=1
+  done
+
+  # the final result of each version, to see at a glance whether they differ (values compared as json with sorted
+  # keys: the key order of a schemaless map changed between kafka versions, without changing the record)
+  if [ ${#cp_versions[@]} -gt 1 ] && [[ ! -n "$json" ]]
+  then
+      echo ""
+      log "⚖️ final result per CP version"
+      for version in "${cp_versions[@]}"
+      do
+          result_file="$work/result-$version.json"
+          if [ -f "$result_file" ]
+          then
+              jq -r --arg v "$version" '
+                  ([.steps[] | select(.error)] | first) as $err
+                  | ([.steps[] | select(.dropped)] | first) as $drop
+                  | ([.steps[] | select(.record)] | last | .record) as $r
+                  | "   CP \($v) (Kafka \(.kafka_version)): " +
+                    (if $err then "❌ step \($err.index) \($err.alias): \($err.error | .[0:160])"
+                     elif $drop then "🗑️ dropped by step \($drop.index) \($drop.alias)"
+                     else "topic \($r.topic), key \($r.key), value \($r.value)" end)' "$result_file"
+          else
+              echo "   CP $version: no result"
+          fi
+      done
+      if [ "$(for v in "${cp_versions[@]}"; do [ -f "$work/result-$v.json" ] && jq -S -c '[.steps[] | {alias, error: (.error // null | if . then (. | split(":")[0]) else null end), dropped, record: (.record // null | if . then {topic, key: (.key | try fromjson catch .), value: (.value | try fromjson catch .), headers} else null end)}]' "$work/result-$v.json"; done | sort -u | wc -l | tr -d ' ')" -le 1 ]
+      then
+          log "✅ same result with all the CP versions"
+      else
+          logwarn "⚠️ the CP versions give different results"
+      fi
+  fi
+  report_files=()
+  for version in "${cp_versions[@]}"
+  do
+      report_files+=("$work/result-$version.json")
+  done
+  smt_report "${report_files[@]}"
+  exit $ret
+
 }
 
 # :command.function
@@ -77781,6 +78284,13 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
+    smt)
+      action="smt"
+      shift
+      playground_connector_smt_parse_requirements "$@"
+      shift $#
+      ;;
+
     offsets)
       action="offsets"
       shift
@@ -78576,6 +79086,368 @@ playground_connector_oracle_cdc_xstream_debug_parse_requirements() {
 
     esac
   done
+
+}
+
+# :command.parse_requirements
+playground_connector_smt_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_smt_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    test)
+      action="test"
+      shift
+      playground_connector_smt_test_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_connector_smt_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_connector_smt_test_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_smt_test_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector smt test"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --config)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--config']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--config requires an argument: --config CONFIG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --record)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--record']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--record requires an argument: --record RECORD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --from-topic)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--from-topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--from-topic requires an argument: --from-topic FROM-TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --offset)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--offset']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--offset requires an argument: --offset OFFSET" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --partition)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--partition']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--partition requires an argument: --partition PARTITION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --type)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--type']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--type requires an argument: --type TYPE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --cp-version)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--cp-version']+x} ]]; then
+            args['--cp-version']="$escaped"
+          else
+            args['--cp-version']="${args['--cp-version']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--cp-version requires an argument: --cp-version CP-VERSION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --smt-plugin)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--smt-plugin']+x} ]]; then
+            args['--smt-plugin']="$escaped"
+          else
+            args['--smt-plugin']="${args['--smt-plugin']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--smt-plugin requires an argument: --smt-plugin SMT-PLUGIN" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --smt-jar)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--smt-jar']+x} ]]; then
+            args['--smt-jar']="$escaped"
+          else
+            args['--smt-jar']="${args['--smt-jar']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--smt-jar requires an argument: --smt-jar SMT-JAR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--offset']:-} ]] || args['--offset']="0"
+  [[ -n ${args['--partition']:-} ]] || args['--partition']="0"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--offset'] ]]; then
+    validation_output="$(validate_integer "${args['--offset']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--offset OFFSET" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--partition'] ]]; then
+    validation_output="$(validate_integer "${args['--partition']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--partition PARTITION" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--smt-jar'] ]]; then
+    values=''
+    eval "values=(${args['--smt-jar']})"
+    for value in "${values[@]}"; do
+      validation_output="$(validate_file_exists "$value")"
+      if [[ -n "$validation_output" ]]; then
+        printf "validation error in %s:\n%s\n" "--smt-jar SMT-JAR" "$validation_output" >&2
+        exit 1
+      fi
+    done
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--type']:-} ]] && [[ ! ${args['--type']:-} =~ ^(sink|source)$ ]]; then
+    printf "%s\n" "--type must be one of: sink, source" >&2
+    exit 1
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_docker_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
 
 }
 
@@ -95782,6 +96654,11 @@ playground_connector_completion() {
         playground_connector_oracle_cdc_xstream_completion "$completion_current" "$@"
         return
         ;;
+      smt)
+        shift
+        playground_connector_smt_completion "$completion_current" "$@"
+        return
+        ;;
       offsets)
         shift
         playground_connector_offsets_completion "$completion_current" "$@"
@@ -95936,7 +96813,7 @@ playground_connector_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" status wait error-recommendations oracle-cdc-xstream offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart stop resume unpause delete diagnose show-lag benchmark show-config show-config-parameters display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update edit alter
+  completion_candidates "$completion_current" status wait error-recommendations oracle-cdc-xstream smt offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart stop resume unpause delete diagnose show-lag benchmark show-config show-config-parameters display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update edit alter
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -96189,6 +97066,188 @@ playground_connector_oracle_cdc_xstream_debug_completion() {
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_connector_smt_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      test)
+        shift
+        playground_connector_smt_test_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" test
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_connector_smt_test_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+
+        ;;
+      --config)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--config"]=1
+
+        ;;
+      --record)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--record"]=1
+
+        ;;
+      --from-topic)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--from-topic"]=1
+
+        ;;
+      --offset)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--offset"]=1
+
+        ;;
+      --partition)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--partition"]=1
+
+        ;;
+      --type)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "sink"
+            "source"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--type"]=1
+
+        ;;
+      --cp-version)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
+      --smt-plugin)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
+      --smt-jar)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --config "$completion_current" --config
+    completion_flag_candidates --record "$completion_current" --record
+    completion_flag_candidates --from-topic "$completion_current" --from-topic
+    completion_flag_candidates --offset "$completion_current" --offset
+    completion_flag_candidates --partition "$completion_current" --partition
+    completion_flag_candidates --type "$completion_current" --type
+    completion_flag_candidates --cp-version "$completion_current" --cp-version
+    completion_flag_candidates --smt-plugin "$completion_current" --smt-plugin
+    completion_flag_candidates --smt-jar "$completion_current" --smt-jar
+    completion_flag_candidates --json "$completion_current" --json
   fi
 
 }
@@ -98873,6 +99932,8 @@ run() {
     "connector oracle-cdc-xstream") playground_connector_oracle_cdc_xstream_command ;;
     "connector oracle-cdc-xstream generate-report") playground_connector_oracle_cdc_xstream_generate_report_command ;;
     "connector oracle-cdc-xstream debug") playground_connector_oracle_cdc_xstream_debug_command ;;
+    "connector smt") playground_connector_smt_command ;;
+    "connector smt test") playground_connector_smt_test_command ;;
     "connector offsets") playground_connector_offsets_command ;;
     "connector offsets get") playground_connector_offsets_get_command ;;
     "connector offsets reset") playground_connector_offsets_reset_command ;;
