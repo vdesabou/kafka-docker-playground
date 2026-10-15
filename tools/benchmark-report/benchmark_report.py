@@ -362,7 +362,11 @@ __WARNINGS__
     ["records", nf.format(r.records)], ["duration", r.seconds + " s"],
     ["throughput", (r.lower_bound ? "≥ " : "") + nf1.format(r.records_per_second) + " records/s"],
     ["batch avg", r.batch_avg_ms + " ms"], ["running ratio avg", r.running_ratio],
-    ["connect cpu avg / max", r.cpu_percent_of_one_core_avg + "% / " + r.cpu_percent_of_one_core_max + "% of one core"],
+    ["connect cpu avg / max", r.cpu_percent_of_one_core_avg + "% / " + r.cpu_percent_of_one_core_max + "% of one core" +
+      (r.cpu_percent_of_available_avg !== undefined ? " (" + r.cpu_percent_of_available_avg + "% of the cpus available)" : "")],
+    ["gc pauses", r.gc_percent === undefined || r.gc_percent === "-" ? "-" : r.gc_percent + "% of the time"],
+    ["records per task", r.task_shares],
+    ["dlq / dropped records", r.dlq_records === undefined ? "-" : r.dlq_records + " sent to the dlq, " + r.skipped_records + " dropped without dlq"],
     ["load", r.load_seconds === "-" ? "-" : r.load_seconds + " s"],
     ["records in topics", r.topic_records_delta === "-" ? "-" : "+" + nf.format(+r.topic_records_delta)],
     ["date", r.date], ["samples", r.samples_csv]

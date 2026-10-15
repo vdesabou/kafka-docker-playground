@@ -8058,7 +8058,8 @@ commands:
         - or --load-command / --stream-load-command, which take precedence
 
       Throughput is read from the connect JMX metrics of the tasks
-      (sink-record-send-total, source-record-write-total), sampled every
+      (sink-record-read-total: records read from kafka, including the ones
+      filtered or sent to the dlq; source-record-write-total), sampled every
       --interval. Results are written to --output-dir (samples csv, result
       json and an html report with the charts, opened in the browser at the
       end in an interactive terminal) and appended to the benchmark-history
@@ -8122,16 +8123,28 @@ commands:
       arg: load-command
       required: false
       help: |-
-        📥 Command that loads the backlog in drain mode, run while the connector is paused, instead of benchmark-load.bash
+        📥 Command that loads the backlog in drain mode, instead of benchmark-load.bash (or of the replayed produce of a sink)
 
-        If it prints a line BENCHMARK_RECORDS=<n>, <n> is the number of records the connector should process, otherwise --nb-records.
+        It runs with bash -c, from the current directory, while the connector is paused. It must create the records and return: --nb-records is then the number of records the connector should process, unless the command prints a line BENCHMARK_RECORDS=<n>.
+
+        Examples:
+
+          # sink: 1M records in the topic of the connector, with the schema of its records on stdin
+          --nb-records 1000000 --load-command "playground topic produce -t my-topic --nb-messages 1000000 < my-schema.avsc"
+
+          # source: your own script, which inserts the rows and prints BENCHMARK_RECORDS=<n>
+          --load-command "./load-my-table.sh 500000"
     - long: --stream-load-command
       arg: stream-load-command
       required: false
       help: |-
-        🌊 Command that generates load continuously in steady mode, run in the background, instead of benchmark-load.bash
+        🌊 Command that generates load continuously in steady mode, instead of benchmark-load.bash (or of the replayed produce of a sink)
 
-        At the end of the measure, the file $BENCHMARK_STOP_FILE is created: the command should stop at the end of its current batch when it exists (it is killed after 120s otherwise). If it prints BENCHMARK_BATCH=<records> <epoch seconds> after each batch, the summary tells when the connector only kept up with the load.
+        It runs in the background with bash -c, from the current directory. At the end of the measure, the file named by the BENCHMARK_STOP_FILE environment variable is created: the command should stop at the end of its current batch when it exists. It is killed after 120s otherwise, and killing a producer in the middle of a batch can send a truncated record to the topic. If it prints BENCHMARK_BATCH=<records> <epoch seconds> after each batch, the summary tells when the connector only kept up with the load.
+
+        Example, batches of 10000 records in the topic of the connector until the end of the measure:
+
+          --stream-load-command 'while [ ! -f "\$BENCHMARK_STOP_FILE" ]; do playground topic produce -t my-topic --nb-messages 10000 < my-schema.avsc; echo "BENCHMARK_BATCH=10000 \$(date +%s)"; done'
     - long: --topic
       short: -t
       arg: topic
@@ -8194,6 +8207,8 @@ commands:
     - playground connector benchmark --connector filestream-sink --nb-records 3000000
     - playground connector benchmark --connector jdbc-postgres-source --nb-records 1000000 --shape small-txn
     - playground connector benchmark --mode steady --duration 2m --warmup 20s
+    - playground connector benchmark --nb-records 1000000 --load-command "playground topic produce -t my-topic --nb-messages 1000000 < my-schema.avsc"
+    - playground connector benchmark --mode steady --duration 2m --stream-load-command 'while [ ! -f "\$BENCHMARK_STOP_FILE" ]; do playground topic produce -t my-topic --nb-messages 10000 < my-schema.avsc; echo "BENCHMARK_BATCH=10000 \$(date +%s)"; done'
     - playground connector benchmark --load-command "./my-load.sh" --json
 
   - name: show-config

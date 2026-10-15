@@ -3754,10 +3754,13 @@ function benchmark_jmx_init() {
   done <<< "$workers"
 }
 
-# prints "<records total> <batch avg ms> <running ratio> <cpu % of one core> <consumer lag max>" for the tasks of a
-# connector: the records total is summed over the tasks of all the workers, the lag (sink only, records-lag-max of the
-# task consumers) is the max, the other values are averages (NaN skipped)
-# workers is a list of "container port" lines, type is sink or source
+# one sample of the JMX metrics of the tasks of a connector, printed as space separated values:
+#   1 records total (summed over the tasks)    2 batch avg ms        3 running ratio avg    4 cpu % of one core
+#   5 consumer lag max (sink)                  6 cpu % of the cpus available to the worker JVM
+#   7 pause ratio avg                          8 gc pause time ms (cumulative, summed over the workers)
+#   9 records sent to the dlq (cumulative)     10 records skipped by errors.tolerance=all (cumulative)
+#   11 records per task, as <task>:<records>;<task>:<records>
+# "-" when not available. workers is a list of "container port" lines, type is sink or source
 function benchmark_jmx_sample() {
   local connector="$1"
   local type="$2"
@@ -3766,38 +3769,59 @@ function benchmark_jmx_sample() {
   local batch="poll-batch-avg-time-ms"
   if [ "$type" == "sink" ]
   then
-    counter="sink-record-send-total"
+    # records read from kafka: the ones filtered by a transform or failing (dlq, errors.tolerance=all) never reach put
+    counter="sink-record-read-total"
     batch="put-batch-avg-time-ms"
   fi
-  local container port beans
+  local container port beans task_beans task_ids
   while read -r container port
   do
     [ -z "$container" ] && continue
-    beans=$(printf 'beans -d kafka.connect\nbeans -d kafka.consumer\nexit\n' | benchmark_jmxterm "$container" "$port" | grep -E "connector=$connector,task=|client-id=connector-consumer-$connector-[0-9]+,type=consumer-fetch-manager-metrics$" || true)
+    beans=$(printf 'beans -d kafka.connect\nbeans -d kafka.consumer\nbeans -d java.lang\nexit\n' | benchmark_jmxterm "$container" "$port" | grep -E "connector=$connector,task=|client-id=connector-consumer-$connector-[0-9]+,type=consumer-fetch-manager-metrics$|type=GarbageCollector" || true)
+    task_beans=$(echo "$beans" | grep -F "type=$type-task-metrics" || true)
+    # the n-th counter value belongs to the n-th task bean
+    task_ids=$(echo "$task_beans" | sed -n 's/.*task=\([0-9]*\).*/\1/p' | tr '\n' ' ')
     {
-      echo "$beans" | grep -F "type=$type-task-metrics" | while read -r bean; do echo "get -b $bean $counter $batch"; done
-      echo "$beans" | grep -F "type=connector-task-metrics" | while read -r bean; do echo "get -b $bean running-ratio"; done
+      echo "$task_beans" | while read -r bean; do [ -n "$bean" ] && echo "get -b $bean $counter $batch"; done
+      echo "$beans" | grep -F "type=connector-task-metrics" | while read -r bean; do echo "get -b $bean running-ratio pause-ratio"; done
+      echo "$beans" | grep -F "type=task-error-metrics" | while read -r bean; do echo "get -b $bean deadletterqueue-produce-requests total-records-skipped"; done
       echo "$beans" | grep -F "type=consumer-fetch-manager-metrics" | while read -r bean; do echo "get -b $bean records-lag-max"; done
+      # pauses only: concurrent collectors report the time of their concurrent cycles; spaces escaped for jmxterm
+      echo "$beans" | grep -F "type=GarbageCollector" | grep -v -E "Concurrent|Cycles" | while read -r bean; do echo "get -b ${bean// /\\ } CollectionTime"; done
       echo "get -b java.lang:type=OperatingSystem ProcessCpuLoad AvailableProcessors"
       echo "exit"
-    } | benchmark_jmxterm "$container" "$port"
-  done <<< "$workers" | awk -v counter="$counter" -v batch="$batch" '
+    } | benchmark_jmxterm "$container" "$port" | awk -v counter="$counter" -v ids="$task_ids" '
+      BEGIN { n = split(ids, id, " ") }
+      $1 == counter { i++; print "TASK", id[i], $3; next }
+      $1 == "CollectionTime" { print "GC", $3; next }
+      { print }'
+  done <<< "$workers" | awk -v batch="$batch" '
+    $1 == "TASK" { value = $3; sub(/;$/, "", value); total += value; tasks = tasks (tasks ? ";" : "") $2 ":" sprintf("%d", value); next }
+    $1 == "GC" { value = $2; sub(/;$/, "", value); gc += value; gc_n++; next }
     {
       name = $1; value = $3; sub(/;$/, "", value)
       if (value == "NaN" || value == "") next
     }
-    name == counter { total += value }
     name == batch { batch_sum += value; batch_n++ }
     name == "running-ratio" { ratio_sum += value; ratio_n++ }
+    name == "pause-ratio" { pause_sum += value; pause_n++ }
+    name == "deadletterqueue-produce-requests" { dlq += value; dlq_n++ }
+    name == "total-records-skipped" { skipped += value; skipped_n++ }
     name == "ProcessCpuLoad" { load = value }
-    name == "AvailableProcessors" { cpu_sum += load * value * 100; cpu_n++ }
+    name == "AvailableProcessors" { cpu_sum += load * value * 100; cpu_avail_sum += load * 100; cpu_n++ }
     name == "records-lag-max" { if (!lag_n || value > lag) lag = value; lag_n++ }
     END {
-      printf "%d %s %s %s %s\n", total,
+      printf "%d %s %s %s %s %s %s %s %s %s %s\n", total,
         (batch_n ? sprintf("%.1f", batch_sum / batch_n) : "-"),
         (ratio_n ? sprintf("%.2f", ratio_sum / ratio_n) : "-"),
         (cpu_n ? sprintf("%.0f", cpu_sum / cpu_n) : "-"),
-        (lag_n ? sprintf("%d", lag) : "-")
+        (lag_n ? sprintf("%d", lag) : "-"),
+        (cpu_n ? sprintf("%.0f", cpu_avail_sum / cpu_n) : "-"),
+        (pause_n ? sprintf("%.2f", pause_sum / pause_n) : "-"),
+        (gc_n ? sprintf("%d", gc) : "-"),
+        (dlq_n ? sprintf("%d", dlq) : "-"),
+        (skipped_n ? sprintf("%d", skipped) : "-"),
+        (tasks != "" ? tasks : "-")
     }'
 }
 
