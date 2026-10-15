@@ -48,27 +48,21 @@ subcommands:
   usage: playground doctor
   options: []
 - name: config
-  description: |-
-    ⚙️ Configure CLI
-
-    Your preferences, kept between sessions:
-
-      editor <name>                      the editor every command opens files
-                                         with (code, vi, nano...)
-      folder_zip_or_jar <dir>...         where to look for connector zips and
-                                         jars, in addition to the current
-                                         folder
-      clipboard true|false               copy connector config to the
-                                         clipboard (macOS only)
-      container-kill-all-before-run      kill every container before each run,
-                                         or just stop the example
-      cleanup-ccloud-resources-after-run delete the Confluent Cloud connectors
-                                         and topics of the last ccloud run on
-                                         stop and before the next run
-                                         (ask, true or false)
-      check-and-update-repo-version      warn when your clone is out of date
-      open-ccloud-connector-in-browser   open fully managed connectors, and in
-      open-grafana-in-browser            which browser
+  description: "⚙️ Configure CLI\n\nYour preferences, kept between sessions:\n\n  editor
+    <name>                      the editor every command opens files\n                                     with
+    (code, vi, nano...)\n  folder_zip_or_jar <dir>...         where to look for connector
+    zips and\n                                     jars, in addition to the current\n
+    \                                    folder\n  clipboard true|false               copy
+    connector config to the\n                                     clipboard (macOS
+    only)\n  container-kill-all-before-run      kill every container before each run,\n
+    \                                    or just stop the example\n  cleanup-ccloud-resources-after-run
+    delete the Confluent Cloud connectors\n                                     and
+    topics of the last ccloud run on\n                                     stop and
+    before the next run\n                                     (ask, true or false)\n
+    \ check-and-update-repo-version      warn when your clone is out of date\n  open-ccloud-connector-in-browser
+    \  open fully managed connectors, and in\n  open-grafana-in-browser            which
+    browser\n\n\U0001F393 Tip: all of them can also be changed from the '⚙️ CLI preferences'\nentry
+    of the 'playground run' menu."
   usage: playground config COMMAND
   options: []
   subcommands:
