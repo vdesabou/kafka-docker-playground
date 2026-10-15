@@ -43,7 +43,7 @@ playground run -f fully-managed-databricks-delta-lake-sink.sh
 
 ## What the script does
 
-1. Makes sure the Databricks SQL warehouse is running.
+1. Makes sure the Databricks SQL warehouse is running. Stops with the Databricks error if the warehouse start is refused (for example `denyReason: INACTIVE` when the workspace is deactivated).
 2. Empties the S3 staging bucket.
 3. Creates topic `pageviews` and produces 100 Avro records with `playground topic produce` (datagen `pageviews` schema).
 4. Creates the fully managed `DatabricksDeltaLakeSink` connector (`delta.lake.topic2table.map` `pageviews:pageviews`, `delta.lake.table.auto.create`).

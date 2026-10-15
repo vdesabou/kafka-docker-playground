@@ -36,7 +36,7 @@ playground run -f databricks-jdbc-sink.sh
 ## What the script does
 
 1. Downloads the Databricks JDBC driver (`DatabricksJDBC42.jar`, 2.7.3) if needed and adds it to the JDBC connector `lib` folder.
-2. Starts the SQL warehouse if it is stopped and waits until it is running.
+2. Starts the SQL warehouse if it is stopped and waits until it is running. Stops with the Databricks error if the start is refused (for example `denyReason: INACTIVE` when the workspace is deactivated).
 3. Starts the environment with a `databricks-sql-cli-container` helper (Python SQL client built from `../connect-jdbc-databricks-source/databricks`).
 4. Pre-creates the `orders` table (otherwise the sink fails with `ConnectException: null (INT32) type doesn't have a mapping to the SQL database column type`).
 5. Creates the `databricks-sink` connector (`auto.create=false`, `connection.user=token`) on topic `orders`.

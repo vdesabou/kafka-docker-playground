@@ -36,7 +36,7 @@ playground run -f databricks-jdbc-source.sh
 ## What the script does
 
 1. Downloads the Databricks JDBC driver (`DatabricksJDBC42.jar`, 2.7.3) if needed and adds it to the JDBC connector `lib` folder.
-2. Starts the SQL warehouse if it is stopped and waits until it is running.
+2. Starts the SQL warehouse if it is stopped and waits until it is running. Stops with the Databricks error if the start is refused (for example `denyReason: INACTIVE` when the workspace is deactivated).
 3. Starts the environment with a `databricks-sql-cli-container` helper (Python SQL client built from `databricks/`).
 4. Creates the `CUSTOMERS` table (identity `id` column) and inserts 21 rows through the SQL client.
 5. Creates the `jdbc-databricks-source` connector (`mode=incrementing` on `id`, `topic.prefix=databricks-`).
