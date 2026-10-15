@@ -45,6 +45,7 @@ playground run -f fully-managed-redis-sink.sh
 1. Bootstraps the Confluent Cloud environment and deletes topic `redis_topic`.
 2. Starts Redis, Redis Insight and ngrok locally.
 3. Produces 3 string messages with key `key1` to topic `redis_topic`.
-4. Creates the fully managed `RedisSink` connector.
-5. Lists the keys of all Redis databases with `redis-cli` and checks that the offset key `__kafka.offset.redis_topic.0` is there.
-6. Asks whether to delete the connector.
+4. Creates the fully managed `RedisSink` connector with `input.data.format` and `input.key.format` set to `STRING` (without `input.key.format`, the connector parses the keys as JSON and sends every record to the DLQ).
+5. Checks that the DLQ topic `dlq-<connector id>` is empty: failed records still commit their offsets, so a consumer lag of 0 doesn't mean they reached Redis.
+6. Lists the keys of all Redis databases with `redis-cli` and checks that the offset key `__kafka.offset.redis_topic.0` is there.
+7. Asks whether to delete the connector.

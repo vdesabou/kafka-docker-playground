@@ -66,6 +66,7 @@ playground connector create-or-update --connector $connector_name << EOF
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",
      "input.data.format": "STRING",
+     "input.key.format": "STRING",
      "redis.hostname": "$NGROK_HOSTNAME",
      "redis.portnumber": "$NGROK_PORT",
      "topics": "redis_topic",
@@ -77,6 +78,11 @@ wait_for_ccloud_connector_up $connector_name 180
 sleep 10
 
 playground connector show-lag --connector $connector_name
+
+# records that fail (e.g. in the key converter) go to the DLQ and still commit their offsets: lag 0 does not mean they reached Redis
+connectorId=$(get_ccloud_connector_lcc $connector_name)
+log "Verifying topic dlq-$connectorId is empty"
+salesforce_assert_topic_empty "dlq-$connectorId"
 
 log "Verify data is in Redis"
 # list the keys of all redis databases (the database used depends on the connector), retry for up to 2 minutes
