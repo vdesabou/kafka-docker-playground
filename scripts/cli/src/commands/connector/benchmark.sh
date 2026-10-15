@@ -15,6 +15,8 @@ compare_file="${args[--compare]}"
 no_history="${args[--no-history]}"
 json="${args[--json]}"
 eval "topics=(${args[--topic]:-})"
+eval "connector_tags=(${args[--connector-tag]:-})"
+rounds="${args[--rounds]}"
 
 # with --json, logs go to stderr and only the result json to stdout
 exec 3>&1
@@ -69,6 +71,10 @@ state=$(echo "$status_json" | jq -r '.connector.state')
 if [ "$state" != "RUNNING" ]
 then
     logerror "❌ $connector_type connector $connector is $state, it must be RUNNING to be benchmarked"
+    if [ "$state" == "PAUSED" ] || [ "$state" == "STOPPED" ]
+    then
+        log "💡 resume it with: playground connector resume --connector $connector"
+    fi
     playground connector status --connector "$connector"
     exit 1
 fi
@@ -93,6 +99,139 @@ sink_topics=$(echo "$curl_output" | jq -r '.topics // "" | split(",") | map(gsub
 handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connector-plugins\""
 plugin_version=$(echo "$curl_output" | jq -r --arg c "$connector_class" '[.[] | select(.class == $c) | .version][0] // "unknown"')
 cp_tag=$(get_running_cp_tag)
+
+# --connector-tag: benchmark each version (child runs of this command), compare them, restore the original version
+if [ ${#connector_tags[@]} -gt 0 ] && [ -z "$BENCHMARK_MATRIX_CHILD" ]
+then
+    test_file=$(playground state get run.test_file)
+    original_version="$plugin_version"
+    original_value=$(benchmark_connector_tag_value "$connector_class" "$original_version")
+    if [ -z "$original_value" ]
+    then
+        logerror "❌ could not find the confluent hub plugin of $connector_class in the example (CONNECT_PLUGIN_PATH of its docker compose file): --connector-tag needs a connector installed from confluent hub"
+        exit 1
+    fi
+    mkdir -p "$output_dir"
+    matrix_id="${connector}-versions-$(date +%Y%m%d-%H%M%S)"
+    matrix_results="$output_dir/$matrix_id.results"
+    : > "$matrix_results"
+    # same benchmark in each child run
+    child_args=(--connector "$connector" --mode "$mode" --nb-records "$nb_records" --shape "$shape" --record-size "$record_size"
+        --duration "${args[--duration]}" --warmup "${args[--warmup]}" --interval "${args[--interval]}" --max-wait "${args[--max-wait]}" --output-dir "$output_dir")
+    [ -n "$load_command" ] && child_args+=(--load-command "$load_command")
+    [ -n "$stream_load_command" ] && child_args+=(--stream-load-command "$stream_load_command")
+    for topic in "${topics[@]}"
+    do
+        child_args+=(--topic "$topic")
+    done
+    [ -n "$no_history" ] && child_args+=(--no-history)
+    [ -n "$verbose" ] && child_args+=(--verbose)
+
+    function switch_connector_version () {
+        local version="$1" value
+        value=$(benchmark_connector_tag_value "$connector_class" "$version")
+        log "🧩 switching the plugin of $connector_class to $version (playground update-version --connector-tag $value)"
+        if ! playground update-version --connector-tag "$value" > "$output_dir/$matrix_id-update-$version.log" 2>&1
+        then
+            logerror "❌ playground update-version --connector-tag $value failed, see $output_dir/$matrix_id-update-$version.log"
+            return 1
+        fi
+        if ! playground connector wait --connector "$connector" --max-wait 300 > /dev/null 2>&1
+        then
+            logerror "❌ $connector_type connector $connector is not RUNNING with version $version"
+            playground connector status --connector "$connector"
+            return 1
+        fi
+        get_connect_url_and_security
+        handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connector-plugins\""
+        running_version=$(echo "$curl_output" | jq -r --arg c "$connector_class" '[.[] | select(.class == $c) | .version][0] // "unknown"')
+        if [ "$running_version" != "$version" ]
+        then
+            logerror "❌ the connect worker runs $connector_class $running_version, not the requested $version"
+            return 1
+        fi
+    }
+    function restore_original_version () {
+        get_connect_url_and_security
+        handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connector-plugins\""
+        if [ "$(echo "$curl_output" | jq -r --arg c "$connector_class" '[.[] | select(.class == $c) | .version][0] // empty')" == "$original_version" ]
+        then
+            log "🧩 $connector_class is already at its original version $original_version"
+            return
+        fi
+        log "🧩 restoring the original version $original_version"
+        switch_connector_version "$original_version" || logwarn "⚠️ could not restore $connector_class $original_version: run playground update-version --connector-tag $original_value"
+    }
+
+    nb_versions=${#connector_tags[@]}
+    log "🏎️ benchmark of $connector_class versions ${connector_tags[*]} ($rounds round(s), currently $original_version)"
+    matrix_failed=0
+    for ((round = 1; round <= rounds; round++))
+    do
+        for version in "${connector_tags[@]}"
+        do
+            log "🏁 version $version, round $round/$rounds"
+            if ! switch_connector_version "$version"
+            then
+                matrix_failed=1
+                break 2
+            fi
+            if [ "$mode" == "drain" ]
+            then
+                # the worker jvm was restarted: an untimed drain first
+                warmup_records=$(( nb_records / 10 > 10000 ? nb_records / 10 : 10000 ))
+                log "🔥 warm-up drain of $warmup_records records (not recorded)"
+                BENCHMARK_MATRIX_CHILD=1 BENCHMARK_NO_OPEN=1 playground connector benchmark "${child_args[@]}" --nb-records "$warmup_records" --no-history > "$output_dir/$matrix_id-warmup-$version-$round.log" 2>&1 || true
+            fi
+            if ! BENCHMARK_MATRIX_CHILD=1 BENCHMARK_NO_OPEN=1 BENCHMARK_MATRIX_RESULTS="$matrix_results" playground connector benchmark "${child_args[@]}"
+            then
+                logerror "❌ the benchmark of version $version failed"
+                matrix_failed=1
+                break 2
+            fi
+        done
+    done
+    restore_original_version
+
+    if [ ! -s "$matrix_results" ]
+    then
+        logerror "❌ no version could be benchmarked"
+        exit 1
+    fi
+    # comparison of the versions: mean per version, delta with the first version
+    log "🏁 comparison of $connector_class versions ($connector, $mode, shape $shape)"
+    xargs cat < "$matrix_results" | jq -s -r '
+        group_by(.plugin_version) as $groups
+        | [ $groups[] | (map(select(.lower_bound != true) | .records_per_second)) as $r
+            | {version: .[0].plugin_version, runs: length, lower_bounds: (map(select(.lower_bound == true)) | length),
+               mean: (if ($r | length) > 0 then ($r | add / length) else null end), min: ($r | min), max: ($r | max)} ] as $v
+        | ($v | map(select(.mean != null) | .mean) | .[0]) as $first
+        | def r1: if . == null then "-" else (. * 10 | round) / 10 | tostring end;
+          (["version", "runs", "lower bounds", "records/s (mean)", "min", "max", "vs first"] | @tsv),
+          ($v[] | [.version, .runs, .lower_bounds, (.mean | r1), (.min | r1), (.max | r1),
+                   (if $first != null and $first > 0 and .mean != null then (((.mean - $first) / $first * 100) | round | tostring) + "%" else "-" end)] | @tsv)' \
+        | column -t -s $'\t' | sed 's/^/   /'
+    html_file="$output_dir/$matrix_id.html"
+    if python3 -I "$root_folder/tools/benchmark-report/benchmark_report.py" --runs $(cat "$matrix_results") --output "$html_file" > /dev/null
+    then
+        log "📊 report: $html_file"
+        if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ]
+        then
+            if command -v open > /dev/null 2>&1
+            then
+                open "$html_file"
+            elif command -v xdg-open > /dev/null 2>&1
+            then
+                xdg-open "$html_file" > /dev/null 2>&1 || true
+            fi
+        fi
+    else
+        logwarn "⚠️ the html report could not be generated"
+    fi
+    logwarn "⚠️ results are relative to this docker host: compare runs on the same machine only"
+    [ $matrix_failed -eq 1 ] && exit 1
+    exit 0
+fi
 
 if [ ${#topics[@]} -eq 0 ] && [ "$type" == "source" ]
 then
@@ -526,6 +665,9 @@ fi
 task_shares="${task_shares//_/ }"
 task_shares="${task_shares//,/, }"
 
+setup_json=$(benchmark_collect_setup "$workers" "$connector_config_json" "$test_file" "$environment")
+[ -z "$setup_json" ] && setup_json='{}'
+
 test_file_relative="${test_file#$root_folder/}"
 result=$(jq -n \
     --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg test_file "$test_file_relative" --arg connector "$connector" \
@@ -538,6 +680,7 @@ result=$(jq -n \
     --arg samples_csv "$csv_file" --argjson lower_bound "$lower_bound" \
     --arg gc_percent "$gc_percent" --arg cpu_available_avg "$cpu_available_avg" --arg pause_ratio "$pause_avg" \
     --arg dlq_records "$dlq_delta" --arg skipped_records "$skipped_delta" --arg task_shares "$task_shares" \
+    --argjson setup "$setup_json" \
     '{date: $date, test_file: $test_file, connector: $connector, connector_class: $connector_class, plugin_version: $plugin_version,
       cp_tag: $cp_tag, type: $type, mode: $mode, shape: $shape, tasks: $tasks, records: $records, seconds: $seconds,
       records_per_second: $records_per_second, lower_bound: $lower_bound, rate_p50: $rate_p50, rate_p95: $rate_p95, rate_min: $rate_min,
@@ -545,8 +688,12 @@ result=$(jq -n \
       cpu_percent_of_one_core_max: $cpu_max, load_seconds: $load_seconds, topic_records_delta: $topic_records_delta,
       gc_percent: $gc_percent, cpu_percent_of_available_avg: $cpu_available_avg, pause_ratio: $pause_ratio,
       dlq_records: $dlq_records, skipped_records: $skipped_records, task_shares: $task_shares,
-      samples_csv: $samples_csv}')
+      samples_csv: $samples_csv, setup: $setup}')
 echo "$result" > "$json_file"
+if [ -n "$BENCHMARK_MATRIX_RESULTS" ]
+then
+    echo "$json_file" >> "$BENCHMARK_MATRIX_RESULTS"
+fi
 
 # previous result to compare with: --compare, or the last one of the same connector, example, mode and shape
 history_file="$root_folder/benchmark-history"
@@ -610,6 +757,7 @@ if [ "$topic_records_delta" != "-" ]
 then
     printf "   %-22s %s\n" "records in topics" "+$topic_records_delta (${topics[*]})"
 fi
+printf "   %-22s %s\n" "setup" "$(benchmark_setup_summary "$setup_json")"
 if [ -n "$previous" ]
 then
     previous_throughput=$(echo "$previous" | jq -r '.records_per_second')
@@ -627,6 +775,18 @@ function add_warning () {
 if [ "$load_stopped_early" == "1" ]
 then
     report_warnings+=("the load stopped before the end of the measure, see $load_log")
+fi
+if [ -n "$previous" ] && [ "$(echo "$previous" | jq -c '.setup // empty')" != "" ]
+then
+    setup_differences=$(benchmark_setup_differences "$setup_json" "$(echo "$previous" | jq -c '.setup')")
+    if [ -n "$setup_differences" ]
+    then
+        add_warning "the previous run was on a different setup ($setup_differences): the comparison is not meaningful"
+    fi
+fi
+if [ "$(echo "$setup_json" | jq -r '.connect.emulated // false')" == "true" ]
+then
+    add_warning "the connect worker runs an image of another architecture ($(echo "$setup_json" | jq -r '.connect.image_arch') on $(echo "$setup_json" | jq -r '.host.arch')): emulation makes it much slower than on native hardware"
 fi
 if [ "$not_running_checks" -gt 0 ]
 then
@@ -712,8 +872,8 @@ done
 if python3 -I "$root_folder/tools/benchmark-report/benchmark_report.py" "${report_args[@]}" > /dev/null
 then
     log "📊 report: $html_file"
-    # only open a browser in an interactive terminal, never in CI
-    if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ]
+    # only open a browser in an interactive terminal, never in CI nor for the runs of a --connector-tag comparison
+    if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ] && [ -z "$BENCHMARK_NO_OPEN" ]
     then
         if command -v open > /dev/null 2>&1
         then

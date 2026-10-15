@@ -9,8 +9,8 @@ benchmark_load_args "$@"
 # topic (wildcards replaced), qos and credentials of the connector
 topic=$(jq -r '."mqtt.topics" | split(",")[0] | gsub("[#+]"; "benchmark")' "$BENCHMARK_CONNECTOR_CONFIG")
 qos=$(jq -r '."mqtt.qos" // "1"' "$BENCHMARK_CONNECTOR_CONFIG")
-user=$(jq -r '."mqtt.username" // empty' "$BENCHMARK_CONNECTOR_CONFIG")
-password=$(jq -r '."mqtt.password" // empty' "$BENCHMARK_CONNECTOR_CONFIG")
+user=$(benchmark_connector_config_value mqtt.username)
+password=$(benchmark_connector_config_value mqtt.password)
 options="-h localhost -p 1883"
 if [[ "$BENCHMARK_TEST_FILE" == *mtls* ]]
 then

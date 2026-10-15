@@ -25,3 +25,12 @@ playground run -f splunk-source.sh
    ```
 
 4. Verifies the event with `playground topic consume --topic splunk-source`.
+
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) sends events to the HTTP event collector of the connector (`curl`, 1000 events per request), for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark), in **steady mode only**: the connector receives the events itself, and keeps the events sent while it is paused in memory, so a drain would not measure it. Once the example is running:
+
+```bash
+# throughput during 2 minutes while batches of 10000 events are sent
+playground connector benchmark --mode steady --duration 2m --nb-records 10000
+```

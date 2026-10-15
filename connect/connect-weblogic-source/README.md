@@ -48,3 +48,22 @@ Example record (queue):
 ```
 Struct{messageID=ID:<576249.1618314788338.0>,messageType=text,timestamp=1618314788338,deliveryMode=2,destination=Struct{destinationType=queue,name=mySystemModule!myJMSServer@MyDistributedQueue},redelivered=false,expiration=0,priority=4,properties={JMS_BEA_DeliveryTime=Struct{propertyType=long,long=1618314788338}, JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=Hello Queue World!}
 ```
+
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) sends messages to the destination of the connector with `BenchmarkJmsProducer` (`tools/benchmark-jms`), run in the `jms-sender` container with the WebLogic client jars and the JNDI settings of the connector (transactions of 1000 messages), for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark). Once the example is running:
+
+```bash
+# time to consume a backlog of 1M messages
+playground connector benchmark --nb-records 1000000
+
+# same with one persistent send per message instead of transactions of 1000
+playground connector benchmark --nb-records 100000 --shape small-txn
+
+# throughput during 2 minutes while batches of 10000 messages are sent
+playground connector benchmark --mode steady --duration 2m --nb-records 10000
+```
+
+The connector is paused while the messages are sent, then resumed, and the benchmark measures the time it takes to consume them. A topic (publish/subscribe) can only be measured with `--mode steady`: a paused subscriber does not keep the backlog in the broker. So `weblogic-topic.sh` is measured with `--mode steady` only.
+
+This connector is a preview connector, which CP 8 no longer supports: run the example with `--tag` set to a 7.x version to benchmark it.

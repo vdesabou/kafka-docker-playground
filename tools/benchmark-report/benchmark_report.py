@@ -24,8 +24,9 @@ def load_samples(path, phase):
                 continue
 
             def num(key):
+                # columns are added over time: a sample file of an older version does not have them
                 try:
-                    return float(row[key])
+                    return float(row.get(key))
                 except (TypeError, ValueError):
                     return None
 
@@ -80,6 +81,7 @@ PAGE = """<!doctype html>
   color-scheme: light;
   --page: #f9f9f7; --surface-1: #fcfcfb; --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #898781;
   --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10); --series-1: #2a78d6;
+  --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100; --series-5: #e87ba4; --series-6: #008300; --series-7: #6250d6; --series-8: #e34948;
   --good: #0ca30c; --good-text: #006300; --critical: #d03b3b; --warning: #fab219;
 }
 @media (prefers-color-scheme: dark) {
@@ -87,6 +89,7 @@ PAGE = """<!doctype html>
     color-scheme: dark;
     --page: #0d0d0d; --surface-1: #1a1a19; --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #898781;
     --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10); --series-1: #3987e5;
+    --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
     --good-text: #0ca30c;
   }
 }
@@ -94,6 +97,7 @@ PAGE = """<!doctype html>
   color-scheme: dark;
   --page: #0d0d0d; --surface-1: #1a1a19; --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #898781;
   --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10); --series-1: #3987e5;
+    --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
   --good-text: #0ca30c;
 }
 * { box-sizing: border-box; }
@@ -104,7 +108,8 @@ header { display: flex; justify-content: space-between; align-items: flex-start;
 h1 { font-size: 1.35rem; margin: 0 0 4px; font-weight: 600; }
 h2 { font-size: 1rem; margin: 0 0 2px; font-weight: 600; }
 .sub { color: var(--text-secondary); font-size: .875rem; margin: 0; }
-.theme-toggle { font: inherit; font-size: .8rem; color: var(--text-secondary); background: var(--surface-1);
+a { color: var(--series-1); }
+.theme-toggle { white-space: nowrap; flex-shrink: 0; font: inherit; font-size: .8rem; color: var(--text-secondary); background: var(--surface-1);
   border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
 .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; margin: 22px 0; }
 .tile, .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; }
@@ -126,12 +131,15 @@ svg text { font-family: inherit; }
   border-radius: 6px; padding: 6px 9px; font-size: .78rem; box-shadow: 0 2px 8px rgba(0,0,0,.12); display: none;
   white-space: nowrap; z-index: 2; }
 .tooltip strong { font-size: .9rem; font-variant-numeric: tabular-nums; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: .8rem; color: var(--text-secondary); margin: 2px 0 6px; }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--c); margin-right: 6px; vertical-align: -1px; }
 .tooltip .key { display: inline-block; width: 12px; height: 2px; background: var(--series-1); vertical-align: middle; margin-right: 6px; }
 .tooltip .muted { color: var(--text-secondary); }
 table { border-collapse: collapse; width: 100%; font-size: .82rem; font-variant-numeric: tabular-nums; }
 th, td { text-align: left; padding: 5px 10px; border-bottom: 1px solid var(--grid); }
 th { color: var(--text-secondary); font-weight: 500; }
 td.num, th.num { text-align: right; }
+pre { margin: 0; font-family: 'SFMono-Regular', Consolas, Menlo, monospace; font-size: .8rem; white-space: pre-wrap; word-break: break-all; }
 details { margin-top: 16px; } summary { cursor: pointer; font-weight: 600; font-size: .95rem; padding: 6px 0; }
 .full { grid-column: 1 / -1; }
 .empty { color: var(--text-muted); font-size: .875rem; padding: 24px 0; }
@@ -144,6 +152,7 @@ footer { color: var(--text-muted); font-size: .78rem; margin-top: 24px; }
   <div>
     <h1>🏎️ Benchmark of __CONNECTOR__</h1>
     <p class="sub">__SUBTITLE__</p>
+    <p class="sub" id="example-link"></p>
   </div>
   <button class="theme-toggle" id="theme-toggle" type="button">Toggle theme</button>
 </header>
@@ -153,9 +162,12 @@ __WARNINGS__
   <section class="card"><h2>Throughput</h2><p class="sub">records per second, per sample</p><div id="chart-rate"></div></section>
   <section class="card"><h2>Connect CPU</h2><p class="sub">% of one core, average of the workers running the tasks</p><div id="chart-cpu"></div></section>
   <section class="card"><h2>__BATCH_TITLE__</h2><p class="sub">average per task, ms</p><div id="chart-batch"></div></section>
-  <section class="card"><h2>Comparable runs</h2><p class="sub">records per second, same example, connector, mode and shape (benchmark-history)</p><div id="chart-history"></div></section>
+  <section class="card"><h2>Comparable runs</h2><p class="sub">records per second, same example, connector, mode and shape (benchmark-history); faded bars and * : another setup</p><div id="chart-history"></div></section>
 </div>
+<details open id="versions-section" hidden><summary>Connector versions</summary><div class="card"><table id="versions-table"></table></div></details>
 <details open><summary>Run details</summary><div class="card"><table id="details"></table></div></details>
+<details open><summary>Setup</summary><div class="card"><table id="setup"></table></div></details>
+<details><summary>Connector configuration (secrets masked)</summary><div class="card"><pre id="connector-config"></pre></div></details>
 <details><summary>Comparable runs (table)</summary><div class="card"><table id="history-table"></table></div></details>
 <details><summary>Samples (table)</summary><div class="card"><table id="samples-table"></table></div></details>
 <footer>Results are relative to the docker host they ran on: compare runs on the same machine only. Generated by playground connector benchmark.</footer>
@@ -164,7 +176,8 @@ __WARNINGS__
 <script>
 (function () {
   const data = JSON.parse(document.getElementById("data").textContent);
-  const r = data.result, samples = data.samples, history = data.history;
+  const r = data.result, samples = data.samples, history = data.history, versions = data.versions || [];
+  const comparison = versions.length > 0;
   const root = document.documentElement;
   document.getElementById("theme-toggle").addEventListener("click", () => {
     const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
@@ -193,6 +206,16 @@ __WARNINGS__
   };
   const compact = (v) => v >= 1e6 ? nf1.format(v / 1e6) + "M" : v >= 1e3 ? nf1.format(v / 1e3) + "k" : nf1.format(v);
 
+  // setup of a run: what changes the throughput, to tell comparable runs apart
+  const gib = b => b ? Math.floor(b / 1073741824) + " GiB" : "?";
+  const setupKey = st => st ? JSON.stringify([st.host && st.host.cpu_model, st.host && st.host.cpus, st.engine && st.engine.cpus,
+    st.engine && st.engine.memory_bytes, st.connect && st.connect.image, st.connect && st.connect.emulated,
+    st.connect && st.connect.heap_max_bytes, st.connect && st.connect.workers, st.kafka && st.kafka.brokers, st.kafka && st.kafka.environment]) : null;
+  const setupShort = st => st && st.host ? st.host.cpu_model + ", " + st.engine.name + " " + st.engine.cpus + " cpus / " + gib(st.engine.memory_bytes) +
+    (st.connect && st.connect.emulated ? ", emulated" : "") : "unknown";
+  const currentSetup = setupKey(r.setup);
+  const sameSetup = h => !currentSetup || !h.setup || setupKey(h.setup) === currentSetup;
+
   // tiles
   const tiles = document.getElementById("tiles");
   function tile(label, value, unit, note, cls) {
@@ -204,12 +227,23 @@ __WARNINGS__
     if (note) t.appendChild(el("div", { class: "note" }, note));
     tiles.appendChild(t);
   }
-  tile("Throughput", (r.lower_bound ? "≥ " : "") + nf.format(r.records_per_second), "records/s",
+  tile(comparison ? "Last run (" + r.plugin_version + ")" : "Throughput", (r.lower_bound ? "≥ " : "") + nf.format(r.records_per_second), "records/s",
        r.rate_p50 !== "-" ? "p50 " + compact(+r.rate_p50) + " · p95 " + compact(+r.rate_p95) + " · min " + compact(+r.rate_min) : "");
   tile("Duration", nf1.format(r.seconds), "s", r.mode === "drain" ? "time to process the backlog" : "measure, after the warm-up");
   tile("Records", nf.format(r.records), "", r.mode === "drain" ? "backlog, loaded in " + r.load_seconds + " s" : "processed during the measure");
   const previous = history.length > 1 ? history[history.length - 2] : null;
-  if (previous && previous.records_per_second > 0) {
+  const versionColor = version => "var(--series-" + (versions.findIndex(v => v.version === version) % 8 + 1) + ")";
+  if (comparison) {
+    const measured = versions.filter(v => v.mean !== null);
+    if (measured.length) {
+      const best = measured.reduce((a, b) => (b.mean > a.mean ? b : a));
+      const d = best.delta;
+      tile("Best version", best.version, "", nf.format(best.mean) + " records/s (mean of " + best.rates.length + " run(s))" +
+           (d !== null && Math.abs(d) >= 1 ? ", " + (d > 0 ? "+" : "") + nf.format(d) + "% vs " + measured[0].version : ""));
+    } else {
+      tile("Best version", "–", "", "only lower bounds: increase --nb-records");
+    }
+  } else if (previous && previous.records_per_second > 0) {
     const delta = (r.records_per_second - previous.records_per_second) / previous.records_per_second * 100;
     const same = Math.abs(delta) < 5;
     tile("Vs previous run", (same ? "≈ " + (delta >= 0 ? "+" : "") : delta > 0 ? "▲ +" : "▼ ") + nf.format(delta) + "%",
@@ -311,27 +345,31 @@ __WARNINGS__
       const x = L + slot * i + (slot - bw) / 2, y = sy(h.records_per_second), base = sy(0), rad = Math.min(4, bw / 2);
       const bar = svgEl("path", {
         d: `M${x},${base}V${y + rad}Q${x},${y} ${x + rad},${y}H${x + bw - rad}Q${x + bw},${y} ${x + bw},${y + rad}V${base}Z`,
-        fill: "var(--series-1)", tabindex: 0
+        fill: comparison ? versionColor(h.plugin_version) : "var(--series-1)", tabindex: 0,
+        "fill-opacity": (comparison && h.lower_bound) || !sameSetup(h) ? 0.35 : 1
       });
       svg.appendChild(bar);
-      const current = i === n - 1;
-      if (current || n <= 8) {
+      const current = !comparison && i === n - 1;
+      if (current || comparison || n <= 8) {
         const t = svgEl("text", { x: x + bw / 2, y: y - 6, "text-anchor": "middle", "font-size": 11, fill: "var(--text-secondary)" });
         t.textContent = compact(h.records_per_second);
         svg.appendChild(t);
       }
       const lab = svgEl("text", { x: x + bw / 2, y: H - B + 16, "text-anchor": "middle", "font-size": 10.5,
         fill: current ? "var(--text-primary)" : "var(--text-muted)", "font-weight": current ? 600 : 400 });
-      lab.textContent = current ? "this run" : (h.date || "").slice(5, 16).replace("T", " ");
+      lab.textContent = comparison ? h.plugin_version + (h.round > 1 || versions.some(v => v.runs > 1) ? " · r" + h.round : "") : current ? "this run" : (h.date || "").slice(5, 16).replace("T", " ") + (sameSetup(h) ? "" : " *");
       svg.appendChild(lab);
       const showTip = () => {
         tip.replaceChildren();
-        tip.appendChild(el("strong", {}, nf.format(h.records_per_second)));
-        tip.appendChild(document.createTextNode(" records/s"));
+        tip.appendChild(el("strong", {}, (h.lower_bound ? "≥ " : "") + nf.format(h.records_per_second)));
+        tip.appendChild(document.createTextNode(" records/s" + (comparison ? " · version " + h.plugin_version + ", round " + h.round : "") +
+          (h.lower_bound ? " (lower bound, not in the mean)" : "")));
         tip.appendChild(el("br"));
         tip.appendChild(el("span", { class: "muted" }, (h.date || "").replace("T", " ").replace("Z", " UTC")));
         tip.appendChild(el("br"));
         tip.appendChild(el("span", { class: "muted" }, h.plugin_version + " · CP " + h.cp_tag + " · " + h.tasks + " task(s) · " + nf.format(h.records) + " records"));
+        tip.appendChild(el("br"));
+        tip.appendChild(el("span", { class: "muted" }, (sameSetup(h) ? "" : "other setup: ") + setupShort(h.setup)));
         tip.style.display = "block";
         const sbox = svg.getBoundingClientRect(), hbox = host.parentElement.getBoundingClientRect(), scale = W / sbox.width;
         tip.style.left = Math.max(8, Math.min(sbox.left - hbox.left + (x + bw / 2) / scale - tip.offsetWidth / 2, hbox.width - tip.offsetWidth - 8)) + "px";
@@ -371,8 +409,88 @@ __WARNINGS__
     ["records in topics", r.topic_records_delta === "-" ? "-" : "+" + nf.format(+r.topic_records_delta)],
     ["date", r.date], ["samples", r.samples_csv]
   ]);
-  fillTable("history-table", [["date"], ["records/s", 1], ["records", 1], ["seconds", 1], ["plugin"], ["CP"], ["tasks", 1]],
-    history.slice().reverse().map(h => [h.date, nf1.format(h.records_per_second), nf.format(h.records), h.seconds, h.plugin_version, h.cp_tag, h.tasks]));
+  fillTable("history-table", [["date"], ["records/s", 1], ["records", 1], ["seconds", 1], ["plugin"], ["CP"], ["tasks", 1], ["setup"]],
+    history.slice().reverse().map(h => [h.date, nf1.format(h.records_per_second), nf.format(h.records), h.seconds, h.plugin_version, h.cp_tag, h.tasks,
+      (sameSetup(h) ? "" : "≠ ") + setupShort(h.setup)]));
+  if (comparison) {
+    document.getElementById("versions-section").hidden = false;
+    const f1 = x => x === null ? "-" : nf1.format(x);
+    fillTable("versions-table", [["version"], ["runs", 1], ["lower bounds", 1], ["records/s (mean)", 1], ["min", 1], ["max", 1], ["vs first version", 1]],
+      versions.map(v => [v.version, v.runs, v.lower_bounds, f1(v.mean), f1(v.min), f1(v.max),
+        v.delta === null ? "-" : (v.delta > 0 ? "+" : "") + nf.format(v.delta) + "%"]));
+    document.querySelector("#chart-history").previousElementSibling.textContent = "records per second of each run, in run order; faded: lower bound, not in the mean";
+    const legend = el("div", { class: "legend" });
+    versions.forEach(v => { const item = el("span", {}, v.version); item.style.setProperty("--c", versionColor(v.version)); legend.appendChild(item); });
+    document.querySelector("#chart-history").before(legend);
+    document.querySelector("#chart-history").parentElement.querySelector("h2").textContent = "Connector versions";
+  }
+  // links to the example on github, at the commit it ran with and on the default branch
+  function exampleLinks(st) {
+    const pg = (st && st.playground) || {};
+    if (!pg.repo_url || !pg.repo_path || !pg.repo_url.startsWith("https://github.com/")) return null;
+    const span = el("span");
+    const link = (text, href) => { const a = el("a", { href: href, target: "_blank", rel: "noopener" }, text); span.appendChild(a); };
+    span.appendChild(el("code", {}, pg.repo_path));
+    span.appendChild(document.createTextNode(" · "));
+    if (pg.repo_commit) {
+      link("at commit " + pg.repo_commit.slice(0, 10), pg.repo_url + "/blob/" + pg.repo_commit + "/" + pg.repo_path);
+      span.appendChild(document.createTextNode(" · "));
+    }
+    link("latest version", pg.repo_url + "/blob/HEAD/" + pg.repo_path);
+    span.appendChild(document.createTextNode(" · "));
+    link("folder", pg.repo_url + "/tree/HEAD/" + pg.repo_path.slice(0, pg.repo_path.lastIndexOf("/")));
+    if (pg.repo_dirty) span.appendChild(document.createTextNode(" (ran with local changes: the commit link may differ from what ran)"));
+    return span;
+  }
+  // link to the documentation of the connector (documentation_url of the plugin manifest)
+  function documentationLink(st) {
+    const url = st && st.connector && st.connector.documentation_url;
+    if (!url || !/^https?:/.test(url)) return null;
+    return el("a", { href: url, target: "_blank", rel: "noopener" }, "connector documentation");
+  }
+  const headerLinks = exampleLinks(r.setup);
+  if (headerLinks) document.getElementById("example-link").appendChild(headerLinks);
+  const headerDoc = documentationLink(r.setup);
+  if (headerDoc) {
+    const line = document.getElementById("example-link");
+    if (line.childNodes.length) line.appendChild(document.createTextNode(" · "));
+    line.appendChild(headerDoc);
+  }
+
+  // setup of this run
+  const st = r.setup || {};
+  const o = (v, unit) => v === undefined || v === null || v === "" ? "-" : v + (unit || "");
+  if (st.host) {
+    fillTable("setup", [["Component"], ["Details"]], [
+      ["host", o(st.host.os) + " " + o(st.host.arch) + ", " + o(st.host.cpu_model) + ", " + o(st.host.cpus) + " cpus, " + gib(st.host.memory_bytes)],
+      ["container engine", o(st.engine.name) + " " + o(st.engine.version) + " (" + o(st.engine.os) + "), " + o(st.engine.cpus) + " cpus, " + gib(st.engine.memory_bytes)],
+      ["connect image", o(st.connect.image) + " (" + o(st.connect.image_arch) + (st.connect.emulated ? ", EMULATED on " + st.host.arch : ", native") + ")"],
+      ["connect workers", o(st.connect.workers)],
+      ["connect jvm", o(st.connect.jvm_version) + ", " + o(st.connect.jvm_cpus) + " cpus available, heap max " + gib(st.connect.heap_max_bytes) +
+        (st.connect.heap_opts ? " (KAFKA_HEAP_OPTS " + st.connect.heap_opts + ")" : "")],
+      ["kafka", o(st.kafka.brokers) + " broker(s), " + (st.kafka.kraft ? "kraft" : "zookeeper") + ", environment " + o(st.kafka.environment) + ", CP " + o(r.cp_tag)],
+      ["connector", o(r.connector_class) + " " + o(r.plugin_version) + ", " + o(r.tasks) + " task(s)"],
+      ["playground", o(st.playground.test_file) + " at commit " + o(st.playground.commit) + (st.playground.dirty ? " (with local changes)" : "")]
+    ]);
+    const rows = document.querySelectorAll("#setup tr");
+    const links = exampleLinks(st);
+    if (links) {
+      const last = rows[rows.length - 1].children[1];
+      last.textContent = "";
+      last.appendChild(links);
+    }
+    const doc = documentationLink(st);
+    if (doc) {
+      // the "connector" row is the second to last
+      const cell = rows[rows.length - 2].children[1];
+      cell.appendChild(document.createTextNode(" · "));
+      cell.appendChild(doc);
+    }
+    document.getElementById("connector-config").textContent = JSON.stringify(st.connector_config || {}, null, 2);
+  } else {
+    fillTable("setup", [["Component"], ["Details"]], [["setup", "not recorded for this run"]]);
+    document.getElementById("connector-config").textContent = "not recorded for this run";
+  }
   fillTable("samples-table", [["time"], ["elapsed s", 1], ["records", 1], ["records/s", 1], ["batch ms", 1], ["running ratio", 1], ["cpu %", 1], ["consumer lag max", 1]],
     samples.map(s => [s.time, s.elapsed, s.records === null ? null : nf.format(s.records), s.rate === null ? null : nf1.format(s.rate), s.batch, s.ratio, s.cpu, s.lag === null ? null : nf.format(s.lag)]));
 })();
@@ -384,17 +502,52 @@ __WARNINGS__
 
 def main():
     parser = argparse.ArgumentParser(description="HTML report of a playground connector benchmark run")
-    parser.add_argument("--result", required=True)
-    parser.add_argument("--samples", required=True)
+    parser.add_argument("--result")
+    parser.add_argument("--samples")
+    parser.add_argument("--runs", nargs="+", help="result json of the runs of a --connector-tag comparison")
     parser.add_argument("--history")
     parser.add_argument("--warning", action="append", default=[])
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
 
-    with open(args.result) as f:
-        result = json.load(f)
-    samples = load_samples(args.samples, result.get("mode", "drain"))
-    history = load_history(args.history, result)
+    versions = []
+    if args.runs:
+        # comparison of connector versions: the runs replace the history, the charts over time show the last run
+        runs = []
+        for path in args.runs:
+            with open(path) as f:
+                runs.append(json.load(f))
+        result = runs[-1]
+        samples = load_samples(result.get("samples_csv"), result.get("mode", "drain")) if os.path.exists(result.get("samples_csv", "")) else []
+        history = runs
+        first = None
+        for run in runs:
+            version = run.get("plugin_version")
+            entry = next((v for v in versions if v["version"] == version), None)
+            if entry is None:
+                entry = {"version": version, "rates": [], "lower_bounds": 0, "runs": 0}
+                versions.append(entry)
+            entry["runs"] += 1
+            run["round"] = entry["runs"]
+            # a lower bound is not a measure: it does not count in the mean
+            if run.get("lower_bound") is True:
+                entry["lower_bounds"] += 1
+            else:
+                entry["rates"].append(run.get("records_per_second") or 0)
+        for v in versions:
+            rates = v["rates"]
+            v["mean"] = sum(rates) / len(rates) if rates else None
+            v["min"], v["max"] = (min(rates), max(rates)) if rates else (None, None)
+            if first is None and v["mean"] is not None:
+                first = v["mean"]
+            v["delta"] = (v["mean"] - first) / first * 100 if first and v["mean"] is not None else None
+    else:
+        if not args.result or not args.samples:
+            parser.error("--result and --samples are required without --runs")
+        with open(args.result) as f:
+            result = json.load(f)
+        samples = load_samples(args.samples, result.get("mode", "drain"))
+        history = load_history(args.history, result)
 
     subtitle = " · ".join(str(x) for x in [
         result.get("connector_class"), result.get("plugin_version"), "CP " + str(result.get("cp_tag")),
@@ -405,7 +558,9 @@ def main():
     warnings = ""
     if args.warning:
         warnings = '<ul class="card warnings">' + "".join("<li>%s</li>" % html.escape(w) for w in args.warning) + "</ul>"
-    payload = json.dumps({"result": result, "samples": samples, "history": history}).replace("</", "<\\/")
+    payload = json.dumps({"result": result, "samples": samples, "history": history, "versions": versions}).replace("</", "<\\/")
+    if versions:
+        subtitle = "connector versions " + ", ".join(v["version"] for v in versions) + " · " + subtitle
     page = (PAGE.replace("__CONNECTOR__", html.escape(str(result.get("connector"))))
             .replace("__SUBTITLE__", html.escape(subtitle))
             .replace("__BATCH_TITLE__", "Put batch time" if result.get("type") == "sink" else "Poll batch time")

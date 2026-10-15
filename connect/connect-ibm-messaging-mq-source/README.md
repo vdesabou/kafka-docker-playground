@@ -37,3 +37,17 @@ To test a jar that you built locally, package it the same way (jar in the `lib/`
 3. Creates the `ibm-messaging-mq-source` connector from queue `DEV.QUEUE.1` (channel `DEV.APP.SVRCONN`, user `app`, `mq.message.body.jms=true`) to topic `MyKafkaTopicName`.
 4. Puts 2 messages in the queue with `amqsput`.
 5. Verifies the 2 records with `playground topic consume --topic MyKafkaTopicName`.
+
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) puts messages in the queue of the connector (`amqsput`, after raising the max depth of the queue, which is 5000 by default), for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark). Once the example is running:
+
+```bash
+# time to consume a backlog of 1M messages
+playground connector benchmark --nb-records 1000000
+
+# throughput during 2 minutes while batches of 10000 messages are sent
+playground connector benchmark --mode steady --duration 2m --nb-records 10000
+```
+
+The connector is paused while the messages are sent, then resumed, and the benchmark measures the time it takes to consume them.
