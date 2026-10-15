@@ -1,16 +1,11 @@
-FROM --platform=linux/amd64 debian:stretch
-#Update stretch repositories
-RUN sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list
-RUN sed -i 's|security.debian.org|archive.debian.org/|g' /etc/apt/sources.list
-RUN sed -i '/stretch-updates/d' /etc/apt/sources.list
+FROM --platform=linux/amd64 debian:bookworm
 
 EXPOSE 749 88/udp
 
 ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get -qq update
-RUN apt-get -qq install locales krb5-kdc krb5-admin-server
-RUN apt-get -qq install vim
-RUN apt-get -qq clean
+RUN apt-get -qq update && \
+    apt-get -qq install locales krb5-kdc krb5-admin-server vim && \
+    apt-get -qq clean && rm -rf /var/lib/apt/lists/*
 
 ENV REALM ${REALM:-EXAMPLE.COM}
 ENV SUPPORTED_ENCRYPTION_TYPES ${SUPPORTED_ENCRYPTION_TYPES:-aes256-cts-hmac-sha1-96:normal}
