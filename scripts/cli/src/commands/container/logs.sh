@@ -113,7 +113,8 @@ do
             log "⌛ Waiting up to $max_wait seconds for message $log to be present in $resolved_container pod logs..."
             while true
             do
-                kubectl -n confluent logs "$resolved_container" --all-containers=true > /tmp/out.txt 2>&1
+                # kubectl fails while an ephemeral container (kubectl debug) is starting, keep retrying
+                kubectl -n confluent logs "$resolved_container" --all-containers=true > /tmp/out.txt 2>&1 || true
                 if grep "$log" /tmp/out.txt > /dev/null
                 then
                     grep "$log" /tmp/out.txt

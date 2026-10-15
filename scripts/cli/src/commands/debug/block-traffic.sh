@@ -39,7 +39,8 @@ securityContext:
   runAsNonRoot: false
 EOF
 
-		debug_output=$(kubectl -n confluent debug "pod/$pod_name" --profile=sysadmin --custom="$debug_custom_file" --image=nicolaka/netshoot --target="$target_container" -- bash -lc "$cmd" 2>&1)
+		# --attach waits for the command to finish and returns its output, otherwise the rule is applied asynchronously
+		debug_output=$(kubectl -n confluent debug "pod/$pod_name" --attach=true --profile=sysadmin --custom="$debug_custom_file" --image=nicolaka/netshoot --target="$target_container" -- bash -lc "$cmd" 2>&1)
 	debug_exit_code=$?
 	rm -f "$debug_custom_file"
 		cleaned_output=$(echo "$debug_output" | sed -E '/^Targeting container /d; /^Defaulting debug container name to /d')
