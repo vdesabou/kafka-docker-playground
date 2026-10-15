@@ -37,6 +37,20 @@ playground run -f sqlserver-microsoft.sh --enable-sql-datagen
 5. Inserts one more row, then verifies that 5 records land in topic `sqlserver-customers` with `playground topic consume`.
 6. Non-SSL variants with `--enable-sql-datagen`: runs the SQL datagen for 10 minutes.
 
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) loads rows in the `dbo.customers` table of the example for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark). Once the example is running:
+
+```bash
+# time to capture 1M rows inserted in one transaction
+playground connector benchmark --nb-records 1000000 --shape bulk
+
+# 100k transactions of one row
+playground connector benchmark --nb-records 100000 --shape small-txn
+```
+
+The connector is paused while the rows are loaded, then resumed, and the benchmark measures the time it takes to produce the records. The connector uses `"mode": "incrementing"`, which only captures new rows, so `--shape update` is refused.
+
 ## SSL setup details
 
 Create a self-signed certificate and import it into a truststore:

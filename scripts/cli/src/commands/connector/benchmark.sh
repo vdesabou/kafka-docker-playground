@@ -134,6 +134,9 @@ mkdir -p "$output_dir"
 run_id="${connector}-$(date +%Y%m%d-%H%M%S)"
 # load scripts can adapt to the connector configuration (a redo log topic doubles the records of oracle cdc...)
 export BENCHMARK_CONNECTOR_CONFIG="$output_dir/$run_id-config.json"
+# a stream load stops at the end of its current batch when this file exists
+export BENCHMARK_STOP_FILE="$output_dir/$run_id.stop"
+rm -f "$BENCHMARK_STOP_FILE"
 echo "$connector_config_json" > "$BENCHMARK_CONNECTOR_CONFIG"
 
 # a sink without load: replay the 'playground topic produce' of the example script that feeds its topics
@@ -144,11 +147,11 @@ then
         handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/topics\""
         sink_topics=$(echo "$curl_output" | jq -r --arg c "$connector" '.[$c].topics // [] | join(" ")')
     fi
-    replay_nb="$nb_records"
-    [ "$mode" == "steady" ] && replay_nb=-1
+    replay_stream=""
+    [ "$mode" == "steady" ] && replay_stream=1
     replay_file="$output_dir/$run_id-replay.bash"
     set +e
-    replay_output=$(benchmark_produce_load_from_example "$test_file" "$sink_topics" "$replay_nb" "$record_size" "$replay_file")
+    replay_output=$(benchmark_produce_load_from_example "$test_file" "$sink_topics" "$nb_records" "$record_size" "$replay_file" "$replay_stream")
     replay_ret=$?
     set -e
     if [ $replay_ret -eq 0 ]
@@ -175,7 +178,7 @@ fi
 csv_file="$output_dir/$run_id.csv"
 json_file="$output_dir/$run_id.json"
 load_log="$output_dir/$run_id-load.log"
-echo "timestamp,elapsed_s,phase,records,rate_records_per_s,batch_avg_ms,running_ratio,cpu_percent_of_one_core" > "$csv_file"
+echo "timestamp,elapsed_s,phase,records,rate_records_per_s,batch_avg_ms,running_ratio,cpu_percent_of_one_core,consumer_lag_max" > "$csv_file"
 
 benchmark_jmx_init "$workers"
 paused_by_benchmark=0
@@ -199,14 +202,23 @@ function kill_tree () {
     do
         kill_tree "$child"
     done
-    kill "$pid" 2> /dev/null
+    # the process can already be gone (a parent exits when its child is killed): not an error
+    kill "$pid" 2> /dev/null || true
 }
 function benchmark_cleanup () {
     restore_run_state
     if [ -n "$load_pid" ] && kill -0 "$load_pid" 2> /dev/null
     then
-        kill_tree "$load_pid"
+        # interrupted: give the load a chance to finish its batch before killing it
+        touch "$BENCHMARK_STOP_FILE" 2> /dev/null
+        for i in 1 2 3 4 5 6 7 8 9 10
+        do
+            kill -0 "$load_pid" 2> /dev/null || break
+            sleep 1
+        done
+        kill -0 "$load_pid" 2> /dev/null && kill_tree "$load_pid"
     fi
+    rm -f "$BENCHMARK_STOP_FILE"
     if [ $paused_by_benchmark -eq 1 ]
     then
         logwarn "⏯️ resuming $connector_type connector $connector paused by the benchmark"
@@ -238,13 +250,13 @@ function take_sample () {
     local values
     values=$(benchmark_jmx_sample "$connector" "$type" "$workers")
     sample_time=$(now)
-    read -r sample_records sample_batch sample_ratio sample_cpu <<< "$values"
+    read -r sample_records sample_batch sample_ratio sample_cpu sample_lag <<< "$values"
     local rate="-"
     if [ -n "$prev_records" ]
     then
         rate=$(awk -v r="$sample_records" -v pr="$prev_records" -v t="$sample_time" -v pt="$prev_time" 'BEGIN { if (t > pt) printf "%.1f", (r - pr) / (t - pt); else print "-" }')
     fi
-    echo "$(date +%H:%M:%S),$(awk -v t="$sample_time" -v s="$start_time" 'BEGIN { printf "%.1f", t - s }'),$phase,$sample_records,$rate,$sample_batch,$sample_ratio,$sample_cpu" >> "$csv_file"
+    echo "$(date +%H:%M:%S),$(awk -v t="$sample_time" -v s="$start_time" 'BEGIN { printf "%.1f", t - s }'),$phase,$sample_records,$rate,$sample_batch,$sample_ratio,$sample_cpu,${sample_lag:--}" >> "$csv_file"
     prev_records="$sample_records"
     prev_time="$sample_time"
 }
@@ -396,7 +408,20 @@ else
     then
         if kill -0 "$load_pid" 2> /dev/null
         then
-            kill_tree "$load_pid"
+            # let the load finish its current batch: killing a producer in the middle of a batch can send a truncated record
+            log "🛑 stopping the load at the end of its current batch"
+            touch "$BENCHMARK_STOP_FILE"
+            stop_wait=0
+            while kill -0 "$load_pid" 2> /dev/null && [ $stop_wait -lt 120 ]
+            do
+                sleep 1
+                stop_wait=$((stop_wait + 1))
+            done
+            if kill -0 "$load_pid" 2> /dev/null
+            then
+                logwarn "⚠️ the load did not stop after 120s, killing it"
+                kill_tree "$load_pid"
+            fi
         else
             logwarn "⚠️ the load stopped before the end of the measure, see $load_log"
             load_stopped_early=1
@@ -536,6 +561,29 @@ then
 elif [ "$nb_samples" -lt 3 ]
 then
     add_warning "only $nb_samples samples during the measure: the percentiles are not meaningful, increase --nb-records (or --duration) or reduce --interval"
+fi
+# steady mode measures the load as much as the connector: detect when the connector simply kept up with it
+if [ "$mode" == "steady" ] && [ "$measured_records" -gt 0 ]
+then
+    generated=0
+    if [ -f "$load_log" ]
+    then
+        # records generated by the stream load during the measure, from its BENCHMARK_BATCH=<records> <epoch> lines
+        generated=$(awk -v s="$measure_start" -v e="$sample_time" '/^BENCHMARK_BATCH=/ { split($1, kv, "="); if ($2 >= s && $2 <= e) g += kv[2] } END { print g + 0 }' "$load_log")
+    fi
+    if [ "$generated" -gt 0 ] && awk -v m="$measured_records" -v g="$generated" 'BEGIN { exit !(m >= 0.9 * g) }'
+    then
+        add_warning "the connector kept up with the load ($measured_records records processed, $generated generated during the measure): this is the speed of the load, not of the connector, use --mode drain to measure its maximum"
+    elif [ "$type" == "sink" ]
+    then
+        # a sink that keeps up never has more than a few records waiting in its topics
+        lag_peak=$(awk -F, -v p="$phase" 'NR > 1 && $3 == p && $9 != "-" { if ($9 > m) m = $9; n++ } END { if (n) print m + 0 }' "$csv_file")
+        per_interval=$(awk -v t="$throughput" -v i="$interval" 'BEGIN { printf "%d", t * i }')
+        if [ -n "$lag_peak" ] && [ "$lag_peak" -le "$per_interval" ]
+        then
+            add_warning "the connector kept up with the load (consumer lag peak $lag_peak records, less than one ${interval}s sample of records): this is the speed of the load, not of the connector, use --mode drain to measure its maximum"
+        fi
+    fi
 fi
 if [ "$mode" == "steady" ] && [ "$measured_records" -eq 0 ]
 then

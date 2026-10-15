@@ -3754,8 +3754,9 @@ function benchmark_jmx_init() {
   done <<< "$workers"
 }
 
-# prints "<records total> <batch avg ms> <running ratio> <cpu % of one core>" for the tasks of a connector:
-# the records total is summed over the tasks of all the workers, the other values are averages (NaN skipped)
+# prints "<records total> <batch avg ms> <running ratio> <cpu % of one core> <consumer lag max>" for the tasks of a
+# connector: the records total is summed over the tasks of all the workers, the lag (sink only, records-lag-max of the
+# task consumers) is the max, the other values are averages (NaN skipped)
 # workers is a list of "container port" lines, type is sink or source
 function benchmark_jmx_sample() {
   local connector="$1"
@@ -3772,10 +3773,11 @@ function benchmark_jmx_sample() {
   while read -r container port
   do
     [ -z "$container" ] && continue
-    beans=$(printf 'beans -d kafka.connect\nexit\n' | benchmark_jmxterm "$container" "$port" | grep -F "connector=$connector,task=" || true)
+    beans=$(printf 'beans -d kafka.connect\nbeans -d kafka.consumer\nexit\n' | benchmark_jmxterm "$container" "$port" | grep -E "connector=$connector,task=|client-id=connector-consumer-$connector-[0-9]+,type=consumer-fetch-manager-metrics$" || true)
     {
       echo "$beans" | grep -F "type=$type-task-metrics" | while read -r bean; do echo "get -b $bean $counter $batch"; done
       echo "$beans" | grep -F "type=connector-task-metrics" | while read -r bean; do echo "get -b $bean running-ratio"; done
+      echo "$beans" | grep -F "type=consumer-fetch-manager-metrics" | while read -r bean; do echo "get -b $bean records-lag-max"; done
       echo "get -b java.lang:type=OperatingSystem ProcessCpuLoad AvailableProcessors"
       echo "exit"
     } | benchmark_jmxterm "$container" "$port"
@@ -3789,23 +3791,27 @@ function benchmark_jmx_sample() {
     name == "running-ratio" { ratio_sum += value; ratio_n++ }
     name == "ProcessCpuLoad" { load = value }
     name == "AvailableProcessors" { cpu_sum += load * value * 100; cpu_n++ }
+    name == "records-lag-max" { if (!lag_n || value > lag) lag = value; lag_n++ }
     END {
-      printf "%d %s %s %s\n", total,
+      printf "%d %s %s %s %s\n", total,
         (batch_n ? sprintf("%.1f", batch_sum / batch_n) : "-"),
         (ratio_n ? sprintf("%.2f", ratio_sum / ratio_n) : "-"),
-        (cpu_n ? sprintf("%.0f", cpu_sum / cpu_n) : "-")
+        (cpu_n ? sprintf("%.0f", cpu_sum / cpu_n) : "-"),
+        (lag_n ? sprintf("%d", lag) : "-")
     }'
 }
 
 # load of a sink for 'playground connector benchmark': replays the 'playground topic produce' of the example script
-# that feeds one of <topics>, with --nb-messages <nb> (-1 until killed), from the example directory.
+# that feeds one of <topics>, with --nb-messages <nb>, from the example directory. With <stream> set, batches of <nb>
+# records are produced until the file $BENCHMARK_STOP_FILE exists (killing the producer in the middle of a batch
+# would send a truncated line as a record), each followed by a BENCHMARK_BATCH=<nb> <epoch> line.
 # Writes the replay script to <output>. Returns 1 when the example has no produce command, 3 when the command uses
 # variables that are not set in this shell (the message lists them)
 function benchmark_produce_load_from_example () {
-  local test_file="$1" topics="$2" nb="$3" record_size="$4" output="$5"
-  python3 -I - "$test_file" "$topics" "$nb" "$record_size" "$output" "$root_folder" << 'PYEOF'
+  local test_file="$1" topics="$2" nb="$3" record_size="$4" output="$5" stream="$6"
+  python3 -I - "$test_file" "$topics" "$nb" "$record_size" "$output" "$root_folder" "$stream" << 'PYEOF'
 import os, re, shlex, sys
-test_file, topics, nb, record_size, output, root = sys.argv[1:7]
+test_file, topics, nb, record_size, output, root, stream = sys.argv[1:8]
 topics = topics.split()
 lines = open(test_file, errors="ignore").read().split("\n")
 blocks = []
@@ -3885,8 +3891,12 @@ with open(output, "w") as f:
     f.write("DIR=%s\ncd \"$DIR\"\n" % shlex.quote(example_dir))
     for a in assignments:
         f.write(a + "\n")
-    f.write("\n".join(block) + "\n")
-    if nb != "-1":
+    if stream:
+        f.write("while [ ! -f \"$BENCHMARK_STOP_FILE\" ]\ndo\n")
+        f.write("\n".join(block) + "\n")
+        f.write("echo \"BENCHMARK_BATCH=%s $(date +%%s)\"\ndone\n" % nb)
+    else:
+        f.write("\n".join(block) + "\n")
         f.write("echo \"BENCHMARK_RECORDS=%s\"\n" % nb)
 print(topic)
 PYEOF

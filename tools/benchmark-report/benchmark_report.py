@@ -37,6 +37,7 @@ def load_samples(path, phase):
                 "batch": num("batch_avg_ms"),
                 "ratio": num("running_ratio"),
                 "cpu": num("cpu_percent_of_one_core"),
+                "lag": num("consumer_lag_max"),
             })
     return samples
 
@@ -368,8 +369,8 @@ __WARNINGS__
   ]);
   fillTable("history-table", [["date"], ["records/s", 1], ["records", 1], ["seconds", 1], ["plugin"], ["CP"], ["tasks", 1]],
     history.slice().reverse().map(h => [h.date, nf1.format(h.records_per_second), nf.format(h.records), h.seconds, h.plugin_version, h.cp_tag, h.tasks]));
-  fillTable("samples-table", [["time"], ["elapsed s", 1], ["records", 1], ["records/s", 1], ["batch ms", 1], ["running ratio", 1], ["cpu %", 1]],
-    samples.map(s => [s.time, s.elapsed, s.records === null ? null : nf.format(s.records), s.rate === null ? null : nf1.format(s.rate), s.batch, s.ratio, s.cpu]));
+  fillTable("samples-table", [["time"], ["elapsed s", 1], ["records", 1], ["records/s", 1], ["batch ms", 1], ["running ratio", 1], ["cpu %", 1], ["consumer lag max", 1]],
+    samples.map(s => [s.time, s.elapsed, s.records === null ? null : nf.format(s.records), s.rate === null ? null : nf1.format(s.rate), s.batch, s.ratio, s.cpu, s.lag === null ? null : nf.format(s.lag)]));
 })();
 </script>
 </body>

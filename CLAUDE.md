@@ -74,11 +74,13 @@ out of context.
   (with `--nb-messages N`) — works for every sink example that produces its data (148/158 scripts; the
   Salesforce / SAP HANA ones need `--load-command`). Sources: the example's `benchmark-load.bash` (called with
   `--records N --mode preload|stream --shape bulk|small-txn|update`, env `BENCHMARK_TEST_FILE`,
-  `BENCHMARK_CONNECTOR`; shipped with the JDBC / Debezium Postgres, Debezium MySQL, Oracle CDC, XStream,
-  Debezium Oracle and JDBC Oracle examples) or `--load-command` / `--stream-load-command`. A load script must
+  `BENCHMARK_CONNECTOR`, `BENCHMARK_CONNECTOR_CONFIG`; in stream mode it must stop at a batch boundary when
+  `$BENCHMARK_STOP_FILE` exists — killing a producer mid-batch sends a truncated record that fails the connector —
+  and print `BENCHMARK_BATCH=<records> <epoch>` per batch; shipped with the JDBC / Debezium Postgres, Debezium MySQL,
+  JDBC / Debezium SQL Server, Oracle CDC, XStream, Debezium Oracle and JDBC Oracle examples) or `--load-command` / `--stream-load-command`. A load script must
   source `scripts/cli/src/lib/utils_function.sh`, not `scripts/utils.sh` (that one records the script as the
   example being run), and can use `benchmark_load_args`, `benchmark_sql_load` (postgres / mysql / oracle
-  `CUSTOMERS` table) and `benchmark_oracle_client_from_example`. Self-managed connectors only (not ccloud,
+  `CUSTOMERS` table, sql server `dbo.customers`) and `benchmark_oracle_client_from_example`. Self-managed connectors only (not ccloud,
   not cfk). When it says the throughput is a lower bound, rerun with 10x `--nb-records`.
 - To understand one example, read its `.sh` and `ls` its folder (compose overrides, sibling variants).
 
