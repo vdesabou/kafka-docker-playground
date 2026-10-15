@@ -33,3 +33,14 @@ The `password` file was created for user `myuser` (password `mypassword`) with:
 ```bash
 mosquitto_passwd -c password myuser
 ```
+
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) publishes messages to the MQTT topic of the connector (`mosquitto_pub -l`, with the QoS and credentials of the connector) for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark), in **steady mode only**: MQTT is publish/subscribe, a paused MQTT source stays subscribed, so the messages published while it is paused go to its in-memory buffer (`records.buffer.queue.size`) or are dropped by the broker, and a drain would not measure MQTT. Once the example is running:
+
+```bash
+# throughput during 2 minutes while batches of 20000 messages are published
+playground connector benchmark --mode steady --duration 2m --nb-records 20000
+```
+
+When the broker publishes more than the connector consumes, mosquitto drops the messages it cannot deliver (`Outgoing messages are being dropped for client ...` in its logs), and the summary warns that the load generated much more than the connector processed.

@@ -8053,8 +8053,10 @@ commands:
         - source connectors: benchmark-load.bash next to the example
           script, called with --records <n> --mode preload|stream --shape
           bulk|small-txn|update (rows in the CUSTOMERS table for the
-          postgres, mysql, oracle and sql server examples, see the README of
-          the example)
+          postgres, mysql, oracle and sql server examples, documents for
+          mongodb, messages for ibm mq and mqtt, see the README of the
+          example). It is called with --check first, so that an unsupported
+          combination fails before the connector is paused
         - or --load-command / --stream-load-command, which take precedence
 
       Throughput is read from the connect JMX metrics of the tasks
