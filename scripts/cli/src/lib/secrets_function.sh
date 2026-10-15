@@ -608,8 +608,8 @@ function secret_store_location () {
 # Two arrays and not one, because "resolved to nothing" has to be remembered as
 # well, otherwise a missing variable is looked up again on every call.
 #
-declare -A PLAYGROUND_SECRET_CACHE 2> /dev/null || true
-declare -A PLAYGROUND_SECRET_CACHE_TRIED 2> /dev/null || true
+declare -gA PLAYGROUND_SECRET_CACHE 2> /dev/null || true
+declare -gA PLAYGROUND_SECRET_CACHE_TRIED 2> /dev/null || true
 
 #
 # Resolve a whole list of variables at once, in parallel, into the cache above.

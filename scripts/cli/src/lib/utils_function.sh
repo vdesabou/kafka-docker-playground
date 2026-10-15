@@ -5278,6 +5278,20 @@ function handle_aws_credentials () {
   rm -rf /tmp/aws_credentials
   export AWS_CREDENTIALS_FILE_NAME="/tmp/aws_credentials"
 
+  # callers like get_3rdparty_file are not seen by the per-example secret preload of playground run,
+  # and example scripts only source utils_function.sh, not the secrets library
+  if [ -z "$AWS_SESSION_TOKEN" ]
+  then
+    if ! type load_secrets_env_vars > /dev/null 2>&1 && [ -f "${DIR_UTILS}/cli/src/lib/secrets_function.sh" ]
+    then
+      source "${DIR_UTILS}/cli/src/lib/secrets_function.sh"
+    fi
+    if type load_secrets_env_vars > /dev/null 2>&1
+    then
+      load_secrets_env_vars AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION
+    fi
+  fi
+
   if [ -z "$AWS_SESSION_TOKEN" ]
   then
     if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
