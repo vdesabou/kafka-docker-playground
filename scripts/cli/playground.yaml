@@ -4281,11 +4281,12 @@ subcommands:
     connect logs, filtered and followed\n  show-lag                consumer lag of
     a sink, until it reaches zero\n  benchmark               records per second, compared
     with the previous run\n  offsets get             where the connector is reading
-    or writing\n\n\U0001F6E0️ Change it\n  create-or-update        create it, or apply
-    a new config, from stdin\n  update                  edit the running config in
-    your editor\n  pause / resume / stop / restart / delete\n  offsets alter / reset
-    \  rewind or fast-forward a connector\n\n\U0001F9D1‍\U0001F52C Understand it\n
-    \ show-config-parameters  every parameter the plugin accepts\n  select-config
+    or writing\n  smt test                what a transform chain does to a record,
+    step by step\n\n\U0001F6E0️ Change it\n  create-or-update        create it, or
+    apply a new config, from stdin\n  update                  edit the running config
+    in your editor\n  pause / resume / stop / restart / delete\n  offsets alter /
+    reset   rewind or fast-forward a connector\n\n\U0001F9D1‍\U0001F52C Understand
+    it\n  show-config-parameters  every parameter the plugin accepts\n  select-config
     \          pick parameters interactively\n  versions                installed
     version vs latest on Confluent Hub\n  sourcecode              open the source
     on GitHub, or diff two versions\n  open-docs               open the Confluent
@@ -4410,6 +4411,108 @@ subcommands:
         moves, tells\nyou the problem is in the database and not in the connector."
       usage: playground connector oracle-cdc-xstream debug
       options: []
+  - name: smt
+    description: "\U0001F9EA Single message transforms (SMT)\n\n  test                         apply
+      a transform chain to a record, step by step"
+    usage: playground connector smt COMMAND
+    options: []
+    subcommands:
+    - name: test
+      description: "\U0001F9EA Apply the transform chain (SMT) of a connector to a
+        record, step by step\n\nShows what each transform changes (topic, key, value,
+        headers, schema field by field), the result of each predicate, a record dropped
+        by a transform, and the transform that throws with its config and its error.
+        No topic or connector is created: the chain runs in a small harness in the
+        connect container, with the classpath and the plugin.path of the worker, so
+        the transforms, predicates and converters are the same classes and versions
+        as in the worker.\n\nThe transforms come from a running connector (--connector)
+        or from a connector config on stdin (or --config @file). The record is a json
+        (--record): schemaless, or {\"schema\": ..., \"payload\": ...} like the JsonConverter
+        for a record with a schema. Or a real record of a topic (--from-topic, --offset),
+        converted with the converters of the connector (avro, protobuf, json schema
+        with schema registry).\n\n--cp-version runs the same test with the built-in
+        transforms of other CP versions (throwaway cp-server-connect containers),
+        --smt-plugin installs a Confluent Hub plugin for the test only (the worker
+        is not changed), --smt-jar adds a jar (custom SMT development).\n\nAn html
+        report of the steps (the value after each step with the added, changed and
+        removed fields highlighted, the schema diff, the predicates, the error with
+        its stack trace, and with --cp-version a comparison of the versions) is written
+        to /tmp/playground-smt-test, and opened in the browser in an interactive terminal.\n\n\U0001F393
+        Tip: the connector config can be a whole connector config: only transforms.*,
+        predicates.* and the converters are used."
+      usage: playground connector smt test [OPTIONS]
+      options:
+      - names:
+        - "--verbose"
+        - "-v"
+        argument: ''
+        description: "\U0001F41E Show command being ran."
+      - names:
+        - "--connector"
+        - "-c"
+        argument: CONNECTOR
+        description: "\U0001F517 Use the transforms, predicates and converters of
+          this running connector"
+      - names:
+        - "--config"
+        argument: CONFIG
+        description: "\U0001F4C4 Connector config with the transforms (json, or @file),
+          instead of --connector or stdin"
+      - names:
+        - "--record"
+        argument: RECORD
+        description: "\U0001F9FE Record to transform (json, or @file): {\"topic\":
+          \"orders\", \"key\": ..., \"value\": ..., \"headers\": {...}, \"timestamp\":
+          <ms>}\n\nkey and value are schemaless json, or {\"schema\": ..., \"payload\":
+          ...} for a record with a schema. Headers are typed like the SimpleHeaderConverter
+          does (string, int64, float64, boolean, map, array), or {\"schema\": ...,
+          \"payload\": ...}; give them as a list [{\"key\": ..., \"value\": ...}]
+          for several headers with the same key. Default: a schemaless record with
+          a value {\"id\": 1, \"name\": \"foo\"}"
+      - names:
+        - "--from-topic"
+        argument: FROM-TOPIC
+        description: "\U0001F5F3 Read the record from this topic instead of --record,
+          and convert it with the converters of the connector"
+      - names:
+        - "--offset"
+        argument: OFFSET
+        description: "\U0001F4CD Offset of the record with --from-topic (default is
+          0)\n\nDefault value: 0"
+      - names:
+        - "--partition"
+        argument: PARTITION
+        description: "\U0001F9E9 Partition of the record with --from-topic (default
+          is 0)\n\nDefault value: 0"
+      - names:
+        - "--type"
+        argument: TYPE
+        description: "\U0001F500 Build a sink or a source record (default: the type
+          of --connector, sink otherwise)\n\nAllowed values: sink, source"
+      - names:
+        - "--cp-version"
+        argument: CP-VERSION
+        description: "\U0001F522 Run the test with the built-in transforms of these
+          CP versions (repeat the flag), in throwaway cp-server-connect containers,
+          to compare them. The plugins of the running worker are not available there,
+          only --smt-plugin and --smt-jar\n\nRepeatable: ✓ Yes"
+      - names:
+        - "--smt-plugin"
+        argument: SMT-PLUGIN
+        description: "\U0001F9E9 Confluent Hub plugin with transforms, installed for
+          the test only (owner/name:version), e.g. confluentinc/connect-transforms:1.6.2\n\nRepeatable:
+          ✓ Yes"
+      - names:
+        - "--smt-jar"
+        argument: SMT-JAR
+        description: |-
+          ☕ Jar with transforms to add for the test (custom SMT development)
+
+          Repeatable: ✓ Yes
+      - names:
+        - "--json"
+        argument: ''
+        description: "\U0001F4C4 Print the steps as json"
   - name: offsets
     description: "\U0001F488 Handle source and sink connectors offsets\n\nWhere a
       connector is in its data: for a source, the position it keeps in\nthe system

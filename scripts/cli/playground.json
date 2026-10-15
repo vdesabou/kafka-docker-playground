@@ -4399,7 +4399,7 @@
     },
     {
       "name": "connector",
-      "description": "🔗 Connector commands\n\nEverything you would otherwise do with curl on the Connect REST API, with\nthe right host, port and credentials already figured out. The same\ncommands work whether the connector is self managed in the connect\ncontainer or fully managed in Confluent Cloud.\n\n🔍 Look at what is running\n  status                  is it RUNNING, and if not, the full stack trace\n  wait                    wait until it is RUNNING (or another state)\n  error-recommendations   suggested fixes for a failed fully managed connector\n  show-config             the configuration actually applied\n  logs                    tail connect logs, filtered and followed\n  show-lag                consumer lag of a sink, until it reaches zero\n  benchmark               records per second, compared with the previous run\n  offsets get             where the connector is reading or writing\n\n🛠️ Change it\n  create-or-update        create it, or apply a new config, from stdin\n  update                  edit the running config in your editor\n  pause / resume / stop / restart / delete\n  offsets alter / reset   rewind or fast-forward a connector\n\n🧑‍🔬 Understand it\n  show-config-parameters  every parameter the plugin accepts\n  select-config           pick parameters interactively\n  versions                installed version vs latest on Confluent Hub\n  sourcecode              open the source on GitHub, or diff two versions\n  open-docs               open the Confluent documentation\n  snippets                ready-to-paste converter and dlq config\n\n🐞 Dig deeper\n  log-level               raise connect log level for this connector\n  enable-remote-debugging attach a java debugger to the connector code\n  translate               self managed config to fully managed config\n\nWithout --connector, commands apply to every connector of the example,\nwhich is usually what you want since most examples run only one.",
+      "description": "🔗 Connector commands\n\nEverything you would otherwise do with curl on the Connect REST API, with\nthe right host, port and credentials already figured out. The same\ncommands work whether the connector is self managed in the connect\ncontainer or fully managed in Confluent Cloud.\n\n🔍 Look at what is running\n  status                  is it RUNNING, and if not, the full stack trace\n  wait                    wait until it is RUNNING (or another state)\n  error-recommendations   suggested fixes for a failed fully managed connector\n  show-config             the configuration actually applied\n  logs                    tail connect logs, filtered and followed\n  show-lag                consumer lag of a sink, until it reaches zero\n  benchmark               records per second, compared with the previous run\n  offsets get             where the connector is reading or writing\n  smt test                what a transform chain does to a record, step by step\n\n🛠️ Change it\n  create-or-update        create it, or apply a new config, from stdin\n  update                  edit the running config in your editor\n  pause / resume / stop / restart / delete\n  offsets alter / reset   rewind or fast-forward a connector\n\n🧑‍🔬 Understand it\n  show-config-parameters  every parameter the plugin accepts\n  select-config           pick parameters interactively\n  versions                installed version vs latest on Confluent Hub\n  sourcecode              open the source on GitHub, or diff two versions\n  open-docs               open the Confluent documentation\n  snippets                ready-to-paste converter and dlq config\n\n🐞 Dig deeper\n  log-level               raise connect log level for this connector\n  enable-remote-debugging attach a java debugger to the connector code\n  translate               self managed config to fully managed config\n\nWithout --connector, commands apply to every connector of the example,\nwhich is usually what you want since most examples run only one.",
       "usage": "playground connector COMMAND",
       "options": [],
       "subcommands": [
@@ -4510,6 +4510,107 @@
               "description": "🐞 Execute various SQL commands to debug xstream components\n\nRuns a series of queries against the XStream views inside the oracle\ncontainer and prints the results, with a link to the Oracle\ndocumentation of each view:\n\n  capture processes   their status, SCN values and latencies\n  redo logs           the files each capture process still needs\n  outbound server     general state, current transaction, low position\n  parameters          capture and apply settings actually in effect\n  rules               the rules the XStream components are using\n\nRead it top to bottom when a connector is RUNNING but idle: a capture\nprocess not in CAPTURING CHANGES, or an SCN that never moves, tells\nyou the problem is in the database and not in the connector.",
               "usage": "playground connector oracle-cdc-xstream debug",
               "options": []
+            }
+          ]
+        },
+        {
+          "name": "smt",
+          "description": "🧪 Single message transforms (SMT)\n\n  test                         apply a transform chain to a record, step by step",
+          "usage": "playground connector smt COMMAND",
+          "options": [],
+          "subcommands": [
+            {
+              "name": "test",
+              "description": "🧪 Apply the transform chain (SMT) of a connector to a record, step by step\n\nShows what each transform changes (topic, key, value, headers, schema field by field), the result of each predicate, a record dropped by a transform, and the transform that throws with its config and its error. No topic or connector is created: the chain runs in a small harness in the connect container, with the classpath and the plugin.path of the worker, so the transforms, predicates and converters are the same classes and versions as in the worker.\n\nThe transforms come from a running connector (--connector) or from a connector config on stdin (or --config @file). The record is a json (--record): schemaless, or {\"schema\": ..., \"payload\": ...} like the JsonConverter for a record with a schema. Or a real record of a topic (--from-topic, --offset), converted with the converters of the connector (avro, protobuf, json schema with schema registry).\n\n--cp-version runs the same test with the built-in transforms of other CP versions (throwaway cp-server-connect containers), --smt-plugin installs a Confluent Hub plugin for the test only (the worker is not changed), --smt-jar adds a jar (custom SMT development).\n\nAn html report of the steps (the value after each step with the added, changed and removed fields highlighted, the schema diff, the predicates, the error with its stack trace, and with --cp-version a comparison of the versions) is written to /tmp/playground-smt-test, and opened in the browser in an interactive terminal.\n\n🎓 Tip: the connector config can be a whole connector config: only transforms.*, predicates.* and the converters are used.",
+              "usage": "playground connector smt test [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--verbose",
+                    "-v"
+                  ],
+                  "argument": "",
+                  "description": "🐞 Show command being ran."
+                },
+                {
+                  "names": [
+                    "--connector",
+                    "-c"
+                  ],
+                  "argument": "CONNECTOR",
+                  "description": "🔗 Use the transforms, predicates and converters of this running connector"
+                },
+                {
+                  "names": [
+                    "--config"
+                  ],
+                  "argument": "CONFIG",
+                  "description": "📄 Connector config with the transforms (json, or @file), instead of --connector or stdin"
+                },
+                {
+                  "names": [
+                    "--record"
+                  ],
+                  "argument": "RECORD",
+                  "description": "🧾 Record to transform (json, or @file): {\"topic\": \"orders\", \"key\": ..., \"value\": ..., \"headers\": {...}, \"timestamp\": <ms>}\n\nkey and value are schemaless json, or {\"schema\": ..., \"payload\": ...} for a record with a schema. Headers are typed like the SimpleHeaderConverter does (string, int64, float64, boolean, map, array), or {\"schema\": ..., \"payload\": ...}; give them as a list [{\"key\": ..., \"value\": ...}] for several headers with the same key. Default: a schemaless record with a value {\"id\": 1, \"name\": \"foo\"}"
+                },
+                {
+                  "names": [
+                    "--from-topic"
+                  ],
+                  "argument": "FROM-TOPIC",
+                  "description": "🗳 Read the record from this topic instead of --record, and convert it with the converters of the connector"
+                },
+                {
+                  "names": [
+                    "--offset"
+                  ],
+                  "argument": "OFFSET",
+                  "description": "📍 Offset of the record with --from-topic (default is 0)\n\nDefault value: 0"
+                },
+                {
+                  "names": [
+                    "--partition"
+                  ],
+                  "argument": "PARTITION",
+                  "description": "🧩 Partition of the record with --from-topic (default is 0)\n\nDefault value: 0"
+                },
+                {
+                  "names": [
+                    "--type"
+                  ],
+                  "argument": "TYPE",
+                  "description": "🔀 Build a sink or a source record (default: the type of --connector, sink otherwise)\n\nAllowed values: sink, source"
+                },
+                {
+                  "names": [
+                    "--cp-version"
+                  ],
+                  "argument": "CP-VERSION",
+                  "description": "🔢 Run the test with the built-in transforms of these CP versions (repeat the flag), in throwaway cp-server-connect containers, to compare them. The plugins of the running worker are not available there, only --smt-plugin and --smt-jar\n\nRepeatable: ✓ Yes"
+                },
+                {
+                  "names": [
+                    "--smt-plugin"
+                  ],
+                  "argument": "SMT-PLUGIN",
+                  "description": "🧩 Confluent Hub plugin with transforms, installed for the test only (owner/name:version), e.g. confluentinc/connect-transforms:1.6.2\n\nRepeatable: ✓ Yes"
+                },
+                {
+                  "names": [
+                    "--smt-jar"
+                  ],
+                  "argument": "SMT-JAR",
+                  "description": "☕ Jar with transforms to add for the test (custom SMT development)\n\nRepeatable: ✓ Yes"
+                },
+                {
+                  "names": [
+                    "--json"
+                  ],
+                  "argument": "",
+                  "description": "📄 Print the steps as json"
+                }
+              ]
             }
           ]
         },
