@@ -3132,13 +3132,39 @@ subcommands:
   - name: list
     description: "\U0001F518 List topics\n\nAdd --show-internal to also see the topics
       Kafka and Connect maintain\nfor themselves, such as the connect configs, offsets
-      and status\ntopics."
+      and status\ntopics.\n\nAdd --sort-by-size to show the size and number of partitions
+      of each\ntopic, largest first (same as 'playground topic get-size')."
     usage: playground topic list [OPTIONS]
     options:
     - names:
       - "--show-internal"
       argument: ''
       description: "\U0001FAE5 Display internal topics"
+    - names:
+      - "--sort-by-size"
+      argument: ''
+      description: "\U0001F4CF Display size and number of partitions of each topic,
+        largest first"
+  - name: get-size
+    description: "\U0001F4CF Get size of topics\n\nShows the size and number of partitions
+      of each topic, largest first,\nto find which topics take the most disk space.
+      Without --topic, all\ntopics are shown (add --show-internal to include internal
+      topics).\n\nThe size of a partition is the size of its largest replica, the
+      size\nof a topic is the sum of its partitions.\n\nWith ccloud environment, sizes
+      come from the retained_bytes metric of\nthe Metrics API, which lags a few minutes
+      behind and requires\nCONFLUENT_CLOUD_API_KEY and CONFLUENT_CLOUD_API_SECRET
+      (Cloud API key)."
+    usage: playground topic get-size [OPTIONS]
+    options:
+    - names:
+      - "--topic"
+      - "-t"
+      argument: TOPIC
+      description: "\U0001F5F3 Topic name"
+    - names:
+      - "--show-internal"
+      argument: ''
+      description: "\U0001FAE5 Include internal topics (when --topic is not set)"
   - name: describe
     description: "\U0001F52C Describe topic\n\nPartitions, replicas, in-sync replicas
       and the configuration overrides\nset on the topic. Where to look when records

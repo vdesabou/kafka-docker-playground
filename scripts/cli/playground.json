@@ -3043,7 +3043,7 @@
         },
         {
           "name": "list",
-          "description": "🔘 List topics\n\nAdd --show-internal to also see the topics Kafka and Connect maintain\nfor themselves, such as the connect configs, offsets and status\ntopics.",
+          "description": "🔘 List topics\n\nAdd --show-internal to also see the topics Kafka and Connect maintain\nfor themselves, such as the connect configs, offsets and status\ntopics.\n\nAdd --sort-by-size to show the size and number of partitions of each\ntopic, largest first (same as 'playground topic get-size').",
           "usage": "playground topic list [OPTIONS]",
           "options": [
             {
@@ -3052,6 +3052,35 @@
               ],
               "argument": "",
               "description": "🫥 Display internal topics"
+            },
+            {
+              "names": [
+                "--sort-by-size"
+              ],
+              "argument": "",
+              "description": "📏 Display size and number of partitions of each topic, largest first"
+            }
+          ]
+        },
+        {
+          "name": "get-size",
+          "description": "📏 Get size of topics\n\nShows the size and number of partitions of each topic, largest first,\nto find which topics take the most disk space. Without --topic, all\ntopics are shown (add --show-internal to include internal topics).\n\nThe size of a partition is the size of its largest replica, the size\nof a topic is the sum of its partitions.\n\nWith ccloud environment, sizes come from the retained_bytes metric of\nthe Metrics API, which lags a few minutes behind and requires\nCONFLUENT_CLOUD_API_KEY and CONFLUENT_CLOUD_API_SECRET (Cloud API key).",
+          "usage": "playground topic get-size [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--topic",
+                "-t"
+              ],
+              "argument": "TOPIC",
+              "description": "🗳 Topic name"
+            },
+            {
+              "names": [
+                "--show-internal"
+              ],
+              "argument": "",
+              "description": "🫥 Include internal topics (when --topic is not set)"
             }
           ]
         },

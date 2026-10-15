@@ -5393,18 +5393,52 @@ commands:
         Add --show-internal to also see the topics Kafka and Connect maintain
         for themselves, such as the connect configs, offsets and status
         topics.
+
+        Add --sort-by-size to show the size and number of partitions of each
+        topic, largest first (same as 'playground topic get-size').
       flags:
       - long: --show-internal
         help: |-
           🫥 Display internal topics
         required: false
+      - long: --sort-by-size
+        help: |-
+          📏 Display size and number of partitions of each topic, largest first
+        required: false
       examples:
       - playground topic list
+      - playground topic list --sort-by-size
       x_example_outputs:
       - command: playground topic list
         output: |-
           17:22:16 ℹ️ 🔘 List of topics (internal topics are excluded)
           filestream
+
+    - name: get-size
+      group: Topic
+      help: |-
+        📏 Get size of topics
+
+        Shows the size and number of partitions of each topic, largest first,
+        to find which topics take the most disk space. Without --topic, all
+        topics are shown (add --show-internal to include internal topics).
+
+        The size of a partition is the size of its largest replica, the size
+        of a topic is the sum of its partitions.
+
+        With ccloud environment, sizes come from the retained_bytes metric of
+        the Metrics API, which lags a few minutes behind and requires
+        CONFLUENT_CLOUD_API_KEY and CONFLUENT_CLOUD_API_SECRET (Cloud API key).
+      flags:
+      - *topic
+      - long: --show-internal
+        help: |-
+          🫥 Include internal topics (when --topic is not set)
+        required: false
+      examples:
+      - playground topic get-size
+      - playground topic get-size --topic filestream
+      - playground topic get-size --show-internal
 
     - name: describe
       group: Topic

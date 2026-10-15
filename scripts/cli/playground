@@ -184,6 +184,7 @@ playground_usage() {
   printf "  %s   📍 Get earliest and latest offsets per partition of a topic\n" "$(green "topic get-offsets")                         "
   printf "  %s   📭 Display content of __consumer_offsets topic\n" "$(green "topic display-consumer-offsets")            "
   printf "  %s   🔘 List topics\n" "$(green "topic list")                                "
+  printf "  %s   📏 Get size of topics\n" "$(green "topic get-size")                            "
   printf "  %s   🔬 Describe topic\n" "$(green "topic describe")                            "
   printf "  %s   🛡️ Change topic's schema compatibility\n" "$(green "topic set-schema-compatibility")            "
   printf "  %s   📥 Consume topic from beginning\n" "$(green "topic consume")                             "
@@ -8181,6 +8182,7 @@ playground_topic_usage() {
   printf "  %s   📍 Get earliest and latest offsets per partition of a topic\n" "$(green "get-offsets")             "
   printf "  %s   📭 Display content of __consumer_offsets topic\n" "$(green "display-consumer-offsets")"
   printf "  %s   🔘 List topics\n" "$(green "list")                    "
+  printf "  %s   📏 Get size of topics\n" "$(green "get-size")                "
   printf "  %s   🔬 Describe topic\n" "$(green "describe")                "
   printf "  %s   🛡️ Change topic's schema compatibility\n" "$(green "set-schema-compatibility")"
   printf "  %s   📥 Consume topic from beginning\n" "$(green "consume")                 "
@@ -8323,7 +8325,7 @@ playground_topic_display_consumer_offsets_usage() {
 playground_topic_list_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground topic list\n\n"
-    printf "  🔘 List topics\n  \n  Add --show-internal to also see the topics Kafka and Connect maintain\n  for themselves, such as the connect configs, offsets and status\n  topics.\n\n"
+    printf "  🔘 List topics\n  \n  Add --show-internal to also see the topics Kafka and Connect maintain\n  for themselves, such as the connect configs, offsets and status\n  topics.\n  \n  Add --sort-by-size to show the size and number of partitions of each\n  topic, largest first (same as 'playground topic get-size').\n\n"
   else
     printf "playground topic list - 🔘 List topics\n\n"
   fi
@@ -8344,6 +8346,11 @@ playground_topic_list_usage() {
     printf "    🫥 Display internal topics\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--sort-by-size")"
+    printf "    📏 Display size and number of partitions of each topic, largest first\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -8352,6 +8359,52 @@ playground_topic_list_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground topic list\n"
+    printf "  playground topic list --sort-by-size\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_get_size_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground topic get-size\n\n"
+    printf "  📏 Get size of topics\n  \n  Shows the size and number of partitions of each topic, largest first,\n  to find which topics take the most disk space. Without --topic, all\n  topics are shown (add --show-internal to include internal topics).\n  \n  The size of a partition is the size of its largest replica, the size\n  of a topic is the sum of its partitions.\n  \n  With ccloud environment, sizes come from the retained_bytes metric of\n  the Metrics API, which lags a few minutes behind and requires\n  CONFLUENT_CLOUD_API_KEY and CONFLUENT_CLOUD_API_SECRET (Cloud API key).\n\n"
+  else
+    printf "playground topic get-size - 📏 Get size of topics\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic get-size [OPTIONS]\n"
+  printf "  playground topic get-size --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
+    printf "    🗳 Topic name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--show-internal")"
+    printf "    🫥 Include internal topics (when --topic is not set)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground topic get-size\n"
+    printf "  playground topic get-size --topic filestream\n"
+    printf "  playground topic get-size --show-internal\n"
     echo
 
   fi
@@ -39107,8 +39160,17 @@ playground_topic_list_command() {
 
   # src/commands/topic/list.sh
   show_internal="${args[--show-internal]}"
+  sort_by_size="${args[--sort-by-size]}"
 
-  if [[ -n "$show_internal" ]]
+  if [[ -n "$sort_by_size" ]]
+  then
+      if [[ -n "$show_internal" ]]
+      then
+          playground topic get-size --show-internal
+      else
+          playground topic get-size
+      fi
+  elif [[ -n "$show_internal" ]]
   then
       log "🫥 List of topics (internal topics are included)"
       playground get-topic-list
@@ -39117,6 +39179,153 @@ playground_topic_list_command() {
       log "🔘 List of topics (internal topics are excluded)"
       playground get-topic-list --skip-internal-topics
   fi
+
+}
+
+# :command.function
+playground_topic_get_size_command() {
+
+  # src/commands/topic/get-size.sh
+  topic="${args[--topic]}"
+  show_internal="${args[--show-internal]}"
+
+  if [[ -n "$topic" ]]
+  then
+      topics=$(echo "$topic" | tr ' ' '\n')
+      log "📏 Size of topic(s) $topic"
+  elif [[ -n "$show_internal" ]]
+  then
+      log "📏 Size of topics, largest first (internal topics are included)"
+      topics=$(playground get-topic-list)
+  else
+      log "📏 Size of topics, largest first (internal topics are excluded)"
+      topics=$(playground get-topic-list --skip-internal-topics)
+  fi
+
+  if [[ ! -n "$topics" ]]
+  then
+      logwarn "No topic found"
+      exit 0
+  fi
+
+  get_environment_used
+
+  if [[ "$environment" == "ccloud" ]]
+  then
+      # DescribeLogDirs is rejected by Confluent Cloud (ClusterAuthorizationException), use Metrics API instead
+      get_kafka_docker_playground_dir
+      if [ ! -f $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta ]
+      then
+          logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta has not been generated"
+          exit 1
+      fi
+      cluster=$(grep "KAFKA CLUSTER ID" $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta | cut -d " " -f 5)
+
+      load_secrets_env_vars CONFLUENT_CLOUD_API_KEY CONFLUENT_CLOUD_API_SECRET
+      if [ -z "$CONFLUENT_CLOUD_API_KEY" ] || [ -z "$CONFLUENT_CLOUD_API_SECRET" ]
+      then
+          logerror "❌ environment variables CONFLUENT_CLOUD_API_KEY and CONFLUENT_CLOUD_API_SECRET should be set to use --sort-by-size with ccloud environment"
+          logerror "Set them with Cloud API key, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys"
+          exit 1
+      fi
+
+      log "〽️ Sizes are retained_bytes from Metrics API for cluster $cluster, they lag a few minutes behind"
+      metrics_data="[]"
+      page_token=""
+      while true
+      do
+          url="https://api.telemetry.confluent.cloud/v2/metrics/cloud/query"
+          if [[ -n "$page_token" ]]
+          then
+              url="$url?page_token=$page_token"
+          fi
+          set +e
+          response=$(curl -sS -u "$CONFLUENT_CLOUD_API_KEY:$CONFLUENT_CLOUD_API_SECRET" -H "Content-Type: application/json" -X POST "$url" -d @- << EOF
+{
+    "aggregations": [{ "metric": "io.confluent.kafka.server/retained_bytes" }],
+    "filter": { "field": "resource.kafka.id", "op": "EQ", "value": "$cluster" },
+    "granularity": "PT1M",
+    "group_by": ["metric.topic", "metric.partition"],
+    "intervals": ["PT15M/now|m"],
+    "limit": 1000
+}
+EOF
+  )
+          set -e
+          if ! echo "$response" | jq -e '.data' > /dev/null 2>&1
+          then
+              logerror "❌ Metrics API query failed: $response"
+              exit 1
+          fi
+          metrics_data=$(jq -s '.[0] + .[1].data' <(echo "$metrics_data") <(echo "$response"))
+          page_token=$(echo "$response" | jq -r '.meta.pagination.next_page_token // empty')
+          if [[ ! -n "$page_token" ]]
+          then
+              break
+          fi
+      done
+
+      # keep the latest point of each partition, size of a topic is the sum of its partitions
+      sizes=$(echo "$metrics_data" | jq -r --arg topics "$topics" '
+          ($topics | split("\n") | map(select(length > 0))) as $wanted
+          | map(select(."metric.topic" | IN($wanted[])))
+          | group_by(."metric.topic", ."metric.partition") | map(max_by(.timestamp))
+          | group_by(."metric.topic") | map({topic: .[0]."metric.topic", partitions: length, size: (map(.value) | add)})
+          | sort_by(-.size, .topic)[]
+          | "\(.size)\t\(.partitions)\t\(.topic)"')
+
+      if [[ ! -n "$sizes" ]]
+      then
+          logwarn "No retained_bytes metric found in the last 15 minutes for cluster $cluster (new topics and clusters take a few minutes to show up in Metrics API)"
+          exit 0
+      fi
+  else
+      get_security_broker "--command-config"
+
+      topic_list=$(echo "$topics" | paste -sd, -)
+
+      set +e
+      if [[ "$environment" == cfk* ]]
+      then
+          log_dirs=$(kubectl -n confluent exec $container -- kafka-log-dirs --describe --bootstrap-server $bootstrap_server $security --topic-list "$topic_list" 2>/dev/null | grep '^{')
+      else
+          log_dirs=$(docker exec $container kafka-log-dirs --describe --bootstrap-server $bootstrap_server $security --topic-list "$topic_list" 2>/dev/null | grep '^{')
+      fi
+      set -e
+
+      if [[ ! -n "$log_dirs" ]]
+      then
+          logerror "❌ Could not get log directories information from the brokers"
+          exit 1
+      fi
+
+      # size of a partition is the largest of its replicas, size of a topic is the sum of its partitions
+      sizes=$(echo "$log_dirs" | jq -r '
+          [.brokers[].logDirs[].partitions[]
+              | {topic: (.partition | sub("-[0-9]+$"; "")), partition: .partition, size: .size}]
+          | group_by(.partition) | map({topic: .[0].topic, size: (map(.size) | max)})
+          | group_by(.topic) | map({topic: .[0].topic, partitions: length, size: (map(.size) | add)})
+          | sort_by(-.size, .topic)[]
+          | "\(.size)\t\(.partitions)\t\(.topic)"')
+
+      if [[ ! -n "$sizes" ]]
+      then
+          logwarn "No partition found on the brokers for topic(s) $(echo $topics)"
+          exit 0
+      fi
+  fi
+
+  echo "$sizes" \
+  | awk -F'\t' '
+      function human(bytes,   units, i) {
+          split("B KB MB GB TB", units, " ")
+          i = 1
+          while (bytes >= 1024 && i < 5) { bytes /= 1024; i++ }
+          return (i == 1) ? sprintf("%d %s", bytes, units[i]) : sprintf("%.1f %s", bytes, units[i])
+      }
+      BEGIN { printf "%-10s %-10s %s\n", "SIZE", "PARTITIONS", "TOPIC" }
+      { printf "%-10s %-10s %s\n", human($1), $2, $3 }'
+
 }
 
 # :command.function
@@ -69657,6 +69866,13 @@ playground_topic_parse_requirements() {
       shift $#
       ;;
 
+    get-size)
+      action="get-size"
+      shift
+      playground_topic_get_size_parse_requirements "$@"
+      shift $#
+      ;;
+
     describe)
       action="describe"
       shift
@@ -70041,6 +70257,95 @@ playground_topic_list_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --show-internal)
+
+        # :flag.case_no_arg
+        args['--show-internal']=1
+        shift
+        ;;
+
+      # :flag.case
+      --sort-by-size)
+
+        # :flag.case_no_arg
+        args['--sort-by-size']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_topic_get_size_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_get_size_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="topic get-size"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
       # :flag.case
       --show-internal)
 
@@ -89393,6 +89698,11 @@ playground_topic_completion() {
         playground_topic_list_completion "$completion_current" "$@"
         return
         ;;
+      get-size)
+        shift
+        playground_topic_get_size_completion "$completion_current" "$@"
+        return
+        ;;
       describe)
         shift
         playground_topic_describe_completion "$completion_current" "$@"
@@ -89442,7 +89752,7 @@ playground_topic_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" get-number-records get-offsets display-consumer-offsets list describe set-schema-compatibility consume produce create delete alter tag
+  completion_candidates "$completion_current" get-number-records get-offsets display-consumer-offsets list get-size describe set-schema-compatibility consume produce create delete alter tag
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -89575,6 +89885,11 @@ playground_topic_list_completion() {
 
         shift
         ;;
+      --sort-by-size)
+        completion_blocked_flags["--sort-by-size"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -89583,6 +89898,50 @@ playground_topic_list_completion() {
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --show-internal "$completion_current" --show-internal
+    completion_flag_candidates --sort-by-size "$completion_current" --sort-by-size
+  fi
+
+}
+
+# :command.completion_function
+playground_topic_get_size_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --show-internal)
+        completion_blocked_flags["--show-internal"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --topic "$completion_current" --topic -t
     completion_flag_candidates --show-internal "$completion_current" --show-internal
   fi
 
@@ -94783,6 +95142,7 @@ run() {
     "topic get-offsets") playground_topic_get_offsets_command ;;
     "topic display-consumer-offsets") playground_topic_display_consumer_offsets_command ;;
     "topic list") playground_topic_list_command ;;
+    "topic get-size") playground_topic_get_size_command ;;
     "topic describe") playground_topic_describe_command ;;
     "topic set-schema-compatibility") playground_topic_set_schema_compatibility_command ;;
     "topic consume") playground_topic_consume_command ;;
