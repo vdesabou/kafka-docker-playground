@@ -132,6 +132,22 @@ export BENCHMARK_CONNECTOR="$connector"
 
 mkdir -p "$output_dir"
 run_id="${connector}-$(date +%Y%m%d-%H%M%S)"
+# a benchmark-load.bash validates the combination (shape, mode, connector config) before the connector is paused
+if [ -n "$load_script" ] && [[ "$load_cmd" == "bash \"$load_script\""* ]]
+then
+    load_check_config="$output_dir/$run_id-check-config.json"
+    echo "$connector_config_json" > "$load_check_config"
+    set +e
+    load_check_output=$(BENCHMARK_CONNECTOR_CONFIG="$load_check_config" BENCHMARK_TEST_FILE="$test_file" BENCHMARK_CONNECTOR="$connector" bash -c "$load_cmd --check" 2>&1)
+    load_check_ret=$?
+    set -e
+    rm -f "$load_check_config"
+    if [ $load_check_ret -ne 0 ]
+    then
+        echo "$load_check_output" | grep -v '^$' | tail -5
+        exit 1
+    fi
+fi
 # load scripts can adapt to the connector configuration (a redo log topic doubles the records of oracle cdc...)
 export BENCHMARK_CONNECTOR_CONFIG="$output_dir/$run_id-config.json"
 # a stream load stops at the end of its current batch when this file exists
@@ -225,6 +241,7 @@ function benchmark_cleanup () {
     then
         logwarn "⏯️ resuming $connector_type connector $connector paused by the benchmark"
         playground connector resume --connector "$connector" > /dev/null 2>&1
+        playground connector wait --connector "$connector" --max-wait 60 --interval 2 > /dev/null 2>&1 || logwarn "⚠️ $connector_type connector $connector is not RUNNING again after 60s"
     fi
 }
 trap benchmark_cleanup EXIT
@@ -661,7 +678,10 @@ then
         # a batch is counted when it ends: allow one batch of difference at the edges of the measure
         read -r generated largest_batch <<< "$(awk -v s="$measure_start" -v e="$sample_time" '/^BENCHMARK_BATCH=/ { split($1, kv, "="); if (kv[2] > b) b = kv[2]; if ($2 >= s && $2 <= e) g += kv[2] } END { print g + 0, b + 0 }' "$load_log")"
     fi
-    if [ "$generated" -gt 0 ] && awk -v m="$measured_records" -v g="$generated" -v b="${largest_batch:-0}" 'BEGIN { exit !(m >= 0.9 * g || m >= g - b) }'
+    if [ "$generated" -gt 0 ] && awk -v m="$measured_records" -v g="$generated" 'BEGIN { exit !(g > 2 * m) }'
+    then
+        add_warning "the load generated $generated records during the measure but the connector processed only $measured_records: a backlog builds up in the source system, or a publish/subscribe broker (mqtt) drops the messages it cannot deliver"
+    elif [ "$generated" -gt 0 ] && awk -v m="$measured_records" -v g="$generated" -v b="${largest_batch:-0}" 'BEGIN { exit !(m >= 0.9 * g || m >= g - b) }'
     then
         add_warning "the connector kept up with the load ($measured_records records processed, $generated generated during the measure): this is the speed of the load, not of the connector, use --mode drain to measure its maximum"
     elif [ "$type" == "sink" ]

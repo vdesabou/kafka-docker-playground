@@ -2826,16 +2826,19 @@ function delete_ccloud_connector() {
 }
 
 # arguments of a benchmark-load.bash script, called by 'playground connector benchmark':
-# --records <n> --mode preload|stream --shape bulk|small-txn|update --record-size <bytes>
-# sets BENCHMARK_LOAD_RECORDS, BENCHMARK_LOAD_MODE, BENCHMARK_LOAD_SHAPE, BENCHMARK_LOAD_RECORD_SIZE
+# --records <n> --mode preload|stream --shape bulk|small-txn|update --record-size <bytes> [--check]
+# sets BENCHMARK_LOAD_RECORDS, BENCHMARK_LOAD_MODE, BENCHMARK_LOAD_SHAPE, BENCHMARK_LOAD_RECORD_SIZE, and
+# BENCHMARK_LOAD_CHECK with --check: the load helpers then only validate the combination, before the connector is paused
 function benchmark_load_args () {
   BENCHMARK_LOAD_RECORDS=100000
   BENCHMARK_LOAD_MODE="preload"
   BENCHMARK_LOAD_SHAPE="bulk"
   BENCHMARK_LOAD_RECORD_SIZE=0
+  BENCHMARK_LOAD_CHECK=""
   while [ $# -gt 0 ]
   do
     case "$1" in
+      --check) BENCHMARK_LOAD_CHECK=1; shift ;;
       --records) BENCHMARK_LOAD_RECORDS="$2"; shift 2 ;;
       --mode) BENCHMARK_LOAD_MODE="$2"; shift 2 ;;
       --shape) BENCHMARK_LOAD_SHAPE="$2"; shift 2 ;;
@@ -2951,6 +2954,10 @@ GO"
     logerror "❌ the connector uses \"mode\": \"incrementing\", which does not capture updates: use --shape bulk or small-txn"
     return 1
   fi
+  if [ -n "$BENCHMARK_LOAD_CHECK" ]
+  then
+    return 0
+  fi
 
   local sql
   case "$shape" in
@@ -2995,6 +3002,167 @@ GO"
   log "📥 $shape load on $dialect CUSTOMERS: $changes rows"
   echo "$sql" | playground container exec --container "$container" --command "$client" > /dev/null
   echo "BENCHMARK_RECORDS=$expected_records"
+}
+
+# <n> text messages "benchmark message <i>", padded with spaces to <record size> bytes when it is set, one per line
+function benchmark_messages () {
+  local records="$1" record_size="${2:-0}" first="${3:-1}"
+  awk -v n="$records" -v size="$record_size" -v first="$first" 'BEGIN {
+    for (i = first; i < first + n; i++) {
+      line = "benchmark message " i
+      if (size > length(line)) line = sprintf("%-" size "s", line)
+      print line
+    }
+  }'
+}
+
+# repeats "<command producing a batch of <records> records>" until the file $BENCHMARK_STOP_FILE exists, printing
+# BENCHMARK_BATCH=<records> <epoch seconds> after each batch (stream mode of a benchmark-load.bash)
+function benchmark_stream_batches () {
+  local records="$1"
+  shift
+  log "🌊 batches of $records records, until stopped"
+  while [ ! -f "${BENCHMARK_STOP_FILE:-/nonexistent}" ]
+  do
+    "$@"
+    echo "BENCHMARK_BATCH=$records $(date +%s)"
+  done
+}
+
+# mongosh connection of a mongodb example script (tls options of the ssl variant), for benchmark_mongo_load:
+# the first 'mongosh ...' command fed by a heredoc
+function benchmark_mongo_client_from_example () {
+  local test_file="$1" client=""
+  if [ -f "$test_file" ]
+  then
+    client=$(grep -E 'container exec --container mongodb --command "mongosh[^"]*" *<<' "$test_file" | head -1 | sed -E 's/.*--command "(mongosh[^"]*)".*/\1/')
+  fi
+  echo "${client:-mongosh}"
+}
+
+# load for 'playground connector benchmark' on a mongodb collection, with mongosh in the mongodb container:
+#   benchmark_mongo_load <container> "<mongosh command reading stdin>" <database> <collection> <records> <bulk|small-txn|update> [preload|stream]
+# - bulk: insertMany of <records> documents (in batches of 10000)
+# - small-txn: <records> insertOne
+# - update: updates <records> existing documents (run a bulk load first)
+# the documents have the shape of an existing document of the collection (string fields numbered, integer _id
+# continued, other fields copied), so that a connector inferring the schema of the documents
+# (output.schema.infer.value) gets a compatible schema. Every change is one record of the connector (change stream).
+# Prints BENCHMARK_RECORDS=<n>, or BENCHMARK_BATCH lines in stream mode (until $BENCHMARK_STOP_FILE exists)
+function benchmark_mongo_load () {
+  local container="$1" client="$2" database="$3" collection="$4" records="$5" shape="$6" mode="${7:-preload}"
+  # document factory, from an existing document when there is one
+  local factory="const coll = db.getCollection('$collection');
+const sample = coll.findOne();
+const intId = sample !== null && typeof sample._id === 'number';
+let nextId = intId ? coll.find({}, { _id: 1 }).sort({ _id: -1 }).limit(1).toArray()[0]._id + 1 : 0;
+function make(i) {
+  if (sample === null) return { first_name: 'first' + i, last_name: 'last' + i, email: 'user' + i + '@example.com' };
+  const doc = {};
+  for (const [k, v] of Object.entries(sample)) {
+    if (k === '_id') { if (intId) doc._id = nextId++; continue; }
+    doc[k] = typeof v === 'string' ? k + ' ' + i : v;
+  }
+  return doc;
+}
+const textField = sample === null ? 'email' : (Object.keys(sample).find(k => k !== '_id' && typeof sample[k] === 'string') || 'benchmark');"
+  local js
+  case "$shape" in
+    bulk)
+      js="$factory
+for (let b = 0; b < $records; b += 10000) { const docs = []; for (let i = b; i < Math.min(b + 10000, $records); i++) docs.push(make(i)); coll.insertMany(docs, { ordered: false }) }"
+    ;;
+    small-txn)
+      js="$factory
+for (let i = 0; i < $records; i++) coll.insertOne(make(i))"
+    ;;
+    update)
+      js="$factory
+const ids = coll.find({}, { _id: 1 }).limit($records).toArray().map(d => d._id);
+for (let b = 0; b < ids.length; b += 10000) coll.updateMany({ _id: { \$in: ids.slice(b, b + 10000) } }, { \$set: { [textField]: textField + ' update ' + Math.random() } });
+print('BENCHMARK_UPDATED=' + ids.length)"
+    ;;
+    *) logerror "❌ benchmark_mongo_load: unknown shape $shape (bulk, small-txn, update)"; return 1 ;;
+  esac
+  if [ -n "$BENCHMARK_LOAD_CHECK" ]
+  then
+    return 0
+  fi
+  run_js () {
+    printf 'use %s\n%s\n' "$database" "$js" | playground container exec --container "$container" --command "$client --quiet" 2>/dev/null
+  }
+  if [ "$mode" == "stream" ]
+  then
+    benchmark_stream_batches "$records" run_js
+    return 0
+  fi
+  log "📥 $shape load on mongodb $database.$collection: $records documents"
+  local out changes="$records"
+  out=$(run_js)
+  if [ "$shape" == "update" ]
+  then
+    changes=$(echo "$out" | sed -n 's/.*BENCHMARK_UPDATED=\([0-9]*\).*/\1/p' | tail -1)
+    changes=${changes:-0}
+    if [ "$changes" -lt "$records" ]
+    then
+      logwarn "⚠️ only $changes documents in $database.$collection, updated $changes instead of $records (run a bulk load first)"
+    fi
+  fi
+  echo "BENCHMARK_RECORDS=$changes"
+}
+
+# load for 'playground connector benchmark' on an mqtt topic, with mosquitto_pub -l (one message per line):
+#   benchmark_mqtt_load <container> "<mosquitto_pub options: host, port, credentials, tls>" <mqtt topic> <qos> <records> <record size> [preload|stream]
+# stream mode only: a paused mqtt source stays connected, so the messages published while it is paused go to its
+# in-memory buffer (records.buffer.queue.size) or are dropped by the broker, and a drain would not measure mqtt
+function benchmark_mqtt_load () {
+  if [ "${BENCHMARK_LOAD_SHAPE:-bulk}" != "bulk" ]
+  then
+    logerror "❌ --shape ${BENCHMARK_LOAD_SHAPE} does not apply to mqtt messages: use the default --shape bulk"
+    return 1
+  fi
+  local container="$1" options="$2" topic="$3" qos="$4" records="$5" record_size="${6:-0}" mode="${7:-preload}"
+  if [ "$mode" != "stream" ]
+  then
+    logerror "❌ mqtt is publish/subscribe: a paused mqtt source stays subscribed, the messages published while it is paused go to its in-memory buffer (records.buffer.queue.size) or are dropped by the broker, so a drain would not measure mqtt. Use --mode steady"
+    return 1
+  fi
+  if [ -n "$BENCHMARK_LOAD_CHECK" ]
+  then
+    return 0
+  fi
+  publish () {
+    benchmark_messages "$records" "$record_size" | playground container exec --container "$container" --command "mosquitto_pub $options -t \"$topic\" -q $qos -l" --shell sh > /dev/null 2>&1
+  }
+  benchmark_stream_batches "$records" publish
+}
+
+# load for 'playground connector benchmark' on an ibm mq queue, with amqsput (one message per line):
+#   benchmark_ibmmq_load <container> <queue manager> <queue> <records> <record size> [preload|stream]
+# the max depth of the queue is raised first: DEV.QUEUE.1 holds 5000 messages by default
+function benchmark_ibmmq_load () {
+  if [ "${BENCHMARK_LOAD_SHAPE:-bulk}" != "bulk" ]
+  then
+    logerror "❌ --shape ${BENCHMARK_LOAD_SHAPE} does not apply to ibm mq messages: use the default --shape bulk"
+    return 1
+  fi
+  local container="$1" queue_manager="$2" queue="$3" records="$4" record_size="${5:-0}" mode="${6:-preload}"
+  if [ -n "$BENCHMARK_LOAD_CHECK" ]
+  then
+    return 0
+  fi
+  echo "ALTER QLOCAL($queue) MAXDEPTH(999999999)" | playground container exec --container "$container" --command "/opt/mqm/bin/runmqsc $queue_manager" > /dev/null
+  put () {
+    benchmark_messages "$records" "$record_size" | playground container exec --container "$container" --command "/opt/mqm/samp/bin/amqsput $queue $queue_manager" > /dev/null
+  }
+  if [ "$mode" == "stream" ]
+  then
+    benchmark_stream_batches "$records" put
+    return 0
+  fi
+  log "📥 $records messages to ibm mq queue $queue"
+  put
+  echo "BENCHMARK_RECORDS=$records"
 }
 
 function wait_for_log () {

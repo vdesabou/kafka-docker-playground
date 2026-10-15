@@ -45,3 +45,17 @@ playground run -f ibm-mq.sh
 * SSL/mTLS: `"mq.ssl.cipher.suite": "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"` is required (`TLS_RSA_*` suites are disabled by default in recent JDKs), and the Connect worker needs `KAFKA_OPTS: -Dcom.ibm.mq.cfg.useIBMCipherMappings=false` (set in the docker-compose override).
 * mTLS: no username/password is needed to connect to the queue manager. `MQ_APP_PASSWORD` is commented out on the `ibmmq` container, so the connector uses `"mq.username": ""` and `"mq.password": ""`.
 * Bindings mode: the worker is started manually inside the container, and the final `playground topic consume` is best effort (the Kafka CLI tools are not available in that image), so the script always exits 0 at the end.
+
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) puts messages in the queue of the connector (`amqsput`, after raising the max depth of the queue, which is 5000 by default) for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark). Once the example is running:
+
+```bash
+# time to consume a backlog of 1M messages
+playground connector benchmark --nb-records 1000000
+
+# throughput during 2 minutes while batches of 10000 messages are put in the queue
+playground connector benchmark --mode steady --duration 2m --nb-records 10000
+```
+
+The connector is paused while the messages are put in the queue, then resumed, and the benchmark measures the time it takes to consume them.
