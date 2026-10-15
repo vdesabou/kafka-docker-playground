@@ -4506,13 +4506,18 @@ subcommands:
         - "--smt-jar"
         argument: SMT-JAR
         description: |-
-          ☕ Jar with transforms to add for the test (custom SMT development)
+          ☕ Jar with transforms to add for the test (custom SMT development). Repeat it for the jars it depends on: they are loaded together, as one plugin
 
           Repeatable: ✓ Yes
       - names:
         - "--json"
         argument: ''
         description: "\U0001F4C4 Print the steps as json"
+      - names:
+        - "--no-open"
+        argument: ''
+        description: "\U0001F6AB Do not open the html report in the browser (it is
+          still written, and its path printed)"
   - name: offsets
     description: "\U0001F488 Handle source and sink connectors offsets\n\nWhere a
       connector is in its data: for a source, the position it keeps in\nthe system

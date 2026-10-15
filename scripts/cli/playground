@@ -10815,12 +10815,17 @@ playground_connector_smt_test_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--smt-jar SMT-JAR (repeatable)")"
-    printf "    ☕ Jar with transforms to add for the test (custom SMT development)\n"
+    printf "    ☕ Jar with transforms to add for the test (custom SMT development). Repeat\n    it for the jars it depends on: they are loaded together, as one plugin\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
     printf "    📄 Print the steps as json\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-open")"
+    printf "    🚫 Do not open the html report in the browser (it is still written, and its\n    path printed)\n"
     echo
 
     # :command.usage_fixed_flags
@@ -46178,6 +46183,7 @@ playground_connector_smt_test_command() {
   partition="${args[--partition]}"
   type="${args[--type]}"
   json="${args[--json]}"
+  no_open="${args[--no-open]}"
   verbose="${args[--verbose]}"
   eval "cp_versions=(${args[--cp-version]:-})"
   eval "smt_plugins=(${args[--smt-plugin]:-})"
@@ -46279,13 +46285,14 @@ playground_connector_smt_test_command() {
       dir=$(smt_tester_hub_plugin "$spec" "$hub_image") || exit 1
       plugin_dirs+=("$dir")
   done
-  for jar in "${smt_jars[@]}"
-  do
-      dir="$work/plugins/custom-$(basename "$jar" .jar)"
+  # all the jars in one plugin, like the lib folder of a plugin: the transform and its dependencies
+  if [ ${#smt_jars[@]} -gt 0 ]
+  then
+      dir="$work/plugins/custom-smt"
       mkdir -p "$dir"
-      cp "$jar" "$dir/"
+      cp "${smt_jars[@]}" "$dir/"
       plugin_dirs+=("$dir")
-  done
+  fi
 
   harness_args=(--type "$type")
   [[ -n "$json" ]] && harness_args+=(--json)
@@ -46365,7 +46372,7 @@ playground_connector_smt_test_command() {
       then
           [[ -n "$json" ]] && return
           log "📊 report: $report"
-          if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ]
+          if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ] && [[ ! -n "$no_open" ]]
           then
               if command -v open > /dev/null 2>&1
               then
@@ -79371,6 +79378,14 @@ playground_connector_smt_test_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --no-open)
+
+        # :flag.case_no_arg
+        args['--no-open']=1
+        shift
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -97228,6 +97243,11 @@ playground_connector_smt_test_completion() {
 
         shift
         ;;
+      --no-open)
+        completion_blocked_flags["--no-open"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -97248,6 +97268,7 @@ playground_connector_smt_test_completion() {
     completion_flag_candidates --smt-plugin "$completion_current" --smt-plugin
     completion_flag_candidates --smt-jar "$completion_current" --smt-jar
     completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --no-open "$completion_current" --no-open
   fi
 
 }

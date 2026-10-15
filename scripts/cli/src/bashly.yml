@@ -7695,11 +7695,15 @@ commands:
         repeatable: true
         validate: file_exists
         help: |-
-          ☕ Jar with transforms to add for the test (custom SMT development)
+          ☕ Jar with transforms to add for the test (custom SMT development). Repeat it for the jars it depends on: they are loaded together, as one plugin
       - long: --json
         required: false
         help: |-
           📄 Print the steps as json
+      - long: --no-open
+        required: false
+        help: |-
+          🚫 Do not open the html report in the browser (it is still written, and its path printed)
       examples:
       - playground connector smt test --connector filestream-sink
       - playground connector smt test --connector filestream-sink --record '{"topic":"filestream","key":"k1","value":{"id":1,"name":"foo"}}'

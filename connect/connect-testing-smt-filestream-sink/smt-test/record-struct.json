@@ -1,0 +1,25 @@
+{
+  "topic": "customers",
+  "key": "c-42",
+  "value": {
+    "schema": {
+      "type": "struct",
+      "name": "Customer",
+      "fields": [
+        { "field": "customer_id", "type": "string" },
+        { "field": "first_name", "type": "string" },
+        { "field": "email", "type": "string" },
+        { "field": "amount", "type": "string" },
+        { "field": "created_at", "type": "int64" }
+      ]
+    },
+    "payload": {
+      "customer_id": "42",
+      "first_name": "John",
+      "email": "john@example.com",
+      "amount": "19.99",
+      "created_at": 1760000000000
+    }
+  },
+  "headers": { "source": "crm" }
+}
