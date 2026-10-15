@@ -693,6 +693,7 @@ then
   MENU_CONNECT_LOG_LEVEL="$(menu_label "🔊" "Connect log level(s)" "--connect-log-level")"
   readonly MENU_SWITCH_EXAMPLE="🔀 Switch to another example in the same folder"
   readonly MENU_REPRO_BOOTSTRAP="🧪 Create a reproduction model from this example"
+  readonly MENU_CONFIG="⚙️  CLI preferences (playground config)"
   readonly MENU_SEPARATOR_ACTIONS="---------------------actions----------------------"
 
   readonly MENU_GO_BACK="🔙 Go back"
@@ -1083,6 +1084,7 @@ then
     if [ -n "$sibling_examples" ]; then group+=("$MENU_SWITCH_EXAMPLE"); fi
     # not when already creating one
     if [[ ! -n "$force_interactive_repro" ]]; then group+=("$MENU_REPRO_BOOTSTRAP"); fi
+    group+=("$MENU_CONFIG")
     add_menu_group "$MENU_SEPARATOR_ACTIONS" "${group[@]}"
 
     options+=("$MENU_GO_BACK")
@@ -1170,6 +1172,11 @@ then
       playground state set run.test_file "$previous_test_file"
       playground repro bootstrap -f "$test_file"
       exit $?
+    fi
+
+    if [[ $res == *"$MENU_CONFIG"* ]]
+    then
+      interactive_config_menu
     fi
 
     if [[ $res == *"$MENU_CONNECT_LOG_LEVEL"* ]]

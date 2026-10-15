@@ -2200,6 +2200,128 @@ function get_run_flag_combination_problems () {
   fi
 }
 
+# playground run menu: submenu showing every 'playground config' preference with
+# its current value, until "go back". A change is saved right away, through the
+# 'playground config <key>' command so that its validation applies
+function interactive_config_menu () {
+  local fzf_colors="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE"
+  local back="🔙 Back to the example menu"
+  # key|emoji|label|default
+  local definitions=(
+    "editor|🔖|Editor used to open files|code"
+    "folder_zip_or_jar|📂|Folders searched for connector zip or jar|~"
+    "clipboard|📋|Copy connector config to the clipboard|true"
+    "container-kill-all-before-run|🔪|Kill all containers before each run|false"
+    "cleanup-ccloud-resources-after-run|🧹|Delete ccloud resources left by the last run|ask"
+    "check-and-update-repo-version|🔄|Check that the repo is up to date|true"
+    "open-ccloud-connector-in-browser.automatically|☁️|Open fully managed connectors in browser|true"
+    "open-ccloud-connector-in-browser.browser|🧭|Browser for fully managed connectors|default browser"
+    "open-grafana-in-browser.automatically|📊|Open Grafana in browser|true"
+    "open-grafana-in-browser.browser|🧭|Browser for Grafana|default browser"
+  )
+  local definition key emoji label default value entries res new_value i
+  while true
+  do
+    entries=()
+    for definition in "${definitions[@]}"
+    do
+      IFS='|' read -r key emoji label default <<< "$definition"
+      if [ "$key" == "clipboard" ] && [[ "$OSTYPE" != "darwin"* ]]
+      then
+        continue
+      fi
+      value=$(playground config get "$key")
+      # folder_zip_or_jar is stored as ",folder1,folder2"
+      value=${value#,}
+      entries+=("$(menu_value_label "$(menu_label "$emoji" "$label" "$key")" "${value:-default: $default}")")
+    done
+    entries+=("$back")
+
+    set +e
+    res=$(printf '%s\n' "${entries[@]}" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="⚙️" --header="select a preference to change (saved right away, same as 'playground config')" --color="$fzf_colors" $fzf_option_pointer)
+    set -e
+    if [ -z "$res" ] || [ "$res" == "$back" ]
+    then
+      return
+    fi
+
+    for definition in "${definitions[@]}"
+    do
+      IFS='|' read -r key emoji label default <<< "$definition"
+      if [[ "$res" == *" $key  ["* ]]
+      then
+        break
+      fi
+    done
+    value=$(playground config get "$key")
+
+    new_value=""
+    set +e
+    case "$key" in
+      editor)
+        new_value=$(printf '%s\n' code vi vim nano subl idea | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔖" --header="select the editor, or type one and use <option+enter>" --color="$fzf_colors" $fzf_option_pointer --bind "alt-enter:print-query")
+        ;;
+      folder_zip_or_jar)
+        # stored as ",folder1,folder2"
+        value=${value#,}
+        new_value=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="📂" --header="enter the folders, separated by spaces (current folder is always included)" --color="$fzf_colors" $fzf_option_empty_pointer --print-query --query "${value//,/ }")
+        ;;
+      *.browser)
+        new_value=$(printf '%s\n' "default browser" "Safari" "Google Chrome" "Firefox" "Microsoft Edge" "Arc" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🧭" --header="select the browser, or type one and use <option+enter>" --color="$fzf_colors" $fzf_option_pointer --bind "alt-enter:print-query")
+        ;;
+      cleanup-ccloud-resources-after-run)
+        new_value=$(printf '%s\n' ask true false | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🧹" --header="ask: list and confirm, true: delete without asking, false: never delete" --color="$fzf_colors" $fzf_option_pointer)
+        ;;
+      *)
+        new_value=$(printf '%s\n' true false | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="⚙️" --header="$label" --color="$fzf_colors" $fzf_option_pointer)
+        ;;
+    esac
+    set -e
+    # --print-query: first line is the query
+    new_value=$(echo "$new_value" | head -1)
+    if [ -z "$new_value" ]
+    then
+      continue
+    fi
+
+    set +e
+    case "$key" in
+      editor)
+        if command -v "$new_value" > /dev/null 2>&1
+        then
+          playground config editor "$new_value"
+        else
+          logwarn "❌ editor <$new_value> is not installed, ignoring it"
+        fi
+        ;;
+      folder_zip_or_jar)
+        local folders=() folder
+        read -r -a folders <<< "$new_value"
+        for i in "${!folders[@]}"
+        do
+          folder="${folders[$i]}"
+          folders[$i]="${folder/#\~/$HOME}"
+        done
+        playground config folder_zip_or_jar "${folders[@]}"
+        ;;
+      *.browser)
+        if [ "$new_value" == "default browser" ]
+        then
+          new_value=""
+        fi
+        playground config "${key%%.*}" browser "$new_value"
+        ;;
+      *.automatically)
+        playground config "${key%%.*}" automatically "$new_value"
+        ;;
+      *)
+        playground config "$key" "$new_value"
+        ;;
+    esac
+    set -e
+  done
+}
+
 # playground run menu: value of a flag in array_flag_list (--flag=value or --flag value)
 function get_menu_flag_value () {
   local flag="$1"

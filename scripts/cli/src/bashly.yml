@@ -477,6 +477,9 @@ commands:
       check-and-update-repo-version      warn when your clone is out of date
       open-ccloud-connector-in-browser   open fully managed connectors, and in
       open-grafana-in-browser            which browser
+
+    🎓 Tip: all of them can also be changed from the '⚙️ CLI preferences'
+    entry of the 'playground run' menu.
   commands:
   - name: show
     private: true
