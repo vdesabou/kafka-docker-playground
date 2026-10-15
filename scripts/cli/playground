@@ -36373,7 +36373,8 @@ securityContext:
   runAsNonRoot: false
 EOF
 
-  		debug_output=$(kubectl -n confluent debug "pod/$pod_name" --profile=sysadmin --custom="$debug_custom_file" --image=nicolaka/netshoot --target="$target_container" -- bash -lc "$cmd" 2>&1)
+  		# --attach waits for the command to finish and returns its output, otherwise the rule is applied asynchronously
+  		debug_output=$(kubectl -n confluent debug "pod/$pod_name" --attach=true --profile=sysadmin --custom="$debug_custom_file" --image=nicolaka/netshoot --target="$target_container" -- bash -lc "$cmd" 2>&1)
   	debug_exit_code=$?
   	rm -f "$debug_custom_file"
   		cleaned_output=$(echo "$debug_output" | sed -E '/^Targeting container /d; /^Defaulting debug container name to /d')
@@ -37612,7 +37613,8 @@ playground_container_logs_command() {
               log "⌛ Waiting up to $max_wait seconds for message $log to be present in $resolved_container pod logs..."
               while true
               do
-                  kubectl -n confluent logs "$resolved_container" --all-containers=true > /tmp/out.txt 2>&1
+                  # kubectl fails while an ephemeral container (kubectl debug) is starting, keep retrying
+                  kubectl -n confluent logs "$resolved_container" --all-containers=true > /tmp/out.txt 2>&1 || true
                   if grep "$log" /tmp/out.txt > /dev/null
                   then
                       grep "$log" /tmp/out.txt
