@@ -539,6 +539,12 @@ fi
       # Extract millisecond timestamp without external cut pipelines
       timestamp_ms_part=${line#CreateTime:}
       timestamp_ms=${timestamp_ms_part%%|*}
+      if [[ ! "$timestamp_ms" =~ ^[0-9]+$ ]]
+      then
+        # stderr of the consumer (e.g. "Processed a total of N messages") was interleaved in the middle of a record line:
+        # skip the fragment, $((timestamp_ms / 1000)) would abort the whole script
+        continue
+      fi
       # Convert milliseconds to seconds
       timestamp_sec=$((timestamp_ms / 1000))
       milliseconds=$((timestamp_ms % 1000))
