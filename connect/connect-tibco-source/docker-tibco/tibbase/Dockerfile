@@ -1,13 +1,9 @@
-FROM debian:stretch
-#Update stretch repositories
-RUN sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list
-RUN sed -i 's|security.debian.org|archive.debian.org/|g' /etc/apt/sources.list
-RUN sed -i '/stretch-updates/d' /etc/apt/sources.list
+# debian:stretch is no longer installable: archive.debian.org returns 404 on some stretch security packages
+# jammy (not the default noble) because tar fails with "Function not implemented" on the EMS archive under noble
+FROM eclipse-temurin:8-jdk-jammy
 
-RUN apt-get update && apt-get install bc wget default-jdk unzip curl procps -y && \
-    if [ "$(dpkg --print-architecture)" = "amd64" ]; then \
-    apt-get install -y lib32z1 lib32ncurses5 lib32stdc++6 lib32z1-dev || true; \
-    fi && \
+RUN apt-get update && apt-get install -y bc wget unzip curl procps && \
+    rm -rf /var/lib/apt/lists/* && \
     groupadd -r tibgrp -g 433 && \
     useradd -u 431 -r -m -g tibgrp -d /home/tibusr -s /bin/bash -c "TIBCO Docker image user" tibusr && \
     chown -R tibusr:tibgrp /home/tibusr && \
