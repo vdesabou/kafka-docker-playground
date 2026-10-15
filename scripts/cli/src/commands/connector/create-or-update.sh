@@ -4,6 +4,8 @@ level=${args[--level]}
 package=${args[--package]}
 validate=${args[--validate]}
 wait_for_zero_lag=${args[--wait-for-zero-lag]}
+wait=${args[--wait]}
+max_wait=${args[--max-wait]}
 skip_automatic_connector_config=${args[--skip-automatic-connector-config]}
 verbose="${args[--verbose]}"
 no_clipboard="${args[--no-clipboard]}"
@@ -12,6 +14,22 @@ initial_state=${args[--initial-state]}
 use_terraform=${args[--terraform]}
 
 connector_type=$(playground state get run.connector_type)
+
+# --wait: fully managed connectors take minutes to be provisioned and can fail transiently while
+# being provisioned, wait_for_ccloud_connector_up restarts them, which 'connector wait' does not
+function wait_for_created_connector () {
+    if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+    then
+        if [[ -n "$initial_state" ]] && [ "$initial_state" != "RUNNING" ]
+        then
+            playground connector wait --connector "$connector" --state "$initial_state" --max-wait "${max_wait:-600}"
+        else
+            wait_for_ccloud_connector_up "$connector" "${max_wait:-600}"
+        fi
+    else
+        playground connector wait --connector "$connector" --state "${initial_state:-RUNNING}" --max-wait "${max_wait:-120}"
+    fi
+}
 
 # Validate terraform flag compatibility
 if [[ -n "$use_terraform" ]]
@@ -290,7 +308,12 @@ then
         playground connector show-config --connector "$connector" --no-clipboard
     fi
 
-    playground connector status --connector $connector
+    if [[ -n "$wait" ]]
+    then
+        wait_for_created_connector
+    else
+        playground connector status --connector $connector
+    fi
 
     if [[ -n "$wait_for_zero_lag" ]]
     then
@@ -537,6 +560,11 @@ then
     then
         kubectl -n confluent get connector "$connector" -o yaml
     fi
+    if [[ -n "$wait" ]]
+    then
+        # the CR being app-ready does not mean that the tasks are RUNNING
+        wait_for_created_connector
+    fi
     if [[ -n "$wait_for_zero_lag" ]]
     then
         logwarn "⏭️ --wait-for-zero-lag is not supported with CFK Connector CRD path"
@@ -551,12 +579,21 @@ fi
 
 playground connector show-config-parameters --connector "$connector" --only-show-json
 set +e
-playground connector status --connector $connector
+# with --wait, the status is displayed by 'connector wait' when it fails (right after the creation, it can also be a 404)
+if [[ -z "$wait" ]]
+then
+    playground connector status --connector $connector
+fi
 if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
 then
     playground connector open-docs --only-show-url
 fi
 set -e
+
+if [[ -n "$wait" ]]
+then
+    wait_for_created_connector
+fi
 
 if [[ -n "$wait_for_zero_lag" ]]
 then

@@ -33,7 +33,7 @@ playground topic produce -t filestream --nb-messages 5 << 'EOF'
 EOF
 
 log "Creating FileStream Sink connector"
-playground connector create-or-update --connector filestream-sink  << EOF
+playground connector create-or-update --connector filestream-sink --wait << EOF
 {
      "tasks.max": "1",
      "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
@@ -44,7 +44,6 @@ playground connector create-or-update --connector filestream-sink  << EOF
      "value.converter.schemas.enable": "false"
 }
 EOF
-
 
 sleep 5
 

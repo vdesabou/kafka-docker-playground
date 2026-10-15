@@ -5297,6 +5297,7 @@ commands:
     📥 Get data out
       consume         read from the beginning, deserialising automatically
       get-number-records   count what is in the topic
+      wait-for-records     wait until the topic contains N records
       get-offsets          earliest and latest offsets per partition
       display-consumer-offsets   read the internal offsets topic
 
@@ -5351,6 +5352,57 @@ commands:
         output: |-
           17:22:53 ℹ️ 💯 Get number of records in topic filestream
           5
+
+    - name: wait-for-records
+      group: Topic
+      help: |-
+        ⏳ Wait for a topic to contain a minimum number of records
+
+        Counts the records in the topic every --interval seconds (same count as
+        'get-number-records') until there are at least
+        --min-expected-messages, and fails after --max-wait seconds. A topic
+        that does not exist yet counts as empty, so it can be used before a
+        source connector has created its topic.
+
+        🎓 Tip: in an example script, use it instead of a fixed sleep before
+        checking what a source connector produced.
+      flags:
+      - long: --topic
+        short: -t
+        required: true
+        arg: topic
+        completions:
+          dynamic:
+          - playground get-topic-list
+        help: |-
+          🗳 Topic name
+      - long: --min-expected-messages
+        arg: min_expected_messages
+        validate: integer
+        required: false
+        default: "1"
+        help: |-
+          🔢 Minimum number of records to wait for (default is 1)
+      - long: --max-wait
+        arg: max_wait
+        validate: integer
+        default: "120"
+        help: |-
+          ⏳ Max time in seconds to wait (default is 120)
+      - long: --interval
+        arg: interval
+        validate: integer
+        default: "5"
+        help: |-
+          🔁 Interval in seconds between checks (default is 5)
+      examples:
+      - playground topic wait-for-records --topic filestream
+      - playground topic wait-for-records --topic filestream --min-expected-messages 10 --max-wait 300
+      x_example_outputs:
+      - command: playground topic wait-for-records --topic filestream --min-expected-messages 5
+        output: |-
+          17:22:53 ℹ️ ⏳ Waiting up to 120 seconds for topic filestream to contain at least 5 records
+          17:22:58 ℹ️ ✅ topic filestream contains 5 records (expected at least 5) after 5 seconds
 
     - name: get-offsets
       group: Topic
@@ -7367,6 +7419,7 @@ commands:
 
     🔍 Look at what is running
       status                  is it RUNNING, and if not, the full stack trace
+      wait                    wait until it is RUNNING (or another state)
       error-recommendations   suggested fixes for a failed fully managed connector
       show-config             the configuration actually applied
       logs                    tail connect logs, filtered and followed
@@ -7426,6 +7479,61 @@ commands:
         -------------------------------------------------------------------------------------------------------------
         filestream-sink                ✅ RUNNING  0:🟢 RUNNING                 -
         -------------------------------------------------------------------------------------------------------------
+
+  - name: wait
+    help: |-
+      ⏳ Wait for connectors to reach a state
+
+      Polls the connector status every --interval seconds until the connector
+      and all its tasks are in --state (RUNNING by default), and fails after
+      --max-wait seconds, displaying the status with the stack trace.
+
+      RUNNING is only reached when the connector and its tasks are still
+      RUNNING one --interval later, since a task is RUNNING before it
+      processes its first record and can fail right after.
+
+      When waiting for RUNNING, it fails right away if the connector or one of
+      its tasks is FAILED, since a failed task does not recover on its own.
+      For the same reason, --state FAILED is reached as soon as the connector
+      or one of its tasks is FAILED (the connector itself usually stays
+      RUNNING when only a task fails).
+
+      🎓 Tip: in an example script, use it right after 'connector
+      create-or-update' instead of a fixed sleep.
+    flags:
+    - *verbose
+    - *connector
+    - long: --state
+      arg: state
+      required: false
+      default: "RUNNING"
+      allowed:
+        - RUNNING
+        - PAUSED
+        - STOPPED
+        - FAILED
+      help: |-
+        🎯 State to wait for (default is RUNNING)
+    - long: --max-wait
+      arg: max_wait
+      validate: integer
+      default: "120"
+      help: |-
+        ⏳ Max time in seconds to wait (default is 120)
+    - long: --interval
+      arg: interval
+      validate: integer
+      default: "5"
+      help: |-
+        🔁 Interval in seconds between status checks (default is 5)
+    examples:
+    - playground connector wait --connector filestream-sink
+    - playground connector wait --connector filestream-sink --state PAUSED --max-wait 60
+    x_example_outputs:
+    - command: playground connector wait --connector filestream-sink
+      output: |-
+        17:22:05 ℹ️ ⏳ Waiting up to 120 seconds for 🌎onprem connector filestream-sink to be RUNNING
+        17:22:10 ℹ️ ✅ 🌎onprem connector filestream-sink is RUNNING (1 task(s)) after 5 seconds
 
   - name: error-recommendations
     filters:
@@ -8222,8 +8330,9 @@ commands:
       script. If the connector already exists it is updated in place, which
       makes the command safe to re-run while you iterate on a configuration.
 
-      The command waits for the connector to be RUNNING and fails with the
-      error if it is not, so a broken config stops the example immediately
+      The command then displays the connector status. Add --wait to wait for
+      the connector and all its tasks to be RUNNING and fail with the error
+      if they are not, so a broken config stops the example immediately
       instead of failing silently later.
 
       🎓 Tip: add --validate to have the config checked by the plugin before
@@ -8258,8 +8367,22 @@ commands:
         ⚠️ Not available for ccloud connectors
     - *package
     - long: --wait-for-zero-lag
-      help: |- 
+      help: |-
         😴 Wait until lag becomes 0
+    - long: --wait
+      required: false
+      help: |-
+        ⏳ Wait until the connector and all its tasks are RUNNING (or in --initial-state), and fail otherwise
+
+        Same as running 'playground connector wait' right after the command. It fails right away if the connector or one of its tasks is FAILED.
+
+        With fully managed connectors, it waits for the connector to be provisioned and restarts it if it fails while being provisioned (same as wait_for_ccloud_connector_up in example scripts).
+    - long: --max-wait
+      arg: max_wait
+      validate: integer
+      required: false
+      help: |-
+        ⏳ Max time in seconds to wait with --wait (default is 120, or 600 for fully managed connectors)
     - long: --validate
       required: false
       help: |-
@@ -8303,7 +8426,7 @@ commands:
         ⚠️ Only available for Confluent Cloud connectors
 
     examples: |
-      playground connector create-or-update -c filestream-sink << EOF
+      playground connector create-or-update -c filestream-sink --wait << EOF
       {
           "tasks.max": "1",
           "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
