@@ -3293,13 +3293,36 @@ then
   
   set -e
 
-  python3 -m http.server 18080 --bind 0.0.0.0 --directory "$CONNECTOR_ZIP_DIR" >/tmp/cfk-connector-zip-http.log 2>&1 &
-  CONNECTOR_ZIP_SERVER_PID=$!
-  disown "$CONNECTOR_ZIP_SERVER_PID" 2>/dev/null || true
+  # kill -9 does not wait for the old listener to release the port: retry if the bind fails with "Address already in use"
+  connector_zip_server_started=0
+  for attempt in 1 2 3 4 5
+  do
+    for i in $(seq 1 10)
+    do
+      listener_pids=$(lsof -t -i ":18080" -sTCP:LISTEN 2>/dev/null || true)
+      if [[ -z "$listener_pids" ]]
+      then
+        break
+      fi
+      echo "$listener_pids" | xargs kill -9 2>/dev/null || true
+      sleep 0.5
+    done
 
-  # Fail fast if server did not start or expected zip is not served.
-  sleep 1
-  if ! kill -0 "$CONNECTOR_ZIP_SERVER_PID" >/dev/null 2>&1
+    python3 -m http.server 18080 --bind 0.0.0.0 --directory "$CONNECTOR_ZIP_DIR" >/tmp/cfk-connector-zip-http.log 2>&1 &
+    CONNECTOR_ZIP_SERVER_PID=$!
+    disown "$CONNECTOR_ZIP_SERVER_PID" 2>/dev/null || true
+
+    # Fail fast if server did not start or expected zip is not served.
+    sleep 1
+    if kill -0 "$CONNECTOR_ZIP_SERVER_PID" >/dev/null 2>&1
+    then
+      connector_zip_server_started=1
+      break
+    fi
+    logwarn "Local CONNECTOR_ZIP HTTP server did not start on port 18080 (attempt $attempt/5), retrying"
+  done
+
+  if [ $connector_zip_server_started -eq 0 ]
   then
     logerror "❌ Could not start local CONNECTOR_ZIP HTTP server on port 18080"
     cat /tmp/cfk-connector-zip-http.log | tail -30 || true
