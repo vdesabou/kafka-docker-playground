@@ -4781,8 +4781,12 @@ subcommands:
       result\njson and an html report with the charts, opened in the browser at the\nend
       in an interactive terminal) and appended to the benchmark-history\nfile, and
       the summary compares them with the previous benchmark of the\nsame connector
-      in the same example (or with --compare <result json>).\n\n⚠️ Not available for
-      fully managed connectors and the cfk environment yet."
+      in the same example (or with --compare <result json>).\n\nEach result records
+      the setup it ran on (host cpu and memory, container\nengine resources, connect
+      image and whether it is emulated, jvm and\nheap, number of workers and brokers,
+      environment, connector config with\nsecrets masked): the report shows it, and
+      the summary warns when the\nprevious run was on a different setup.\n\n⚠️ Not
+      available for fully managed connectors and the cfk environment yet."
     usage: playground connector benchmark [OPTIONS]
     options:
     - names:
@@ -4827,10 +4831,10 @@ subcommands:
         bash -c, from the current directory, while the connector is paused. It must
         create the records and return: --nb-records is then the number of records
         the connector should process, unless the command prints a line BENCHMARK_RECORDS=<n>.\n\nExamples:\n\n
-        \ # sink: 1M records in the topic of the connector, with the schema of its
-        records on stdin\n  --nb-records 1000000 --load-command \"playground topic
-        produce -t my-topic --nb-messages 1000000 < my-schema.avsc\"\n\n  # source:
-        your own script, which inserts the rows and prints BENCHMARK_RECORDS=<n>\n
+        \ # sink: 1M records in the topic of the connector (use the schema of its
+        records)\n  --nb-records 1000000 --load-command \"playground topic produce
+        -t my-topic --nb-messages 1000000 --value @predefined-schemas/avro/customer.avsc\"\n\n
+        \ # source: your own script, which inserts the rows and prints BENCHMARK_RECORDS=<n>\n
         \ --load-command \"./load-my-table.sh 500000\""
     - names:
       - "--stream-load-command"
@@ -4846,8 +4850,8 @@ subcommands:
         kept up with the load.\n\nExample, batches of 10000 records in the topic of
         the connector until the end of the measure:\n\n  --stream-load-command 'while
         [ ! -f \"\\$BENCHMARK_STOP_FILE\" ]; do playground topic produce -t my-topic
-        --nb-messages 10000 < my-schema.avsc; echo \"BENCHMARK_BATCH=10000 \\$(date
-        +%s)\"; done'"
+        --nb-messages 10000 --value @predefined-schemas/avro/customer.avsc; echo \"BENCHMARK_BATCH=10000
+        \\$(date +%s)\"; done'"
     - names:
       - "--topic"
       - "-t"
@@ -4879,6 +4883,25 @@ subcommands:
         ⏳ Max time to wait for the backlog to be processed in drain mode (default is 30m)
 
         Default value: 30m
+    - names:
+      - "--connector-tag"
+      argument: CONNECTOR-TAG
+      description: "\U0001F9E9 Benchmark these versions of the connector plugin one
+        after the other (repeat the flag), and compare them\n\nFor each version: playground
+        update-version --connector-tag (only the connect container is restarted, the
+        connector and its offsets are kept), check that the connector runs the requested
+        version, an untimed warm-up drain (the worker jvm was restarted), then the
+        benchmark. The original version is restored at the end, and the summary and
+        the report compare the versions.\n\nExample: --connector-tag 10.8.4 --connector-tag
+        10.9.9\n\n⚠️ A downgrade or a major version change can be incompatible with
+        the offsets or the config of the connector: the benchmark stops at the first
+        FAILED state.\n\nRepeatable: ✓ Yes"
+    - names:
+      - "--rounds"
+      argument: ROUNDS
+      description: "\U0001F501 With --connector-tag, number of rounds over the versions
+        (default is 1): 2 alternates them (A B A B), which shows a drift from one
+        run to the next\n\nDefault value: 1"
     - names:
       - "--output-dir"
       argument: OUTPUT-DIR

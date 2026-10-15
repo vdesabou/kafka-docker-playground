@@ -3165,6 +3165,163 @@ function benchmark_ibmmq_load () {
   echo "BENCHMARK_RECORDS=$records"
 }
 
+# value of <key> in the connector config, for a benchmark-load.bash: the connect rest api masks the passwords
+# ("••••", "[hidden]"), so a masked value is taken from the connector config of the example script that was run
+# ($BENCHMARK_TEST_FILE), when it is a literal there
+function benchmark_connector_config_value () {
+  local key="$1" value
+  value=$(jq -r --arg k "$key" '.[$k] // empty' "$BENCHMARK_CONNECTOR_CONFIG" 2> /dev/null)
+  if [[ "$value" == *"•"* ]] || [ "$value" == "[hidden]" ]
+  then
+    value=""
+    if [ -f "$BENCHMARK_TEST_FILE" ]
+    then
+      value=$(grep -o -E "\"${key//./\\.}\"[[:space:]]*:[[:space:]]*\"[^\"\$]*\"" "$BENCHMARK_TEST_FILE" | head -1 | sed -E 's/.*:[[:space:]]*"([^"]*)"$/\1/')
+    fi
+    if [ -z "$value" ]
+    then
+      logwarn "⚠️ $key is masked by the connect rest api and is not a literal in $(basename "$BENCHMARK_TEST_FILE")"
+    fi
+  fi
+  echo "$value"
+}
+
+# common checks of the message loads: <shapes> is the list of supported shapes; a topic (publish/subscribe) can only be
+# measured in stream mode, since a paused subscriber does not keep the backlog in the broker
+function benchmark_check_messages_load () {
+  local shapes="$1" destination_type="$2" mode="$3"
+  local shape="${BENCHMARK_LOAD_SHAPE:-bulk}"
+  if [[ " $shapes " != *" $shape "* ]]
+  then
+    logerror "❌ --shape $shape does not apply to this load: use one of $shapes"
+    return 1
+  fi
+  if [[ "$destination_type" =~ ^[Tt][Oo][Pp][Ii][Cc]$ ]] && [ "$mode" != "stream" ]
+  then
+    logerror "❌ the destination is a topic (publish/subscribe): a paused subscriber does not keep the backlog in the broker, so a drain would not measure the connector. Use --mode steady"
+    return 1
+  fi
+}
+
+# load for 'playground connector benchmark' on an activemq destination, with BenchmarkJmsProducer run in the activemq
+# container with the activemq-all jar of the broker (the 'activemq producer' tool never commits the messages sent after
+# its last transaction batch, so its count is not exact):
+#   benchmark_activemq_load <container> <user> <password> <queue|topic> <destination> <records> <record size> [preload|stream]
+# --shape bulk: jms transactions of 1000 messages, --shape small-txn: one persistent send per message
+function benchmark_activemq_load () {
+  local container="$1" user="$2" password="$3" destination_type="$4" destination="$5" records="$6" record_size="${7:-0}" mode="${8:-preload}"
+  benchmark_jms_load "$container" "/opt/activemq/*" org.apache.activemq.jndi.ActiveMQInitialContextFactory tcp://localhost:61616 "$user" "$password" ConnectionFactory "$destination_type" "$destination" "$records" "$record_size" "$mode"
+}
+
+# load for 'playground connector benchmark' on a rabbitmq queue, with the producer.py of the example (one connection):
+#   benchmark_rabbitmq_load <producer container> <queue> <records> [preload|stream]
+function benchmark_rabbitmq_load () {
+  local container="$1" queue="$2" records="$3" mode="${4:-preload}"
+  benchmark_check_messages_load "bulk" "queue" "$mode" || return 1
+  [ -n "$BENCHMARK_LOAD_CHECK" ] && return 0
+  send () {
+    playground container exec --container "$container" --command "bash -c \"python /producer.py $queue $records\"" > /dev/null 2>&1
+  }
+  if [ "$mode" == "stream" ]
+  then
+    benchmark_stream_batches "$records" send
+    return 0
+  fi
+  log "📥 $records messages to rabbitmq queue $queue"
+  send
+  echo "BENCHMARK_RECORDS=$records"
+}
+
+# load for 'playground connector benchmark' on a solace queue or topic, with the rest messaging port of the broker
+# (curl, keep-alive and 16 parallel transfers). Each message gets a Solace-Message-ID: without it the jms message id is
+# null, which the solace source connector rejects (required field "messageID"):
+#   benchmark_solace_load <rest url, e.g. http://localhost:9000> <queue|topic> <destination> <records> <record size> [preload|stream]
+function benchmark_solace_load () {
+  local url="$1" destination_type="$2" destination="$3" records="$4" record_size="${5:-0}" mode="${6:-preload}"
+  benchmark_check_messages_load "bulk" "$destination_type" "$mode" || return 1
+  [ -n "$BENCHMARK_LOAD_CHECK" ] && return 0
+  local path="Queue"
+  [[ "$destination_type" =~ ^[Tt][Oo][Pp][Ii][Cc]$ ]] && path="TOPIC"
+  send () {
+    benchmark_messages "$records" "$record_size" | awk -v url="$url/$path/$destination" -v id="benchmark-$(date +%s)" '{ if (NR > 1) print "next"; printf "url = \"%s\"\ndata = \"%s\"\nheader = \"Content-Type: text/plain\"\nheader = \"Solace-Message-ID: %s-%d\"\noutput = /dev/null\n", url, $0, id, NR }' \
+      | curl -s --fail-early --parallel --parallel-max 16 -K -
+  }
+  if [ "$mode" == "stream" ]
+  then
+    benchmark_stream_batches "$records" send
+    return 0
+  fi
+  log "📥 $records messages to solace $(echo "$path" | tr "[:upper:]" "[:lower:]") $destination"
+  send
+  echo "BENCHMARK_RECORDS=$records"
+}
+
+# load for 'playground connector benchmark' on the http event collector of the splunk source connector (curl, 1000
+# events per request), stream mode only: the connector receives the events itself, a paused connector keeps them in
+# memory, so a drain would not measure it
+#   benchmark_splunk_load <collector url, e.g. https://localhost:8889/services/collector/event> <records> <record size> [preload|stream]
+function benchmark_splunk_load () {
+  local url="$1" records="$2" record_size="${3:-0}" mode="${4:-preload}"
+  benchmark_check_messages_load "bulk" "queue" "$mode" || return 1
+  if [ "$mode" != "stream" ]
+  then
+    logerror "❌ the splunk source connector receives the events itself (http event collector): events sent while it is paused are kept in its memory, so a drain would not measure it. Use --mode steady"
+    return 1
+  fi
+  [ -n "$BENCHMARK_LOAD_CHECK" ] && return 0
+  send () {
+    local first
+    for ((first = 1; first <= records; first += 1000))
+    do
+      benchmark_messages "$(( records - first + 1 < 1000 ? records - first + 1 : 1000 ))" "$record_size" "$first" | awk '{ printf "{\"event\":\"%s\"}", $0 }' \
+        | curl -s -k -o /dev/null -X POST "$url" --data-binary @-
+    done
+  }
+  benchmark_stream_batches "$records" send
+}
+
+# compiled tools/benchmark-jms/BenchmarkJmsProducer.java (javax.jms 1.1 api), cached in ~/.playground-benchmark-jms:
+# prints the folder of BenchmarkJmsProducer.class
+function benchmark_jms_producer_classes () {
+  local cache="$HOME/.playground-benchmark-jms"
+  local source_file="$root_folder/tools/benchmark-jms/BenchmarkJmsProducer.java"
+  [ -z "$root_folder" ] && source_file="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)/tools/benchmark-jms/BenchmarkJmsProducer.java"
+  if [ ! -f "$cache/classes/BenchmarkJmsProducer.class" ] || [ "$source_file" -nt "$cache/classes/BenchmarkJmsProducer.class" ]
+  then
+    mkdir -p "$cache/classes"
+    [ -f "$cache/javax.jms-api-2.0.1.jar" ] || curl -sSL -o "$cache/javax.jms-api-2.0.1.jar" https://repo1.maven.org/maven2/javax/jms/javax.jms-api/2.0.1/javax.jms-api-2.0.1.jar
+    cp "$source_file" "$cache/"
+    # compiled in a jdk container: the connect image has no compiler
+    docker run --rm -v "$cache:/w" eclipse-temurin:17-jdk javac --release 8 -cp /w/javax.jms-api-2.0.1.jar -d /w/classes /w/BenchmarkJmsProducer.java > /dev/null 2>&1 || { logerror "❌ could not compile BenchmarkJmsProducer"; return 1; }
+  fi
+  echo "$cache/classes"
+}
+
+# load for 'playground connector benchmark' on any jms destination, with BenchmarkJmsProducer run in <container> with
+# the jms client jars of the provider (<classpath>), and the jndi settings of the connector:
+#   benchmark_jms_load <container> "<classpath>" <jndi factory> <provider url> <principal> <credentials> <connection factory> <queue|topic> <destination> <records> <record size> [preload|stream]
+# --shape bulk: jms transactions of 1000 messages, --shape small-txn: one persistent send per message
+function benchmark_jms_load () {
+  local container="$1" classpath="$2" factory="$3" url="$4" principal="$5" credentials="$6" cf="$7" destination_type="$8" destination="$9" records="${10}" record_size="${11:-0}" mode="${12:-preload}"
+  benchmark_check_messages_load "bulk small-txn" "$destination_type" "$mode" || return 1
+  [ -n "$BENCHMARK_LOAD_CHECK" ] && return 0
+  local classes batch=1000
+  [ "${BENCHMARK_LOAD_SHAPE:-bulk}" == "small-txn" ] && batch=0
+  classes=$(benchmark_jms_producer_classes) || return 1
+  playground container cp --source "$classes/BenchmarkJmsProducer.class" --destination "$container:/tmp/BenchmarkJmsProducer.class" > /dev/null 2>&1
+  send () {
+    playground container exec --container "$container" --command "java -cp '/tmp:$classpath' BenchmarkJmsProducer '$factory' '$url' '$principal' '$credentials' '$cf' '$destination_type' '$destination' $records $record_size $batch" > /dev/null
+  }
+  if [ "$mode" == "stream" ]
+  then
+    benchmark_stream_batches "$records" send
+    return 0
+  fi
+  log "📥 $records messages to jms $destination_type $destination"
+  send
+  echo "BENCHMARK_RECORDS=$records"
+}
+
 function wait_for_log () {
   message="$1"
   container=${2:-connect}

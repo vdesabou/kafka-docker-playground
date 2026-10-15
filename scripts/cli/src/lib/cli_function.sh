@@ -3925,3 +3925,139 @@ with open(output, "w") as f:
 print(topic)
 PYEOF
 }
+
+# setup on which a 'playground connector benchmark' ran, as one json object: host, container engine, connect worker,
+# kafka, connector (config with secrets masked) and playground version, so that results are only compared on the same setup
+#   benchmark_collect_setup <workers ("container port" lines)> <connector config json> <test file> <environment>
+function benchmark_collect_setup () {
+  local workers="$1" connector_config_json="$2" test_file="$3" environment="$4"
+  local host_os host_arch cpu_model host_cpus host_memory engine engine_info first_worker image image_arch emulated heap heap_max jvm_version jvm_cpus nb_workers nb_brokers kraft commit dirty
+  host_arch=$(uname -m)
+  if [ "$(uname -s)" == "Darwin" ]
+  then
+    host_os="macOS $(sw_vers -productVersion 2>/dev/null)"
+    cpu_model=$(sysctl -n machdep.cpu.brand_string 2>/dev/null)
+    host_cpus=$(sysctl -n hw.ncpu 2>/dev/null)
+    host_memory=$(sysctl -n hw.memsize 2>/dev/null)
+  else
+    host_os=$(. /etc/os-release 2>/dev/null && echo "$PRETTY_NAME")
+    cpu_model=$(grep -m1 'model name' /proc/cpuinfo 2>/dev/null | cut -d: -f2 | sed 's/^ *//')
+    host_cpus=$(nproc 2>/dev/null)
+    host_memory=$(( $(awk '/MemTotal/ { print $2 }' /proc/meminfo 2>/dev/null || echo 0) * 1024 ))
+  fi
+  engine="docker"
+  container_engine_is_podman && engine="podman"
+  # no playground command gives the engine resources and the image architecture
+  engine_info=$(docker info --format '{{.ServerVersion}}|{{.OperatingSystem}}|{{.NCPU}}|{{.MemTotal}}' 2>/dev/null)
+  first_worker=$(echo "$workers" | head -1 | awk '{ print $1 }')
+  image=$(docker inspect -f '{{.Config.Image}}' "$first_worker" 2>/dev/null)
+  image_arch=$(docker image inspect -f '{{.Architecture}}' "$image" 2>/dev/null)
+  emulated=false
+  case "$host_arch:$image_arch" in
+    arm64:amd64|aarch64:amd64|x86_64:arm64|x86_64:aarch64) emulated=true ;;
+  esac
+  heap=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$first_worker" 2>/dev/null | sed -n 's/^KAFKA_HEAP_OPTS=//p' | head -1)
+  local jvm
+  jvm=$(printf 'get -b java.lang:type=Runtime VmVersion\nget -b java.lang:type=OperatingSystem AvailableProcessors\nget -b java.lang:type=Memory HeapMemoryUsage\nexit\n' | benchmark_jmxterm "$first_worker" "$(echo "$workers" | head -1 | awk '{ print $2 }')")
+  jvm_version=$(echo "$jvm" | sed -n 's/^VmVersion = \(.*\);$/\1/p')
+  jvm_cpus=$(echo "$jvm" | sed -n 's/^AvailableProcessors = \(.*\);$/\1/p')
+  # HeapMemoryUsage is a composite value: { committed = ...; init = ...; max = <bytes>; used = ...; }
+  heap_max=$(echo "$jvm" | sed -n 's/^ *max = \([0-9]*\);$/\1/p' | head -1)
+  nb_workers=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -c -E '^connect[0-9]*$')
+  nb_brokers=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -c -E '^broker[0-9]*$')
+  kraft=false
+  docker ps --format '{{.Names}}' 2>/dev/null | grep -q -E '^controller[0-9]*$' && kraft=true
+  commit=$(git -C "$root_folder" rev-parse --short HEAD 2>/dev/null)
+  dirty=false
+  [ -n "$(git -C "$root_folder" status --porcelain -uno 2>/dev/null)" ] && dirty=true
+  # documentation of the connector: documentation_url of the manifest of the plugin that contains the connector class
+  local connector_class documentation_url="" plugin_dir
+  connector_class=$(echo "$connector_config_json" | jq -r '."connector.class" // empty' 2> /dev/null)
+  if [ -n "$connector_class" ]
+  then
+    plugin_dir=$(playground --output-level ERROR container exec --container "$first_worker" --command "for d in /usr/share/confluent-hub-components/* /usr/share/java/*; do [ -f \"\$d/manifest.json\" ] && grep -rlq --include='*.jar' '${connector_class//.//}.class' \"\$d\" && echo \"\$d\" && break; done" 2> /dev/null | tail -1)
+    if [ -n "$plugin_dir" ]
+    then
+      documentation_url=$(playground --output-level ERROR container exec --container "$first_worker" --command "cat '$plugin_dir/manifest.json'" 2> /dev/null | jq -r '.documentation_url // empty' 2> /dev/null)
+    fi
+  fi
+  # github link of the example: repro models are in the reproduction-models submodule, another repository
+  local repo_dir="$root_folder" repo_path repo_url repo_commit repo_dirty=false
+  repo_path="${test_file#$root_folder/}"
+  if [[ "$repo_path" == reproduction-models/* ]]
+  then
+    repo_dir="$root_folder/reproduction-models"
+    repo_path="${repo_path#reproduction-models/}"
+  fi
+  repo_url=$(git -C "$repo_dir" config --get remote.origin.url 2>/dev/null | sed -E 's#^git@github.com:#https://github.com/#; s#\.git$##')
+  repo_commit=$(git -C "$repo_dir" rev-parse HEAD 2>/dev/null)
+  [ -n "$(git -C "$repo_dir" status --porcelain -uno 2>/dev/null)" ] && repo_dirty=true
+  jq -n \
+    --arg host_os "$host_os" --arg host_arch "$host_arch" --arg cpu_model "$cpu_model" --arg host_cpus "$host_cpus" --arg host_memory "$host_memory" \
+    --arg engine "$engine" --arg engine_info "$engine_info" \
+    --arg image "$image" --arg image_arch "$image_arch" --argjson emulated "$emulated" --arg heap "$heap" --arg heap_max "$heap_max" --arg jvm_version "$jvm_version" --arg jvm_cpus "$jvm_cpus" \
+    --arg nb_workers "$nb_workers" --arg nb_brokers "$nb_brokers" --argjson kraft "$kraft" --arg environment "$environment" \
+    --arg test_file "${test_file#$root_folder/}" --arg commit "$commit" --argjson dirty "$dirty" \
+    --arg repo_url "$repo_url" --arg repo_path "$repo_path" --arg repo_commit "$repo_commit" --argjson repo_dirty "$repo_dirty" \
+    --arg documentation_url "$documentation_url" --arg plugin_dir "$plugin_dir" \
+    --argjson config "$(echo "$connector_config_json" | jq -c 'with_entries(if (.key | test("password|secret|token|credentials|jaas|private\\.key|api\\.key|apikey"; "i")) then .value = "****" else . end)' 2>/dev/null || echo '{}')" \
+    '($engine_info | split("|")) as $e |
+     {host: {os: $host_os, arch: $host_arch, cpu_model: $cpu_model, cpus: ($host_cpus | tonumber? // null), memory_bytes: ($host_memory | tonumber? // null)},
+      engine: {name: $engine, version: $e[0], os: $e[1], cpus: ($e[2] | tonumber? // null), memory_bytes: ($e[3] | tonumber? // null)},
+      connect: {image: $image, image_arch: $image_arch, emulated: $emulated, heap_opts: $heap, heap_max_bytes: ($heap_max | tonumber? // null), jvm_version: $jvm_version, jvm_cpus: ($jvm_cpus | tonumber? // null), workers: ($nb_workers | tonumber? // null)},
+      kafka: {environment: $environment, brokers: ($nb_brokers | tonumber? // null), kraft: $kraft},
+      playground: {test_file: $test_file, commit: $commit, dirty: $dirty,
+                   repo_url: $repo_url, repo_path: $repo_path, repo_commit: $repo_commit, repo_dirty: $repo_dirty},
+      connector: {documentation_url: $documentation_url, plugin_dir: $plugin_dir},
+      connector_config: $config}'
+}
+
+# one line summary of a setup json, e.g. "macOS 27.0.1 arm64, Apple M5 Max (18 cpus, 36 GiB) · docker 29.8.2 Docker Desktop (18 cpus, 23 GiB) · ..."
+function benchmark_setup_summary () {
+  echo "$1" | jq -r '
+    def gib: if . == null then "?" else ((. / 1073741824) | floor | tostring) + " GiB" end;
+    "\(.host.os) \(.host.arch), \(.host.cpu_model) (\(.host.cpus) cpus, \(.host.memory_bytes | gib)) · \(.engine.name) \(.engine.version) \(.engine.os) (\(.engine.cpus) cpus, \(.engine.memory_bytes | gib)) · connect \(.connect.image | split("/") | last)\(if .connect.emulated then " EMULATED" else "" end), \(.connect.workers) worker(s), jvm \(.connect.jvm_version), heap \(.connect.heap_max_bytes | gib) max\(if .connect.heap_opts == "" then "" else " (" + .connect.heap_opts + ")" end) · \(.kafka.brokers) broker(s), \(.kafka.environment)"' 2>/dev/null
+}
+
+# differences between two setups on what changes the throughput (host, engine resources, connect image and jvm, heap,
+# brokers), empty when they are the same
+function benchmark_setup_differences () {
+  local current="$1" previous="$2"
+  jq -n -r --argjson c "$current" --argjson p "$previous" '
+    [ ["host cpu", $c.host.cpu_model, $p.host.cpu_model], ["host cpus", $c.host.cpus, $p.host.cpus],
+      ["engine cpus", $c.engine.cpus, $p.engine.cpus], ["engine memory", $c.engine.memory_bytes, $p.engine.memory_bytes],
+      ["connect image", $c.connect.image, $p.connect.image], ["emulated", $c.connect.emulated, $p.connect.emulated],
+      ["heap max", $c.connect.heap_max_bytes, $p.connect.heap_max_bytes], ["connect workers", $c.connect.workers, $p.connect.workers],
+      ["brokers", $c.kafka.brokers, $p.kafka.brokers], ["environment", $c.kafka.environment, $p.kafka.environment] ]
+    | map(select(.[1] != .[2])) | map("\(.[0]) \(.[2]) -> \(.[1])") | join(", ")' 2>/dev/null
+}
+
+# value of 'playground update-version --connector-tag' that puts the plugin of <connector class> at <version> and keeps
+# the other confluent hub plugins of the example at their current version (one version per plugin, in the order of
+# CONNECT_PLUGIN_PATH, like update-version expects). Needs $test_file. Prints nothing when the plugin is not found
+function benchmark_connector_tag_value () {
+  local connector_class="$1" version="$2"
+  local class_path="${connector_class//.//}.class" value="" found=0 connector_path full_name owner name current
+  get_connector_paths
+  for connector_path in ${connector_paths//,/ }
+  do
+    full_name=$(basename "$connector_path")
+    owner=$(echo "$full_name" | cut -d'-' -f1)
+    name=$(echo "$full_name" | cut -d'-' -f2-)
+    # same plugins as update-version: the ones coming from confluent hub
+    if [ "$owner" == "java" ] || [ "$name" == "hub-components" ] || [ "$owner" == "filestream" ]
+    then
+      continue
+    fi
+    # the jar names of a zip are stored uncompressed: grep finds the class in the jars of the plugin
+    if playground --output-level ERROR container exec --container connect --command "grep -rlq --include='*.jar' '$class_path' '$connector_path'" > /dev/null 2>&1
+    then
+      current="$version"
+      found=1
+    else
+      current=$(playground --output-level ERROR container exec --container connect --command "cat '$connector_path/manifest.json'" 2> /dev/null | jq -r '.version // empty' 2> /dev/null)
+    fi
+    value="${value:+$value,}$current"
+  done
+  [ $found -eq 1 ] && echo "$value"
+}

@@ -37,3 +37,17 @@ create queue connector-quickstart
 permission all consume
 no shutdown full
 ```
+
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) sends messages to the destination of the connector through the REST messaging port of the broker (`curl`, keep-alive, 16 parallel transfers), for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark). Once the example is running:
+
+```bash
+# time to consume a backlog of 1M messages
+playground connector benchmark --nb-records 1000000
+
+# throughput during 2 minutes while batches of 10000 messages are sent
+playground connector benchmark --mode steady --duration 2m --nb-records 10000
+```
+
+The connector is paused while the messages are sent, then resumed, and the benchmark measures the time it takes to consume them. A topic (publish/subscribe) can only be measured with `--mode steady`: a paused subscriber does not keep the backlog in the broker.
