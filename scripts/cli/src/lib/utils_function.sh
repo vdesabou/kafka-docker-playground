@@ -2857,15 +2857,18 @@ function benchmark_oracle_client_from_example () {
 }
 
 # load for 'playground connector benchmark' on the CUSTOMERS table used by sql-datagen
-# (first_name, last_name, email, gender, club_status, comments), created if it does not exist:
-#   benchmark_sql_load <postgres|mysql|oracle> <container> "<sql client reading stdin>" <records> <bulk|small-txn|update> [preload|stream]
+# (first_name, last_name, email, gender, club_status, comments), created if it does not exist; with sqlserver, the
+# dbo.customers table of the examples (first_name, last_name, email), which has cdc enabled for debezium:
+#   benchmark_sql_load <postgres|mysql|oracle|sqlserver> <container> "<sql client reading stdin>" <records> <bulk|small-txn|update> [preload|stream]
 # - bulk: one transaction inserting <records> rows
 # - small-txn: <records> transactions of one row
 # - update: updates <records> existing rows (run a bulk load first)
 # - stream mode: repeats batches of <records> rows of the shape until killed
 # prints BENCHMARK_RECORDS=<n>, the number of records the connector should write, so that the benchmark waits for them:
 # changes x BENCHMARK_RECORDS_PER_CHANGE (default 1) + transactions x BENCHMARK_RECORDS_PER_TRANSACTION (default 0),
-# e.g. 2 and 1 for oracle cdc with a redo log topic, which gets the row change and the commit
+# e.g. 2 and 1 for oracle cdc with a redo log topic, which gets the row change and the commit.
+# In stream mode, repeats batches until the file $BENCHMARK_STOP_FILE exists, and prints BENCHMARK_BATCH=<records>
+# <epoch seconds> after each batch, so that the benchmark knows the rate of the load.
 function benchmark_sql_load () {
   local dialect="$1" container="$2" client="$3" records="$4" shape="$5" mode="${6:-preload}"
   local create_table insert_bulk insert_small_txn update count_flags count_sql="SELECT COUNT(*) FROM CUSTOMERS;" client_for_count="$client"
@@ -2912,11 +2915,42 @@ COMMIT;"
       count_sql="SET HEADING OFF FEEDBACK OFF PAGESIZE 0
 SELECT COUNT(*) FROM CUSTOMERS;"
     ;;
+    sqlserver)
+      # the examples create dbo.customers with cdc enabled (debezium needs it): only create it when it is missing
+      create_table="IF OBJECT_ID('dbo.customers', 'U') IS NULL CREATE TABLE dbo.customers (id INT IDENTITY(1,1) NOT NULL PRIMARY KEY, first_name VARCHAR(255) NOT NULL, last_name VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL);
+GO"
+      insert_bulk="SET NOCOUNT ON;
+WITH seq AS (SELECT TOP ($records) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS i FROM sys.all_objects a CROSS JOIN sys.all_objects b CROSS JOIN sys.all_objects c)
+INSERT INTO dbo.customers (first_name, last_name, email) SELECT CONCAT('first', i), CONCAT('last', i), CONCAT('user', i, '@example.com') FROM seq;
+GO"
+      insert_small_txn="SET NOCOUNT ON;
+DECLARE @i INT = 1;
+WHILE @i <= $records
+BEGIN
+  INSERT INTO dbo.customers (first_name, last_name, email) VALUES (CONCAT('first', @i), CONCAT('last', @i), CONCAT('user', @i, '@example.com'));
+  SET @i = @i + 1;
+END
+GO"
+      update="SET NOCOUNT ON;
+UPDATE c SET email = CONCAT('update', c.id, '-', ABS(CHECKSUM(NEWID())) % 1000000, '@example.com') FROM (SELECT TOP ($records) * FROM dbo.customers ORDER BY id) c;
+GO"
+      count_flags="-h -1"
+      count_sql="SET NOCOUNT ON;
+SELECT COUNT(*) FROM dbo.customers;
+GO"
+    ;;
     *)
-      logerror "❌ benchmark_sql_load: unsupported dialect $dialect (postgres, mysql, oracle)"
+      logerror "❌ benchmark_sql_load: unsupported dialect $dialect (postgres, mysql, oracle, sqlserver)"
       return 1
     ;;
   esac
+
+  # a jdbc source in incrementing mode only captures new rows: updates would never arrive
+  if [ "$shape" == "update" ] && [ -f "$BENCHMARK_CONNECTOR_CONFIG" ] && [ "$(jq -r '.mode // empty' "$BENCHMARK_CONNECTOR_CONFIG")" == "incrementing" ]
+  then
+    logerror "❌ the connector uses \"mode\": \"incrementing\", which does not capture updates: use --shape bulk or small-txn"
+    return 1
+  fi
 
   local sql
   case "$shape" in
@@ -2940,23 +2974,27 @@ SELECT COUNT(*) FROM CUSTOMERS;"
     fi
   fi
 
-  if [ "$mode" == "stream" ]
-  then
-    log "🌊 $shape load on $dialect CUSTOMERS, batches of $records rows, until stopped"
-    while true
-    do
-      echo "$sql" | playground container exec --container "$container" --command "$client" > /dev/null
-    done
-  fi
-
-  log "📥 $shape load on $dialect CUSTOMERS: $changes rows"
-  echo "$sql" | playground container exec --container "$container" --command "$client" > /dev/null
   local transactions=1
   if [ "$shape" == "small-txn" ]
   then
     transactions="$changes"
   fi
-  echo "BENCHMARK_RECORDS=$((changes * ${BENCHMARK_RECORDS_PER_CHANGE:-1} + transactions * ${BENCHMARK_RECORDS_PER_TRANSACTION:-0}))"
+  local expected_records=$((changes * ${BENCHMARK_RECORDS_PER_CHANGE:-1} + transactions * ${BENCHMARK_RECORDS_PER_TRANSACTION:-0}))
+
+  if [ "$mode" == "stream" ]
+  then
+    log "🌊 $shape load on $dialect CUSTOMERS, batches of $changes rows, until stopped"
+    while [ ! -f "${BENCHMARK_STOP_FILE:-/nonexistent}" ]
+    do
+      echo "$sql" | playground container exec --container "$container" --command "$client" > /dev/null
+      echo "BENCHMARK_BATCH=$expected_records $(date +%s)"
+    done
+    return 0
+  fi
+
+  log "📥 $shape load on $dialect CUSTOMERS: $changes rows"
+  echo "$sql" | playground container exec --container "$container" --command "$client" > /dev/null
+  echo "BENCHMARK_RECORDS=$expected_records"
 }
 
 function wait_for_log () {
