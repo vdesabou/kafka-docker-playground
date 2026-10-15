@@ -178,11 +178,13 @@ fi
 csv_file="$output_dir/$run_id.csv"
 json_file="$output_dir/$run_id.json"
 load_log="$output_dir/$run_id-load.log"
-echo "timestamp,elapsed_s,phase,records,rate_records_per_s,batch_avg_ms,running_ratio,cpu_percent_of_one_core,consumer_lag_max" > "$csv_file"
+echo "timestamp,elapsed_s,phase,records,rate_records_per_s,batch_avg_ms,running_ratio,cpu_percent_of_one_core,consumer_lag_max,epoch,cpu_percent_of_available,pause_ratio,gc_time_ms,dlq_records,skipped_records,task_records" > "$csv_file"
 
 benchmark_jmx_init "$workers"
 paused_by_benchmark=0
 load_stopped_early=0
+not_running_checks=0
+not_running_states=""
 load_pid=""
 # a load script sourcing scripts/utils.sh records itself as the example being run: put the state back
 function restore_run_state () {
@@ -233,6 +235,11 @@ function check_not_failed () {
     then
         return
     fi
+    if ! echo "$curl_output" | jq -e '[.connector.state, .tasks[]?.state] | all(. == "RUNNING")' > /dev/null 2>&1
+    then
+        not_running_checks=$((not_running_checks + 1))
+        not_running_states=$(echo "$curl_output" | jq -r '"connector \(.connector.state), tasks \([.tasks[]?.state] | join(" "))"')
+    fi
     if echo "$curl_output" | jq -e '[.connector.state, .tasks[]?.state] | index("FAILED")' > /dev/null 2>&1
     then
         logerror "❌ $connector_type connector $connector is FAILED, stopping the benchmark"
@@ -250,13 +257,13 @@ function take_sample () {
     local values
     values=$(benchmark_jmx_sample "$connector" "$type" "$workers")
     sample_time=$(now)
-    read -r sample_records sample_batch sample_ratio sample_cpu sample_lag <<< "$values"
+    read -r sample_records sample_batch sample_ratio sample_cpu sample_lag sample_cpu_available sample_pause sample_gc sample_dlq sample_skipped sample_tasks <<< "$values"
     local rate="-"
     if [ -n "$prev_records" ]
     then
         rate=$(awk -v r="$sample_records" -v pr="$prev_records" -v t="$sample_time" -v pt="$prev_time" 'BEGIN { if (t > pt) printf "%.1f", (r - pr) / (t - pt); else print "-" }')
     fi
-    echo "$(date +%H:%M:%S),$(awk -v t="$sample_time" -v s="$start_time" 'BEGIN { printf "%.1f", t - s }'),$phase,$sample_records,$rate,$sample_batch,$sample_ratio,$sample_cpu,${sample_lag:--}" >> "$csv_file"
+    echo "$(date +%H:%M:%S),$(awk -v t="$sample_time" -v s="$start_time" 'BEGIN { printf "%.1f", t - s }'),$phase,$sample_records,$rate,$sample_batch,$sample_ratio,$sample_cpu,${sample_lag:--},$sample_time,${sample_cpu_available:--},${sample_pause:--},${sample_gc:--},${sample_dlq:--},${sample_skipped:--},${sample_tasks:--}" >> "$csv_file"
     prev_records="$sample_records"
     prev_time="$sample_time"
 }
@@ -396,6 +403,7 @@ else
     done
     baseline_records="$sample_records"
     measure_start="$sample_time"
+    not_running_checks=0
     log "⏱️ measuring for ${duration}s (sample every ${interval}s)"
     measure_end=$(awk -v s="$measure_start" -v d="$duration" 'BEGIN { printf "%.3f", s + d }')
     while awk -v n="$(now)" -v e="$measure_end" 'BEGIN { exit !(n < e) }'
@@ -458,6 +466,49 @@ then
     lower_bound=true
 fi
 
+# bottleneck indicators over the measure: from the sample just before the measure to the last one of the measure
+# (cumulative gc time, dlq and skipped records, records per task), and averages over the samples of the measure
+read -r gc_percent cpu_available_avg pause_avg dlq_delta skipped_delta task_shares max_task_share idle_tasks <<< "$(awk -F, -v p="$phase" -v nw="$(echo "$workers" | grep -c .)" '
+    NR == 1 { next }
+    $3 != p && !started { ref = $0; next }
+    $3 == p {
+        started = 1; last = $0
+        if ($11 != "-") { cpu += $11; nc++ }
+        if ($12 != "-") { pause += $12; np++ }
+    }
+    END {
+        split(ref, r, ","); split(last, l, ",")
+        gc = "-"
+        if (r[13] != "-" && l[13] != "-" && l[10] > r[10] && nw > 0) gc = sprintf("%.1f", (l[13] - r[13]) / ((l[10] - r[10]) * 1000 * nw) * 100)
+        dlq = (r[14] != "-" && l[14] != "-") ? l[14] - r[14] : "-"
+        skipped = (r[15] != "-" && l[15] != "-") ? l[15] - r[15] : "-"
+        # records per task during the measure
+        nt = split(l[16], lt, ";"); split(r[16], rt, ";")
+        for (i in rt) { split(rt[i], kv, ":"); before[kv[1]] = kv[2] }
+        total = 0
+        for (i = 1; i <= nt; i++) { split(lt[i], kv, ":"); d[kv[1]] = kv[2] - before[kv[1]]; total += d[kv[1]]; ids[i] = kv[1] }
+        shares = "-"; maxshare = 0; idle = 0
+        if (nt > 1 && total > 0) {
+            shares = ""
+            for (i = 1; i <= nt; i++) {
+                s = d[ids[i]] / total
+                shares = shares (shares ? "," : "") "task " ids[i] " " sprintf("%.0f%%", s * 100)
+                if (s > maxshare) maxshare = s
+                if (d[ids[i]] == 0) idle++
+            }
+            gsub(/ /, "_", shares)
+        }
+        printf "%s %s %s %s %s %s %.2f %d\n", gc, (nc ? sprintf("%.0f", cpu / nc) : "-"), (np ? sprintf("%.2f", pause / np) : "-"),
+            dlq, skipped, shares, maxshare, idle
+    }' "$csv_file")"
+# total-records-skipped also counts the records sent to the dlq: keep the ones dropped without a dlq
+if [ "$dlq_delta" != "-" ] && [ "$skipped_delta" != "-" ]
+then
+    skipped_delta=$((skipped_delta - dlq_delta))
+fi
+task_shares="${task_shares//_/ }"
+task_shares="${task_shares//,/, }"
+
 test_file_relative="${test_file#$root_folder/}"
 result=$(jq -n \
     --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg test_file "$test_file_relative" --arg connector "$connector" \
@@ -468,11 +519,15 @@ result=$(jq -n \
     --arg batch_avg_ms "$batch_avg" --arg running_ratio "$ratio_avg" --arg cpu_avg "$cpu_avg" --arg cpu_max "$cpu_max" \
     --arg load_seconds "$load_seconds" --arg topic_records_delta "$topic_records_delta" \
     --arg samples_csv "$csv_file" --argjson lower_bound "$lower_bound" \
+    --arg gc_percent "$gc_percent" --arg cpu_available_avg "$cpu_available_avg" --arg pause_ratio "$pause_avg" \
+    --arg dlq_records "$dlq_delta" --arg skipped_records "$skipped_delta" --arg task_shares "$task_shares" \
     '{date: $date, test_file: $test_file, connector: $connector, connector_class: $connector_class, plugin_version: $plugin_version,
       cp_tag: $cp_tag, type: $type, mode: $mode, shape: $shape, tasks: $tasks, records: $records, seconds: $seconds,
       records_per_second: $records_per_second, lower_bound: $lower_bound, rate_p50: $rate_p50, rate_p95: $rate_p95, rate_min: $rate_min,
       batch_avg_ms: $batch_avg_ms, running_ratio: $running_ratio, cpu_percent_of_one_core_avg: $cpu_avg,
       cpu_percent_of_one_core_max: $cpu_max, load_seconds: $load_seconds, topic_records_delta: $topic_records_delta,
+      gc_percent: $gc_percent, cpu_percent_of_available_avg: $cpu_available_avg, pause_ratio: $pause_ratio,
+      dlq_records: $dlq_records, skipped_records: $skipped_records, task_shares: $task_shares,
       samples_csv: $samples_csv}')
 echo "$result" > "$json_file"
 
@@ -524,7 +579,16 @@ else
     printf "   %-22s %s\n" "poll batch avg" "$batch_avg ms"
 fi
 printf "   %-22s %s\n" "running ratio avg" "$ratio_avg"
-printf "   %-22s %s\n" "connect cpu avg / max" "${cpu_avg}% / ${cpu_max}% of one core"
+printf "   %-22s %s\n" "connect cpu avg / max" "${cpu_avg}% / ${cpu_max}% of one core (${cpu_available_avg}% of the cpus available)"
+printf "   %-22s %s\n" "gc pauses" "${gc_percent}% of the time"
+if [ "$task_shares" != "-" ]
+then
+    printf "   %-22s %s\n" "records per task" "$task_shares"
+fi
+if [ "$dlq_delta" != "-" ] && [ "$dlq_delta" != "0" ] || { [ "$skipped_delta" != "-" ] && [ "$skipped_delta" != "0" ]; }
+then
+    printf "   %-22s %s\n" "dlq / dropped" "$dlq_delta records sent to the dlq, $skipped_delta dropped without dlq"
+fi
 if [ "$topic_records_delta" != "-" ]
 then
     printf "   %-22s %s\n" "records in topics" "+$topic_records_delta (${topics[*]})"
@@ -547,9 +611,34 @@ if [ "$load_stopped_early" == "1" ]
 then
     report_warnings+=("the load stopped before the end of the measure, see $load_log")
 fi
-if [ "$ratio_avg" != "-" ] && awk -v r="$ratio_avg" 'BEGIN { exit !(r < 0.5) }'
+if [ "$not_running_checks" -gt 0 ]
 then
-    add_warning "the tasks were running only $ratio_avg of the time (paused or restarting)"
+    add_warning "the connector or its tasks were not RUNNING at $not_running_checks status check(s) during the measure (last seen: $not_running_states): paused, restarting or rebalancing"
+# running and pause ratios are averaged over a window of up to a minute, so an earlier pause (a previous drain) still
+# shows in a short measure: only use them for a steady measure of 2 minutes or more
+elif [ "$mode" == "steady" ] && awk -v s="$measured_seconds" 'BEGIN { exit !(s >= 120) }' && { { [ "$ratio_avg" != "-" ] && awk -v r="$ratio_avg" 'BEGIN { exit !(r < 0.5) }'; } || { [ "$pause_avg" != "-" ] && awk -v r="$pause_avg" 'BEGIN { exit !(r > 0.2) }'; }; }
+then
+    add_warning "the tasks are paused or idle most of the time (running ratio $ratio_avg, pause ratio $pause_avg): restarts, rebalances or a paused connector"
+fi
+if [ "$cpu_available_avg" != "-" ] && [ "$cpu_available_avg" -ge 90 ]
+then
+    add_warning "the connect worker is CPU bound (${cpu_available_avg}% of the cpus available to it): the results reflect the docker host"
+fi
+if [ "$gc_percent" != "-" ] && awk -v g="$gc_percent" 'BEGIN { exit !(g > 10) }'
+then
+    add_warning "the connect worker spent ${gc_percent}% of the time in gc pauses: the results reflect its heap size (KAFKA_HEAP_OPTS), not the connector"
+fi
+if [ "$task_shares" != "-" ] && { [ "$idle_tasks" -gt 0 ] || awk -v m="$max_task_share" -v n="$nb_tasks" 'BEGIN { t = 1.5 / n; if (t < 0.6) t = 0.6; exit !(m >= t) }'; }
+then
+    add_warning "the records are not spread across the tasks ($task_shares): tasks.max greater than the number of partitions, key skew, or a connector that does not parallelize this load"
+fi
+if [ "$dlq_delta" != "-" ] && [ "$dlq_delta" -gt 0 ]
+then
+    add_warning "$dlq_delta records went to the dead letter queue during the run: they are counted in the throughput"
+fi
+if [ "$skipped_delta" != "-" ] && [ "$skipped_delta" -gt 0 ]
+then
+    add_warning "$skipped_delta records were dropped by errors.tolerance=all without a dead letter queue during the run: they are counted in the throughput"
 fi
 if [ "$mode" == "steady" ] && [ "$rate_min" != "-" ] && [ "$rate_p50" != "-" ] && awk -v m="$rate_min" -v p="$rate_p50" 'BEGIN { exit !(p > 0 && m < p * 0.2) }'
 then
@@ -569,9 +658,10 @@ then
     if [ -f "$load_log" ]
     then
         # records generated by the stream load during the measure, from its BENCHMARK_BATCH=<records> <epoch> lines
-        generated=$(awk -v s="$measure_start" -v e="$sample_time" '/^BENCHMARK_BATCH=/ { split($1, kv, "="); if ($2 >= s && $2 <= e) g += kv[2] } END { print g + 0 }' "$load_log")
+        # a batch is counted when it ends: allow one batch of difference at the edges of the measure
+        read -r generated largest_batch <<< "$(awk -v s="$measure_start" -v e="$sample_time" '/^BENCHMARK_BATCH=/ { split($1, kv, "="); if (kv[2] > b) b = kv[2]; if ($2 >= s && $2 <= e) g += kv[2] } END { print g + 0, b + 0 }' "$load_log")"
     fi
-    if [ "$generated" -gt 0 ] && awk -v m="$measured_records" -v g="$generated" 'BEGIN { exit !(m >= 0.9 * g) }'
+    if [ "$generated" -gt 0 ] && awk -v m="$measured_records" -v g="$generated" -v b="${largest_batch:-0}" 'BEGIN { exit !(m >= 0.9 * g || m >= g - b) }'
     then
         add_warning "the connector kept up with the load ($measured_records records processed, $generated generated during the measure): this is the speed of the load, not of the connector, use --mode drain to measure its maximum"
     elif [ "$type" == "sink" ]
