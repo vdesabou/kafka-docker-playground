@@ -3078,9 +3078,10 @@ subcommands:
     Get data in\n  produce         generate records from a schema, or from your own
     data\n  create          create a topic with the partitions you need\n\n\U0001F4E5
     Get data out\n  consume         read from the beginning, deserialising automatically\n
-    \ get-number-records   count what is in the topic\n  get-offsets          earliest
-    and latest offsets per partition\n  display-consumer-offsets   read the internal
-    offsets topic\n\n\U0001F527 Manage\n  list / describe / alter / delete\n  set-schema-compatibility
+    \ get-number-records   count what is in the topic\n  wait-for-records     wait
+    until the topic contains N records\n  get-offsets          earliest and latest
+    offsets per partition\n  display-consumer-offsets   read the internal offsets
+    topic\n\n\U0001F527 Manage\n  list / describe / alter / delete\n  set-schema-compatibility
     \  compatibility of the topic subjects\n  tag             stream catalog tags
     (Confluent Cloud only)\n\nSerialisation is handled for you: 'produce' registers
     the schema you give\nit and 'consume' works out from the payload whether it is
@@ -3101,6 +3102,38 @@ subcommands:
       - "-t"
       argument: TOPIC
       description: "\U0001F5F3 Topic name"
+  - name: wait-for-records
+    description: "⏳ Wait for a topic to contain a minimum number of records\n\nCounts
+      the records in the topic every --interval seconds (same count as\n'get-number-records')
+      until there are at least\n--min-expected-messages, and fails after --max-wait
+      seconds. A topic\nthat does not exist yet counts as empty, so it can be used
+      before a\nsource connector has created its topic.\n\n\U0001F393 Tip: in an example
+      script, use it instead of a fixed sleep before\nchecking what a source connector
+      produced."
+    usage: playground topic wait-for-records [OPTIONS]
+    options:
+    - names:
+      - "--topic"
+      - "-t"
+      argument: TOPIC
+      description: "\U0001F5F3 Topic name\n\nRequired: ✓ Yes"
+    - names:
+      - "--min-expected-messages"
+      argument: MIN_EXPECTED_MESSAGES
+      description: "\U0001F522 Minimum number of records to wait for (default is 1)\n\nDefault
+        value: 1"
+    - names:
+      - "--max-wait"
+      argument: MAX_WAIT
+      description: |-
+        ⏳ Max time in seconds to wait (default is 120)
+
+        Default value: 120
+    - names:
+      - "--interval"
+      argument: INTERVAL
+      description: "\U0001F501 Interval in seconds between checks (default is 5)\n\nDefault
+        value: 5"
   - name: get-offsets
     description: "\U0001F4CD Get earliest and latest offsets per partition of a topic\n\nThe
       low and high watermarks of every partition, and the number of\nrecords in between.
@@ -4248,11 +4281,12 @@ subcommands:
     already figured out. The same\ncommands work whether the connector is self managed
     in the connect\ncontainer or fully managed in Confluent Cloud.\n\n\U0001F50D Look
     at what is running\n  status                  is it RUNNING, and if not, the full
-    stack trace\n  error-recommendations   suggested fixes for a failed fully managed
-    connector\n  show-config             the configuration actually applied\n  logs
-    \                   tail connect logs, filtered and followed\n  show-lag                consumer
-    lag of a sink, until it reaches zero\n  offsets get             where the connector
-    is reading or writing\n\n\U0001F6E0️ Change it\n  create-or-update        create
+    stack trace\n  wait                    wait until it is RUNNING (or another state)\n
+    \ error-recommendations   suggested fixes for a failed fully managed connector\n
+    \ show-config             the configuration actually applied\n  logs                    tail
+    connect logs, filtered and followed\n  show-lag                consumer lag of
+    a sink, until it reaches zero\n  offsets get             where the connector is
+    reading or writing\n\n\U0001F6E0️ Change it\n  create-or-update        create
     it, or apply a new config, from stdin\n  update                  edit the running
     config in your editor\n  pause / resume / stop / restart / delete\n  offsets alter
     / reset   rewind or fast-forward a connector\n\n\U0001F9D1‍\U0001F52C Understand
@@ -4286,6 +4320,49 @@ subcommands:
       argument: CONNECTOR
       description: "\U0001F517 Connector name\n\n\U0001F393 Tip: If not specified,
         the command will apply to all connectors"
+  - name: wait
+    description: "⏳ Wait for connectors to reach a state\n\nPolls the connector status
+      every --interval seconds until the connector\nand all its tasks are in --state
+      (RUNNING by default), and fails after\n--max-wait seconds, displaying the status
+      with the stack trace.\n\nRUNNING is only reached when the connector and its
+      tasks are still\nRUNNING one --interval later, since a task is RUNNING before
+      it\nprocesses its first record and can fail right after.\n\nWhen waiting for
+      RUNNING, it fails right away if the connector or one of\nits tasks is FAILED,
+      since a failed task does not recover on its own.\nFor the same reason, --state
+      FAILED is reached as soon as the connector\nor one of its tasks is FAILED (the
+      connector itself usually stays\nRUNNING when only a task fails).\n\n\U0001F393
+      Tip: in an example script, use it right after 'connector\ncreate-or-update'
+      instead of a fixed sleep."
+    usage: playground connector wait [OPTIONS]
+    options:
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+    - names:
+      - "--connector"
+      - "-c"
+      argument: CONNECTOR
+      description: "\U0001F517 Connector name\n\n\U0001F393 Tip: If not specified,
+        the command will apply to all connectors"
+    - names:
+      - "--state"
+      argument: STATE
+      description: "\U0001F3AF State to wait for (default is RUNNING)\n\nDefault value:
+        RUNNING\nAllowed values: RUNNING, PAUSED, STOPPED, FAILED"
+    - names:
+      - "--max-wait"
+      argument: MAX_WAIT
+      description: |-
+        ⏳ Max time in seconds to wait (default is 120)
+
+        Default value: 120
+    - names:
+      - "--interval"
+      argument: INTERVAL
+      description: "\U0001F501 Interval in seconds between status checks (default
+        is 5)\n\nDefault value: 5"
   - name: error-recommendations
     description: "\U0001F4A1 Show error recommendations for fully managed connectors\n\nConfluent
       Cloud analyses the failure stack trace of a failed fully\nmanaged or custom
@@ -4994,11 +5071,12 @@ subcommands:
       every example uses to deploy its connector. The json config\nis read from stdin,
       usually as a heredoc, so it stays readable in the\nscript. If the connector
       already exists it is updated in place, which\nmakes the command safe to re-run
-      while you iterate on a configuration.\n\nThe command waits for the connector
-      to be RUNNING and fails with the\nerror if it is not, so a broken config stops
-      the example immediately\ninstead of failing silently later.\n\n\U0001F393 Tip:
-      add --validate to have the config checked by the plugin before\nit is deployed,
-      which reports every invalid property at once."
+      while you iterate on a configuration.\n\nThe command then displays the connector
+      status. Add --wait to wait for\nthe connector and all its tasks to be RUNNING
+      and fail with the error\nif they are not, so a broken config stops the example
+      immediately\ninstead of failing silently later.\n\n\U0001F393 Tip: add --validate
+      to have the config checked by the plugin before\nit is deployed, which reports
+      every invalid property at once."
     usage: playground connector create-or-update [JSON] [OPTIONS]
     options:
     - names:
@@ -5030,6 +5108,20 @@ subcommands:
       - "--wait-for-zero-lag"
       argument: ''
       description: "\U0001F634 Wait until lag becomes 0"
+    - names:
+      - "--wait"
+      argument: ''
+      description: |-
+        ⏳ Wait until the connector and all its tasks are RUNNING (or in --initial-state), and fail otherwise
+
+        Same as running 'playground connector wait' right after the command. It fails right away if the connector or one of its tasks is FAILED.
+
+        With fully managed connectors, it waits for the connector to be provisioned and restarts it if it fails while being provisioned (same as wait_for_ccloud_connector_up in example scripts).
+    - names:
+      - "--max-wait"
+      argument: MAX_WAIT
+      description: "⏳ Max time in seconds to wait with --wait (default is 120, or
+        600 for fully managed connectors)"
     - names:
       - "--validate"
       argument: ''

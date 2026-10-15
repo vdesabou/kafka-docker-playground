@@ -10,7 +10,7 @@ log "Generating data"
 playground container exec --container connect --command "bash -c \"mkdir -p /tmp/kafka-connect/examples/ && curl -sSL -k 'https://api.mockaroo.com/api/17c84440?count=10&key=25fd9c80' -o /tmp/kafka-connect/examples/file.json\""
 
 log "Creating FileStream Source connector"
-playground connector create-or-update --connector filestream-source  << EOF
+playground connector create-or-update --connector filestream-source --wait << EOF
 {
      "tasks.max": "1",
      "connector.class": "org.apache.kafka.connect.file.FileStreamSourceConnector",
@@ -24,9 +24,6 @@ playground connector create-or-update --connector filestream-source  << EOF
      "errors.log.include.messages": "true"
 }
 EOF
-
-
-sleep 5
 
 log "Verify we have received the data in filestream topic"
 playground topic consume --topic filestream --min-expected-messages 5 --timeout 60
