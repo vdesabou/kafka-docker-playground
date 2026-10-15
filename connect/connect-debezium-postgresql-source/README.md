@@ -44,6 +44,24 @@ The incremental snapshot variants:
 3. Update the connector to also include `public.customers2`, insert a row: only this new row shows up in `asgard.public.customers2`.
 4. Send an `execute-snapshot` signal (insert into `debezium_signal`, or `playground topic produce` to `dbz-signals`) and verify that all 6 records are in `asgard.public.customers2`.
 
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) loads rows in the `CUSTOMERS` table (created if it does not exist) for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark). Once the example is running:
+
+```bash
+# time to capture 1M rows inserted in one transaction
+playground connector benchmark --nb-records 1000000 --shape bulk
+
+# 100k transactions of one row, then 1M updates of existing rows
+playground connector benchmark --nb-records 100000 --shape small-txn
+playground connector benchmark --nb-records 1000000 --shape update
+
+# throughput during 2 minutes while batches of 10k rows are inserted continuously
+playground connector benchmark --mode steady --duration 2m --nb-records 10000
+```
+
+The connector is paused while the rows are loaded, then resumed, and the benchmark measures the time it takes to produce the records. Results are compared with the previous benchmark of the same shape.
+
 ## SSL setup details
 
 The SSL and mTLS scripts generate a root CA and the PostgreSQL server certificate with `openssl`:

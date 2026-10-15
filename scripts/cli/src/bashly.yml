@@ -7427,6 +7427,7 @@ commands:
       show-config             the configuration actually applied
       logs                    tail connect logs, filtered and followed
       show-lag                consumer lag of a sink, until it reaches zero
+      benchmark               records per second, compared with the previous run
       offsets get             where the connector is reading or writing
 
     🛠️ Change it
@@ -8021,6 +8022,173 @@ commands:
       output: |-
         17:22:14 ℹ️ 🏁 consumer lag for 🌎onprem connector filestream-sink is 0 ! took: 0min 2sec
         topic: filestream partition: 0   current-offset: 5          end-offset: 5          lag: 0          [🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹] 100% 🏁
+
+  - name: benchmark
+    help: |-
+      🏎️ Benchmark the throughput of a connector
+
+      Measures how many records per second a running self managed connector
+      processes, so that two runs can be compared: another --connector-tag,
+      another batch size, another number of tasks. Everything runs on one
+      docker host, so the numbers are relative: compare runs on the same
+      machine only.
+
+      --mode drain (default) pauses the connector, loads a backlog of
+      --nb-records, resumes the connector and measures the time it takes to
+      process the backlog. This is the most reproducible number, since it does
+      not depend on how fast the load is generated.
+
+      --mode steady measures the throughput during --duration (after
+      --warmup), while --stream-load-command runs in the background.
+
+      The load comes from the example:
+
+        - sink connectors: the 'playground topic produce' of the example
+          script that feeds the connector is replayed with --nb-messages
+          <n> (same schema, key and headers), so every sink example that
+          produces its data works without anything else
+        - source connectors: benchmark-load.bash next to the example
+          script, called with --records <n> --mode preload|stream --shape
+          bulk|small-txn|update (rows in the CUSTOMERS table for the
+          postgres, mysql and oracle examples, see the README of the example)
+        - or --load-command / --stream-load-command, which take precedence
+
+      Throughput is read from the connect JMX metrics of the tasks
+      (sink-record-send-total, source-record-write-total), sampled every
+      --interval. Results are written to --output-dir (samples csv, result
+      json and an html report with the charts, opened in the browser at the
+      end in an interactive terminal) and appended to the benchmark-history
+      file, and the summary compares them with the previous benchmark of the
+      same connector in the same example (or with --compare <result json>).
+
+      ⚠️ Not available for fully managed connectors and the cfk environment yet.
+    filters:
+    - connect_running
+    flags:
+    - *verbose
+    - long: --connector
+      short: -c
+      required: false
+      arg: connector
+      completions:
+        dynamic:
+        - playground get-connector-list
+      help: |-
+        🔗 Connector name
+
+        🎓 Tip: not needed when only one connector is running
+    - long: --mode
+      arg: mode
+      required: false
+      default: "drain"
+      allowed:
+        - drain
+        - steady
+      help: |-
+        🏁 drain (time to process a backlog of --nb-records) or steady (throughput during --duration)
+    - long: --nb-records
+      arg: nb-records
+      validate: integer
+      required: false
+      default: "100000"
+      help: |-
+        💯 Number of records of the backlog in drain mode (default is 100000)
+    - long: --shape
+      arg: shape
+      required: false
+      default: "bulk"
+      allowed:
+        - bulk
+        - small-txn
+        - update
+      help: |-
+        🧱 Shape of the load, passed to benchmark-load.bash (default is bulk)
+
+        - bulk: one transaction with all the records
+        - small-txn: one transaction per record
+        - update: updates existing records
+    - long: --record-size
+      arg: record-size
+      validate: integer
+      required: false
+      default: "0"
+      help: |-
+        🏋️ Record size in bytes, passed to benchmark-load.bash (default is 0: size given by the load)
+    - long: --load-command
+      arg: load-command
+      required: false
+      help: |-
+        📥 Command that loads the backlog in drain mode, run while the connector is paused, instead of benchmark-load.bash
+
+        If it prints a line BENCHMARK_RECORDS=<n>, <n> is the number of records the connector should process, otherwise --nb-records.
+    - long: --stream-load-command
+      arg: stream-load-command
+      required: false
+      help: |-
+        🌊 Command that generates load continuously in steady mode, run in the background and stopped at the end, instead of benchmark-load.bash
+    - long: --topic
+      short: -t
+      arg: topic
+      required: false
+      repeatable: true
+      completions:
+        dynamic:
+        - playground get-topic-list
+      help: |-
+        🗳 Topics to count records in at the end of a drain, to check the result of a source connector (default is the topics of the connector)
+    - long: --duration
+      arg: duration
+      validate: duration
+      required: false
+      default: "5m"
+      help: |-
+        ⏱️ Duration of the measure in steady mode, in seconds or with a s/m/h suffix (default is 5m)
+    - long: --warmup
+      arg: warmup
+      validate: duration
+      required: false
+      default: "30s"
+      help: |-
+        🔥 Time excluded from the measure at the beginning in steady mode (default is 30s)
+    - long: --interval
+      arg: interval
+      validate: duration
+      required: false
+      default: "5s"
+      help: |-
+        🔁 Interval between samples (default is 5s)
+    - long: --max-wait
+      arg: max-wait
+      validate: duration
+      required: false
+      default: "30m"
+      help: |-
+        ⏳ Max time to wait for the backlog to be processed in drain mode (default is 30m)
+    - long: --output-dir
+      arg: output-dir
+      required: false
+      default: "/tmp/playground-benchmark"
+      help: |-
+        📂 Folder for the samples csv, the result json and the html report (default is /tmp/playground-benchmark)
+    - long: --compare
+      arg: compare
+      validate: file_exists
+      required: false
+      help: |-
+        ⚖️ Result json of a previous benchmark to compare with (default is the previous benchmark of the same connector in the same example, from the benchmark-history file)
+    - long: --no-history
+      required: false
+      help: |-
+        🙈 Do not append the result to the benchmark-history file
+    - long: --json
+      required: false
+      help: |-
+        📄 Print the result as json instead of the summary
+    examples:
+    - playground connector benchmark --connector filestream-sink --nb-records 3000000
+    - playground connector benchmark --connector jdbc-postgres-source --nb-records 1000000 --shape small-txn
+    - playground connector benchmark --mode steady --duration 2m --warmup 20s
+    - playground connector benchmark --load-command "./my-load.sh" --json
 
   - name: show-config
     help:  |

@@ -35,6 +35,7 @@ out of context.
 | "what is wrong in this CFK support bundle?" | `playground analyze cfk-bundle --bundle <dir\|.tar.gz\|.zip>` (`--severity high`, `--top 5`, `--json`) | `tar x` + grepping pod logs and CR yamls |
 | "what does this Oracle XStream diagnostics report say?" (`orclcdc_diag_<date>.html`) | `playground analyze oracle-xstream-report -f <report.html> -p "<symptom, since when>"` (repeat `-f` to compare reports, `-c oracle` on a running example, `--sample synthetic_failures` to try it, `--json`); skill `kdp-xstream-report` for the write-up | reading the HTML report section by section |
 | "is this example red in CI too, and why?" | `playground get-ci-result --test <dir> --logs` (`--environment cfk`, `--podman`) | reading the 🔥 issue, `gh run view --log` (it truncates long jobs) |
+| "how fast is this connector? is version Y slower?" | `playground connector benchmark [--connector <c>]` (drain of `--nb-records` by default, `--mode steady --duration 5m`, `--shape bulk\|small-txn\|update`, `--json`; compares with the previous run in `benchmark-history`; writes an HTML report with the charts to `--output-dir`, opened only in an interactive terminal) | `sleep` + counting records by hand |
 | "where is the source code of connector X (version Y)?" | `playground connector-plugin sourcecode --connector-plugin confluentinc/<name> [--connector-tag Y] --only-show-url` | guessing repo / branch, GitHub code search |
 
 - `playground find-example` searches connector class, script path, README title and script body of every
@@ -69,6 +70,16 @@ out of context.
   code, add **`--checkout-only`**: it clones that tag into `/tmp/connector-plugin-sourcecode/<repo>-<version>`
   (reused on the next call) and prints the folder as the last line, without browser, editor or prompt.
   Don't pass `--open` or `--compile` non-interactively: they open an editor.
+- `playground connector benchmark` needs a load. Sinks: it replays the example's own `playground topic produce`
+  (with `--nb-messages N`) — works for every sink example that produces its data (148/158 scripts; the
+  Salesforce / SAP HANA ones need `--load-command`). Sources: the example's `benchmark-load.bash` (called with
+  `--records N --mode preload|stream --shape bulk|small-txn|update`, env `BENCHMARK_TEST_FILE`,
+  `BENCHMARK_CONNECTOR`; shipped with the JDBC / Debezium Postgres, Debezium MySQL, Oracle CDC, XStream,
+  Debezium Oracle and JDBC Oracle examples) or `--load-command` / `--stream-load-command`. A load script must
+  source `scripts/cli/src/lib/utils_function.sh`, not `scripts/utils.sh` (that one records the script as the
+  example being run), and can use `benchmark_load_args`, `benchmark_sql_load` (postgres / mysql / oracle
+  `CUSTOMERS` table) and `benchmark_oracle_client_from_example`. Self-managed connectors only (not ccloud,
+  not cfk). When it says the throughput is a lower bound, rerun with 10x `--nb-records`.
 - To understand one example, read its `.sh` and `ls` its folder (compose overrides, sibling variants).
 
 ## 🥈 Use the `playground` CLI, not raw `docker` / `curl` / `kafka-*`

@@ -45,6 +45,21 @@ playground run -f cdc-xstream-oracle19.sh
 
 With `SQL_DATAGEN` set (or `--enable-sql-datagen`), a Java based datagen tool is built and injects data for 10 minutes at the end of the run.
 
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) loads rows in the `CUSTOMERS` table for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark), with the same database user and container database (CDB or PDB) as the variant of the example that was run. Once the example is running:
+
+```bash
+# time to capture 1M rows inserted in one transaction
+playground connector benchmark --nb-records 1000000 --shape bulk
+
+# 100k transactions of one row, then 1M updates of existing rows
+playground connector benchmark --nb-records 100000 --shape small-txn
+playground connector benchmark --nb-records 1000000 --shape update
+```
+
+The connector is paused while the rows are loaded, then resumed, and the benchmark measures the time it takes to produce the records.
+
 ## Troubleshooting
 
 When the `oracle` container is running:

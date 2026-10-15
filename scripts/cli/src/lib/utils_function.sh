@@ -2825,6 +2825,140 @@ function delete_ccloud_connector() {
   return 0
 }
 
+# arguments of a benchmark-load.bash script, called by 'playground connector benchmark':
+# --records <n> --mode preload|stream --shape bulk|small-txn|update --record-size <bytes>
+# sets BENCHMARK_LOAD_RECORDS, BENCHMARK_LOAD_MODE, BENCHMARK_LOAD_SHAPE, BENCHMARK_LOAD_RECORD_SIZE
+function benchmark_load_args () {
+  BENCHMARK_LOAD_RECORDS=100000
+  BENCHMARK_LOAD_MODE="preload"
+  BENCHMARK_LOAD_SHAPE="bulk"
+  BENCHMARK_LOAD_RECORD_SIZE=0
+  while [ $# -gt 0 ]
+  do
+    case "$1" in
+      --records) BENCHMARK_LOAD_RECORDS="$2"; shift 2 ;;
+      --mode) BENCHMARK_LOAD_MODE="$2"; shift 2 ;;
+      --shape) BENCHMARK_LOAD_SHAPE="$2"; shift 2 ;;
+      --record-size) BENCHMARK_LOAD_RECORD_SIZE="$2"; shift 2 ;;
+      *) logerror "❌ unknown benchmark-load argument $1"; return 1 ;;
+    esac
+  done
+}
+
+# sqlplus connection of an oracle example script (the user, cdb or pdb of the variant that was run), for benchmark_sql_load:
+# the first 'sqlplus <user>/<password>@...' that is not sys or the xstream admin, unescaped like the double quotes of the script do
+function benchmark_oracle_client_from_example () {
+  local test_file="$1" client=""
+  if [ -f "$test_file" ]
+  then
+    client=$(grep -o -E 'sqlplus [^ "]+/[^ "]+@[^ "]+' "$test_file" | grep -v -i -E 'sqlplus (sys|system|[^ ]*cfltadmin)/' | head -1 | sed 's/\\\\/\\/g')
+  fi
+  echo "${client:-sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB}"
+}
+
+# load for 'playground connector benchmark' on the CUSTOMERS table used by sql-datagen
+# (first_name, last_name, email, gender, club_status, comments), created if it does not exist:
+#   benchmark_sql_load <postgres|mysql|oracle> <container> "<sql client reading stdin>" <records> <bulk|small-txn|update> [preload|stream]
+# - bulk: one transaction inserting <records> rows
+# - small-txn: <records> transactions of one row
+# - update: updates <records> existing rows (run a bulk load first)
+# - stream mode: repeats batches of <records> rows of the shape until killed
+# prints BENCHMARK_RECORDS=<n>, the number of records the connector should write, so that the benchmark waits for them:
+# changes x BENCHMARK_RECORDS_PER_CHANGE (default 1) + transactions x BENCHMARK_RECORDS_PER_TRANSACTION (default 0),
+# e.g. 2 and 1 for oracle cdc with a redo log topic, which gets the row change and the commit
+function benchmark_sql_load () {
+  local dialect="$1" container="$2" client="$3" records="$4" shape="$5" mode="${6:-preload}"
+  local create_table insert_bulk insert_small_txn update count_flags count_sql="SELECT COUNT(*) FROM CUSTOMERS;" client_for_count="$client"
+  case "$dialect" in
+    postgres)
+      create_table="CREATE TABLE IF NOT EXISTS CUSTOMERS (id SERIAL PRIMARY KEY, first_name VARCHAR(50), last_name VARCHAR(50), email VARCHAR(50), gender VARCHAR(50), club_status VARCHAR(20), comments VARCHAR(90), create_ts timestamp DEFAULT CURRENT_TIMESTAMP, update_ts timestamp DEFAULT CURRENT_TIMESTAMP);"
+      insert_bulk="INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) SELECT 'first' || i, 'last' || i, 'user' || i || '@example.com', CASE WHEN i % 2 = 0 THEN 'Female' ELSE 'Male' END, (ARRAY['bronze','silver','gold','platinum'])[1 + i % 4], 'benchmark row ' || i FROM generate_series(1, $records) AS i;"
+      insert_small_txn="DO \$\$ BEGIN FOR i IN 1..$records LOOP INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES ('first' || i, 'last' || i, 'user' || i || '@example.com', CASE WHEN i % 2 = 0 THEN 'Female' ELSE 'Male' END, (ARRAY['bronze','silver','gold','platinum'])[1 + i % 4], 'benchmark row ' || i); COMMIT; END LOOP; END \$\$;"
+      update="UPDATE CUSTOMERS SET comments = 'benchmark update ' || id || ' ' || floor(random() * 1000000) WHERE id IN (SELECT id FROM CUSTOMERS ORDER BY id LIMIT $records);"
+      count_flags="-t -A"
+    ;;
+    mysql)
+      create_table="CREATE TABLE IF NOT EXISTS CUSTOMERS (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, first_name VARCHAR(50), last_name VARCHAR(50), email VARCHAR(50), gender VARCHAR(50), club_status VARCHAR(20), comments VARCHAR(90), create_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP, update_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);"
+      insert_bulk="SET SESSION cte_max_recursion_depth = $((records + 1)); INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) WITH RECURSIVE seq (i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM seq WHERE i < $records) SELECT CONCAT('first', i), CONCAT('last', i), CONCAT('user', i, '@example.com'), IF(i % 2 = 0, 'Female', 'Male'), ELT(1 + i % 4, 'bronze', 'silver', 'gold', 'platinum'), CONCAT('benchmark row ', i) FROM seq;"
+      insert_small_txn="DROP PROCEDURE IF EXISTS benchmark_small_txn;
+DELIMITER //
+CREATE PROCEDURE benchmark_small_txn(IN n INT) BEGIN DECLARE i INT DEFAULT 1; WHILE i <= n DO INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES (CONCAT('first', i), CONCAT('last', i), CONCAT('user', i, '@example.com'), IF(i % 2 = 0, 'Female', 'Male'), ELT(1 + i % 4, 'bronze', 'silver', 'gold', 'platinum'), CONCAT('benchmark row ', i)); COMMIT; SET i = i + 1; END WHILE; END //
+DELIMITER ;
+CALL benchmark_small_txn($records);"
+      update="UPDATE CUSTOMERS SET comments = CONCAT('benchmark update ', id, ' ', FLOOR(RAND() * 1000000)) ORDER BY id LIMIT $records;"
+      count_flags="-N -s"
+    ;;
+    oracle)
+      # no CREATE TABLE IF NOT EXISTS before 23c: ignore ORA-00955 (name already used)
+      create_table="BEGIN
+  EXECUTE IMMEDIATE 'CREATE TABLE CUSTOMERS (id NUMBER(10) GENERATED BY DEFAULT ON NULL AS IDENTITY NOT NULL PRIMARY KEY, first_name VARCHAR(50), last_name VARCHAR(50), email VARCHAR(50), gender VARCHAR(50), club_status VARCHAR(20), comments VARCHAR(90), create_ts timestamp DEFAULT CURRENT_TIMESTAMP, update_ts timestamp)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF;
+END;
+/"
+      insert_bulk="INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) SELECT 'first' || LEVEL, 'last' || LEVEL, 'user' || LEVEL || '@example.com', DECODE(MOD(LEVEL, 2), 0, 'Female', 'Male'), DECODE(MOD(LEVEL, 4), 0, 'bronze', 1, 'silver', 2, 'gold', 'platinum'), 'benchmark row ' || LEVEL FROM dual CONNECT BY LEVEL <= $records;
+COMMIT;"
+      insert_small_txn="BEGIN
+  FOR i IN 1..$records LOOP
+    INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES ('first' || i, 'last' || i, 'user' || i || '@example.com', DECODE(MOD(i, 2), 0, 'Female', 'Male'), DECODE(MOD(i, 4), 0, 'bronze', 1, 'silver', 2, 'gold', 'platinum'), 'benchmark row ' || i);
+    COMMIT;
+  END LOOP;
+END;
+/"
+      update="UPDATE CUSTOMERS SET comments = 'benchmark update ' || id || ' ' || TRUNC(DBMS_RANDOM.VALUE(0, 1000000)), update_ts = CURRENT_TIMESTAMP WHERE id IN (SELECT id FROM (SELECT id FROM CUSTOMERS ORDER BY id) WHERE ROWNUM <= $records);
+COMMIT;"
+      # sqlplus takes no output flag after the connect string: silent mode (no prompt on the result line) and the output format in the sql
+      count_flags=""
+      client_for_count="${client/sqlplus /sqlplus -s }"
+      count_sql="SET HEADING OFF FEEDBACK OFF PAGESIZE 0
+SELECT COUNT(*) FROM CUSTOMERS;"
+    ;;
+    *)
+      logerror "❌ benchmark_sql_load: unsupported dialect $dialect (postgres, mysql, oracle)"
+      return 1
+    ;;
+  esac
+
+  local sql
+  case "$shape" in
+    bulk) sql="$insert_bulk" ;;
+    small-txn) sql="$insert_small_txn" ;;
+    update) sql="$update" ;;
+    *) logerror "❌ benchmark_sql_load: unknown shape $shape (bulk, small-txn, update)"; return 1 ;;
+  esac
+
+  echo "$create_table" | playground container exec --container "$container" --command "$client" > /dev/null
+  local changes="$records"
+  if [ "$shape" == "update" ]
+  then
+    local rows
+    rows=$(echo "$count_sql" | playground container exec --container "$container" --command "$client_for_count $count_flags" 2> /dev/null | grep -E '^\s*[0-9]+\s*$' | tail -1 | tr -d ' ')
+    rows=${rows:-0}
+    if [ "$rows" -lt "$records" ]
+    then
+      logwarn "⚠️ only $rows rows in CUSTOMERS, updating $rows rows instead of $records (run a bulk load first)"
+      changes="$rows"
+    fi
+  fi
+
+  if [ "$mode" == "stream" ]
+  then
+    log "🌊 $shape load on $dialect CUSTOMERS, batches of $records rows, until stopped"
+    while true
+    do
+      echo "$sql" | playground container exec --container "$container" --command "$client" > /dev/null
+    done
+  fi
+
+  log "📥 $shape load on $dialect CUSTOMERS: $changes rows"
+  echo "$sql" | playground container exec --container "$container" --command "$client" > /dev/null
+  local transactions=1
+  if [ "$shape" == "small-txn" ]
+  then
+    transactions="$changes"
+  fi
+  echo "BENCHMARK_RECORDS=$((changes * ${BENCHMARK_RECORDS_PER_CHANGE:-1} + transactions * ${BENCHMARK_RECORDS_PER_TRANSACTION:-0}))"
+}
+
 function wait_for_log () {
   message="$1"
   container=${2:-connect}
