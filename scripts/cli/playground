@@ -231,6 +231,7 @@ playground_usage() {
   printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")                          "
   printf "  %s   🩺 Diagnose a connector in one call: status, errors and progress\n" "$(green "connector diagnose")                        "
   printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")                        "
+  printf "  %s   🏎️ Benchmark the throughput of a connector\n" "$(green "connector benchmark")                       "
   printf "  %s   🧰 Show current connector config that was applied\n" "$(green "connector show-config")                     "
   printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "connector show-config-parameters")          "
   printf "  %s   〽️ Display metrics api for fully managed connector\n" "$(green "connector display-metrics-api")             "
@@ -10401,7 +10402,7 @@ playground_connector_plugin_sourcecode_usage() {
 playground_connector_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector\n\n"
-    printf "  🔗 Connector commands\n  \n  Everything you would otherwise do with curl on the Connect REST API, with\n  the right host, port and credentials already figured out. The same\n  commands work whether the connector is self managed in the connect\n  container or fully managed in Confluent Cloud.\n  \n  🔍 Look at what is running\n    status                  is it RUNNING, and if not, the full stack trace\n    wait                    wait until it is RUNNING (or another state)\n    error-recommendations   suggested fixes for a failed fully managed connector\n    show-config             the configuration actually applied\n    logs                    tail connect logs, filtered and followed\n    show-lag                consumer lag of a sink, until it reaches zero\n    offsets get             where the connector is reading or writing\n  \n  🛠️ Change it\n    create-or-update        create it, or apply a new config, from stdin\n    update                  edit the running config in your editor\n    pause / resume / stop / restart / delete\n    offsets alter / reset   rewind or fast-forward a connector\n  \n  🧑‍🔬 Understand it\n    show-config-parameters  every parameter the plugin accepts\n    select-config           pick parameters interactively\n    versions                installed version vs latest on Confluent Hub\n    sourcecode              open the source on GitHub, or diff two versions\n    open-docs               open the Confluent documentation\n    snippets                ready-to-paste converter and dlq config\n  \n  🐞 Dig deeper\n    log-level               raise connect log level for this connector\n    enable-remote-debugging attach a java debugger to the connector code\n    translate               self managed config to fully managed config\n  \n  Without --connector, commands apply to every connector of the example,\n  which is usually what you want since most examples run only one.\n\n"
+    printf "  🔗 Connector commands\n  \n  Everything you would otherwise do with curl on the Connect REST API, with\n  the right host, port and credentials already figured out. The same\n  commands work whether the connector is self managed in the connect\n  container or fully managed in Confluent Cloud.\n  \n  🔍 Look at what is running\n    status                  is it RUNNING, and if not, the full stack trace\n    wait                    wait until it is RUNNING (or another state)\n    error-recommendations   suggested fixes for a failed fully managed connector\n    show-config             the configuration actually applied\n    logs                    tail connect logs, filtered and followed\n    show-lag                consumer lag of a sink, until it reaches zero\n    benchmark               records per second, compared with the previous run\n    offsets get             where the connector is reading or writing\n  \n  🛠️ Change it\n    create-or-update        create it, or apply a new config, from stdin\n    update                  edit the running config in your editor\n    pause / resume / stop / restart / delete\n    offsets alter / reset   rewind or fast-forward a connector\n  \n  🧑‍🔬 Understand it\n    show-config-parameters  every parameter the plugin accepts\n    select-config           pick parameters interactively\n    versions                installed version vs latest on Confluent Hub\n    sourcecode              open the source on GitHub, or diff two versions\n    open-docs               open the Confluent documentation\n    snippets                ready-to-paste converter and dlq config\n  \n  🐞 Dig deeper\n    log-level               raise connect log level for this connector\n    enable-remote-debugging attach a java debugger to the connector code\n    translate               self managed config to fully managed config\n  \n  Without --connector, commands apply to every connector of the example,\n  which is usually what you want since most examples run only one.\n\n"
   else
     printf "playground connector - 🔗 Connector commands\n\n"
   fi
@@ -10429,6 +10430,7 @@ playground_connector_usage() {
   printf "  %s   🗑️  Delete connector\n" "$(green "delete")                          "
   printf "  %s   🩺 Diagnose a connector in one call: status, errors and progress\n" "$(green "diagnose")                        "
   printf "  %s   🐢 Show lag of sink connector\n" "$(green "show-lag")                        "
+  printf "  %s   🏎️ Benchmark the throughput of a connector\n" "$(green "benchmark")                       "
   printf "  %s   🧰 Show current connector config that was applied\n" "$(green "show-config")                     "
   printf "  %s   🔩 Show all possible configuration parameters of connector\n" "$(green "show-config-parameters")          "
   printf "  %s   〽️ Display metrics api for fully managed connector\n" "$(green "display-metrics-api")             "
@@ -11366,6 +11368,138 @@ playground_connector_show_lag_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground connector show-lag\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_benchmark_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector benchmark\n\n"
+    printf "  🏎️ Benchmark the throughput of a connector\n  \n  Measures how many records per second a running self managed connector\n  processes, so that two runs can be compared: another --connector-tag,\n  another batch size, another number of tasks. Everything runs on one\n  docker host, so the numbers are relative: compare runs on the same\n  machine only.\n  \n  --mode drain (default) pauses the connector, loads a backlog of\n  --nb-records, resumes the connector and measures the time it takes to\n  process the backlog. This is the most reproducible number, since it does\n  not depend on how fast the load is generated.\n  \n  --mode steady measures the throughput during --duration (after\n  --warmup), while --stream-load-command runs in the background.\n  \n  The load comes from the example:\n  \n    - sink connectors: the 'playground topic produce' of the example\n      script that feeds the connector is replayed with --nb-messages\n      <n> (same schema, key and headers), so every sink example that\n      produces its data works without anything else\n    - source connectors: benchmark-load.bash next to the example\n      script, called with --records <n> --mode preload|stream --shape\n      bulk|small-txn|update (rows in the CUSTOMERS table for the\n      postgres, mysql and oracle examples, see the README of the example)\n    - or --load-command / --stream-load-command, which take precedence\n  \n  Throughput is read from the connect JMX metrics of the tasks\n  (sink-record-send-total, source-record-write-total), sampled every\n  --interval. Results are written to --output-dir (samples csv, result\n  json and an html report with the charts, opened in the browser at the\n  end in an interactive terminal) and appended to the benchmark-history\n  file, and the summary compares them with the previous benchmark of the\n  same connector in the same example (or with --compare <result json>).\n  \n  ⚠️ Not available for fully managed connectors and the cfk environment yet.\n\n"
+  else
+    printf "playground connector benchmark - 🏎️ Benchmark the throughput of a connector\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector benchmark [OPTIONS]\n"
+  printf "  playground connector benchmark --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    🎓 Tip: not needed when only one connector is running\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--mode MODE")"
+    printf "    🏁 drain (time to process a backlog of --nb-records) or steady (throughput\n    during --duration)\n"
+    printf "    %s\n" "Allowed: drain, steady"
+    printf "    %s\n" "Default: drain"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--nb-records NB-RECORDS")"
+    printf "    💯 Number of records of the backlog in drain mode (default is 100000)\n"
+    printf "    %s\n" "Default: 100000"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--shape SHAPE")"
+    printf "    🧱 Shape of the load, passed to benchmark-load.bash (default is bulk)\n    \n    - bulk: one transaction with all the records\n    - small-txn: one transaction per record\n    - update: updates existing records\n"
+    printf "    %s\n" "Allowed: bulk, small-txn, update"
+    printf "    %s\n" "Default: bulk"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--record-size RECORD-SIZE")"
+    printf "    🏋️ Record size in bytes, passed to benchmark-load.bash (default is 0: size\n    given by the load)\n"
+    printf "    %s\n" "Default: 0"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--load-command LOAD-COMMAND")"
+    printf "    📥 Command that loads the backlog in drain mode, run while the connector is\n    paused, instead of benchmark-load.bash\n    \n    If it prints a line BENCHMARK_RECORDS=<n>, <n> is the number of records the\n    connector should process, otherwise --nb-records.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--stream-load-command STREAM-LOAD-COMMAND")"
+    printf "    🌊 Command that generates load continuously in steady mode, run in the\n    background and stopped at the end, instead of benchmark-load.bash\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC (repeatable)")"
+    printf "    🗳 Topics to count records in at the end of a drain, to check the result of a\n    source connector (default is the topics of the connector)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--duration DURATION")"
+    printf "    ⏱️ Duration of the measure in steady mode, in seconds or with a s/m/h suffix\n    (default is 5m)\n"
+    printf "    %s\n" "Default: 5m"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--warmup WARMUP")"
+    printf "    🔥 Time excluded from the measure at the beginning in steady mode (default is\n    30s)\n"
+    printf "    %s\n" "Default: 30s"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--interval INTERVAL")"
+    printf "    🔁 Interval between samples (default is 5s)\n"
+    printf "    %s\n" "Default: 5s"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-wait MAX-WAIT")"
+    printf "    ⏳ Max time to wait for the backlog to be processed in drain mode (default is\n    30m)\n"
+    printf "    %s\n" "Default: 30m"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir OUTPUT-DIR")"
+    printf "    📂 Folder for the samples csv, the result json and the html report (default\n    is /tmp/playground-benchmark)\n"
+    printf "    %s\n" "Default: /tmp/playground-benchmark"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--compare COMPARE")"
+    printf "    ⚖️ Result json of a previous benchmark to compare with (default is the\n    previous benchmark of the same connector in the same example, from the\n    benchmark-history file)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-history")"
+    printf "    🙈 Do not append the result to the benchmark-history file\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    📄 Print the result as json instead of the summary\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector benchmark --connector filestream-sink --nb-records\n  3000000\n"
+    printf "  playground connector benchmark --connector jdbc-postgres-source --nb-records\n  1000000 --shape small-txn\n"
+    printf "  playground connector benchmark --mode steady --duration 2m --warmup 20s\n"
+    printf "  playground connector benchmark --load-command \"./my-load.sh\" --json\n"
     echo
 
   fi
@@ -16373,6 +16507,190 @@ function take_thread_dumps_with_kill_quit() {
   grep -q "Full thread dump" "$output_file"
 }
 
+# 30 -> 30, 30s -> 30, 5m -> 300, 1h -> 3600 (format checked by validate_duration)
+function duration_to_seconds() {
+  local value="$1"
+  case "$value" in
+    *h) echo $(( ${value%h} * 3600 )) ;;
+    *m) echo $(( ${value%m} * 60 )) ;;
+    *s) echo "${value%s}" ;;
+    *) echo "$value" ;;
+  esac
+}
+
+# connect worker container and JMX port of a worker id from the connect REST API (connect:8083, connect2:8283...)
+function benchmark_worker_container_and_port() {
+  local worker_id="$1"
+  local host="${worker_id%%:*}"
+  host="${host%%.*}"
+  case "$host" in
+    connect2) echo "connect2 10022" ;;
+    connect3) echo "connect3 10032" ;;
+    *) echo "connect 10002" ;;
+  esac
+}
+
+# jmxterm commands of one connect worker, read from stdin, printed as 'attribute = value;' lines
+function benchmark_jmxterm() {
+  local container="$1"
+  local port="$2"
+  docker exec -i "$container" java -jar "$BENCHMARK_JMXTERM_JAR" -l "localhost:$port" -n -v silent 2> /dev/null
+}
+
+# copies jmxterm to the connect workers running the tasks of the connector
+function benchmark_jmx_init() {
+  local workers="$1"
+  BENCHMARK_JMXTERM_JAR="/tmp/jmxterm-1.0.2-uber.jar"
+  if [ ! -f "$BENCHMARK_JMXTERM_JAR" ]
+  then
+    curl -L https://github.com/jiaqi/jmxterm/releases/download/v1.0.2/jmxterm-1.0.2-uber.jar -o "$BENCHMARK_JMXTERM_JAR" -s
+  fi
+  local container port
+  while read -r container port
+  do
+    [ -z "$container" ] && continue
+    playground container cp --source "$BENCHMARK_JMXTERM_JAR" --destination "$container:$BENCHMARK_JMXTERM_JAR" > /dev/null 2>&1
+  done <<< "$workers"
+}
+
+# prints "<records total> <batch avg ms> <running ratio> <cpu % of one core>" for the tasks of a connector:
+# the records total is summed over the tasks of all the workers, the other values are averages (NaN skipped)
+# workers is a list of "container port" lines, type is sink or source
+function benchmark_jmx_sample() {
+  local connector="$1"
+  local type="$2"
+  local workers="$3"
+  local counter="source-record-write-total"
+  local batch="poll-batch-avg-time-ms"
+  if [ "$type" == "sink" ]
+  then
+    counter="sink-record-send-total"
+    batch="put-batch-avg-time-ms"
+  fi
+  local container port beans
+  while read -r container port
+  do
+    [ -z "$container" ] && continue
+    beans=$(printf 'beans -d kafka.connect\nexit\n' | benchmark_jmxterm "$container" "$port" | grep -F "connector=$connector,task=" || true)
+    {
+      echo "$beans" | grep -F "type=$type-task-metrics" | while read -r bean; do echo "get -b $bean $counter $batch"; done
+      echo "$beans" | grep -F "type=connector-task-metrics" | while read -r bean; do echo "get -b $bean running-ratio"; done
+      echo "get -b java.lang:type=OperatingSystem ProcessCpuLoad AvailableProcessors"
+      echo "exit"
+    } | benchmark_jmxterm "$container" "$port"
+  done <<< "$workers" | awk -v counter="$counter" -v batch="$batch" '
+    {
+      name = $1; value = $3; sub(/;$/, "", value)
+      if (value == "NaN" || value == "") next
+    }
+    name == counter { total += value }
+    name == batch { batch_sum += value; batch_n++ }
+    name == "running-ratio" { ratio_sum += value; ratio_n++ }
+    name == "ProcessCpuLoad" { load = value }
+    name == "AvailableProcessors" { cpu_sum += load * value * 100; cpu_n++ }
+    END {
+      printf "%d %s %s %s\n", total,
+        (batch_n ? sprintf("%.1f", batch_sum / batch_n) : "-"),
+        (ratio_n ? sprintf("%.2f", ratio_sum / ratio_n) : "-"),
+        (cpu_n ? sprintf("%.0f", cpu_sum / cpu_n) : "-")
+    }'
+}
+
+# load of a sink for 'playground connector benchmark': replays the 'playground topic produce' of the example script
+# that feeds one of <topics>, with --nb-messages <nb> (-1 until killed), from the example directory.
+# Writes the replay script to <output>. Returns 1 when the example has no produce command, 3 when the command uses
+# variables that are not set in this shell (the message lists them)
+function benchmark_produce_load_from_example () {
+  local test_file="$1" topics="$2" nb="$3" record_size="$4" output="$5"
+  python3 -I - "$test_file" "$topics" "$nb" "$record_size" "$output" "$root_folder" << 'PYEOF'
+import os, re, shlex, sys
+test_file, topics, nb, record_size, output, root = sys.argv[1:7]
+topics = topics.split()
+lines = open(test_file, errors="ignore").read().split("\n")
+blocks = []
+i = 0
+while i < len(lines):
+    line = lines[i]
+    if re.match(r"^exit 0\s*$", line):
+        break
+    if re.match(r"^\s*playground topic produce\b", line):
+        start = i
+        block = [line]
+        m = re.search(r"<<-?\s*(['\"]?)([A-Za-z_]+)\1", line)
+        quoted = bool(m and m.group(1))
+        if m:
+            terminator = m.group(2)
+            i += 1
+            while i < len(lines) and lines[i].strip() != terminator:
+                block.append(lines[i])
+                i += 1
+            block.append(terminator)
+        blocks.append((block, quoted, start))
+    i += 1
+if not blocks:
+    sys.exit(1)
+
+topic_re = r"(?:-t|--topic)(?:\s+|=)(\"[^\"]*\"|'[^']*'|\S+)"
+def topic_of(block):
+    m = re.search(topic_re, block[0])
+    return m.group(1).strip("\"'") if m else ""
+
+chosen = None
+for block, quoted, start in blocks:
+    if topic_of(block) in topics:
+        chosen, topic = (block, quoted, start), topic_of(block)
+        break
+if chosen is None:
+    for block, quoted, start in blocks:
+        if "$" in topic_of(block):
+            chosen, topic = (block, quoted, start), topics[0]
+            break
+if chosen is None:
+    sys.exit(1)
+
+(block, quoted, start) = chosen
+first = block[0]
+first = re.sub(topic_re, "--topic " + shlex.quote(topic), first, count=1)
+first = re.sub(r"\s--nb-messages(?:\s+|=)(\$\([^)]*\)|\"[^\"]*\"|'[^']*'|\S+)", "", first)
+extra = " --nb-messages %s" % nb
+if record_size != "0" and "--record-size" not in first:
+    extra += " --record-size %s" % record_size
+first = re.sub(r"playground topic produce", "playground topic produce" + extra, first, count=1)
+block = [first] + block[1:]
+
+# variables still used by the command (and by the heredoc when it is not quoted) must be set
+checked = first.split("<<")[0] + ("" if quoted else "\n".join(block[1:]))
+known = {"DIR", "PWD", "root_folder", "HOME", "USER", "RANDOM"}
+def unset_vars(text, assigned):
+    return sorted({v for v in re.findall(r"\$\{?([A-Za-z_][A-Za-z0-9_]*)", text) if v not in known and v not in assigned and not os.environ.get(v)})
+# variables computed by the script before the produce (TIMESTAMP=$(date +%s)...): replay their last assignment
+assignments = []
+assigned = set()
+for v in unset_vars(checked, assigned):
+    for line in reversed(lines[:start]):
+        if re.match(r"^\s*%s=" % v, line):
+            assignments.append(line.strip())
+            assigned.add(v)
+            break
+missing = unset_vars(checked + "\n" + "\n".join(assignments), assigned)
+if missing:
+    print("variables used by the produce command of %s are not set: %s" % (os.path.basename(test_file), " ".join(missing)))
+    sys.exit(3)
+
+example_dir = os.path.dirname(test_file)
+with open(output, "w") as f:
+    f.write("#!/bin/bash\n# replay of the 'playground topic produce' of %s, generated by 'playground connector benchmark'\nset -e\n" % test_file)
+    f.write("source %s\n" % shlex.quote(os.path.join(root, "scripts/cli/src/lib/utils_function.sh")))
+    f.write("DIR=%s\ncd \"$DIR\"\n" % shlex.quote(example_dir))
+    for a in assignments:
+        f.write(a + "\n")
+    f.write("\n".join(block) + "\n")
+    if nb != "-1":
+        f.write("echo \"BENCHMARK_RECORDS=%s\"\n" % nb)
+print(topic)
+PYEOF
+}
+
 # src/lib/colors.sh
 print_in_color() {
   local color="$1"
@@ -20303,6 +20621,140 @@ function delete_ccloud_connector() {
   return 0
 }
 
+# arguments of a benchmark-load.bash script, called by 'playground connector benchmark':
+# --records <n> --mode preload|stream --shape bulk|small-txn|update --record-size <bytes>
+# sets BENCHMARK_LOAD_RECORDS, BENCHMARK_LOAD_MODE, BENCHMARK_LOAD_SHAPE, BENCHMARK_LOAD_RECORD_SIZE
+function benchmark_load_args () {
+  BENCHMARK_LOAD_RECORDS=100000
+  BENCHMARK_LOAD_MODE="preload"
+  BENCHMARK_LOAD_SHAPE="bulk"
+  BENCHMARK_LOAD_RECORD_SIZE=0
+  while [ $# -gt 0 ]
+  do
+    case "$1" in
+      --records) BENCHMARK_LOAD_RECORDS="$2"; shift 2 ;;
+      --mode) BENCHMARK_LOAD_MODE="$2"; shift 2 ;;
+      --shape) BENCHMARK_LOAD_SHAPE="$2"; shift 2 ;;
+      --record-size) BENCHMARK_LOAD_RECORD_SIZE="$2"; shift 2 ;;
+      *) logerror "❌ unknown benchmark-load argument $1"; return 1 ;;
+    esac
+  done
+}
+
+# sqlplus connection of an oracle example script (the user, cdb or pdb of the variant that was run), for benchmark_sql_load:
+# the first 'sqlplus <user>/<password>@...' that is not sys or the xstream admin, unescaped like the double quotes of the script do
+function benchmark_oracle_client_from_example () {
+  local test_file="$1" client=""
+  if [ -f "$test_file" ]
+  then
+    client=$(grep -o -E 'sqlplus [^ "]+/[^ "]+@[^ "]+' "$test_file" | grep -v -i -E 'sqlplus (sys|system|[^ ]*cfltadmin)/' | head -1 | sed 's/\\\\/\\/g')
+  fi
+  echo "${client:-sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB}"
+}
+
+# load for 'playground connector benchmark' on the CUSTOMERS table used by sql-datagen
+# (first_name, last_name, email, gender, club_status, comments), created if it does not exist:
+#   benchmark_sql_load <postgres|mysql|oracle> <container> "<sql client reading stdin>" <records> <bulk|small-txn|update> [preload|stream]
+# - bulk: one transaction inserting <records> rows
+# - small-txn: <records> transactions of one row
+# - update: updates <records> existing rows (run a bulk load first)
+# - stream mode: repeats batches of <records> rows of the shape until killed
+# prints BENCHMARK_RECORDS=<n>, the number of records the connector should write, so that the benchmark waits for them:
+# changes x BENCHMARK_RECORDS_PER_CHANGE (default 1) + transactions x BENCHMARK_RECORDS_PER_TRANSACTION (default 0),
+# e.g. 2 and 1 for oracle cdc with a redo log topic, which gets the row change and the commit
+function benchmark_sql_load () {
+  local dialect="$1" container="$2" client="$3" records="$4" shape="$5" mode="${6:-preload}"
+  local create_table insert_bulk insert_small_txn update count_flags count_sql="SELECT COUNT(*) FROM CUSTOMERS;" client_for_count="$client"
+  case "$dialect" in
+    postgres)
+      create_table="CREATE TABLE IF NOT EXISTS CUSTOMERS (id SERIAL PRIMARY KEY, first_name VARCHAR(50), last_name VARCHAR(50), email VARCHAR(50), gender VARCHAR(50), club_status VARCHAR(20), comments VARCHAR(90), create_ts timestamp DEFAULT CURRENT_TIMESTAMP, update_ts timestamp DEFAULT CURRENT_TIMESTAMP);"
+      insert_bulk="INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) SELECT 'first' || i, 'last' || i, 'user' || i || '@example.com', CASE WHEN i % 2 = 0 THEN 'Female' ELSE 'Male' END, (ARRAY['bronze','silver','gold','platinum'])[1 + i % 4], 'benchmark row ' || i FROM generate_series(1, $records) AS i;"
+      insert_small_txn="DO \$\$ BEGIN FOR i IN 1..$records LOOP INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES ('first' || i, 'last' || i, 'user' || i || '@example.com', CASE WHEN i % 2 = 0 THEN 'Female' ELSE 'Male' END, (ARRAY['bronze','silver','gold','platinum'])[1 + i % 4], 'benchmark row ' || i); COMMIT; END LOOP; END \$\$;"
+      update="UPDATE CUSTOMERS SET comments = 'benchmark update ' || id || ' ' || floor(random() * 1000000) WHERE id IN (SELECT id FROM CUSTOMERS ORDER BY id LIMIT $records);"
+      count_flags="-t -A"
+    ;;
+    mysql)
+      create_table="CREATE TABLE IF NOT EXISTS CUSTOMERS (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, first_name VARCHAR(50), last_name VARCHAR(50), email VARCHAR(50), gender VARCHAR(50), club_status VARCHAR(20), comments VARCHAR(90), create_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP, update_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);"
+      insert_bulk="SET SESSION cte_max_recursion_depth = $((records + 1)); INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) WITH RECURSIVE seq (i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM seq WHERE i < $records) SELECT CONCAT('first', i), CONCAT('last', i), CONCAT('user', i, '@example.com'), IF(i % 2 = 0, 'Female', 'Male'), ELT(1 + i % 4, 'bronze', 'silver', 'gold', 'platinum'), CONCAT('benchmark row ', i) FROM seq;"
+      insert_small_txn="DROP PROCEDURE IF EXISTS benchmark_small_txn;
+DELIMITER //
+CREATE PROCEDURE benchmark_small_txn(IN n INT) BEGIN DECLARE i INT DEFAULT 1; WHILE i <= n DO INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES (CONCAT('first', i), CONCAT('last', i), CONCAT('user', i, '@example.com'), IF(i % 2 = 0, 'Female', 'Male'), ELT(1 + i % 4, 'bronze', 'silver', 'gold', 'platinum'), CONCAT('benchmark row ', i)); COMMIT; SET i = i + 1; END WHILE; END //
+DELIMITER ;
+CALL benchmark_small_txn($records);"
+      update="UPDATE CUSTOMERS SET comments = CONCAT('benchmark update ', id, ' ', FLOOR(RAND() * 1000000)) ORDER BY id LIMIT $records;"
+      count_flags="-N -s"
+    ;;
+    oracle)
+      # no CREATE TABLE IF NOT EXISTS before 23c: ignore ORA-00955 (name already used)
+      create_table="BEGIN
+  EXECUTE IMMEDIATE 'CREATE TABLE CUSTOMERS (id NUMBER(10) GENERATED BY DEFAULT ON NULL AS IDENTITY NOT NULL PRIMARY KEY, first_name VARCHAR(50), last_name VARCHAR(50), email VARCHAR(50), gender VARCHAR(50), club_status VARCHAR(20), comments VARCHAR(90), create_ts timestamp DEFAULT CURRENT_TIMESTAMP, update_ts timestamp)';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -955 THEN RAISE; END IF;
+END;
+/"
+      insert_bulk="INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) SELECT 'first' || LEVEL, 'last' || LEVEL, 'user' || LEVEL || '@example.com', DECODE(MOD(LEVEL, 2), 0, 'Female', 'Male'), DECODE(MOD(LEVEL, 4), 0, 'bronze', 1, 'silver', 2, 'gold', 'platinum'), 'benchmark row ' || LEVEL FROM dual CONNECT BY LEVEL <= $records;
+COMMIT;"
+      insert_small_txn="BEGIN
+  FOR i IN 1..$records LOOP
+    INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES ('first' || i, 'last' || i, 'user' || i || '@example.com', DECODE(MOD(i, 2), 0, 'Female', 'Male'), DECODE(MOD(i, 4), 0, 'bronze', 1, 'silver', 2, 'gold', 'platinum'), 'benchmark row ' || i);
+    COMMIT;
+  END LOOP;
+END;
+/"
+      update="UPDATE CUSTOMERS SET comments = 'benchmark update ' || id || ' ' || TRUNC(DBMS_RANDOM.VALUE(0, 1000000)), update_ts = CURRENT_TIMESTAMP WHERE id IN (SELECT id FROM (SELECT id FROM CUSTOMERS ORDER BY id) WHERE ROWNUM <= $records);
+COMMIT;"
+      # sqlplus takes no output flag after the connect string: silent mode (no prompt on the result line) and the output format in the sql
+      count_flags=""
+      client_for_count="${client/sqlplus /sqlplus -s }"
+      count_sql="SET HEADING OFF FEEDBACK OFF PAGESIZE 0
+SELECT COUNT(*) FROM CUSTOMERS;"
+    ;;
+    *)
+      logerror "❌ benchmark_sql_load: unsupported dialect $dialect (postgres, mysql, oracle)"
+      return 1
+    ;;
+  esac
+
+  local sql
+  case "$shape" in
+    bulk) sql="$insert_bulk" ;;
+    small-txn) sql="$insert_small_txn" ;;
+    update) sql="$update" ;;
+    *) logerror "❌ benchmark_sql_load: unknown shape $shape (bulk, small-txn, update)"; return 1 ;;
+  esac
+
+  echo "$create_table" | playground container exec --container "$container" --command "$client" > /dev/null
+  local changes="$records"
+  if [ "$shape" == "update" ]
+  then
+    local rows
+    rows=$(echo "$count_sql" | playground container exec --container "$container" --command "$client_for_count $count_flags" 2> /dev/null | grep -E '^\s*[0-9]+\s*$' | tail -1 | tr -d ' ')
+    rows=${rows:-0}
+    if [ "$rows" -lt "$records" ]
+    then
+      logwarn "⚠️ only $rows rows in CUSTOMERS, updating $rows rows instead of $records (run a bulk load first)"
+      changes="$rows"
+    fi
+  fi
+
+  if [ "$mode" == "stream" ]
+  then
+    log "🌊 $shape load on $dialect CUSTOMERS, batches of $records rows, until stopped"
+    while true
+    do
+      echo "$sql" | playground container exec --container "$container" --command "$client" > /dev/null
+    done
+  fi
+
+  log "📥 $shape load on $dialect CUSTOMERS: $changes rows"
+  echo "$sql" | playground container exec --container "$container" --command "$client" > /dev/null
+  local transactions=1
+  if [ "$shape" == "small-txn" ]
+  then
+    transactions="$changes"
+  fi
+  echo "BENCHMARK_RECORDS=$((changes * ${BENCHMARK_RECORDS_PER_CHANGE:-1} + transactions * ${BENCHMARK_RECORDS_PER_TRANSACTION:-0}))"
+}
+
 function wait_for_log () {
   message="$1"
   container=${2:-connect}
@@ -22737,6 +23189,17 @@ validate_date_format() {
 validate_dir_exists() {
   if [[ ! -d "$1" ]]; then
     logerror "must be an existing directory"
+  fi
+}
+
+# src/lib/validations/validate_duration.sh
+validate_duration() {
+  if [[ "$1" =~ ^[0-9]+[smh]?$ ]]
+  then
+    return 0
+  else
+    echo "must be a duration in seconds, or with a s, m or h suffix (e.g. 30s, 5m)"
+    return
   fi
 }
 
@@ -46577,6 +47040,583 @@ playground_connector_show_lag_command() {
       fi
     done
   done
+}
+
+# :command.function
+playground_connector_benchmark_command() {
+
+  # src/commands/connector/benchmark.sh
+  connector="${args[--connector]}"
+  verbose="${args[--verbose]}"
+  mode="${args[--mode]}"
+  nb_records="${args[--nb-records]}"
+  shape="${args[--shape]}"
+  record_size="${args[--record-size]}"
+  load_command="${args[--load-command]}"
+  stream_load_command="${args[--stream-load-command]}"
+  duration=$(duration_to_seconds "${args[--duration]}")
+  warmup=$(duration_to_seconds "${args[--warmup]}")
+  interval=$(duration_to_seconds "${args[--interval]}")
+  max_wait=$(duration_to_seconds "${args[--max-wait]}")
+  output_dir="${args[--output-dir]}"
+  compare_file="${args[--compare]}"
+  no_history="${args[--no-history]}"
+  json="${args[--json]}"
+  eval "topics=(${args[--topic]:-})"
+
+  # with --json, logs go to stderr and only the result json to stdout
+  exec 3>&1
+  if [[ -n "$json" ]]
+  then
+      exec 1>&2
+  fi
+
+  connector_type=$(playground state get run.connector_type)
+  environment=$(playground state get run.environment)
+
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+      logerror "❌ benchmark is not available for $connector_type connectors yet"
+      exit 1
+  fi
+  if [[ "$environment" == cfk* ]]
+  then
+      logerror "❌ benchmark is not available with the cfk environment yet"
+      exit 1
+  fi
+
+  if [[ ! -n "$connector" ]]
+  then
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No $connector_type connector is running !"
+          exit 1
+      fi
+      if [ $(echo "$connector" | wc -w) -gt 1 ]
+      then
+          logerror "❌ several connectors are running ($(echo $connector)), choose one with --connector"
+          exit 1
+      fi
+  fi
+
+  function now () {
+      if [ -n "$EPOCHREALTIME" ]
+      then
+          echo "${EPOCHREALTIME/,/.}"
+      else
+          date +%s
+      fi
+  }
+
+  get_connect_url_and_security
+  handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\""
+  status_json="$curl_output"
+  type=$(echo "$status_json" | jq -r '.type')
+  state=$(echo "$status_json" | jq -r '.connector.state')
+  if [ "$state" != "RUNNING" ]
+  then
+      logerror "❌ $connector_type connector $connector is $state, it must be RUNNING to be benchmarked"
+      playground connector status --connector "$connector"
+      exit 1
+  fi
+  if echo "$status_json" | jq -e '[.tasks[]?.state] | index("FAILED")' > /dev/null 2>&1
+  then
+      logerror "❌ a task of $connector_type connector $connector is FAILED, it must be RUNNING to be benchmarked"
+      playground connector status --connector "$connector"
+      exit 1
+  fi
+  if [ "$type" != "sink" ] && [ "$type" != "source" ]
+  then
+      logerror "❌ could not get the type of $connector_type connector $connector from its status"
+      exit 1
+  fi
+  nb_tasks=$(echo "$status_json" | jq '.tasks | length')
+  workers=$(echo "$status_json" | jq -r '.tasks[].worker_id' | sort -u | while read -r worker_id; do benchmark_worker_container_and_port "$worker_id"; done | sort -u)
+
+  handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/config\""
+  connector_class=$(echo "$curl_output" | jq -r '."connector.class"')
+  connector_config_json="$curl_output"
+  sink_topics=$(echo "$curl_output" | jq -r '.topics // "" | split(",") | map(gsub("^\\s+|\\s+$"; "")) | join(" ")')
+  handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connector-plugins\""
+  plugin_version=$(echo "$curl_output" | jq -r --arg c "$connector_class" '[.[] | select(.class == $c) | .version][0] // "unknown"')
+  cp_tag=$(get_running_cp_tag)
+
+  if [ ${#topics[@]} -eq 0 ] && [ "$type" == "source" ]
+  then
+      handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/topics\""
+      read -ra topics <<< "$(echo "$curl_output" | jq -r --arg c "$connector" '.[$c].topics // [] | join(" ")')"
+  fi
+
+  test_file=$(playground state get run.test_file)
+  example_dir=""
+  load_script=""
+  if [ -n "$test_file" ] && [ -f "$test_file" ]
+  then
+      example_dir=$(dirname "$test_file")
+      if [ -f "$example_dir/benchmark-load.bash" ]
+      then
+          load_script="$example_dir/benchmark-load.bash"
+      fi
+  fi
+
+  load_mode="preload"
+  [ "$mode" == "steady" ] && load_mode="stream"
+  if [ "$mode" == "drain" ] && [ -n "$load_command" ]
+  then
+      load_cmd="$load_command"
+  elif [ "$mode" == "steady" ] && [ -n "$stream_load_command" ]
+  then
+      load_cmd="$stream_load_command"
+  elif [ -n "$load_script" ]
+  then
+      load_cmd="bash \"$load_script\" --records $nb_records --mode $load_mode --shape $shape --record-size $record_size"
+  else
+      load_cmd=""
+  fi
+  # load scripts can adapt to the variant of the example that was run (cdb or pdb...)
+  export BENCHMARK_TEST_FILE="$test_file"
+  export BENCHMARK_CONNECTOR="$connector"
+
+  mkdir -p "$output_dir"
+  run_id="${connector}-$(date +%Y%m%d-%H%M%S)"
+  # load scripts can adapt to the connector configuration (a redo log topic doubles the records of oracle cdc...)
+  export BENCHMARK_CONNECTOR_CONFIG="$output_dir/$run_id-config.json"
+  echo "$connector_config_json" > "$BENCHMARK_CONNECTOR_CONFIG"
+
+  # a sink without load: replay the 'playground topic produce' of the example script that feeds its topics
+  if [ -z "$load_cmd" ] && [ "$type" == "sink" ] && [ -n "$test_file" ] && [ -f "$test_file" ]
+  then
+      if [ -z "$sink_topics" ]
+      then
+          handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/topics\""
+          sink_topics=$(echo "$curl_output" | jq -r --arg c "$connector" '.[$c].topics // [] | join(" ")')
+      fi
+      replay_nb="$nb_records"
+      [ "$mode" == "steady" ] && replay_nb=-1
+      replay_file="$output_dir/$run_id-replay.bash"
+      set +e
+      replay_output=$(benchmark_produce_load_from_example "$test_file" "$sink_topics" "$replay_nb" "$record_size" "$replay_file")
+      replay_ret=$?
+      set -e
+      if [ $replay_ret -eq 0 ]
+      then
+          load_cmd="bash \"$replay_file\""
+          log "🔁 load: replay of the 'playground topic produce' of $(basename "$test_file") to topic $replay_output"
+      elif [ $replay_ret -eq 3 ]
+      then
+          logerror "❌ cannot replay the produce command of the example: $replay_output, set them or use --load-command"
+          exit 1
+      fi
+  fi
+
+  if [ -z "$load_cmd" ] && [ "$mode" == "drain" ]
+  then
+      logerror "❌ no load for the drain: the example has no benchmark-load.bash and no 'playground topic produce' to replay, use --load-command"
+      exit 1
+  fi
+  if [ -z "$load_cmd" ]
+  then
+      logwarn "⚠️ no --stream-load-command, no benchmark-load.bash and no 'playground topic produce' to replay: measuring the connector with the load already running, if any"
+  fi
+
+  csv_file="$output_dir/$run_id.csv"
+  json_file="$output_dir/$run_id.json"
+  load_log="$output_dir/$run_id-load.log"
+  echo "timestamp,elapsed_s,phase,records,rate_records_per_s,batch_avg_ms,running_ratio,cpu_percent_of_one_core" > "$csv_file"
+
+  benchmark_jmx_init "$workers"
+  paused_by_benchmark=0
+  load_stopped_early=0
+  load_pid=""
+  # a load script sourcing scripts/utils.sh records itself as the example being run: put the state back
+  function restore_run_state () {
+      if [ "$(playground state get run.test_file)" != "$test_file" ]
+      then
+          playground state set run.test_file "$test_file"
+      fi
+      if [ "$(playground state get run.connector_type)" != "$connector_type" ]
+      then
+          playground state set run.connector_type "$connector_type"
+      fi
+  }
+  # the stream load is a tree of processes (bash, playground, docker exec): stop all of them
+  function kill_tree () {
+      local pid="$1" child
+      for child in $(pgrep -P "$pid" 2> /dev/null)
+      do
+          kill_tree "$child"
+      done
+      kill "$pid" 2> /dev/null
+  }
+  function benchmark_cleanup () {
+      restore_run_state
+      if [ -n "$load_pid" ] && kill -0 "$load_pid" 2> /dev/null
+      then
+          kill_tree "$load_pid"
+      fi
+      if [ $paused_by_benchmark -eq 1 ]
+      then
+          logwarn "⏯️ resuming $connector_type connector $connector paused by the benchmark"
+          playground connector resume --connector "$connector" > /dev/null 2>&1
+      fi
+  }
+  trap benchmark_cleanup EXIT
+
+  # fails the benchmark as soon as the connector or one of its tasks is FAILED
+  function check_not_failed () {
+      if ! handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\"" > /dev/null 2>&1
+      then
+          return
+      fi
+      if echo "$curl_output" | jq -e '[.connector.state, .tasks[]?.state] | index("FAILED")' > /dev/null 2>&1
+      then
+          logerror "❌ $connector_type connector $connector is FAILED, stopping the benchmark"
+          set +e
+          playground connector status --connector "$connector"
+          exit 1
+      fi
+  }
+
+  # one sample: appends a csv line and sets sample_records, sample_time
+  prev_records=""
+  prev_time=""
+  function take_sample () {
+      local phase="$1"
+      local values
+      values=$(benchmark_jmx_sample "$connector" "$type" "$workers")
+      sample_time=$(now)
+      read -r sample_records sample_batch sample_ratio sample_cpu <<< "$values"
+      local rate="-"
+      if [ -n "$prev_records" ]
+      then
+          rate=$(awk -v r="$sample_records" -v pr="$prev_records" -v t="$sample_time" -v pt="$prev_time" 'BEGIN { if (t > pt) printf "%.1f", (r - pr) / (t - pt); else print "-" }')
+      fi
+      echo "$(date +%H:%M:%S),$(awk -v t="$sample_time" -v s="$start_time" 'BEGIN { printf "%.1f", t - s }'),$phase,$sample_records,$rate,$sample_batch,$sample_ratio,$sample_cpu" >> "$csv_file"
+      prev_records="$sample_records"
+      prev_time="$sample_time"
+  }
+
+  # records per topic, as "<topic> <count>" lines
+  function count_topic_records () {
+      local topic count
+      for topic in "${topics[@]}"
+      do
+          count=$(playground --output-level WARN topic get-number-records --topic "$topic" 2> /dev/null | grep -E '^[0-9]+$' | tail -1)
+          echo "$topic ${count:-0}"
+      done
+  }
+
+  # a source can create topics during the drain (a new table): read the topics of the connector again
+  function refresh_connector_topics () {
+      if [ -n "${args[--topic]}" ]
+      then
+          return
+      fi
+      if handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/topics\"" > /dev/null 2>&1
+      then
+          read -ra topics <<< "$(echo "$curl_output" | jq -r --arg c "$connector" '.[$c].topics // [] | join(" ")')"
+      fi
+  }
+
+  expected="$nb_records"
+  load_seconds="-"
+  topic_records_delta="-"
+  start_time=$(now)
+
+  if [ "$mode" == "drain" ]
+  then
+      log "⏸️ pausing $connector_type connector $connector ($type, $nb_tasks task(s), $connector_class $plugin_version)"
+      playground connector pause --connector "$connector" > /dev/null
+      paused_by_benchmark=1
+      playground connector wait --connector "$connector" --state PAUSED --max-wait 120 --interval 2 > /dev/null
+
+      log "📥 loading the backlog: $load_cmd"
+      load_start=$(now)
+      set +e
+      if [[ -n "$verbose" ]]
+      then
+          bash -c "$load_cmd" 2>&1 | tee "$load_log" >&2
+          load_ret=${PIPESTATUS[0]}
+      else
+          bash -c "$load_cmd" > "$load_log" 2>&1
+          load_ret=$?
+      fi
+      set -e
+      if [ $load_ret -ne 0 ]
+      then
+          logerror "❌ the load failed with exit code $load_ret, last lines of $load_log:"
+          tail -20 "$load_log"
+          exit 1
+      fi
+      load_seconds=$(awk -v e="$(now)" -v s="$load_start" 'BEGIN { printf "%.1f", e - s }')
+      restore_run_state
+      records_from_load=$(grep -E '^BENCHMARK_RECORDS=[0-9]+$' "$load_log" | tail -1 | cut -d= -f2)
+      if [ -n "$records_from_load" ]
+      then
+          expected="$records_from_load"
+      fi
+      log "📦 backlog of $expected records loaded in ${load_seconds}s"
+
+      if [ "$type" == "source" ]
+      then
+          topic_records_before=$(count_topic_records)
+      fi
+
+      start_time=$(now)
+      take_sample "baseline"
+      baseline_records="$sample_records"
+      log "⏯️ resuming $connector_type connector $connector and waiting for $expected records (max ${max_wait}s, sample every ${interval}s)"
+      start_time=$(now)
+      prev_time="$start_time"
+      playground connector resume --connector "$connector" > /dev/null
+      paused_by_benchmark=0
+
+      end_time=""
+      last_logged=0
+      while true
+      do
+          sleep "$interval"
+          before_records="$prev_records"
+          before_time="$prev_time"
+          take_sample "drain"
+          processed=$((sample_records - baseline_records))
+          elapsed=$(awk -v t="$sample_time" -v s="$start_time" 'BEGIN { printf "%d", t - s }')
+          if [ "$processed" -ge "$expected" ]
+          then
+              # the backlog was processed between the last two samples: interpolate
+              end_time=$(awk -v e="$expected" -v b="$baseline_records" -v pr="$before_records" -v r="$sample_records" -v pt="$before_time" -v t="$sample_time" \
+                  'BEGIN { done_before = pr - b; if (r > pr) printf "%.3f", pt + (e - done_before) / (r - pr) * (t - pt); else printf "%.3f", t }')
+              break
+          fi
+          if [ $((elapsed - last_logged)) -ge 30 ]
+          then
+              log "⌛ $processed/$expected records after ${elapsed}s"
+              last_logged=$elapsed
+          fi
+          check_not_failed
+          if [ "$elapsed" -ge "$max_wait" ]
+          then
+              logerror "❌ only $processed/$expected records processed after ${max_wait}s"
+              playground connector status --connector "$connector"
+              exit 1
+          fi
+      done
+      measured_seconds=$(awk -v e="$end_time" -v s="$start_time" 'BEGIN { printf "%.1f", e - s }')
+      measured_records="$expected"
+      if [ "$type" == "source" ]
+      then
+          refresh_connector_topics
+          if [ ${#topics[@]} -gt 0 ]
+          then
+              # topics created during the drain count from 0
+              topic_records_delta=$(awk 'NR == FNR { before[$1] = $2; next } { delta += $2 - before[$1] } END { print delta + 0 }' \
+                  <(echo "$topic_records_before") <(count_topic_records))
+          fi
+      fi
+  else
+      if [ -n "$load_cmd" ]
+      then
+          log "🌊 starting the load in the background: $load_cmd"
+          bash -c "$load_cmd" > "$load_log" 2>&1 &
+          load_pid=$!
+      fi
+      log "🔥 warm-up for ${warmup}s"
+      take_sample "warmup"
+      warmup_end=$(awk -v s="$start_time" -v w="$warmup" 'BEGIN { printf "%.3f", s + w }')
+      while awk -v n="$(now)" -v e="$warmup_end" 'BEGIN { exit !(n < e) }'
+      do
+          sleep "$interval"
+          take_sample "warmup"
+          check_not_failed
+      done
+      baseline_records="$sample_records"
+      measure_start="$sample_time"
+      log "⏱️ measuring for ${duration}s (sample every ${interval}s)"
+      measure_end=$(awk -v s="$measure_start" -v d="$duration" 'BEGIN { printf "%.3f", s + d }')
+      while awk -v n="$(now)" -v e="$measure_end" 'BEGIN { exit !(n < e) }'
+      do
+          sleep "$interval"
+          take_sample "steady"
+          check_not_failed
+      done
+      if [ -n "$load_pid" ]
+      then
+          if kill -0 "$load_pid" 2> /dev/null
+          then
+              kill_tree "$load_pid"
+          else
+              logwarn "⚠️ the load stopped before the end of the measure, see $load_log"
+              load_stopped_early=1
+          fi
+          load_pid=""
+      fi
+      measured_records=$((sample_records - baseline_records))
+      measured_seconds=$(awk -v e="$sample_time" -v s="$measure_start" 'BEGIN { printf "%.1f", e - s }')
+  fi
+
+  # summary from the samples of the measure (drain or steady phase)
+  phase="$mode"
+  read -r rate_p50 rate_p95 rate_min batch_avg ratio_avg cpu_avg cpu_max <<< "$(awk -F, -v p="$phase" '
+      NR > 1 && $3 == p {
+          if ($5 != "-") rates[n++] = $5
+          if ($6 != "-") { batch += $6; nb++ }
+          if ($7 != "-") { ratio += $7; nr++ }
+          if ($8 != "-") { cpu += $8; nc++; if ($8 > cpumax) cpumax = $8 }
+      }
+      END {
+          # insertion sort, a few hundred samples at most
+          for (i = 1; i < n; i++) { v = rates[i]; j = i - 1; while (j >= 0 && rates[j] > v) { rates[j + 1] = rates[j]; j-- } rates[j + 1] = v }
+          printf "%s %s %s %s %s %s %s\n",
+              (n ? rates[int((n - 1) * 0.5)] : "-"), (n ? rates[int((n - 1) * 0.95)] : "-"), (n ? rates[0] : "-"),
+              (nb ? sprintf("%.1f", batch / nb) : "-"), (nr ? sprintf("%.2f", ratio / nr) : "-"),
+              (nc ? sprintf("%.0f", cpu / nc) : "-"), (nc ? sprintf("%.0f", cpumax) : "-")
+      }' "$csv_file")"
+  throughput=$(awk -v r="$measured_records" -v s="$measured_seconds" 'BEGIN { if (s > 0) printf "%.1f", r / s; else print "0" }')
+  nb_samples=$(awk -F, -v p="$phase" 'NR > 1 && $3 == p' "$csv_file" | wc -l | tr -d ' ')
+  # the backlog was processed before the first sample: only an upper bound of the duration is known
+  lower_bound=false
+  if [ "$mode" == "drain" ] && [ "$nb_samples" -le 1 ]
+  then
+      lower_bound=true
+  fi
+
+  test_file_relative="${test_file#$root_folder/}"
+  result=$(jq -n \
+      --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg test_file "$test_file_relative" --arg connector "$connector" \
+      --arg connector_class "$connector_class" --arg plugin_version "$plugin_version" --arg cp_tag "$cp_tag" \
+      --arg type "$type" --arg mode "$mode" --arg shape "$shape" --argjson tasks "$nb_tasks" \
+      --argjson records "$measured_records" --argjson seconds "$measured_seconds" --argjson records_per_second "$throughput" \
+      --arg rate_p50 "$rate_p50" --arg rate_p95 "$rate_p95" --arg rate_min "$rate_min" \
+      --arg batch_avg_ms "$batch_avg" --arg running_ratio "$ratio_avg" --arg cpu_avg "$cpu_avg" --arg cpu_max "$cpu_max" \
+      --arg load_seconds "$load_seconds" --arg topic_records_delta "$topic_records_delta" \
+      --arg samples_csv "$csv_file" --argjson lower_bound "$lower_bound" \
+      '{date: $date, test_file: $test_file, connector: $connector, connector_class: $connector_class, plugin_version: $plugin_version,
+        cp_tag: $cp_tag, type: $type, mode: $mode, shape: $shape, tasks: $tasks, records: $records, seconds: $seconds,
+        records_per_second: $records_per_second, lower_bound: $lower_bound, rate_p50: $rate_p50, rate_p95: $rate_p95, rate_min: $rate_min,
+        batch_avg_ms: $batch_avg_ms, running_ratio: $running_ratio, cpu_percent_of_one_core_avg: $cpu_avg,
+        cpu_percent_of_one_core_max: $cpu_max, load_seconds: $load_seconds, topic_records_delta: $topic_records_delta,
+        samples_csv: $samples_csv}')
+  echo "$result" > "$json_file"
+
+  # previous result to compare with: --compare, or the last one of the same connector, example, mode and shape
+  history_file="$root_folder/benchmark-history"
+  previous=""
+  if [ -n "$compare_file" ]
+  then
+      previous=$(jq -c . "$compare_file")
+  elif [ -f "$history_file" ]
+  then
+      # lower bounds are not comparable
+      previous=$(jq -c --arg t "$test_file_relative" --arg c "$connector" --arg m "$mode" --arg s "$shape" 'select(.test_file == $t and .connector == $c and .mode == $m and .shape == $s and .lower_bound != true and .records > 0)' "$history_file" 2> /dev/null | tail -1)
+  fi
+  if [[ ! -n "$no_history" ]]
+  then
+      echo "$result" | jq -c . >> "$history_file"
+  fi
+
+  if [[ -n "$json" ]]
+  then
+      if [ -n "$previous" ]
+      then
+          echo "$result" | jq --argjson p "$previous" '. + {previous: $p}' >&3
+      else
+          echo "$result" >&3
+      fi
+      exit 0
+  fi
+
+  log "🏁 benchmark of $connector_type connector $connector ($type, $nb_tasks task(s), $connector_class $plugin_version, CP $cp_tag)"
+  if [ "$mode" == "drain" ]
+  then
+      printf "   %-22s %s\n" "mode" "drain of $measured_records records (shape $shape, loaded in ${load_seconds}s)"
+  else
+      printf "   %-22s %s\n" "mode" "steady for ${measured_seconds}s after ${warmup}s of warm-up"
+  fi
+  printf "   %-22s %s\n" "duration" "${measured_seconds}s"
+  if [ "$lower_bound" == "true" ]
+  then
+      printf "   %-22s %s\n" "throughput" "≥ $throughput records/s   (the backlog was processed before the first sample)"
+  else
+      printf "   %-22s %s\n" "throughput" "$throughput records/s   (per ${interval}s sample: p50 $rate_p50  p95 $rate_p95  min $rate_min)"
+  fi
+  if [ "$type" == "sink" ]
+  then
+      printf "   %-22s %s\n" "put batch avg" "$batch_avg ms"
+  else
+      printf "   %-22s %s\n" "poll batch avg" "$batch_avg ms"
+  fi
+  printf "   %-22s %s\n" "running ratio avg" "$ratio_avg"
+  printf "   %-22s %s\n" "connect cpu avg / max" "${cpu_avg}% / ${cpu_max}% of one core"
+  if [ "$topic_records_delta" != "-" ]
+  then
+      printf "   %-22s %s\n" "records in topics" "+$topic_records_delta (${topics[*]})"
+  fi
+  if [ -n "$previous" ]
+  then
+      previous_throughput=$(echo "$previous" | jq -r '.records_per_second')
+      delta=$(awk -v n="$throughput" -v p="$previous_throughput" 'BEGIN { if (p > 0) printf "%+.0f%%", (n - p) / p * 100; else print "n/a" }')
+      printf "   %-22s %s\n" "previous run" "$previous_throughput records/s on $(echo "$previous" | jq -r '.date'): $delta"
+      printf "   %-22s %s\n" "" "($(echo "$previous" | jq -r '"\(.plugin_version), CP \(.cp_tag), \(.tasks) task(s), \(.records) records, shape \(.shape)"'))"
+  fi
+
+  # warnings of the summary, also shown in the html report
+  report_warnings=()
+  function add_warning () {
+      logwarn "⚠️ $1"
+      report_warnings+=("$1")
+  }
+  if [ "$load_stopped_early" == "1" ]
+  then
+      report_warnings+=("the load stopped before the end of the measure, see $load_log")
+  fi
+  if [ "$ratio_avg" != "-" ] && awk -v r="$ratio_avg" 'BEGIN { exit !(r < 0.5) }'
+  then
+      add_warning "the tasks were running only $ratio_avg of the time (paused or restarting)"
+  fi
+  if [ "$mode" == "steady" ] && [ "$rate_min" != "-" ] && [ "$rate_p50" != "-" ] && awk -v m="$rate_min" -v p="$rate_p50" 'BEGIN { exit !(p > 0 && m < p * 0.2) }'
+  then
+      add_warning "the throughput dropped to $rate_min records/s at least once (p50 $rate_p50): stalls, rebalances or a load that does not keep up"
+  fi
+  if [ "$lower_bound" == "true" ]
+  then
+      add_warning "the backlog was processed before the first sample, the throughput is a lower bound: increase --nb-records (10x) for a real measure"
+  elif [ "$nb_samples" -lt 3 ]
+  then
+      add_warning "only $nb_samples samples during the measure: the percentiles are not meaningful, increase --nb-records (or --duration) or reduce --interval"
+  fi
+  if [ "$mode" == "steady" ] && [ "$measured_records" -eq 0 ]
+  then
+      add_warning "no record was processed during the measure: is there any load?"
+  fi
+  logwarn "⚠️ results are relative to this docker host: compare runs on the same machine only"
+  log "📄 samples: $csv_file"
+  log "📄 result: $json_file"
+
+  html_file="$output_dir/$run_id.html"
+  report_args=(--result "$json_file" --samples "$csv_file" --history "$history_file" --output "$html_file")
+  for warning in "${report_warnings[@]}"
+  do
+      report_args+=(--warning "$warning")
+  done
+  if python3 -I "$root_folder/tools/benchmark-report/benchmark_report.py" "${report_args[@]}" > /dev/null
+  then
+      log "📊 report: $html_file"
+      # only open a browser in an interactive terminal, never in CI
+      if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ]
+      then
+          if command -v open > /dev/null 2>&1
+          then
+              open "$html_file"
+          elif command -v xdg-open > /dev/null 2>&1
+          then
+              xdg-open "$html_file" > /dev/null 2>&1 || true
+          fi
+      fi
+  else
+      logwarn "⚠️ the html report could not be generated"
+  fi
+
 }
 
 # :command.function
@@ -75953,6 +76993,13 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
+    benchmark)
+      action="benchmark"
+      shift
+      playground_connector_benchmark_parse_requirements "$@"
+      shift $#
+      ;;
+
     show-config)
       action="show-config"
       shift
@@ -78202,6 +79249,382 @@ playground_connector_show_lag_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--max-wait MAX_WAIT" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_connector_benchmark_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_benchmark_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector benchmark"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --mode)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--mode']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--mode requires an argument: --mode MODE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --nb-records)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--nb-records']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--nb-records requires an argument: --nb-records NB-RECORDS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --shape)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--shape']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--shape requires an argument: --shape SHAPE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --record-size)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--record-size']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--record-size requires an argument: --record-size RECORD-SIZE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --load-command)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--load-command']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--load-command requires an argument: --load-command LOAD-COMMAND" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --stream-load-command)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--stream-load-command']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--stream-load-command requires an argument: --stream-load-command STREAM-LOAD-COMMAND" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--topic']+x} ]]; then
+            args['--topic']="$escaped"
+          else
+            args['--topic']="${args['--topic']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --duration)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--duration']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--duration requires an argument: --duration DURATION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --warmup)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--warmup']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--warmup requires an argument: --warmup WARMUP" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --interval)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--interval']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--interval requires an argument: --interval INTERVAL" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-wait)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-wait']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-wait requires an argument: --max-wait MAX-WAIT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --output-dir)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir OUTPUT-DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --compare)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--compare']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--compare requires an argument: --compare COMPARE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-history)
+
+        # :flag.case_no_arg
+        args['--no-history']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--mode']:-} ]] || args['--mode']="drain"
+  [[ -n ${args['--nb-records']:-} ]] || args['--nb-records']="100000"
+  [[ -n ${args['--shape']:-} ]] || args['--shape']="bulk"
+  [[ -n ${args['--record-size']:-} ]] || args['--record-size']="0"
+  [[ -n ${args['--duration']:-} ]] || args['--duration']="5m"
+  [[ -n ${args['--warmup']:-} ]] || args['--warmup']="30s"
+  [[ -n ${args['--interval']:-} ]] || args['--interval']="5s"
+  [[ -n ${args['--max-wait']:-} ]] || args['--max-wait']="30m"
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="/tmp/playground-benchmark"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--nb-records'] ]]; then
+    validation_output="$(validate_integer "${args['--nb-records']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--nb-records NB-RECORDS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--record-size'] ]]; then
+    validation_output="$(validate_integer "${args['--record-size']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--record-size RECORD-SIZE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--duration'] ]]; then
+    validation_output="$(validate_duration "${args['--duration']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--duration DURATION" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--warmup'] ]]; then
+    validation_output="$(validate_duration "${args['--warmup']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--warmup WARMUP" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--interval'] ]]; then
+    validation_output="$(validate_duration "${args['--interval']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--interval INTERVAL" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--max-wait'] ]]; then
+    validation_output="$(validate_duration "${args['--max-wait']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-wait MAX-WAIT" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--compare'] ]]; then
+    validation_output="$(validate_file_exists "${args['--compare']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--compare COMPARE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--mode']:-} ]] && [[ ! ${args['--mode']:-} =~ ^(drain|steady)$ ]]; then
+    printf "%s\n" "--mode must be one of: drain, steady" >&2
+    exit 1
+  fi
+  if [[ ${args['--shape']:-} ]] && [[ ! ${args['--shape']:-} =~ ^(bulk|small-txn|update)$ ]]; then
+    printf "%s\n" "--shape must be one of: bulk, small-txn, update" >&2
+    exit 1
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_connect_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
   fi
 
 }
@@ -93502,6 +94925,11 @@ playground_connector_completion() {
         playground_connector_show_lag_completion "$completion_current" "$@"
         return
         ;;
+      benchmark)
+        shift
+        playground_connector_benchmark_completion "$completion_current" "$@"
+        return
+        ;;
       show-config)
         shift
         playground_connector_show_config_completion "$completion_current" "$@"
@@ -93586,7 +95014,7 @@ playground_connector_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" status wait error-recommendations oracle-cdc-xstream offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart stop resume unpause delete diagnose show-lag show-config show-config-parameters display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update edit alter
+  completion_candidates "$completion_current" status wait error-recommendations oracle-cdc-xstream offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart stop resume unpause delete diagnose show-lag benchmark show-config show-config-parameters display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update edit alter
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -94560,6 +95988,217 @@ playground_connector_show_lag_completion() {
     completion_flag_candidates --connector "$completion_current" --connector -c
     completion_flag_candidates --interval "$completion_current" --interval
     completion_flag_candidates --max-wait "$completion_current" --max-wait
+  fi
+
+}
+
+# :command.completion_function
+playground_connector_benchmark_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+
+        ;;
+      --mode)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "drain"
+            "steady"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--mode"]=1
+
+        ;;
+      --nb-records)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--nb-records"]=1
+
+        ;;
+      --shape)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "bulk"
+            "small-txn"
+            "update"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--shape"]=1
+
+        ;;
+      --record-size)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--record-size"]=1
+
+        ;;
+      --load-command)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--load-command"]=1
+
+        ;;
+      --stream-load-command)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--stream-load-command"]=1
+
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+
+        ;;
+      --duration)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--duration"]=1
+
+        ;;
+      --warmup)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--warmup"]=1
+
+        ;;
+      --interval)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--interval"]=1
+
+        ;;
+      --max-wait)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-wait"]=1
+
+        ;;
+      --output-dir)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --compare)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--compare"]=1
+
+        ;;
+      --no-history)
+        completion_blocked_flags["--no-history"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --mode "$completion_current" --mode
+    completion_flag_candidates --nb-records "$completion_current" --nb-records
+    completion_flag_candidates --shape "$completion_current" --shape
+    completion_flag_candidates --record-size "$completion_current" --record-size
+    completion_flag_candidates --load-command "$completion_current" --load-command
+    completion_flag_candidates --stream-load-command "$completion_current" --stream-load-command
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --duration "$completion_current" --duration
+    completion_flag_candidates --warmup "$completion_current" --warmup
+    completion_flag_candidates --interval "$completion_current" --interval
+    completion_flag_candidates --max-wait "$completion_current" --max-wait
+    completion_flag_candidates --output-dir "$completion_current" --output-dir
+    completion_flag_candidates --compare "$completion_current" --compare
+    completion_flag_candidates --no-history "$completion_current" --no-history
+    completion_flag_candidates --json "$completion_current" --json
   fi
 
 }
@@ -96308,6 +97947,7 @@ run() {
     "connector delete") playground_connector_delete_command ;;
     "connector diagnose") playground_connector_diagnose_command ;;
     "connector show-lag") playground_connector_show_lag_command ;;
+    "connector benchmark") playground_connector_benchmark_command ;;
     "connector show-config") playground_connector_show_config_command ;;
     "connector show-config-parameters") playground_connector_show_config_parameters_command ;;
     "connector display-metrics-api") playground_connector_display_metrics_api_command ;;

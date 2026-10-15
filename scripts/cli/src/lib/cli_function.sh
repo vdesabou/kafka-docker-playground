@@ -3707,3 +3707,187 @@ function take_thread_dumps_with_kill_quit() {
 
   grep -q "Full thread dump" "$output_file"
 }
+
+# 30 -> 30, 30s -> 30, 5m -> 300, 1h -> 3600 (format checked by validate_duration)
+function duration_to_seconds() {
+  local value="$1"
+  case "$value" in
+    *h) echo $(( ${value%h} * 3600 )) ;;
+    *m) echo $(( ${value%m} * 60 )) ;;
+    *s) echo "${value%s}" ;;
+    *) echo "$value" ;;
+  esac
+}
+
+# connect worker container and JMX port of a worker id from the connect REST API (connect:8083, connect2:8283...)
+function benchmark_worker_container_and_port() {
+  local worker_id="$1"
+  local host="${worker_id%%:*}"
+  host="${host%%.*}"
+  case "$host" in
+    connect2) echo "connect2 10022" ;;
+    connect3) echo "connect3 10032" ;;
+    *) echo "connect 10002" ;;
+  esac
+}
+
+# jmxterm commands of one connect worker, read from stdin, printed as 'attribute = value;' lines
+function benchmark_jmxterm() {
+  local container="$1"
+  local port="$2"
+  docker exec -i "$container" java -jar "$BENCHMARK_JMXTERM_JAR" -l "localhost:$port" -n -v silent 2> /dev/null
+}
+
+# copies jmxterm to the connect workers running the tasks of the connector
+function benchmark_jmx_init() {
+  local workers="$1"
+  BENCHMARK_JMXTERM_JAR="/tmp/jmxterm-1.0.2-uber.jar"
+  if [ ! -f "$BENCHMARK_JMXTERM_JAR" ]
+  then
+    curl -L https://github.com/jiaqi/jmxterm/releases/download/v1.0.2/jmxterm-1.0.2-uber.jar -o "$BENCHMARK_JMXTERM_JAR" -s
+  fi
+  local container port
+  while read -r container port
+  do
+    [ -z "$container" ] && continue
+    playground container cp --source "$BENCHMARK_JMXTERM_JAR" --destination "$container:$BENCHMARK_JMXTERM_JAR" > /dev/null 2>&1
+  done <<< "$workers"
+}
+
+# prints "<records total> <batch avg ms> <running ratio> <cpu % of one core>" for the tasks of a connector:
+# the records total is summed over the tasks of all the workers, the other values are averages (NaN skipped)
+# workers is a list of "container port" lines, type is sink or source
+function benchmark_jmx_sample() {
+  local connector="$1"
+  local type="$2"
+  local workers="$3"
+  local counter="source-record-write-total"
+  local batch="poll-batch-avg-time-ms"
+  if [ "$type" == "sink" ]
+  then
+    counter="sink-record-send-total"
+    batch="put-batch-avg-time-ms"
+  fi
+  local container port beans
+  while read -r container port
+  do
+    [ -z "$container" ] && continue
+    beans=$(printf 'beans -d kafka.connect\nexit\n' | benchmark_jmxterm "$container" "$port" | grep -F "connector=$connector,task=" || true)
+    {
+      echo "$beans" | grep -F "type=$type-task-metrics" | while read -r bean; do echo "get -b $bean $counter $batch"; done
+      echo "$beans" | grep -F "type=connector-task-metrics" | while read -r bean; do echo "get -b $bean running-ratio"; done
+      echo "get -b java.lang:type=OperatingSystem ProcessCpuLoad AvailableProcessors"
+      echo "exit"
+    } | benchmark_jmxterm "$container" "$port"
+  done <<< "$workers" | awk -v counter="$counter" -v batch="$batch" '
+    {
+      name = $1; value = $3; sub(/;$/, "", value)
+      if (value == "NaN" || value == "") next
+    }
+    name == counter { total += value }
+    name == batch { batch_sum += value; batch_n++ }
+    name == "running-ratio" { ratio_sum += value; ratio_n++ }
+    name == "ProcessCpuLoad" { load = value }
+    name == "AvailableProcessors" { cpu_sum += load * value * 100; cpu_n++ }
+    END {
+      printf "%d %s %s %s\n", total,
+        (batch_n ? sprintf("%.1f", batch_sum / batch_n) : "-"),
+        (ratio_n ? sprintf("%.2f", ratio_sum / ratio_n) : "-"),
+        (cpu_n ? sprintf("%.0f", cpu_sum / cpu_n) : "-")
+    }'
+}
+
+# load of a sink for 'playground connector benchmark': replays the 'playground topic produce' of the example script
+# that feeds one of <topics>, with --nb-messages <nb> (-1 until killed), from the example directory.
+# Writes the replay script to <output>. Returns 1 when the example has no produce command, 3 when the command uses
+# variables that are not set in this shell (the message lists them)
+function benchmark_produce_load_from_example () {
+  local test_file="$1" topics="$2" nb="$3" record_size="$4" output="$5"
+  python3 -I - "$test_file" "$topics" "$nb" "$record_size" "$output" "$root_folder" << 'PYEOF'
+import os, re, shlex, sys
+test_file, topics, nb, record_size, output, root = sys.argv[1:7]
+topics = topics.split()
+lines = open(test_file, errors="ignore").read().split("\n")
+blocks = []
+i = 0
+while i < len(lines):
+    line = lines[i]
+    if re.match(r"^exit 0\s*$", line):
+        break
+    if re.match(r"^\s*playground topic produce\b", line):
+        start = i
+        block = [line]
+        m = re.search(r"<<-?\s*(['\"]?)([A-Za-z_]+)\1", line)
+        quoted = bool(m and m.group(1))
+        if m:
+            terminator = m.group(2)
+            i += 1
+            while i < len(lines) and lines[i].strip() != terminator:
+                block.append(lines[i])
+                i += 1
+            block.append(terminator)
+        blocks.append((block, quoted, start))
+    i += 1
+if not blocks:
+    sys.exit(1)
+
+topic_re = r"(?:-t|--topic)(?:\s+|=)(\"[^\"]*\"|'[^']*'|\S+)"
+def topic_of(block):
+    m = re.search(topic_re, block[0])
+    return m.group(1).strip("\"'") if m else ""
+
+chosen = None
+for block, quoted, start in blocks:
+    if topic_of(block) in topics:
+        chosen, topic = (block, quoted, start), topic_of(block)
+        break
+if chosen is None:
+    for block, quoted, start in blocks:
+        if "$" in topic_of(block):
+            chosen, topic = (block, quoted, start), topics[0]
+            break
+if chosen is None:
+    sys.exit(1)
+
+(block, quoted, start) = chosen
+first = block[0]
+first = re.sub(topic_re, "--topic " + shlex.quote(topic), first, count=1)
+first = re.sub(r"\s--nb-messages(?:\s+|=)(\$\([^)]*\)|\"[^\"]*\"|'[^']*'|\S+)", "", first)
+extra = " --nb-messages %s" % nb
+if record_size != "0" and "--record-size" not in first:
+    extra += " --record-size %s" % record_size
+first = re.sub(r"playground topic produce", "playground topic produce" + extra, first, count=1)
+block = [first] + block[1:]
+
+# variables still used by the command (and by the heredoc when it is not quoted) must be set
+checked = first.split("<<")[0] + ("" if quoted else "\n".join(block[1:]))
+known = {"DIR", "PWD", "root_folder", "HOME", "USER", "RANDOM"}
+def unset_vars(text, assigned):
+    return sorted({v for v in re.findall(r"\$\{?([A-Za-z_][A-Za-z0-9_]*)", text) if v not in known and v not in assigned and not os.environ.get(v)})
+# variables computed by the script before the produce (TIMESTAMP=$(date +%s)...): replay their last assignment
+assignments = []
+assigned = set()
+for v in unset_vars(checked, assigned):
+    for line in reversed(lines[:start]):
+        if re.match(r"^\s*%s=" % v, line):
+            assignments.append(line.strip())
+            assigned.add(v)
+            break
+missing = unset_vars(checked + "\n" + "\n".join(assignments), assigned)
+if missing:
+    print("variables used by the produce command of %s are not set: %s" % (os.path.basename(test_file), " ".join(missing)))
+    sys.exit(3)
+
+example_dir = os.path.dirname(test_file)
+with open(output, "w") as f:
+    f.write("#!/bin/bash\n# replay of the 'playground topic produce' of %s, generated by 'playground connector benchmark'\nset -e\n" % test_file)
+    f.write("source %s\n" % shlex.quote(os.path.join(root, "scripts/cli/src/lib/utils_function.sh")))
+    f.write("DIR=%s\ncd \"$DIR\"\n" % shlex.quote(example_dir))
+    for a in assignments:
+        f.write(a + "\n")
+    f.write("\n".join(block) + "\n")
+    if nb != "-1":
+        f.write("echo \"BENCHMARK_RECORDS=%s\"\n" % nb)
+print(topic)
+PYEOF
+}

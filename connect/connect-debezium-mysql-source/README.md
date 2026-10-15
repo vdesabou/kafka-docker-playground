@@ -40,3 +40,21 @@ playground run -f debezium-mysql-source.sh
 3. Checks that `GTID_MODE` is `ON`, then updates the connector to also include `mydb.customers` with `read.only=true` and Kafka signal channel `dbz-signals`.
 4. Inserts a new customer: only this record shows up in `server1_mydb_customers`.
 5. Produces an `execute-snapshot` (`INCREMENTAL`) signal to `dbz-signals` and verifies that all 3 customer records are now in `server1_mydb_customers`.
+
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) loads rows in the `CUSTOMERS` table (created if it does not exist) for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark). Once the example is running:
+
+```bash
+# time to capture 1M rows inserted in one transaction
+playground connector benchmark --nb-records 1000000 --shape bulk
+
+# 100k transactions of one row, then 1M updates of existing rows
+playground connector benchmark --nb-records 100000 --shape small-txn
+playground connector benchmark --nb-records 1000000 --shape update
+
+# throughput during 2 minutes while batches of 10k rows are inserted continuously
+playground connector benchmark --mode steady --duration 2m --nb-records 10000
+```
+
+The connector is paused while the rows are loaded, then resumed, and the benchmark measures the time it takes to produce the records. Results are compared with the previous benchmark of the same shape.
