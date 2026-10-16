@@ -14,7 +14,11 @@ Flight recording analyzer behind `playground analyze flight-recorder` and the "W
 
 The recordings are driven over JMX (`jdk.management.jfr:type=FlightRecorder`, with the jmxterm the benchmark already
 uses): `newRecording`, `setConfiguration`, `startRecording`, then `stopRecording`, `copyTo`, `closeRecording`. No
-`jcmd` (not in the cp images), no restart, no JVM flag: a recording only covers the measure.
+`jcmd` (not in the cp images), no restart, no JVM flag: a recording only covers the measure. The helpers
+(`jfr_jmx_start`, `jfr_jmx_stop`, `jfr_jmx_discard`, `jfr_digest`) are in `scripts/cli/src/lib/cli_function.sh`, and
+are shared by `playground connector benchmark`, `playground analyze flight-recorder -c` and
+`playground debug flight-recorder` (start / stop of an open-ended recording, analyzed on stop, with `jcmd` as the
+fallback for containers without a JMX port).
 
 ## What it reports
 
@@ -57,6 +61,9 @@ playground analyze flight-recorder -c connect --duration 2m --connector my-sink
 playground analyze flight-recorder -f recording.jfr                       # any .jfr (JMC, jcmd, playground debug flight-recorder)
 playground analyze flight-recorder -f worker1.jfr -f worker2.jfr          # several workers over the same period
 playground analyze flight-recorder -f recording.jfr --threads '^pool-' --json
+
+playground debug flight-recorder --action start                           # open-ended: start, reproduce, stop
+playground debug flight-recorder --action stop                            # copies the .jfr and analyzes it
 
 playground connector benchmark                                            # records the measure by default
 playground connector benchmark --no-flight-recorder

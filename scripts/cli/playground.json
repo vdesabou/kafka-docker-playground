@@ -2199,7 +2199,7 @@
                 "-c"
               ],
               "argument": "CONTAINER",
-              "description": "🐳 Container to record over JMX for --duration (default: connect). Its KAFKA_JMX_PORT must be set, as in the playground environments"
+              "description": "🐳 Container to record over JMX for --duration (default: connect). Its JMX port (KAFKA_JMX_PORT, SCHEMA_REGISTRY_JMX_PORT...) must be set, as in the playground environments"
             },
             {
               "names": [
@@ -2257,7 +2257,7 @@
     },
     {
       "name": "debug",
-      "description": "🐞 Debug commands\n\nThe heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\nthe analysis tools are run inside the right container, installed on the\nfly when missing, and their output is brought back to your machine.\n\n🐌 It hangs, or it is slow\n  thread-dump         what every thread is doing right now\n  flight-recorder     record the JVM over a period, open it in JMC\n\n💾 It eats memory\n  heap-dump           take a .hprof, optionally as a histogram\n\n🌐 It is a network or TLS problem\n  tcp-dump            capture traffic, open it in Wireshark\n  testssl             probe a TLS endpoint, locally or in the cloud\n  block-traffic       cut a route with iptables, to simulate an outage\n  java-debug          turn on the JVM SSL, Kerberos or class loading traces\n\n🔬 It is in the code\n  log-level set       raise the level of any package, without a restart\n  enable-remote-debugging   attach your IDE debugger to a container\n  jscissors           trace method calls, arguments and return values\n\n📦 Hand it over\n  generate-diagnostics   a support bundle for connect or broker\n\n🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,\nlogs, Oracle XStream reports, CFK bundles, flight recordings): playground analyze",
+      "description": "🐞 Debug commands\n\nThe heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\nthe analysis tools are run inside the right container, installed on the\nfly when missing, and their output is brought back to your machine.\n\n🐌 It hangs, or it is slow\n  thread-dump         what every thread is doing right now\n  flight-recorder     record the JVM from start to stop, then analyze it\n\n💾 It eats memory\n  heap-dump           take a .hprof, optionally as a histogram\n\n🌐 It is a network or TLS problem\n  tcp-dump            capture traffic, open it in Wireshark\n  testssl             probe a TLS endpoint, locally or in the cloud\n  block-traffic       cut a route with iptables, to simulate an outage\n  java-debug          turn on the JVM SSL, Kerberos or class loading traces\n\n🔬 It is in the code\n  log-level set       raise the level of any package, without a restart\n  enable-remote-debugging   attach your IDE debugger to a container\n  jscissors           trace method calls, arguments and return values\n\n📦 Hand it over\n  generate-diagnostics   a support bundle for connect or broker\n\n🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,\nlogs, Oracle XStream reports, CFK bundles, flight recordings): playground analyze",
       "usage": "playground debug COMMAND",
       "options": [],
       "subcommands": [
@@ -2528,7 +2528,7 @@
         },
         {
           "name": "flight-recorder",
-          "description": "🛩️ Record flight recorder\n\nRead more about it at https://www.baeldung.com/java-flight-recorder-monitoring\n\nOpen the jfr file with JDK Mission Control JMC(https://jdk.java.net/jmc/)",
+          "description": "🛩️ Record a JVM with Java Flight Recorder, from --action start to --action stop\n\nFor a window of any length, in a script or by hand: start, reproduce the problem, stop. --action stop copies the\n.jfr to --output-dir and analyzes it with playground analyze flight-recorder (where the time of the connector tasks\ngoes: states, CPU by layer, hot methods, allocation, locks, GC, findings), unless --no-analyze. Open it with JDK\nMission Control (https://jdk.java.net/jmc/) for the details. To record for a fixed time and analyze in one\ncommand: playground analyze flight-recorder -c <container> --duration 2m.\n\n🔌 The recording is driven over JMX (FlightRecorderMXBean) when the container has a JMX port (KAFKA_JMX_PORT, SCHEMA_REGISTRY_JMX_PORT...), as in the\nplayground environments: the cp images ship a JRE without jcmd, and nothing is installed or restarted. Otherwise\n(cfk pods), jcmd is used when the image has it.\n\n⚙️ --settings playground (default) records what the analysis needs with a low overhead\n(tools/jfr-analyzer/playground.jfc); profile and default are the settings of the JDK; all records every event\nwith no threshold (scripts/cli/all.jfc), for a deep dive in JDK Mission Control, with a high overhead.\n\n🔖 The recording of each container is kept in playground.ini (flight_recorder.<container>), --action status shows it.",
           "usage": "playground debug flight-recorder [OPTIONS]",
           "options": [
             {
@@ -2546,7 +2546,29 @@
                 "--action"
               ],
               "argument": "ACTION",
-              "description": "🟢 start or stop\n\nRequired: ✓ Yes\nAllowed values: start, stop"
+              "description": "🟢 start, stop (copy the recording and analyze it) or status\n\nRequired: ✓ Yes\nAllowed values: start, stop, status"
+            },
+            {
+              "names": [
+                "--settings"
+              ],
+              "argument": "SETTINGS",
+              "description": "⚙️ Settings of the recording, used by --action start (default: playground)\n\n  playground   what playground analyze flight-recorder needs, low overhead (tools/jfr-analyzer/playground.jfc)\n  profile      settings of the JDK for profiling, about 2% overhead\n  default      settings of the JDK for continuous recording, about 1% overhead\n  all          every event, no threshold (scripts/cli/all.jfc): high overhead, for JDK Mission Control\n\nDefault value: playground\nAllowed values: playground, profile, default, all"
+            },
+            {
+              "names": [
+                "--output-dir",
+                "-o"
+              ],
+              "argument": "OUTPUT_DIR",
+              "description": "📂 Folder for the .jfr and the HTML report of the analysis, used by --action stop (default: current folder)\n\nDefault value: ."
+            },
+            {
+              "names": [
+                "--no-analyze"
+              ],
+              "argument": "",
+              "description": "🙈 With --action stop, only copy the recording, do not analyze it"
             }
           ]
         },

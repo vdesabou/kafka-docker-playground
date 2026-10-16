@@ -1,67 +1,141 @@
 containers="${args[--container]}"
 action="${args[--action]}"
+settings="${args[--settings]}"
+output_dir="${args[--output-dir]}"
+no_analyze="${args[--no-analyze]}"
 
 # Convert space-separated string to array
 IFS=' ' read -ra container_array <<< "$containers"
 
+# settings: a .jfc file of the playground, or settings shipped with the JDK
+case "${settings}" in
+    playground) settings_file="$root_folder/tools/jfr-analyzer/playground.jfc" ;;
+    all) settings_file="$root_folder/scripts/cli/all.jfc" ;;
+    *) settings_file="" ;;
+esac
+
+get_environment_used
+
+# the recording of each container is kept in playground.ini, flight_recorder.<container>:
+#   jmx <jmx port> <recording id> <settings> <start epoch>   recording driven over JMX (FlightRecorderMXBean)
+#   jcmd - dump1 <settings> <start epoch>                    recording started with jcmd (cfk pods, no JMX port)
+function jmx_port_of () {
+    docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$1" 2> /dev/null | sed -n 's/^[A-Z_]*JMX_PORT=//p' | head -1
+}
+
+function format_epoch () {
+    date -r "$1" "$2" 2> /dev/null || date -d "@$1" "$2" 2> /dev/null || echo "$1"
+}
+
+function has_jcmd () {
+    playground --output-level ERROR container exec --container "$1" --command "type jcmd" > /dev/null 2>&1
+}
+
+function analyze_recording () {
+    local file="$1"
+    if [[ -n "$no_analyze" ]]
+    then
+        log "🔎 analyze it with: playground analyze flight-recorder -f $file"
+        return
+    fi
+    log "🔎 analyzing $file (--no-analyze to skip it)"
+    playground analyze flight-recorder -f "$file" --output-dir "$(dirname "$file")" || logwarn "⚠️ the recording could not be analyzed, open it with JDK Mission Control (https://jdk.java.net/jmc/)"
+}
+
+mkdir -p "$output_dir"
+output_dir=$(cd "$output_dir" && pwd)
+
 for container in "${container_array[@]}"
 do
-    filename="flight-recorder-$container-$(date '+%Y-%m-%d-%H-%M-%S').jfr"
-
-    set +e
-    playground --output-level ERROR container exec --container "$container" --command "type jcmd" > /dev/null 2>&1
-    if [ $? != 0 ]
-    then
-        logwarn "jcmd is not installed on container $container, attempting to install jdk 17"
-        playground container change-jdk --version 17
-
-        playground --output-level ERROR container exec --container "$container" --command "type jcmd" > /dev/null 2>&1
-        if [ $? != 0 ]
-        then
-            logerror "❌ jcmd could not be installed on container $container"
-            exit 1
-        fi
-    fi
+    state=$(playground state get "flight_recorder.$container" 2> /dev/null)
+    read -r mode port id recorded_settings started_at <<< "$state"
 
     case "${action}" in
         start)
-            set +e
-            output=$(playground --output-level ERROR container exec --container "${container}" --command "jcmd 1 JFR.check")
-            echo "$output" | grep "running" | grep "dump1"
-            if [ $? -eq 0 ]
+            if [[ -n "$state" ]]
             then
-                logwarn "🛩️ flight recorder is already started !"
-                exit 0
+                logwarn "🛩️ flight recorder is already started on $container (settings $recorded_settings, since $(format_epoch "$started_at" '+%H:%M:%S')): stop it with --action stop"
+                continue
             fi
-            set -e
-
-            playground container cp --source ${root_folder}/scripts/cli/all.jfc --destination ${container}:/tmp/all.jfc > /dev/null 2>&1
-            playground --output-level ERROR container exec --container "${container}" --command "jcmd 1 JFR.start name=dump1 filename=/tmp/${filename} settings=/tmp/all.jfc"
-            if [ $? -eq 0 ]
+            # over JMX first: no jcmd needed (the cp images ship a JRE) and no restart
+            port=""
+            if [[ "$environment" != cfk* ]]
             then
-                log "🛩️ flight recorder is now started"
+                port=$(jmx_port_of "$container")
+            fi
+            if [[ -n "$port" ]]
+            then
+                benchmark_jmx_init "$container $port"
+                if recording=$(jfr_jmx_start "$container $port" "${settings_file:-$settings}")
+                then
+                    read -r _ _ id <<< "$recording"
+                    playground state set "flight_recorder.$container" "jmx $port $id $settings $(date +%s)"
+                    log "🛩️ flight recorder is now started on $container over JMX (recording $id, settings $settings)"
+                    continue
+                fi
+                logwarn "⚠️ the flight recorder of $container could not be started over JMX (localhost:$port), trying jcmd"
+            fi
+            if ! has_jcmd "$container"
+            then
+                logerror "❌ cannot start the flight recorder of $container: no JMX port (KAFKA_JMX_PORT, SCHEMA_REGISTRY_JMX_PORT...) reachable and no jcmd in the image"
+                log "💡 playground container change-jdk --version <n> installs a JDK with jcmd, but it restarts the container"
+                exit 1
+            fi
+            remote_settings="$settings"
+            if [[ -n "$settings_file" ]]
+            then
+                remote_settings="/tmp/$(basename "$settings_file")"
+                playground container cp --source "$settings_file" --destination "$container:$remote_settings" > /dev/null 2>&1
+            fi
+            if playground --output-level ERROR container exec --container "$container" --command "jcmd 1 JFR.start name=dump1 settings=$remote_settings"
+            then
+                playground state set "flight_recorder.$container" "jcmd - dump1 $settings $(date +%s)"
+                log "🛩️ flight recorder is now started on $container with jcmd (settings $settings)"
             else
-                logerror "❌ Failed to start flight recorder"
+                logerror "❌ failed to start the flight recorder of $container with jcmd"
+                exit 1
             fi
         ;;
         stop)
-            set +e
-            output=$(playground --output-level ERROR container exec --container "${container}" --command "jcmd 1 JFR.check")
-            echo "$output" | grep "running" | grep "dump1"
-            if [ $? -ne 0 ]
+            if [[ -z "$state" ]]
             then
-                logerror "🛩️ flight recorder is not started !"
+                logerror "🛩️ flight recorder is not started on $container !"
                 exit 1
             fi
-            set -e
-            playground --output-level ERROR container exec --container "${container}" --command "jcmd 1 JFR.stop name=dump1 filename=/tmp/${filename}"
-            if [ $? -eq 0 ]
+            filename="$output_dir/flight-recorder-$container-$(date '+%Y-%m-%d-%H-%M-%S').jfr"
+            if [[ "$mode" == "jmx" ]]
             then
-                log "🛩️ flight recorder is available at ${filename}"
-                log "use JDK Mission Control JMC (https://jdk.java.net/jmc/) to open it, or playground analyze flight-recorder -f ${filename}"
-                playground container cp --source ${container}:/tmp/${filename} --destination ${filename}
+                benchmark_jmx_init "$container $port"
+                recorded=$(jfr_jmx_stop "$container $port $id" "${filename%.jfr}.tmp")
+                if [[ -z "$recorded" ]]
+                then
+                    playground state del "flight_recorder.$container" > /dev/null 2>&1
+                    logerror "❌ failed to stop the flight recorder of $container over JMX (recording $id): the JVM restarted, or the recording was closed"
+                    exit 1
+                fi
+                mv "$recorded" "$filename"
             else
-                logerror "❌ Failed to stop flight recorder"
+                remote="/tmp/$(basename "$filename")"
+                if ! playground --output-level ERROR container exec --container "$container" --command "jcmd 1 JFR.stop name=dump1 filename=$remote"
+                then
+                    playground state del "flight_recorder.$container" > /dev/null 2>&1
+                    logerror "❌ failed to stop the flight recorder of $container with jcmd"
+                    exit 1
+                fi
+                playground container cp --source "$container:$remote" --destination "$filename" > /dev/null 2>&1
+                playground --output-level ERROR container exec --container "$container" --command "rm -f $remote" > /dev/null 2>&1
+            fi
+            playground state del "flight_recorder.$container" > /dev/null 2>&1
+            log "🛩️ flight recording of $container ($(( $(date +%s) - started_at ))s, settings $recorded_settings) is available at $filename"
+            log "use JDK Mission Control JMC (https://jdk.java.net/jmc/) to open it"
+            analyze_recording "$filename"
+        ;;
+        status)
+            if [[ -z "$state" ]]
+            then
+                log "🛩️ no flight recording started on $container by the playground"
+            else
+                log "🛩️ flight recording running on $container since $(format_epoch "$started_at" '+%Y-%m-%d %H:%M:%S') ($(( $(date +%s) - started_at ))s), with $mode, settings $recorded_settings"
             fi
         ;;
         *)

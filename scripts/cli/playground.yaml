@@ -2340,7 +2340,8 @@ subcommands:
       - "-c"
       argument: CONTAINER
       description: "\U0001F433 Container to record over JMX for --duration (default:
-        connect). Its KAFKA_JMX_PORT must be set, as in the playground environments"
+        connect). Its JMX port (KAFKA_JMX_PORT, SCHEMA_REGISTRY_JMX_PORT...) must
+        be set, as in the playground environments"
     - names:
       - "--duration"
       argument: DURATION
@@ -2385,10 +2386,10 @@ subcommands:
     utilities, tcpdump, iptables and\nthe analysis tools are run inside the right
     container, installed on the\nfly when missing, and their output is brought back
     to your machine.\n\n\U0001F40C It hangs, or it is slow\n  thread-dump         what
-    every thread is doing right now\n  flight-recorder     record the JVM over a period,
-    open it in JMC\n\n\U0001F4BE It eats memory\n  heap-dump           take a .hprof,
-    optionally as a histogram\n\n\U0001F310 It is a network or TLS problem\n  tcp-dump
-    \           capture traffic, open it in Wireshark\n  testssl             probe
+    every thread is doing right now\n  flight-recorder     record the JVM from start
+    to stop, then analyze it\n\n\U0001F4BE It eats memory\n  heap-dump           take
+    a .hprof, optionally as a histogram\n\n\U0001F310 It is a network or TLS problem\n
+    \ tcp-dump            capture traffic, open it in Wireshark\n  testssl             probe
     a TLS endpoint, locally or in the cloud\n  block-traffic       cut a route with
     iptables, to simulate an outage\n  java-debug          turn on the JVM SSL, Kerberos
     or class loading traces\n\n\U0001F52C It is in the code\n  log-level set       raise
@@ -2663,8 +2664,23 @@ subcommands:
       description: "\U0001F7E2 enable or disable\n\nDefault value: enable\nAllowed
         values: enable, disable"
   - name: flight-recorder
-    description: "\U0001F6E9️ Record flight recorder\n\nRead more about it at https://www.baeldung.com/java-flight-recorder-monitoring\n\nOpen
-      the jfr file with JDK Mission Control JMC(https://jdk.java.net/jmc/)"
+    description: "\U0001F6E9️ Record a JVM with Java Flight Recorder, from --action
+      start to --action stop\n\nFor a window of any length, in a script or by hand:
+      start, reproduce the problem, stop. --action stop copies the\n.jfr to --output-dir
+      and analyzes it with playground analyze flight-recorder (where the time of the
+      connector tasks\ngoes: states, CPU by layer, hot methods, allocation, locks,
+      GC, findings), unless --no-analyze. Open it with JDK\nMission Control (https://jdk.java.net/jmc/)
+      for the details. To record for a fixed time and analyze in one\ncommand: playground
+      analyze flight-recorder -c <container> --duration 2m.\n\n\U0001F50C The recording
+      is driven over JMX (FlightRecorderMXBean) when the container has a JMX port
+      (KAFKA_JMX_PORT, SCHEMA_REGISTRY_JMX_PORT...), as in the\nplayground environments:
+      the cp images ship a JRE without jcmd, and nothing is installed or restarted.
+      Otherwise\n(cfk pods), jcmd is used when the image has it.\n\n⚙️ --settings
+      playground (default) records what the analysis needs with a low overhead\n(tools/jfr-analyzer/playground.jfc);
+      profile and default are the settings of the JDK; all records every event\nwith
+      no threshold (scripts/cli/all.jfc), for a deep dive in JDK Mission Control,
+      with a high overhead.\n\n\U0001F516 The recording of each container is kept
+      in playground.ini (flight_recorder.<container>), --action status shows it."
     usage: playground debug flight-recorder [OPTIONS]
     options:
     - names:
@@ -2679,8 +2695,32 @@ subcommands:
     - names:
       - "--action"
       argument: ACTION
-      description: "\U0001F7E2 start or stop\n\nRequired: ✓ Yes\nAllowed values: start,
-        stop"
+      description: "\U0001F7E2 start, stop (copy the recording and analyze it) or
+        status\n\nRequired: ✓ Yes\nAllowed values: start, stop, status"
+    - names:
+      - "--settings"
+      argument: SETTINGS
+      description: |-
+        ⚙️ Settings of the recording, used by --action start (default: playground)
+
+          playground   what playground analyze flight-recorder needs, low overhead (tools/jfr-analyzer/playground.jfc)
+          profile      settings of the JDK for profiling, about 2% overhead
+          default      settings of the JDK for continuous recording, about 1% overhead
+          all          every event, no threshold (scripts/cli/all.jfc): high overhead, for JDK Mission Control
+
+        Default value: playground
+        Allowed values: playground, profile, default, all
+    - names:
+      - "--output-dir"
+      - "-o"
+      argument: OUTPUT_DIR
+      description: "\U0001F4C2 Folder for the .jfr and the HTML report of the analysis,
+        used by --action stop (default: current folder)\n\nDefault value: ."
+    - names:
+      - "--no-analyze"
+      argument: ''
+      description: "\U0001F648 With --action stop, only copy the recording, do not
+        analyze it"
   - name: log-level
     description: "\U0001F9EC Set log level for any package\n\nChanges the level of
       any logger on the running connect worker, straight\naway and without a restart,
