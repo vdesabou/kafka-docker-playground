@@ -665,7 +665,7 @@ SECTION_CSS = """
 .jfr-findings .next { color: var(--text-secondary); display: block; margin-top: 3px; }
 .jfr-section code { font-family: 'SFMono-Regular', Consolas, Menlo, monospace; font-size: .78rem; }
 .jfr-section .muted { color: var(--text-muted); }
-.verdict { margin: 18px 0 0; padding: 12px 16px; border-left: 4px solid var(--sev); font-size: 1rem; font-weight: 500; }
+.jfr-verdict { margin: 18px 0 0; padding: 12px 16px; border-left: 4px solid var(--sev); font-size: 1rem; font-weight: 500; }
 .jfr-section td code { word-break: break-all; }
 """
 
@@ -951,7 +951,7 @@ def verdict_html(a):
     else:
         text = "✅ Nothing alarming in this recording."
         sev = "var(--good)"
-    return f'<div class="card verdict" style="--sev: {sev}">{e(text)}</div>'
+    return f'<div class="card jfr-verdict" style="--sev: {sev}">{e(text)}</div>'
 
 
 def standalone_html(a, recording_link=None):
