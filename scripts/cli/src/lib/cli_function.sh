@@ -3758,21 +3758,30 @@ function benchmark_jmx_init() {
 # and this needs neither jcmd nor a restart. Uses jmxterm, copied by benchmark_jmx_init.
 JFR_BEAN="jdk.management.jfr:type=FlightRecorder"
 
-# starts a recording with the settings of tools/jfr-analyzer/playground.jfc on each "<container> <jmx port>" line of
-# $1, prints "<container> <jmx port> <recording id>" lines. Returns 1 (after closing what was started) when a JVM has no
-# flight recorder MBean (JDK 8 before 8u262) or refuses the settings
+# starts a recording on each "<container> <jmx port>" line of $1, with the settings $2: a .jfc file (default
+# tools/jfr-analyzer/playground.jfc) or the name of settings of the JDK (profile, default). Prints
+# "<container> <jmx port> <recording id>" lines. Returns 1 (after closing what was started) when a JVM has no flight
+# recorder MBean (JDK 8 before 8u262) or refuses the settings
 function jfr_jmx_start () {
-  local workers="$1"
-  local config container port id out started=""
-  # setConfiguration takes the content of the .jfc: one line, without the comment, spaces escaped for jmxterm
-  config=$(sed '/<!--/,/-->/d' "$root_folder/tools/jfr-analyzer/playground.jfc" | tr '\n' ' ' | sed 's/  */ /g')
-  config="${config// /\\ }"
+  local workers="$1" settings="${2:-$root_folder/tools/jfr-analyzer/playground.jfc}"
+  local config operation container port id out started=""
+  if [ -f "$settings" ]
+  then
+    # setConfiguration takes the content of the .jfc: one line, without comments, single quotes (a double quote ends
+    # the argument for jmxterm), spaces escaped for jmxterm
+    operation="setConfiguration"
+    config=$(sed '/<!--/,/-->/d' "$settings" | tr '\n' ' ' | sed "s/\"/'/g; s/  */ /g")
+    config="${config// /\\ }"
+  else
+    operation="setPredefinedConfiguration"
+    config="$settings"
+  fi
   while read -r container port
   do
     [ -z "$container" ] && continue
     id=$(printf 'run -b %s newRecording\n' "$JFR_BEAN" | benchmark_jmxterm "$container" "$port" | tr -dc '0-9')
     # setConfiguration and startRecording return null when they succeed, nothing when they fail
-    [ -n "$id" ] && out=$(printf 'run -b %s setConfiguration %s %s\nrun -b %s startRecording %s\n' "$JFR_BEAN" "$id" "$config" "$JFR_BEAN" "$id" | benchmark_jmxterm "$container" "$port")
+    [ -n "$id" ] && out=$(printf 'run -b %s %s %s %s\nrun -b %s startRecording %s\n' "$JFR_BEAN" "$operation" "$id" "$config" "$JFR_BEAN" "$id" | benchmark_jmxterm "$container" "$port")
     if [ -z "$id" ] || [ "$(echo "$out" | grep -c '^null$')" -ne 2 ]
     then
       [ -n "$id" ] && started="$started"$'\n'"$container $port $id"
