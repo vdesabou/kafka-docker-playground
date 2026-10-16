@@ -49447,6 +49447,8 @@ playground_connector_benchmark_command() {
   }
 
   expected="$nb_records"
+  # the drain stopped at --max-wait before the end of the backlog
+  incomplete=false
   load_seconds="-"
   topic_records_delta="-"
   start_time=$(now)
@@ -49460,7 +49462,7 @@ playground_connector_benchmark_command() {
       # RUNNING) if a rebalance swallows the wakeup: a task restarted while its connector is paused starts paused
       if ! playground connector wait --connector "$connector" --state PAUSED --max-wait 30 --interval 2 > /dev/null 2>&1
       then
-          logwarn "⚠️ $connector_type connector $connector is not paused with all its tasks after 30s, restarting them (they start paused)"
+          logwarn "⚠️ $connector_type connector $connector is not paused with all its tasks after 30s, restarting them (they start paused): a task stuck in its code keeps its thread running next to the new one until the worker restarts, the flight recorder findings tell where it is stuck"
           playground connector restart --connector "$connector" > /dev/null
           playground connector wait --connector "$connector" --state PAUSED --max-wait 120 --interval 2 > /dev/null
       fi
@@ -49533,14 +49535,24 @@ playground_connector_benchmark_command() {
           check_not_failed
           if [ "$elapsed" -ge "$max_wait" ]
           then
-              logerror "❌ only $processed/$expected records processed after ${max_wait}s"
+              # a connector that does not drain is what the flight recording explains best: measure what was processed, write
+              # the report, and fail at the end
+              logerror "❌ only $processed/$expected records processed after ${max_wait}s, the drain did not finish: reporting on what was processed"
+              set +e
               playground connector status --connector "$connector"
-              exit 1
+              set -e
+              incomplete=true
+              end_time="$sample_time"
+              break
           fi
       done
       stop_flight_recorder
       measured_seconds=$(awk -v e="$end_time" -v s="$start_time" 'BEGIN { printf "%.1f", e - s }')
       measured_records="$expected"
+      if [ "$incomplete" == "true" ]
+      then
+          measured_records="$processed"
+      fi
       if [ "$type" == "source" ]
       then
           refresh_connector_topics
@@ -49750,7 +49762,7 @@ playground_connector_benchmark_command() {
       --arg rate_p50 "$rate_p50" --arg rate_p95 "$rate_p95" --arg rate_min "$rate_min" \
       --arg batch_avg_ms "$batch_avg" --arg running_ratio "$ratio_avg" --arg cpu_avg "$cpu_avg" --arg cpu_max "$cpu_max" \
       --arg load_seconds "$load_seconds" --arg topic_records_delta "$topic_records_delta" \
-      --arg samples_csv "$csv_file" --argjson lower_bound "$lower_bound" \
+      --arg samples_csv "$csv_file" --argjson lower_bound "$lower_bound" --argjson incomplete "$incomplete" --argjson expected_records "$expected" \
       --arg gc_percent "$gc_percent" --arg cpu_available_avg "$cpu_available_avg" --arg pause_ratio "$pause_avg" \
       --arg dlq_records "$dlq_delta" --arg skipped_records "$skipped_delta" --arg task_shares "$task_shares" \
       --argjson setup "$setup_json" --argjson flight_recorder "$flight_recorder_json" --argjson grafana "$grafana_json" \
@@ -49758,7 +49770,8 @@ playground_connector_benchmark_command() {
       --arg load_script "$([ -n "$load_script" ] && [[ "$load_cmd" == *"$load_script"* ]] && basename "$load_script")" \
       '{date: $date, test_file: $test_file, connector: $connector, connector_class: $connector_class, plugin_version: $plugin_version,
         cp_tag: $cp_tag, type: $type, mode: $mode, shape: $shape, sessions: $sessions, tasks: $tasks, records: $records, seconds: $seconds,
-        records_per_second: $records_per_second, lower_bound: $lower_bound, rate_p50: $rate_p50, rate_p95: $rate_p95, rate_min: $rate_min,
+        records_per_second: $records_per_second, lower_bound: $lower_bound,
+        incomplete: $incomplete, expected_records: $expected_records, rate_p50: $rate_p50, rate_p95: $rate_p95, rate_min: $rate_min,
         batch_avg_ms: $batch_avg_ms, running_ratio: $running_ratio, cpu_percent_of_one_core_avg: $cpu_avg,
         cpu_percent_of_one_core_max: $cpu_max, load_seconds: $load_seconds, topic_records_delta: $topic_records_delta,
         gc_percent: $gc_percent, cpu_percent_of_available_avg: $cpu_available_avg, pause_ratio: $pause_ratio,
@@ -49780,7 +49793,7 @@ playground_connector_benchmark_command() {
   elif [ -f "$history_file" ]
   then
       # lower bounds are not comparable
-      previous=$(jq -c --arg t "$test_file_relative" --arg c "$connector" --arg m "$mode" --arg s "$shape" 'select(.test_file == $t and .connector == $c and .mode == $m and .shape == $s and .lower_bound != true and .records > 0)' "$history_file" 2> /dev/null | tail -1)
+      previous=$(jq -c --arg t "$test_file_relative" --arg c "$connector" --arg m "$mode" --arg s "$shape" 'select(.test_file == $t and .connector == $c and .mode == $m and .shape == $s and .lower_bound != true and .incomplete != true and .records > 0)' "$history_file" 2> /dev/null | tail -1)
   fi
   if [[ ! -n "$no_history" ]]
   then
@@ -49795,13 +49808,19 @@ playground_connector_benchmark_command() {
       else
           echo "$result" >&3
       fi
+      [ "$incomplete" == "true" ] && exit 1
       exit 0
   fi
 
   log "🏁 benchmark of $connector_type connector $connector ($type, $nb_tasks task(s), $connector_class $plugin_version, CP $cp_tag)"
   if [ "$mode" == "drain" ]
   then
-      printf "   %-22s %s\n" "mode" "drain of $measured_records records (shape $shape$([ "$sessions" -gt 1 ] && echo ", $sessions sessions"), loaded in ${load_seconds}s)"
+      if [ "$incomplete" == "true" ]
+      then
+          printf "   %-22s %s\n" "mode" "drain stopped after ${max_wait}s (--max-wait): $measured_records of $expected records processed (shape $shape)"
+      else
+          printf "   %-22s %s\n" "mode" "drain of $measured_records records (shape $shape$([ "$sessions" -gt 1 ] && echo ", $sessions sessions"), loaded in ${load_seconds}s)"
+      fi
   else
       printf "   %-22s %s\n" "mode" "steady for ${measured_seconds}s after ${warmup}s of warm-up"
   fi
@@ -49946,6 +49965,10 @@ playground_connector_benchmark_command() {
   then
       add_warning "the throughput dropped to $rate_min records/s at least once (p50 $rate_p50): stalls, rebalances or a load that does not keep up"
   fi
+  if [ "$incomplete" == "true" ]
+  then
+      add_warning "the drain did not finish: only $measured_records of $expected records were processed in ${max_wait}s (--max-wait), the throughput is the one of the records processed; see where the time goes in the flight recorder findings"
+  fi
   if [ "$lower_bound" == "true" ]
   then
       add_warning "the backlog was processed before the first sample, the throughput is a lower bound: increase --nb-records (10x) for a real measure"
@@ -50018,6 +50041,12 @@ playground_connector_benchmark_command() {
       fi
   else
       logwarn "⚠️ the html report could not be generated"
+  fi
+
+  # the report is written, but a drain that did not finish is a failed benchmark
+  if [ "$incomplete" == "true" ]
+  then
+      exit 1
   fi
 
 }

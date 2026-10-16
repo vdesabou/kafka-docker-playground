@@ -43,6 +43,9 @@ public class JfrDigest {
         long monitorNs, parkNs, waitNs, sleepNs, fileNs;
         final Map<String, long[]> socket = new LinkedHashMap<>(); // "op remote" -> count, ns, bytes
         final Map<String, Long> nativeStacks = new HashMap<>();
+        // the java threads sampled under this name: a task restarted while its thread is busy leaves that thread
+        // running, with the same name as the new one
+        final Set<Long> javaIds = new HashSet<>();
     }
 
     static class Agg {
@@ -68,14 +71,24 @@ public class JfrDigest {
         Pattern filter = Pattern.compile(threadFilter);
 
         // first pass: are there threads matching the filter? otherwise every thread is analyzed
+        // and when did the recording start: a recording copied over JMX is made of whole chunks of the repository, and a
+        // chunk started before the recording holds older events (a previous recording): the start is the recordingStart
+        // of the last recording (jdk.ActiveRecording), or the first end of an event. An event is recorded when it ends,
+        // its start can be long before (a thread parked for an hour): the durations are clipped to the recording
         Set<String> sampled = new HashSet<>();
         long nbEvents = 0;
+        Instant firstEnd = null, recordingStart = null;
         for (Path file : files) {
             try (RecordingFile rf = new RecordingFile(file)) {
                 while (rf.hasMoreEvents()) {
                     RecordedEvent e = rf.readEvent();
                     nbEvents++;
+                    if (firstEnd == null || e.getEndTime().isBefore(firstEnd)) firstEnd = e.getEndTime();
                     String type = e.getEventType().getName();
+                    if (type.equals("jdk.ActiveRecording") && e.hasField("recordingStart")) {
+                        Instant rs = e.getInstant("recordingStart");
+                        if (recordingStart == null || rs.isAfter(recordingStart)) recordingStart = rs;
+                    }
                     if (type.equals("jdk.ExecutionSample") || type.equals("jdk.ThreadCPULoad")) {
                         String name = threadName(e, type.equals("jdk.ExecutionSample") ? "sampledThread" : "eventThread");
                         if (name != null) sampled.add(name);
@@ -83,6 +96,7 @@ public class JfrDigest {
                 }
             }
         }
+        if (recordingStart == null || (firstEnd != null && recordingStart.isBefore(firstEnd))) recordingStart = firstEnd;
         boolean any = sampled.stream().anyMatch(n -> filter.matcher(n).find());
         String selection = any ? "filter" : "all";
 
@@ -94,7 +108,7 @@ public class JfrDigest {
         Map<String, Long> allocStacks = new HashMap<>();
         Map<String, Agg> fileIo = new HashMap<>();
         long allocAllThreads = 0;
-        Set<String> allocSeen = new HashSet<>();
+        Set<Long> allocSeen = new HashSet<>();
 
         List<Double> pauses = new ArrayList<>();
         Map<String, Integer> gcByName = new HashMap<>();
@@ -112,18 +126,29 @@ public class JfrDigest {
             try (RecordingFile rf = new RecordingFile(file)) {
                 while (rf.hasMoreEvents()) {
                     RecordedEvent e = rf.readEvent();
-                    Instant st = e.getStartTime(), et = e.getEndTime();
-                    if (start == null || st.isBefore(start)) start = st;
-                    if (end == null || et.isAfter(end)) end = et;
                     String type = e.getEventType().getName();
+                    // the description of the JVM is written at the start of each chunk: kept whatever its time
+                    boolean metadata = type.equals("jdk.JVMInformation") || type.equals("jdk.CPUInformation")
+                        || type.equals("jdk.ContainerConfiguration") || type.equals("jdk.ActiveRecording");
+                    if (!metadata && e.getEndTime().isBefore(recordingStart)) continue;
+                    if (metadata) {
+                        switch (type) {
+                            case "jdk.JVMInformation" -> jvmVersion = str(e, "jvmVersion");
+                            case "jdk.ContainerConfiguration" -> {
+                                if (e.hasField("effectiveCpuCount")) effectiveCpus = (int) e.getLong("effectiveCpuCount");
+                            }
+                            case "jdk.CPUInformation" -> {
+                                if (e.hasField("hwThreads")) hwThreads = e.getInt("hwThreads");
+                            }
+                            default -> { }
+                        }
+                        continue;
+                    }
+                    Instant st = e.getStartTime().isBefore(recordingStart) ? recordingStart : e.getStartTime(), et = e.getEndTime();
+                    if (start == null || st.isBefore(start)) start = st;
+                    long clippedNs = Duration.between(st, et).toNanos();
+                    if (end == null || et.isAfter(end)) end = et;
                     switch (type) {
-                        case "jdk.JVMInformation" -> jvmVersion = str(e, "jvmVersion");
-                        case "jdk.ContainerConfiguration" -> {
-                            if (e.hasField("effectiveCpuCount")) effectiveCpus = (int) e.getLong("effectiveCpuCount");
-                        }
-                        case "jdk.CPUInformation" -> {
-                            if (e.hasField("hwThreads")) hwThreads = e.getInt("hwThreads");
-                        }
                         case "jdk.CPULoad" -> {
                             jvmUser += e.getFloat("jvmUser");
                             jvmSystem += e.getFloat("jvmSystem");
@@ -142,7 +167,10 @@ public class JfrDigest {
                         case "jdk.ExecutionSample" -> {
                             String name = threadName(e, "sampledThread");
                             if (name == null) break;
-                            threads.computeIfAbsent(name, k -> new ThreadStats()).execSamples++;
+                            ThreadStats ts = threads.computeIfAbsent(name, k -> new ThreadStats());
+                            ts.execSamples++;
+                            RecordedThread rt = e.getValue("sampledThread");
+                            if (rt != null) ts.javaIds.add(rt.getJavaThreadId());
                             if (selected(name, filter, any)) execStacks.merge(stackKey(e.getStackTrace(), depth), 1L, Long::sum);
                         }
                         case "jdk.NativeMethodSample" -> {
@@ -162,13 +190,13 @@ public class JfrDigest {
                             long bytes = e.hasField("bytesRead") ? e.getLong("bytesRead") : e.hasField("bytesWritten") ? e.getLong("bytesWritten") : 0;
                             long[] v = threads.computeIfAbsent(name, k -> new ThreadStats()).socket.computeIfAbsent(op + " " + remote, k -> new long[3]);
                             v[0]++;
-                            v[1] += e.getDuration().toNanos();
+                            v[1] += clippedNs;
                             v[2] += Math.max(bytes, 0);
                         }
                         case "jdk.FileRead", "jdk.FileWrite" -> {
                             String name = threadName(e, "eventThread");
                             if (name == null || !selected(name, filter, any)) break;
-                            long ns = e.getDuration().toNanos();
+                            long ns = clippedNs;
                             threads.computeIfAbsent(name, k -> new ThreadStats()).fileNs += ns;
                             String op = type.equals("jdk.FileRead") ? "read" : "write";
                             String path = str(e, "path");
@@ -183,7 +211,7 @@ public class JfrDigest {
                         case "jdk.JavaMonitorEnter", "jdk.ThreadPark", "jdk.JavaMonitorWait", "jdk.ThreadSleep" -> {
                             String name = threadName(e, "eventThread");
                             if (name == null || !selected(name, filter, any)) break;
-                            long ns = e.getDuration().toNanos();
+                            long ns = clippedNs;
                             ThreadStats t = threads.computeIfAbsent(name, k -> new ThreadStats());
                             String kind;
                             String cls;
@@ -203,9 +231,11 @@ public class JfrDigest {
                         }
                         case "jdk.ObjectAllocationSample" -> {
                             // the weight is what the thread allocated since its previous sample: the first sample of a
-                            // thread carries everything since the thread started, before the recording
+                            // thread carries everything since the thread started, before the recording (by thread id: a
+                            // restarted task has two threads with the same name)
                             String name = threadName(e, "eventThread");
-                            if (name == null || allocSeen.add(name)) break;
+                            RecordedThread at = e.getValue("eventThread");
+                            if (name == null || at == null || allocSeen.add(at.getJavaThreadId())) break;
                             long weight = e.getLong("weight");
                             allocAllThreads += weight;
                             if (!selected(name, filter, any)) break;
@@ -283,6 +313,7 @@ public class JfrDigest {
             out.append(",\"cpu_system\":").append(t.cpuN > 0 ? num(t.cpuSystem / Math.max(rounds, t.cpuN)) : "null");
             out.append(",\"cpu_n\":").append(t.cpuN);
             out.append(",\"exec_samples\":").append(t.execSamples);
+            out.append(",\"java_threads\":").append(t.javaIds.size());
             out.append(",\"native_samples\":").append(t.nativeSamples);
             if (sel) {
                 out.append(",\"monitor_ms\":").append(num(t.monitorNs / 1e6));

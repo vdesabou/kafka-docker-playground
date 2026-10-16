@@ -52,6 +52,20 @@ STATES = [
     ("file", "File I/O", "var(--series-5)"),
     ("other", "Not attributed", "var(--axis)"),
 ]
+# known slow code paths: when the execution samples of the task threads go through all the frames of an entry (prefixes),
+# the finding names the issue instead of a generic "CPU in layer X"
+KNOWN_ISSUES = [
+    {"frames": ("org.apache.kafka.connect.storage.SimpleHeaderConverter", "java.math.BigInteger"),
+     "title": "The header converter parses huge numbers (KAFKA-17792).",
+     "text": "{share} of the task-thread CPU samples are in SimpleHeaderConverter parsing header values as numbers with "
+             "java.math.BigInteger: string headers that look like huge numbers, such as the Zipkin B3 trace ids "
+             "(X-B3-SpanId: 407127e212797209), cost seconds of CPU each.",
+     "next": "A regression of Apache Kafka 3.8 and 3.9 (Confluent Platform 7.8.0, 7.8.1, 7.9.0 and 7.9.1), fixed in 3.9.1 and "
+             "4.0.0 (Confluent Platform 7.8.2, 7.9.2 and later): upgrade the Connect workers, or set "
+             "header.converter=org.apache.kafka.connect.storage.StringConverter on the connector, which keeps the headers "
+             "as strings.",
+     "link": "https://issues.apache.org/jira/browse/KAFKA-17792"},
+]
 BROKER_PORTS = {9091, 9092, 9093, 9094, 19092, 29092, 39092, 49092}
 
 
@@ -318,6 +332,13 @@ def analyze(model, connector_class=None, connector_type=None, mode=None, source_
         layer_rows.append({"layer": layer, "samples": layers[layer], "share": layers[layer] / nb_exec,
                            "packages": [{"package": p, "share": c / nb_exec} for p, c in pk.most_common(3)]})
     layer_rows.sort(key=lambda r: -r["share"])
+    # several java threads under one task thread name: the previous thread of a restarted task is still running
+    abandoned = sorted(((t["name"], t["java_threads"]) for t in selected if (t.get("java_threads") or 0) > 1), key=lambda x: natural_key(x[0]))
+    known = []
+    for issue in KNOWN_ISSUES:
+        c = sum(n for st, n in model["exec"].items() if all(any(f.startswith(p) for f in st) for p in issue["frames"]))
+        if nb_exec and c / nb_exec >= 0.2:
+            known.append(dict(issue, share=c / nb_exec))
     hot = []
     github = source_url if source_url and source_url.startswith("https://github.com/") else None
     for m, c in methods.most_common(top):
@@ -391,7 +412,7 @@ def analyze(model, connector_class=None, connector_type=None, mode=None, source_
         "states": {"categories": [{"key": k, "label": label, "color": color} for k, label, color in STATES],
                    "threads": thread_states, "mean": mean},
         "jit_cores": jit_cores, "task_cores": task_cores,
-        "exec_samples": nb_exec, "layers": layer_rows, "hot_methods": hot, "alloc": alloc,
+        "exec_samples": nb_exec, "layers": layer_rows, "hot_methods": hot, "known_issues": known, "abandoned_threads": abandoned, "alloc": alloc,
         "locks": locks, "waits": waits, "io": io, "top_threads": top_threads, "gc": gc,
         "exceptions_per_s": exceptions_per_s,
         "file_io": sorted(model["file_io"], key=lambda x: -x["ms"])[:top],
@@ -432,8 +453,18 @@ def findings(a):
     layers = {r["layer"]: r["share"] for r in a["layers"]}
     io = [x for x in a["io"] if not x["broker"]]
 
-    def add(severity, title, text, next_step=None):
-        out.append({"severity": severity, "title": title, "text": text, "next": next_step})
+    def add(severity, title, text, next_step=None, link=None):
+        out.append({"severity": severity, "title": title, "text": text, "next": next_step, "link": link})
+
+    for k in a.get("known_issues", []):
+        add("critical", k["title"], k["text"].format(share=pct(k["share"])), k["next"], k["link"])
+    if a.get("abandoned_threads"):
+        names = ", ".join(f"{n} ({c} threads)" for n, c in a["abandoned_threads"])
+        add("warning", "A restarted task left its previous thread running.",
+            f"Several java threads run under the same task thread name: {names}. Connect cannot stop a thread: when a task is "
+            "restarted while it is stuck (a put or a conversion that does not return), the old thread keeps running next to "
+            "the new one, and the CPU and samples of the tasks below include it.",
+            "Restart the worker to get rid of it, once the cause is fixed: until then it keeps using CPU.")
 
     if nb_threads == 0:
         add("info", "No task thread in the recording.",
@@ -496,12 +527,20 @@ def findings(a):
     if a["exec_samples"] >= 50:
         sev = "warning" if m["running"] >= 0.5 else "info"
         conv, conn = layers.get("Converters (serialization)", 0), layers.get("Connector", 0)
-        if conv >= 0.3:
+        # a known issue in a converter already says why
+        if conv >= 0.3 and not a.get("known_issues"):
             add(sev, "Most of the CPU goes to conversion.",
                 f"{pct(conv)} of the task-thread CPU samples are in converters and serializers, against {pct(conn)} in the "
                 "connector itself.",
                 "Expected with large or nested records. If the CPU is the limit, compare with another converter or a smaller "
                 "schema before tuning the connector.")
+        top = a["hot_methods"][0] if a["hot_methods"] else None
+        if top and top["share"] >= 0.5 and not a.get("known_issues"):
+            add(sev, f"One method takes {pct(top['share'])} of the CPU of the tasks.",
+                f"{pct(top['share'])} of the task-thread CPU samples are in {short_method(top['method'])}"
+                + (f" (running {short_method(top['self'])})" if top.get("self") else "") + f", {top['layer'].lower()} layer.",
+                "A single hot spot: search the issue tracker of that code for it with the class name, and look at what in the "
+                "records (size, headers, values) makes it expensive.")
         if layers.get("Logging", 0) >= 0.1:
             add("warning", "Logging takes a large part of the CPU.",
                 f"{pct(layers['Logging'])} of the task-thread CPU samples are in logging.",
@@ -628,6 +667,8 @@ def text_report(a, top):
             lines.append(f"  {ICONS[f['severity']]} {f['title']} {f['text']}")
             if f.get("next"):
                 lines.append(f"     → {f['next']}")
+            if f.get("link"):
+                lines.append(f"     ↗ {f['link']}")
         lines.append("")
     lines.append("Task thread time, by state (mean of the task threads)")
     for k, label, _ in STATES:
@@ -708,6 +749,9 @@ def findings_html(items):
     lis = []
     for f in items:
         nxt = f'<span class="next">→ {e(f["next"])}</span>' if f.get("next") else ""
+        if f.get("link"):
+            nxt += f'<span class="next">↗ <a href="{e(f["link"], quote=True)}" target="_blank" rel="noopener">{e(f["link"])}</a></span>'
+
         lis.append(f'<li style="--sev: {SEV_COLOR[f["severity"]]}"><span class="title">{ICONS[f["severity"]].strip()} {e(f["title"])}</span>'
                    f'{e(f["text"])}{nxt}</li>')
     return '<ul class="jfr-findings">' + "".join(lis) + "</ul>"

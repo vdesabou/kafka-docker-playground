@@ -63,11 +63,11 @@ def load_history(path, result):
                 except ValueError:
                     continue
                 if all(run.get(k) == result.get(k) for k in ("test_file", "connector", "mode", "shape")) \
-                        and run.get("lower_bound") is not True and (run.get("records") or 0) > 0:
+                        and run.get("lower_bound") is not True and run.get("incomplete") is not True and (run.get("records") or 0) > 0:
                     runs.append(run)
     # with --no-history, this run is not in the file
     if not runs or runs[-1].get("date") != result.get("date") or runs[-1].get("samples_csv") != result.get("samples_csv"):
-        if result.get("lower_bound") is not True and (result.get("records") or 0) > 0:
+        if result.get("lower_bound") is not True and result.get("incomplete") is not True and (result.get("records") or 0) > 0:
             runs.append(result)
     return runs[-20:]
 
@@ -125,6 +125,7 @@ a { color: var(--series-1); }
 .tile { padding: 14px 16px; }
 .tile .label { color: var(--text-secondary); font-size: .8rem; }
 .tile .value { font-size: 1.6rem; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tile .value.bad { color: var(--critical); }
 .tile .unit { font-size: .85rem; font-weight: 400; color: var(--text-secondary); }
 .tile .note { color: var(--text-muted); font-size: .78rem; margin-top: 4px; }
 .delta-good { color: var(--good-text); } .delta-bad { color: var(--critical); }
@@ -244,8 +245,9 @@ __JFR__
   }
   tile(comparison ? "🚀 Last run (" + r[groupKey] + ")" : "🚀 Throughput", (r.lower_bound ? "≥ " : "") + nf.format(r.records_per_second), "records/s",
        r.rate_p50 !== "-" ? "p50 " + compact(+r.rate_p50) + " · p95 " + compact(+r.rate_p95) + " · min " + compact(+r.rate_min) : "");
-  tile("⏱️ Duration", nf1.format(r.seconds), "s", r.mode === "drain" ? "time to process the backlog" : "measure, after the warm-up");
-  tile("🧾 Records", nf.format(r.records), "", r.mode === "drain" ? "backlog, loaded in " + r.load_seconds + " s" : "processed during the measure");
+  tile("⏱️ Duration", nf1.format(r.seconds), "s", r.incomplete ? "stopped by --max-wait" : r.mode === "drain" ? "time to process the backlog" : "measure, after the warm-up");
+  tile("🧾 Records", nf.format(r.records), "", r.incomplete ? "of " + nf.format(r.expected_records) + ": the drain did not finish (--max-wait)" :
+       r.mode === "drain" ? "backlog, loaded in " + r.load_seconds + " s" : "processed during the measure", r.incomplete ? "bad" : undefined);
   const previous = history.length > 1 ? history[history.length - 2] : null;
   const versionColor = version => "var(--series-" + (versions.findIndex(v => v.version === version) % 8 + 1) + ")";
   if (comparison) {
@@ -542,6 +544,9 @@ def verdict(result, history, versions, warnings, jfr_findings, group_noun="versi
             severity = "var(--warning)"
     else:
         parts.append(f"🚀 {'≥ ' if result.get('lower_bound') else ''}{result.get('records_per_second') or 0:,.0f} records/s")
+        if result.get("incomplete"):
+            parts.append(f"🛑 the drain did not finish: {result.get('records') or 0:,} of {result.get('expected_records') or 0:,} records")
+            severity = "var(--critical)"
         previous = history[-2] if len(history) > 1 else None
         if previous and previous.get("records_per_second"):
             delta = (result["records_per_second"] - previous["records_per_second"]) / previous["records_per_second"] * 100
@@ -549,7 +554,8 @@ def verdict(result, history, versions, warnings, jfr_findings, group_noun="versi
                          f"{'faster' if delta > 0 else 'slower'} than the previous run")
     if warnings:
         parts.append(f"⚠️ {len(warnings)} warning{'s' if len(warnings) > 1 else ''} below")
-        severity = "var(--warning)"
+        if severity == "var(--good)":
+            severity = "var(--warning)"
     top = next((f for f in jfr_findings if f.get("severity") in ("critical", "warning")), None)
     if top:
         parts.append("🛩️ " + top["title"].rstrip("."))
@@ -643,7 +649,8 @@ def main():
 
     subtitle = " · ".join(str(x) for x in [
         result.get("connector_class"), result.get("plugin_version"), "CP " + str(result.get("cp_tag")),
-        f"{result.get('mode')} of {fmt_int(result.get('records'))} records" if result.get("mode") == "drain"
+        (f"drain stopped at {fmt_int(result.get('records'))} of {fmt_int(result.get('expected_records'))} records" if result.get("incomplete") else
+         f"{result.get('mode')} of {fmt_int(result.get('records'))} records") if result.get("mode") == "drain"
         else f"steady for {result.get('seconds')} s",
         "shape " + str(result.get("shape")), str(result.get("date", "")).replace("T", " ").replace("Z", " UTC"),
     ])
