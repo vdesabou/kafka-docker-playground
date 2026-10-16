@@ -386,6 +386,10 @@ def banner(results):
     if len(set("\n".join(normalized(r)) for r in results)) == 1:
         tone, icon, text = verdicts[0]
         return '<div class="banner %s">%s The %d versions agree: %s</div>' % (tone, icon, len(results), end(esc(text[0].lower() + text[1:])))
+    # same outcome everywhere (all applied, same step dropped or failed): the records themselves differ
+    if len(set(v[2] for v in verdicts)) == 1:
+        return '<div class="banner warning">⚠️ The versions give different records: %s in all of them, but the values differ (see the flagged cells below).</div>' % (
+            esc(verdicts[0][2][0].lower() + verdicts[0][2][1:]))
     return '<div class="banner warning">⚠️ The versions disagree: %s</div>' % end("; ".join(
         "<b>%s</b> %s %s" % (esc(l), v[1], esc(v[2][0].lower() + v[2][1:])) for l, v in zip(labels, verdicts)))
 
