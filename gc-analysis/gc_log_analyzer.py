@@ -166,6 +166,10 @@ h2{font-size:1.05rem;font-weight:600;margin-bottom:12px;color:#334155}
 .rec-badge.ok{background:#cffafe;color:#0891b2}
 .rec-text{font-size:.88rem;flex:1;color:#334155}
 .rec-flag{display:block;margin-top:4px;font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.8rem;color:#1e293b}
+.verdict{background:#fff;border-radius:10px;padding:14px 18px;margin-bottom:22px;
+         box-shadow:0 1px 3px rgba(0,0,0,.07);border-left:4px solid #16a34a;font-size:1rem;font-weight:500}
+.verdict.critical{border-left-color:#dc2626}
+.verdict.warn{border-left-color:#d97706}
 .warn-box{background:#fff7ed;border-left:5px solid #ea580c;border-radius:8px;padding:12px 16px;margin-bottom:22px;font-size:.88rem}
 .table-card{background:#fff;border-radius:10px;padding:18px 20px;
             box-shadow:0 1px 3px rgba(0,0,0,.07);overflow-x:auto;margin-bottom:22px}
@@ -1304,7 +1308,7 @@ def _sample(points: list, limit: int, keep_key=None) -> list:
 def svg_pause_timeline(events: List[GCEvent], x_unit: float, x_label: str) -> str:
     pts = [(e.t_ms / x_unit, e.pause_ms, e.is_full or e.cmf or e.evac_failure) for e in events if e.pause_ms > 0]
     if not pts:
-        return "<p>No pause.</p>"
+        return "<p>🙌 No pause.</p>"
     pts = _sample(pts, 3000, keep_key=lambda p: p[1])
     out, sx, sy = _svg_frame(max(p[0] for p in pts), max(p[1] for p in pts), x_label, "pause (ms)")
     for x, y, bad in pts:
@@ -1321,7 +1325,7 @@ def svg_pause_timeline(events: List[GCEvent], x_unit: float, x_label: str) -> st
 def svg_heap(events: List[GCEvent], x_unit: float, x_label: str, xmx: Optional[float]) -> str:
     pts = [(e.t_ms / x_unit, e.heap_before_mb, e.heap_after_mb) for e in events if e.heap_after_mb > 0]
     if not pts:
-        return "<p>No heap figure in this log.</p>"
+        return "<p>💾 No heap figure in this log.</p>"
     pts = _sample(pts, 1500)
     ymax = max(max(p[1] for p in pts), xmx or 0)
     out, sx, sy = _svg_frame(max(p[0] for p in pts), ymax, x_label, "heap (MB)")
@@ -1371,18 +1375,36 @@ def html_report(stats: dict, runs_summary: List[dict], warnings: List[str], run:
 
     thru = stats.get("throughput_pct")
     kpis = "".join([
-        kpi("Throughput", thru if thru is not None else "-", "%", "" if thru is None else "danger" if thru < 90 else "warn" if thru < 95 else "ok"),
-        kpi("GC pauses", stats.get("pause_events", 0), "events"),
-        kpi("Full GC", stats.get("full_gc_count", 0), "events", "danger" if stats.get("full_gc_count") and _concurrent_collector(stats["collector"]) else "ok"),
-        kpi("p99 pause", p.get("p99", 0), "ms", "danger" if p.get("p99", 0) > 500 else "warn" if p.get("p99", 0) > 200 else "ok"),
-        kpi("Max pause", p.get("max", 0), "ms", "warn" if p.get("max", 0) > 200 else ""),
-        kpi("Live set", h.get("live_set") if h.get("live_set") is not None else f"≤{h.get('post_gc_floor', '-')}", f"MB{' of ' + format(stats['xmx_mb'], 'g') + ' MB Xmx' if stats.get('xmx_mb') else ''}"),
+        kpi("🚀 Throughput", thru if thru is not None else "-", "%", "" if thru is None else "danger" if thru < 90 else "warn" if thru < 95 else "ok"),
+        kpi("⏱️ GC pauses", stats.get("pause_events", 0), "events"),
+        kpi("♻️ Full GC", stats.get("full_gc_count", 0), "events", "danger" if stats.get("full_gc_count") and _concurrent_collector(stats["collector"]) else "ok"),
+        kpi("⏱️ p99 pause", p.get("p99", 0), "ms", "danger" if p.get("p99", 0) > 500 else "warn" if p.get("p99", 0) > 200 else "ok"),
+        kpi("⏱️ Max pause", p.get("max", 0), "ms", "warn" if p.get("max", 0) > 200 else ""),
+        kpi("💾 Live set", h.get("live_set") if h.get("live_set") is not None else f"≤{h.get('post_gc_floor', '-')}", f"MB{' of ' + format(stats['xmx_mb'], 'g') + ' MB Xmx' if stats.get('xmx_mb') else ''}"),
     ])
 
+    # coloured circle in front of the severity badge, same concept = same emoji in every playground report
+    sev_icon = {"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "LOW": "🟢", "INFO": "ℹ️", "OK": "✅"}
     recs = "".join(
-        f'<div class="rec-card {r["severity"].lower()}"><span class="rec-badge {r["severity"].lower()}">{_e(r["severity"])}</span>'
+        f'<div class="rec-card {r["severity"].lower()}"><span class="rec-badge {r["severity"].lower()}">'
+        f'{sev_icon.get(r["severity"], "")} {_e(r["severity"])}</span>'
         f'<span class="rec-text">{_e(r["text"])}{("<span class=rec-flag>" + _e(r["flag"]) + "</span>") if r.get("flag") else ""}</span></div>'
         for r in stats["recommendations"])
+
+    # one-sentence verdict computed from the recommendations, right under the header
+    sevs = [r["severity"] for r in stats["recommendations"]]
+    crit, high = sevs.count("CRITICAL"), sevs.count("HIGH")
+    to_look = sum(sevs.count(x) for x in ("HIGH", "MEDIUM", "LOW"))
+    if crit:
+        first = next(r["text"] for r in stats["recommendations"] if r["severity"] == "CRITICAL").split(". ")[0].rstrip(".")
+        first = first if len(first) <= 90 else first[:89].rstrip() + "…"
+        verdict = ("critical", f"🚨 {crit} critical finding{'s' if crit > 1 else ''}"
+                               f"{f', {high} high' if high else ''}: start with {first}.")
+    elif to_look:
+        verdict = ("warn", f"⚠️ {to_look} thing{'s' if to_look > 1 else ''} to look at, nothing critical.")
+    else:
+        verdict = ("ok", f"✅ Nothing alarming in the {stats.get('pause_events', 0)} GC pauses of run #{stats['run']}.")
+    verdict_html = f"<div class='verdict {verdict[0]}'>{_e(verdict[1])}</div>"
 
     cov = stats["coverage"]
     warn_items = list(warnings)
@@ -1396,28 +1418,28 @@ def html_report(stats: dict, runs_summary: List[dict], warnings: List[str], run:
         rows = "".join(f"<tr{' style=font-weight:700' if r['run'] == stats['run'] else ''}><td>#{r['run']}</td><td>{_e(r['start'] or '?')}</td>"
                        f"<td>{_e(r['span'])}</td><td>{r['pauses']}</td><td>{r['full']}</td><td>{r['max_pause']}</td></tr>"
                        for r in runs_summary)
-        runs_html = ("<div class='table-card'><h2>JVM runs (the analyzed one is in bold)</h2><table><tr><th>Run</th><th>Start</th>"
+        runs_html = ("<div class='table-card'><h2>📜 JVM runs (the analyzed one is in bold)</h2><table><tr><th>Run</th><th>Start</th>"
                      "<th>Span</th><th>Pauses</th><th>Full GC</th><th>Max pause (ms)</th></tr>" + rows + "</table></div>")
 
     dist = stats.get("pause_distribution", {})
     types = list(stats.get("gc_type_breakdown", {}).items())[:8]
     charts = (
         "<div class='charts-grid'>"
-        f"<div class='chart-card'><h2>GC pause timeline</h2>{svg_pause_timeline(run.events, x_unit, x_label)}</div>"
-        f"<div class='chart-card'><h2>Heap before / after GC</h2>{svg_heap(run.events, x_unit, x_label, stats.get('xmx_mb'))}</div>"
-        f"<div class='chart-card'><h2>Pause distribution</h2>{svg_bars([k + 'ms' for k in dist], list(dist.values()), ['#22c55e', '#3b82f6', '#eab308', '#f97316', '#dc2626'], 'pauses')}</div>"
-        f"<div class='chart-card'><h2>GC types</h2>{svg_bars([k for k, _ in types], [v['count'] for _, v in types], ['#3b82f6', '#10b981', '#f97316', '#8b5cf6', '#ec4899', '#14b8a6', '#f59e0b', '#6366f1'], 'events')}</div>"
+        f"<div class='chart-card'><h2>📈 GC pause timeline</h2>{svg_pause_timeline(run.events, x_unit, x_label)}</div>"
+        f"<div class='chart-card'><h2>💾 Heap before / after GC</h2>{svg_heap(run.events, x_unit, x_label, stats.get('xmx_mb'))}</div>"
+        f"<div class='chart-card'><h2>📊 Pause distribution</h2>{svg_bars([k + 'ms' for k in dist], list(dist.values()), ['#22c55e', '#3b82f6', '#eab308', '#f97316', '#dc2626'], 'pauses')}</div>"
+        f"<div class='chart-card'><h2>♻️ GC types</h2>{svg_bars([k for k, _ in types], [v['count'] for _, v in types], ['#3b82f6', '#10b981', '#f97316', '#8b5cf6', '#ec4899', '#14b8a6', '#f59e0b', '#6366f1'], 'events')}</div>"
         "</div>")
 
     top_rows = "".join(
         f"<tr class='{'full-gc-row' if e.is_full else ''}'><td>{_e(_fmt_abs(e.abs_ms) or round(e.t_ms / 1000, 3))}</td>"
         f"<td>{_e(e.gc_type)}</td><td>{_e(e.cause)}</td><td class='{'pause-hi' if e.pause_ms > 500 else ''}'>{e.pause_ms:.2f}</td>"
         f"<td>{e.heap_before_mb:.0f}M -&gt; {e.heap_after_mb:.0f}M</td><td class='flag-cell'>{_e(e.src)}</td></tr>" for e in top)
-    top_html = (f"<div class='table-card'><h2>Top {len(top)} longest pauses</h2><table><tr><th>When</th><th>Type</th>"
+    top_html = (f"<div class='table-card'><h2>⏱️ Top {len(top)} longest pauses</h2><table><tr><th>When</th><th>Type</th>"
                 f"<th>Cause</th><th>Pause (ms)</th><th>Heap</th><th>Source</th></tr>{top_rows}</table></div>") if top else ""
 
     causes = stats.get("gc_causes", {})
-    causes_html = ("<div class='table-card'><h2>GC causes</h2><table><tr><th>Cause</th><th>Count</th></tr>"
+    causes_html = ("<div class='table-card'><h2>📋 GC causes</h2><table><tr><th>Cause</th><th>Count</th></tr>"
                    + "".join(f"<tr><td>{_e(k)}</td><td>{v}</td></tr>" for k, v in causes.items()) + "</table></div>") if causes else ""
 
     jdk = stats.get("jdk_version")
@@ -1425,18 +1447,18 @@ def html_report(stats: dict, runs_summary: List[dict], warnings: List[str], run:
             f"Collector: {_e(stats['collector'])}", f"-Xmx: {_e(str(stats['xmx_mb']) + 'M' if stats.get('xmx_mb') else 'unknown')}",
             f"Span: {span}s", f"Coverage: {cov['parsed']}/{cov['candidates']}",
             f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"]
-    header = ("<div class='header'><div><h1>JVM GC Log Analysis</h1><div class='header-meta'>"
+    header = ("<div class='header'><div><h1>♻️ JVM GC Log Analysis</h1><div class='header-meta'>"
               + "".join(f"<span>{m}</span>" for m in meta) + "</div></div>"
               f"<div class='health-badge'><div class='health-score' style='color:{hcolor}'>{_e(health if health is not None else '-')}</div>"
-              f"<div class='health-label'>health</div><div class='health-name' style='color:{hcolor}'>{_e(stats.get('health_label', ''))}</div></div></div>")
+              f"<div class='health-label'>🩺 health</div><div class='health-name' style='color:{hcolor}'>{_e(stats.get('health_label', ''))}</div></div></div>")
 
     return ("<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'>"
             "<meta name='viewport' content='width=device-width,initial-scale=1'>"
             f"<title>GC Report — {_e(title)}</title>{_HTML_CSS}</head><body><div class='page'>"
-            + header + warn_html + f"<div class='kpi-grid'>{kpis}</div>" + charts
-            + "<div class='section-title'>Recommendations</div>" + f"<div class='recs-list'>{recs}</div>"
+            + header + verdict_html + warn_html + f"<div class='kpi-grid'>{kpis}</div>" + charts
+            + "<div class='section-title'>💡 Recommendations</div>" + f"<div class='recs-list'>{recs}</div>"
             + runs_html + causes_html + top_html
-            + "<div class='footer'>Generated by playground analyze gc-logs (self-contained, no external resource)</div>"
+            + "<div class='footer'>🛠️ Generated by playground analyze gc-logs (self-contained, no external resource)</div>"
             "</div></body></html>")
 
 

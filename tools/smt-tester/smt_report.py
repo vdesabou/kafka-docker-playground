@@ -183,9 +183,9 @@ def render_run(result, run_index):
         icon, label, tone = STATUS[status]
         index = step.get("index", 0)
         if index == 0:
-            title = "Input record"
+            title = "🧾 Input record"
         else:
-            title = "%s <span class=\"alias\">%s</span>" % (esc((step.get("type") or "?").split(".")[-1]), esc(step.get("alias", "")))
+            title = "🔀 %s <span class=\"alias\">%s</span>" % (esc((step.get("type") or "?").split(".")[-1]), esc(step.get("alias", "")))
         out.append('<section class="card step st-%s" id="r%d-s%d">' % (status, run_index, index))
         out.append('<div class="step-head"><span class="num">%s</span><h3>%s</h3><span class="badge %s">%s %s</span></div>' % (index, title, tone, icon, label))
         meta = []
@@ -232,7 +232,7 @@ def render_run(result, run_index):
             value_before = parse(previous.get("value")) if previous is not None and status != "skipped" else None
             value_changed = index == 0 or previous is None or record.get("value") != previous.get("value") or record.get("value_schema") != previous.get("value_schema")
             if status == "applied" and not value_changed:
-                out.append(part("📄", "value", '<span class="muted">unchanged</span>'))
+                out.append(part("📄", "value", '<span class="muted">➖ unchanged</span>'))
             elif status in ("applied", "input") or (status == "unchanged" and index == 0):
                 out.append(part("📄", "value", '<pre class="json">%s</pre>' % render_json(value_after, value_before if index > 0 else None),
                                 ("schema: %s" % esc(record.get("value_schema"))) if index == 0 else
@@ -245,9 +245,9 @@ def render_run(result, run_index):
                 elif index > 0 and record.get("value_schema") != (previous or {}).get("value_schema"):
                     out.append('<div class="muted schema">schema: %s → %s</div>' % (esc((previous or {}).get("value_schema")), esc(record.get("value_schema"))))
             elif status == "unchanged":
-                out.append('<div class="muted">the record is unchanged</div>')
+                out.append('<div class="muted">➖ the record is unchanged</div>')
             elif status == "skipped":
-                out.append('<div class="muted">the predicate decided not to apply this transform: the record goes to the next step unchanged</div>')
+                out.append('<div class="muted">⏭️ the predicate decided not to apply this transform: the record goes to the next step unchanged</div>')
         out.append("</section>")
         if record is not None and status not in ("error", "dropped"):
             previous = record
@@ -330,11 +330,64 @@ def comparison(results):
                 rec = step.get("record") or {}
                 text = "topic <code>%s</code><br><code>%s</code>" % (esc(rec.get("topic")), esc(rec.get("value"))[:220])
             cells.append('<td class="%s"><span class="badge %s">%s %s</span>%s<div class="cell">%s</div></td>' % (
-                "differs" if differs else "", tone, icon, label, ' <span class="badge warning">≠ first version</span>' if differs else "", text))
+                "differs" if differs else "", tone, icon, label, ' <span class="badge warning">⚠️ ≠ first version</span>' if differs else "", text))
         rows.append("<tr><th>%s. %s</th>%s</tr>" % (i, esc(name), "".join(cells)))
     same = len(set("\n".join(n) for n in norms)) == 1
     verdict = '<div class="verdict good">✅ same result with all the versions</div>' if same else '<div class="verdict warning">⚠️ the versions give different results: the differing cells are flagged</div>'
     return verdict + '<div class="card"><table class="compare">' + head + "".join(rows) + "</table></div>"
+
+
+def short_error(error, limit=140):
+    """first line of an error without the exception class, shortened"""
+    text = (error or "").strip().splitlines()[0] if (error or "").strip() else "unknown error"
+    head, sep, rest = text.partition(": ")
+    if sep and "." in head and " " not in head:
+        text = rest
+    return text if len(text) <= limit else text[:limit - 1].rstrip() + "…"
+
+
+def step_name(step):
+    """the alias of a transform, with its class when it helps"""
+    short = (step.get("type") or "").split(".")[-1]
+    alias = step.get("alias") or "?"
+    return "%s, %s" % (alias, short) if short else alias
+
+
+def run_verdict(result):
+    """(tone, emoji, sentence) summarising the chain of one run"""
+    if result.get("error"):
+        return "critical", "❌", "The SMT test could not run: %s" % short_error(result["error"])
+    steps = result.get("steps", [])
+    for step in steps:
+        if step.get("error"):
+            return "critical", "❌", "Step %s (%s) failed: %s" % (step.get("index"), step_name(step), short_error(step.get("error")))
+        if step.get("dropped"):
+            return "warning", "🗑️", "The record was dropped by step %s (%s)" % (step.get("index"), step_name(step))
+    transforms = len(steps) - 1
+    skipped = sum(1 for s in steps if s.get("index") and s.get("skipped"))
+    text = "The record went through the %d transform%s" % (transforms, "" if transforms == 1 else "s")
+    if skipped:
+        text += " (%d skipped by predicate)" % skipped
+    return "good", "✅", text
+
+
+def end(text):
+    """a sentence ends with a period, unless it was shortened"""
+    return text if text.endswith("…") else text + "."
+
+
+def banner(results):
+    """the one-sentence verdict under the header; with several versions, whether they agree"""
+    verdicts = [run_verdict(r) for r in results]
+    if len(results) == 1:
+        tone, icon, text = verdicts[0]
+        return '<div class="banner %s">%s %s</div>' % (tone, icon, end(esc(text)))
+    labels = [r.get("label") or "run %d" % (i + 1) for i, r in enumerate(results)]
+    if len(set("\n".join(normalized(r)) for r in results)) == 1:
+        tone, icon, text = verdicts[0]
+        return '<div class="banner %s">%s The %d versions agree: %s</div>' % (tone, icon, len(results), end(esc(text[0].lower() + text[1:])))
+    return '<div class="banner warning">⚠️ The versions disagree: %s</div>' % end("; ".join(
+        "<b>%s</b> %s %s" % (esc(l), v[1], esc(v[2][0].lower() + v[2][1:])) for l, v in zip(labels, verdicts)))
 
 
 PAGE = """<!doctype html>
@@ -399,6 +452,8 @@ pre { margin: 0; font-family: "SFMono-Regular", Consolas, Menlo, monospace; font
 details { margin-top: 8px; } summary { cursor: pointer; font-size: .84rem; color: var(--text2); }
 .verdict { padding: 10px 14px; border-radius: 8px; margin: 10px 0; font-size: .9rem; } .verdict.good { background: var(--good-bg); } .verdict.warning { background: var(--warning-bg); } .verdict.critical { background: var(--critical-bg); }
 .result { font-size: .9rem; }
+.banner { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--muted); border-radius: 10px; padding: 12px 18px; margin: 16px 0 4px; font-size: 1rem; font-weight: 500; }
+.banner.good { border-left-color: var(--good); } .banner.warning { border-left-color: var(--warning); } .banner.critical { border-left-color: var(--critical); }
 .compare { width: 100%; font-size: .82rem; } .compare th, .compare td { border-bottom: 1px solid var(--grid); padding: 8px 10px; text-align: left; vertical-align: top; }
 .compare th { color: var(--text2); font-weight: 500; } .compare td.differs { background: var(--warning-bg); }
 .cell { margin-top: 4px; word-break: break-word; }
@@ -408,9 +463,10 @@ details { margin-top: 8px; } summary { cursor: pointer; font-size: .84rem; color
 footer { color: var(--muted); font-size: .78rem; margin-top: 24px; }
 </style></head>
 <body><div class="root">
-<header><div><h1>🧪 __TITLE__</h1><p class="sub">__SUBTITLE__</p></div><button class="theme-toggle" id="theme-toggle" type="button">Toggle theme</button></header>
+<header><div><h1>🔀 __TITLE__</h1><p class="sub">__SUBTITLE__</p></div><button class="theme-toggle" id="theme-toggle" type="button">Toggle theme</button></header>
+__BANNER__
 __BODY__
-<footer>Generated by playground connector smt test. Hover a changed field to see its previous value.</footer>
+<footer>🛠️ Generated by playground connector smt test. Hover a changed field to see its previous value.</footer>
 </div>
 <script>
 document.getElementById("theme-toggle").addEventListener("click", () => {
@@ -441,9 +497,9 @@ def main():
     body = []
     first = results[0]
     if len(results) > 1:
-        body.append("<h2>Comparison of the versions</h2>")
+        body.append("<h2>🆚 Comparison of the versions</h2>")
         body.append(comparison(results))
-        body.append('<h2>Steps per version</h2><div class="tabs">%s</div>' % "".join(
+        body.append('<h2>🔀 Steps per version</h2><div class="tabs">%s</div>' % "".join(
             '<button class="tab" type="button" data-run="run%d" aria-selected="%s">%s</button>' % (i, "true" if i == 0 else "false", esc(r.get("label") or "run %d" % (i + 1)))
             for i, r in enumerate(results)))
     for i, result in enumerate(results):
@@ -477,7 +533,7 @@ def main():
     transforms = len(first.get("steps", [])) - 1
     subtitle = "%d transform(s) on a %s record · %s" % (transforms, first.get("connector_type", "sink"),
                                                        " · ".join("%s (Kafka %s)" % (r.get("label") or "run", r.get("kafka_version")) for r in results))
-    page = PAGE.replace("__TITLE__", esc(args.title)).replace("__SUBTITLE__", esc(subtitle)).replace("__BODY__", "\n".join(body))
+    page = PAGE.replace("__TITLE__", esc(args.title)).replace("__SUBTITLE__", esc(subtitle)).replace("__BANNER__", banner(results)).replace("__BODY__", "\n".join(body))
     with open(args.output, "w") as f:
         f.write(page)
     print(args.output)
