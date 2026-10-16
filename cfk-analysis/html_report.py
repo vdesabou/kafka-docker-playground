@@ -24,6 +24,50 @@ SEVERITY_BG = {
     "medium": "#fefce8",
     "low": "#f0fdf4",
 }
+# coloured circle shown before the severity text (badges, filters, tiles)
+SEVERITY_EMOJI = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}
+
+# one emoji per category heading, same concept = same emoji as the other playground reports
+CATEGORY_EMOJI = {
+    "Pod Failures": "☸️",
+    "Pod Status": "☸️",
+    "Container Status": "☸️",
+    "Init Container Issues": "☸️",
+    "Scheduling Issues": "🗓️",
+    "Resource Issues": "💾",
+    "Image Issues": "🖼️",
+    "Certificate/TLS Issues": "🔐",
+    "Authentication Issues": "🔑",
+    "RBAC Issues": "🛡️",
+    "MDS/RBAC Issues": "🛡️",
+    "License Issues": "🎫",
+    "Network Issues": "🌐",
+    "Volume Issues": "📁",
+    "Storage Issues": "📁",
+    "Health Check Issues": "🩺",
+    "Component Status": "🩺",
+    "Kubernetes Events": "📣",
+    "Kafka Issues": "📨",
+    "Replication Issues": "🔁",
+    "KRaft Issues": "🗳️",
+    "Zookeeper Issues": "🦓",
+    "Schema Registry Issues": "🧬",
+    "Connect Issues": "🔌",
+    "Control Center Issues": "🎛️",
+    "REST Proxy Issues": "🔗",
+    "KsqlDB Issues": "🧮",
+    "Operator Issues": "🤖",
+    "Configuration": "⚙️",
+    "Finalizer Issues": "🧹",
+    "Reconciliation Blocked": "🧊",
+    "Application Errors": "🪵",
+    "Other Critical (Unclassified)": "🚨",
+    "Other Errors (Unclassified)": "❌",
+    "Other Failures (Unclassified)": "❌",
+    "Other Exceptions (Unclassified)": "🧩",
+    "Other Warnings (Unclassified)": "⚠️",
+}
+DEFAULT_CATEGORY_EMOJI = "🔎"
 
 
 CSS = """
@@ -43,6 +87,18 @@ header {
 }
 header h1 { margin: 0 0 8px 0; font-size: 24px; font-weight: 600; }
 header .meta { color: #cbd5e1; font-size: 13px; }
+.verdict {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid #15803d;
+  border-radius: 8px;
+  padding: 14px 20px;
+  margin-bottom: 24px;
+  font-size: 1rem;
+  font-weight: 500;
+}
+.verdict.critical { border-left-color: #b91c1c; }
+.verdict.warning  { border-left-color: #c2410c; }
 main { max-width: 1180px; margin: 0 auto; padding: 32px 40px 80px 40px; }
 .summary {
   display: grid;
@@ -274,6 +330,32 @@ def _severity_worst(issues: List[Dict]) -> str:
     )
 
 
+def _verdict(summary: Dict, categories_sorted: List[str], grouped: Dict[str, List[Dict]]) -> str:
+    """One friendly sentence on top of the report, computed from the severity counts."""
+    critical = summary.get("critical", 0)
+    high = summary.get("high", 0)
+    medium = summary.get("medium", 0)
+    if critical:
+        # categories are sorted worst first: the first one holding a critical issue is where to start
+        first = next(
+            (c for c in categories_sorted if any(i.get("severity") == "critical" for i in grouped[c])),
+            "",
+        )
+        text = f"🚨 {critical} critical finding{'s' if critical > 1 else ''}"
+        if high:
+            text += f", {high} high"
+        if first:
+            text += f": start with {first}."
+        else:
+            text += "."
+        return f'<div class="verdict critical">{_esc(text)}</div>'
+    if high or medium:
+        n = high + medium
+        text = f"⚠️ {n} thing{'s' if n > 1 else ''} to look at, nothing critical."
+        return f'<div class="verdict warning">{_esc(text)}</div>'
+    return '<div class="verdict">✅ Nothing alarming in this CFK support bundle.</div>'
+
+
 def render(results: Dict, bundle_label: str = "") -> str:
     summary = results.get("summary", {})
     issues = results.get("issues", [])
@@ -291,27 +373,27 @@ def render(results: Dict, bundle_label: str = "") -> str:
 
     summary_html = f"""
     <div class="summary">
-      <div class="card"><div class="label">Total issues</div><div class="value">{_esc(summary.get('total_issues', 0))}</div></div>
-      <div class="card critical"><div class="label">Critical</div><div class="value">{_esc(summary.get('critical', 0))}</div></div>
-      <div class="card high"><div class="label">High</div><div class="value">{_esc(summary.get('high', 0))}</div></div>
-      <div class="card medium"><div class="label">Medium</div><div class="value">{_esc(summary.get('medium', 0))}</div></div>
-      <div class="card low"><div class="label">Low</div><div class="value">{_esc(summary.get('low', 0))}</div></div>
+      <div class="card"><div class="label">🔎 Total issues</div><div class="value">{_esc(summary.get('total_issues', 0))}</div></div>
+      <div class="card critical"><div class="label">{SEVERITY_EMOJI['critical']} Critical</div><div class="value">{_esc(summary.get('critical', 0))}</div></div>
+      <div class="card high"><div class="label">{SEVERITY_EMOJI['high']} High</div><div class="value">{_esc(summary.get('high', 0))}</div></div>
+      <div class="card medium"><div class="label">{SEVERITY_EMOJI['medium']} Medium</div><div class="value">{_esc(summary.get('medium', 0))}</div></div>
+      <div class="card low"><div class="label">{SEVERITY_EMOJI['low']} Low</div><div class="value">{_esc(summary.get('low', 0))}</div></div>
     </div>
     """
 
-    controls_html = """
+    controls_html = f"""
     <div class="controls">
-      <button class="filter-btn active" data-filter="all">All</button>
-      <button class="filter-btn" data-filter="critical">Critical</button>
-      <button class="filter-btn" data-filter="high">High</button>
-      <button class="filter-btn" data-filter="medium">Medium</button>
-      <button class="filter-btn" data-filter="low">Low</button>
+      <button class="filter-btn active" data-filter="all">📋 All</button>
+      <button class="filter-btn" data-filter="critical">{SEVERITY_EMOJI['critical']} Critical</button>
+      <button class="filter-btn" data-filter="high">{SEVERITY_EMOJI['high']} High</button>
+      <button class="filter-btn" data-filter="medium">{SEVERITY_EMOJI['medium']} Medium</button>
+      <button class="filter-btn" data-filter="low">{SEVERITY_EMOJI['low']} Low</button>
       <input id="search" class="search" type="search" placeholder="Search messages, files, categories…" />
     </div>
     """
 
     if not issues:
-        body_html = '<div class="no-issues">No issues detected in the scanned files (see coverage above).</div>'
+        body_html = '<div class="no-issues">🎉 No issues detected in the scanned files (see coverage above).</div>'
     else:
         cat_blocks = []
         for cat in categories_sorted:
@@ -334,13 +416,13 @@ def render(results: Dict, bundle_label: str = "") -> str:
                 context_block = ""
                 if context:
                     context_block = (
-                        f'<details><summary>Show context</summary>'
+                        f'<details><summary>📋 Show context</summary>'
                         f'<pre>{_esc(context)}</pre></details>'
                     )
                 issue_rows.append(f"""
                 <div class="issue" data-severity="{_esc(sev)}">
                   <div class="head">
-                    <span class="severity-pill" style="background:{SEVERITY_BG[sev]};color:{SEVERITY_COLOR[sev]}">{_esc(sev)}</span>
+                    <span class="severity-pill" style="background:{SEVERITY_BG[sev]};color:{SEVERITY_COLOR[sev]}">{SEVERITY_EMOJI.get(sev, "")} {_esc(sev)}</span>
                     <span class="location">{loc}</span>
                   </div>
                   <div class="message">{msg}</div>
@@ -356,8 +438,8 @@ def render(results: Dict, bundle_label: str = "") -> str:
             cat_blocks.append(f"""
             <details class="category" data-severity="{_esc(worst)}" open>
               <summary>
-                <span class="severity-pill" style="background:{SEVERITY_BG[worst]};color:{SEVERITY_COLOR[worst]}">{_esc(worst)}</span>
-                <span class="title">{_esc(cat)}</span>
+                <span class="severity-pill" style="background:{SEVERITY_BG[worst]};color:{SEVERITY_COLOR[worst]}">{SEVERITY_EMOJI.get(worst, "")} {_esc(worst)}</span>
+                <span class="title">{CATEGORY_EMOJI.get(cat, DEFAULT_CATEGORY_EMOJI)} {_esc(cat)}</span>
                 <span class="count">{len(items)}</span>
               </summary>
               <div class="recommendation">
@@ -372,6 +454,8 @@ def render(results: Dict, bundle_label: str = "") -> str:
             """)
 
         body_html = "".join(cat_blocks)
+
+    verdict_html = _verdict(summary, categories_sorted, grouped)
 
     bundle_meta = f"Bundle: {_esc(bundle_label)}" if bundle_label else ""
     coverage = results.get("coverage") or {}
@@ -403,12 +487,13 @@ def render(results: Dict, bundle_label: str = "") -> str:
     </div>
   </header>
   <main>
+    {verdict_html}
     {summary_html}
     {controls_html}
     {body_html}
   </main>
   <footer>
-    Generated by <strong>playground analyze cfk-bundle</strong>
+    🛠️ Generated by <strong>playground analyze cfk-bundle</strong>
     &nbsp;·&nbsp; Sensitive values are sanitized by default (best effort) — review before sharing externally.
   </footer>
   <script>{JS}</script>

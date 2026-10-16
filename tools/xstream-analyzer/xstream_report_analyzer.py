@@ -1141,6 +1141,8 @@ th{text-align:left;padding:7px 11px;background:#f8fafc;font-weight:600;border-bo
 td{padding:6px 11px;border-bottom:1px solid #f1f5f9;vertical-align:top}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem}
 .st{font-weight:600}.st.PASS{color:#16a34a}.st.FAIL{color:#dc2626}.st.WARNING{color:#d97706}.st.CHECK{color:#2563eb}.st.INFO,.st.UNKNOWN{color:#64748b}
+.verdict{background:#fff;border-radius:10px;padding:14px 18px;box-shadow:0 1px 3px rgba(0,0,0,.07);border-left:4px solid #16a34a;margin-bottom:22px;font-size:1rem;font-weight:500;color:#1e293b}
+.verdict.critical{border-left-color:#dc2626}.verdict.high{border-left-color:#ea580c}.verdict.medium{border-left-color:#d97706}.verdict.good{border-left-color:#16a34a}
 .report-sep{border:none;border-top:2px dashed #cbd5e1;margin:30px 0}
 .footer{font-size:.75rem;color:#94a3b8;text-align:center;margin-top:20px}
 </style>"""
@@ -1172,6 +1174,33 @@ def _svg_advice(advice: List[dict]) -> str:
     return "".join(out)
 
 
+# coloured circle in front of the severity badges, same colours as the badges
+_SEV_ICON = {"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "LOW": "🟢", "INFO": "ℹ️"}
+
+
+def _short(text: str, limit: int = 90) -> str:
+    """First sentence of a finding, cut at a word boundary for the verdict banner."""
+    text = str(text).split(". ")[0].rstrip(".")
+    return text if len(text) <= limit else text[:limit].rsplit(" ", 1)[0] + "…"
+
+
+def _verdict(a: "Analysis", counts: dict) -> str:
+    """One-sentence verdict under the header, consistent with the overall health (same severity counts)."""
+    crit, high, med = counts["CRITICAL"], counts["HIGH"], counts["MEDIUM"]
+    if crit:
+        first = next(f for f in a.findings if f["severity"] == "CRITICAL")
+        text = (f"🚨 {crit} critical finding{'s' if crit > 1 else ''}" + (f", {high} high" if high else "")
+                + f": start with {_short(first['message'])}")
+        text += "" if text.endswith("…") else "."
+        cls = "critical"
+    elif high or med:
+        text = f"⚠️ {high + med} thing{'s' if high + med > 1 else ''} to look at, nothing critical."
+        cls = "high" if high else "medium"
+    else:
+        text, cls = "✅ Nothing alarming in this XStream diagnostics report.", "good"
+    return f"<div class='verdict {cls}'>{_e(text)}</div>"
+
+
 def _table(title: str, headers: List[str], rows: List[List[str]], raw: bool = False) -> str:
     if not rows:
         return ""
@@ -1199,16 +1228,16 @@ def _html_one(a: "Analysis") -> str:
     spilled = sum((r.get("spilled") or 0) for r in a.summary.get("apply_readers", []))
     open_txn = (tx.get("capture", {}).get("open", 0) + tx.get("apply", {}).get("open", 0)) if tx else 0
     kpis = "".join([
-        kpi("Capture", ", ".join(sorted(set((c.get("status") or "-") for c in caps))) or "NOT PRESENT",
+        kpi("📸 Capture", ", ".join(sorted(set((c.get("status") or "-") for c in caps))) or "NOT PRESENT",
             ", ".join(sorted(set((c.get("state") or "-") for c in caps))), "ok" if caps and all(c.get("status") == "ENABLED" for c in caps) else "danger"),
-        kpi("Capture latency", _fmt_seconds(lat), "worst capture", "danger" if lat and lat > LATENCY_CRIT else "warn" if lat and lat > LATENCY_WARN else "ok"),
-        kpi("Capture position", _fmt_seconds(pos_age), "captured SCN before the report",
+        kpi("⏱️ Capture latency", _fmt_seconds(lat), "worst capture", "danger" if lat and lat > LATENCY_CRIT else "warn" if lat and lat > LATENCY_WARN else "ok"),
+        kpi("📍 Capture position", _fmt_seconds(pos_age), "captured SCN before the report",
             "danger" if any(c.get("stuck") for c in caps) else "warn" if pos_age > POSITION_STALE_SECONDS else "ok") if pos_age is not None else "",
-        kpi("Outbound server", status, ", ".join(s["name"] or "" for s in srvs), "ok" if status == "ATTACHED" else "danger"),
-        kpi("LogMiner memory", f"{lm_pct:.0f}%" if lm_pct is not None else "-", "of max", "danger" if lm_pct and lm_pct > LOGMINER_MEM_CRIT else "warn" if lm_pct and lm_pct > LOGMINER_MEM_WARN else "ok"),
-        kpi("LCRs sent", _fmt_num(sum((s.get("lcrs_sent") or 0) for s in srvs)), "since outbound start"),
-        kpi("Open transactions", open_txn, "capture + apply", "warn" if open_txn > OPEN_TXN_WARN else ""),
-        kpi("Spilled", _fmt_num(spilled), "messages (apply reader)", "warn" if spilled else "ok"),
+        kpi("📤 Outbound server", status, ", ".join(s["name"] or "" for s in srvs), "ok" if status == "ATTACHED" else "danger"),
+        kpi("💾 LogMiner memory", f"{lm_pct:.0f}%" if lm_pct is not None else "-", "of max", "danger" if lm_pct and lm_pct > LOGMINER_MEM_CRIT else "warn" if lm_pct and lm_pct > LOGMINER_MEM_WARN else "ok"),
+        kpi("🚀 LCRs sent", _fmt_num(sum((s.get("lcrs_sent") or 0) for s in srvs)), "since outbound start"),
+        kpi("🔄 Open transactions", open_txn, "capture + apply", "warn" if open_txn > OPEN_TXN_WARN else ""),
+        kpi("💧 Spilled", _fmt_num(spilled), "messages (apply reader)", "warn" if spilled else "ok"),
     ])
 
     recs = []
@@ -1216,12 +1245,12 @@ def _html_one(a: "Analysis") -> str:
         sev = f["severity"].lower()
         ev_txt = _fmt_evidence(f.get("evidence"))
         meta = f"§ {f['section']}" + (f" · pattern {f['pattern']}: {PATTERNS[f['pattern']]}" if f.get("pattern") else "")
-        recs.append(f'<div class="rec-card {sev}"><span class="rec-badge {sev}">{_e(f["severity"])}</span><div class="rec-text">'
+        recs.append(f'<div class="rec-card {sev}"><span class="rec-badge {sev}">{_SEV_ICON.get(f["severity"], "")} {_e(f["severity"])}</span><div class="rec-text">'
                     f'{_e(f["message"])}<div class="rec-meta">{_e(meta)}</div>'
                     + (f'<div class="rec-meta mono">{_e(ev_txt)}</div>' if ev_txt else "")
                     + (f'<div class="rec-action">{_e(f["action"])}</div>' if f.get("action") else "")
                     + "</div></div>")
-    findings = "".join(recs) or "<div class='rec-card info'><span class='rec-text'>No finding.</span></div>"
+    findings = "".join(recs) or "<div class='rec-card info'><span class='rec-text'>🎉 No finding: nothing to report in this diagnostics report.</span></div>"
     problem = ""
     if a.problem:
         pb = a.problem
@@ -1230,7 +1259,7 @@ def _html_one(a: "Analysis") -> str:
                    f"dates: {_e(', '.join(pb['dates']) or 'none recognized')}</div><ul style='margin-left:18px'>"
                    + "".join(f"<li>{_e(x)}</li>" for x in pb["facts"]) + "</ul>"
                    + ("<div class='rec-meta'>Findings that explain it, most relevant first:</div><ul style='margin-left:18px'>"
-                      + "".join(f"<li><b>{_e(f['severity'])}</b> {_e(f['message'])}</li>" for f in pb["explaining_findings"]) + "</ul>"
+                      + "".join(f"<li><b>{_SEV_ICON.get(f['severity'], '')} {_e(f['severity'])}</b> {_e(f['message'])}</li>" for f in pb["explaining_findings"]) + "</ul>"
                       if pb["explaining_findings"] else "<div class='rec-meta'>No CRITICAL / HIGH / MEDIUM finding matches it.</div>")
                    + "</div>")
 
@@ -1257,14 +1286,14 @@ def _html_one(a: "Analysis") -> str:
     queue_t = _table("📦 Buffered queue", ["Queue", "State", "Messages", "Spilled", "Cumulative spilled", "Spill ratio"],
                      [[q["name"], q["state"], _fmt_num(q["messages"]), _fmt_num(q["spilled"]), _fmt_num(q["cumulative_spilled"]),
                        _fmt_num(q["spill_ratio"])] for q in a.summary.get("queues", [])])
-    rules_t = _table("📜 Capture rules", ["Capture", "Global", "Schemas", "Tables", "DDL"],
+    rules_t = _table("⚙️ Capture rules", ["Capture", "Global", "Schemas", "Tables", "DDL"],
                      [[k, "yes" if v["global"] else "", ", ".join(v["schemas"]), ", ".join(v["tables"]), "yes" if v["ddl"] else ""]
                       for k, v in a.summary.get("capture_rules", {}).items()])
     sp = a.summary.get("streams_pool", {})
-    pool = (f"<div class='chart-card'><h2>🌊 Streams pool advice: estimated spills per pool size "
+    pool = (f"<div class='chart-card'><h2>🏊 Streams pool advice: estimated spills per pool size "
             f"(current {_e(_fmt_num(sp.get('current_size_mb')))} MB, allocated {_e(_fmt_num(sp.get('total_allocated_mb')))} MB)</h2>"
             f"{_svg_advice(sp.get('advice', []))}</div>") if sp.get("advice") else ""
-    long_t = _table("⏳ Database transactions open for more than 30 minutes", ["Session", "XID", "Status", "Duration", "User", "Program"],
+    long_t = _table("⏱️ Database transactions open for more than 30 minutes", ["Session", "XID", "Status", "Duration", "User", "Program"],
                     [[t["session"], t["xid"], t["status"], _fmt_seconds((t["minutes"] or 0) * 60), t["username"], t["program"]]
                      for t in tx.get("database_long_running", [])[:a.top]]) if tx else ""
     patterns = "".join(f"<li><b>{_e(k)}</b>. {_e(PATTERNS[k])} ({len(v)} finding(s))</li>" for k, v in sorted(a.patterns.items()))
@@ -1274,8 +1303,8 @@ def _html_one(a: "Analysis") -> str:
     return (f"<div class='header'><h1>🅾️ {_e(db.get('global_name') or db.get('name') or 'Oracle XStream')} — {_e(os.path.basename(a.r.path))}</h1>"
             f"<div class='header-meta'>{meta}</div>"
             + (f"<div class='header-meta'>{_e(db['version'])}</div>" if db.get("version") else "")
-            + f"<div class='health {_e(d['health'].replace(' ', '-'))}'>Overall health: {_e(d['health'])}</div></div>"
-            f"<div class='kpi-grid'>{kpis}</div>{problem}"
+            + f"<div class='health {_e(d['health'].replace(' ', '-'))}'>🩺 Overall health: {_e(d['health'])}</div></div>"
+            + _verdict(a, d["counts"]) + f"<div class='kpi-grid'>{kpis}</div>{problem}"
             f"<div class='section-title'>🔎 Findings</div><div class='recs-list'>{findings}</div>"
             + (f"<div class='table-card'><h2>🧩 Matched patterns</h2><ul style='margin-left:18px'>{patterns}</ul></div>" if patterns else "")
             + prereq + capture_t + lm_t + out_t + apply_t + queue_t + pool + rules_t + long_t)
@@ -1304,7 +1333,7 @@ def html_report(analyses: List["Analysis"], deltas: List[dict]) -> str:
     body = "<hr class='report-sep'>".join(_html_one(a) for a in reversed(analyses))
     return (f"<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'><title>{_e(title)}</title>{_HTML_CSS}</head>"
             f"<body><div class='page'>{_html_deltas(deltas)}{body}"
-            "<div class='footer'>Generated by playground analyze oracle-xstream-report (kafka-docker-playground) from orclcdc_diag.sql report(s)</div>"
+            "<div class='footer'>🛠️ Generated by playground analyze oracle-xstream-report (kafka-docker-playground) from orclcdc_diag.sql report(s)</div>"
             "</div></body></html>")
 
 

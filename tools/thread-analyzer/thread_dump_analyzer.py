@@ -107,8 +107,13 @@ details summary{cursor:pointer;font-weight:600;font-size:.86rem;padding:6px 0}
 .st.RUNNABLE{background:#dcfce7;color:#15803d}.st.BLOCKED{background:#fee2e2;color:#dc2626}
 .st.WAITING{background:#dbeafe;color:#1d4ed8}.st.TIMED_WAITING{background:#e0e7ff;color:#4338ca}.st.OTHER{background:#f1f5f9;color:#475569}
 .warn-box{background:#fff7ed;border-left:5px solid #ea580c;border-radius:8px;padding:12px 16px;margin-bottom:22px;font-size:.88rem}
+.verdict{background:#fff;border-radius:10px;padding:14px 18px;box-shadow:0 1px 3px rgba(0,0,0,.07);border-left:4px solid #16a34a;font-size:1rem;font-weight:500;margin-bottom:22px}
+.verdict.danger{border-left-color:#dc2626}.verdict.warn{border-left-color:#d97706}.verdict.ok{border-left-color:#16a34a}
 .footer{text-align:center;font-size:.78rem;color:#94a3b8;padding:14px}
 </style>"""
+
+# coloured circle in front of the severity badges of the HTML report (text and colours unchanged)
+SEVERITY_ICONS = {"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "LOW": "🟢", "INFO": "ℹ️", "OK": "✅"}
 
 STATE_COLORS = OrderedDict([("RUNNABLE", "#22c55e"), ("BLOCKED", "#dc2626"), ("WAITING", "#3b82f6"),
                             ("TIMED_WAITING", "#8b5cf6"), ("OTHER", "#94a3b8")])
@@ -718,7 +723,7 @@ def svg_states(res: dict) -> str:
 
 def svg_hbars(rows: List[Tuple[str, float, str]], unit: str) -> str:
     if not rows:
-        return "<p>No data.</p>"
+        return "<p>ℹ️ No data in the dump(s).</p>"
     W, rowh, L = 560, 22, 230
     H = 10 + rowh * len(rows)
     mx = max(v for _, v, _ in rows) or 1
@@ -733,6 +738,24 @@ def svg_hbars(rows: List[Tuple[str, float, str]], unit: str) -> str:
     return "".join(out)
 
 
+def html_verdict(res: dict) -> Tuple[str, str]:
+    """One-sentence verdict for the banner, computed from the findings: (css class, text)."""
+    sevs = [f["severity"] for f in res["findings"]]
+    n_crit, n_high, n_med = sevs.count("CRITICAL"), sevs.count("HIGH"), sevs.count("MEDIUM")
+    if n_crit:
+        first = next(f["text"] for f in res["findings"] if f["severity"] == "CRITICAL")
+        first = re.split(r": |\. ", first, maxsplit=1)[0].rstrip(".")
+        if len(first) > 90:
+            first = first[:89].rstrip() + "…"
+        return "danger", (f"🚨 {n_crit} critical finding{'s' if n_crit > 1 else ''}"
+                          + (f", {n_high} high" if n_high else "") + f": start with {first}.")
+    if n_high or n_med:
+        n = n_high + n_med
+        return "warn", f"⚠️ {n} thing{'s' if n > 1 else ''} to look at, nothing critical."
+    n = len(res["dumps"])
+    return "ok", f"✅ Nothing alarming in the {n} thread dump{'s' if n > 1 else ''}."
+
+
 def html_report(res: dict, title: str) -> str:
     last = res["dumps"][-1]
     n_block = last["states"].get("BLOCKED", 0)
@@ -742,15 +765,15 @@ def html_report(res: dict, title: str) -> str:
                 f'<div class="kpi-value">{_e(val)}</div><div class="kpi-unit">{_e(unit)}</div></div>')
 
     kpis = "".join([
-        kpi("Dumps", len(res["dumps"]), f"{res['same_jvm_dumps']} same JVM"),
-        kpi("Threads", last["threads"], f"{last['daemon']} daemon"),
-        kpi("Blocked", n_block, "threads", "danger" if n_block else "ok"),
-        kpi("Deadlocks", len(res["deadlocks"]), "cycles", "danger" if res["deadlocks"] else "ok"),
-        kpi("Contended locks", sum(1 for c in res["contention"] if c["count"] >= 2), "locks", "warn" if any(c["count"] >= 2 for c in res["contention"]) else "ok"),
-        kpi("Stuck", len(res["stuck"]), "same frames in all dumps" if res["same_jvm_dumps"] > 1 else "needs 2+ dumps",
+        kpi("📁 Dumps", len(res["dumps"]), f"{res['same_jvm_dumps']} same JVM"),
+        kpi("🧵 Threads", last["threads"], f"{last['daemon']} daemon"),
+        kpi("🧊 Blocked", n_block, "threads", "danger" if n_block else "ok"),
+        kpi("💀 Deadlocks", len(res["deadlocks"]), "cycles", "danger" if res["deadlocks"] else "ok"),
+        kpi("🔒 Contended locks", sum(1 for c in res["contention"] if c["count"] >= 2), "locks", "warn" if any(c["count"] >= 2 for c in res["contention"]) else "ok"),
+        kpi("⏸️ Stuck", len(res["stuck"]), "same frames in all dumps" if res["same_jvm_dumps"] > 1 else "needs 2+ dumps",
             "warn" if res["stuck"] else ""),
     ])
-    recs = "".join(f'<div class="rec-card {f["severity"].lower()}"><span class="rec-badge {f["severity"].lower()}">{_e(f["severity"])}</span>'
+    recs = "".join(f'<div class="rec-card {f["severity"].lower()}"><span class="rec-badge {f["severity"].lower()}">{SEVERITY_ICONS.get(f["severity"], "")} {_e(f["severity"])}</span>'
                    f'<span class="rec-text">{_e(f["text"])}</span></div>' for f in res["findings"])
 
     if res["cpu_interval"]:
@@ -761,9 +784,9 @@ def html_report(res: dict, title: str) -> str:
         cpu_title, cpu_unit = "CPU since thread start (latest dump)", "s"
     pool_rows = [(p["pool"], p["count"], "#3b82f6") for p in res["pools"][:12]]
     charts = ("<div class='charts-grid'>"
-              f"<div class='chart-card'><h2>Thread states per dump</h2>{svg_states(res)}</div>"
-              f"<div class='chart-card'><h2>{_e(cpu_title)}</h2>{svg_hbars(cpu_rows, cpu_unit)}</div>"
-              f"<div class='chart-card'><h2>Biggest thread pools</h2>{svg_hbars(pool_rows, '')}</div>"
+              f"<div class='chart-card'><h2>📊 Thread states per dump</h2>{svg_states(res)}</div>"
+              f"<div class='chart-card'><h2>🔥 {_e(cpu_title)}</h2>{svg_hbars(cpu_rows, cpu_unit)}</div>"
+              f"<div class='chart-card'><h2>🏊 Biggest thread pools</h2>{svg_hbars(pool_rows, '')}</div>"
               "</div>")
 
     def st(s):
@@ -795,21 +818,23 @@ def html_report(res: dict, title: str) -> str:
     if res["identical_stacks"]:
         items = "".join(f"<details><summary>{s['count']} threads {st(s['state'])}{' idle' if s['idle'] else ''} — {_e(', '.join(s['threads'][:4]))}{'…' if s['count'] > 4 else ''}</summary>"
                         f"<pre>{_e(chr(10).join('at ' + f for f in s['frames']))}</pre></details>" for s in res["identical_stacks"])
-        sections.append(f"<div class='table-card'><h2>📚 Most common stacks (latest dump)</h2>{items}</div>")
+        sections.append(f"<div class='table-card'><h2>🧩 Most common stacks (latest dump)</h2>{items}</div>")
     rows = "".join(f"<tr><td>{p['count']}</td><td class='mono'>{_e(p['pool'])}</td><td>{' '.join(st(k) + ' ' + str(v) for k, v in p['states'].items())}</td>"
                    f"<td>{_e(' → '.join(map(str, p['history']))) if p.get('history') else ''}</td></tr>" for p in res["pools"][:40])
-    sections.append(f"<div class='table-card'><h2>🧵 Thread pools (latest dump)</h2><table><tr><th>Threads</th><th>Pool</th><th>States</th><th>Across dumps</th></tr>{rows}</table></div>")
+    sections.append(f"<div class='table-card'><h2>🏊 Thread pools (latest dump)</h2><table><tr><th>Threads</th><th>Pool</th><th>States</th><th>Across dumps</th></tr>{rows}</table></div>")
 
+    v_cls, v_text = html_verdict(res)
     meta = [f"&#128196; {_e(title)}", f"JVM: {_e(last['jvm'] or '?')}", f"Dumps: {len(res['dumps'])}",
             f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"]
     return ("<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
             f"<title>Thread dump report — {_e(title)}</title>{_HTML_CSS}</head><body><div class='page'>"
-            "<div class='header'><h1>JVM Thread Dump Analysis</h1><div class='header-meta'>"
+            "<div class='header'><h1>🧵 JVM Thread Dump Analysis</h1><div class='header-meta'>"
             + "".join(f"<span>{m}</span>" for m in meta) + "</div></div>"
+            + f"<div class='verdict {v_cls}'>{_e(v_text)}</div>"
             + f"<div class='kpi-grid'>{kpis}</div>" + charts
-            + "<div class='section-title'>Findings</div>" + f"<div class='recs-list'>{recs}</div>"
+            + "<div class='section-title'>🔎 Findings</div>" + f"<div class='recs-list'>{recs}</div>"
             + "".join(sections)
-            + "<div class='footer'>Generated by playground analyze thread-dump (self-contained, no external resource)</div>"
+            + "<div class='footer'>🛠️ Generated by playground analyze thread-dump (self-contained, no external resource)</div>"
             "</div></body></html>")
 
 

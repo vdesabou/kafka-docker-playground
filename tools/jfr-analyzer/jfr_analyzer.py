@@ -665,6 +665,7 @@ SECTION_CSS = """
 .jfr-findings .next { color: var(--text-secondary); display: block; margin-top: 3px; }
 .jfr-section code { font-family: 'SFMono-Regular', Consolas, Menlo, monospace; font-size: .78rem; }
 .jfr-section .muted { color: var(--text-muted); }
+.verdict { margin: 18px 0 0; padding: 12px 16px; border-left: 4px solid var(--sev); font-size: 1rem; font-weight: 500; }
 .jfr-section td code { word-break: break-all; }
 """
 
@@ -712,7 +713,7 @@ def findings_html(items):
 def states_svg(a):
     threads = a["states"]["threads"]
     if not threads:
-        return '<div class="empty">no task thread in the recording</div>'
+        return '<div class="empty">🤷 no task thread in the recording</div>'
     w, left, rowh, gap, top = 640, 150, 24, 12, 6
     plot = w - left - 8
     height = top + len(threads) * (rowh + gap) + 20
@@ -748,7 +749,7 @@ def states_svg(a):
 def layers_svg(a):
     rows = a["layers"]
     if not rows:
-        return '<div class="empty">no execution sample of the task threads</div>'
+        return '<div class="empty">🤷 no execution sample of the task threads</div>'
     w, left, rowh, gap, top = 640, 190, 20, 9, 4
     plot = w - left - 50
     mx = max(r["share"] for r in rows)
@@ -820,37 +821,37 @@ def render_section(a, title="🛩️ Where the time goes", recording_link=None, 
     top_rows = [[e(t["name"]) + (' <span class="muted">task</span>' if t["selected"] else ""), f'{t["cores"]:.2f}'] for t in a["top_threads"][:8]]
 
     cards = [
-        f'<div class="card"><h2>Task thread time, by state</h2><p class="sub">Share of the recording each task thread spent running, '
+        f'<div class="card"><h2>🧵 Task thread time, by state</h2><p class="sub">Share of the recording each task thread spent running, '
         f'blocked or waiting (calls of 1 ms or more; the rest is split by native samples)</p><div class="legend">{legend}</div>'
         f'{states_svg(a)}<details><summary>Table</summary>{state_table}</details><div class="tooltip"></div></div>',
-        f'<div class="card"><h2>CPU of the task threads, by layer</h2><p class="sub">{a["exec_samples"]:,} execution samples, each '
+        f'<div class="card"><h2>🔥 CPU of the task threads, by layer</h2><p class="sub">{a["exec_samples"]:,} execution samples, each '
         f'classified by its first frame outside the JDK</p>{layers_svg(a)}<details><summary>Table</summary>{layer_table}</details>'
         f'<div class="tooltip"></div></div>',
     ]
     if hot_rows:
-        cards.append('<div class="card full"><h2>Hot methods (task threads)</h2><p class="sub">First frame outside the JDK of the '
+        cards.append('<div class="card full"><h2>🧩 Hot methods (task threads)</h2><p class="sub">First frame outside the JDK of the '
                      'execution samples, and the JDK method running in it</p>'
                      + table(["Method", "Layer", "CPU samples"], hot_rows, nums=(2,)) + "</div>")
     if io_rows:
-        cards.append('<div class="card"><h2>Network I/O of the task threads</h2><p class="sub">Socket reads and writes of 1 ms or more '
+        cards.append('<div class="card"><h2>🌐 Network I/O of the task threads</h2><p class="sub">Socket reads and writes of 1 ms or more '
                      '(events), and shorter calls seen by the native samples, by remote</p>'
                      + table(["Remote", "Calls ≥ 1 ms", "Avg ms", "Total s", "Task time", "Shorter calls"], io_rows, nums=(1, 2, 3, 4, 5)) + "</div>")
     if alloc_rows:
-        cards.append(f'<div class="card"><h2>Allocation by class</h2><p class="sub">Task threads, {fmt_bytes(alloc["rate_bytes_s"])}/s in total'
+        cards.append(f'<div class="card"><h2>💾 Allocation by class</h2><p class="sub">Task threads, {fmt_bytes(alloc["rate_bytes_s"])}/s in total'
                      f' ({fmt_bytes(alloc["all_threads_rate_bytes_s"])}/s for the whole JVM)</p>'
                      + table(["Class", "MB/s", "Share"], alloc_rows, nums=(1, 2)) + "</div>")
     if waits_rows or other_rows:
         body = ""
         if other_rows:
-            body += "<p class=\"sub\">Locks (monitor enter)</p>" + table(["Site", "Monitor", "Waits", "Total s"], other_rows, nums=(2, 3))
+            body += "<p class=\"sub\">🔒 Locks (monitor enter)</p>" + table(["Site", "Monitor", "Waits", "Total s"], other_rows, nums=(2, 3))
         if waits_rows:
-            body += "<p class=\"sub\" style=\"margin-top:10px\">Sleep, park and wait</p>" + table(["Site", "Kind", "Count", "Total s"], waits_rows, nums=(2, 3))
-        cards.append('<div class="card"><h2>Locks and waits (task threads)</h2>' + body + "</div>")
+            body += "<p class=\"sub\" style=\"margin-top:10px\">💤 Sleep, park and wait</p>" + table(["Site", "Kind", "Count", "Total s"], waits_rows, nums=(2, 3))
+        cards.append('<div class="card"><h2>🔒 Locks and waits (task threads)</h2>' + body + "</div>")
     if top_rows:
-        cards.append('<div class="card"><h2>Busiest threads of the JVM</h2><p class="sub">CPU cores used, average over the recording</p>'
+        cards.append('<div class="card"><h2>🔥 Busiest threads of the JVM</h2><p class="sub">CPU cores used, average over the recording</p>'
                      + table(["Thread", "Cores"], top_rows, nums=(1,)) + "</div>")
     if normal_rows:
-        cards.append('<div class="card"><h2>Other signals</h2><p class="sub">Checked and found normal</p>' + table(["Signal", "Value"], normal_rows) + "</div>")
+        cards.append('<div class="card"><h2>✅ Other signals</h2><p class="sub">Checked and found normal</p>' + table(["Signal", "Value"], normal_rows) + "</div>")
     return (f'<section class="jfr-section"><h2>{e(title)}</h2><p class="sub">{sub}</p>{findings_html(a["findings"])}'
             f'<div class="grid">{"".join(cards)}</div></section>')
 
@@ -876,8 +877,8 @@ def render_comparison(cmp):
     states = table(["State"] + names + [f"Δ {names[-1]} vs {names[0]}"], rows_for("states", skeys, slabels), nums=range(1, len(names) + 2))
     return (f'<section class="jfr-section"><h2>🆚 Where the time goes, by version</h2><p class="sub">Flight recordings of the measured runs, '
             f'averaged over the rounds of each version</p>{findings_html(cmp["findings"])}<div class="grid">'
-            f'<div class="card"><h2>CPU of the task threads, by layer</h2><p class="sub">Share of the execution samples of each version</p>{layers}</div>'
-            f'<div class="card"><h2>Task thread time, by state</h2><p class="sub">Mean of the task threads of each version</p>{states}</div>'
+            f'<div class="card"><h2>🔥 CPU of the task threads, by layer</h2><p class="sub">Share of the execution samples of each version</p>{layers}</div>'
+            f'<div class="card"><h2>🧵 Task thread time, by state</h2><p class="sub">Mean of the task threads of each version</p>{states}</div>'
             f'</div></section>')
 
 
@@ -936,6 +937,23 @@ footer { color: var(--text-muted); font-size: .78rem; margin-top: 24px; }
 """
 
 
+def verdict_html(a):
+    """one friendly sentence at the top of the standalone report, from its findings"""
+    crit = [f for f in a["findings"] if f["severity"] == "critical"]
+    warn = [f for f in a["findings"] if f["severity"] == "warning"]
+    if crit:
+        text = f"🚨 {len(crit)} critical finding{'s' if len(crit) > 1 else ''}" + (f", {len(warn)} to look at" if warn else "") + \
+            f": start with “{crit[0]['title'].rstrip('.')}”."
+        sev = "var(--critical)"
+    elif warn:
+        text = f"⚠️ {len(warn)} thing{'s' if len(warn) > 1 else ''} to look at, nothing critical: “{warn[0]['title'].rstrip('.')}”."
+        sev = "var(--warning)"
+    else:
+        text = "✅ Nothing alarming in this recording."
+        sev = "var(--good)"
+    return f'<div class="card verdict" style="--sev: {sev}">{e(text)}</div>'
+
+
 def standalone_html(a, recording_link=None):
     rec = a["recording"]
     title = "Flight recording analysis"
@@ -947,8 +965,9 @@ def standalone_html(a, recording_link=None):
 <body><div class="viz-root">
 <header><div><h1>🛩️ {e(title)}</h1><p class="sub">{e(sub)}</p></div>
 <button class="theme-toggle" id="theme-toggle" type="button">Toggle theme</button></header>
-{render_section(a, title="Where the time goes", recording_link=recording_link)}
-<footer>Generated by playground analyze flight-recorder. Open the recording in JDK Mission Control (https://jdk.java.net/jmc/) for the details.</footer>
+{verdict_html(a)}
+{render_section(a, title="🔎 Where the time goes", recording_link=recording_link)}
+<footer>🛠️ Generated by playground analyze flight-recorder. Open the recording in JDK Mission Control (https://jdk.java.net/jmc/) for the details.</footer>
 </div>
 <script>
 document.getElementById("theme-toggle").addEventListener("click", () => {{
