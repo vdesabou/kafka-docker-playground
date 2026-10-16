@@ -91,7 +91,9 @@ out of context.
   REST API masks passwords (`••••`), the helper then takes them from the example script and `benchmark_oracle_client_from_example`. Self-managed connectors only (not ccloud,
   not cfk). When it says the throughput is a lower bound, rerun with 10x `--nb-records`. `--connector-tag A --connector-tag B
   [--rounds 2]` benchmarks several plugin versions (update-version, version check, warm-up drain, comparison report)
-  and restores the original version.
+  and restores the original version. The load script is looked up next to the script that was run: a repro model gets
+  the example's `benchmark-load.bash` as a symlink from `repro bootstrap`; to load another table, **replace the symlink
+  with a file** (`rm` it first: editing through the link changes the example), see "A table of your own" in the docs.
 - To understand one example, read its `.sh` and `ls` its folder (compose overrides, sibling variants).
 
 ## 🥈 Use the `playground` CLI, not raw `docker` / `curl` / `kafka-*`
@@ -265,7 +267,8 @@ playground repro import --file playground_repro_export.tgz
 
 **⚠️ Always scaffold a new repro model with `playground repro bootstrap` — never hand-write the `.sh`
 file.** Bootstrap copies the base example, adds the standard header (date, author, description,
-documentation links, `# 💬 comments:` block), copies and renames the docker-compose override, appends the
+documentation links, `# 💬 comments:` block), copies and renames the docker-compose override, links the
+example's support files (`README.md`, `stop.sh`, `benchmark-load.bash`…) into the repro folder, appends the
 CLI cheat-sheet + snippets after `exit 0`, and registers the model in the CLI state/metrics. A hand-written
 file looks almost right but is missing all of that.
 
