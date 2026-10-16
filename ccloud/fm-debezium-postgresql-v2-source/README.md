@@ -11,7 +11,6 @@ See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?i
 | Variable | Description |
 | --- | --- |
 | `NGROK_AUTH_TOKEN` | Required. [Ngrok](https://ngrok.com) auth token, used to expose the PostgreSQL port to the internet so that the fully managed connector can reach it ([sign up](https://dashboard.ngrok.com/signup), [get your token](https://dashboard.ngrok.com/get-started/your-authtoken)) |
-| `SQL_DATAGEN` | Optional. If set, builds `postgres-datagen` and injects data for 10 minutes at the end of the run |
 
 ### Exposing docker container over internet
 
@@ -38,6 +37,8 @@ playground run -f fully-managed-v2-postgres.sh
 | Script | Description |
 | --- | --- |
 | `fully-managed-v2-postgres.sh` | CDC of table `public.customers` from a local PostgreSQL 15 (`debezium/postgres` image), Avro output |
+
+With `--enable-sql-datagen` (`playground run -f fully-managed-v2-postgres.sh --enable-sql-datagen`), once the example succeeded, `playground run` injects rows in the `CUSTOMERS` table with [`benchmark-load.bash`](benchmark-load.bash) (the same load as `playground connector benchmark`) for 10 minutes: one row per transaction, from 5 parallel sessions, logging the rows inserted every 30 seconds. `SQL_DATAGEN_DURATION` (minutes, default `10`) and `SQL_DATAGEN_SESSIONS` (default `5`) change the duration and the number of sessions.
 
 ## What the script does
 

@@ -1765,7 +1765,13 @@ commands:
     help: |-
       🌪️ Enable SQL Datagen injection
 
-      This only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium
+      Once the example succeeded, rows are injected with the benchmark-load.bash next to the example script (the load of
+      playground connector benchmark): one row per transaction, in parallel sessions, for a few minutes, while Grafana shows
+      the connector. Works with the JDBC, Debezium, Oracle CDC and XStream source examples (Oracle, MySQL, MariaDB,
+      PostgreSQL, SQL Server), self-managed and fully managed, and with their reproduction models.
+
+      SQL_DATAGEN_DURATION (minutes, default 10) and SQL_DATAGEN_SESSIONS (default 5) change the duration and the number of
+      parallel sessions.
 
   - &connect-community-image
     long: --connect-community-image
@@ -8493,6 +8499,15 @@ commands:
       required: false
       help: |-
         🙈 Do not append the result to the benchmark-history file
+    - long: --sessions
+      arg: sessions
+      validate: integer
+      required: false
+      default: "1"
+      help: |-
+        🧵 Run the benchmark-load.bash of the example in <sessions> parallel sessions (default is 1)
+
+        A drain splits --nb-records between them, steady mode gives each session batches of --nb-records. Concurrent transactions are what a busy database looks like to a CDC connector (interleaved transactions in the redo log or the WAL, several open transactions). Only with the benchmark-load.bash of the example, not with --load-command.
     - long: --no-flight-recorder
       required: false
       help: |-
@@ -8512,6 +8527,7 @@ commands:
     - playground connector benchmark --load-command "./my-load.sh" --json
     - playground connector benchmark --nb-records 1000000 --connector-tag 10.8.4 --connector-tag 10.9.9 --rounds 2
     - playground connector benchmark --nb-records 1000000 --no-flight-recorder
+    - playground connector benchmark --nb-records 1000000 --shape small-txn --sessions 5
 
   - name: show-config
     help:  |

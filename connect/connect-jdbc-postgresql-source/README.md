@@ -16,14 +16,17 @@ playground run -f postgres.sh
 
 | Script | Description |
 | --- | --- |
-| `postgres.sh` | No SSL, PostgreSQL 15. Supports `--enable-sql-datagen` |
+| `postgres.sh` | No SSL, PostgreSQL 15 |
 | `postgres-ssl.sh` | SSL encryption with server certificate verification (`sslmode=verify-full`), custom PostgreSQL 10 image |
 | `postgres-mtls.sh` | SSL encryption + mutual TLS: the client authenticates with a certificate instead of a password |
 
-To inject data for 10 minutes with the Java SQL datagen (built from `postgres-datagen/`) after the connector is created:
+With `--enable-sql-datagen`, `playground run` injects rows in the `CUSTOMERS` table for 10 minutes once the example succeeded (see [Benchmark](#benchmark)):
 
 ```bash
 playground run -f postgres.sh --enable-sql-datagen
+
+# inject rows for 2 minutes only
+SQL_DATAGEN_DURATION=2 playground run -f postgres.sh --enable-sql-datagen
 ```
 
 ## What the script does
@@ -33,7 +36,6 @@ playground run -f postgres.sh --enable-sql-datagen
 3. Creates the `CUSTOMERS` table (`id` SERIAL, `update_ts` maintained by a `BEFORE UPDATE` trigger), inserts 20 rows, then one more.
 4. Creates the source connector (`postgres-source`, `postgres-source-ssl` or `postgres-source-mtls`) in `timestamp+incrementing` mode on `update_ts` / `id`, with `topic.prefix=postgres-`.
 5. Verifies that records land in topic `postgres-customers` with `playground topic consume`.
-6. `postgres.sh` with `--enable-sql-datagen`: runs the SQL datagen for 10 minutes.
 
 ## Benchmark
 
@@ -52,6 +54,8 @@ playground connector benchmark --mode steady --duration 2m --nb-records 10000
 ```
 
 The connector is paused while the rows are loaded, then resumed, and the benchmark measures the time it takes to produce the records. Results are compared with the previous benchmark of the same shape.
+
+`playground run -f postgres.sh --enable-sql-datagen` uses the same load once the example succeeded: one row per transaction (`--shape small-txn`) from 5 parallel sessions for 10 minutes (`SQL_DATAGEN_SESSIONS`, `SQL_DATAGEN_DURATION` in minutes), logging the rows inserted every 30 seconds.
 
 ## SSL setup details
 

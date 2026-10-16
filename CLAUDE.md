@@ -94,6 +94,10 @@ out of context.
   and restores the original version. The load script is looked up next to the script that was run: a repro model gets
   the example's `benchmark-load.bash` as a symlink from `repro bootstrap`; to load another table, **replace the symlink
   with a file** (`rm` it first: editing through the link changes the example), see "A table of your own" in the docs.
+  `--sessions <n>` runs that load in n parallel sessions. `playground run --enable-sql-datagen` uses the same load:
+  after the example, `sql_datagen_inject` streams one-row transactions from `SQL_DATAGEN_SESSIONS` (5) sessions for
+  `SQL_DATAGEN_DURATION` (10) minutes; there is no Java datagen nor `sql-datagen` container anymore. All the database
+  source examples (mysql and mariadb included) use the same `CUSTOMERS` table as `benchmark_sql_load`.
 - To understand one example, read its `.sh` and `ls` its folder (compose overrides, sibling variants).
 
 ## 🥈 Use the `playground` CLI, not raw `docker` / `curl` / `kafka-*`

@@ -362,7 +362,9 @@ fi
 if [[ -n "$enable_sql_datagen" ]]
 then
   array_flag_list+=("--enable-sql-datagen")
-  export SQL_DATAGEN=true
+  # rows are injected by this command once the example is done (see sql_datagen_inject), with the benchmark-load.bash of
+  # the example: not SQL_DATAGEN, which the examples and reproduction models of the former Java datagen still test
+  export ENABLE_SQL_DATAGEN=true
 
   if [[ $test_file != *"fully-managed"* ]]
   then
@@ -372,7 +374,7 @@ then
 
     if [[ -n "$force_interactive_repro" ]]
     then
-      force_enable --enable-sql-datagen SQL_DATAGEN
+      force_enable --enable-sql-datagen ENABLE_SQL_DATAGEN
       force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
     fi
   fi
@@ -725,7 +727,7 @@ then
   fi
 
   sql_datagen=0
-  if [[ $test_file == *"connect-debezium-sqlserver"* ]] || [[ $test_file == *"connect-debezium-mysql"* ]] || [[ $test_file == *"connect-debezium-postgresql"* ]] || [[ $test_file == *"connect-debezium-oracle"* ]] || [[ $test_file == *"connect-cdc-oracle"* ]] || [[ $test_file == *"connect-jdbc-sqlserver"* ]] || [[ $test_file == *"connect-jdbc-mysql"* ]] || [[ $test_file == *"connect-jdbc-postgresql"* ]] || [[ $test_file == *"connect-jdbc-oracle"* ]] || [[ $test_file == *"connect-cdc-xstream"* ]] || [[ $test_file == *"fm-debezium"* ]] || [[ $test_file == *"fm-cdc"* ]]
+  if [[ $test_file == *"connect-debezium-sqlserver"* ]] || [[ $test_file == *"connect-debezium-mysql"* ]] || [[ $test_file == *"connect-debezium-mariadb"* ]] || [[ $test_file == *"connect-jdbc-mariadb"* ]] || [[ $test_file == *"fm-jdbc-mysql"* ]] || [[ $test_file == *"connect-debezium-postgresql"* ]] || [[ $test_file == *"connect-debezium-oracle"* ]] || [[ $test_file == *"connect-cdc-oracle"* ]] || [[ $test_file == *"connect-jdbc-sqlserver"* ]] || [[ $test_file == *"connect-jdbc-mysql"* ]] || [[ $test_file == *"connect-jdbc-postgresql"* ]] || [[ $test_file == *"connect-jdbc-oracle"* ]] || [[ $test_file == *"connect-cdc-xstream"* ]] || [[ $test_file == *"fm-debezium"* ]] || [[ $test_file == *"fm-cdc"* ]]
   then
     sql_datagen=1
   fi
@@ -1049,7 +1051,7 @@ then
     add_menu_toggle $((1-is_ccloud)) "$ENABLE_KAFKA_NODES" "$MENU_BROKERS"
     add_menu_toggle $((1-is_ccloud)) "$ENABLE_CONNECT_NODES" "$MENU_CONNECT_WORKERS"
     add_menu_toggle $((1-is_fully_managed)) "$ENABLE_KCAT" "$MENU_KCAT"
-    add_menu_toggle $sql_datagen "$SQL_DATAGEN" "$MENU_SQL_DATAGEN"
+    add_menu_toggle $sql_datagen "$ENABLE_SQL_DATAGEN" "$MENU_SQL_DATAGEN"
     add_menu_toggle $((1-is_fully_managed)) "$ENABLE_FLINK" "$MENU_FLINK"
     add_menu_group "$MENU_SEPARATOR_FEATURES" "${toggle_group[@]}"
 
@@ -1344,10 +1346,10 @@ then
 
     if [[ $res == *"$MENU_SQL_DATAGEN"* ]]
     then
-      if [ -z "$SQL_DATAGEN" ]
+      if [ -z "$ENABLE_SQL_DATAGEN" ]
       then
         array_flag_list+=("--enable-sql-datagen")
-        export SQL_DATAGEN=true
+        export ENABLE_SQL_DATAGEN=true
         interactive_enable_sql="true"
 
         array_flag_list+=("--enable-jmx-grafana")
@@ -1355,7 +1357,7 @@ then
         interactive_enable_grafana="true"
       else
         array_flag_list=("${array_flag_list[@]/"--enable-sql-datagen"}")
-        unset SQL_DATAGEN
+        unset ENABLE_SQL_DATAGEN
         interactive_enable_sql=""
 
         if [[ $test_file != *"fully-managed"* ]]
@@ -1813,7 +1815,7 @@ then
       log "📊 automatically enabling Grafana as --enable-sql-datagen is set"
       if [[ -n "$force_interactive_repro" ]]
       then
-        force_enable --enable-sql-datagen SQL_DATAGEN
+        force_enable --enable-sql-datagen ENABLE_SQL_DATAGEN
         force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
       fi
     fi
@@ -2113,6 +2115,17 @@ then
 fi
 set -e
 touch /tmp/playground-run-command-used
+# a reproduction model created with --enable-sql-datagen forces it with an export line in the script
+sql_datagen="$ENABLE_SQL_DATAGEN"
+if grep -q '^export ENABLE_SQL_DATAGEN=true' "$filename"
+then
+  sql_datagen=true
+fi
+if grep -q '^export SQL_DATAGEN=true' "$filename"
+then
+  logwarn "⚠️ $filename forces the former Java SQL datagen (export SQL_DATAGEN=true), which is gone: its build and its sql-datagen container fail"
+  logwarn "   replace that line with: export ENABLE_SQL_DATAGEN=true (rows are then injected with the benchmark-load.bash of the example)"
+fi
 set +e
 bash $filename
 ret=$?
@@ -2135,6 +2148,11 @@ then
   log "####################################################"
   log "✅ RESULT: SUCCESS for $filename ($ELAPSED - $CUMULATED)"
   log "####################################################"
+  if [ -n "$sql_datagen" ]
+  then
+    # SQL_DATAGEN_DURATION (minutes, default 10) and SQL_DATAGEN_SESSIONS (default 5)
+    sql_datagen_inject "$test_file" "${SQL_DATAGEN_DURATION:-10}" "${SQL_DATAGEN_SESSIONS:-5}" || ret=$?
+  fi
 elif [ $ret -eq 111 ]
 then
   log "####################################################"

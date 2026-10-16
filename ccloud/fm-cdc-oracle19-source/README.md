@@ -13,7 +13,6 @@ See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?i
 | Variable | Description |
 | --- | --- |
 | `NGROK_AUTH_TOKEN` | Required. [Ngrok](https://ngrok.com) auth token, used to expose the Oracle port to the internet (see below) |
-| `SQL_DATAGEN` | Optional. If set, builds `oracle-datagen` and injects data for 10 minutes at the end of the run |
 
 ### Oracle image
 
@@ -48,6 +47,8 @@ playground run -f fully-managed-cdc-oracle19-cdb-table.sh
 | Script | Description |
 | --- | --- |
 | `fully-managed-cdc-oracle19-cdb-table.sh` | Oracle 19c, common user `C##MYUSER`, table `CUSTOMERS` in the CDB |
+
+With `--enable-sql-datagen` (`playground run -f fully-managed-cdc-oracle19-cdb-table.sh --enable-sql-datagen`), once the example succeeded, `playground run` injects rows in the `CUSTOMERS` table with [`benchmark-load.bash`](benchmark-load.bash) (the same load as `playground connector benchmark`) for 10 minutes: one row per transaction, from 5 parallel sessions, logging the rows inserted every 30 seconds. `SQL_DATAGEN_DURATION` (minutes, default `10`) and `SQL_DATAGEN_SESSIONS` (default `5`) change the duration and the number of sessions.
 
 ## What the script does
 

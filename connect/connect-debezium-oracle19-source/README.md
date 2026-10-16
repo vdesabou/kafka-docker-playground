@@ -12,10 +12,6 @@ The connector plugin is downloaded from Maven Central (default version `3.4.1`, 
 - Otherwise, download Oracle Database 19c (19.3) for Linux x86-64 `LINUX.X64_193000_db_home.zip` from this [page](https://www.oracle.com/database/technologies/oracle19c-linux-downloads.html) and place it in this folder. The first run builds the docker image `oracle/database:19.3.0-ee` (using this [project](https://github.com/oracle/docker-images/blob/master/OracleDatabase/SingleInstance/README.md)), which takes about 10 minutes. Make sure to increase the Docker disk image size (96 GB is known to work).
 - `ojdbc8.jar` must be present in this folder (it must be downloaded manually to acknowledge the Oracle user agreement).
 
-| Variable | Description |
-| --- | --- |
-| `SQL_DATAGEN` | Optional: when set, builds the `oracle-datagen` tool and injects data for 10 minutes at the end of the run |
-
 ## How to run
 
 ```bash
@@ -35,7 +31,8 @@ playground run -f debezium-oracle19.sh
 5. Creates the `debezium-oracle-source` connector (`io.debezium.connector.oracle.OracleConnector`, `topic.prefix` `C__MYUSER`).
 6. Runs inserts, updates, a delete and an `ALTER TABLE` adding a column.
 7. Verifies topics `C__MYUSER.C__MYUSER.CUSTOMERS` (at least 10 records) and `C__MYUSER` (schema changes) with `playground topic consume`.
-8. If `SQL_DATAGEN` is set, injects data for 10 minutes.
+
+With `--enable-sql-datagen`, `playground run` injects rows in the `CUSTOMERS` table once the example succeeded, see [Benchmark](#benchmark).
 
 ## Benchmark
 
@@ -51,3 +48,5 @@ playground connector benchmark --nb-records 1000000 --shape update
 ```
 
 The connector is paused while the rows are loaded, then resumed, and the benchmark measures the time it takes to produce the records.
+
+`playground run -f debezium-oracle19.sh --enable-sql-datagen` uses the same load once the example succeeded: one row per transaction (`--shape small-txn`) from 5 parallel sessions for 10 minutes (`SQL_DATAGEN_SESSIONS`, `SQL_DATAGEN_DURATION` in minutes), logging the rows inserted every 30 seconds.

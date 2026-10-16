@@ -33,9 +33,11 @@ playground run -f fully-managed-mysql-source.sh
 
 ## What the script does
 
-1. Bootstraps the Confluent Cloud environment and recreates topic `mysql-team`.
+1. Bootstraps the Confluent Cloud environment and recreates topic `mysql-CUSTOMERS`.
 2. Starts MySQL and Ngrok; the SSL variant copies the MySQL certificates and builds a JKS truststore and keystore.
-3. Creates table `team` in database `mydb` and inserts 2 rows.
-4. Creates the `MySqlSource` fully managed connector (timestamp column `last_modified`, incrementing column `id`, `topic.prefix` `mysql-`).
-5. Verifies that 2 records are in `mysql-team` (`playground topic consume`).
+3. Creates table `CUSTOMERS` in database `mydb` and inserts 2 rows.
+4. Creates the `MySqlSource` fully managed connector (timestamp column `update_ts`, incrementing column `id`, `topic.prefix` `mysql-`).
+5. Verifies that 2 records are in `mysql-CUSTOMERS` (`playground topic consume`).
 6. Asks before deleting the connector.
+
+With `--enable-sql-datagen` (`playground run -f fully-managed-mysql-source.sh --enable-sql-datagen`), once the example succeeded, `playground run` injects rows in the `CUSTOMERS` table with [`benchmark-load.bash`](benchmark-load.bash) (the same load as `playground connector benchmark`) for 10 minutes: one row per transaction, from 5 parallel sessions. `SQL_DATAGEN_DURATION` (minutes, default `10`) and `SQL_DATAGEN_SESSIONS` (default `5`) change the duration and the number of sessions.

@@ -11,7 +11,6 @@ See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?i
 | Variable | Description |
 | --- | --- |
 | `NGROK_AUTH_TOKEN` | Required. [Ngrok](https://ngrok.com) auth token, used to expose the MariaDB port to the internet so that the fully managed connector can reach it ([sign up](https://dashboard.ngrok.com/signup), [get your token](https://dashboard.ngrok.com/get-started/your-authtoken)) |
-| `SQL_DATAGEN` | Optional. If set, builds `mysql-datagen` (from `ccloud/fm-debezium-mysql-v2-source`) and injects data for 10 minutes at the end of the run |
 
 ### Exposing docker container over internet
 
@@ -37,12 +36,14 @@ playground run -f fully-managed-debezium-mariadb.sh
 
 | Script | Description |
 | --- | --- |
-| `fully-managed-debezium-mariadb.sh` | CDC of table `mydb.team` from a local MariaDB, Avro output |
+| `fully-managed-debezium-mariadb.sh` | CDC of table `mydb.CUSTOMERS` from a local MariaDB, Avro output |
+
+With `--enable-sql-datagen` (`playground run -f fully-managed-debezium-mariadb.sh --enable-sql-datagen`), once the example succeeded, `playground run` injects rows in the `CUSTOMERS` table with [`benchmark-load.bash`](benchmark-load.bash) (the same load as `playground connector benchmark`) for 10 minutes: one row per transaction, from 5 parallel sessions, logging the rows inserted every 30 seconds. `SQL_DATAGEN_DURATION` (minutes, default `10`) and `SQL_DATAGEN_SESSIONS` (default `5`) change the duration and the number of sessions.
 
 ## What the script does
 
 1. Starts MariaDB and ngrok locally (`docker-compose.yml`).
-2. Creates table `mydb.team` and inserts 2 rows.
-3. Creates the fully managed `MariaDbCdcSource` connector (`topic.prefix` `mariadb`, `table.include.list` `mydb.team`, Avro output) pointing to the ngrok endpoint.
-4. Verifies at least 2 records in topic `mariadb.mydb.team` with `playground topic consume`.
+2. Creates table `mydb.CUSTOMERS` and inserts 2 rows.
+3. Creates the fully managed `MariaDbCdcSource` connector (`topic.prefix` `mariadb`, `table.include.list` `mydb.CUSTOMERS`, Avro output) pointing to the ngrok endpoint.
+4. Verifies at least 2 records in topic `mariadb.mydb.CUSTOMERS` with `playground topic consume`.
 5. Deletes the connector at the end of the run.

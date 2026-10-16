@@ -65,13 +65,16 @@ The `redo-log-topic` contains the raw LogMiner records (`SCN`, `OPERATION`, `SEG
 
 ## Performance testing
 
-Set the `SQL_DATAGEN` environment variable, or use `--enable-sql-datagen` with `playground run`, on `cdc-oracle19-cdb-table.sh` or `cdc-oracle19-pdb-table.sh`. The script then builds a Java based datagen tool and injects data for 10 minutes at the end of the run:
+With `--enable-sql-datagen` (for example on `cdc-oracle19-cdb-table.sh` or `cdc-oracle19-pdb-table.sh`), once the example succeeded, `playground run` injects rows in the `CUSTOMERS` table with [`benchmark-load.bash`](benchmark-load.bash) (the same load as `playground connector benchmark`) for 10 minutes: one row per transaction, from 5 parallel sessions, logging the rows inserted every 30 seconds. `SQL_DATAGEN_DURATION` (minutes, default `10`) and `SQL_DATAGEN_SESSIONS` (default `5`) change the duration and the number of sessions.
 
 ```bash
-playground container exec --container sql-datagen --command "bash -c \"java -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username C##MYUSER --password mypassword --sidOrServerName sid --sidOrServerNameVal ORCLCDB --maxPoolSize 10 --durationTimeMin 10\""
+playground run -f cdc-oracle19-cdb-table.sh --enable-sql-datagen
+
+# inject rows for 2 minutes only
+SQL_DATAGEN_DURATION=2 playground run -f cdc-oracle19-cdb-table.sh --enable-sql-datagen
 ```
 
-You can increase throughput with `--maxPoolSize`.
+Increase `SQL_DATAGEN_SESSIONS` to increase throughput.
 
 ### Benchmark
 
@@ -91,7 +94,7 @@ The connector is paused while the rows are loaded, then resumed, and the benchma
 ### Note on redo.log.row.fetch.size
 
 `redo.log.row.fetch.size` (default `10`) is the number of redo log rows fetched at a time. Some examples set it to `1` for demo purposes only, so that each change is fetched as soon as it is available (for example [`cdc-oracle21-pdb-table.sh`](../connect-cdc-oracle21-source/cdc-oracle21-pdb-table.sh)).
-If you're planning to inject more data (for example with `SQL_DATAGEN`), keep the default or increase it (for example `1000`), otherwise the connector will lag behind.
+If you're planning to inject more data (for example with `--enable-sql-datagen` or `playground connector benchmark`), keep the default or increase it (for example `1000`), otherwise the connector will lag behind.
 
 ## TLS setup details
 

@@ -6,10 +6,6 @@ Quickly test the [Debezium SQL Server](https://docs.confluent.io/kafka-connector
 
 ## Prerequisites
 
-| Variable | Description |
-| --- | --- |
-| `SQL_DATAGEN` | Optional (`debezium-sqlserver-source.sh` only): when set, builds the `sqlserver-datagen` tool and injects data for 10 minutes at the end of the run |
-
 With CP 8.x, the minimal supported connector version is `2.5.0` (the script exits with code 111 otherwise).
 
 ## How to run
@@ -35,11 +31,12 @@ playground run -f debezium-sqlserver-source.sh
 3. Creates the `debezium-sqlserver-source` connector (`io.debezium.connector.sqlserver.SqlServerConnector`, `topic.prefix` `server1`).
 4. Inserts one more row.
 5. Verifies that topic `server1.testDB.dbo.customers` contains 5 records with `playground topic consume`.
-6. If `SQL_DATAGEN` is set, injects data for 10 minutes.
 
 The incremental snapshot variants then add table `customers2`, update the connector to include it, check that only the newly inserted row is captured, send an `execute-snapshot` signal (insert into `debezium_signal` or `playground topic produce` to `dbz-signals`) and verify that all records are in `server1.testDB.dbo.customers2`.
 
 The SSL variant generates a self-signed certificate (`CN=sqlserver`), imports it into a JKS truststore mounted in the `connect` container at `/tmp/truststore.jks`, and configures `database.trustStore` / `database.trustStorePassword`.
+
+With `--enable-sql-datagen`, `playground run` injects rows in the `dbo.customers` table once the example succeeded, see [Benchmark](#benchmark).
 
 ## Benchmark
 
@@ -57,3 +54,5 @@ playground connector benchmark --nb-records 1000000 --shape update
 ```
 
 The connector is paused while the rows are loaded, then resumed, and the benchmark measures the time it takes to produce the records.
+
+`playground run -f debezium-sqlserver-source.sh --enable-sql-datagen` uses the same load once the example succeeded: one row per transaction (`--shape small-txn`) from 5 parallel sessions for 10 minutes (`SQL_DATAGEN_SESSIONS`, `SQL_DATAGEN_DURATION` in minutes), logging the rows inserted every 30 seconds.
