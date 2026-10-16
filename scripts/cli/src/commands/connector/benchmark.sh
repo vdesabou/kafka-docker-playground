@@ -608,7 +608,14 @@ then
     log "⏸️ pausing $connector_type connector $connector ($type, $nb_tasks task(s), $connector_class $plugin_version)"
     playground connector pause --connector "$connector" > /dev/null
     paused_by_benchmark=1
-    playground connector wait --connector "$connector" --state PAUSED --max-wait 120 --interval 2 > /dev/null
+    # a task only sees the pause between two polls of its consumer, and can miss it (connector PAUSED, task still
+    # RUNNING) if a rebalance swallows the wakeup: a task restarted while its connector is paused starts paused
+    if ! playground connector wait --connector "$connector" --state PAUSED --max-wait 30 --interval 2 > /dev/null 2>&1
+    then
+        logwarn "⚠️ $connector_type connector $connector is not paused with all its tasks after 30s, restarting them (they start paused)"
+        playground connector restart --connector "$connector" > /dev/null
+        playground connector wait --connector "$connector" --state PAUSED --max-wait 120 --interval 2 > /dev/null
+    fi
 
     log "📥 loading the backlog$([ "$sessions" -gt 1 ] && echo " in $sessions sessions"): $load_cmd"
     load_start=$(now)
