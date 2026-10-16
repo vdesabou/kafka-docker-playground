@@ -468,6 +468,16 @@ __JFR__
     if (line.childNodes.length) line.appendChild(document.createTextNode(" · "));
     line.appendChild(headerDoc);
   }
+  // grafana of the environment: the dashboards at the time of the run(s), where the measure is annotated
+  if ((data.grafana || []).length) {
+    const line = document.getElementById("example-link");
+    if (line.childNodes.length) line.appendChild(el("br"));
+    line.appendChild(document.createTextNode("📊 Grafana: "));
+    data.grafana.forEach((g, i) => {
+      if (i) line.appendChild(document.createTextNode(" · "));
+      line.appendChild(el("a", { href: g.url, target: "_blank", rel: "noopener" }, g.title));
+    });
+  }
 
   // setup of this run
   const st = r.setup || {};
@@ -545,6 +555,17 @@ def verdict(result, history, versions, warnings, jfr_findings):
         elif severity == "var(--good)":
             severity = "var(--warning)"
     return f'<div class="card verdict" style="--sev: {severity}">{html.escape(" · ".join(parts))}</div>'
+
+
+def grafana_links(runs):
+    """links to the grafana dashboards of the runs, from the start of the first measure to the end of the last one"""
+    runs = [r for r in runs if (r.get("grafana") or {}).get("enabled") and r.get("measure_from_ms") and r.get("measure_to_ms")]
+    if not runs:
+        return []
+    start = min(r["measure_from_ms"] for r in runs) - 30000
+    end = max(r["measure_to_ms"] for r in runs) + 30000
+    return [{"title": d["title"], "url": "http://localhost:3000/d/%s?orgId=1&from=%d&to=%d" % (d["uid"], start, end)}
+            for d in runs[-1]["grafana"].get("dashboards", []) if d.get("uid")]
 
 
 def jfr_comparison(runs, versions):
@@ -634,7 +655,8 @@ def main():
         files = (result.get("flight_recorder") or {}).get("files") or []
         jfr_html = jfr_analyzer.render_section(analysis, recording_link=files[0] if len(files) == 1 else None,
                                                subtitle_prefix=("Recorded during the " + ("drain" if result.get("mode") == "drain" else "measure") + " · "))
-    payload = json.dumps({"result": result, "samples": samples, "history": history, "versions": versions}).replace("</", "<\\/")
+    payload = json.dumps({"result": result, "samples": samples, "history": history, "versions": versions,
+                          "grafana": grafana_links(history if versions else [result])}).replace("</", "<\\/")
     if versions:
         subtitle = "connector versions " + ", ".join(v["version"] for v in versions) + " · " + subtitle
     page = (PAGE.replace("__CONNECTOR__", html.escape(str(result.get("connector"))))

@@ -8347,6 +8347,15 @@ commands:
       same way. The .jfr files are kept in --output-dir (JDK Mission
       Control, or playground analyze flight-recorder).
 
+      📊 When Grafana runs (example started with --enable-jmx-grafana,
+      or --enable-sql-datagen), the measure is annotated on the Kafka
+      Connect, connector (Debezium, Oracle CDC, XStream, MongoDB) and
+      Kafka cluster dashboards, and the summary and the report link to
+      them at the time of the run (each version is annotated with
+      --connector-tag). Grafana is not started by the benchmark: its
+      JMX exporter and containers use CPU, and the summary warns when
+      the previous run was not measured the same way.
+
       ⚠️ Not available for fully managed connectors and the cfk environment yet.
     filters:
     - connect_running

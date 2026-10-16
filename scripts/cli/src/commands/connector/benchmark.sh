@@ -215,6 +215,14 @@ then
           ($v[] | [.version, .runs, .lower_bounds, (.mean | r1), (.min | r1), (.max | r1),
                    (if $first != null and $first > 0 and .mean != null then (((.mean - $first) / $first * 100) | round | tostring) + "%" else "-" end)] | @tsv)' \
         | column -t -s $'\t' | sed 's/^/   /'
+    # grafana: one link over all the runs of the comparison, each run is annotated with its version
+    grafana_link=$(xargs cat < "$matrix_results" | jq -s -r 'map(select(.grafana.enabled == true)) | if length > 0 then
+        "\(.[0].grafana.dashboards[0].uid) \(map(.measure_from_ms) | min) \(map(.measure_to_ms) | max)" else empty end')
+    if [ -n "$grafana_link" ]
+    then
+        read -r grafana_uid grafana_from grafana_to <<< "$grafana_link"
+        log "📊 grafana (each run is annotated with its version): $(benchmark_grafana_url "$grafana_uid" "$grafana_from" "$grafana_to")"
+    fi
     html_file="$output_dir/$matrix_id.html"
     if python3 -I "$root_folder/tools/benchmark-report/benchmark_report.py" --runs $(cat "$matrix_results") --output "$html_file" > /dev/null
     then
@@ -665,6 +673,16 @@ else
     measured_seconds=$(awk -v e="$sample_time" -v s="$measure_start" 'BEGIN { printf "%.1f", e - s }')
 fi
 
+# window of the measure, in ms, for the grafana annotation and links
+if [ "$mode" == "drain" ]
+then
+    measure_from_ms=$(awk -v t="$start_time" 'BEGIN { printf "%d", t * 1000 }')
+    measure_to_ms=$(awk -v t="$end_time" 'BEGIN { printf "%d", t * 1000 }')
+else
+    measure_from_ms=$(awk -v t="$measure_start" 'BEGIN { printf "%d", t * 1000 }')
+    measure_to_ms=$(awk -v t="$sample_time" 'BEGIN { printf "%d", t * 1000 }')
+fi
+
 # summary from the samples of the measure (drain or steady phase)
 phase="$mode"
 read -r rate_p50 rate_p95 rate_min batch_avg ratio_avg cpu_avg cpu_max <<< "$(awk -F, -v p="$phase" '
@@ -773,6 +791,21 @@ else
         '{enabled: ($status != "disabled" and $status != "unavailable"), status: $status, files: ($files | split("\n") | map(select(. != "")))}')
 fi
 
+# grafana of the environment (--enable-jmx-grafana): the measure as an annotation on the dashboards of the connector
+grafana_json='{"enabled": false}'
+if benchmark_grafana_available
+then
+    grafana_dashboards=$(benchmark_grafana_dashboards "$connector_class")
+    grafana_annotated=$(benchmark_grafana_annotate "$measure_from_ms" "$measure_to_ms" \
+        "🏎️ benchmark of $connector ($plugin_version): $mode of $measured_records records, $([ "$lower_bound" == "true" ] && echo "≥ ")$throughput records/s" \
+        "playground-benchmark,$connector,$plugin_version" "$grafana_dashboards")
+    grafana_json=$(while IFS='|' read -r uid title
+        do
+            [ -n "$uid" ] && jq -n -c --arg uid "$uid" --arg title "$title" --arg url "$(benchmark_grafana_url "$uid" "$measure_from_ms" "$measure_to_ms")" '{uid: $uid, title: $title, url: $url}'
+        done <<< "$grafana_dashboards" | jq -s -c --argjson annotated "${grafana_annotated:-0}" --arg interval "$(benchmark_grafana_scrape_interval)" \
+            '{enabled: true, annotated: $annotated, scrape_interval_s: ($interval | tonumber? // null), dashboards: .}')
+fi
+
 test_file_relative="${test_file#$root_folder/}"
 result=$(jq -n \
     --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg test_file "$test_file_relative" --arg connector "$connector" \
@@ -785,7 +818,8 @@ result=$(jq -n \
     --arg samples_csv "$csv_file" --argjson lower_bound "$lower_bound" \
     --arg gc_percent "$gc_percent" --arg cpu_available_avg "$cpu_available_avg" --arg pause_ratio "$pause_avg" \
     --arg dlq_records "$dlq_delta" --arg skipped_records "$skipped_delta" --arg task_shares "$task_shares" \
-    --argjson setup "$setup_json" --argjson flight_recorder "$flight_recorder_json" \
+    --argjson setup "$setup_json" --argjson flight_recorder "$flight_recorder_json" --argjson grafana "$grafana_json" \
+    --argjson measure_from_ms "$measure_from_ms" --argjson measure_to_ms "$measure_to_ms" \
     '{date: $date, test_file: $test_file, connector: $connector, connector_class: $connector_class, plugin_version: $plugin_version,
       cp_tag: $cp_tag, type: $type, mode: $mode, shape: $shape, sessions: $sessions, tasks: $tasks, records: $records, seconds: $seconds,
       records_per_second: $records_per_second, lower_bound: $lower_bound, rate_p50: $rate_p50, rate_p95: $rate_p95, rate_min: $rate_min,
@@ -793,7 +827,8 @@ result=$(jq -n \
       cpu_percent_of_one_core_max: $cpu_max, load_seconds: $load_seconds, topic_records_delta: $topic_records_delta,
       gc_percent: $gc_percent, cpu_percent_of_available_avg: $cpu_available_avg, pause_ratio: $pause_ratio,
       dlq_records: $dlq_records, skipped_records: $skipped_records, task_shares: $task_shares,
-      samples_csv: $samples_csv, setup: $setup, flight_recorder: $flight_recorder}')
+      samples_csv: $samples_csv, setup: $setup, flight_recorder: $flight_recorder, grafana: $grafana,
+      measure_from_ms: $measure_from_ms, measure_to_ms: $measure_to_ms}')
 echo "$result" > "$json_file"
 if [ -n "$BENCHMARK_MATRIX_RESULTS" ]
 then
@@ -863,6 +898,11 @@ then
     printf "   %-22s %s\n" "records in topics" "+$topic_records_delta (${topics[*]})"
 fi
 printf "   %-22s %s\n" "setup" "$(benchmark_setup_summary "$setup_json")"
+if [ "$(echo "$grafana_json" | jq -r '.enabled')" == "true" ]
+then
+    printf "   %-22s %s\n" "grafana" "$(echo "$grafana_json" | jq -r '.dashboards[0].url // "-"')"
+    printf "   %-22s %s\n" "" "measure annotated on $(echo "$grafana_json" | jq -r '"\(.annotated) dashboard(s): " + ([.dashboards[].title] | join(", "))')"
+fi
 if [ -n "$jfr_analysis" ]
 then
     jfr_lines=$(jq -r '.findings[0:4][] | (if .severity == "critical" then "🔴" elif .severity == "warning" then "🟠" else "ℹ️ " end) + " " + .title' "$jfr_analysis")
@@ -906,6 +946,16 @@ fi
 if [ -n "$previous" ] && [ "$(echo "$previous" | jq -r '.sessions // 1')" != "$sessions" ]
 then
     add_warning "the previous run used $(echo "$previous" | jq -r '.sessions // 1') load session(s) and this one $sessions: the load is not the same"
+fi
+if [ -n "$previous" ] && [ "$(echo "$previous" | jq -r '.grafana.enabled // false')" != "$(echo "$grafana_json" | jq -r '.enabled')" ]
+then
+    add_warning "the previous run was $([ "$(echo "$previous" | jq -r '.grafana.enabled // false')" == "true" ] && echo "measured with" || echo "measured without") Grafana and this one $([ "$(echo "$grafana_json" | jq -r '.enabled')" == "true" ] && echo "with" || echo "without"): the JMX exporter in the JVMs and the Grafana containers use CPU, compare runs measured the same way"
+fi
+# grafana only has the samples prometheus scraped during the measure
+scrape_interval=$(echo "$grafana_json" | jq -r '.scrape_interval_s // empty')
+if [ -n "$scrape_interval" ] && awk -v s="$measured_seconds" -v i="$scrape_interval" 'BEGIN { exit !(s < 3 * i) }'
+then
+    add_warning "the measure lasted ${measured_seconds}s and prometheus scrapes every ${scrape_interval}s: grafana has only $(awk -v s="$measured_seconds" -v i="$scrape_interval" 'BEGIN { printf "%d", s / i }') sample(s) during it, increase --nb-records or use --mode steady --duration 2m to see the run on the dashboards"
 fi
 if [ -n "$previous" ]
 then
