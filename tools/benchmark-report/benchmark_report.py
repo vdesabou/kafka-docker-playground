@@ -9,7 +9,8 @@ the samples as a table.
                         [--warning <text>]... [--jfr <flight recorder analysis.json>] --output <report.html>
 
 With a flight recorder analysis (tools/jfr-analyzer), a "Where the time goes" section follows the charts; in a
---connector-tag comparison (--runs), the analyses of the runs are compared by version.
+--connector-tag comparison (--runs), the analyses of the runs are compared by version. With --group-by shape, the runs
+of a --shape sequence (bulk,update,delete) are compared by phase.
 """
 import argparse
 import csv
@@ -176,7 +177,7 @@ __WARNINGS__
   <section class="card"><h2>📜 Comparable runs</h2><p class="sub">records per second, same example, connector, mode and shape (benchmark-history); faded bars and * : another setup</p><div id="chart-history"></div></section>
 </div>
 __JFR__
-<details open id="versions-section" hidden><summary>🆚 Connector versions</summary><div class="card"><table id="versions-table"></table></div></details>
+<details open id="versions-section" hidden><summary>__GROUP_TITLE__</summary><div class="card"><table id="versions-table"></table></div></details>
 <details open><summary>📋 Run details</summary><div class="card"><table id="details"></table></div></details>
 <details open><summary>🖥️ Setup</summary><div class="card"><table id="setup"></table></div></details>
 <details><summary>⚙️ Connector configuration (secrets masked)</summary><div class="card"><pre id="connector-config"></pre></div></details>
@@ -190,6 +191,8 @@ __JFR__
   const data = JSON.parse(document.getElementById("data").textContent);
   const r = data.result, samples = data.samples, history = data.history, versions = data.versions || [];
   const comparison = versions.length > 0;
+  // what the runs of a comparison are grouped by: connector versions (--connector-tag) or phases (--shape a,b,c)
+  const groupKey = data.group_key || "plugin_version", groupNoun = data.group_noun || "version", groupTitle = data.group_title || "🆚 Connector versions";
   const root = document.documentElement;
   document.getElementById("theme-toggle").addEventListener("click", () => {
     const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
@@ -239,7 +242,7 @@ __JFR__
     if (note) t.appendChild(el("div", { class: "note" }, note));
     tiles.appendChild(t);
   }
-  tile(comparison ? "🚀 Last run (" + r.plugin_version + ")" : "🚀 Throughput", (r.lower_bound ? "≥ " : "") + nf.format(r.records_per_second), "records/s",
+  tile(comparison ? "🚀 Last run (" + r[groupKey] + ")" : "🚀 Throughput", (r.lower_bound ? "≥ " : "") + nf.format(r.records_per_second), "records/s",
        r.rate_p50 !== "-" ? "p50 " + compact(+r.rate_p50) + " · p95 " + compact(+r.rate_p95) + " · min " + compact(+r.rate_min) : "");
   tile("⏱️ Duration", nf1.format(r.seconds), "s", r.mode === "drain" ? "time to process the backlog" : "measure, after the warm-up");
   tile("🧾 Records", nf.format(r.records), "", r.mode === "drain" ? "backlog, loaded in " + r.load_seconds + " s" : "processed during the measure");
@@ -250,10 +253,10 @@ __JFR__
     if (measured.length) {
       const best = measured.reduce((a, b) => (b.mean > a.mean ? b : a));
       const d = best.delta;
-      tile("🏆 Best version", best.version, "", nf.format(best.mean) + " records/s (mean of " + best.rates.length + " run(s))" +
+      tile("🏆 Fastest " + groupNoun, best.version, "", nf.format(best.mean) + " records/s (mean of " + best.rates.length + " run(s))" +
            (d !== null && Math.abs(d) >= 1 ? ", " + (d > 0 ? "+" : "") + nf.format(d) + "% vs " + measured[0].version : ""));
     } else {
-      tile("🏆 Best version", "–", "", "only lower bounds: increase --nb-records");
+      tile("🏆 Fastest " + groupNoun, "–", "", "only lower bounds: increase --nb-records");
     }
   } else if (previous && previous.records_per_second > 0) {
     const delta = (r.records_per_second - previous.records_per_second) / previous.records_per_second * 100;
@@ -357,7 +360,7 @@ __JFR__
       const x = L + slot * i + (slot - bw) / 2, y = sy(h.records_per_second), base = sy(0), rad = Math.min(4, bw / 2);
       const bar = svgEl("path", {
         d: `M${x},${base}V${y + rad}Q${x},${y} ${x + rad},${y}H${x + bw - rad}Q${x + bw},${y} ${x + bw},${y + rad}V${base}Z`,
-        fill: comparison ? versionColor(h.plugin_version) : "var(--series-1)", tabindex: 0,
+        fill: comparison ? versionColor(h[groupKey]) : "var(--series-1)", tabindex: 0,
         "fill-opacity": (comparison && h.lower_bound) || !sameSetup(h) ? 0.35 : 1
       });
       svg.appendChild(bar);
@@ -369,12 +372,12 @@ __JFR__
       }
       const lab = svgEl("text", { x: x + bw / 2, y: H - B + 16, "text-anchor": "middle", "font-size": 10.5,
         fill: current ? "var(--text-primary)" : "var(--text-muted)", "font-weight": current ? 600 : 400 });
-      lab.textContent = comparison ? h.plugin_version + (h.round > 1 || versions.some(v => v.runs > 1) ? " · r" + h.round : "") : current ? "this run" : (h.date || "").slice(5, 16).replace("T", " ") + (sameSetup(h) ? "" : " *");
+      lab.textContent = comparison ? h[groupKey] + (h.round > 1 || versions.some(v => v.runs > 1) ? " · r" + h.round : "") : current ? "this run" : (h.date || "").slice(5, 16).replace("T", " ") + (sameSetup(h) ? "" : " *");
       svg.appendChild(lab);
       const showTip = () => {
         tip.replaceChildren();
         tip.appendChild(el("strong", {}, (h.lower_bound ? "≥ " : "") + nf.format(h.records_per_second)));
-        tip.appendChild(document.createTextNode(" records/s" + (comparison ? " · version " + h.plugin_version + ", round " + h.round : "") +
+        tip.appendChild(document.createTextNode(" records/s" + (comparison ? " · " + groupNoun + " " + h[groupKey] + ", round " + h.round : "") +
           (h.lower_bound ? " (lower bound, not in the mean)" : "")));
         tip.appendChild(el("br"));
         tip.appendChild(el("span", { class: "muted" }, (h.date || "").replace("T", " ").replace("Z", " UTC")));
@@ -427,14 +430,14 @@ __JFR__
   if (comparison) {
     document.getElementById("versions-section").hidden = false;
     const f1 = x => x === null ? "-" : nf1.format(x);
-    fillTable("versions-table", [["version"], ["runs", 1], ["lower bounds", 1], ["records/s (mean)", 1], ["min", 1], ["max", 1], ["vs first version", 1]],
+    fillTable("versions-table", [[groupNoun], ["runs", 1], ["lower bounds", 1], ["records/s (mean)", 1], ["min", 1], ["max", 1], ["vs first " + groupNoun, 1]],
       versions.map(v => [v.version, v.runs, v.lower_bounds, f1(v.mean), f1(v.min), f1(v.max),
         v.delta === null ? "-" : (v.delta > 0 ? "+" : "") + nf.format(v.delta) + "%"]));
     document.querySelector("#chart-history").previousElementSibling.textContent = "records per second of each run, in run order; faded: lower bound, not in the mean";
     const legend = el("div", { class: "legend" });
     versions.forEach(v => { const item = el("span", {}, v.version); item.style.setProperty("--c", versionColor(v.version)); legend.appendChild(item); });
     document.querySelector("#chart-history").before(legend);
-    document.querySelector("#chart-history").parentElement.querySelector("h2").textContent = "🆚 Connector versions";
+    document.querySelector("#chart-history").parentElement.querySelector("h2").textContent = groupTitle;
   }
   // links to the example on github, at the commit it ran with and on the default branch
   function exampleLinks(st) {
@@ -523,7 +526,7 @@ __JFR_JS__
 """
 
 
-def verdict(result, history, versions, warnings, jfr_findings):
+def verdict(result, history, versions, warnings, jfr_findings, group_noun="version"):
     """one friendly sentence at the top of the report, from what the report shows below"""
     parts = []
     severity = "var(--good)"
@@ -532,10 +535,10 @@ def verdict(result, history, versions, warnings, jfr_findings):
         if measured:
             best = max(measured, key=lambda v: v["mean"])
             delta = best["delta"]
-            parts.append(f"🏆 {best['version']} is the fastest ({best['mean']:,.0f} records/s"
+            parts.append(f"🏆 {best['version']} is the fastest{'' if group_noun == 'version' else ' ' + group_noun} ({best['mean']:,.0f} records/s"
                          + (f", {delta:+.0f}% vs {measured[0]['version']}" if delta is not None and abs(delta) >= 1 else "") + ")")
         else:
-            parts.append("⚠️ only lower bounds: increase --nb-records to compare the versions")
+            parts.append(f"⚠️ only lower bounds: increase --nb-records to compare the {group_noun}s")
             severity = "var(--warning)"
     else:
         parts.append(f"🚀 {'≥ ' if result.get('lower_bound') else ''}{result.get('records_per_second') or 0:,.0f} records/s")
@@ -568,28 +571,31 @@ def grafana_links(runs):
             for d in runs[-1]["grafana"].get("dashboards", []) if d.get("uid")]
 
 
-def jfr_comparison(runs, versions):
-    """'where the time goes' of each version of a --connector-tag comparison, from the flight recordings of its runs"""
+def jfr_comparison(runs, versions, group_key="plugin_version", group_noun="version"):
+    """'where the time goes' of each version of a --connector-tag comparison (or each phase of a --shape sequence), from
+    the flight recordings of its runs"""
     entries = []
     for v in versions:
         analyses = []
         for run in runs:
             path = (run.get("flight_recorder") or {}).get("analysis")
-            if run.get("plugin_version") == v["version"] and path and os.path.exists(path):
+            if run.get(group_key) == v["version"] and path and os.path.exists(path):
                 with open(path) as f:
                     analyses.append(json.load(f))
         if analyses:
             entries.append({"version": v["version"], "records_per_second": v["mean"], "analyses": analyses})
     if len(entries) < 2:
         return ""
-    return jfr_analyzer.render_comparison(jfr_analyzer.compare(entries))
+    return jfr_analyzer.render_comparison(jfr_analyzer.compare(entries, group_noun), group_noun)
 
 
 def main():
     parser = argparse.ArgumentParser(description="HTML report of a playground connector benchmark run")
     parser.add_argument("--result")
     parser.add_argument("--samples")
-    parser.add_argument("--runs", nargs="+", help="result json of the runs of a --connector-tag comparison")
+    parser.add_argument("--runs", nargs="+", help="result json of the runs of a --connector-tag comparison or a --shape sequence")
+    parser.add_argument("--group-by", choices=["plugin_version", "shape"], default="plugin_version",
+                        help="what the runs are compared by: connector versions (default) or the phases of a --shape sequence")
     parser.add_argument("--history")
     parser.add_argument("--warning", action="append", default=[])
     parser.add_argument("--jfr", help="flight recorder analysis json of tools/jfr-analyzer/jfr_analyzer.py")
@@ -608,7 +614,7 @@ def main():
         history = runs
         first = None
         for run in runs:
-            version = run.get("plugin_version")
+            version = run.get(args.group_by)
             entry = next((v for v in versions if v["version"] == version), None)
             if entry is None:
                 entry = {"version": version, "rates": [], "lower_bounds": 0, "runs": 0}
@@ -644,10 +650,11 @@ def main():
     warnings = ""
     if args.warning:
         warnings = '<ul class="card warnings">' + "".join("<li>%s</li>" % html.escape(w) for w in args.warning) + "</ul>"
+    group_noun, group_title = ("version", "🆚 Connector versions") if args.group_by == "plugin_version" else ("phase", "🔁 Phases of the sequence")
     jfr_html = ""
     jfr_findings = []
     if versions:
-        jfr_html = jfr_comparison(history, versions)
+        jfr_html = jfr_comparison(history, versions, args.group_by, group_noun)
     elif args.jfr and os.path.exists(args.jfr):
         with open(args.jfr) as f:
             analysis = json.load(f)
@@ -656,13 +663,15 @@ def main():
         jfr_html = jfr_analyzer.render_section(analysis, recording_link=files[0] if len(files) == 1 else None,
                                                subtitle_prefix=("Recorded during the " + ("drain" if result.get("mode") == "drain" else "measure") + " · "))
     payload = json.dumps({"result": result, "samples": samples, "history": history, "versions": versions,
+                          "group_key": args.group_by, "group_noun": group_noun, "group_title": group_title,
                           "grafana": grafana_links(history if versions else [result])}).replace("</", "<\\/")
     if versions:
-        subtitle = "connector versions " + ", ".join(v["version"] for v in versions) + " · " + subtitle
+        subtitle = ("connector versions " if group_noun == "version" else "sequence ") + (", " if group_noun == "version" else " → ").join(v["version"] for v in versions) + " · " + subtitle
     page = (PAGE.replace("__CONNECTOR__", html.escape(str(result.get("connector"))))
             .replace("__SUBTITLE__", html.escape(subtitle))
             .replace("__BATCH_TITLE__", "⏱️ Put batch time" if result.get("type") == "sink" else "⏱️ Poll batch time")
-            .replace("__VERDICT__", verdict(result, history, versions, args.warning, jfr_findings))
+            .replace("__VERDICT__", verdict(result, history, versions, args.warning, jfr_findings, group_noun))
+            .replace("__GROUP_TITLE__", group_title)
             .replace("__WARNINGS__", warnings)
             .replace("__JFR_CSS__", jfr_analyzer.SECTION_CSS if jfr_html else "")
             .replace("__JFR_JS__", jfr_analyzer.TOOLTIP_JS if jfr_html else "")

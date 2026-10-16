@@ -53,6 +53,10 @@ playground connector benchmark --nb-records 1000000 --shape bulk
 playground connector benchmark --nb-records 100000 --shape small-txn
 playground connector benchmark --nb-records 1000000 --shape update
 
+# insert, update, then delete the same 500k rows: one drain per phase, compared in the summary and the report
+# each deleted row gives a delete event and a tombstone (tombstones.on.delete, default true)
+playground connector benchmark --nb-records 500000 --shape bulk,update,delete
+
 # throughput during 2 minutes while batches of 10k rows are inserted continuously
 playground connector benchmark --mode steady --duration 2m --nb-records 10000
 ```

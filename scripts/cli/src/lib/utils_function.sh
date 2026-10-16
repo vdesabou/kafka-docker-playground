@@ -2866,6 +2866,8 @@ function benchmark_oracle_client_from_example () {
 # - bulk: one transaction inserting <records> rows
 # - small-txn: <records> transactions of one row
 # - update: updates <records> existing rows (run a bulk load first)
+# - delete: deletes <records> existing rows, the ones with the lowest ids (drain only; plus one tombstone per row for
+#   debezium / xstream with tombstones.on.delete, oracle cdc with emit.tombstone.on.delete)
 # - stream mode: repeats batches of <records> rows of the shape until killed
 # prints BENCHMARK_RECORDS=<n>, the number of records the connector should write, so that the benchmark waits for them:
 # changes x BENCHMARK_RECORDS_PER_CHANGE (default 1) + transactions x BENCHMARK_RECORDS_PER_TRANSACTION (default 0),
@@ -2881,6 +2883,7 @@ function benchmark_sql_load () {
       insert_bulk="INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) SELECT 'first' || i, 'last' || i, 'user' || i || '@example.com', CASE WHEN i % 2 = 0 THEN 'Female' ELSE 'Male' END, (ARRAY['bronze','silver','gold','platinum'])[1 + i % 4], 'benchmark row ' || i FROM generate_series(1, $records) AS i;"
       insert_small_txn="DO \$\$ BEGIN FOR i IN 1..$records LOOP INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES ('first' || i, 'last' || i, 'user' || i || '@example.com', CASE WHEN i % 2 = 0 THEN 'Female' ELSE 'Male' END, (ARRAY['bronze','silver','gold','platinum'])[1 + i % 4], 'benchmark row ' || i); COMMIT; END LOOP; END \$\$;"
       update="UPDATE CUSTOMERS SET comments = 'benchmark update ' || id || ' ' || floor(random() * 1000000) WHERE id IN (SELECT id FROM CUSTOMERS ORDER BY id LIMIT $records);"
+      delete="DELETE FROM CUSTOMERS WHERE id IN (SELECT id FROM CUSTOMERS ORDER BY id LIMIT $records);"
       count_flags="-t -A"
     ;;
     mysql|mariadb)
@@ -2898,6 +2901,7 @@ DELIMITER ;
 CALL $procedure($records);
 DROP PROCEDURE $procedure;"
       update="UPDATE CUSTOMERS SET comments = CONCAT('benchmark update ', id, ' ', FLOOR(RAND() * 1000000)) ORDER BY id LIMIT $records;"
+      delete="DELETE FROM CUSTOMERS ORDER BY id LIMIT $records;"
       count_flags="-N -s"
     ;;
     oracle)
@@ -2917,6 +2921,8 @@ COMMIT;"
 END;
 /"
       update="UPDATE CUSTOMERS SET comments = 'benchmark update ' || id || ' ' || TRUNC(DBMS_RANDOM.VALUE(0, 1000000)), update_ts = CURRENT_TIMESTAMP WHERE id IN (SELECT id FROM (SELECT id FROM CUSTOMERS ORDER BY id) WHERE ROWNUM <= $records);
+COMMIT;"
+      delete="DELETE FROM CUSTOMERS WHERE id IN (SELECT id FROM (SELECT id FROM CUSTOMERS ORDER BY id) WHERE ROWNUM <= $records);
 COMMIT;"
       # sqlplus takes no output flag after the connect string: silent mode (no prompt on the result line) and the output format in the sql
       count_flags=""
@@ -2943,6 +2949,9 @@ GO"
       update="SET NOCOUNT ON;
 UPDATE c SET email = CONCAT('update', c.id, '-', ABS(CHECKSUM(NEWID())) % 1000000, '@example.com') FROM (SELECT TOP ($records) * FROM dbo.customers ORDER BY id) c;
 GO"
+      delete="SET NOCOUNT ON;
+WITH c AS (SELECT TOP ($records) * FROM dbo.customers ORDER BY id) DELETE FROM c;
+GO"
       count_flags="-h -1"
       count_sql="SET NOCOUNT ON;
 SELECT COUNT(*) FROM dbo.customers;
@@ -2960,6 +2969,23 @@ GO"
     logerror "❌ the connector uses \"mode\": \"incrementing\", which does not capture updates: use --shape bulk or small-txn"
     return 1
   fi
+  local connector_class=""
+  [ -f "$BENCHMARK_CONNECTOR_CONFIG" ] && connector_class=$(jq -r '."connector.class" // empty' "$BENCHMARK_CONNECTOR_CONFIG")
+  if [ "$shape" == "delete" ]
+  then
+    # a jdbc source runs queries: a deleted row is simply not returned anymore
+    if [[ "$connector_class" == *.JdbcSourceConnector ]]
+    then
+      logerror "❌ the JDBC source connector does not capture deletes: use --shape bulk, small-txn or update"
+      return 1
+    fi
+    # a stream of deletes would empty the table, and then delete nothing
+    if [ "$mode" == "stream" ]
+    then
+      logerror "❌ --shape delete is for a drain (it deletes rows that a previous run inserted): not with --mode steady"
+      return 1
+    fi
+  fi
   if [ -n "$BENCHMARK_LOAD_CHECK" ]
   then
     return 0
@@ -2970,19 +2996,20 @@ GO"
     bulk) sql="$insert_bulk" ;;
     small-txn) sql="$insert_small_txn" ;;
     update) sql="$update" ;;
-    *) logerror "❌ benchmark_sql_load: unknown shape $shape (bulk, small-txn, update)"; return 1 ;;
+    delete) sql="$delete" ;;
+    *) logerror "❌ benchmark_sql_load: unknown shape $shape (bulk, small-txn, update, delete)"; return 1 ;;
   esac
 
   echo "$create_table" | playground container exec --container "$container" --command "$client" > /dev/null
   local changes="$records"
-  if [ "$shape" == "update" ]
+  if [ "$shape" == "update" ] || [ "$shape" == "delete" ]
   then
     local rows
     rows=$(echo "$count_sql" | playground container exec --container "$container" --command "$client_for_count $count_flags" 2> /dev/null | grep -E '^\s*[0-9]+\s*$' | tail -1 | tr -d ' ')
     rows=${rows:-0}
     if [ "$rows" -lt "$records" ]
     then
-      logwarn "⚠️ only $rows rows in CUSTOMERS, updating $rows rows instead of $records (run a bulk load first)"
+      logwarn "⚠️ only $rows rows in CUSTOMERS, ${shape/%e/}ing $rows rows instead of $records (run a bulk load first)"
       changes="$rows"
     fi
   fi
@@ -2992,7 +3019,19 @@ GO"
   then
     transactions="$changes"
   fi
-  local expected_records=$((changes * ${BENCHMARK_RECORDS_PER_CHANGE:-1} + transactions * ${BENCHMARK_RECORDS_PER_TRANSACTION:-0}))
+  # a deleted row can also give a tombstone (null value, same key): debezium and xstream by default
+  # (tombstones.on.delete), oracle cdc when emit.tombstone.on.delete is true
+  local tombstones=0
+  if [ "$shape" == "delete" ] && [ -f "$BENCHMARK_CONNECTOR_CONFIG" ]
+  then
+    case "$connector_class" in
+      io.debezium.*|*.OracleXStreamSourceConnector)
+        [ "$(jq -r '."tombstones.on.delete" // "true"' "$BENCHMARK_CONNECTOR_CONFIG")" == "true" ] && tombstones=1 ;;
+      *.OracleCdcSourceConnector)
+        [ "$(jq -r '."emit.tombstone.on.delete" // "false"' "$BENCHMARK_CONNECTOR_CONFIG")" == "true" ] && tombstones=1 ;;
+    esac
+  fi
+  local expected_records=$((changes * (${BENCHMARK_RECORDS_PER_CHANGE:-1} + tombstones) + transactions * ${BENCHMARK_RECORDS_PER_TRANSACTION:-0}))
 
   if [ "$mode" == "stream" ]
   then

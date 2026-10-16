@@ -11671,8 +11671,7 @@ playground_connector_benchmark_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--shape SHAPE")"
-    printf "    🧱 Shape of the load, passed to benchmark-load.bash (default is bulk)\n    \n    - bulk: one transaction with all the records\n    - small-txn: one transaction per record\n    - update: updates existing records\n"
-    printf "    %s\n" "Allowed: bulk, small-txn, update"
+    printf "    🧱 Shape of the load, passed to benchmark-load.bash (default is bulk)\n    \n    - bulk: one transaction with all the records\n    - small-txn: one transaction per record\n    - update: updates existing records\n    - delete: deletes existing records (drain only; not for a JDBC source, which\n    does not capture deletes; with Debezium or XStream, each deleted row also\n    gives a tombstone, unless tombstones.on.delete=false)\n    \n    A sequence of shapes, e.g. bulk,update,delete, runs one drain per shape on\n    the same rows (insert, update, then delete them) and compares the phases in\n    the summary and the report. Drain of a source connector only.\n"
     printf "    %s\n" "Default: bulk"
     echo
 
@@ -11780,6 +11779,7 @@ playground_connector_benchmark_usage() {
     printf "  playground connector benchmark --nb-records 1000000 --connector-tag 10.8.4\n  --connector-tag 10.9.9 --rounds 2\n"
     printf "  playground connector benchmark --nb-records 1000000 --no-flight-recorder\n"
     printf "  playground connector benchmark --nb-records 1000000 --shape small-txn\n  --sessions 5\n"
+    printf "  playground connector benchmark --nb-records 500000 --shape bulk,update,delete\n"
     echo
 
   fi
@@ -21371,6 +21371,8 @@ function benchmark_oracle_client_from_example () {
 # - bulk: one transaction inserting <records> rows
 # - small-txn: <records> transactions of one row
 # - update: updates <records> existing rows (run a bulk load first)
+# - delete: deletes <records> existing rows, the ones with the lowest ids (drain only; plus one tombstone per row for
+#   debezium / xstream with tombstones.on.delete, oracle cdc with emit.tombstone.on.delete)
 # - stream mode: repeats batches of <records> rows of the shape until killed
 # prints BENCHMARK_RECORDS=<n>, the number of records the connector should write, so that the benchmark waits for them:
 # changes x BENCHMARK_RECORDS_PER_CHANGE (default 1) + transactions x BENCHMARK_RECORDS_PER_TRANSACTION (default 0),
@@ -21386,6 +21388,7 @@ function benchmark_sql_load () {
       insert_bulk="INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) SELECT 'first' || i, 'last' || i, 'user' || i || '@example.com', CASE WHEN i % 2 = 0 THEN 'Female' ELSE 'Male' END, (ARRAY['bronze','silver','gold','platinum'])[1 + i % 4], 'benchmark row ' || i FROM generate_series(1, $records) AS i;"
       insert_small_txn="DO \$\$ BEGIN FOR i IN 1..$records LOOP INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES ('first' || i, 'last' || i, 'user' || i || '@example.com', CASE WHEN i % 2 = 0 THEN 'Female' ELSE 'Male' END, (ARRAY['bronze','silver','gold','platinum'])[1 + i % 4], 'benchmark row ' || i); COMMIT; END LOOP; END \$\$;"
       update="UPDATE CUSTOMERS SET comments = 'benchmark update ' || id || ' ' || floor(random() * 1000000) WHERE id IN (SELECT id FROM CUSTOMERS ORDER BY id LIMIT $records);"
+      delete="DELETE FROM CUSTOMERS WHERE id IN (SELECT id FROM CUSTOMERS ORDER BY id LIMIT $records);"
       count_flags="-t -A"
     ;;
     mysql|mariadb)
@@ -21403,6 +21406,7 @@ DELIMITER ;
 CALL $procedure($records);
 DROP PROCEDURE $procedure;"
       update="UPDATE CUSTOMERS SET comments = CONCAT('benchmark update ', id, ' ', FLOOR(RAND() * 1000000)) ORDER BY id LIMIT $records;"
+      delete="DELETE FROM CUSTOMERS ORDER BY id LIMIT $records;"
       count_flags="-N -s"
     ;;
     oracle)
@@ -21422,6 +21426,8 @@ COMMIT;"
 END;
 /"
       update="UPDATE CUSTOMERS SET comments = 'benchmark update ' || id || ' ' || TRUNC(DBMS_RANDOM.VALUE(0, 1000000)), update_ts = CURRENT_TIMESTAMP WHERE id IN (SELECT id FROM (SELECT id FROM CUSTOMERS ORDER BY id) WHERE ROWNUM <= $records);
+COMMIT;"
+      delete="DELETE FROM CUSTOMERS WHERE id IN (SELECT id FROM (SELECT id FROM CUSTOMERS ORDER BY id) WHERE ROWNUM <= $records);
 COMMIT;"
       # sqlplus takes no output flag after the connect string: silent mode (no prompt on the result line) and the output format in the sql
       count_flags=""
@@ -21448,6 +21454,9 @@ GO"
       update="SET NOCOUNT ON;
 UPDATE c SET email = CONCAT('update', c.id, '-', ABS(CHECKSUM(NEWID())) % 1000000, '@example.com') FROM (SELECT TOP ($records) * FROM dbo.customers ORDER BY id) c;
 GO"
+      delete="SET NOCOUNT ON;
+WITH c AS (SELECT TOP ($records) * FROM dbo.customers ORDER BY id) DELETE FROM c;
+GO"
       count_flags="-h -1"
       count_sql="SET NOCOUNT ON;
 SELECT COUNT(*) FROM dbo.customers;
@@ -21465,6 +21474,23 @@ GO"
     logerror "❌ the connector uses \"mode\": \"incrementing\", which does not capture updates: use --shape bulk or small-txn"
     return 1
   fi
+  local connector_class=""
+  [ -f "$BENCHMARK_CONNECTOR_CONFIG" ] && connector_class=$(jq -r '."connector.class" // empty' "$BENCHMARK_CONNECTOR_CONFIG")
+  if [ "$shape" == "delete" ]
+  then
+    # a jdbc source runs queries: a deleted row is simply not returned anymore
+    if [[ "$connector_class" == *.JdbcSourceConnector ]]
+    then
+      logerror "❌ the JDBC source connector does not capture deletes: use --shape bulk, small-txn or update"
+      return 1
+    fi
+    # a stream of deletes would empty the table, and then delete nothing
+    if [ "$mode" == "stream" ]
+    then
+      logerror "❌ --shape delete is for a drain (it deletes rows that a previous run inserted): not with --mode steady"
+      return 1
+    fi
+  fi
   if [ -n "$BENCHMARK_LOAD_CHECK" ]
   then
     return 0
@@ -21475,19 +21501,20 @@ GO"
     bulk) sql="$insert_bulk" ;;
     small-txn) sql="$insert_small_txn" ;;
     update) sql="$update" ;;
-    *) logerror "❌ benchmark_sql_load: unknown shape $shape (bulk, small-txn, update)"; return 1 ;;
+    delete) sql="$delete" ;;
+    *) logerror "❌ benchmark_sql_load: unknown shape $shape (bulk, small-txn, update, delete)"; return 1 ;;
   esac
 
   echo "$create_table" | playground container exec --container "$container" --command "$client" > /dev/null
   local changes="$records"
-  if [ "$shape" == "update" ]
+  if [ "$shape" == "update" ] || [ "$shape" == "delete" ]
   then
     local rows
     rows=$(echo "$count_sql" | playground container exec --container "$container" --command "$client_for_count $count_flags" 2> /dev/null | grep -E '^\s*[0-9]+\s*$' | tail -1 | tr -d ' ')
     rows=${rows:-0}
     if [ "$rows" -lt "$records" ]
     then
-      logwarn "⚠️ only $rows rows in CUSTOMERS, updating $rows rows instead of $records (run a bulk load first)"
+      logwarn "⚠️ only $rows rows in CUSTOMERS, ${shape/%e/}ing $rows rows instead of $records (run a bulk load first)"
       changes="$rows"
     fi
   fi
@@ -21497,7 +21524,19 @@ GO"
   then
     transactions="$changes"
   fi
-  local expected_records=$((changes * ${BENCHMARK_RECORDS_PER_CHANGE:-1} + transactions * ${BENCHMARK_RECORDS_PER_TRANSACTION:-0}))
+  # a deleted row can also give a tombstone (null value, same key): debezium and xstream by default
+  # (tombstones.on.delete), oracle cdc when emit.tombstone.on.delete is true
+  local tombstones=0
+  if [ "$shape" == "delete" ] && [ -f "$BENCHMARK_CONNECTOR_CONFIG" ]
+  then
+    case "$connector_class" in
+      io.debezium.*|*.OracleXStreamSourceConnector)
+        [ "$(jq -r '."tombstones.on.delete" // "true"' "$BENCHMARK_CONNECTOR_CONFIG")" == "true" ] && tombstones=1 ;;
+      *.OracleCdcSourceConnector)
+        [ "$(jq -r '."emit.tombstone.on.delete" // "false"' "$BENCHMARK_CONNECTOR_CONFIG")" == "true" ] && tombstones=1 ;;
+    esac
+  fi
+  local expected_records=$((changes * (${BENCHMARK_RECORDS_PER_CHANGE:-1} + tombstones) + transactions * ${BENCHMARK_RECORDS_PER_TRANSACTION:-0}))
 
   if [ "$mode" == "stream" ]
   then
@@ -48857,6 +48896,85 @@ playground_connector_benchmark_command() {
   handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connector-plugins\""
   plugin_version=$(echo "$curl_output" | jq -r --arg c "$connector_class" '[.[] | select(.class == $c) | .version][0] // "unknown"')
   cp_tag=$(get_running_cp_tag)
+
+  # --shape: one shape, or a sequence of shapes (bulk,update,delete) run one after the other on the same rows
+  IFS=',' read -ra shapes <<< "$shape"
+  for phase_shape in "${shapes[@]}"
+  do
+      case "$phase_shape" in
+          bulk|small-txn|update|delete) ;;
+          *) logerror "❌ --shape $phase_shape: use bulk, small-txn, update or delete (or a sequence, e.g. bulk,update,delete)"; exit 1 ;;
+      esac
+  done
+
+  # --shape a,b,c: one drain per shape (child runs of this command) on the same rows, then the phases are compared
+  if [ ${#shapes[@]} -gt 1 ] && [ -z "$BENCHMARK_MATRIX_CHILD" ]
+  then
+      if [ ${#connector_tags[@]} -gt 0 ] || [ "$mode" != "drain" ] || [ "$type" != "source" ] || [ -n "$load_command" ]
+      then
+          logerror "❌ a --shape sequence is a series of drains of the load script of a source connector: not with --connector-tag, --mode steady, a sink connector or --load-command"
+          exit 1
+      fi
+      mkdir -p "$output_dir"
+      sequence_id="${connector}-sequence-$(date +%Y%m%d-%H%M%S)"
+      sequence_results="$output_dir/$sequence_id.results"
+      : > "$sequence_results"
+      child_args=(--connector "$connector" --mode drain --nb-records "$nb_records" --record-size "$record_size"
+          --interval "${args[--interval]}" --max-wait "${args[--max-wait]}" --output-dir "$output_dir" --sessions "$sessions")
+      for topic in "${topics[@]}"
+      do
+          child_args+=(--topic "$topic")
+      done
+      [ -n "$no_history" ] && child_args+=(--no-history)
+      [ -n "$no_flight_recorder" ] && child_args+=(--no-flight-recorder)
+      [ -n "$verbose" ] && child_args+=(--verbose)
+      log "🔁 sequence of ${#shapes[@]} drains of $nb_records records on $connector: ${shape//,/ → }"
+      sequence_failed=0
+      phase=0
+      for phase_shape in "${shapes[@]}"
+      do
+          phase=$((phase + 1))
+          log "🏁 phase $phase/${#shapes[@]}: --shape $phase_shape"
+          if ! BENCHMARK_MATRIX_CHILD=1 BENCHMARK_NO_OPEN=1 BENCHMARK_MATRIX_RESULTS="$sequence_results" playground connector benchmark "${child_args[@]}" --shape "$phase_shape"
+          then
+              logerror "❌ phase $phase (--shape $phase_shape) failed"
+              sequence_failed=1
+              break
+          fi
+      done
+      if [ ! -s "$sequence_results" ]
+      then
+          logerror "❌ no phase could be benchmarked"
+          exit 1
+      fi
+      log "🏁 sequence of $connector_class ($connector): ${shape//,/ → }"
+      xargs cat < "$sequence_results" | jq -s -r '
+          def r1: if . == null then "-" else (. * 10 | round) / 10 | tostring end;
+          (["phase", "shape", "records", "seconds", "records/s"] | @tsv),
+          (to_entries[] | [(.key + 1), .value.shape, .value.records, .value.seconds,
+              ((if .value.lower_bound == true then "≥ " else "" end) + (.value.records_per_second | r1))] | @tsv)' \
+          | column -t -s $'\t' | sed 's/^/   /'
+      html_file="$output_dir/$sequence_id.html"
+      if python3 -I "$root_folder/tools/benchmark-report/benchmark_report.py" --runs $(cat "$sequence_results") --group-by shape --output "$html_file" > /dev/null
+      then
+          log "📊 report: $html_file"
+          if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ]
+          then
+              if command -v open > /dev/null 2>&1
+              then
+                  open "$html_file"
+              elif command -v xdg-open > /dev/null 2>&1
+              then
+                  xdg-open "$html_file" > /dev/null 2>&1 || true
+              fi
+          fi
+      else
+          logwarn "⚠️ the html report could not be generated"
+      fi
+      logwarn "⚠️ results are relative to this docker host: compare runs on the same machine only"
+      [ $sequence_failed -eq 1 ] && exit 1
+      exit 0
+  fi
 
   # --connector-tag: benchmark each version (child runs of this command), compare them, restore the original version
   if [ ${#connector_tags[@]} -gt 0 ] && [ -z "$BENCHMARK_MATRIX_CHILD" ]
@@ -82582,10 +82700,6 @@ playground_connector_benchmark_parse_requirements() {
     printf "%s\n" "--mode must be one of: drain, steady" >&2
     exit 1
   fi
-  if [[ ${args['--shape']:-} ]] && [[ ! ${args['--shape']:-} =~ ^(bulk|small-txn|update)$ ]]; then
-    printf "%s\n" "--shape must be one of: bulk, small-txn, update" >&2
-    exit 1
-  fi
 
   # :command.user_filter
   filter_error=$(filter_connect_running)
@@ -99390,12 +99504,9 @@ playground_connector_benchmark_completion() {
       --shape)
         shift
         if [[ $# -eq 0 ]]; then
-          local -a completion_values=(
-            "bulk"
-            "small-txn"
-            "update"
-          )
-          completion_candidates "$completion_current" "${completion_values[@]}"
+          if completion_output="$({ printf '%s\n' bulk small-txn update delete bulk,update,delete small-txn,update,delete; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
 
           return
         fi

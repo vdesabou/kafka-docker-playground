@@ -5079,8 +5079,13 @@ subcommands:
       argument: SHAPE
       description: "\U0001F9F1 Shape of the load, passed to benchmark-load.bash (default
         is bulk)\n\n- bulk: one transaction with all the records\n- small-txn: one
-        transaction per record\n- update: updates existing records\n\nDefault value:
-        bulk\nAllowed values: bulk, small-txn, update"
+        transaction per record\n- update: updates existing records\n- delete: deletes
+        existing records (drain only; not for a JDBC source, which does not capture
+        deletes; with Debezium or XStream, each deleted row also gives a tombstone,
+        unless tombstones.on.delete=false)\n\nA sequence of shapes, e.g. bulk,update,delete,
+        runs one drain per shape on the same rows (insert, update, then delete them)
+        and compares the phases in the summary and the report. Drain of a source connector
+        only.\n\nDefault value: bulk"
     - names:
       - "--record-size"
       argument: RECORD-SIZE

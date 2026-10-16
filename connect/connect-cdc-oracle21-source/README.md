@@ -87,6 +87,10 @@ playground connector benchmark --nb-records 1000000 --shape bulk
 # 100k transactions of one row, then 1M updates of existing rows
 playground connector benchmark --nb-records 100000 --shape small-txn
 playground connector benchmark --nb-records 1000000 --shape update
+
+# insert, update, then delete the same 500k rows: one drain per phase, compared in the summary and the report
+# each deleted row gives one record, plus a tombstone with emit.tombstone.on.delete=true
+playground connector benchmark --nb-records 500000 --shape bulk,update,delete
 ```
 
 The connector is paused while the rows are loaded, then resumed, and the benchmark measures the time it takes to produce the records. With `redo.log.topic.name` set, the connector writes each row change twice (to the redo log topic and to the table topic) and each commit once more to the redo log topic: the benchmark waits for all of them, so the throughput counts every record written by the connector (2M records for 1M rows inserted in one transaction).

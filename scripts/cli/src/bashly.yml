@@ -8399,16 +8399,18 @@ commands:
       arg: shape
       required: false
       default: "bulk"
-      allowed:
-        - bulk
-        - small-txn
-        - update
+      completions:
+        dynamic:
+        - printf '%s\n' bulk small-txn update delete bulk,update,delete small-txn,update,delete
       help: |-
         🧱 Shape of the load, passed to benchmark-load.bash (default is bulk)
 
         - bulk: one transaction with all the records
         - small-txn: one transaction per record
         - update: updates existing records
+        - delete: deletes existing records (drain only; not for a JDBC source, which does not capture deletes; with Debezium or XStream, each deleted row also gives a tombstone, unless tombstones.on.delete=false)
+
+        A sequence of shapes, e.g. bulk,update,delete, runs one drain per shape on the same rows (insert, update, then delete them) and compares the phases in the summary and the report. Drain of a source connector only.
     - long: --record-size
       arg: record-size
       validate: integer
@@ -8544,6 +8546,7 @@ commands:
     - playground connector benchmark --nb-records 1000000 --connector-tag 10.8.4 --connector-tag 10.9.9 --rounds 2
     - playground connector benchmark --nb-records 1000000 --no-flight-recorder
     - playground connector benchmark --nb-records 1000000 --shape small-txn --sessions 5
+    - playground connector benchmark --nb-records 500000 --shape bulk,update,delete
 
   - name: show-config
     help:  |
