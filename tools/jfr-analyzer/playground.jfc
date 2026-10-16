@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+  Flight recorder settings of playground connector benchmark and playground analyze flight-recorder (live recording of a container).
+  Only the events that jfr_analyzer.py reads, so that the overhead stays close to the 'profile' settings of the JDK:
+  - no throttle on the socket events (JDK 25 'profile' keeps 300 per second): blocked time is a sum of their durations
+  - socket, file, lock and park events from 1 ms, without stack trace for the socket ones (host and port are enough)
+  - thread CPU load every second (10 s in 'profile'), for the share of the time each task thread is running
+  Sent inline with FlightRecorderMXBean.setConfiguration: attributes are single-quoted, no double quote in this file.
+-->
+<configuration version='2.0' label='playground' description='playground: where the time of the connector tasks goes' provider='kafka-docker-playground'>
+  <event name='jdk.ExecutionSample'><setting name='enabled'>true</setting><setting name='period'>10 ms</setting></event>
+  <event name='jdk.NativeMethodSample'><setting name='enabled'>true</setting><setting name='period'>20 ms</setting></event>
+  <event name='jdk.ThreadCPULoad'><setting name='enabled'>true</setting><setting name='period'>1 s</setting></event>
+  <event name='jdk.CPULoad'><setting name='enabled'>true</setting><setting name='period'>1 s</setting></event>
+  <event name='jdk.SocketRead'><setting name='enabled'>true</setting><setting name='stackTrace'>false</setting><setting name='threshold'>1 ms</setting></event>
+  <event name='jdk.SocketWrite'><setting name='enabled'>true</setting><setting name='stackTrace'>false</setting><setting name='threshold'>1 ms</setting></event>
+  <event name='jdk.FileRead'><setting name='enabled'>true</setting><setting name='stackTrace'>false</setting><setting name='threshold'>1 ms</setting></event>
+  <event name='jdk.FileWrite'><setting name='enabled'>true</setting><setting name='stackTrace'>false</setting><setting name='threshold'>1 ms</setting></event>
+  <event name='jdk.JavaMonitorEnter'><setting name='enabled'>true</setting><setting name='stackTrace'>true</setting><setting name='threshold'>1 ms</setting></event>
+  <event name='jdk.JavaMonitorWait'><setting name='enabled'>true</setting><setting name='stackTrace'>true</setting><setting name='threshold'>1 ms</setting></event>
+  <event name='jdk.ThreadPark'><setting name='enabled'>true</setting><setting name='stackTrace'>true</setting><setting name='threshold'>1 ms</setting></event>
+  <event name='jdk.ThreadSleep'><setting name='enabled'>true</setting><setting name='stackTrace'>true</setting><setting name='threshold'>1 ms</setting></event>
+  <event name='jdk.ObjectAllocationSample'><setting name='enabled'>true</setting><setting name='stackTrace'>true</setting><setting name='throttle'>150/s</setting></event>
+  <event name='jdk.GarbageCollection'><setting name='enabled'>true</setting><setting name='threshold'>0 ms</setting></event>
+  <event name='jdk.GCHeapSummary'><setting name='enabled'>true</setting></event>
+  <event name='jdk.ExceptionStatistics'><setting name='enabled'>true</setting><setting name='period'>1 s</setting></event>
+  <event name='jdk.JVMInformation'><setting name='enabled'>true</setting><setting name='period'>beginChunk</setting></event>
+  <event name='jdk.CPUInformation'><setting name='enabled'>true</setting><setting name='period'>beginChunk</setting></event>
+  <event name='jdk.ContainerConfiguration'><setting name='enabled'>true</setting><setting name='period'>beginChunk</setting></event>
+  <event name='jdk.ActiveRecording'><setting name='enabled'>true</setting></event>
+</configuration>

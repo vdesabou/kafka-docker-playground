@@ -3692,6 +3692,7 @@ commands:
       logs                    ERROR/FATAL digest of logs, folders, zips
       oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)
       cfk-bundle              CFK support bundle: pods, events, CRs, logs
+      flight-recorder         JFR: where the time of the connector tasks goes
 
     To collect them: playground debug thread-dump, heap-dump, flight-recorder,
     playground connector oracle-cdc-xstream generate-report,
@@ -4240,6 +4241,107 @@ commands:
     - playground analyze cfk-bundle -b ./bundle.tgz --output-dir ./reports
     - playground analyze cfk-bundle -b ./bundle.tgz --include-warnings
 
+  - name: flight-recorder
+    help: |-
+      🛩️ Analyze a Java Flight Recorder recording: where the time of the connector tasks goes
+
+      📊 For the Kafka Connect task threads (task-thread-*, or --threads / --connector): the time of each thread by state (running, blocked on network I/O by remote host, Kafka client, locks, waiting, file I/O), the CPU by layer (connector, converters, SMTs, Kafka client, connect framework, libraries, logging, JDK), the hot methods, the allocation by class, locks and waits by site, the busiest threads of the JVM, GC pauses and exceptions, and findings with next steps. Without task thread in the recording, every thread is analyzed.
+
+      🐳 With --container (default: connect), it records the JVM for --duration over JMX (FlightRecorderMXBean: no jcmd, which the cp images do not have, and no restart) with the settings of tools/jfr-analyzer/playground.jfc, then analyzes the recording. playground connector benchmark records the measure the same way.
+
+      🔖 Reads .jfr files of JDK 11+ JVMs with the JDK flight recorder API, run in a eclipse-temurin:25-jdk container (pulled the first time). The settings of the recording matter: playground.jfc records socket, file, lock and park events from 1 ms and the CPU of each thread every second; a recording made with the default or profile settings of the JDK gives fewer details (throttled socket events, 10 ms thresholds).
+
+      🌐 Also writes a self-contained HTML report (inline SVG charts, works offline) in --output-dir, opened in the browser in an interactive terminal
+
+      🧪 With --sample, it analyzes the digests shipped in tools/jfr-analyzer/samples (no Docker needed): a quick way to see what it reports.
+
+      🔖 Exit code is 0 when the analysis completed, 2 when the file is not a flight recording or has no event
+    flags:
+      - long: --file
+        short: -f
+        required: false
+        repeatable: true
+        arg: file
+        validate: file_exists
+        completions:
+          dynamic:
+          - playground get-specific-file-extension "$completion_current" --extension "jfr"
+        help: |-
+          🗒️  .jfr file to analyze (repeat --file for the recordings of several connect workers over the same period)
+
+          ❕ Provide only one of --file, --container and --sample
+
+          🎓 Tip: use <tab> completion to trigger fzf completion
+                  use <option+enter> to use the value you typed manually
+      - long: --sample
+        short: -s
+        required: false
+        arg: sample
+        allowed: [jdbc_postgres_sink]
+        help: |-
+          🧪 Sample of tools/jfr-analyzer/samples
+
+            jdbc_postgres_sink   drain of 3M avro records by the JDBC sink to PostgreSQL, 1 task, CP 8.3.2 (JDK 25)
+      - long: --container
+        short: -c
+        required: false
+        arg: container
+        completions:
+          dynamic:
+          - playground get-container-list
+        help: |-
+          🐳 Container to record over JMX for --duration (default: connect). Its KAFKA_JMX_PORT must be set, as in the playground environments
+      - long: --duration
+        arg: duration
+        validate: duration
+        required: false
+        default: "60s"
+        help: |-
+          ⏱️ Duration of the recording with --container, in seconds or with a s/m/h suffix (default is 60s)
+      - long: --connector
+        required: false
+        arg: connector
+        completions:
+          dynamic:
+          - playground get-connector-list
+        help: |-
+          🔗 Analyze the task threads of this connector only (task-thread-<connector>-<n>), and classify its frames as connector code (its class is read from the connect REST API when connect is running)
+      - long: --connector-class
+        required: false
+        arg: connector_class
+        help: |-
+          🔌 Class of the connector, to classify its frames as connector code (default: read from --connector, or guessed from the package)
+      - long: --threads
+        required: false
+        arg: regex
+        help: |-
+          🧵 Regular expression of the thread names to analyze (default: ^task-thread-, or the task threads of --connector)
+      - long: --output-dir
+        short: -o
+        arg: output_dir
+        required: false
+        default: "./jfr-analysis-output"
+        help: |-
+          📂 Output directory for the recording taken from a container, the digest and the HTML report (default: ./jfr-analysis-output)
+      - long: --json
+        required: false
+        help: |-
+          🗂️  Output JSON (no text report, no HTML report)
+      - long: --top
+        arg: top
+        required: false
+        default: "10"
+        validate: integer
+        help: |-
+          📊 Number of rows per section (default: 10)
+    examples:
+    - playground analyze flight-recorder --sample jdbc_postgres_sink
+    - playground analyze flight-recorder
+    - playground analyze flight-recorder -c connect --duration 2m --connector my-jdbc-sink
+    - playground analyze flight-recorder --file flight-recorder-connect-2026-10-16-09-12-00.jfr
+    - playground analyze flight-recorder -f /tmp/playground-benchmark/my-sink-20261016-091200-connect.jfr -f /tmp/playground-benchmark/my-sink-20261016-091200-connect2.jfr
+    - playground analyze flight-recorder -f recording.jfr --threads '^pool-.*' --json
+
 - name: debug
   expose: always
   group: Debug
@@ -4272,7 +4374,7 @@ commands:
       generate-diagnostics   a support bundle for connect or broker
 
     🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,
-    logs, Oracle XStream reports, CFK bundles): playground analyze
+    logs, Oracle XStream reports, CFK bundles, flight recordings): playground analyze
   commands:
 
   - name: enable-remote-debugging
@@ -8183,6 +8285,19 @@ commands:
       secrets masked): the report shows it, and the summary warns when the
       previous run was on a different setup.
 
+      🛩️ The connect workers are recorded with Java Flight Recorder during
+      the measure (over JMX: the cp images have no jcmd, nothing is
+      restarted), and the report and the summary say where the time of the
+      task threads went: running, blocked on the system behind the
+      connector, in the Kafka client, locks, waits; the CPU by layer
+      (connector, converters, SMTs, Kafka client, libraries, logging), hot
+      methods, allocation, GC, exceptions, with findings and next steps.
+      With --connector-tag, the versions are compared the same way. The
+      recording costs a few % of throughput: --no-flight-recorder disables
+      it, and the summary warns when the previous run was not recorded the
+      same way. The .jfr files are kept in --output-dir (JDK Mission
+      Control, or playground analyze flight-recorder).
+
       ⚠️ Not available for fully managed connectors and the cfk environment yet.
     filters:
     - connect_running
@@ -8335,6 +8450,12 @@ commands:
       required: false
       help: |-
         🙈 Do not append the result to the benchmark-history file
+    - long: --no-flight-recorder
+      required: false
+      help: |-
+        🛩️ Do not record the connect workers with Java Flight Recorder during the measure (no "where the time goes" section in the report)
+
+        The recording costs a few % of throughput: compare runs recorded the same way.
     - long: --json
       required: false
       help: |-
@@ -8347,6 +8468,7 @@ commands:
     - playground connector benchmark --mode steady --duration 2m --stream-load-command 'while [ ! -f "\$BENCHMARK_STOP_FILE" ]; do playground topic produce -t my-topic --nb-messages 10000 --value @predefined-schemas/avro/customer.avsc; echo "BENCHMARK_BATCH=10000 \$(date +%s)"; done'
     - playground connector benchmark --load-command "./my-load.sh" --json
     - playground connector benchmark --nb-records 1000000 --connector-tag 10.8.4 --connector-tag 10.9.9 --rounds 2
+    - playground connector benchmark --nb-records 1000000 --no-flight-recorder
 
   - name: show-config
     help:  |

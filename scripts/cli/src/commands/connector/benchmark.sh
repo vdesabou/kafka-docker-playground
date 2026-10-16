@@ -17,6 +17,7 @@ json="${args[--json]}"
 eval "topics=(${args[--topic]:-})"
 eval "connector_tags=(${args[--connector-tag]:-})"
 rounds="${args[--rounds]}"
+no_flight_recorder="${args[--no-flight-recorder]}"
 
 # with --json, logs go to stderr and only the result json to stdout
 exec 3>&1
@@ -125,6 +126,7 @@ then
         child_args+=(--topic "$topic")
     done
     [ -n "$no_history" ] && child_args+=(--no-history)
+    [ -n "$no_flight_recorder" ] && child_args+=(--no-flight-recorder)
     [ -n "$verbose" ] && child_args+=(--verbose)
 
     function switch_connector_version () {
@@ -181,7 +183,7 @@ then
                 # the worker jvm was restarted: an untimed drain first
                 warmup_records=$(( nb_records / 10 > 10000 ? nb_records / 10 : 10000 ))
                 log "🔥 warm-up drain of $warmup_records records (not recorded)"
-                BENCHMARK_MATRIX_CHILD=1 BENCHMARK_NO_OPEN=1 playground connector benchmark "${child_args[@]}" --nb-records "$warmup_records" --no-history > "$output_dir/$matrix_id-warmup-$version-$round.log" 2>&1 || true
+                BENCHMARK_MATRIX_CHILD=1 BENCHMARK_NO_OPEN=1 playground connector benchmark "${child_args[@]}" --nb-records "$warmup_records" --no-history --no-flight-recorder > "$output_dir/$matrix_id-warmup-$version-$round.log" 2>&1 || true
             fi
             if ! BENCHMARK_MATRIX_CHILD=1 BENCHMARK_NO_OPEN=1 BENCHMARK_MATRIX_RESULTS="$matrix_results" playground connector benchmark "${child_args[@]}"
             then
@@ -376,6 +378,10 @@ function benchmark_cleanup () {
         kill -0 "$load_pid" 2> /dev/null && kill_tree "$load_pid"
     fi
     rm -f "$BENCHMARK_STOP_FILE"
+    if [ -n "$jfr_recordings" ]
+    then
+        jfr_jmx_discard "$jfr_recordings"
+    fi
     if [ $paused_by_benchmark -eq 1 ]
     then
         logwarn "⏯️ resuming $connector_type connector $connector paused by the benchmark"
@@ -384,6 +390,41 @@ function benchmark_cleanup () {
     fi
 }
 trap benchmark_cleanup EXIT
+
+# flight recorder of the workers during the measure, over JMX (no jcmd in the cp images, no restart)
+# jfr_status: disabled (--no-flight-recorder), unavailable (could not start: no overhead), recorded, failed (recorded,
+# but not copied or not analyzed)
+jfr_recordings=""
+jfr_files=""
+jfr_status="disabled"
+function start_flight_recorder () {
+    if [ -n "$no_flight_recorder" ]
+    then
+        return
+    fi
+    if jfr_recordings=$(jfr_jmx_start "$workers")
+    then
+        jfr_status="recorded"
+        log "🛩️ flight recorder started on $(echo "$workers" | awk '{ print $1 }' | xargs) for the measure (--no-flight-recorder to disable it)"
+    else
+        jfr_recordings=""
+        jfr_status="unavailable"
+        logwarn "⚠️ the flight recorder could not be started over JMX on $(echo "$workers" | awk '{ print $1 }' | xargs): the report will not show where the time goes"
+    fi
+}
+function stop_flight_recorder () {
+    if [ -z "$jfr_recordings" ]
+    then
+        return
+    fi
+    jfr_files=$(jfr_jmx_stop "$jfr_recordings" "$output_dir/$run_id")
+    jfr_recordings=""
+    if [ -z "$jfr_files" ]
+    then
+        jfr_status="failed"
+        logwarn "⚠️ the flight recordings could not be copied from the workers"
+    fi
+}
 
 # fails the benchmark as soon as the connector or one of its tasks is FAILED
 function check_not_failed () {
@@ -490,6 +531,7 @@ then
         topic_records_before=$(count_topic_records)
     fi
 
+    start_flight_recorder
     start_time=$(now)
     take_sample "baseline"
     baseline_records="$sample_records"
@@ -529,6 +571,7 @@ then
             exit 1
         fi
     done
+    stop_flight_recorder
     measured_seconds=$(awk -v e="$end_time" -v s="$start_time" 'BEGIN { printf "%.1f", e - s }')
     measured_records="$expected"
     if [ "$type" == "source" ]
@@ -557,6 +600,7 @@ else
         take_sample "warmup"
         check_not_failed
     done
+    start_flight_recorder
     baseline_records="$sample_records"
     measure_start="$sample_time"
     not_running_checks=0
@@ -568,6 +612,7 @@ else
         take_sample "steady"
         check_not_failed
     done
+    stop_flight_recorder
     if [ -n "$load_pid" ]
     then
         if kill -0 "$load_pid" 2> /dev/null
@@ -668,6 +713,42 @@ task_shares="${task_shares//,/, }"
 setup_json=$(benchmark_collect_setup "$workers" "$connector_config_json" "$test_file" "$environment")
 [ -z "$setup_json" ] && setup_json='{}'
 
+# where the time of the tasks went, from the flight recordings
+jfr_analysis=""
+if [ -n "$jfr_files" ]
+then
+    log "🛩️ analyzing the flight recording(s) ($JFR_ANALYZER_IMAGE)"
+    task_threads="^task-thread-$(printf '%s' "$connector" | sed 's/[][\.*^$(){}+?|/]/\\&/g')-[0-9]+$"
+    # shellcheck disable=SC2086
+    jfr_digests=$(jfr_digest "$output_dir" "$task_threads" $jfr_files)
+    if [ -n "$jfr_digests" ]
+    then
+        digest_args=()
+        for digest in $jfr_digests
+        do
+            digest_args+=(--digest "$digest")
+        done
+        if python3 -I "$root_folder/tools/jfr-analyzer/jfr_analyzer.py" "${digest_args[@]}" --connector-class "$connector_class" --connector-type "$type" \
+            --mode "$mode" --source-url "$(echo "$setup_json" | jq -r '.connector.source_url // empty')" --json-out "$output_dir/$run_id-jfr.json" > "$output_dir/$run_id-jfr.txt" 2>&1
+        then
+            jfr_analysis="$output_dir/$run_id-jfr.json"
+        fi
+    fi
+    if [ -z "$jfr_analysis" ]
+    then
+        jfr_status="failed"
+        logwarn "⚠️ the flight recording(s) could not be analyzed: $(echo $jfr_files)"
+    fi
+fi
+if [ -n "$jfr_analysis" ]
+then
+    flight_recorder_json=$(jq -c --arg files "$jfr_files" --arg analysis "$jfr_analysis" \
+        '{enabled: true, files: ($files | split("\n") | map(select(. != ""))), analysis: $analysis, findings: [.findings[] | {severity, title}]}' "$jfr_analysis")
+else
+    flight_recorder_json=$(jq -n -c --arg status "$jfr_status" --arg files "$jfr_files" \
+        '{enabled: ($status != "disabled" and $status != "unavailable"), status: $status, files: ($files | split("\n") | map(select(. != "")))}')
+fi
+
 test_file_relative="${test_file#$root_folder/}"
 result=$(jq -n \
     --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg test_file "$test_file_relative" --arg connector "$connector" \
@@ -680,7 +761,7 @@ result=$(jq -n \
     --arg samples_csv "$csv_file" --argjson lower_bound "$lower_bound" \
     --arg gc_percent "$gc_percent" --arg cpu_available_avg "$cpu_available_avg" --arg pause_ratio "$pause_avg" \
     --arg dlq_records "$dlq_delta" --arg skipped_records "$skipped_delta" --arg task_shares "$task_shares" \
-    --argjson setup "$setup_json" \
+    --argjson setup "$setup_json" --argjson flight_recorder "$flight_recorder_json" \
     '{date: $date, test_file: $test_file, connector: $connector, connector_class: $connector_class, plugin_version: $plugin_version,
       cp_tag: $cp_tag, type: $type, mode: $mode, shape: $shape, tasks: $tasks, records: $records, seconds: $seconds,
       records_per_second: $records_per_second, lower_bound: $lower_bound, rate_p50: $rate_p50, rate_p95: $rate_p95, rate_min: $rate_min,
@@ -688,7 +769,7 @@ result=$(jq -n \
       cpu_percent_of_one_core_max: $cpu_max, load_seconds: $load_seconds, topic_records_delta: $topic_records_delta,
       gc_percent: $gc_percent, cpu_percent_of_available_avg: $cpu_available_avg, pause_ratio: $pause_ratio,
       dlq_records: $dlq_records, skipped_records: $skipped_records, task_shares: $task_shares,
-      samples_csv: $samples_csv, setup: $setup}')
+      samples_csv: $samples_csv, setup: $setup, flight_recorder: $flight_recorder}')
 echo "$result" > "$json_file"
 if [ -n "$BENCHMARK_MATRIX_RESULTS" ]
 then
@@ -758,6 +839,20 @@ then
     printf "   %-22s %s\n" "records in topics" "+$topic_records_delta (${topics[*]})"
 fi
 printf "   %-22s %s\n" "setup" "$(benchmark_setup_summary "$setup_json")"
+if [ -n "$jfr_analysis" ]
+then
+    jfr_lines=$(jq -r '.findings[0:4][] | (if .severity == "critical" then "🔴" elif .severity == "warning" then "🟠" else "ℹ️ " end) + " " + .title' "$jfr_analysis")
+    if [ -z "$jfr_lines" ]
+    then
+        jfr_lines="no finding"
+    fi
+    first_line=1
+    while IFS= read -r line
+    do
+        printf "   %-22s %s\n" "$([ $first_line -eq 1 ] && echo "flight recorder")" "$line"
+        first_line=0
+    done <<< "$jfr_lines"
+fi
 if [ -n "$previous" ]
 then
     previous_throughput=$(echo "$previous" | jq -r '.records_per_second')
@@ -782,6 +877,15 @@ then
     if [ -n "$setup_differences" ]
     then
         add_warning "the previous run was on a different setup ($setup_differences): the comparison is not meaningful"
+    fi
+fi
+if [ -n "$previous" ]
+then
+    previous_jfr=$(echo "$previous" | jq -r '.flight_recorder.enabled // false')
+    current_jfr=$(echo "$flight_recorder_json" | jq -r '.enabled')
+    if [ "$previous_jfr" != "$current_jfr" ]
+    then
+        add_warning "the previous run was $([ "$previous_jfr" == "true" ] && echo "recorded with" || echo "run without") the flight recorder and this one $([ "$current_jfr" == "true" ] && echo "with" || echo "without"): it costs a few % of throughput, compare runs recorded the same way (--no-flight-recorder)"
     fi
 fi
 if [ "$(echo "$setup_json" | jq -r '.connect.emulated // false')" == "true" ]
@@ -862,9 +966,17 @@ fi
 logwarn "⚠️ results are relative to this docker host: compare runs on the same machine only"
 log "📄 samples: $csv_file"
 log "📄 result: $json_file"
+if [ -n "$jfr_analysis" ]
+then
+    log "🛩️ flight recording(s): $(echo $jfr_files) (open in JDK Mission Control, or playground analyze flight-recorder -f <file>)"
+fi
 
 html_file="$output_dir/$run_id.html"
 report_args=(--result "$json_file" --samples "$csv_file" --history "$history_file" --output "$html_file")
+if [ -n "$jfr_analysis" ]
+then
+    report_args+=(--jfr "$jfr_analysis")
+fi
 for warning in "${report_warnings[@]}"
 do
     report_args+=(--warning "$warning")

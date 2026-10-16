@@ -142,6 +142,7 @@ playground_usage() {
   printf "  %s   📈 Analyze JVM Garbage Collection logs\n" "$(green "analyze gc-logs")                           "
   printf "  %s   🅾️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)\n" "$(green "analyze oracle-xstream-report")             "
   printf "  %s   📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n" "$(green "analyze cfk-bundle")                        "
+  printf "  %s   🛩️ Analyze a Java Flight Recorder recording: where the time of the connector tasks goes\n" "$(green "analyze flight-recorder")                   "
   echo
   printf "%s\n" "$(bold "Debug commands:")"
   printf "  %s   🐞 Debug commands\n" "$(green "debug")                                     "
@@ -5752,7 +5753,7 @@ playground_tools_redos_check_usage() {
 playground_analyze_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze\n\n"
-    printf "  🔎 Analyze commands\n  \n  Turn what you collected into findings: each command reads a file (a\n  dump, a log, a bundle, a report, yours or one a customer sent) or takes\n  it from a running container, and prints a digest with what is wrong and\n  what to do, plus an HTML report to share (opened in your browser). They\n  all work offline, and --sample runs them on the samples shipped with the\n  playground, to see what they report.\n  \n    thread-dump             deadlocks, lock contention, stuck threads\n    gc-logs                 GC pauses, failures, live set, leak trend\n    heap-dump               Eclipse MAT leak suspects, retained sizes\n    logs                    ERROR/FATAL digest of logs, folders, zips\n    oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n    cfk-bundle              CFK support bundle: pods, events, CRs, logs\n  \n  To collect them: playground debug thread-dump, heap-dump, flight-recorder,\n  playground connector oracle-cdc-xstream generate-report,\n  playground debug cfk generate-bundle.\n\n"
+    printf "  🔎 Analyze commands\n  \n  Turn what you collected into findings: each command reads a file (a\n  dump, a log, a bundle, a report, yours or one a customer sent) or takes\n  it from a running container, and prints a digest with what is wrong and\n  what to do, plus an HTML report to share (opened in your browser). They\n  all work offline, and --sample runs them on the samples shipped with the\n  playground, to see what they report.\n  \n    thread-dump             deadlocks, lock contention, stuck threads\n    gc-logs                 GC pauses, failures, live set, leak trend\n    heap-dump               Eclipse MAT leak suspects, retained sizes\n    logs                    ERROR/FATAL digest of logs, folders, zips\n    oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n    cfk-bundle              CFK support bundle: pods, events, CRs, logs\n    flight-recorder         JFR: where the time of the connector tasks goes\n  \n  To collect them: playground debug thread-dump, heap-dump, flight-recorder,\n  playground connector oracle-cdc-xstream generate-report,\n  playground debug cfk generate-bundle.\n\n"
   else
     printf "playground analyze - 🔎 Analyze commands\n\n"
   fi
@@ -5771,6 +5772,7 @@ playground_analyze_usage() {
   printf "  %s   📈 Analyze JVM Garbage Collection logs\n" "$(green "gc-logs")              "
   printf "  %s   🅾️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)\n" "$(green "oracle-xstream-report")"
   printf "  %s   📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n" "$(green "cfk-bundle")           "
+  printf "  %s   🛩️ Analyze a Java Flight Recorder recording: where the time of the connector tasks goes\n" "$(green "flight-recorder")      "
   echo
 
   # :command.long_usage
@@ -6247,10 +6249,102 @@ playground_analyze_cfk_bundle_usage() {
 }
 
 # :command.usage
+playground_analyze_flight_recorder_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground analyze flight-recorder\n\n"
+    printf "  🛩️ Analyze a Java Flight Recorder recording: where the time of the connector\n  tasks goes\n  \n  📊 For the Kafka Connect task threads (task-thread-*, or --threads /\n  --connector): the time of each thread by state (running, blocked on network\n  I/O by remote host, Kafka client, locks, waiting, file I/O), the CPU by layer\n  (connector, converters, SMTs, Kafka client, connect framework, libraries,\n  logging, JDK), the hot methods, the allocation by class, locks and waits by\n  site, the busiest threads of the JVM, GC pauses and exceptions, and findings\n  with next steps. Without task thread in the recording, every thread is\n  analyzed.\n  \n  🐳 With --container (default: connect), it records the JVM for --duration over\n  JMX (FlightRecorderMXBean: no jcmd, which the cp images do not have, and no\n  restart) with the settings of tools/jfr-analyzer/playground.jfc, then analyzes\n  the recording. playground connector benchmark records the measure the same\n  way.\n  \n  🔖 Reads .jfr files of JDK 11+ JVMs with the JDK flight recorder API, run in a\n  eclipse-temurin:25-jdk container (pulled the first time). The settings of the\n  recording matter: playground.jfc records socket, file, lock and park events\n  from 1 ms and the CPU of each thread every second; a recording made with the\n  default or profile settings of the JDK gives fewer details (throttled socket\n  events, 10 ms thresholds).\n  \n  🌐 Also writes a self-contained HTML report (inline SVG charts, works offline)\n  in --output-dir, opened in the browser in an interactive terminal\n  \n  🧪 With --sample, it analyzes the digests shipped in tools/jfr-analyzer/samples\n  (no Docker needed): a quick way to see what it reports.\n  \n  🔖 Exit code is 0 when the analysis completed, 2 when the file is not a flight\n  recording or has no event\n\n"
+  else
+    printf "playground analyze flight-recorder - 🛩️ Analyze a Java Flight Recorder recording: where the time of the connector tasks goes\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground analyze flight-recorder [OPTIONS]\n"
+  printf "  playground analyze flight-recorder --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file, -f FILE (repeatable)")"
+    printf "    🗒️  .jfr file to analyze (repeat --file for the recordings of several\n    connect workers over the same period)\n    \n    ❕ Provide only one of --file, --container and --sample\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n            use <option+enter> to use the value you typed manually\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--sample, -s SAMPLE")"
+    printf "    🧪 Sample of tools/jfr-analyzer/samples\n    \n      jdbc_postgres_sink   drain of 3M avro records by the JDBC sink to\n    PostgreSQL, 1 task, CP 8.3.2 (JDK 25)\n"
+    printf "    %s\n" "Allowed: jdbc_postgres_sink"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
+    printf "    🐳 Container to record over JMX for --duration (default: connect). Its\n    KAFKA_JMX_PORT must be set, as in the playground environments\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--duration DURATION")"
+    printf "    ⏱️ Duration of the recording with --container, in seconds or with a s/m/h\n    suffix (default is 60s)\n"
+    printf "    %s\n" "Default: 60s"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector CONNECTOR")"
+    printf "    🔗 Analyze the task threads of this connector only\n    (task-thread-<connector>-<n>), and classify its frames as connector code\n    (its class is read from the connect REST API when connect is running)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector-class CONNECTOR_CLASS")"
+    printf "    🔌 Class of the connector, to classify its frames as connector code (default:\n    read from --connector, or guessed from the package)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--threads REGEX")"
+    printf "    🧵 Regular expression of the thread names to analyze (default: ^task-thread-,\n    or the task threads of --connector)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
+    printf "    📂 Output directory for the recording taken from a container, the digest and\n    the HTML report (default: ./jfr-analysis-output)\n"
+    printf "    %s\n" "Default: ./jfr-analysis-output"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🗂️  Output JSON (no text report, no HTML report)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--top TOP")"
+    printf "    📊 Number of rows per section (default: 10)\n"
+    printf "    %s\n" "Default: 10"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground analyze flight-recorder --sample jdbc_postgres_sink\n"
+    printf "  playground analyze flight-recorder\n"
+    printf "  playground analyze flight-recorder -c connect --duration 2m --connector\n  my-jdbc-sink\n"
+    printf "  playground analyze flight-recorder --file\n  flight-recorder-connect-2026-10-16-09-12-00.jfr\n"
+    printf "  playground analyze flight-recorder -f\n  /tmp/playground-benchmark/my-sink-20261016-091200-connect.jfr -f\n  /tmp/playground-benchmark/my-sink-20261016-091200-connect2.jfr\n"
+    printf "  playground analyze flight-recorder -f recording.jfr --threads '^pool-.*'\n  --json\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_debug_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground debug\n\n"
-    printf "  🐞 Debug commands\n  \n  The heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\n  the analysis tools are run inside the right container, installed on the\n  fly when missing, and their output is brought back to your machine.\n  \n  🐌 It hangs, or it is slow\n    thread-dump         what every thread is doing right now\n    flight-recorder     record the JVM over a period, open it in JMC\n  \n  💾 It eats memory\n    heap-dump           take a .hprof, optionally as a histogram\n  \n  🌐 It is a network or TLS problem\n    tcp-dump            capture traffic, open it in Wireshark\n    testssl             probe a TLS endpoint, locally or in the cloud\n    block-traffic       cut a route with iptables, to simulate an outage\n    java-debug          turn on the JVM SSL, Kerberos or class loading traces\n  \n  🔬 It is in the code\n    log-level set       raise the level of any package, without a restart\n    enable-remote-debugging   attach your IDE debugger to a container\n    jscissors           trace method calls, arguments and return values\n  \n  📦 Hand it over\n    generate-diagnostics   a support bundle for connect or broker\n  \n  🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,\n  logs, Oracle XStream reports, CFK bundles): playground analyze\n\n"
+    printf "  🐞 Debug commands\n  \n  The heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\n  the analysis tools are run inside the right container, installed on the\n  fly when missing, and their output is brought back to your machine.\n  \n  🐌 It hangs, or it is slow\n    thread-dump         what every thread is doing right now\n    flight-recorder     record the JVM over a period, open it in JMC\n  \n  💾 It eats memory\n    heap-dump           take a .hprof, optionally as a histogram\n  \n  🌐 It is a network or TLS problem\n    tcp-dump            capture traffic, open it in Wireshark\n    testssl             probe a TLS endpoint, locally or in the cloud\n    block-traffic       cut a route with iptables, to simulate an outage\n    java-debug          turn on the JVM SSL, Kerberos or class loading traces\n  \n  🔬 It is in the code\n    log-level set       raise the level of any package, without a restart\n    enable-remote-debugging   attach your IDE debugger to a container\n    jscissors           trace method calls, arguments and return values\n  \n  📦 Hand it over\n    generate-diagnostics   a support bundle for connect or broker\n  \n  🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,\n  logs, Oracle XStream reports, CFK bundles, flight recordings): playground\n  analyze\n\n"
   else
     printf "playground debug - 🐞 Debug commands\n\n"
   fi
@@ -11515,7 +11609,7 @@ playground_connector_show_lag_usage() {
 playground_connector_benchmark_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector benchmark\n\n"
-    printf "  🏎️ Benchmark the throughput of a connector\n  \n  Measures how many records per second a running self managed connector\n  processes, so that two runs can be compared: another --connector-tag,\n  another batch size, another number of tasks. Everything runs on one\n  docker host, so the numbers are relative: compare runs on the same\n  machine only.\n  \n  --mode drain (default) pauses the connector, loads a backlog of\n  --nb-records, resumes the connector and measures the time it takes to\n  process the backlog. This is the most reproducible number, since it does\n  not depend on how fast the load is generated.\n  \n  --mode steady measures the throughput during --duration (after\n  --warmup), while --stream-load-command runs in the background. When the\n  connector simply keeps up with the load (consumer lag of a sink, records\n  generated by the load of a source), the summary says so: the result is\n  then the speed of the load, not of the connector.\n  \n  The load comes from the example:\n  \n    - sink connectors: the 'playground topic produce' of the example\n      script that feeds the connector is replayed with --nb-messages\n      <n> (same schema, key and headers), so every sink example that\n      produces its data works without anything else\n    - source connectors: benchmark-load.bash next to the example\n      script, called with --records <n> --mode preload|stream --shape\n      bulk|small-txn|update (rows in the CUSTOMERS table for the\n      postgres, mysql, oracle and sql server examples, documents for\n      mongodb, messages for ibm mq and mqtt, see the README of the\n      example). It is called with --check first, so that an unsupported\n      combination fails before the connector is paused\n    - or --load-command / --stream-load-command, which take precedence\n  \n  Throughput is read from the connect JMX metrics of the tasks\n  (sink-record-read-total: records read from kafka, including the ones\n  filtered or sent to the dlq; source-record-write-total), sampled every\n  --interval. Results are written to --output-dir (samples csv, result\n  json and an html report with the charts, opened in the browser at the\n  end in an interactive terminal) and appended to the benchmark-history\n  file, and the summary compares them with the previous benchmark of the\n  same connector in the same example (or with --compare <result json>).\n  \n  Each result records the setup it ran on (host cpu and memory, container\n  engine resources, connect image and whether it is emulated, jvm and\n  heap, number of workers and brokers, environment, connector config with\n  secrets masked): the report shows it, and the summary warns when the\n  previous run was on a different setup.\n  \n  ⚠️ Not available for fully managed connectors and the cfk environment yet.\n\n"
+    printf "  🏎️ Benchmark the throughput of a connector\n  \n  Measures how many records per second a running self managed connector\n  processes, so that two runs can be compared: another --connector-tag,\n  another batch size, another number of tasks. Everything runs on one\n  docker host, so the numbers are relative: compare runs on the same\n  machine only.\n  \n  --mode drain (default) pauses the connector, loads a backlog of\n  --nb-records, resumes the connector and measures the time it takes to\n  process the backlog. This is the most reproducible number, since it does\n  not depend on how fast the load is generated.\n  \n  --mode steady measures the throughput during --duration (after\n  --warmup), while --stream-load-command runs in the background. When the\n  connector simply keeps up with the load (consumer lag of a sink, records\n  generated by the load of a source), the summary says so: the result is\n  then the speed of the load, not of the connector.\n  \n  The load comes from the example:\n  \n    - sink connectors: the 'playground topic produce' of the example\n      script that feeds the connector is replayed with --nb-messages\n      <n> (same schema, key and headers), so every sink example that\n      produces its data works without anything else\n    - source connectors: benchmark-load.bash next to the example\n      script, called with --records <n> --mode preload|stream --shape\n      bulk|small-txn|update (rows in the CUSTOMERS table for the\n      postgres, mysql, oracle and sql server examples, documents for\n      mongodb, messages for ibm mq and mqtt, see the README of the\n      example). It is called with --check first, so that an unsupported\n      combination fails before the connector is paused\n    - or --load-command / --stream-load-command, which take precedence\n  \n  Throughput is read from the connect JMX metrics of the tasks\n  (sink-record-read-total: records read from kafka, including the ones\n  filtered or sent to the dlq; source-record-write-total), sampled every\n  --interval. Results are written to --output-dir (samples csv, result\n  json and an html report with the charts, opened in the browser at the\n  end in an interactive terminal) and appended to the benchmark-history\n  file, and the summary compares them with the previous benchmark of the\n  same connector in the same example (or with --compare <result json>).\n  \n  Each result records the setup it ran on (host cpu and memory, container\n  engine resources, connect image and whether it is emulated, jvm and\n  heap, number of workers and brokers, environment, connector config with\n  secrets masked): the report shows it, and the summary warns when the\n  previous run was on a different setup.\n  \n  🛩️ The connect workers are recorded with Java Flight Recorder during\n  the measure (over JMX: the cp images have no jcmd, nothing is\n  restarted), and the report and the summary say where the time of the\n  task threads went: running, blocked on the system behind the\n  connector, in the Kafka client, locks, waits; the CPU by layer\n  (connector, converters, SMTs, Kafka client, libraries, logging), hot\n  methods, allocation, GC, exceptions, with findings and next steps.\n  With --connector-tag, the versions are compared the same way. The\n  recording costs a few %% of throughput: --no-flight-recorder disables\n  it, and the summary warns when the previous run was not recorded the\n  same way. The .jfr files are kept in --output-dir (JDK Mission\n  Control, or playground analyze flight-recorder).\n  \n  ⚠️ Not available for fully managed connectors and the cfk environment yet.\n\n"
   else
     printf "playground connector benchmark - 🏎️ Benchmark the throughput of a connector\n\n"
   fi
@@ -11634,6 +11728,11 @@ playground_connector_benchmark_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--no-flight-recorder")"
+    printf "    🛩️ Do not record the connect workers with Java Flight Recorder during the\n    measure (no \"where the time goes\" section in the report)\n    \n    The recording costs a few %% of throughput: compare runs recorded the same\n    way.\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
     printf "    📄 Print the result as json instead of the summary\n"
     echo
@@ -11652,6 +11751,7 @@ playground_connector_benchmark_usage() {
     printf "  playground connector benchmark --mode steady --duration 2m\n  --stream-load-command 'while [ ! -f \"\$BENCHMARK_STOP_FILE\" ]; do playground\n  topic produce -t my-topic --nb-messages 10000 --value\n  @predefined-schemas/avro/customer.avsc; echo \"BENCHMARK_BATCH=10000 \$(date\n  +%%s)\"; done'\n"
     printf "  playground connector benchmark --load-command \"./my-load.sh\" --json\n"
     printf "  playground connector benchmark --nb-records 1000000 --connector-tag 10.8.4\n  --connector-tag 10.9.9 --rounds 2\n"
+    printf "  playground connector benchmark --nb-records 1000000 --no-flight-recorder\n"
     echo
 
   fi
@@ -16705,6 +16805,90 @@ function benchmark_jmx_init() {
   done <<< "$workers"
 }
 
+# flight recorder of JVMs over JMX (FlightRecorderMXBean, jdk.management.jfr): the cp images ship a JRE without jcmd,
+# and this needs neither jcmd nor a restart. Uses jmxterm, copied by benchmark_jmx_init.
+JFR_BEAN="jdk.management.jfr:type=FlightRecorder"
+
+# starts a recording with the settings of tools/jfr-analyzer/playground.jfc on each "<container> <jmx port>" line of
+# $1, prints "<container> <jmx port> <recording id>" lines. Returns 1 (after closing what was started) when a JVM has no
+# flight recorder MBean (JDK 8 before 8u262) or refuses the settings
+function jfr_jmx_start () {
+  local workers="$1"
+  local config container port id out started=""
+  # setConfiguration takes the content of the .jfc: one line, without the comment, spaces escaped for jmxterm
+  config=$(sed '/<!--/,/-->/d' "$root_folder/tools/jfr-analyzer/playground.jfc" | tr '\n' ' ' | sed 's/  */ /g')
+  config="${config// /\\ }"
+  while read -r container port
+  do
+    [ -z "$container" ] && continue
+    id=$(printf 'run -b %s newRecording\n' "$JFR_BEAN" | benchmark_jmxterm "$container" "$port" | tr -dc '0-9')
+    # setConfiguration and startRecording return null when they succeed, nothing when they fail
+    [ -n "$id" ] && out=$(printf 'run -b %s setConfiguration %s %s\nrun -b %s startRecording %s\n' "$JFR_BEAN" "$id" "$config" "$JFR_BEAN" "$id" | benchmark_jmxterm "$container" "$port")
+    if [ -z "$id" ] || [ "$(echo "$out" | grep -c '^null$')" -ne 2 ]
+    then
+      [ -n "$id" ] && started="$started"$'\n'"$container $port $id"
+      jfr_jmx_discard "$started"
+      return 1
+    fi
+    started="$started"$'\n'"$container $port $id"
+    echo "$container $port $id"
+  done <<< "$workers"
+}
+
+# stops the recordings of $1 ("<container> <jmx port> <recording id>" lines) and copies them to <prefix>-<container>.jfr,
+# prints the paths of the .jfr files
+function jfr_jmx_stop () {
+  local recordings="$1" prefix="$2"
+  local container port id remote local_file
+  while read -r container port id
+  do
+    [ -z "$container" ] && continue
+    remote="/tmp/playground-jfr-$id-$(date +%s).jfr"
+    local_file="$prefix-$container.jfr"
+    printf 'run -b %s stopRecording %s\nrun -b %s copyTo %s %s\nrun -b %s closeRecording %s\n' "$JFR_BEAN" "$id" "$JFR_BEAN" "$id" "$remote" "$JFR_BEAN" "$id" | benchmark_jmxterm "$container" "$port" > /dev/null
+    if playground container cp --source "$container:$remote" --destination "$local_file" > /dev/null 2>&1 && [ -s "$local_file" ]
+    then
+      echo "$local_file"
+    fi
+    playground --output-level ERROR container exec --container "$container" --command "rm -f $remote" > /dev/null 2>&1
+  done <<< "$recordings"
+}
+
+# closes (and discards) the recordings of $1, for an interrupted run
+function jfr_jmx_discard () {
+  local recordings="$1"
+  local container port id
+  while read -r container port id
+  do
+    [ -z "$container" ] && continue
+    printf 'run -b %s closeRecording %s\n' "$JFR_BEAN" "$id" | benchmark_jmxterm "$container" "$port" > /dev/null
+  done <<< "$recordings"
+}
+
+# digest of .jfr files with tools/jfr-analyzer/JfrDigest.java, in a JDK container (the source launcher needs a JDK, and
+# a recent one reads the recordings of every JDK 11+): jfr_digest <output dir> <thread regex> <file.jfr>...
+# prints the paths of the digests, <output dir>/<file name>.digest.json. Returns 1 when a file could not be read
+function jfr_digest () {
+  local output_dir="$1" threads="$2"
+  shift 2
+  local file digest ret=0
+  for file in "$@"
+  do
+    digest="$output_dir/$(basename "${file%.jfr}").digest.json"
+    # the recording goes through stdin: no volume for it, so it works from any folder and with podman
+    if docker run --rm -i -v "$root_folder/tools/jfr-analyzer:/tools:ro" "$JFR_ANALYZER_IMAGE" \
+        sh -c 'cat > /tmp/recording.jfr && exec java /tools/JfrDigest.java /tmp/recording.jfr --threads "$1"' sh "$threads" < "$file" > "$digest" 2> "$digest.log" && [ -s "$digest" ]
+    then
+      rm -f "$digest.log"
+      echo "$digest"
+    else
+      ret=1
+    fi
+  done
+  return $ret
+}
+JFR_ANALYZER_IMAGE="eclipse-temurin:25-jdk"
+
 # one sample of the JMX metrics of the tasks of a connector, printed as space separated values:
 #   1 records total (summed over the tasks)    2 batch avg ms        3 running ratio avg    4 cpu % of one core
 #   5 consumer lag max (sink)                  6 cpu % of the cpus available to the worker JVM
@@ -16922,14 +17106,17 @@ function benchmark_collect_setup () {
   dirty=false
   [ -n "$(git -C "$root_folder" status --porcelain -uno 2>/dev/null)" ] && dirty=true
   # documentation of the connector: documentation_url of the manifest of the plugin that contains the connector class
-  local connector_class documentation_url="" plugin_dir
+  # (and source_url, for the links of the flight recorder hot methods)
+  local connector_class documentation_url="" source_url="" plugin_dir manifest
   connector_class=$(echo "$connector_config_json" | jq -r '."connector.class" // empty' 2> /dev/null)
   if [ -n "$connector_class" ]
   then
     plugin_dir=$(playground --output-level ERROR container exec --container "$first_worker" --command "for d in /usr/share/confluent-hub-components/* /usr/share/java/*; do [ -f \"\$d/manifest.json\" ] && grep -rlq --include='*.jar' '${connector_class//.//}.class' \"\$d\" && echo \"\$d\" && break; done" 2> /dev/null | tail -1)
     if [ -n "$plugin_dir" ]
     then
-      documentation_url=$(playground --output-level ERROR container exec --container "$first_worker" --command "cat '$plugin_dir/manifest.json'" 2> /dev/null | jq -r '.documentation_url // empty' 2> /dev/null)
+      manifest=$(playground --output-level ERROR container exec --container "$first_worker" --command "cat '$plugin_dir/manifest.json'" 2> /dev/null)
+      documentation_url=$(echo "$manifest" | jq -r '.documentation_url // empty' 2> /dev/null)
+      source_url=$(echo "$manifest" | jq -r '.source_url // empty' 2> /dev/null)
     fi
   fi
   # github link of the example: repro models are in the reproduction-models submodule, another repository
@@ -16950,7 +17137,7 @@ function benchmark_collect_setup () {
     --arg nb_workers "$nb_workers" --arg nb_brokers "$nb_brokers" --argjson kraft "$kraft" --arg environment "$environment" \
     --arg test_file "${test_file#$root_folder/}" --arg commit "$commit" --argjson dirty "$dirty" \
     --arg repo_url "$repo_url" --arg repo_path "$repo_path" --arg repo_commit "$repo_commit" --argjson repo_dirty "$repo_dirty" \
-    --arg documentation_url "$documentation_url" --arg plugin_dir "$plugin_dir" \
+    --arg documentation_url "$documentation_url" --arg source_url "$source_url" --arg plugin_dir "$plugin_dir" \
     --argjson config "$(echo "$connector_config_json" | jq -c 'with_entries(if (.key | test("password|secret|token|credentials|jaas|private\\.key|api\\.key|apikey"; "i")) then .value = "****" else . end)' 2>/dev/null || echo '{}')" \
     '($engine_info | split("|")) as $e |
      {host: {os: $host_os, arch: $host_arch, cpu_model: $cpu_model, cpus: ($host_cpus | tonumber? // null), memory_bytes: ($host_memory | tonumber? // null)},
@@ -16959,7 +17146,7 @@ function benchmark_collect_setup () {
       kafka: {environment: $environment, brokers: ($nb_brokers | tonumber? // null), kraft: $kraft},
       playground: {test_file: $test_file, commit: $commit, dirty: $dirty,
                    repo_url: $repo_url, repo_path: $repo_path, repo_commit: $repo_commit, repo_dirty: $repo_dirty},
-      connector: {documentation_url: $documentation_url, plugin_dir: $plugin_dir},
+      connector: {documentation_url: $documentation_url, source_url: $source_url, plugin_dir: $plugin_dir},
       connector_config: $config}'
 }
 
@@ -36561,6 +36748,177 @@ playground_analyze_cfk_bundle_command() {
 }
 
 # :command.function
+playground_analyze_flight_recorder_command() {
+
+  # src/commands/analyze/flight-recorder.sh
+  eval "file_array=(${args[--file]})"
+  sample="${args[--sample]}"
+  container="${args[--container]}"
+  duration=$(duration_to_seconds "${args[--duration]}")
+  connector="${args[--connector]}"
+  connector_class="${args[--connector-class]}"
+  threads="${args[--threads]}"
+  output_dir="${args[--output-dir]}"
+  json_out="${args[--json]}"
+  top="${args[--top]}"
+
+  set +e
+
+  nb_modes=0
+  [[ ${#file_array[@]} -gt 0 ]] && nb_modes=$((nb_modes + 1))
+  [[ -n "$sample" ]] && nb_modes=$((nb_modes + 1))
+  [[ -n "$container" ]] && nb_modes=$((nb_modes + 1))
+  if [[ $nb_modes -gt 1 ]]; then
+      logerror "❌ Provide only one of --file, --container and --sample"
+      exit 1
+  fi
+  if [[ $nb_modes -eq 0 ]]; then
+      container="connect"
+  fi
+
+  analyzer="$root_folder/tools/jfr-analyzer/jfr_analyzer.py"
+  if ! command -v python3 &>/dev/null; then
+      logerror "❌ python3 is required but not found on PATH"
+      exit 1
+  fi
+
+  # with --json, logs go to stderr and only the analysis to stdout
+  if [[ -n "$json_out" ]]; then
+      exec 3>&1 1>&2
+  fi
+
+  mkdir -p "$output_dir"
+  output_dir_abs=$(cd "$output_dir" && pwd)
+
+  if [[ -n "$connector" ]]; then
+      [[ -z "$threads" ]] && threads="^task-thread-$(printf '%s' "$connector" | sed 's/[][\.*^$(){}+?|/]/\\&/g')-[0-9]+$"
+      if [[ -z "$connector_class" ]]; then
+          get_connect_url_and_security
+          if handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/config\"" > /dev/null 2>&1; then
+              connector_class=$(echo "$curl_output" | jq -r '."connector.class" // empty' 2> /dev/null)
+          fi
+      fi
+  fi
+  [[ -z "$threads" ]] && threads="^task-thread-"
+
+  # fzf completion returns <display>@<path>
+  for i in "${!file_array[@]}"
+  do
+      if [[ ! -e "${file_array[$i]}" && "${file_array[$i]}" == *"@"* ]]; then
+          file_array[$i]=$(echo "${file_array[$i]}" | cut -d "@" -f 2)
+      fi
+  done
+
+  # ── Container mode: record the JVM over JMX ──
+  if [[ -n "$container" ]]; then
+      port=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$container" 2> /dev/null | sed -n 's/^KAFKA_JMX_PORT=//p' | head -1)
+      if [[ -z "$port" ]]; then
+          logerror "❌ container $container is not running or has no KAFKA_JMX_PORT: the flight recorder is driven over JMX"
+          exit 1
+      fi
+      workers="$container $port"
+      benchmark_jmx_init "$workers"
+      recordings=$(jfr_jmx_start "$workers")
+      if [[ $? -ne 0 || -z "$recordings" ]]; then
+          logerror "❌ could not start the flight recorder of $container over JMX (localhost:$port): JDK 8 before 8u262, or JMX not reachable"
+          exit 1
+      fi
+      trap 'jfr_jmx_discard "$recordings"' EXIT
+      log "🛩️ recording $container for ${duration}s with the settings of tools/jfr-analyzer/playground.jfc"
+      sleep "$duration"
+      recorded=$(jfr_jmx_stop "$recordings" "$output_dir_abs/flight-recorder-$(date '+%Y-%m-%d-%H-%M-%S')")
+      recordings=""
+      trap - EXIT
+      if [[ -z "$recorded" ]]; then
+          logerror "❌ the recording could not be copied from $container"
+          exit 1
+      fi
+      log "✅ recording saved in $recorded"
+      file_array=("$recorded")
+  fi
+
+  # ── Digests: from the samples, the .json digests given, or the .jfr files ──
+  digests=()
+  if [[ -n "$sample" ]]; then
+      # a sample digest also carries the connector class, type and mode of its benchmark
+      digests=("$root_folder/tools/jfr-analyzer/samples/$sample.digest.json")
+  fi
+  jfr_files=()
+  for file in "${file_array[@]}"
+  do
+      if [[ "$file" == *.digest.json ]]; then
+          digests+=("$file")
+      else
+          jfr_files+=("$file")
+      fi
+  done
+  if [[ ${#jfr_files[@]} -gt 0 ]]; then
+      log "🔬 reading ${#jfr_files[@]} recording(s) with the JDK flight recorder API ($JFR_ANALYZER_IMAGE)"
+      produced=$(jfr_digest "$output_dir_abs" "$threads" "${jfr_files[@]}")
+      ret=$?
+      for digest in $produced
+      do
+          digests+=("$digest")
+      done
+      if [[ $ret -ne 0 ]]; then
+          logerror "❌ not a flight recording, or it could not be read: ${jfr_files[*]}"
+          for file in "${jfr_files[@]}"
+          do
+              log_file="$output_dir_abs/$(basename "${file%.jfr}").digest.json.log"
+              [[ -s "$log_file" ]] && grep -m1 -E "Exception|Error" "$log_file"
+          done
+          exit 2
+      fi
+  fi
+
+  analyzer_args=()
+  for digest in "${digests[@]}"
+  do
+      analyzer_args+=(--digest "$digest")
+  done
+  analyzer_args+=(--top "$top")
+  [[ -n "$connector_class" ]] && analyzer_args+=(--connector-class "$connector_class")
+
+  if [[ -n "$json_out" ]]; then
+      python3 -I "$analyzer" "${analyzer_args[@]}" --json >&3
+      exit $?
+  fi
+
+  if [[ ${#jfr_files[@]} -gt 0 ]]; then
+      first=$(basename "${jfr_files[0]}")
+      html_out="$output_dir_abs/${first%.jfr}-jfr-report.html"
+      [[ ${#jfr_files[@]} -eq 1 ]] && analyzer_args+=(--recording-link "${jfr_files[0]}")
+  else
+      first=$(basename "${digests[0]}")
+      html_out="$output_dir_abs/${first%.digest.json}-jfr-report.html"
+  fi
+  analyzer_args+=(--html-out "$html_out")
+
+  log ""
+  python3 -I "$analyzer" "${analyzer_args[@]}"
+  exit_code=$?
+  if [[ $exit_code -ne 0 ]]; then
+      logerror "❌ flight recording analysis failed (exit code $exit_code)"
+      exit $exit_code
+  fi
+
+  if [[ -f "$html_out" ]]; then
+      log ""
+      log "✅ HTML report saved: $html_out"
+      # only open a browser in an interactive terminal
+      if [[ -t 1 ]] && command -v open &>/dev/null; then
+          log "🌐 Opening report in browser..."
+          open "$html_out"
+      else
+          log "🔗 Open in browser: file://$html_out"
+      fi
+  fi
+
+  exit 0
+
+}
+
+# :command.function
 playground_debug_enable_remote_debugging_command() {
 
   # src/commands/debug/enable-remote-debugging.sh
@@ -38025,7 +38383,7 @@ playground_debug_flight_recorder_command() {
               if [ $? -eq 0 ]
               then
                   log "🛩️ flight recorder is available at ${filename}"
-                  log "use JDK Mission Control JMC (https://jdk.java.net/jmc/) to open it"
+                  log "use JDK Mission Control JMC (https://jdk.java.net/jmc/) to open it, or playground analyze flight-recorder -f ${filename}"
                   playground container cp --source ${container}:/tmp/${filename} --destination ${filename}
               else
                   logerror "❌ Failed to stop flight recorder"
@@ -48136,6 +48494,7 @@ playground_connector_benchmark_command() {
   eval "topics=(${args[--topic]:-})"
   eval "connector_tags=(${args[--connector-tag]:-})"
   rounds="${args[--rounds]}"
+  no_flight_recorder="${args[--no-flight-recorder]}"
 
   # with --json, logs go to stderr and only the result json to stdout
   exec 3>&1
@@ -48244,6 +48603,7 @@ playground_connector_benchmark_command() {
           child_args+=(--topic "$topic")
       done
       [ -n "$no_history" ] && child_args+=(--no-history)
+      [ -n "$no_flight_recorder" ] && child_args+=(--no-flight-recorder)
       [ -n "$verbose" ] && child_args+=(--verbose)
 
       function switch_connector_version () {
@@ -48300,7 +48660,7 @@ playground_connector_benchmark_command() {
                   # the worker jvm was restarted: an untimed drain first
                   warmup_records=$(( nb_records / 10 > 10000 ? nb_records / 10 : 10000 ))
                   log "🔥 warm-up drain of $warmup_records records (not recorded)"
-                  BENCHMARK_MATRIX_CHILD=1 BENCHMARK_NO_OPEN=1 playground connector benchmark "${child_args[@]}" --nb-records "$warmup_records" --no-history > "$output_dir/$matrix_id-warmup-$version-$round.log" 2>&1 || true
+                  BENCHMARK_MATRIX_CHILD=1 BENCHMARK_NO_OPEN=1 playground connector benchmark "${child_args[@]}" --nb-records "$warmup_records" --no-history --no-flight-recorder > "$output_dir/$matrix_id-warmup-$version-$round.log" 2>&1 || true
               fi
               if ! BENCHMARK_MATRIX_CHILD=1 BENCHMARK_NO_OPEN=1 BENCHMARK_MATRIX_RESULTS="$matrix_results" playground connector benchmark "${child_args[@]}"
               then
@@ -48495,6 +48855,10 @@ playground_connector_benchmark_command() {
           kill -0 "$load_pid" 2> /dev/null && kill_tree "$load_pid"
       fi
       rm -f "$BENCHMARK_STOP_FILE"
+      if [ -n "$jfr_recordings" ]
+      then
+          jfr_jmx_discard "$jfr_recordings"
+      fi
       if [ $paused_by_benchmark -eq 1 ]
       then
           logwarn "⏯️ resuming $connector_type connector $connector paused by the benchmark"
@@ -48503,6 +48867,41 @@ playground_connector_benchmark_command() {
       fi
   }
   trap benchmark_cleanup EXIT
+
+  # flight recorder of the workers during the measure, over JMX (no jcmd in the cp images, no restart)
+  # jfr_status: disabled (--no-flight-recorder), unavailable (could not start: no overhead), recorded, failed (recorded,
+  # but not copied or not analyzed)
+  jfr_recordings=""
+  jfr_files=""
+  jfr_status="disabled"
+  function start_flight_recorder () {
+      if [ -n "$no_flight_recorder" ]
+      then
+          return
+      fi
+      if jfr_recordings=$(jfr_jmx_start "$workers")
+      then
+          jfr_status="recorded"
+          log "🛩️ flight recorder started on $(echo "$workers" | awk '{ print $1 }' | xargs) for the measure (--no-flight-recorder to disable it)"
+      else
+          jfr_recordings=""
+          jfr_status="unavailable"
+          logwarn "⚠️ the flight recorder could not be started over JMX on $(echo "$workers" | awk '{ print $1 }' | xargs): the report will not show where the time goes"
+      fi
+  }
+  function stop_flight_recorder () {
+      if [ -z "$jfr_recordings" ]
+      then
+          return
+      fi
+      jfr_files=$(jfr_jmx_stop "$jfr_recordings" "$output_dir/$run_id")
+      jfr_recordings=""
+      if [ -z "$jfr_files" ]
+      then
+          jfr_status="failed"
+          logwarn "⚠️ the flight recordings could not be copied from the workers"
+      fi
+  }
 
   # fails the benchmark as soon as the connector or one of its tasks is FAILED
   function check_not_failed () {
@@ -48609,6 +49008,7 @@ playground_connector_benchmark_command() {
           topic_records_before=$(count_topic_records)
       fi
 
+      start_flight_recorder
       start_time=$(now)
       take_sample "baseline"
       baseline_records="$sample_records"
@@ -48648,6 +49048,7 @@ playground_connector_benchmark_command() {
               exit 1
           fi
       done
+      stop_flight_recorder
       measured_seconds=$(awk -v e="$end_time" -v s="$start_time" 'BEGIN { printf "%.1f", e - s }')
       measured_records="$expected"
       if [ "$type" == "source" ]
@@ -48676,6 +49077,7 @@ playground_connector_benchmark_command() {
           take_sample "warmup"
           check_not_failed
       done
+      start_flight_recorder
       baseline_records="$sample_records"
       measure_start="$sample_time"
       not_running_checks=0
@@ -48687,6 +49089,7 @@ playground_connector_benchmark_command() {
           take_sample "steady"
           check_not_failed
       done
+      stop_flight_recorder
       if [ -n "$load_pid" ]
       then
           if kill -0 "$load_pid" 2> /dev/null
@@ -48787,6 +49190,42 @@ playground_connector_benchmark_command() {
   setup_json=$(benchmark_collect_setup "$workers" "$connector_config_json" "$test_file" "$environment")
   [ -z "$setup_json" ] && setup_json='{}'
 
+  # where the time of the tasks went, from the flight recordings
+  jfr_analysis=""
+  if [ -n "$jfr_files" ]
+  then
+      log "🛩️ analyzing the flight recording(s) ($JFR_ANALYZER_IMAGE)"
+      task_threads="^task-thread-$(printf '%s' "$connector" | sed 's/[][\.*^$(){}+?|/]/\\&/g')-[0-9]+$"
+      # shellcheck disable=SC2086
+      jfr_digests=$(jfr_digest "$output_dir" "$task_threads" $jfr_files)
+      if [ -n "$jfr_digests" ]
+      then
+          digest_args=()
+          for digest in $jfr_digests
+          do
+              digest_args+=(--digest "$digest")
+          done
+          if python3 -I "$root_folder/tools/jfr-analyzer/jfr_analyzer.py" "${digest_args[@]}" --connector-class "$connector_class" --connector-type "$type" \
+              --mode "$mode" --source-url "$(echo "$setup_json" | jq -r '.connector.source_url // empty')" --json-out "$output_dir/$run_id-jfr.json" > "$output_dir/$run_id-jfr.txt" 2>&1
+          then
+              jfr_analysis="$output_dir/$run_id-jfr.json"
+          fi
+      fi
+      if [ -z "$jfr_analysis" ]
+      then
+          jfr_status="failed"
+          logwarn "⚠️ the flight recording(s) could not be analyzed: $(echo $jfr_files)"
+      fi
+  fi
+  if [ -n "$jfr_analysis" ]
+  then
+      flight_recorder_json=$(jq -c --arg files "$jfr_files" --arg analysis "$jfr_analysis" \
+          '{enabled: true, files: ($files | split("\n") | map(select(. != ""))), analysis: $analysis, findings: [.findings[] | {severity, title}]}' "$jfr_analysis")
+  else
+      flight_recorder_json=$(jq -n -c --arg status "$jfr_status" --arg files "$jfr_files" \
+          '{enabled: ($status != "disabled" and $status != "unavailable"), status: $status, files: ($files | split("\n") | map(select(. != "")))}')
+  fi
+
   test_file_relative="${test_file#$root_folder/}"
   result=$(jq -n \
       --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg test_file "$test_file_relative" --arg connector "$connector" \
@@ -48799,7 +49238,7 @@ playground_connector_benchmark_command() {
       --arg samples_csv "$csv_file" --argjson lower_bound "$lower_bound" \
       --arg gc_percent "$gc_percent" --arg cpu_available_avg "$cpu_available_avg" --arg pause_ratio "$pause_avg" \
       --arg dlq_records "$dlq_delta" --arg skipped_records "$skipped_delta" --arg task_shares "$task_shares" \
-      --argjson setup "$setup_json" \
+      --argjson setup "$setup_json" --argjson flight_recorder "$flight_recorder_json" \
       '{date: $date, test_file: $test_file, connector: $connector, connector_class: $connector_class, plugin_version: $plugin_version,
         cp_tag: $cp_tag, type: $type, mode: $mode, shape: $shape, tasks: $tasks, records: $records, seconds: $seconds,
         records_per_second: $records_per_second, lower_bound: $lower_bound, rate_p50: $rate_p50, rate_p95: $rate_p95, rate_min: $rate_min,
@@ -48807,7 +49246,7 @@ playground_connector_benchmark_command() {
         cpu_percent_of_one_core_max: $cpu_max, load_seconds: $load_seconds, topic_records_delta: $topic_records_delta,
         gc_percent: $gc_percent, cpu_percent_of_available_avg: $cpu_available_avg, pause_ratio: $pause_ratio,
         dlq_records: $dlq_records, skipped_records: $skipped_records, task_shares: $task_shares,
-        samples_csv: $samples_csv, setup: $setup}')
+        samples_csv: $samples_csv, setup: $setup, flight_recorder: $flight_recorder}')
   echo "$result" > "$json_file"
   if [ -n "$BENCHMARK_MATRIX_RESULTS" ]
   then
@@ -48877,6 +49316,20 @@ playground_connector_benchmark_command() {
       printf "   %-22s %s\n" "records in topics" "+$topic_records_delta (${topics[*]})"
   fi
   printf "   %-22s %s\n" "setup" "$(benchmark_setup_summary "$setup_json")"
+  if [ -n "$jfr_analysis" ]
+  then
+      jfr_lines=$(jq -r '.findings[0:4][] | (if .severity == "critical" then "🔴" elif .severity == "warning" then "🟠" else "ℹ️ " end) + " " + .title' "$jfr_analysis")
+      if [ -z "$jfr_lines" ]
+      then
+          jfr_lines="no finding"
+      fi
+      first_line=1
+      while IFS= read -r line
+      do
+          printf "   %-22s %s\n" "$([ $first_line -eq 1 ] && echo "flight recorder")" "$line"
+          first_line=0
+      done <<< "$jfr_lines"
+  fi
   if [ -n "$previous" ]
   then
       previous_throughput=$(echo "$previous" | jq -r '.records_per_second')
@@ -48901,6 +49354,15 @@ playground_connector_benchmark_command() {
       if [ -n "$setup_differences" ]
       then
           add_warning "the previous run was on a different setup ($setup_differences): the comparison is not meaningful"
+      fi
+  fi
+  if [ -n "$previous" ]
+  then
+      previous_jfr=$(echo "$previous" | jq -r '.flight_recorder.enabled // false')
+      current_jfr=$(echo "$flight_recorder_json" | jq -r '.enabled')
+      if [ "$previous_jfr" != "$current_jfr" ]
+      then
+          add_warning "the previous run was $([ "$previous_jfr" == "true" ] && echo "recorded with" || echo "run without") the flight recorder and this one $([ "$current_jfr" == "true" ] && echo "with" || echo "without"): it costs a few % of throughput, compare runs recorded the same way (--no-flight-recorder)"
       fi
   fi
   if [ "$(echo "$setup_json" | jq -r '.connect.emulated // false')" == "true" ]
@@ -48981,9 +49443,17 @@ playground_connector_benchmark_command() {
   logwarn "⚠️ results are relative to this docker host: compare runs on the same machine only"
   log "📄 samples: $csv_file"
   log "📄 result: $json_file"
+  if [ -n "$jfr_analysis" ]
+  then
+      log "🛩️ flight recording(s): $(echo $jfr_files) (open in JDK Mission Control, or playground analyze flight-recorder -f <file>)"
+  fi
 
   html_file="$output_dir/$run_id.html"
   report_args=(--result "$json_file" --samples "$csv_file" --history "$history_file" --output "$html_file")
+  if [ -n "$jfr_analysis" ]
+  then
+      report_args+=(--jfr "$jfr_analysis")
+  fi
   for warning in "${report_warnings[@]}"
   do
       report_args+=(--warning "$warning")
@@ -66675,6 +67145,13 @@ playground_analyze_parse_requirements() {
       shift $#
       ;;
 
+    flight-recorder)
+      action="flight-recorder"
+      shift
+      playground_analyze_flight_recorder_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_analyze_usage >&2
@@ -67883,6 +68360,247 @@ playground_analyze_cfk_bundle_parse_requirements() {
   fi
   if [[ ${args['--severity']:-} ]] && [[ ! ${args['--severity']:-} =~ ^(critical|high|medium|low)$ ]]; then
     printf "%s\n" "--severity must be one of: critical, high, medium, low" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_analyze_flight_recorder_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_analyze_flight_recorder_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="analyze flight-recorder"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --file | -f)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--file']+x} ]]; then
+            args['--file']="$escaped"
+          else
+            args['--file']="${args['--file']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --sample | -s)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--sample']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--sample requires an argument: --sample, -s SAMPLE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --container | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--container']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--container requires an argument: --container, -c CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --duration)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--duration']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--duration requires an argument: --duration DURATION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector-class)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector-class']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector-class requires an argument: --connector-class CONNECTOR_CLASS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --threads)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--threads']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--threads requires an argument: --threads REGEX" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --output-dir | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir, -o OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --top)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--top']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--top requires an argument: --top TOP" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--duration']:-} ]] || args['--duration']="60s"
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="./jfr-analysis-output"
+  [[ -n ${args['--top']:-} ]] || args['--top']="10"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--file'] ]]; then
+    values=''
+    eval "values=(${args['--file']})"
+    for value in "${values[@]}"; do
+      validation_output="$(validate_file_exists "$value")"
+      if [[ -n "$validation_output" ]]; then
+        printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
+        exit 1
+      fi
+    done
+  fi
+
+  # :flag.validations
+  if [[ -v args['--duration'] ]]; then
+    validation_output="$(validate_duration "${args['--duration']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--duration DURATION" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--top'] ]]; then
+    validation_output="$(validate_integer "${args['--top']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--top TOP" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--sample']:-} ]] && [[ ! ${args['--sample']:-} =~ ^(jdbc_postgres_sink)$ ]]; then
+    printf "%s\n" "--sample must be one of: jdbc_postgres_sink" >&2
     exit 1
   fi
 
@@ -81298,6 +82016,14 @@ playground_connector_benchmark_parse_requirements() {
         ;;
 
       # :flag.case
+      --no-flight-recorder)
+
+        # :flag.case_no_arg
+        args['--no-flight-recorder']=1
+        shift
+        ;;
+
+      # :flag.case
       --json)
 
         # :flag.case_no_arg
@@ -90862,6 +91588,11 @@ playground_analyze_completion() {
         playground_analyze_cfk_bundle_completion "$completion_current" "$@"
         return
         ;;
+      flight-recorder)
+        shift
+        playground_analyze_flight_recorder_completion "$completion_current" "$@"
+        return
+        ;;
       --help | -h)
         completion_blocked_flags["--help"]=1
         shift
@@ -90871,7 +91602,7 @@ playground_analyze_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" thread-dump heap-dump logs gc-logs oracle-xstream-report cfk-bundle
+  completion_candidates "$completion_current" thread-dump heap-dump logs gc-logs oracle-xstream-report cfk-bundle flight-recorder
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -91488,6 +92219,146 @@ playground_analyze_cfk_bundle_completion() {
     completion_flag_candidates --top "$completion_current" --top
     completion_flag_candidates --include-warnings "$completion_current" --include-warnings
     completion_flag_candidates --output-dir "$completion_current" --output-dir
+  fi
+
+}
+
+# :command.completion_function
+playground_analyze_flight_recorder_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --file | -f)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-specific-file-extension "$completion_current" --extension "jfr"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+
+        ;;
+      --sample | -s)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "jdbc_postgres_sink"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--sample"]=1
+
+        ;;
+      --container | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-container-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--container"]=1
+
+        ;;
+      --duration)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--duration"]=1
+
+        ;;
+      --connector)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+
+        ;;
+      --connector-class)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector-class"]=1
+
+        ;;
+      --threads)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--threads"]=1
+
+        ;;
+      --output-dir | -o)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --top)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--top"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --file "$completion_current" --file -f
+    completion_flag_candidates --sample "$completion_current" --sample -s
+    completion_flag_candidates --container "$completion_current" --container -c
+    completion_flag_candidates --duration "$completion_current" --duration
+    completion_flag_candidates --connector "$completion_current" --connector
+    completion_flag_candidates --connector-class "$completion_current" --connector-class
+    completion_flag_candidates --threads "$completion_current" --threads
+    completion_flag_candidates --output-dir "$completion_current" --output-dir -o
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --top "$completion_current" --top
   fi
 
 }
@@ -98190,6 +99061,11 @@ playground_connector_benchmark_completion() {
 
         shift
         ;;
+      --no-flight-recorder)
+        completion_blocked_flags["--no-flight-recorder"]=1
+
+        shift
+        ;;
       --json)
         completion_blocked_flags["--json"]=1
 
@@ -98221,6 +99097,7 @@ playground_connector_benchmark_completion() {
     completion_flag_candidates --output-dir "$completion_current" --output-dir
     completion_flag_candidates --compare "$completion_current" --compare
     completion_flag_candidates --no-history "$completion_current" --no-history
+    completion_flag_candidates --no-flight-recorder "$completion_current" --no-flight-recorder
     completion_flag_candidates --json "$completion_current" --json
   fi
 
@@ -99861,6 +100738,7 @@ run() {
     "analyze gc-logs") playground_analyze_gc_logs_command ;;
     "analyze oracle-xstream-report") playground_analyze_oracle_xstream_report_command ;;
     "analyze cfk-bundle") playground_analyze_cfk_bundle_command ;;
+    "analyze flight-recorder") playground_analyze_flight_recorder_command ;;
     "debug") playground_debug_command ;;
     "debug enable-remote-debugging") playground_debug_enable_remote_debugging_command ;;
     "debug disable-remote-debugging") playground_debug_disable_remote_debugging_command ;;
