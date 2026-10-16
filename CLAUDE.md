@@ -81,8 +81,8 @@ out of context.
   `BENCHMARK_CONNECTOR`, `BENCHMARK_CONNECTOR_CONFIG`; in stream mode it must stop at a batch boundary when
   `$BENCHMARK_STOP_FILE` exists — killing a producer mid-batch sends a truncated record that fails the connector —
   and print `BENCHMARK_BATCH=<records> <epoch>` per batch; shipped with the JDBC / Debezium Postgres, Debezium MySQL,
-  JDBC / Debezium SQL Server, Oracle CDC, XStream, Debezium Oracle, JDBC Oracle, MongoDB, IBM MQ and MQTT (steady
-  only) examples; called with `--check` first, before the connector is paused) or `--load-command` / `--stream-load-command`. A load script must
+  JDBC / Debezium SQL Server, Oracle CDC, XStream, Debezium Oracle, JDBC Oracle, MongoDB, IBM MQ, MQTT (steady
+  only) and generalized S3 / GCS / Azure Blob Storage source (`benchmark_cloud_storage_load`, JSON files) examples; called with `--check` first, before the connector is paused) or `--load-command` / `--stream-load-command`. A load script must
   source `scripts/cli/src/lib/utils_function.sh`, not `scripts/utils.sh` (that one records the script as the
   example being run), and can use `benchmark_load_args`, `benchmark_sql_load` (postgres / mysql / oracle
   `CUSTOMERS` table, sql server `dbo.customers`), `benchmark_mongo_load`, `benchmark_mqtt_load`, `benchmark_ibmmq_load`, `benchmark_activemq_load`, `benchmark_rabbitmq_load`,

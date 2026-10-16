@@ -560,12 +560,40 @@ function check_not_failed () {
 # one sample: appends a csv line and sets sample_records, sample_time
 prev_records=""
 prev_time=""
+# a task restarted (rebalance, reconfiguration by its connector) counts from 0 again: the records counter of each task
+# is kept monotonic by adding the value it had before the reset (a reset that goes unnoticed, when the new count is
+# already above the old one at the next sample, is caught by the topics in a drain)
+declare -A task_last_records=()
+declare -A task_records_offset=()
+task_counter_resets=0
 function take_sample () {
     local phase="$1"
     local values
     values=$(benchmark_jmx_sample "$connector" "$type" "$workers")
     sample_time=$(now)
     read -r sample_records sample_batch sample_ratio sample_cpu sample_lag sample_cpu_available sample_pause sample_gc sample_dlq sample_skipped sample_tasks <<< "$values"
+    if [ "$sample_tasks" != "-" ] && [ -n "$sample_tasks" ] && [ -z "$records_from_topics" ]
+    then
+        local entry task value corrected=0
+        for entry in ${sample_tasks//;/ }
+        do
+            task="${entry%%:*}"
+            value="${entry#*:}"
+            if [ -n "${task_last_records[$task]}" ] && [ "$value" -lt "${task_last_records[$task]}" ]
+            then
+                task_records_offset[$task]=$(( ${task_records_offset[$task]:-0} + ${task_last_records[$task]} ))
+                task_counter_resets=$((task_counter_resets + 1))
+            fi
+            task_last_records[$task]="$value"
+            corrected=$((corrected + value + ${task_records_offset[$task]:-0}))
+        done
+        sample_records="$corrected"
+    fi
+    # the task counters were reset by a restart during the drain: the records come from the topics
+    if [ -n "$records_from_topics" ]
+    then
+        sample_records=$((baseline_records + $(topic_records_progress)))
+    fi
     local rate="-"
     if [ -n "$prev_records" ]
     then
@@ -586,6 +614,12 @@ function count_topic_records () {
     done
 }
 
+# records written to the topics since the backlog was loaded (topic_records_before)
+function topic_records_progress () {
+    awk 'NR == FNR { before[$1] = $2; next } { delta += $2 - before[$1] } END { print delta + 0 }' \
+        <(echo "$topic_records_before") <(count_topic_records)
+}
+
 # a source can create topics during the drain (a new table): read the topics of the connector again
 function refresh_connector_topics () {
     if [ -n "${args[--topic]}" ]
@@ -599,6 +633,8 @@ function refresh_connector_topics () {
 }
 
 expected="$nb_records"
+# set when a task restart reset the JMX counters during a drain: the samples count the records in the topics
+records_from_topics=""
 # the drain stopped at --max-wait before the end of the backlog
 incomplete=false
 load_seconds="-"
@@ -664,6 +700,7 @@ then
 
     end_time=""
     last_logged=0
+    stalled_samples=0
     while true
     do
         sleep "$interval"
@@ -672,6 +709,38 @@ then
         take_sample "drain"
         processed=$((sample_records - baseline_records))
         elapsed=$(awk -v t="$sample_time" -v s="$start_time" 'BEGIN { printf "%d", t - s }')
+        # a source task restarted by its connector (the generalized cloud storage sources reconfigure their tasks every
+        # minute or so) counts from 0 again: when the counter goes down, or stalls while the topics keep growing, the
+        # rest of the drain counts the records in the topics
+        if [ "$type" == "source" ] && [ -z "$records_from_topics" ] && [ ${#topics[@]} -gt 0 ]
+        then
+            if [ "$sample_records" -lt "$before_records" ]
+            then
+                stalled_samples=2
+            elif [ "$sample_records" == "$before_records" ]
+            then
+                stalled_samples=$((stalled_samples + 1))
+            else
+                stalled_samples=0
+            fi
+            if [ "$stalled_samples" -gt 0 ] && [ $((stalled_samples % 2)) -eq 0 ]
+            then
+                topic_progress=$(topic_records_progress)
+                if [ "$topic_progress" -gt "$processed" ]
+                then
+                    logwarn "⚠️ the task metrics count $processed/$expected records but the topics got $topic_progress: a task was restarted (its counters start from 0), counting the records in the topics from now on"
+                    records_from_topics=1
+                    sample_records=$((baseline_records + topic_progress))
+                    prev_records="$sample_records"
+                    processed="$topic_progress"
+                    if [ "$processed" -ge "$expected" ]
+                    then
+                        end_time="$sample_time"
+                        break
+                    fi
+                fi
+            fi
+        fi
         if [ "$processed" -ge "$expected" ]
         then
             # the backlog was processed between the last two samples: interpolate
@@ -711,8 +780,7 @@ then
         if [ ${#topics[@]} -gt 0 ]
         then
             # topics created during the drain count from 0
-            topic_records_delta=$(awk 'NR == FNR { before[$1] = $2; next } { delta += $2 - before[$1] } END { print delta + 0 }' \
-                <(echo "$topic_records_before") <(count_topic_records))
+            topic_records_delta=$(topic_records_progress)
         fi
     fi
 else
@@ -1041,6 +1109,14 @@ function add_warning () {
 if [ "$load_stopped_early" == "1" ]
 then
     report_warnings+=("the load stopped before the end of the measure, see $load_log")
+fi
+if [ "$task_counter_resets" -gt 0 ] && [ -z "$records_from_topics" ]
+then
+    add_warning "the records counter of a task was reset $task_counter_resets time(s) (task restarts: rebalance, or a connector reconfiguring its tasks): the records counted before each reset were kept, see the task restarts in the connect logs"
+fi
+if [ -n "$records_from_topics" ]
+then
+    add_warning "a task was restarted during the drain (its JMX counters started from 0): the samples count the records in the topics from then on, see the task restarts in the connect logs (a generalized cloud storage source is reconfigured at each poll interval)"
 fi
 if [ -n "$previous" ] && [ "$(echo "$previous" | jq -c '.setup // empty')" != "" ]
 then

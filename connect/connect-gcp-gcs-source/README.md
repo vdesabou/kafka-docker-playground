@@ -37,8 +37,45 @@ The bucket is created in region `europe-west2` (override with `GCS_BUCKET_REGION
    2. List and read one Avro file of the bucket with `playground tools read-avro-file`
    3. Create the `gcs-source` connector with a `RegexRouter` transform adding the `copy_of_` prefix, and consume 9 records from `copy_of_gcs-topic`
 4. Generalized:
-   1. Upload `generalized.quickstart.json` to `quickstart/` in the bucket
+   1. Empty `quickstart/` in the bucket (files left by a benchmark) and upload `generalized.quickstart.json` to it
    2. Create the `gcs-source` connector (`JsonFormat`, `topics.dir=quickstart`, `topic.regex.list=quick-start-topic:.*`) and consume 9 records from `quick-start-topic`
+
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) loads [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark) with JSON files of `{"f1":"benchmark message <i>"}` lines (one record per line), uploaded to the `topics.dir` of the connector with `gcloud storage cp` and the credentials of the `gcloud-config` container created by the example. It applies to the generalized mode only (`mode=GENERIC` with a JSON format, `gcs-source-generalized.sh`); the Backup and Restore mode reads the files of a sink, and is refused. Once the example is running:
+
+```bash
+# drain of 100000 records in 10 files
+playground connector benchmark --nb-records 100000
+
+# per-object overhead: 2000 files of one record
+playground connector benchmark --nb-records 2000 --shape small-txn
+
+# throughput during 2 minutes while files of 20000 records are uploaded
+playground connector benchmark --mode steady --duration 2m --nb-records 20000
+```
+
+The connector lists the objects after the last one it read (`startAfter`), so the files are named
+`zz-benchmark-<epoch>-<batch>-<pid>-<n>.json`: they sort after the files of the example and of the previous runs.
+For the same reason, steady mode uploads one file per batch, one after the other, and `--sessions` must not be used in
+steady mode: an object uploaded after a higher name was read is skipped.
+
+| Option | Load |
+| --- | --- |
+| `--shape bulk` (default) | files of `BENCHMARK_FILE_RECORDS` records (default `10000`) |
+| `--shape small-txn` | one record per file: the cost of listing and opening each object (drain only, the upload of many small objects is slow) |
+| `--mode steady` | one file of `--nb-records` records per batch |
+
+`--shape update` and `--shape delete` are refused: a rewritten object is not read again.
+
+In generalized mode, a task gets `task.batch.size` files at a time (default `10`), and the connector looks for new files
+every `gcs.poll.interval.ms` (default `60000`), reconfiguring its task. With the default load (files of 10000 records),
+the drain therefore goes by steps of 100000 records per minute, whatever the speed of the connector: raise
+`task.batch.size` or lower `gcs.poll.interval.ms` to see the difference. The task restarts reset its JMX counters, so
+the benchmark counts the records in the topic instead, and says so.
+
+A steady load faster than that (the summary says the load generated much more than the connector processed) leaves
+files in the bucket, that the next runs read too: rerun the example, which empties the `quickstart` folder.
 
 ## Service account setup
 

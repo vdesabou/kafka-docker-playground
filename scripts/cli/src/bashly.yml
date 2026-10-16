@@ -8315,8 +8315,9 @@ commands:
           script, called with --records <n> --mode preload|stream --shape
           bulk|small-txn|update (rows in the CUSTOMERS table for the
           postgres, mysql, oracle and sql server examples, documents for
-          mongodb, messages for ibm mq and mqtt, see the README of the
-          example). It is called with --check first, so that an unsupported
+          mongodb, messages for ibm mq and mqtt, json files for the
+          generalized s3, gcs and azure blob storage sources, see the README
+          of the example). It is called with --check first, so that an unsupported
           combination fails before the connector is paused
         - or --load-command / --stream-load-command, which take precedence
 
