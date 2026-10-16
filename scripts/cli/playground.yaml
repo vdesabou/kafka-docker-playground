@@ -771,7 +771,8 @@ subcommands:
       the JDBC, Debezium, Oracle CDC and XStream source examples (Oracle, MySQL, MariaDB,\nPostgreSQL,
       SQL Server), self-managed and fully managed, and with their reproduction models.\n\nSQL_DATAGEN_DURATION
       (minutes, default 10) and SQL_DATAGEN_SESSIONS (default 5) change the duration
-      and the number of\nparallel sessions."
+      and the number of\nparallel sessions, BENCHMARK_LOAD_SCRIPT another load script
+      than benchmark-load.bash (see playground connector\nbenchmark)."
   - names:
     - "--connect-community-image"
     argument: ''
@@ -5015,9 +5016,13 @@ subcommands:
       mysql, oracle and sql server examples, documents for\n    mongodb, messages
       for ibm mq and mqtt, see the README of the\n    example). It is called with
       --check first, so that an unsupported\n    combination fails before the connector
-      is paused\n  - or --load-command / --stream-load-command, which take precedence\n\nThroughput
-      is read from the connect JMX metrics of the tasks\n(sink-record-read-total:
-      records read from kafka, including the ones\nfiltered or sent to the dlq; source-record-write-total),
+      is paused\n  - or --load-command / --stream-load-command, which take precedence\n\nBENCHMARK_LOAD_SCRIPT=<file>
+      uses another load script than\nbenchmark-load.bash: a file name in the folder
+      of the example (or an\nabsolute path), e.g. one per reproduction model named
+      after its ticket\n(BENCHMARK_LOAD_SCRIPT=benchmark-load-123456.bash). It takes
+      the same\narguments, and --enable-sql-datagen uses it too.\n\nThroughput is
+      read from the connect JMX metrics of the tasks\n(sink-record-read-total: records
+      read from kafka, including the ones\nfiltered or sent to the dlq; source-record-write-total),
       sampled every\n--interval. Results are written to --output-dir (samples csv,
       result\njson and an html report with the charts, opened in the browser at the\nend
       in an interactive terminal) and appended to the benchmark-history\nfile, and

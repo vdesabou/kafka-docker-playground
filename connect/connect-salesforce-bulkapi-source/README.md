@@ -44,6 +44,23 @@ playground run -f salesforce-bulkapi-source.sh
 4. Verifies that topic `sfdc-bulkapi-leads` receives the Lead with `playground topic consume`.
 5. Deletes the Lead created by the test on exit.
 
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) creates Leads in Salesforce with one Bulk API job (`sfdx force:data:bulk:upsert`) for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark): the connector is paused, the Leads are created, the connector is resumed, and the benchmark measures the time it takes to write them to `sfdc-bulkapi-leads`. Once the example is running:
+
+```bash
+playground connector benchmark --connector salesforce-bulkapi-source --nb-records 1000
+```
+
+- It uses the Salesforce user of the connector (`salesforce.username`) and the sfdx session of the `sfdx-cli` container.
+- It first deletes the Leads of the previous benchmark runs (`Company = 'playground-benchmark'`): a developer org holds about 2500 Leads (5 MB of data storage), so keep `--nb-records` small.
+- Drain with `--shape bulk` only: no steady mode (a stream of jobs would fill the org).
+- To remove the last Leads when you are done:
+
+```bash
+playground container exec --container sfdx-cli --command "sfdx force:data:soql:query --target-org <salesforce.username> -q \"SELECT Id FROM Lead WHERE Company = 'playground-benchmark'\" -r csv > /tmp/ids.csv && sfdx force:data:bulk:delete --target-org <salesforce.username> -s Lead -f /tmp/ids.csv -w 30"
+```
+
 ## Register a test account
 
 Go to [Salesforce developer portal](https://developer.salesforce.com/signup/) and register an account.

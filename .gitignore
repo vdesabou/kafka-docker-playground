@@ -97,5 +97,6 @@ cfk-reports
 config.yaml
 .claude/*
 !.claude/skills/
+jfr-analysis-output
 !.claude/settings.json
 .terraform-playground

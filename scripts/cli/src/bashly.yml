@@ -1771,7 +1771,8 @@ commands:
       PostgreSQL, SQL Server), self-managed and fully managed, and with their reproduction models.
 
       SQL_DATAGEN_DURATION (minutes, default 10) and SQL_DATAGEN_SESSIONS (default 5) change the duration and the number of
-      parallel sessions.
+      parallel sessions, BENCHMARK_LOAD_SCRIPT another load script than benchmark-load.bash (see playground connector
+      benchmark).
 
   - &connect-community-image
     long: --connect-community-image
@@ -8318,6 +8319,12 @@ commands:
           example). It is called with --check first, so that an unsupported
           combination fails before the connector is paused
         - or --load-command / --stream-load-command, which take precedence
+
+      BENCHMARK_LOAD_SCRIPT=<file> uses another load script than
+      benchmark-load.bash: a file name in the folder of the example (or an
+      absolute path), e.g. one per reproduction model named after its ticket
+      (BENCHMARK_LOAD_SCRIPT=benchmark-load-123456.bash). It takes the same
+      arguments, and --enable-sql-datagen uses it too.
 
       Throughput is read from the connect JMX metrics of the tasks
       (sink-record-read-total: records read from kafka, including the ones
