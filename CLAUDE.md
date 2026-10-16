@@ -77,7 +77,7 @@ out of context.
 - `playground connector benchmark` needs a load. Sinks: it replays the example's own `playground topic produce`
   (with `--nb-messages N`) — works for every sink example that produces its data (148/158 scripts; the
   Salesforce / SAP HANA ones need `--load-command`). Sources: the example's `benchmark-load.bash` (called with
-  `--records N --mode preload|stream --shape bulk|small-txn|update`, env `BENCHMARK_TEST_FILE`,
+  `--records N --mode preload|stream --shape bulk|small-txn|update|delete`, env `BENCHMARK_TEST_FILE`,
   `BENCHMARK_CONNECTOR`, `BENCHMARK_CONNECTOR_CONFIG`; in stream mode it must stop at a batch boundary when
   `$BENCHMARK_STOP_FILE` exists — killing a producer mid-batch sends a truncated record that fails the connector —
   and print `BENCHMARK_BATCH=<records> <epoch>` per batch; shipped with the JDBC / Debezium Postgres, Debezium MySQL,
@@ -97,7 +97,9 @@ out of context.
   source example has a load that creates Leads with one Bulk API job. The load script is looked up next to the script that was run: a repro model gets
   the example's `benchmark-load.bash` as a symlink from `repro bootstrap`; to load another table, **replace the symlink
   with a file** (`rm` it first: editing through the link changes the example), see "A table of your own" in the docs.
-  `--sessions <n>` runs that load in n parallel sessions. `playground run --enable-sql-datagen` uses the same load:
+  `--sessions <n>` runs that load in n parallel sessions. `--shape bulk,update,delete` runs one drain per shape on the same
+  rows and compares the phases (`benchmark_report.py --group-by shape`); `delete` counts the tombstones from the connector
+  config (`tombstones.on.delete`, `emit.tombstone.on.delete`) and is refused for a JDBC source. `playground run --enable-sql-datagen` uses the same load:
   after the example, `sql_datagen_inject` streams one-row transactions from `SQL_DATAGEN_SESSIONS` (5) sessions for
   `SQL_DATAGEN_DURATION` (10) minutes; there is no Java datagen nor `sql-datagen` container anymore. All the database
   source examples (mysql and mariadb included) use the same `CUSTOMERS` table as `benchmark_sql_load`.

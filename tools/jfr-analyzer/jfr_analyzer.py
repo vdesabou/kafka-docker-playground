@@ -552,7 +552,7 @@ def findings(a):
 
 # ── comparison of runs (connector versions) ───────────────────────────────────────────────────────────────────────
 
-def compare(entries):
+def compare(entries, noun="version"):
     """entries: [{"version", "records_per_second", "analyses": [analysis...]}], first one is the reference."""
     rows = []
     for e in entries:
@@ -605,7 +605,10 @@ def compare(entries):
             title = f"{r['version']} is {abs(delta):.0f}% {'slower' if slower else 'faster'}, with the same profile."
             text += " No layer or state changed by 5 points or more: the difference is spread out."
         out.append({"severity": "critical" if slower and delta <= -15 else "warning" if slower else "info",
-                    "title": title, "text": text, "next": "Look at the changes between the two versions in that area."})
+                    "title": title, "text": text,
+                    "next": "Look at the changes between the two versions in that area." if noun == "version" else
+                    "The phases work on the same rows: the difference comes from the type of change and the records it gives "
+                    "(an update carries the before and after images, a delete can give a tombstone too)."})
     return {"versions": rows, "findings": out}
 
 
@@ -856,7 +859,7 @@ def render_section(a, title="🛩️ Where the time goes", recording_link=None, 
             f'<div class="grid">{"".join(cards)}</div></section>')
 
 
-def render_comparison(cmp):
+def render_comparison(cmp, noun="version"):
     versions = cmp["versions"]
     if len(versions) < 2:
         return ""
@@ -875,10 +878,10 @@ def render_comparison(cmp):
     skeys = [k for k, _, _ in STATES]
     slabels = [label for _, label, _ in STATES]
     states = table(["State"] + names + [f"Δ {names[-1]} vs {names[0]}"], rows_for("states", skeys, slabels), nums=range(1, len(names) + 2))
-    return (f'<section class="jfr-section"><h2>🆚 Where the time goes, by version</h2><p class="sub">Flight recordings of the measured runs, '
-            f'averaged over the rounds of each version</p>{findings_html(cmp["findings"])}<div class="grid">'
-            f'<div class="card"><h2>🔥 CPU of the task threads, by layer</h2><p class="sub">Share of the execution samples of each version</p>{layers}</div>'
-            f'<div class="card"><h2>🧵 Task thread time, by state</h2><p class="sub">Mean of the task threads of each version</p>{states}</div>'
+    return (f'<section class="jfr-section"><h2>🆚 Where the time goes, by {noun}</h2><p class="sub">Flight recordings of the measured runs, '
+            f'averaged over the rounds of each {noun}</p>{findings_html(cmp["findings"])}<div class="grid">'
+            f'<div class="card"><h2>🔥 CPU of the task threads, by layer</h2><p class="sub">Share of the execution samples of each {noun}</p>{layers}</div>'
+            f'<div class="card"><h2>🧵 Task thread time, by state</h2><p class="sub">Mean of the task threads of each {noun}</p>{states}</div>'
             f'</div></section>')
 
 

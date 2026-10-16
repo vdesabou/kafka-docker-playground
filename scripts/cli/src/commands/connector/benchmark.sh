@@ -102,6 +102,85 @@ handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connector-plugi
 plugin_version=$(echo "$curl_output" | jq -r --arg c "$connector_class" '[.[] | select(.class == $c) | .version][0] // "unknown"')
 cp_tag=$(get_running_cp_tag)
 
+# --shape: one shape, or a sequence of shapes (bulk,update,delete) run one after the other on the same rows
+IFS=',' read -ra shapes <<< "$shape"
+for phase_shape in "${shapes[@]}"
+do
+    case "$phase_shape" in
+        bulk|small-txn|update|delete) ;;
+        *) logerror "❌ --shape $phase_shape: use bulk, small-txn, update or delete (or a sequence, e.g. bulk,update,delete)"; exit 1 ;;
+    esac
+done
+
+# --shape a,b,c: one drain per shape (child runs of this command) on the same rows, then the phases are compared
+if [ ${#shapes[@]} -gt 1 ] && [ -z "$BENCHMARK_MATRIX_CHILD" ]
+then
+    if [ ${#connector_tags[@]} -gt 0 ] || [ "$mode" != "drain" ] || [ "$type" != "source" ] || [ -n "$load_command" ]
+    then
+        logerror "❌ a --shape sequence is a series of drains of the load script of a source connector: not with --connector-tag, --mode steady, a sink connector or --load-command"
+        exit 1
+    fi
+    mkdir -p "$output_dir"
+    sequence_id="${connector}-sequence-$(date +%Y%m%d-%H%M%S)"
+    sequence_results="$output_dir/$sequence_id.results"
+    : > "$sequence_results"
+    child_args=(--connector "$connector" --mode drain --nb-records "$nb_records" --record-size "$record_size"
+        --interval "${args[--interval]}" --max-wait "${args[--max-wait]}" --output-dir "$output_dir" --sessions "$sessions")
+    for topic in "${topics[@]}"
+    do
+        child_args+=(--topic "$topic")
+    done
+    [ -n "$no_history" ] && child_args+=(--no-history)
+    [ -n "$no_flight_recorder" ] && child_args+=(--no-flight-recorder)
+    [ -n "$verbose" ] && child_args+=(--verbose)
+    log "🔁 sequence of ${#shapes[@]} drains of $nb_records records on $connector: ${shape//,/ → }"
+    sequence_failed=0
+    phase=0
+    for phase_shape in "${shapes[@]}"
+    do
+        phase=$((phase + 1))
+        log "🏁 phase $phase/${#shapes[@]}: --shape $phase_shape"
+        if ! BENCHMARK_MATRIX_CHILD=1 BENCHMARK_NO_OPEN=1 BENCHMARK_MATRIX_RESULTS="$sequence_results" playground connector benchmark "${child_args[@]}" --shape "$phase_shape"
+        then
+            logerror "❌ phase $phase (--shape $phase_shape) failed"
+            sequence_failed=1
+            break
+        fi
+    done
+    if [ ! -s "$sequence_results" ]
+    then
+        logerror "❌ no phase could be benchmarked"
+        exit 1
+    fi
+    log "🏁 sequence of $connector_class ($connector): ${shape//,/ → }"
+    xargs cat < "$sequence_results" | jq -s -r '
+        def r1: if . == null then "-" else (. * 10 | round) / 10 | tostring end;
+        (["phase", "shape", "records", "seconds", "records/s"] | @tsv),
+        (to_entries[] | [(.key + 1), .value.shape, .value.records, .value.seconds,
+            ((if .value.lower_bound == true then "≥ " else "" end) + (.value.records_per_second | r1))] | @tsv)' \
+        | column -t -s $'\t' | sed 's/^/   /'
+    html_file="$output_dir/$sequence_id.html"
+    if python3 -I "$root_folder/tools/benchmark-report/benchmark_report.py" --runs $(cat "$sequence_results") --group-by shape --output "$html_file" > /dev/null
+    then
+        log "📊 report: $html_file"
+        if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ]
+        then
+            if command -v open > /dev/null 2>&1
+            then
+                open "$html_file"
+            elif command -v xdg-open > /dev/null 2>&1
+            then
+                xdg-open "$html_file" > /dev/null 2>&1 || true
+            fi
+        fi
+    else
+        logwarn "⚠️ the html report could not be generated"
+    fi
+    logwarn "⚠️ results are relative to this docker host: compare runs on the same machine only"
+    [ $sequence_failed -eq 1 ] && exit 1
+    exit 0
+fi
+
 # --connector-tag: benchmark each version (child runs of this command), compare them, restore the original version
 if [ ${#connector_tags[@]} -gt 0 ] && [ -z "$BENCHMARK_MATRIX_CHILD" ]
 then
