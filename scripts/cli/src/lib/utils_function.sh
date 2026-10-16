@@ -3035,17 +3035,40 @@ function benchmark_stream_batches () {
   done
 }
 
-# playground run --enable-sql-datagen: runs the benchmark-load.bash next to <test file> in stream mode, one row per
+# load script of playground connector benchmark and --enable-sql-datagen for <test file>: BENCHMARK_LOAD_SCRIPT when it
+# is set (a file name in the folder of the example, or an absolute path: several loads in one folder, e.g. one per
+# reproduction model, named after its ticket), the benchmark-load.bash of the folder otherwise. Prints nothing when there
+# is none, fails when BENCHMARK_LOAD_SCRIPT names a file that does not exist
+function benchmark_load_script () {
+  local test_file="$1" dir file
+  dir=$(dirname "$test_file")
+  if [ -n "$BENCHMARK_LOAD_SCRIPT" ]
+  then
+    file="$BENCHMARK_LOAD_SCRIPT"
+    [[ "$file" != /* ]] && file="$dir/$file"
+    if [ ! -f "$file" ]
+    then
+      logerror "❌ BENCHMARK_LOAD_SCRIPT=$BENCHMARK_LOAD_SCRIPT: $file does not exist" >&2
+      return 1
+    fi
+    echo "$file"
+  elif [ -f "$dir/benchmark-load.bash" ]
+  then
+    echo "$dir/benchmark-load.bash"
+  fi
+}
+
+# playground run --enable-sql-datagen: runs the load of <test file> (benchmark_load_script) in stream mode, one row per
 # transaction, in <sessions> parallel sessions, for <minutes> minutes, then stops them at the end of their batch. Same
 # loads as playground connector benchmark (CUSTOMERS table of the example, or the load of a reproduction model).
 #   sql_datagen_inject <test file> <minutes> <sessions>
 function sql_datagen_inject () {
   local test_file="$1" minutes="$2" sessions="$3"
   local load_script work session pids="" end rows elapsed
-  load_script="$(dirname "$test_file")/benchmark-load.bash"
-  if [ ! -f "$load_script" ]
+  load_script=$(benchmark_load_script "$test_file") || return 1
+  if [ -z "$load_script" ]
   then
-    logerror "❌ --enable-sql-datagen: no benchmark-load.bash next to $test_file"
+    logerror "❌ --enable-sql-datagen: no benchmark-load.bash next to $test_file (or BENCHMARK_LOAD_SCRIPT)"
     logerror "   for a reproduction model, link the one of its example: ln -s ../../connect/<example>/benchmark-load.bash $(dirname "$test_file")/"
     return 1
   fi

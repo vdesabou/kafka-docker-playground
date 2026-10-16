@@ -19,6 +19,7 @@ playground run -f postgres.sh
 | `postgres.sh` | No SSL, PostgreSQL 15 |
 | `postgres-ssl.sh` | SSL encryption with server certificate verification (`sslmode=verify-full`), custom PostgreSQL 10 image |
 | `postgres-mtls.sh` | SSL encryption + mutual TLS: the client authenticates with a certificate instead of a password |
+| `postgres-orders.sh` | No SSL, a table of your own: an `orders` table with its own benchmark load, [`benchmark-load-orders.bash`](benchmark-load-orders.bash) (see below) |
 
 With `--enable-sql-datagen`, `playground run` injects rows in the `CUSTOMERS` table for 10 minutes once the example succeeded (see [Benchmark](#benchmark)):
 
@@ -37,6 +38,8 @@ SQL_DATAGEN_DURATION=2 playground run -f postgres.sh --enable-sql-datagen
 4. Creates the source connector (`postgres-source`, `postgres-source-ssl` or `postgres-source-mtls`) in `timestamp+incrementing` mode on `update_ts` / `id`, with `topic.prefix=postgres-`.
 5. Verifies that records land in topic `postgres-customers` with `playground topic consume`.
 
+`postgres-orders.sh` creates an `orders` table instead (3 rows), with the connector `postgres-orders-source` in `incrementing` mode on `id`, and verifies topic `postgres-orders`.
+
 ## Benchmark
 
 [`benchmark-load.bash`](benchmark-load.bash) loads rows in the `CUSTOMERS` table (created if it does not exist) for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark). Once the example is running:
@@ -54,6 +57,15 @@ playground connector benchmark --mode steady --duration 2m --nb-records 10000
 ```
 
 The connector is paused while the rows are loaded, then resumed, and the benchmark measures the time it takes to produce the records. Results are compared with the previous benchmark of the same shape.
+
+`postgres-orders.sh` reads another table: its load is [`benchmark-load-orders.bash`](benchmark-load-orders.bash), selected with `BENCHMARK_LOAD_SCRIPT` (it inserts rows only, the connector is in `incrementing` mode):
+
+```bash
+playground run -f postgres-orders.sh
+BENCHMARK_LOAD_SCRIPT=benchmark-load-orders.bash playground connector benchmark --nb-records 1000000
+```
+
+This is how a reproduction model loads a table of its own: a `benchmark-load-<ticket>.bash` next to its script, see "A table of your own" in the [documentation](https://kafka-docker-playground.io/#/reusables?id=a-table-of-your-own-reproduction-models).
 
 `playground run -f postgres.sh --enable-sql-datagen` uses the same load once the example succeeded: one row per transaction (`--shape small-txn`) from 5 parallel sessions for 10 minutes (`SQL_DATAGEN_SESSIONS`, `SQL_DATAGEN_DURATION` in minutes), logging the rows inserted every 30 seconds.
 

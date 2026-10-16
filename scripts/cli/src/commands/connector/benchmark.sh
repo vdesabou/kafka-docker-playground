@@ -257,10 +257,7 @@ load_script=""
 if [ -n "$test_file" ] && [ -f "$test_file" ]
 then
     example_dir=$(dirname "$test_file")
-    if [ -f "$example_dir/benchmark-load.bash" ]
-    then
-        load_script="$example_dir/benchmark-load.bash"
-    fi
+    load_script=$(benchmark_load_script "$test_file") || exit 1
 fi
 
 load_mode="preload"
@@ -274,6 +271,10 @@ then
 elif [ -n "$load_script" ]
 then
     load_cmd="bash \"$load_script\" --records $nb_records --mode $load_mode --shape $shape --record-size $record_size"
+    if [ -n "$BENCHMARK_LOAD_SCRIPT" ]
+    then
+        log "📥 load: $(basename "$load_script") (BENCHMARK_LOAD_SCRIPT)"
+    fi
 else
     load_cmd=""
 fi
@@ -820,6 +821,7 @@ result=$(jq -n \
     --arg dlq_records "$dlq_delta" --arg skipped_records "$skipped_delta" --arg task_shares "$task_shares" \
     --argjson setup "$setup_json" --argjson flight_recorder "$flight_recorder_json" --argjson grafana "$grafana_json" \
     --argjson measure_from_ms "$measure_from_ms" --argjson measure_to_ms "$measure_to_ms" \
+    --arg load_script "$([ -n "$load_script" ] && [[ "$load_cmd" == *"$load_script"* ]] && basename "$load_script")" \
     '{date: $date, test_file: $test_file, connector: $connector, connector_class: $connector_class, plugin_version: $plugin_version,
       cp_tag: $cp_tag, type: $type, mode: $mode, shape: $shape, sessions: $sessions, tasks: $tasks, records: $records, seconds: $seconds,
       records_per_second: $records_per_second, lower_bound: $lower_bound, rate_p50: $rate_p50, rate_p95: $rate_p95, rate_min: $rate_min,
@@ -828,7 +830,7 @@ result=$(jq -n \
       gc_percent: $gc_percent, cpu_percent_of_available_avg: $cpu_available_avg, pause_ratio: $pause_ratio,
       dlq_records: $dlq_records, skipped_records: $skipped_records, task_shares: $task_shares,
       samples_csv: $samples_csv, setup: $setup, flight_recorder: $flight_recorder, grafana: $grafana,
-      measure_from_ms: $measure_from_ms, measure_to_ms: $measure_to_ms}')
+      measure_from_ms: $measure_from_ms, measure_to_ms: $measure_to_ms, load_script: $load_script}')
 echo "$result" > "$json_file"
 if [ -n "$BENCHMARK_MATRIX_RESULTS" ]
 then
@@ -942,6 +944,13 @@ then
     then
         add_warning "the previous run was on a different setup ($setup_differences): the comparison is not meaningful"
     fi
+fi
+# a load script of another name loads something else (BENCHMARK_LOAD_SCRIPT)
+previous_load_script=$(echo "$previous" | jq -r '.load_script // empty' 2> /dev/null)
+current_load_script=$(echo "$result" | jq -r '.load_script // empty')
+if [ -n "$previous_load_script" ] && [ -n "$current_load_script" ] && [ "$previous_load_script" != "$current_load_script" ]
+then
+    add_warning "the previous run used the load $previous_load_script and this one $current_load_script: the load is not the same"
 fi
 if [ -n "$previous" ] && [ "$(echo "$previous" | jq -r '.sessions // 1')" != "$sessions" ]
 then
