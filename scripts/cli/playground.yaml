@@ -5036,8 +5036,15 @@ subcommands:
       --connector-tag, the versions are compared the same way. The\nrecording costs
       a few % of throughput: --no-flight-recorder disables\nit, and the summary warns
       when the previous run was not recorded the\nsame way. The .jfr files are kept
-      in --output-dir (JDK Mission\nControl, or playground analyze flight-recorder).\n\n⚠️
-      Not available for fully managed connectors and the cfk environment yet."
+      in --output-dir (JDK Mission\nControl, or playground analyze flight-recorder).\n\n\U0001F4CA
+      When Grafana runs (example started with --enable-jmx-grafana,\nor --enable-sql-datagen),
+      the measure is annotated on the Kafka\nConnect, connector (Debezium, Oracle
+      CDC, XStream, MongoDB) and\nKafka cluster dashboards, and the summary and the
+      report link to\nthem at the time of the run (each version is annotated with\n--connector-tag).
+      Grafana is not started by the benchmark: its\nJMX exporter and containers use
+      CPU, and the summary warns when\nthe previous run was not measured the same
+      way.\n\n⚠️ Not available for fully managed connectors and the cfk environment
+      yet."
     usage: playground connector benchmark [OPTIONS]
     options:
     - names:

@@ -3754,6 +3754,67 @@ function benchmark_jmx_init() {
   done <<< "$workers"
 }
 
+# grafana of the environment (--enable-jmx-grafana), for playground connector benchmark: an annotation of the measure on
+# the dashboards of the connector, and links to them at the time of the run. Credentials of environment/plaintext.
+BENCHMARK_GRAFANA_URL="http://localhost:3000"
+BENCHMARK_GRAFANA_AUTH="admin:password"
+
+# succeeds when the grafana container of the environment is running and answers
+function benchmark_grafana_available () {
+  [ "$(docker inspect -f '{{.State.Running}}' grafana 2> /dev/null)" == "true" ] || return 1
+  curl -s -m 5 -u "$BENCHMARK_GRAFANA_AUTH" "$BENCHMARK_GRAFANA_URL/api/health" | jq -e '.database == "ok"' > /dev/null 2>&1
+}
+
+# dashboards of a connector class, "<uid>|<title>" lines read from the provisioned dashboards: kafka connect, the one of
+# the connector when there is one, and the kafka cluster
+function benchmark_grafana_dashboards () {
+  local connector_class="$1" dir="$root_folder/environment/plaintext/grafana/provisioning/dashboards" files="kafka-connect-cluster.json" file
+  case "$connector_class" in
+    io.debezium.*) files="$files debezium-connectors.json" ;;
+    *.OracleCdcSourceConnector) files="$files confluent-oracle-cdc.json" ;;
+    *.OracleXStreamSourceConnector) files="$files xstream-connector.json" ;;
+    com.mongodb.*) files="$files mongo.json" ;;
+  esac
+  for file in $files kafka-cluster.json
+  do
+    [ -f "$dir/$file" ] && jq -r '"\(.uid)|\(.title)"' "$dir/$file"
+  done
+}
+
+# region annotation from <from ms> to <to ms> with <text> and <tags> (comma separated) on each dashboard of
+# <dashboards> ("<uid>|<title>" lines), prints the number of dashboards annotated
+function benchmark_grafana_annotate () {
+  local from="$1" to="$2" text="$3" tags="$4" dashboards="$5" uid title id annotated=0
+  while IFS='|' read -r uid title
+  do
+    [ -z "$uid" ] && continue
+    # the built-in annotation query of a dashboard only shows the annotations of that dashboard
+    id=$(curl -s -m 5 -u "$BENCHMARK_GRAFANA_AUTH" "$BENCHMARK_GRAFANA_URL/api/dashboards/uid/$uid" | jq -r '.dashboard.id // empty' 2> /dev/null)
+    [ -z "$id" ] && continue
+    if jq -n --argjson id "$id" --argjson from "$from" --argjson to "$to" --arg text "$text" --arg tags "$tags" \
+        '{dashboardId: $id, time: $from, timeEnd: $to, text: $text, tags: ($tags | split(","))}' \
+      | curl -s -m 5 -u "$BENCHMARK_GRAFANA_AUTH" -H 'Content-Type: application/json' -X POST "$BENCHMARK_GRAFANA_URL/api/annotations" -d @- \
+      | jq -e '.id' > /dev/null 2>&1
+    then
+      annotated=$((annotated + 1))
+    fi
+  done <<< "$dashboards"
+  echo "$annotated"
+}
+
+# scrape interval of the prometheus of the environment, in seconds (empty when it cannot be read)
+function benchmark_grafana_scrape_interval () {
+  local interval
+  interval=$(curl -s -m 5 "http://localhost:9090/api/v1/status/config" | jq -r '.data.yaml // empty' 2> /dev/null | awk '/^global:/ { g = 1; next } g && /^[^ ]/ { g = 0 } g && $1 == "scrape_interval:" { print $2; exit }')
+  [ -n "$interval" ] && duration_to_seconds "$interval"
+}
+
+# link to a dashboard from 30 s before <from ms> to 30 s after <to ms>
+function benchmark_grafana_url () {
+  local uid="$1" from="$2" to="$3"
+  echo "$BENCHMARK_GRAFANA_URL/d/$uid?orgId=1&from=$((from - 30000))&to=$((to + 30000))"
+}
+
 # flight recorder of JVMs over JMX (FlightRecorderMXBean, jdk.management.jfr): the cp images ship a JRE without jcmd,
 # and this needs neither jcmd nor a restart. Uses jmxterm, copied by benchmark_jmx_init.
 JFR_BEAN="jdk.management.jfr:type=FlightRecorder"
