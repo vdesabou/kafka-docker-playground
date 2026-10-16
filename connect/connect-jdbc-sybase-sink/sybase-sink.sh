@@ -16,12 +16,16 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-
 
 log "Waiting for Sybase to be ready..."
 for i in {1..60}; do
-  if playground container exec --container dksybase --command "/sybase/isql -S -Usa -Ppassword -b <<< \"select 1\"" > /dev/null 2>&1; then
+  # Capture both stdout and stderr into a variable
+  if sybase_output=$(playground container exec --container dksybase --command "/sybase/isql -S -Usa -Ppassword -b <<< \"select 1\"" 2>&1); then
     log "✅ Sybase is ready!"
     break
   fi
+
   if [ $i -eq 60 ]; then
     logerror "❌ Sybase did not become ready after 60 seconds"
+    logerror "Last error output:"
+    logerror "$sybase_output"
     exit 1
   fi
   sleep 1
