@@ -1900,7 +1900,8 @@ subcommands:
     \ heap-dump               Eclipse MAT leak suspects, retained sizes\n  logs                    ERROR/FATAL
     digest of logs, folders, zips\n  oracle-xstream-report   Oracle XStream diagnostics
     (orclcdc_diag)\n  cfk-bundle              CFK support bundle: pods, events, CRs,
-    logs\n\nTo collect them: playground debug thread-dump, heap-dump, flight-recorder,\nplayground
+    logs\n  flight-recorder         JFR: where the time of the connector tasks goes\n\nTo
+    collect them: playground debug thread-dump, heap-dump, flight-recorder,\nplayground
     connector oracle-cdc-xstream generate-report,\nplayground debug cfk generate-bundle."
   usage: playground analyze COMMAND
   options: []
@@ -2292,6 +2293,93 @@ subcommands:
       argument: DIR
       description: "\U0001F4C1 Directory for the HTML report (default: ./cfk-reports)\n\nDefault
         value: ./cfk-reports"
+  - name: flight-recorder
+    description: "\U0001F6E9️ Analyze a Java Flight Recorder recording: where the
+      time of the connector tasks goes\n\n\U0001F4CA For the Kafka Connect task threads
+      (task-thread-*, or --threads / --connector): the time of each thread by state
+      (running, blocked on network I/O by remote host, Kafka client, locks, waiting,
+      file I/O), the CPU by layer (connector, converters, SMTs, Kafka client, connect
+      framework, libraries, logging, JDK), the hot methods, the allocation by class,
+      locks and waits by site, the busiest threads of the JVM, GC pauses and exceptions,
+      and findings with next steps. Without task thread in the recording, every thread
+      is analyzed.\n\n\U0001F433 With --container (default: connect), it records the
+      JVM for --duration over JMX (FlightRecorderMXBean: no jcmd, which the cp images
+      do not have, and no restart) with the settings of tools/jfr-analyzer/playground.jfc,
+      then analyzes the recording. playground connector benchmark records the measure
+      the same way.\n\n\U0001F516 Reads .jfr files of JDK 11+ JVMs with the JDK flight
+      recorder API, run in a eclipse-temurin:25-jdk container (pulled the first time).
+      The settings of the recording matter: playground.jfc records socket, file, lock
+      and park events from 1 ms and the CPU of each thread every second; a recording
+      made with the default or profile settings of the JDK gives fewer details (throttled
+      socket events, 10 ms thresholds).\n\n\U0001F310 Also writes a self-contained
+      HTML report (inline SVG charts, works offline) in --output-dir, opened in the
+      browser in an interactive terminal\n\n\U0001F9EA With --sample, it analyzes
+      the digests shipped in tools/jfr-analyzer/samples (no Docker needed): a quick
+      way to see what it reports.\n\n\U0001F516 Exit code is 0 when the analysis completed,
+      2 when the file is not a flight recording or has no event"
+    usage: playground analyze flight-recorder [OPTIONS]
+    options:
+    - names:
+      - "--file"
+      - "-f"
+      argument: FILE
+      description: "\U0001F5D2️  .jfr file to analyze (repeat --file for the recordings
+        of several connect workers over the same period)\n\n❕ Provide only one of
+        --file, --container and --sample\n\n\U0001F393 Tip: use <tab> completion to
+        trigger fzf completion\n        use <option+enter> to use the value you typed
+        manually\n\nRepeatable: ✓ Yes"
+    - names:
+      - "--sample"
+      - "-s"
+      argument: SAMPLE
+      description: "\U0001F9EA Sample of tools/jfr-analyzer/samples\n\n  jdbc_postgres_sink
+        \  drain of 3M avro records by the JDBC sink to PostgreSQL, 1 task, CP 8.3.2
+        (JDK 25)\n\nAllowed values: jdbc_postgres_sink"
+    - names:
+      - "--container"
+      - "-c"
+      argument: CONTAINER
+      description: "\U0001F433 Container to record over JMX for --duration (default:
+        connect). Its KAFKA_JMX_PORT must be set, as in the playground environments"
+    - names:
+      - "--duration"
+      argument: DURATION
+      description: |-
+        ⏱️ Duration of the recording with --container, in seconds or with a s/m/h suffix (default is 60s)
+
+        Default value: 60s
+    - names:
+      - "--connector"
+      argument: CONNECTOR
+      description: "\U0001F517 Analyze the task threads of this connector only (task-thread-<connector>-<n>),
+        and classify its frames as connector code (its class is read from the connect
+        REST API when connect is running)"
+    - names:
+      - "--connector-class"
+      argument: CONNECTOR_CLASS
+      description: "\U0001F50C Class of the connector, to classify its frames as connector
+        code (default: read from --connector, or guessed from the package)"
+    - names:
+      - "--threads"
+      argument: REGEX
+      description: "\U0001F9F5 Regular expression of the thread names to analyze (default:
+        ^task-thread-, or the task threads of --connector)"
+    - names:
+      - "--output-dir"
+      - "-o"
+      argument: OUTPUT_DIR
+      description: "\U0001F4C2 Output directory for the recording taken from a container,
+        the digest and the HTML report (default: ./jfr-analysis-output)\n\nDefault
+        value: ./jfr-analysis-output"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F5C2️  Output JSON (no text report, no HTML report)"
+    - names:
+      - "--top"
+      argument: TOP
+      description: "\U0001F4CA Number of rows per section (default: 10)\n\nDefault
+        value: 10"
 - name: debug
   description: "\U0001F41E Debug commands\n\nThe heavy tooling, made usable: the JDK
     utilities, tcpdump, iptables and\nthe analysis tools are run inside the right
@@ -2308,8 +2396,8 @@ subcommands:
     your IDE debugger to a container\n  jscissors           trace method calls, arguments
     and return values\n\n\U0001F4E6 Hand it over\n  generate-diagnostics   a support
     bundle for connect or broker\n\n\U0001F50E To analyze what you collected (thread
-    dumps, GC logs, heap dumps,\nlogs, Oracle XStream reports, CFK bundles): playground
-    analyze"
+    dumps, GC logs, heap dumps,\nlogs, Oracle XStream reports, CFK bundles, flight
+    recordings): playground analyze"
   usage: playground debug COMMAND
   options: []
   subcommands:
@@ -4893,8 +4981,18 @@ subcommands:
       the setup it ran on (host cpu and memory, container\nengine resources, connect
       image and whether it is emulated, jvm and\nheap, number of workers and brokers,
       environment, connector config with\nsecrets masked): the report shows it, and
-      the summary warns when the\nprevious run was on a different setup.\n\n⚠️ Not
-      available for fully managed connectors and the cfk environment yet."
+      the summary warns when the\nprevious run was on a different setup.\n\n\U0001F6E9️
+      The connect workers are recorded with Java Flight Recorder during\nthe measure
+      (over JMX: the cp images have no jcmd, nothing is\nrestarted), and the report
+      and the summary say where the time of the\ntask threads went: running, blocked
+      on the system behind the\nconnector, in the Kafka client, locks, waits; the
+      CPU by layer\n(connector, converters, SMTs, Kafka client, libraries, logging),
+      hot\nmethods, allocation, GC, exceptions, with findings and next steps.\nWith
+      --connector-tag, the versions are compared the same way. The\nrecording costs
+      a few % of throughput: --no-flight-recorder disables\nit, and the summary warns
+      when the previous run was not recorded the\nsame way. The .jfr files are kept
+      in --output-dir (JDK Mission\nControl, or playground analyze flight-recorder).\n\n⚠️
+      Not available for fully managed connectors and the cfk environment yet."
     usage: playground connector benchmark [OPTIONS]
     options:
     - names:
@@ -5025,6 +5123,12 @@ subcommands:
       - "--no-history"
       argument: ''
       description: "\U0001F648 Do not append the result to the benchmark-history file"
+    - names:
+      - "--no-flight-recorder"
+      argument: ''
+      description: "\U0001F6E9️ Do not record the connect workers with Java Flight
+        Recorder during the measure (no \"where the time goes\" section in the report)\n\nThe
+        recording costs a few % of throughput: compare runs recorded the same way."
     - names:
       - "--json"
       argument: ''

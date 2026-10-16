@@ -1818,7 +1818,7 @@
     },
     {
       "name": "analyze",
-      "description": "🔎 Analyze commands\n\nTurn what you collected into findings: each command reads a file (a\ndump, a log, a bundle, a report, yours or one a customer sent) or takes\nit from a running container, and prints a digest with what is wrong and\nwhat to do, plus an HTML report to share (opened in your browser). They\nall work offline, and --sample runs them on the samples shipped with the\nplayground, to see what they report.\n\n  thread-dump             deadlocks, lock contention, stuck threads\n  gc-logs                 GC pauses, failures, live set, leak trend\n  heap-dump               Eclipse MAT leak suspects, retained sizes\n  logs                    ERROR/FATAL digest of logs, folders, zips\n  oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n  cfk-bundle              CFK support bundle: pods, events, CRs, logs\n\nTo collect them: playground debug thread-dump, heap-dump, flight-recorder,\nplayground connector oracle-cdc-xstream generate-report,\nplayground debug cfk generate-bundle.",
+      "description": "🔎 Analyze commands\n\nTurn what you collected into findings: each command reads a file (a\ndump, a log, a bundle, a report, yours or one a customer sent) or takes\nit from a running container, and prints a digest with what is wrong and\nwhat to do, plus an HTML report to share (opened in your browser). They\nall work offline, and --sample runs them on the samples shipped with the\nplayground, to see what they report.\n\n  thread-dump             deadlocks, lock contention, stuck threads\n  gc-logs                 GC pauses, failures, live set, leak trend\n  heap-dump               Eclipse MAT leak suspects, retained sizes\n  logs                    ERROR/FATAL digest of logs, folders, zips\n  oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n  cfk-bundle              CFK support bundle: pods, events, CRs, logs\n  flight-recorder         JFR: where the time of the connector tasks goes\n\nTo collect them: playground debug thread-dump, heap-dump, flight-recorder,\nplayground connector oracle-cdc-xstream generate-report,\nplayground debug cfk generate-bundle.",
       "usage": "playground analyze COMMAND",
       "options": [],
       "aliases": [
@@ -2171,12 +2171,93 @@
               "description": "📁 Directory for the HTML report (default: ./cfk-reports)\n\nDefault value: ./cfk-reports"
             }
           ]
+        },
+        {
+          "name": "flight-recorder",
+          "description": "🛩️ Analyze a Java Flight Recorder recording: where the time of the connector tasks goes\n\n📊 For the Kafka Connect task threads (task-thread-*, or --threads / --connector): the time of each thread by state (running, blocked on network I/O by remote host, Kafka client, locks, waiting, file I/O), the CPU by layer (connector, converters, SMTs, Kafka client, connect framework, libraries, logging, JDK), the hot methods, the allocation by class, locks and waits by site, the busiest threads of the JVM, GC pauses and exceptions, and findings with next steps. Without task thread in the recording, every thread is analyzed.\n\n🐳 With --container (default: connect), it records the JVM for --duration over JMX (FlightRecorderMXBean: no jcmd, which the cp images do not have, and no restart) with the settings of tools/jfr-analyzer/playground.jfc, then analyzes the recording. playground connector benchmark records the measure the same way.\n\n🔖 Reads .jfr files of JDK 11+ JVMs with the JDK flight recorder API, run in a eclipse-temurin:25-jdk container (pulled the first time). The settings of the recording matter: playground.jfc records socket, file, lock and park events from 1 ms and the CPU of each thread every second; a recording made with the default or profile settings of the JDK gives fewer details (throttled socket events, 10 ms thresholds).\n\n🌐 Also writes a self-contained HTML report (inline SVG charts, works offline) in --output-dir, opened in the browser in an interactive terminal\n\n🧪 With --sample, it analyzes the digests shipped in tools/jfr-analyzer/samples (no Docker needed): a quick way to see what it reports.\n\n🔖 Exit code is 0 when the analysis completed, 2 when the file is not a flight recording or has no event",
+          "usage": "playground analyze flight-recorder [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--file",
+                "-f"
+              ],
+              "argument": "FILE",
+              "description": "🗒️  .jfr file to analyze (repeat --file for the recordings of several connect workers over the same period)\n\n❕ Provide only one of --file, --container and --sample\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n        use <option+enter> to use the value you typed manually\n\nRepeatable: ✓ Yes"
+            },
+            {
+              "names": [
+                "--sample",
+                "-s"
+              ],
+              "argument": "SAMPLE",
+              "description": "🧪 Sample of tools/jfr-analyzer/samples\n\n  jdbc_postgres_sink   drain of 3M avro records by the JDBC sink to PostgreSQL, 1 task, CP 8.3.2 (JDK 25)\n\nAllowed values: jdbc_postgres_sink"
+            },
+            {
+              "names": [
+                "--container",
+                "-c"
+              ],
+              "argument": "CONTAINER",
+              "description": "🐳 Container to record over JMX for --duration (default: connect). Its KAFKA_JMX_PORT must be set, as in the playground environments"
+            },
+            {
+              "names": [
+                "--duration"
+              ],
+              "argument": "DURATION",
+              "description": "⏱️ Duration of the recording with --container, in seconds or with a s/m/h suffix (default is 60s)\n\nDefault value: 60s"
+            },
+            {
+              "names": [
+                "--connector"
+              ],
+              "argument": "CONNECTOR",
+              "description": "🔗 Analyze the task threads of this connector only (task-thread-<connector>-<n>), and classify its frames as connector code (its class is read from the connect REST API when connect is running)"
+            },
+            {
+              "names": [
+                "--connector-class"
+              ],
+              "argument": "CONNECTOR_CLASS",
+              "description": "🔌 Class of the connector, to classify its frames as connector code (default: read from --connector, or guessed from the package)"
+            },
+            {
+              "names": [
+                "--threads"
+              ],
+              "argument": "REGEX",
+              "description": "🧵 Regular expression of the thread names to analyze (default: ^task-thread-, or the task threads of --connector)"
+            },
+            {
+              "names": [
+                "--output-dir",
+                "-o"
+              ],
+              "argument": "OUTPUT_DIR",
+              "description": "📂 Output directory for the recording taken from a container, the digest and the HTML report (default: ./jfr-analysis-output)\n\nDefault value: ./jfr-analysis-output"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🗂️  Output JSON (no text report, no HTML report)"
+            },
+            {
+              "names": [
+                "--top"
+              ],
+              "argument": "TOP",
+              "description": "📊 Number of rows per section (default: 10)\n\nDefault value: 10"
+            }
+          ]
         }
       ]
     },
     {
       "name": "debug",
-      "description": "🐞 Debug commands\n\nThe heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\nthe analysis tools are run inside the right container, installed on the\nfly when missing, and their output is brought back to your machine.\n\n🐌 It hangs, or it is slow\n  thread-dump         what every thread is doing right now\n  flight-recorder     record the JVM over a period, open it in JMC\n\n💾 It eats memory\n  heap-dump           take a .hprof, optionally as a histogram\n\n🌐 It is a network or TLS problem\n  tcp-dump            capture traffic, open it in Wireshark\n  testssl             probe a TLS endpoint, locally or in the cloud\n  block-traffic       cut a route with iptables, to simulate an outage\n  java-debug          turn on the JVM SSL, Kerberos or class loading traces\n\n🔬 It is in the code\n  log-level set       raise the level of any package, without a restart\n  enable-remote-debugging   attach your IDE debugger to a container\n  jscissors           trace method calls, arguments and return values\n\n📦 Hand it over\n  generate-diagnostics   a support bundle for connect or broker\n\n🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,\nlogs, Oracle XStream reports, CFK bundles): playground analyze",
+      "description": "🐞 Debug commands\n\nThe heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\nthe analysis tools are run inside the right container, installed on the\nfly when missing, and their output is brought back to your machine.\n\n🐌 It hangs, or it is slow\n  thread-dump         what every thread is doing right now\n  flight-recorder     record the JVM over a period, open it in JMC\n\n💾 It eats memory\n  heap-dump           take a .hprof, optionally as a histogram\n\n🌐 It is a network or TLS problem\n  tcp-dump            capture traffic, open it in Wireshark\n  testssl             probe a TLS endpoint, locally or in the cloud\n  block-traffic       cut a route with iptables, to simulate an outage\n  java-debug          turn on the JVM SSL, Kerberos or class loading traces\n\n🔬 It is in the code\n  log-level set       raise the level of any package, without a restart\n  enable-remote-debugging   attach your IDE debugger to a container\n  jscissors           trace method calls, arguments and return values\n\n📦 Hand it over\n  generate-diagnostics   a support bundle for connect or broker\n\n🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,\nlogs, Oracle XStream reports, CFK bundles, flight recordings): playground analyze",
       "usage": "playground debug COMMAND",
       "options": [],
       "subcommands": [
@@ -4991,7 +5072,7 @@
         },
         {
           "name": "benchmark",
-          "description": "🏎️ Benchmark the throughput of a connector\n\nMeasures how many records per second a running self managed connector\nprocesses, so that two runs can be compared: another --connector-tag,\nanother batch size, another number of tasks. Everything runs on one\ndocker host, so the numbers are relative: compare runs on the same\nmachine only.\n\n--mode drain (default) pauses the connector, loads a backlog of\n--nb-records, resumes the connector and measures the time it takes to\nprocess the backlog. This is the most reproducible number, since it does\nnot depend on how fast the load is generated.\n\n--mode steady measures the throughput during --duration (after\n--warmup), while --stream-load-command runs in the background. When the\nconnector simply keeps up with the load (consumer lag of a sink, records\ngenerated by the load of a source), the summary says so: the result is\nthen the speed of the load, not of the connector.\n\nThe load comes from the example:\n\n  - sink connectors: the 'playground topic produce' of the example\n    script that feeds the connector is replayed with --nb-messages\n    <n> (same schema, key and headers), so every sink example that\n    produces its data works without anything else\n  - source connectors: benchmark-load.bash next to the example\n    script, called with --records <n> --mode preload|stream --shape\n    bulk|small-txn|update (rows in the CUSTOMERS table for the\n    postgres, mysql, oracle and sql server examples, documents for\n    mongodb, messages for ibm mq and mqtt, see the README of the\n    example). It is called with --check first, so that an unsupported\n    combination fails before the connector is paused\n  - or --load-command / --stream-load-command, which take precedence\n\nThroughput is read from the connect JMX metrics of the tasks\n(sink-record-read-total: records read from kafka, including the ones\nfiltered or sent to the dlq; source-record-write-total), sampled every\n--interval. Results are written to --output-dir (samples csv, result\njson and an html report with the charts, opened in the browser at the\nend in an interactive terminal) and appended to the benchmark-history\nfile, and the summary compares them with the previous benchmark of the\nsame connector in the same example (or with --compare <result json>).\n\nEach result records the setup it ran on (host cpu and memory, container\nengine resources, connect image and whether it is emulated, jvm and\nheap, number of workers and brokers, environment, connector config with\nsecrets masked): the report shows it, and the summary warns when the\nprevious run was on a different setup.\n\n⚠️ Not available for fully managed connectors and the cfk environment yet.",
+          "description": "🏎️ Benchmark the throughput of a connector\n\nMeasures how many records per second a running self managed connector\nprocesses, so that two runs can be compared: another --connector-tag,\nanother batch size, another number of tasks. Everything runs on one\ndocker host, so the numbers are relative: compare runs on the same\nmachine only.\n\n--mode drain (default) pauses the connector, loads a backlog of\n--nb-records, resumes the connector and measures the time it takes to\nprocess the backlog. This is the most reproducible number, since it does\nnot depend on how fast the load is generated.\n\n--mode steady measures the throughput during --duration (after\n--warmup), while --stream-load-command runs in the background. When the\nconnector simply keeps up with the load (consumer lag of a sink, records\ngenerated by the load of a source), the summary says so: the result is\nthen the speed of the load, not of the connector.\n\nThe load comes from the example:\n\n  - sink connectors: the 'playground topic produce' of the example\n    script that feeds the connector is replayed with --nb-messages\n    <n> (same schema, key and headers), so every sink example that\n    produces its data works without anything else\n  - source connectors: benchmark-load.bash next to the example\n    script, called with --records <n> --mode preload|stream --shape\n    bulk|small-txn|update (rows in the CUSTOMERS table for the\n    postgres, mysql, oracle and sql server examples, documents for\n    mongodb, messages for ibm mq and mqtt, see the README of the\n    example). It is called with --check first, so that an unsupported\n    combination fails before the connector is paused\n  - or --load-command / --stream-load-command, which take precedence\n\nThroughput is read from the connect JMX metrics of the tasks\n(sink-record-read-total: records read from kafka, including the ones\nfiltered or sent to the dlq; source-record-write-total), sampled every\n--interval. Results are written to --output-dir (samples csv, result\njson and an html report with the charts, opened in the browser at the\nend in an interactive terminal) and appended to the benchmark-history\nfile, and the summary compares them with the previous benchmark of the\nsame connector in the same example (or with --compare <result json>).\n\nEach result records the setup it ran on (host cpu and memory, container\nengine resources, connect image and whether it is emulated, jvm and\nheap, number of workers and brokers, environment, connector config with\nsecrets masked): the report shows it, and the summary warns when the\nprevious run was on a different setup.\n\n🛩️ The connect workers are recorded with Java Flight Recorder during\nthe measure (over JMX: the cp images have no jcmd, nothing is\nrestarted), and the report and the summary say where the time of the\ntask threads went: running, blocked on the system behind the\nconnector, in the Kafka client, locks, waits; the CPU by layer\n(connector, converters, SMTs, Kafka client, libraries, logging), hot\nmethods, allocation, GC, exceptions, with findings and next steps.\nWith --connector-tag, the versions are compared the same way. The\nrecording costs a few % of throughput: --no-flight-recorder disables\nit, and the summary warns when the previous run was not recorded the\nsame way. The .jfr files are kept in --output-dir (JDK Mission\nControl, or playground analyze flight-recorder).\n\n⚠️ Not available for fully managed connectors and the cfk environment yet.",
           "usage": "playground connector benchmark [OPTIONS]",
           "options": [
             {
@@ -5122,6 +5203,13 @@
               ],
               "argument": "",
               "description": "🙈 Do not append the result to the benchmark-history file"
+            },
+            {
+              "names": [
+                "--no-flight-recorder"
+              ],
+              "argument": "",
+              "description": "🛩️ Do not record the connect workers with Java Flight Recorder during the measure (no \"where the time goes\" section in the report)\n\nThe recording costs a few % of throughput: compare runs recorded the same way."
             },
             {
               "names": [

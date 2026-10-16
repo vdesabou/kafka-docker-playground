@@ -6,7 +6,10 @@ stat tiles, throughput / connect CPU / batch latency over time, history of the c
 the samples as a table.
 
     benchmark_report.py --result <run.json> --samples <run.csv> [--history <benchmark-history>]
-                        [--warning <text>]... --output <report.html>
+                        [--warning <text>]... [--jfr <flight recorder analysis.json>] --output <report.html>
+
+With a flight recorder analysis (tools/jfr-analyzer), a "Where the time goes" section follows the charts; in a
+--connector-tag comparison (--runs), the analyses of the runs are compared by version.
 """
 import argparse
 import csv
@@ -14,6 +17,11 @@ import html
 import json
 import os
 import sys
+
+# no __pycache__ in the repository
+sys.dont_write_bytecode = True
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "jfr-analyzer"))
+import jfr_analyzer  # noqa: E402
 
 
 def load_samples(path, phase):
@@ -144,6 +152,7 @@ details { margin-top: 16px; } summary { cursor: pointer; font-weight: 600; font-
 .full { grid-column: 1 / -1; }
 .empty { color: var(--text-muted); font-size: .875rem; padding: 24px 0; }
 footer { color: var(--text-muted); font-size: .78rem; margin-top: 24px; }
+__JFR_CSS__
 </style>
 </head>
 <body>
@@ -164,6 +173,7 @@ __WARNINGS__
   <section class="card"><h2>__BATCH_TITLE__</h2><p class="sub">average per task, ms</p><div id="chart-batch"></div></section>
   <section class="card"><h2>Comparable runs</h2><p class="sub">records per second, same example, connector, mode and shape (benchmark-history); faded bars and * : another setup</p><div id="chart-history"></div></section>
 </div>
+__JFR__
 <details open id="versions-section" hidden><summary>Connector versions</summary><div class="card"><table id="versions-table"></table></div></details>
 <details open><summary>Run details</summary><div class="card"><table id="details"></table></div></details>
 <details open><summary>Setup</summary><div class="card"><table id="setup"></table></div></details>
@@ -495,9 +505,27 @@ __WARNINGS__
     samples.map(s => [s.time, s.elapsed, s.records === null ? null : nf.format(s.records), s.rate === null ? null : nf1.format(s.rate), s.batch, s.ratio, s.cpu, s.lag === null ? null : nf.format(s.lag)]));
 })();
 </script>
+__JFR_JS__
 </body>
 </html>
 """
+
+
+def jfr_comparison(runs, versions):
+    """'where the time goes' of each version of a --connector-tag comparison, from the flight recordings of its runs"""
+    entries = []
+    for v in versions:
+        analyses = []
+        for run in runs:
+            path = (run.get("flight_recorder") or {}).get("analysis")
+            if run.get("plugin_version") == v["version"] and path and os.path.exists(path):
+                with open(path) as f:
+                    analyses.append(json.load(f))
+        if analyses:
+            entries.append({"version": v["version"], "records_per_second": v["mean"], "analyses": analyses})
+    if len(entries) < 2:
+        return ""
+    return jfr_analyzer.render_comparison(jfr_analyzer.compare(entries))
 
 
 def main():
@@ -507,6 +535,7 @@ def main():
     parser.add_argument("--runs", nargs="+", help="result json of the runs of a --connector-tag comparison")
     parser.add_argument("--history")
     parser.add_argument("--warning", action="append", default=[])
+    parser.add_argument("--jfr", help="flight recorder analysis json of tools/jfr-analyzer/jfr_analyzer.py")
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
 
@@ -558,6 +587,15 @@ def main():
     warnings = ""
     if args.warning:
         warnings = '<ul class="card warnings">' + "".join("<li>%s</li>" % html.escape(w) for w in args.warning) + "</ul>"
+    jfr_html = ""
+    if versions:
+        jfr_html = jfr_comparison(history, versions)
+    elif args.jfr and os.path.exists(args.jfr):
+        with open(args.jfr) as f:
+            analysis = json.load(f)
+        files = (result.get("flight_recorder") or {}).get("files") or []
+        jfr_html = jfr_analyzer.render_section(analysis, recording_link=files[0] if len(files) == 1 else None,
+                                               subtitle_prefix=("Recorded during the " + ("drain" if result.get("mode") == "drain" else "measure") + " · "))
     payload = json.dumps({"result": result, "samples": samples, "history": history, "versions": versions}).replace("</", "<\\/")
     if versions:
         subtitle = "connector versions " + ", ".join(v["version"] for v in versions) + " · " + subtitle
@@ -565,6 +603,9 @@ def main():
             .replace("__SUBTITLE__", html.escape(subtitle))
             .replace("__BATCH_TITLE__", "Put batch time" if result.get("type") == "sink" else "Poll batch time")
             .replace("__WARNINGS__", warnings)
+            .replace("__JFR_CSS__", jfr_analyzer.SECTION_CSS if jfr_html else "")
+            .replace("__JFR_JS__", jfr_analyzer.TOOLTIP_JS if jfr_html else "")
+            .replace("__JFR__", jfr_html)
             .replace("__DATA__", payload))
     with open(args.output, "w") as f:
         f.write(page)

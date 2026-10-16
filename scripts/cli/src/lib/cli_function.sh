@@ -3754,6 +3754,90 @@ function benchmark_jmx_init() {
   done <<< "$workers"
 }
 
+# flight recorder of JVMs over JMX (FlightRecorderMXBean, jdk.management.jfr): the cp images ship a JRE without jcmd,
+# and this needs neither jcmd nor a restart. Uses jmxterm, copied by benchmark_jmx_init.
+JFR_BEAN="jdk.management.jfr:type=FlightRecorder"
+
+# starts a recording with the settings of tools/jfr-analyzer/playground.jfc on each "<container> <jmx port>" line of
+# $1, prints "<container> <jmx port> <recording id>" lines. Returns 1 (after closing what was started) when a JVM has no
+# flight recorder MBean (JDK 8 before 8u262) or refuses the settings
+function jfr_jmx_start () {
+  local workers="$1"
+  local config container port id out started=""
+  # setConfiguration takes the content of the .jfc: one line, without the comment, spaces escaped for jmxterm
+  config=$(sed '/<!--/,/-->/d' "$root_folder/tools/jfr-analyzer/playground.jfc" | tr '\n' ' ' | sed 's/  */ /g')
+  config="${config// /\\ }"
+  while read -r container port
+  do
+    [ -z "$container" ] && continue
+    id=$(printf 'run -b %s newRecording\n' "$JFR_BEAN" | benchmark_jmxterm "$container" "$port" | tr -dc '0-9')
+    # setConfiguration and startRecording return null when they succeed, nothing when they fail
+    [ -n "$id" ] && out=$(printf 'run -b %s setConfiguration %s %s\nrun -b %s startRecording %s\n' "$JFR_BEAN" "$id" "$config" "$JFR_BEAN" "$id" | benchmark_jmxterm "$container" "$port")
+    if [ -z "$id" ] || [ "$(echo "$out" | grep -c '^null$')" -ne 2 ]
+    then
+      [ -n "$id" ] && started="$started"$'\n'"$container $port $id"
+      jfr_jmx_discard "$started"
+      return 1
+    fi
+    started="$started"$'\n'"$container $port $id"
+    echo "$container $port $id"
+  done <<< "$workers"
+}
+
+# stops the recordings of $1 ("<container> <jmx port> <recording id>" lines) and copies them to <prefix>-<container>.jfr,
+# prints the paths of the .jfr files
+function jfr_jmx_stop () {
+  local recordings="$1" prefix="$2"
+  local container port id remote local_file
+  while read -r container port id
+  do
+    [ -z "$container" ] && continue
+    remote="/tmp/playground-jfr-$id-$(date +%s).jfr"
+    local_file="$prefix-$container.jfr"
+    printf 'run -b %s stopRecording %s\nrun -b %s copyTo %s %s\nrun -b %s closeRecording %s\n' "$JFR_BEAN" "$id" "$JFR_BEAN" "$id" "$remote" "$JFR_BEAN" "$id" | benchmark_jmxterm "$container" "$port" > /dev/null
+    if playground container cp --source "$container:$remote" --destination "$local_file" > /dev/null 2>&1 && [ -s "$local_file" ]
+    then
+      echo "$local_file"
+    fi
+    playground --output-level ERROR container exec --container "$container" --command "rm -f $remote" > /dev/null 2>&1
+  done <<< "$recordings"
+}
+
+# closes (and discards) the recordings of $1, for an interrupted run
+function jfr_jmx_discard () {
+  local recordings="$1"
+  local container port id
+  while read -r container port id
+  do
+    [ -z "$container" ] && continue
+    printf 'run -b %s closeRecording %s\n' "$JFR_BEAN" "$id" | benchmark_jmxterm "$container" "$port" > /dev/null
+  done <<< "$recordings"
+}
+
+# digest of .jfr files with tools/jfr-analyzer/JfrDigest.java, in a JDK container (the source launcher needs a JDK, and
+# a recent one reads the recordings of every JDK 11+): jfr_digest <output dir> <thread regex> <file.jfr>...
+# prints the paths of the digests, <output dir>/<file name>.digest.json. Returns 1 when a file could not be read
+function jfr_digest () {
+  local output_dir="$1" threads="$2"
+  shift 2
+  local file digest ret=0
+  for file in "$@"
+  do
+    digest="$output_dir/$(basename "${file%.jfr}").digest.json"
+    # the recording goes through stdin: no volume for it, so it works from any folder and with podman
+    if docker run --rm -i -v "$root_folder/tools/jfr-analyzer:/tools:ro" "$JFR_ANALYZER_IMAGE" \
+        sh -c 'cat > /tmp/recording.jfr && exec java /tools/JfrDigest.java /tmp/recording.jfr --threads "$1"' sh "$threads" < "$file" > "$digest" 2> "$digest.log" && [ -s "$digest" ]
+    then
+      rm -f "$digest.log"
+      echo "$digest"
+    else
+      ret=1
+    fi
+  done
+  return $ret
+}
+JFR_ANALYZER_IMAGE="eclipse-temurin:25-jdk"
+
 # one sample of the JMX metrics of the tasks of a connector, printed as space separated values:
 #   1 records total (summed over the tasks)    2 batch avg ms        3 running ratio avg    4 cpu % of one core
 #   5 consumer lag max (sink)                  6 cpu % of the cpus available to the worker JVM
@@ -3971,14 +4055,17 @@ function benchmark_collect_setup () {
   dirty=false
   [ -n "$(git -C "$root_folder" status --porcelain -uno 2>/dev/null)" ] && dirty=true
   # documentation of the connector: documentation_url of the manifest of the plugin that contains the connector class
-  local connector_class documentation_url="" plugin_dir
+  # (and source_url, for the links of the flight recorder hot methods)
+  local connector_class documentation_url="" source_url="" plugin_dir manifest
   connector_class=$(echo "$connector_config_json" | jq -r '."connector.class" // empty' 2> /dev/null)
   if [ -n "$connector_class" ]
   then
     plugin_dir=$(playground --output-level ERROR container exec --container "$first_worker" --command "for d in /usr/share/confluent-hub-components/* /usr/share/java/*; do [ -f \"\$d/manifest.json\" ] && grep -rlq --include='*.jar' '${connector_class//.//}.class' \"\$d\" && echo \"\$d\" && break; done" 2> /dev/null | tail -1)
     if [ -n "$plugin_dir" ]
     then
-      documentation_url=$(playground --output-level ERROR container exec --container "$first_worker" --command "cat '$plugin_dir/manifest.json'" 2> /dev/null | jq -r '.documentation_url // empty' 2> /dev/null)
+      manifest=$(playground --output-level ERROR container exec --container "$first_worker" --command "cat '$plugin_dir/manifest.json'" 2> /dev/null)
+      documentation_url=$(echo "$manifest" | jq -r '.documentation_url // empty' 2> /dev/null)
+      source_url=$(echo "$manifest" | jq -r '.source_url // empty' 2> /dev/null)
     fi
   fi
   # github link of the example: repro models are in the reproduction-models submodule, another repository
@@ -3999,7 +4086,7 @@ function benchmark_collect_setup () {
     --arg nb_workers "$nb_workers" --arg nb_brokers "$nb_brokers" --argjson kraft "$kraft" --arg environment "$environment" \
     --arg test_file "${test_file#$root_folder/}" --arg commit "$commit" --argjson dirty "$dirty" \
     --arg repo_url "$repo_url" --arg repo_path "$repo_path" --arg repo_commit "$repo_commit" --argjson repo_dirty "$repo_dirty" \
-    --arg documentation_url "$documentation_url" --arg plugin_dir "$plugin_dir" \
+    --arg documentation_url "$documentation_url" --arg source_url "$source_url" --arg plugin_dir "$plugin_dir" \
     --argjson config "$(echo "$connector_config_json" | jq -c 'with_entries(if (.key | test("password|secret|token|credentials|jaas|private\\.key|api\\.key|apikey"; "i")) then .value = "****" else . end)' 2>/dev/null || echo '{}')" \
     '($engine_info | split("|")) as $e |
      {host: {os: $host_os, arch: $host_arch, cpu_model: $cpu_model, cpus: ($host_cpus | tonumber? // null), memory_bytes: ($host_memory | tonumber? // null)},
@@ -4008,7 +4095,7 @@ function benchmark_collect_setup () {
       kafka: {environment: $environment, brokers: ($nb_brokers | tonumber? // null), kraft: $kraft},
       playground: {test_file: $test_file, commit: $commit, dirty: $dirty,
                    repo_url: $repo_url, repo_path: $repo_path, repo_commit: $repo_commit, repo_dirty: $repo_dirty},
-      connector: {documentation_url: $documentation_url, plugin_dir: $plugin_dir},
+      connector: {documentation_url: $documentation_url, source_url: $source_url, plugin_dir: $plugin_dir},
       connector_config: $config}'
 }
 

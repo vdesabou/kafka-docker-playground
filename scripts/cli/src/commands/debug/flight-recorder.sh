@@ -58,7 +58,7 @@ do
             if [ $? -eq 0 ]
             then
                 log "🛩️ flight recorder is available at ${filename}"
-                log "use JDK Mission Control JMC (https://jdk.java.net/jmc/) to open it"
+                log "use JDK Mission Control JMC (https://jdk.java.net/jmc/) to open it, or playground analyze flight-recorder -f ${filename}"
                 playground container cp --source ${container}:/tmp/${filename} --destination ${filename}
             else
                 logerror "❌ Failed to stop flight recorder"
