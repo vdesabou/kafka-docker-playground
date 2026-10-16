@@ -613,7 +613,19 @@ registries:
       remoteURL: "*"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+options:
+  k3s:
+    extraArgs:
 EOF
+  local kubelet_arg
+  for kubelet_arg in "${K3D_KUBELET_ARGS[@]}"
+  do
+    cat >> "$output_file" << EOF
+      - arg: "--kubelet-arg=${kubelet_arg}"
+        nodeFilters:
+          - server:*
+EOF
+  done
 }
 
 function sanitize_k8s_name() {
@@ -3187,6 +3199,16 @@ fi
 
 log "Start or reuse k3d (k3s)"
 K3D_MEMORY=${K3D_MEMORY:-"24g"}
+# the CP and example images are imported into the node (k3d image import), they can't be pulled back: the connect one
+# is patched with additional tools (microdnf, curl...). When the image filesystem is over 85% (Oracle examples on CI),
+# kubelet image GC deletes the ones not used by a running pod between two scripts, and the next connect-0 pulls the
+# upstream image instead (#9364). A threshold of 100 disables image GC
+K3D_KUBELET_ARGS=("image-gc-high-threshold=100" "image-gc-low-threshold=99")
+K3D_CREATE_K3S_ARGS=()
+for kubelet_arg in "${K3D_KUBELET_ARGS[@]}"
+do
+  K3D_CREATE_K3S_ARGS+=(--k3s-arg "--kubelet-arg=${kubelet_arg}@server:*")
+done
 if k3d cluster list 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$K3D_CLUSTER_NAME"
 then
   log "✅ k3d cluster $K3D_CLUSTER_NAME already exists, ensuring it is running"
@@ -3200,7 +3222,7 @@ else
     log "🗂️ Using registry cache for k3d cluster creation (${K3D_REGISTRY_CACHE_NAME}:${K3D_REGISTRY_CACHE_PORT})"
     k3d cluster create --config "$K3D_CONFIG_FILE" --wait
   else
-    k3d cluster create "$K3D_CLUSTER_NAME" --servers 1 --agents 0 --servers-memory "$K3D_MEMORY" --wait
+    k3d cluster create "$K3D_CLUSTER_NAME" --servers 1 --agents 0 --servers-memory "$K3D_MEMORY" "${K3D_CREATE_K3S_ARGS[@]}" --wait
   fi
 fi
 
