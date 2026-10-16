@@ -3406,6 +3406,74 @@ function benchmark_splunk_load () {
   benchmark_stream_batches "$records" send
 }
 
+# load for 'playground connector benchmark' on the generalized mode (mode=GENERIC, json format) of the s3, gcs and azure
+# blob storage source connectors: files of {"f1":"benchmark message <i>"} lines, one record per line, uploaded to the
+# topics.dir of the connector by the function of the example:
+#   benchmark_cloud_storage_load <upload function> <records> <record size> [preload|stream]
+# <upload function> <folder name in $PLAYGROUND_HOST_TMP_DIR, the /tmp of the cli containers> uploads the files of the
+# folder to the topics.dir of the connector (several at once is fine: the connector is paused during a drain)
+# - bulk: files of BENCHMARK_FILE_RECORDS (10000) records; small-txn: one record per file (the cost of listing and
+#   opening each object), drain only
+# - stream mode: one file of <records> records per batch, uploaded on its own
+# the connector lists the objects after the last one it read (startAfter): the names start with zz-benchmark-<epoch ms>
+# so that they sort after the files of the example and of the previous runs, and a stream uploads them one by one, in
+# order (no --sessions in steady mode: an object uploaded after a higher name was read is skipped)
+function benchmark_cloud_storage_load () {
+  local upload="$1" records="$2" record_size="${3:-0}" mode="${4:-preload}"
+  local shape="${BENCHMARK_LOAD_SHAPE:-bulk}" per_file="${BENCHMARK_FILE_RECORDS:-10000}"
+  if [[ " bulk small-txn " != *" $shape "* ]]
+  then
+    logerror "❌ --shape $shape does not apply to files in an object store: a rewritten object is not read again (use bulk or small-txn)"
+    return 1
+  fi
+  if [ "$shape" == "small-txn" ] && [ "$mode" == "stream" ]
+  then
+    logerror "❌ --shape small-txn uploads one object per record, too slow for a stream (one upload at a time, in order): use --mode drain, or --shape bulk"
+    return 1
+  fi
+  [ "$shape" == "small-txn" ] && per_file=1
+  local mode_config format
+  mode_config=$(jq -r '.mode // "RESTORE_BACKUP"' "$BENCHMARK_CONNECTOR_CONFIG")
+  format=$(jq -r '."format.class" // ""' "$BENCHMARK_CONNECTOR_CONFIG")
+  if [ "$mode_config" != "GENERIC" ] || [[ "$format" != *JsonFormat ]]
+  then
+    logerror "❌ this load writes json files for the generalized mode (mode=GENERIC, a JsonFormat): the connector has mode=$mode_config and format.class=$format, run the *-generalized.sh example"
+    return 1
+  fi
+  [ -n "$BENCHMARK_LOAD_CHECK" ] && return 0
+
+  local work name batch=0
+  work=$(mktemp -d "$PLAYGROUND_HOST_TMP_DIR/benchmark-cloud-storage.XXXXXX")
+  name=$(basename "$work")
+  # <records> records in files of <per file> records, named after the time, the batch and the process (sessions)
+  write_files () {
+    local count="$1" size="$2" prefix
+    rm -f "$work"/*.json
+    batch=$((batch + 1))
+    prefix="zz-benchmark-$(date +%s)-$(printf '%06d' "$batch")-$$"
+    benchmark_messages "$count" "$record_size" | awk -v per="$size" -v dir="$work" -v prefix="$prefix" '{
+      file = sprintf("%s/%s-%06d.json", dir, prefix, int((NR - 1) / per))
+      printf "{\"f1\":\"%s\"}\n", $0 > file
+      if (NR % per == 0) close(file)
+    }'
+  }
+  if [ "$mode" == "stream" ]
+  then
+    upload_batch () {
+      write_files "$records" "$records"
+      "$upload" "$name"
+    }
+    benchmark_stream_batches "$records" upload_batch
+    rm -rf "$work"
+    return 0
+  fi
+  write_files "$records" "$per_file"
+  log "📥 $shape load: $records records in $(ls "$work" | wc -l | tr -d ' ') file(s) of $per_file record(s)"
+  "$upload" "$name"
+  rm -rf "$work"
+  echo "BENCHMARK_RECORDS=$records"
+}
+
 # compiled tools/benchmark-jms/BenchmarkJmsProducer.java (javax.jms 1.1 api), cached in ~/.playground-benchmark-jms:
 # prints the folder of BenchmarkJmsProducer.class
 function benchmark_jms_producer_classes () {
@@ -5401,7 +5469,13 @@ function get_optional_env_vars () {
 }
 
 function handle_aws_credentials () {
-  rm -rf /tmp/aws_credentials
+  # rewritten in place below, never deleted: the connect container mounts this file (a single file bind mount keeps
+  # the inode, and 'playground run' calls this again at the end through get_3rdparty_file), unless docker created a
+  # folder in its place because it did not exist
+  if [ -d /tmp/aws_credentials ]
+  then
+    rm -rf /tmp/aws_credentials
+  fi
   export AWS_CREDENTIALS_FILE_NAME="/tmp/aws_credentials"
 
   # callers like get_3rdparty_file are not seen by the per-example secret preload of playground run,

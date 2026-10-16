@@ -5014,9 +5014,10 @@ subcommands:
       next to the example\n    script, called with --records <n> --mode preload|stream
       --shape\n    bulk|small-txn|update (rows in the CUSTOMERS table for the\n    postgres,
       mysql, oracle and sql server examples, documents for\n    mongodb, messages
-      for ibm mq and mqtt, see the README of the\n    example). It is called with
-      --check first, so that an unsupported\n    combination fails before the connector
-      is paused\n  - or --load-command / --stream-load-command, which take precedence\n\nBENCHMARK_LOAD_SCRIPT=<file>
+      for ibm mq and mqtt, json files for the\n    generalized s3, gcs and azure blob
+      storage sources, see the README\n    of the example). It is called with --check
+      first, so that an unsupported\n    combination fails before the connector is
+      paused\n  - or --load-command / --stream-load-command, which take precedence\n\nBENCHMARK_LOAD_SCRIPT=<file>
       uses another load script than\nbenchmark-load.bash: a file name in the folder
       of the example (or an\nabsolute path), e.g. one per reproduction model named
       after its ticket\n(BENCHMARK_LOAD_SCRIPT=benchmark-load-123456.bash). It takes
