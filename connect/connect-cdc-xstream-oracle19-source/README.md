@@ -43,7 +43,7 @@ playground run -f cdc-xstream-oracle19.sh
 6. Inserts, updates and deletes rows and alters the table (basic and TLS variants), or inserts rows then triggers a blocking snapshot (blocking snapshot variants).
 7. Verifies the topic `cflt.C__CFLTUSER.CUSTOMERS` with `playground topic consume`.
 
-With `SQL_DATAGEN` set (or `--enable-sql-datagen`), a Java based datagen tool is built and injects data for 10 minutes at the end of the run.
+With `--enable-sql-datagen`, `playground run` injects rows in the `CUSTOMERS` table once the example succeeded, see [Benchmark](#benchmark).
 
 ## Benchmark
 
@@ -59,6 +59,8 @@ playground connector benchmark --nb-records 1000000 --shape update
 ```
 
 The connector is paused while the rows are loaded, then resumed, and the benchmark measures the time it takes to produce the records.
+
+`playground run -f cdc-xstream-oracle19.sh --enable-sql-datagen` uses the same load once the example succeeded: one row per transaction (`--shape small-txn`) from 5 parallel sessions for 10 minutes (`SQL_DATAGEN_SESSIONS`, `SQL_DATAGEN_DURATION` in minutes), logging the rows inserted every 30 seconds.
 
 ## Troubleshooting
 

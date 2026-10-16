@@ -764,9 +764,14 @@ subcommands:
   - names:
     - "--enable-sql-datagen"
     argument: ''
-    description: "\U0001F32A️ Enable SQL Datagen injection\n\nThis only works for
-      Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with
-      JDBC and Debezium"
+    description: "\U0001F32A️ Enable SQL Datagen injection\n\nOnce the example succeeded,
+      rows are injected with the benchmark-load.bash next to the example script (the
+      load of\nplayground connector benchmark): one row per transaction, in parallel
+      sessions, for a few minutes, while Grafana shows\nthe connector. Works with
+      the JDBC, Debezium, Oracle CDC and XStream source examples (Oracle, MySQL, MariaDB,\nPostgreSQL,
+      SQL Server), self-managed and fully managed, and with their reproduction models.\n\nSQL_DATAGEN_DURATION
+      (minutes, default 10) and SQL_DATAGEN_SESSIONS (default 5) change the duration
+      and the number of\nparallel sessions."
   - names:
     - "--connect-community-image"
     argument: ''
@@ -5163,6 +5168,15 @@ subcommands:
       - "--no-history"
       argument: ''
       description: "\U0001F648 Do not append the result to the benchmark-history file"
+    - names:
+      - "--sessions"
+      argument: SESSIONS
+      description: "\U0001F9F5 Run the benchmark-load.bash of the example in <sessions>
+        parallel sessions (default is 1)\n\nA drain splits --nb-records between them,
+        steady mode gives each session batches of --nb-records. Concurrent transactions
+        are what a busy database looks like to a CDC connector (interleaved transactions
+        in the redo log or the WAL, several open transactions). Only with the benchmark-load.bash
+        of the example, not with --load-command.\n\nDefault value: 1"
     - names:
       - "--no-flight-recorder"
       argument: ''

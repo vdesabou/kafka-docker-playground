@@ -18,6 +18,7 @@ eval "topics=(${args[--topic]:-})"
 eval "connector_tags=(${args[--connector-tag]:-})"
 rounds="${args[--rounds]}"
 no_flight_recorder="${args[--no-flight-recorder]}"
+sessions="${args[--sessions]}"
 
 # with --json, logs go to stderr and only the result json to stdout
 exec 3>&1
@@ -127,6 +128,7 @@ then
     done
     [ -n "$no_history" ] && child_args+=(--no-history)
     [ -n "$no_flight_recorder" ] && child_args+=(--no-flight-recorder)
+    child_args+=(--sessions "$sessions")
     [ -n "$verbose" ] && child_args+=(--verbose)
 
     function switch_connector_version () {
@@ -288,6 +290,27 @@ then
         echo "$load_check_output" | grep -v '^$' | tail -5
         exit 1
     fi
+fi
+# --sessions: the load script runs in <sessions> parallel sessions, in one bash process (the load pid of the
+# benchmark), sharing the stop file; a drain splits --nb-records between them, a stream gives each one batches of
+# --nb-records
+if [ "$sessions" -gt 1 ]
+then
+    if [ -z "$load_script" ] || [[ "$load_cmd" != "bash \"$load_script\""* ]]
+    then
+        logerror "❌ --sessions needs the benchmark-load.bash of the example: it cannot split --load-command, --stream-load-command or a replayed produce"
+        exit 1
+    fi
+    per_session=$nb_records
+    [ "$load_mode" == "preload" ] && per_session=$((nb_records / sessions))
+    sessions_cmd="rc=0; pids=''"
+    for ((session = 1; session <= sessions; session++))
+    do
+        session_records=$per_session
+        [ "$load_mode" == "preload" ] && [ $session -eq 1 ] && session_records=$((per_session + nb_records - per_session * sessions))
+        sessions_cmd="$sessions_cmd; bash \"$load_script\" --records $session_records --mode $load_mode --shape $shape --record-size $record_size & pids=\"\$pids \$!\""
+    done
+    load_cmd="$sessions_cmd; for p in \$pids; do wait \$p || rc=\$?; done; exit \$rc"
 fi
 # load scripts can adapt to the connector configuration (a redo log topic doubles the records of oracle cdc...)
 export BENCHMARK_CONNECTOR_CONFIG="$output_dir/$run_id-config.json"
@@ -499,7 +522,7 @@ then
     paused_by_benchmark=1
     playground connector wait --connector "$connector" --state PAUSED --max-wait 120 --interval 2 > /dev/null
 
-    log "📥 loading the backlog: $load_cmd"
+    log "📥 loading the backlog$([ "$sessions" -gt 1 ] && echo " in $sessions sessions"): $load_cmd"
     load_start=$(now)
     set +e
     if [[ -n "$verbose" ]]
@@ -519,7 +542,8 @@ then
     fi
     load_seconds=$(awk -v e="$(now)" -v s="$load_start" 'BEGIN { printf "%.1f", e - s }')
     restore_run_state
-    records_from_load=$(grep -E '^BENCHMARK_RECORDS=[0-9]+$' "$load_log" | tail -1 | cut -d= -f2)
+    # one line per session with --sessions
+    records_from_load=$(grep -E '^BENCHMARK_RECORDS=[0-9]+$' "$load_log" | cut -d= -f2 | awk '{ n += $1 } END { if (NR) print n }')
     if [ -n "$records_from_load" ]
     then
         expected="$records_from_load"
@@ -587,7 +611,7 @@ then
 else
     if [ -n "$load_cmd" ]
     then
-        log "🌊 starting the load in the background: $load_cmd"
+        log "🌊 starting the load in the background$([ "$sessions" -gt 1 ] && echo " ($sessions sessions)"): $load_cmd"
         bash -c "$load_cmd" > "$load_log" 2>&1 &
         load_pid=$!
     fi
@@ -753,7 +777,7 @@ test_file_relative="${test_file#$root_folder/}"
 result=$(jq -n \
     --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg test_file "$test_file_relative" --arg connector "$connector" \
     --arg connector_class "$connector_class" --arg plugin_version "$plugin_version" --arg cp_tag "$cp_tag" \
-    --arg type "$type" --arg mode "$mode" --arg shape "$shape" --argjson tasks "$nb_tasks" \
+    --arg type "$type" --arg mode "$mode" --arg shape "$shape" --argjson tasks "$nb_tasks" --argjson sessions "$sessions" \
     --argjson records "$measured_records" --argjson seconds "$measured_seconds" --argjson records_per_second "$throughput" \
     --arg rate_p50 "$rate_p50" --arg rate_p95 "$rate_p95" --arg rate_min "$rate_min" \
     --arg batch_avg_ms "$batch_avg" --arg running_ratio "$ratio_avg" --arg cpu_avg "$cpu_avg" --arg cpu_max "$cpu_max" \
@@ -763,7 +787,7 @@ result=$(jq -n \
     --arg dlq_records "$dlq_delta" --arg skipped_records "$skipped_delta" --arg task_shares "$task_shares" \
     --argjson setup "$setup_json" --argjson flight_recorder "$flight_recorder_json" \
     '{date: $date, test_file: $test_file, connector: $connector, connector_class: $connector_class, plugin_version: $plugin_version,
-      cp_tag: $cp_tag, type: $type, mode: $mode, shape: $shape, tasks: $tasks, records: $records, seconds: $seconds,
+      cp_tag: $cp_tag, type: $type, mode: $mode, shape: $shape, sessions: $sessions, tasks: $tasks, records: $records, seconds: $seconds,
       records_per_second: $records_per_second, lower_bound: $lower_bound, rate_p50: $rate_p50, rate_p95: $rate_p95, rate_min: $rate_min,
       batch_avg_ms: $batch_avg_ms, running_ratio: $running_ratio, cpu_percent_of_one_core_avg: $cpu_avg,
       cpu_percent_of_one_core_max: $cpu_max, load_seconds: $load_seconds, topic_records_delta: $topic_records_delta,
@@ -806,7 +830,7 @@ fi
 log "🏁 benchmark of $connector_type connector $connector ($type, $nb_tasks task(s), $connector_class $plugin_version, CP $cp_tag)"
 if [ "$mode" == "drain" ]
 then
-    printf "   %-22s %s\n" "mode" "drain of $measured_records records (shape $shape, loaded in ${load_seconds}s)"
+    printf "   %-22s %s\n" "mode" "drain of $measured_records records (shape $shape$([ "$sessions" -gt 1 ] && echo ", $sessions sessions"), loaded in ${load_seconds}s)"
 else
     printf "   %-22s %s\n" "mode" "steady for ${measured_seconds}s after ${warmup}s of warm-up"
 fi
@@ -878,6 +902,10 @@ then
     then
         add_warning "the previous run was on a different setup ($setup_differences): the comparison is not meaningful"
     fi
+fi
+if [ -n "$previous" ] && [ "$(echo "$previous" | jq -r '.sessions // 1')" != "$sessions" ]
+then
+    add_warning "the previous run used $(echo "$previous" | jq -r '.sessions // 1') load session(s) and this one $sessions: the load is not the same"
 fi
 if [ -n "$previous" ]
 then

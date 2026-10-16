@@ -13,7 +13,6 @@ See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?i
 | Variable | Description |
 | --- | --- |
 | `NGROK_AUTH_TOKEN` | Required. [Ngrok](https://ngrok.com) auth token, used to expose the Oracle port to the internet so that the fully managed connector can reach it ([sign up](https://dashboard.ngrok.com/signup), [get your token](https://dashboard.ngrok.com/get-started/your-authtoken)) |
-| `SQL_DATAGEN` | Optional. If set, builds `oracle-datagen` and injects data for 10 minutes at the end of the run |
 
 **🚨WARNING🚨** Exposing a TCP port over internet with ngrok is a security risk on a personal machine. Prefer an AWS EC2 instance with [Confluent Static Egress IP Addresses](https://docs.confluent.io/cloud/current/networking/static-egress-ip-addresses.html#use-static-egress-ip-addresses-with-ccloud) allowed in its Security Group.
 
@@ -41,6 +40,8 @@ playground run -f fully-managed-cdc-xstream-oracle19.sh
 | `fully-managed-cdc-xstream-oracle19.sh` | Basic example: snapshot, then inserts, updates, deletes and a schema change |
 | `fully-managed-cdc-xstream-oracle19-blocking-snapshot.sh` | Triggers an ad-hoc blocking snapshot through the signal table `CFLT_SIGNALS` (`signal.data.collection`) |
 | `fully-managed-cdc-xstream-oracle19-ssl-wallet.sh` | Oracle listener over TLS (one-way), the connector uses the server `cwallet.sso` (`database.tls.mode`, `database.wallet.file`) |
+
+With `--enable-sql-datagen` (`playground run -f fully-managed-cdc-xstream-oracle19.sh --enable-sql-datagen`), once the example succeeded, `playground run` injects rows in the `CUSTOMERS` table with [`benchmark-load.bash`](benchmark-load.bash) (the same load as `playground connector benchmark`) for 10 minutes: one row per transaction, from 5 parallel sessions, logging the rows inserted every 30 seconds. `SQL_DATAGEN_DURATION` (minutes, default `10`) and `SQL_DATAGEN_SESSIONS` (default `5`) change the duration and the number of sessions.
 
 ## What the script does
 

@@ -11,22 +11,6 @@ then
      exit 111
 fi
 
-if [ ! -z "$SQL_DATAGEN" ]
-then
-     cd ../../connect/connect-jdbc-sqlserver-source
-     log "🌪️ SQL_DATAGEN is set"
-     for component in sqlserver-datagen
-     do
-     set +e
-     log "🏗 Building jar for ${component}"
-     build_java_component_with_retry "${component}" docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${PWD}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "${PWD}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package
-     set -e
-     done
-     cd -
-else
-     log "🛑 SQL_DATAGEN is not set"
-fi
-
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.microsoft.yml"
 
@@ -84,10 +68,3 @@ EOF
 
 log "Verifying topic sqlserver-customers"
 playground topic consume --topic sqlserver-customers --min-expected-messages 5 --timeout 60
-
-if [ ! -z "$SQL_DATAGEN" ]
-then
-     DURATION=10
-     log "Injecting data for $DURATION minutes"
-     playground container exec --container sql-datagen --command "bash -c \"java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --username sa --password 'Password!' --connectionUrl 'jdbc:sqlserver://sqlserver:1433;databaseName=testDB;encrypt=false' --maxPoolSize 10 --durationTimeMin $DURATION\""
-fi

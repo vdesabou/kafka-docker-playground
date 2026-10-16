@@ -21,7 +21,7 @@ playground run -f oracle21.sh
 
 | Script | Description |
 | --- | --- |
-| `oracle21.sh` | No SSL (`jdbc:oracle:thin:@oracle:1521/ORCLCDB`). Supports `--enable-sql-datagen` |
+| `oracle21.sh` | No SSL (`jdbc:oracle:thin:@oracle:1521/ORCLCDB`) |
 | `oracle21-ssl.sh` | SSL encryption (TCPS on port 1532), server DN verified |
 | `oracle21-mtls.sh` | SSL encryption + mutual TLS (case #3 in this [document](https://www.oracle.com/technetwork/topics/wp-oracle-jdbc-thin-ssl-130128.pdf)) |
 | `oracle21-mtls-db-auth.sh` | SSL encryption + mutual TLS + DB authentication with the client certificate (case #4 in the same document) |
@@ -30,19 +30,16 @@ The [Oracle JDBC thin driver SSL white paper](https://www.oracle.com/technetwork
 
 ### Performance testing
 
-`oracle21.sh` can inject data with a Java based SQL datagen tool (built from `oracle-datagen/`) for 10 minutes after the connector is created:
+With `--enable-sql-datagen`, `playground run` injects rows in the `CUSTOMERS` table for 10 minutes once the example succeeded (see [Benchmark](#benchmark)):
 
 ```bash
 playground run -f oracle21.sh --enable-sql-datagen
+
+# inject rows for 2 minutes only
+SQL_DATAGEN_DURATION=2 playground run -f oracle21.sh --enable-sql-datagen
 ```
 
-The datagen runs in the `sql-datagen` container:
-
-```bash
-java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username C##MYUSER --password mypassword --sidOrServerName sid --sidOrServerNameVal ORCLCDB --maxPoolSize 10 --durationTimeMin 10
-```
-
-Increase `--maxPoolSize` to increase throughput.
+Increase `SQL_DATAGEN_SESSIONS` (default `5`) to increase throughput.
 
 ## What the script does
 
@@ -52,7 +49,6 @@ Increase `--maxPoolSize` to increase throughput.
 4. Creates table `CUSTOMERS` (identity `ID`, trigger `TRG_CUSTOMERS_UPD` setting `UPDATE_TS` on insert/update) and inserts 5 rows.
 5. Creates the source connector (`oracle-source`, `oracle-source-ssl`, `oracle-source-mtls` or `oracle-source-mtls-db-auth`) in `timestamp` mode on `UPDATE_TS`, with `numeric.mapping=best_fit`, `schema.pattern=C##MYUSER`, `table.whitelist=CUSTOMERS` and `topic.prefix=oracle-`.
 6. Verifies that records land in topic `oracle-CUSTOMERS` with `playground topic consume`.
-7. `oracle21.sh` with `--enable-sql-datagen`: runs the SQL datagen for 10 minutes.
 
 ## Benchmark
 
@@ -68,6 +64,8 @@ playground connector benchmark --nb-records 1000000 --shape update
 ```
 
 The connector is paused while the rows are loaded, then resumed, and the benchmark measures the time it takes to produce the records.
+
+`playground run -f oracle21.sh --enable-sql-datagen` uses the same load once the example succeeded: one row per transaction (`--shape small-txn`) from 5 parallel sessions for 10 minutes (`SQL_DATAGEN_SESSIONS`, `SQL_DATAGEN_DURATION` in minutes), logging the rows inserted every 30 seconds.
 
 ## SSL setup details
 

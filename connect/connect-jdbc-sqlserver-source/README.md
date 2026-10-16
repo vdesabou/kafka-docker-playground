@@ -17,15 +17,18 @@ playground run -f sqlserver-microsoft.sh
 
 | Script | Description |
 | --- | --- |
-| `sqlserver-jtds.sh` | jTDS driver, no SSL. Supports `--enable-sql-datagen` |
+| `sqlserver-jtds.sh` | jTDS driver, no SSL |
 | `sqlserver-jtds-ssl.sh` | jTDS driver, SSL encryption (`ssl=require`) |
-| `sqlserver-microsoft.sh` | Microsoft driver, no SSL (`encrypt=false`). Supports `--enable-sql-datagen` |
+| `sqlserver-microsoft.sh` | Microsoft driver, no SSL (`encrypt=false`) |
 | `sqlserver-microsoft-ssl.sh` | Microsoft driver, SSL encryption with server certificate validation against a truststore |
 
-To inject data for 10 minutes with the Java SQL datagen (built from `sqlserver-datagen/`) after the records are verified:
+With `--enable-sql-datagen`, `playground run` injects rows in the `dbo.customers` table for 10 minutes once the example succeeded (see [Benchmark](#benchmark)):
 
 ```bash
 playground run -f sqlserver-microsoft.sh --enable-sql-datagen
+
+# inject rows for 2 minutes only
+SQL_DATAGEN_DURATION=2 playground run -f sqlserver-microsoft.sh --enable-sql-datagen
 ```
 
 ## What the script does
@@ -35,7 +38,6 @@ playground run -f sqlserver-microsoft.sh --enable-sql-datagen
 3. Creates database `testDB` and table `customers` (identity `id` starting at 1001) with 4 rows.
 4. Creates the source connector (`sqlserver-source` or `sqlserver-source-ssl`) in `incrementing` mode on `id`, with `topic.prefix=sqlserver-`.
 5. Inserts one more row, then verifies that 5 records land in topic `sqlserver-customers` with `playground topic consume`.
-6. Non-SSL variants with `--enable-sql-datagen`: runs the SQL datagen for 10 minutes.
 
 ## Benchmark
 
@@ -50,6 +52,8 @@ playground connector benchmark --nb-records 100000 --shape small-txn
 ```
 
 The connector is paused while the rows are loaded, then resumed, and the benchmark measures the time it takes to produce the records. The connector uses `"mode": "incrementing"`, which only captures new rows, so `--shape update` is refused.
+
+`playground run -f sqlserver-microsoft.sh --enable-sql-datagen` uses the same load once the example succeeded: one row per transaction (`--shape small-txn`) from 5 parallel sessions for 10 minutes (`SQL_DATAGEN_SESSIONS`, `SQL_DATAGEN_DURATION` in minutes), logging the rows inserted every 30 seconds.
 
 ## SSL setup details
 

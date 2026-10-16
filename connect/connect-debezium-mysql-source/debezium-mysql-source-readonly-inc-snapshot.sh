@@ -21,10 +21,39 @@ PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext-ro-inc-snapshot.yml"
 
 
-log "Create teams table"
+log "Create CUSTOMERS table"
 playground container exec --container mysql --command "mysql  --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb" << EOF
 USE mydb;
 
+CREATE TABLE CUSTOMERS (
+  id          INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  first_name  VARCHAR(50),
+  last_name   VARCHAR(50),
+  email       VARCHAR(50),
+  gender      VARCHAR(50),
+  club_status VARCHAR(20),
+  comments    VARCHAR(90),
+  create_ts   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  update_ts   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+
+INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES ('Rica', 'Blaisdell', 'rblaisdell0@rambler.ru', 'Female', 'bronze', 'Universal optimal hierarchy');
+
+describe CUSTOMERS;
+select * from CUSTOMERS;
+EOF
+
+log "Adding an element to the table"
+playground container exec --container mysql --command "mysql  --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb" << EOF
+USE mydb;
+
+INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES ('Ruthie', 'Brockherst', 'rbrockherst1@ow.ly', 'Female', 'platinum', 'Reverse-engineered tangible interface');
+EOF
+
+log "Create team table"
+playground container exec --container mysql --command "mysql  --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb" << EOF
+USE mydb;
 CREATE TABLE team (
   id            INT          NOT NULL PRIMARY KEY AUTO_INCREMENT,
   name          VARCHAR(255) NOT NULL,
@@ -38,53 +67,12 @@ INSERT INTO team (
   email,
   last_modified
 ) VALUES (
-  'kafka',
-  'kafka@apache.org',
-  NOW()
-);
-
-ALTER TABLE team AUTO_INCREMENT = 101;
-describe team;
-select * from team;
-EOF
-
-log "Adding an element to the table"
-playground container exec --container mysql --command "mysql  --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb" << EOF
-USE mydb;
-
-INSERT INTO team (
-  name,
-  email,
-  last_modified
-) VALUES (
-  'another',
-  'another@apache.org',
-  NOW()
-);
-EOF
-
-log "Create customers table"
-playground container exec --container mysql --command "mysql  --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb" << EOF
-USE mydb;
-CREATE TABLE customers (
-  id            INT          NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  name          VARCHAR(255) NOT NULL,
-  email         VARCHAR(255) NOT NULL,
-  last_modified DATETIME     NOT NULL
-);
-
-
-INSERT INTO customers (
-  name,
-  email,
-  last_modified
-) VALUES (
   'Roger',
   'roger@apache.org',
   NOW()
 );
 
-INSERT INTO customers (
+INSERT INTO team (
   name,
   email,
   last_modified
@@ -94,7 +82,7 @@ INSERT INTO customers (
   NOW()
 );
 
-ALTER TABLE customers AUTO_INCREMENT = 101;
+ALTER TABLE team AUTO_INCREMENT = 101;
 EOF
 
 
@@ -119,7 +107,7 @@ playground connector create-or-update --connector debezium-mysql-source  << EOF
   "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
   "schema.history.internal.kafka.topic": "schema-changes.mydb",
 
-  "table.include.list": "mydb.team",
+  "table.include.list": "mydb.CUSTOMERS",
   "transforms": "RemoveDots",
   "transforms.RemoveDots.type": "org.apache.kafka.connect.transforms.RegexRouter",
   "transforms.RemoveDots.regex": "(.*)\\\\.(.*)\\\\.(.*)",
@@ -133,12 +121,12 @@ EOF
 
 sleep 5
 
-log "Verifying topic server1_mydb_team"
-playground topic consume --topic server1_mydb_team --min-expected-messages 2 --timeout 60
+log "Verifying topic server1_mydb_CUSTOMERS"
+playground topic consume --topic server1_mydb_CUSTOMERS --min-expected-messages 2 --timeout 60
 
 log "Show content of customer table:"
 playground container exec --container mysql --command "mysql  --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb" << EOF
-select * from customers;
+select * from team;
 EOF
 
 log "Verify GTID mode is ON before enabling read-only incremental snapshot"
@@ -150,7 +138,7 @@ then
 fi
 
 
-log "Adding customers table to the connector"
+log "Adding team table to the connector"
 playground connector create-or-update --connector debezium-mysql-source  << EOF
 {
   "connector.class": "io.debezium.connector.mysql.MySqlConnector",
@@ -172,7 +160,7 @@ playground connector create-or-update --connector debezium-mysql-source  << EOF
   "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
   "schema.history.internal.kafka.topic": "schema-changes.mydb",
 
-  "table.include.list": "mydb.team,mydb.customers",
+  "table.include.list": "mydb.CUSTOMERS,mydb.team",
   "read.only": "true",
   "signal.kafka.topic": "dbz-signals",
   "signal.kafka.bootstrap.servers": "broker:9092",
@@ -187,9 +175,9 @@ playground connector create-or-update --connector debezium-mysql-source  << EOF
   }
 EOF
 
-log "insert a record in customers"
+log "insert a record in team"
 playground container exec --container mysql --command "mysql  --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb" << EOF
-INSERT INTO customers (
+INSERT INTO team (
   name,
   email,
   last_modified
@@ -201,16 +189,16 @@ INSERT INTO customers (
 EOF
 
 set +e
-log "Verifying topic server1_mydb_customers : there will be only the new record"
-playground topic consume --topic server1_mydb_customers --min-expected-messages 1 --timeout 60
+log "Verifying topic server1_mydb_team : there will be only the new record"
+playground topic consume --topic server1_mydb_team --min-expected-messages 1 --timeout 60
 set -e
 
 log "Send Signal to the topic to start incremental snapshot"
 playground topic produce -t dbz-signals --nb-messages 1 --key "server1" << 'EOF'
-{"type":"execute-snapshot","data": {"data-collections": ["mydb.customers"], "type": "INCREMENTAL"}}
+{"type":"execute-snapshot","data": {"data-collections": ["mydb.team"], "type": "INCREMENTAL"}}
 EOF
 
 sleep 20
 
-log "Verifying topic server1_mydb_customer again, the 3 records are there"
-playground topic consume --topic server1_mydb_customers --min-expected-messages 3 --timeout 60
+log "Verifying topic server1_mydb_team again, the 3 records are there"
+playground topic consume --topic server1_mydb_team --min-expected-messages 3 --timeout 60

@@ -6,10 +6,6 @@ Quickly test the [Debezium PostgreSQL](https://docs.confluent.io/kafka-connector
 
 ## Prerequisites
 
-| Variable | Description |
-| --- | --- |
-| `SQL_DATAGEN` | Optional (`debezium-postgres-source.sh` only): when set, builds the `postgres-datagen` tool and injects data for 10 minutes at the end of the run |
-
 With CP 8.x, the minimal supported connector version is `2.5.0` (the script exits with code 111 otherwise).
 
 ## How to run
@@ -35,7 +31,6 @@ playground run -f debezium-postgres-source.sh
 2. Creates table `CUSTOMERS`, inserts sample rows and adds one more row.
 3. Creates the `debezium-postgres-source` connector (`topic.prefix` `asgard`).
 4. Verifies that topic `asgard.public.customers-raw` contains the records with `playground topic consume`.
-5. If `SQL_DATAGEN` is set, injects data for 10 minutes.
 
 The incremental snapshot variants:
 
@@ -43,6 +38,8 @@ The incremental snapshot variants:
 2. Create the connector with `table.include.list=public.customers` and verify `asgard.public.customers`.
 3. Update the connector to also include `public.customers2`, insert a row: only this new row shows up in `asgard.public.customers2`.
 4. Send an `execute-snapshot` signal (insert into `debezium_signal`, or `playground topic produce` to `dbz-signals`) and verify that all 6 records are in `asgard.public.customers2`.
+
+With `--enable-sql-datagen`, `playground run` injects rows in the `CUSTOMERS` table once the example succeeded, see [Benchmark](#benchmark).
 
 ## Benchmark
 
@@ -61,6 +58,8 @@ playground connector benchmark --mode steady --duration 2m --nb-records 10000
 ```
 
 The connector is paused while the rows are loaded, then resumed, and the benchmark measures the time it takes to produce the records. Results are compared with the previous benchmark of the same shape.
+
+`playground run -f debezium-postgres-source.sh --enable-sql-datagen` uses the same load once the example succeeded: one row per transaction (`--shape small-txn`) from 5 parallel sessions for 10 minutes (`SQL_DATAGEN_SESSIONS`, `SQL_DATAGEN_DURATION` in minutes), logging the rows inserted every 30 seconds.
 
 ## SSL setup details
 

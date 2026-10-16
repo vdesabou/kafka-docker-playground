@@ -3464,7 +3464,7 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-sql-datagen")"
-    printf "    🌪️ Enable SQL Datagen injection\n    \n    This only works for Oracle, MySql, Postgres and Microsoft Sql Server source\n    connector examples with JDBC and Debezium\n"
+    printf "    🌪️ Enable SQL Datagen injection\n    \n    Once the example succeeded, rows are injected with the benchmark-load.bash\n    next to the example script (the load of\n    playground connector benchmark): one row per transaction, in parallel\n    sessions, for a few minutes, while Grafana shows\n    the connector. Works with the JDBC, Debezium, Oracle CDC and XStream source\n    examples (Oracle, MySQL, MariaDB,\n    PostgreSQL, SQL Server), self-managed and fully managed, and with their\n    reproduction models.\n    \n    SQL_DATAGEN_DURATION (minutes, default 10) and SQL_DATAGEN_SESSIONS (default\n    5) change the duration and the number of\n    parallel sessions.\n"
     echo
 
     # :flag.usage
@@ -11749,6 +11749,12 @@ playground_connector_benchmark_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--sessions SESSIONS")"
+    printf "    🧵 Run the benchmark-load.bash of the example in <sessions> parallel sessions\n    (default is 1)\n    \n    A drain splits --nb-records between them, steady mode gives each session\n    batches of --nb-records. Concurrent transactions are what a busy database\n    looks like to a CDC connector (interleaved transactions in the redo log or\n    the WAL, several open transactions). Only with the benchmark-load.bash of\n    the example, not with --load-command.\n"
+    printf "    %s\n" "Default: 1"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--no-flight-recorder")"
     printf "    🛩️ Do not record the connect workers with Java Flight Recorder during the\n    measure (no \"where the time goes\" section in the report)\n    \n    The recording costs a few %% of throughput: compare runs recorded the same\n    way.\n"
     echo
@@ -11773,6 +11779,7 @@ playground_connector_benchmark_usage() {
     printf "  playground connector benchmark --load-command \"./my-load.sh\" --json\n"
     printf "  playground connector benchmark --nb-records 1000000 --connector-tag 10.8.4\n  --connector-tag 10.9.9 --rounds 2\n"
     printf "  playground connector benchmark --nb-records 1000000 --no-flight-recorder\n"
+    printf "  playground connector benchmark --nb-records 1000000 --shape small-txn\n  --sessions 5\n"
     echo
 
   fi
@@ -19541,13 +19548,13 @@ function set_profiles() {
     profile_conduktor_command="--profile conduktor"
     playground state set flags.ENABLE_CONDUKTOR 1
   fi
+  # --enable-sql-datagen: no container anymore, playground run injects rows with the benchmark-load.bash of the example
   profile_sql_datagen_command=""
-  if [ ! -z "$SQL_DATAGEN" ]
+  if [ ! -z "$ENABLE_SQL_DATAGEN" ]
   then
-    profile_sql_datagen_command="--profile sql_datagen"
-    playground state set flags.SQL_DATAGEN 1
+    playground state set flags.ENABLE_SQL_DATAGEN 1
   else
-    playground state del flags.SQL_DATAGEN
+    playground state del flags.ENABLE_SQL_DATAGEN
   fi
 
   #define kafka_nodes variable and when profile is included/excluded
@@ -21299,7 +21306,7 @@ function benchmark_oracle_client_from_example () {
 # load for 'playground connector benchmark' on the CUSTOMERS table used by sql-datagen
 # (first_name, last_name, email, gender, club_status, comments), created if it does not exist; with sqlserver, the
 # dbo.customers table of the examples (first_name, last_name, email), which has cdc enabled for debezium:
-#   benchmark_sql_load <postgres|mysql|oracle|sqlserver> <container> "<sql client reading stdin>" <records> <bulk|small-txn|update> [preload|stream]
+#   benchmark_sql_load <postgres|mysql|mariadb|oracle|sqlserver> <container> "<sql client reading stdin>" <records> <bulk|small-txn|update> [preload|stream]
 # - bulk: one transaction inserting <records> rows
 # - small-txn: <records> transactions of one row
 # - update: updates <records> existing rows (run a bulk load first)
@@ -21320,14 +21327,20 @@ function benchmark_sql_load () {
       update="UPDATE CUSTOMERS SET comments = 'benchmark update ' || id || ' ' || floor(random() * 1000000) WHERE id IN (SELECT id FROM CUSTOMERS ORDER BY id LIMIT $records);"
       count_flags="-t -A"
     ;;
-    mysql)
-      create_table="CREATE TABLE IF NOT EXISTS CUSTOMERS (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, first_name VARCHAR(50), last_name VARCHAR(50), email VARCHAR(50), gender VARCHAR(50), club_status VARCHAR(20), comments VARCHAR(90), create_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP, update_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);"
-      insert_bulk="SET SESSION cte_max_recursion_depth = $((records + 1)); INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) WITH RECURSIVE seq (i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM seq WHERE i < $records) SELECT CONCAT('first', i), CONCAT('last', i), CONCAT('user', i, '@example.com'), IF(i % 2 = 0, 'Female', 'Male'), ELT(1 + i % 4, 'bronze', 'silver', 'gold', 'platinum'), CONCAT('benchmark row ', i) FROM seq;"
-      insert_small_txn="DROP PROCEDURE IF EXISTS benchmark_small_txn;
+    mysql|mariadb)
+      # the recursive cte of the bulk load is limited to 1000 levels by default, a setting named differently in mariadb
+      local recursion_limit="SET SESSION cte_max_recursion_depth = $((records + 1));"
+      [ "$dialect" == "mariadb" ] && recursion_limit="SET SESSION max_recursive_iterations = $((records + 1));"
+      create_table="CREATE TABLE IF NOT EXISTS CUSTOMERS (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, first_name VARCHAR(50), last_name VARCHAR(50), email VARCHAR(50), gender VARCHAR(50), club_status VARCHAR(20), comments VARCHAR(90), create_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP, update_ts TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);"
+      insert_bulk="$recursion_limit INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) WITH RECURSIVE seq (i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM seq WHERE i < $records) SELECT CONCAT('first', i), CONCAT('last', i), CONCAT('user', i, '@example.com'), IF(i % 2 = 0, 'Female', 'Male'), ELT(1 + i % 4, 'bronze', 'silver', 'gold', 'platinum'), CONCAT('benchmark row ', i) FROM seq;"
+      # a procedure name of its own: parallel sessions (--sessions, --enable-sql-datagen) would drop each other's
+      local procedure="benchmark_small_txn_$$_$RANDOM"
+      insert_small_txn="DROP PROCEDURE IF EXISTS $procedure;
 DELIMITER //
-CREATE PROCEDURE benchmark_small_txn(IN n INT) BEGIN DECLARE i INT DEFAULT 1; WHILE i <= n DO INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES (CONCAT('first', i), CONCAT('last', i), CONCAT('user', i, '@example.com'), IF(i % 2 = 0, 'Female', 'Male'), ELT(1 + i % 4, 'bronze', 'silver', 'gold', 'platinum'), CONCAT('benchmark row ', i)); COMMIT; SET i = i + 1; END WHILE; END //
+CREATE PROCEDURE $procedure(IN n INT) BEGIN DECLARE i INT DEFAULT 1; WHILE i <= n DO INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES (CONCAT('first', i), CONCAT('last', i), CONCAT('user', i, '@example.com'), IF(i % 2 = 0, 'Female', 'Male'), ELT(1 + i % 4, 'bronze', 'silver', 'gold', 'platinum'), CONCAT('benchmark row ', i)); COMMIT; SET i = i + 1; END WHILE; END //
 DELIMITER ;
-CALL benchmark_small_txn($records);"
+CALL $procedure($records);
+DROP PROCEDURE $procedure;"
       update="UPDATE CUSTOMERS SET comments = CONCAT('benchmark update ', id, ' ', FLOOR(RAND() * 1000000)) ORDER BY id LIMIT $records;"
       count_flags="-N -s"
     ;;
@@ -21380,7 +21393,7 @@ SELECT COUNT(*) FROM dbo.customers;
 GO"
     ;;
     *)
-      logerror "❌ benchmark_sql_load: unsupported dialect $dialect (postgres, mysql, oracle, sqlserver)"
+      logerror "❌ benchmark_sql_load: unsupported dialect $dialect (postgres, mysql, mariadb, oracle, sqlserver)"
       return 1
     ;;
   esac
@@ -21464,6 +21477,64 @@ function benchmark_stream_batches () {
     "$@"
     echo "BENCHMARK_BATCH=$records $(date +%s)"
   done
+}
+
+# playground run --enable-sql-datagen: runs the benchmark-load.bash next to <test file> in stream mode, one row per
+# transaction, in <sessions> parallel sessions, for <minutes> minutes, then stops them at the end of their batch. Same
+# loads as playground connector benchmark (CUSTOMERS table of the example, or the load of a reproduction model).
+#   sql_datagen_inject <test file> <minutes> <sessions>
+function sql_datagen_inject () {
+  local test_file="$1" minutes="$2" sessions="$3"
+  local load_script work session pids="" end rows elapsed
+  load_script="$(dirname "$test_file")/benchmark-load.bash"
+  if [ ! -f "$load_script" ]
+  then
+    logerror "❌ --enable-sql-datagen: no benchmark-load.bash next to $test_file"
+    logerror "   for a reproduction model, link the one of its example: ln -s ../../connect/<example>/benchmark-load.bash $(dirname "$test_file")/"
+    return 1
+  fi
+  work=$(mktemp -d -t playground-sql-datagen.XXXXXX)
+  export BENCHMARK_TEST_FILE="$test_file"
+  export BENCHMARK_STOP_FILE="$work/stop"
+  # rows per batch of each session: small enough to stop quickly at the end, large enough to keep the database busy
+  local batch=100
+  if ! bash "$load_script" --check --records "$batch" --mode stream --shape small-txn > "$work/check.log" 2>&1
+  then
+    tail -5 "$work/check.log"
+    logerror "❌ --enable-sql-datagen: $load_script refused --shape small-txn --mode stream"
+    return 1
+  fi
+  log "🌪️ injecting rows with $(basename "$load_script") for $minutes minute(s): $sessions session(s), one row per transaction"
+  for ((session = 1; session <= sessions; session++))
+  do
+    bash "$load_script" --records "$batch" --mode stream --shape small-txn > "$work/session-$session.log" 2>&1 &
+    pids="$pids $!"
+  done
+  end=$(( $(date +%s) + minutes * 60 ))
+  local start
+  start=$(date +%s)
+  while [ "$(date +%s)" -lt "$end" ]
+  do
+    sleep 30
+    rows=$(cat "$work"/session-*.log 2> /dev/null | awk -F'[= ]' '/^BENCHMARK_BATCH=/ { n += $2 } END { print n + 0 }')
+    elapsed=$(( $(date +%s) - start ))
+    log "🌪️ $rows rows inserted in ${elapsed}s ($(( rows / (elapsed > 0 ? elapsed : 1) )) rows/s)"
+  done
+  touch "$BENCHMARK_STOP_FILE"
+  local pid
+  for pid in $pids
+  do
+    wait "$pid" 2> /dev/null || true
+  done
+  rows=$(cat "$work"/session-*.log 2> /dev/null | awk -F'[= ]' '/^BENCHMARK_BATCH=/ { n += $2 } END { print n + 0 }')
+  elapsed=$(( $(date +%s) - start ))
+  log "🌪️ done: $rows rows inserted in ${elapsed}s by $sessions session(s)"
+  if grep -l -E "ERROR|ORA-|error" "$work"/session-*.log > /dev/null 2>&1
+  then
+    logwarn "⚠️ some sessions reported errors, see $work"
+  else
+    rm -rf "$work"
+  fi
 }
 
 # mongosh connection of a mongodb example script (tls options of the ssl variant), for benchmark_mongo_load:
@@ -23281,7 +23352,7 @@ function force_enable () {
 }
 
 function load_env_variables () {
-  for item in {ENABLE_CONTROL_CENTER,ENABLE_FLINK,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_CONNECT_NODES}
+  for item in {ENABLE_CONTROL_CENTER,ENABLE_FLINK,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,ENABLE_SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_CONNECT_NODES}
   do
     i=$(playground state get "flags.${item}")
     if [ "$i" != "" ]
@@ -29054,7 +29125,9 @@ playground_run_command() {
   if [[ -n "$enable_sql_datagen" ]]
   then
     array_flag_list+=("--enable-sql-datagen")
-    export SQL_DATAGEN=true
+    # rows are injected by this command once the example is done (see sql_datagen_inject), with the benchmark-load.bash of
+    # the example: not SQL_DATAGEN, which the examples and reproduction models of the former Java datagen still test
+    export ENABLE_SQL_DATAGEN=true
 
     if [[ $test_file != *"fully-managed"* ]]
     then
@@ -29064,7 +29137,7 @@ playground_run_command() {
 
       if [[ -n "$force_interactive_repro" ]]
       then
-        force_enable --enable-sql-datagen SQL_DATAGEN
+        force_enable --enable-sql-datagen ENABLE_SQL_DATAGEN
         force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
       fi
     fi
@@ -29415,7 +29488,7 @@ playground_run_command() {
     fi
 
     sql_datagen=0
-    if [[ $test_file == *"connect-debezium-sqlserver"* ]] || [[ $test_file == *"connect-debezium-mysql"* ]] || [[ $test_file == *"connect-debezium-postgresql"* ]] || [[ $test_file == *"connect-debezium-oracle"* ]] || [[ $test_file == *"connect-cdc-oracle"* ]] || [[ $test_file == *"connect-jdbc-sqlserver"* ]] || [[ $test_file == *"connect-jdbc-mysql"* ]] || [[ $test_file == *"connect-jdbc-postgresql"* ]] || [[ $test_file == *"connect-jdbc-oracle"* ]] || [[ $test_file == *"connect-cdc-xstream"* ]] || [[ $test_file == *"fm-debezium"* ]] || [[ $test_file == *"fm-cdc"* ]]
+    if [[ $test_file == *"connect-debezium-sqlserver"* ]] || [[ $test_file == *"connect-debezium-mysql"* ]] || [[ $test_file == *"connect-debezium-mariadb"* ]] || [[ $test_file == *"connect-jdbc-mariadb"* ]] || [[ $test_file == *"fm-jdbc-mysql"* ]] || [[ $test_file == *"connect-debezium-postgresql"* ]] || [[ $test_file == *"connect-debezium-oracle"* ]] || [[ $test_file == *"connect-cdc-oracle"* ]] || [[ $test_file == *"connect-jdbc-sqlserver"* ]] || [[ $test_file == *"connect-jdbc-mysql"* ]] || [[ $test_file == *"connect-jdbc-postgresql"* ]] || [[ $test_file == *"connect-jdbc-oracle"* ]] || [[ $test_file == *"connect-cdc-xstream"* ]] || [[ $test_file == *"fm-debezium"* ]] || [[ $test_file == *"fm-cdc"* ]]
     then
       sql_datagen=1
     fi
@@ -29744,7 +29817,7 @@ playground_run_command() {
       add_menu_toggle $((1-is_ccloud)) "$ENABLE_KAFKA_NODES" "$MENU_BROKERS"
       add_menu_toggle $((1-is_ccloud)) "$ENABLE_CONNECT_NODES" "$MENU_CONNECT_WORKERS"
       add_menu_toggle $((1-is_fully_managed)) "$ENABLE_KCAT" "$MENU_KCAT"
-      add_menu_toggle $sql_datagen "$SQL_DATAGEN" "$MENU_SQL_DATAGEN"
+      add_menu_toggle $sql_datagen "$ENABLE_SQL_DATAGEN" "$MENU_SQL_DATAGEN"
       add_menu_toggle $((1-is_fully_managed)) "$ENABLE_FLINK" "$MENU_FLINK"
       add_menu_group "$MENU_SEPARATOR_FEATURES" "${toggle_group[@]}"
 
@@ -30039,10 +30112,10 @@ playground_run_command() {
 
       if [[ $res == *"$MENU_SQL_DATAGEN"* ]]
       then
-        if [ -z "$SQL_DATAGEN" ]
+        if [ -z "$ENABLE_SQL_DATAGEN" ]
         then
           array_flag_list+=("--enable-sql-datagen")
-          export SQL_DATAGEN=true
+          export ENABLE_SQL_DATAGEN=true
           interactive_enable_sql="true"
 
           array_flag_list+=("--enable-jmx-grafana")
@@ -30050,7 +30123,7 @@ playground_run_command() {
           interactive_enable_grafana="true"
         else
           array_flag_list=("${array_flag_list[@]/"--enable-sql-datagen"}")
-          unset SQL_DATAGEN
+          unset ENABLE_SQL_DATAGEN
           interactive_enable_sql=""
 
           if [[ $test_file != *"fully-managed"* ]]
@@ -30508,7 +30581,7 @@ playground_run_command() {
         log "📊 automatically enabling Grafana as --enable-sql-datagen is set"
         if [[ -n "$force_interactive_repro" ]]
         then
-          force_enable --enable-sql-datagen SQL_DATAGEN
+          force_enable --enable-sql-datagen ENABLE_SQL_DATAGEN
           force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
         fi
       fi
@@ -30809,6 +30882,17 @@ playground_run_command() {
   fi
   set -e
   touch /tmp/playground-run-command-used
+  # a reproduction model created with --enable-sql-datagen forces it with an export line in the script
+  sql_datagen="$ENABLE_SQL_DATAGEN"
+  if grep -q '^export ENABLE_SQL_DATAGEN=true' "$filename"
+  then
+    sql_datagen=true
+  fi
+  if grep -q '^export SQL_DATAGEN=true' "$filename"
+  then
+    logwarn "⚠️ $filename forces the former Java SQL datagen (export SQL_DATAGEN=true), which is gone: its build and its sql-datagen container fail"
+    logwarn "   replace that line with: export ENABLE_SQL_DATAGEN=true (rows are then injected with the benchmark-load.bash of the example)"
+  fi
   set +e
   bash $filename
   ret=$?
@@ -30831,6 +30915,11 @@ playground_run_command() {
     log "####################################################"
     log "✅ RESULT: SUCCESS for $filename ($ELAPSED - $CUMULATED)"
     log "####################################################"
+    if [ -n "$sql_datagen" ]
+    then
+      # SQL_DATAGEN_DURATION (minutes, default 10) and SQL_DATAGEN_SESSIONS (default 5)
+      sql_datagen_inject "$test_file" "${SQL_DATAGEN_DURATION:-10}" "${SQL_DATAGEN_SESSIONS:-5}" || ret=$?
+    fi
   elif [ $ret -eq 111 ]
   then
     log "####################################################"
@@ -48601,6 +48690,7 @@ playground_connector_benchmark_command() {
   eval "connector_tags=(${args[--connector-tag]:-})"
   rounds="${args[--rounds]}"
   no_flight_recorder="${args[--no-flight-recorder]}"
+  sessions="${args[--sessions]}"
 
   # with --json, logs go to stderr and only the result json to stdout
   exec 3>&1
@@ -48710,6 +48800,7 @@ playground_connector_benchmark_command() {
       done
       [ -n "$no_history" ] && child_args+=(--no-history)
       [ -n "$no_flight_recorder" ] && child_args+=(--no-flight-recorder)
+      child_args+=(--sessions "$sessions")
       [ -n "$verbose" ] && child_args+=(--verbose)
 
       function switch_connector_version () {
@@ -48871,6 +48962,27 @@ playground_connector_benchmark_command() {
           echo "$load_check_output" | grep -v '^$' | tail -5
           exit 1
       fi
+  fi
+  # --sessions: the load script runs in <sessions> parallel sessions, in one bash process (the load pid of the
+  # benchmark), sharing the stop file; a drain splits --nb-records between them, a stream gives each one batches of
+  # --nb-records
+  if [ "$sessions" -gt 1 ]
+  then
+      if [ -z "$load_script" ] || [[ "$load_cmd" != "bash \"$load_script\""* ]]
+      then
+          logerror "❌ --sessions needs the benchmark-load.bash of the example: it cannot split --load-command, --stream-load-command or a replayed produce"
+          exit 1
+      fi
+      per_session=$nb_records
+      [ "$load_mode" == "preload" ] && per_session=$((nb_records / sessions))
+      sessions_cmd="rc=0; pids=''"
+      for ((session = 1; session <= sessions; session++))
+      do
+          session_records=$per_session
+          [ "$load_mode" == "preload" ] && [ $session -eq 1 ] && session_records=$((per_session + nb_records - per_session * sessions))
+          sessions_cmd="$sessions_cmd; bash \"$load_script\" --records $session_records --mode $load_mode --shape $shape --record-size $record_size & pids=\"\$pids \$!\""
+      done
+      load_cmd="$sessions_cmd; for p in \$pids; do wait \$p || rc=\$?; done; exit \$rc"
   fi
   # load scripts can adapt to the connector configuration (a redo log topic doubles the records of oracle cdc...)
   export BENCHMARK_CONNECTOR_CONFIG="$output_dir/$run_id-config.json"
@@ -49082,7 +49194,7 @@ playground_connector_benchmark_command() {
       paused_by_benchmark=1
       playground connector wait --connector "$connector" --state PAUSED --max-wait 120 --interval 2 > /dev/null
 
-      log "📥 loading the backlog: $load_cmd"
+      log "📥 loading the backlog$([ "$sessions" -gt 1 ] && echo " in $sessions sessions"): $load_cmd"
       load_start=$(now)
       set +e
       if [[ -n "$verbose" ]]
@@ -49102,7 +49214,8 @@ playground_connector_benchmark_command() {
       fi
       load_seconds=$(awk -v e="$(now)" -v s="$load_start" 'BEGIN { printf "%.1f", e - s }')
       restore_run_state
-      records_from_load=$(grep -E '^BENCHMARK_RECORDS=[0-9]+$' "$load_log" | tail -1 | cut -d= -f2)
+      # one line per session with --sessions
+      records_from_load=$(grep -E '^BENCHMARK_RECORDS=[0-9]+$' "$load_log" | cut -d= -f2 | awk '{ n += $1 } END { if (NR) print n }')
       if [ -n "$records_from_load" ]
       then
           expected="$records_from_load"
@@ -49170,7 +49283,7 @@ playground_connector_benchmark_command() {
   else
       if [ -n "$load_cmd" ]
       then
-          log "🌊 starting the load in the background: $load_cmd"
+          log "🌊 starting the load in the background$([ "$sessions" -gt 1 ] && echo " ($sessions sessions)"): $load_cmd"
           bash -c "$load_cmd" > "$load_log" 2>&1 &
           load_pid=$!
       fi
@@ -49336,7 +49449,7 @@ playground_connector_benchmark_command() {
   result=$(jq -n \
       --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg test_file "$test_file_relative" --arg connector "$connector" \
       --arg connector_class "$connector_class" --arg plugin_version "$plugin_version" --arg cp_tag "$cp_tag" \
-      --arg type "$type" --arg mode "$mode" --arg shape "$shape" --argjson tasks "$nb_tasks" \
+      --arg type "$type" --arg mode "$mode" --arg shape "$shape" --argjson tasks "$nb_tasks" --argjson sessions "$sessions" \
       --argjson records "$measured_records" --argjson seconds "$measured_seconds" --argjson records_per_second "$throughput" \
       --arg rate_p50 "$rate_p50" --arg rate_p95 "$rate_p95" --arg rate_min "$rate_min" \
       --arg batch_avg_ms "$batch_avg" --arg running_ratio "$ratio_avg" --arg cpu_avg "$cpu_avg" --arg cpu_max "$cpu_max" \
@@ -49346,7 +49459,7 @@ playground_connector_benchmark_command() {
       --arg dlq_records "$dlq_delta" --arg skipped_records "$skipped_delta" --arg task_shares "$task_shares" \
       --argjson setup "$setup_json" --argjson flight_recorder "$flight_recorder_json" \
       '{date: $date, test_file: $test_file, connector: $connector, connector_class: $connector_class, plugin_version: $plugin_version,
-        cp_tag: $cp_tag, type: $type, mode: $mode, shape: $shape, tasks: $tasks, records: $records, seconds: $seconds,
+        cp_tag: $cp_tag, type: $type, mode: $mode, shape: $shape, sessions: $sessions, tasks: $tasks, records: $records, seconds: $seconds,
         records_per_second: $records_per_second, lower_bound: $lower_bound, rate_p50: $rate_p50, rate_p95: $rate_p95, rate_min: $rate_min,
         batch_avg_ms: $batch_avg_ms, running_ratio: $running_ratio, cpu_percent_of_one_core_avg: $cpu_avg,
         cpu_percent_of_one_core_max: $cpu_max, load_seconds: $load_seconds, topic_records_delta: $topic_records_delta,
@@ -49389,7 +49502,7 @@ playground_connector_benchmark_command() {
   log "🏁 benchmark of $connector_type connector $connector ($type, $nb_tasks task(s), $connector_class $plugin_version, CP $cp_tag)"
   if [ "$mode" == "drain" ]
   then
-      printf "   %-22s %s\n" "mode" "drain of $measured_records records (shape $shape, loaded in ${load_seconds}s)"
+      printf "   %-22s %s\n" "mode" "drain of $measured_records records (shape $shape$([ "$sessions" -gt 1 ] && echo ", $sessions sessions"), loaded in ${load_seconds}s)"
   else
       printf "   %-22s %s\n" "mode" "steady for ${measured_seconds}s after ${warmup}s of warm-up"
   fi
@@ -49461,6 +49574,10 @@ playground_connector_benchmark_command() {
       then
           add_warning "the previous run was on a different setup ($setup_differences): the comparison is not meaningful"
       fi
+  fi
+  if [ -n "$previous" ] && [ "$(echo "$previous" | jq -r '.sessions // 1')" != "$sessions" ]
+  then
+      add_warning "the previous run used $(echo "$previous" | jq -r '.sessions // 1') load session(s) and this one $sessions: the load is not the same"
   fi
   if [ -n "$previous" ]
   then
@@ -82164,6 +82281,20 @@ playground_connector_benchmark_parse_requirements() {
         ;;
 
       # :flag.case
+      --sessions)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--sessions']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--sessions requires an argument: --sessions SESSIONS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --no-flight-recorder)
 
         # :flag.case_no_arg
@@ -82219,6 +82350,7 @@ playground_connector_benchmark_parse_requirements() {
   [[ -n ${args['--max-wait']:-} ]] || args['--max-wait']="30m"
   [[ -n ${args['--rounds']:-} ]] || args['--rounds']="1"
   [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="/tmp/playground-benchmark"
+  [[ -n ${args['--sessions']:-} ]] || args['--sessions']="1"
 
   # :command.validations
   # :flag.validations
@@ -82289,6 +82421,15 @@ playground_connector_benchmark_parse_requirements() {
     validation_output="$(validate_file_exists "${args['--compare']:-}")"
     if [[ -n "${validation_output}" ]]; then
       printf "validation error in %s:\n%s\n" "--compare COMPARE" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--sessions'] ]]; then
+    validation_output="$(validate_integer "${args['--sessions']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--sessions SESSIONS" "$validation_output" >&2
       exit 1
     fi
   fi
@@ -99245,6 +99386,16 @@ playground_connector_benchmark_completion() {
 
         shift
         ;;
+      --sessions)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--sessions"]=1
+
+        ;;
       --no-flight-recorder)
         completion_blocked_flags["--no-flight-recorder"]=1
 
@@ -99281,6 +99432,7 @@ playground_connector_benchmark_completion() {
     completion_flag_candidates --output-dir "$completion_current" --output-dir
     completion_flag_candidates --compare "$completion_current" --compare
     completion_flag_candidates --no-history "$completion_current" --no-history
+    completion_flag_candidates --sessions "$completion_current" --sessions
     completion_flag_candidates --no-flight-recorder "$completion_current" --no-flight-recorder
     completion_flag_candidates --json "$completion_current" --json
   fi

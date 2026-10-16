@@ -22,6 +22,8 @@ playground run -f mariadb-jdbc-source.sh
 
 1. Downloads `mariadb-java-client-3.2.0.jar` if needed and copies it into the JDBC connector `lib` folder.
 2. Starts a MariaDB container alongside the plaintext environment.
-3. Creates the `team` table (`id` auto-increment, `last_modified` DATETIME) and inserts 2 rows.
-4. Creates the `mariadb-source` connector (`mode=timestamp+incrementing` on `last_modified` / `id`, `topic.prefix=mariadb-`).
-5. Verifies that 2 records land in topic `mariadb-team` with `playground topic consume`.
+3. Creates the `CUSTOMERS` table (the columns of the other database examples: `id` auto-increment, `first_name`, `last_name`, `email`, `gender`, `club_status`, `comments`, `create_ts`, `update_ts`) and inserts 2 rows.
+4. Creates the `mariadb-source` connector (`mode=timestamp+incrementing` on `update_ts` / `id`, `topic.prefix=mariadb-`).
+5. Verifies that 2 records land in topic `mariadb-CUSTOMERS` with `playground topic consume`.
+
+With `--enable-sql-datagen` (`playground run -f mariadb-jdbc-source.sh --enable-sql-datagen`), once the example succeeded, `playground run` injects rows in the `CUSTOMERS` table with [`benchmark-load.bash`](benchmark-load.bash) (the same load as `playground connector benchmark`) for 10 minutes: one row per transaction, from 5 parallel sessions. `SQL_DATAGEN_DURATION` (minutes, default `10`) and `SQL_DATAGEN_SESSIONS` (default `5`) change the duration and the number of sessions.

@@ -17,22 +17,6 @@ then
      exit 111
 fi
 
-if [ ! -z "$SQL_DATAGEN" ]
-then
-     cd ../../connect/connect-debezium-mysql-source
-     log "🌪️ SQL_DATAGEN is set"
-     for component in mysql-datagen
-     do
-     set +e
-     log "🏗 Building jar for ${component}"
-     build_java_component_with_retry "${component}" docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${PWD}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "${PWD}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-11 mvn -s /tmp/settings.xml -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package
-     set -e
-     done
-     cd -
-else
-     log "🛑 SQL_DATAGEN is not set"
-fi
-
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
@@ -40,42 +24,30 @@ log "Create table"
 playground container exec --container mysql --command "mysql  --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb" << EOF
 USE mydb;
 
-CREATE TABLE team (
-  id            INT          NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  name          VARCHAR(255) NOT NULL,
-  email         VARCHAR(255) NOT NULL,
-  last_modified DATETIME     NOT NULL
+CREATE TABLE CUSTOMERS (
+  id          INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  first_name  VARCHAR(50),
+  last_name   VARCHAR(50),
+  email       VARCHAR(50),
+  gender      VARCHAR(50),
+  club_status VARCHAR(20),
+  comments    VARCHAR(90),
+  create_ts   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  update_ts   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 
-INSERT INTO team (
-  name,
-  email,
-  last_modified
-) VALUES (
-  'kafka',
-  'kafka@apache.org',
-  NOW()
-);
+INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES ('Rica', 'Blaisdell', 'rblaisdell0@rambler.ru', 'Female', 'bronze', 'Universal optimal hierarchy');
 
-ALTER TABLE team AUTO_INCREMENT = 101;
-describe team;
-select * from team;
+describe CUSTOMERS;
+select * from CUSTOMERS;
 EOF
 
 log "Adding an element to the table"
 playground container exec --container mysql --command "mysql  --protocol=TCP --host=127.0.0.1 --user=root --password=password --database=mydb" << EOF
 USE mydb;
 
-INSERT INTO team (
-  name,
-  email,
-  last_modified
-) VALUES (
-  'another',
-  'another@apache.org',
-  NOW()
-);
+INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES ('Ruthie', 'Brockherst', 'rbrockherst1@ow.ly', 'Female', 'platinum', 'Reverse-engineered tangible interface');
 EOF
 
 log "Creating Debezium MySQL source connector"
@@ -112,13 +84,6 @@ EOF
 
 sleep 5
 
-log "Verifying topic server1_mydb_team"
-playground topic consume --topic server1_mydb_team --min-expected-messages 2 --timeout 60
-
-if [ ! -z "$SQL_DATAGEN" ]
-then
-     DURATION=10
-     log "Injecting data for $DURATION minutes"
-     playground container exec --container sql-datagen --command "bash -c \"java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --connectionUrl 'jdbc:mysql://mysql:3306/mydb?user=debezium&password=dbz&useSSL=false&allowPublicKeyRetrieval=true' --maxPoolSize 10 --durationTimeMin $DURATION\""
-fi
+log "Verifying topic server1_mydb_CUSTOMERS"
+playground topic consume --topic server1_mydb_CUSTOMERS --min-expected-messages 2 --timeout 60
 

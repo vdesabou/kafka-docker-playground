@@ -1103,13 +1103,13 @@ function set_profiles() {
     profile_conduktor_command="--profile conduktor"
     playground state set flags.ENABLE_CONDUKTOR 1
   fi
+  # --enable-sql-datagen: no container anymore, playground run injects rows with the benchmark-load.bash of the example
   profile_sql_datagen_command=""
-  if [ ! -z "$SQL_DATAGEN" ]
+  if [ ! -z "$ENABLE_SQL_DATAGEN" ]
   then
-    profile_sql_datagen_command="--profile sql_datagen"
-    playground state set flags.SQL_DATAGEN 1
+    playground state set flags.ENABLE_SQL_DATAGEN 1
   else
-    playground state del flags.SQL_DATAGEN
+    playground state del flags.ENABLE_SQL_DATAGEN
   fi
 
   #define kafka_nodes variable and when profile is included/excluded
@@ -2862,7 +2862,7 @@ function benchmark_oracle_client_from_example () {
 # load for 'playground connector benchmark' on the CUSTOMERS table used by sql-datagen
 # (first_name, last_name, email, gender, club_status, comments), created if it does not exist; with sqlserver, the
 # dbo.customers table of the examples (first_name, last_name, email), which has cdc enabled for debezium:
-#   benchmark_sql_load <postgres|mysql|oracle|sqlserver> <container> "<sql client reading stdin>" <records> <bulk|small-txn|update> [preload|stream]
+#   benchmark_sql_load <postgres|mysql|mariadb|oracle|sqlserver> <container> "<sql client reading stdin>" <records> <bulk|small-txn|update> [preload|stream]
 # - bulk: one transaction inserting <records> rows
 # - small-txn: <records> transactions of one row
 # - update: updates <records> existing rows (run a bulk load first)
@@ -2883,14 +2883,20 @@ function benchmark_sql_load () {
       update="UPDATE CUSTOMERS SET comments = 'benchmark update ' || id || ' ' || floor(random() * 1000000) WHERE id IN (SELECT id FROM CUSTOMERS ORDER BY id LIMIT $records);"
       count_flags="-t -A"
     ;;
-    mysql)
-      create_table="CREATE TABLE IF NOT EXISTS CUSTOMERS (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, first_name VARCHAR(50), last_name VARCHAR(50), email VARCHAR(50), gender VARCHAR(50), club_status VARCHAR(20), comments VARCHAR(90), create_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP, update_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);"
-      insert_bulk="SET SESSION cte_max_recursion_depth = $((records + 1)); INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) WITH RECURSIVE seq (i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM seq WHERE i < $records) SELECT CONCAT('first', i), CONCAT('last', i), CONCAT('user', i, '@example.com'), IF(i % 2 = 0, 'Female', 'Male'), ELT(1 + i % 4, 'bronze', 'silver', 'gold', 'platinum'), CONCAT('benchmark row ', i) FROM seq;"
-      insert_small_txn="DROP PROCEDURE IF EXISTS benchmark_small_txn;
+    mysql|mariadb)
+      # the recursive cte of the bulk load is limited to 1000 levels by default, a setting named differently in mariadb
+      local recursion_limit="SET SESSION cte_max_recursion_depth = $((records + 1));"
+      [ "$dialect" == "mariadb" ] && recursion_limit="SET SESSION max_recursive_iterations = $((records + 1));"
+      create_table="CREATE TABLE IF NOT EXISTS CUSTOMERS (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, first_name VARCHAR(50), last_name VARCHAR(50), email VARCHAR(50), gender VARCHAR(50), club_status VARCHAR(20), comments VARCHAR(90), create_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP, update_ts TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);"
+      insert_bulk="$recursion_limit INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) WITH RECURSIVE seq (i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM seq WHERE i < $records) SELECT CONCAT('first', i), CONCAT('last', i), CONCAT('user', i, '@example.com'), IF(i % 2 = 0, 'Female', 'Male'), ELT(1 + i % 4, 'bronze', 'silver', 'gold', 'platinum'), CONCAT('benchmark row ', i) FROM seq;"
+      # a procedure name of its own: parallel sessions (--sessions, --enable-sql-datagen) would drop each other's
+      local procedure="benchmark_small_txn_$$_$RANDOM"
+      insert_small_txn="DROP PROCEDURE IF EXISTS $procedure;
 DELIMITER //
-CREATE PROCEDURE benchmark_small_txn(IN n INT) BEGIN DECLARE i INT DEFAULT 1; WHILE i <= n DO INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES (CONCAT('first', i), CONCAT('last', i), CONCAT('user', i, '@example.com'), IF(i % 2 = 0, 'Female', 'Male'), ELT(1 + i % 4, 'bronze', 'silver', 'gold', 'platinum'), CONCAT('benchmark row ', i)); COMMIT; SET i = i + 1; END WHILE; END //
+CREATE PROCEDURE $procedure(IN n INT) BEGIN DECLARE i INT DEFAULT 1; WHILE i <= n DO INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES (CONCAT('first', i), CONCAT('last', i), CONCAT('user', i, '@example.com'), IF(i % 2 = 0, 'Female', 'Male'), ELT(1 + i % 4, 'bronze', 'silver', 'gold', 'platinum'), CONCAT('benchmark row ', i)); COMMIT; SET i = i + 1; END WHILE; END //
 DELIMITER ;
-CALL benchmark_small_txn($records);"
+CALL $procedure($records);
+DROP PROCEDURE $procedure;"
       update="UPDATE CUSTOMERS SET comments = CONCAT('benchmark update ', id, ' ', FLOOR(RAND() * 1000000)) ORDER BY id LIMIT $records;"
       count_flags="-N -s"
     ;;
@@ -2943,7 +2949,7 @@ SELECT COUNT(*) FROM dbo.customers;
 GO"
     ;;
     *)
-      logerror "❌ benchmark_sql_load: unsupported dialect $dialect (postgres, mysql, oracle, sqlserver)"
+      logerror "❌ benchmark_sql_load: unsupported dialect $dialect (postgres, mysql, mariadb, oracle, sqlserver)"
       return 1
     ;;
   esac
@@ -3027,6 +3033,64 @@ function benchmark_stream_batches () {
     "$@"
     echo "BENCHMARK_BATCH=$records $(date +%s)"
   done
+}
+
+# playground run --enable-sql-datagen: runs the benchmark-load.bash next to <test file> in stream mode, one row per
+# transaction, in <sessions> parallel sessions, for <minutes> minutes, then stops them at the end of their batch. Same
+# loads as playground connector benchmark (CUSTOMERS table of the example, or the load of a reproduction model).
+#   sql_datagen_inject <test file> <minutes> <sessions>
+function sql_datagen_inject () {
+  local test_file="$1" minutes="$2" sessions="$3"
+  local load_script work session pids="" end rows elapsed
+  load_script="$(dirname "$test_file")/benchmark-load.bash"
+  if [ ! -f "$load_script" ]
+  then
+    logerror "❌ --enable-sql-datagen: no benchmark-load.bash next to $test_file"
+    logerror "   for a reproduction model, link the one of its example: ln -s ../../connect/<example>/benchmark-load.bash $(dirname "$test_file")/"
+    return 1
+  fi
+  work=$(mktemp -d -t playground-sql-datagen.XXXXXX)
+  export BENCHMARK_TEST_FILE="$test_file"
+  export BENCHMARK_STOP_FILE="$work/stop"
+  # rows per batch of each session: small enough to stop quickly at the end, large enough to keep the database busy
+  local batch=100
+  if ! bash "$load_script" --check --records "$batch" --mode stream --shape small-txn > "$work/check.log" 2>&1
+  then
+    tail -5 "$work/check.log"
+    logerror "❌ --enable-sql-datagen: $load_script refused --shape small-txn --mode stream"
+    return 1
+  fi
+  log "🌪️ injecting rows with $(basename "$load_script") for $minutes minute(s): $sessions session(s), one row per transaction"
+  for ((session = 1; session <= sessions; session++))
+  do
+    bash "$load_script" --records "$batch" --mode stream --shape small-txn > "$work/session-$session.log" 2>&1 &
+    pids="$pids $!"
+  done
+  end=$(( $(date +%s) + minutes * 60 ))
+  local start
+  start=$(date +%s)
+  while [ "$(date +%s)" -lt "$end" ]
+  do
+    sleep 30
+    rows=$(cat "$work"/session-*.log 2> /dev/null | awk -F'[= ]' '/^BENCHMARK_BATCH=/ { n += $2 } END { print n + 0 }')
+    elapsed=$(( $(date +%s) - start ))
+    log "🌪️ $rows rows inserted in ${elapsed}s ($(( rows / (elapsed > 0 ? elapsed : 1) )) rows/s)"
+  done
+  touch "$BENCHMARK_STOP_FILE"
+  local pid
+  for pid in $pids
+  do
+    wait "$pid" 2> /dev/null || true
+  done
+  rows=$(cat "$work"/session-*.log 2> /dev/null | awk -F'[= ]' '/^BENCHMARK_BATCH=/ { n += $2 } END { print n + 0 }')
+  elapsed=$(( $(date +%s) - start ))
+  log "🌪️ done: $rows rows inserted in ${elapsed}s by $sessions session(s)"
+  if grep -l -E "ERROR|ORA-|error" "$work"/session-*.log > /dev/null 2>&1
+  then
+    logwarn "⚠️ some sessions reported errors, see $work"
+  else
+    rm -rf "$work"
+  fi
 }
 
 # mongosh connection of a mongodb example script (tls options of the ssl variant), for benchmark_mongo_load:
@@ -4878,7 +4942,7 @@ function force_enable () {
 }
 
 function load_env_variables () {
-  for item in {ENABLE_CONTROL_CENTER,ENABLE_FLINK,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_CONNECT_NODES}
+  for item in {ENABLE_CONTROL_CENTER,ENABLE_FLINK,ENABLE_KSQLDB,ENABLE_RESTPROXY,ENABLE_JMX_GRAFANA,ENABLE_KCAT,ENABLE_CONDUKTOR,ENABLE_SQL_DATAGEN,ENABLE_KAFKA_NODES,ENABLE_CONNECT_NODES}
   do
     i=$(playground state get "flags.${item}")
     if [ "$i" != "" ]

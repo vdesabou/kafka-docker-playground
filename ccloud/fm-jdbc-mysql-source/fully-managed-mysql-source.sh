@@ -13,10 +13,10 @@ bootstrap_ccloud_environment
 
 
 set +e
-playground topic delete --topic mysql-team
+playground topic delete --topic mysql-CUSTOMERS
 set -e
 
-playground topic create --topic mysql-team
+playground topic create --topic mysql-CUSTOMERS
 
 docker compose build
 docker compose down -v --remove-orphans
@@ -29,46 +29,34 @@ log "Create table"
 docker exec -i mysql mysql --user=root --password=password --database=mydb << EOF
 USE mydb;
 
-CREATE TABLE team (
-  id            INT          NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  name          VARCHAR(255) NOT NULL,
-  email         VARCHAR(255) NOT NULL,
-  last_modified DATETIME     NOT NULL
+CREATE TABLE CUSTOMERS (
+  id          INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  first_name  VARCHAR(50),
+  last_name   VARCHAR(50),
+  email       VARCHAR(50),
+  gender      VARCHAR(50),
+  club_status VARCHAR(20),
+  comments    VARCHAR(90),
+  create_ts   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  update_ts   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 
-INSERT INTO team (
-  name,
-  email,
-  last_modified
-) VALUES (
-  'kafka',
-  'kafka@apache.org',
-  NOW()
-);
+INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES ('Rica', 'Blaisdell', 'rblaisdell0@rambler.ru', 'Female', 'bronze', 'Universal optimal hierarchy');
 
-ALTER TABLE team AUTO_INCREMENT = 101;
-describe team;
-select * from team;
+describe CUSTOMERS;
+select * from CUSTOMERS;
 EOF
 
 log "Adding an element to the table"
 docker exec -i mysql mysql --user=root --password=password --database=mydb << EOF
 USE mydb;
 
-INSERT INTO team (
-  name,
-  email,
-  last_modified
-) VALUES (
-  'another',
-  'another@apache.org',
-  NOW()
-);
+INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES ('Ruthie', 'Brockherst', 'rbrockherst1@ow.ly', 'Female', 'platinum', 'Reverse-engineered tangible interface');
 EOF
 
-log "Show content of team table:"
-docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
+log "Show content of CUSTOMERS table:"
+docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from CUSTOMERS'"
 
 log "Waiting for ngrok to start"
 while true
@@ -116,9 +104,9 @@ playground connector create-or-update --connector $connector_name << EOF
   "connection.user": "user",
   "connection.password": "password",
   "db.name": "mydb",
-  "table.whitelist": "team",
+  "table.whitelist": "CUSTOMERS",
   "db.timezone": "UTC",
-  "timestamp.column.name":"last_modified",
+  "timestamp.column.name":"update_ts",
   "incrementing.column.name":"id",
   "topic.prefix":"mysql-",
   "tasks.max": "1"
@@ -128,8 +116,8 @@ wait_for_ccloud_connector_up $connector_name 180
 
 sleep 5
 
-log "Verifying topic mysql-team"
-playground topic consume --topic mysql-team --min-expected-messages 2 --timeout 60
+log "Verifying topic mysql-CUSTOMERS"
+playground topic consume --topic mysql-CUSTOMERS --min-expected-messages 2 --timeout 60
 
 
 log "Do you want to delete the fully managed connector $connector_name ?"
