@@ -58,6 +58,15 @@ The network selection strategy for connecting to a Couchbase Server cluster that
 ==========================
 Security
 ==========================
+🔘 couchbase.trust.store.password
+
+Password for accessing the trust store.
+
+	 - Type: PASSWORD
+	 - Default: [hidden]
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.enable.tls
 
 Use secure connection to Couchbase Server.
@@ -120,15 +129,6 @@ Note that this config is considered advanced, please only customize the cipher l
 	 - Default: LIST
 	 - Importance: The custom list of ciphers to use when connecting to Couchbase using regular or DCP clients.
 	 - Required: MEDIUM
-
-🔘 couchbase.trust.store.password
-
-Password for accessing the trust store.
-
-	 - Type: PASSWORD
-	 - Default: [hidden]
-	 - Importance: MEDIUM
-	 - Required: false
 
 ==========================
 Logging
