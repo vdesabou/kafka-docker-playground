@@ -1,0 +1,1 @@
+../../connect/connect-rabbitmq-source/benchmark-load.bash

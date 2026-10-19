@@ -113,7 +113,7 @@ EOF
 
 log "Adding an element to the table"
 docker exec -i postgres psql -U myuser -d postgres << EOF
-insert into customers (id, first_name, last_name, email, gender, comments) values (21, 'Bernardo', 'Dudman', 'bdudmanb@lulu.com', 'Male', 'Robust bandwidth-monitored budgetary management');
+insert into customers (first_name, last_name, email, gender, comments) values ('Bernardo', 'Dudman', 'bdudmanb@lulu.com', 'Male', 'Robust bandwidth-monitored budgetary management');
 EOF
 
 log "Show content of CUSTOMERS table:"

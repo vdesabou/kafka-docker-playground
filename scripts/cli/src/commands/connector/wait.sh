@@ -56,7 +56,13 @@ do
     do
         get_connector_states "$connector"
         nb_tasks=$(echo "$tasks_states" | { grep -c . || true; } | tr -d ' ')
-        nb_tasks_in_state=$(echo "$tasks_states" | { grep -cx "$state" || true; } | tr -d ' ')
+        task_state_pattern="$state"
+        # the tasks of a paused fully managed connector are STOPPED
+        if [ "$state" == "PAUSED" ] && { [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]; }
+        then
+            task_state_pattern="PAUSED|STOPPED"
+        fi
+        nb_tasks_in_state=$(echo "$tasks_states" | { grep -cxE "$task_state_pattern" || true; } | tr -d ' ')
         elapsed=$((SECONDS - start_time))
 
         is_failed=false

@@ -1,0 +1,1 @@
+../../connect/connect-gcp-pubsub-source/benchmark-load.bash

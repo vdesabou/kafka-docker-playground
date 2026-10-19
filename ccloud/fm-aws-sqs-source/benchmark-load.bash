@@ -1,0 +1,1 @@
+../../connect/connect-aws-sqs-source/benchmark-load.bash

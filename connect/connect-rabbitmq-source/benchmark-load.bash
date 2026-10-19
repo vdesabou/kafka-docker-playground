@@ -7,4 +7,10 @@ source ${DIR}/../../scripts/cli/src/lib/utils_function.sh
 
 benchmark_load_args "$@"
 queue=$(jq -r '."rabbitmq.queue"' "$BENCHMARK_CONNECTOR_CONFIG")
-benchmark_rabbitmq_load rabbitmq-producer "$queue" "$BENCHMARK_LOAD_RECORDS" "$BENCHMARK_LOAD_MODE"
+# rabbitmq_producer in the fully managed example
+producer=rabbitmq-producer
+if ! docker inspect "$producer" > /dev/null 2>&1 && docker inspect rabbitmq_producer > /dev/null 2>&1
+then
+    producer=rabbitmq_producer
+fi
+benchmark_rabbitmq_load "$producer" "$queue" "$BENCHMARK_LOAD_RECORDS" "$BENCHMARK_LOAD_MODE"

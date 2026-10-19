@@ -95,8 +95,11 @@ out of context.
   the spool dir family, `benchmark_hdfs_load`, `benchmark_cloud_storage_load` for S3 / GCS / Azure),
   `benchmark_append_file_load` (FileStream), and `benchmark_sql_load custom` with `BENCHMARK_SQL_*` statements for a
   table of the example. Read connector settings with `benchmark_connector_config_value <key>`: the connect
-  REST API masks passwords (`••••`), the helper then takes them from the example script and `benchmark_oracle_client_from_example`. Self-managed connectors only (not ccloud,
-  not cfk). When it says the throughput is a lower bound, rerun with 10x `--nb-records`. `--connector-tag A --connector-tag B
+  REST API masks passwords (`••••`), the helper then takes them from the example script and `benchmark_oracle_client_from_example`. Self-managed connectors, plus fully managed
+  sources whose `ccloud/fm-*` example ships a `benchmark-load.bash` (records counted from the topic end offsets,
+  no JMX / flight recorder / `--connector-tag`) and fully managed sinks (produce replay, records counted from the
+  committed offsets of `connect-<lcc id>`, which move about once a minute: drains of 10+ commits, often 1M records); for both, the per minute Metrics API
+  (`sent_records` / `received_records`, put batch time, batch size, dlq) gives the steady rate of the full minutes; not cfk. When it says the throughput is a lower bound, rerun with 10x `--nb-records`. `--connector-tag A --connector-tag B
   [--rounds 2]` benchmarks several plugin versions (update-version, version check, warm-up drain, comparison report)
   and restores the original version. `BENCHMARK_LOAD_SCRIPT=<file>` selects another load script than `benchmark-load.bash`
   (a file of the example's folder, e.g. `benchmark-load-<ticket>.bash` for a repro model; public example

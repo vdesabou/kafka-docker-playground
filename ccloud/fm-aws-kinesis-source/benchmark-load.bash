@@ -1,0 +1,1 @@
+../../connect/connect-aws-kinesis-source/benchmark-load.bash

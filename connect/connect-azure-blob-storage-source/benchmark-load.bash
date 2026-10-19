@@ -13,7 +13,7 @@ data_file="${DIR}/../../connect/connect-azure-blob-storage-source/data"
 function azure_config_value () {
     local key="$1" data_key="$2" value
     value=$(jq -r --arg k "$key" '.[$k] // empty' "$BENCHMARK_CONNECTOR_CONFIG")
-    if [ -z "$value" ] || [[ "$value" == *'${file:'* ]] || [[ "$value" == *"•"* ]] || [ "$value" == "[hidden]" ]
+    if [ -z "$value" ] || [[ "$value" == *'${file:'* ]] || [[ "$value" == *"•"* ]] || [ "$value" == "[hidden]" ] || [[ "$value" =~ ^\*+$ ]]
     then
         value=$(grep "^${data_key}=" "$data_file" 2> /dev/null | head -1 | cut -d= -f2-)
     fi
@@ -21,6 +21,11 @@ function azure_config_value () {
 }
 account_name=$(azure_config_value azblob.account.name AZURE_ACCOUNT_NAME)
 account_key=$(azure_config_value azblob.account.key AZURE_ACCOUNT_KEY)
+# the fully managed example writes no data file, and the ccloud connect api masks the key: ask azure for it
+if [[ "$BENCHMARK_TEST_FILE" == */ccloud/* ]] && [ -n "$account_name" ]
+then
+    account_key=$(az storage account keys list --account-name "$account_name" --query "[0].value" -o tsv 2> /dev/null)
+fi
 container_name=$(azure_config_value azblob.container.name AZURE_CONTAINER_NAME)
 topics_dir=$(jq -r '."topics.dir" // "topics"' "$BENCHMARK_CONNECTOR_CONFIG")
 if [ -z "$account_name" ] || [ -z "$account_key" ] || [ -z "$container_name" ]

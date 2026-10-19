@@ -291,10 +291,14 @@ __JFR__
       svg.appendChild(t);
     }
   }
-  function lineChart(id, key, unitLabel, yfmt, reference) {
+  function lineChart(id, key, unitLabel, yfmt, reference, data) {
     const host = document.getElementById(id);
-    const pts = samples.filter(s => s[key] !== null && s.elapsed !== null);
-    if (pts.length === 0) { host.appendChild(el("div", { class: "empty" }, "🤷 no sample for this metric")); return; }
+    const pts = (data || samples).filter(s => s[key] !== null && s.elapsed !== null);
+    if (pts.length === 0) {
+      const fullyManaged = r.setup && r.setup.connect && r.setup.connect.fully_managed;
+      host.appendChild(el("div", { class: "empty" }, fullyManaged ? "☁️ not available for a fully managed connector (no JMX)" : "🤷 no sample for this metric"));
+      return;
+    }
     const xs = niceScale(Math.max(...pts.map(p => p.elapsed)));
     const ys = niceScale(Math.max(...pts.map(p => p[key]), reference ? reference.value : 0));
     const xmax = xs.max, ymax = ys.max;
@@ -343,7 +347,19 @@ __JFR__
   }
   lineChart("chart-rate", "rate", "records/s", compact,
             { value: r.records_per_second, label: (r.lower_bound ? "≥ " : "") + "average " + compact(r.records_per_second) });
-  lineChart("chart-cpu", "cpu", "% of one core", v => nf.format(v) + "%");
+  // a fully managed connector has no cpu: its records per minute in the Metrics API instead
+  const ma = r.metrics_api;
+  if (ma && ma.enabled && ma.records_per_minute.some(p => p.records > 0)) {
+    const card = document.getElementById("chart-cpu").parentElement;
+    card.querySelector("h2").textContent = "☁️ Records per minute (Metrics API)";
+    card.querySelector(".sub").textContent = ma.metric + " of the connector, one point per minute (seconds since its first minute with records)";
+    const active = ma.records_per_minute.filter(p => p.records > 0);
+    const t0 = active[0].epoch, t1 = active[active.length - 1].epoch;
+    lineChart("chart-cpu", "records", "records per minute", v => nf.format(v), null,
+      ma.records_per_minute.filter(p => p.epoch >= t0 && p.epoch <= t1).map(p => ({ elapsed: p.epoch - t0, records: p.records })));
+  } else {
+    lineChart("chart-cpu", "cpu", "% of one core", v => nf.format(v) + "%");
+  }
   lineChart("chart-batch", "batch", "ms", v => nf1.format(v));
 
   // history bars
@@ -416,16 +432,24 @@ __JFR__
     ["example", r.test_file], ["mode", r.mode], ["shape", r.shape],
     ["records", nf.format(r.records)], ["duration", r.seconds + " s"],
     ["throughput", (r.lower_bound ? "≥ " : "") + nf1.format(r.records_per_second) + " records/s"],
+    ...(r.metrics_api && r.metrics_api.enabled ? [["Metrics API (" + r.metrics_api.metric + ")",
+      (r.metrics_api.steady_records_per_second === null ? "no full minute during the measure" :
+        nf1.format(r.metrics_api.steady_records_per_second) + " records/s steady, median of " + r.metrics_api.full_minutes + " full minute(s)") +
+      (r.metrics_api.batch_size_avg === null ? "" : ", " + nf1.format(r.metrics_api.batch_size_avg) + " records per batch") +
+      "; records per minute: " + r.metrics_api.records_per_minute.filter(p => p.records > 0)
+        .map(p => new Date(p.epoch * 1000).toISOString().slice(11, 16) + " " + nf.format(p.records)).join(" · ")]] : []),
     ["batch avg", r.batch_avg_ms + " ms"], ["running ratio avg", r.running_ratio],
     ["connect cpu avg / max", r.cpu_percent_of_one_core_avg + "% / " + r.cpu_percent_of_one_core_max + "% of one core" +
       (r.cpu_percent_of_available_avg !== undefined ? " (" + r.cpu_percent_of_available_avg + "% of the cpus available)" : "")],
     ["gc pauses", r.gc_percent === undefined || r.gc_percent === "-" ? "-" : r.gc_percent + "% of the time"],
     ["records per task", r.task_shares],
-    ["dlq / dropped records", r.dlq_records === undefined ? "-" : r.dlq_records + " sent to the dlq, " + r.skipped_records + " dropped without dlq"],
+    ["dlq / dropped records", r.dlq_records === undefined ? "-" : r.dlq_records + " sent to the dlq" + (r.skipped_records === "-" ? "" : ", " + r.skipped_records + " dropped without dlq")],
     ["load", r.load_seconds === "-" ? "-" : r.load_seconds + " s"],
     ["records in topics", r.topic_records_delta === "-" ? "-" : "+" + nf.format(+r.topic_records_delta)],
     ["date", r.date], ["samples", r.samples_csv]
-  ]);
+  ].filter(row => !(r.setup && r.setup.connect && r.setup.connect.fully_managed) ||
+    !(["running ratio avg", "connect cpu avg / max", "gc pauses", "records per task"].includes(row[0]) ||
+      (row[0] === "batch avg" && r.batch_avg_ms === "-") || (row[0] === "dlq / dropped records" && r.dlq_records === "-"))));
   fillTable("history-table", [["date"], ["records/s", 1], ["records", 1], ["seconds", 1], ["plugin"], ["CP"], ["tasks", 1], ["setup"]],
     history.slice().reverse().map(h => [h.date, nf1.format(h.records_per_second), nf.format(h.records), h.seconds, h.plugin_version, h.cp_tag, h.tasks,
       (sameSetup(h) ? "" : "≠ ") + setupShort(h.setup)]));
@@ -491,11 +515,17 @@ __JFR__
     fillTable("setup", [["Component"], ["Details"]], [
       ["host", o(st.host.os) + " " + o(st.host.arch) + ", " + o(st.host.cpu_model) + ", " + o(st.host.cpus) + " cpus, " + gib(st.host.memory_bytes)],
       ["container engine", o(st.engine.name) + " " + o(st.engine.version) + " (" + o(st.engine.os) + "), " + o(st.engine.cpus) + " cpus, " + gib(st.engine.memory_bytes)],
-      ["connect image", o(st.connect.image) + " (" + o(st.connect.image_arch) + (st.connect.emulated ? ", EMULATED on " + st.host.arch : ", native") + ")"],
-      ["connect workers", o(st.connect.workers)],
-      ["connect jvm", o(st.connect.jvm_version) + ", " + o(st.connect.jvm_cpus) + " cpus available, heap max " + gib(st.connect.heap_max_bytes) +
-        (st.connect.heap_opts ? " (KAFKA_HEAP_OPTS " + st.connect.heap_opts + ")" : "")],
-      ["kafka", o(st.kafka.brokers) + " broker(s), " + (st.kafka.kraft ? "kraft" : "zookeeper") + ", environment " + o(st.kafka.environment) + ", CP " + o(r.cp_tag)],
+      // a fully managed connector runs in Confluent Cloud: only the load runs on this host
+      ...(st.connect.fully_managed ? [
+        ["connect", "fully managed connector, Confluent Cloud (records counted from " +
+          (r.type === "sink" ? "the offsets committed by its consumer group, at each offset commit" : "the end offsets of the topics") + ", no JMX)"]
+      ] : [
+        ["connect image", o(st.connect.image) + " (" + o(st.connect.image_arch) + (st.connect.emulated ? ", EMULATED on " + st.host.arch : ", native") + ")"],
+        ["connect workers", o(st.connect.workers)],
+        ["connect jvm", o(st.connect.jvm_version) + ", " + o(st.connect.jvm_cpus) + " cpus available, heap max " + gib(st.connect.heap_max_bytes) +
+          (st.connect.heap_opts ? " (KAFKA_HEAP_OPTS " + st.connect.heap_opts + ")" : "")],
+        ["kafka", o(st.kafka.brokers) + " broker(s), " + (st.kafka.kraft ? "kraft" : "zookeeper") + ", environment " + o(st.kafka.environment) + ", CP " + o(r.cp_tag)]
+      ]),
       ["connector", o(r.connector_class) + " " + o(r.plugin_version) + ", " + o(r.tasks) + " task(s)"],
       ["playground", o(st.playground.test_file) + " at commit " + o(st.playground.commit) + (st.playground.dirty ? " (with local changes)" : "")]
     ]);

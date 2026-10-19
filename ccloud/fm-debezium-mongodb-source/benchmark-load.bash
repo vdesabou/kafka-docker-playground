@@ -1,0 +1,1 @@
+../../connect/connect-debezium-mongodb-source/benchmark-load.bash

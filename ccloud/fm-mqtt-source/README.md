@@ -55,3 +55,14 @@ The mTLS variant fails validation because the generated certificate does not con
 ```text
 mqtt.server.uri: MqttException (0) - javax.net.ssl.SSLHandshakeException: No subject alternative DNS name matching 4.tcp.eu.ngrok.io found.
 ```
+
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) is the load of the self-managed example [`connect-mqtt-source`](../../connect/connect-mqtt-source/README.md#benchmark): it loads messages on the MQTT topic (steady mode only: the broker does not keep a backlog) for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark). Run the example, answer `n` when it asks to delete the connector, then:
+
+```bash
+# throughput during 2 minutes while batches of 1000 messages are published continuously
+playground connector benchmark --mode steady --duration 2m --nb-records 1000
+```
+
+The connector runs in Confluent Cloud, so there is no JMX: the benchmark counts the records from the end offsets of the topics of the connector (`--topic` to choose them) and a drain starts measuring at the first records seen after the resume (Confluent Cloud takes a few seconds to restart the tasks), and the throughput includes the network between this machine and Confluent Cloud (ngrok tunnel). Compare runs made from the same machine.

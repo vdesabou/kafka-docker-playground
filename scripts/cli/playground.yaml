@@ -5051,8 +5051,34 @@ subcommands:
       report link to\nthem at the time of the run (each version is annotated with\n--connector-tag).
       Grafana is not started by the benchmark: its\nJMX exporter and containers use
       CPU, and the summary warns when\nthe previous run was not measured the same
-      way.\n\n⚠️ Not available for fully managed connectors and the cfk environment
-      yet."
+      way.\n\n☁️ Fully managed source connectors (ccloud/fm-*-source examples that\nship
+      a benchmark-load.bash, the one of the equivalent self managed\nexample: same
+      local database or broker, reached by the connector\nthrough ngrok): the records
+      are counted from the end offsets of the\ntopics of the connector every --interval
+      (its kafka.topic or\ntopic.prefix, and the topics consumed by the example script,\n--topic
+      to choose them), since Confluent Cloud gives no JMX: no batch\ntime, running
+      ratio, cpu, gc, flight recorder nor --connector-tag.\nA drain starts measuring
+      at the first records seen after the resume\n(Confluent Cloud takes a few seconds
+      to restart the tasks, and its\nstatus lags behind them), so the records seen
+      by that first sample\nare not measured. The throughput includes the network
+      between the\ndocker host and Confluent Cloud. Run the example and answer n when
+      it asks to\ndelete the connector, then run the benchmark.\n\n☁️ Fully managed
+      sink connectors: the load is the replay of the\n'playground topic produce' of
+      the example, like for a self managed\nsink, and the records are counted from
+      the offsets committed by the\nconsumer group of the connector (connect-<lcc
+      id>). Confluent Cloud\ncommits them about every minute, so the end of a drain
+      is known\nwithin one commit interval: a drain that sees less than 5 commits\nis
+      reported as a lower bound, and the summary gives the\n--nb-records of a drain
+      of 10 commits (within ~10%, usually 1M\nrecords or more).\n\n\U0001F4C8 After
+      the measure of a fully managed connector, the benchmark\nreads its per minute
+      metrics in the Confluent Cloud Metrics API\n(sent_records / received_records,
+      exact counts published about 30s\ninto each minute): the steady throughput is
+      the median of the full\nminutes of the measure (a drain of 3 minutes or more
+      has one), which\ndoes not depend on when a sink commits its offsets, and the
+      put batch\ntime, batch size and dlq records fill the rows that JMX gives for
+      a\nself managed connector. The Metrics API uses the Cloud API key\n(CONFLUENT_CLOUD_API_KEY)
+      and does not answer for a deleted connector.\n\n⚠️ Not available with the cfk
+      environment yet."
     usage: playground connector benchmark [OPTIONS]
     options:
     - names:

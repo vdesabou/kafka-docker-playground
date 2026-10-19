@@ -41,3 +41,17 @@ playground run -f fully-managed-mysql-source.sh
 6. Asks before deleting the connector.
 
 With `--enable-sql-datagen` (`playground run -f fully-managed-mysql-source.sh --enable-sql-datagen`), once the example succeeded, `playground run` injects rows in the `CUSTOMERS` table with [`benchmark-load.bash`](benchmark-load.bash) (the same load as `playground connector benchmark`) for 10 minutes: one row per transaction, from 5 parallel sessions. `SQL_DATAGEN_DURATION` (minutes, default `10`) and `SQL_DATAGEN_SESSIONS` (default `5`) change the duration and the number of sessions.
+
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) is the same load as the self-managed example [`connect-jdbc-mysql-source`](../../connect/connect-jdbc-mysql-source/README.md): it loads rows in the `CUSTOMERS` table for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark). Run the example, answer `n` when it asks to delete the connector, then:
+
+```bash
+# time to capture 100k rows inserted in one transaction
+playground connector benchmark --nb-records 100000 --shape bulk
+
+# 10k transactions of one row
+playground connector benchmark --nb-records 10000 --shape small-txn
+```
+
+The connector runs in Confluent Cloud, so there is no JMX: the benchmark counts the records from the end offsets of the topics of the connector (`--topic` to choose them) and a drain starts measuring at the first records seen after the resume (Confluent Cloud takes a few seconds to restart the tasks), and the throughput includes the network between this machine and Confluent Cloud (ngrok tunnel). Compare runs made from the same machine.

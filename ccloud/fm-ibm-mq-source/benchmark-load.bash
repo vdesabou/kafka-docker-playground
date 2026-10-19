@@ -1,0 +1,1 @@
+../../connect/connect-ibm-mq-source/benchmark-load.bash

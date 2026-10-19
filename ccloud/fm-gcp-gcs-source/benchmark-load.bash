@@ -1,0 +1,1 @@
+../../connect/connect-gcp-gcs-source/benchmark-load.bash
