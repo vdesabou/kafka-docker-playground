@@ -38,3 +38,21 @@ The incremental snapshot variants then:
 4. Verify that `dbserver1.inventory.customers2` now contains all records.
 
 The SSL variant generates a self-signed certificate and a JKS truststore under `ssl/`, starts MongoDB with TLS and sets `mongodb.ssl.enabled=true` with `mongodb.ssl.truststore` in the connector.
+
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) inserts documents in the `inventory.customers` collection of the examples (or the first collection of `collection.include.list`) for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark), with `mongosh` in the `mongodb` container (with the TLS options of the SSL variant). The documents have the shape of an existing one. Once one of the examples is running:
+
+```bash
+# insertMany of 100000 documents
+playground connector benchmark --nb-records 100000
+
+# 5000 insertOne
+playground connector benchmark --nb-records 5000 --shape small-txn
+
+# updates of 10000 existing documents (run a bulk load first)
+playground connector benchmark --nb-records 10000 --shape update
+
+# throughput during 2 minutes while batches of 10000 documents are inserted
+playground connector benchmark --mode steady --duration 2m --nb-records 10000
+```

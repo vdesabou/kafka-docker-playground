@@ -18,6 +18,8 @@ import javax.naming.InitialContext;
  *
  * Arguments: <jndi factory> <provider url> <principal or ""> <credentials or ""> <connection factory name>
  *            <queue|topic> <destination name> <messages> <record size> <transaction batch size, 0 for none>
+ * With -Dbenchmark.json=<template>, the messages are the template with {message} replaced by "benchmark message <i>",
+ * for a connector parsing json (-Dbenchmark.json=true: {"f1":"{message}"}).
  */
 public class BenchmarkJmsProducer {
 
@@ -50,12 +52,17 @@ public class BenchmarkJmsProducer {
                     ? session.createTopic(destinationName) : session.createQueue(destinationName);
             MessageProducer producer = session.createProducer(destination);
             producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+            String template = System.getProperty("benchmark.json", "false");
+            if ("true".equals(template)) {
+                template = "{\"f1\":\"{message}\"}";
+            }
+            boolean json = !"false".equals(template) && !template.isEmpty();
             for (int i = 1; i <= messages; i++) {
                 StringBuilder text = new StringBuilder("benchmark message ").append(i);
                 while (text.length() < recordSize) {
                     text.append(' ');
                 }
-                producer.send(session.createTextMessage(text.toString()));
+                producer.send(session.createTextMessage(json ? template.replace("{message}", text) : text.toString()));
                 if (transacted && i % batch == 0) {
                     session.commit();
                 }

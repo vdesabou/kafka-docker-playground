@@ -726,9 +726,10 @@ then
             if [ "$stalled_samples" -gt 0 ] && [ $((stalled_samples % 2)) -eq 0 ]
             then
                 topic_progress=$(topic_records_progress)
-                if [ "$topic_progress" -gt "$processed" ]
+                # the topics must have moved: a counter below its baseline (processed < 0) proves nothing alone
+                if [ "$topic_progress" -gt 0 ] && [ "$topic_progress" -gt "$processed" ]
                 then
-                    logwarn "⚠️ the task metrics count $processed/$expected records but the topics got $topic_progress: a task was restarted (its counters start from 0), counting the records in the topics from now on"
+                    logwarn "⚠️ the task metrics count $processed/$expected records but the topics got $topic_progress (a restarted task counts from 0 again): counting the records in the topics from now on"
                     records_from_topics=1
                     sample_records=$((baseline_records + topic_progress))
                     prev_records="$sample_records"
@@ -1116,7 +1117,7 @@ then
 fi
 if [ -n "$records_from_topics" ]
 then
-    add_warning "a task was restarted during the drain (its JMX counters started from 0): the samples count the records in the topics from then on, see the task restarts in the connect logs (the cloud storage and hdfs sources reconfigure their task at each poll interval)"
+    add_warning "the JMX counters of the tasks fell behind the records written to the topics during the drain, usually because a task was restarted (the cloud storage and hdfs sources reconfigure their task at each poll interval): the samples count the records in the topics from then on, see the task restarts in the connect logs"
 fi
 if [ -n "$previous" ] && [ "$(echo "$previous" | jq -c '.setup // empty')" != "" ]
 then

@@ -42,7 +42,7 @@ playground connector create-or-update --connector ftps-source-json  << EOF
      "ftps.input.path": "/input",
      "ftps.error.path": "/error",
      "ftps.finished.path": "/finished",
-     "ftps.input.file.pattern": "json-ftps-source.json",
+     "ftps.input.file.pattern": ".*\\\\.json",
      "ftps.username":"bob",
      "ftps.password":"test",
      "ftps.host":"ftps-server",
