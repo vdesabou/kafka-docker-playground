@@ -48,9 +48,8 @@ do
             continue
         fi
 
-        # check for ignored scripts in scripts/tests-ignored.txt
-        grep "$script" ${DIR}/tests-ignored.txt > /dev/null
-        if [ $? = 0 ]
+        # check for ignored scripts in scripts/tests-ignored.txt (whole line, like run-tests.sh)
+        if grep -qxF "$script" ${DIR}/tests-ignored.txt
         then
             # logwarn "####################################################"
             # logwarn "skipping $script in dir $dir"

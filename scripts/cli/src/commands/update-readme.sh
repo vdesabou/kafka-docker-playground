@@ -128,6 +128,10 @@ do
   rm -f ${gh_msg_file_final}
   touch ${gh_msg_file_final}
   gh_issue_number=""
+  # set again for each script below: when all the scripts of a test are skipped, the values of the previous
+  # test must not be used to close its issue
+  testdir=$(echo "$test" | sed 's/\//-/g')
+  html_url=""
   if [ ! -d $test ]
   then
     # logwarn "####################################################"
@@ -152,9 +156,8 @@ do
       continue
     fi
 
-    # check for ignored scripts in scripts/tests-ignored.txt
-    grep "$script_name" ${root_folder}/scripts/tests-ignored.txt > /dev/null
-    if [ $? = 0 ]
+    # check for ignored scripts in scripts/tests-ignored.txt (whole line, like run-tests.sh: start.sh must not match a comment mentioning it)
+    if grep -qxF "$script_name" ${root_folder}/scripts/tests-ignored.txt
     then
       log "####################################################"
       log "⏭ skipping $script_name in test $test"
@@ -396,7 +399,7 @@ do
         fi
         gh_issue_number="$issue_number"
       fi
-      if [ ${nb_success} -eq ${nb_tests} ] && [ -n "$gh_issues_available" ]
+      if [ ${nb_tests} -gt 0 ] && [ ${nb_success} -eq ${nb_tests} ] && [ -n "$gh_issues_available" ]
       then
         # if all scripts in tests are now successful, close the issue
         issue_number=$(get_open_issue_number "$title")
