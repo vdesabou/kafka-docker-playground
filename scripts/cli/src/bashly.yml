@@ -8391,6 +8391,16 @@ commands:
       --nb-records of a drain of 10 commits (within ~10%, usually 1M
       records or more).
 
+      📈 After the measure of a fully managed connector, the benchmark
+      reads its per minute metrics in the Confluent Cloud Metrics API
+      (sent_records / received_records, exact counts published about 30s
+      into each minute): the steady throughput is the median of the full
+      minutes of the measure (a drain of 3 minutes or more has one), which
+      does not depend on when a sink commits its offsets, and the put batch
+      time, batch size and dlq records fill the rows that JMX gives for a
+      self managed connector. The Metrics API uses the Cloud API key
+      (CONFLUENT_CLOUD_API_KEY) and does not answer for a deleted connector.
+
       ⚠️ Not available with the cfk environment yet.
     filters:
     - connect_running

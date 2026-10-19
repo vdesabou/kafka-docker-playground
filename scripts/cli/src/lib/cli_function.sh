@@ -4077,6 +4077,25 @@ function benchmark_ccloud_group_offsets () {
     | awk '$4 ~ /^[0-9]+$/ { committed += $4; if ($6 ~ /^[0-9]+$/ && $6 > lag) lag = $6; n++ } END { printf "%d %s\n", committed, (n ? lag + 0 : "-") }'
 }
 
+# Confluent Cloud Metrics API, for playground connector benchmark: "<epoch> <value>" lines of
+# io.confluent.kafka.connect/<metric> for connector <lcc id>, one point per minute from <from epoch> to <to epoch>. A point
+# is published about 30s into its minute and never updated; a deleted connector is not authorized (no line)
+function benchmark_ccloud_metric () {
+  local metric="$1" id="$2" from="$3" to="$4" interval
+  interval="$(benchmark_iso_minute "$from")/$(benchmark_iso_minute "$to")"
+  curl -s -m 30 -u "$CONFLUENT_CLOUD_API_KEY:$CONFLUENT_CLOUD_API_SECRET" -H 'Content-Type: application/json' \
+    https://api.telemetry.confluent.cloud/v2/metrics/cloud/query \
+    -d "$(jq -n -c --arg m "io.confluent.kafka.connect/$metric" --arg id "$id" --arg i "$interval" \
+      '{aggregations: [{metric: $m}], filter: {field: "resource.connector.id", op: "EQ", value: $id}, granularity: "PT1M", intervals: [$i]}')" \
+    | jq -r '.data[]? | select(.value != "NaN") | "\(.timestamp | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601) \(.value)"' 2> /dev/null
+}
+
+# <epoch> as the ISO 8601 date of its minute, e.g. 2026-10-19T10:37:00Z
+function benchmark_iso_minute () {
+  local epoch="${1%.*}"
+  date -u -r "$epoch" +%Y-%m-%dT%H:%M:00Z 2> /dev/null || date -u -d "@$epoch" +%Y-%m-%dT%H:%M:00Z
+}
+
 # topics written by a fully managed source (the ccloud connect api has no /topics endpoint), one per line: the topics of
 # its config (kafka.topic, topics...), the existing topics starting with its topic.prefix (or database.server.name), and
 # the topics consumed by the example script (a topic name template like table.topic.name.template of oracle cdc).

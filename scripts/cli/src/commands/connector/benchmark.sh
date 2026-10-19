@@ -130,20 +130,21 @@ then
     exit 1
 fi
 # a fully managed sink is measured with the committed offsets of its consumer group
+# lcc id of a fully managed connector: its consumer group and its metrics in the Metrics API
 consumer_group=""
+connector_id=""
+if [ -n "$fully_managed" ]
+then
+    connect_rest_get "?expand=id" > /dev/null 2>&1 && connector_id=$(echo "$curl_output" | jq -r --arg c "$connector" '.[$c].id.id // empty')
+    if [ -z "$connector_id" ]
+    then
+        logerror "❌ could not get the id of $connector_type connector $connector"
+        exit 1
+    fi
+fi
 if [ -n "$fully_managed" ] && [ "$type" == "sink" ]
 then
-    if ! connect_rest_get "?expand=id"
-    then
-        logerror "❌ could not get the id of $connector_type connector $connector"
-        exit 1
-    fi
-    consumer_group="connect-$(echo "$curl_output" | jq -r --arg c "$connector" '.[$c].id.id // empty')"
-    if [ "$consumer_group" == "connect-" ]
-    then
-        logerror "❌ could not get the id of $connector_type connector $connector"
-        exit 1
-    fi
+    consumer_group="connect-$connector_id"
     benchmark_ccloud_groups_start || exit 1
     trap 'benchmark_ccloud_kcat_stop; benchmark_ccloud_groups_stop' EXIT
     log "📊 records counted from the committed offsets of consumer group $consumer_group"
@@ -879,6 +880,7 @@ then
         take_sample "baseline"
         baseline_records="$sample_records"
         prev_time="$start_time"
+        backlog_records="$expected"
         expected=$((expected - baseline_records))
         log "▶️ first records after $(awk -v n="$start_time" -v s="$resume_time" 'BEGIN { printf "%.0f", n - s }')s (not measured), measuring the remaining $expected records"
     fi
@@ -1030,6 +1032,72 @@ else
     measured_seconds=$(awk -v e="$sample_time" -v s="$measure_start" 'BEGIN { printf "%.1f", e - s }')
 fi
 
+# fully managed: the per minute metrics of the connector in the Confluent Cloud Metrics API (exact counts, published about
+# 30s into each minute): the steady throughput of the full minutes, which does not depend on when the offsets are
+# committed, and the batch metrics that JMX gives for a self managed connector
+metrics_api_json='{"enabled": false}'
+metrics_steady="-"
+metrics_put_batch="-"
+metrics_dlq="-"
+if [ -n "$fully_managed" ]
+then
+    metrics_records_metric="sent_records"
+    [ "$type" == "sink" ] && metrics_records_metric="received_records"
+    if [ "$mode" == "drain" ]
+    then
+        metrics_from="${resume_time:-$start_time}"
+        metrics_to="$end_time"
+    else
+        metrics_from="$measure_start"
+        metrics_to="$sample_time"
+    fi
+    query_from=$(awk -v t="$metrics_from" 'BEGIN { printf "%d", t - 120 }')
+    query_to=$(awk -v t="$metrics_to" 'BEGIN { printf "%d", t + 180 }')
+    end_minute=$(awk -v t="$metrics_to" 'BEGIN { printf "%d", int(t / 60) * 60 }')
+    log "☁️ reading the per minute metrics of the connector in the Confluent Cloud Metrics API ($metrics_records_metric)"
+    metrics_wait_start=$SECONDS
+    while true
+    do
+        metrics_points=$(benchmark_ccloud_metric "$metrics_records_metric" "$connector_id" "$query_from" "$query_to")
+        published=$(echo "$metrics_points" | awk 'NF == 2 { n += $2 } END { printf "%d", n }')
+        last_point=$(echo "$metrics_points" | awk 'NF == 2 { t = $1 } END { printf "%d", t }')
+        # a drain is complete when all the records of the backlog are published, a steady measure when its last minute is
+        if [ "$mode" == "drain" ] && [ "$incomplete" != "true" ] && [ "$published" -ge "${backlog_records:-$expected}" ]
+        then
+            break
+        elif { [ "$mode" != "drain" ] || [ "$incomplete" == "true" ]; } && [ "$last_point" -ge "$end_minute" ]
+        then
+            break
+        fi
+        if [ $((SECONDS - metrics_wait_start)) -ge 150 ]
+        then
+            logwarn "⚠️ the Metrics API did not publish all the minutes of the measure after 150s ($published records): using what it has"
+            break
+        fi
+        sleep 15
+    done
+    # full minutes: the minutes with records of the measure, without the first and the last one (partial minutes)
+    read -r metrics_steady metrics_full_minutes <<< "$(echo "$metrics_points" | awk -v f="$metrics_from" -v t="$metrics_to" '
+        NF == 2 && $2 > 0 && $1 >= f - 60 && $1 <= t + 60 { v[n++] = $2 }
+        END {
+            m = 0
+            for (i = 1; i < n - 1; i++) full[m++] = v[i]
+            for (i = 1; i < m; i++) { x = full[i]; j = i - 1; while (j >= 0 && full[j] > x) { full[j + 1] = full[j]; j-- } full[j + 1] = x }
+            if (m == 0) print "- 0"; else printf "%.1f %d\n", (m % 2 ? full[int(m / 2)] : (full[m / 2 - 1] + full[m / 2]) / 2) / 60, m
+        }')"
+    function metrics_average () {
+        benchmark_ccloud_metric "$1" "$connector_id" "$query_from" "$query_to" | awk 'NF == 2 && $2 > 0 { s += $2; n++ } END { if (n) printf "%.1f", s / n; else print "-" }'
+    }
+    metrics_batch_size=$(metrics_average connector_task_batch_size_avg)
+    [ "$type" == "sink" ] && metrics_put_batch=$(metrics_average sink_task_put_batch_avg_time_milliseconds)
+    metrics_dlq=$(benchmark_ccloud_metric dead_letter_queue_records "$connector_id" "$query_from" "$query_to" | awk 'NF == 2 { s += $2; n++ } END { if (n) printf "%d", s; else print "-" }')
+    metrics_api_json=$(echo "$metrics_points" | jq -R -s -c --arg metric "$metrics_records_metric" --arg steady "$metrics_steady" --argjson full "${metrics_full_minutes:-0}" \
+        --arg put_batch "$metrics_put_batch" --arg batch_size "$metrics_batch_size" --arg dlq "$metrics_dlq" --arg id "$connector_id" \
+        '{enabled: true, connector_id: $id, metric: $metric, steady_records_per_second: ($steady | tonumber? // null), full_minutes: $full,
+          put_batch_avg_ms: ($put_batch | tonumber? // null), batch_size_avg: ($batch_size | tonumber? // null), dlq_records: ($dlq | tonumber? // null),
+          records_per_minute: [split("\n")[] | select(. != "") | split(" ") | {epoch: (.[0] | tonumber), records: (.[1] | tonumber)}]}')
+fi
+
 # window of the measure, in ms, for the grafana annotation and links
 if [ "$mode" == "drain" ]
 then
@@ -1126,6 +1194,13 @@ then
 fi
 task_shares="${task_shares//_/ }"
 task_shares="${task_shares//,/, }"
+# fully managed: batch time and dlq records from the Metrics API
+if [ -n "$fully_managed" ]
+then
+    batch_avg="$metrics_put_batch"
+    dlq_delta="$metrics_dlq"
+    skipped_delta="-"
+fi
 
 setup_json=$(benchmark_collect_setup "$workers" "$connector_config_json" "$test_file" "$environment" "$fully_managed")
 [ -z "$setup_json" ] && setup_json='{}'
@@ -1193,7 +1268,7 @@ result=$(jq -n \
     --arg samples_csv "$csv_file" --argjson lower_bound "$lower_bound" --argjson incomplete "$incomplete" --argjson expected_records "$expected" \
     --arg gc_percent "$gc_percent" --arg cpu_available_avg "$cpu_available_avg" --arg pause_ratio "$pause_avg" \
     --arg dlq_records "$dlq_delta" --arg skipped_records "$skipped_delta" --arg task_shares "$task_shares" \
-    --argjson setup "$setup_json" --argjson flight_recorder "$flight_recorder_json" --argjson grafana "$grafana_json" \
+    --argjson setup "$setup_json" --argjson flight_recorder "$flight_recorder_json" --argjson grafana "$grafana_json" --argjson metrics_api "$metrics_api_json" \
     --argjson measure_from_ms "$measure_from_ms" --argjson measure_to_ms "$measure_to_ms" \
     --arg load_script "$([ -n "$load_script" ] && [[ "$load_cmd" == *"$load_script"* ]] && basename "$load_script")" \
     '{date: $date, test_file: $test_file, connector: $connector, connector_class: $connector_class, plugin_version: $plugin_version,
@@ -1204,7 +1279,7 @@ result=$(jq -n \
       cpu_percent_of_one_core_max: $cpu_max, load_seconds: $load_seconds, topic_records_delta: $topic_records_delta,
       gc_percent: $gc_percent, cpu_percent_of_available_avg: $cpu_available_avg, pause_ratio: $pause_ratio,
       dlq_records: $dlq_records, skipped_records: $skipped_records, task_shares: $task_shares,
-      samples_csv: $samples_csv, setup: $setup, flight_recorder: $flight_recorder, grafana: $grafana,
+      samples_csv: $samples_csv, setup: $setup, flight_recorder: $flight_recorder, grafana: $grafana, metrics_api: $metrics_api,
       measure_from_ms: $measure_from_ms, measure_to_ms: $measure_to_ms, load_script: $load_script}')
 echo "$result" > "$json_file"
 if [ -n "$BENCHMARK_MATRIX_RESULTS" ]
@@ -1271,6 +1346,19 @@ then
     printf "   %-22s %s\n" "running ratio avg" "$ratio_avg"
     printf "   %-22s %s\n" "connect cpu avg / max" "${cpu_avg}% / ${cpu_max}% of one core (${cpu_available_avg}% of the cpus available)"
     printf "   %-22s %s\n" "gc pauses" "${gc_percent}% of the time"
+else
+    if [ "$metrics_steady" != "-" ]
+    then
+        printf "   %-22s %s\n" "metrics api" "$metrics_steady records/s steady (median of $metrics_full_minutes full minute(s) of $metrics_records_metric)"
+    else
+        printf "   %-22s %s\n" "metrics api" "no full minute of $metrics_records_metric during the measure: use a drain of 3 minutes or more"
+    fi
+    if [ "$type" == "sink" ]
+    then
+        printf "   %-22s %s\n" "put batch avg" "$metrics_put_batch ms ($metrics_batch_size records per batch)"
+    else
+        printf "   %-22s %s\n" "batch size avg" "$metrics_batch_size records"
+    fi
 fi
 if [ "$task_shares" != "-" ]
 then
@@ -1330,9 +1418,9 @@ if [ -n "$fully_managed" ]
 then
     if [ "$type" == "source" ]
     then
-        add_warning "$connector_type connector: the records are counted from the end offsets of ${topics[*]} every ${interval}s (no JMX: no batch time, running ratio, cpu, gc nor flight recorder), and the throughput includes the network between this machine (load, ngrok tunnel) and Confluent Cloud"
+        add_warning "$connector_type connector: the records are counted from the end offsets of ${topics[*]} every ${interval}s (no JMX: no running ratio, cpu, gc nor flight recorder; the steady rate and the batch metrics come from the Metrics API), and the throughput includes the network between this machine (load, ngrok tunnel) and Confluent Cloud"
     else
-        add_warning "$connector_type connector: the records are counted from the offsets committed by consumer group $consumer_group every ${interval}s (no JMX: no batch time, running ratio, cpu, gc nor flight recorder): they move at each offset commit of the tasks, not at each record, so a drain of less than a few minutes is not accurate (increase --nb-records), and the throughput includes the network between Confluent Cloud and the system behind the connector"
+        add_warning "$connector_type connector: the records are counted from the offsets committed by consumer group $consumer_group every ${interval}s (no JMX: no running ratio, cpu, gc nor flight recorder; the steady rate and the batch metrics come from the Metrics API): they move at each offset commit of the tasks, not at each record, so a drain of less than a few minutes is not accurate (increase --nb-records), and the throughput includes the network between Confluent Cloud and the system behind the connector"
     fi
 elif [ -n "$records_from_topics" ]
 then
