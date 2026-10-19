@@ -1242,39 +1242,37 @@ for sink_file in "${pipeline_array[@]}"; do
     fi
     set -e
     # need to remove cli which produces and change topic
-    kafka_cli_producer_error=0
-    kafka_cli_producer_eof=0
-    line_kafka_cli_producer=$(grep -En "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
-    if [ $? != 0 ]
-    then
-        logwarn "Could not find kafka cli producer!"
-        kafka_cli_producer_error=1
-    fi
+    # remove the producer of the sink example (and the log line before it): the sink reads what the source produces
+    producer_regex="kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer|playground topic produce"
+    line_kafka_cli_producer=$(grep -En "$producer_regex" $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
     set +e
-    grep -E "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | grep EOF > /dev/null
-    if [ $? = 0 ]
+    if [ -z "$line_kafka_cli_producer" ]
     then
-        kafka_cli_producer_eof=1
-
-        sed -n "$line_kafka_cli_producer,$(($line_kafka_cli_producer + 10))p" $tmp_dir/tmp_file > /tmp/tmp
-        tmp=$(grep -n "^EOF" /tmp/tmp | cut -d ":" -f 1 | tail -n1)
-        if [ $tmp == "" ]
-        then
-          logwarn "Could not determine EOF for kafka cli producer!"
-          kafka_cli_producer_error=1
-        fi
-        line_kafka_cli_producer_end=$(($line_kafka_cli_producer + $tmp))
-    fi
-
-
-    if [ $kafka_cli_producer_error == 0 ]
-    then
-      if [ $kafka_cli_producer_eof == 0 ]
+      logwarn "Could not find the producer of the sink example, keeping it as is"
+      cat $tmp_dir/tmp_file >> $repro_test_file
+    else
+      line_kafka_cli_producer_end=$(($line_kafka_cli_producer + 1))
+      if sed -n "${line_kafka_cli_producer}p" $tmp_dir/tmp_file | grep -q "EOF"
       then
-        line_kafka_cli_producer_end=$(($line_kafka_cli_producer + 1))
+        # heredoc (avro schema...): it ends at the first EOF line after the producer
+        tmp=$(tail -n +$(($line_kafka_cli_producer + 1)) $tmp_dir/tmp_file | grep -n "^EOF" | cut -d ":" -f 1 | head -n1)
+        if [ "$tmp" == "" ]
+        then
+          logwarn "Could not determine EOF for the producer of the sink example, keeping it as is"
+          line_kafka_cli_producer_end=""
+        else
+          line_kafka_cli_producer_end=$(($line_kafka_cli_producer + $tmp + 1))
+        fi
       fi
-      { head -n $(($line_kafka_cli_producer - 2)) $tmp_dir/tmp_file; tail -n +$line_kafka_cli_producer_end $tmp_dir/tmp_file; } >  $tmp_dir/tmp_file2
-      cat  $tmp_dir/tmp_file2 >> $repro_test_file
+
+      if [ -n "$line_kafka_cli_producer_end" ]
+      then
+        # head -n 0 (or negative) is an error on macOS
+        { if [ $line_kafka_cli_producer -gt 2 ]; then head -n $(($line_kafka_cli_producer - 2)) $tmp_dir/tmp_file; fi; tail -n +$line_kafka_cli_producer_end $tmp_dir/tmp_file; } >  $tmp_dir/tmp_file2
+        cat $tmp_dir/tmp_file2 >> $repro_test_file
+      else
+        cat $tmp_dir/tmp_file >> $repro_test_file
+      fi
     fi
     set -e
 
@@ -1286,9 +1284,9 @@ for sink_file in "${pipeline_array[@]}"; do
     then
       cp $repro_test_file $tmp_dir/tmp_file
       line=$(grep -n '"topics"' $repro_test_file | cut -d ":" -f 1 | tail -n1)
-      
-      echo "              \"topics\": \"$original_topic_name\"," > $tmp_dir/topic_line
-      { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/topic_line; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $repro_test_file
+
+      # replace the topic of the sink example (adding a second "topics" key would leave the original one in the config)
+      sed "${line}s|\"topics\"[[:space:]]*:[[:space:]]*\"[^\"]*\"|\"topics\": \"$original_topic_name\"|" $tmp_dir/tmp_file > $repro_test_file
     else 
       logwarn "Could not find original topic name! "
       logwarn "You would need to change topics config for sink by yourself."
@@ -1403,7 +1401,11 @@ set_cli_metric nb_existing_reproduction_models $nb
 log "🛠️ Number of repro models available: $(get_cli_metric nb_existing_reproduction_models)"
 
 playground generate-fzf-find-files &
-playground open-docs --only-show-url
+# with --no-run, the state is still the one of the previous example: its docs are not the ones of this model
+if [[ ! -n "$no_run" ]]
+then
+  playground open-docs --only-show-url
+fi
 
 if [[ -n "$no_run" ]]
 then

@@ -4947,9 +4947,10 @@ subcommands:
       the trace of a failed task\n  \U0001F525 errors       digest of the connect
       ERROR/FATAL records (self-managed),\n                  or Confluent Cloud error
       recommendations (fully managed)\n  \U0001F422 progress     consumer lag of a
-      sink, or offsets of a source\n  \U0001F449 next steps   the commands to dig
-      further\n\nIt never follows logs and never waits for the lag to reach 0, so
-      it is\nsafe to use from scripts and AI agents."
+      sink (its committed offsets when a task is not\n                  RUNNING),
+      or offsets of a source\n  \U0001F449 next steps   the commands to dig further\n\nIt
+      never follows logs and never waits for the lag to reach 0, so it is\nsafe to
+      use from scripts and AI agents."
     usage: playground connector diagnose [OPTIONS]
     options:
     - names:

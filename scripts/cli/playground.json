@@ -5027,7 +5027,7 @@
         },
         {
           "name": "diagnose",
-          "description": "🩺 Diagnose a connector in one call: status, errors and progress\n\nChains the commands you would run one after the other when a connector\nmisbehaves, and returns:\n\n  🗺️  status       connector and task states, with the trace of a failed task\n  🔥 errors       digest of the connect ERROR/FATAL records (self-managed),\n                  or Confluent Cloud error recommendations (fully managed)\n  🐢 progress     consumer lag of a sink, or offsets of a source\n  👉 next steps   the commands to dig further\n\nIt never follows logs and never waits for the lag to reach 0, so it is\nsafe to use from scripts and AI agents.",
+          "description": "🩺 Diagnose a connector in one call: status, errors and progress\n\nChains the commands you would run one after the other when a connector\nmisbehaves, and returns:\n\n  🗺️  status       connector and task states, with the trace of a failed task\n  🔥 errors       digest of the connect ERROR/FATAL records (self-managed),\n                  or Confluent Cloud error recommendations (fully managed)\n  🐢 progress     consumer lag of a sink (its committed offsets when a task is not\n                  RUNNING), or offsets of a source\n  👉 next steps   the commands to dig further\n\nIt never follows logs and never waits for the lag to reach 0, so it is\nsafe to use from scripts and AI agents.",
           "usage": "playground connector diagnose [OPTIONS]",
           "options": [
             {

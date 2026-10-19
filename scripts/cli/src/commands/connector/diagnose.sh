@@ -71,12 +71,19 @@ do
     echo ""
     if [ "$type" == "sink" ]
     then
-        log "🐢 3/4 progress: consumer lag of sink $connector"
-        playground connector show-lag --connector "$connector" --interval 1 --max-wait 1 $maybe_verbose
+        if [[ "$connector_state" == "RUNNING" ]] && [[ "$task_states" == "RUNNING" ]]
+        then
+            log "🐢 3/4 progress: consumer lag of sink $connector"
+            playground connector show-lag --connector "$connector" --interval 1 --max-wait 1 $maybe_verbose || true
+        else
+            # show-lag waits 60s for a RUNNING task and then fails, which would hide the next steps
+            log "🐢 3/4 progress: committed offsets of sink $connector (no lag while the connector and all its tasks are not RUNNING)"
+            playground connector offsets get --connector "$connector" $maybe_verbose || true
+        fi
     elif [ "$type" == "source" ]
     then
         log "🐢 3/4 progress: offsets of source $connector (run it again to see whether they move)"
-        playground connector offsets get --connector "$connector" $maybe_verbose
+        playground connector offsets get --connector "$connector" $maybe_verbose || true
     else
         logwarn "🐢 3/4 progress: unknown connector type <$type>, skipped"
     fi

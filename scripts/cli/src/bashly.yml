@@ -8226,7 +8226,8 @@ commands:
         🗺️  status       connector and task states, with the trace of a failed task
         🔥 errors       digest of the connect ERROR/FATAL records (self-managed),
                         or Confluent Cloud error recommendations (fully managed)
-        🐢 progress     consumer lag of a sink, or offsets of a source
+        🐢 progress     consumer lag of a sink (its committed offsets when a task is not
+                        RUNNING), or offsets of a source
         👉 next steps   the commands to dig further
 
       It never follows logs and never waits for the lag to reach 0, so it is

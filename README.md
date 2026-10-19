@@ -4,6 +4,13 @@
 
 👷‍♂️ Easily build examples or reproduction models
 
+## 🍿 See it in action
+
+<a href="https://kafka-docker-playground.io/#/introduction"><img src="https://kafka-docker-playground.io/videos/find-example.gif" alt="playground find-example" width="49%"></a>
+<a href="https://kafka-docker-playground.io/#/introduction"><img src="https://kafka-docker-playground.io/videos/diagnose.gif" alt="playground connector diagnose" width="49%"></a>
+
+More clips (repro model, benchmark, Claude Code, analyze) on the [website](https://kafka-docker-playground.io/#/introduction).
+
 ## 📚 Documentation
 
 Check out [kafka-docker-playground.io](https://kafka-docker-playground.io/) to learn how to use the playground, how it works and how to build your own reproduction models ! 
@@ -18,6 +25,8 @@ Check out [kafka-docker-playground.io](https://kafka-docker-playground.io/) to l
 - ♻️ Cluster Linking, Replicator and MirrorMaker 2 [examples](https://kafka-docker-playground.io/#/content?id=🌍-multi-data-center-deployments)
 - 🎯 Run examples with any Confluent Platform or connector [versions](https://kafka-docker-playground.io/#/how-to-use?id=🪄-specify-versions)
 - 🧠 Easily run commands with playground [CLI](https://kafka-docker-playground.io/#/cli)
+- 📈 [Benchmark](https://kafka-docker-playground.io/#/reusables?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector) a connector: throughput, version comparison, and where the time of the tasks goes (Java Flight Recorder)
+- 📊 Find what is wrong with shareable [reports](https://kafka-docker-playground.io/#/reports): thread dumps, GC logs, flight recordings, connector benchmarks, SMT tests, Oracle XStream and CFK diagnostics
 - 🤖 Use it with [Claude Code](https://kafka-docker-playground.io/#/claude-code): project guide, skills to add examples, review PRs, change the CLI or analyze Oracle XStream reports
 - 🎓 Learn how the playground [works](https://kafka-docker-playground.io/#/how-it-works)
 - 👷‍♂️ Build your own examples or reproduction models with [reusables](https://kafka-docker-playground.io/#/reusables) section
@@ -27,9 +36,13 @@ Check out [kafka-docker-playground.io](https://kafka-docker-playground.io/) to l
 - ☸️ Run any onprem connector example using Confluent For Kubernetes (CFK) completely transparently using `--environment cfk` CLI option
 - 👾 And even more [playgrounds](https://kafka-docker-playground.io/#/content?id=👾-other-playgrounds)...
 
-## 🍿 See CLI in action
+## 📊 See what it finds
 
-[![asciicast](https://asciinema.org/a/643687.svg)](https://asciinema.org/a/643687)
+Real reports, generated from the samples shipped in the repository: browse them all in the [reports](https://kafka-docker-playground.io/#/reports) gallery.
+
+<a href="https://kafka-docker-playground.io/#/reports"><img src="https://kafka-docker-playground.io/images/reports/thread-dump.png" alt="thread dump report" width="32%"></a>
+<a href="https://kafka-docker-playground.io/#/reports"><img src="https://kafka-docker-playground.io/images/reports/benchmark.png" alt="connector benchmark report" width="32%"></a>
+<a href="https://kafka-docker-playground.io/#/reports"><img src="https://kafka-docker-playground.io/images/reports/oracle-xstream-report.png" alt="Oracle XStream report" width="32%"></a>
 
 ## 🏁 Getting Started
 

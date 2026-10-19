@@ -11948,7 +11948,7 @@ playground_connector_delete_usage() {
 playground_connector_diagnose_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector diagnose\n\n"
-    printf "  🩺 Diagnose a connector in one call: status, errors and progress\n  \n  Chains the commands you would run one after the other when a connector\n  misbehaves, and returns:\n  \n    🗺️  status       connector and task states, with the trace of a failed task\n    🔥 errors       digest of the connect ERROR/FATAL records (self-managed),\n                    or Confluent Cloud error recommendations (fully managed)\n    🐢 progress     consumer lag of a sink, or offsets of a source\n    👉 next steps   the commands to dig further\n  \n  It never follows logs and never waits for the lag to reach 0, so it is\n  safe to use from scripts and AI agents.\n\n"
+    printf "  🩺 Diagnose a connector in one call: status, errors and progress\n  \n  Chains the commands you would run one after the other when a connector\n  misbehaves, and returns:\n  \n    🗺️  status       connector and task states, with the trace of a failed task\n    🔥 errors       digest of the connect ERROR/FATAL records (self-managed),\n                    or Confluent Cloud error recommendations (fully managed)\n    🐢 progress     consumer lag of a sink (its committed offsets when a task is\n  not\n                    RUNNING), or offsets of a source\n    👉 next steps   the commands to dig further\n  \n  It never follows logs and never waits for the lag to reach 0, so it is\n  safe to use from scripts and AI agents.\n\n"
   else
     printf "playground connector diagnose - 🩺 Diagnose a connector in one call: status, errors and progress\n\n"
   fi
@@ -33680,15 +33680,15 @@ playground_open_docs_command() {
   only_show_url="${args[--only-show-url]}"
   test_file=$(playground state get run.test_file)
 
-  if [ ! -f $test_file ]
+  if [ ! -f "$test_file" ]
   then
 
       logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
       exit 1
   fi
 
-  readme_file="$(dirname $test_file)/README.md"
-  if [ ! -f $readme_file ]
+  readme_file="$(dirname "$test_file")/README.md"
+  if [ ! -f "$readme_file" ]
   then
 
       logwarn "README file $readme_file does not exist, ignoring"
@@ -35501,38 +35501,37 @@ EOF
       fi
       set -e
       # need to remove cli which produces and change topic
-      kafka_cli_producer_error=0
-      kafka_cli_producer_eof=0
-      line_kafka_cli_producer=$(grep -En "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
-      if [ $? != 0 ]
-      then
-          logwarn "Could not find kafka cli producer!"
-          kafka_cli_producer_error=1
-      fi
+      # remove the producer of the sink example (and the log line before it): the sink reads what the source produces
+      producer_regex="kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer|playground topic produce"
+      line_kafka_cli_producer=$(grep -En "$producer_regex" $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
       set +e
-      grep -E "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | grep EOF > /dev/null
-      if [ $? = 0 ]
+      if [ -z "$line_kafka_cli_producer" ]
       then
-          kafka_cli_producer_eof=1
-
-          sed -n "$line_kafka_cli_producer,$(($line_kafka_cli_producer + 10))p" $tmp_dir/tmp_file > /tmp/tmp
-          tmp=$(grep -n "^EOF" /tmp/tmp | cut -d ":" -f 1 | tail -n1)
-          if [ $tmp == "" ]
-          then
-            logwarn "Could not determine EOF for kafka cli producer!"
-            kafka_cli_producer_error=1
-          fi
-          line_kafka_cli_producer_end=$(($line_kafka_cli_producer + $tmp))
-      fi
-
-      if [ $kafka_cli_producer_error == 0 ]
-      then
-        if [ $kafka_cli_producer_eof == 0 ]
+        logwarn "Could not find the producer of the sink example, keeping it as is"
+        cat $tmp_dir/tmp_file >> $repro_test_file
+      else
+        line_kafka_cli_producer_end=$(($line_kafka_cli_producer + 1))
+        if sed -n "${line_kafka_cli_producer}p" $tmp_dir/tmp_file | grep -q "EOF"
         then
-          line_kafka_cli_producer_end=$(($line_kafka_cli_producer + 1))
+          # heredoc (avro schema...): it ends at the first EOF line after the producer
+          tmp=$(tail -n +$(($line_kafka_cli_producer + 1)) $tmp_dir/tmp_file | grep -n "^EOF" | cut -d ":" -f 1 | head -n1)
+          if [ "$tmp" == "" ]
+          then
+            logwarn "Could not determine EOF for the producer of the sink example, keeping it as is"
+            line_kafka_cli_producer_end=""
+          else
+            line_kafka_cli_producer_end=$(($line_kafka_cli_producer + $tmp + 1))
+          fi
         fi
-        { head -n $(($line_kafka_cli_producer - 2)) $tmp_dir/tmp_file; tail -n +$line_kafka_cli_producer_end $tmp_dir/tmp_file; } >  $tmp_dir/tmp_file2
-        cat  $tmp_dir/tmp_file2 >> $repro_test_file
+
+        if [ -n "$line_kafka_cli_producer_end" ]
+        then
+          # head -n 0 (or negative) is an error on macOS
+          { if [ $line_kafka_cli_producer -gt 2 ]; then head -n $(($line_kafka_cli_producer - 2)) $tmp_dir/tmp_file; fi; tail -n +$line_kafka_cli_producer_end $tmp_dir/tmp_file; } >  $tmp_dir/tmp_file2
+          cat $tmp_dir/tmp_file2 >> $repro_test_file
+        else
+          cat $tmp_dir/tmp_file >> $repro_test_file
+        fi
       fi
       set -e
 
@@ -35545,8 +35544,8 @@ EOF
         cp $repro_test_file $tmp_dir/tmp_file
         line=$(grep -n '"topics"' $repro_test_file | cut -d ":" -f 1 | tail -n1)
 
-        echo "              \"topics\": \"$original_topic_name\"," > $tmp_dir/topic_line
-        { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/topic_line; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $repro_test_file
+        # replace the topic of the sink example (adding a second "topics" key would leave the original one in the config)
+        sed "${line}s|\"topics\"[[:space:]]*:[[:space:]]*\"[^\"]*\"|\"topics\": \"$original_topic_name\"|" $tmp_dir/tmp_file > $repro_test_file
       else
 
         logwarn "Could not find original topic name! "
@@ -35659,7 +35658,11 @@ EOF
   log "🛠️ Number of repro models available: $(get_cli_metric nb_existing_reproduction_models)"
 
   playground generate-fzf-find-files &
-  playground open-docs --only-show-url
+  # with --no-run, the state is still the one of the previous example: its docs are not the ones of this model
+  if [[ ! -n "$no_run" ]]
+  then
+    playground open-docs --only-show-url
+  fi
 
   if [[ -n "$no_run" ]]
   then
@@ -49533,12 +49536,19 @@ playground_connector_diagnose_command() {
       echo ""
       if [ "$type" == "sink" ]
       then
-          log "🐢 3/4 progress: consumer lag of sink $connector"
-          playground connector show-lag --connector "$connector" --interval 1 --max-wait 1 $maybe_verbose
+          if [[ "$connector_state" == "RUNNING" ]] && [[ "$task_states" == "RUNNING" ]]
+          then
+              log "🐢 3/4 progress: consumer lag of sink $connector"
+              playground connector show-lag --connector "$connector" --interval 1 --max-wait 1 $maybe_verbose || true
+          else
+              # show-lag waits 60s for a RUNNING task and then fails, which would hide the next steps
+              log "🐢 3/4 progress: committed offsets of sink $connector (no lag while the connector and all its tasks are not RUNNING)"
+              playground connector offsets get --connector "$connector" $maybe_verbose || true
+          fi
       elif [ "$type" == "source" ]
       then
           log "🐢 3/4 progress: offsets of source $connector (run it again to see whether they move)"
-          playground connector offsets get --connector "$connector" $maybe_verbose
+          playground connector offsets get --connector "$connector" $maybe_verbose || true
       else
           logwarn "🐢 3/4 progress: unknown connector type <$type>, skipped"
       fi
