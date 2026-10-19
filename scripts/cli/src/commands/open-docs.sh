@@ -1,14 +1,14 @@
 only_show_url="${args[--only-show-url]}"
 test_file=$(playground state get run.test_file)
 
-if [ ! -f $test_file ]
+if [ ! -f "$test_file" ]
 then 
     logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
     exit 1
 fi
 
-readme_file="$(dirname $test_file)/README.md"
-if [ ! -f $readme_file ]
+readme_file="$(dirname "$test_file")/README.md"
+if [ ! -f "$readme_file" ]
 then 
     logwarn "README file $readme_file does not exist, ignoring"
     exit 0

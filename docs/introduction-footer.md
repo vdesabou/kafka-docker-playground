@@ -8,15 +8,63 @@
 - ♻️ Cluster Linking, Replicator and MirrorMaker 2 [examples](/content?id=🌍-multi-data-center-deployments)
 - 🎯 Run examples with any Confluent Platform or connector [versions](/how-to-use?id=🪄-specify-versions)
 - 🧠 Easily run commands with playground [CLI](/cli)
+- 📈 [Benchmark](/reusables?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector) a connector: throughput, version comparison, and where the time of the tasks goes (Java Flight Recorder)
+- 📊 Find what is wrong with shareable [reports](/reports): thread dumps, GC logs, flight recordings, connector benchmarks, SMT tests, Oracle XStream and CFK diagnostics
 - 🎓 Learn how the playground [works](/how-it-works)
 - 👷‍♂️ Build your own reproduction models with [reusables](/reusables)
 - 🎩 Work remotely with VS Code on AWS EC2 instances using [playground ec2](/playground%20ec2) commands
 - 🤖 Automated testing using Github Actions [CI](/how-it-works?id=🤖-how-ci-works)
 - 👾 And even more [playgrounds](/content?id=👾-other-playgrounds)...
 
-## 🍿 See CLI in action
+## 📊 See what it finds
 
-<script async id="asciicast-581275" src="https://asciinema.org/a/581275.js" async data-autoplay="true" data-size="big"></script>
+Real reports, generated from the samples shipped in the repository: browse them all in the [reports](/reports) gallery.
+
+<a href="#/reports"><img src="images/reports/thread-dump.png" alt="thread dump report" width="32%"></a>
+<a href="#/reports"><img src="images/reports/benchmark.png" alt="connector benchmark report" width="32%"></a>
+<a href="#/reports"><img src="images/reports/oracle-xstream-report.png" alt="Oracle XStream report" width="32%"></a>
+
+## 🍿 See it in action
+
+<!-- tabs:start -->
+
+#### **🔎 Find & run**
+
+Find the example closest to your case, then run it with the Confluent Platform and connector versions you need.
+
+<video src="videos/find-example.mp4" autoplay loop muted playsinline controls width="100%"></video>
+
+#### **🩺 Diagnose**
+
+A connector stopped working: status, error digest with the root cause, progress and next steps, in one command.
+
+<video src="videos/diagnose.mp4" autoplay loop muted playsinline controls width="100%"></video>
+
+#### **👷 Repro model**
+
+Turn an example into a reproduction model of your own issue, ready to edit and run.
+
+<video src="videos/repro-bootstrap.mp4" autoplay loop muted playsinline controls width="100%"></video>
+
+#### **📈 Benchmark**
+
+[Benchmark](/reusables?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector) the throughput of a connector (and compare versions), with a flight recording that says where the time went.
+
+<video src="videos/benchmark.mp4" autoplay loop muted playsinline controls width="100%"></video>
+
+#### **🤖 Claude Code**
+
+Ask [Claude Code](/claude-code) in plain language: it checks the connector with the playground CLI and explains the root cause and the fix.
+
+<video src="videos/claude-code.mp4" autoplay loop muted playsinline controls width="100%"></video>
+
+#### **🔬 Analyze**
+
+Digest thread dumps, GC logs, heap dumps, flight recordings, CFK bundles or Oracle XStream reports (here a thread dump sample).
+
+<video src="videos/analyze.mp4" autoplay loop muted playsinline controls width="100%"></video>
+
+<!-- tabs:end -->
 
 ## 🏁 Getting Started
 
