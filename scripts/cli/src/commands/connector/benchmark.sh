@@ -709,7 +709,7 @@ then
         take_sample "drain"
         processed=$((sample_records - baseline_records))
         elapsed=$(awk -v t="$sample_time" -v s="$start_time" 'BEGIN { printf "%d", t - s }')
-        # a source task restarted by its connector (the generalized cloud storage sources reconfigure their tasks every
+        # a source task restarted by its connector (the cloud storage and hdfs sources reconfigure their task every
         # minute or so) counts from 0 again: when the counter goes down, or stalls while the topics keep growing, the
         # rest of the drain counts the records in the topics
         if [ "$type" == "source" ] && [ -z "$records_from_topics" ] && [ ${#topics[@]} -gt 0 ]
@@ -1116,7 +1116,7 @@ then
 fi
 if [ -n "$records_from_topics" ]
 then
-    add_warning "a task was restarted during the drain (its JMX counters started from 0): the samples count the records in the topics from then on, see the task restarts in the connect logs (a generalized cloud storage source is reconfigured at each poll interval)"
+    add_warning "a task was restarted during the drain (its JMX counters started from 0): the samples count the records in the topics from then on, see the task restarts in the connect logs (the cloud storage and hdfs sources reconfigure their task at each poll interval)"
 fi
 if [ -n "$previous" ] && [ "$(echo "$previous" | jq -c '.setup // empty')" != "" ]
 then

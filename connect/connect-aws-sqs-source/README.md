@@ -55,3 +55,23 @@ Example of record received:
   "Body": "Fuel report for account 0001 on 2015-09-16 at 02:07:31 PM."
 }
 ```
+
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) sends `benchmark message <i>` messages to the queue of the connector (`sqs.url`) for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark), with `boto3` in a small `playground-benchmark-python` image built the first time ([`tools/benchmark-python/benchmark_producer.py`](../../tools/benchmark-python/benchmark_producer.py)), with the AWS credentials of the playground (`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`, or `~/.aws`). A paused connector does not receive the messages, so they wait in the queue and a drain measures the connector.
+
+> [!IMPORTANT]
+> The script deletes the queue on exit, after a `Continue (y/n)?` prompt: answer `n` to keep it for the benchmark. Running the example again deletes and recreates it.
+
+```bash
+# drain of 50000 messages, sent with send_message_batch (10 messages) from 16 threads
+playground connector benchmark --nb-records 50000
+
+# one send_message per message
+playground connector benchmark --nb-records 5000 --shape small-txn
+
+# throughput during 2 minutes while batches of 5000 messages are sent
+playground connector benchmark --mode steady --duration 2m --nb-records 5000
+```
+
+A task receives at most 10 messages per request (`sqs.messages.max`, the SQS maximum) and deletes each message when Kafka acknowledges it: the throughput depends mostly on the latency to the region of the queue, raise `tasks.max` to receive in parallel. FIFO queues (`.fifo`) get a message group and a deduplication id.

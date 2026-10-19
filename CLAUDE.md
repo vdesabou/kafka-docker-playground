@@ -82,12 +82,14 @@ out of context.
   `$BENCHMARK_STOP_FILE` exists — killing a producer mid-batch sends a truncated record that fails the connector —
   and print `BENCHMARK_BATCH=<records> <epoch>` per batch; shipped with the JDBC / Debezium Postgres, Debezium MySQL,
   JDBC / Debezium SQL Server, Oracle CDC, XStream, Debezium Oracle, JDBC Oracle, MongoDB, IBM MQ, MQTT (steady
-  only) and generalized S3 / GCS / Azure Blob Storage source (`benchmark_cloud_storage_load`, JSON files) examples; called with `--check` first, before the connector is paused) or `--load-command` / `--stream-load-command`. A load script must
+  only), SQS, Kinesis, Pub/Sub (both connectors), SFTP, HDFS 3 and generalized S3 / GCS / Azure Blob Storage source examples; called with `--check` first, before the connector is paused) or `--load-command` / `--stream-load-command`. A load script must
   source `scripts/cli/src/lib/utils_function.sh`, not `scripts/utils.sh` (that one records the script as the
   example being run), and can use `benchmark_load_args`, `benchmark_sql_load` (postgres / mysql / oracle
   `CUSTOMERS` table, sql server `dbo.customers`), `benchmark_mongo_load`, `benchmark_mqtt_load`, `benchmark_ibmmq_load`, `benchmark_activemq_load`, `benchmark_rabbitmq_load`,
   `benchmark_solace_load`, `benchmark_splunk_load`, `benchmark_jms_load` (generic `tools/benchmark-jms/BenchmarkJmsProducer`,
-  compiled once in a JDK container). Read connector settings with `benchmark_connector_config_value <key>`: the connect
+  compiled once in a JDK container), `benchmark_python_load` (SQS / Kinesis / Pub/Sub with
+  `tools/benchmark-python/benchmark_producer.py` in an image built once), `benchmark_files_load` (files of JSON / CSV
+  records given to an upload function: SFTP, HDFS 3, and `benchmark_cloud_storage_load` for S3 / GCS / Azure). Read connector settings with `benchmark_connector_config_value <key>`: the connect
   REST API masks passwords (`••••`), the helper then takes them from the example script and `benchmark_oracle_client_from_example`. Self-managed connectors only (not ccloud,
   not cfk). When it says the throughput is a lower bound, rerun with 10x `--nb-records`. `--connector-tag A --connector-tag B
   [--rounds 2]` benchmarks several plugin versions (update-version, version check, warm-up drain, comparison report)
