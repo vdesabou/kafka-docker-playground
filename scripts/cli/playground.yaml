@@ -2926,12 +2926,13 @@ subcommands:
       argument: ''
       description: "\U0001F516 Save output to a file and open with text editor set
         with playground config editor <editor> (default is code)\n\nConflicts with:
-        --wait-for-log, --grep"
+        --wait-for-log, --grep, --errors"
     - names:
       - "--wait-for-log"
       - "-w"
       argument: LOG
-      description: "\U0001F634 Wait until log appears\n\nConflicts with: --open, --grep"
+      description: "\U0001F634 Wait until log appears\n\nConflicts with: --open, --grep,
+        --errors"
     - names:
       - "--max-wait"
       - "-m"
@@ -2945,7 +2946,7 @@ subcommands:
       - "--grep"
       argument: GREP
       description: "\U0001F3AF Grep pattern to filter logs\n\nConflicts with: --open,
-        --wait-for-log"
+        --wait-for-log, --errors"
     - names:
       - "--previous"
       argument: ''
@@ -5310,8 +5311,7 @@ subcommands:
       - "-o"
       argument: ''
       description: "\U0001F516 Save output to a file and open with text editor set
-        with playground config editor <editor> (default is code)\n\nConflicts with:
-        --wait-for-log, --grep"
+        with playground config editor <editor> (default is code)"
     - names:
       - "--verbose"
       - "-v"
@@ -5428,12 +5428,12 @@ subcommands:
       argument: ''
       description: "\U0001F516 Save output to a file and open with text editor set
         with playground config editor <editor> (default is code)\n\nConflicts with:
-        --wait-for-log, --grep"
+        --wait-for-log"
     - names:
       - "--wait-for-log"
       - "-w"
       argument: LOG
-      description: "\U0001F634 Wait until log appears\n\nConflicts with: --open, --grep"
+      description: "\U0001F634 Wait until log appears\n\nConflicts with: --open"
     - names:
       - "--verbose"
       - "-v"

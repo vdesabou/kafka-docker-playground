@@ -8,6 +8,10 @@ help: |-
   👉 Check documentation https://kafka-docker-playground.io/#/cli
 filters:
 - docker_running
+environment_variables:
+- name: PG_VERBOSE_MODE
+  private: true
+  help: "Set by --vvv, propagated to the nested playground calls (internal)"
 
 # Use bash code here directly or a function name that references code elsewhere.
 help_header_override: |
@@ -1125,6 +1129,9 @@ commands:
 
       Uses the config key editor, then the EDITOR environment variable, then
       vi.
+    environment_variables:
+    - name: EDITOR
+      help: "✏️ Editor used when the config key editor is not set (default vi)"
     flags:
     - long: --plain
       required: false
@@ -1446,6 +1453,15 @@ commands:
 
 - name: run
   group: Run
+  environment_variables:
+  - name: PLAYGROUND_ENVIRONMENT
+    help: "🔐 Environment used when --environment is not set (plaintext by default in the examples)"
+  - name: SQL_DATAGEN_DURATION
+    help: "⏱️ With --enable-sql-datagen, duration of the injection in minutes (default 10)"
+  - name: SQL_DATAGEN_SESSIONS
+    help: "🔀 With --enable-sql-datagen, number of parallel sessions (default 5)"
+  - name: BENCHMARK_LOAD_SCRIPT
+    help: "📜 With --enable-sql-datagen, load script to use instead of benchmark-load.bash (file of the example folder, or absolute path)"
   dependencies:
     fzf: visit https://github.com/junegunn/fzf#installation to install
   help: |-
@@ -2410,6 +2426,11 @@ commands:
     For a Confluent Cloud example, the connectors and topics it created are
     listed and deleted too, after asking for confirmation. Change this with
     'playground config cleanup-ccloud-resources-after-run ask|true|false'.
+
+  environment_variables:
+  - name: PG_SKIP_CCLOUD_RUN_CLEANUP
+    private: true
+    help: "Set by playground run, skips the cleanup of the ccloud run resources (internal)"
 
 - name: remove-all-docker-images
   group: Run
@@ -5038,20 +5059,18 @@ commands:
         being ready, instead of sleeping and hoping.
       flags:
       - *container
-      - &logsopen
-        long: --open
+      - long: --open
         short: -o
         help: |- 
           🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
-        conflicts: [--wait-for-log, --grep]
-      - &logswaitforlog
-        long: --wait-for-log
+        conflicts: [--wait-for-log, --grep, --errors]
+      - long: --wait-for-log
         short: -w
         arg: log
         validate: not_empty
         help: |- 
           😴 Wait until log appears
-        conflicts: [--open, --grep]
+        conflicts: [--open, --grep, --errors]
       - &logsmaxwait
         long: --max-wait
         short: -m
@@ -5068,7 +5087,7 @@ commands:
         help: |-
           🎯 Grep pattern to filter logs
 
-        conflicts: [--open, --wait-for-log]
+        conflicts: [--open, --wait-for-log, --errors]
 
       - long: --previous
         required: false
@@ -7452,6 +7471,11 @@ commands:
       
       🏗️ Compile code and generate zip file(s) by providing --compile flag
 
+    environment_variables:
+    - name: GH_TOKEN
+      help: "🔑 GitHub token, needed for fully managed connectors (cc-docker-connect is private)"
+    - name: GITHUB_TOKEN
+      help: "🔑 GitHub token, used when GH_TOKEN is not set"
     flags:
       - long: --connector-plugin
         short: -c
@@ -7612,6 +7636,13 @@ commands:
       The connector state, the state of each task, and for a failed task the
       full stack trace, which is the thing you actually need. Add --verbose to
       see the underlying REST call.
+    environment_variables:
+    - name: PG_SKIP_ERROR_RECOMMENDATIONS
+      private: true
+      help: "Do not print error recommendations for FAILED connectors (internal)"
+    - name: PG_SKIP_DIAGNOSE_HINT
+      private: true
+      help: "Do not print the playground connector diagnose hint (internal)"
     flags:
     - *verbose
     - &connector
@@ -8402,6 +8433,18 @@ commands:
       (CONFLUENT_CLOUD_API_KEY) and does not answer for a deleted connector.
 
       ⚠️ Not available with the cfk environment yet.
+    environment_variables:
+    - name: BENCHMARK_LOAD_SCRIPT
+      help: "📜 Load script to use instead of benchmark-load.bash: a file of the example folder, or an absolute path"
+    - name: BENCHMARK_MATRIX_CHILD
+      private: true
+      help: "Set for the child runs of --shape / --connector-tag matrices (internal)"
+    - name: BENCHMARK_MATRIX_RESULTS
+      private: true
+      help: "File where a child run appends its result file (internal)"
+    - name: BENCHMARK_NO_OPEN
+      private: true
+      help: "Do not open the HTML report in a browser (internal)"
     filters:
     - connect_running
     flags:
@@ -8654,7 +8697,10 @@ commands:
       See https://api.telemetry.confluent.cloud/docs/descriptors/datasets/cloud
     flags:
     - *connector
-    - *logsopen
+    - long: --open
+      short: -o
+      help: |-
+        🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
     - *verbose
 
   - name: display-metrics-api-with-grafana
@@ -8766,8 +8812,18 @@ commands:
       For Fully Managed connectors, limitations apply (see https://docs.confluent.io/cloud/current/connectors/logging-cloud-connectors.html#using-ccloud-cli)
     flags:
     - *connector
-    - *logsopen
-    - *logswaitforlog
+    - long: --open
+      short: -o
+      conflicts: [--wait-for-log]
+      help: |-
+        🔖 Save output to a file and open with text editor set with playground config editor <editor> (default is code)
+    - long: --wait-for-log
+      short: -w
+      arg: log
+      validate: not_empty
+      conflicts: [--open]
+      help: |-
+        😴 Wait until log appears
     - *verbose
 
   - name: open-ccloud-connector-in-browser

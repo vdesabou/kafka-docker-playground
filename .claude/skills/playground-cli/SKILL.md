@@ -120,7 +120,15 @@ here (anchors, validators, filters, groups, completions). The essentials:
   (Connector, Container, Debug, Kafka, Run, Schema, Topic, Tools, …).
 - **`private: true`** hides a command from help and docs. Used for the
   `get-*-list` completion providers and for internal commands like
-  `bashly-reload` and `state`.
+  `bashly-reload` and `state`. `PLAYGROUND_SHOW_PRIVATE=1 playground <cmd> --help`
+  shows them (`private_reveal_key` in `scripts/cli/settings.yml`).
+- **`environment_variables:`** documents the variables a partial reads, in an
+  `Environment Variables:` section of `--help`. Mark the ones the CLI sets
+  for its own nested calls `private: true`. Never add `required:` or
+  `default:` to an existing variable: bashly enforces both.
+- **`conflicts:`** is checked only against flags parsed *before* the flag
+  that declares it, so declare a conflict on both flags (`--a` lists `--b`,
+  and `--b` lists `--a`), otherwise one order on the command line passes.
 - **Completions** call those private commands (bashly 2.x hash format):
   `completions: { dynamic: [playground get-connector-list] }`.
 - **`filters:`** declare preconditions (`docker_running`,

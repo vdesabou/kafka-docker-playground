@@ -206,7 +206,7 @@ playground state get|set <section>.<key>      # local state
 playground config get|set <key>               # local config
 ```
 
-Discover anything with `playground --help`, `playground <cmd> --help`, or by grepping `scripts/cli/src/bashly.yml`.
+Discover anything with `playground --help`, `playground <cmd> --help`, or by grepping `scripts/cli/src/bashly.yml`. `PLAYGROUND_SHOW_PRIVATE=1 playground <cmd> --help` also lists the private commands, flags and environment variables.
 
 ## Architecture
 
