@@ -1,9 +1,10 @@
-"""Load for 'playground connector benchmark' on the aws and gcp messaging sources (sqs, kinesis, pub/sub).
+"""Load for 'playground connector benchmark' on the aws and gcp messaging sources (sqs, kinesis, pub/sub, cloudwatch logs).
 
 Run by benchmark_python_load (scripts/cli/src/lib/utils_function.sh) in the playground-benchmark-python image:
   benchmark_producer.py sqs --queue-url <url> --region <region> --records <n> [--first <i>] [--record-size <bytes>] [--shape bulk|small-txn]
   benchmark_producer.py kinesis --stream <name> --region <region> --records <n> ...
   benchmark_producer.py pubsub --project <id> --topic <id> --keyfile <path> --records <n> ...
+  benchmark_producer.py cloudwatch-logs --log-group <name> --log-stream <name> --region <region> --records <n> ...
 Messages are "benchmark message <i>", padded with spaces to --record-size. Prints SENT=<n> at the end.
 """
 import argparse
@@ -83,6 +84,21 @@ def kinesis(args):
         list(executor.map(put_batch, chunks(messages(args), size)))
 
 
+def cloudwatch_logs(args):
+    client = aws_client("logs", args)
+    # put_log_events takes 10000 events and 1 MB at most (26 bytes of overhead per event), in chronological order
+    batch, size = [], 0
+    for message in messages(args):
+        event_size = len(message.encode()) + 26
+        if batch and (len(batch) == 10000 or size + event_size > 1000000 or args.shape == "small-txn"):
+            client.put_log_events(logGroupName=args.log_group, logStreamName=args.log_stream, logEvents=batch)
+            batch, size = [], 0
+        batch.append({"timestamp": int(time.time() * 1000), "message": message})
+        size += event_size
+    if batch:
+        client.put_log_events(logGroupName=args.log_group, logStreamName=args.log_stream, logEvents=batch)
+
+
 def pubsub(args):
     from google.cloud import pubsub_v1
     from google.oauth2 import service_account
@@ -104,15 +120,18 @@ def pubsub(args):
 def main():
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="target", required=True)
-    for name in ("sqs", "kinesis", "pubsub"):
+    for name in ("sqs", "kinesis", "pubsub", "cloudwatch-logs"):
         p = sub.add_parser(name)
         p.add_argument("--records", type=int, required=True)
         p.add_argument("--first", type=int, default=1)
         p.add_argument("--record-size", type=int, default=0)
         p.add_argument("--shape", default="bulk", choices=["bulk", "small-txn"])
         p.add_argument("--threads", type=int, default=16)
-        if name in ("sqs", "kinesis"):
+        if name in ("sqs", "kinesis", "cloudwatch-logs"):
             p.add_argument("--region", required=True)
+        if name == "cloudwatch-logs":
+            p.add_argument("--log-group", required=True)
+            p.add_argument("--log-stream", required=True)
         if name == "sqs":
             p.add_argument("--queue-url", required=True)
         if name == "kinesis":
@@ -122,7 +141,7 @@ def main():
             p.add_argument("--topic", required=True)
             p.add_argument("--keyfile", required=True)
     args = parser.parse_args()
-    {"sqs": sqs, "kinesis": kinesis, "pubsub": pubsub}[args.target](args)
+    {"sqs": sqs, "kinesis": kinesis, "pubsub": pubsub, "cloudwatch-logs": cloudwatch_logs}[args.target](args)
     print("SENT=%d" % args.records)
 
 

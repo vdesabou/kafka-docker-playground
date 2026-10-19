@@ -5014,16 +5014,18 @@ subcommands:
       next to the example\n    script, called with --records <n> --mode preload|stream
       --shape\n    bulk|small-txn|update (rows in the CUSTOMERS table for the\n    postgres,
       mysql, oracle and sql server examples, documents for\n    mongodb, messages
-      for ibm mq, mqtt, sqs, kinesis and pub/sub,\n    files for sftp, hdfs3 and the
-      generalized s3, gcs and azure blob\n    storage sources, see the README of the
-      example). It is called with\n    --check first, so that an unsupported\n    combination
-      fails before the connector is paused\n  - or --load-command / --stream-load-command,
-      which take precedence\n\nBENCHMARK_LOAD_SCRIPT=<file> uses another load script
-      than\nbenchmark-load.bash: a file name in the folder of the example (or an\nabsolute
-      path), e.g. one per reproduction model named after its ticket\n(BENCHMARK_LOAD_SCRIPT=benchmark-load-123456.bash).
-      It takes the same\narguments, and --enable-sql-datagen uses it too.\n\nThroughput
-      is read from the connect JMX metrics of the tasks\n(sink-record-read-total:
-      records read from kafka, including the ones\nfiltered or sent to the dlq; source-record-write-total),
+      for ibm mq, mqtt, activemq, sqs, kinesis,\n    pub/sub and cloudwatch logs,
+      files for spool dir, filepulse,\n    filestream, sftp, ftps, hdfs 2 / 3 and
+      the generalized s3, gcs and\n    azure blob storage sources, see the README
+      of the example). It is\n    called with --check first, so that an unsupported\n
+      \   combination fails before the connector is paused\n  - or --load-command
+      / --stream-load-command, which take precedence\n\nBENCHMARK_LOAD_SCRIPT=<file>
+      uses another load script than\nbenchmark-load.bash: a file name in the folder
+      of the example (or an\nabsolute path), e.g. one per reproduction model named
+      after its ticket\n(BENCHMARK_LOAD_SCRIPT=benchmark-load-123456.bash). It takes
+      the same\narguments, and --enable-sql-datagen uses it too.\n\nThroughput is
+      read from the connect JMX metrics of the tasks\n(sink-record-read-total: records
+      read from kafka, including the ones\nfiltered or sent to the dlq; source-record-write-total),
       sampled every\n--interval. Results are written to --output-dir (samples csv,
       result\njson and an html report with the charts, opened in the browser at the\nend
       in an interactive terminal) and appended to the benchmark-history\nfile, and

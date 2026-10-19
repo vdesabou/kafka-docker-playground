@@ -42,3 +42,22 @@ S3 examples (`s3-csv.sh`, `s3-json.sh`):
 2. Writes the AWS credentials in a `data` file mounted in the `connect` container, referenced in the connector config with the `FileConfigProvider` (`${file:/data:aws.access.key.id}`).
 3. Creates the `filepulse-source-s3-csv` or `filepulse-source-s3-json` connector.
 4. Verifies the data in `connect-filepulse-csv-data-records` or `tracks-filepulse-json-00` with `playground topic consume`.
+
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) writes CSV files of musics to the `fs.listing.directory.path` of the connector of `csv.sh`, in the connect container, for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark): the columns of the dataset of the example (`title;album;duration;release;artist;type`, with a header line), and `U2` as the artist, since the `Drop` filter of the example keeps only those. The files are copied next to the folder and then moved into it, so the connector never reads a file being written. `json.sh` and `xml.sh` read one record per file or XML documents, and are refused. Once `csv.sh` is running:
+
+```bash
+# drain of 100000 records in files of 10000 records
+playground connector benchmark --nb-records 100000
+
+# throughput during 2 minutes while files of 20000 records are written
+playground connector benchmark --mode steady --duration 2m --nb-records 20000
+```
+
+| Option | Load |
+| --- | --- |
+| `--shape bulk` (default) | files of `BENCHMARK_FILE_RECORDS` records (default `10000`) |
+| `--shape small-txn` | one record per file: the cost of listing, opening and moving each file (drain only) |
+| `--mode steady` | one file of `--nb-records` records per batch |
+The connector lists the folder every `fs.listing.interval.ms` (`10000` in the example): a drain starts after the next listing.

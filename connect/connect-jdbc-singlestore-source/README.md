@@ -30,3 +30,18 @@ playground run -f jdbc-singlestore-source.sh
 {"id":1,"name":"kafka","team_email":"kafka@apache.org","last_modified":1644341162000}
 {"id":2,"name":"another","team_email":"another@apache.org","last_modified":1644341163000}
 ```
+
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) inserts rows in the `application` table of the `db` database for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark), read by the JDBC source connector in `timestamp+incrementing` mode. The rows are numbered by a small `benchmark_digits` table that the connector does not read. Once the example is running:
+
+```bash
+# one statement inserting 100000 rows (10000000 at most)
+playground connector benchmark --nb-records 100000
+
+# 2000 statements of one row, each one its own transaction
+playground connector benchmark --nb-records 2000 --shape small-txn
+
+# throughput during 2 minutes while statements of 10000 rows are run
+playground connector benchmark --mode steady --duration 2m --nb-records 10000
+```

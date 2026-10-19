@@ -38,3 +38,20 @@ playground run -f cloudwatch.sh
 3. Creates the AWS CloudWatch Logs source connector (`io.confluent.connect.aws.cloudwatch.AwsCloudWatchSourceConnector`) using `https://logs.$AWS_REGION.amazonaws.com`.
 4. Verifies the 11 events are received in topic `<log group>.<log stream>` with `playground topic consume`.
 5. On exit, asks for confirmation and then deletes the connector, the log stream and the log group.
+
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) puts log events in the log stream of the connector (`aws.cloudwatch.log.group`, the first of `aws.cloudwatch.log.streams`, region of `aws.cloudwatch.logs.url`) for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark), with `put_log_events` (10000 events per request) and `boto3` in a small `playground-benchmark-python` image built the first time ([`tools/benchmark-python/benchmark_producer.py`](../../tools/benchmark-python/benchmark_producer.py)), with the AWS credentials of the playground. The events stay in the stream while the connector is paused, so a drain measures the connector.
+
+> [!IMPORTANT]
+> The script deletes the log group on exit, after a `Continue (y/n)?` prompt: answer `n` to keep it for the benchmark. Running the example again deletes and recreates it.
+
+```bash
+# drain of 50000 events
+playground connector benchmark --nb-records 50000
+
+# throughput during 2 minutes while batches of 10000 events are put
+playground connector benchmark --mode steady --duration 2m --nb-records 10000
+```
+
+`--shape small-txn` puts the events one by one.

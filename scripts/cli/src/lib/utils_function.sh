@@ -2862,7 +2862,11 @@ function benchmark_oracle_client_from_example () {
 # load for 'playground connector benchmark' on the CUSTOMERS table used by sql-datagen
 # (first_name, last_name, email, gender, club_status, comments), created if it does not exist; with sqlserver, the
 # dbo.customers table of the examples (first_name, last_name, email), which has cdc enabled for debezium:
-#   benchmark_sql_load <postgres|mysql|mariadb|oracle|sqlserver> <container> "<sql client reading stdin>" <records> <bulk|small-txn|update> [preload|stream]
+#   benchmark_sql_load <postgres|mysql|mariadb|oracle|sqlserver|custom> <container> "<sql client reading stdin>" <records> <bulk|small-txn|update> [preload|stream]
+# custom: the statements of a table of the example, set by the load script for <records> rows: BENCHMARK_SQL_TABLE (for
+# the logs), BENCHMARK_SQL_CREATE (optional), BENCHMARK_SQL_BULK, BENCHMARK_SQL_SMALL_TXN, BENCHMARK_SQL_UPDATE,
+# BENCHMARK_SQL_DELETE (a shape without statement is refused), BENCHMARK_SQL_COUNT and BENCHMARK_SQL_COUNT_FLAGS
+# (row count, for update and delete)
 # - bulk: one transaction inserting <records> rows
 # - small-txn: <records> transactions of one row
 # - update: updates <records> existing rows (run a bulk load first)
@@ -2877,7 +2881,30 @@ function benchmark_oracle_client_from_example () {
 function benchmark_sql_load () {
   local dialect="$1" container="$2" client="$3" records="$4" shape="$5" mode="${6:-preload}"
   local create_table insert_bulk insert_small_txn update count_flags count_sql="SELECT COUNT(*) FROM CUSTOMERS;" client_for_count="$client"
+  local table="CUSTOMERS"
   case "$dialect" in
+    custom)
+      table="${BENCHMARK_SQL_TABLE:-the table}"
+      create_table="$BENCHMARK_SQL_CREATE"
+      insert_bulk="$BENCHMARK_SQL_BULK"
+      insert_small_txn="$BENCHMARK_SQL_SMALL_TXN"
+      update="$BENCHMARK_SQL_UPDATE"
+      delete="$BENCHMARK_SQL_DELETE"
+      count_sql="$BENCHMARK_SQL_COUNT"
+      count_flags="$BENCHMARK_SQL_COUNT_FLAGS"
+      local shape_sql
+      case "$shape" in
+        bulk) shape_sql="$insert_bulk" ;;
+        small-txn) shape_sql="$insert_small_txn" ;;
+        update) shape_sql="$update" ;;
+        delete) shape_sql="$delete" ;;
+      esac
+      if [ -z "$shape_sql" ]
+      then
+        logerror "❌ --shape $shape is not supported by the load of this example ($table)"
+        return 1
+      fi
+    ;;
     postgres)
       create_table="CREATE TABLE IF NOT EXISTS CUSTOMERS (id SERIAL PRIMARY KEY, first_name VARCHAR(50), last_name VARCHAR(50), email VARCHAR(50), gender VARCHAR(50), club_status VARCHAR(20), comments VARCHAR(90), create_ts timestamp DEFAULT CURRENT_TIMESTAMP, update_ts timestamp DEFAULT CURRENT_TIMESTAMP);"
       insert_bulk="INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) SELECT 'first' || i, 'last' || i, 'user' || i || '@example.com', CASE WHEN i % 2 = 0 THEN 'Female' ELSE 'Male' END, (ARRAY['bronze','silver','gold','platinum'])[1 + i % 4], 'benchmark row ' || i FROM generate_series(1, $records) AS i;"
@@ -2958,7 +2985,7 @@ SELECT COUNT(*) FROM dbo.customers;
 GO"
     ;;
     *)
-      logerror "❌ benchmark_sql_load: unsupported dialect $dialect (postgres, mysql, mariadb, oracle, sqlserver)"
+      logerror "❌ benchmark_sql_load: unsupported dialect $dialect (postgres, mysql, mariadb, oracle, sqlserver, custom)"
       return 1
     ;;
   esac
@@ -3000,7 +3027,10 @@ GO"
     *) logerror "❌ benchmark_sql_load: unknown shape $shape (bulk, small-txn, update, delete)"; return 1 ;;
   esac
 
-  echo "$create_table" | playground container exec --container "$container" --command "$client" > /dev/null
+  if [ -n "$create_table" ]
+  then
+    echo "$create_table" | playground container exec --container "$container" --command "$client" > /dev/null
+  fi
   local changes="$records"
   if [ "$shape" == "update" ] || [ "$shape" == "delete" ]
   then
@@ -3009,7 +3039,7 @@ GO"
     rows=${rows:-0}
     if [ "$rows" -lt "$records" ]
     then
-      logwarn "⚠️ only $rows rows in CUSTOMERS, ${shape/%e/}ing $rows rows instead of $records (run a bulk load first)"
+      logwarn "⚠️ only $rows rows in $table, ${shape/%e/}ing $rows rows instead of $records (run a bulk load first)"
       changes="$rows"
     fi
   fi
@@ -3035,7 +3065,7 @@ GO"
 
   if [ "$mode" == "stream" ]
   then
-    log "🌊 $shape load on $dialect CUSTOMERS, batches of $changes rows, until stopped"
+    log "🌊 $shape load on $dialect $table, batches of $changes rows, until stopped"
     while [ ! -f "${BENCHMARK_STOP_FILE:-/nonexistent}" ]
     do
       echo "$sql" | playground container exec --container "$container" --command "$client" > /dev/null
@@ -3044,7 +3074,7 @@ GO"
     return 0
   fi
 
-  log "📥 $shape load on $dialect CUSTOMERS: $changes rows"
+  log "📥 $shape load on $dialect $table: $changes rows"
   echo "$sql" | playground container exec --container "$container" --command "$client" > /dev/null
   echo "BENCHMARK_RECORDS=$expected_records"
 }
@@ -3415,6 +3445,8 @@ function benchmark_splunk_load () {
 #   users-json                      the users of the sftp examples: {"id":<i>,"first_name":...,"favorite_color":...}
 #   users-csv:<separator>:<header>  the same users, <separator> as an ascii code (44 for a comma, 9 for a tab), with a
 #                                   header line in each file when <header> is true
+#   custom                          the rows of the load script: BENCHMARK_FILES_ROW, where {id} and {message} are replaced,
+#                                   after the optional header line BENCHMARK_FILES_HEADER
 # - bulk: files of BENCHMARK_FILE_RECORDS (10000) records; small-txn: one record per file (the cost of listing and
 #   opening each file), drain only
 # - stream mode: one file of <records> records per batch, uploaded on its own
@@ -3445,7 +3477,8 @@ function benchmark_files_load () {
     rm -f "$work"/*
     batch=$((batch + 1))
     prefix="zz-benchmark-$(date +%s)-$(printf '%06d' "$batch")-$$"
-    benchmark_messages "$count" "$record_size" | awk -v per="$size" -v dir="$work" -v prefix="$prefix" -v ext="$extension" -v format="$format" '
+    benchmark_messages "$count" "$record_size" | BENCHMARK_FILES_ROW="${BENCHMARK_FILES_ROW:-}" BENCHMARK_FILES_HEADER="${BENCHMARK_FILES_HEADER:-}" \
+      awk -v per="$size" -v dir="$work" -v prefix="$prefix" -v ext="$extension" -v format="$format" '
     BEGIN {
       n = split(format, f, ":")
       separator = (n > 1) ? sprintf("%c", f[2]) : ","
@@ -3454,7 +3487,14 @@ function benchmark_files_load () {
     {
       file = sprintf("%s/%s-%06d.%s", dir, prefix, int((NR - 1) / per), ext)
       id = $3
-      if (f[1] == "json-f1") {
+      if (f[1] == "custom") {
+        if (ENVIRON["BENCHMARK_FILES_HEADER"] != "" && (NR - 1) % per == 0) print ENVIRON["BENCHMARK_FILES_HEADER"] > file
+        row = ENVIRON["BENCHMARK_FILES_ROW"]
+        gsub(/\{id\}/, id, row)
+        # the messages have no & (which gsub would replace by the match)
+        gsub(/\{message\}/, $0, row)
+        print row > file
+      } else if (f[1] == "json-f1") {
         printf "{\"f1\":\"%s\"}\n", $0 > file
       } else if (f[1] == "users-json") {
         printf "{\"id\":%d,\"first_name\":\"benchmark\",\"last_name\":\"%s\",\"email\":\"benchmark%d@example.com\",\"gender\":\"Female\",\"ip_address\":\"10.0.0.1\",\"last_login\":\"2018-02-12T06:26:23Z\",\"account_balance\":1450.68,\"country\":\"FR\",\"favorite_color\":\"#4eaefa\"}\n", id, $0, id > file
@@ -3503,6 +3543,140 @@ function benchmark_cloud_storage_load () {
   benchmark_files_load "$upload" "$records" "$record_size" "$mode" json-f1 json
 }
 
+# format and extension of the files of users for a source of the spool dir family (spool dir, sftp, ftps), from the
+# connector class and config in $BENCHMARK_CONNECTOR_CONFIG: prints "<format> <extension>" for benchmark_files_load, with
+# <input file pattern key> the config key of the pattern of the input files (input.file.pattern, ftps.input.file.pattern)
+#   read -r format extension <<< "$(benchmark_users_files_format input.file.pattern)" || exit 1
+function benchmark_users_files_format () {
+  local pattern_key="${1:-input.file.pattern}" connector_class format pattern extension="" candidate
+  connector_class=$(jq -r '."connector.class" // empty' "$BENCHMARK_CONNECTOR_CONFIG")
+  case "$connector_class" in
+    *CsvSourceConnector)
+      format="users-csv:$(jq -r '."csv.separator.char" // "44"' "$BENCHMARK_CONNECTOR_CONFIG"):$(jq -r '."csv.first.row.as.header" // "false"' "$BENCHMARK_CONNECTOR_CONFIG")"
+      ;;
+    *JsonSourceConnector|*LineDelimitedSourceConnector|*FtpsSourceConnector)
+      format="users-json"
+      ;;
+    *)
+      logerror "❌ this load writes json or csv files of users: $connector_class is not supported" >&2
+      return 1
+      ;;
+  esac
+  # an extension that the pattern accepts (a java regex matching the whole name, the same as grep -E -x here)
+  pattern=$(jq -r --arg k "$pattern_key" '.[$k] // ".*"' "$BENCHMARK_CONNECTOR_CONFIG")
+  for candidate in json csv tsv txt
+  do
+    if echo "zz-benchmark-1-000001-1-000000.$candidate" | grep -q -E -x -- "$pattern"
+    then
+      extension="$candidate"
+      break
+    fi
+  done
+  if [ -z "$extension" ]
+  then
+    logerror "❌ $pattern_key $pattern accepts no file name of this load (zz-benchmark-<...>.json|csv|tsv|txt): use a pattern like .*\\.csv" >&2
+    return 1
+  fi
+  echo "$format $extension"
+}
+
+# upload of the files of a benchmark_files_load folder (<folder name> in $PLAYGROUND_HOST_TMP_DIR) to the folder <input
+# path> of <container>: copied next to it first, then moved into it (as root, owned like the input folder), so that the
+# connector never sees a file being written
+#   benchmark_container_files_upload <container> <input path> <folder name>
+function benchmark_container_files_upload () {
+  local container="$1" input_path="$2" name="$3"
+  local staging
+  staging="$(dirname "$input_path")/.benchmark-$name"
+  playground --output-level ERROR container cp --source "$PLAYGROUND_HOST_TMP_DIR/$name" --destination "$container:$staging" > /dev/null
+  playground --output-level ERROR container exec --container "$container" --root --command "chown -R --reference=$input_path $staging && mv $staging/* $input_path/ && rmdir $staging" > /dev/null
+}
+
+# load for 'playground connector benchmark' on an hdfs source (hdfs 2 and hdfs 3): avro files of
+# {"f1":"benchmark message <i>"} records (the schema of the examples) written in the layout of the hdfs sink,
+# <topics.dir>/<topic>/<partition>/<topic>+0+<start>+<end>.avro, with the hdfs command of the namenode container:
+#   benchmark_hdfs_load "<hdfs command, e.g. /opt/hadoop-3.1.3/bin/hdfs>" <records> <record size> [preload|stream]
+# the topic is the first folder of <topics.dir> (BENCHMARK_HDFS_TOPIC to choose another one). The source reads the file
+# listed after the last one it read: the files go to a partition folder that sorts after the ones of the sink
+# (f1=zz-benchmark with the FieldPartitioner of the examples, partition=0 with the DefaultPartitioner), with offsets
+# growing from one run (and one batch) to the next. hdfs dfs -put writes <file>._COPYING_ and renames it: the source
+# never reads a file being written
+function benchmark_hdfs_load () {
+  local hdfs="$1" records="$2" record_size="${3:-0}" mode="${4:-preload}"
+  local format topics_dir
+  format=$(jq -r '."format.class" // empty' "$BENCHMARK_CONNECTOR_CONFIG")
+  if [[ "$format" != *avro.AvroFormat ]]
+  then
+    logerror "❌ this load writes avro files: the connector has format.class=$format"
+    return 1
+  fi
+  topics_dir=$(jq -r '."topics.dir" // "topics"' "$BENCHMARK_CONNECTOR_CONFIG")
+  benchmark_hdfs_topic=""
+  benchmark_hdfs_partition=""
+  if [ -z "$BENCHMARK_LOAD_CHECK" ]
+  then
+    # the paths of hdfs dfs -ls are in its last column (no -C option in hadoop 2.7)
+    benchmark_hdfs_topic="${BENCHMARK_HDFS_TOPIC:-$(playground --output-level ERROR container exec --container namenode --command "$hdfs dfs -ls /$topics_dir" 2> /dev/null | awk '$NF ~ /^\// { print $NF }' | grep -v -E '/(\+tmp|_)' | head -1 | xargs -n1 basename 2> /dev/null)}"
+    if [ -z "$benchmark_hdfs_topic" ]
+    then
+      logerror "❌ no topic folder in /$topics_dir in hdfs: run the example first"
+      return 1
+    fi
+    benchmark_hdfs_partition=$(playground --output-level ERROR container exec --container namenode --command "$hdfs dfs -ls /$topics_dir/$benchmark_hdfs_topic" 2> /dev/null | awk '$NF ~ /^\// { print $NF }' | grep "=" | head -1 | xargs -n1 basename 2> /dev/null | cut -d= -f1)
+    case "$benchmark_hdfs_partition" in
+      partition|"") benchmark_hdfs_partition="partition=0" ;;
+      *) benchmark_hdfs_partition="$benchmark_hdfs_partition=zz-benchmark" ;;
+    esac
+  fi
+  benchmark_hdfs_next_offset=$(( $(date +%s) * 1000000000 ))
+  benchmark_hdfs_upload () {
+    local work="$PLAYGROUND_HOST_TMP_DIR/$1" file count list=""
+    mkdir -p "$work/avro"
+    echo '{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' > "$work/avro/schema.avsc"
+    for file in $(cd "$work" && ls *.json)
+    do
+      count=$(grep -c . "$work/$file")
+      list="$list$file $(printf '%s+0+%019d+%019d.avro' "$benchmark_hdfs_topic" "$benchmark_hdfs_next_offset" $((benchmark_hdfs_next_offset + count - 1)))"$'\n'
+      benchmark_hdfs_next_offset=$((benchmark_hdfs_next_offset + count))
+    done
+    echo -n "$list" > "$work/avro/list"
+    # one container for all the files, as root (the hadoop login of avro-tools needs a known user), then given back
+    # to the user: they are removed below
+    docker run --quiet --rm -v "$work:/w" --entrypoint sh vdesabou/avro-tools -c \
+      'while read -r json avro; do java -jar /opt/avro-tools.jar fromjson --schema-file /w/avro/schema.avsc "/w/$json" > "/w/avro/$avro" || exit 1; done < /w/avro/list; chown -R '"$(id -u):$(id -g)"' /w/avro'
+    rm -f "$work/avro/schema.avsc" "$work/avro/list"
+    playground --output-level ERROR container cp --source "$work/avro" --destination "namenode:/tmp/$1" > /dev/null
+    playground --output-level ERROR container exec --container namenode --command "$hdfs dfs -mkdir -p /$topics_dir/$benchmark_hdfs_topic/$benchmark_hdfs_partition && $hdfs dfs -put /tmp/$1/*.avro /$topics_dir/$benchmark_hdfs_topic/$benchmark_hdfs_partition/ && rm -rf /tmp/$1" > /dev/null
+    rm -rf "$work/avro"
+  }
+  benchmark_files_load benchmark_hdfs_upload "$records" "$record_size" "$mode" json-f1 json
+}
+
+# load for 'playground connector benchmark' on a file tailed by a source (FileStream): <records> lines of users appended
+# to <file> in <container>, in one write (the connector buffers a partial last line until its newline arrives):
+#   benchmark_append_file_load <container> <file> <records> <record size> [preload|stream]
+function benchmark_append_file_load () {
+  local container="$1" file="$2" records="$3" record_size="${4:-0}" mode="${5:-preload}"
+  if [ "${BENCHMARK_LOAD_SHAPE:-bulk}" != "bulk" ]
+  then
+    logerror "❌ --shape ${BENCHMARK_LOAD_SHAPE} does not apply to lines appended to a file: use the default --shape bulk"
+    return 1
+  fi
+  [ -n "$BENCHMARK_LOAD_CHECK" ] && return 0
+  append () {
+    benchmark_messages "$records" "$record_size" | awk '{ printf "{\"id\":%d,\"first_name\":\"benchmark\",\"last_name\":\"%s\",\"email\":\"benchmark%d@example.com\"}\n", $3, $0, $3 }' \
+      | playground --output-level ERROR container exec --container "$container" --command "cat >> $file" > /dev/null
+  }
+  if [ "$mode" == "stream" ]
+  then
+    benchmark_stream_batches "$records" append
+    return 0
+  fi
+  log "📥 $records lines appended to $file"
+  append
+  echo "BENCHMARK_RECORDS=$records"
+}
+
 # docker image with python, boto3 and google-cloud-pubsub for tools/benchmark-python/benchmark_producer.py, built once
 function benchmark_python_image () {
   local image="playground-benchmark-python:1"
@@ -3518,9 +3692,11 @@ function benchmark_python_image () {
   echo "$image"
 }
 
-# load for 'playground connector benchmark' on sqs, kinesis or pub/sub, with tools/benchmark-python/benchmark_producer.py:
-#   benchmark_python_load "<docker run options: credentials>" <records> <record size> <preload|stream> <sqs|kinesis|pubsub> <producer options>...
-# --shape bulk: batches (10 messages for sqs, 500 records for kinesis, 1000 messages for pub/sub) sent by 16 threads,
+# load for 'playground connector benchmark' on sqs, kinesis, pub/sub or cloudwatch logs, with
+# tools/benchmark-python/benchmark_producer.py:
+#   benchmark_python_load "<docker run options: credentials>" <records> <record size> <preload|stream> <sqs|kinesis|pubsub|cloudwatch-logs> <producer options>...
+# --shape bulk: batches (10 messages for sqs, 500 records for kinesis, 1000 messages for pub/sub, 10000 events in one
+# stream for cloudwatch logs) sent by 16 threads (one for cloudwatch logs, which takes the events of a stream in order),
 # --shape small-txn: one request per message. The messages are "benchmark message <i>", padded to <record size>
 function benchmark_python_load () {
   local docker_options="$1" records="$2" record_size="${3:-0}" mode="${4:-preload}" target="$5"
@@ -3579,6 +3755,8 @@ function benchmark_jms_producer_classes () {
 # the jms client jars of the provider (<classpath>), and the jndi settings of the connector:
 #   benchmark_jms_load <container> "<classpath>" <jndi factory> <provider url> <principal> <credentials> <connection factory> <queue|topic> <destination> <records> <record size> [preload|stream]
 # --shape bulk: jms transactions of 1000 messages, --shape small-txn: one persistent send per message
+# BENCHMARK_JMS_JSON=<template> sends the template with {message} replaced by "benchmark message <i>" instead, for a
+# connector that parses json (true: {"f1":"{message}"}; no single quote in the template)
 function benchmark_jms_load () {
   local container="$1" classpath="$2" factory="$3" url="$4" principal="$5" credentials="$6" cf="$7" destination_type="$8" destination="$9" records="${10}" record_size="${11:-0}" mode="${12:-preload}"
   benchmark_check_messages_load "bulk small-txn" "$destination_type" "$mode" || return 1
@@ -3588,7 +3766,7 @@ function benchmark_jms_load () {
   classes=$(benchmark_jms_producer_classes) || return 1
   playground container cp --source "$classes/BenchmarkJmsProducer.class" --destination "$container:/tmp/BenchmarkJmsProducer.class" > /dev/null 2>&1
   send () {
-    playground container exec --container "$container" --command "java -cp '/tmp:$classpath' BenchmarkJmsProducer '$factory' '$url' '$principal' '$credentials' '$cf' '$destination_type' '$destination' $records $record_size $batch" > /dev/null
+    playground container exec --container "$container" --command "java '-Dbenchmark.json=${BENCHMARK_JMS_JSON:-false}' -cp '/tmp:$classpath' BenchmarkJmsProducer '$factory' '$url' '$principal' '$credentials' '$cf' '$destination_type' '$destination' $records $record_size $batch" > /dev/null
   }
   if [ "$mode" == "stream" ]
   then
