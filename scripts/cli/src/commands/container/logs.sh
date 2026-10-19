@@ -19,12 +19,6 @@ then
     exit 1
 fi
 
-if [[ -n "$errors" ]] && [[ -n "$grep" ]]
-then
-    logerror "❌ --errors and --grep cannot be used together"
-    exit 1
-fi
-
 # the digest needs the whole (bounded) log, so it never follows
 if [[ -n "$errors" ]]
 then

@@ -40,6 +40,41 @@ playground_usage() {
   printf "  %s   Show help about a command\n" "$(green "help")                                      "
   printf "  %s   🗺️ Show a status\n" "$(green "status")                                    "
   printf "  %s   🩺 Check that the container engine is ready for the playground\n" "$(green "doctor")                                    "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for docker ports\n" "$(green "get-docker-ports")                          "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for container/pod list\n" "$(green "get-container-list")                        "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for connector list\n" "$(green "get-connector-list")                        "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for ec2 instance list\n" "$(green "get-ec2-instance-list")                     "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for ec2 cloudformation list\n" "$(green "get-ec2-cloudformation-list")               "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for zazkia connections list\n" "$(green "get-zazkia-connection-list")                "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for secret names\n" "$(green "get-secret-list")                           "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for secret profiles\n" "$(green "get-secret-profile-list")                   "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Call playground connector-plugin sourcecode --compile for all plugins in confluent-hub-plugin-list.txt\n" "$(green "compile-all-connector-plugins")             "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   force call to generate_fzf_find_files\n" "$(green "generate-fzf-find-files")                   "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   generate the confluent platform tag list\n" "$(green "generate-tag-list")                         "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   generate the confluent hub plugin list\n" "$(green "generate-connector-plugin-list")            "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   generate the confluent kafka region list\n" "$(green "generate-kafka-region-list")                "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for connector plugin\n" "$(green "get-connector-plugin")                      "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for ccloud environment\n" "$(green "get-ccloud-environment-list")               "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for ccloud cluster\n" "$(green "get-ccloud-cluster-list")                   "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for confluent platform tag\n" "$(green "get-tag-list")                              "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for confluent cloud kafka cluster region list\n" "$(green "get-kafka-region-list")                     "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for topic list\n" "$(green "get-topic-list")                            "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for consumer group list\n" "$(green "get-consumer-group-list")                   "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for stream catalog tag list\n" "$(green "get-catalog-tag-list")                      "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for subject list\n" "$(green "get-subject-list")                          "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for examples list\n" "$(green "get-examples-list-with-fzf")                "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for zip or jar list\n" "$(green "get-zip-or-jar-with-fzf")                   "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for extension provided\n" "$(green "get-specific-file-extension")               "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for any files\n" "$(green "get-any-file-with-fzf")                     "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for export tgz files\n" "$(green "get-playground-repro-export-with-fzf")      "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Return some completion for predefined schemas\n" "$(green "get-predefined-schemas")                    "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   \n" "$(green "update-cache-versions")                     "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   \n" "$(green "update-readme")                             "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   \n" "$(green "force-ci")                                  "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   \n" "$(green "start-ci")                                  "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   \n" "$(green "update-docs")                               "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   \n" "$(green "bashly-reload")                             "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   \n" "$(green "state")                                     "
   printf "  %s   ⚙️ Configure CLI\n" "$(green "config")                                    "
   printf "  %s   💰  Retrieve ccloud costs for a range of dates\n" "$(green "ccloud-costs")                              "
   printf "  %s   👛  Retrieve ccloud costs for each month since last year\n" "$(green "ccloud-costs-history")                      "
@@ -55,10 +90,12 @@ playground_usage() {
   printf "  %s   🐚 Export what an example needs into the current shell\n" "$(green "secrets env")                               "
   printf "  %s   📥 Import an existing secret.properties / variable.properties file\n" "$(green "secrets import")                            "
   printf "  %s   📤 Write every credential of a profile to a file, in clear text\n" "$(green "secrets export")                            "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🐙 Push a profile to the GitHub Actions secrets and variables of a repository\n" "$(green "secrets push-github")                       "
   printf "  %s   ✏️ Open the store in your editor\n" "$(green "secrets edit")                              "
   printf "  %s   🏦 Show or change where secrets are kept\n" "$(green "secrets backend")                           "
   printf "  %s   🗂️ Show or switch the active profile\n" "$(green "secrets profile")                           "
   printf "  %s   🔎 Look for stored credentials in clear text in the repository\n" "$(green "secrets scan")                              "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🧹 List the examples whose environment variables are not auto-detected\n" "$(green "secrets lint")                              "
   echo
   printf "%s\n" "$(bold "Cloud Resources commands:")"
   printf "  %s   ☁️ What the playground left behind in your cloud accounts, and what it costs\n" "$(green "cloud-resources")                           "
@@ -71,6 +108,7 @@ playground_usage() {
   printf "  %s   🤖 get CI result for current example\n" "$(green "get-ci-result")                             "
   printf "  %s   🏰 Get an history of the examples which were run with run command and run it again\n" "$(green "history")                                   "
   printf "  %s   🔎 Find examples matching a free-text query, without the interactive picker\n" "$(green "find-example")                              "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🔐 Simply start an environment listed in http://tinyurl.com/y4ybbw32:\n" "$(green "start-environment")                         "
   printf "  %s   🌩️  Switch to ccloud environment.\n" "$(green "switch-ccloud")                             "
   printf "  %s   💺  Switch back from previous environment before switch-ccloud was called.\n" "$(green "switch-back")                               "
   printf "  %s   🦭 Switch the container engine to Podman\n" "$(green "switch-podman")                             "
@@ -151,7 +189,11 @@ playground_usage() {
   printf "  %s   🔐 Testing TLS/SSL encryption using https://testssl.sh/\n" "$(green "debug testssl")                             "
   printf "  %s   ⛑️ Generate a diagnostic bundle with Diagnostics Bundle Tool\n" "$(green "debug generate-diagnostics")                "
   printf "  %s   🎯 Take a java thread dump\n" "$(green "debug thread-dump")                         "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Moved to 'playground analyze thread-dump' (kept as a hidden alias)\n" "$(green "debug thread-analyze")                      "
   printf "  %s   👻 Take a heap dump\n" "$(green "debug heap-dump")                           "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Moved to 'playground analyze heap-dump' (kept as a hidden alias)\n" "$(green "debug heap-analyze")                        "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Moved to 'playground analyze logs' (kept as a hidden alias)\n" "$(green "debug analyze-logs")                        "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Moved to 'playground analyze gc-logs' (kept as a hidden alias)\n" "$(green "debug gc-analyze")                          "
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "debug tcp-dump")                            "
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "debug block-traffic")                       "
   printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "debug java-debug")                          "
@@ -178,6 +220,7 @@ playground_usage() {
   printf "  %s   ⏯️  Resume a container\n" "$(green "container resume")                          "
   printf "  %s   🔫 Kill a container\n" "$(green "container kill")                            "
   printf "  %s   📦  Set environment variable(s) for a container\n" "$(green "container set-environment-variables")       "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🚏 wait-for-connect-rest-api-ready\n" "$(green "container wait-for-connect-rest-api-ready") "
   echo
   printf "%s\n" "$(bold "Topic commands:")"
   printf "  %s   🗳 Topic commands\n" "$(green "topic")                                     "
@@ -255,9 +298,11 @@ playground_usage() {
   printf "  %s   👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation\n" "$(green "ec2 create")                                "
   printf "  %s   ❌ Delete an EC2 instance created with Cloud Formation\n" "$(green "ec2 delete")                                "
   printf "  %s   👨‍💻 Open an EC2 instance using Visual Studio code\n" "$(green "ec2 open")                                  "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🛂 Allow your current ip to connect to ec2 instance via ssh\n" "$(green "ec2 allow-my-ip")                           "
   printf "  %s   🔘 List all EC2 instance\n" "$(green "ec2 list")                                  "
   printf "  %s   🔴 Stop an EC2 instance\n" "$(green "ec2 stop")                                  "
   printf "  %s   🟢 Start an EC2 instance\n" "$(green "ec2 start")                                 "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🗺️ Show a status\n" "$(green "ec2 status")                                "
   printf "  %s   ↔️ Synchronize reproduction-models folder between local and ec2 instance\n" "$(green "ec2 sync-repro-folder")                     "
   printf "  %s   🔐 Send the secrets store to an ec2 instance\n" "$(green "ec2 push-secrets")                          "
   echo
@@ -286,6 +331,19 @@ playground_usage() {
     printf "  %s\n" "$(magenta "--version")"
     printf "    Show version number\n"
     echo
+
+    # :command.usage_environment_variables
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      printf "%s\n" "$(bold "Environment Variables:")"
+    fi
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :environment_variable.usage
+      printf "  %s\n" "$(cyan "PG_VERBOSE_MODE")"
+      printf "    Set by --vvv, propagated to the nested playground calls (internal)\n"
+      echo
+
+    fi
 
   fi
 }
@@ -1431,6 +1489,10 @@ playground_state_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Show the entire playground.ini file\n" "$(green "show")"
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Read a value from the playground.ini file\n" "$(green "get") "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Save a value in the playground.ini file\n" "$(green "set") "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Remove a value from the playground.ini file\n" "$(green "del") "
   echo
 
   # :command.long_usage
@@ -1596,6 +1658,9 @@ playground_config_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Show the entire playground_config.ini file\n" "$(green "show")                              "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Read a value from the playground_config.ini file\n" "$(green "get")                               "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Save a value in the playground_config.ini file\n" "$(green "set")                               "
   printf "  %s   editor to use to open files\n" "$(green "editor")                            "
   printf "  %s   📂 list of folders where to search for zip or jar\n" "$(green "folder_zip_or_jar")                 "
   printf "  %s   copy to clipboard connector config (only working on MacOS)\n" "$(green "clipboard")                         "
@@ -2194,10 +2259,12 @@ playground_secrets_usage() {
   printf "  %s   🐚 Export what an example needs into the current shell\n" "$(green "env")        "
   printf "  %s   📥 Import an existing secret.properties / variable.properties file\n" "$(green "import")     "
   printf "  %s   📤 Write every credential of a profile to a file, in clear text\n" "$(green "export")     "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🐙 Push a profile to the GitHub Actions secrets and variables of a repository\n" "$(green "push-github")"
   printf "  %s   ✏️ Open the store in your editor\n" "$(green "edit")       "
   printf "  %s   🏦 Show or change where secrets are kept\n" "$(green "backend")    "
   printf "  %s   🗂️ Show or switch the active profile\n" "$(green "profile")    "
   printf "  %s   🔎 Look for stored credentials in clear text in the repository\n" "$(green "scan")       "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🧹 List the examples whose environment variables are not auto-detected\n" "$(green "lint")       "
   echo
 
   # :command.long_usage
@@ -2801,6 +2868,14 @@ playground_secrets_edit_usage() {
     printf "    Show this help\n"
     echo
 
+    # :command.usage_environment_variables
+    printf "%s\n" "$(bold "Environment Variables:")"
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "EDITOR")"
+    printf "    ✏️ Editor used when the config key editor is not set (default vi)\n"
+    echo
+
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground secrets edit\n"
@@ -3054,6 +3129,13 @@ playground_cloud_resources_aws_list_usage() {
     printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--user USER")"
+      printf "    ☢️ force user\n"
+      echo
+
+    fi
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -3083,6 +3165,13 @@ playground_cloud_resources_aws_costs_usage() {
     printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--user USER")"
+      printf "    ☢️ force user\n"
+      echo
+
+    fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--start-date START_DATE")"
     printf "    🗓️ start date in format yyyy-mm-dd\n    \n    Default is 30 days ago\n"
@@ -3092,6 +3181,14 @@ playground_cloud_resources_aws_costs_usage() {
     printf "  %s\n" "$(magenta "--end-date END_DATE")"
     printf "    🗓️ end date in format yyyy-mm-dd\n    \n      Default is 3 days ago\n"
     echo
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--display-only-total-cost")"
+      printf "    💰 display only total cost\n"
+      echo
+
+    fi
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -3187,6 +3284,13 @@ playground_cloud_resources_azure_list_usage() {
     printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--user USER")"
+      printf "    ☢️ force user\n"
+      echo
+
+    fi
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -3216,6 +3320,13 @@ playground_cloud_resources_azure_costs_usage() {
     printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--user USER")"
+      printf "    ☢️ force user\n"
+      echo
+
+    fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--start-date START_DATE")"
     printf "    🗓️ start date in format yyyy-mm-dd\n    \n    Default is 30 days ago\n"
@@ -3225,6 +3336,14 @@ playground_cloud_resources_azure_costs_usage() {
     printf "  %s\n" "$(magenta "--end-date END_DATE")"
     printf "    🗓️ end date in format yyyy-mm-dd\n    \n      Default is 3 days ago\n"
     echo
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--display-only-total-cost")"
+      printf "    💰 display only total cost\n"
+      echo
+
+    fi
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -3296,6 +3415,14 @@ playground_ccloud_costs_usage() {
     printf "  %s\n" "$(magenta "--end-date END_DATE")"
     printf "    🗓️ end date in format yyyy-mm-dd\n    \n      Default is 3 days ago\n"
     echo
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--display-only-total-cost")"
+      printf "    💰 display only total cost\n"
+      echo
+
+    fi
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -3529,9 +3656,47 @@ playground_run_usage() {
     printf "    🔒 The Schema Registry api key and secret to use, it should be separated with\n    colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n    \n    ℹ️ Optional, if not set, new credentials will be created\n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable\n"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--force-interactive-re-run")"
+      printf "    Force interactive mode\n"
+      echo
+
+    fi
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--force-interactive-repro")"
+      printf "    Force interactive mode\n"
+      echo
+
+    fi
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_environment_variables
+    printf "%s\n" "$(bold "Environment Variables:")"
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "PLAYGROUND_ENVIRONMENT")"
+    printf "    🔐 Environment used when --environment is not set (plaintext by default in\n    the examples)\n"
+    echo
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "SQL_DATAGEN_DURATION")"
+    printf "    ⏱️ With --enable-sql-datagen, duration of the injection in minutes (default\n    10)\n"
+    echo
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "SQL_DATAGEN_SESSIONS")"
+    printf "    🔀 With --enable-sql-datagen, number of parallel sessions (default 5)\n"
+    echo
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "BENCHMARK_LOAD_SCRIPT")"
+    printf "    📜 With --enable-sql-datagen, load script to use instead of\n    benchmark-load.bash (file of the example folder, or absolute path)\n"
     echo
 
     # :command.usage_examples
@@ -3770,6 +3935,20 @@ playground_start_environment_usage() {
     printf "    😴 Wait for control-center instead of connect\n"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--service SERVICE (repeatable)")"
+      printf "    service to start\n    \n    Example: --service \"oracle\" --service \"connect\"\n"
+      echo
+
+    fi
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--no-stop")"
+      printf "    Do not stop the environment before starting it\n"
+      echo
+
+    fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--docker-compose-override-file, -f DOCKER-COMPOSE-OVERRIDE-FILE")"
     printf "    🔖 docker-compose override file\n    \n    ❕ It must be absolute full path\n"
@@ -4005,6 +4184,14 @@ playground_open_usage() {
     printf "    🐳 Also open associated docker-compose file for the current example\n"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--wait")"
+      printf "    😴 Wait\n"
+      echo
+
+    fi
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -4036,6 +4223,19 @@ playground_stop_usage() {
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
     echo
+
+    # :command.usage_environment_variables
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      printf "%s\n" "$(bold "Environment Variables:")"
+    fi
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :environment_variable.usage
+      printf "  %s\n" "$(cyan "PG_SKIP_CCLOUD_RUN_CLEANUP")"
+      printf "    Set by playground run, skips the cleanup of the ccloud run resources\n    (internal)\n"
+      echo
+
+    fi
 
   fi
 }
@@ -4246,6 +4446,13 @@ playground_cleanup_cloud_resources_usage() {
     printf "    ☢️ do not ask for confirmation\n    \n    ❗use with caution\n"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--user USER")"
+      printf "    ☢️ force user\n"
+      echo
+
+    fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--resource RESOURCE (repeatable)")"
     printf "    🛁 resource to cleanup\n    \n    If not provided, all of them are cleaned up\n    \n    🎓 Tip: you can pass multiple resources by specifying --resource multiple\n    times\n"
@@ -4427,6 +4634,37 @@ playground_repro_bootstrap_usage() {
     printf "    💭 Description for the reproduction model\n"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--producer, -p PRODUCER-TYPE")"
+      printf "    🤎 Java producer type to use\n    \n    One of avro, avro-with-key, protobuf, protobuf-with-key, json-schema,\n    json-schema-with-key\n    \n    🎓 Tip: Most of times, it's much simpler to use 'playground topic produce'.\n    Use java producer only if you have very specific requirements such as\n    specifying record timestamp or to do perf testing (even though CLI is also\n    good for that)\n    \n    🎓 Tip: 'with-key' will also produce key with selected converter, otherwise\n    LongConverter is used\n"
+      printf "    %s\n" "Allowed: none, avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key"
+      printf "    %s\n" "Default: none"
+      printf "    %s\n" "Conflicts: --pipeline"
+      echo
+
+    fi
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--nb-producers, -n NB-PRODUCERS")"
+      printf "    2️⃣ Number of java producers to generate\n"
+      echo
+
+    fi
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--producer-schema-key")"
+      printf "    🔰 Schema to use for the key\n    \n    ✨ Copy and paste the schema you want to use for the key, save and close the\n    file to continue\n"
+      echo
+
+    fi
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--producer-schema-value")"
+      printf "    🔰 Schema to use for the value\n    \n    ✨ Copy and paste the schema you want to use for the key, save and close the\n    file to continue\n"
+      echo
+
+    fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--custom-smt")"
     printf "    🔧 Add a custom SMT (which is a no-op)\n"
@@ -4568,6 +4806,14 @@ playground_schema_get_usage() {
     printf "    🧟 Include soft deleted subjects\n"
     printf "    %s\n" "Conflicts: id"
     echo
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--store-in-tmp FOLDER")"
+      printf "    store in /tmp folder\n"
+      echo
+
+    fi
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -5842,6 +6088,13 @@ playground_analyze_thread_dump_usage() {
     printf "    %s\n" "Default: ./thread-analysis-output"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--html")"
+      printf "    Deprecated: the HTML report is always written (kept so that existing\n    commands keep working)\n"
+      echo
+
+    fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
     printf "    🗂️  Output JSON (no text report, no HTML report)\n"
@@ -6050,6 +6303,13 @@ playground_analyze_gc_logs_usage() {
     printf "    %s\n" "Default: ./gc-analysis-output"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--html")"
+      printf "    Deprecated: the HTML report is always written (kept so that existing\n    commands keep working)\n"
+      echo
+
+    fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
     printf "    🗂️  Output JSON stats (no text report, no HTML report)\n"
@@ -6135,6 +6395,13 @@ playground_analyze_oracle_xstream_report_usage() {
     printf "    %s\n" "Default: ./xstream-analysis-output"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--html")"
+      printf "    Deprecated: the HTML report is always written (kept so that existing\n    commands keep working)\n"
+      echo
+
+    fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
     printf "    🗂️  Output JSON (findings, prerequisites, summary per component, deltas\n    between reports)\n"
@@ -6223,6 +6490,13 @@ playground_analyze_cfk_bundle_usage() {
     printf "    ⚠️  Also report WARN log records that match no known category (WARN records\n    matching a known category are always reported)\n"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--html")"
+      printf "    Deprecated: the HTML report is always written (kept so that existing\n    commands keep working)\n"
+      echo
+
+    fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--output-dir DIR")"
     printf "    📁 Directory for the HTML report (default: ./cfk-reports)\n"
@@ -6360,7 +6634,11 @@ playground_debug_usage() {
   printf "  %s   🔐 Testing TLS/SSL encryption using https://testssl.sh/\n" "$(green "testssl")                 "
   printf "  %s   ⛑️ Generate a diagnostic bundle with Diagnostics Bundle Tool\n" "$(green "generate-diagnostics")    "
   printf "  %s   🎯 Take a java thread dump\n" "$(green "thread-dump")             "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Moved to 'playground analyze thread-dump' (kept as a hidden alias)\n" "$(green "thread-analyze")          "
   printf "  %s   👻 Take a heap dump\n" "$(green "heap-dump")               "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Moved to 'playground analyze heap-dump' (kept as a hidden alias)\n" "$(green "heap-analyze")            "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Moved to 'playground analyze logs' (kept as a hidden alias)\n" "$(green "analyze-logs")            "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Moved to 'playground analyze gc-logs' (kept as a hidden alias)\n" "$(green "gc-analyze")              "
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "tcp-dump")                "
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "block-traffic")           "
   printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "java-debug")              "
@@ -6370,6 +6648,7 @@ playground_debug_usage() {
   echo
   printf "%s\n" "$(bold "Debug commands:")"
   printf "  %s   🧱 CFK debug sub-commands\n" "$(green "cfk")                     "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Moved to 'playground analyze cfk-bundle' (kept as a hidden alias)\n" "$(green "cfk cfk-bundle-analyze")  "
   printf "  %s   ⛑️ Generate a Support bundle\n" "$(green "cfk generate-bundle")     "
   echo
 
@@ -6411,6 +6690,14 @@ playground_debug_enable_remote_debugging_usage() {
     printf "    🐳 container name (or pod name when cfk environment is used)\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
     printf "    %s\n" "Default: connect"
     echo
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--skip-vs-code-config-display")"
+      printf "\n"
+      echo
+
+    fi
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -6636,6 +6923,13 @@ playground_debug_thread_analyze_usage() {
     printf "    %s\n" "Default: ./thread-analysis-output"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--html")"
+      printf "    Deprecated: the HTML report is always written (kept so that existing\n    commands keep working)\n"
+      echo
+
+    fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
     printf "    🗂️  Output JSON (no text report, no HTML report)\n"
@@ -6847,6 +7141,13 @@ playground_debug_gc_analyze_usage() {
     printf "    %s\n" "Default: ./gc-analysis-output"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--html")"
+      printf "    Deprecated: the HTML report is always written (kept so that existing\n    commands keep working)\n"
+      echo
+
+    fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
     printf "    🗂️  Output JSON stats (no text report, no HTML report)\n"
@@ -7287,6 +7588,7 @@ playground_debug_cfk_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Moved to 'playground analyze cfk-bundle' (kept as a hidden alias)\n" "$(green "cfk-bundle-analyze")"
   printf "  %s   ⛑️ Generate a Support bundle\n" "$(green "generate-bundle")   "
   echo
 
@@ -7356,6 +7658,13 @@ playground_debug_cfk_cfk_bundle_analyze_usage() {
     printf "    ⚠️  Also report WARN log records that match no known category (WARN records\n    matching a known category are always reported)\n"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--html")"
+      printf "    Deprecated: the HTML report is always written (kept so that existing\n    commands keep working)\n"
+      echo
+
+    fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--output-dir DIR")"
     printf "    📁 Directory for the HTML report (default: ./cfk-reports)\n"
@@ -7498,6 +7807,7 @@ playground_container_usage() {
   printf "  %s   ⏯️  Resume a container\n" "$(green "resume")                         "
   printf "  %s   🔫 Kill a container\n" "$(green "kill")                           "
   printf "  %s   📦  Set environment variable(s) for a container\n" "$(green "set-environment-variables")      "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🚏 wait-for-connect-rest-api-ready\n" "$(green "wait-for-connect-rest-api-ready")"
   echo
 
   # :command.long_usage
@@ -7718,13 +8028,13 @@ playground_container_logs_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
     printf "    🔖 Save output to a file and open with text editor set with playground config\n    editor <editor> (default is code)\n"
-    printf "    %s\n" "Conflicts: --wait-for-log, --grep"
+    printf "    %s\n" "Conflicts: --wait-for-log, --grep, --errors"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--wait-for-log, -w LOG")"
     printf "    😴 Wait until log appears\n"
-    printf "    %s\n" "Conflicts: --open, --grep"
+    printf "    %s\n" "Conflicts: --open, --grep, --errors"
     echo
 
     # :flag.usage
@@ -7738,7 +8048,7 @@ playground_container_logs_usage() {
     printf "  %s\n" "$(magenta "--grep GREP")"
     printf "    🎯 Grep pattern to filter logs\n"
     printf "    %s\n" "Default: "
-    printf "    %s\n" "Conflicts: --open, --wait-for-log"
+    printf "    %s\n" "Conflicts: --open, --wait-for-log, --errors"
     echo
 
     # :flag.usage
@@ -8245,6 +8555,14 @@ playground_container_set_environment_variables_usage() {
     printf "    %s\n" "Conflicts: --env"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--mount-jscissors-files")"
+      printf "    Mount jscissors files for debugging\n"
+      echo
+
+    fi
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -8350,6 +8668,16 @@ playground_topic_get_number_records_usage() {
     printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
     printf "    🗳 Topic name\n"
     echo
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--isolation-level ISOLATION-LEVEL")"
+      printf "    🫥 The isolation level to use, see\n    https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#isolation-level\n    If not set, default is read_uncommitted\n"
+      printf "    %s\n" "Allowed: read_uncommitted, read_committed"
+      printf "    %s\n" "Default: read_uncommitted"
+      echo
+
+    fi
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -8817,6 +9145,13 @@ playground_topic_produce_usage() {
     printf "    🐞 Show command being ran.\n"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--debug, -d")"
+      printf "    debug mode (internal)\n"
+      echo
+
+    fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
     printf "    🗳 Topic name\n"
@@ -8937,6 +9272,13 @@ playground_topic_produce_usage() {
     printf "    ❌ Delete topic and associated schema/subject if applicable before producing\n    data.\n"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--reference REFERENCE (repeatable)")"
+      printf "    🖇️ Schema reference\n    \n    See docs:\n    https://docs.confluent.io/platform/7.6/schema-registry/fundamentals/serdes-develop/index.html#schema-references\n    \n    🎓 Tip: you can pass multiple references by specifying --reference multiple\n    times\n    \n    🔥 You can either:\n    \n    * Set your own schema (avro, json-schema, protobuf) within single quotes\n    (see examples)\n    \n    * Use completion to select predefined schemas (or use your own schema file)\n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+      echo
+
+    fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--validate-config VALIDATE-CONFIG (repeatable)")"
     printf "    🔩 Converter configuration parameters to use \n    \n    See docs:\n    https://docs.confluent.io/platform/current/schema-registry/connect.html#using-kconnect-long-with-sr\n    \n    🎓 Tip: you can pass multiple parameters by specifying --validate-config\n    multiple times\n"
@@ -8953,6 +9295,14 @@ playground_topic_produce_usage() {
     printf "    🏋️ Record size in bytes, eg. 1048576 for 1MB\n    \n    📢 If size is > 1Mb, --producer-property max.request.size and topic\n    max.message.bytes will be automatically set to support the record size.\n    \n    Note that --no-null will be used when this option is set\n"
     printf "    %s\n" "Default: 0"
     echo
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--value-schema-id VALUE-SCHEMA-ID")"
+      printf "    🔰 Do not auto register schema and specify schema id to use. \n    \n    It sets --property value.schema.id=x --property auto.register=false\n    --property use.latest.version=true\n"
+      echo
+
+    fi
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -10506,6 +10856,19 @@ playground_connector_plugin_sourcecode_usage() {
     printf "    Show this help\n"
     echo
 
+    # :command.usage_environment_variables
+    printf "%s\n" "$(bold "Environment Variables:")"
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "GH_TOKEN")"
+    printf "    🔑 GitHub token, needed for fully managed connectors (cc-docker-connect is\n    private)\n"
+    echo
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "GITHUB_TOKEN")"
+    printf "    🔑 GitHub token, used when GH_TOKEN is not set\n"
+    echo
+
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  # will checkout the latest version from hub and print the path of the folder\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-hdfs --checkout-only\n  \n  # will open latest version from hub source code\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-hdfs\n  \n  # will ask you to select a version\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-hdfs --connector-tag \" \"\n  \n  # if you're a confluent employee (make sure to set your aws credentials), it\n  will also work on proprietary connectors and fully managed connectors\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/MqttSource\n  \n  # comparison mode:\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-hdfs --connector-tag \"10.2.1\" --connector-tag\n  \"10.2.0\"\n  \n  # comparison mode (with versions selection):\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-hdfs --connector-tag \" \" --connector-tag \" \"\n  \n  # compile \n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-jdbc --compile\n  \n  # if you're a confluent employee (make sure to set your aws credentials and\n  follow Maven FAQ), it will also work on proprietary connectors and fully\n  managed connectors\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-oracle-xstream-cdc-source --compile --connector-tag\n  \"1.2.0\" --compile-verbose\n  \n  # will open repository in your editor\n  playground connector-plugin sourcecode --connector-plugin\n  confluentinc/kafka-connect-hdfs --open\n"
@@ -10623,6 +10986,26 @@ playground_connector_status_usage() {
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
     echo
+
+    # :command.usage_environment_variables
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      printf "%s\n" "$(bold "Environment Variables:")"
+    fi
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :environment_variable.usage
+      printf "  %s\n" "$(cyan "PG_SKIP_ERROR_RECOMMENDATIONS")"
+      printf "    Do not print error recommendations for FAILED connectors (internal)\n"
+      echo
+
+    fi
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :environment_variable.usage
+      printf "  %s\n" "$(cyan "PG_SKIP_DIAGNOSE_HINT")"
+      printf "    Do not print the playground connector diagnose hint (internal)\n"
+      echo
+
+    fi
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
@@ -11284,6 +11667,47 @@ playground_connector_sourcecode_usage() {
     printf "    🔗 Connector version to use\n    \n    By default, for each connector, the current version is used (for Confluent\n    employees, it will also get latest versions for fully managed connectors)\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n    \n    🎓 Tip: you can compare different sourcecode versions by specifying\n    --connector-tag two times, in such case it will open github in comparison\n    mode\n"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--compile")"
+      printf "\n"
+      echo
+
+    fi
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--compile-jdk-version COMPILE_JDK_VERSION")"
+      printf "    🤎 JDK version to use when compiling\n    It will check in pom.xml for maven-compiler-plugin source/target version or\n    release version and set jdk accordingly\n    Default is 11\n"
+      printf "    %s\n" "Allowed: 8, 11, 17, 21, 25"
+      printf "    %s\n" "Needs: --compile"
+      echo
+
+    fi
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--compile-verbose, -v")"
+      printf "    🐞 Show output of compilation.\n"
+      printf "    %s\n" "Needs: --compile"
+      echo
+
+    fi
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--forced-url")"
+      printf "    🔗 Set github url (to compile cp for example)\n"
+      printf "    %s\n" "Needs: --compile"
+      echo
+
+    fi
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--enable-remote-debugging")"
+      printf "    ✨ This will enable java remote debugging for connect container\n    \n    👉 Check documentation\n    https://kafka-docker-playground.io/#/reusables?id=%%e2%%9c%%a8-remote-debugging\n    \n    ⚠️ This does not work for fully and custom connectors.\n"
+      printf "    %s\n" "Needs: --compile"
+      echo
+
+    fi
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -11768,6 +12192,36 @@ playground_connector_benchmark_usage() {
     printf "    Show this help\n"
     echo
 
+    # :command.usage_environment_variables
+    printf "%s\n" "$(bold "Environment Variables:")"
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "BENCHMARK_LOAD_SCRIPT")"
+    printf "    📜 Load script to use instead of benchmark-load.bash: a file of the example\n    folder, or an absolute path\n"
+    echo
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :environment_variable.usage
+      printf "  %s\n" "$(cyan "BENCHMARK_MATRIX_CHILD")"
+      printf "    Set for the child runs of --shape / --connector-tag matrices (internal)\n"
+      echo
+
+    fi
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :environment_variable.usage
+      printf "  %s\n" "$(cyan "BENCHMARK_MATRIX_RESULTS")"
+      printf "    File where a child run appends its result file (internal)\n"
+      echo
+
+    fi
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :environment_variable.usage
+      printf "  %s\n" "$(cyan "BENCHMARK_NO_OPEN")"
+      printf "    Do not open the HTML report in a browser (internal)\n"
+      echo
+
+    fi
+
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground connector benchmark --connector filestream-sink --nb-records\n  3000000\n"
@@ -11815,6 +12269,13 @@ playground_connector_show_config_usage() {
     printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--no-clipboard")"
+      printf "    do not copy to clipboard (internal)\n"
+      echo
+
+    fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--force-rest-endpoint")"
     printf "    ☢️ Force using REST API /config endpoint\n    (https://docs.confluent.io/platform/current/connect/references/restapi.html#get--connectors-(string-name)-config)\n"
@@ -11868,10 +12329,25 @@ playground_connector_show_config_parameters_usage() {
     printf "    ☢️ Force refresh.\n"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--only-show-file-path")"
+      printf "    📂 Only show the path of the file containing the configuration parameters\n"
+      echo
+
+    fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--only-show-json")"
     printf "    📗 Only show list of all available parameters for connector (with default\n    value when applicable)\n"
     echo
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--only-show-json-file-path")"
+      printf "    📂 Only show the path of the json file containing the configuration\n    parameters\n"
+      echo
+
+    fi
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -11909,7 +12385,6 @@ playground_connector_display_metrics_api_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
     printf "    🔖 Save output to a file and open with text editor set with playground config\n    editor <editor> (default is code)\n"
-    printf "    %s\n" "Conflicts: --wait-for-log, --grep"
     echo
 
     # :flag.usage
@@ -12135,13 +12610,13 @@ playground_connector_logs_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
     printf "    🔖 Save output to a file and open with text editor set with playground config\n    editor <editor> (default is code)\n"
-    printf "    %s\n" "Conflicts: --wait-for-log, --grep"
+    printf "    %s\n" "Conflicts: --wait-for-log"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--wait-for-log, -w LOG")"
     printf "    😴 Wait until log appears\n"
-    printf "    %s\n" "Conflicts: --open, --grep"
+    printf "    %s\n" "Conflicts: --open"
     echo
 
     # :flag.usage
@@ -12395,6 +12870,13 @@ playground_connector_create_or_update_usage() {
     printf "    🐞 Show command being ran.\n"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--no-clipboard")"
+      printf "    do not copy to clipboard (internal)\n"
+      echo
+
+    fi
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR (required)")"
     printf "    🔗 Connector name\n"
@@ -12532,9 +13014,11 @@ playground_ec2_usage() {
   printf "  %s   👷 Create kafka-docker-playground EC2 instance using AWS Cloud Formation\n" "$(green "create")           "
   printf "  %s   ❌ Delete an EC2 instance created with Cloud Formation\n" "$(green "delete")           "
   printf "  %s   👨‍💻 Open an EC2 instance using Visual Studio code\n" "$(green "open")             "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🛂 Allow your current ip to connect to ec2 instance via ssh\n" "$(green "allow-my-ip")      "
   printf "  %s   🔘 List all EC2 instance\n" "$(green "list")             "
   printf "  %s   🔴 Stop an EC2 instance\n" "$(green "stop")             "
   printf "  %s   🟢 Start an EC2 instance\n" "$(green "start")            "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🗺️ Show a status\n" "$(green "status")           "
   printf "  %s   ↔️ Synchronize reproduction-models folder between local and ec2 instance\n" "$(green "sync-repro-folder")"
   printf "  %s   🔐 Send the secrets store to an ec2 instance\n" "$(green "push-secrets")     "
   echo
@@ -40016,12 +40500,6 @@ playground_container_logs_command() {
       exit 1
   fi
 
-  if [[ -n "$errors" ]] && [[ -n "$grep" ]]
-  then
-      logerror "❌ --errors and --grep cannot be used together"
-      exit 1
-  fi
-
   # the digest needs the whole (bounded) log, so it never follows
   if [[ -n "$errors" ]]
   then
@@ -54301,6 +54779,10 @@ parse_requirements() {
     esac
   done
 
+  # :command.environment_variables_filter
+
+  env_var_names+=("PG_VERBOSE_MODE")
+
   # :command.dependencies_filter
   missing_deps=
   # :dependency.filter
@@ -60878,6 +61360,10 @@ playground_secrets_edit_parse_requirements() {
     esac
   done
 
+  # :command.environment_variables_filter
+
+  env_var_names+=("EDITOR")
+
   # :command.command_filter
   action="secrets edit"
 
@@ -62266,6 +62752,13 @@ playground_run_parse_requirements() {
 
     esac
   done
+
+  # :command.environment_variables_filter
+
+  env_var_names+=("PLAYGROUND_ENVIRONMENT")
+  env_var_names+=("SQL_DATAGEN_DURATION")
+  env_var_names+=("SQL_DATAGEN_SESSIONS")
+  env_var_names+=("BENCHMARK_LOAD_SCRIPT")
 
   # :command.dependencies_filter
   missing_deps=
@@ -63938,6 +64431,10 @@ playground_stop_parse_requirements() {
 
     esac
   done
+
+  # :command.environment_variables_filter
+
+  env_var_names+=("PG_SKIP_CCLOUD_RUN_CLEANUP")
 
   # :command.command_filter
   action="stop"
@@ -73668,7 +74165,7 @@ playground_container_logs_parse_requirements() {
       # :flag.case
       --open | -o)
         # :flag.conflicts
-        for conflict in --wait-for-log --grep; do
+        for conflict in --wait-for-log --grep --errors; do
           if [[ -n "${args[$conflict]:-}" ]]; then
             printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
             exit 1
@@ -73683,7 +74180,7 @@ playground_container_logs_parse_requirements() {
       # :flag.case
       --wait-for-log | -w)
         # :flag.conflicts
-        for conflict in --open --grep; do
+        for conflict in --open --grep --errors; do
           if [[ -n "${args[$conflict]:-}" ]]; then
             printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
             exit 1
@@ -73725,7 +74222,7 @@ playground_container_logs_parse_requirements() {
       # :flag.case
       --grep)
         # :flag.conflicts
-        for conflict in --open --wait-for-log; do
+        for conflict in --open --wait-for-log --errors; do
           if [[ -n "${args[$conflict]:-}" ]]; then
             printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
             exit 1
@@ -80302,6 +80799,11 @@ playground_connector_plugin_sourcecode_parse_requirements() {
     esac
   done
 
+  # :command.environment_variables_filter
+
+  env_var_names+=("GH_TOKEN")
+  env_var_names+=("GITHUB_TOKEN")
+
   # :command.command_filter
   action="connector-plugin sourcecode"
 
@@ -80810,6 +81312,11 @@ playground_connector_status_parse_requirements() {
 
     esac
   done
+
+  # :command.environment_variables_filter
+
+  env_var_names+=("PG_SKIP_ERROR_RECOMMENDATIONS")
+  env_var_names+=("PG_SKIP_DIAGNOSE_HINT")
 
   # :command.command_filter
   action="connector status"
@@ -83273,6 +83780,13 @@ playground_connector_benchmark_parse_requirements() {
     esac
   done
 
+  # :command.environment_variables_filter
+
+  env_var_names+=("BENCHMARK_LOAD_SCRIPT")
+  env_var_names+=("BENCHMARK_MATRIX_CHILD")
+  env_var_names+=("BENCHMARK_MATRIX_RESULTS")
+  env_var_names+=("BENCHMARK_NO_OPEN")
+
   # :command.command_filter
   action="connector benchmark"
 
@@ -83961,13 +84475,6 @@ playground_connector_display_metrics_api_parse_requirements() {
 
       # :flag.case
       --open | -o)
-        # :flag.conflicts
-        for conflict in --wait-for-log --grep; do
-          if [[ -n "${args[$conflict]:-}" ]]; then
-            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
-            exit 1
-          fi
-        done
 
         # :flag.case_no_arg
         args['--open']=1
@@ -84472,12 +84979,10 @@ playground_connector_logs_parse_requirements() {
       # :flag.case
       --open | -o)
         # :flag.conflicts
-        for conflict in --wait-for-log --grep; do
-          if [[ -n "${args[$conflict]:-}" ]]; then
-            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
-            exit 1
-          fi
-        done
+        if [[ -n "${args['--wait-for-log']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--wait-for-log" >&2
+          exit 1
+        fi
 
         # :flag.case_no_arg
         args['--open']=1
@@ -84487,12 +84992,10 @@ playground_connector_logs_parse_requirements() {
       # :flag.case
       --wait-for-log | -w)
         # :flag.conflicts
-        for conflict in --open --grep; do
-          if [[ -n "${args[$conflict]:-}" ]]; then
-            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
-            exit 1
-          fi
-        done
+        if [[ -n "${args['--open']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--open" >&2
+          exit 1
+        fi
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
@@ -95637,6 +96140,7 @@ playground_container_logs_completion() {
         completion_blocked_flags["--open"]=1
         completion_blocked_flags["--wait-for-log"]=1
         completion_blocked_flags["--grep"]=1
+        completion_blocked_flags["--errors"]=1
 
         shift
         ;;
@@ -95650,6 +96154,7 @@ playground_container_logs_completion() {
         completion_blocked_flags["--wait-for-log"]=1
         completion_blocked_flags["--open"]=1
         completion_blocked_flags["--grep"]=1
+        completion_blocked_flags["--errors"]=1
 
         ;;
       --max-wait | -m)
@@ -95674,6 +96179,7 @@ playground_container_logs_completion() {
         completion_blocked_flags["--grep"]=1
         completion_blocked_flags["--open"]=1
         completion_blocked_flags["--wait-for-log"]=1
+        completion_blocked_flags["--errors"]=1
 
         ;;
       --previous)
@@ -100818,8 +101324,6 @@ playground_connector_display_metrics_api_completion() {
         ;;
       --open | -o)
         completion_blocked_flags["--open"]=1
-        completion_blocked_flags["--wait-for-log"]=1
-        completion_blocked_flags["--grep"]=1
 
         shift
         ;;
@@ -101078,7 +101582,6 @@ playground_connector_logs_completion() {
       --open | -o)
         completion_blocked_flags["--open"]=1
         completion_blocked_flags["--wait-for-log"]=1
-        completion_blocked_flags["--grep"]=1
 
         shift
         ;;
@@ -101091,7 +101594,6 @@ playground_connector_logs_completion() {
         shift
         completion_blocked_flags["--wait-for-log"]=1
         completion_blocked_flags["--open"]=1
-        completion_blocked_flags["--grep"]=1
 
         ;;
       --verbose | -v)
