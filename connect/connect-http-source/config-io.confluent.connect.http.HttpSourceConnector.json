@@ -30,6 +30,7 @@
     "http.request.parameters.separator": "&",
     "http.request.sensitive.headers": "[hidden]",
     "http.response.data.json.pointer": "STRING",
+    "http.template.variable.literal.substitution.enabled": "false",
     "https.ssl.cipher.suites": "LIST",
     "https.ssl.enabled": "false",
     "https.ssl.enabled.protocols": "TLSv1.2,TLSv1.3",

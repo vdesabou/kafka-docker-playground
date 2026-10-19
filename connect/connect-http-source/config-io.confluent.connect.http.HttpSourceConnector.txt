@@ -160,6 +160,15 @@ This config indicates how offsets are computed and how requests are generated. I
 	 - Importance: HIGH
 	 - Required: false
 
+🔘 http.template.variable.literal.substitution.enabled
+
+Whether to substitute the values of the template variables `${offset}` and `${entityName}` literally. Set this to true if a value can contain `$` or `\`, for example a next page URL with `$skiptoken`. If false, a `$` in a value can make the connector fail, and a `\` is removed from the value.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 🔘 connection.disallow.local.ips
 
 Disallow local IP addresses after DNS resolution.
