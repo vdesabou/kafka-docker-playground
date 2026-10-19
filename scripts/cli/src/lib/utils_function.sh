@@ -3406,54 +3406,64 @@ function benchmark_splunk_load () {
   benchmark_stream_batches "$records" send
 }
 
-# load for 'playground connector benchmark' on the generalized mode (mode=GENERIC, json format) of the s3, gcs and azure
-# blob storage source connectors: files of {"f1":"benchmark message <i>"} lines, one record per line, uploaded to the
-# topics.dir of the connector by the function of the example:
-#   benchmark_cloud_storage_load <upload function> <records> <record size> [preload|stream]
+# load for 'playground connector benchmark' made of files, uploaded by the function of the example:
+#   benchmark_files_load <upload function> <records> <record size> <preload|stream> <format> <extension>
 # <upload function> <folder name in $PLAYGROUND_HOST_TMP_DIR, the /tmp of the cli containers> uploads the files of the
-# folder to the topics.dir of the connector (several at once is fine: the connector is paused during a drain)
+# folder, in the order of their names (several at once is fine: the connector is paused during a drain)
+# <format>, one record per line:
+#   json-f1                         {"f1":"benchmark message <i>"}
+#   users-json                      the users of the sftp examples: {"id":<i>,"first_name":...,"favorite_color":...}
+#   users-csv:<separator>:<header>  the same users, <separator> as an ascii code (44 for a comma, 9 for a tab), with a
+#                                   header line in each file when <header> is true
 # - bulk: files of BENCHMARK_FILE_RECORDS (10000) records; small-txn: one record per file (the cost of listing and
-#   opening each object), drain only
+#   opening each file), drain only
 # - stream mode: one file of <records> records per batch, uploaded on its own
-# the connector lists the objects after the last one it read (startAfter): the names start with zz-benchmark-<epoch ms>
-# so that they sort after the files of the example and of the previous runs, and a stream uploads them one by one, in
-# order (no --sessions in steady mode: an object uploaded after a higher name was read is skipped)
-function benchmark_cloud_storage_load () {
-  local upload="$1" records="$2" record_size="${3:-0}" mode="${4:-preload}"
+# the names start with zz-benchmark-<epoch>-<batch>, so that they sort after the files of the example and of the
+# previous runs (connectors that read the files in the order of their names)
+function benchmark_files_load () {
+  local upload="$1" records="$2" record_size="${3:-0}" mode="${4:-preload}" format="${5:-json-f1}" extension="${6:-json}"
   local shape="${BENCHMARK_LOAD_SHAPE:-bulk}" per_file="${BENCHMARK_FILE_RECORDS:-10000}"
   if [[ " bulk small-txn " != *" $shape "* ]]
   then
-    logerror "❌ --shape $shape does not apply to files in an object store: a rewritten object is not read again (use bulk or small-txn)"
+    logerror "❌ --shape $shape does not apply to files: a rewritten file is not read again (use bulk or small-txn)"
     return 1
   fi
   if [ "$shape" == "small-txn" ] && [ "$mode" == "stream" ]
   then
-    logerror "❌ --shape small-txn uploads one object per record, too slow for a stream (one upload at a time, in order): use --mode drain, or --shape bulk"
+    logerror "❌ --shape small-txn uploads one file per record, too slow for a stream (one upload at a time, in order): use --mode drain, or --shape bulk"
     return 1
   fi
   [ "$shape" == "small-txn" ] && per_file=1
-  local mode_config format
-  mode_config=$(jq -r '.mode // "RESTORE_BACKUP"' "$BENCHMARK_CONNECTOR_CONFIG")
-  format=$(jq -r '."format.class" // ""' "$BENCHMARK_CONNECTOR_CONFIG")
-  if [ "$mode_config" != "GENERIC" ] || [[ "$format" != *JsonFormat ]]
-  then
-    logerror "❌ this load writes json files for the generalized mode (mode=GENERIC, a JsonFormat): the connector has mode=$mode_config and format.class=$format, run the *-generalized.sh example"
-    return 1
-  fi
   [ -n "$BENCHMARK_LOAD_CHECK" ] && return 0
 
   local work name batch=0
-  work=$(mktemp -d "$PLAYGROUND_HOST_TMP_DIR/benchmark-cloud-storage.XXXXXX")
+  work=$(mktemp -d "$PLAYGROUND_HOST_TMP_DIR/benchmark-files.XXXXXX")
   name=$(basename "$work")
   # <records> records in files of <per file> records, named after the time, the batch and the process (sessions)
   write_files () {
     local count="$1" size="$2" prefix
-    rm -f "$work"/*.json
+    rm -f "$work"/*
     batch=$((batch + 1))
     prefix="zz-benchmark-$(date +%s)-$(printf '%06d' "$batch")-$$"
-    benchmark_messages "$count" "$record_size" | awk -v per="$size" -v dir="$work" -v prefix="$prefix" '{
-      file = sprintf("%s/%s-%06d.json", dir, prefix, int((NR - 1) / per))
-      printf "{\"f1\":\"%s\"}\n", $0 > file
+    benchmark_messages "$count" "$record_size" | awk -v per="$size" -v dir="$work" -v prefix="$prefix" -v ext="$extension" -v format="$format" '
+    BEGIN {
+      n = split(format, f, ":")
+      separator = (n > 1) ? sprintf("%c", f[2]) : ","
+      header = (n > 2 && f[3] == "true")
+    }
+    {
+      file = sprintf("%s/%s-%06d.%s", dir, prefix, int((NR - 1) / per), ext)
+      id = $3
+      if (f[1] == "json-f1") {
+        printf "{\"f1\":\"%s\"}\n", $0 > file
+      } else if (f[1] == "users-json") {
+        printf "{\"id\":%d,\"first_name\":\"benchmark\",\"last_name\":\"%s\",\"email\":\"benchmark%d@example.com\",\"gender\":\"Female\",\"ip_address\":\"10.0.0.1\",\"last_login\":\"2018-02-12T06:26:23Z\",\"account_balance\":1450.68,\"country\":\"FR\",\"favorite_color\":\"#4eaefa\"}\n", id, $0, id > file
+      } else {
+        if (header && (NR - 1) % per == 0) {
+          print "id" separator "first_name" separator "last_name" separator "email" separator "gender" separator "ip_address" separator "last_login" separator "account_balance" separator "country" separator "favorite_color" > file
+        }
+        print id separator "benchmark" separator $0 separator "benchmark" id "@example.com" separator "Female" separator "10.0.0.1" separator "2018-02-12T06:26:23Z" separator "1450.68" separator "FR" separator "#4eaefa" > file
+      }
       if (NR % per == 0) close(file)
     }'
   }
@@ -3472,6 +3482,80 @@ function benchmark_cloud_storage_load () {
   "$upload" "$name"
   rm -rf "$work"
   echo "BENCHMARK_RECORDS=$records"
+}
+
+# load for 'playground connector benchmark' on the generalized mode (mode=GENERIC, json format) of the s3, gcs and azure
+# blob storage source connectors: json-f1 files (benchmark_files_load) uploaded to the topics.dir of the connector:
+#   benchmark_cloud_storage_load <upload function> <records> <record size> [preload|stream]
+# the connector lists the objects after the last one it read (startAfter), hence the names that sort after the previous
+# ones, and the uploads one by one in a stream (no --sessions in steady mode: an object uploaded after a higher name was
+# read is skipped)
+function benchmark_cloud_storage_load () {
+  local upload="$1" records="$2" record_size="${3:-0}" mode="${4:-preload}"
+  local mode_config format
+  mode_config=$(jq -r '.mode // "RESTORE_BACKUP"' "$BENCHMARK_CONNECTOR_CONFIG")
+  format=$(jq -r '."format.class" // ""' "$BENCHMARK_CONNECTOR_CONFIG")
+  if [ "$mode_config" != "GENERIC" ] || [[ "$format" != *JsonFormat ]]
+  then
+    logerror "❌ this load writes json files for the generalized mode (mode=GENERIC, a JsonFormat): the connector has mode=$mode_config and format.class=$format, run the *-generalized.sh example"
+    return 1
+  fi
+  benchmark_files_load "$upload" "$records" "$record_size" "$mode" json-f1 json
+}
+
+# docker image with python, boto3 and google-cloud-pubsub for tools/benchmark-python/benchmark_producer.py, built once
+function benchmark_python_image () {
+  local image="playground-benchmark-python:1"
+  if ! docker image inspect "$image" > /dev/null 2>&1
+  then
+    log "🐍 building the $image image (python, boto3, google-cloud-pubsub), once" >&2
+    if ! printf 'FROM python:3.12-slim\nRUN pip install --no-cache-dir boto3 google-cloud-pubsub\n' | docker build -q -t "$image" - > /dev/null
+    then
+      logerror "❌ could not build $image" >&2
+      return 1
+    fi
+  fi
+  echo "$image"
+}
+
+# load for 'playground connector benchmark' on sqs, kinesis or pub/sub, with tools/benchmark-python/benchmark_producer.py:
+#   benchmark_python_load "<docker run options: credentials>" <records> <record size> <preload|stream> <sqs|kinesis|pubsub> <producer options>...
+# --shape bulk: batches (10 messages for sqs, 500 records for kinesis, 1000 messages for pub/sub) sent by 16 threads,
+# --shape small-txn: one request per message. The messages are "benchmark message <i>", padded to <record size>
+function benchmark_python_load () {
+  local docker_options="$1" records="$2" record_size="${3:-0}" mode="${4:-preload}" target="$5"
+  shift 5
+  benchmark_check_messages_load "bulk small-txn" "queue" "$mode" || return 1
+  [ -n "$BENCHMARK_LOAD_CHECK" ] && return 0
+  local image tools first=1
+  image=$(benchmark_python_image) || return 1
+  tools="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)/tools/benchmark-python"
+  [ -n "$root_folder" ] && tools="$root_folder/tools/benchmark-python"
+  send () {
+    # shellcheck disable=SC2086
+    docker run --quiet --rm -v "$tools:/w:ro" $docker_options "$image" python -I /w/benchmark_producer.py "$target" \
+      --records "$records" --first "$first" --record-size "$record_size" --shape "${BENCHMARK_LOAD_SHAPE:-bulk}" "$@" > /dev/null || return 1
+    first=$((first + records))
+  }
+  if [ "$mode" == "stream" ]
+  then
+    benchmark_stream_batches "$records" send "$@"
+    return 0
+  fi
+  log "📥 ${BENCHMARK_LOAD_SHAPE:-bulk} load on $target: $records messages"
+  send "$@" || return 1
+  echo "BENCHMARK_RECORDS=$records"
+}
+
+# docker run options giving the aws credentials of the playground to a container: the AWS_* variables when they are set
+# (short-lived credentials too), ~/.aws otherwise (same order as the aws function)
+function benchmark_aws_docker_options () {
+  if [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]
+  then
+    echo "-e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN"
+  else
+    echo "-v $HOME/.aws:/root/.aws:ro"
+  fi
 }
 
 # compiled tools/benchmark-jms/BenchmarkJmsProducer.java (javax.jms 1.1 api), cached in ~/.playground-benchmark-jms:

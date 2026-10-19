@@ -37,7 +37,7 @@ playground connector create-or-update --connector sftp-source-tsv  << EOF
      "input.path": "/home/foo/upload/input",
      "error.path": "/home/foo/upload/error",
      "finished.path": "/home/foo/upload/finished",
-     "input.file.pattern": "tsv-sftp-source.tsv",
+     "input.file.pattern": ".*\\\\.tsv",
      "sftp.username":"foo",
      "sftp.password":"pass",
      "sftp.host":"sftp-server",

@@ -45,6 +45,23 @@ Records look like:
 {"MessageData":{"string":"Erin"},"AttributesMap":{}}
 ```
 
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) publishes `benchmark message <i>` messages to the topic of the connector (`gcp.pubsub.project.id`, `gcp.pubsub.topic.id`) for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark), with the Pub/Sub python client (batches of 1000 messages) in a small `playground-benchmark-python` image built the first time ([`tools/benchmark-python/benchmark_producer.py`](../../tools/benchmark-python/benchmark_producer.py)), and the `keyfile.json` of the example. The messages wait in the subscription while the connector is paused, so a drain measures the connector.
+
+> [!IMPORTANT]
+> The script deletes the topic and the subscription on exit, after a `Continue (y/n)?` prompt: answer `n` to keep them for the benchmark. Running the example again deletes and recreates them.
+
+```bash
+# drain of 100000 messages
+playground connector benchmark --nb-records 100000
+
+# throughput during 2 minutes while batches of 10000 messages are published
+playground connector benchmark --mode steady --duration 2m --nb-records 10000
+```
+
+`--shape small-txn` publishes the messages one by one, waiting for each one.
+
 ## Service account setup
 
 Create a `Service Account` from the IAM & Admin console.

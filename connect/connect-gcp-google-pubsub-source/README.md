@@ -34,6 +34,26 @@ playground run -f gcp-google-pubsub-source.sh
 5. Creates the `pubsub-source` connector and verifies records arrive in `pubsub-topic` with `playground topic consume`
 6. On exit, deletes the Pub/Sub topic and subscription
 
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) publishes `benchmark message <i>` messages to the topic of the connector (`cps.project`, `cps.topic`) for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark), with the Pub/Sub python client (batches of 1000 messages) in a small `playground-benchmark-python` image built the first time ([`tools/benchmark-python/benchmark_producer.py`](../../tools/benchmark-python/benchmark_producer.py)), and the `keyfile.json` of the example. The messages wait in the subscription while the connector is paused, so a drain measures the connector.
+
+> [!IMPORTANT]
+> The script deletes the topic and the subscription on exit, after a `Continue (y/n)?` prompt: answer `n` to keep them for the benchmark. Running the example again deletes and recreates them.
+
+```bash
+# drain of 100000 messages
+playground connector benchmark --nb-records 100000
+
+# throughput during 2 minutes while batches of 10000 messages are published
+playground connector benchmark --mode steady --duration 2m --nb-records 10000
+```
+
+`--shape small-txn` publishes the messages one by one, waiting for each one.
+
+> [!WARNING]
+> On CP 8.x the connector of this example fails to start (`ClassCastException: class io.grpc.override.ContextStorageOverride`, see [#7650](https://github.com/vdesabou/kafka-docker-playground/issues/7650)): run the example with `--tag 7.9.0`. There, a drain of 100000 messages stalled after about 12000 records, with `Failed to acknowledge message: ... DEADLINE_EXCEEDED` in the connect logs: start with a smaller `--nb-records`.
+
 ## Service account setup
 
 Create a `Service Account` from the IAM & Admin console.

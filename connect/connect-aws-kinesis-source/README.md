@@ -39,3 +39,20 @@ playground run -f kinesis-source.sh
 3. Creates topic `kinesis-topic` and the Kinesis source connector (`io.confluent.connect.kinesis.KinesisSourceConnector`).
 4. Verifies the record is received in `kinesis-topic` with `playground topic consume`.
 5. On exit, asks for confirmation and then deletes the Kinesis stream.
+
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) puts `benchmark message <i>` records in the stream of the connector (`kinesis.stream`, `kinesis.region`) for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark), with `put_records` (500 records per request, the throttled records are sent again) and `boto3` in a small `playground-benchmark-python` image built the first time ([`tools/benchmark-python/benchmark_producer.py`](../../tools/benchmark-python/benchmark_producer.py)), with the AWS credentials of the playground. The records stay in the stream while the connector is paused, so a drain measures the connector.
+
+> [!IMPORTANT]
+> The script deletes the stream on exit, after a `Continue (y/n)?` prompt: answer `n` to keep it for the benchmark. Running the example again deletes and recreates it.
+
+```bash
+# drain of 50000 records
+playground connector benchmark --nb-records 50000
+
+# throughput during 2 minutes while batches of 5000 records are put
+playground connector benchmark --mode steady --duration 2m --nb-records 5000
+```
+
+A shard takes 1000 records/s: the stream of the example has one shard, so loading 50000 records takes about 50 seconds, and the connector reads them much faster (a drain of a small backlog is a lower bound, the summary says so).
