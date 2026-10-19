@@ -109,7 +109,7 @@ out of context.
   with a file** (`rm` it first: editing through the link changes the example), see "A table of your own" in the docs.
   `--sessions <n>` runs that load in n parallel sessions. `--shape bulk,update,delete` runs one drain per shape on the same
   rows and compares the phases (`benchmark_report.py --group-by shape`); `delete` counts the tombstones from the connector
-  config (`tombstones.on.delete`, `emit.tombstone.on.delete`) and is refused for a JDBC source. `playground run --enable-sql-datagen` uses the same load:
+  config (`tombstones.on.delete`, `emit.tombstone.on.delete`) and is refused for a JDBC source. `playground run --benchmark` (also a toggle in the `run` menu) runs `connector benchmark` right after the example succeeds, with `BENCHMARK_ARGS` for its flags, and exits with its code if it fails. `playground run --enable-sql-datagen` uses the same load:
   after the example, `sql_datagen_inject` streams one-row transactions from `SQL_DATAGEN_SESSIONS` (5) sessions for
   `SQL_DATAGEN_DURATION` (10) minutes; there is no Java datagen nor `sql-datagen` container anymore. All the database
   source examples (mysql and mariadb included) use the same `CUSTOMERS` table as `benchmark_sql_load`.

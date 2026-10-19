@@ -24,6 +24,7 @@ enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
 enable_jmx_grafana="${args[--enable-jmx-grafana]}"
 enable_kcat="${args[--enable-kcat]}"
 enable_sql_datagen="${args[--enable-sql-datagen]}"
+benchmark="${args[--benchmark]}"
 connect_community_image="${args[--connect-community-image]}"
 kafka_community_image="${args[--kafka-community-image]}"
 enable_kraft="${args[--enable-kraft]}"
@@ -380,6 +381,18 @@ then
   fi
 fi
 
+if [[ -n "$benchmark" ]]
+then
+  array_flag_list+=("--benchmark")
+  # playground connector benchmark is run by this command once the example is done
+  export ENABLE_BENCHMARK=true
+
+  if [[ -n "$force_interactive_repro" ]]
+  then
+    force_enable --benchmark ENABLE_BENCHMARK
+  fi
+fi
+
 if [[ -n "$connect_community_image" ]]
 then
   if [[ $test_file == *"fully-managed"* ]]
@@ -670,6 +683,7 @@ then
   MENU_CONNECT_WORKERS="$(menu_label "🥉" "Multiple connect workers" "--enable-multiple-connect-workers" 4)"
   MENU_KCAT="$(menu_label "🐈" "kcat" "--enable-kcat" 4)"
   MENU_SQL_DATAGEN="$(menu_label "🌀" "SQL Datagen injection" "--enable-sql-datagen" 4)"
+  MENU_BENCHMARK="$(menu_label "🏎️" "Benchmark the connector" "--benchmark" 4)"
   MENU_FLINK="$(menu_label "🐹" "Flink" "--enable-flink" 4)"
   MENU_CONNECT_COMMUNITY_IMAGE="$(menu_label "🌱" "Community connect image" "--connect-community-image" 4)"
   MENU_KAFKA_COMMUNITY_IMAGE="$(menu_label "🌿" "Community kafka image" "--kafka-community-image" 4)"
@@ -730,6 +744,13 @@ then
   if [[ $test_file == *"connect-debezium-sqlserver"* ]] || [[ $test_file == *"connect-debezium-mysql"* ]] || [[ $test_file == *"connect-debezium-mariadb"* ]] || [[ $test_file == *"connect-jdbc-mariadb"* ]] || [[ $test_file == *"fm-jdbc-mysql"* ]] || [[ $test_file == *"connect-debezium-postgresql"* ]] || [[ $test_file == *"connect-debezium-oracle"* ]] || [[ $test_file == *"connect-cdc-oracle"* ]] || [[ $test_file == *"connect-jdbc-sqlserver"* ]] || [[ $test_file == *"connect-jdbc-mysql"* ]] || [[ $test_file == *"connect-jdbc-postgresql"* ]] || [[ $test_file == *"connect-jdbc-oracle"* ]] || [[ $test_file == *"connect-cdc-xstream"* ]] || [[ $test_file == *"fm-debezium"* ]] || [[ $test_file == *"fm-cdc"* ]]
   then
     sql_datagen=1
+  fi
+
+  # playground connector benchmark needs a load: the benchmark-load.bash of a source, or the topic produce of a sink
+  benchmark_available=0
+  if [ -f "$test_file_directory/benchmark-load.bash" ] || grep -q "playground topic produce" "$test_file"
+  then
+    benchmark_available=1
   fi
 
   # environments the example can be run with (empty: it starts its own)
@@ -1052,6 +1073,7 @@ then
     add_menu_toggle $((1-is_ccloud)) "$ENABLE_CONNECT_NODES" "$MENU_CONNECT_WORKERS"
     add_menu_toggle $((1-is_fully_managed)) "$ENABLE_KCAT" "$MENU_KCAT"
     add_menu_toggle $sql_datagen "$ENABLE_SQL_DATAGEN" "$MENU_SQL_DATAGEN"
+    add_menu_toggle $benchmark_available "$ENABLE_BENCHMARK" "$MENU_BENCHMARK"
     add_menu_toggle $((1-is_fully_managed)) "$ENABLE_FLINK" "$MENU_FLINK"
     add_menu_group "$MENU_SEPARATOR_FEATURES" "${toggle_group[@]}"
 
@@ -1366,6 +1388,20 @@ then
           unset ENABLE_JMX_GRAFANA
           interactive_enable_grafana=""
         fi
+      fi
+    fi
+
+    if [[ $res == *"$MENU_BENCHMARK"* ]]
+    then
+      if [ -z "$ENABLE_BENCHMARK" ]
+      then
+        array_flag_list+=("--benchmark")
+        export ENABLE_BENCHMARK=true
+        interactive_enable_benchmark="true"
+      else
+        array_flag_list=("${array_flag_list[@]/"--benchmark"}")
+        unset ENABLE_BENCHMARK
+        interactive_enable_benchmark=""
       fi
     fi
 
@@ -1808,6 +1844,11 @@ then
     fi
   fi
 
+  if [ "$interactive_enable_benchmark" == "true" ] && [[ -n "$force_interactive_repro" ]]
+  then
+    force_enable --benchmark ENABLE_BENCHMARK
+  fi
+
   if [ "$interactive_enable_sql" == "true" ]
   then
     if [[ $test_file != *"fully-managed"* ]]
@@ -2121,6 +2162,13 @@ if grep -q '^export ENABLE_SQL_DATAGEN=true' "$filename"
 then
   sql_datagen=true
 fi
+# same for --benchmark
+run_benchmark="$ENABLE_BENCHMARK"
+benchmark_ret=0
+if grep -q '^export ENABLE_BENCHMARK=true' "$filename"
+then
+  run_benchmark=true
+fi
 if grep -q '^export SQL_DATAGEN=true' "$filename"
 then
   logwarn "⚠️ $filename forces the former Java SQL datagen (export SQL_DATAGEN=true), which is gone: its build and its sql-datagen container fail"
@@ -2152,6 +2200,23 @@ then
   then
     # SQL_DATAGEN_DURATION (minutes, default 10) and SQL_DATAGEN_SESSIONS (default 5)
     sql_datagen_inject "$test_file" "${SQL_DATAGEN_DURATION:-10}" "${SQL_DATAGEN_SESSIONS:-5}" || ret=$?
+  fi
+  if [ -n "$run_benchmark" ]
+  then
+    if [[ "$(playground state get run.environment)" == cfk* ]]
+    then
+      logwarn "⏭️ --benchmark is ignored: playground connector benchmark is not available with the cfk environment yet"
+    else
+      # BENCHMARK_ARGS: extra flags for playground connector benchmark, e.g. "--mode steady --duration 5m"
+      read -r -a benchmark_args <<< "${BENCHMARK_ARGS:-}"
+      log "🏎️ --benchmark is set: running playground connector benchmark ${benchmark_args[*]}"
+      playground connector benchmark "${benchmark_args[@]}" || benchmark_ret=$?
+      if [ $benchmark_ret -ne 0 ]
+      then
+        logerror "❌ playground connector benchmark failed, run it again with:"
+        echo "playground connector benchmark ${benchmark_args[*]}"
+      fi
+    fi
   fi
 elif [ $ret -eq 111 ]
 then
@@ -2299,4 +2364,10 @@ then
     fi
     log "👀 if you want more details, run <playground cloud-resources azure costs-history --detailed>"
   fi
+fi
+
+# the example succeeded, but --benchmark did not
+if [ $benchmark_ret -ne 0 ]
+then
+  exit $benchmark_ret
 fi
