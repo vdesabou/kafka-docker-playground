@@ -6,6 +6,9 @@ services:
     hostname: dksybase
     container_name: dksybase
     command: ["bash", "/sybase/start"]
+    # the 32-bit isql client of this image cannot connect under the default seccomp profile of Docker 29 (#9320)
+    security_opt:
+      - seccomp:unconfined
     ports:
       - "5000:5000"
 

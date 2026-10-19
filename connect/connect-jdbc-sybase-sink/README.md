@@ -20,7 +20,7 @@ playground run -f sybase-sink.sh
 
 ## What the script does
 
-1. Starts a Sybase container (`dksybase`) alongside the plaintext environment and waits until `isql` can connect.
+1. Starts a Sybase container (`dksybase`) alongside the plaintext environment and waits until `isql` can connect. The container runs with `seccomp:unconfined`: under the default seccomp profile of Docker 29, the image's 32-bit `isql` client cannot connect to the server.
 2. Creates the `sybase-sink` connector (`jdbc:jtds:sybase://dksybase:5000`, user `sa`, `topics=orders`, `table.name.format=master.dbo.orders`, `auto.create=true`).
 3. Produces 2 Avro records (`id`, `product`, `quantity`, `price`) to topic `orders` with `playground topic produce`.
 4. Runs `select * from orders` with `isql` and checks that the `foo` row is present.
