@@ -47,3 +47,17 @@ With `--enable-sql-datagen` (`playground run -f fully-managed-v2-postgres.sh --e
 3. Creates the fully managed `PostgresCdcSourceV2` connector (`topic.prefix` `asgard`, `table.include.list` `public.customers`, Avro output) pointing to the ngrok endpoint.
 4. Verifies at least 5 records in topic `asgard.public.customers` with `playground topic consume`.
 5. Deletes the connector at the end of the run.
+
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) is the same load as the self-managed example [`connect-debezium-postgresql-source`](../../connect/connect-debezium-postgresql-source/README.md#benchmark): it loads rows in the `CUSTOMERS` table for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark). Run the example, answer `n` when it asks to delete the connector, then:
+
+```bash
+# time to capture 100k rows inserted in one transaction
+playground connector benchmark --nb-records 100000 --shape bulk
+
+# 10k transactions of one row
+playground connector benchmark --nb-records 10000 --shape small-txn
+```
+
+The connector runs in Confluent Cloud, so there is no JMX: the benchmark counts the records from the end offsets of the topics of the connector (`--topic` to choose them) and a drain starts measuring at the first records seen after the resume (Confluent Cloud takes a few seconds to restart the tasks), and the throughput includes the network between this machine and Confluent Cloud (ngrok tunnel). Compare runs made from the same machine.

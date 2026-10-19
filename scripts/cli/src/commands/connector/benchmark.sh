@@ -30,10 +30,22 @@ fi
 connector_type=$(playground state get run.connector_type)
 environment=$(playground state get run.environment)
 
-if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+if [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
 then
     logerror "❌ benchmark is not available for $connector_type connectors yet"
     exit 1
+fi
+# fully managed: no worker to read JMX from or to record, the records of a source are counted in its topics
+fully_managed=""
+if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
+then
+    fully_managed=1
+    no_flight_recorder=1
+    if [ ${#connector_tags[@]} -gt 0 ]
+    then
+        logerror "❌ --connector-tag is not available for $connector_type connectors: Confluent Cloud runs the version of the connector"
+        exit 1
+    fi
 fi
 if [[ "$environment" == cfk* ]]
 then
@@ -65,8 +77,32 @@ function now () {
     fi
 }
 
-get_connect_url_and_security
-handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\""
+# GET on connectors/<path> of the connect rest api (ccloud connect api for a fully managed connector), sets curl_output
+if [ -n "$fully_managed" ]
+then
+    get_ccloud_connect
+    ccloud_environment="$environment"
+    ccloud_cluster="$cluster"
+    environment=$(playground state get run.environment)
+    benchmark_ccloud_kcat_start || exit 1
+    trap benchmark_ccloud_kcat_stop EXIT
+else
+    get_connect_url_and_security
+fi
+function connect_rest_get () {
+    local path="$1" ret
+    if [ -n "$fully_managed" ]
+    then
+        # handle_ccloud_connect_rest_api sets environment to the ccloud environment id
+        local saved_environment="$environment"
+        handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$ccloud_environment/clusters/$ccloud_cluster/connectors/$path\" --header \"authorization: Basic \$authorization\""
+        ret=$?
+        environment="$saved_environment"
+        return $ret
+    fi
+    handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$path\""
+}
+connect_rest_get "$connector/status"
 status_json="$curl_output"
 type=$(echo "$status_json" | jq -r '.type')
 state=$(echo "$status_json" | jq -r '.connector.state')
@@ -91,16 +127,32 @@ then
     logerror "❌ could not get the type of $connector_type connector $connector from its status"
     exit 1
 fi
+if [ -n "$fully_managed" ] && [ "$type" == "sink" ]
+then
+    logerror "❌ benchmark is only available for $connector_type source connectors yet"
+    exit 1
+fi
 nb_tasks=$(echo "$status_json" | jq '.tasks | length')
-workers=$(echo "$status_json" | jq -r '.tasks[].worker_id' | sort -u | while read -r worker_id; do benchmark_worker_container_and_port "$worker_id"; done | sort -u)
+workers=""
+if [ -z "$fully_managed" ]
+then
+    workers=$(echo "$status_json" | jq -r '.tasks[].worker_id' | sort -u | while read -r worker_id; do benchmark_worker_container_and_port "$worker_id"; done | sort -u)
+fi
 
-handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/config\""
+connect_rest_get "$connector/config"
 connector_class=$(echo "$curl_output" | jq -r '."connector.class"')
 connector_config_json="$curl_output"
 sink_topics=$(echo "$curl_output" | jq -r '.topics // "" | split(",") | map(gsub("^\\s+|\\s+$"; "")) | join(" ")')
-handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connector-plugins\""
-plugin_version=$(echo "$curl_output" | jq -r --arg c "$connector_class" '[.[] | select(.class == $c) | .version][0] // "unknown"')
-cp_tag=$(get_running_cp_tag)
+if [ -n "$fully_managed" ]
+then
+    # Confluent Cloud does not tell the version of the plugin
+    plugin_version="fully managed"
+    cp_tag="ccloud"
+else
+    handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connector-plugins\""
+    plugin_version=$(echo "$curl_output" | jq -r --arg c "$connector_class" '[.[] | select(.class == $c) | .version][0] // "unknown"')
+    cp_tag=$(get_running_cp_tag)
+fi
 
 # --shape: one shape, or a sequence of shapes (bulk,update,delete) run one after the other on the same rows
 IFS=',' read -ra shapes <<< "$shape"
@@ -324,13 +376,33 @@ then
     exit 0
 fi
 
+test_file=$(playground state get run.test_file)
+
+# topics written by the connector: the ccloud connect api has no topics endpoint
+function connector_topics () {
+    if [ -n "$fully_managed" ]
+    then
+        benchmark_fully_managed_source_topics "$connector_config_json" "$test_file" | xargs
+        return
+    fi
+    if handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/topics\"" > /dev/null 2>&1
+    then
+        echo "$curl_output" | jq -r --arg c "$connector" '.[$c].topics // [] | join(" ")'
+    fi
+}
 if [ ${#topics[@]} -eq 0 ] && [ "$type" == "source" ]
 then
-    handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/topics\""
-    read -ra topics <<< "$(echo "$curl_output" | jq -r --arg c "$connector" '.[$c].topics // [] | join(" ")')"
+    read -ra topics <<< "$(connector_topics)"
+    if [ -n "$fully_managed" ]
+    then
+        if [ ${#topics[@]} -eq 0 ]
+        then
+            logerror "❌ could not find the topics of $connector_type connector $connector in its config nor in the example: set them with --topic"
+            exit 1
+        fi
+        log "📊 records counted in topic(s) ${topics[*]} (--topic to choose them)"
+    fi
 fi
-
-test_file=$(playground state get run.test_file)
 example_dir=""
 load_script=""
 if [ -n "$test_file" ] && [ -f "$test_file" ]
@@ -412,8 +484,7 @@ if [ -z "$load_cmd" ] && [ "$type" == "sink" ] && [ -n "$test_file" ] && [ -f "$
 then
     if [ -z "$sink_topics" ]
     then
-        handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/topics\""
-        sink_topics=$(echo "$curl_output" | jq -r --arg c "$connector" '.[$c].topics // [] | join(" ")')
+        sink_topics=$(connector_topics)
     fi
     replay_stream=""
     [ "$mode" == "steady" ] && replay_stream=1
@@ -448,7 +519,10 @@ json_file="$output_dir/$run_id.json"
 load_log="$output_dir/$run_id-load.log"
 echo "timestamp,elapsed_s,phase,records,rate_records_per_s,batch_avg_ms,running_ratio,cpu_percent_of_one_core,consumer_lag_max,epoch,cpu_percent_of_available,pause_ratio,gc_time_ms,dlq_records,skipped_records,task_records" > "$csv_file"
 
-benchmark_jmx_init "$workers"
+if [ -z "$fully_managed" ]
+then
+    benchmark_jmx_init "$workers"
+fi
 paused_by_benchmark=0
 load_stopped_early=0
 not_running_checks=0
@@ -489,6 +563,10 @@ function benchmark_cleanup () {
         kill -0 "$load_pid" 2> /dev/null && kill_tree "$load_pid"
     fi
     rm -f "$BENCHMARK_STOP_FILE"
+    if [ -n "$fully_managed" ]
+    then
+        benchmark_ccloud_kcat_stop
+    fi
     if [ -n "$jfr_recordings" ]
     then
         jfr_jmx_discard "$jfr_recordings"
@@ -539,7 +617,7 @@ function stop_flight_recorder () {
 
 # fails the benchmark as soon as the connector or one of its tasks is FAILED
 function check_not_failed () {
-    if ! handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\"" > /dev/null 2>&1
+    if ! connect_rest_get "$connector/status" > /dev/null 2>&1
     then
         return
     fi
@@ -568,8 +646,11 @@ declare -A task_records_offset=()
 task_counter_resets=0
 function take_sample () {
     local phase="$1"
-    local values
-    values=$(benchmark_jmx_sample "$connector" "$type" "$workers")
+    local values="0 - - - - - - - - - -"
+    if [ -z "$fully_managed" ]
+    then
+        values=$(benchmark_jmx_sample "$connector" "$type" "$workers")
+    fi
     sample_time=$(now)
     read -r sample_records sample_batch sample_ratio sample_cpu sample_lag sample_cpu_available sample_pause sample_gc sample_dlq sample_skipped sample_tasks <<< "$values"
     if [ "$sample_tasks" != "-" ] && [ -n "$sample_tasks" ] && [ -z "$records_from_topics" ]
@@ -589,8 +670,12 @@ function take_sample () {
         done
         sample_records="$corrected"
     fi
+    # fully managed: records written to the topics since topic_records_before
+    if [ -n "$fully_managed" ]
+    then
+        sample_records=$(topic_records_progress)
     # the task counters were reset by a restart during the drain: the records come from the topics
-    if [ -n "$records_from_topics" ]
+    elif [ -n "$records_from_topics" ]
     then
         sample_records=$((baseline_records + $(topic_records_progress)))
     fi
@@ -607,6 +692,11 @@ function take_sample () {
 # records per topic, as "<topic> <count>" lines
 function count_topic_records () {
     local topic count
+    if [ -n "$fully_managed" ]
+    then
+        [ ${#topics[@]} -gt 0 ] && benchmark_ccloud_topic_end_offsets "${topics[@]}"
+        return
+    fi
     for topic in "${topics[@]}"
     do
         count=$(playground --output-level WARN topic get-number-records --topic "$topic" 2> /dev/null | grep -E '^[0-9]+$' | tail -1)
@@ -626,15 +716,22 @@ function refresh_connector_topics () {
     then
         return
     fi
-    if handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/topics\"" > /dev/null 2>&1
+    local current
+    current=$(connector_topics)
+    if [ -n "$current" ]
     then
-        read -ra topics <<< "$(echo "$curl_output" | jq -r --arg c "$connector" '.[$c].topics // [] | join(" ")')"
+        read -ra topics <<< "$current"
     fi
 }
 
 expected="$nb_records"
 # set when a task restart reset the JMX counters during a drain: the samples count the records in the topics
 records_from_topics=""
+# no JMX for a fully managed connector: the samples always count the records in the topics
+if [ -n "$fully_managed" ]
+then
+    records_from_topics=1
+fi
 # the drain stopped at --max-wait before the end of the backlog
 incomplete=false
 load_seconds="-"
@@ -697,6 +794,32 @@ then
     prev_time="$start_time"
     playground connector resume --connector "$connector" > /dev/null
     paused_by_benchmark=0
+    # Confluent Cloud takes a few seconds to start the tasks again, and its status says RUNNING after they started
+    # writing: the measure starts at the first sample that sees records in the topics, from there (the records seen by
+    # that sample are not measured)
+    if [ -n "$fully_managed" ]
+    then
+        resume_time="$start_time"
+        while [ "$(topic_records_progress)" -le "$baseline_records" ]
+        do
+            if awk -v n="$(now)" -v s="$resume_time" -v m="$max_wait" 'BEGIN { exit !(n - s >= m) }'
+            then
+                logerror "❌ no record in ${topics[*]} ${max_wait}s after $connector_type connector $connector was resumed"
+                playground connector status --connector "$connector"
+                exit 1
+            fi
+            check_not_failed
+            sleep 1
+        done
+        # the tasks were still starting: not a status of the measure
+        not_running_checks=0
+        start_time=$(now)
+        take_sample "baseline"
+        baseline_records="$sample_records"
+        prev_time="$start_time"
+        expected=$((expected - baseline_records))
+        log "▶️ first records after $(awk -v n="$start_time" -v s="$resume_time" 'BEGIN { printf "%.0f", n - s }')s (not measured), measuring the remaining $expected records"
+    fi
 
     end_time=""
     last_logged=0
@@ -785,6 +908,10 @@ then
         fi
     fi
 else
+    if [ -n "$fully_managed" ]
+    then
+        topic_records_before=$(count_topic_records)
+    fi
     if [ -n "$load_cmd" ]
     then
         log "🌊 starting the load in the background$([ "$sessions" -gt 1 ] && echo " ($sessions sessions)"): $load_cmd"
@@ -920,7 +1047,7 @@ fi
 task_shares="${task_shares//_/ }"
 task_shares="${task_shares//,/, }"
 
-setup_json=$(benchmark_collect_setup "$workers" "$connector_config_json" "$test_file" "$environment")
+setup_json=$(benchmark_collect_setup "$workers" "$connector_config_json" "$test_file" "$environment" "$fully_managed")
 [ -z "$setup_json" ] && setup_json='{}'
 
 # where the time of the tasks went, from the flight recordings
@@ -1052,15 +1179,19 @@ then
 else
     printf "   %-22s %s\n" "throughput" "$throughput records/s   (per ${interval}s sample: p50 $rate_p50  p95 $rate_p95  min $rate_min)"
 fi
-if [ "$type" == "sink" ]
+# no JMX for a fully managed connector
+if [ -z "$fully_managed" ]
 then
-    printf "   %-22s %s\n" "put batch avg" "$batch_avg ms"
-else
-    printf "   %-22s %s\n" "poll batch avg" "$batch_avg ms"
+    if [ "$type" == "sink" ]
+    then
+        printf "   %-22s %s\n" "put batch avg" "$batch_avg ms"
+    else
+        printf "   %-22s %s\n" "poll batch avg" "$batch_avg ms"
+    fi
+    printf "   %-22s %s\n" "running ratio avg" "$ratio_avg"
+    printf "   %-22s %s\n" "connect cpu avg / max" "${cpu_avg}% / ${cpu_max}% of one core (${cpu_available_avg}% of the cpus available)"
+    printf "   %-22s %s\n" "gc pauses" "${gc_percent}% of the time"
 fi
-printf "   %-22s %s\n" "running ratio avg" "$ratio_avg"
-printf "   %-22s %s\n" "connect cpu avg / max" "${cpu_avg}% / ${cpu_max}% of one core (${cpu_available_avg}% of the cpus available)"
-printf "   %-22s %s\n" "gc pauses" "${gc_percent}% of the time"
 if [ "$task_shares" != "-" ]
 then
     printf "   %-22s %s\n" "records per task" "$task_shares"
@@ -1115,7 +1246,10 @@ if [ "$task_counter_resets" -gt 0 ] && [ -z "$records_from_topics" ]
 then
     add_warning "the records counter of a task was reset $task_counter_resets time(s) (task restarts: rebalance, or a connector reconfiguring its tasks): the records counted before each reset were kept, see the task restarts in the connect logs"
 fi
-if [ -n "$records_from_topics" ]
+if [ -n "$fully_managed" ]
+then
+    add_warning "$connector_type connector: the records are counted from the end offsets of ${topics[*]} every ${interval}s (no JMX: no batch time, running ratio, cpu, gc nor flight recorder), and the throughput includes the network between this machine (load, ngrok tunnel) and Confluent Cloud"
+elif [ -n "$records_from_topics" ]
 then
     add_warning "the JMX counters of the tasks fell behind the records written to the topics during the drain, usually because a task was restarted (the cloud storage and hdfs sources reconfigure their task at each poll interval): the samples count the records in the topics from then on, see the task restarts in the connect logs"
 fi

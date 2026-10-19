@@ -1,0 +1,1 @@
+../../connect/connect-mongodb-source/benchmark-load.bash

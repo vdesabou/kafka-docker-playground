@@ -1,0 +1,1 @@
+../../connect/connect-jdbc-sqlserver-source/benchmark-load.bash

@@ -3000,8 +3000,8 @@ GO"
   [ -f "$BENCHMARK_CONNECTOR_CONFIG" ] && connector_class=$(jq -r '."connector.class" // empty' "$BENCHMARK_CONNECTOR_CONFIG")
   if [ "$shape" == "delete" ]
   then
-    # a jdbc source runs queries: a deleted row is simply not returned anymore
-    if [[ "$connector_class" == *.JdbcSourceConnector ]]
+    # a jdbc source runs queries: a deleted row is simply not returned anymore (fully managed: short class names)
+    if [[ "$connector_class" == *.JdbcSourceConnector ]] || [[ "$connector_class" =~ ^(MySqlSource|PostgresSource|OracleDatabaseSource|MicrosoftSqlServerSource|IbmDb2Source)$ ]]
     then
       logerror "❌ the JDBC source connector does not capture deletes: use --shape bulk, small-txn or update"
       return 1
@@ -3055,9 +3055,9 @@ GO"
   if [ "$shape" == "delete" ] && [ -f "$BENCHMARK_CONNECTOR_CONFIG" ]
   then
     case "$connector_class" in
-      io.debezium.*|*.OracleXStreamSourceConnector)
+      io.debezium.*|*.OracleXStreamSourceConnector|OracleXStreamSource|*CdcSourceV2|MariaDbCdcSource|MongoDbCdcSource)
         [ "$(jq -r '."tombstones.on.delete" // "true"' "$BENCHMARK_CONNECTOR_CONFIG")" == "true" ] && tombstones=1 ;;
-      *.OracleCdcSourceConnector)
+      *.OracleCdcSourceConnector|OracleCdcSource)
         [ "$(jq -r '."emit.tombstone.on.delete" // "false"' "$BENCHMARK_CONNECTOR_CONFIG")" == "true" ] && tombstones=1 ;;
     esac
   fi
@@ -3192,6 +3192,11 @@ function benchmark_mongo_client_from_example () {
   if [ -f "$test_file" ]
   then
     client=$(grep -E 'container exec --container mongodb --command "mongosh[^"]*" *<<' "$test_file" | head -1 | sed -E 's/.*--command "(mongosh[^"]*)".*/\1/')
+    if [ -z "$client" ]
+    then
+      # docker exec form of the fully managed examples
+      client=$(grep -E 'docker exec -i mongodb mongosh[^<]*<<' "$test_file" | head -1 | sed -E 's/.*docker exec -i mongodb (mongosh[^<]*[^< ]) *<<.*/\1/')
+    fi
   fi
   echo "${client:-mongosh}"
 }
@@ -3322,12 +3327,12 @@ function benchmark_ibmmq_load () {
 }
 
 # value of <key> in the connector config, for a benchmark-load.bash: the connect rest api masks the passwords
-# ("••••", "[hidden]"), so a masked value is taken from the connector config of the example script that was run
+# ("••••", "[hidden]", "****" for the ccloud connect api), so a masked value is taken from the connector config of the example script that was run
 # ($BENCHMARK_TEST_FILE), when it is a literal there
 function benchmark_connector_config_value () {
   local key="$1" value
   value=$(jq -r --arg k "$key" '.[$k] // empty' "$BENCHMARK_CONNECTOR_CONFIG" 2> /dev/null)
-  if [[ "$value" == *"•"* ]] || [ "$value" == "[hidden]" ]
+  if [[ "$value" == *"•"* ]] || [ "$value" == "[hidden]" ] || [[ "$value" =~ ^\*+$ ]]
   then
     value=""
     if [ -f "$BENCHMARK_TEST_FILE" ]
@@ -3535,6 +3540,12 @@ function benchmark_cloud_storage_load () {
   local mode_config format
   mode_config=$(jq -r '.mode // "RESTORE_BACKUP"' "$BENCHMARK_CONNECTOR_CONFIG")
   format=$(jq -r '."format.class" // ""' "$BENCHMARK_CONNECTOR_CONFIG")
+  # fully managed: input.data.format
+  if [ "$(jq -r '."input.data.format" // ""' "$BENCHMARK_CONNECTOR_CONFIG")" == "JSON" ]
+  then
+    mode_config="GENERIC"
+    format="JsonFormat"
+  fi
   if [ "$mode_config" != "GENERIC" ] || [[ "$format" != *JsonFormat ]]
   then
     logerror "❌ this load writes json files for the generalized mode (mode=GENERIC, a JsonFormat): the connector has mode=$mode_config and format.class=$format, run the *-generalized.sh example"
@@ -3556,6 +3567,14 @@ function benchmark_users_files_format () {
       ;;
     *JsonSourceConnector|*LineDelimitedSourceConnector|*FtpsSourceConnector)
       format="users-json"
+      ;;
+    # fully managed sftp: the format is in input.file.parser.format
+    SftpSource)
+      case "$(jq -r '."input.file.parser.format" // ""' "$BENCHMARK_CONNECTOR_CONFIG")" in
+        CSV) format="users-csv:$(jq -r '."csv.separator.char" // "44"' "$BENCHMARK_CONNECTOR_CONFIG"):$(jq -r '."csv.first.row.as.header" // "false"' "$BENCHMARK_CONNECTOR_CONFIG")" ;;
+        JSON) format="users-json" ;;
+        *) logerror "❌ this load writes json or csv files of users: input.file.parser.format must be CSV or JSON" >&2; return 1 ;;
+      esac
       ;;
     *)
       logerror "❌ this load writes json or csv files of users: $connector_class is not supported" >&2

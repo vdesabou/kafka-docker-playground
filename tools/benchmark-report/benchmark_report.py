@@ -294,7 +294,11 @@ __JFR__
   function lineChart(id, key, unitLabel, yfmt, reference) {
     const host = document.getElementById(id);
     const pts = samples.filter(s => s[key] !== null && s.elapsed !== null);
-    if (pts.length === 0) { host.appendChild(el("div", { class: "empty" }, "🤷 no sample for this metric")); return; }
+    if (pts.length === 0) {
+      const fullyManaged = r.setup && r.setup.connect && r.setup.connect.fully_managed;
+      host.appendChild(el("div", { class: "empty" }, fullyManaged ? "☁️ not available for a fully managed connector (no JMX)" : "🤷 no sample for this metric"));
+      return;
+    }
     const xs = niceScale(Math.max(...pts.map(p => p.elapsed)));
     const ys = niceScale(Math.max(...pts.map(p => p[key]), reference ? reference.value : 0));
     const xmax = xs.max, ymax = ys.max;
@@ -425,7 +429,8 @@ __JFR__
     ["load", r.load_seconds === "-" ? "-" : r.load_seconds + " s"],
     ["records in topics", r.topic_records_delta === "-" ? "-" : "+" + nf.format(+r.topic_records_delta)],
     ["date", r.date], ["samples", r.samples_csv]
-  ]);
+  ].filter(row => !(r.setup && r.setup.connect && r.setup.connect.fully_managed) ||
+    !["batch avg", "running ratio avg", "connect cpu avg / max", "gc pauses", "records per task", "dlq / dropped records"].includes(row[0])));
   fillTable("history-table", [["date"], ["records/s", 1], ["records", 1], ["seconds", 1], ["plugin"], ["CP"], ["tasks", 1], ["setup"]],
     history.slice().reverse().map(h => [h.date, nf1.format(h.records_per_second), nf.format(h.records), h.seconds, h.plugin_version, h.cp_tag, h.tasks,
       (sameSetup(h) ? "" : "≠ ") + setupShort(h.setup)]));
@@ -491,11 +496,16 @@ __JFR__
     fillTable("setup", [["Component"], ["Details"]], [
       ["host", o(st.host.os) + " " + o(st.host.arch) + ", " + o(st.host.cpu_model) + ", " + o(st.host.cpus) + " cpus, " + gib(st.host.memory_bytes)],
       ["container engine", o(st.engine.name) + " " + o(st.engine.version) + " (" + o(st.engine.os) + "), " + o(st.engine.cpus) + " cpus, " + gib(st.engine.memory_bytes)],
-      ["connect image", o(st.connect.image) + " (" + o(st.connect.image_arch) + (st.connect.emulated ? ", EMULATED on " + st.host.arch : ", native") + ")"],
-      ["connect workers", o(st.connect.workers)],
-      ["connect jvm", o(st.connect.jvm_version) + ", " + o(st.connect.jvm_cpus) + " cpus available, heap max " + gib(st.connect.heap_max_bytes) +
-        (st.connect.heap_opts ? " (KAFKA_HEAP_OPTS " + st.connect.heap_opts + ")" : "")],
-      ["kafka", o(st.kafka.brokers) + " broker(s), " + (st.kafka.kraft ? "kraft" : "zookeeper") + ", environment " + o(st.kafka.environment) + ", CP " + o(r.cp_tag)],
+      // a fully managed connector runs in Confluent Cloud: only the load runs on this host
+      ...(st.connect.fully_managed ? [
+        ["connect", "fully managed connector, Confluent Cloud (records counted from the end offsets of the topics, no JMX)"]
+      ] : [
+        ["connect image", o(st.connect.image) + " (" + o(st.connect.image_arch) + (st.connect.emulated ? ", EMULATED on " + st.host.arch : ", native") + ")"],
+        ["connect workers", o(st.connect.workers)],
+        ["connect jvm", o(st.connect.jvm_version) + ", " + o(st.connect.jvm_cpus) + " cpus available, heap max " + gib(st.connect.heap_max_bytes) +
+          (st.connect.heap_opts ? " (KAFKA_HEAP_OPTS " + st.connect.heap_opts + ")" : "")],
+        ["kafka", o(st.kafka.brokers) + " broker(s), " + (st.kafka.kraft ? "kraft" : "zookeeper") + ", environment " + o(st.kafka.environment) + ", CP " + o(r.cp_tag)]
+      ]),
       ["connector", o(r.connector_class) + " " + o(r.plugin_version) + ", " + o(r.tasks) + " task(s)"],
       ["playground", o(st.playground.test_file) + " at commit " + o(st.playground.commit) + (st.playground.dirty ? " (with local changes)" : "")]
     ]);

@@ -1,0 +1,1 @@
+../../connect/connect-aws-cloudwatch-logs-source/benchmark-load.bash

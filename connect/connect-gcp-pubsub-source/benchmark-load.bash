@@ -9,7 +9,12 @@ source ${DIR}/../../scripts/cli/src/lib/utils_function.sh
 benchmark_load_args "$@"
 project=$(jq -r '."gcp.pubsub.project.id" // empty' "$BENCHMARK_CONNECTOR_CONFIG")
 topic=$(jq -r '."gcp.pubsub.topic.id" // empty' "$BENCHMARK_CONNECTOR_CONFIG")
-keyfile="${DIR}/../../connect/connect-gcp-pubsub-source/keyfile.json"
+# the keyfile of the example that was run (the fully managed one has its own), else the one of this example
+keyfile="$(dirname "$BENCHMARK_TEST_FILE")/keyfile.json"
+if [ ! -f "$keyfile" ]
+then
+    keyfile="${DIR}/../../connect/connect-gcp-pubsub-source/keyfile.json"
+fi
 if [ -z "$project" ] || [ -z "$topic" ] || [ ! -f "$keyfile" ]
 then
     logerror "❌ gcp.pubsub.project.id / gcp.pubsub.topic.id are not in the config of the connector, or $keyfile does not exist: run gcp-pubsub-source.sh first"

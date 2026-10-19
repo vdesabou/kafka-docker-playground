@@ -8366,7 +8366,22 @@ commands:
       JMX exporter and containers use CPU, and the summary warns when
       the previous run was not measured the same way.
 
-      ⚠️ Not available for fully managed connectors and the cfk environment yet.
+      ☁️ Fully managed source connectors (ccloud/fm-*-source examples that
+      ship a benchmark-load.bash, the one of the equivalent self managed
+      example: same local database or broker, reached by the connector
+      through ngrok): the records are counted from the end offsets of the
+      topics of the connector every --interval (its kafka.topic or
+      topic.prefix, and the topics consumed by the example script,
+      --topic to choose them), since Confluent Cloud gives no JMX: no batch
+      time, running ratio, cpu, gc, flight recorder nor --connector-tag.
+      A drain starts measuring at the first records seen after the resume
+      (Confluent Cloud takes a few seconds to restart the tasks, and its
+      status lags behind them), so the records seen by that first sample
+      are not measured. The throughput includes the network between the
+      docker host and Confluent Cloud. Run the example and answer n when it asks to
+      delete the connector, then run the benchmark.
+
+      ⚠️ Not available for fully managed sink connectors and the cfk environment yet.
     filters:
     - connect_running
     flags:

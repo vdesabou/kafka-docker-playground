@@ -12,6 +12,11 @@ files_format=$(benchmark_users_files_format input.file.pattern)
 read -r format extension <<< "$files_format"
 # the server of the example (sftp-server, ssh-server for kerberos), with a chroot or not
 container=$(jq -r '."sftp.host" // "sftp-server"' "$BENCHMARK_CONNECTOR_CONFIG")
+# the fully managed example reaches sftp-server through ngrok: sftp.host is not a container
+if ! docker inspect "$container" > /dev/null 2>&1
+then
+    container=sftp-server
+fi
 input_path=$(jq -r '."input.path"' "$BENCHMARK_CONNECTOR_CONFIG")
 if [ -z "$BENCHMARK_LOAD_CHECK" ] && playground --output-level ERROR container exec --container "$container" --root --command "test -d /chroot$input_path" > /dev/null 2>&1
 then

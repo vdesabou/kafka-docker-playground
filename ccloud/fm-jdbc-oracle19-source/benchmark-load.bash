@@ -1,0 +1,1 @@
+../../connect/connect-jdbc-oracle19-source/benchmark-load.bash

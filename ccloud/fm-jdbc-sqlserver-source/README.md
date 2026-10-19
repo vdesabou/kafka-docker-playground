@@ -37,3 +37,17 @@ playground run -f fully-managed-sqlserver-source.sh
 3. Creates the `MicrosoftSqlServerSource` fully managed connector (`incrementing` mode on `id`, `topic.prefix` `sqlserver-`).
 4. Inserts one more row and verifies that 5 records are in `sqlserver-customers` (`playground topic consume`).
 5. Asks before deleting the connector.
+
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) is the load of the self-managed example [`connect-jdbc-sqlserver-source`](../../connect/connect-jdbc-sqlserver-source/README.md#benchmark): it loads rows in the `customers` table for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark). Run the example, answer `n` when it asks to delete the connector, then:
+
+```bash
+# time to capture 100k rows inserted in one transaction
+playground connector benchmark --nb-records 100000 --shape bulk
+
+# 10k transactions of one row
+playground connector benchmark --nb-records 10000 --shape small-txn
+```
+
+The connector runs in Confluent Cloud, so there is no JMX: the benchmark counts the records from the end offsets of the topics of the connector (`--topic` to choose them) and a drain starts measuring at the first records seen after the resume (Confluent Cloud takes a few seconds to restart the tasks), and the throughput includes the network between this machine and Confluent Cloud (ngrok tunnel). Compare runs made from the same machine.

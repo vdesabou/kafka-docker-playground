@@ -1530,6 +1530,13 @@ function filter_oracle_running() {
 }
 
 function filter_connect_running() {
+  # fully managed and custom connectors run in Confluent Cloud, not on a local worker
+  local connector_type
+  connector_type=$(playground state get run.connector_type)
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+    return 0
+  fi
   get_connect_url_and_security
 
   curl $security -s "${connect_url}" > /dev/null 2>&1
@@ -3991,6 +3998,82 @@ function benchmark_jmx_sample() {
     }'
 }
 
+# fully managed connectors, for playground connector benchmark: no JMX, the records of a source are counted from the end
+# offsets of its topics, read with kcat in one container started for the whole benchmark ('playground topic
+# get-number-records' reads each topic from the beginning on ccloud, far too slow for a sample every few seconds)
+BENCHMARK_CCLOUD_KCAT_CONTAINER="benchmark_kcat_$$"
+function benchmark_ccloud_kcat_start () {
+  if [ ! -f "$root_folder/.ccloud/librdkafka.delta" ]
+  then
+    logerror "❌ $root_folder/.ccloud/librdkafka.delta has not been generated"
+    return 1
+  fi
+  tr -d '"' < "$root_folder/.ccloud/librdkafka.delta" | grep -v "basic.auth.user.info" > "$root_folder/.ccloud/librdkafka_benchmark.delta"
+  docker run -d --rm --name "$BENCHMARK_CCLOUD_KCAT_CONTAINER" --network=host \
+    -v "$root_folder/.ccloud/librdkafka_benchmark.delta:/tmp/configuration/ccloud.properties" \
+    --entrypoint tail confluentinc/cp-kcat:latest -f /dev/null > /dev/null 2>&1
+}
+
+function benchmark_ccloud_kcat_stop () {
+  docker rm -f "$BENCHMARK_CCLOUD_KCAT_CONTAINER" > /dev/null 2>&1 || true
+}
+
+# topics of the ccloud cluster (internal ones excluded), one per line
+function benchmark_ccloud_topic_list () {
+  docker exec "$BENCHMARK_CCLOUD_KCAT_CONTAINER" kcat -F /tmp/configuration/ccloud.properties -L -J 2> /dev/null \
+    | jq -r '.topics[].topic | select(startswith("_") | not)' 2> /dev/null
+}
+
+# "<topic> <sum of the end offsets of its partitions>" lines for <topics>, 0 for a topic that does not exist (yet). Offsets
+# overcount the records of a transactional producer (one commit marker per transaction and partition): fine for the
+# difference over a drain of non transactional sources
+function benchmark_ccloud_topic_end_offsets () {
+  local metadata topic query_args=()
+  metadata=$(docker exec "$BENCHMARK_CCLOUD_KCAT_CONTAINER" kcat -F /tmp/configuration/ccloud.properties -L -J 2> /dev/null)
+  for topic in "$@"
+  do
+    while read -r partition
+    do
+      [ -n "$partition" ] && query_args+=(-t "$topic:$partition:-1")
+    done <<< "$(echo "$metadata" | jq -r --arg t "$topic" '.topics[]? | select(.topic == $t) | .partitions[].partition' 2> /dev/null)"
+  done
+  local offsets='{}'
+  if [ ${#query_args[@]} -gt 0 ]
+  then
+    offsets=$(docker exec "$BENCHMARK_CCLOUD_KCAT_CONTAINER" kcat -F /tmp/configuration/ccloud.properties -Q -J "${query_args[@]}" 2> /dev/null)
+  fi
+  for topic in "$@"
+  do
+    echo "$topic $(echo "$offsets" | jq -r --arg t "$topic" '[.[$t] // {} | to_entries[] | .value.offset? // empty | select(. >= 0)] | add // 0' 2> /dev/null || echo 0)"
+  done
+}
+
+# topics written by a fully managed source (the ccloud connect api has no /topics endpoint), one per line: the topics of
+# its config (kafka.topic, topics...), the existing topics starting with its topic.prefix (or database.server.name), and
+# the topics consumed by the example script (a topic name template like table.topic.name.template of oracle cdc).
+# Needs benchmark_ccloud_kcat_start
+function benchmark_fully_managed_source_topics () {
+  local connector_config_json="$1" test_file="$2" explicit prefixes topics prefix
+  explicit=$(echo "$connector_config_json" | jq -r '[."kafka.topic", ."kafka.topics", .topics, .topic, ."redo.log.topic.name"] | map(select(. != null and . != "")) | join(",") | split(",") | map(gsub("^\\s+|\\s+$"; "")) | map(select(. != "" and (test("\\$\\{") | not))) | .[]' 2> /dev/null)
+  prefixes=$(echo "$connector_config_json" | jq -r '[."topic.prefix", ."database.server.name"] | map(select(. != null and . != "")) | .[]' 2> /dev/null)
+  topics="$explicit"
+  if [ -n "$prefixes" ]
+  then
+    local all_topics
+    all_topics=$(benchmark_ccloud_topic_list)
+    for prefix in $prefixes
+    do
+      topics="$topics"$'\n'"$(echo "$all_topics" | awk -v p="$prefix" 'index($0, p) == 1')"
+    done
+  fi
+  if [ -n "$test_file" ] && [ -f "$test_file" ]
+  then
+    # literal --topic of the 'playground topic consume' commands of the example, before the exit 0 of a repro model
+    topics="$topics"$'\n'$(sed '/^exit 0/q' "$test_file" | grep -E '^[[:space:]]*playground topic consume' | sed -n -E 's/.*--topic[ =]+"?([A-Za-z0-9._-]+)"?( |$).*/\1/p')
+  fi
+  echo "$topics" | grep . | sort -u
+}
+
 # load of a sink for 'playground connector benchmark': replays the 'playground topic produce' of the example script
 # that feeds one of <topics>, with --nb-messages <nb>, from the example directory. With <stream> set, batches of <nb>
 # records are produced until the file $BENCHMARK_STOP_FILE exists (killing the producer in the middle of a batch
@@ -4096,7 +4179,7 @@ PYEOF
 # kafka, connector (config with secrets masked) and playground version, so that results are only compared on the same setup
 #   benchmark_collect_setup <workers ("container port" lines)> <connector config json> <test file> <environment>
 function benchmark_collect_setup () {
-  local workers="$1" connector_config_json="$2" test_file="$3" environment="$4"
+  local workers="$1" connector_config_json="$2" test_file="$3" environment="$4" fully_managed="$5"
   local host_os host_arch cpu_model host_cpus host_memory engine engine_info first_worker image image_arch emulated heap heap_max jvm_version jvm_cpus nb_workers nb_brokers kraft commit dirty
   host_arch=$(uname -m)
   if [ "$(uname -s)" == "Darwin" ]
@@ -4116,21 +4199,35 @@ function benchmark_collect_setup () {
   # no playground command gives the engine resources and the image architecture
   engine_info=$(docker info --format '{{.ServerVersion}}|{{.OperatingSystem}}|{{.NCPU}}|{{.MemTotal}}' 2>/dev/null)
   first_worker=$(echo "$workers" | head -1 | awk '{ print $1 }')
+  # a fully managed connector has no worker on this machine
+  if [ -n "$fully_managed" ]
+  then
+    first_worker=""
+  fi
   image=$(docker inspect -f '{{.Config.Image}}' "$first_worker" 2>/dev/null)
   image_arch=$(docker image inspect -f '{{.Architecture}}' "$image" 2>/dev/null)
   emulated=false
   case "$host_arch:$image_arch" in
     arm64:amd64|aarch64:amd64|x86_64:arm64|x86_64:aarch64) emulated=true ;;
   esac
-  heap=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$first_worker" 2>/dev/null | sed -n 's/^KAFKA_HEAP_OPTS=//p' | head -1)
-  local jvm
-  jvm=$(printf 'get -b java.lang:type=Runtime VmVersion\nget -b java.lang:type=OperatingSystem AvailableProcessors\nget -b java.lang:type=Memory HeapMemoryUsage\nexit\n' | benchmark_jmxterm "$first_worker" "$(echo "$workers" | head -1 | awk '{ print $2 }')")
+  local jvm=""
+  if [ -n "$first_worker" ]
+  then
+    heap=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$first_worker" 2>/dev/null | sed -n 's/^KAFKA_HEAP_OPTS=//p' | head -1)
+    jvm=$(printf 'get -b java.lang:type=Runtime VmVersion\nget -b java.lang:type=OperatingSystem AvailableProcessors\nget -b java.lang:type=Memory HeapMemoryUsage\nexit\n' | benchmark_jmxterm "$first_worker" "$(echo "$workers" | head -1 | awk '{ print $2 }')")
+  fi
   jvm_version=$(echo "$jvm" | sed -n 's/^VmVersion = \(.*\);$/\1/p')
   jvm_cpus=$(echo "$jvm" | sed -n 's/^AvailableProcessors = \(.*\);$/\1/p')
   # HeapMemoryUsage is a composite value: { committed = ...; init = ...; max = <bytes>; used = ...; }
   heap_max=$(echo "$jvm" | sed -n 's/^ *max = \([0-9]*\);$/\1/p' | head -1)
   nb_workers=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -c -E '^connect[0-9]*$')
   nb_brokers=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -c -E '^broker[0-9]*$')
+  # the local containers have nothing to do with a fully managed connector
+  if [ -n "$fully_managed" ]
+  then
+    nb_workers=0
+    nb_brokers=0
+  fi
   kraft=false
   docker ps --format '{{.Names}}' 2>/dev/null | grep -q -E '^controller[0-9]*$' && kraft=true
   commit=$(git -C "$root_folder" rev-parse --short HEAD 2>/dev/null)
@@ -4140,7 +4237,7 @@ function benchmark_collect_setup () {
   # (and source_url, for the links of the flight recorder hot methods)
   local connector_class documentation_url="" source_url="" plugin_dir manifest
   connector_class=$(echo "$connector_config_json" | jq -r '."connector.class" // empty' 2> /dev/null)
-  if [ -n "$connector_class" ]
+  if [ -n "$connector_class" ] && [ -n "$first_worker" ]
   then
     plugin_dir=$(playground --output-level ERROR container exec --container "$first_worker" --command "for d in /usr/share/confluent-hub-components/* /usr/share/java/*; do [ -f \"\$d/manifest.json\" ] && grep -rlq --include='*.jar' '${connector_class//.//}.class' \"\$d\" && echo \"\$d\" && break; done" 2> /dev/null | tail -1)
     if [ -n "$plugin_dir" ]
@@ -4165,7 +4262,7 @@ function benchmark_collect_setup () {
     --arg host_os "$host_os" --arg host_arch "$host_arch" --arg cpu_model "$cpu_model" --arg host_cpus "$host_cpus" --arg host_memory "$host_memory" \
     --arg engine "$engine" --arg engine_info "$engine_info" \
     --arg image "$image" --arg image_arch "$image_arch" --argjson emulated "$emulated" --arg heap "$heap" --arg heap_max "$heap_max" --arg jvm_version "$jvm_version" --arg jvm_cpus "$jvm_cpus" \
-    --arg nb_workers "$nb_workers" --arg nb_brokers "$nb_brokers" --argjson kraft "$kraft" --arg environment "$environment" \
+    --arg nb_workers "$nb_workers" --arg nb_brokers "$nb_brokers" --argjson kraft "$kraft" --arg environment "$environment" --argjson fully_managed "$([ -n "$fully_managed" ] && echo true || echo false)" \
     --arg test_file "${test_file#$root_folder/}" --arg commit "$commit" --argjson dirty "$dirty" \
     --arg repo_url "$repo_url" --arg repo_path "$repo_path" --arg repo_commit "$repo_commit" --argjson repo_dirty "$repo_dirty" \
     --arg documentation_url "$documentation_url" --arg source_url "$source_url" --arg plugin_dir "$plugin_dir" \
@@ -4173,7 +4270,7 @@ function benchmark_collect_setup () {
     '($engine_info | split("|")) as $e |
      {host: {os: $host_os, arch: $host_arch, cpu_model: $cpu_model, cpus: ($host_cpus | tonumber? // null), memory_bytes: ($host_memory | tonumber? // null)},
       engine: {name: $engine, version: $e[0], os: $e[1], cpus: ($e[2] | tonumber? // null), memory_bytes: ($e[3] | tonumber? // null)},
-      connect: {image: $image, image_arch: $image_arch, emulated: $emulated, heap_opts: $heap, heap_max_bytes: ($heap_max | tonumber? // null), jvm_version: $jvm_version, jvm_cpus: ($jvm_cpus | tonumber? // null), workers: ($nb_workers | tonumber? // null)},
+      connect: {fully_managed: $fully_managed, image: $image, image_arch: $image_arch, emulated: $emulated, heap_opts: $heap, heap_max_bytes: ($heap_max | tonumber? // null), jvm_version: $jvm_version, jvm_cpus: ($jvm_cpus | tonumber? // null), workers: ($nb_workers | tonumber? // null)},
       kafka: {environment: $environment, brokers: ($nb_brokers | tonumber? // null), kraft: $kraft},
       playground: {test_file: $test_file, commit: $commit, dirty: $dirty,
                    repo_url: $repo_url, repo_path: $repo_path, repo_commit: $repo_commit, repo_dirty: $repo_dirty},
@@ -4185,7 +4282,8 @@ function benchmark_collect_setup () {
 function benchmark_setup_summary () {
   echo "$1" | jq -r '
     def gib: if . == null then "?" else ((. / 1073741824) | floor | tostring) + " GiB" end;
-    "\(.host.os) \(.host.arch), \(.host.cpu_model) (\(.host.cpus) cpus, \(.host.memory_bytes | gib)) · \(.engine.name) \(.engine.version) \(.engine.os) (\(.engine.cpus) cpus, \(.engine.memory_bytes | gib)) · connect \(.connect.image | split("/") | last)\(if .connect.emulated then " EMULATED" else "" end), \(.connect.workers) worker(s), jvm \(.connect.jvm_version), heap \(.connect.heap_max_bytes | gib) max\(if .connect.heap_opts == "" then "" else " (" + .connect.heap_opts + ")" end) · \(.kafka.brokers) broker(s), \(.kafka.environment)"' 2>/dev/null
+    "\(.host.os) \(.host.arch), \(.host.cpu_model) (\(.host.cpus) cpus, \(.host.memory_bytes | gib)) · \(.engine.name) \(.engine.version) \(.engine.os) (\(.engine.cpus) cpus, \(.engine.memory_bytes | gib)) · " +
+    if .connect.fully_managed then "fully managed connector, Confluent Cloud" else "connect \(.connect.image | split("/") | last)\(if .connect.emulated then " EMULATED" else "" end), \(.connect.workers) worker(s), jvm \(.connect.jvm_version), heap \(.connect.heap_max_bytes | gib) max\(if .connect.heap_opts == "" then "" else " (" + .connect.heap_opts + ")" end) · \(.kafka.brokers) broker(s), \(.kafka.environment)" end' 2>/dev/null
 }
 
 # differences between two setups on what changes the throughput (host, engine resources, connect image and jvm, heap,

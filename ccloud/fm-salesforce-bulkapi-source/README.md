@@ -48,3 +48,14 @@ playground run -f fully-managed-salesforce-bulkapi-source.sh
 3. Get your security token from *Settings* -> *My Personal Information* -> *Reset My Security Token*:
 
 ![security token](Screenshot1.png)
+
+## Benchmark
+
+[`benchmark-load.bash`](benchmark-load.bash) is the load of the self-managed example [`connect-salesforce-bulkapi-source`](../../connect/connect-salesforce-bulkapi-source/README.md#benchmark): it loads Leads created with one Bulk API job for [`playground connector benchmark`](https://kafka-docker-playground.io/#/playground%20connector%20benchmark). Run the example, answer `n` when it asks to delete the connector, then:
+
+```bash
+# time to read a backlog of 100k records
+playground connector benchmark --nb-records 100000
+```
+
+The connector runs in Confluent Cloud, so there is no JMX: the benchmark counts the records from the end offsets of the topics of the connector (`--topic` to choose them) and a drain starts measuring at the first records seen after the resume (Confluent Cloud takes a few seconds to restart the tasks), and the throughput includes the network between this machine and Confluent Cloud (ngrok tunnel). Compare runs made from the same machine.

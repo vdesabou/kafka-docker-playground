@@ -5051,8 +5051,19 @@ subcommands:
       report link to\nthem at the time of the run (each version is annotated with\n--connector-tag).
       Grafana is not started by the benchmark: its\nJMX exporter and containers use
       CPU, and the summary warns when\nthe previous run was not measured the same
-      way.\n\n⚠️ Not available for fully managed connectors and the cfk environment
-      yet."
+      way.\n\n☁️ Fully managed source connectors (ccloud/fm-*-source examples that\nship
+      a benchmark-load.bash, the one of the equivalent self managed\nexample: same
+      local database or broker, reached by the connector\nthrough ngrok): the records
+      are counted from the end offsets of the\ntopics of the connector every --interval
+      (its kafka.topic or\ntopic.prefix, and the topics consumed by the example script,\n--topic
+      to choose them), since Confluent Cloud gives no JMX: no batch\ntime, running
+      ratio, cpu, gc, flight recorder nor --connector-tag.\nA drain starts measuring
+      at the first records seen after the resume\n(Confluent Cloud takes a few seconds
+      to restart the tasks, and its\nstatus lags behind them), so the records seen
+      by that first sample\nare not measured. The throughput includes the network
+      between the\ndocker host and Confluent Cloud. Run the example and answer n when
+      it asks to\ndelete the connector, then run the benchmark.\n\n⚠️ Not available
+      for fully managed sink connectors and the cfk environment yet."
     usage: playground connector benchmark [OPTIONS]
     options:
     - names:
