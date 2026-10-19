@@ -498,7 +498,8 @@ __JFR__
       ["container engine", o(st.engine.name) + " " + o(st.engine.version) + " (" + o(st.engine.os) + "), " + o(st.engine.cpus) + " cpus, " + gib(st.engine.memory_bytes)],
       // a fully managed connector runs in Confluent Cloud: only the load runs on this host
       ...(st.connect.fully_managed ? [
-        ["connect", "fully managed connector, Confluent Cloud (records counted from the end offsets of the topics, no JMX)"]
+        ["connect", "fully managed connector, Confluent Cloud (records counted from " +
+          (r.type === "sink" ? "the offsets committed by its consumer group, at each offset commit" : "the end offsets of the topics") + ", no JMX)"]
       ] : [
         ["connect image", o(st.connect.image) + " (" + o(st.connect.image_arch) + (st.connect.emulated ? ", EMULATED on " + st.host.arch : ", native") + ")"],
         ["connect workers", o(st.connect.workers)],

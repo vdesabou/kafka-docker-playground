@@ -8381,7 +8381,17 @@ commands:
       docker host and Confluent Cloud. Run the example and answer n when it asks to
       delete the connector, then run the benchmark.
 
-      ⚠️ Not available for fully managed sink connectors and the cfk environment yet.
+      ☁️ Fully managed sink connectors: the load is the replay of the
+      'playground topic produce' of the example, like for a self managed
+      sink, and the records are counted from the offsets committed by the
+      consumer group of the connector (connect-<lcc id>). Confluent Cloud
+      commits them about every minute, so the end of a drain is known
+      within one commit interval: a drain that sees less than 5 commits
+      is reported as a lower bound, and the summary gives the
+      --nb-records of a drain of 10 commits (within ~10%, usually 1M
+      records or more).
+
+      ⚠️ Not available with the cfk environment yet.
     filters:
     - connect_running
     flags:

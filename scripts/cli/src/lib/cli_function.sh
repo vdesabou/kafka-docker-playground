@@ -4048,6 +4048,35 @@ function benchmark_ccloud_topic_end_offsets () {
   done
 }
 
+# fully managed sink, for playground connector benchmark: the records are counted from the committed offsets of its consumer
+# group (connect-<lcc id>), read with kafka-consumer-groups in one container started for the whole benchmark
+BENCHMARK_CCLOUD_GROUPS_CONTAINER="benchmark_groups_$$"
+function benchmark_ccloud_groups_start () {
+  get_kafka_docker_playground_dir
+  if [ ! -f "$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta" ] || [ ! -f "$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta" ]
+  then
+    logerror "❌ $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta or ak-tools-ccloud.delta has not been generated"
+    return 1
+  fi
+  source "$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta"
+  get_connect_image
+  docker run -d --rm --name "$BENCHMARK_CCLOUD_GROUPS_CONTAINER" \
+    -v "$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties" \
+    -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" \
+    --entrypoint tail "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" -f /dev/null > /dev/null 2>&1
+}
+
+function benchmark_ccloud_groups_stop () {
+  docker rm -f "$BENCHMARK_CCLOUD_GROUPS_CONTAINER" > /dev/null 2>&1 || true
+}
+
+# "<sum of the committed offsets> <max lag>" of consumer group <group> ("0 -" when it has no committed offset yet)
+function benchmark_ccloud_group_offsets () {
+  local group="$1"
+  docker exec "$BENCHMARK_CCLOUD_GROUPS_CONTAINER" bash -c "kafka-consumer-groups --bootstrap-server \$BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties --group '$group' --describe 2> /dev/null" \
+    | awk '$4 ~ /^[0-9]+$/ { committed += $4; if ($6 ~ /^[0-9]+$/ && $6 > lag) lag = $6; n++ } END { printf "%d %s\n", committed, (n ? lag + 0 : "-") }'
+}
+
 # topics written by a fully managed source (the ccloud connect api has no /topics endpoint), one per line: the topics of
 # its config (kafka.topic, topics...), the existing topics starting with its topic.prefix (or database.server.name), and
 # the topics consumed by the example script (a topic name template like table.topic.name.template of oracle cdc).

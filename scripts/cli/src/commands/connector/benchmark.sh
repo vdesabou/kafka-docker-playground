@@ -90,17 +90,19 @@ else
     get_connect_url_and_security
 fi
 function connect_rest_get () {
-    local path="$1" ret
+    local path="/$1" ret
+    # a query on the list of connectors: connectors?expand=id
+    [[ "$1" == "?"* ]] && path="$1"
     if [ -n "$fully_managed" ]
     then
         # handle_ccloud_connect_rest_api sets environment to the ccloud environment id
         local saved_environment="$environment"
-        handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$ccloud_environment/clusters/$ccloud_cluster/connectors/$path\" --header \"authorization: Basic \$authorization\""
+        handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$ccloud_environment/clusters/$ccloud_cluster/connectors$path\" --header \"authorization: Basic \$authorization\""
         ret=$?
         environment="$saved_environment"
         return $ret
     fi
-    handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$path\""
+    handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors$path\""
 }
 connect_rest_get "$connector/status"
 status_json="$curl_output"
@@ -127,10 +129,24 @@ then
     logerror "❌ could not get the type of $connector_type connector $connector from its status"
     exit 1
 fi
+# a fully managed sink is measured with the committed offsets of its consumer group
+consumer_group=""
 if [ -n "$fully_managed" ] && [ "$type" == "sink" ]
 then
-    logerror "❌ benchmark is only available for $connector_type source connectors yet"
-    exit 1
+    if ! connect_rest_get "?expand=id"
+    then
+        logerror "❌ could not get the id of $connector_type connector $connector"
+        exit 1
+    fi
+    consumer_group="connect-$(echo "$curl_output" | jq -r --arg c "$connector" '.[$c].id.id // empty')"
+    if [ "$consumer_group" == "connect-" ]
+    then
+        logerror "❌ could not get the id of $connector_type connector $connector"
+        exit 1
+    fi
+    benchmark_ccloud_groups_start || exit 1
+    trap 'benchmark_ccloud_kcat_stop; benchmark_ccloud_groups_stop' EXIT
+    log "📊 records counted from the committed offsets of consumer group $consumer_group"
 fi
 nb_tasks=$(echo "$status_json" | jq '.tasks | length')
 workers=""
@@ -566,6 +582,7 @@ function benchmark_cleanup () {
     if [ -n "$fully_managed" ]
     then
         benchmark_ccloud_kcat_stop
+        benchmark_ccloud_groups_stop
     fi
     if [ -n "$jfr_recordings" ]
     then
@@ -670,17 +687,32 @@ function take_sample () {
         done
         sample_records="$corrected"
     fi
-    # fully managed: records written to the topics since topic_records_before
+    # fully managed: records written to the topics since topic_records_before (source), committed by the consumer group
+    # since committed_before (sink)
     if [ -n "$fully_managed" ]
     then
-        sample_records=$(topic_records_progress)
+        fully_managed_progress
+        sample_records="$fully_managed_records"
+        sample_lag="$fully_managed_lag"
     # the task counters were reset by a restart during the drain: the records come from the topics
     elif [ -n "$records_from_topics" ]
     then
         sample_records=$((baseline_records + $(topic_records_progress)))
     fi
     local rate="-"
-    if [ -n "$prev_records" ]
+    if [ -n "$consumer_group" ]
+    then
+        # fully managed sink: the committed offsets move at each offset commit, the rate is the one between two commits
+        if [ "$sample_records" != "$commit_records" ]
+        then
+            if [ -n "$commit_records" ]
+            then
+                rate=$(awk -v r="$sample_records" -v pr="$commit_records" -v t="$sample_time" -v pt="$commit_time" 'BEGIN { if (t > pt) printf "%.1f", (r - pr) / (t - pt); else print "-" }')
+            fi
+            commit_records="$sample_records"
+            commit_time="$sample_time"
+        fi
+    elif [ -n "$prev_records" ]
     then
         rate=$(awk -v r="$sample_records" -v pr="$prev_records" -v t="$sample_time" -v pt="$prev_time" 'BEGIN { if (t > pt) printf "%.1f", (r - pr) / (t - pt); else print "-" }')
     fi
@@ -702,6 +734,33 @@ function count_topic_records () {
         count=$(playground --output-level WARN topic get-number-records --topic "$topic" 2> /dev/null | grep -E '^[0-9]+$' | tail -1)
         echo "$topic ${count:-0}"
     done
+}
+
+# fully managed: sets fully_managed_records, the records written to the topics (source) or committed by the consumer group
+# (sink) since the backlog was loaded, and fully_managed_lag (max consumer lag of a sink)
+fully_managed_records=0
+fully_managed_lag="-"
+# fully managed sink: records and time of the last offset commit seen, for the rate between two commits
+commit_records=""
+commit_time=""
+committed_before=0
+function fully_managed_progress () {
+    if [ "$type" == "source" ]
+    then
+        fully_managed_records=$(topic_records_progress)
+        return
+    fi
+    local committed
+    read -r committed fully_managed_lag <<< "$(benchmark_ccloud_group_offsets "$consumer_group")"
+    fully_managed_records=$((committed - committed_before))
+}
+function fully_managed_snapshot () {
+    if [ "$type" == "source" ]
+    then
+        topic_records_before=$(count_topic_records)
+    else
+        read -r committed_before fully_managed_lag <<< "$(benchmark_ccloud_group_offsets "$consumer_group")"
+    fi
 }
 
 # records written to the topics since the backlog was loaded (topic_records_before)
@@ -727,8 +786,8 @@ function refresh_connector_topics () {
 expected="$nb_records"
 # set when a task restart reset the JMX counters during a drain: the samples count the records in the topics
 records_from_topics=""
-# no JMX for a fully managed connector: the samples always count the records in the topics
-if [ -n "$fully_managed" ]
+# no JMX for a fully managed source: the samples always count the records in the topics
+if [ -n "$fully_managed" ] && [ "$type" == "source" ]
 then
     records_from_topics=1
 fi
@@ -780,7 +839,10 @@ then
     fi
     log "📦 backlog of $expected records loaded in ${load_seconds}s"
 
-    if [ "$type" == "source" ]
+    if [ -n "$fully_managed" ]
+    then
+        fully_managed_snapshot
+    elif [ "$type" == "source" ]
     then
         topic_records_before=$(count_topic_records)
     fi
@@ -800,11 +862,11 @@ then
     if [ -n "$fully_managed" ]
     then
         resume_time="$start_time"
-        while [ "$(topic_records_progress)" -le "$baseline_records" ]
+        while fully_managed_progress && [ "$fully_managed_records" -le "$baseline_records" ]
         do
             if awk -v n="$(now)" -v s="$resume_time" -v m="$max_wait" 'BEGIN { exit !(n - s >= m) }'
             then
-                logerror "❌ no record in ${topics[*]} ${max_wait}s after $connector_type connector $connector was resumed"
+                logerror "❌ no progress ${max_wait}s after $connector_type connector $connector was resumed"
                 playground connector status --connector "$connector"
                 exit 1
             fi
@@ -910,7 +972,7 @@ then
 else
     if [ -n "$fully_managed" ]
     then
-        topic_records_before=$(count_topic_records)
+        fully_managed_snapshot
     fi
     if [ -n "$load_cmd" ]
     then
@@ -999,9 +1061,27 @@ throughput=$(awk -v r="$measured_records" -v s="$measured_seconds" 'BEGIN { if (
 nb_samples=$(awk -F, -v p="$phase" 'NR > 1 && $3 == p' "$csv_file" | wc -l | tr -d ' ')
 # the backlog was processed before the first sample: only an upper bound of the duration is known
 lower_bound=false
+lower_bound_reason="the backlog was processed before the first sample"
 if [ "$mode" == "drain" ] && [ "$nb_samples" -le 1 ]
 then
     lower_bound=true
+fi
+# fully managed sink: the committed offsets only move at each offset commit of the tasks (about every minute), so the end of
+# a drain is seen up to one commit interval late: less than 5 commits during the drain is a lower bound
+commit_steps="-"
+commit_interval="-"
+if [ -n "$fully_managed" ] && [ "$type" == "sink" ]
+then
+    read -r commit_steps commit_interval <<< "$(awk -F, -v p="$phase" '
+        NR == 1 { next }
+        prev != "" && $4 != prev { if ($3 == p) n++; if (last != "") { d += $10 - last; nd++ } last = $10 }
+        { prev = $4 }
+        END { printf "%d %s\n", n, (nd ? sprintf("%.0f", d / nd) : "-") }' "$csv_file")"
+    if [ "$mode" == "drain" ] && [ "$commit_steps" -lt 5 ]
+    then
+        lower_bound=true
+        lower_bound_reason="only $commit_steps offset commit(s) seen during the drain"
+    fi
 fi
 
 # bottleneck indicators over the measure: from the sample just before the measure to the last one of the measure
@@ -1175,9 +1255,9 @@ fi
 printf "   %-22s %s\n" "duration" "${measured_seconds}s"
 if [ "$lower_bound" == "true" ]
 then
-    printf "   %-22s %s\n" "throughput" "≥ $throughput records/s   (the backlog was processed before the first sample)"
+    printf "   %-22s %s\n" "throughput" "≥ $throughput records/s   ($lower_bound_reason)"
 else
-    printf "   %-22s %s\n" "throughput" "$throughput records/s   (per ${interval}s sample: p50 $rate_p50  p95 $rate_p95  min $rate_min)"
+    printf "   %-22s %s\n" "throughput" "$throughput records/s   (per $([ -n "$consumer_group" ] && echo "offset commit, every ~${commit_interval}s" || echo "${interval}s sample"): p50 $rate_p50  p95 $rate_p95  min $rate_min)"
 fi
 # no JMX for a fully managed connector
 if [ -z "$fully_managed" ]
@@ -1248,7 +1328,12 @@ then
 fi
 if [ -n "$fully_managed" ]
 then
-    add_warning "$connector_type connector: the records are counted from the end offsets of ${topics[*]} every ${interval}s (no JMX: no batch time, running ratio, cpu, gc nor flight recorder), and the throughput includes the network between this machine (load, ngrok tunnel) and Confluent Cloud"
+    if [ "$type" == "source" ]
+    then
+        add_warning "$connector_type connector: the records are counted from the end offsets of ${topics[*]} every ${interval}s (no JMX: no batch time, running ratio, cpu, gc nor flight recorder), and the throughput includes the network between this machine (load, ngrok tunnel) and Confluent Cloud"
+    else
+        add_warning "$connector_type connector: the records are counted from the offsets committed by consumer group $consumer_group every ${interval}s (no JMX: no batch time, running ratio, cpu, gc nor flight recorder): they move at each offset commit of the tasks, not at each record, so a drain of less than a few minutes is not accurate (increase --nb-records), and the throughput includes the network between Confluent Cloud and the system behind the connector"
+    fi
 elif [ -n "$records_from_topics" ]
 then
     add_warning "the JMX counters of the tasks fell behind the records written to the topics during the drain, usually because a task was restarted (the cloud storage and hdfs sources reconfigure their task at each poll interval): the samples count the records in the topics from then on, see the task restarts in the connect logs"
@@ -1332,7 +1417,13 @@ if [ "$incomplete" == "true" ]
 then
     add_warning "the drain did not finish: only $measured_records of $expected records were processed in ${max_wait}s (--max-wait), the throughput is the one of the records processed; see where the time goes in the flight recorder findings"
 fi
-if [ "$lower_bound" == "true" ]
+if [ "$lower_bound" == "true" ] && [ "$commit_steps" != "-" ]
+then
+    # one commit seen: no interval measured, Confluent Cloud commits about every minute
+    interval_s="$commit_interval"
+    [[ "$interval_s" =~ ^[0-9]+$ ]] && [ "$interval_s" -gt 0 ] || interval_s=60
+    add_warning "Confluent Cloud commits the offsets of the sink every ~${interval_s}s and the drain saw $commit_steps commit(s): the end of the drain is known within one commit interval, the throughput is a lower bound. Use a drain of 10 commits or more (about $((interval_s * 10))s) for a measure within ~10%: --nb-records $((nb_records * 10 / (commit_steps > 0 ? commit_steps : 1))) --max-wait $((max_wait > interval_s * 20 ? max_wait : interval_s * 20))"
+elif [ "$lower_bound" == "true" ]
 then
     add_warning "the backlog was processed before the first sample, the throughput is a lower bound: increase --nb-records (10x) for a real measure"
 elif [ "$nb_samples" -lt 3 ]

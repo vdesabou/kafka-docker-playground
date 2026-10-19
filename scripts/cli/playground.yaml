@@ -5062,8 +5062,15 @@ subcommands:
       to restart the tasks, and its\nstatus lags behind them), so the records seen
       by that first sample\nare not measured. The throughput includes the network
       between the\ndocker host and Confluent Cloud. Run the example and answer n when
-      it asks to\ndelete the connector, then run the benchmark.\n\n⚠️ Not available
-      for fully managed sink connectors and the cfk environment yet."
+      it asks to\ndelete the connector, then run the benchmark.\n\n☁️ Fully managed
+      sink connectors: the load is the replay of the\n'playground topic produce' of
+      the example, like for a self managed\nsink, and the records are counted from
+      the offsets committed by the\nconsumer group of the connector (connect-<lcc
+      id>). Confluent Cloud\ncommits them about every minute, so the end of a drain
+      is known\nwithin one commit interval: a drain that sees less than 5 commits\nis
+      reported as a lower bound, and the summary gives the\n--nb-records of a drain
+      of 10 commits (within ~10%, usually 1M\nrecords or more).\n\n⚠️ Not available
+      with the cfk environment yet."
     usage: playground connector benchmark [OPTIONS]
     options:
     - names:
