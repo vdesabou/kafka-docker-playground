@@ -12,10 +12,26 @@ scheduling, …) with concrete remediation steps per category:
 - Every `platform.confluent.io` custom resource: `status.phase` / `status.state`, ready replicas, `False`
   conditions, failed connector tasks, `block-reconcile`, stuck finalizers. Multi-document YAML and `kind: List`
   are supported.
+- Environment: Kubernetes version, CFK operator version (operator image tag or CRD app-version) and the application
+  / init image of every component, from `cluster-details.txt` and the CR specs. Checked against the
+  [CFK support matrix](https://docs.confluent.io/operator/current/co-supported-environments.html): Kubernetes,
+  Confluent Platform and Control Center versions outside the range of the CFK minor, `confluent-init-container`
+  on another version than the operator, components on different CP versions (`Compatibility` category).
+- Recent changes, newest first: `metadata.managedFields` of the CRs (who changed which part of the spec, e.g.
+  `Update by kubectl-edit: spec.image, spec.podTemplate`) and StatefulSets (operator rollouts), pod creation and
+  container terminations. Pods and StatefulSets written without `kind` (`pods/pod-<name>.yaml`) are recognized.
+- JVM default truststore: a CR whose `configOverrides.jvm` (or `KAFKA_OPTS` / `JAVA_TOOL_OPTIONS`) sets
+  `-Djavax.net.ssl.trustStore` without `-Djavax.net.ssl.trustStorePassword` (nor `trustStoreType=JKS`) is
+  reported, high when its logs have `trustAnchors parameter must be non-empty`: a PKCS12 store read without its
+  password has 0 trusted certificates, so the AWS SDK, HTTP connectors and JDBC drivers fail while the Kafka
+  clients (their own `ssl.truststore.*`) keep working (`JVM Truststore Issues` category).
 - Logs (rotated `.log.N` and `.gz` included): only records with an explicit `ERROR`/`FATAL` level (`WARN` when
   it matches a known category, or always with `--include-warnings`) and uncaught exceptions. Each record is
   classified on its `Caused by:` chain first, identical records are counted, and ERRORs matching no category
-  are reported as "Other … (Unclassified)".
+  are reported as "Other … (Unclassified)". Connector task / client ids are not part of the identity: one root
+  cause failing 27 tasks is one issue, with the tasks listed in `affected`.
+- `False` conditions are reported only when `True` is the healthy value (`*-ready`, `*-available`…) or their
+  reason says something failed: `garbage-collecting` / `config-revision-hash` `False` are normal.
 
 Each issue is attributed to a `component` (`kafka`, `kraftcontroller`, `zookeeper`, `connect`, `schemaregistry`,
 `ksqldb`, `controlcenter`, `kafkarestproxy`, `operator`, or `other` for nodes, volumes and unknown pods) and, when
@@ -31,6 +47,7 @@ review the output before sharing it.
 ## Files
 
 - `analyzer.py` — detection engine over logs / events / pods / CFK CRs, with coverage counters.
+- `environment.py` — `cluster-details.txt` parser, CFK support matrix checks, change timeline.
 - `sanitizer.py` — redacts secrets first, then emails / LDAP DNs / IPs / hostnames.
 - `recommendations.py` — category → concrete CFK remediation steps mapping.
 - `html_report.py` — self-contained offline HTML report (no CDN dependency).
@@ -64,7 +81,8 @@ bundle, `playground analyze logs -f <bundle>` complements it.
 `kubectl confluent support-bundle` layout, built by `samples/make_synthetic_bundle.py` (deterministic: same
 bytes on every run). It tells one story: kafka-2 crash-looping on an expired TLS certificate with a pending
 PersistentVolumeClaim, connect-0 OOMKilled with a FAILED connector task, Schema Registry failing to
-authenticate, and operator reconcile errors (19 issues, 4 critical).
+authenticate, and operator reconcile errors (19 issues, 4 critical). It also has a `cluster-details.txt` and a
+`kubectl edit` of the Kafka CR, for the Environment and Recent changes sections.
 
 ```bash
 python3 -I cfk-analysis/samples/make_synthetic_bundle.py cfk-analysis/samples/cfk-support-bundle-synthetic.tar.gz

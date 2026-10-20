@@ -29,6 +29,7 @@ from typing import Optional, Tuple
 
 from analyzer import CFKBundleAnalyzer, COMPONENTS
 from sanitizer import DataSanitizer
+import environment
 import recommendations
 import html_report
 
@@ -141,6 +142,34 @@ def group_by_category(issues):
     return grouped
 
 
+def print_environment(results, timeline_limit: int = 12):
+    """Versions and images, then the latest changes (newest first)"""
+    env = results.get("environment") or {}
+    components = env.get("components") or {}
+    if env.get("kubernetes_version") or env.get("cfk_version") or components:
+        print("-" * 72)
+        print("Environment")
+        print("-" * 72)
+        if env.get("kubernetes_version"):
+            print(f"Kubernetes:       {env['kubernetes_version']}")
+        if env.get("cfk_version") or env.get("operator_image_tag"):
+            print(f"CFK operator:     {env.get('cfk_version', '?')} (image tag {env.get('operator_image_tag', '?')})")
+        for name, info in sorted(components.items()):
+            line = f"  {name:<24} {info.get('image', '?')}"
+            if info.get("init_image"):
+                line += f"  init {environment.image_tag(info['init_image']) or info['init_image']}"
+            print(line)
+        print()
+    timeline = results.get("timeline") or []
+    if timeline:
+        print("-" * 72)
+        print(f"Recent changes (newest first, {min(len(timeline), timeline_limit)} of {len(timeline)})")
+        print("-" * 72)
+        for change in timeline[:timeline_limit]:
+            print(f"  {change['time']}  {change['kind']}/{change['name']}  {change['what']}")
+        print()
+
+
 def print_text_report(results, top: int):
     summary = results["summary"]
     issues = results["issues"]
@@ -173,6 +202,7 @@ def print_text_report(results, top: int):
         print(f"Sanitized:        {r['secrets']} secrets, {r['ip_addresses']} IPs, {r['hostnames']} hostnames, "
               f"{r['emails']} emails, {r['ldap_dns']} LDAP DNs (best effort, review before sharing)")
     print()
+    print_environment(results)
 
     if not issues:
         print("No issues detected in the scanned files.")
@@ -205,10 +235,16 @@ def print_text_report(results, top: int):
             if issue.get("count", 1) > 1:
                 loc += f"  (x{issue['count']})"
             msg = issue["message"]
-            if len(msg) > 180:
-                msg = msg[:177] + "..."
+            # log records are cut (the context has the rest); findings on the config / versions are short sentences
+            limit = 180 if issue.get("line_number") else 500
+            if len(msg) > limit:
+                msg = msg[:limit - 3] + "..."
             print(f"  {glyph} {loc}")
             print(f"         {msg}")
+            affected = issue.get("affected") or []
+            if len(affected) > 1 or (affected and issue.get("count", 1) > 1):
+                shown = ", ".join(affected[:8]) + (f" (+{len(affected) - 8} more)" if len(affected) > 8 else "")
+                print(f"           Affects {len(affected)} task(s): {shown}")
             for cause in issue.get("caused_by") or []:
                 cause = cause if len(cause) <= 170 else cause[:167] + "..."
                 print(f"           Caused by: {cause}")
@@ -283,9 +319,8 @@ def run(
         json.dump(results, sys.stdout, indent=2, default=str)
         sys.stdout.write("\n")
     else:
-        # Text report by default; skip if user only asked for HTML.
-        if not html_out:
-            print_text_report(results, top=top)
+        # the text digest is printed with the HTML report too: it is what a terminal / an agent reads
+        print_text_report(results, top=top)
         print_verdict(results)
 
     return 0

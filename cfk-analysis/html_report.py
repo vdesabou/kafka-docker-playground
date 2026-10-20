@@ -60,6 +60,8 @@ CATEGORY_EMOJI = {
     "Configuration": "⚙️",
     "Finalizer Issues": "🧹",
     "Reconciliation Blocked": "🧊",
+    "JVM Truststore Issues": "🔐",
+    "Compatibility": "🧭",
     "Application Errors": "🪵",
     "Other Critical (Unclassified)": "🚨",
     "Other Errors (Unclassified)": "❌",
@@ -229,6 +231,22 @@ main { max-width: 1180px; margin: 0 auto; padding: 32px 40px 80px 40px; }
   padding: 2px 8px;
   border-radius: 999px;
 }
+.panel {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  padding: 12px 20px;
+}
+.panel > summary { cursor: pointer; font-weight: 600; font-size: 15px; }
+.panel .label { font-weight: 400; color: #6b7280; font-size: 12px; margin-left: 8px; }
+.panel .facts { margin: 10px 0; font-size: 14px; }
+table.env { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 12.5px; }
+table.env th { text-align: left; color: #6b7280; font-weight: 600; border-bottom: 1px solid #e5e7eb; padding: 4px 8px; }
+table.env td { border-bottom: 1px solid #f3f4f6; padding: 4px 8px; vertical-align: top; word-break: break-all; }
+table.env td.nowrap { white-space: nowrap; word-break: normal; }
+.affected { margin-top: 4px; font-size: 12.5px; }
+.affected > summary { cursor: pointer; color: #4b5563; }
 .recommendation {
   padding: 16px 20px 4px 20px;
   background: #f8fafc;
@@ -468,6 +486,46 @@ def _component_controls(issues: List[Dict], summary: Dict) -> str:
     )
 
 
+def _environment_html(results: Dict, timeline_limit: int = 40) -> str:
+    """Versions / images table and the latest changes, both collapsible"""
+    env = results.get("environment") or {}
+    components = env.get("components") or {}
+    blocks = []
+    if env.get("kubernetes_version") or env.get("cfk_version") or components:
+        facts = []
+        if env.get("kubernetes_version"):
+            facts.append(f"☸️ Kubernetes <strong>{_esc(env['kubernetes_version'])}</strong>")
+        if env.get("cfk_version") or env.get("operator_image_tag"):
+            facts.append(f"🤖 CFK operator <strong>{_esc(env.get('cfk_version', '?'))}</strong> "
+                         f"(image tag {_esc(env.get('operator_image_tag', '?'))})")
+        rows = "".join(
+            f"<tr><td>{_esc(name)}</td><td><code>{_esc(info.get('image', ''))}</code></td>"
+            f"<td><code>{_esc(info.get('init_image', ''))}</code></td></tr>"
+            for name, info in sorted(components.items())
+        )
+        table = (f'<table class="env"><tr><th>Component</th><th>Application image</th><th>Init image</th></tr>{rows}</table>'
+                 if rows else "")
+        blocks.append(f"""
+        <details class="panel" open>
+          <summary>🧭 Environment</summary>
+          <div class="facts">{" &nbsp;·&nbsp; ".join(facts)}</div>
+          {table}
+        </details>""")
+    timeline = results.get("timeline") or []
+    if timeline:
+        rows = "".join(
+            f"<tr><td class=\"nowrap\">{_esc(c['time'])}</td><td>{_esc(c['kind'])}/{_esc(c['name'])}</td>"
+            f"<td>{_esc(c['what'])}</td></tr>"
+            for c in timeline[:timeline_limit]
+        )
+        blocks.append(f"""
+        <details class="panel" open>
+          <summary>🕒 Recent changes <span class="label">newest first, {min(len(timeline), timeline_limit)} of {len(timeline)}: managedFields of the CRs / StatefulSets, pod (re)starts</span></summary>
+          <table class="env"><tr><th>Time (UTC)</th><th>Object</th><th>Change</th></tr>{rows}</table>
+        </details>""")
+    return "".join(blocks)
+
+
 def render(results: Dict, bundle_label: str = "") -> str:
     summary = results.get("summary", {})
     issues = results.get("issues", [])
@@ -528,6 +586,10 @@ def render(results: Dict, bundle_label: str = "") -> str:
                 msg = _esc(issue.get("message", ""))
                 for cause in issue.get("caused_by") or []:
                     msg += f"<br>&nbsp;&nbsp;↳ Caused by: {_esc(cause)}"
+                affected = issue.get("affected") or []
+                if len(affected) > 1 or (affected and issue.get("count", 1) > 1):
+                    msg += (f'<details class="affected"><summary>🔌 Affects {len(affected)} task(s)</summary>'
+                            f'<pre>{_esc(chr(10).join(affected))}</pre></details>')
                 context = issue.get("context")
                 context_block = ""
                 if context:
@@ -606,6 +668,7 @@ def render(results: Dict, bundle_label: str = "") -> str:
   <main>
     {verdict_html}
     {summary_html}
+    {_environment_html(results)}
     {controls_html}
     {body_html}
   </main>

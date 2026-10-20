@@ -86,6 +86,12 @@ class DataSanitizer:
         if 'metadata' in sanitized:
             sanitized['metadata'] = self.sanitize_dict(sanitized['metadata'])
 
+        if sanitized.get('environment'):
+            sanitized['environment'] = self.sanitize_dict(sanitized['environment'])
+
+        if sanitized.get('timeline'):
+            sanitized['timeline'] = [self.sanitize_dict(c) for c in sanitized['timeline']]
+
         if 'coverage' in sanitized:
             coverage = dict(sanitized['coverage'])
             coverage['unparsable_files'] = [self.sanitize_path(p) for p in coverage.get('unparsable_files', [])]
@@ -104,6 +110,9 @@ class DataSanitizer:
 
         if 'caused_by' in sanitized:
             sanitized['caused_by'] = [self.sanitize_text(c) for c in sanitized['caused_by']]
+
+        if sanitized.get('affected'):
+            sanitized['affected'] = [self.sanitize_text(a) for a in sanitized['affected']]
 
         if 'file' in sanitized:
             sanitized['file'] = self.sanitize_path(sanitized['file'])
