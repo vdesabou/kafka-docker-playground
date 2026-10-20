@@ -21,6 +21,8 @@ except ImportError:
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 
+import environment
+
 
 # Log files: foo.log, foo.txt, rotated foo.log.1 / foo.log.2026-10-12, and their .gz
 _TEXT_FILE_RE = re.compile(r'\.(?:log|txt|out)(?:\.[\w-]+)?(?:\.gz)?$|\.log\.gz$', re.IGNORECASE)
@@ -75,6 +77,15 @@ _NAME_KEYWORDS = (
     ('control-center', 'controlcenter'), ('restproxy', 'kafkarestproxy'), ('kafka-rest', 'kafkarestproxy'),
     ('operator', 'operator'), ('connect', 'connect'), ('replicator', 'connect'), ('kafka', 'kafka'),
 )
+# Conditions of the CFK CRs where False is the healthy value (False = not garbage collecting, config up to date…).
+# A False condition is reported only when True is the healthy value: *ready / *available / *healthy, or its
+# reason / message says something failed.
+_GOOD_WHEN_TRUE_RE = re.compile(r'ready|available|healthy|synced|reconciled|succeeded|running', re.IGNORECASE)
+_FAILURE_WORDS_RE = re.compile(r'fail|error|invalid|denied|unable|cannot|timeout', re.IGNORECASE)
+
+# Connect task / client of a log record, to list the connectors one root cause affects
+_TASK_RE = re.compile(r'(?:Task|Worker\w*Task|task)\{id=([^}]+)\}|connector-(?:producer|consumer|dlq-producer|adminclient)-([\w.-]+?)(?:-\d+)?[\],\s]')
+
 # pod name suffixes: statefulset ordinal (kafka-0), deployment hash (confluent-operator-7d9c8b6f5-x2x7k)
 _POD_SUFFIX_RES = (re.compile(r'-\d+$'), re.compile(r'-[a-z0-9]{6,10}-[a-z0-9]{5}$'))
 
@@ -88,6 +99,9 @@ class CFKBundleAnalyzer:
         self.issues = []
         self.issue_index = {}  # signature -> issue, for deduplication with occurrence counts
         self.component_index = {}  # pod / CR name -> (component, instance), filled while walking the bundle
+        self.environment = {'components': {}}  # versions and images, see environment.py
+        self.timeline = []  # changes (managedFields, pod restarts), newest first after the walk
+        self.jvm_truststores = {}  # CR name -> JVM default truststore flags of its configOverrides / envVars
         self.summary = {
             'total_issues': 0,
             'critical': 0,
@@ -128,6 +142,14 @@ class CFKBundleAnalyzer:
                 'pattern': r'no space left on device|disk.{0,20}full|KafkaStorageException|log director(?:y|ies).{0,60}offline|PersistentVolumeClaim.{0,80}pending',
                 'severity': 'critical',
                 'category': 'Storage Issues'
+            },
+            # the JVM default truststore (javax.net.ssl.trustStore) has no trusted certificate: a PKCS12 store
+            # read without javax.net.ssl.trustStorePassword, an empty or missing file. Before tls_handshake,
+            # it is also an SSLException.
+            'empty_truststore': {
+                'pattern': r'trustAnchors parameter must be non-empty|Keystore was tampered with, or password was incorrect|FileNotFoundException: \S*(?:truststore|keystore)\S*',
+                'severity': 'high',
+                'category': 'JVM Truststore Issues'
             },
             'tls_handshake': {
                 'pattern': r'SSLHandshakeException|SSLException|SSL handshake failed|PKIX path|unable to find valid certification path|certificate verify failed|x509:|tls: bad certificate|tls handshake (?:error|failure|timeout)|bad_certificate|certificate_unknown|handshake_failure|certificate (?:has )?expired',
@@ -345,6 +367,8 @@ class CFKBundleAnalyzer:
                     self.coverage['skipped_files'] += 1
                     continue
                 self._index_path(self._rel(file_path))
+                if file == 'cluster-details.txt':
+                    self._read_cluster_details(file_path)
                 if _YAML_FILE_RE.search(file):
                     if 'event' in file.lower():
                         self._analyze_event_file(file_path)
@@ -356,8 +380,15 @@ class CFKBundleAnalyzer:
                     self.coverage['skipped_files'] += 1
 
         # after the walk: events and shared pods.yaml may come before the CRs they refer to
+        self._check_environment()
+        self._check_jvm_truststores()
         for issue in self.issues:
             self._assign_component(issue)
+        for change in self.timeline:
+            found = self._lookup_name(change['name'])
+            if found:
+                change['component'], change['instance'] = found
+        self.timeline.sort(key=lambda c: c['time'], reverse=True)
 
         self.summary['analysis_time'] = (datetime.now() - start_time).total_seconds()
         self.summary['total_issues'] = len(self.issues)
@@ -369,6 +400,8 @@ class CFKBundleAnalyzer:
         return {
             'summary': self.summary,
             'coverage': self.coverage,
+            'environment': self.environment,
+            'timeline': self.timeline,
             'issues': sorted(
                 self.issues,
                 key=lambda x: (_SEVERITY_ORDER.get(x['severity'], 4), -x.get('count', 1)),
@@ -387,6 +420,10 @@ class CFKBundleAnalyzer:
     # request/thread IDs, line numbers — that should NOT cause distinct
     # log lines to be treated as different issues.
     _NORMALIZE_PATTERNS = [
+        # one issue per root cause, not per connector task / client
+        (re.compile(r'\{id=[^}]*\}'), '{id=<TASK>}'),
+        (re.compile(r'\b(clientId|groupId|client\.id|group\.id)=[^\],\s]+'), r'\1=<CLIENT>'),
+        (re.compile(r'connector-(?:producer|consumer|dlq-producer|adminclient)-[\w.-]+'), 'connector-<CLIENT>'),
         (re.compile(r'\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}[.,]?\d*Z?'), '<TS>'),
         (re.compile(r'\b\d{2}:\d{2}:\d{2}[.,]?\d*\b'), '<TS>'),
         (re.compile(r'\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b'), '<UUID>'),
@@ -409,11 +446,13 @@ class CFKBundleAnalyzer:
     def _add_issue(self, severity: str, category: str, message: str,
                    file_path: str, line_number: int = None, context: str = None,
                    caused_by: List[str] = None, count: int = 1, timestamp: str = None,
-                   dedupe_key: str = None, resource: str = None, resource_kind: str = None):
+                   dedupe_key: str = None, resource: str = None, resource_kind: str = None,
+                   affected: str = None):
         """Add an issue, or bump the occurrence count of an identical one.
 
         Identical means same category, same file (rotated logs of the same pod count
-        as the same file) and the same normalized message.
+        as the same file) and the same normalized message (connector task / client ids
+        removed, `affected` lists them).
         `resource` / `resource_kind` name the pod or CR the issue is about, to find its
         component when the file is shared (events, pods.yaml).
         """
@@ -425,6 +464,8 @@ class CFKBundleAnalyzer:
             existing['count'] = existing.get('count', 1) + count
             if _SEVERITY_ORDER[severity] < _SEVERITY_ORDER[existing['severity']]:
                 existing['severity'] = severity
+            if affected and affected not in existing.setdefault('affected', []):
+                existing['affected'].append(affected)
             return
 
         issue = {
@@ -444,6 +485,8 @@ class CFKBundleAnalyzer:
             issue['caused_by'] = caused_by
         if resource or resource_kind:
             issue['_resource'] = (resource_kind or '', resource or '')
+        if affected:
+            issue['affected'] = [affected]
 
         self.issue_index[signature] = issue
         self.issues.append(issue)
@@ -641,10 +684,12 @@ class CFKBundleAnalyzer:
                 severity, category = 'medium', 'Other Errors (Unclassified)'
             label = level.title()
 
+        task = _TASK_RE.search(head + ' ')
         context_lines = lines[max(0, line_num - 3):min(len(lines), line_num + 2)]
         self._add_issue(
             severity=severity,
             category=category,
+            affected=(task.group(1) or task.group(2)) if task else None,
             message=f"{label}: {head.strip()[:300]}",
             file_path=rel,
             line_number=line_num,
@@ -757,23 +802,135 @@ class CFKBundleAnalyzer:
         relative_path = self._rel(file_path)
 
         for obj in objects:
-            kind = obj.get('kind', '')
+            kind = obj.get('kind') or self._infer_kind(obj)
             api_version = str(obj.get('apiVersion', ''))
             metadata = obj.get('metadata') or {}
+            name = metadata.get('name') or ''
             if kind == 'Pod':
                 self.coverage['pods'] += 1
                 labels = metadata.get('labels') or {}
-                self._index_component(metadata.get('name'), str(labels.get('platform.confluent.io/type', '')).lower(),
+                self._index_component(name, str(labels.get('platform.confluent.io/type', '')).lower(),
                                       labels.get('app'))
                 self._check_pod_config(obj, relative_path)
+                self.timeline += environment.pod_changes(obj, name)
             elif kind == 'Event':
                 self._process_event(obj, file_path)
             elif api_version.startswith('platform.confluent.io/'):
                 self.coverage['custom_resources'] += 1
                 # a Connector belongs to its Connect cluster
                 cluster = ((obj.get('spec') or {}).get('connectClusterRef') or {}).get('name')
-                self._index_component(metadata.get('name'), _KIND_COMPONENT.get(kind.lower(), ''), cluster)
+                self._index_component(name, _KIND_COMPONENT.get(kind.lower(), ''), cluster)
                 self._check_confluent_component_config(obj, relative_path)
+                self.timeline += environment.managed_field_changes(obj, kind, name)
+                self._record_component_images(obj, name)
+                self._record_jvm_truststore(obj, kind, name, relative_path)
+            elif kind == 'StatefulSet':
+                self.timeline += environment.managed_field_changes(obj, kind, name)
+            elif kind == 'Deployment':
+                for container in ((obj.get('spec') or {}).get('template') or {}).get('spec', {}).get('containers') or []:
+                    if 'confluent-operator' in str(container.get('image', '')) or name == 'confluent-operator':
+                        self.environment.setdefault('operator_image_tag', environment.image_tag(container.get('image', '')))
+
+    @staticmethod
+    def _infer_kind(obj: Dict) -> str:
+        """`kubectl confluent support-bundle` writes pods/pod-<name>.yaml and sts/statefulset.yaml without kind"""
+        spec = obj.get('spec') or {}
+        if not isinstance(spec, dict):
+            return ''
+        if isinstance(spec.get('containers'), list):
+            return 'Pod'
+        if spec.get('serviceName') is not None and isinstance(spec.get('template'), dict):
+            return 'StatefulSet'
+        if isinstance(spec.get('template'), dict) and spec.get('selector') is not None:
+            return 'Deployment'
+        return ''
+
+    # ── Environment: versions, compatibility, JVM truststore ─────────────
+
+    def _read_cluster_details(self, file_path: str):
+        try:
+            with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
+                details = environment.parse_cluster_details(f.read())
+        except OSError:
+            return
+        components = details.pop('components', {})
+        self.environment.update(details)
+        for name, images in components.items():
+            self.environment['components'].setdefault(name, {}).update(images)
+
+    def _record_component_images(self, obj: Dict, name: str):
+        image = (obj.get('spec') or {}).get('image') or {}
+        if not isinstance(image, dict) or not name or not (image.get('application') or image.get('init')):
+            return
+        entry = self.environment['components'].setdefault(name, {})
+        entry.setdefault('kind', obj.get('kind'))
+        if image.get('application'):
+            entry.setdefault('image', image['application'])
+        if image.get('init'):
+            entry.setdefault('init_image', image['init'])
+
+    def _check_environment(self):
+        env = self.environment
+        release = environment.operator_release(env.get('operator_image_tag', '')) or \
+            environment.operator_release(env.get('crd_version', ''))
+        if release:
+            env['cfk_version'] = release
+        source = 'cluster-details.txt' if env.get('kubernetes_version') else 'cluster-resources'
+        for finding in environment.compatibility_findings(env):
+            instance = finding.get('instance')
+            self._add_issue(
+                severity=finding['severity'],
+                category='Compatibility',
+                message=finding['message'],
+                file_path=source,
+                resource=instance or 'confluent-operator',
+            )
+
+    def _record_jvm_truststore(self, obj: Dict, kind: str, name: str, file_path: str):
+        """JVM flags of the CR (configOverrides.jvm, KAFKA_OPTS / JAVA_TOOL_OPTIONS env vars) for the default truststore"""
+        spec = obj.get('spec') or {}
+        flags = [str(f) for f in ((spec.get('configOverrides') or {}).get('jvm') or [])]
+        for env_var in ((spec.get('podTemplate') or {}).get('envVars') or []):
+            if isinstance(env_var, dict) and env_var.get('name') in ('KAFKA_OPTS', 'JAVA_TOOL_OPTIONS', 'KAFKA_JVM_PERFORMANCE_OPTS'):
+                flags += str(env_var.get('value', '')).split()
+        store = next((f.split('=', 1)[1] for f in flags if f.startswith('-Djavax.net.ssl.trustStore=')), None)
+        if store is None:
+            return
+        self.jvm_truststores[name] = {
+            'kind': kind, 'file': file_path, 'store': store,
+            'password': any(f.startswith('-Djavax.net.ssl.trustStorePassword=') for f in flags),
+            'type': next((f.split('=', 1)[1] for f in flags if f.startswith('-Djavax.net.ssl.trustStoreType=')), None),
+        }
+
+    def _check_jvm_truststores(self):
+        """A JVM default truststore set without its password is empty when the store is PKCS12 (keytool default,
+        whatever the file extension): every TLS client using the default SSLContext (AWS SDK, HTTP connectors,
+        JDBC drivers…) then fails with `trustAnchors parameter must be non-empty`."""
+        log_errors = {}
+        for issue in self.issues:
+            if issue['category'] == 'JVM Truststore Issues' and 'trustanchors' in issue['message'].lower() + \
+                    ' '.join(issue.get('caused_by') or []).lower():
+                found = self._component_from_path(issue['file'])
+                if found and found[1]:
+                    log_errors[found[1]] = log_errors.get(found[1], 0) + issue.get('count', 1)
+        with_password = sorted(n for n, t in self.jvm_truststores.items() if t['password'])
+        for name, truststore in sorted(self.jvm_truststores.items()):
+            if truststore['password'] or (truststore['type'] or '').upper() == 'JKS':
+                continue
+            message = (f"{truststore['kind']}/{name} sets -Djavax.net.ssl.trustStore={truststore['store']} without "
+                       f"-Djavax.net.ssl.trustStorePassword (nor trustStoreType=JKS). A PKCS12 store, the keytool default "
+                       f"whatever the file extension, then loads with 0 trusted certificates in the JVM default SSLContext")
+            if with_password:
+                message += f". {', '.join(with_password)} set the password"
+            if log_errors.get(name):
+                message += f". Matches the {log_errors[name]} 'trustAnchors parameter must be non-empty' errors of its logs"
+            self._add_issue(
+                severity='high' if log_errors.get(name) else 'medium',
+                category='JVM Truststore Issues',
+                message=message,
+                file_path=truststore['file'],
+                resource=name, resource_kind=truststore['kind'],
+            )
 
     def _check_pod_config(self, pod: Dict, file_path: str):
         """Check pod status for issues"""
@@ -939,7 +1096,9 @@ class CFKBundleAnalyzer:
             if not isinstance(condition, dict):
                 continue
             condition_type = condition.get('type', '')
-            if condition.get('status') == 'False' and 'progressing' not in condition_type.lower():
+            text = f"{condition.get('reason', '')} {condition.get('message', '')}"
+            bad_when_false = _GOOD_WHEN_TRUE_RE.search(condition_type) or _FAILURE_WORDS_RE.search(text)
+            if condition.get('status') == 'False' and bad_when_false and 'progressing' not in condition_type.lower():
                 self._add_issue(
                     severity='medium',
                     category='Component Status',

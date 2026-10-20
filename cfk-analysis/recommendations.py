@@ -52,6 +52,40 @@ RECOMMENDATIONS: Dict[str, Dict[str, object]] = {
         ],
         "docs": "https://docs.confluent.io/operator/current/co-network-encryption.html",
     },
+    "JVM Truststore Issues": {
+        "summary": "The JVM default truststore (-Djavax.net.ssl.trustStore) has no trusted certificate, or cannot be read. "
+                   "Kafka clients use their own ssl.truststore.* settings and keep working; everything that uses the "
+                   "JVM default SSLContext (AWS SDK of the S3 / SQS / Kinesis connectors, HTTP connectors, JDBC "
+                   "drivers, MDS client…) fails with 'the trustAnchors parameter must be non-empty'.",
+        "steps": [
+            "Read the JVM flags of the CR: kubectl -n <ns> get <kind> <name> -o jsonpath='{.spec.configOverrides.jvm}' "
+            "(and spec.podTemplate.envVars KAFKA_OPTS / JAVA_TOOL_OPTIONS).",
+            "Check the store in the pod: kubectl -n <ns> exec <pod> -- keytool -list -keystore <path> < /dev/null — "
+            "'Keystore type: PKCS12' with 'Your keystore contains 0 entries' means the store needs its password.",
+            "Add -Djavax.net.ssl.trustStorePassword=<password> (and -Djavax.net.ssl.trustStoreType=PKCS12) to "
+            "spec.configOverrides.jvm, or point -Djavax.net.ssl.trustStore at a JKS store. Mount the password "
+            "from a secret rather than writing it in the CR.",
+            "The store must also hold the CAs of the external endpoints (Amazon Root CA for AWS, public CAs for "
+            "SaaS APIs), not only the CA of the Kafka cluster: else the next error is 'PKIX path building failed'.",
+            "'Keystore was tampered with, or password was incorrect': the password does not match the store. "
+            "FileNotFoundException: the file is not mounted at that path (secret / Vault injection).",
+            "CFK rolls the pods when the CR changes; check the new pods start with the flags "
+            "(kubectl -n <ns> get cm <name>-shared-config -o yaml, jvm.config).",
+        ],
+        "docs": "https://docs.confluent.io/operator/current/co-configure-overview.html",
+    },
+    "Compatibility": {
+        "summary": "A version in the bundle is outside the support matrix of the CFK version that manages it.",
+        "steps": [
+            "Kubernetes / OpenShift outside the CFK range: upgrade CFK to a release that supports it "
+            "(release notes list the range of each patch release) or roll back the cluster upgrade.",
+            "Confluent Platform / Control Center version outside the CFK range: upgrade CFK first, then the component.",
+            "confluent-init-container on another version than the operator: set spec.image.init of every CR to the "
+            "operator version (kubectl confluent cluster list-crd gives the installed CFK version).",
+            "Mixed Confluent Platform versions across components are only expected during an upgrade; plan to align them.",
+        ],
+        "docs": "https://docs.confluent.io/operator/current/co-supported-environments.html",
+    },
     "Authentication Issues": {
         "summary": "SASL/OAuth/Basic auth is being rejected.",
         "steps": [

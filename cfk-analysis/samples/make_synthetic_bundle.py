@@ -10,6 +10,8 @@ folders with their CR and logs, operator logs) that tells one story:
 - connect-0 was OOMKilled and restarted 6 times; the connector `orders-sink` has a FAILED task
 - schemaregistry-0 cannot authenticate to Kafka (SaslAuthenticationException)
 - the operator logs reconcile errors for the Kafka CR, which stays PROVISIONING with 2/3 ready replicas
+- cluster-details.txt (Kubernetes / CFK versions, images) and a `kubectl edit` of the Kafka CR the evening before,
+  for the Environment and Recent changes sections (supported versions: no Compatibility issue)
 
 The tarball is deterministic (sorted entries, fixed mtimes, gzip without timestamp): regenerating it gives the same bytes.
 
@@ -102,11 +104,49 @@ FILES[f"{NS}/cluster-resources/pods.yaml"] = "apiVersion: v1\nkind: List\nitems:
     pod("schemaregistry-0", "schemaregistry", False, 0, image="confluentinc/cp-schema-registry:8.1.0"),
 ])
 
+FILES[f"{NS}/cluster-details.txt"] = """buildDate: "2026-08-12T10:01:22Z"
+gitVersion: v1.33.4
+major: "1"
+minor: "33"
+platform: linux/amd64
+
+Operator Version: 0.1351.24
+
+kafka:
+ Application Image: confluentinc/cp-server:8.1.0
+ Init Image: confluentinc/confluent-init-container:3.1.0
+
+connect:
+ Application Image: confluentinc/cp-server-connect:8.1.0
+ Init Image: confluentinc/confluent-init-container:3.1.0
+
+schemaregistry:
+ Application Image: confluentinc/cp-schema-registry:8.1.0
+ Init Image: confluentinc/confluent-init-container:3.1.0
+
+CRD Name                                           || app-version          || chart-version
+kafkas.platform.confluent.io                       || 3.1.0                || v0.1351.24
+"""
+
 FILES[f"{NS}/kafka/kafka.yaml"] = f"""apiVersion: platform.confluent.io/v1beta1
 kind: Kafka
 metadata:
   name: kafka
   namespace: {NS}
+  managedFields:
+  - manager: kubectl-edit
+    operation: Update
+    apiVersion: platform.confluent.io/v1beta1
+    time: "2026-10-13T18:42:10Z"
+    fieldsType: FieldsV1
+    fieldsV1: {{f:spec: {{f:tls: {{}}, f:podTemplate: {{}}}}}}
+  - manager: manager
+    operation: Update
+    apiVersion: platform.confluent.io/v1beta1
+    subresource: status
+    time: "2026-10-14T08:01:00Z"
+    fieldsType: FieldsV1
+    fieldsV1: {{f:status: {{}}}}
 spec:
   replicas: 3
   image: {{application: confluentinc/cp-server:8.1.0, init: confluentinc/confluent-init-container:3.1.0}}
@@ -121,6 +161,11 @@ status:
     reason: StatefulSetNotReady
     message: 'statefulset kafka: 2/3 replicas ready'
     lastTransitionTime: "2026-10-14T08:01:00Z"
+  - type: platform.confluent.io/garbage-collecting
+    status: "False"
+    reason: Garbage Collection not triggered
+    message: Cluster is not being garbage collected
+    lastTransitionTime: "2026-10-01T08:00:00Z"
 """
 
 FILES[f"{NS}/connect/connect.yaml"] = f"""apiVersion: platform.confluent.io/v1beta1
