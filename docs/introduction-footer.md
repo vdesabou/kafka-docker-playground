@@ -34,11 +34,53 @@ Find the example closest to your case, then run it with the Confluent Platform a
 
 <video src="videos/find-example.mp4" autoplay loop muted playsinline controls width="100%"></video>
 
+#### **🕹️ Run menu**
+
+Prefer menus to flags? `playground run` lets you pick an example and its options (versions, environment, connector zip...), and shows the matching command.
+
+<video src="videos/run-menu.mp4" autoplay loop muted playsinline controls width="100%"></video>
+
+#### **🔐 Secrets**
+
+[Check](/playground%20secrets%20check) which credentials an example needs, and [store](/playground%20secrets%20set) them once for all your runs.
+
+<video src="videos/secrets.mp4" autoplay loop muted playsinline controls width="100%"></video>
+
+#### **📨 Topics**
+
+[Produce](/playground%20topic%20produce) realistic records from a schema (Avro, JSON Schema, Protobuf or plain JSON) and [consume](/playground%20topic%20consume) them back.
+
+<video src="videos/topic.mp4" autoplay loop muted playsinline controls width="100%"></video>
+
 #### **🩺 Diagnose**
 
 A connector stopped working: status, error digest with the root cause, progress and next steps, in one command.
 
 <video src="videos/diagnose.mp4" autoplay loop muted playsinline controls width="100%"></video>
+
+#### **🐢 Show lag**
+
+Is the sink catching up, standing still or falling behind? [Watch](/playground%20connector%20show-lag) its consumer lag until it reaches 0.
+
+<video src="videos/show-lag.mp4" autoplay loop muted playsinline controls width="100%"></video>
+
+#### **📜 Logs**
+
+Turn on [DEBUG](/playground%20connector%20log-level) for a connector, then [wait for](/playground%20connector%20logs) the log line you are looking for (here the SQL the JDBC sink runs).
+
+<video src="videos/logs.mp4" autoplay loop muted playsinline controls width="100%"></video>
+
+#### **🧑‍💻 Source code**
+
+Read the [source code](/playground%20connector-plugin%20sourcecode) of a connector at the exact version you run, compare two versions, or check it out locally.
+
+<video src="videos/sourcecode.mp4" autoplay loop muted playsinline controls width="100%"></video>
+
+#### **✅ Validate & diff**
+
+A customer sent their config: validate it without creating anything, then see how it differs from the connector of the example.
+
+<video src="videos/validate-diff.mp4" autoplay loop muted playsinline controls width="100%"></video>
 
 #### **👷 Repro model**
 
@@ -46,17 +88,17 @@ Turn an example into a reproduction model of your own issue, ready to edit and r
 
 <video src="videos/repro-bootstrap.mp4" autoplay loop muted playsinline controls width="100%"></video>
 
+#### **🔗 Pipeline**
+
+Chain a source example and a sink example on the same topic in a single [reproduction model](/reusables).
+
+<video src="videos/repro-pipeline.mp4" autoplay loop muted playsinline controls width="100%"></video>
+
 #### **📈 Benchmark**
 
 [Benchmark](/reusables?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector) the throughput of a connector (and compare versions), with a flight recording that says where the time went.
 
 <video src="videos/benchmark.mp4" autoplay loop muted playsinline controls width="100%"></video>
-
-#### **🤖 Claude Code**
-
-Ask [Claude Code](/claude-code) in plain language: it checks the connector with the playground CLI and explains the root cause and the fix.
-
-<video src="videos/claude-code.mp4" autoplay loop muted playsinline controls width="100%"></video>
 
 #### **🔬 Analyze**
 
@@ -64,7 +106,15 @@ Digest thread dumps, GC logs, heap dumps, flight recordings, CFK bundles or Orac
 
 <video src="videos/analyze.mp4" autoplay loop muted playsinline controls width="100%"></video>
 
+#### **🤖 Claude Code**
+
+Ask [Claude Code](/claude-code) in plain language: it checks the connector with the playground CLI and explains the root cause and the fix.
+
+<video src="videos/claude-code.mp4" autoplay loop muted playsinline controls width="100%"></video>
+
 <!-- tabs:end -->
+
+🎬 Want the explanation too? The **[Bite size sessions](/sessions.md)** are 2–3 minute narrated walkthroughs of one command, from the symptom to the HTML report.
 
 ## 🏁 Getting Started
 
