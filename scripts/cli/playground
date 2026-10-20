@@ -242,6 +242,8 @@ playground_usage() {
   printf "  %s   👥 Consumer group commands\n" "$(green "consumer-group")                            "
   printf "  %s   👥 List consumer groups\n" "$(green "consumer-group list")                       "
   printf "  %s   🔬 Describe consumer group\n" "$(green "consumer-group describe")                   "
+  printf "  %s   ⏪ Reset the committed offsets of a consumer group\n" "$(green "consumer-group reset-offsets")              "
+  printf "  %s   🗑️ Delete a consumer group, or its offsets for one topic\n" "$(green "consumer-group delete")                     "
   echo
   printf "%s\n" "$(bold "RBAC commands:")"
   printf "  %s   🛡️ RBAC commands (rbac-sasl-plain and cfk-rbac environments, plus Confluent Cloud ACLs)\n" "$(green "rbac")                                      "
@@ -10008,7 +10010,7 @@ playground_topic_tag_search_usage() {
 playground_consumer_group_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground consumer-group\n\n"
-    printf "  👥 Consumer group commands\n  \n  Inspect any consumer group (not only the ones of sink connectors): which\n  groups exist, their state and members, and the committed offsets and lag\n  per partition. Works on plaintext, secured environments, cfk and\n  Confluent Cloud.\n  \n    list       consumer groups, optionally with their state\n    describe   committed offsets and lag, or --state, or --members\n  \n  🎓 Tip: for a sink connector, 'playground connector show-lag' follows the\n  lag until it reaches 0.\n\n"
+    printf "  👥 Consumer group commands\n  \n  Inspect any consumer group (not only the ones of sink connectors): which\n  groups exist, their state and members, and the committed offsets and lag\n  per partition. Works on plaintext, secured environments, cfk and\n  Confluent Cloud.\n  \n    list            consumer groups, optionally with their state\n    describe        committed offsets and lag, or --state, or --members\n    reset-offsets   rewind or fast-forward a group (earliest, latest,\n  datetime...)\n    delete          delete a group, or its offsets for one topic\n  \n  🎓 Tip: for a sink connector, 'playground connector show-lag' follows the\n  lag until it reaches 0.\n\n"
   else
     printf "playground consumer-group - 👥 Consumer group commands\n\n"
   fi
@@ -10019,8 +10021,10 @@ playground_consumer_group_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "Topic commands:")"
-  printf "  %s   👥 List consumer groups\n" "$(green "list")    "
-  printf "  %s   🔬 Describe consumer group\n" "$(green "describe")"
+  printf "  %s   👥 List consumer groups\n" "$(green "list")         "
+  printf "  %s   🔬 Describe consumer group\n" "$(green "describe")     "
+  printf "  %s   ⏪ Reset the committed offsets of a consumer group\n" "$(green "reset-offsets")"
+  printf "  %s   🗑️ Delete a consumer group, or its offsets for one topic\n" "$(green "delete")       "
   echo
 
   # :command.long_usage
@@ -10125,6 +10129,140 @@ playground_consumer_group_describe_usage() {
     printf "  playground consumer-group describe --group connect-http-sink\n"
     printf "  playground consumer-group describe --group my-app --members\n"
     printf "  playground consumer-group describe --group my-app --state\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_consumer_group_reset_offsets_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground consumer-group reset-offsets\n\n"
+    printf "  ⏪ Reset the committed offsets of a consumer group\n  \n  Wraps kafka-consumer-groups --reset-offsets: set exactly one of\n  --to-earliest, --to-latest, --to-offset, --to-datetime, --shift-by\n  or --by-duration. All the topics of the group are reset, unless\n  --topic is set (topic, or topic:partition[,partition]).\n  \n  The offsets are changed right away (kafka-consumer-groups --execute):\n  use --dry-run to only see the new offsets. The group must have no\n  active member.\n  \n  🎓 Tip: for a sink connector (group connect-<connector>), use\n  'playground connector offsets reset|alter', which stops and resumes\n  the connector for you.\n\n"
+  else
+    printf "playground consumer-group reset-offsets - ⏪ Reset the committed offsets of a consumer group\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground consumer-group reset-offsets [OPTIONS]\n"
+  printf "  playground consumer-group reset-offsets --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--group, -g GROUP (required)")"
+    printf "    👥 Consumer group name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
+    printf "    🗳 Topic to reset (topic, or topic:partition[,partition])\n    \n    ℹ️ If not set, all the topics of the group are reset\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--to-earliest")"
+    printf "    ⏮️ Reset to the earliest offset\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--to-latest")"
+    printf "    ⏭️ Reset to the latest offset (skip everything that is in the topic)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--to-offset OFFSET")"
+    printf "    📍 Reset to this offset\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--to-datetime DATETIME")"
+    printf "    📅 Reset to the first offset at or after this date (YYYY-MM-DDTHH:mm:SS.sss,\n    e.g. 2026-10-20T08:00:00.000)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--shift-by SHIFT")"
+    printf "    ↔️ Move the offsets by this number of records (negative to go back, e.g.\n    -100)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--by-duration DURATION")"
+    printf "    ⏱️ Reset to the offsets of this long ago (ISO-8601 duration, e.g. PT1H for\n    one hour ago, P1D for one day)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--dry-run")"
+    printf "    🧪 Only display the new offsets, do not change them\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground consumer-group reset-offsets --group my-app --to-earliest\n"
+    printf "  playground consumer-group reset-offsets --group my-app --topic orders\n  --shift-by -100 --dry-run\n"
+    printf "  playground consumer-group reset-offsets --group my-app --to-datetime\n  2026-10-20T08:00:00.000\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_consumer_group_delete_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground consumer-group delete\n\n"
+    printf "  🗑️ Delete a consumer group, or its offsets for one topic\n  \n  Wraps kafka-consumer-groups --delete. With --topic, only the\n  committed offsets of that topic are deleted (--delete-offsets), the\n  group keeps its other offsets.\n  \n  The group must have no active member: for a sink connector, stop or\n  delete the connector first.\n\n"
+  else
+    printf "playground consumer-group delete - 🗑️ Delete a consumer group, or its offsets for one topic\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground consumer-group delete [OPTIONS]\n"
+  printf "  playground consumer-group delete --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--group, -g GROUP (required)")"
+    printf "    👥 Consumer group name\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
+    printf "    🗳 Only delete the committed offsets of this topic\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground consumer-group delete --group my-app\n"
+    printf "  playground consumer-group delete --group my-app --topic orders\n"
     echo
 
   fi
@@ -47391,6 +47529,135 @@ playground_consumer_group_describe_command() {
 }
 
 # :command.function
+playground_consumer_group_reset_offsets_command() {
+
+  # src/commands/consumer-group/reset-offsets.sh
+  group="${args[--group]}"
+  topic="${args[--topic]}"
+  to_earliest="${args[--to-earliest]}"
+  to_latest="${args[--to-latest]}"
+  to_offset="${args[--to-offset]}"
+  to_datetime="${args[--to-datetime]}"
+  shift_by="${args[--shift-by]}"
+  by_duration="${args[--by-duration]}"
+  dry_run="${args[--dry-run]}"
+  verbose="${args[--verbose]}"
+
+  reset_args=()
+  nb_specs=0
+  [[ -n "$to_earliest" ]] && { reset_args+=(--to-earliest); nb_specs=$((nb_specs+1)); description="to earliest"; }
+  [[ -n "$to_latest" ]] && { reset_args+=(--to-latest); nb_specs=$((nb_specs+1)); description="to latest"; }
+  [[ -n "$to_offset" ]] && { reset_args+=(--to-offset "$to_offset"); nb_specs=$((nb_specs+1)); description="to offset $to_offset"; }
+  [[ -n "$to_datetime" ]] && { reset_args+=(--to-datetime "$to_datetime"); nb_specs=$((nb_specs+1)); description="to datetime $to_datetime"; }
+  [[ -n "$shift_by" ]] && { reset_args+=(--shift-by "$shift_by"); nb_specs=$((nb_specs+1)); description="shifted by $shift_by"; }
+  [[ -n "$by_duration" ]] && { reset_args+=(--by-duration "$by_duration"); nb_specs=$((nb_specs+1)); description="by duration $by_duration"; }
+  if [ $nb_specs -ne 1 ]
+  then
+      logerror "❌ set exactly one of --to-earliest, --to-latest, --to-offset, --to-datetime, --shift-by, --by-duration"
+      exit 1
+  fi
+
+  if [[ -n "$topic" ]]
+  then
+      reset_args+=(--topic "$topic")
+      scope="topic $topic"
+  else
+      reset_args+=(--all-topics)
+      scope="all its topics"
+  fi
+
+  if [[ -n "$dry_run" ]]
+  then
+      reset_args+=(--dry-run)
+      log "🧪 Dry run: offsets of consumer group $group on $scope $description"
+  else
+      reset_args+=(--execute)
+      log "⏪ Resetting offsets of consumer group $group on $scope $description"
+  fi
+
+  output=$(run_kafka_admin_tool kafka-consumer-groups --reset-offsets --group "$group" "${reset_args[@]}" 2>&1) || true
+
+  # kafka-consumer-groups exits 0 on errors such as an active group, detect them from the output
+  error=$(echo "$output" | grep -m1 -E "^Error: |inactive|does not exist" || true)
+  if [ -n "$error" ]
+  then
+      logerror "❌ Failed to reset offsets of consumer group $group: ${error#Error: }"
+      if echo "$output" | grep -q "inactive"
+      then
+          connector_name="${group#connect-}"
+          if [ "$connector_name" != "$group" ]
+          then
+              logerror "   $group is the group of sink connector $connector_name: use playground connector offsets reset|alter --connector $connector_name, it stops and resumes the connector for you"
+          else
+              logerror "   the group must have no active member: stop its consumers first (playground consumer-group describe --group $group --members)"
+          fi
+      fi
+      exit 1
+  fi
+  echo "$output" | grep -v "^$"
+  if [ $(echo "$output" | grep -v "^$" | grep -vc "^GROUP ") -eq 0 ]
+  then
+      if [[ -n "$topic" ]]
+      then
+          logwarn "⚠️ nothing to reset: topic $topic does not exist or has no partition"
+      else
+          logwarn "⚠️ nothing to reset: group $group has no committed offset (unknown group?). Use --topic to set the offsets of a new group"
+      fi
+      exit 1
+  fi
+
+  if [[ -n "$dry_run" ]]
+  then
+      log "🧪 Nothing was changed, run again without --dry-run to apply"
+  else
+      log "✅ Offsets of consumer group $group reset"
+  fi
+
+}
+
+# :command.function
+playground_consumer_group_delete_command() {
+
+  # src/commands/consumer-group/delete.sh
+  group="${args[--group]}"
+  topic="${args[--topic]}"
+  verbose="${args[--verbose]}"
+
+  if [[ -n "$topic" ]]
+  then
+      log "🧹 Deleting committed offsets of consumer group $group for topic $topic"
+      delete_args=(--delete-offsets --group "$group" --topic "$topic")
+  else
+      log "🗑️ Deleting consumer group $group"
+      delete_args=(--delete --group "$group")
+  fi
+
+  output=$(run_kafka_admin_tool kafka-consumer-groups "${delete_args[@]}" 2>&1) || true
+
+  # kafka-consumer-groups exits 0 on errors such as an unknown or non-empty group, detect them from the output
+  error=$(echo "$output" | grep -m1 -E "^Error: |Error: Deletion|GroupNotEmptyException|GroupIdNotFoundException|does not exist|is not empty|failed" || true)
+  if [ -n "$error" ]
+  then
+      logerror "❌ Failed to delete: ${error#Error: }"
+      echo "$output" | grep -v "^$" | grep -vF "$error" || true
+      if echo "$output" | grep -qE "NonEmpty|not empty|GroupNotEmpty"
+      then
+          connector_name="${group#connect-}"
+          if [ "$connector_name" != "$group" ]
+          then
+              logerror "   $group is the group of sink connector $connector_name: stop or delete the connector first (playground connector stop|delete --connector $connector_name)"
+          else
+              logerror "   the group still has active members: stop its consumers first (playground consumer-group describe --group $group --members)"
+          fi
+      fi
+      exit 1
+  fi
+  echo "$output" | grep -v "^$"
+  log "✅ Done"
+
+}
+
+# :command.function
 playground_rbac_role_binding_create_command() {
 
   # src/commands/rbac/role-binding/create.sh
@@ -81011,6 +81278,20 @@ playground_consumer_group_parse_requirements() {
       shift $#
       ;;
 
+    reset-offsets)
+      action="reset-offsets"
+      shift
+      playground_consumer_group_reset_offsets_parse_requirements "$@"
+      shift $#
+      ;;
+
+    delete)
+      action="delete"
+      shift
+      playground_consumer_group_delete_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_consumer_group_usage >&2
@@ -81236,6 +81517,298 @@ playground_consumer_group_describe_parse_requirements() {
 
     esac
   done
+
+}
+
+# :command.parse_requirements
+playground_consumer_group_reset_offsets_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_consumer_group_reset_offsets_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="consumer-group reset-offsets"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --group | -g)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--group']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--group requires an argument: --group, -g GROUP" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --to-earliest)
+
+        # :flag.case_no_arg
+        args['--to-earliest']=1
+        shift
+        ;;
+
+      # :flag.case
+      --to-latest)
+
+        # :flag.case_no_arg
+        args['--to-latest']=1
+        shift
+        ;;
+
+      # :flag.case
+      --to-offset)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--to-offset']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--to-offset requires an argument: --to-offset OFFSET" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --to-datetime)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--to-datetime']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--to-datetime requires an argument: --to-datetime DATETIME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --shift-by)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--shift-by']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--shift-by requires an argument: --shift-by SHIFT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --by-duration)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--by-duration']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--by-duration requires an argument: --by-duration DURATION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --dry-run)
+
+        # :flag.case_no_arg
+        args['--dry-run']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--group']+x} ]]; then
+    printf "missing required flag: --group, -g GROUP\n" >&2
+    exit 1
+  fi
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--to-offset'] ]]; then
+    validation_output="$(validate_integer "${args['--to-offset']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--to-offset OFFSET" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_consumer_group_delete_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_consumer_group_delete_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="consumer-group delete"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --group | -g)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--group']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--group requires an argument: --group, -g GROUP" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--group']+x} ]]; then
+    printf "missing required flag: --group, -g GROUP\n" >&2
+    exit 1
+  fi
 
 }
 
@@ -101499,6 +102072,16 @@ playground_consumer_group_completion() {
         playground_consumer_group_describe_completion "$completion_current" "$@"
         return
         ;;
+      reset-offsets)
+        shift
+        playground_consumer_group_reset_offsets_completion "$completion_current" "$@"
+        return
+        ;;
+      delete)
+        shift
+        playground_consumer_group_delete_completion "$completion_current" "$@"
+        return
+        ;;
       --help | -h)
         completion_blocked_flags["--help"]=1
         shift
@@ -101508,7 +102091,7 @@ playground_consumer_group_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" list describe
+  completion_candidates "$completion_current" list describe reset-offsets delete
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -101601,6 +102184,182 @@ playground_consumer_group_describe_completion() {
     completion_flag_candidates --group "$completion_current" --group -g
     completion_flag_candidates --state "$completion_current" --state
     completion_flag_candidates --members "$completion_current" --members
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_consumer_group_reset_offsets_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --group | -g)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-consumer-group-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--group"]=1
+
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --to-earliest)
+        completion_blocked_flags["--to-earliest"]=1
+
+        shift
+        ;;
+      --to-latest)
+        completion_blocked_flags["--to-latest"]=1
+
+        shift
+        ;;
+      --to-offset)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--to-offset"]=1
+
+        ;;
+      --to-datetime)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--to-datetime"]=1
+
+        ;;
+      --shift-by)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--shift-by"]=1
+
+        ;;
+      --by-duration)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--by-duration"]=1
+
+        ;;
+      --dry-run)
+        completion_blocked_flags["--dry-run"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --group "$completion_current" --group -g
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --to-earliest "$completion_current" --to-earliest
+    completion_flag_candidates --to-latest "$completion_current" --to-latest
+    completion_flag_candidates --to-offset "$completion_current" --to-offset
+    completion_flag_candidates --to-datetime "$completion_current" --to-datetime
+    completion_flag_candidates --shift-by "$completion_current" --shift-by
+    completion_flag_candidates --by-duration "$completion_current" --by-duration
+    completion_flag_candidates --dry-run "$completion_current" --dry-run
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_consumer_group_delete_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --group | -g)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-consumer-group-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--group"]=1
+
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --group "$completion_current" --group -g
+    completion_flag_candidates --topic "$completion_current" --topic -t
     completion_flag_candidates --verbose "$completion_current" --verbose -v
   fi
 
@@ -106277,6 +107036,8 @@ run() {
     "consumer-group") playground_consumer_group_command ;;
     "consumer-group list") playground_consumer_group_list_command ;;
     "consumer-group describe") playground_consumer_group_describe_command ;;
+    "consumer-group reset-offsets") playground_consumer_group_reset_offsets_command ;;
+    "consumer-group delete") playground_consumer_group_delete_command ;;
     "rbac") playground_rbac_command ;;
     "rbac role-binding") playground_rbac_role_binding_command ;;
     "rbac role-binding create") playground_rbac_role_binding_create_command ;;
