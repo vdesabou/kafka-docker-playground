@@ -1,0 +1,12 @@
+==========================
+null
+==========================
+🔘 file
+
+Destination filename. If not specified, the standard output will be used
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: false
+

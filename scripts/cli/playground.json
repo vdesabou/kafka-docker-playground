@@ -3122,7 +3122,7 @@
     },
     {
       "name": "topic",
-      "description": "🗳 Topic commands\n\nProduce, consume and manage topics without dealing with the kafka-* shell\nscripts: the bootstrap server, the security properties and the schema\nregistry url are all derived from the running environment, so the same\ncommand works on plaintext, on sasl-ssl and on Confluent Cloud.\n\n📤 Get data in\n  produce         generate records from a schema, or from your own data\n  create          create a topic with the partitions you need\n\n📥 Get data out\n  consume         read from the beginning, deserialising automatically\n  get-number-records   count what is in the topic\n  wait-for-records     wait until the topic contains N records\n  get-offsets          earliest and latest offsets per partition\n  display-consumer-offsets   read the internal offsets topic\n\n🔧 Manage\n  list / describe / alter / delete\n  set-schema-compatibility   compatibility of the topic subjects\n  tag             stream catalog tags (Confluent Cloud only)\n\nSerialisation is handled for you: 'produce' registers the schema you give\nit and 'consume' works out from the payload whether it is avro, protobuf,\njson schema or plain text.\n\n🎓 Tip: in an example script, 'consume --min-expected-messages N' is the\nassertion that the data made it through; it fails the run if it did not.",
+      "description": "🗳 Topic commands\n\nProduce, consume and manage topics without dealing with the kafka-* shell\nscripts: the bootstrap server, the security properties and the schema\nregistry url are all derived from the running environment, so the same\ncommand works on plaintext, on sasl-ssl and on Confluent Cloud.\n\n📤 Get data in\n  produce         generate records from a schema, or from your own data\n  create          create a topic with the partitions you need\n\n📥 Get data out\n  consume         read from the beginning, deserialising automatically\n  get-number-records   count what is in the topic\n  wait-for-records     wait until the topic contains N records\n  get-offsets          earliest and latest offsets per partition\n  display-consumer-offsets   read the internal offsets topic\n\n🔧 Manage\n  list / describe / alter / delete\n  dlq inspect / replay   dead letter queue grouped by error, and replay\n  set-schema-compatibility   compatibility of the topic subjects\n  tag             stream catalog tags (Confluent Cloud only)\n\nSerialisation is handled for you: 'produce' registers the schema you give\nit and 'consume' works out from the payload whether it is avro, protobuf,\njson schema or plain text.\n\n🎓 Tip: in an example script, 'consume --min-expected-messages N' is the\nassertion that the data made it through; it fails the run if it did not.",
       "usage": "playground topic COMMAND",
       "options": [],
       "subcommands": [
@@ -3697,6 +3697,132 @@
               ],
               "argument": "TOPIC",
               "description": "🗳 Topic name\n\nRequired: ✓ Yes"
+            }
+          ]
+        },
+        {
+          "name": "dlq",
+          "description": "📬 Dead letter queue commands\n\nRead the dead letter queue of a sink connector\n(errors.tolerance=all with errors.deadletterqueue.topic.name, or the\ndlq-<lcc id> topic of a fully managed connector) without decoding\nits headers by hand, and send the records back once the cause is\nfixed.\n\n  inspect   records grouped by error (exception, message, root cause,\n            original topic, partition and offsets)\n  replay    produce the records again to their original topic, or\n            to --to\n\nWithout --topic, the dead letter queue of --connector, or of the only\nrunning connector that has one, is used.\n\nThe errors are in the __connect.errors.* headers, which are only\nwritten with \"errors.deadletterqueue.context.headers.enable\": \"true\"\n('playground connector snippets --dlq' has it).\n\n👉 Example: https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector",
+          "usage": "playground topic dlq COMMAND",
+          "options": [],
+          "subcommands": [
+            {
+              "name": "inspect",
+              "description": "🩺 Show what is in a dead letter queue, grouped by error\n\nReads the whole dead letter queue (up to --max-messages) and groups\nthe records by connector, stage (key / value converter,\ntransformation, task put...) and exception, most frequent first.\nFor each group: the exception and its message, the root cause (last\n\"Caused by:\" of the stack trace), the original topic, partition and\noffsets, the offsets in the dead letter queue and a sample value.\n\nKeys and values are read as raw bytes, so it works whatever the\nformat of the records (avro, protobuf, json schema, plain json).\n\n👉 Example: https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector",
+              "usage": "playground topic dlq inspect [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--topic",
+                    "-t"
+                  ],
+                  "argument": "TOPIC",
+                  "description": "📬 Dead letter queue topic\n\nℹ️ If not set, the dead letter queue of --connector, or of the only running connector that has one"
+                },
+                {
+                  "names": [
+                    "--connector",
+                    "-c"
+                  ],
+                  "argument": "CONNECTOR",
+                  "description": "🔗 Connector whose dead letter queue is used (errors.deadletterqueue.topic.name, or dlq-<lcc id> for a fully managed connector)"
+                },
+                {
+                  "names": [
+                    "--max-messages"
+                  ],
+                  "argument": "MAX_MESSAGES",
+                  "description": "🔢 Maximum number of records to read (default is 10000)\n\nDefault value: 10000"
+                },
+                {
+                  "names": [
+                    "--grep"
+                  ],
+                  "argument": "REGEX",
+                  "description": "🔎 Only the records whose exception class, message or root cause match this regex (java syntax)"
+                },
+                {
+                  "names": [
+                    "--json"
+                  ],
+                  "argument": "",
+                  "description": "🤖 Print the groups as JSON"
+                },
+                {
+                  "names": [
+                    "--verbose",
+                    "-v"
+                  ],
+                  "argument": "",
+                  "description": "🐞 Show command being ran."
+                }
+              ]
+            },
+            {
+              "name": "replay",
+              "description": "🔁 Produce the records of a dead letter queue again\n\nOnce the cause is fixed (converter, schema, mapping...), sends the\nrecords back to the topic they came from (their\n__connect.errors.topic header), or to --to, so that the sink\nconnector processes them again. Keys, values, timestamps and the\nother headers are kept as they are (raw bytes), the\n__connect.errors.* headers are removed unless\n--keep-error-headers is set.\n\nOnly the records already in the dead letter queue when the command\nstarts are read, and they are not deleted from it: a record that\nfails again is added to the dead letter queue a second time.\n\n🎓 Tip: --dry-run shows how many records would go to which topic,\nand --grep replays only one kind of error.\n\n👉 Example: https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector",
+              "usage": "playground topic dlq replay [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--topic",
+                    "-t"
+                  ],
+                  "argument": "TOPIC",
+                  "description": "📬 Dead letter queue topic\n\nℹ️ If not set, the dead letter queue of --connector, or of the only running connector that has one"
+                },
+                {
+                  "names": [
+                    "--connector",
+                    "-c"
+                  ],
+                  "argument": "CONNECTOR",
+                  "description": "🔗 Connector whose dead letter queue is used (errors.deadletterqueue.topic.name, or dlq-<lcc id> for a fully managed connector)"
+                },
+                {
+                  "names": [
+                    "--to"
+                  ],
+                  "argument": "TO",
+                  "description": "📤 Topic to produce to\n\nℹ️ If not set, each record goes back to its original topic (__connect.errors.topic header)"
+                },
+                {
+                  "names": [
+                    "--max-messages"
+                  ],
+                  "argument": "MAX_MESSAGES",
+                  "description": "🔢 Maximum number of records to read (default is 10000)\n\nDefault value: 10000"
+                },
+                {
+                  "names": [
+                    "--grep"
+                  ],
+                  "argument": "REGEX",
+                  "description": "🔎 Only the records whose exception class, message or root cause match this regex (java syntax)"
+                },
+                {
+                  "names": [
+                    "--keep-error-headers"
+                  ],
+                  "argument": "",
+                  "description": "🏷️ Keep the __connect.errors.* headers on the replayed records"
+                },
+                {
+                  "names": [
+                    "--dry-run"
+                  ],
+                  "argument": "",
+                  "description": "🧪 Only display how many records would be replayed, and to which topics"
+                },
+                {
+                  "names": [
+                    "--verbose",
+                    "-v"
+                  ],
+                  "argument": "",
+                  "description": "🐞 Show command being ran."
+                }
+              ]
             }
           ]
         },
@@ -4561,7 +4687,7 @@
     },
     {
       "name": "connector",
-      "description": "🔗 Connector commands\n\nEverything you would otherwise do with curl on the Connect REST API, with\nthe right host, port and credentials already figured out. The same\ncommands work whether the connector is self managed in the connect\ncontainer or fully managed in Confluent Cloud.\n\n🔍 Look at what is running\n  status                  is it RUNNING, and if not, the full stack trace\n  wait                    wait until it is RUNNING (or another state)\n  error-recommendations   suggested fixes for a failed fully managed connector\n  show-config             the configuration actually applied\n  logs                    tail connect logs, filtered and followed\n  show-lag                consumer lag of a sink, until it reaches zero\n  benchmark               records per second, compared with the previous run\n  offsets get             where the connector is reading or writing\n  smt test                what a transform chain does to a record, step by step\n\n🛠️ Change it\n  create-or-update        create it, or apply a new config, from stdin\n  update                  edit the running config in your editor\n  pause / resume / stop / restart / delete\n  offsets alter / reset   rewind or fast-forward a connector\n\n🧑‍🔬 Understand it\n  show-config-parameters  every parameter the plugin accepts\n  select-config           pick parameters interactively\n  versions                installed version vs latest on Confluent Hub\n  sourcecode              open the source on GitHub, or diff two versions\n  open-docs               open the Confluent documentation\n  snippets                ready-to-paste converter and dlq config\n\n🐞 Dig deeper\n  log-level               raise connect log level for this connector\n  enable-remote-debugging attach a java debugger to the connector code\n  translate               self managed config to fully managed config\n\nWithout --connector, commands apply to every connector of the example,\nwhich is usually what you want since most examples run only one.",
+      "description": "🔗 Connector commands\n\nEverything you would otherwise do with curl on the Connect REST API, with\nthe right host, port and credentials already figured out. The same\ncommands work whether the connector is self managed in the connect\ncontainer or fully managed in Confluent Cloud.\n\n🔍 Look at what is running\n  status                  is it RUNNING, and if not, the full stack trace\n  wait                    wait until it is RUNNING (or another state)\n  error-recommendations   suggested fixes for a failed fully managed connector\n  show-config             the configuration actually applied\n  diff                    running config vs a file, another connector or the defaults\n  logs                    tail connect logs, filtered and followed\n  show-lag                consumer lag of a sink, until it reaches zero\n  benchmark               records per second, compared with the previous run\n  offsets get             where the connector is reading or writing\n  smt test                what a transform chain does to a record, step by step\n\n🛠️ Change it\n  create-or-update        create it, or apply a new config, from stdin\n  validate                check a config with the plugin, without creating it\n  update                  edit the running config in your editor\n  pause / resume / stop / restart / delete\n  offsets alter / reset   rewind or fast-forward a connector\n\n🧑‍🔬 Understand it\n  show-config-parameters  every parameter the plugin accepts\n  select-config           pick parameters interactively\n  versions                installed version vs latest on Confluent Hub\n  sourcecode              open the source on GitHub, or diff two versions\n  open-docs               open the Confluent documentation\n  snippets                ready-to-paste converter and dlq config\n\n🐞 Dig deeper\n  log-level               raise connect log level for this connector\n  enable-remote-debugging attach a java debugger to the connector code\n  translate               self managed config to fully managed config\n\nWithout --connector, commands apply to every connector of the example,\nwhich is usually what you want since most examples run only one.",
       "usage": "playground connector COMMAND",
       "options": [],
       "subcommands": [
@@ -4629,6 +4755,88 @@
               ],
               "argument": "INTERVAL",
               "description": "🔁 Interval in seconds between status checks (default is 5)\n\nDefault value: 5"
+            }
+          ]
+        },
+        {
+          "name": "validate",
+          "description": "✅ Validate a connector config without creating the connector\n\nSends the config to the validate endpoint of the plugin\n(PUT /connector-plugins/<class>/config/validate) and prints every\ninvalid property with its error message. Nothing is created or\nchanged, so it is the dry run of 'create-or-update' for a customer\nconfig. Exits with 1 if the config is invalid.\n\nThe config is read from stdin. Without stdin, --connector validates\nthe config of that running connector, for example after switching\nto another connector version.\n\nThe same automatic config as 'create-or-update' is added for the\nenvironment of the example (security settings on sasl-ssl...),\nunless --skip-automatic-connector-config is set.\n\n🎓 Tip: works for fully managed connectors too, with the validate\nendpoint of Confluent Cloud.",
+          "usage": "playground connector validate [JSON] [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--connector",
+                "-c"
+              ],
+              "argument": "CONNECTOR",
+              "description": "🔗 Connector name\n\nName given to the validate endpoint with a config on stdin. Without\nstdin, the running connector whose config is validated."
+            },
+            {
+              "names": [
+                "--skip-automatic-connector-config"
+              ],
+              "argument": "",
+              "description": "🤖 Do not add the automatic configuration of the environment (security settings on sasl-ssl...) before validating"
+            }
+          ]
+        },
+        {
+          "name": "diff",
+          "description": "🔀 Diff the config of a running connector with another config\n\nCompares the config of a running connector, key by key, with:\n\n  stdin              a config (plain json, or the heredoc printed by\n                     'show-config')\n  --file             the same, from a file, e.g. the config of a\n                     customer\n  --with-connector   another running connector\n  --defaults         the default value of each parameter of the plugin:\n                     shows only what the connector changes, and the\n                     keys set to their default that could be removed\n\nKeys only on one side, and keys with different values, are listed.\nPasswords masked by the REST API are not compared.\n\n🎓 Tip: run it with the config of a customer and the config of the\nexample to see right away what differs.",
+          "usage": "playground connector diff [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--verbose",
+                "-v"
+              ],
+              "argument": "",
+              "description": "🐞 Show command being ran."
+            },
+            {
+              "names": [
+                "--connector",
+                "-c"
+              ],
+              "argument": "CONNECTOR",
+              "description": "🔗 Connector name\n\n🎓 Tip: If not specified, the command will apply to all connectors"
+            },
+            {
+              "names": [
+                "--file",
+                "-f"
+              ],
+              "argument": "FILE",
+              "description": "📄 File with the config to compare with (json, or a create-or-update heredoc)"
+            },
+            {
+              "names": [
+                "--with-connector"
+              ],
+              "argument": "WITH_CONNECTOR",
+              "description": "🔗 Other running connector to compare with"
+            },
+            {
+              "names": [
+                "--defaults"
+              ],
+              "argument": "",
+              "description": "💤 Compare with the default value of each parameter of the plugin"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🤖 Print the result as JSON"
             }
           ]
         },

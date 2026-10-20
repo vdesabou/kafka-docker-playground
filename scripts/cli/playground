@@ -237,6 +237,7 @@ playground_usage() {
   printf "  %s   🆕 Create topic\n" "$(green "topic create")                              "
   printf "  %s   ❌ Delete topic and associated schema/subject if applicable\n" "$(green "topic delete")                              "
   printf "  %s   🪛 Alter topic config\n" "$(green "topic alter")                               "
+  printf "  %s   📬 Dead letter queue commands\n" "$(green "topic dlq")                                 "
   printf "  %s   🏷️ Stream Catalog tags (Confluent Cloud only)\n" "$(green "topic tag")                                 "
   printf "  %s   👥 Consumer group commands\n" "$(green "consumer-group")                            "
   printf "  %s   👥 List consumer groups\n" "$(green "consumer-group list")                       "
@@ -260,6 +261,8 @@ playground_usage() {
   printf "  %s   🔗 Connector commands\n" "$(green "connector")                                 "
   printf "  %s   🧩 Show status of all connectors\n" "$(green "connector status")                          "
   printf "  %s   ⏳ Wait for connectors to reach a state\n" "$(green "connector wait")                            "
+  printf "  %s   ✅ Validate a connector config without creating the connector\n" "$(green "connector validate")                        "
+  printf "  %s   🔀 Diff the config of a running connector with another config\n" "$(green "connector diff")                            "
   printf "  %s   💡 Show error recommendations for fully managed connectors\n" "$(green "connector error-recommendations")           "
   printf "  %s   🅾️ Specific Oracle CDC Xstream commands\n" "$(green "connector oracle-cdc-xstream")              "
   printf "  %s   🧪 Single message transforms (SMT)\n" "$(green "connector smt")                             "
@@ -8648,7 +8651,7 @@ playground_container_wait_for_connect_rest_api_ready_usage() {
 playground_topic_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground topic\n\n"
-    printf "  🗳 Topic commands\n  \n  Produce, consume and manage topics without dealing with the kafka-* shell\n  scripts: the bootstrap server, the security properties and the schema\n  registry url are all derived from the running environment, so the same\n  command works on plaintext, on sasl-ssl and on Confluent Cloud.\n  \n  📤 Get data in\n    produce         generate records from a schema, or from your own data\n    create          create a topic with the partitions you need\n  \n  📥 Get data out\n    consume         read from the beginning, deserialising automatically\n    get-number-records   count what is in the topic\n    wait-for-records     wait until the topic contains N records\n    get-offsets          earliest and latest offsets per partition\n    display-consumer-offsets   read the internal offsets topic\n  \n  🔧 Manage\n    list / describe / alter / delete\n    set-schema-compatibility   compatibility of the topic subjects\n    tag             stream catalog tags (Confluent Cloud only)\n  \n  Serialisation is handled for you: 'produce' registers the schema you give\n  it and 'consume' works out from the payload whether it is avro, protobuf,\n  json schema or plain text.\n  \n  🎓 Tip: in an example script, 'consume --min-expected-messages N' is the\n  assertion that the data made it through; it fails the run if it did not.\n\n"
+    printf "  🗳 Topic commands\n  \n  Produce, consume and manage topics without dealing with the kafka-* shell\n  scripts: the bootstrap server, the security properties and the schema\n  registry url are all derived from the running environment, so the same\n  command works on plaintext, on sasl-ssl and on Confluent Cloud.\n  \n  📤 Get data in\n    produce         generate records from a schema, or from your own data\n    create          create a topic with the partitions you need\n  \n  📥 Get data out\n    consume         read from the beginning, deserialising automatically\n    get-number-records   count what is in the topic\n    wait-for-records     wait until the topic contains N records\n    get-offsets          earliest and latest offsets per partition\n    display-consumer-offsets   read the internal offsets topic\n  \n  🔧 Manage\n    list / describe / alter / delete\n    dlq inspect / replay   dead letter queue grouped by error, and replay\n    set-schema-compatibility   compatibility of the topic subjects\n    tag             stream catalog tags (Confluent Cloud only)\n  \n  Serialisation is handled for you: 'produce' registers the schema you give\n  it and 'consume' works out from the payload whether it is avro, protobuf,\n  json schema or plain text.\n  \n  🎓 Tip: in an example script, 'consume --min-expected-messages N' is the\n  assertion that the data made it through; it fails the run if it did not.\n\n"
   else
     printf "playground topic - 🗳 Topic commands\n\n"
   fi
@@ -8672,6 +8675,9 @@ playground_topic_usage() {
   printf "  %s   🆕 Create topic\n" "$(green "create")                  "
   printf "  %s   ❌ Delete topic and associated schema/subject if applicable\n" "$(green "delete")                  "
   printf "  %s   🪛 Alter topic config\n" "$(green "alter")                   "
+  printf "  %s   📬 Dead letter queue commands\n" "$(green "dlq")                     "
+  printf "  %s   🩺 Show what is in a dead letter queue, grouped by error\n" "$(green "dlq inspect")             "
+  printf "  %s   🔁 Produce the records of a dead letter queue again\n" "$(green "dlq replay")              "
   printf "  %s   🏷️ Stream Catalog tags (Confluent Cloud only)\n" "$(green "tag")                     "
   echo
 
@@ -9505,6 +9511,180 @@ playground_topic_alter_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground topic alter --topic atopic --add-config max.message.bytes=5242940\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_dlq_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground topic dlq\n\n"
+    printf "  📬 Dead letter queue commands\n  \n  Read the dead letter queue of a sink connector\n  (errors.tolerance=all with errors.deadletterqueue.topic.name, or the\n  dlq-<lcc id> topic of a fully managed connector) without decoding\n  its headers by hand, and send the records back once the cause is\n  fixed.\n  \n    inspect   records grouped by error (exception, message, root cause,\n              original topic, partition and offsets)\n    replay    produce the records again to their original topic, or\n              to --to\n  \n  Without --topic, the dead letter queue of --connector, or of the only\n  running connector that has one, is used.\n  \n  The errors are in the __connect.errors.* headers, which are only\n  written with \"errors.deadletterqueue.context.headers.enable\": \"true\"\n  ('playground connector snippets --dlq' has it).\n  \n  👉 Example:\n  https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector\n\n"
+  else
+    printf "playground topic dlq - 📬 Dead letter queue commands\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic dlq COMMAND\n"
+  printf "  playground topic dlq [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "Topic commands:")"
+  printf "  %s   🩺 Show what is in a dead letter queue, grouped by error\n" "$(green "inspect")"
+  printf "  %s   🔁 Produce the records of a dead letter queue again\n" "$(green "replay") "
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_dlq_inspect_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground topic dlq inspect\n\n"
+    printf "  🩺 Show what is in a dead letter queue, grouped by error\n  \n  Reads the whole dead letter queue (up to --max-messages) and groups\n  the records by connector, stage (key / value converter,\n  transformation, task put...) and exception, most frequent first.\n  For each group: the exception and its message, the root cause (last\n  \"Caused by:\" of the stack trace), the original topic, partition and\n  offsets, the offsets in the dead letter queue and a sample value.\n  \n  Keys and values are read as raw bytes, so it works whatever the\n  format of the records (avro, protobuf, json schema, plain json).\n  \n  👉 Example:\n  https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector\n\n"
+  else
+    printf "playground topic dlq inspect - 🩺 Show what is in a dead letter queue, grouped by error\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic dlq inspect [OPTIONS]\n"
+  printf "  playground topic dlq inspect --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
+    printf "    📬 Dead letter queue topic\n    \n    ℹ️ If not set, the dead letter queue of --connector, or of the only running\n    connector that has one\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector whose dead letter queue is used\n    (errors.deadletterqueue.topic.name, or dlq-<lcc id> for a fully managed\n    connector)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-messages MAX_MESSAGES")"
+    printf "    🔢 Maximum number of records to read (default is 10000)\n"
+    printf "    %s\n" "Default: 10000"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--grep REGEX")"
+    printf "    🔎 Only the records whose exception class, message or root cause match this\n    regex (java syntax)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the groups as JSON\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground topic dlq inspect --topic dlq\n"
+    printf "  playground topic dlq inspect --connector http-sink\n"
+    printf "  playground topic dlq inspect --topic dlq --grep \"Unknown magic byte\"\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_dlq_replay_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground topic dlq replay\n\n"
+    printf "  🔁 Produce the records of a dead letter queue again\n  \n  Once the cause is fixed (converter, schema, mapping...), sends the\n  records back to the topic they came from (their\n  __connect.errors.topic header), or to --to, so that the sink\n  connector processes them again. Keys, values, timestamps and the\n  other headers are kept as they are (raw bytes), the\n  __connect.errors.* headers are removed unless\n  --keep-error-headers is set.\n  \n  Only the records already in the dead letter queue when the command\n  starts are read, and they are not deleted from it: a record that\n  fails again is added to the dead letter queue a second time.\n  \n  🎓 Tip: --dry-run shows how many records would go to which topic,\n  and --grep replays only one kind of error.\n  \n  👉 Example:\n  https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector\n\n"
+  else
+    printf "playground topic dlq replay - 🔁 Produce the records of a dead letter queue again\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic dlq replay [OPTIONS]\n"
+  printf "  playground topic dlq replay --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
+    printf "    📬 Dead letter queue topic\n    \n    ℹ️ If not set, the dead letter queue of --connector, or of the only running\n    connector that has one\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector whose dead letter queue is used\n    (errors.deadletterqueue.topic.name, or dlq-<lcc id> for a fully managed\n    connector)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--to TO")"
+    printf "    📤 Topic to produce to\n    \n    ℹ️ If not set, each record goes back to its original topic\n    (__connect.errors.topic header)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-messages MAX_MESSAGES")"
+    printf "    🔢 Maximum number of records to read (default is 10000)\n"
+    printf "    %s\n" "Default: 10000"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--grep REGEX")"
+    printf "    🔎 Only the records whose exception class, message or root cause match this\n    regex (java syntax)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--keep-error-headers")"
+    printf "    🏷️ Keep the __connect.errors.* headers on the replayed records\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--dry-run")"
+    printf "    🧪 Only display how many records would be replayed, and to which topics\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground topic dlq replay --topic dlq --dry-run\n"
+    printf "  playground topic dlq replay --topic dlq\n"
+    printf "  playground topic dlq replay --connector http-sink --grep \"Unknown magic byte\"\n  --to retry-topic\n"
     echo
 
   fi
@@ -10943,7 +11123,7 @@ playground_connector_plugin_sourcecode_usage() {
 playground_connector_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector\n\n"
-    printf "  🔗 Connector commands\n  \n  Everything you would otherwise do with curl on the Connect REST API, with\n  the right host, port and credentials already figured out. The same\n  commands work whether the connector is self managed in the connect\n  container or fully managed in Confluent Cloud.\n  \n  🔍 Look at what is running\n    status                  is it RUNNING, and if not, the full stack trace\n    wait                    wait until it is RUNNING (or another state)\n    error-recommendations   suggested fixes for a failed fully managed connector\n    show-config             the configuration actually applied\n    logs                    tail connect logs, filtered and followed\n    show-lag                consumer lag of a sink, until it reaches zero\n    benchmark               records per second, compared with the previous run\n    offsets get             where the connector is reading or writing\n    smt test                what a transform chain does to a record, step by\n  step\n  \n  🛠️ Change it\n    create-or-update        create it, or apply a new config, from stdin\n    update                  edit the running config in your editor\n    pause / resume / stop / restart / delete\n    offsets alter / reset   rewind or fast-forward a connector\n  \n  🧑‍🔬 Understand it\n    show-config-parameters  every parameter the plugin accepts\n    select-config           pick parameters interactively\n    versions                installed version vs latest on Confluent Hub\n    sourcecode              open the source on GitHub, or diff two versions\n    open-docs               open the Confluent documentation\n    snippets                ready-to-paste converter and dlq config\n  \n  🐞 Dig deeper\n    log-level               raise connect log level for this connector\n    enable-remote-debugging attach a java debugger to the connector code\n    translate               self managed config to fully managed config\n  \n  Without --connector, commands apply to every connector of the example,\n  which is usually what you want since most examples run only one.\n\n"
+    printf "  🔗 Connector commands\n  \n  Everything you would otherwise do with curl on the Connect REST API, with\n  the right host, port and credentials already figured out. The same\n  commands work whether the connector is self managed in the connect\n  container or fully managed in Confluent Cloud.\n  \n  🔍 Look at what is running\n    status                  is it RUNNING, and if not, the full stack trace\n    wait                    wait until it is RUNNING (or another state)\n    error-recommendations   suggested fixes for a failed fully managed connector\n    show-config             the configuration actually applied\n    diff                    running config vs a file, another connector or the\n  defaults\n    logs                    tail connect logs, filtered and followed\n    show-lag                consumer lag of a sink, until it reaches zero\n    benchmark               records per second, compared with the previous run\n    offsets get             where the connector is reading or writing\n    smt test                what a transform chain does to a record, step by\n  step\n  \n  🛠️ Change it\n    create-or-update        create it, or apply a new config, from stdin\n    validate                check a config with the plugin, without creating it\n    update                  edit the running config in your editor\n    pause / resume / stop / restart / delete\n    offsets alter / reset   rewind or fast-forward a connector\n  \n  🧑‍🔬 Understand it\n    show-config-parameters  every parameter the plugin accepts\n    select-config           pick parameters interactively\n    versions                installed version vs latest on Confluent Hub\n    sourcecode              open the source on GitHub, or diff two versions\n    open-docs               open the Confluent documentation\n    snippets                ready-to-paste converter and dlq config\n  \n  🐞 Dig deeper\n    log-level               raise connect log level for this connector\n    enable-remote-debugging attach a java debugger to the connector code\n    translate               self managed config to fully managed config\n  \n  Without --connector, commands apply to every connector of the example,\n  which is usually what you want since most examples run only one.\n\n"
   else
     printf "playground connector - 🔗 Connector commands\n\n"
   fi
@@ -10956,6 +11136,8 @@ playground_connector_usage() {
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   🧩 Show status of all connectors\n" "$(green "status")                          "
   printf "  %s   ⏳ Wait for connectors to reach a state\n" "$(green "wait")                            "
+  printf "  %s   ✅ Validate a connector config without creating the connector\n" "$(green "validate")                        "
+  printf "  %s   🔀 Diff the config of a running connector with another config\n" "$(green "diff")                            "
   printf "  %s   💡 Show error recommendations for fully managed connectors\n" "$(green "error-recommendations")           "
   printf "  %s   🅾️ Specific Oracle CDC Xstream commands\n" "$(green "oracle-cdc-xstream")              "
   printf "  %s   🧪 Single message transforms (SMT)\n" "$(green "smt")                             "
@@ -11138,6 +11320,130 @@ playground_connector_wait_usage() {
     echo
 
   fi
+}
+
+# :command.usage
+playground_connector_validate_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector validate\n\n"
+    printf "  ✅ Validate a connector config without creating the connector\n  \n  Sends the config to the validate endpoint of the plugin\n  (PUT /connector-plugins/<class>/config/validate) and prints every\n  invalid property with its error message. Nothing is created or\n  changed, so it is the dry run of 'create-or-update' for a customer\n  config. Exits with 1 if the config is invalid.\n  \n  The config is read from stdin. Without stdin, --connector validates\n  the config of that running connector, for example after switching\n  to another connector version.\n  \n  The same automatic config as 'create-or-update' is added for the\n  environment of the example (security settings on sasl-ssl...),\n  unless --skip-automatic-connector-config is set.\n  \n  🎓 Tip: works for fully managed connectors too, with the validate\n  endpoint of Confluent Cloud.\n\n"
+  else
+    printf "playground connector validate - ✅ Validate a connector config without creating the connector\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector validate [JSON] [OPTIONS]\n"
+  printf "  playground connector validate --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    Name given to the validate endpoint with a config on stdin. Without\n    stdin, the running connector whose config is validated.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--skip-automatic-connector-config")"
+    printf "    🤖 Do not add the automatic configuration of the environment (security\n    settings on sasl-ssl...) before validating\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "JSON")"
+    printf "    json (reads from stdin if empty)\n"
+    printf "    %s\n" "Default: -"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector validate << EOF\n{\n  \"connector.class\": \"FileStreamSink\",\n  \"topics\": \"filestream\",\n  \"file\": \"/tmp/output.json\",\n  \"tasks.max\": \"abc\"\n}\nEOF\n"
+printf "  playground connector validate --connector filestream-sink\n"
+echo
+
+fi
+}
+
+# :command.usage
+playground_connector_diff_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector diff\n\n"
+    printf "  🔀 Diff the config of a running connector with another config\n  \n  Compares the config of a running connector, key by key, with:\n  \n    stdin              a config (plain json, or the heredoc printed by\n                       'show-config')\n    --file             the same, from a file, e.g. the config of a\n                       customer\n    --with-connector   another running connector\n    --defaults         the default value of each parameter of the plugin:\n                       shows only what the connector changes, and the\n                       keys set to their default that could be removed\n  \n  Keys only on one side, and keys with different values, are listed.\n  Passwords masked by the REST API are not compared.\n  \n  🎓 Tip: run it with the config of a customer and the config of the\n  example to see right away what differs.\n\n"
+  else
+    printf "playground connector diff - 🔀 Diff the config of a running connector with another config\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector diff [OPTIONS]\n"
+  printf "  playground connector diff --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file, -f FILE")"
+    printf "    📄 File with the config to compare with (json, or a create-or-update heredoc)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--with-connector WITH_CONNECTOR")"
+    printf "    🔗 Other running connector to compare with\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--defaults")"
+    printf "    💤 Compare with the default value of each parameter of the plugin\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the result as JSON\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector diff --connector filestream-sink --file\n  customer-config.json\n"
+    printf "  playground connector diff --connector filestream-sink --with-connector\n  filestream-sink2\n"
+    printf "  playground connector diff --connector filestream-sink --defaults\n"
+    printf "  playground connector diff --connector filestream-sink << EOF\n{\n  \"connector.class\": \"FileStreamSink\",\n  \"topics\": \"filestream\",\n  \"file\": \"/tmp/output.json\"\n}\nEOF\n"
+echo
+
+fi
 }
 
 # :command.usage
@@ -18873,6 +19179,250 @@ function smt_tester_hub_plugin () {
     fi
   fi
   ls -d "$dir"/*/ | head -1 | sed 's#/$##'
+}
+
+# config of a running connector as a JSON object in $curl_output (REST API /config endpoint, or the Connector CR on cfk)
+# returns 1 if it could not be read
+function get_connector_config_json () {
+  local connector="$1" connector_type env_used
+  connector_type=$(playground state get run.connector_type)
+  env_used=$(playground state get run.environment)
+  curl_output=""
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+    get_ccloud_connect
+    handle_ccloud_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config\" --header \"authorization: Basic $authorization\""
+  elif [[ "$env_used" == cfk* ]]
+  then
+    curl_output=$(kubectl -n confluent get connector "$connector" -o json 2>/dev/null | jq -c '.spec.configs // empty' 2>/dev/null)
+  else
+    get_connect_url_and_security
+    handle_onprem_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/config\""
+  fi
+  if [ -z "$curl_output" ] || ! echo "$curl_output" | jq -e 'type == "object"' > /dev/null 2>&1
+  then
+    return 1
+  fi
+}
+
+# validate a connector config with the connector-plugins/<class>/config/validate endpoint (self managed or Confluent
+# Cloud), as 'connector create-or-update --validate' and 'connector validate' do:
+#   validate_connector_config <connector> <json content> <tmp dir> <environment> <is_cfk> <skip_automatic_connector_config|running>
+# returns 0 if valid, 1 if not (errors logged), 2 if skipped (cfk: no connect REST validation endpoint)
+function validate_connector_config () {
+  local connector="$1" json_content="$2" tmp_dir="$3" env_used="$4" is_cfk="$5" skip_automatic="$6"
+  local connector_type connector_class json_file="$tmp_dir/validate_connector.json" json_validate_file="$tmp_dir/json_validate_file"
+  connector_type=$(playground state get run.connector_type)
+  connector_class=$(echo "$json_content" | jq -r '."connector.class"')
+  if [[ "$connector_class" == "null" ]] || [[ -z "$connector_class" ]]
+  then
+    logerror "❌ connector.class is required"
+    return 1
+  fi
+  echo "$json_content" > "$json_file"
+
+  set +e
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+    get_ccloud_connect
+    handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate"
+  elif [[ "$is_cfk" -eq 1 ]]
+  then
+    logwarn "⚠️ validation with CFK currently performs basic checks only (no Connect REST validation endpoint)"
+    log "✅ Basic CFK validation passed"
+    set -e
+    return 2
+  else
+    get_connect_url_and_security
+    if [[ -n "$skip_automatic" ]]
+    then
+      # "running": the config of a running connector, it already has the automatic config
+      [ "$skip_automatic" != "running" ] && log "🤖 --skip-automatic-connector-config is set"
+    else
+      add_connector_config_based_on_environment "$env_used" "$json_content"
+    fi
+    # add mandatory name field
+    echo "$json_content" | jq ". + {\"name\": \"$connector\"}" > "$json_file"
+    handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$json_file $connect_url/connector-plugins/$connector_class/config/validate"
+  fi
+  set -e
+
+  if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
+  then
+    set +e
+    echo "$curl_output" > "$json_validate_file"
+    jq_output=$(jq . "$json_validate_file" 2>&1)
+    error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
+
+    if [[ -n "$error_line" ]]; then
+      logerror "❌ Invalid JSON at line $error_line"
+    fi
+    set -e
+
+    if [ -z "$GITHUB_RUN_NUMBER" ]
+    then
+      if [[ $(type -f bat 2>&1) =~ "not found" ]]
+      then
+        cat -n "$json_validate_file"
+      else
+        bat "$json_validate_file" --highlight-line $error_line
+      fi
+    fi
+    return 1
+  fi
+
+  # Check if there were any errors
+  has_errors=$(echo "$curl_output" | jq '.configs[] | select(.value.errors | length > 0) | length' | tr -d '\n')
+
+  if [[ "$has_errors" -gt 0 ]]
+  then
+    output=$(echo "$curl_output" | jq -r '.configs[] | select(.value.errors | length > 0) | .value.name + " ->> " + (.value.errors | to_entries | map("\(.value|tostring)") | join(", "))')
+    logerror "❌ Validation errors found in connector config\n$output"
+    return 1
+  fi
+  log "✅ $connector_type connector config is valid !"
+}
+
+# content of stdin, or nothing when stdin is a terminal or nothing comes within 3 seconds: an agent or a CI job runs
+# commands with a stdin that is neither a terminal nor closed, a plain cat would wait forever
+function read_stdin_if_any () {
+  [ -t 0 ] && return 0
+  local first=""
+  if IFS= read -r -t 3 first || [ -n "$first" ]
+  then
+    printf '%s\n' "$first"
+    cat
+  fi
+}
+
+DLQ_TOOL_CACHE="$HOME/.playground-dlq-tool"
+
+# compiled tools/dlq-tool/DlqTool.java, cached by source hash: prints the classes folder
+# compiled against kafka-clients 3.9 for java 8: it only uses consumer / producer apis that the kafka jars of any
+# cp image (6.x to 8.x) have, so the same class runs in every container
+function dlq_tool_classes () {
+  local source_file="$root_folder/tools/dlq-tool/DlqTool.java" key classes jar="kafka-clients-3.9.1.jar"
+  key=$(shasum "$source_file" | cut -c1-10)
+  classes="$DLQ_TOOL_CACHE/classes/$key"
+  if [ ! -f "$classes/DlqTool.class" ]
+  then
+    mkdir -p "$classes" "$DLQ_TOOL_CACHE/src"
+    if [ ! -f "$DLQ_TOOL_CACHE/$jar" ]
+    then
+      curl -sSfL -o "$DLQ_TOOL_CACHE/$jar" "https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/3.9.1/$jar" || { logerror "❌ could not download $jar"; rm -f "$DLQ_TOOL_CACHE/$jar"; return 1; }
+    fi
+    cp "$source_file" "$DLQ_TOOL_CACHE/src/DlqTool.java"
+    # compiled in a jdk container: the cp images have no compiler
+    if ! docker run --rm -v "$DLQ_TOOL_CACHE:/w" -v "$classes:/out" eclipse-temurin:17-jdk javac --release 8 -cp "/w/$jar" -d /out /w/src/DlqTool.java > "$DLQ_TOOL_CACHE/compile.log" 2>&1
+    then
+      logerror "❌ could not compile the dlq tool, see $DLQ_TOOL_CACHE/compile.log"
+      rm -rf "$classes"
+      return 1
+    fi
+  fi
+  echo "$classes"
+}
+
+# run a java class that uses the kafka clients (one .class file in <classes dir>) with kafka-run-class, in the same
+# container and with the same bootstrap server and security config as run_kafka_admin_tool:
+#   run_kafka_java_tool <classes dir> <class name> <args...>
+# --bootstrap-server <servers> [--command-config <client properties>] are appended to the arguments
+function run_kafka_java_tool () {
+  local classes="$1" class="$2"
+  shift 2
+  local remote_dir="/tmp/playground-$(echo "$class" | tr '[:upper:]' '[:lower:]')"
+  get_environment_used
+
+  if [[ "$environment" == "ccloud" ]]
+  then
+    get_kafka_docker_playground_dir
+    DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+    if [ -f $DELTA_CONFIGS_ENV ]
+    then
+      source $DELTA_CONFIGS_ENV
+    else
+      logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
+      exit 1
+    fi
+    if [[ -n "$verbose" ]]
+    then
+      log "🐞 command used"
+      echo "$class $* --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
+    fi
+    get_connect_image
+    docker run --quiet --rm -v "$classes:$remote_dir" -e CLASSPATH="$remote_dir" -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-run-class "$class" "$@" --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
+  else
+    get_security_broker "--command-config"
+    if [[ -n "$verbose" ]]
+    then
+      log "🐞 command used (in container $container)"
+      echo "$class $* --bootstrap-server $bootstrap_server $security"
+    fi
+    if [[ "$environment" == cfk* ]]
+    then
+      kubectl -n confluent exec -i $container -- sh -c "mkdir -p $remote_dir && cat > $remote_dir/$class.class" < "$classes/$class.class"
+      kubectl -n confluent exec -i $container -- env CLASSPATH="$remote_dir" kafka-run-class "$class" "$@" --bootstrap-server $bootstrap_server $security
+    else
+      docker exec -i $container sh -c "mkdir -p $remote_dir && cat > $remote_dir/$class.class" < "$classes/$class.class"
+      docker exec -i -e CLASSPATH="$remote_dir" $container kafka-run-class "$class" "$@" --bootstrap-server $bootstrap_server $security
+    fi
+  fi
+}
+
+# dead letter queue topic of a sink connector: errors.deadletterqueue.topic.name, or dlq-<lcc id> for a fully
+# managed connector (the config can use ${connector} as a placeholder for the lcc id). Prints nothing if there is none
+function get_connector_dlq_topic () {
+  local connector="$1" connector_type dlq lcc
+  get_connector_config_json "$connector" || return 1
+  connector_type=$(playground state get run.connector_type)
+  dlq=$(echo "$curl_output" | jq -r '."errors.deadletterqueue.topic.name" // empty')
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+    if [ -z "$dlq" ] || [[ "$dlq" == *'${connector}'* ]]
+    then
+      lcc=$(get_ccloud_connector_lcc "$connector" 2> /dev/null)
+      [ -z "$lcc" ] && return 1
+      dlq="${dlq:-dlq-\${connector\}}"
+      dlq="${dlq//\$\{connector\}/$lcc}"
+    fi
+  fi
+  echo "$dlq"
+}
+
+# dead letter queue topic of 'playground topic dlq' commands, in $dlq_topic: --topic, or the dlq of --connector, or
+# the dlq of the only connector of the example that has one
+function resolve_dlq_topic () {
+  local topic="$1" connector="$2" c t
+  dlq_topic="$topic"
+  [ -n "$dlq_topic" ] && return 0
+  if [ -n "$connector" ]
+  then
+    dlq_topic=$(get_connector_dlq_topic "$connector")
+    if [ -z "$dlq_topic" ]
+    then
+      logerror "❌ connector $connector has no dead letter queue (errors.deadletterqueue.topic.name is not set), use --topic"
+      exit 1
+    fi
+    return 0
+  fi
+  local found=()
+  for c in $(playground get-connector-list 2> /dev/null)
+  do
+    t=$(get_connector_dlq_topic "$c")
+    [ -n "$t" ] && found+=("$t")
+  done
+  if [ ${#found[@]} -eq 1 ]
+  then
+    dlq_topic="${found[0]}"
+    log "✨ --topic was not provided, using the dead letter queue of the running connector: $dlq_topic"
+  elif [ ${#found[@]} -gt 1 ]
+  then
+    logerror "❌ several connectors have a dead letter queue (${found[*]}), use --topic or --connector"
+    exit 1
+  else
+    logerror "❌ no running connector has a dead letter queue (errors.deadletterqueue.topic.name), use --topic"
+    exit 1
+  fi
 }
 
 # src/lib/colors.sh
@@ -46395,6 +46945,220 @@ playground_topic_alter_command() {
 }
 
 # :command.function
+playground_topic_dlq_inspect_command() {
+
+  # src/commands/topic/dlq/inspect.sh
+  topic="${args[--topic]}"
+  connector="${args[--connector]}"
+  max_messages="${args[--max-messages]}"
+  grep_regex="${args[--grep]}"
+  json="${args[--json]}"
+  verbose="${args[--verbose]}"
+
+  resolve_dlq_topic "$topic" "$connector"
+
+  classes=$(dlq_tool_classes) || exit 1
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  tool_args=(inspect --topic "$dlq_topic" --max-messages "$max_messages")
+  [[ -n "$grep_regex" ]] && tool_args+=(--grep "$grep_regex")
+
+  [[ -z "$json" ]] && log "🩺 Inspecting dead letter queue $dlq_topic"
+  # '|| ret=$?': get_connect_image turns set -e back on in run_kafka_java_tool
+  ret=0
+  run_kafka_java_tool "$classes" DlqTool "${tool_args[@]}" > $tmp_dir/out 2> $tmp_dir/err || ret=$?
+
+  if grep -q "^DLQ_ERROR " $tmp_dir/out
+  then
+      logerror "❌ $(grep -m1 "^DLQ_ERROR " $tmp_dir/out | cut -c11-)"
+      exit 1
+  fi
+  if [ $ret -ne 0 ] || ! grep -q "^DLQ_SUMMARY " $tmp_dir/out
+  then
+      logerror "❌ could not read dead letter queue $dlq_topic"
+      grep -v "^DLQ_" $tmp_dir/out | tail -20
+      tail -20 $tmp_dir/err
+      exit 1
+  fi
+
+  grep "^DLQ_RECORD " $tmp_dir/out | cut -c12- > $tmp_dir/records.json || true
+  summary=$(grep -m1 "^DLQ_SUMMARY " $tmp_dir/out | cut -c13-)
+  total=$(echo "$summary" | jq -r .total)
+  read_count=$(echo "$summary" | jq -r .read)
+  skipped=$(echo "$summary" | jq -r .skipped_filter)
+
+  # one group per connector, stage and exception, most frequent first
+  jq -s '
+    group_by([.errors."connector.name", .errors.stage, .errors."exception.class.name", .errors."exception.message"])
+    | map({
+        count: length,
+        connector: .[0].errors."connector.name",
+        stage: .[0].errors.stage,
+        class: .[0].errors."class.name",
+        exception: .[0].errors."exception.class.name",
+        message: .[0].errors."exception.message",
+        root_cause: .[0].root_cause,
+        original_topics: (map(select(.errors.topic != null) | {topic: .errors.topic, partition: .errors.partition, offset: (.errors.offset | tonumber? // null)})
+          | group_by([.topic, .partition])
+          | map({topic: .[0].topic, partition: .[0].partition, first_offset: (map(.offset) | min), last_offset: (map(.offset) | max), count: length})),
+        dlq_offsets: (group_by(.partition) | map({partition: .[0].partition, first: (map(.offset) | min), last: (map(.offset) | max)})),
+        sample_value: .[0].value_preview
+      })
+    | sort_by(-.count)' $tmp_dir/records.json > $tmp_dir/groups.json
+
+  if [[ -n "$json" ]]
+  then
+      jq -n --argjson summary "$summary" --slurpfile groups $tmp_dir/groups.json --arg topic "$dlq_topic" \
+          '{topic: $topic, total: $summary.total, read: $summary.read, skipped_by_grep: $summary.skipped_filter, groups: $groups[0]}'
+      exit 0
+  fi
+
+  if [ "$total" == "0" ]
+  then
+      log "✅ dead letter queue $dlq_topic is empty"
+      exit 0
+  fi
+
+  matched=$((read_count - skipped))
+  if [ "$read_count" -lt "$total" ]
+  then
+      logwarn "⚠️ read the first $read_count records of $total (--max-messages $max_messages)"
+  fi
+  if [[ -n "$grep_regex" ]]
+  then
+      log "🔎 $matched of $read_count records match --grep $grep_regex"
+  fi
+
+  no_headers=$(jq '[.[] | select(.exception == null) | .count] | add // 0' $tmp_dir/groups.json)
+  if [ "$no_headers" == "$matched" ] && [ "$matched" != "0" ]
+  then
+      logwarn "⚠️ the records have no __connect.errors.* headers, so the error cannot be shown"
+      logwarn "   set \"errors.deadletterqueue.context.headers.enable\": \"true\" on the connector, and look at the connect logs (errors.log.enable)"
+  fi
+
+  log "📊 $matched records in $(jq length $tmp_dir/groups.json) group(s), most frequent first"
+  jq -r '.[] |
+    "",
+    "🔢 \(.count) record(s)" + (if .connector then " of connector \(.connector)" else "" end) + (if .stage then ", stage \(.stage)" else "" end) + (if .class then " (\(.class))" else "" end),
+    (if .exception then "  ❌ \(.exception): \((.message // "") | if length > 300 then .[0:300] + "…" else . end)" else "  ❌ no __connect.errors.* headers" end),
+    (if .root_cause and .root_cause != ((.exception // "") + ": " + (.message // "")) then "  🌱 root cause: \(.root_cause | if length > 300 then .[0:300] + "…" else . end)" else empty end),
+    (.original_topics[] | "  📍 original records: topic \(.topic) partition \(.partition) offsets \(.first_offset)..\(.last_offset) (\(.count))"),
+    (.dlq_offsets[] | "  📬 dlq partition \(.partition) offsets \(.first)..\(.last)"),
+    (if .sample_value then "  🔎 sample value: \(.sample_value | if length > 150 then .[0:150] + "…" else . end)" else empty end)
+  ' $tmp_dir/groups.json
+  echo ""
+  log "🎓 replay them once the cause is fixed: playground topic dlq replay --topic $dlq_topic"
+
+}
+
+# :command.function
+playground_topic_dlq_replay_command() {
+
+  # src/commands/topic/dlq/replay.sh
+  topic="${args[--topic]}"
+  connector="${args[--connector]}"
+  to="${args[--to]}"
+  max_messages="${args[--max-messages]}"
+  grep_regex="${args[--grep]}"
+  keep_error_headers="${args[--keep-error-headers]}"
+  dry_run="${args[--dry-run]}"
+  verbose="${args[--verbose]}"
+
+  resolve_dlq_topic "$topic" "$connector"
+
+  if [ "$to" == "$dlq_topic" ]
+  then
+      logerror "❌ --to is the dead letter queue itself"
+      exit 1
+  fi
+
+  classes=$(dlq_tool_classes) || exit 1
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  tool_args=(replay --topic "$dlq_topic" --max-messages "$max_messages")
+  [[ -n "$to" ]] && tool_args+=(--to "$to")
+  [[ -n "$grep_regex" ]] && tool_args+=(--grep "$grep_regex")
+  [[ -n "$keep_error_headers" ]] && tool_args+=(--keep-error-headers)
+  [[ -n "$dry_run" ]] && tool_args+=(--dry-run)
+
+  destination="${to:-the original topics (__connect.errors.topic header)}"
+  if [[ -n "$dry_run" ]]
+  then
+      log "🧪 Dry run: records of dead letter queue $dlq_topic that would be replayed to $destination"
+  else
+      log "🔁 Replaying dead letter queue $dlq_topic to $destination"
+  fi
+  # '|| ret=$?': get_connect_image turns set -e back on in run_kafka_java_tool
+  ret=0
+  run_kafka_java_tool "$classes" DlqTool "${tool_args[@]}" > $tmp_dir/out 2> $tmp_dir/err || ret=$?
+
+  if grep -q "^DLQ_ERROR " $tmp_dir/out
+  then
+      logerror "❌ $(grep -m1 "^DLQ_ERROR " $tmp_dir/out | cut -c11-)"
+      tail -20 $tmp_dir/err
+      exit 1
+  fi
+  if [ $ret -ne 0 ] || ! grep -q "^DLQ_SUMMARY " $tmp_dir/out
+  then
+      logerror "❌ could not replay dead letter queue $dlq_topic"
+      grep -v "^DLQ_" $tmp_dir/out | tail -20
+      tail -20 $tmp_dir/err
+      exit 1
+  fi
+
+  summary=$(grep -m1 "^DLQ_SUMMARY " $tmp_dir/out | cut -c13-)
+  total=$(echo "$summary" | jq -r .total)
+  read_count=$(echo "$summary" | jq -r .read)
+  replayed=$(echo "$summary" | jq -r .replayed)
+  skipped_filter=$(echo "$summary" | jq -r .skipped_filter)
+  skipped_no_topic=$(echo "$summary" | jq -r .skipped_no_topic)
+
+  if [ "$total" == "0" ]
+  then
+      log "✅ dead letter queue $dlq_topic is empty, nothing to replay"
+      exit 0
+  fi
+  if [ "$read_count" -lt "$total" ]
+  then
+      logwarn "⚠️ read the first $read_count records of $total (--max-messages $max_messages)"
+  fi
+  if [ "$skipped_filter" != "0" ]
+  then
+      log "🔎 $skipped_filter records do not match --grep $grep_regex and were skipped"
+  fi
+  if [ "$skipped_no_topic" != "0" ]
+  then
+      logwarn "⚠️ $skipped_no_topic records have no __connect.errors.topic header and were skipped: use --to <topic> (or enable errors.deadletterqueue.context.headers.enable on the connector)"
+  fi
+  echo "$summary" | jq -r '.targets | to_entries[] | "  📤 \(.value) record(s) to topic \(.key)"'
+  if [[ -n "$dry_run" ]]
+  then
+      log "🧪 $replayed records would be replayed, run again without --dry-run to replay them"
+  else
+      log "✅ $replayed records replayed"
+      if [[ -z "$to" ]]
+      then
+          log "🎓 the sink connector reads them again from its topics: check the dead letter queue with playground topic dlq inspect --topic $dlq_topic"
+      fi
+  fi
+
+}
+
+# :command.function
 playground_topic_tag_list_command() {
 
   # src/commands/topic/tag/list.sh
@@ -48698,6 +49462,276 @@ playground_connector_wait_command() {
           sleep $interval
       done
   done
+
+}
+
+# :command.function
+playground_connector_validate_command() {
+
+  # src/commands/connector/validate.sh
+  connector="${args[--connector]}"
+  json=${args[json]}
+  skip_automatic_connector_config=${args[--skip-automatic-connector-config]}
+  verbose="${args[--verbose]}"
+
+  connector_type=$(playground state get run.connector_type)
+
+  environment=$(playground state get run.environment_before_switch)
+  if [ "$environment" = "" ]
+  then
+      environment=$(playground state get run.environment)
+  fi
+  if [ "$environment" = "" ]
+  then
+      environment="plaintext"
+  fi
+  is_cfk=0
+  if [[ "$environment" == cfk* ]]
+  then
+      is_cfk=1
+  fi
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  if [ "$json" = "-" ]
+  then
+      json_content=$(read_stdin_if_any)
+  else
+      json_content=$json
+  fi
+
+  if [[ -z "$json_content" ]]
+  then
+      # no config on stdin: validate the config of the running connector
+      if [[ -z "$connector" ]]
+      then
+          logerror "❌ give the config to validate on stdin, or --connector to validate the config of a running connector"
+          exit 1
+      fi
+      if ! get_connector_config_json "$connector"
+      then
+          logerror "❌ could not get the config of connector $connector"
+          exit 1
+      fi
+      json_content="$curl_output"
+      log "🔎 Validating the config of running $connector_type connector $connector"
+      if echo "$json_content" | jq -e 'to_entries | any(.value | tostring | test("^(\\*+|\\[hidden\\])$") or contains("••"))' > /dev/null 2>&1
+      then
+          logwarn "⚠️ the REST API masks the passwords of the running config: errors on those keys can be false positives"
+      fi
+      # the running config already has what create-or-update added for the environment
+      skip_automatic_connector_config=running
+  else
+      if ! echo "$json_content" | jq -e 'type == "object"' > /dev/null 2>&1
+      then
+          logerror "❌ the config is not a valid JSON object"
+          exit 1
+      fi
+      connector="${connector:-playground-validate}"
+      log "🔎 Validating $connector_type connector config (nothing is created)"
+  fi
+
+  set +e
+  validate_connector_config "$connector" "$json_content" "$tmp_dir" "$environment" "$is_cfk" "$skip_automatic_connector_config"
+  ret=$?
+  set -e
+  if [ $ret -eq 1 ]
+  then
+      exit 1
+  fi
+
+}
+
+# :command.function
+playground_connector_diff_command() {
+
+  # src/commands/connector/diff.sh
+  connector="${args[--connector]}"
+  file="${args[--file]}"
+  with_connector="${args[--with-connector]}"
+  defaults="${args[--defaults]}"
+  json="${args[--json]}"
+  verbose="${args[--verbose]}"
+
+  connector_type=$(playground state get run.connector_type)
+
+  if [[ -z "$connector" ]]
+  then
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No $connector_type connector is running !"
+          exit 1
+      fi
+      if [ $(echo "$connector" | wc -w) -gt 1 ]
+      then
+          logerror "❌ several connectors are running ($connector), use --connector"
+          exit 1
+      fi
+  fi
+
+  nb_sources=0
+  [[ -n "$file" ]] && nb_sources=$((nb_sources+1))
+  [[ -n "$with_connector" ]] && nb_sources=$((nb_sources+1))
+  [[ -n "$defaults" ]] && nb_sources=$((nb_sources+1))
+  if [ $nb_sources -gt 1 ]
+  then
+      logerror "❌ set only one of --file, --with-connector, --defaults"
+      exit 1
+  fi
+  stdin_content=""
+  if [ $nb_sources -eq 0 ]
+  then
+      stdin_content=$(read_stdin_if_any)
+      if [[ -z "$stdin_content" ]]
+      then
+          logerror "❌ nothing to compare with: give a config on stdin, or --file, --with-connector or --defaults"
+          exit 1
+      fi
+  fi
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  if ! get_connector_config_json "$connector"
+  then
+      logerror "❌ could not get the config of connector $connector"
+      exit 1
+  fi
+  echo "$curl_output" > $tmp_dir/a.json
+  label_a="$connector"
+
+  # a file or stdin can be a plain config, or a 'playground connector create-or-update' heredoc as printed by show-config
+  function read_config () {
+      local content
+      content=$(cat)
+      if ! echo "$content" | jq -e 'type == "object"' > /dev/null 2>&1
+      then
+          content=$(echo "$content" | sed -n '/<< *.\{0,1\}EOF/,/^EOF/p' | sed '1d;$d' | sed 's/\\\$/$/g')
+      fi
+      if ! echo "$content" | jq -e 'type == "object"' > /dev/null 2>&1
+      then
+          logerror "❌ $1 is not a JSON connector config"
+          exit 1
+      fi
+      # a full connector (REST API GET /connectors/<name>) has the config in .config
+      echo "$content" | jq 'if (.config | type) == "object" and has("name") then .config else . end'
+  }
+
+  if [[ -n "$with_connector" ]]
+  then
+      if ! get_connector_config_json "$with_connector"
+      then
+          logerror "❌ could not get the config of connector $with_connector"
+          exit 1
+      fi
+      echo "$curl_output" > $tmp_dir/b.json
+      label_b="$with_connector"
+  elif [[ -n "$file" ]]
+  then
+      read_config "$file" < "$file" > $tmp_dir/b.json
+      label_b="$(basename "$file")"
+  elif [[ -n "$defaults" ]]
+  then
+      # default value of each parameter, from the validate endpoint of the plugin
+      connector_class=$(jq -r '."connector.class"' $tmp_dir/a.json)
+      if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+      then
+          get_ccloud_connect
+          handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$tmp_dir/a.json https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate"
+      elif [[ "$(playground state get run.environment)" == cfk* ]]
+      then
+          logerror "❌ --defaults is not supported with CFK (no Connect REST validation endpoint)"
+          exit 1
+      else
+          get_connect_url_and_security
+          handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$tmp_dir/a.json $connect_url/connector-plugins/$connector_class/config/validate"
+      fi
+      echo "$curl_output" | jq '[.configs[] | select(.definition != null) | {key: .definition.name, value: .definition.default_value}] | from_entries' > $tmp_dir/b.json 2> /dev/null || true
+      if [ ! -s $tmp_dir/b.json ] || [ "$(jq length $tmp_dir/b.json)" == "0" ]
+      then
+          logerror "❌ the validate endpoint did not return the parameter definitions of $connector_class"
+          exit 1
+      fi
+      label_b="defaults"
+  else
+      echo "$stdin_content" | read_config "stdin" > $tmp_dir/b.json
+      label_b="stdin"
+  fi
+
+  # masked values ("[hidden]", "****", "••••") are not compared: the REST API hides the passwords
+  jq -n --slurpfile a $tmp_dir/a.json --slurpfile b $tmp_dir/b.json --arg defaults "$defaults" '
+    def masked: (. // "") | tostring | test("^(\\*+|\\[hidden\\])$") or contains("••");
+    def str: if . == null then null else (if type == "string" then . else tojson end) end;
+    # __internal.config.version is added by the worker (Kafka 4)
+    def clean: del(.name) | with_entries(select(.key | startswith("__internal.") | not));
+    ($a[0] | clean) as $A | ($b[0] | clean) as $B
+    | if $defaults != "" then
+        # only the keys set on the connector, compared with the default of the parameter
+        [ $A | to_entries[] | .key as $k | (.value | str) as $va
+          | if ($B | has($k) | not) then {key: $k, status: "no_default", a: $va}
+            elif ($va | masked) then {key: $k, status: "masked", a: $va, b: ($B[$k] | str)}
+            elif $B[$k] == null then {key: $k, status: "required", a: $va}
+            elif $va == ($B[$k] | str) then {key: $k, status: "same", a: $va, b: ($B[$k] | str)}
+            else {key: $k, status: "different", a: $va, b: ($B[$k] | str)} end ]
+      else
+        [ (($A | keys) + ($B | keys) | unique)[] as $k
+          | ($A[$k] | str) as $va | ($B[$k] | str) as $vb
+          | if ($A | has($k) | not) then {key: $k, status: "only_b", b: $vb}
+            elif ($B | has($k) | not) then {key: $k, status: "only_a", a: $va}
+            elif ($va | masked) or ($vb | masked) then {key: $k, status: "masked", a: $va, b: $vb}
+            elif $va == $vb then {key: $k, status: "same", a: $va, b: $vb}
+            else {key: $k, status: "different", a: $va, b: $vb} end ]
+      end' > $tmp_dir/diff.json
+
+  if [[ -n "$json" ]]
+  then
+      jq --arg a "$label_a" --arg b "$label_b" '{a: $a, b: $b, keys: .}' $tmp_dir/diff.json
+      exit 0
+  fi
+
+  if [[ -n "$defaults" ]]
+  then
+      log "🔀 Parameters of connector $connector that are not at their default value"
+      jq -r '
+        def short: if . == null then "(null)" elif length > 120 then .[0:120] + "…" else . end;
+        (.[] | select(.status == "required") | "  📌 \(.key) = \(.a | short)   (no default value)"),
+        (.[] | select(.status == "different") | "  ✏️  \(.key) = \(.a | short)   (default: \(.b | if . == "" then "empty" else short end))"),
+        (.[] | select(.status == "no_default") | "  🧩 \(.key) = \(.a | short)   (not a parameter of the plugin: worker override, transform, converter or predicate)"),
+        (.[] | select(.status == "masked") | "  🔒 \(.key)   (masked by the REST API)")' $tmp_dir/diff.json
+      same=$(jq '[.[] | select(.status == "same")] | length' $tmp_dir/diff.json)
+      different=$(jq '[.[] | select(.status == "different")] | length' $tmp_dir/diff.json)
+      log "📊 $different parameter(s) differ from their default, $same are set to their default value (they could be removed)"
+      jq -r '.[] | select(.status == "same") | "  💤 \(.key) = \(.a)"' $tmp_dir/diff.json
+      exit 0
+  fi
+
+  log "🔀 Diff of connector $connector (➖) with $label_b (➕)"
+  jq -r --arg a "$label_a" --arg b "$label_b" '
+    def short: if . == null then "(null)" elif length > 120 then .[0:120] + "…" else . end;
+    (.[] | select(.status == "different") | "  ✏️  \(.key)\n       ➖ \(.a | short)\n       ➕ \(.b | short)"),
+    (.[] | select(.status == "only_a") | "  ➖ \(.key) = \(.a | short)   (only in \($a))"),
+    (.[] | select(.status == "only_b") | "  ➕ \(.key) = \(.b | short)   (only in \($b))"),
+    (.[] | select(.status == "masked") | "  🔒 \(.key)   (masked by the REST API, not compared)")' $tmp_dir/diff.json
+  same=$(jq '[.[] | select(.status == "same")] | length' $tmp_dir/diff.json)
+  differ=$(jq '[.[] | select(.status == "different" or .status == "only_a" or .status == "only_b")] | length' $tmp_dir/diff.json)
+  if [ "$differ" == "0" ]
+  then
+      log "✅ no difference ($same identical keys)"
+  else
+      log "📊 $differ key(s) differ, $same identical"
+  fi
 
 }
 
@@ -54414,7 +55448,6 @@ playground_connector_create_or_update_command() {
   new_json_file=$tmp_dir/connector_new.json
   connector_with_offsets_file=$tmp_dir/connector_with_offsets.json
   connector_with_initial_state_file=$tmp_dir/connector_with_initial_state.json
-  json_validate_file=$tmp_dir/json_validate_file
 
   echo "$json_content" > $json_file
 
@@ -54497,79 +55530,12 @@ playground_connector_create_or_update_command() {
   then
       log "✅ --validate is set"
       set +e
-      connector_class=$(echo "$json_content" | jq -r '."connector.class"')
-
-      if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
-      then
-          get_ccloud_connect
-          handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate"
-      elif [[ "$is_cfk" -eq 1 ]]
-      then
-          if [[ "$connector_class" == "null" ]] || [[ -z "$connector_class" ]]
-          then
-              logerror "❌ connector.class is required"
-              exit 1
-          fi
-          logwarn "⚠️ --validate with CFK currently performs basic checks only (no Connect REST validation endpoint)"
-          log "✅ Basic CFK validation passed"
-          set -e
-          validate=skipped
-      else
-          get_connect_url_and_security
-          if [[ -n "$skip_automatic_connector_config" ]]
-          then
-              log "🤖 --skip-automatic-connector-config is set"
-          else
-              add_connector_config_based_on_environment "$environment" "$json_content"
-          fi
-          # add mandatory name field
-          new_json_content=$(echo "$json_content" | jq ". + {\"name\": \"$connector\"}")
-
-          echo "$new_json_content" > $new_json_file
-          handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$new_json_file $connect_url/connector-plugins/$connector_class/config/validate"
-      fi
+      validate_connector_config "$connector" "$json_content" "$tmp_dir" "$environment" "$is_cfk" "$skip_automatic_connector_config"
+      ret=$?
       set -e
-      if [[ "$validate" == "skipped" ]]
+      if [ $ret -eq 1 ]
       then
-          :
-      else
-      if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
-      then
-          set +e
-          echo "$curl_output" > $json_validate_file
-          jq_output=$(jq . "$json_validate_file" 2>&1)
-          error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
-
-          if [[ -n "$error_line" ]]; then
-              logerror "❌ Invalid JSON at line $error_line"
-          fi
-          set -e
-
-          if [ -z "$GITHUB_RUN_NUMBER" ]
-          then
-              if [[ $(type -f bat 2>&1) =~ "not found" ]]
-              then
-                  cat -n $json_validate_file
-              else
-                  bat $json_validate_file --highlight-line $error_line
-              fi
-          fi
-
           exit 1
-      fi
-
-      # Check if there were any errors
-      has_errors=$(echo "$curl_output" | jq '.configs[] | select(.value.errors | length > 0) | length' | tr -d '\n')
-
-      if [[ "$has_errors" -gt 0 ]]
-      then
-          output=$(echo "$curl_output" | jq -r '.configs[] | select(.value.errors | length > 0) | .value.name + " ->> " + (.value.errors | to_entries | map("\(.value|tostring)") | join(", "))')
-          logerror "❌ Validation errors found in connector config\n$output"
-
-          exit 1
-      else
-          log "✅ $connector_type connector config is valid !"
-      fi
       fi
   fi
 
@@ -76861,6 +77827,13 @@ playground_topic_parse_requirements() {
       shift $#
       ;;
 
+    dlq)
+      action="dlq"
+      shift
+      playground_topic_dlq_parse_requirements "$@"
+      shift $#
+      ;;
+
     tag)
       action="tag"
       shift
@@ -78819,6 +79792,406 @@ playground_topic_alter_parse_requirements() {
   if [[ -z ${args['--topic']+x} ]]; then
     printf "missing required flag: --topic, -t TOPIC\n" >&2
     exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_topic_dlq_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_dlq_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    inspect)
+      action="inspect"
+      shift
+      playground_topic_dlq_inspect_parse_requirements "$@"
+      shift $#
+      ;;
+
+    replay)
+      action="replay"
+      shift
+      playground_topic_dlq_replay_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_topic_dlq_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_topic_dlq_inspect_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_dlq_inspect_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="topic dlq inspect"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-messages)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-messages']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-messages requires an argument: --max-messages MAX_MESSAGES" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --grep)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--grep']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--grep requires an argument: --grep REGEX" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--max-messages']:-} ]] || args['--max-messages']="10000"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--max-messages'] ]]; then
+    validation_output="$(validate_integer "${args['--max-messages']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-messages MAX_MESSAGES" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_topic_dlq_replay_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_dlq_replay_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="topic dlq replay"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --to)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--to']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--to requires an argument: --to TO" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-messages)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-messages']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-messages requires an argument: --max-messages MAX_MESSAGES" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --grep)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--grep']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--grep requires an argument: --grep REGEX" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --keep-error-headers)
+
+        # :flag.case_no_arg
+        args['--keep-error-headers']=1
+        shift
+        ;;
+
+      # :flag.case
+      --dry-run)
+
+        # :flag.case_no_arg
+        args['--dry-run']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--max-messages']:-} ]] || args['--max-messages']="10000"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--max-messages'] ]]; then
+    validation_output="$(validate_integer "${args['--max-messages']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-messages MAX_MESSAGES" "$validation_output" >&2
+      exit 1
+    fi
   fi
 
 }
@@ -82262,6 +83635,20 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
+    validate)
+      action="validate"
+      shift
+      playground_connector_validate_parse_requirements "$@"
+      shift $#
+      ;;
+
+    diff)
+      action="diff"
+      shift
+      playground_connector_diff_parse_requirements "$@"
+      shift $#
+      ;;
+
     error-recommendations)
       action="error-recommendations"
       shift
@@ -82777,6 +84164,245 @@ playground_connector_wait_parse_requirements() {
   if [[ ${args['--state']:-} ]] && [[ ! ${args['--state']:-} =~ ^(RUNNING|PAUSED|STOPPED|FAILED)$ ]]; then
     printf "%s\n" "--state must be one of: RUNNING, PAUSED, STOPPED, FAILED" >&2
     exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_connector_validate_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_validate_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector validate"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --skip-automatic-connector-config)
+
+        # :flag.case_no_arg
+        args['--skip-automatic-connector-config']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          # :argument.case
+          if [[ -z ${args['json']+x} ]]; then
+            args['json']=$1
+            shift
+          else
+            printf "invalid argument: %s\n" "$key" >&2
+            exit 1
+          fi
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['json']+x} ]]; then
+          args['json']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['json']:-} ]] || args['json']="-"
+
+}
+
+# :command.parse_requirements
+playground_connector_diff_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_diff_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector diff"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --file | -f)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --with-connector)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--with-connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--with-connector requires an argument: --with-connector WITH_CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --defaults)
+
+        # :flag.case_no_arg
+        args['--defaults']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--file'] ]]; then
+    validation_output="$(validate_file_exists "${args['--file']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
+      exit 1
+    fi
   fi
 
 }
@@ -98189,6 +99815,11 @@ playground_topic_completion() {
         playground_topic_alter_completion "$completion_current" "$@"
         return
         ;;
+      dlq)
+        shift
+        playground_topic_dlq_completion "$completion_current" "$@"
+        return
+        ;;
       tag)
         shift
         playground_topic_tag_completion "$completion_current" "$@"
@@ -98203,7 +99834,7 @@ playground_topic_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" get-number-records wait-for-records get-offsets display-consumer-offsets list get-size describe set-schema-compatibility consume produce create delete alter tag
+  completion_candidates "$completion_current" get-number-records wait-for-records get-offsets display-consumer-offsets list get-size describe set-schema-compatibility consume produce create delete alter dlq tag
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -99241,6 +100872,230 @@ playground_topic_alter_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --topic "$completion_current" --topic -t
+  fi
+
+}
+
+# :command.completion_function
+playground_topic_dlq_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      inspect)
+        shift
+        playground_topic_dlq_inspect_completion "$completion_current" "$@"
+        return
+        ;;
+      replay)
+        shift
+        playground_topic_dlq_replay_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" inspect replay
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_topic_dlq_inspect_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+
+        ;;
+      --max-messages)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-messages"]=1
+
+        ;;
+      --grep)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--grep"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --max-messages "$completion_current" --max-messages
+    completion_flag_candidates --grep "$completion_current" --grep
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_topic_dlq_replay_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+
+        ;;
+      --to)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--to"]=1
+
+        ;;
+      --max-messages)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-messages"]=1
+
+        ;;
+      --grep)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--grep"]=1
+
+        ;;
+      --keep-error-headers)
+        completion_blocked_flags["--keep-error-headers"]=1
+
+        shift
+        ;;
+      --dry-run)
+        completion_blocked_flags["--dry-run"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --to "$completion_current" --to
+    completion_flag_candidates --max-messages "$completion_current" --max-messages
+    completion_flag_candidates --grep "$completion_current" --grep
+    completion_flag_candidates --keep-error-headers "$completion_current" --keep-error-headers
+    completion_flag_candidates --dry-run "$completion_current" --dry-run
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
   fi
 
 }
@@ -100992,6 +102847,16 @@ playground_connector_completion() {
         playground_connector_wait_completion "$completion_current" "$@"
         return
         ;;
+      validate)
+        shift
+        playground_connector_validate_completion "$completion_current" "$@"
+        return
+        ;;
+      diff)
+        shift
+        playground_connector_diff_completion "$completion_current" "$@"
+        return
+        ;;
       error-recommendations)
         shift
         playground_connector_error_recommendations_completion "$completion_current" "$@"
@@ -101161,7 +103026,7 @@ playground_connector_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" status wait error-recommendations oracle-cdc-xstream smt offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart stop resume unpause delete diagnose show-lag benchmark show-config show-config-parameters display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update edit alter
+  completion_candidates "$completion_current" status wait validate diff error-recommendations oracle-cdc-xstream smt offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart stop resume unpause delete diagnose show-lag benchmark show-config show-config-parameters display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update edit alter
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -101291,6 +103156,144 @@ playground_connector_wait_completion() {
     completion_flag_candidates --state "$completion_current" --state
     completion_flag_candidates --max-wait "$completion_current" --max-wait
     completion_flag_candidates --interval "$completion_current" --interval
+  fi
+
+}
+
+# :command.completion_function
+playground_connector_validate_completion() {
+  local completion_current="$1"
+  local completion_arg_index=0
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+
+        ;;
+      --skip-automatic-connector-config)
+        completion_blocked_flags["--skip-automatic-connector-config"]=1
+
+        shift
+        ;;
+      *)
+        if [[ $completion_arg_index -ge 1 ]]; then
+          return
+        fi
+        completion_arg_index=$((completion_arg_index + 1))
+        shift
+
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --skip-automatic-connector-config "$completion_current" --skip-automatic-connector-config
+  fi
+
+}
+
+# :command.completion_function
+playground_connector_diff_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+
+        ;;
+      --file | -f)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-specific-file-extension "$completion_current" --extension "json"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--file"]=1
+
+        ;;
+      --with-connector)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--with-connector"]=1
+
+        ;;
+      --defaults)
+        completion_blocked_flags["--defaults"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --file "$completion_current" --file -f
+    completion_flag_candidates --with-connector "$completion_current" --with-connector
+    completion_flag_candidates --defaults "$completion_current" --defaults
+    completion_flag_candidates --json "$completion_current" --json
   fi
 
 }
@@ -104260,6 +106263,9 @@ run() {
     "topic create") playground_topic_create_command ;;
     "topic delete") playground_topic_delete_command ;;
     "topic alter") playground_topic_alter_command ;;
+    "topic dlq") playground_topic_dlq_command ;;
+    "topic dlq inspect") playground_topic_dlq_inspect_command ;;
+    "topic dlq replay") playground_topic_dlq_replay_command ;;
     "topic tag") playground_topic_tag_command ;;
     "topic tag list") playground_topic_tag_list_command ;;
     "topic tag create") playground_topic_tag_create_command ;;
@@ -104293,6 +106299,8 @@ run() {
     "connector") playground_connector_command ;;
     "connector status") playground_connector_status_command ;;
     "connector wait") playground_connector_wait_command ;;
+    "connector validate") playground_connector_validate_command ;;
+    "connector diff") playground_connector_diff_command ;;
     "connector error-recommendations") playground_connector_error_recommendations_command ;;
     "connector oracle-cdc-xstream") playground_connector_oracle_cdc_xstream_command ;;
     "connector oracle-cdc-xstream generate-report") playground_connector_oracle_cdc_xstream_generate_report_command ;;
