@@ -38,6 +38,9 @@ cluster_environment="${args[--cluster-environment]}"
 cluster_name="${args[--cluster-name]}"
 cluster_creds="${args[--cluster-creds]}"
 cluster_schema_registry_creds="${args[--cluster-schema-registry-creds]}"
+ccloud_service_account="${args[--ccloud-service-account]}"
+ccloud_service_account_acls="${args[--ccloud-service-account-acls]}"
+ccloud_service_account_id="${args[--ccloud-service-account-id]}"
 force_interactive_re_run="${args[--force-interactive-re-run]}"
 force_interactive_repro="${args[--force-interactive-repro]}"
 
@@ -587,6 +590,37 @@ then
   export SCHEMA_REGISTRY_CREDS=$cluster_schema_registry_creds
 fi
 
+if [[ -n "$ccloud_service_account" ]] || [[ -n "$ccloud_service_account_acls" ]] || [[ -n "$ccloud_service_account_id" ]]
+then
+  if [[ $test_file != *"fully-managed"* ]] && [[ $test_file != *"custom-"* ]]
+  then
+    logerror "❌ --ccloud-service-account is only supported with fully managed and custom connector examples"
+    exit 1
+  fi
+  array_flag_list+=("--ccloud-service-account")
+  # read by playground connector create-or-update
+  export PG_CCLOUD_SERVICE_ACCOUNT=true
+  if [[ -n "$ccloud_service_account_acls" ]]
+  then
+    array_flag_list+=("--ccloud-service-account-acls $ccloud_service_account_acls")
+    export PG_CCLOUD_SERVICE_ACCOUNT_ACLS=$ccloud_service_account_acls
+  fi
+  if [[ -n "$ccloud_service_account_id" ]]
+  then
+    array_flag_list+=("--ccloud-service-account-id $ccloud_service_account_id")
+    export PG_CCLOUD_SERVICE_ACCOUNT_ID=$ccloud_service_account_id
+  fi
+
+  if [[ -n "$force_interactive_repro" ]]
+  then
+    force_enable --ccloud-service-account PG_CCLOUD_SERVICE_ACCOUNT
+    if [[ -n "$ccloud_service_account_acls" ]]
+    then
+      force_enable --ccloud-service-account-acls PG_CCLOUD_SERVICE_ACCOUNT_ACLS "$ccloud_service_account_acls"
+    fi
+  fi
+fi
+
 if [[ -n "$open" ]]
 then
   if [[ $test_file == *"fully-managed"* ]] || [[ $test_file == *"custom-"* ]]
@@ -684,6 +718,7 @@ then
   MENU_KCAT="$(menu_label "🐈" "kcat" "--enable-kcat" 4)"
   MENU_SQL_DATAGEN="$(menu_label "🌀" "SQL Datagen injection" "--enable-sql-datagen" 4)"
   MENU_BENCHMARK="$(menu_label "🏎️" "Benchmark the connector" "--benchmark" 4)"
+  MENU_CCLOUD_SERVICE_ACCOUNT="$(menu_label "👤" "Connector service account" "--ccloud-service-account" 4)"
   MENU_FLINK="$(menu_label "🐹" "Flink" "--enable-flink" 4)"
   MENU_CONNECT_COMMUNITY_IMAGE="$(menu_label "🌱" "Community connect image" "--connect-community-image" 4)"
   MENU_KAFKA_COMMUNITY_IMAGE="$(menu_label "🌿" "Community kafka image" "--kafka-community-image" 4)"
@@ -701,6 +736,8 @@ then
   MENU_CLUSTER_NAME="$(menu_label "🎰" "Cluster name" "--cluster-name")"
   MENU_CLUSTER_CREDS="$(menu_label "🔒" "Kafka api key & secret" "--cluster-creds")"
   MENU_CLUSTER_SR_CREDS="$(menu_label "🔰" "Schema registry api key & secret" "--cluster-schema-registry-creds")"
+  MENU_CCLOUD_SERVICE_ACCOUNT_ACLS="$(menu_label "🚦" "Service account ACLs" "--ccloud-service-account-acls")"
+  MENU_CCLOUD_SERVICE_ACCOUNT_ID="$(menu_label "🪪" "Existing service account" "--ccloud-service-account-id")"
 
   MENU_UNSET_CLUSTER_NAME="❌🎰🎯 Unset cluster name (will also reset cloud region, cluster type and cloud provider)"
 
@@ -1074,6 +1111,8 @@ then
     add_menu_toggle $((1-is_fully_managed)) "$ENABLE_KCAT" "$MENU_KCAT"
     add_menu_toggle $sql_datagen "$ENABLE_SQL_DATAGEN" "$MENU_SQL_DATAGEN"
     add_menu_toggle $benchmark_available "$ENABLE_BENCHMARK" "$MENU_BENCHMARK"
+    if [[ $test_file == *"fully-managed"* ]] || [[ $test_file == *"custom-"* ]]; then ccloud_service_account_available=1; else ccloud_service_account_available=0; fi
+    add_menu_toggle $ccloud_service_account_available "$PG_CCLOUD_SERVICE_ACCOUNT" "$MENU_CCLOUD_SERVICE_ACCOUNT"
     add_menu_toggle $((1-is_fully_managed)) "$ENABLE_FLINK" "$MENU_FLINK"
     add_menu_group "$MENU_SEPARATOR_FEATURES" "${toggle_group[@]}"
 
@@ -1089,6 +1128,12 @@ then
       group+=("$(menu_value_label "$MENU_CLUSTER_CREDS" "$([ -n "$(get_menu_flag_value --cluster-creds)" ] && echo set)")")
       group+=("$(menu_value_label "$MENU_CLUSTER_SR_CREDS" "$([ -n "$(get_menu_flag_value --cluster-schema-registry-creds)" ] && echo set)")")
       if [ ! -z "$CLUSTER_NAME" ] || [[ -n "$cluster_name" ]]; then group+=("$MENU_UNSET_CLUSTER_NAME"); fi
+      # sub-options of the connector service account toggle
+      if [ -n "$PG_CCLOUD_SERVICE_ACCOUNT" ]
+      then
+        group+=("$(menu_value_label "$MENU_CCLOUD_SERVICE_ACCOUNT_ACLS" "${PG_CCLOUD_SERVICE_ACCOUNT_ACLS:-docs}")")
+        group+=("$(menu_value_label "$MENU_CCLOUD_SERVICE_ACCOUNT_ID" "${PG_CCLOUD_SERVICE_ACCOUNT_ID:-new one per connector}")")
+      fi
     fi
     add_menu_group "$MENU_SEPARATOR_CLOUD" "${group[@]}"
 
@@ -1402,6 +1447,63 @@ then
         array_flag_list=("${array_flag_list[@]/"--benchmark"}")
         unset ENABLE_BENCHMARK
         interactive_enable_benchmark=""
+      fi
+    fi
+
+    if [[ $res == *"$MENU_CCLOUD_SERVICE_ACCOUNT"* ]]
+    then
+      if [ -z "$PG_CCLOUD_SERVICE_ACCOUNT" ]
+      then
+        array_flag_list+=("--ccloud-service-account")
+        export PG_CCLOUD_SERVICE_ACCOUNT=true
+        interactive_enable_ccloud_service_account="true"
+      else
+        maybe_remove_flag "--ccloud-service-account"
+        maybe_remove_flag "--ccloud-service-account-acls"
+        maybe_remove_flag "--ccloud-service-account-id"
+        unset PG_CCLOUD_SERVICE_ACCOUNT PG_CCLOUD_SERVICE_ACCOUNT_ACLS PG_CCLOUD_SERVICE_ACCOUNT_ID
+        interactive_enable_ccloud_service_account=""
+      fi
+    fi
+
+    if [[ $res == *"$MENU_CCLOUD_SERVICE_ACCOUNT_ACLS"* ]]
+    then
+      set +e
+      ccloud_service_account_acls=$(printf '%s\n' \
+        "docs  the ACLs of the documentation, derived from the connector config" \
+        "full  every operation on every topic, group and transactional id" \
+        "none  no ACL, add them with playground rbac acl create --connector <connector>" \
+        | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🚦" --header="select the ACLs of the service accounts" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer | awk '{print $1}')
+      set -e
+      if [[ -n "$ccloud_service_account_acls" ]]
+      then
+        maybe_remove_flag "--ccloud-service-account-acls"
+        unset PG_CCLOUD_SERVICE_ACCOUNT_ACLS
+        # docs is the default
+        if [ "$ccloud_service_account_acls" != "docs" ]
+        then
+          array_flag_list+=("--ccloud-service-account-acls $ccloud_service_account_acls")
+          export PG_CCLOUD_SERVICE_ACCOUNT_ACLS=$ccloud_service_account_acls
+        fi
+      fi
+    fi
+
+    if [[ $res == *"$MENU_CCLOUD_SERVICE_ACCOUNT_ID"* ]]
+    then
+      set +e
+      # service accounts of the organization, or type an id
+      ccloud_service_account_id=$( { echo "new  create a new service account per connector, with its ACLs"; confluent iam service-account list -o json 2>/dev/null | jq -r '.[] | "\(.id)  \(.name)"'; } \
+        | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🪪" --header="select or type the id of the service account used as is by the connectors (no ACL created)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query | tail -n 1 | awk '{print $1}')
+      set -e
+      if [[ -n "$ccloud_service_account_id" ]]
+      then
+        maybe_remove_flag "--ccloud-service-account-id"
+        unset PG_CCLOUD_SERVICE_ACCOUNT_ID
+        if [ "$ccloud_service_account_id" != "new" ]
+        then
+          array_flag_list+=("--ccloud-service-account-id $ccloud_service_account_id")
+          export PG_CCLOUD_SERVICE_ACCOUNT_ID=$ccloud_service_account_id
+        fi
       fi
     fi
 
@@ -1847,6 +1949,19 @@ then
   if [ "$interactive_enable_benchmark" == "true" ] && [[ -n "$force_interactive_repro" ]]
   then
     force_enable --benchmark ENABLE_BENCHMARK
+  fi
+
+  if [ "$interactive_enable_ccloud_service_account" == "true" ] && [[ -n "$force_interactive_repro" ]]
+  then
+    force_enable --ccloud-service-account PG_CCLOUD_SERVICE_ACCOUNT
+    if [ -n "$PG_CCLOUD_SERVICE_ACCOUNT_ACLS" ]
+    then
+      force_enable --ccloud-service-account-acls PG_CCLOUD_SERVICE_ACCOUNT_ACLS "$PG_CCLOUD_SERVICE_ACCOUNT_ACLS"
+    fi
+    if [ -n "$PG_CCLOUD_SERVICE_ACCOUNT_ID" ]
+    then
+      force_enable --ccloud-service-account-id PG_CCLOUD_SERVICE_ACCOUNT_ID "$PG_CCLOUD_SERVICE_ACCOUNT_ID"
+    fi
   fi
 
   if [ "$interactive_enable_sql" == "true" ]

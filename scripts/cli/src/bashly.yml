@@ -1464,6 +1464,8 @@ commands:
     help: "📜 With --enable-sql-datagen or --benchmark, load script to use instead of benchmark-load.bash (file of the example folder, or absolute path)"
   - name: BENCHMARK_ARGS
     help: "🏎️ With --benchmark, extra flags for playground connector benchmark (e.g. \"--mode steady --duration 5m\")"
+  - name: PG_CCLOUD_SERVICE_ACCOUNT_ACL_EXCLUDE
+    help: "🙈 With --ccloud-service-account, regex of the ACLs not to create, matched on <OPERATION> <ResourceType>:<name> [prefix] (e.g. \"READ Group:\")"
   dependencies:
     fzf: visit https://github.com/junegunn/fzf#installation to install
   help: |-
@@ -1953,6 +1955,45 @@ commands:
       ❣️ Only required if you want to use your own existing cluster
       
       🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable
+
+  - long: --ccloud-service-account
+    required: false
+    help: |-
+      👤 Run the fully managed connectors with a service account (kafka.auth.mode=SERVICE_ACCOUNT)
+
+      Instead of the API key of the example, each fully managed or custom
+      connector gets its own service account, with the ACLs listed in
+      https://docs.confluent.io/cloud/current/connectors/service-account.html
+      (derived from the connector config), and the owner of
+      CONFLUENT_CLOUD_API_KEY gets the Assigner role on it. The example is
+      not changed.
+
+      The service accounts and their ACLs are deleted with the connectors
+      (playground connector delete, end-of-run cleanup, playground
+      cleanup-cloud-resources).
+
+      🎓 Tip: to reproduce an authorization error, delete or deny an ACL with
+      playground rbac acl delete|create --connector <connector> [--deny],
+      restart the connector and run playground connector diagnose.
+      PG_CCLOUD_SERVICE_ACCOUNT_ACL_EXCLUDE skips ACLs when they are created.
+  - long: --ccloud-service-account-acls
+    required: false
+    arg: profile
+    allowed: [docs, full, none]
+    help: |-
+      🚦 ACLs of the service accounts created by --ccloud-service-account (implies it)
+
+        docs  the ACLs of the documentation, derived from the connector config (default)
+        full  every operation on every topic, group and transactional id (same as the API key of the example)
+        none  no ACL, add them with playground rbac acl create --connector <connector>
+  - long: --ccloud-service-account-id
+    required: false
+    validate: not_empty
+    arg: service-account
+    help: |-
+      👤 Use this existing service account (sa-xxxxx) for the fully managed connectors, as is (implies --ccloud-service-account)
+
+      No ACL is created nor deleted, and the service account is kept.
 
   - long: --force-interactive-re-run
     required: false
@@ -6953,10 +6994,8 @@ commands:
 - name: rbac
   expose: always
   group: RBAC
-  filters:
-  - rbac_environment
   help: |-
-    🛡️ RBAC commands (rbac-sasl-plain and cfk-rbac environments only)
+    🛡️ RBAC commands (rbac-sasl-plain and cfk-rbac environments, plus Confluent Cloud ACLs)
 
     Change permissions of the running rbac-sasl-plain or cfk-rbac environment
     without opening a shell in a container: the commands call the MDS REST API
@@ -6966,7 +7005,8 @@ commands:
       role-binding   create, delete and list role bindings
       user           add, delete and list LDAP users and their groups
       acl            create, delete and list ACLs (MDS centralized ACLs, or
-                     regular Kafka ACLs with --kafka-acls)
+                     regular Kafka ACLs with --kafka-acls). On a Confluent
+                     Cloud run, ACLs of the Confluent Cloud cluster
 
     🎓 Tip: principals are User:<name> or Group:<name>, a bare name means User:<name>.
   commands:
@@ -6974,6 +7014,8 @@ commands:
     - name: role-binding
       expose: always
       group: RBAC
+      filters:
+      - rbac_environment
       help: |-
         🔐 Role binding commands
       commands:
@@ -7111,6 +7153,8 @@ commands:
     - name: user
       expose: always
       group: RBAC
+      filters:
+      - rbac_environment
       help: |-
         🧑 LDAP user commands
 
@@ -7180,6 +7224,8 @@ commands:
     - name: acl
       expose: always
       group: RBAC
+      filters:
+      - rbac_or_ccloud_environment
       help: |-
         🚦 ACL commands
 
@@ -7187,6 +7233,13 @@ commands:
         _confluent-metadata-auth topic and enforced by the CONFLUENT access rule
         provider). With --kafka-acls, they are regular Kafka ACLs created with
         kafka-acls (ZK_ACL or KRAFT_ACL access rule provider).
+
+        ⛅ On a Confluent Cloud run, they are the ACLs of the Confluent Cloud
+        cluster (confluent kafka acl). --connector then uses the service
+        account of a fully managed connector created with
+        playground run --ccloud-service-account as principal, to reproduce
+        authorization errors: delete or deny one of its ACLs, then restart the
+        connector.
       commands:
 
         - name: create
@@ -7194,7 +7247,29 @@ commands:
           help: |-
             🚦 Create ACLs, one per --operation
           flags:
-          - *rbac-principal-required
+          - &rbac-acl-principal
+            long: --principal
+            short: -p
+            required: false
+            arg: principal
+            help: |-
+              🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)
+
+              ⛅ On Confluent Cloud, User:sa-xxxxx (service account) or User:u-xxxxx (user)
+
+              ❕ Required, unless --connector is set
+          - &rbac-acl-connector
+            long: --connector
+            short: -c
+            required: false
+            arg: connector
+            completions:
+              dynamic:
+              - playground get-connector-list
+            help: |-
+              🔗 Use the service account of this fully managed connector (kafka.service.account.id) as principal
+
+              ⛅ Confluent Cloud only, see playground run --ccloud-service-account
           - &rbac-operation
             long: --operation
             short: -o
@@ -7236,6 +7311,7 @@ commands:
           - playground rbac acl create --principal User:charlie --operation WRITE --operation DESCRIBE --resource Topic:orders
           - playground rbac acl create --principal User:charlie --operation READ --resource Group:my-app --prefix
           - playground rbac acl create --principal User:charlie --operation READ --resource Topic:orders --kafka-acls
+          - playground rbac acl create --connector HttpSink_\$USER --operation READ --resource Topic:http-topic --deny
 
         - name: delete
           group: RBAC
@@ -7244,7 +7320,8 @@ commands:
 
             Same flags as 'playground rbac acl create'.
           flags:
-          - *rbac-principal-required
+          - *rbac-acl-principal
+          - *rbac-acl-connector
           - *rbac-operation
           - *rbac-acl-resource
           - *rbac-prefix
@@ -7254,19 +7331,23 @@ commands:
           - *verbose
           examples:
           - playground rbac acl delete --principal User:charlie --operation WRITE --resource Topic:orders
+          - playground rbac acl delete --connector HttpSink_\$USER --operation READ --resource Group:connect-lcc- --prefix
 
         - name: list
           group: RBAC
           help: |-
             📋 List ACLs
 
-            Lists both MDS centralized ACLs and regular Kafka ACLs.
+            Lists both MDS centralized ACLs and regular Kafka ACLs, or the ACLs of
+            the Confluent Cloud cluster on a Confluent Cloud run.
           flags:
           - *rbac-principal
+          - *rbac-acl-connector
           - *verbose
           examples:
           - playground rbac acl list
           - playground rbac acl list --principal User:charlie
+          - playground rbac acl list --connector HttpSink_\$USER
 
 - name: connector-plugin
   expose: always
@@ -8983,6 +9064,15 @@ commands:
 
       🎓 Tip: add --validate to have the config checked by the plugin before
       it is deployed, which reports every invalid property at once.
+    environment_variables:
+    - name: PG_CCLOUD_SERVICE_ACCOUNT
+      help: "👤 true: create fully managed connectors with a service account and the ACLs of the documentation (set by playground run --ccloud-service-account)"
+    - name: PG_CCLOUD_SERVICE_ACCOUNT_ACLS
+      help: "🚦 With PG_CCLOUD_SERVICE_ACCOUNT, ACLs of the service account: docs (default), full or none"
+    - name: PG_CCLOUD_SERVICE_ACCOUNT_ID
+      help: "👤 With PG_CCLOUD_SERVICE_ACCOUNT, existing service account to use as is, instead of creating one"
+    - name: PG_CCLOUD_SERVICE_ACCOUNT_ACL_EXCLUDE
+      help: "🙈 With PG_CCLOUD_SERVICE_ACCOUNT, regex of the ACLs not to create, matched on <OPERATION> <ResourceType>:<name> [prefix]"
     args:
     - name: json
       

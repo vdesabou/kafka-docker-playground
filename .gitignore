@@ -72,6 +72,7 @@ confluent-hub
 playground-run-history
 benchmark-history
 playground-ccloud-created-topics
+playground-ccloud-service-accounts
 playground.ini
 playground_config.ini
 .ccloud

@@ -1,6 +1,31 @@
 principal="${args[--principal]}"
 verbose="${args[--verbose]}"
 
+get_environment_used
+if [[ "$environment" == "ccloud" ]]
+then
+  # Confluent Cloud ACLs of the cluster of the ccloud run
+  get_ccloud_rbac_acl_principal || exit 1
+  rows=$(get_ccloud_acls "$principal") || exit 1
+  rows=$(awk -F'\t' -v OFS='\t' 'NF { print $0, "*", "confluent-cloud" }' <<< "$rows")
+  if [[ -z "$rows" ]]
+  then
+    logwarn "no ACL found"
+    exit 0
+  fi
+  {
+    printf "PRINCIPAL\tPERMISSION\tOPERATION\tRESOURCE\tPATTERN\tHOST\tSTORE\n"
+    echo "$rows"
+  } | column -t -s $'\t'
+  exit 0
+fi
+
+if [[ -n "${args[--connector]}" ]]
+then
+  logerror "❌ --connector is only supported with Confluent Cloud (fully managed connectors)"
+  exit 1
+fi
+
 entry_filter='{"operation": "ANY", "permissionType": "ANY"}'
 kafka_acls_principal=""
 if [[ -n "$principal" ]]
