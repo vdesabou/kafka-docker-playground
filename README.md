@@ -9,7 +9,7 @@
 <a href="https://kafka-docker-playground.io/#/introduction"><img src="https://kafka-docker-playground.io/videos/find-example.gif" alt="playground find-example" width="49%"></a>
 <a href="https://kafka-docker-playground.io/#/introduction"><img src="https://kafka-docker-playground.io/videos/diagnose.gif" alt="playground connector diagnose" width="49%"></a>
 
-More clips (repro model, benchmark, Claude Code, analyze) on the [website](https://kafka-docker-playground.io/#/introduction).
+More clips (run menu, topics, logs, source code, repro model, benchmark, Claude Code, analyze...) on the [website](https://kafka-docker-playground.io/#/introduction), and 2–3 minute narrated walkthroughs, from the symptom to the HTML report, in the [🎬 Bite size sessions](https://kafka-docker-playground.io/#/sessions).
 
 ## 📚 Documentation
 
