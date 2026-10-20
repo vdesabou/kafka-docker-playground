@@ -6832,6 +6832,8 @@ commands:
         The errors are in the __connect.errors.* headers, which are only
         written with "errors.deadletterqueue.context.headers.enable": "true"
         ('playground connector snippets --dlq' has it).
+
+        👉 Example: https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector
       commands:
 
         - name: inspect
@@ -6848,6 +6850,8 @@ commands:
 
             Keys and values are read as raw bytes, so it works whatever the
             format of the records (avro, protobuf, json schema, plain json).
+
+            👉 Example: https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector
           flags:
           - &dlq-topic
             long: --topic
@@ -6928,6 +6932,8 @@ commands:
 
             🎓 Tip: --dry-run shows how many records would go to which topic,
             and --grep replays only one kind of error.
+
+            👉 Example: https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector
           flags:
           - *dlq-topic
           - *dlq-connector

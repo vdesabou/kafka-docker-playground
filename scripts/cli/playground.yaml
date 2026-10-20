@@ -3806,7 +3806,8 @@ subcommands:
       original topic, or\n            to --to\n\nWithout --topic, the dead letter
       queue of --connector, or of the only\nrunning connector that has one, is used.\n\nThe
       errors are in the __connect.errors.* headers, which are only\nwritten with \"errors.deadletterqueue.context.headers.enable\":
-      \"true\"\n('playground connector snippets --dlq' has it)."
+      \"true\"\n('playground connector snippets --dlq' has it).\n\n\U0001F449 Example:
+      https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector"
     usage: playground topic dlq COMMAND
     options: []
     subcommands:
@@ -3818,7 +3819,8 @@ subcommands:
         message, the root cause (last\n\"Caused by:\" of the stack trace), the original
         topic, partition and\noffsets, the offsets in the dead letter queue and a
         sample value.\n\nKeys and values are read as raw bytes, so it works whatever
-        the\nformat of the records (avro, protobuf, json schema, plain json)."
+        the\nformat of the records (avro, protobuf, json schema, plain json).\n\n\U0001F449
+        Example: https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector"
       usage: playground topic dlq inspect [OPTIONS]
       options:
       - names:
@@ -3862,7 +3864,8 @@ subcommands:
         already in the dead letter queue when the command\nstarts are read, and they
         are not deleted from it: a record that\nfails again is added to the dead letter
         queue a second time.\n\n\U0001F393 Tip: --dry-run shows how many records would
-        go to which topic,\nand --grep replays only one kind of error."
+        go to which topic,\nand --grep replays only one kind of error.\n\n\U0001F449
+        Example: https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector"
       usage: playground topic dlq replay [OPTIONS]
       options:
       - names:

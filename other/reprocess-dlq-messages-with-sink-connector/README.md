@@ -7,7 +7,7 @@ A sink connector with `errors.tolerance=all` sends the records it cannot process
 
 | Script | How the DLQ records are processed |
 | --- | --- |
-| `reprocess-dlq-messages-with-sink-connector.sh` | A second sink connector reads the DLQ topic, with a [subject alias](https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#subject-aliases) `dlq-value` → `avro-topic-value` so that the Avro records of the DLQ can be deserialized. Needs no extra tool, so it also works in production. |
+| `process-dlq-messages-with-sink-connector.sh` | A second sink connector reads the DLQ topic, with a [subject alias](https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#subject-aliases) `dlq-value` → `avro-topic-value` so that the Avro records of the DLQ can be deserialized. Needs no extra tool, so it also works in production. |
 | `replay-dlq-messages-with-playground.sh` | `playground topic dlq replay` produces the DLQ records again to their original topic (`__connect.errors.topic` header), where the original connector processes them. No second connector, no alias. |
 
 Both scripts start with the same failure:
@@ -31,7 +31,7 @@ Both scripts start with the same failure:
 ## How to run
 
 ```bash
-playground run -f reprocess-dlq-messages-with-sink-connector.sh
+playground run -f process-dlq-messages-with-sink-connector.sh
 ```
 
 or
