@@ -55,6 +55,29 @@ _GOOD_CR_STATES = {'RUNNING', 'CREATED', 'SUCCEEDED', 'SUCCESS', 'READY', 'ACTIV
 # Waiting reasons that are normal transients, not problems
 _TRANSIENT_WAITING = {'ContainerCreating', 'PodInitializing'}
 
+# Components an issue is attributed to (--component, HTML filter). `other` = not a CFK component
+# (nodes, PVs, unknown pods). Folder names of `kubectl confluent support-bundle`: cluster-resources/<type>/<name>/
+COMPONENTS = ('kafka', 'kraftcontroller', 'zookeeper', 'connect', 'schemaregistry', 'ksqldb',
+              'controlcenter', 'kafkarestproxy', 'operator', 'other')
+_KIND_COMPONENT = {
+    'kafka': 'kafka', 'kafkatopic': 'kafka', 'kafkarestclass': 'kafka', 'clusterlink': 'kafka',
+    'confluentrolebinding': 'kafka', 'kraftcontroller': 'kraftcontroller', 'zookeeper': 'zookeeper',
+    'connect': 'connect', 'connector': 'connect', 'schemaregistry': 'schemaregistry',
+    'schema': 'schemaregistry', 'schemaexporter': 'schemaregistry', 'ksqldb': 'ksqldb',
+    'controlcenter': 'controlcenter', 'kafkarestproxy': 'kafkarestproxy',
+}
+# Sub-folders of a component folder that are not the CR name
+_GENERIC_DIRS = {'logs', 'pods', 'cm', 'sts', 'svc', 'pv', 'pvc', 'pdb', 'deployment', 'secrets'}
+# Last resort for names that are not in the bundle: keywords, most specific first
+_NAME_KEYWORDS = (
+    ('kraft', 'kraftcontroller'), ('zookeeper', 'zookeeper'), ('schemaregistry', 'schemaregistry'),
+    ('schema-registry', 'schemaregistry'), ('ksql', 'ksqldb'), ('controlcenter', 'controlcenter'),
+    ('control-center', 'controlcenter'), ('restproxy', 'kafkarestproxy'), ('kafka-rest', 'kafkarestproxy'),
+    ('operator', 'operator'), ('connect', 'connect'), ('replicator', 'connect'), ('kafka', 'kafka'),
+)
+# pod name suffixes: statefulset ordinal (kafka-0), deployment hash (confluent-operator-7d9c8b6f5-x2x7k)
+_POD_SUFFIX_RES = (re.compile(r'-\d+$'), re.compile(r'-[a-z0-9]{6,10}-[a-z0-9]{5}$'))
+
 
 class CFKBundleAnalyzer:
     """Main analyzer class for CFK support bundles"""
@@ -64,6 +87,7 @@ class CFKBundleAnalyzer:
         self.include_warnings = include_warnings
         self.issues = []
         self.issue_index = {}  # signature -> issue, for deduplication with occurrence counts
+        self.component_index = {}  # pod / CR name -> (component, instance), filled while walking the bundle
         self.summary = {
             'total_issues': 0,
             'critical': 0,
@@ -320,6 +344,7 @@ class CFKBundleAnalyzer:
                 if os.path.islink(file_path):
                     self.coverage['skipped_files'] += 1
                     continue
+                self._index_path(self._rel(file_path))
                 if _YAML_FILE_RE.search(file):
                     if 'event' in file.lower():
                         self._analyze_event_file(file_path)
@@ -329,6 +354,10 @@ class CFKBundleAnalyzer:
                     self._analyze_text_file(file_path)
                 else:
                     self.coverage['skipped_files'] += 1
+
+        # after the walk: events and shared pods.yaml may come before the CRs they refer to
+        for issue in self.issues:
+            self._assign_component(issue)
 
         self.summary['analysis_time'] = (datetime.now() - start_time).total_seconds()
         self.summary['total_issues'] = len(self.issues)
@@ -380,11 +409,13 @@ class CFKBundleAnalyzer:
     def _add_issue(self, severity: str, category: str, message: str,
                    file_path: str, line_number: int = None, context: str = None,
                    caused_by: List[str] = None, count: int = 1, timestamp: str = None,
-                   dedupe_key: str = None):
+                   dedupe_key: str = None, resource: str = None, resource_kind: str = None):
         """Add an issue, or bump the occurrence count of an identical one.
 
         Identical means same category, same file (rotated logs of the same pod count
         as the same file) and the same normalized message.
+        `resource` / `resource_kind` name the pod or CR the issue is about, to find its
+        component when the file is shared (events, pods.yaml).
         """
         file_key = re.sub(r'\.log(?:\.[\w-]+)?(?:\.gz)?$', '.log', file_path)
         signature = f"{category}:{file_key}:{dedupe_key or self._normalize_signature(message)}"
@@ -411,9 +442,75 @@ class CFKBundleAnalyzer:
             issue['context'] = context
         if caused_by:
             issue['caused_by'] = caused_by
+        if resource or resource_kind:
+            issue['_resource'] = (resource_kind or '', resource or '')
 
         self.issue_index[signature] = issue
         self.issues.append(issue)
+
+    # ── Component attribution ─────────────────────────────────────────────
+
+    def _index_component(self, name: str, component: str, instance: str = None):
+        if name and component in COMPONENTS:
+            self.component_index.setdefault(name, (component, instance or name))
+
+    def _index_path(self, file_path: str):
+        """cluster-resources/<type>/<name>/... names a CR of that type"""
+        parts = file_path.replace('\\', '/').split('/')[:-1]
+        for index, part in enumerate(parts[:-1]):
+            if index > 0 and parts[index - 1] == 'cluster-resources' and part.lower() in COMPONENTS:
+                self._index_component(parts[index + 1], part.lower())
+
+    def _lookup_name(self, name: str, keywords: bool = True):
+        """(component, instance) of a pod / CR name: bundle index first, then pod suffixes, then keywords"""
+        if not name:
+            return None
+        candidates = [name] + [r.sub('', name) for r in _POD_SUFFIX_RES if r.search(name)]
+        for candidate in candidates:
+            if candidate in self.component_index:
+                return self.component_index[candidate]
+        if keywords:
+            lowered = name.lower()
+            for keyword, component in _NAME_KEYWORDS:
+                if keyword in lowered:
+                    return component, candidates[-1]
+        return None
+
+    def _component_from_path(self, file_path: str):
+        """cluster-resources/connect/connect-peh/logs/connect-peh-0.log -> (connect, connect-peh)"""
+        parts = file_path.replace('\\', '/').split('/')
+        dirs = [p.lower() for p in parts[:-1]]
+        matches = [i for i, d in enumerate(dirs) if d in COMPONENTS and d != 'other']
+        if not matches:
+            return None
+        # cluster-resources/<type>/ wins, else the deepest folder (a namespace may be called "kafka")
+        typed = [i for i in matches if i > 0 and dirs[i - 1] == 'cluster-resources']
+        index = (typed or matches)[-1]
+        following = parts[index + 1:-1]
+        if following and following[0].lower() not in _GENERIC_DIRS:
+            return dirs[index], following[0]
+        return dirs[index], None
+
+    def _lookup_resource(self, kind: str, name: str):
+        if kind.lower() in _KIND_COMPONENT:
+            return self.component_index.get(name) or (_KIND_COMPONENT[kind.lower()], name or None)
+        return self._lookup_name(name)
+
+    def _assign_component(self, issue: Dict):
+        kind, name = issue.pop('_resource', ('', ''))
+        # flat layout (confluent/connect/logs/connect-0.log): the log file is named after its pod
+        stem = re.sub(r'\.(?:log|txt|out)(?:\..*)?$', '', os.path.basename(issue.get('file', '')), flags=re.IGNORECASE)
+        component, instance = self._component_from_path(issue.get('file', '')) or (None, None)
+        if component is None:
+            found = self._lookup_resource(kind, name) or self._lookup_name(stem)
+            component, instance = found if found else ('other', None)
+        elif instance is None:
+            found = self._lookup_resource(kind, name) if name else self._lookup_name(stem, keywords=False)
+            if found and found[0] == component:
+                instance = found[1]
+        issue['component'] = component
+        if instance:
+            issue['instance'] = instance
 
     # ── Log / text files ──────────────────────────────────────────────────
 
@@ -644,6 +741,8 @@ class CFKBundleAnalyzer:
             context=yaml.safe_dump(event, default_flow_style=False, sort_keys=False),
             count=count,
             timestamp=event.get('lastTimestamp') or event.get('eventTime') or event.get('firstTimestamp'),
+            resource=obj.get('name'),
+            resource_kind=obj.get('kind'),
         )
 
     # ── YAML: pods and CFK custom resources ───────────────────────────────
@@ -660,13 +759,20 @@ class CFKBundleAnalyzer:
         for obj in objects:
             kind = obj.get('kind', '')
             api_version = str(obj.get('apiVersion', ''))
+            metadata = obj.get('metadata') or {}
             if kind == 'Pod':
                 self.coverage['pods'] += 1
+                labels = metadata.get('labels') or {}
+                self._index_component(metadata.get('name'), str(labels.get('platform.confluent.io/type', '')).lower(),
+                                      labels.get('app'))
                 self._check_pod_config(obj, relative_path)
             elif kind == 'Event':
                 self._process_event(obj, file_path)
             elif api_version.startswith('platform.confluent.io/'):
                 self.coverage['custom_resources'] += 1
+                # a Connector belongs to its Connect cluster
+                cluster = ((obj.get('spec') or {}).get('connectClusterRef') or {}).get('name')
+                self._index_component(metadata.get('name'), _KIND_COMPONENT.get(kind.lower(), ''), cluster)
                 self._check_confluent_component_config(obj, relative_path)
 
     def _check_pod_config(self, pod: Dict, file_path: str):
@@ -681,6 +787,7 @@ class CFKBundleAnalyzer:
                 category='Pod Status',
                 message=f"Pod {name} in {phase} phase: {status.get('reason', '')} {status.get('message', '')}".strip(),
                 file_path=file_path,
+                resource=name, resource_kind='Pod',
                 context=yaml.safe_dump(status, default_flow_style=False),
             )
         elif phase == 'Pending':
@@ -692,6 +799,7 @@ class CFKBundleAnalyzer:
                 message=f"Pod {name} is Pending"
                         + (f": {unscheduled[0].get('message', '')}" if unscheduled else ''),
                 file_path=file_path,
+                resource=name, resource_kind='Pod',
             )
 
         statuses = [(c, True) for c in status.get('initContainerStatuses') or []] + \
@@ -714,6 +822,7 @@ class CFKBundleAnalyzer:
                     category=category,
                     message=f"Container {cname} waiting: {reason} - {waiting.get('message', '')}",
                     file_path=file_path,
+                    resource=name, resource_kind='Pod',
                 )
 
             terminated = state.get('terminated')
@@ -723,6 +832,7 @@ class CFKBundleAnalyzer:
                     category='Init Container Issues' if is_init else 'Pod Failures',
                     message=f"Container {cname} terminated: {terminated.get('reason', '')} exitCode={terminated.get('exitCode')}",
                     file_path=file_path,
+                    resource=name, resource_kind='Pod',
                 )
 
             last_terminated = last_state.get('terminated') or {}
@@ -732,6 +842,7 @@ class CFKBundleAnalyzer:
                     category='Resource Issues',
                     message=f"Container {cname} was OOMKilled (lastState, exitCode={last_terminated.get('exitCode')}, restarts={restarts})",
                     file_path=file_path,
+                    resource=name, resource_kind='Pod',
                 )
             elif last_terminated and last_terminated.get('exitCode', 0) != 0 and restarts:
                 self._add_issue(
@@ -739,6 +850,7 @@ class CFKBundleAnalyzer:
                     category='Pod Failures',
                     message=f"Container {cname} previously terminated: {last_terminated.get('reason', '')} exitCode={last_terminated.get('exitCode')} (restarts={restarts})",
                     file_path=file_path,
+                    resource=name, resource_kind='Pod',
                 )
 
             if restarts >= 3:
@@ -747,6 +859,7 @@ class CFKBundleAnalyzer:
                     category='Pod Failures',
                     message=f"Container {cname} restarted {restarts} times",
                     file_path=file_path,
+                    resource=name, resource_kind='Pod',
                 )
 
     def _check_confluent_component_config(self, component: Dict, file_path: str):
@@ -764,6 +877,7 @@ class CFKBundleAnalyzer:
                 category='Reconciliation Blocked',
                 message=f"{ref} has platform.confluent.io/block-reconcile=true",
                 file_path=file_path,
+                resource=metadata.get('name'), resource_kind=kind,
             )
 
         if metadata.get('deletionTimestamp') and metadata.get('finalizers'):
@@ -772,6 +886,7 @@ class CFKBundleAnalyzer:
                 category='Finalizer Issues',
                 message=f"{ref} is being deleted since {metadata['deletionTimestamp']} but still has finalizers {metadata['finalizers']}",
                 file_path=file_path,
+                resource=metadata.get('name'), resource_kind=kind,
             )
 
         if 'replicas' in spec and spec.get('replicas') == 0:
@@ -780,6 +895,7 @@ class CFKBundleAnalyzer:
                 category='Configuration',
                 message=f"{ref} has 0 replicas - component is scaled down",
                 file_path=file_path,
+                resource=metadata.get('name'), resource_kind=kind,
             )
 
         # Component CRs report `phase`, Connector / KafkaTopic / ConfluentRolebinding… report `state`
@@ -794,6 +910,7 @@ class CFKBundleAnalyzer:
                 category=category,
                 message=f"{ref} status.{key} is {value}",
                 file_path=file_path,
+                resource=metadata.get('name'), resource_kind=kind,
                 context=yaml.safe_dump(status, default_flow_style=False, sort_keys=False)[:2000],
             )
 
@@ -805,6 +922,7 @@ class CFKBundleAnalyzer:
                 category='Component Status',
                 message=f"{ref} has {ready}/{replicas} ready replicas",
                 file_path=file_path,
+                resource=metadata.get('name'), resource_kind=kind,
             )
 
         failed_tasks = status.get('failedTasks')
@@ -814,6 +932,7 @@ class CFKBundleAnalyzer:
                 category='Connect Issues',
                 message=f"{ref} has failed tasks: {json.dumps(failed_tasks, default=str)[:300]}",
                 file_path=file_path,
+                resource=metadata.get('name'), resource_kind=kind,
             )
 
         for condition in status.get('conditions') or []:
@@ -826,4 +945,5 @@ class CFKBundleAnalyzer:
                     category='Component Status',
                     message=f"{ref} condition {condition_type} is False: {condition.get('reason', '')} {condition.get('message', '')}".strip(),
                     file_path=file_path,
+                    resource=metadata.get('name'), resource_kind=kind,
                 )

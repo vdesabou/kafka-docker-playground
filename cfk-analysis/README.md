@@ -17,6 +17,14 @@ scheduling, …) with concrete remediation steps per category:
   classified on its `Caused by:` chain first, identical records are counted, and ERRORs matching no category
   are reported as "Other … (Unclassified)".
 
+Each issue is attributed to a `component` (`kafka`, `kraftcontroller`, `zookeeper`, `connect`, `schemaregistry`,
+`ksqldb`, `controlcenter`, `kafkarestproxy`, `operator`, or `other` for nodes, volumes and unknown pods) and, when
+known, to an `instance` (the CR name, e.g. `connect-peh`). They come from the bundle layout
+(`cluster-resources/<type>/<name>/`), the CFK custom resources (a `Connector` belongs to its `connectClusterRef`),
+the `platform.confluent.io/type` / `app` pod labels and, for events, the involved object. `--component connect`
+keeps only the Connect issues (text, JSON and HTML); the HTML report also has Component / Instance buttons, and its
+search filters single issues.
+
 Sensitive values (secrets, IPs, hostnames, emails, LDAP DNs) are sanitized by default. This is best effort:
 review the output before sharing it.
 
@@ -44,6 +52,7 @@ playground analyze cfk-bundle --sample synthetic          # try it on the sample
 playground analyze cfk-bundle --bundle ./customer-bundle.tar.gz
 playground analyze cfk-bundle --bundle ./bundle.tgz --output-dir ./reports      # + HTML report in ./reports
 playground analyze cfk-bundle --bundle ./bundle.tar.gz --json > report.json
+playground analyze cfk-bundle --bundle ./bundle.tar --component connect          # only the Connect issues
 ```
 
 See `playground analyze cfk-bundle --help` for all flags. For a raw ERROR digest of every log in the

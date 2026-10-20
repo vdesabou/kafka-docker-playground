@@ -6,6 +6,7 @@ severity="${args[--severity]}"
 top="${args[--top]}"
 output_dir="${args[--output-dir]}"
 include_warnings="${args[--include-warnings]}"
+eval "component_array=(${args[--component]})"
 
 set +e
 
@@ -79,6 +80,10 @@ fi
 if [[ -n "$include_warnings" ]]; then
     cli_args+=(--include-warnings)
 fi
+
+for component in "${component_array[@]}"; do
+    cli_args+=(--component "$component")
+done
 
 # run as the current user: it can read the bundle and write the HTML report
 docker_args=(

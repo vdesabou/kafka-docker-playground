@@ -4260,6 +4260,8 @@ commands:
 
       🔖 Use --json to emit machine-readable output for downstream tooling.
 
+      🧩 Each issue is attributed to a component (kafka, kraftcontroller, connect, schemaregistry, operator…) and to the instance (CR name, e.g. connect-peh) it comes from. Use --component to keep only some of them, or the Component / Instance buttons of the HTML report.
+
       🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal.
 
       🧪 With --sample, it analyzes the samples shipped in cfk-analysis/samples: a quick way to see what it reports.
@@ -4298,6 +4300,13 @@ commands:
         allowed: [critical, high, medium, low]
         help: |-
           🎚️  Filter issues by minimum severity (critical | high | medium | low)
+      - long: --component
+        required: false
+        repeatable: true
+        arg: component
+        allowed: [kafka, kraftcontroller, zookeeper, connect, schemaregistry, ksqldb, controlcenter, kafkarestproxy, operator, other]
+        help: |-
+          🧩 Only keep the issues of this component (repeat --component for several). other = not a CFK component (nodes, volumes, unknown pods)
       - long: --top
         required: false
         arg: n
@@ -4325,6 +4334,7 @@ commands:
     - playground analyze cfk-bundle --bundle ./customer-bundle.tar.gz
     - playground analyze cfk-bundle --bundle ./extracted-bundle/
     - playground analyze cfk-bundle --bundle ./bundle.zip --severity high
+    - playground analyze cfk-bundle --bundle ./bundle.tar --component connect
     - playground analyze cfk-bundle --bundle ./bundle.tar.gz --json > report.json
     - playground analyze cfk-bundle -b ./bundle.tgz --output-dir ./reports
     - playground analyze cfk-bundle -b ./bundle.tgz --include-warnings

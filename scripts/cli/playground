@@ -6467,7 +6467,7 @@ playground_analyze_oracle_xstream_report_usage() {
 playground_analyze_cfk_bundle_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze cfk-bundle\n\n"
-    printf "  📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n  \n  🔍 Checks Warning events, pods (phase, waiting reasons, restarts, OOMKilled),\n  every platform.confluent.io custom resource (phase/state, ready replicas,\n  False conditions, failed connector tasks) and the ERROR/FATAL records of every\n  log (rotated and .gz included, with their Caused by chain and an occurrence\n  count), sorts them into ~30 categories (pod failures, TLS, auth, MDS/RBAC,\n  license, KRaft, replication, storage, scheduling, …) and prints concrete\n  remediation steps per category.\n  \n  ✅ Works offline on any bundle produced by kubectl confluent support-bundle (or\n  playground debug cfk generate-bundle): no cfk environment needed.\n  \n  🔒 Sanitization (secrets / IPs / hostnames / emails / LDAP DNs) is ON by\n  default. It is best effort: review the output before sharing it. Pass\n  --no-sanitize only for internal/test bundles.\n  \n  🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.\n  \n  🔖 Use --json to emit machine-readable output for downstream tooling.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal.\n  \n  🧪 With --sample, it analyzes the samples shipped in cfk-analysis/samples: a\n  quick way to see what it reports.\n  \n  🔖 Exit code is 0 when the analysis completed (whatever was found, read the\n  summary), 64 for an invalid, unsafe or empty bundle.\n\n"
+    printf "  📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n  \n  🔍 Checks Warning events, pods (phase, waiting reasons, restarts, OOMKilled),\n  every platform.confluent.io custom resource (phase/state, ready replicas,\n  False conditions, failed connector tasks) and the ERROR/FATAL records of every\n  log (rotated and .gz included, with their Caused by chain and an occurrence\n  count), sorts them into ~30 categories (pod failures, TLS, auth, MDS/RBAC,\n  license, KRaft, replication, storage, scheduling, …) and prints concrete\n  remediation steps per category.\n  \n  ✅ Works offline on any bundle produced by kubectl confluent support-bundle (or\n  playground debug cfk generate-bundle): no cfk environment needed.\n  \n  🔒 Sanitization (secrets / IPs / hostnames / emails / LDAP DNs) is ON by\n  default. It is best effort: review the output before sharing it. Pass\n  --no-sanitize only for internal/test bundles.\n  \n  🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.\n  \n  🔖 Use --json to emit machine-readable output for downstream tooling.\n  \n  🧩 Each issue is attributed to a component (kafka, kraftcontroller, connect,\n  schemaregistry, operator…) and to the instance (CR name, e.g. connect-peh) it\n  comes from. Use --component to keep only some of them, or the Component /\n  Instance buttons of the HTML report.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal.\n  \n  🧪 With --sample, it analyzes the samples shipped in cfk-analysis/samples: a\n  quick way to see what it reports.\n  \n  🔖 Exit code is 0 when the analysis completed (whatever was found, read the\n  summary), 64 for an invalid, unsafe or empty bundle.\n\n"
   else
     printf "playground analyze cfk-bundle - 📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n\n"
   fi
@@ -6511,6 +6511,12 @@ playground_analyze_cfk_bundle_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--component COMPONENT (repeatable)")"
+    printf "    🧩 Only keep the issues of this component (repeat --component for several).\n    other = not a CFK component (nodes, volumes, unknown pods)\n"
+    printf "    %s\n" "Allowed: kafka, kraftcontroller, zookeeper, connect, schemaregistry, ksqldb, controlcenter, kafkarestproxy, operator, other"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--top N")"
     printf "    🔢 Max number of issues to display per category in text mode (default: 5)\n"
     printf "    %s\n" "Default: 5"
@@ -6545,6 +6551,7 @@ playground_analyze_cfk_bundle_usage() {
     printf "  playground analyze cfk-bundle --bundle ./customer-bundle.tar.gz\n"
     printf "  playground analyze cfk-bundle --bundle ./extracted-bundle/\n"
     printf "  playground analyze cfk-bundle --bundle ./bundle.zip --severity high\n"
+    printf "  playground analyze cfk-bundle --bundle ./bundle.tar --component connect\n"
     printf "  playground analyze cfk-bundle --bundle ./bundle.tar.gz --json > report.json\n"
     printf "  playground analyze cfk-bundle -b ./bundle.tgz --output-dir ./reports\n"
     printf "  playground analyze cfk-bundle -b ./bundle.tgz --include-warnings\n"
@@ -7676,6 +7683,12 @@ playground_debug_cfk_cfk_bundle_analyze_usage() {
     printf "  %s\n" "$(magenta "--severity LEVEL")"
     printf "    🎚️  Filter issues by minimum severity (critical | high | medium | low)\n"
     printf "    %s\n" "Allowed: critical, high, medium, low"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--component COMPONENT (repeatable)")"
+    printf "    🧩 Only keep the issues of this component (repeat --component for several).\n    other = not a CFK component (nodes, volumes, unknown pods)\n"
+    printf "    %s\n" "Allowed: kafka, kraftcontroller, zookeeper, connect, schemaregistry, ksqldb, controlcenter, kafkarestproxy, operator, other"
     echo
 
     # :flag.usage
@@ -38902,6 +38915,7 @@ playground_analyze_cfk_bundle_command() {
   top="${args[--top]}"
   output_dir="${args[--output-dir]}"
   include_warnings="${args[--include-warnings]}"
+  eval "component_array=(${args[--component]})"
 
   set +e
 
@@ -38975,6 +38989,10 @@ playground_analyze_cfk_bundle_command() {
   if [[ -n "$include_warnings" ]]; then
       cli_args+=(--include-warnings)
   fi
+
+  for component in "${component_array[@]}"; do
+      cli_args+=(--component "$component")
+  done
 
   # run as the current user: it can read the bundle and write the HTML report
   docker_args=(
@@ -40837,6 +40855,7 @@ playground_debug_cfk_cfk_bundle_analyze_command() {
   top="${args[--top]}"
   output_dir="${args[--output-dir]}"
   include_warnings="${args[--include-warnings]}"
+  eval "component_array=(${args[--component]})"
 
   set +e
 
@@ -40910,6 +40929,10 @@ playground_debug_cfk_cfk_bundle_analyze_command() {
   if [[ -n "$include_warnings" ]]; then
       cli_args+=(--include-warnings)
   fi
+
+  for component in "${component_array[@]}"; do
+      cli_args+=(--component "$component")
+  done
 
   # run as the current user: it can read the bundle and write the HTML report
   docker_args=(
@@ -71362,6 +71385,25 @@ playground_analyze_cfk_bundle_parse_requirements() {
         ;;
 
       # :flag.case
+      --component)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--component']+x} ]]; then
+            args['--component']="$escaped"
+          else
+            args['--component']="${args['--component']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--component requires an argument: --component COMPONENT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --top)
 
         # :flag.case_arg
@@ -71457,6 +71499,14 @@ playground_analyze_cfk_bundle_parse_requirements() {
     printf "%s\n" "--severity must be one of: critical, high, medium, low" >&2
     exit 1
   fi
+  input_array=''
+  eval "input_array=(${args[--component]})"
+  for i in "${input_array[@]}"; do
+    if [[ ! $i =~ ^(kafka|kraftcontroller|zookeeper|connect|schemaregistry|ksqldb|controlcenter|kafkarestproxy|operator|other)$ ]]; then
+      printf "%s\n" "--component must be one of: kafka, kraftcontroller, zookeeper, connect, schemaregistry, ksqldb, controlcenter, kafkarestproxy, operator, other" >&2
+      exit 1
+    fi
+  done
 
 }
 
@@ -74372,6 +74422,25 @@ playground_debug_cfk_cfk_bundle_analyze_parse_requirements() {
         ;;
 
       # :flag.case
+      --component)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--component']+x} ]]; then
+            args['--component']="$escaped"
+          else
+            args['--component']="${args['--component']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--component requires an argument: --component COMPONENT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --top)
 
         # :flag.case_arg
@@ -74467,6 +74536,14 @@ playground_debug_cfk_cfk_bundle_analyze_parse_requirements() {
     printf "%s\n" "--severity must be one of: critical, high, medium, low" >&2
     exit 1
   fi
+  input_array=''
+  eval "input_array=(${args[--component]})"
+  for i in "${input_array[@]}"; do
+    if [[ ! $i =~ ^(kafka|kraftcontroller|zookeeper|connect|schemaregistry|ksqldb|controlcenter|kafkarestproxy|operator|other)$ ]]; then
+      printf "%s\n" "--component must be one of: kafka, kraftcontroller, zookeeper, connect, schemaregistry, ksqldb, controlcenter, kafkarestproxy, operator, other" >&2
+      exit 1
+    fi
+  done
 
 }
 
@@ -95436,6 +95513,28 @@ playground_analyze_cfk_bundle_completion() {
         completion_blocked_flags["--severity"]=1
 
         ;;
+      --component)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "kafka"
+            "kraftcontroller"
+            "zookeeper"
+            "connect"
+            "schemaregistry"
+            "ksqldb"
+            "controlcenter"
+            "kafkarestproxy"
+            "operator"
+            "other"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+
+        ;;
       --top)
         shift
         if [[ $# -eq 0 ]]; then
@@ -95474,6 +95573,7 @@ playground_analyze_cfk_bundle_completion() {
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --no-sanitize "$completion_current" --no-sanitize
     completion_flag_candidates --severity "$completion_current" --severity
+    completion_flag_candidates --component "$completion_current" --component
     completion_flag_candidates --top "$completion_current" --top
     completion_flag_candidates --include-warnings "$completion_current" --include-warnings
     completion_flag_candidates --output-dir "$completion_current" --output-dir
@@ -96950,6 +97050,28 @@ playground_debug_cfk_cfk_bundle_analyze_completion() {
         completion_blocked_flags["--severity"]=1
 
         ;;
+      --component)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "kafka"
+            "kraftcontroller"
+            "zookeeper"
+            "connect"
+            "schemaregistry"
+            "ksqldb"
+            "controlcenter"
+            "kafkarestproxy"
+            "operator"
+            "other"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+
+        ;;
       --top)
         shift
         if [[ $# -eq 0 ]]; then
@@ -96988,6 +97110,7 @@ playground_debug_cfk_cfk_bundle_analyze_completion() {
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --no-sanitize "$completion_current" --no-sanitize
     completion_flag_candidates --severity "$completion_current" --severity
+    completion_flag_candidates --component "$completion_current" --component
     completion_flag_candidates --top "$completion_current" --top
     completion_flag_candidates --include-warnings "$completion_current" --include-warnings
     completion_flag_candidates --output-dir "$completion_current" --output-dir

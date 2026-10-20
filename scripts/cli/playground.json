@@ -2137,7 +2137,7 @@
         },
         {
           "name": "cfk-bundle",
-          "description": "📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n\n🔍 Checks Warning events, pods (phase, waiting reasons, restarts, OOMKilled), every platform.confluent.io custom resource (phase/state, ready replicas, False conditions, failed connector tasks) and the ERROR/FATAL records of every log (rotated and .gz included, with their Caused by chain and an occurrence count), sorts them into ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication, storage, scheduling, …) and prints concrete remediation steps per category.\n\n✅ Works offline on any bundle produced by kubectl confluent support-bundle (or playground debug cfk generate-bundle): no cfk environment needed.\n\n🔒 Sanitization (secrets / IPs / hostnames / emails / LDAP DNs) is ON by default. It is best effort: review the output before sharing it. Pass --no-sanitize only for internal/test bundles.\n\n🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.\n\n🔖 Use --json to emit machine-readable output for downstream tooling.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal.\n\n🧪 With --sample, it analyzes the samples shipped in cfk-analysis/samples: a quick way to see what it reports.\n\n🔖 Exit code is 0 when the analysis completed (whatever was found, read the summary), 64 for an invalid, unsafe or empty bundle.",
+          "description": "📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n\n🔍 Checks Warning events, pods (phase, waiting reasons, restarts, OOMKilled), every platform.confluent.io custom resource (phase/state, ready replicas, False conditions, failed connector tasks) and the ERROR/FATAL records of every log (rotated and .gz included, with their Caused by chain and an occurrence count), sorts them into ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication, storage, scheduling, …) and prints concrete remediation steps per category.\n\n✅ Works offline on any bundle produced by kubectl confluent support-bundle (or playground debug cfk generate-bundle): no cfk environment needed.\n\n🔒 Sanitization (secrets / IPs / hostnames / emails / LDAP DNs) is ON by default. It is best effort: review the output before sharing it. Pass --no-sanitize only for internal/test bundles.\n\n🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.\n\n🔖 Use --json to emit machine-readable output for downstream tooling.\n\n🧩 Each issue is attributed to a component (kafka, kraftcontroller, connect, schemaregistry, operator…) and to the instance (CR name, e.g. connect-peh) it comes from. Use --component to keep only some of them, or the Component / Instance buttons of the HTML report.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal.\n\n🧪 With --sample, it analyzes the samples shipped in cfk-analysis/samples: a quick way to see what it reports.\n\n🔖 Exit code is 0 when the analysis completed (whatever was found, read the summary), 64 for an invalid, unsafe or empty bundle.",
           "usage": "playground analyze cfk-bundle [OPTIONS]",
           "options": [
             {
@@ -2176,6 +2176,13 @@
               ],
               "argument": "LEVEL",
               "description": "🎚️  Filter issues by minimum severity (critical | high | medium | low)\n\nAllowed values: critical, high, medium, low"
+            },
+            {
+              "names": [
+                "--component"
+              ],
+              "argument": "COMPONENT",
+              "description": "🧩 Only keep the issues of this component (repeat --component for several). other = not a CFK component (nodes, volumes, unknown pods)\n\nRepeatable: ✓ Yes\nAllowed values: kafka, kraftcontroller, zookeeper, connect, schemaregistry, ksqldb, controlcenter, kafkarestproxy, operator, other"
             },
             {
               "names": [

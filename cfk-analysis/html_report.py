@@ -69,6 +69,20 @@ CATEGORY_EMOJI = {
 }
 DEFAULT_CATEGORY_EMOJI = "🔎"
 
+# component filter buttons, in this order (keys of analyzer.COMPONENTS)
+COMPONENT_LABEL = {
+    "kafka": "📨 Kafka",
+    "kraftcontroller": "🗳️ KRaft",
+    "zookeeper": "🦓 ZooKeeper",
+    "connect": "🔌 Connect",
+    "schemaregistry": "📜 Schema Registry",
+    "ksqldb": "🌊 ksqlDB",
+    "controlcenter": "🎛️ Control Center",
+    "kafkarestproxy": "🌐 REST Proxy",
+    "operator": "⚙️ Operator",
+    "other": "❔ Other",
+}
+
 
 CSS = """
 *, *::before, *::after { box-sizing: border-box; }
@@ -147,6 +161,30 @@ main { max-width: 1180px; margin: 0 auto; padding: 32px 40px 80px 40px; }
   font-family: inherit;
 }
 .search:focus { outline: 2px solid #2563eb; outline-offset: -1px; border-color: transparent; }
+.controls.components { margin-top: -12px; }
+.controls.instances { margin-top: -12px; }
+.controls .label { font-size: 12px; color: #6b7280; font-weight: 600; }
+.component-btn, .instance-btn {
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12.5px;
+  cursor: pointer;
+  color: #374151;
+}
+.component-btn:hover, .instance-btn:hover { border-color: #6b7280; }
+.component-btn.active, .instance-btn.active { background: #1e3a8a; color: white; border-color: #1e3a8a; }
+.component-btn .n, .instance-btn .n { opacity: 0.7; margin-left: 4px; }
+.component-tag {
+  font-size: 11px;
+  background: #eef2ff;
+  color: #3730a3;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.no-match { display: none; }
 .category {
   background: white;
   border: 1px solid #e5e7eb;
@@ -268,40 +306,82 @@ footer a { color: #6b7280; }
 
 JS = """
 const filterButtons = document.querySelectorAll('.filter-btn');
+const componentButtons = document.querySelectorAll('.component-btn');
+const instanceButtons = document.querySelectorAll('.instance-btn');
+const instanceBar = document.querySelector('.controls.instances');
 const categories = document.querySelectorAll('.category');
 const searchInput = document.getElementById('search');
+const noMatch = document.querySelector('.no-match');
 
 let currentFilter = 'all';
+let currentComponent = 'all';
+let currentInstance = 'all';
 let currentSearch = '';
 
 function applyFilters() {
+  const counts = { total: 0, critical: 0, high: 0, medium: 0, low: 0 };
   categories.forEach(cat => {
-    const sev = cat.dataset.severity;
-    const text = cat.textContent.toLowerCase();
-
-    const severityMatch =
-      currentFilter === 'all' ||
-      cat.querySelectorAll(`.issue[data-severity="${currentFilter}"]`).length > 0;
-
-    const searchMatch = !currentSearch || text.includes(currentSearch);
-
-    cat.style.display = (severityMatch && searchMatch) ? '' : 'none';
-
-    if (currentFilter !== 'all') {
-      cat.querySelectorAll('.issue').forEach(issue => {
-        issue.style.display = (issue.dataset.severity === currentFilter) ? '' : 'none';
-      });
-    } else {
-      cat.querySelectorAll('.issue').forEach(issue => { issue.style.display = ''; });
-    }
+    const title = cat.querySelector('summary .title').textContent.toLowerCase();
+    let visible = 0;
+    cat.querySelectorAll('.issue').forEach(issue => {
+      const inScope =
+        (currentComponent === 'all' || issue.dataset.component === currentComponent) &&
+        (currentInstance === 'all' || issue.dataset.instance === currentInstance) &&
+        (!currentSearch || title.includes(currentSearch) || issue.textContent.toLowerCase().includes(currentSearch));
+      const show = inScope && (currentFilter === 'all' || issue.dataset.severity === currentFilter);
+      issue.style.display = show ? '' : 'none';
+      if (show) visible++;
+      // the summary cards count every severity of the selected component / instance / search
+      if (inScope) {
+        counts.total++;
+        counts[issue.dataset.severity]++;
+      }
+    });
+    cat.style.display = visible ? '' : 'none';
+    cat.querySelector('summary .count').textContent = visible;
   });
+  document.querySelectorAll('.card[data-count]').forEach(card => {
+    card.querySelector('.value').textContent = counts[card.dataset.count];
+  });
+  const anyVisible = [...categories].some(cat => cat.style.display !== 'none');
+  if (noMatch) noMatch.style.display = anyVisible ? 'none' : 'block';
+}
+
+function activate(buttons, btn) {
+  buttons.forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
 }
 
 filterButtons.forEach(btn => {
   btn.addEventListener('click', () => {
-    filterButtons.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    activate(filterButtons, btn);
     currentFilter = btn.dataset.filter;
+    applyFilters();
+  });
+});
+
+componentButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    activate(componentButtons, btn);
+    currentComponent = btn.dataset.component;
+    currentInstance = 'all';
+    // instance chips of the selected component only, when it has more than one instance
+    let shown = 0;
+    instanceButtons.forEach(b => {
+      const mine = b.dataset.instance === 'all' || b.dataset.component === currentComponent;
+      b.style.display = mine ? '' : 'none';
+      b.classList.toggle('active', b.dataset.instance === 'all');
+      if (mine && b.dataset.instance !== 'all') shown++;
+    });
+    if (instanceBar) instanceBar.style.display = (currentComponent !== 'all' && shown > 1) ? '' : 'none';
+    applyFilters();
+  });
+});
+
+instanceButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    activate(instanceButtons, btn);
+    currentInstance = btn.dataset.instance;
     applyFilters();
   });
 });
@@ -356,6 +436,38 @@ def _verdict(summary: Dict, categories_sorted: List[str], grouped: Dict[str, Lis
     return '<div class="verdict">✅ Nothing alarming in this CFK support bundle.</div>'
 
 
+def _component_controls(issues: List[Dict], summary: Dict) -> str:
+    """Component buttons with their issue count, and the instance (CR name) chips of each component"""
+    by_component: Dict[str, int] = defaultdict(int)
+    by_instance: Dict[tuple, int] = defaultdict(int)
+    for i in issues:
+        component = i.get("component", "other")
+        by_component[component] += 1
+        if i.get("instance"):
+            by_instance[(component, i["instance"])] += 1
+    if not by_component:
+        return ""
+    ordered = [c for c in COMPONENT_LABEL if by_component.get(c)] + \
+              sorted(c for c in by_component if c not in COMPONENT_LABEL)
+    buttons = [f'<button class="component-btn active" data-component="all">🧩 All components<span class="n">{len(issues)}</span></button>']
+    buttons += [
+        f'<button class="component-btn" data-component="{_esc(c)}">{_esc(COMPONENT_LABEL.get(c, c))}<span class="n">{by_component[c]}</span></button>'
+        for c in ordered
+    ]
+    chips = ['<button class="instance-btn active" data-instance="all">All instances</button>']
+    chips += [
+        f'<button class="instance-btn" data-component="{_esc(c)}" data-instance="{_esc(name)}" style="display:none">{_esc(name)}<span class="n">{n}</span></button>'
+        for (c, name), n in sorted(by_instance.items())
+    ]
+    scope = ""
+    if summary.get("components"):
+        scope = f' <span class="label">(report limited to --component {_esc(" ".join(summary["components"]))})</span>'
+    return (
+        f'<div class="controls components"><span class="label">Component</span>{"".join(buttons)}{scope}</div>'
+        f'<div class="controls instances" style="display:none"><span class="label">Instance</span>{"".join(chips)}</div>'
+    )
+
+
 def render(results: Dict, bundle_label: str = "") -> str:
     summary = results.get("summary", {})
     issues = results.get("issues", [])
@@ -373,11 +485,11 @@ def render(results: Dict, bundle_label: str = "") -> str:
 
     summary_html = f"""
     <div class="summary">
-      <div class="card"><div class="label">🔎 Total issues</div><div class="value">{_esc(summary.get('total_issues', 0))}</div></div>
-      <div class="card critical"><div class="label">{SEVERITY_EMOJI['critical']} Critical</div><div class="value">{_esc(summary.get('critical', 0))}</div></div>
-      <div class="card high"><div class="label">{SEVERITY_EMOJI['high']} High</div><div class="value">{_esc(summary.get('high', 0))}</div></div>
-      <div class="card medium"><div class="label">{SEVERITY_EMOJI['medium']} Medium</div><div class="value">{_esc(summary.get('medium', 0))}</div></div>
-      <div class="card low"><div class="label">{SEVERITY_EMOJI['low']} Low</div><div class="value">{_esc(summary.get('low', 0))}</div></div>
+      <div class="card" data-count="total"><div class="label">🔎 Total issues</div><div class="value">{_esc(summary.get('total_issues', 0))}</div></div>
+      <div class="card critical" data-count="critical"><div class="label">{SEVERITY_EMOJI['critical']} Critical</div><div class="value">{_esc(summary.get('critical', 0))}</div></div>
+      <div class="card high" data-count="high"><div class="label">{SEVERITY_EMOJI['high']} High</div><div class="value">{_esc(summary.get('high', 0))}</div></div>
+      <div class="card medium" data-count="medium"><div class="label">{SEVERITY_EMOJI['medium']} Medium</div><div class="value">{_esc(summary.get('medium', 0))}</div></div>
+      <div class="card low" data-count="low"><div class="label">{SEVERITY_EMOJI['low']} Low</div><div class="value">{_esc(summary.get('low', 0))}</div></div>
     </div>
     """
 
@@ -388,8 +500,9 @@ def render(results: Dict, bundle_label: str = "") -> str:
       <button class="filter-btn" data-filter="high">{SEVERITY_EMOJI['high']} High</button>
       <button class="filter-btn" data-filter="medium">{SEVERITY_EMOJI['medium']} Medium</button>
       <button class="filter-btn" data-filter="low">{SEVERITY_EMOJI['low']} Low</button>
-      <input id="search" class="search" type="search" placeholder="Search messages, files, categories…" />
+      <input id="search" class="search" type="search" placeholder="Search messages, files, categories, pods…" />
     </div>
+    {_component_controls(issues, summary)}
     """
 
     if not issues:
@@ -404,6 +517,9 @@ def render(results: Dict, bundle_label: str = "") -> str:
             issue_rows = []
             for issue in items:
                 sev = issue.get("severity", "low")
+                component = issue.get("component", "other")
+                instance = issue.get("instance", "")
+                tag = COMPONENT_LABEL.get(component, component) + (f" · {instance}" if instance else "")
                 loc = _esc(issue.get("file", ""))
                 if issue.get("line_number"):
                     loc += f":{issue['line_number']}"
@@ -420,9 +536,10 @@ def render(results: Dict, bundle_label: str = "") -> str:
                         f'<pre>{_esc(context)}</pre></details>'
                     )
                 issue_rows.append(f"""
-                <div class="issue" data-severity="{_esc(sev)}">
+                <div class="issue" data-severity="{_esc(sev)}" data-component="{_esc(component)}" data-instance="{_esc(instance)}">
                   <div class="head">
                     <span class="severity-pill" style="background:{SEVERITY_BG[sev]};color:{SEVERITY_COLOR[sev]}">{SEVERITY_EMOJI.get(sev, "")} {_esc(sev)}</span>
+                    <span class="component-tag">{_esc(tag)}</span>
                     <span class="location">{loc}</span>
                   </div>
                   <div class="message">{msg}</div>
@@ -453,7 +570,7 @@ def render(results: Dict, bundle_label: str = "") -> str:
             </details>
             """)
 
-        body_html = "".join(cat_blocks)
+        body_html = "".join(cat_blocks) + '<div class="no-issues no-match">No issue matches these filters.</div>'
 
     verdict_html = _verdict(summary, categories_sorted, grouped)
 
