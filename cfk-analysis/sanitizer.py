@@ -108,6 +108,9 @@ class DataSanitizer:
         if 'file' in sanitized:
             sanitized['file'] = self.sanitize_path(sanitized['file'])
 
+        if sanitized.get('instance'):
+            sanitized['instance'] = self.sanitize_path(f"/{sanitized['instance']}/").strip('/')
+
         return sanitized
 
     def sanitize_text(self, text: str) -> str:

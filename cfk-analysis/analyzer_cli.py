@@ -5,7 +5,7 @@ Wraps CFKBundleAnalyzer + DataSanitizer + recommendations for shell use.
 
 Usage:
   analyzer_cli.py <bundle-path> [--json] [--no-sanitize] [--severity LEVEL] [--top N]
-                  [--include-warnings] [--html-out FILE]
+                  [--component NAME ...] [--include-warnings] [--html-out FILE]
 
 <bundle-path> may be a directory or a .tar / .tar.gz / .tgz / .zip archive.
 Archives are extracted to a temp directory that is cleaned up on exit.
@@ -27,7 +27,7 @@ from collections import defaultdict
 from contextlib import contextmanager, redirect_stdout
 from typing import Optional, Tuple
 
-from analyzer import CFKBundleAnalyzer
+from analyzer import CFKBundleAnalyzer, COMPONENTS
 from sanitizer import DataSanitizer
 import recommendations
 import html_report
@@ -112,6 +112,28 @@ def filter_by_severity(issues, minimum: Optional[str]):
     return [i for i in issues if SEVERITY_ORDER.get(i["severity"], 99) <= threshold]
 
 
+def filter_by_component(issues, components):
+    if not components:
+        return issues
+    return [i for i in issues if i.get("component") in components]
+
+
+def recount(results):
+    counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
+    for i in results["issues"]:
+        counts[i["severity"]] = counts.get(i["severity"], 0) + 1
+    results["summary"].update(counts)
+    results["summary"]["total_issues"] = len(results["issues"])
+
+
+def component_counts(issues):
+    """[(component, issue count)] in COMPONENTS order"""
+    counts = defaultdict(int)
+    for i in issues:
+        counts[i.get("component", "other")] += 1
+    return [(c, counts[c]) for c in COMPONENTS if counts[c]]
+
+
 def group_by_category(issues):
     grouped = defaultdict(list)
     for i in issues:
@@ -141,6 +163,11 @@ def print_text_report(results, top: int):
     print(f"  high:           {summary['high']}")
     print(f"  medium:         {summary['medium']}")
     print(f"  low:            {summary['low']}")
+    by_component = component_counts(issues)
+    if by_component:
+        print("By component:     " + ", ".join(f"{c} {n}" for c, n in by_component))
+    if summary.get("components"):
+        print(f"Filtered on:      --component {' '.join(summary['components'])}")
     if results.get("redaction_summary"):
         r = results["redaction_summary"]
         print(f"Sanitized:        {r['secrets']} secrets, {r['ip_addresses']} IPs, {r['hostnames']} hostnames, "
@@ -169,7 +196,10 @@ def print_text_report(results, top: int):
 
         for issue in items[:top]:
             glyph = SEVERITY_GLYPH.get(issue["severity"], "[?   ]")
-            loc = issue["file"]
+            loc = f"[{issue.get('component', 'other')}"
+            if issue.get("instance"):
+                loc += f"/{issue['instance']}"
+            loc += f"] {issue['file']}"
             if issue.get("line_number"):
                 loc += f":{issue['line_number']}"
             if issue.get("count", 1) > 1:
@@ -212,6 +242,7 @@ def run(
     as_json: bool,
     html_out: Optional[str] = None,
     include_warnings: bool = False,
+    components: Optional[list] = None,
 ) -> int:
     with extracted_bundle(bundle_path) as bundle_dir:
         analyzer = CFKBundleAnalyzer(bundle_dir, include_warnings=include_warnings)
@@ -234,13 +265,11 @@ def run(
     if sanitize:
         results = DataSanitizer().sanitize_results(results)
 
-    if severity:
-        results["issues"] = filter_by_severity(results["issues"], severity)
-        counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
-        for i in results["issues"]:
-            counts[i["severity"]] = counts.get(i["severity"], 0) + 1
-        results["summary"].update(counts)
-        results["summary"]["total_issues"] = len(results["issues"])
+    if severity or components:
+        results["issues"] = filter_by_component(filter_by_severity(results["issues"], severity), components)
+        recount(results)
+    if components:
+        results["summary"]["components"] = components
 
     if html_out:
         rendered = html_report.render(results, bundle_label=os.path.basename(bundle_path))
@@ -264,6 +293,8 @@ def run(
 
 def print_verdict(results):
     s = results["summary"]
+    if s.get("components"):
+        print(f"Component filter: {', '.join(s['components'])}")
     if s["critical"]:
         print(f"CRITICAL: {s['critical']} critical and {s['high']} high-severity issues, act on the recommendations above.")
     elif s["high"]:
@@ -285,6 +316,8 @@ def main() -> int:
     p.add_argument("--severity", choices=["critical", "high", "medium", "low"], help="Minimum severity to include")
     p.add_argument("--top", type=int, default=5, help="Max issues to show per category in text mode (default: 5)")
     p.add_argument("--html-out", help="Write a self-contained HTML report to this path")
+    p.add_argument("--component", action="append", choices=COMPONENTS,
+                   help="Only keep the issues of this component (repeatable)")
     p.add_argument("--include-warnings", action="store_true", help="Also report WARN log records that match no known category")
     args = p.parse_args()
 
@@ -297,6 +330,7 @@ def main() -> int:
             as_json=args.json,
             html_out=args.html_out,
             include_warnings=args.include_warnings,
+            components=args.component,
         )
     except (FileNotFoundError, ValueError, BundleError) as e:
         print(f"Error: {e}", file=sys.stderr)

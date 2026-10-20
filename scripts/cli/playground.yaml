@@ -2291,11 +2291,15 @@ subcommands:
       It is best effort: review the output before sharing it. Pass --no-sanitize only
       for internal/test bundles.\n\n\U0001F516 Accepts a directory or a .tar / .tar.gz
       / .tgz / .zip archive.\n\n\U0001F516 Use --json to emit machine-readable output
-      for downstream tooling.\n\n\U0001F310 Also writes a self-contained HTML report
-      in --output-dir, opened in the browser in an interactive terminal.\n\n\U0001F9EA
-      With --sample, it analyzes the samples shipped in cfk-analysis/samples: a quick
-      way to see what it reports.\n\n\U0001F516 Exit code is 0 when the analysis completed
-      (whatever was found, read the summary), 64 for an invalid, unsafe or empty bundle."
+      for downstream tooling.\n\n\U0001F9E9 Each issue is attributed to a component
+      (kafka, kraftcontroller, connect, schemaregistry, operator…) and to the instance
+      (CR name, e.g. connect-peh) it comes from. Use --component to keep only some
+      of them, or the Component / Instance buttons of the HTML report.\n\n\U0001F310
+      Also writes a self-contained HTML report in --output-dir, opened in the browser
+      in an interactive terminal.\n\n\U0001F9EA With --sample, it analyzes the samples
+      shipped in cfk-analysis/samples: a quick way to see what it reports.\n\n\U0001F516
+      Exit code is 0 when the analysis completed (whatever was found, read the summary),
+      64 for an invalid, unsafe or empty bundle."
     usage: playground analyze cfk-bundle [OPTIONS]
     options:
     - names:
@@ -2326,6 +2330,13 @@ subcommands:
       argument: LEVEL
       description: "\U0001F39A️  Filter issues by minimum severity (critical | high
         | medium | low)\n\nAllowed values: critical, high, medium, low"
+    - names:
+      - "--component"
+      argument: COMPONENT
+      description: "\U0001F9E9 Only keep the issues of this component (repeat --component
+        for several). other = not a CFK component (nodes, volumes, unknown pods)\n\nRepeatable:
+        ✓ Yes\nAllowed values: kafka, kraftcontroller, zookeeper, connect, schemaregistry,
+        ksqldb, controlcenter, kafkarestproxy, operator, other"
     - names:
       - "--top"
       argument: "N"
