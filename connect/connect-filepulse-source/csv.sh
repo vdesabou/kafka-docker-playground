@@ -44,10 +44,8 @@ log "Creating CSV FilePulse Source connector"
 #           http://localhost:8083/connectors/filepulse-source-csv/config | jq .
 # else
      # Version 2.x
-     curl -X PUT \
-          -H "Content-Type: application/json" \
-          --data @connect-file-pulse-quickstart-csv-2x.json \
-          http://localhost:8083/connectors/filepulse-source-csv/config | jq .
+     # create-or-update (not a raw curl): on cfk it replaces broker:9092 by kafka:9071
+     playground connector create-or-update --connector filepulse-source-csv < connect-file-pulse-quickstart-csv-2x.json
 # fi
 
 sleep 30
