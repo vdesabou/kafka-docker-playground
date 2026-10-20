@@ -3917,8 +3917,10 @@ subcommands:
   description: "\U0001F465 Consumer group commands\n\nInspect any consumer group (not
     only the ones of sink connectors): which\ngroups exist, their state and members,
     and the committed offsets and lag\nper partition. Works on plaintext, secured
-    environments, cfk and\nConfluent Cloud.\n\n  list       consumer groups, optionally
-    with their state\n  describe   committed offsets and lag, or --state, or --members\n\n\U0001F393
+    environments, cfk and\nConfluent Cloud.\n\n  list            consumer groups,
+    optionally with their state\n  describe        committed offsets and lag, or --state,
+    or --members\n  reset-offsets   rewind or fast-forward a group (earliest, latest,
+    datetime...)\n  delete          delete a group, or its offsets for one topic\n\n\U0001F393
     Tip: for a sink connector, 'playground connector show-lag' follows the\nlag until
     it reaches 0."
   usage: playground consumer-group COMMAND
@@ -3961,6 +3963,88 @@ subcommands:
       argument: ''
       description: "\U0001F9D1‍\U0001F91D‍\U0001F9D1 Display members of the group
         and their assigned partitions"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+  - name: reset-offsets
+    description: "⏪ Reset the committed offsets of a consumer group\n\nWraps kafka-consumer-groups
+      --reset-offsets: set exactly one of\n--to-earliest, --to-latest, --to-offset,
+      --to-datetime, --shift-by\nor --by-duration. All the topics of the group are
+      reset, unless\n--topic is set (topic, or topic:partition[,partition]).\n\nThe
+      offsets are changed right away (kafka-consumer-groups --execute):\nuse --dry-run
+      to only see the new offsets. The group must have no\nactive member.\n\n\U0001F393
+      Tip: for a sink connector (group connect-<connector>), use\n'playground connector
+      offsets reset|alter', which stops and resumes\nthe connector for you."
+    usage: playground consumer-group reset-offsets [OPTIONS]
+    options:
+    - names:
+      - "--group"
+      - "-g"
+      argument: GROUP
+      description: "\U0001F465 Consumer group name\n\nRequired: ✓ Yes"
+    - names:
+      - "--topic"
+      - "-t"
+      argument: TOPIC
+      description: "\U0001F5F3 Topic to reset (topic, or topic:partition[,partition])\n\nℹ️
+        If not set, all the topics of the group are reset"
+    - names:
+      - "--to-earliest"
+      argument: ''
+      description: "⏮️ Reset to the earliest offset"
+    - names:
+      - "--to-latest"
+      argument: ''
+      description: "⏭️ Reset to the latest offset (skip everything that is in the
+        topic)"
+    - names:
+      - "--to-offset"
+      argument: OFFSET
+      description: "\U0001F4CD Reset to this offset"
+    - names:
+      - "--to-datetime"
+      argument: DATETIME
+      description: "\U0001F4C5 Reset to the first offset at or after this date (YYYY-MM-DDTHH:mm:SS.sss,
+        e.g. 2026-10-20T08:00:00.000)"
+    - names:
+      - "--shift-by"
+      argument: SHIFT
+      description: "↔️ Move the offsets by this number of records (negative to go
+        back, e.g. -100)"
+    - names:
+      - "--by-duration"
+      argument: DURATION
+      description: "⏱️ Reset to the offsets of this long ago (ISO-8601 duration, e.g.
+        PT1H for one hour ago, P1D for one day)"
+    - names:
+      - "--dry-run"
+      argument: ''
+      description: "\U0001F9EA Only display the new offsets, do not change them"
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+  - name: delete
+    description: "\U0001F5D1️ Delete a consumer group, or its offsets for one topic\n\nWraps
+      kafka-consumer-groups --delete. With --topic, only the\ncommitted offsets of
+      that topic are deleted (--delete-offsets), the\ngroup keeps its other offsets.\n\nThe
+      group must have no active member: for a sink connector, stop or\ndelete the
+      connector first."
+    usage: playground consumer-group delete [OPTIONS]
+    options:
+    - names:
+      - "--group"
+      - "-g"
+      argument: GROUP
+      description: "\U0001F465 Consumer group name\n\nRequired: ✓ Yes"
+    - names:
+      - "--topic"
+      - "-t"
+      argument: TOPIC
+      description: "\U0001F5F3 Only delete the committed offsets of this topic"
     - names:
       - "--verbose"
       - "-v"

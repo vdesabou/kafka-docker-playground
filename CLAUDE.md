@@ -136,6 +136,7 @@ environments where the raw command only works on `plaintext`.
 | `curl localhost:8083/connectors/...` | `playground connector status\|show-config\|logs\|pause\|resume\|restart\|delete\|update` |
 | `curl .../connectors/<c>/offsets` | `playground connector offsets get\|alter\|reset` |
 | `kafka-consumer-groups --describe` for a connector | `playground connector show-lag` |
+| `kafka-consumer-groups --describe\|--reset-offsets\|--delete` for any other group | `playground consumer-group describe\|reset-offsets\|delete --group <g>` (`--to-earliest`, `--to-datetime`, `--shift-by`…, `--dry-run`) |
 | `sleep N` waiting for a connector to start, or for a source connector to produce | `playground connector create-or-update --connector <c> --wait` (or `playground connector wait --connector <c>`, `--state RUNNING\|PAUSED\|STOPPED\|FAILED`, `--max-wait 120`) / `playground topic wait-for-records --topic <t> --min-expected-messages N --max-wait 120` |
 | `kafka-console-producer`, `kafka-avro-console-producer` | `playground topic produce -t <t> --nb-messages N` (+ schema on stdin) |
 | `kafka-console-consumer` | `playground topic consume --topic <t> --min-expected-messages N --timeout 60` |
