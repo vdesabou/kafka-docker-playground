@@ -5340,3 +5340,133 @@ function read_stdin_if_any () {
     cat
   fi
 }
+
+DLQ_TOOL_CACHE="$HOME/.playground-dlq-tool"
+
+# compiled tools/dlq-tool/DlqTool.java, cached by source hash: prints the classes folder
+# compiled against kafka-clients 3.9 for java 8: it only uses consumer / producer apis that the kafka jars of any
+# cp image (6.x to 8.x) have, so the same class runs in every container
+function dlq_tool_classes () {
+  local source_file="$root_folder/tools/dlq-tool/DlqTool.java" key classes jar="kafka-clients-3.9.1.jar"
+  key=$(shasum "$source_file" | cut -c1-10)
+  classes="$DLQ_TOOL_CACHE/classes/$key"
+  if [ ! -f "$classes/DlqTool.class" ]
+  then
+    mkdir -p "$classes" "$DLQ_TOOL_CACHE/src"
+    if [ ! -f "$DLQ_TOOL_CACHE/$jar" ]
+    then
+      curl -sSfL -o "$DLQ_TOOL_CACHE/$jar" "https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/3.9.1/$jar" || { logerror "❌ could not download $jar"; rm -f "$DLQ_TOOL_CACHE/$jar"; return 1; }
+    fi
+    cp "$source_file" "$DLQ_TOOL_CACHE/src/DlqTool.java"
+    # compiled in a jdk container: the cp images have no compiler
+    if ! docker run --rm -v "$DLQ_TOOL_CACHE:/w" -v "$classes:/out" eclipse-temurin:17-jdk javac --release 8 -cp "/w/$jar" -d /out /w/src/DlqTool.java > "$DLQ_TOOL_CACHE/compile.log" 2>&1
+    then
+      logerror "❌ could not compile the dlq tool, see $DLQ_TOOL_CACHE/compile.log"
+      rm -rf "$classes"
+      return 1
+    fi
+  fi
+  echo "$classes"
+}
+
+# run a java class that uses the kafka clients (one .class file in <classes dir>) with kafka-run-class, in the same
+# container and with the same bootstrap server and security config as run_kafka_admin_tool:
+#   run_kafka_java_tool <classes dir> <class name> <args...>
+# --bootstrap-server <servers> [--command-config <client properties>] are appended to the arguments
+function run_kafka_java_tool () {
+  local classes="$1" class="$2"
+  shift 2
+  local remote_dir="/tmp/playground-$(echo "$class" | tr '[:upper:]' '[:lower:]')"
+  get_environment_used
+
+  if [[ "$environment" == "ccloud" ]]
+  then
+    get_kafka_docker_playground_dir
+    DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+    if [ -f $DELTA_CONFIGS_ENV ]
+    then
+      source $DELTA_CONFIGS_ENV
+    else
+      logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
+      exit 1
+    fi
+    if [[ -n "$verbose" ]]
+    then
+      log "🐞 command used"
+      echo "$class $* --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
+    fi
+    get_connect_image
+    docker run --quiet --rm -v "$classes:$remote_dir" -e CLASSPATH="$remote_dir" -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-run-class "$class" "$@" --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
+  else
+    get_security_broker "--command-config"
+    if [[ -n "$verbose" ]]
+    then
+      log "🐞 command used (in container $container)"
+      echo "$class $* --bootstrap-server $bootstrap_server $security"
+    fi
+    if [[ "$environment" == cfk* ]]
+    then
+      kubectl -n confluent exec -i $container -- sh -c "mkdir -p $remote_dir && cat > $remote_dir/$class.class" < "$classes/$class.class"
+      kubectl -n confluent exec -i $container -- env CLASSPATH="$remote_dir" kafka-run-class "$class" "$@" --bootstrap-server $bootstrap_server $security
+    else
+      docker exec -i $container sh -c "mkdir -p $remote_dir && cat > $remote_dir/$class.class" < "$classes/$class.class"
+      docker exec -i -e CLASSPATH="$remote_dir" $container kafka-run-class "$class" "$@" --bootstrap-server $bootstrap_server $security
+    fi
+  fi
+}
+
+# dead letter queue topic of a sink connector: errors.deadletterqueue.topic.name, or dlq-<lcc id> for a fully
+# managed connector (the config can use ${connector} as a placeholder for the lcc id). Prints nothing if there is none
+function get_connector_dlq_topic () {
+  local connector="$1" connector_type dlq lcc
+  get_connector_config_json "$connector" || return 1
+  connector_type=$(playground state get run.connector_type)
+  dlq=$(echo "$curl_output" | jq -r '."errors.deadletterqueue.topic.name" // empty')
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+    if [ -z "$dlq" ] || [[ "$dlq" == *'${connector}'* ]]
+    then
+      lcc=$(get_ccloud_connector_lcc "$connector" 2> /dev/null)
+      [ -z "$lcc" ] && return 1
+      dlq="${dlq:-dlq-\${connector\}}"
+      dlq="${dlq//\$\{connector\}/$lcc}"
+    fi
+  fi
+  echo "$dlq"
+}
+
+# dead letter queue topic of 'playground topic dlq' commands, in $dlq_topic: --topic, or the dlq of --connector, or
+# the dlq of the only connector of the example that has one
+function resolve_dlq_topic () {
+  local topic="$1" connector="$2" c t
+  dlq_topic="$topic"
+  [ -n "$dlq_topic" ] && return 0
+  if [ -n "$connector" ]
+  then
+    dlq_topic=$(get_connector_dlq_topic "$connector")
+    if [ -z "$dlq_topic" ]
+    then
+      logerror "❌ connector $connector has no dead letter queue (errors.deadletterqueue.topic.name is not set), use --topic"
+      exit 1
+    fi
+    return 0
+  fi
+  local found=()
+  for c in $(playground get-connector-list 2> /dev/null)
+  do
+    t=$(get_connector_dlq_topic "$c")
+    [ -n "$t" ] && found+=("$t")
+  done
+  if [ ${#found[@]} -eq 1 ]
+  then
+    dlq_topic="${found[0]}"
+    log "✨ --topic was not provided, using the dead letter queue of the running connector: $dlq_topic"
+  elif [ ${#found[@]} -gt 1 ]
+  then
+    logerror "❌ several connectors have a dead letter queue (${found[*]}), use --topic or --connector"
+    exit 1
+  else
+    logerror "❌ no running connector has a dead letter queue (errors.deadletterqueue.topic.name), use --topic"
+    exit 1
+  fi
+}

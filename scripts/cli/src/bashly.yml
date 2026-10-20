@@ -5549,6 +5549,7 @@ commands:
 
     🔧 Manage
       list / describe / alter / delete
+      dlq inspect / replay   dead letter queue grouped by error, and replay
       set-schema-compatibility   compatibility of the topic subjects
       tag             stream catalog tags (Confluent Cloud only)
 
@@ -6807,6 +6808,160 @@ commands:
         required: false
       examples: |
         playground topic alter --topic atopic --add-config max.message.bytes=5242940
+
+    - name: dlq
+      group: Topic
+      expose: always
+      help: |-
+        📬 Dead letter queue commands
+
+        Read the dead letter queue of a sink connector
+        (errors.tolerance=all with errors.deadletterqueue.topic.name, or the
+        dlq-<lcc id> topic of a fully managed connector) without decoding
+        its headers by hand, and send the records back once the cause is
+        fixed.
+
+          inspect   records grouped by error (exception, message, root cause,
+                    original topic, partition and offsets)
+          replay    produce the records again to their original topic, or
+                    to --to
+
+        Without --topic, the dead letter queue of --connector, or of the only
+        running connector that has one, is used.
+
+        The errors are in the __connect.errors.* headers, which are only
+        written with "errors.deadletterqueue.context.headers.enable": "true"
+        ('playground connector snippets --dlq' has it).
+      commands:
+
+        - name: inspect
+          group: Topic
+          help: |-
+            🩺 Show what is in a dead letter queue, grouped by error
+
+            Reads the whole dead letter queue (up to --max-messages) and groups
+            the records by connector, stage (key / value converter,
+            transformation, task put...) and exception, most frequent first.
+            For each group: the exception and its message, the root cause (last
+            "Caused by:" of the stack trace), the original topic, partition and
+            offsets, the offsets in the dead letter queue and a sample value.
+
+            Keys and values are read as raw bytes, so it works whatever the
+            format of the records (avro, protobuf, json schema, plain json).
+          flags:
+          - &dlq-topic
+            long: --topic
+            short: -t
+            required: false
+            arg: topic
+            completions:
+              dynamic:
+              - playground get-topic-list
+            help: |-
+              📬 Dead letter queue topic
+
+              ℹ️ If not set, the dead letter queue of --connector, or of the only running connector that has one
+          - &dlq-connector
+            long: --connector
+            short: -c
+            required: false
+            arg: connector
+            completions:
+              dynamic:
+              - playground get-connector-list
+            help: |-
+              🔗 Connector whose dead letter queue is used (errors.deadletterqueue.topic.name, or dlq-<lcc id> for a fully managed connector)
+          - &dlq-max-messages
+            long: --max-messages
+            required: false
+            arg: max_messages
+            validate: integer
+            default: "10000"
+            help: |-
+              🔢 Maximum number of records to read (default is 10000)
+          - &dlq-grep
+            long: --grep
+            required: false
+            arg: regex
+            help: |-
+              🔎 Only the records whose exception class, message or root cause match this regex (java syntax)
+          - long: --json
+            required: false
+            help: |-
+              🤖 Print the groups as JSON
+          - *verbose
+          examples:
+          - playground topic dlq inspect --topic dlq
+          - playground topic dlq inspect --connector http-sink
+          - playground topic dlq inspect --topic dlq --grep "Unknown magic byte"
+          x_example_outputs:
+          - command: playground topic dlq inspect --topic dlq
+            output: |-
+              17:22:05 ℹ️ 🩺 Inspecting dead letter queue dlq
+              17:22:09 ℹ️ 📊 10 records in 1 group(s), most frequent first
+
+              🔢 10 record(s) of connector filestream-sink, stage VALUE_CONVERTER (io.confluent.connect.avro.AvroConverter)
+                ❌ org.apache.kafka.connect.errors.DataException: Failed to deserialize data for topic filestream to Avro:
+                🌱 root cause: org.apache.kafka.common.errors.SerializationException: Unknown magic byte!
+                📍 original records: topic filestream partition 0 offsets 0..9 (10)
+                📬 dlq partition 0 offsets 0..9
+                🔎 sample value: {"f1":"value1"}
+
+              17:22:09 ℹ️ 🎓 replay them once the cause is fixed: playground topic dlq replay --topic dlq
+
+        - name: replay
+          group: Topic
+          help: |-
+            🔁 Produce the records of a dead letter queue again
+
+            Once the cause is fixed (converter, schema, mapping...), sends the
+            records back to the topic they came from (their
+            __connect.errors.topic header), or to --to, so that the sink
+            connector processes them again. Keys, values, timestamps and the
+            other headers are kept as they are (raw bytes), the
+            __connect.errors.* headers are removed unless
+            --keep-error-headers is set.
+
+            Only the records already in the dead letter queue when the command
+            starts are read, and they are not deleted from it: a record that
+            fails again is added to the dead letter queue a second time.
+
+            🎓 Tip: --dry-run shows how many records would go to which topic,
+            and --grep replays only one kind of error.
+          flags:
+          - *dlq-topic
+          - *dlq-connector
+          - long: --to
+            required: false
+            arg: to
+            completions:
+              dynamic:
+              - playground get-topic-list
+            help: |-
+              📤 Topic to produce to
+
+              ℹ️ If not set, each record goes back to its original topic (__connect.errors.topic header)
+          - *dlq-max-messages
+          - *dlq-grep
+          - long: --keep-error-headers
+            required: false
+            help: |-
+              🏷️ Keep the __connect.errors.* headers on the replayed records
+          - long: --dry-run
+            required: false
+            help: |-
+              🧪 Only display how many records would be replayed, and to which topics
+          - *verbose
+          examples:
+          - playground topic dlq replay --topic dlq --dry-run
+          - playground topic dlq replay --topic dlq
+          - playground topic dlq replay --connector http-sink --grep "Unknown magic byte" --to retry-topic
+          x_example_outputs:
+          - command: playground topic dlq replay --topic dlq
+            output: |-
+              17:22:05 ℹ️ 🔁 Replaying dead letter queue dlq to the original topics (__connect.errors.topic header)
+                📤 10 record(s) to topic filestream
+              17:22:09 ℹ️ ✅ 10 records replayed
 
     - name: tag
       group: Topic

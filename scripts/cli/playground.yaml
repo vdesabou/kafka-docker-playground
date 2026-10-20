@@ -3271,7 +3271,8 @@ subcommands:
     \ get-number-records   count what is in the topic\n  wait-for-records     wait
     until the topic contains N records\n  get-offsets          earliest and latest
     offsets per partition\n  display-consumer-offsets   read the internal offsets
-    topic\n\n\U0001F527 Manage\n  list / describe / alter / delete\n  set-schema-compatibility
+    topic\n\n\U0001F527 Manage\n  list / describe / alter / delete\n  dlq inspect
+    / replay   dead letter queue grouped by error, and replay\n  set-schema-compatibility
     \  compatibility of the topic subjects\n  tag             stream catalog tags
     (Confluent Cloud only)\n\nSerialisation is handled for you: 'produce' registers
     the schema you give\nit and 'consume' works out from the payload whether it is
@@ -3795,6 +3796,117 @@ subcommands:
       - "-t"
       argument: TOPIC
       description: "\U0001F5F3 Topic name\n\nRequired: ✓ Yes"
+  - name: dlq
+    description: "\U0001F4EC Dead letter queue commands\n\nRead the dead letter queue
+      of a sink connector\n(errors.tolerance=all with errors.deadletterqueue.topic.name,
+      or the\ndlq-<lcc id> topic of a fully managed connector) without decoding\nits
+      headers by hand, and send the records back once the cause is\nfixed.\n\n  inspect
+      \  records grouped by error (exception, message, root cause,\n            original
+      topic, partition and offsets)\n  replay    produce the records again to their
+      original topic, or\n            to --to\n\nWithout --topic, the dead letter
+      queue of --connector, or of the only\nrunning connector that has one, is used.\n\nThe
+      errors are in the __connect.errors.* headers, which are only\nwritten with \"errors.deadletterqueue.context.headers.enable\":
+      \"true\"\n('playground connector snippets --dlq' has it)."
+    usage: playground topic dlq COMMAND
+    options: []
+    subcommands:
+    - name: inspect
+      description: "\U0001FA7A Show what is in a dead letter queue, grouped by error\n\nReads
+        the whole dead letter queue (up to --max-messages) and groups\nthe records
+        by connector, stage (key / value converter,\ntransformation, task put...)
+        and exception, most frequent first.\nFor each group: the exception and its
+        message, the root cause (last\n\"Caused by:\" of the stack trace), the original
+        topic, partition and\noffsets, the offsets in the dead letter queue and a
+        sample value.\n\nKeys and values are read as raw bytes, so it works whatever
+        the\nformat of the records (avro, protobuf, json schema, plain json)."
+      usage: playground topic dlq inspect [OPTIONS]
+      options:
+      - names:
+        - "--topic"
+        - "-t"
+        argument: TOPIC
+        description: "\U0001F4EC Dead letter queue topic\n\nℹ️ If not set, the dead
+          letter queue of --connector, or of the only running connector that has one"
+      - names:
+        - "--connector"
+        - "-c"
+        argument: CONNECTOR
+        description: "\U0001F517 Connector whose dead letter queue is used (errors.deadletterqueue.topic.name,
+          or dlq-<lcc id> for a fully managed connector)"
+      - names:
+        - "--max-messages"
+        argument: MAX_MESSAGES
+        description: "\U0001F522 Maximum number of records to read (default is 10000)\n\nDefault
+          value: 10000"
+      - names:
+        - "--grep"
+        argument: REGEX
+        description: "\U0001F50E Only the records whose exception class, message or
+          root cause match this regex (java syntax)"
+      - names:
+        - "--json"
+        argument: ''
+        description: "\U0001F916 Print the groups as JSON"
+      - names:
+        - "--verbose"
+        - "-v"
+        argument: ''
+        description: "\U0001F41E Show command being ran."
+    - name: replay
+      description: "\U0001F501 Produce the records of a dead letter queue again\n\nOnce
+        the cause is fixed (converter, schema, mapping...), sends the\nrecords back
+        to the topic they came from (their\n__connect.errors.topic header), or to
+        --to, so that the sink\nconnector processes them again. Keys, values, timestamps
+        and the\nother headers are kept as they are (raw bytes), the\n__connect.errors.*
+        headers are removed unless\n--keep-error-headers is set.\n\nOnly the records
+        already in the dead letter queue when the command\nstarts are read, and they
+        are not deleted from it: a record that\nfails again is added to the dead letter
+        queue a second time.\n\n\U0001F393 Tip: --dry-run shows how many records would
+        go to which topic,\nand --grep replays only one kind of error."
+      usage: playground topic dlq replay [OPTIONS]
+      options:
+      - names:
+        - "--topic"
+        - "-t"
+        argument: TOPIC
+        description: "\U0001F4EC Dead letter queue topic\n\nℹ️ If not set, the dead
+          letter queue of --connector, or of the only running connector that has one"
+      - names:
+        - "--connector"
+        - "-c"
+        argument: CONNECTOR
+        description: "\U0001F517 Connector whose dead letter queue is used (errors.deadletterqueue.topic.name,
+          or dlq-<lcc id> for a fully managed connector)"
+      - names:
+        - "--to"
+        argument: TO
+        description: "\U0001F4E4 Topic to produce to\n\nℹ️ If not set, each record
+          goes back to its original topic (__connect.errors.topic header)"
+      - names:
+        - "--max-messages"
+        argument: MAX_MESSAGES
+        description: "\U0001F522 Maximum number of records to read (default is 10000)\n\nDefault
+          value: 10000"
+      - names:
+        - "--grep"
+        argument: REGEX
+        description: "\U0001F50E Only the records whose exception class, message or
+          root cause match this regex (java syntax)"
+      - names:
+        - "--keep-error-headers"
+        argument: ''
+        description: "\U0001F3F7️ Keep the __connect.errors.* headers on the replayed
+          records"
+      - names:
+        - "--dry-run"
+        argument: ''
+        description: "\U0001F9EA Only display how many records would be replayed,
+          and to which topics"
+      - names:
+        - "--verbose"
+        - "-v"
+        argument: ''
+        description: "\U0001F41E Show command being ran."
   - name: tag
     description: "\U0001F3F7️ Stream Catalog tags (Confluent Cloud only)\n\nTag definitions
       live in the Stream Catalog of the environment, served\nby the Schema Registry

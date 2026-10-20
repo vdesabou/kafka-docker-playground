@@ -237,6 +237,7 @@ playground_usage() {
   printf "  %s   🆕 Create topic\n" "$(green "topic create")                              "
   printf "  %s   ❌ Delete topic and associated schema/subject if applicable\n" "$(green "topic delete")                              "
   printf "  %s   🪛 Alter topic config\n" "$(green "topic alter")                               "
+  printf "  %s   📬 Dead letter queue commands\n" "$(green "topic dlq")                                 "
   printf "  %s   🏷️ Stream Catalog tags (Confluent Cloud only)\n" "$(green "topic tag")                                 "
   printf "  %s   👥 Consumer group commands\n" "$(green "consumer-group")                            "
   printf "  %s   👥 List consumer groups\n" "$(green "consumer-group list")                       "
@@ -8650,7 +8651,7 @@ playground_container_wait_for_connect_rest_api_ready_usage() {
 playground_topic_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground topic\n\n"
-    printf "  🗳 Topic commands\n  \n  Produce, consume and manage topics without dealing with the kafka-* shell\n  scripts: the bootstrap server, the security properties and the schema\n  registry url are all derived from the running environment, so the same\n  command works on plaintext, on sasl-ssl and on Confluent Cloud.\n  \n  📤 Get data in\n    produce         generate records from a schema, or from your own data\n    create          create a topic with the partitions you need\n  \n  📥 Get data out\n    consume         read from the beginning, deserialising automatically\n    get-number-records   count what is in the topic\n    wait-for-records     wait until the topic contains N records\n    get-offsets          earliest and latest offsets per partition\n    display-consumer-offsets   read the internal offsets topic\n  \n  🔧 Manage\n    list / describe / alter / delete\n    set-schema-compatibility   compatibility of the topic subjects\n    tag             stream catalog tags (Confluent Cloud only)\n  \n  Serialisation is handled for you: 'produce' registers the schema you give\n  it and 'consume' works out from the payload whether it is avro, protobuf,\n  json schema or plain text.\n  \n  🎓 Tip: in an example script, 'consume --min-expected-messages N' is the\n  assertion that the data made it through; it fails the run if it did not.\n\n"
+    printf "  🗳 Topic commands\n  \n  Produce, consume and manage topics without dealing with the kafka-* shell\n  scripts: the bootstrap server, the security properties and the schema\n  registry url are all derived from the running environment, so the same\n  command works on plaintext, on sasl-ssl and on Confluent Cloud.\n  \n  📤 Get data in\n    produce         generate records from a schema, or from your own data\n    create          create a topic with the partitions you need\n  \n  📥 Get data out\n    consume         read from the beginning, deserialising automatically\n    get-number-records   count what is in the topic\n    wait-for-records     wait until the topic contains N records\n    get-offsets          earliest and latest offsets per partition\n    display-consumer-offsets   read the internal offsets topic\n  \n  🔧 Manage\n    list / describe / alter / delete\n    dlq inspect / replay   dead letter queue grouped by error, and replay\n    set-schema-compatibility   compatibility of the topic subjects\n    tag             stream catalog tags (Confluent Cloud only)\n  \n  Serialisation is handled for you: 'produce' registers the schema you give\n  it and 'consume' works out from the payload whether it is avro, protobuf,\n  json schema or plain text.\n  \n  🎓 Tip: in an example script, 'consume --min-expected-messages N' is the\n  assertion that the data made it through; it fails the run if it did not.\n\n"
   else
     printf "playground topic - 🗳 Topic commands\n\n"
   fi
@@ -8674,6 +8675,9 @@ playground_topic_usage() {
   printf "  %s   🆕 Create topic\n" "$(green "create")                  "
   printf "  %s   ❌ Delete topic and associated schema/subject if applicable\n" "$(green "delete")                  "
   printf "  %s   🪛 Alter topic config\n" "$(green "alter")                   "
+  printf "  %s   📬 Dead letter queue commands\n" "$(green "dlq")                     "
+  printf "  %s   🩺 Show what is in a dead letter queue, grouped by error\n" "$(green "dlq inspect")             "
+  printf "  %s   🔁 Produce the records of a dead letter queue again\n" "$(green "dlq replay")              "
   printf "  %s   🏷️ Stream Catalog tags (Confluent Cloud only)\n" "$(green "tag")                     "
   echo
 
@@ -9507,6 +9511,180 @@ playground_topic_alter_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground topic alter --topic atopic --add-config max.message.bytes=5242940\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_dlq_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground topic dlq\n\n"
+    printf "  📬 Dead letter queue commands\n  \n  Read the dead letter queue of a sink connector\n  (errors.tolerance=all with errors.deadletterqueue.topic.name, or the\n  dlq-<lcc id> topic of a fully managed connector) without decoding\n  its headers by hand, and send the records back once the cause is\n  fixed.\n  \n    inspect   records grouped by error (exception, message, root cause,\n              original topic, partition and offsets)\n    replay    produce the records again to their original topic, or\n              to --to\n  \n  Without --topic, the dead letter queue of --connector, or of the only\n  running connector that has one, is used.\n  \n  The errors are in the __connect.errors.* headers, which are only\n  written with \"errors.deadletterqueue.context.headers.enable\": \"true\"\n  ('playground connector snippets --dlq' has it).\n\n"
+  else
+    printf "playground topic dlq - 📬 Dead letter queue commands\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic dlq COMMAND\n"
+  printf "  playground topic dlq [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "Topic commands:")"
+  printf "  %s   🩺 Show what is in a dead letter queue, grouped by error\n" "$(green "inspect")"
+  printf "  %s   🔁 Produce the records of a dead letter queue again\n" "$(green "replay") "
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_dlq_inspect_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground topic dlq inspect\n\n"
+    printf "  🩺 Show what is in a dead letter queue, grouped by error\n  \n  Reads the whole dead letter queue (up to --max-messages) and groups\n  the records by connector, stage (key / value converter,\n  transformation, task put...) and exception, most frequent first.\n  For each group: the exception and its message, the root cause (last\n  \"Caused by:\" of the stack trace), the original topic, partition and\n  offsets, the offsets in the dead letter queue and a sample value.\n  \n  Keys and values are read as raw bytes, so it works whatever the\n  format of the records (avro, protobuf, json schema, plain json).\n\n"
+  else
+    printf "playground topic dlq inspect - 🩺 Show what is in a dead letter queue, grouped by error\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic dlq inspect [OPTIONS]\n"
+  printf "  playground topic dlq inspect --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
+    printf "    📬 Dead letter queue topic\n    \n    ℹ️ If not set, the dead letter queue of --connector, or of the only running\n    connector that has one\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector whose dead letter queue is used\n    (errors.deadletterqueue.topic.name, or dlq-<lcc id> for a fully managed\n    connector)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-messages MAX_MESSAGES")"
+    printf "    🔢 Maximum number of records to read (default is 10000)\n"
+    printf "    %s\n" "Default: 10000"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--grep REGEX")"
+    printf "    🔎 Only the records whose exception class, message or root cause match this\n    regex (java syntax)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the groups as JSON\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground topic dlq inspect --topic dlq\n"
+    printf "  playground topic dlq inspect --connector http-sink\n"
+    printf "  playground topic dlq inspect --topic dlq --grep \"Unknown magic byte\"\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_dlq_replay_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground topic dlq replay\n\n"
+    printf "  🔁 Produce the records of a dead letter queue again\n  \n  Once the cause is fixed (converter, schema, mapping...), sends the\n  records back to the topic they came from (their\n  __connect.errors.topic header), or to --to, so that the sink\n  connector processes them again. Keys, values, timestamps and the\n  other headers are kept as they are (raw bytes), the\n  __connect.errors.* headers are removed unless\n  --keep-error-headers is set.\n  \n  Only the records already in the dead letter queue when the command\n  starts are read, and they are not deleted from it: a record that\n  fails again is added to the dead letter queue a second time.\n  \n  🎓 Tip: --dry-run shows how many records would go to which topic,\n  and --grep replays only one kind of error.\n\n"
+  else
+    printf "playground topic dlq replay - 🔁 Produce the records of a dead letter queue again\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic dlq replay [OPTIONS]\n"
+  printf "  playground topic dlq replay --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
+    printf "    📬 Dead letter queue topic\n    \n    ℹ️ If not set, the dead letter queue of --connector, or of the only running\n    connector that has one\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector whose dead letter queue is used\n    (errors.deadletterqueue.topic.name, or dlq-<lcc id> for a fully managed\n    connector)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--to TO")"
+    printf "    📤 Topic to produce to\n    \n    ℹ️ If not set, each record goes back to its original topic\n    (__connect.errors.topic header)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-messages MAX_MESSAGES")"
+    printf "    🔢 Maximum number of records to read (default is 10000)\n"
+    printf "    %s\n" "Default: 10000"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--grep REGEX")"
+    printf "    🔎 Only the records whose exception class, message or root cause match this\n    regex (java syntax)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--keep-error-headers")"
+    printf "    🏷️ Keep the __connect.errors.* headers on the replayed records\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--dry-run")"
+    printf "    🧪 Only display how many records would be replayed, and to which topics\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground topic dlq replay --topic dlq --dry-run\n"
+    printf "  playground topic dlq replay --topic dlq\n"
+    printf "  playground topic dlq replay --connector http-sink --grep \"Unknown magic byte\"\n  --to retry-topic\n"
     echo
 
   fi
@@ -19114,6 +19292,136 @@ function read_stdin_if_any () {
   then
     printf '%s\n' "$first"
     cat
+  fi
+}
+
+DLQ_TOOL_CACHE="$HOME/.playground-dlq-tool"
+
+# compiled tools/dlq-tool/DlqTool.java, cached by source hash: prints the classes folder
+# compiled against kafka-clients 3.9 for java 8: it only uses consumer / producer apis that the kafka jars of any
+# cp image (6.x to 8.x) have, so the same class runs in every container
+function dlq_tool_classes () {
+  local source_file="$root_folder/tools/dlq-tool/DlqTool.java" key classes jar="kafka-clients-3.9.1.jar"
+  key=$(shasum "$source_file" | cut -c1-10)
+  classes="$DLQ_TOOL_CACHE/classes/$key"
+  if [ ! -f "$classes/DlqTool.class" ]
+  then
+    mkdir -p "$classes" "$DLQ_TOOL_CACHE/src"
+    if [ ! -f "$DLQ_TOOL_CACHE/$jar" ]
+    then
+      curl -sSfL -o "$DLQ_TOOL_CACHE/$jar" "https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/3.9.1/$jar" || { logerror "❌ could not download $jar"; rm -f "$DLQ_TOOL_CACHE/$jar"; return 1; }
+    fi
+    cp "$source_file" "$DLQ_TOOL_CACHE/src/DlqTool.java"
+    # compiled in a jdk container: the cp images have no compiler
+    if ! docker run --rm -v "$DLQ_TOOL_CACHE:/w" -v "$classes:/out" eclipse-temurin:17-jdk javac --release 8 -cp "/w/$jar" -d /out /w/src/DlqTool.java > "$DLQ_TOOL_CACHE/compile.log" 2>&1
+    then
+      logerror "❌ could not compile the dlq tool, see $DLQ_TOOL_CACHE/compile.log"
+      rm -rf "$classes"
+      return 1
+    fi
+  fi
+  echo "$classes"
+}
+
+# run a java class that uses the kafka clients (one .class file in <classes dir>) with kafka-run-class, in the same
+# container and with the same bootstrap server and security config as run_kafka_admin_tool:
+#   run_kafka_java_tool <classes dir> <class name> <args...>
+# --bootstrap-server <servers> [--command-config <client properties>] are appended to the arguments
+function run_kafka_java_tool () {
+  local classes="$1" class="$2"
+  shift 2
+  local remote_dir="/tmp/playground-$(echo "$class" | tr '[:upper:]' '[:lower:]')"
+  get_environment_used
+
+  if [[ "$environment" == "ccloud" ]]
+  then
+    get_kafka_docker_playground_dir
+    DELTA_CONFIGS_ENV=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/env.delta
+    if [ -f $DELTA_CONFIGS_ENV ]
+    then
+      source $DELTA_CONFIGS_ENV
+    else
+      logerror "❌ $DELTA_CONFIGS_ENV has not been generated"
+      exit 1
+    fi
+    if [[ -n "$verbose" ]]
+    then
+      log "🐞 command used"
+      echo "$class $* --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties"
+    fi
+    get_connect_image
+    docker run --quiet --rm -v "$classes:$remote_dir" -e CLASSPATH="$remote_dir" -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-run-class "$class" "$@" --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
+  else
+    get_security_broker "--command-config"
+    if [[ -n "$verbose" ]]
+    then
+      log "🐞 command used (in container $container)"
+      echo "$class $* --bootstrap-server $bootstrap_server $security"
+    fi
+    if [[ "$environment" == cfk* ]]
+    then
+      kubectl -n confluent exec -i $container -- sh -c "mkdir -p $remote_dir && cat > $remote_dir/$class.class" < "$classes/$class.class"
+      kubectl -n confluent exec -i $container -- env CLASSPATH="$remote_dir" kafka-run-class "$class" "$@" --bootstrap-server $bootstrap_server $security
+    else
+      docker exec -i $container sh -c "mkdir -p $remote_dir && cat > $remote_dir/$class.class" < "$classes/$class.class"
+      docker exec -i -e CLASSPATH="$remote_dir" $container kafka-run-class "$class" "$@" --bootstrap-server $bootstrap_server $security
+    fi
+  fi
+}
+
+# dead letter queue topic of a sink connector: errors.deadletterqueue.topic.name, or dlq-<lcc id> for a fully
+# managed connector (the config can use ${connector} as a placeholder for the lcc id). Prints nothing if there is none
+function get_connector_dlq_topic () {
+  local connector="$1" connector_type dlq lcc
+  get_connector_config_json "$connector" || return 1
+  connector_type=$(playground state get run.connector_type)
+  dlq=$(echo "$curl_output" | jq -r '."errors.deadletterqueue.topic.name" // empty')
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+    if [ -z "$dlq" ] || [[ "$dlq" == *'${connector}'* ]]
+    then
+      lcc=$(get_ccloud_connector_lcc "$connector" 2> /dev/null)
+      [ -z "$lcc" ] && return 1
+      dlq="${dlq:-dlq-\${connector\}}"
+      dlq="${dlq//\$\{connector\}/$lcc}"
+    fi
+  fi
+  echo "$dlq"
+}
+
+# dead letter queue topic of 'playground topic dlq' commands, in $dlq_topic: --topic, or the dlq of --connector, or
+# the dlq of the only connector of the example that has one
+function resolve_dlq_topic () {
+  local topic="$1" connector="$2" c t
+  dlq_topic="$topic"
+  [ -n "$dlq_topic" ] && return 0
+  if [ -n "$connector" ]
+  then
+    dlq_topic=$(get_connector_dlq_topic "$connector")
+    if [ -z "$dlq_topic" ]
+    then
+      logerror "❌ connector $connector has no dead letter queue (errors.deadletterqueue.topic.name is not set), use --topic"
+      exit 1
+    fi
+    return 0
+  fi
+  local found=()
+  for c in $(playground get-connector-list 2> /dev/null)
+  do
+    t=$(get_connector_dlq_topic "$c")
+    [ -n "$t" ] && found+=("$t")
+  done
+  if [ ${#found[@]} -eq 1 ]
+  then
+    dlq_topic="${found[0]}"
+    log "✨ --topic was not provided, using the dead letter queue of the running connector: $dlq_topic"
+  elif [ ${#found[@]} -gt 1 ]
+  then
+    logerror "❌ several connectors have a dead letter queue (${found[*]}), use --topic or --connector"
+    exit 1
+  else
+    logerror "❌ no running connector has a dead letter queue (errors.deadletterqueue.topic.name), use --topic"
+    exit 1
   fi
 }
 
@@ -46633,6 +46941,220 @@ playground_topic_alter_command() {
       fi
   fi
   set -e
+
+}
+
+# :command.function
+playground_topic_dlq_inspect_command() {
+
+  # src/commands/topic/dlq/inspect.sh
+  topic="${args[--topic]}"
+  connector="${args[--connector]}"
+  max_messages="${args[--max-messages]}"
+  grep_regex="${args[--grep]}"
+  json="${args[--json]}"
+  verbose="${args[--verbose]}"
+
+  resolve_dlq_topic "$topic" "$connector"
+
+  classes=$(dlq_tool_classes) || exit 1
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  tool_args=(inspect --topic "$dlq_topic" --max-messages "$max_messages")
+  [[ -n "$grep_regex" ]] && tool_args+=(--grep "$grep_regex")
+
+  [[ -z "$json" ]] && log "🩺 Inspecting dead letter queue $dlq_topic"
+  # '|| ret=$?': get_connect_image turns set -e back on in run_kafka_java_tool
+  ret=0
+  run_kafka_java_tool "$classes" DlqTool "${tool_args[@]}" > $tmp_dir/out 2> $tmp_dir/err || ret=$?
+
+  if grep -q "^DLQ_ERROR " $tmp_dir/out
+  then
+      logerror "❌ $(grep -m1 "^DLQ_ERROR " $tmp_dir/out | cut -c11-)"
+      exit 1
+  fi
+  if [ $ret -ne 0 ] || ! grep -q "^DLQ_SUMMARY " $tmp_dir/out
+  then
+      logerror "❌ could not read dead letter queue $dlq_topic"
+      grep -v "^DLQ_" $tmp_dir/out | tail -20
+      tail -20 $tmp_dir/err
+      exit 1
+  fi
+
+  grep "^DLQ_RECORD " $tmp_dir/out | cut -c12- > $tmp_dir/records.json || true
+  summary=$(grep -m1 "^DLQ_SUMMARY " $tmp_dir/out | cut -c13-)
+  total=$(echo "$summary" | jq -r .total)
+  read_count=$(echo "$summary" | jq -r .read)
+  skipped=$(echo "$summary" | jq -r .skipped_filter)
+
+  # one group per connector, stage and exception, most frequent first
+  jq -s '
+    group_by([.errors."connector.name", .errors.stage, .errors."exception.class.name", .errors."exception.message"])
+    | map({
+        count: length,
+        connector: .[0].errors."connector.name",
+        stage: .[0].errors.stage,
+        class: .[0].errors."class.name",
+        exception: .[0].errors."exception.class.name",
+        message: .[0].errors."exception.message",
+        root_cause: .[0].root_cause,
+        original_topics: (map(select(.errors.topic != null) | {topic: .errors.topic, partition: .errors.partition, offset: (.errors.offset | tonumber? // null)})
+          | group_by([.topic, .partition])
+          | map({topic: .[0].topic, partition: .[0].partition, first_offset: (map(.offset) | min), last_offset: (map(.offset) | max), count: length})),
+        dlq_offsets: (group_by(.partition) | map({partition: .[0].partition, first: (map(.offset) | min), last: (map(.offset) | max)})),
+        sample_value: .[0].value_preview
+      })
+    | sort_by(-.count)' $tmp_dir/records.json > $tmp_dir/groups.json
+
+  if [[ -n "$json" ]]
+  then
+      jq -n --argjson summary "$summary" --slurpfile groups $tmp_dir/groups.json --arg topic "$dlq_topic" \
+          '{topic: $topic, total: $summary.total, read: $summary.read, skipped_by_grep: $summary.skipped_filter, groups: $groups[0]}'
+      exit 0
+  fi
+
+  if [ "$total" == "0" ]
+  then
+      log "✅ dead letter queue $dlq_topic is empty"
+      exit 0
+  fi
+
+  matched=$((read_count - skipped))
+  if [ "$read_count" -lt "$total" ]
+  then
+      logwarn "⚠️ read the first $read_count records of $total (--max-messages $max_messages)"
+  fi
+  if [[ -n "$grep_regex" ]]
+  then
+      log "🔎 $matched of $read_count records match --grep $grep_regex"
+  fi
+
+  no_headers=$(jq '[.[] | select(.exception == null) | .count] | add // 0' $tmp_dir/groups.json)
+  if [ "$no_headers" == "$matched" ] && [ "$matched" != "0" ]
+  then
+      logwarn "⚠️ the records have no __connect.errors.* headers, so the error cannot be shown"
+      logwarn "   set \"errors.deadletterqueue.context.headers.enable\": \"true\" on the connector, and look at the connect logs (errors.log.enable)"
+  fi
+
+  log "📊 $matched records in $(jq length $tmp_dir/groups.json) group(s), most frequent first"
+  jq -r '.[] |
+    "",
+    "🔢 \(.count) record(s)" + (if .connector then " of connector \(.connector)" else "" end) + (if .stage then ", stage \(.stage)" else "" end) + (if .class then " (\(.class))" else "" end),
+    (if .exception then "  ❌ \(.exception): \((.message // "") | if length > 300 then .[0:300] + "…" else . end)" else "  ❌ no __connect.errors.* headers" end),
+    (if .root_cause and .root_cause != ((.exception // "") + ": " + (.message // "")) then "  🌱 root cause: \(.root_cause | if length > 300 then .[0:300] + "…" else . end)" else empty end),
+    (.original_topics[] | "  📍 original records: topic \(.topic) partition \(.partition) offsets \(.first_offset)..\(.last_offset) (\(.count))"),
+    (.dlq_offsets[] | "  📬 dlq partition \(.partition) offsets \(.first)..\(.last)"),
+    (if .sample_value then "  🔎 sample value: \(.sample_value | if length > 150 then .[0:150] + "…" else . end)" else empty end)
+  ' $tmp_dir/groups.json
+  echo ""
+  log "🎓 replay them once the cause is fixed: playground topic dlq replay --topic $dlq_topic"
+
+}
+
+# :command.function
+playground_topic_dlq_replay_command() {
+
+  # src/commands/topic/dlq/replay.sh
+  topic="${args[--topic]}"
+  connector="${args[--connector]}"
+  to="${args[--to]}"
+  max_messages="${args[--max-messages]}"
+  grep_regex="${args[--grep]}"
+  keep_error_headers="${args[--keep-error-headers]}"
+  dry_run="${args[--dry-run]}"
+  verbose="${args[--verbose]}"
+
+  resolve_dlq_topic "$topic" "$connector"
+
+  if [ "$to" == "$dlq_topic" ]
+  then
+      logerror "❌ --to is the dead letter queue itself"
+      exit 1
+  fi
+
+  classes=$(dlq_tool_classes) || exit 1
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  tool_args=(replay --topic "$dlq_topic" --max-messages "$max_messages")
+  [[ -n "$to" ]] && tool_args+=(--to "$to")
+  [[ -n "$grep_regex" ]] && tool_args+=(--grep "$grep_regex")
+  [[ -n "$keep_error_headers" ]] && tool_args+=(--keep-error-headers)
+  [[ -n "$dry_run" ]] && tool_args+=(--dry-run)
+
+  destination="${to:-the original topics (__connect.errors.topic header)}"
+  if [[ -n "$dry_run" ]]
+  then
+      log "🧪 Dry run: records of dead letter queue $dlq_topic that would be replayed to $destination"
+  else
+      log "🔁 Replaying dead letter queue $dlq_topic to $destination"
+  fi
+  # '|| ret=$?': get_connect_image turns set -e back on in run_kafka_java_tool
+  ret=0
+  run_kafka_java_tool "$classes" DlqTool "${tool_args[@]}" > $tmp_dir/out 2> $tmp_dir/err || ret=$?
+
+  if grep -q "^DLQ_ERROR " $tmp_dir/out
+  then
+      logerror "❌ $(grep -m1 "^DLQ_ERROR " $tmp_dir/out | cut -c11-)"
+      tail -20 $tmp_dir/err
+      exit 1
+  fi
+  if [ $ret -ne 0 ] || ! grep -q "^DLQ_SUMMARY " $tmp_dir/out
+  then
+      logerror "❌ could not replay dead letter queue $dlq_topic"
+      grep -v "^DLQ_" $tmp_dir/out | tail -20
+      tail -20 $tmp_dir/err
+      exit 1
+  fi
+
+  summary=$(grep -m1 "^DLQ_SUMMARY " $tmp_dir/out | cut -c13-)
+  total=$(echo "$summary" | jq -r .total)
+  read_count=$(echo "$summary" | jq -r .read)
+  replayed=$(echo "$summary" | jq -r .replayed)
+  skipped_filter=$(echo "$summary" | jq -r .skipped_filter)
+  skipped_no_topic=$(echo "$summary" | jq -r .skipped_no_topic)
+
+  if [ "$total" == "0" ]
+  then
+      log "✅ dead letter queue $dlq_topic is empty, nothing to replay"
+      exit 0
+  fi
+  if [ "$read_count" -lt "$total" ]
+  then
+      logwarn "⚠️ read the first $read_count records of $total (--max-messages $max_messages)"
+  fi
+  if [ "$skipped_filter" != "0" ]
+  then
+      log "🔎 $skipped_filter records do not match --grep $grep_regex and were skipped"
+  fi
+  if [ "$skipped_no_topic" != "0" ]
+  then
+      logwarn "⚠️ $skipped_no_topic records have no __connect.errors.topic header and were skipped: use --to <topic> (or enable errors.deadletterqueue.context.headers.enable on the connector)"
+  fi
+  echo "$summary" | jq -r '.targets | to_entries[] | "  📤 \(.value) record(s) to topic \(.key)"'
+  if [[ -n "$dry_run" ]]
+  then
+      log "🧪 $replayed records would be replayed, run again without --dry-run to replay them"
+  else
+      log "✅ $replayed records replayed"
+      if [[ -z "$to" ]]
+      then
+          log "🎓 the sink connector reads them again from its topics: check the dead letter queue with playground topic dlq inspect --topic $dlq_topic"
+      fi
+  fi
 
 }
 
@@ -77305,6 +77827,13 @@ playground_topic_parse_requirements() {
       shift $#
       ;;
 
+    dlq)
+      action="dlq"
+      shift
+      playground_topic_dlq_parse_requirements "$@"
+      shift $#
+      ;;
+
     tag)
       action="tag"
       shift
@@ -79263,6 +79792,406 @@ playground_topic_alter_parse_requirements() {
   if [[ -z ${args['--topic']+x} ]]; then
     printf "missing required flag: --topic, -t TOPIC\n" >&2
     exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_topic_dlq_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_dlq_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    inspect)
+      action="inspect"
+      shift
+      playground_topic_dlq_inspect_parse_requirements "$@"
+      shift $#
+      ;;
+
+    replay)
+      action="replay"
+      shift
+      playground_topic_dlq_replay_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_topic_dlq_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_topic_dlq_inspect_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_dlq_inspect_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="topic dlq inspect"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-messages)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-messages']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-messages requires an argument: --max-messages MAX_MESSAGES" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --grep)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--grep']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--grep requires an argument: --grep REGEX" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--max-messages']:-} ]] || args['--max-messages']="10000"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--max-messages'] ]]; then
+    validation_output="$(validate_integer "${args['--max-messages']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-messages MAX_MESSAGES" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_topic_dlq_replay_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_dlq_replay_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="topic dlq replay"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --to)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--to']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--to requires an argument: --to TO" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-messages)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-messages']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-messages requires an argument: --max-messages MAX_MESSAGES" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --grep)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--grep']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--grep requires an argument: --grep REGEX" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --keep-error-headers)
+
+        # :flag.case_no_arg
+        args['--keep-error-headers']=1
+        shift
+        ;;
+
+      # :flag.case
+      --dry-run)
+
+        # :flag.case_no_arg
+        args['--dry-run']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--max-messages']:-} ]] || args['--max-messages']="10000"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--max-messages'] ]]; then
+    validation_output="$(validate_integer "${args['--max-messages']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-messages MAX_MESSAGES" "$validation_output" >&2
+      exit 1
+    fi
   fi
 
 }
@@ -98886,6 +99815,11 @@ playground_topic_completion() {
         playground_topic_alter_completion "$completion_current" "$@"
         return
         ;;
+      dlq)
+        shift
+        playground_topic_dlq_completion "$completion_current" "$@"
+        return
+        ;;
       tag)
         shift
         playground_topic_tag_completion "$completion_current" "$@"
@@ -98900,7 +99834,7 @@ playground_topic_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" get-number-records wait-for-records get-offsets display-consumer-offsets list get-size describe set-schema-compatibility consume produce create delete alter tag
+  completion_candidates "$completion_current" get-number-records wait-for-records get-offsets display-consumer-offsets list get-size describe set-schema-compatibility consume produce create delete alter dlq tag
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -99938,6 +100872,230 @@ playground_topic_alter_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --topic "$completion_current" --topic -t
+  fi
+
+}
+
+# :command.completion_function
+playground_topic_dlq_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      inspect)
+        shift
+        playground_topic_dlq_inspect_completion "$completion_current" "$@"
+        return
+        ;;
+      replay)
+        shift
+        playground_topic_dlq_replay_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" inspect replay
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_topic_dlq_inspect_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+
+        ;;
+      --max-messages)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-messages"]=1
+
+        ;;
+      --grep)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--grep"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --max-messages "$completion_current" --max-messages
+    completion_flag_candidates --grep "$completion_current" --grep
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_topic_dlq_replay_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --topic | -t)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--topic"]=1
+
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+
+        ;;
+      --to)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-topic-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--to"]=1
+
+        ;;
+      --max-messages)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-messages"]=1
+
+        ;;
+      --grep)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--grep"]=1
+
+        ;;
+      --keep-error-headers)
+        completion_blocked_flags["--keep-error-headers"]=1
+
+        shift
+        ;;
+      --dry-run)
+        completion_blocked_flags["--dry-run"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --topic "$completion_current" --topic -t
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --to "$completion_current" --to
+    completion_flag_candidates --max-messages "$completion_current" --max-messages
+    completion_flag_candidates --grep "$completion_current" --grep
+    completion_flag_candidates --keep-error-headers "$completion_current" --keep-error-headers
+    completion_flag_candidates --dry-run "$completion_current" --dry-run
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
   fi
 
 }
@@ -105105,6 +106263,9 @@ run() {
     "topic create") playground_topic_create_command ;;
     "topic delete") playground_topic_delete_command ;;
     "topic alter") playground_topic_alter_command ;;
+    "topic dlq") playground_topic_dlq_command ;;
+    "topic dlq inspect") playground_topic_dlq_inspect_command ;;
+    "topic dlq replay") playground_topic_dlq_replay_command ;;
     "topic tag") playground_topic_tag_command ;;
     "topic tag list") playground_topic_tag_list_command ;;
     "topic tag create") playground_topic_tag_create_command ;;
