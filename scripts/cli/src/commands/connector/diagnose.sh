@@ -63,6 +63,7 @@ do
     then
         log "🔥 2/4 errors: Confluent Cloud error recommendations"
         playground connector error-recommendations --connector "$connector" $maybe_verbose
+        display_ccloud_connector_service_account_acl_check "$connector"
     else
         log "🔥 2/4 errors: digest of connect ERROR/FATAL records since $since (whole worker, not only this connector)"
         playground container logs --container connect --errors --since "$since" --max-findings "$max_findings"

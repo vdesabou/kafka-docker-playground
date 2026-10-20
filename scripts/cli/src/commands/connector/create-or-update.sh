@@ -201,6 +201,15 @@ else
     done
 fi
 
+# playground run --ccloud-service-account: kafka.auth.mode=SERVICE_ACCOUNT, with a service account
+# and the ACLs of the documentation
+if [ "$PG_CCLOUD_SERVICE_ACCOUNT" == "true" ] && { [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]; }
+then
+    get_ccloud_connect
+    ccloud_connector_service_account_setup "$connector" "$json_content" "$is_create" || exit 1
+    echo "$json_content" > $json_file
+fi
+
 if [[ -n "$validate" ]]
 then
     log "✅ --validate is set"

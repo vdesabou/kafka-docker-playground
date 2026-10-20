@@ -1237,6 +1237,15 @@ function filter_rbac_environment() {
   fi
 }
 
+function filter_rbac_or_ccloud_environment() {
+  get_environment_used
+
+  if [[ "$environment" != "rbac-sasl-plain" ]] && [[ "$environment" != "cfk-rbac" ]] && [[ "$environment" != "ccloud" ]]
+  then
+    logerror "environment should be rbac-sasl-plain, cfk-rbac or ccloud with this command (it is $environment)!"
+  fi
+}
+
 # call the MDS REST API of the rbac-sasl-plain or cfk-rbac environment as superUser
 # (on cfk-rbac, localhost:8091 is a port-forward to the MDS of the kafka service)
 # usage: mds_request <method> <path> [json body]
@@ -1408,6 +1417,16 @@ function mds_role_binding() {
 # usage: mds_acl <create|delete>
 function mds_acl() {
   local action="$1"
+  if [[ -n "${args[--connector]}" ]]
+  then
+    logerror "❌ --connector is only supported with Confluent Cloud (fully managed connectors)"
+    return 1
+  fi
+  if [[ -z "${args[--principal]}" ]]
+  then
+    logerror "❌ --principal is required"
+    return 1
+  fi
   local principal=$(normalize_rbac_principal "${args[--principal]}")
   local resource="${args[--resource]}"
   local prefix="${args[--prefix]}"
@@ -1479,6 +1498,720 @@ function mds_acl() {
       mds_request DELETE "/security/1.0/acls" "$(jq -nc --argjson scope "$mds_scope" --argjson pattern "$pattern" --argjson entry "$entry" '{scope: $scope, aclBindingFilter: {patternFilter: $pattern, entryFilter: $entry}}')" || return 1
     fi
   done
+}
+
+# ⛅ Confluent Cloud ACLs and service accounts of fully managed connectors
+# (playground run --ccloud-service-account, and playground rbac acl on a ccloud run)
+# see https://docs.confluent.io/cloud/current/connectors/service-account.html
+
+# flags of confluent kafka acl create|delete for one ACL
+# $1 = principal (User:sa-xxx or User:u-xxx), $2 = operations (READ,WRITE), $3 = <ResourceType>:<name>,
+# $4 = 1 when the resource name is a prefix, $5 = ALLOW (default) or DENY
+# sets ccloud_acl_flags (array)
+function get_ccloud_acl_flags() {
+  local principal="$1"
+  local operations="$2"
+  local resource="$3"
+  local prefix="$4"
+  local permission="${5:-ALLOW}"
+  local resource_type="${resource%%:*}"
+  local resource_name="${resource#*:}"
+
+  ccloud_acl_flags=()
+  if [[ "$principal" == User:sa-* ]]
+  then
+    ccloud_acl_flags+=(--service-account "${principal#User:}")
+  else
+    ccloud_acl_flags+=(--principal "$principal")
+  fi
+  # READ,DESCRIBE_CONFIGS -> read,describe-configs
+  ccloud_acl_flags+=(--operations "$(tr '[:upper:]_' '[:lower:]-' <<< "$operations")")
+  ccloud_acl_flags+=("--$(tr '[:upper:]' '[:lower:]' <<< "$permission")")
+  case "$resource_type" in
+    Topic) ccloud_acl_flags+=(--topic "$resource_name") ;;
+    Group) ccloud_acl_flags+=(--consumer-group "$resource_name") ;;
+    Cluster) ccloud_acl_flags+=(--cluster-scope) ;;
+    TransactionalId) ccloud_acl_flags+=(--transactional-id "$resource_name") ;;
+    *)
+      logerror "❌ resource type $resource_type is not supported for Confluent Cloud ACLs, it should be Topic, Group, Cluster or TransactionalId"
+      return 1
+    ;;
+  esac
+  if [ "$prefix" == "1" ]
+  then
+    ccloud_acl_flags+=(--prefix)
+  fi
+}
+
+# log a confluent CLI command, quoted to be copied and pasted
+function log_confluent_command() {
+  local arg
+  local command="confluent"
+  for arg in "$@"
+  do
+    if [[ "$arg" =~ ^[A-Za-z0-9_./:,=@+-]+$ ]]
+    then
+      command="$command $arg"
+    else
+      command="$command '${arg//\'/\'\\\'\'}'"
+    fi
+  done
+  log "💻 $command"
+}
+
+# create or delete one ACL on the Confluent Cloud cluster of the ccloud run. Creation is retried for a
+# minute: a service account created a few seconds ago may not be known by the cluster yet
+# usage: ccloud_acl_request <create|delete> <arguments of get_ccloud_acl_flags>
+function ccloud_acl_request() {
+  local action="$1"
+  shift
+  local output
+  local -i curr_wait=0
+  get_ccloud_acl_flags "$@" || return 1
+  if [ "$action" == "delete" ]
+  then
+    ccloud_acl_flags+=(--force)
+  fi
+  local command=(kafka acl "$action" "${ccloud_acl_flags[@]}" --environment "$(get_ccloud_environment_id)" --cluster "$(get_ccloud_kafka_cluster_id)")
+  log_confluent_command "${command[@]}"
+  until output=$(confluent "${command[@]}" 2>&1)
+  do
+    if [ "$action" == "delete" ] || (( curr_wait >= 60 ))
+    then
+      logerror "❌ confluent ${command[*]} failed: $output"
+      return 1
+    fi
+    curr_wait=$((curr_wait+5))
+    sleep 5
+  done
+}
+
+# ACLs of a principal on the Confluent Cloud cluster of the ccloud run, one per line:
+# <PERMISSION> <OPERATION> <ResourceType>:<name> <LITERAL|PREFIXED> (all the ACLs of the cluster without $1)
+# $1 = principal (User:sa-xxx), optional
+function get_ccloud_acls() {
+  local principal="$1"
+  local principal_flags=()
+  if [[ "$principal" == User:sa-* ]]
+  then
+    principal_flags=(--service-account "${principal#User:}")
+  elif [[ -n "$principal" ]]
+  then
+    principal_flags=(--principal "$principal")
+  fi
+  local command=(kafka acl list "${principal_flags[@]}" --environment "$(get_ccloud_environment_id)" --cluster "$(get_ccloud_kafka_cluster_id)")
+  # stderr: the output of this function is parsed
+  log_confluent_command "${command[@]}" >&2
+  confluent "${command[@]}" -o json | jq -r '.[] |
+    (.resource_type | if . == "TOPIC" then "Topic" elif . == "GROUP" then "Group" elif . == "CLUSTER" then "Cluster" elif . == "TRANSACTIONAL_ID" then "TransactionalId" else . end) as $type |
+    [.principal, .permission, .operation, "\($type):\(.resource_name)", .pattern_type] | @tsv'
+}
+
+# Topic resource of an ACL for a topic name of a connector config, which can contain templates:
+# ${connector} is the lcc id (dlq-${connector} -> prefix dlq-lcc-), and any other ${...} turns the
+# name into a prefix (${databaseName}.${schemaName}.${tableName} -> every topic, Topic:*)
+# prints <ResourceType>:<name> [prefix]
+function get_ccloud_acl_topic_resource() {
+  local name="$1"
+  name="${name//\$\{connector\}/lcc-\$\{connector\}}"
+  if [[ "$name" != *'${'* ]]
+  then
+    echo "Topic:$name"
+  elif [[ -n "${name%%\$\{*}" ]]
+  then
+    echo "Topic:${name%%\$\{*} prefix"
+  else
+    echo "Topic:*"
+  fi
+}
+
+# ACLs the service account of a fully managed connector needs, derived from its config as listed in
+# https://docs.confluent.io/cloud/current/connectors/service-account.html
+# prints one ACL per line: <OPERATION> <ResourceType>:<name> [prefix]
+# $1 = connector config as a JSON object, $2 = docs (default), full or none
+function get_ccloud_connector_service_account_acls() {
+  local config="$1"
+  local profile="${2:-docs}"
+  local connector_class
+  local topic
+  local resource
+  local operation
+  local prefix
+  local value
+
+  case "$profile" in
+    none)
+      return 0
+    ;;
+    full)
+      # same as the service account of the Confluent Cloud stack (ccloud::create_acls_all_resources_full_access)
+      printf '%s Topic:*\n' CREATE DELETE WRITE READ DESCRIBE DESCRIBE_CONFIGS
+      printf '%s Group:*\n' READ WRITE CREATE DESCRIBE
+      printf '%s TransactionalId:*\n' DESCRIBE WRITE
+      printf '%s Cluster:kafka-cluster\n' IDEMPOTENT_WRITE DESCRIBE
+      return 0
+    ;;
+  esac
+
+  connector_class=$(jq -r '."connector.class" // empty' <<< "$config")
+  echo "DESCRIBE Cluster:kafka-cluster"
+
+  if [ -n "$(jq -r '.topics // ."topics.regex" // empty' <<< "$config")" ]
+  then
+    # sink
+    for topic in $(jq -r '.topics // empty' <<< "$config" | tr ',' '\n' | tr -d ' ')
+    do
+      echo "READ Topic:$topic"
+    done
+    if [ -n "$(jq -r '."topics.regex" // empty' <<< "$config")" ]
+    then
+      # a regex can't be an ACL
+      echo "READ Topic:*"
+    fi
+    echo "READ Group:connect-lcc- prefix"
+    resource=$(get_ccloud_acl_topic_resource "$(jq -r '."errors.deadletterqueue.topic.name" // "dlq-${connector}"' <<< "$config")")
+    printf "%s $resource\n" CREATE WRITE
+    case "$connector_class" in
+      HttpSink|HttpSinkV2|LambdaSink|AzureFunctionsSink|DatadogMetricsSink|GoogleCloudFunctionsSink|GoogleCloudFunctionsGen2Sink|SalesforcePlatformEventSink|ServiceNowSink)
+        resource=$(get_ccloud_acl_topic_resource "$(jq -r '."reporter.result.topic.name" // "success-${connector}"' <<< "$config")")
+        printf "%s $resource\n" CREATE WRITE
+        resource=$(get_ccloud_acl_topic_resource "$(jq -r '."reporter.error.topic.name" // "error-${connector}"' <<< "$config")")
+        printf "%s $resource\n" CREATE WRITE
+      ;;
+    esac
+  else
+    # source: the documentation lists WRITE on an existing topic, CREATE lets the connector create it
+    # as the examples expect (same keys as record_ccloud_connector_output_topics)
+    for topic in $(jq -r 'to_entries[] | select(.key | test("^(kafka\\.topic|couchbase\\.topic|redo\\.log\\.topic\\.name|state\\.topic\\.name|[a-z]+[0-9]+\\.topics?)$")) | .value | strings' <<< "$config" | tr ',' '\n' | tr -d ' ')
+    do
+      resource=$(get_ccloud_acl_topic_resource "$topic")
+      printf "%s $resource\n" CREATE WRITE
+    done
+    for prefix in $(jq -r 'to_entries[] | select(.key | test("^(topic\\.prefix|[a-z0-9]+\\.topic\\.prefix|database\\.server\\.name)$")) | .value | strings' <<< "$config" | tr -d ' ')
+    do
+      resource=$(get_ccloud_acl_topic_resource "$prefix")
+      if [[ "$resource" != *" prefix" ]] && [[ "$resource" != "Topic:*" ]]
+      then
+        resource="$resource prefix"
+      fi
+      printf "%s $resource\n" CREATE WRITE
+    done
+
+    value=$(jq -r '."heartbeat.interval.ms" // "0"' <<< "$config")
+    case "$connector_class" in
+      MySqlCdcSource|SqlServerCdcSource)
+        # Debezium legacy
+        prefix=$(jq -r '."database.server.name" // empty' <<< "$config")
+        echo "DESCRIBE_CONFIGS Cluster:kafka-cluster"
+        printf "%s Topic:dbhistory.$prefix.lcc- prefix\n" READ CREATE WRITE
+        echo "READ Group:$prefix-dbhistory"
+        if [ "$value" != "0" ]
+        then
+          printf "%s Topic:__debezium-heartbeat.$prefix prefix\n" DESCRIBE CREATE WRITE
+        fi
+      ;;
+      MySqlCdcSourceV2|SqlServerCdcSourceV2|MariaDbCdcSource|PostgresCdcSourceV2)
+        # Debezium v2
+        prefix=$(jq -r '."topic.prefix" // empty' <<< "$config")
+        echo "DESCRIBE_CONFIGS Cluster:kafka-cluster"
+        if [ "$connector_class" != "PostgresCdcSourceV2" ]
+        then
+          topic=$(jq -r '."schema.history.internal.kafka.topic" // empty' <<< "$config")
+          if [ -n "$topic" ]
+          then
+            resource=$(get_ccloud_acl_topic_resource "$topic")
+          else
+            resource="Topic:dbhistory.$prefix.lcc- prefix"
+          fi
+          printf "%s $resource\n" READ CREATE WRITE
+          echo "READ Group:$prefix-schemahistory"
+        fi
+        if [ "$value" != "0" ]
+        then
+          printf "%s Topic:__debezium-heartbeat-lcc- prefix\n" DESCRIBE CREATE WRITE
+        fi
+      ;;
+      OracleCdcSource)
+        # redo log topic ${connectorName}-${databaseName}-redo-log, prefixed with lcc-
+        printf "%s Topic:lcc- prefix\n" CREATE READ WRITE
+        echo "READ Group:lcc- prefix"
+        topic=$(jq -r '."redo.log.topic.name" // empty' <<< "$config")
+        if [ -n "$topic" ]
+        then
+          echo "READ $(get_ccloud_acl_topic_resource "$topic")"
+        fi
+        for topic in $(jq -r '.["table.topic.name.template", "lob.topic.name.template", "redo.log.corruption.topic"] // empty' <<< "$config")
+        do
+          resource=$(get_ccloud_acl_topic_resource "$topic")
+          printf "%s $resource\n" CREATE WRITE
+        done
+      ;;
+      OracleXStreamSource)
+        prefix=$(jq -r '."topic.prefix" // empty' <<< "$config")
+        echo "DESCRIBE_CONFIGS Cluster:kafka-cluster"
+        printf "%s Topic:__orcl-schema-changes.$prefix.lcc- prefix\n" READ CREATE WRITE
+        if [ "$value" != "0" ]
+        then
+          printf "%s Topic:__orcl-heartbeat.lcc- prefix\n" READ CREATE WRITE
+        fi
+        topic=$(jq -r '."signal.kafka.topic" // empty' <<< "$config")
+        if [ -n "$topic" ]
+        then
+          echo "READ Topic:$topic"
+          echo "READ Group:kafka-signal"
+        fi
+      ;;
+    esac
+
+    if [ "$(jq -r '."exactly.once.enabled" // "false"' <<< "$config")" == "true" ]
+    then
+      printf "%s Topic:connect-offsets-lcc- prefix\n" DESCRIBE CREATE READ WRITE
+      printf "%s TransactionalId:transaction-lcc- prefix\n" DESCRIBE WRITE
+    fi
+  fi
+}
+
+# config keys that may name Kafka topics but are not covered by get_ccloud_connector_service_account_acls
+# $1 = connector config as a JSON object
+function get_ccloud_connector_uncovered_topic_keys() {
+  jq -r 'to_entries[] | select(.key | test("topic")) | select(.key | test("^(topics|topics\\.regex|kafka\\.topic|couchbase\\.topic|redo\\.log\\.topic\\.name|state\\.topic\\.name|[a-z]+[0-9]+\\.topics?|topic\\.prefix|[a-z0-9]+\\.topic\\.prefix|errors\\.deadletterqueue\\.topic\\.name|reporter\\.(result|error)\\.topic\\.name|schema\\.history\\.internal\\.kafka\\.topic|table\\.topic\\.name\\.template|lob\\.topic\\.name\\.template|redo\\.log\\.corruption\\.topic|signal\\.kafka\\.topic|topic\\.creation\\..*)$") | not) | .key' <<< "$1" 2>/dev/null
+}
+
+# file where the service accounts created for fully managed connectors are recorded, one per line:
+# <cluster id> <service account id> <connector name> <run id>
+function get_ccloud_service_accounts_file() {
+  get_kafka_docker_playground_dir
+  ccloud_service_accounts_file="$KAFKA_DOCKER_PLAYGROUND_DIR/playground-ccloud-service-accounts"
+}
+
+# service account recorded for a connector of the cluster of the ccloud run (the last one created)
+# $1 = connector name
+function get_ccloud_connector_recorded_service_account() {
+  get_ccloud_service_accounts_file
+  if [ -f "$ccloud_service_accounts_file" ]
+  then
+    awk -v c="$(get_ccloud_kafka_cluster_id)" -v n="$1" '$1 == c && $3 == n {sa = $2} END {if (sa != "") print sa}' "$ccloud_service_accounts_file"
+  fi
+}
+
+# service account of a fully managed connector: kafka.service.account.id of its config, or the one
+# recorded when it was created
+# $1 = connector name
+function get_ccloud_connector_service_account() {
+  local connector="$1"
+  local service_account=""
+  get_ccloud_connect
+  if handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config\" --header \"authorization: Basic $authorization\"" > /dev/null 2>&1
+  then
+    if [ "$(jq -r '."kafka.auth.mode" // empty' <<< "$curl_output" 2>/dev/null)" == "SERVICE_ACCOUNT" ]
+    then
+      service_account=$(jq -r '."kafka.service.account.id" // empty' <<< "$curl_output" 2>/dev/null)
+    else
+      # the connector exists and uses an API key
+      return 0
+    fi
+  fi
+  if [ -z "$service_account" ]
+  then
+    service_account=$(get_ccloud_connector_recorded_service_account "$connector")
+  fi
+  echo "$service_account"
+}
+
+# delete a service account created for a fully managed connector: its ACLs on the cluster of the ccloud
+# run first (deleting a service account does not delete them), then the service account
+# $1 = service account id
+function delete_ccloud_connector_service_account() {
+  local service_account="$1"
+  local principal permission operation resource pattern prefix
+  log "❌ deleting service account $service_account and its ACLs"
+  while IFS=$'\t' read -r principal permission operation resource pattern
+  do
+    if [ -n "$resource" ]
+    then
+      prefix=0
+      if [ "$pattern" == "PREFIXED" ]
+      then
+        prefix=1
+      fi
+      ccloud_acl_request delete "User:$service_account" "$operation" "$resource" "$prefix" "$permission" 2> /dev/null || logwarn "❌ failed to delete ACL $permission $operation $resource ($pattern) of $service_account"
+    fi
+  done <<< "$(get_ccloud_acls "User:$service_account" 2>/dev/null)"
+  log_confluent_command iam service-account delete "$service_account" --force
+  confluent iam service-account delete "$service_account" --force > /dev/null 2>&1 || logwarn "❌ failed to delete service account $service_account"
+  get_ccloud_service_accounts_file
+  if [ -f "$ccloud_service_accounts_file" ]
+  then
+    awk -v s="$service_account" '$2 != s' "$ccloud_service_accounts_file" > "$ccloud_service_accounts_file.tmp"
+    mv "$ccloud_service_accounts_file.tmp" "$ccloud_service_accounts_file"
+  fi
+}
+
+# delete the service accounts recorded for the connectors of the cluster of the ccloud run, optionally
+# only those of run $1, or of connector $2
+function cleanup_ccloud_connector_service_accounts() {
+  local run_id="$1"
+  local connector="$2"
+  local service_account
+  get_ccloud_service_accounts_file
+  if [ ! -f "$ccloud_service_accounts_file" ]
+  then
+    return 0
+  fi
+  for service_account in $(awk -v c="$(get_ccloud_kafka_cluster_id)" -v r="$run_id" -v n="$connector" '$1 == c && (r == "" || $4 == r) && (n == "" || $3 == n) {print $2}' "$ccloud_service_accounts_file" | sort -u)
+  do
+    delete_ccloud_connector_service_account "$service_account"
+  done
+}
+
+# Switch the config of a fully managed or custom connector to kafka.auth.mode=SERVICE_ACCOUNT
+# (playground run --ccloud-service-account, or PG_CCLOUD_SERVICE_ACCOUNT=true): on creation, create a
+# service account for the connector, its ACLs (PG_CCLOUD_SERVICE_ACCOUNT_ACLS docs, full or none, minus
+# the ones matching PG_CCLOUD_SERVICE_ACCOUNT_ACL_EXCLUDE) and the Assigner role binding of the owner of
+# the Cloud API key creating the connector. PG_CCLOUD_SERVICE_ACCOUNT_ID uses an existing service account
+# instead, as is. On update, the service account of the connector is kept.
+# $1 = connector name, $2 = connector config as a JSON object, $3 = 1 when the connector is created
+# sets json_content to the new config
+function ccloud_connector_service_account_setup() {
+  local connector="$1"
+  local config="$2"
+  local is_create="$3"
+  local profile="${PG_CCLOUD_SERVICE_ACCOUNT_ACLS:-docs}"
+  local exclude="${PG_CCLOUD_SERVICE_ACCOUNT_ACL_EXCLUDE}"
+  local service_account="${PG_CCLOUD_SERVICE_ACCOUNT_ID}"
+  local name
+  local owner
+  local acls
+  local acl
+  local uncovered_keys
+  local run_id
+  local operations resource prefix
+  local pids=()
+  local pid
+  local failed=0
+
+  json_content="$config"
+  if [ "$(jq -r '."kafka.auth.mode" // empty' <<< "$config")" == "SERVICE_ACCOUNT" ]
+  then
+    log "👤 connector $connector config already sets kafka.auth.mode=SERVICE_ACCOUNT, keeping it"
+    return 0
+  fi
+  case "$profile" in
+    docs|full|none) ;;
+    *)
+      logerror "❌ PG_CCLOUD_SERVICE_ACCOUNT_ACLS should be docs, full or none (it is $profile)"
+      return 1
+    ;;
+  esac
+
+  if [ -z "$service_account" ] && [ "$is_create" != "1" ]
+  then
+    service_account=$(get_ccloud_connector_service_account "$connector")
+    if [ -n "$service_account" ]
+    then
+      log "👤 keeping service account $service_account of connector $connector"
+    fi
+  fi
+
+  if [ -n "$service_account" ]
+  then
+    if [ -n "${PG_CCLOUD_SERVICE_ACCOUNT_ID}" ]
+    then
+      log "👤 using service account $service_account for connector $connector, as is (no ACL created)"
+    fi
+  else
+    # pg-<user>-conn-<connector>-<n>, at most 64 characters
+    name="pg-${USER}-conn-$(tr -c 'a-zA-Z0-9_-' '-' <<< "$connector" | sed 's/-$//')"
+    name="$(cut -c 1-57 <<< "$name")-$((RANDOM % 100000))"
+    local create_command=(iam service-account create "$name" --description "Service account of fully managed connector $connector, created by kafka-docker-playground")
+    log_confluent_command "${create_command[@]}"
+    if ! service_account=$(confluent "${create_command[@]}" -o json | jq -r '.id // empty') || [ -z "$service_account" ]
+    then
+      logerror "❌ could not create service account $name"
+      return 1
+    fi
+    run_id="${PG_CCLOUD_RUN_ID:-$(playground state get run.ccloud_run_id 2>/dev/null)}"
+    get_ccloud_service_accounts_file
+    echo "$(get_ccloud_kafka_cluster_id) $service_account $connector $run_id" >> "$ccloud_service_accounts_file"
+    log "👤 created service account $service_account ($name) for connector $connector"
+
+    # the principal creating a connector with a service account must hold the Assigner role on it
+    owner=$(confluent api-key describe "$CONFLUENT_CLOUD_API_KEY" -o json 2>/dev/null | jq -r '(if type == "array" then .[0] else . end).owner // empty' 2>/dev/null)
+    if [ -n "$owner" ]
+    then
+      log_confluent_command iam rbac role-binding create --principal "User:$owner" --role Assigner --resource "ServiceAccount:$service_account"
+      if confluent iam rbac role-binding create --principal "User:$owner" --role Assigner --resource "ServiceAccount:$service_account" > /dev/null 2>&1
+      then
+        log "🎩 granted Assigner role on $service_account to User:$owner (owner of CONFLUENT_CLOUD_API_KEY)"
+      else
+        logwarn "🎩 could not grant Assigner role on $service_account to User:$owner (owner of CONFLUENT_CLOUD_API_KEY): connector creation fails if User:$owner does not hold it (OrgAdmin does)"
+      fi
+    else
+      logwarn "🎩 could not find the owner of CONFLUENT_CLOUD_API_KEY: it must hold the Assigner role on $service_account (OrgAdmin does)"
+    fi
+
+    acls=$(get_ccloud_connector_service_account_acls "$config" "$profile" | awk '!seen[$0]++')
+    if [ -n "$exclude" ] && [ -n "$acls" ]
+    then
+      while read -r acl
+      do
+        logwarn "🙈 not creating ACL $acl (PG_CCLOUD_SERVICE_ACCOUNT_ACL_EXCLUDE=$exclude)"
+      done <<< "$(grep -E -- "$exclude" <<< "$acls")"
+      acls=$(grep -Ev -- "$exclude" <<< "$acls")
+    fi
+    if [ -n "$acls" ]
+    then
+      log "🚦 creating the ACLs of service account $service_account ($profile profile), reproduce an error by removing one, e.g.:"
+      log "   playground rbac acl delete --connector $connector --operation $(head -n 2 <<< "$acls" | tail -n 1 | awk '{print $1 " --resource " $2 ($3 == "prefix" ? " --prefix" : "")}')"
+      # one confluent call per resource, concurrently
+      while read -r operations resource prefix
+      do
+        ccloud_acl_request create "User:$service_account" "$operations" "$resource" "$([ "$prefix" == "prefix" ] && echo 1 || echo 0)" ALLOW &
+        pids+=($!)
+      done <<< "$(awk '{key = $2 " " $3; if (!(key in ops)) {order[++n] = key; ops[key] = $1} else ops[key] = ops[key] "," $1} END {for (i = 1; i <= n; i++) print ops[order[i]] " " order[i]}' <<< "$acls")"
+      for pid in "${pids[@]}"
+      do
+        wait $pid || failed=1
+      done
+      if [ $failed -eq 1 ]
+      then
+        logerror "❌ could not create all the ACLs of service account $service_account"
+        return 1
+      fi
+    else
+      logwarn "🚦 no ACL created for service account $service_account ($profile profile): add them with playground rbac acl create --connector $connector"
+    fi
+
+    if [ "$profile" == "docs" ]
+    then
+      if grep -q ' Topic:\*$' <<< "$acls"
+      then
+        logwarn "🤔 a topic name of the config is a regex or starts with a template (\${...}): it can't be narrowed, the ACLs on Topic:* allow every topic"
+      fi
+      uncovered_keys=$(get_ccloud_connector_uncovered_topic_keys "$config" | paste -sd ',' - | sed 's/,/, /g')
+      if [ -n "$uncovered_keys" ]
+      then
+        logwarn "🤔 these config keys may name Kafka topics that the ACLs don't cover: $uncovered_keys"
+        logwarn "   if the connector fails with an authorization error, add the ACLs with playground rbac acl create --connector $connector, or use --ccloud-service-account-acls full"
+      fi
+    fi
+  fi
+
+  json_content=$(jq --arg sa "$service_account" 'del(."kafka.api.key", ."kafka.api.secret") + {"kafka.auth.mode": "SERVICE_ACCOUNT", "kafka.service.account.id": $sa}' <<< "$config")
+}
+
+# 0 when ACL $2 (<PERMISSION> <OPERATION> <ResourceType>:<name> <LITERAL|PREFIXED>, from get_ccloud_acls
+# without principal) applies to the ACL $1 (<OPERATION> <ResourceType>:<name> [prefix])
+function ccloud_acl_covers() {
+  local expected_operation expected_resource expected_prefix
+  local permission operation resource pattern
+  read -r expected_operation expected_resource expected_prefix <<< "$1"
+  read -r permission operation resource pattern <<< "$2"
+  # READ, WRITE, DELETE and ALTER imply DESCRIBE, ALTER_CONFIGS implies DESCRIBE_CONFIGS
+  if [[ "$operation" != "$expected_operation" ]] && [[ "$operation" != "ALL" ]] \
+    && ! { [[ "$expected_operation" == "DESCRIBE" ]] && [[ " READ WRITE DELETE ALTER " == *" $operation "* ]]; } \
+    && ! { [[ "$expected_operation" == "DESCRIBE_CONFIGS" ]] && [[ "$operation" == "ALTER_CONFIGS" ]]; }
+  then
+    return 1
+  fi
+  if [[ "${resource%%:*}" != "${expected_resource%%:*}" ]]
+  then
+    return 1
+  fi
+  local name="${resource#*:}"
+  local expected_name="${expected_resource#*:}"
+  if [[ "$pattern" == "PREFIXED" ]]
+  then
+    [[ "$expected_name" == "$name"* ]] && [[ "$expected_name" != "*" ]]
+  elif [[ "$name" == "*" ]]
+  then
+    return 0
+  else
+    [[ "$expected_name" == "$name" ]] && [[ -z "$expected_prefix" ]]
+  fi
+}
+
+# playground connector diagnose of a fully managed connector with kafka.auth.mode=SERVICE_ACCOUNT: the ACLs
+# of the documentation that its service account misses, or that are denied
+# $1 = connector name
+function display_ccloud_connector_service_account_acl_check() {
+  local connector="$1"
+  local config
+  local service_account
+  local expected
+  local actual
+  local acl
+  local line
+  local allowed
+  local denied
+  local missing=""
+  local denied_acls=""
+  local denies=""
+  get_ccloud_connect
+  if ! handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config\" --header \"authorization: Basic $authorization\"" > /dev/null 2>&1
+  then
+    return 0
+  fi
+  config="$curl_output"
+  if [ "$(jq -r '."kafka.auth.mode" // empty' <<< "$config" 2>/dev/null)" != "SERVICE_ACCOUNT" ]
+  then
+    return 0
+  fi
+  service_account=$(jq -r '."kafka.service.account.id" // empty' <<< "$config")
+  echo ""
+  log "🚦 service account $service_account: ACLs of the documentation (https://docs.confluent.io/cloud/current/connectors/service-account.html)"
+  if ! actual=$(get_ccloud_acls "User:$service_account" | cut -f 2-)
+  then
+    logwarn "could not list the ACLs of $service_account"
+    return 0
+  fi
+  expected=$(get_ccloud_connector_service_account_acls "$config" docs | awk '!seen[$0]++')
+  while read -r acl
+  do
+    allowed=0
+    denied=0
+    while read -r line
+    do
+      if [ -n "$line" ] && ccloud_acl_covers "$acl" "$line"
+      then
+        if [[ "$line" == DENY* ]]
+        then
+          denied=1
+          denies="$denies$line"$'\n'
+        else
+          allowed=1
+        fi
+      fi
+    done <<< "$actual"
+    if [ $denied -eq 1 ]
+    then
+      denied_acls="$denied_acls$acl"$'\n'
+    fi
+    if [ $allowed -eq 0 ]
+    then
+      missing="$missing$acl"$'\n'
+    fi
+  done <<< "$expected"
+
+  if [ -z "$missing" ] && [ -z "$denied_acls" ]
+  then
+    log "✅ the $(wc -l <<< "$expected" | tr -d ' ') ACLs the connector needs are allowed"
+    return 0
+  fi
+  while read -r acl
+  do
+    if [ -n "$acl" ]
+    then
+      logwarn "❌ missing: $acl"
+    fi
+  done <<< "$missing"
+  while read -r acl
+  do
+    if [ -n "$acl" ]
+    then
+      logwarn "⛔ denied: $acl"
+    fi
+  done <<< "$denied_acls"
+  if [ -n "$missing" ]
+  then
+    echo "   🔧 to create the missing ACLs:"
+    while read -r acl
+    do
+      if [ -n "$acl" ]
+      then
+        awk -v c="$connector" '{print "   playground rbac acl create --connector " c " --operation " $1 " --resource " $2 ($3 == "prefix" ? " --prefix" : "")}' <<< "$acl"
+      fi
+    done <<< "$missing"
+  fi
+  if [ -n "$denies" ]
+  then
+    echo "   🔧 to delete the DENY ACLs:"
+    sort -u <<< "$denies" | while read -r permission operation resource pattern
+    do
+      if [ -n "$resource" ]
+      then
+        echo "   playground rbac acl delete --connector $connector --deny --operation $operation --resource $resource$([ "$pattern" == "PREFIXED" ] && echo " --prefix")"
+      fi
+    done
+  fi
+}
+
+# principal of playground rbac acl on a ccloud run: --principal, or the service account of the fully
+# managed --connector
+# sets principal
+function get_ccloud_rbac_acl_principal() {
+  local connector="${args[--connector]}"
+  local service_account
+  principal="${args[--principal]}"
+  if [[ -n "$connector" ]] && [[ -n "$principal" ]]
+  then
+    logerror "❌ --connector and --principal can't be both set"
+    return 1
+  fi
+  if [[ -n "$connector" ]]
+  then
+    service_account=$(get_ccloud_connector_service_account "$connector")
+    if [ -z "$service_account" ]
+    then
+      logerror "❌ connector $connector does not use a service account (kafka.auth.mode=SERVICE_ACCOUNT), run the example with playground run --ccloud-service-account"
+      return 1
+    fi
+    principal="User:$service_account"
+  elif [[ -n "$principal" ]]
+  then
+    principal=$(normalize_rbac_principal "$principal")
+  fi
+}
+
+# playground rbac acl create|delete on a ccloud run: Confluent Cloud ACL (confluent kafka acl)
+# usage: ccloud_rbac_acl <create|delete>
+function ccloud_rbac_acl() {
+  local action="$1"
+  local resource="${args[--resource]}"
+  local permission="ALLOW"
+  local prefix=0
+  local principal
+  local resource_type
+  local resource_name
+  local operation
+  local operations=""
+  eval "local operation_list=(${args[--operation]})"
+
+  if [[ -n "${args[--kafka-acls]}" ]] || [[ -n "${args[--host]}" ]]
+  then
+    logerror "❌ --kafka-acls and --host are not supported with Confluent Cloud"
+    return 1
+  fi
+  get_ccloud_rbac_acl_principal || return 1
+  if [[ -z "$principal" ]]
+  then
+    logerror "❌ --principal or --connector is required"
+    return 1
+  fi
+  parse_rbac_resource "$resource" || return 1
+  if [[ -n "${args[--deny]}" ]]
+  then
+    permission="DENY"
+  fi
+  if [[ -n "${args[--prefix]}" ]]
+  then
+    prefix=1
+  fi
+  for operation in "${operation_list[@]}"
+  do
+    operations="${operations:+$operations,}$operation"
+  done
+  if [ "$action" == "create" ]
+  then
+    log "🚦 Creating Confluent Cloud ACL $permission $operations for $principal on $resource_type:$resource_name$([ $prefix -eq 1 ] && echo " (prefixed)")"
+  else
+    log "🗑️ Deleting Confluent Cloud ACL $permission $operations for $principal on $resource_type:$resource_name$([ $prefix -eq 1 ] && echo " (prefixed)")"
+  fi
+  ccloud_acl_request "$action" "$principal" "$operations" "$resource_type:$resource_name" "$prefix" "$permission" || return 1
+  if [[ -n "${args[--connector]}" ]]
+  then
+    log "🎓 an ACL change takes up to a minute to be applied, then restart the connector: playground connector restart --connector ${args[--connector]}"
+  fi
 }
 
 rbac_ldap_base_dn="dc=confluentdemo,dc=io"
@@ -2043,13 +2776,18 @@ function add_connector_config_based_on_environment () {
 
 function maybe_remove_flag () {
   flag="$1"
-  for ((i=0; i<${#array_flag_list[@]}; i++))
+  local entry
+  local kept=()
+  for entry in "${array_flag_list[@]}"
   do
-    if [[ ${array_flag_list[i]} == ${flag}=* ]]
+    # --flag=value, --flag value, or a flag without value
+    if [[ $entry == ${flag}=* ]] || [[ $entry == "${flag} "* ]] || [[ $entry == "${flag}" ]]
     then
-        unset "array_flag_list[i]"
+      continue
     fi
+    kept+=("$entry")
   done
+  array_flag_list=("${kept[@]}")
 }
 
 # set the log levels of PLAYGROUND_CONNECT_LOG_LEVELS (playground run --connect-log-level), best effort
@@ -2558,6 +3296,12 @@ function cleanup_confluent_cloud_resources () {
       fi
   done
 
+  # service accounts created by --ccloud-service-account
+  for id in $(confluent iam service-account list --output json | jq -r --arg p "pg-${user}-conn-" '.[] | select(.name | startswith($p)) | .id')
+  do
+      check_if_skip "delete_ccloud_connector_service_account $id"
+  done
+
   existing_topics=$(confluent kafka topic list | awk '{if(NR>2) print $1}')
   if [ ! -z "$GITHUB_RUN_NUMBER" ] || [[ $CLUSTER_NAME = pg-${user}-* ]]
   then
@@ -2776,6 +3520,8 @@ function maybe_cleanup_ccloud_run_resources () {
 
   if [ -z "$connectors_to_delete" ] && [ -z "$topics_to_delete" ]
   then
+    # the connectors of the run are gone, so are the service accounts they used
+    cleanup_ccloud_connector_service_accounts "$run_id"
     prune_ccloud_recorded_entries "$cluster_id" "$existing_topics" "$(echo "$connectors_json" | jq -r '.[].name' 2>/dev/null)"
     playground state set run.ccloud_run_cleaned "$run_id"
     return 0
@@ -2817,6 +3563,8 @@ function maybe_cleanup_ccloud_run_resources () {
           confluent connect cluster delete $id $cluster_flags --force > /dev/null 2>&1 || logwarn "❌ failed to delete connector $name ($id)"
       fi
   done <<< "$connectors_to_delete"
+  # service accounts created by --ccloud-service-account for the connectors of the run
+  cleanup_ccloud_connector_service_accounts "$run_id"
   for topic in $topics_to_delete
   do
       log "❌ deleting topic $topic"

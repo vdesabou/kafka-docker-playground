@@ -807,6 +807,27 @@
           ],
           "argument": "CLUSTER-SCHEMA-REGISTRY-CREDS",
           "description": "🔒 The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\nℹ️ Optional, if not set, new credentials will be created\n\n❣️ Only required if you want to use your own existing cluster\n\n🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable"
+        },
+        {
+          "names": [
+            "--ccloud-service-account"
+          ],
+          "argument": "",
+          "description": "👤 Run the fully managed connectors with a service account (kafka.auth.mode=SERVICE_ACCOUNT)\n\nInstead of the API key of the example, each fully managed or custom\nconnector gets its own service account, with the ACLs listed in\nhttps://docs.confluent.io/cloud/current/connectors/service-account.html\n(derived from the connector config), and the owner of\nCONFLUENT_CLOUD_API_KEY gets the Assigner role on it. The example is\nnot changed.\n\nThe service accounts and their ACLs are deleted with the connectors\n(playground connector delete, end-of-run cleanup, playground\ncleanup-cloud-resources).\n\n🎓 Tip: to reproduce an authorization error, delete or deny an ACL with\nplayground rbac acl delete|create --connector <connector> [--deny],\nrestart the connector and run playground connector diagnose.\nPG_CCLOUD_SERVICE_ACCOUNT_ACL_EXCLUDE skips ACLs when they are created."
+        },
+        {
+          "names": [
+            "--ccloud-service-account-acls"
+          ],
+          "argument": "PROFILE",
+          "description": "🚦 ACLs of the service accounts created by --ccloud-service-account (implies it)\n\n  docs  the ACLs of the documentation, derived from the connector config (default)\n  full  every operation on every topic, group and transactional id (same as the API key of the example)\n  none  no ACL, add them with playground rbac acl create --connector <connector>\n\nAllowed values: docs, full, none"
+        },
+        {
+          "names": [
+            "--ccloud-service-account-id"
+          ],
+          "argument": "SERVICE-ACCOUNT",
+          "description": "👤 Use this existing service account (sa-xxxxx) for the fully managed connectors, as is (implies --ccloud-service-account)\n\nNo ACL is created nor deleted, and the service account is kept."
         }
       ]
     },
@@ -3922,7 +3943,7 @@
     },
     {
       "name": "rbac",
-      "description": "🛡️ RBAC commands (rbac-sasl-plain and cfk-rbac environments only)\n\nChange permissions of the running rbac-sasl-plain or cfk-rbac environment\nwithout opening a shell in a container: the commands call the MDS REST API\n(http://localhost:8091, a port-forward to the kafka service on cfk-rbac) as\nsuperUser.\n\n  role-binding   create, delete and list role bindings\n  user           add, delete and list LDAP users and their groups\n  acl            create, delete and list ACLs (MDS centralized ACLs, or\n                 regular Kafka ACLs with --kafka-acls)\n\n🎓 Tip: principals are User:<name> or Group:<name>, a bare name means User:<name>.",
+      "description": "🛡️ RBAC commands (rbac-sasl-plain and cfk-rbac environments, plus Confluent Cloud ACLs)\n\nChange permissions of the running rbac-sasl-plain or cfk-rbac environment\nwithout opening a shell in a container: the commands call the MDS REST API\n(http://localhost:8091, a port-forward to the kafka service on cfk-rbac) as\nsuperUser.\n\n  role-binding   create, delete and list role bindings\n  user           add, delete and list LDAP users and their groups\n  acl            create, delete and list ACLs (MDS centralized ACLs, or\n                 regular Kafka ACLs with --kafka-acls). On a Confluent\n                 Cloud run, ACLs of the Confluent Cloud cluster\n\n🎓 Tip: principals are User:<name> or Group:<name>, a bare name means User:<name>.",
       "usage": "playground rbac COMMAND",
       "options": [],
       "subcommands": [
@@ -4161,7 +4182,7 @@
         },
         {
           "name": "acl",
-          "description": "🚦 ACL commands\n\nBy default, ACLs are MDS centralized ACLs (stored in the\n_confluent-metadata-auth topic and enforced by the CONFLUENT access rule\nprovider). With --kafka-acls, they are regular Kafka ACLs created with\nkafka-acls (ZK_ACL or KRAFT_ACL access rule provider).",
+          "description": "🚦 ACL commands\n\nBy default, ACLs are MDS centralized ACLs (stored in the\n_confluent-metadata-auth topic and enforced by the CONFLUENT access rule\nprovider). With --kafka-acls, they are regular Kafka ACLs created with\nkafka-acls (ZK_ACL or KRAFT_ACL access rule provider).\n\n⛅ On a Confluent Cloud run, they are the ACLs of the Confluent Cloud\ncluster (confluent kafka acl). --connector then uses the service\naccount of a fully managed connector created with\nplayground run --ccloud-service-account as principal, to reproduce\nauthorization errors: delete or deny one of its ACLs, then restart the\nconnector.",
           "usage": "playground rbac acl COMMAND",
           "options": [],
           "subcommands": [
@@ -4176,7 +4197,15 @@
                     "-p"
                   ],
                   "argument": "PRINCIPAL",
-                  "description": "🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)\n\nRequired: ✓ Yes"
+                  "description": "🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)\n\n⛅ On Confluent Cloud, User:sa-xxxxx (service account) or User:u-xxxxx (user)\n\n❕ Required, unless --connector is set"
+                },
+                {
+                  "names": [
+                    "--connector",
+                    "-c"
+                  ],
+                  "argument": "CONNECTOR",
+                  "description": "🔗 Use the service account of this fully managed connector (kafka.service.account.id) as principal\n\n⛅ Confluent Cloud only, see playground run --ccloud-service-account"
                 },
                 {
                   "names": [
@@ -4242,7 +4271,15 @@
                     "-p"
                   ],
                   "argument": "PRINCIPAL",
-                  "description": "🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)\n\nRequired: ✓ Yes"
+                  "description": "🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)\n\n⛅ On Confluent Cloud, User:sa-xxxxx (service account) or User:u-xxxxx (user)\n\n❕ Required, unless --connector is set"
+                },
+                {
+                  "names": [
+                    "--connector",
+                    "-c"
+                  ],
+                  "argument": "CONNECTOR",
+                  "description": "🔗 Use the service account of this fully managed connector (kafka.service.account.id) as principal\n\n⛅ Confluent Cloud only, see playground run --ccloud-service-account"
                 },
                 {
                   "names": [
@@ -4299,7 +4336,7 @@
             },
             {
               "name": "list",
-              "description": "📋 List ACLs\n\nLists both MDS centralized ACLs and regular Kafka ACLs.",
+              "description": "📋 List ACLs\n\nLists both MDS centralized ACLs and regular Kafka ACLs, or the ACLs of\nthe Confluent Cloud cluster on a Confluent Cloud run.",
               "usage": "playground rbac acl list [OPTIONS]",
               "options": [
                 {
@@ -4309,6 +4346,14 @@
                   ],
                   "argument": "PRINCIPAL",
                   "description": "🧑 Principal, User:<name> or Group:<name> (a bare name means User:<name>)\n\nℹ️ If not set, role bindings of all principals are listed"
+                },
+                {
+                  "names": [
+                    "--connector",
+                    "-c"
+                  ],
+                  "argument": "CONNECTOR",
+                  "description": "🔗 Use the service account of this fully managed connector (kafka.service.account.id) as principal\n\n⛅ Confluent Cloud only, see playground run --ccloud-service-account"
                 },
                 {
                   "names": [
