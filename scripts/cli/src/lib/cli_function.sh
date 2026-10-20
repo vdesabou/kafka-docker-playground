@@ -5226,3 +5226,117 @@ function smt_tester_hub_plugin () {
   fi
   ls -d "$dir"/*/ | head -1 | sed 's#/$##'
 }
+
+# config of a running connector as a JSON object in $curl_output (REST API /config endpoint, or the Connector CR on cfk)
+# returns 1 if it could not be read
+function get_connector_config_json () {
+  local connector="$1" connector_type env_used
+  connector_type=$(playground state get run.connector_type)
+  env_used=$(playground state get run.environment)
+  curl_output=""
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+    get_ccloud_connect
+    handle_ccloud_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config\" --header \"authorization: Basic $authorization\""
+  elif [[ "$env_used" == cfk* ]]
+  then
+    curl_output=$(kubectl -n confluent get connector "$connector" -o json 2>/dev/null | jq -c '.spec.configs // empty' 2>/dev/null)
+  else
+    get_connect_url_and_security
+    handle_onprem_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/config\""
+  fi
+  if [ -z "$curl_output" ] || ! echo "$curl_output" | jq -e 'type == "object"' > /dev/null 2>&1
+  then
+    return 1
+  fi
+}
+
+# validate a connector config with the connector-plugins/<class>/config/validate endpoint (self managed or Confluent
+# Cloud), as 'connector create-or-update --validate' and 'connector validate' do:
+#   validate_connector_config <connector> <json content> <tmp dir> <environment> <is_cfk> <skip_automatic_connector_config|running>
+# returns 0 if valid, 1 if not (errors logged), 2 if skipped (cfk: no connect REST validation endpoint)
+function validate_connector_config () {
+  local connector="$1" json_content="$2" tmp_dir="$3" env_used="$4" is_cfk="$5" skip_automatic="$6"
+  local connector_type connector_class json_file="$tmp_dir/validate_connector.json" json_validate_file="$tmp_dir/json_validate_file"
+  connector_type=$(playground state get run.connector_type)
+  connector_class=$(echo "$json_content" | jq -r '."connector.class"')
+  if [[ "$connector_class" == "null" ]] || [[ -z "$connector_class" ]]
+  then
+    logerror "❌ connector.class is required"
+    return 1
+  fi
+  echo "$json_content" > "$json_file"
+
+  set +e
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+    get_ccloud_connect
+    handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate"
+  elif [[ "$is_cfk" -eq 1 ]]
+  then
+    logwarn "⚠️ validation with CFK currently performs basic checks only (no Connect REST validation endpoint)"
+    log "✅ Basic CFK validation passed"
+    set -e
+    return 2
+  else
+    get_connect_url_and_security
+    if [[ -n "$skip_automatic" ]]
+    then
+      # "running": the config of a running connector, it already has the automatic config
+      [ "$skip_automatic" != "running" ] && log "🤖 --skip-automatic-connector-config is set"
+    else
+      add_connector_config_based_on_environment "$env_used" "$json_content"
+    fi
+    # add mandatory name field
+    echo "$json_content" | jq ". + {\"name\": \"$connector\"}" > "$json_file"
+    handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$json_file $connect_url/connector-plugins/$connector_class/config/validate"
+  fi
+  set -e
+
+  if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
+  then
+    set +e
+    echo "$curl_output" > "$json_validate_file"
+    jq_output=$(jq . "$json_validate_file" 2>&1)
+    error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
+
+    if [[ -n "$error_line" ]]; then
+      logerror "❌ Invalid JSON at line $error_line"
+    fi
+    set -e
+
+    if [ -z "$GITHUB_RUN_NUMBER" ]
+    then
+      if [[ $(type -f bat 2>&1) =~ "not found" ]]
+      then
+        cat -n "$json_validate_file"
+      else
+        bat "$json_validate_file" --highlight-line $error_line
+      fi
+    fi
+    return 1
+  fi
+
+  # Check if there were any errors
+  has_errors=$(echo "$curl_output" | jq '.configs[] | select(.value.errors | length > 0) | length' | tr -d '\n')
+
+  if [[ "$has_errors" -gt 0 ]]
+  then
+    output=$(echo "$curl_output" | jq -r '.configs[] | select(.value.errors | length > 0) | .value.name + " ->> " + (.value.errors | to_entries | map("\(.value|tostring)") | join(", "))')
+    logerror "❌ Validation errors found in connector config\n$output"
+    return 1
+  fi
+  log "✅ $connector_type connector config is valid !"
+}
+
+# content of stdin, or nothing when stdin is a terminal or nothing comes within 3 seconds: an agent or a CI job runs
+# commands with a stdin that is neither a terminal nor closed, a plain cat would wait forever
+function read_stdin_if_any () {
+  [ -t 0 ] && return 0
+  local first=""
+  if IFS= read -r -t 3 first || [ -n "$first" ]
+  then
+    printf '%s\n' "$first"
+    cat
+  fi
+}

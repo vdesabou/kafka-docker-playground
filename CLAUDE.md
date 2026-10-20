@@ -26,6 +26,7 @@ out of context.
 | "what is running right now?" | `playground status` (lists containers, flags exited/restarting ones) | `docker ps`, reading `playground.ini` |
 | "what is the state of the connectors?" | `playground connector status` | curl on the Connect REST API |
 | "why is this connector not working?" | `playground connector diagnose [--connector <c>]` (status + error digest + lag/offsets + next steps) | `status`, `container logs --errors`, `show-lag`, `offsets get` one by one |
+| "is this connector config valid? what differs from the customer's?" | `playground connector validate` (config on stdin, or `--connector <c>` for the running one) / `playground connector diff --connector <c> --file cfg.json` (`--with-connector`, `--defaults`) | `curl .../config/validate`, comparing JSON by eye |
 | "why did it fail?" | `playground container logs -c connect --errors` (`--since 10m`, `--include-warnings`) | `docker logs connect`, scrolling raw logs |
 | "show me recent raw lines" | `playground container logs -c connect --no-follow --tail 500` / `--grep "Caused by" --no-follow` | `docker logs connect \| tail` |
 | "what is failing in these logs?" (customer bundle, CI artifact) | `playground analyze logs -f <file\|folder\|.zip\|.tar.gz>` (`--include-warnings`, `--max-findings 10`, `--sample connect_task_failure` to try it) | `unzip` + `grep ERROR`, ad-hoc `python3` |

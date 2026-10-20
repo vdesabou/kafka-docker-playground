@@ -7713,6 +7713,7 @@ commands:
       wait                    wait until it is RUNNING (or another state)
       error-recommendations   suggested fixes for a failed fully managed connector
       show-config             the configuration actually applied
+      diff                    running config vs a file, another connector or the defaults
       logs                    tail connect logs, filtered and followed
       show-lag                consumer lag of a sink, until it reaches zero
       benchmark               records per second, compared with the previous run
@@ -7721,6 +7722,7 @@ commands:
 
     🛠️ Change it
       create-or-update        create it, or apply a new config, from stdin
+      validate                check a config with the plugin, without creating it
       update                  edit the running config in your editor
       pause / resume / stop / restart / delete
       offsets alter / reset   rewind or fast-forward a connector
@@ -7834,6 +7836,137 @@ commands:
       output: |-
         17:22:05 ℹ️ ⏳ Waiting up to 120 seconds for 🌎onprem connector filestream-sink to be RUNNING
         17:22:10 ℹ️ ✅ 🌎onprem connector filestream-sink is RUNNING (1 task(s)) after 5 seconds
+
+  - name: validate
+    help: |-
+      ✅ Validate a connector config without creating the connector
+
+      Sends the config to the validate endpoint of the plugin
+      (PUT /connector-plugins/<class>/config/validate) and prints every
+      invalid property with its error message. Nothing is created or
+      changed, so it is the dry run of 'create-or-update' for a customer
+      config. Exits with 1 if the config is invalid.
+
+      The config is read from stdin. Without stdin, --connector validates
+      the config of that running connector, for example after switching
+      to another connector version.
+
+      The same automatic config as 'create-or-update' is added for the
+      environment of the example (security settings on sasl-ssl...),
+      unless --skip-automatic-connector-config is set.
+
+      🎓 Tip: works for fully managed connectors too, with the validate
+      endpoint of Confluent Cloud.
+    args:
+    - name: json
+      default: "-"
+      help: json (reads from stdin if empty)
+    flags:
+    - *verbose
+    - long: --connector
+      short: -c
+      required: false
+      arg: connector
+      completions:
+        dynamic:
+        - playground get-connector-list
+      help: |-
+        🔗 Connector name
+
+        Name given to the validate endpoint with a config on stdin. Without
+        stdin, the running connector whose config is validated.
+    - long: --skip-automatic-connector-config
+      required: false
+      help: |-
+        🤖 Do not add the automatic configuration of the environment (security settings on sasl-ssl...) before validating
+    examples:
+    - |-
+      playground connector validate << EOF
+      {
+        "connector.class": "FileStreamSink",
+        "topics": "filestream",
+        "file": "/tmp/output.json",
+        "tasks.max": "abc"
+      }
+      EOF
+    - playground connector validate --connector filestream-sink
+    x_example_outputs:
+    - command: playground connector validate (tasks.max is abc)
+      output: |-
+        17:22:05 ℹ️ 🔎 Validating 🌎onprem connector config (nothing is created)
+        17:22:05 ❗ ❌ Validation errors found in connector config
+        tasks.max ->> Invalid value abc for configuration tasks.max: Not a number of type INT
+
+  - name: diff
+    help: |-
+      🔀 Diff the config of a running connector with another config
+
+      Compares the config of a running connector, key by key, with:
+
+        stdin              a config (plain json, or the heredoc printed by
+                           'show-config')
+        --file             the same, from a file, e.g. the config of a
+                           customer
+        --with-connector   another running connector
+        --defaults         the default value of each parameter of the plugin:
+                           shows only what the connector changes, and the
+                           keys set to their default that could be removed
+
+      Keys only on one side, and keys with different values, are listed.
+      Passwords masked by the REST API are not compared.
+
+      🎓 Tip: run it with the config of a customer and the config of the
+      example to see right away what differs.
+    flags:
+    - *verbose
+    - *connector
+    - long: --file
+      short: -f
+      required: false
+      arg: file
+      validate: file_exists
+      completions:
+        dynamic:
+        - playground get-specific-file-extension "$completion_current" --extension "json"
+      help: |-
+        📄 File with the config to compare with (json, or a create-or-update heredoc)
+    - long: --with-connector
+      required: false
+      arg: with_connector
+      completions:
+        dynamic:
+        - playground get-connector-list
+      help: |-
+        🔗 Other running connector to compare with
+    - long: --defaults
+      required: false
+      help: |-
+        💤 Compare with the default value of each parameter of the plugin
+    - long: --json
+      required: false
+      help: |-
+        🤖 Print the result as JSON
+    examples:
+    - playground connector diff --connector filestream-sink --file customer-config.json
+    - playground connector diff --connector filestream-sink --with-connector filestream-sink2
+    - playground connector diff --connector filestream-sink --defaults
+    - |-
+      playground connector diff --connector filestream-sink << EOF
+      {
+        "connector.class": "FileStreamSink",
+        "topics": "filestream",
+        "file": "/tmp/output.json"
+      }
+      EOF
+    x_example_outputs:
+    - command: playground connector diff --connector filestream-sink --file customer-config.json
+      output: |-
+        17:22:05 ℹ️ 🔀 Diff of connector filestream-sink (➖) with customer-config.json (➕)
+          ✏️  tasks.max
+               ➖ 1
+               ➕ 4
+          ➕ errors.tolerance = all   (only in customer-config.json)
+        17:22:05 ℹ️ 📊 2 key(s) differ, 6 identical
 
   - name: error-recommendations
     filters:

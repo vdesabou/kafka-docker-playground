@@ -131,7 +131,6 @@ json_file=$tmp_dir/connector.json
 new_json_file=$tmp_dir/connector_new.json
 connector_with_offsets_file=$tmp_dir/connector_with_offsets.json
 connector_with_initial_state_file=$tmp_dir/connector_with_initial_state.json
-json_validate_file=$tmp_dir/json_validate_file
 
 echo "$json_content" > $json_file
 
@@ -214,79 +213,12 @@ if [[ -n "$validate" ]]
 then
     log "✅ --validate is set"
     set +e
-    connector_class=$(echo "$json_content" | jq -r '."connector.class"')
-
-    if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
-    then
-        get_ccloud_connect
-        handle_ccloud_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" -H \"authorization: Basic $authorization\" --data @$json_file https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins/$connector_class/config/validate"
-    elif [[ "$is_cfk" -eq 1 ]]
-    then
-        if [[ "$connector_class" == "null" ]] || [[ -z "$connector_class" ]]
-        then
-            logerror "❌ connector.class is required"
-            exit 1
-        fi
-        logwarn "⚠️ --validate with CFK currently performs basic checks only (no Connect REST validation endpoint)"
-        log "✅ Basic CFK validation passed"
-        set -e
-        validate=skipped
-    else
-        get_connect_url_and_security
-        if [[ -n "$skip_automatic_connector_config" ]]
-        then
-            log "🤖 --skip-automatic-connector-config is set"
-        else
-            add_connector_config_based_on_environment "$environment" "$json_content"
-        fi
-        # add mandatory name field
-        new_json_content=$(echo "$json_content" | jq ". + {\"name\": \"$connector\"}")
-
-        echo "$new_json_content" > $new_json_file
-        handle_onprem_connect_rest_api "curl $security -s -X PUT -H \"Content-Type: application/json\" --data @$new_json_file $connect_url/connector-plugins/$connector_class/config/validate"
-    fi
+    validate_connector_config "$connector" "$json_content" "$tmp_dir" "$environment" "$is_cfk" "$skip_automatic_connector_config"
+    ret=$?
     set -e
-    if [[ "$validate" == "skipped" ]]
+    if [ $ret -eq 1 ]
     then
-        :
-    else
-    if ! echo "$curl_output" | jq -e .  > /dev/null 2>&1
-    then
-        set +e
-        echo "$curl_output" > $json_validate_file
-        jq_output=$(jq . "$json_validate_file" 2>&1)
-        error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
-
-        if [[ -n "$error_line" ]]; then
-            logerror "❌ Invalid JSON at line $error_line"
-        fi
-        set -e
-
-        if [ -z "$GITHUB_RUN_NUMBER" ]
-        then
-            if [[ $(type -f bat 2>&1) =~ "not found" ]]
-            then
-                cat -n $json_validate_file
-            else
-                bat $json_validate_file --highlight-line $error_line
-            fi
-        fi
-
         exit 1
-    fi
-
-    # Check if there were any errors
-    has_errors=$(echo "$curl_output" | jq '.configs[] | select(.value.errors | length > 0) | length' | tr -d '\n')
-
-    if [[ "$has_errors" -gt 0 ]]
-    then
-        output=$(echo "$curl_output" | jq -r '.configs[] | select(.value.errors | length > 0) | .value.name + " ->> " + (.value.errors | to_entries | map("\(.value|tostring)") | join(", "))')
-        logerror "❌ Validation errors found in connector config\n$output"
-
-        exit 1
-    else
-        log "✅ $connector_type connector config is valid !"
-    fi
     fi
 fi
 
