@@ -3220,10 +3220,35 @@ else
     K3D_CONFIG_FILE=$(mktemp)
     generate_k3d_config_with_registry_cache "$K3D_CONFIG_FILE"
     log "🗂️ Using registry cache for k3d cluster creation (${K3D_REGISTRY_CACHE_NAME}:${K3D_REGISTRY_CACHE_PORT})"
-    k3d cluster create --config "$K3D_CONFIG_FILE" --wait
+    k3d cluster create --config "$K3D_CONFIG_FILE" --wait || k3d_create_failed=1
   else
-    k3d cluster create "$K3D_CLUSTER_NAME" --servers 1 --agents 0 --servers-memory "$K3D_MEMORY" "${K3D_CREATE_K3S_ARGS[@]}" --wait
+    k3d cluster create "$K3D_CLUSTER_NAME" --servers 1 --agents 0 --servers-memory "$K3D_MEMORY" "${K3D_CREATE_K3S_ARGS[@]}" --wait || k3d_create_failed=1
   fi
+  if [[ "${k3d_create_failed:-0}" == "1" ]]
+  then
+    if ! k3d cluster list 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$K3D_CLUSTER_NAME"
+    then
+      logerror "❌ k3d cluster $K3D_CLUSTER_NAME could not be created"
+      exit 1
+    fi
+    logwarn "k3d cluster create failed but cluster $K3D_CLUSTER_NAME exists, checking its kubeconfig"
+  fi
+fi
+
+# k3d can create the cluster and then panic while reading its kubeconfig from the node (podman CI:
+# "panic: runtime error: slice bounds out of range [512:0]" in KubeconfigGet). No context is written,
+# and every following run reuses the cluster and fails with: no context exists with the name
+if ! kubectl config get-contexts "k3d-${K3D_CLUSTER_NAME}" >/dev/null 2>&1
+then
+  for attempt in 1 2 3 4 5
+  do
+    log "🔑 kubeconfig context k3d-${K3D_CLUSTER_NAME} is missing, merging it from k3d (attempt $attempt/5)"
+    if k3d kubeconfig merge "$K3D_CLUSTER_NAME" --kubeconfig-merge-default --kubeconfig-switch-context >/dev/null
+    then
+      break
+    fi
+    sleep 5
+  done
 fi
 
 kubectl config use-context "k3d-${K3D_CLUSTER_NAME}" >/dev/null
