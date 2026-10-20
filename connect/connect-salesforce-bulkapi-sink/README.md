@@ -44,7 +44,7 @@ playground run -f salesforce-bulkapi-sink-with-bulkapi-source.sh
 ## What the script does
 
 1. Picks the authentication grant (`JWT_BEARER` or `PASSWORD`) from the connector version, and starts the environment with an `sfdx-cli` container.
-2. Logs in with the sfdx CLI (JWT) on account #1 (PushTopic variants: also re-creates the Lead PushTopic and creates the PushTopic source connector `salesforce-pushtopic-source`, topic `sfdc-pushtopic-leads`).
+2. Logs in with the sfdx CLI (JWT) on account #1 (PushTopic variants: also re-creates the Lead PushTopic, with a query restricted to the first name of the Lead of the run so that Leads created by other jobs in the same org are not sent to the sink, and creates the PushTopic source connector `salesforce-pushtopic-source`, topic `sfdc-pushtopic-leads`).
 3. Creates a random Lead in account #1.
 4. Bulk API variants: creates the Bulk API source connector `salesforce-bulkapi-source` (object `Lead`, topic `sfdc-bulkapi-leads`).
 5. Verifies that the Lead is received in the source topic with `playground topic consume`.
