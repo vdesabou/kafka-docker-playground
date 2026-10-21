@@ -705,8 +705,10 @@ function generate_data() {
 
             if [[ $new_value_size -gt 0 ]]
             then
-                # Create a string of '-' characters with length equivalent to new_value_size
-                new_value_string=$(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom | head -c$new_value_size)
+                # Create a random alphanumeric string of length new_value_size
+                # the input of tr is bounded (about 24% of random bytes are alphanumeric): with SIGPIPE ignored by a
+                # parent process, tr reading /dev/urandom without end would never stop after head exits
+                new_value_string=$(head -c $((new_value_size * 5 + 256)) /dev/urandom | LC_ALL=C tr -dc 'a-zA-Z0-9' 2> /dev/null | head -c$new_value_size)
 
                 echo -n "$new_value_string" > temp.txt
 
