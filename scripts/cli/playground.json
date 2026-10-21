@@ -1099,27 +1099,50 @@
     },
     {
       "name": "repro",
-      "description": "👷‍♂️ Reproduction model commands\n\nA reproduction model is an example written to demonstrate one specific\nproblem, so that anyone can reproduce it with a single command.\n\n  bootstrap   scaffold one from an existing example, then edit it\n  export      package the models you have not committed, as a tgz\n  import      unpack a tgz someone sent you, and run it\n\n👉 Always scaffold with bootstrap rather than copying a script by hand: it\ncreates the header, the docker compose override, the CLI cheat sheet and\nregisters the model, which a hand-written file would be missing.\n\nKeep a model minimal and about one issue, state expected versus actual\nbehaviour in its comments header, and never put customer data in it.",
+      "description": "👷‍♂️ Reproduction model commands\n\nA reproduction model is an example written to demonstrate one specific\nproblem, so that anyone can reproduce it with a single command.\n\n  bootstrap   scaffold one from an existing example, then edit it\n  export      package one or more models as a self-contained tgz bundle\n  import      unpack a bundle someone sent you, and run it\n\n👉 Always scaffold with bootstrap rather than copying a script by hand: it\ncreates the header, the docker compose override, the CLI cheat sheet and\nregisters the model, which a hand-written file would be missing.\n\nKeep a model minimal and about one issue, state expected versus actual\nbehaviour in its comments header, and never put customer data in it.",
       "usage": "playground repro COMMAND",
       "options": [],
       "subcommands": [
         {
           "name": "export",
-          "description": "📤 Export as tgz file uncommitted reproduction models from the folder of current reproduction model\n\nProduces a single tgz that a colleague can feed to\n'playground repro import' to run your scenario as is. Use --all to take\nevery uncommitted model rather than only the current folder.",
+          "description": "📤 Export reproduction models as a self-contained tgz bundle\n\nProduces a single tgz that a colleague can feed to\n'playground repro import' to run your scenario as is.\n\nThe bundle holds what the model needs, committed or not: the script,\nthe files of its folder it mentions (docker compose override, producer,\nSQL files…) and the support files linked by bootstrap (README.md,\nstop.sh, benchmark-load.bash, config-*). Symlinks are stored as their\ncontent, so the bundle does not depend on the version of the base\nexample. Git-ignored files, build output (target/), dumps, flight\nrecordings, logs and credential files (keyfile.json, *.pem, *.key) are\nleft out.\n\nA repro-manifest.json describes the bundle: the last 'playground run'\nline of each model (from playground-run-history), its case number,\nauthor, base example, the playground commit, the names (never the\nvalues) of the credentials it needs, and the sha256 of every file.\n\nWithout --file, the current reproduction model is exported.\n\n🎓 Tip: start with --dry-run to see what would be packed.",
           "usage": "playground repro export [OPTIONS]",
           "options": [
             {
               "names": [
-                "--all"
+                "--file",
+                "-f"
+              ],
+              "argument": "FILE",
+              "description": "🔖 Reproduction model script to export (default: current one)\n\nCan be repeated to put several models in one bundle.\n\nRepeatable: ✓ Yes\nConflicts with: --all-uncommitted, --all"
+            },
+            {
+              "names": [
+                "--all-uncommitted"
               ],
               "argument": "",
-              "description": "Export all uncommitted reproduction models"
+              "description": "📦 Export every reproduction model with uncommitted changes (new or modified)\n\nConflicts with: --file"
+            },
+            {
+              "names": [
+                "--output",
+                "-o"
+              ],
+              "argument": "OUTPUT",
+              "description": "📁 Folder where to write the bundle (default: current folder, or the repository root when run from reproduction-models)"
+            },
+            {
+              "names": [
+                "--dry-run"
+              ],
+              "argument": "",
+              "description": "🔍 Only list the models and files that would be packed"
             }
           ]
         },
         {
           "name": "import",
-          "description": "📥 Import tgz file which was created with export command\n\nUnpacks the models into your reproduction-models folder, from where you\ncan run them with 'playground run'.",
+          "description": "📥 Import a tgz bundle created by 'playground repro export'\n\nThe bundle is extracted to a temporary folder first and checked: no\nabsolute paths, no '..', no special files, and the sha256 of every file\nmust match its manifest. Bundles from older versions, without manifest,\nare still accepted.\n\nFiles identical to yours are skipped. When a file differs, the import\nstops unless --on-conflict says what to do. Files that were symlinks to\na public example are restored as symlinks when the public file is\nidentical, otherwise their content is kept.\n\nThen the model becomes the current one, and the command prints the\n'playground run' line to use and the credentials missing from your\n'playground secrets' profile.",
           "usage": "playground repro import [OPTIONS]",
           "options": [
             {
@@ -1128,7 +1151,21 @@
                 "-f"
               ],
               "argument": "FILE",
-              "description": "🤐 playground_repro_export.tgz file\n\n❕ It must be absolute full path\n\n🎓 Tip: use <tab> completion to trigger fzf completion \n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files"
+              "description": "🤐 Bundle file (playground_repro_*.tgz, any name is accepted)\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n        use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files\n\nRequired: ✓ Yes"
+            },
+            {
+              "names": [
+                "--on-conflict"
+              ],
+              "argument": "ON-CONFLICT",
+              "description": "⚔️ What to do when a file of the bundle differs from your copy\n\nabort: import nothing and list the differences\nrename: import the differing files with an -imported-<date> suffix (references in the imported scripts are updated)\noverwrite: replace your copy\n\nDefault value: abort\nAllowed values: abort, rename, overwrite"
+            },
+            {
+              "names": [
+                "--dry-run"
+              ],
+              "argument": "",
+              "description": "🔍 Only show the manifest, the files and the conflicts"
             }
           ]
         },
