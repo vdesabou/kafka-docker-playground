@@ -1876,159 +1876,54 @@ function container_to_ip() {
     echo $(docker inspect $1 -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
 }
 
+# Traffic degradation, see 'playground debug degrade-traffic': tc runs from the netshoot image in the
+# network namespace of the container, so these work whatever the image of the container is.
+# Each add_* replaces what was applied before on the source container.
+
 function clear_traffic_control() {
-    if [ $# -lt 1 ]; then
-        echo "Usage: clear_traffic_control src_container"
-    fi
-
-    src_container=$1
-
-    echo "Removing all traffic control settings on $src_container"
-
-    # Delete the entry from the tc table so the changes made to tc do not persist
-    docker exec --privileged -u0 -t $src_container tc qdisc del dev eth0 root
-}
-
-function get_latency() {
-    if [ $# -lt 2 ]; then
-        echo "Usage: get_latency src_container dst_container"
-    fi
-    src_container=$1
-    dst_container=$2
-    docker exec --privileged -u0 -t $src_container ping $dst_container -c 4 -W 80 | tail -1 | awk -F '/' '{print $5}'
-}
-
-# https://serverfault.com/a/906499
-function add_latency() {
-    if [ $# -lt 3 ]; then
-        echo "Usage: add_latency src_container dst_container (or ip address) latency"
-        echo "Example: add_latency container-1 container-2 100ms"
-    fi
-
-    src_container=$1
-    if valid_ip $2
+    if [ $# -lt 1 ]
     then
-      dst_ip=$2
-    else
-      dst_ip=$(container_to_ip $2)
+        logerror "Usage: clear_traffic_control src_container"
+        return 1
     fi
-    latency=$3
+    playground debug degrade-traffic --container "$1" --action stop
+}
 
-    set +e
-    clear_traffic_control $src_container
-    set -e
+# average ping time in ms from src_container to dst_container
+function get_latency() {
+    if [ $# -lt 2 ]
+    then
+        logerror "Usage: get_latency src_container dst_container"
+        return 1
+    fi
+    docker run --rm --network "container:$1" --cap-add NET_RAW nicolaka/netshoot ping -c 4 -W 2 "$2" | tail -1 | awk -F '/' '{print $5}'
+}
 
-    echo "Adding $latency latency from $src_container to $2"
-
-    # Add a classful priority queue which lets us differentiate messages.
-    # This queue is named 1:.
-    # Three children classes, 1:1, 1:2 and 1:3, are automatically created.
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 root handle 1: prio
-
-
-    # Add a filter to the parent queue 1: (also called 1:0). The filter has priority 1 (if we had more filters this would make a difference).
-    # For all messages with the ip of dst_ip as their destination, it routes them to class 1:1, which
-    # subsequently sends them to its only child, queue 10: (All messages need to  "end up" in a queue).
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol ip parent 1: prio 1 u32 match ip dst $dst_ip flowid 1:1
-
-    # Route the rest of the of the packets without any control.
-    # Add a filter to the parent queue 1:. The filter has priority 2.
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip dst 0.0.0.0/0 flowid 1:2
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip protocol 1 0xff flowid 1:2
-
-    # Add a child queue named 10: under class 1:1. All outgoing packets that will be routed to 10: will have delay applied them.
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:1 handle 10: netem delay $latency
-
-    # Add a child queue named 20: under class 1:2
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:2 handle 20: sfq
+function add_latency() {
+    if [ $# -lt 3 ]
+    then
+        logerror "Usage: add_latency src_container dst_container (or ip address) latency, e.g. add_latency connect broker 100ms"
+        return 1
+    fi
+    playground debug degrade-traffic --container "$1" --destination "$2" --latency "$3" --action start
 }
 
 function add_packet_corruption() {
-    if [ $# -lt 3 ]; then
-        echo "Usage: add_packet_corruption src_container dst_container (or ip address) corrupt"
-        echo "Exemple: add_packet_corruption container-1 container-2 1%"
-    fi
-
-    src_container=$1
-    if valid_ip $2
+    if [ $# -lt 3 ]
     then
-      dst_ip=$2
-    else
-      dst_ip=$(container_to_ip $2)
+        logerror "Usage: add_packet_corruption src_container dst_container (or ip address) corruption, e.g. add_packet_corruption connect broker 1%"
+        return 1
     fi
-    corruption=$3
-
-    set +e
-    clear_traffic_control $src_container
-    set -e
-
-    echo "Adding $corruption corruption from $src_container to $2"
-
-    # Add a classful priority queue which lets us differentiate messages.
-    # This queue is named 1:.
-    # Three children classes, 1:1, 1:2 and 1:3, are automatically created.
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 root handle 1: prio
-
-
-    # Add a filter to the parent queue 1: (also called 1:0). The filter has priority 1 (if we had more filters this would make a difference).
-    # For all messages with the ip of dst_ip as their destination, it routes them to class 1:1, which
-    # subsequently sends them to its only child, queue 10: (All messages need to  "end up" in a queue).
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol ip parent 1: prio 1 u32 match ip dst $dst_ip flowid 1:1
-
-    # Route the rest of the of the packets without any control.
-    # Add a filter to the parent queue 1:. The filter has priority 2.
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip dst 0.0.0.0/0 flowid 1:2
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip protocol 1 0xff flowid 1:2
-
-    # Add a child queue named 10: under class 1:1. All outgoing packets that will be routed to 10: will have corrupt applied them.
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:1 handle 10: netem corrupt $corruption
-
-    # Add a child queue named 20: under class 1:2
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:2 handle 20: sfq
+    playground debug degrade-traffic --container "$1" --destination "$2" --corruption "$3" --action start
 }
 
 function add_packet_loss() {
-    if [ $# -lt 3 ]; then
-        echo "Usage: add_packet_loss src_container dst_container (or ip address) corrupt"
-        echo "Exemple: add_packet_loss container-1 container-2 1%"
-    fi
-
-    src_container=$1
-    if valid_ip $2
+    if [ $# -lt 3 ]
     then
-      dst_ip=$2
-    else
-      dst_ip=$(container_to_ip $2)
+        logerror "Usage: add_packet_loss src_container dst_container (or ip address) loss, e.g. add_packet_loss connect broker 1%"
+        return 1
     fi
-    loss=$3
-
-    set +e
-    clear_traffic_control $src_container
-    set -e
-
-    echo "Adding $loss loss from $src_container to $2"
-
-    # Add a classful priority queue which lets us differentiate messages.
-    # This queue is named 1:.
-    # Three children classes, 1:1, 1:2 and 1:3, are automatically created.
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 root handle 1: prio
-
-
-    # Add a filter to the parent queue 1: (also called 1:0). The filter has priority 1 (if we had more filters this would make a difference).
-    # For all messages with the ip of dst_ip as their destination, it routes them to class 1:1, which
-    # subsequently sends them to its only child, queue 10: (All messages need to  "end up" in a queue).
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol ip parent 1: prio 1 u32 match ip dst $dst_ip flowid 1:1
-
-    # Route the rest of the of the packets without any control.
-    # Add a filter to the parent queue 1:. The filter has priority 2.
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip dst 0.0.0.0/0 flowid 1:2
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip protocol 1 0xff flowid 1:2
-
-    # Add a child queue named 10: under class 1:1. All outgoing packets that will be routed to 10: will have loss applied them.
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:1 handle 10: netem loss $loss
-
-    # Add a child queue named 20: under class 1:2
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:2 handle 20: sfq
+    playground debug degrade-traffic --container "$1" --destination "$2" --loss "$3" --action start
 }
 
 function get_3rdparty_file () {

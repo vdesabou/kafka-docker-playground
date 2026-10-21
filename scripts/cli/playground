@@ -196,6 +196,7 @@ playground_usage() {
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Moved to 'playground analyze gc-logs' (kept as a hidden alias)\n" "$(green "debug gc-analyze")                          "
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "debug tcp-dump")                            "
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "debug block-traffic")                       "
+  printf "  %s   🐌 Add latency, packet loss, corruption or a bandwidth limit using tc\n" "$(green "debug degrade-traffic")                     "
   printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "debug java-debug")                          "
   printf "  %s   ✂️ jscissors is an instrumentation framework and can help to analyse control flow and perform some specific logging\n" "$(green "debug jscissors")                           "
   printf "  %s   🛩️ Record a JVM with Java Flight Recorder, from --action start to --action stop\n" "$(green "debug flight-recorder")                     "
@@ -6722,7 +6723,7 @@ playground_analyze_flight_recorder_usage() {
 playground_debug_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground debug\n\n"
-    printf "  🐞 Debug commands\n  \n  The heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\n  the analysis tools are run inside the right container, installed on the\n  fly when missing, and their output is brought back to your machine.\n  \n  🐌 It hangs, or it is slow\n    thread-dump         what every thread is doing right now\n    flight-recorder     record the JVM from start to stop, then analyze it\n  \n  💾 It eats memory\n    heap-dump           take a .hprof, optionally as a histogram\n  \n  🌐 It is a network or TLS problem\n    tcp-dump            capture traffic, open it in Wireshark\n    testssl             probe a TLS endpoint, locally or in the cloud\n    block-traffic       cut a route with iptables, to simulate an outage\n    java-debug          turn on the JVM SSL, Kerberos or class loading traces\n  \n  🔬 It is in the code\n    log-level set       raise the level of any package, without a restart\n    enable-remote-debugging   attach your IDE debugger to a container\n    jscissors           trace method calls, arguments and return values\n  \n  📦 Hand it over\n    generate-diagnostics   a support bundle for connect or broker\n  \n  🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,\n  logs, Oracle XStream reports, CFK bundles, flight recordings): playground\n  analyze\n\n"
+    printf "  🐞 Debug commands\n  \n  The heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\n  the analysis tools are run inside the right container, installed on the\n  fly when missing, and their output is brought back to your machine.\n  \n  🐌 It hangs, or it is slow\n    thread-dump         what every thread is doing right now\n    flight-recorder     record the JVM from start to stop, then analyze it\n  \n  💾 It eats memory\n    heap-dump           take a .hprof, optionally as a histogram\n  \n  🌐 It is a network or TLS problem\n    tcp-dump            capture traffic, open it in Wireshark\n    testssl             probe a TLS endpoint, locally or in the cloud\n    block-traffic       cut a route with iptables, to simulate an outage\n    degrade-traffic     add latency, packet loss or corruption with tc\n    java-debug          turn on the JVM SSL, Kerberos or class loading traces\n  \n  🔬 It is in the code\n    log-level set       raise the level of any package, without a restart\n    enable-remote-debugging   attach your IDE debugger to a container\n    jscissors           trace method calls, arguments and return values\n  \n  📦 Hand it over\n    generate-diagnostics   a support bundle for connect or broker\n  \n  🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,\n  logs, Oracle XStream reports, CFK bundles, flight recordings): playground\n  analyze\n\n"
   else
     printf "playground debug - 🐞 Debug commands\n\n"
   fi
@@ -6745,6 +6746,7 @@ playground_debug_usage() {
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Moved to 'playground analyze gc-logs' (kept as a hidden alias)\n" "$(green "gc-analyze")              "
   printf "  %s   🕵️‍♂️ Take a tcp dump (sniffing network)\n" "$(green "tcp-dump")                "
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "block-traffic")           "
+  printf "  %s   🐌 Add latency, packet loss, corruption or a bandwidth limit using tc\n" "$(green "degrade-traffic")         "
   printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "java-debug")              "
   printf "  %s   ✂️ jscissors is an instrumentation framework and can help to analyse control flow and perform some specific logging\n" "$(green "jscissors")               "
   printf "  %s   🛩️ Record a JVM with Java Flight Recorder, from --action start to --action stop\n" "$(green "flight-recorder")         "
@@ -7380,6 +7382,96 @@ playground_debug_block_traffic_usage() {
     printf "  playground debug block-traffic -c broker -c connect --destination zookeeper\n  --action start\n"
     printf "  playground debug block-traffic --container schema-registry --destination\n  broker --port 9092 --action start\n"
     printf "  playground debug block-traffic -c connect -c ksqldb-server --destination\n  schema-registry --action stop\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_debug_degrade_traffic_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground debug degrade-traffic\n\n"
+    printf "  🐌 Add latency, packet loss, corruption or a bandwidth limit using tc\n  \n  Some issues only happen on a slow or unreliable network: request\n  timeouts, retries, rebalances, producer or consumer errors. This makes\n  the traffic from a container slow or lossy, to a destination (and\n  port) or to everything, and --action stop puts it back to normal\n  without restarting anything.\n  \n  Several effects can be combined in one call, e.g. --latency 100ms\n  --loss 1%%. A new --action start replaces what was applied before on\n  the container. --action status shows what is applied and the measured\n  round trip to the destination.\n  \n  tc runs from the nicolaka/netshoot image in the network namespace of\n  the container (an ephemeral container of the pod with cfk): nothing is\n  installed in the container, so it works with any image.\n  \n  ❕ tc only shapes the packets a container sends: with --latency 100ms\n  the round trip to the destination grows by 100ms. A container restart\n  removes the degradation.\n\n"
+  else
+    printf "playground debug degrade-traffic - 🐌 Add latency, packet loss, corruption or a bandwidth limit using tc\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground debug degrade-traffic [OPTIONS]\n"
+  printf "  playground debug degrade-traffic --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--container, -c, --pod, -p CONTAINER (repeatable)")"
+    printf "    🐳 container name (or pod name when cfk environment is used)\n    \n    🎓 Tip: you can pass multiple containers by specifying --container multiple\n    times\n"
+    printf "    %s\n" "Default: connect"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--destination DESTINATION")"
+    printf "    🎯 Destination: an ip address, a container name or a hostname (default: all\n    the traffic of the container)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--port PORT")"
+    printf "    🚪 Only the tcp traffic to this port of the destination\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--latency LATENCY")"
+    printf "    ⏱️ Added latency, e.g. 100ms, 1s\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--jitter JITTER")"
+    printf "    〰️ Random variation of the latency, e.g. 20ms (needs --latency)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--loss LOSS")"
+    printf "    🕳️ Percentage of packets dropped, e.g. 1%%\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--corruption CORRUPTION")"
+    printf "    🧨 Percentage of packets corrupted, e.g. 1%%\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--duplicate DUPLICATE")"
+    printf "    👯 Percentage of packets duplicated, e.g. 1%%\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--rate RATE")"
+    printf "    🚰 Bandwidth limit, e.g. 1mbit, 500kbit\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--action ACTION (required)")"
+    printf "    🟢 start, stop or status\n"
+    printf "    %s\n" "Allowed: start, stop, status"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground debug degrade-traffic --container connect --destination broker\n  --latency 100ms --action start\n"
+    printf "  playground debug degrade-traffic -c connect --destination broker --latency\n  100ms --jitter 20ms --loss 1%% --action start\n"
+    printf "  playground debug degrade-traffic -c connect -c ksqldb-server --destination\n  broker --port 9092 --loss 5%% --action start\n"
+    printf "  playground debug degrade-traffic -c connect --rate 1mbit --action start\n"
+    printf "  playground debug degrade-traffic -c connect --destination broker --action\n  status\n"
+    printf "  playground debug degrade-traffic -c connect -c ksqldb-server --action stop\n"
     echo
 
   fi
@@ -14182,6 +14274,144 @@ function resolve_container_name_for_environment() {
   esac
 
   echo "$mapped_name"
+}
+
+#
+# Network tools (iptables, tc, ping) run from this image, in the network namespace of the
+# target container or pod: nothing has to be installed in the target, whatever its image
+#
+PLAYGROUND_NETSHOOT_IMAGE="nicolaka/netshoot"
+
+# run a command in an ephemeral netshoot container of a cfk pod (same network namespace),
+# as root with the sysadmin profile (NET_ADMIN). Prints the output when $3 is true.
+function run_cfk_netshoot_command() {
+  local pod_name=$1
+  local cmd=$2
+  local emit_output=${3:-false}
+  local target_container
+  local debug_output
+  local cleaned_output
+  local debug_exit_code
+  local debug_custom_file
+
+  target_container=$(kubectl -n confluent get pod "$pod_name" -o jsonpath='{.spec.containers[0].name}' 2>/dev/null)
+  if [[ -z "$target_container" ]]
+  then
+    logerror "❌ Could not resolve target container for pod $pod_name"
+    exit 1
+  fi
+
+  debug_custom_file=$(mktemp -t pg-cfk-netshoot-XXXXXXXXXX.yaml)
+  cat << EOF > "$debug_custom_file"
+securityContext:
+  runAsUser: 0
+  runAsNonRoot: false
+EOF
+
+  # --attach waits for the command to finish and returns its output, otherwise the rule is applied asynchronously
+  set +e
+  debug_output=$(kubectl -n confluent debug "pod/$pod_name" --attach=true --profile=sysadmin --custom="$debug_custom_file" --image=$PLAYGROUND_NETSHOOT_IMAGE --target="$target_container" -- bash -lc "$cmd" 2>&1)
+  debug_exit_code=$?
+  set -e
+  rm -f "$debug_custom_file"
+  cleaned_output=$(echo "$debug_output" | sed -E '/^Targeting container /d; /^Defaulting debug container name to /d')
+  if [ $debug_exit_code -ne 0 ]
+  then
+    logerror "❌ failed to execute command on pod $pod_name"
+    if [[ -n "$cleaned_output" ]]
+    then
+      echo "$cleaned_output"
+    else
+      echo "$debug_output"
+    fi
+    exit 1
+  fi
+
+  if [[ "$emit_output" == "true" ]]
+  then
+    if [[ -n "$cleaned_output" ]]
+    then
+      echo "$cleaned_output"
+    else
+      log "(no output from: $cmd)"
+    fi
+  fi
+}
+
+# run a command in the network namespace of a container (docker, podman) or pod (cfk), with
+# NET_ADMIN, and print its output. The changes it makes (tc, iptables) stay after it exits.
+function run_in_network_namespace() {
+  local container=$1
+  local cmd=$2
+
+  if [[ -z "$environment" ]]
+  then
+    get_environment_used
+  fi
+
+  if [[ "$environment" == cfk* ]]
+  then
+    run_cfk_netshoot_command "$container" "$cmd" "true"
+    return
+  fi
+
+  if ! docker image inspect $PLAYGROUND_NETSHOOT_IMAGE > /dev/null 2>&1
+  then
+    log "📥 pulling $PLAYGROUND_NETSHOOT_IMAGE (network tools image, only the first time)"
+    docker pull $PLAYGROUND_NETSHOOT_IMAGE > /dev/null
+  fi
+  docker run --rm --network "container:$container" --cap-add NET_ADMIN --cap-add NET_RAW $PLAYGROUND_NETSHOOT_IMAGE sh -c "$cmd"
+}
+
+# ip addresses of a destination (ip, container, pod, service or hostname), one per line
+function resolve_traffic_destination_ips() {
+  local destination=$1
+  local ip_pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$"
+  local ip_address=""
+
+  if [[ -z "$environment" ]]
+  then
+    get_environment_used
+  fi
+
+  if [[ $destination =~ $ip_pattern ]]
+  then
+    echo "$destination"
+    return
+  fi
+
+  if [[ "$environment" == cfk* ]]
+  then
+    ip_address=$(kubectl -n confluent get pod "$destination" -o jsonpath='{.status.podIP}' 2>/dev/null)
+    if [[ -z "$ip_address" ]]
+    then
+      ip_address=$(kubectl -n confluent get svc "$destination" -o jsonpath='{.spec.clusterIP}' 2>/dev/null)
+      if [[ "$ip_address" == "None" || "$ip_address" == "none" ]]
+      then
+        ip_address=""
+      fi
+    fi
+  else
+    ip_address=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' "$destination" 2>/dev/null | awk '{ print $1 }')
+  fi
+  if [[ -n "$ip_address" ]]
+  then
+    echo "$ip_address"
+    return
+  fi
+
+  log "🌐 Using nslookup to get IP address of $destination..." >&2
+  if [[ "$environment" == cfk* ]]
+  then
+    local endpoint_ips
+    endpoint_ips=$(kubectl -n confluent get endpoints "$destination" -o jsonpath='{range .subsets[*].addresses[*]}{.ip}{"\n"}{end}' 2>/dev/null | grep -E "$ip_pattern" | sort -u || true)
+    if [[ -n "$endpoint_ips" ]]
+    then
+      echo "$endpoint_ips"
+      return
+    fi
+  fi
+  nslookup "$destination" 2>/dev/null | awk '/^Address: / { print $2 }' | grep -E "$ip_pattern" | sort -u || true
 }
 
 function is_container_running() {
@@ -23043,156 +23273,54 @@ function container_to_ip() {
     echo $(docker inspect $1 -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
 }
 
+# Traffic degradation, see 'playground debug degrade-traffic': tc runs from the netshoot image in the
+# network namespace of the container, so these work whatever the image of the container is.
+# Each add_* replaces what was applied before on the source container.
+
 function clear_traffic_control() {
-    if [ $# -lt 1 ]; then
-        echo "Usage: clear_traffic_control src_container"
-    fi
-
-    src_container=$1
-
-    echo "Removing all traffic control settings on $src_container"
-
-    # Delete the entry from the tc table so the changes made to tc do not persist
-    docker exec --privileged -u0 -t $src_container tc qdisc del dev eth0 root
-}
-
-function get_latency() {
-    if [ $# -lt 2 ]; then
-        echo "Usage: get_latency src_container dst_container"
-    fi
-    src_container=$1
-    dst_container=$2
-    docker exec --privileged -u0 -t $src_container ping $dst_container -c 4 -W 80 | tail -1 | awk -F '/' '{print $5}'
-}
-
-# https://serverfault.com/a/906499
-function add_latency() {
-    if [ $# -lt 3 ]; then
-        echo "Usage: add_latency src_container dst_container (or ip address) latency"
-        echo "Example: add_latency container-1 container-2 100ms"
-    fi
-
-    src_container=$1
-    if valid_ip $2
+    if [ $# -lt 1 ]
     then
-      dst_ip=$2
-    else
-      dst_ip=$(container_to_ip $2)
+        logerror "Usage: clear_traffic_control src_container"
+        return 1
     fi
-    latency=$3
+    playground debug degrade-traffic --container "$1" --action stop
+}
 
-    set +e
-    clear_traffic_control $src_container
-    set -e
+# average ping time in ms from src_container to dst_container
+function get_latency() {
+    if [ $# -lt 2 ]
+    then
+        logerror "Usage: get_latency src_container dst_container"
+        return 1
+    fi
+    docker run --rm --network "container:$1" --cap-add NET_RAW nicolaka/netshoot ping -c 4 -W 2 "$2" | tail -1 | awk -F '/' '{print $5}'
+}
 
-    echo "Adding $latency latency from $src_container to $2"
-
-    # Add a classful priority queue which lets us differentiate messages.
-    # This queue is named 1:.
-    # Three children classes, 1:1, 1:2 and 1:3, are automatically created.
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 root handle 1: prio
-
-    # Add a filter to the parent queue 1: (also called 1:0). The filter has priority 1 (if we had more filters this would make a difference).
-    # For all messages with the ip of dst_ip as their destination, it routes them to class 1:1, which
-    # subsequently sends them to its only child, queue 10: (All messages need to  "end up" in a queue).
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol ip parent 1: prio 1 u32 match ip dst $dst_ip flowid 1:1
-
-    # Route the rest of the of the packets without any control.
-    # Add a filter to the parent queue 1:. The filter has priority 2.
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip dst 0.0.0.0/0 flowid 1:2
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip protocol 1 0xff flowid 1:2
-
-    # Add a child queue named 10: under class 1:1. All outgoing packets that will be routed to 10: will have delay applied them.
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:1 handle 10: netem delay $latency
-
-    # Add a child queue named 20: under class 1:2
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:2 handle 20: sfq
+function add_latency() {
+    if [ $# -lt 3 ]
+    then
+        logerror "Usage: add_latency src_container dst_container (or ip address) latency, e.g. add_latency connect broker 100ms"
+        return 1
+    fi
+    playground debug degrade-traffic --container "$1" --destination "$2" --latency "$3" --action start
 }
 
 function add_packet_corruption() {
-    if [ $# -lt 3 ]; then
-        echo "Usage: add_packet_corruption src_container dst_container (or ip address) corrupt"
-        echo "Exemple: add_packet_corruption container-1 container-2 1%"
-    fi
-
-    src_container=$1
-    if valid_ip $2
+    if [ $# -lt 3 ]
     then
-      dst_ip=$2
-    else
-      dst_ip=$(container_to_ip $2)
+        logerror "Usage: add_packet_corruption src_container dst_container (or ip address) corruption, e.g. add_packet_corruption connect broker 1%"
+        return 1
     fi
-    corruption=$3
-
-    set +e
-    clear_traffic_control $src_container
-    set -e
-
-    echo "Adding $corruption corruption from $src_container to $2"
-
-    # Add a classful priority queue which lets us differentiate messages.
-    # This queue is named 1:.
-    # Three children classes, 1:1, 1:2 and 1:3, are automatically created.
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 root handle 1: prio
-
-    # Add a filter to the parent queue 1: (also called 1:0). The filter has priority 1 (if we had more filters this would make a difference).
-    # For all messages with the ip of dst_ip as their destination, it routes them to class 1:1, which
-    # subsequently sends them to its only child, queue 10: (All messages need to  "end up" in a queue).
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol ip parent 1: prio 1 u32 match ip dst $dst_ip flowid 1:1
-
-    # Route the rest of the of the packets without any control.
-    # Add a filter to the parent queue 1:. The filter has priority 2.
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip dst 0.0.0.0/0 flowid 1:2
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip protocol 1 0xff flowid 1:2
-
-    # Add a child queue named 10: under class 1:1. All outgoing packets that will be routed to 10: will have corrupt applied them.
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:1 handle 10: netem corrupt $corruption
-
-    # Add a child queue named 20: under class 1:2
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:2 handle 20: sfq
+    playground debug degrade-traffic --container "$1" --destination "$2" --corruption "$3" --action start
 }
 
 function add_packet_loss() {
-    if [ $# -lt 3 ]; then
-        echo "Usage: add_packet_loss src_container dst_container (or ip address) corrupt"
-        echo "Exemple: add_packet_loss container-1 container-2 1%"
-    fi
-
-    src_container=$1
-    if valid_ip $2
+    if [ $# -lt 3 ]
     then
-      dst_ip=$2
-    else
-      dst_ip=$(container_to_ip $2)
+        logerror "Usage: add_packet_loss src_container dst_container (or ip address) loss, e.g. add_packet_loss connect broker 1%"
+        return 1
     fi
-    loss=$3
-
-    set +e
-    clear_traffic_control $src_container
-    set -e
-
-    echo "Adding $loss loss from $src_container to $2"
-
-    # Add a classful priority queue which lets us differentiate messages.
-    # This queue is named 1:.
-    # Three children classes, 1:1, 1:2 and 1:3, are automatically created.
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 root handle 1: prio
-
-    # Add a filter to the parent queue 1: (also called 1:0). The filter has priority 1 (if we had more filters this would make a difference).
-    # For all messages with the ip of dst_ip as their destination, it routes them to class 1:1, which
-    # subsequently sends them to its only child, queue 10: (All messages need to  "end up" in a queue).
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol ip parent 1: prio 1 u32 match ip dst $dst_ip flowid 1:1
-
-    # Route the rest of the of the packets without any control.
-    # Add a filter to the parent queue 1:. The filter has priority 2.
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip dst 0.0.0.0/0 flowid 1:2
-    docker exec --privileged -u0 -t $src_container tc filter add dev eth0 protocol all parent 1: prio 2 u32 match ip protocol 1 0xff flowid 1:2
-
-    # Add a child queue named 10: under class 1:1. All outgoing packets that will be routed to 10: will have loss applied them.
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:1 handle 10: netem loss $loss
-
-    # Add a child queue named 20: under class 1:2
-    docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:2 handle 20: sfq
+    playground debug degrade-traffic --container "$1" --destination "$2" --loss "$3" --action start
 }
 
 function get_3rdparty_file () {
@@ -42097,60 +42225,6 @@ playground_debug_block_traffic_command() {
   	resolved_container_array+=("$(resolve_container_name_for_environment "$container")")
   done
 
-  ip_pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$"
-
-  run_cfk_netfilter_command() {
-  	local pod_name=$1
-  	local cmd=$2
-  	local emit_output=${3:-false}
-  	local target_container
-  	local debug_output
-  	local cleaned_output
-  	local debug_exit_code
-  	local debug_custom_file
-
-  	target_container=$(kubectl -n confluent get pod "$pod_name" -o jsonpath='{.spec.containers[0].name}' 2>/dev/null)
-  	if [[ -z "$target_container" ]]
-  	then
-  		logerror "❌ Could not resolve target container for pod $pod_name"
-  		exit 1
-  	fi
-
-  	debug_custom_file=$(mktemp -t pg-cfk-netfilter-XXXXXXXXXX.yaml)
-  	cat << EOF > "$debug_custom_file"
-securityContext:
-  runAsUser: 0
-  runAsNonRoot: false
-EOF
-
-  		# --attach waits for the command to finish and returns its output, otherwise the rule is applied asynchronously
-  		debug_output=$(kubectl -n confluent debug "pod/$pod_name" --attach=true --profile=sysadmin --custom="$debug_custom_file" --image=nicolaka/netshoot --target="$target_container" -- bash -lc "$cmd" 2>&1)
-  	debug_exit_code=$?
-  	rm -f "$debug_custom_file"
-  		cleaned_output=$(echo "$debug_output" | sed -E '/^Targeting container /d; /^Defaulting debug container name to /d')
-  		if [ $debug_exit_code -ne 0 ]
-  	then
-  		logerror "❌ failed to execute netfilter command on pod $pod_name"
-  		if [[ -n "$cleaned_output" ]]
-  		then
-  			echo "$cleaned_output"
-  		else
-  			echo "$debug_output"
-  		fi
-  		exit 1
-  	fi
-
-  	if [[ "$emit_output" == "true" ]]
-  	then
-  		if [[ -n "$cleaned_output" ]]
-  		then
-  			echo "$cleaned_output"
-  		else
-  			log "(no output from: $cmd)"
-  		fi
-  	fi
-  }
-
   install_iptables_if_needed() {
   	local container=$1
 
@@ -42191,73 +42265,7 @@ EOF
   	install_iptables_if_needed "$container"
   done
 
-  get_container_ip() {
-  	if [[ "$environment" == cfk* ]]
-  	then
-  		local pod_ip
-  		pod_ip=$(kubectl -n confluent get pod "$1" -o jsonpath='{.status.podIP}' 2>/dev/null)
-  		if [[ -n "$pod_ip" ]]
-  		then
-  			echo "$pod_ip"
-  			return
-  		fi
-
-  		local service_ip
-  		service_ip=$(kubectl -n confluent get svc "$1" -o jsonpath='{.spec.clusterIP}' 2>/dev/null)
-  		if [[ -n "$service_ip" && "$service_ip" != "None" && "$service_ip" != "none" ]]
-  		then
-  			echo "$service_ip"
-  		fi
-  	else
-  		local container_ip
-  		container_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$1" 2>/dev/null)
-  		if [ $? -eq 0 ]
-  		then
-  			echo "$container_ip"
-  		fi
-  	fi
-  }
-
-  get_service_endpoint_ips() {
-  	if [[ "$environment" != cfk* ]]
-  	then
-  		return
-  	fi
-
-  	kubectl -n confluent get endpoints "$1" -o jsonpath='{range .subsets[*].addresses[*]}{.ip}{"\n"}{end}' 2>/dev/null | grep -E "$ip_pattern" || true
-  }
-
-  get_ips_by_nslookup() {
-  	nslookup "$1" 2>/dev/null | awk '/^Address: / { print $2 }' | grep -E "$ip_pattern" || true
-  }
-
-  destination_ips=()
-  if [[ $destination =~ $ip_pattern ]]
-  then
-  	destination_ips+=("$destination")
-  else
-  	ip_address=$(get_container_ip "$destination")
-  	if [[ -n $ip_address ]]
-  	then
-  		destination_ips+=("$ip_address")
-  	else
-  		log "🌐 Using nslookup to get IP address..."
-  		mapfile -t service_endpoint_ips < <(get_service_endpoint_ips "$destination")
-  		if [[ ${#service_endpoint_ips[@]} -gt 0 ]]
-  		then
-  			destination_ips=("${service_endpoint_ips[@]}")
-  		else
-  			mapfile -t nslookup_ips < <(get_ips_by_nslookup "$destination")
-  			if [[ ${#nslookup_ips[@]} -gt 0 ]]
-  			then
-  				destination_ips=("${nslookup_ips[@]}")
-  			else
-  				logerror "❌ Unable to retrieve IP address for $destination using service endpoints/nslookup"
-  				exit 1
-  			fi
-  		fi
-  	fi
-  fi
+  mapfile -t destination_ips < <(resolve_traffic_destination_ips "$destination")
 
   if [[ ${#destination_ips[@]} -eq 0 ]]
   then
@@ -42314,10 +42322,10 @@ EOF
   			then
   					rule_cmd="iptables -${action} OUTPUT -p tcp -d ${ip} --dport ${port} -j DROP"
   					check_cmd="iptables -C OUTPUT -p tcp -d ${ip} --dport ${port} -j DROP"
-  					run_cfk_netfilter_command "$container" "$rule_cmd"
+  					run_cfk_netshoot_command "$container" "$rule_cmd"
   					if [[ "$action" == "A" ]]
   					then
-  						run_cfk_netfilter_command "$container" "$check_cmd"
+  						run_cfk_netshoot_command "$container" "$check_cmd"
   					fi
   			else
   				docker exec --privileged --user root ${container} bash -c "iptables -${action} OUTPUT -p tcp -d ${ip} --dport ${port} -j DROP"
@@ -42327,10 +42335,10 @@ EOF
   			then
   					rule_cmd="iptables -${action} OUTPUT -d ${ip} -j DROP"
   					check_cmd="iptables -C OUTPUT -d ${ip} -j DROP"
-  					run_cfk_netfilter_command "$container" "$rule_cmd"
+  					run_cfk_netshoot_command "$container" "$rule_cmd"
   					if [[ "$action" == "A" ]]
   					then
-  						run_cfk_netfilter_command "$container" "$check_cmd"
+  						run_cfk_netshoot_command "$container" "$check_cmd"
   					fi
   			else
   				docker exec --privileged --user root ${container} bash -c "iptables -${action} OUTPUT -d ${ip} -j DROP"
@@ -42341,10 +42349,233 @@ EOF
   	log "Output of command iptables-save for container $container"
   	if [[ "$environment" == cfk* ]]
   	then
-  		run_cfk_netfilter_command "$container" "iptables-save" "true"
+  		run_cfk_netshoot_command "$container" "iptables-save" "true"
   	else
   		docker exec --privileged --user root ${container} bash -c "iptables-save"
   	fi
+  done
+
+}
+
+# :command.function
+playground_debug_degrade_traffic_command() {
+
+  # src/commands/debug/degrade-traffic.sh
+  eval "containers=(${args[--container]})"
+  destination="${args[--destination]}"
+  port="${args[--port]}"
+  latency="${args[--latency]}"
+  jitter="${args[--jitter]}"
+  loss="${args[--loss]}"
+  corruption="${args[--corruption]}"
+  duplicate="${args[--duplicate]}"
+  rate="${args[--rate]}"
+  action="${args[--action]}"
+
+  get_environment_used
+
+  # 1. the netem parameters
+  time_pattern="^[0-9]+(\.[0-9]+)?(us|ms|s)$"
+  percent_pattern="^[0-9]+(\.[0-9]+)?%$"
+  rate_pattern="^[0-9]+(\.[0-9]+)?(bit|kbit|mbit|gbit|bps|kbps|mbps|gbps)$"
+  for check in "--latency@$latency@$time_pattern@100ms" "--jitter@$jitter@$time_pattern@20ms" "--loss@$loss@$percent_pattern@1%" "--corruption@$corruption@$percent_pattern@1%" "--duplicate@$duplicate@$percent_pattern@1%" "--rate@$rate@$rate_pattern@1mbit"
+  do
+      IFS='@' read -r flag value pattern sample <<< "$check"
+      if [[ -n "$value" ]] && [[ ! "$value" =~ $pattern ]]
+      then
+          logerror "❌ $flag $value is not valid, example: $flag $sample"
+          exit 1
+      fi
+  done
+  if [[ -n "$jitter" ]] && [[ -z "$latency" ]]
+  then
+      logerror "❌ --jitter needs --latency"
+      exit 1
+  fi
+
+  netem=""
+  description=""
+  if [[ -n "$latency" ]]
+  then
+      netem="$netem delay $latency${jitter:+ $jitter}"
+      description="$description, ${latency}${jitter:+ ± $jitter} latency"
+  fi
+  if [[ -n "$loss" ]]
+  then
+      netem="$netem loss $loss"
+      description="$description, $loss packet loss"
+  fi
+  if [[ -n "$corruption" ]]
+  then
+      netem="$netem corrupt $corruption"
+      description="$description, $corruption packet corruption"
+  fi
+  if [[ -n "$duplicate" ]]
+  then
+      netem="$netem duplicate $duplicate"
+      description="$description, $duplicate packet duplication"
+  fi
+  if [[ -n "$rate" ]]
+  then
+      netem="$netem rate $rate"
+      description="$description, $rate bandwidth"
+  fi
+  description="${description#, }"
+
+  if [ "$action" == "start" ] && [[ -z "$netem" ]]
+  then
+      logerror "❌ --action start needs at least one of --latency, --loss, --corruption, --duplicate or --rate"
+      exit 1
+  fi
+  if [ "$action" != "start" ] && [[ -n "$netem" ]]
+  then
+      logwarn "🤷 --latency, --loss, --corruption, --duplicate and --rate are only used with --action start"
+  fi
+  if [[ -n "$port" ]] && [[ -z "$destination" ]]
+  then
+      logerror "❌ --port needs --destination"
+      exit 1
+  fi
+
+  # 2. the destination
+  destination_ips=()
+  if [[ -n "$destination" ]]
+  then
+      mapfile -t destination_ips < <(resolve_traffic_destination_ips "$destination")
+      if [[ ${#destination_ips[@]} -eq 0 ]]
+      then
+          logerror "❌ Unable to determine destination IPs for $destination"
+          exit 1
+      fi
+  fi
+  ip_display=$(printf "%s " "${destination_ips[@]}")
+  ip_display=${ip_display% }
+
+  if [[ -n "$destination" ]]
+  then
+      target="to $destination ($ip_display)${port:+ port $port}"
+  else
+      target="to any destination"
+  fi
+
+  #
+  # 3. the tc commands, run in the network namespace of each container
+  #
+  # - with a destination: a prio qdisc whose band 1:1 (the destination, and port) goes through
+  #   netem and band 1:2 (everything else) through sfq, unchanged
+  # - without: netem as root qdisc of the interface of the default route
+  # tc only shapes outgoing packets: the round trip to the destination grows by the latency.
+  #
+  # the interface: the one of the route to the destination (containers on several networks
+  # have several), the one of the default route otherwise
+  interface_cmd="ip route get ${destination_ips[0]:-1.1.1.1} 2>/dev/null | sed -n 's/.* dev \([^ ]*\).*/\1/p' | head -1"
+
+  case "$action" in
+      start)
+          cmd="dev=\$($interface_cmd); [ -n \"\$dev\" ] || { echo 'no network interface found' >&2; exit 1; }; tc qdisc del dev \$dev root 2>/dev/null;"
+          if [[ -n "$destination" ]]
+          then
+              cmd="$cmd tc qdisc add dev \$dev root handle 1: prio && tc qdisc add dev \$dev parent 1:1 handle 10: netem$netem && tc qdisc add dev \$dev parent 1:2 handle 20: sfq"
+              for ip in "${destination_ips[@]}"
+              do
+                  if [[ -n "$port" ]]
+                  then
+                      cmd="$cmd && tc filter add dev \$dev protocol ip parent 1: prio 1 u32 match ip dst $ip/32 match ip dport $port 0xffff flowid 1:1"
+                  else
+                      cmd="$cmd && tc filter add dev \$dev protocol ip parent 1: prio 1 u32 match ip dst $ip/32 flowid 1:1"
+                  fi
+              done
+              # everything else (ip and icmp) to the band without degradation
+              cmd="$cmd && tc filter add dev \$dev protocol all parent 1: prio 2 u32 match ip dst 0.0.0.0/0 flowid 1:2 && tc filter add dev \$dev protocol all parent 1: prio 2 u32 match ip protocol 1 0xff flowid 1:2"
+          else
+              cmd="$cmd tc qdisc add dev \$dev root netem$netem"
+          fi
+          ;;
+      stop)
+          # every interface but lo; 'Cannot delete qdisc with handle of zero' only means there was nothing
+          cmd="for dev in \$(ls /sys/class/net | grep -v '^lo\$'); do tc qdisc del dev \$dev root 2>/dev/null; done; true"
+          ;;
+      status)
+          cmd="for dev in \$(ls /sys/class/net | grep -v '^lo\$'); do tc qdisc show dev \$dev | grep -E 'netem|prio|sfq' | sed \"s/^/\$dev: /\"; done; true"
+          ;;
+  esac
+
+  # round trip measured from the container, to show the effect: ping, or the time of a tcp
+  # connection when --port is set (only that tcp traffic is degraded, not icmp)
+  function measure_round_trip() {
+      local container=$1
+      local output
+      local average
+      if [[ -z "$destination" ]]
+      then
+          return
+      fi
+      if [[ -n "$port" ]]
+      then
+          output=$(run_in_network_namespace "$container" "bash -c 'for i in 1 2 3 4; do s=\$EPOCHREALTIME; if timeout 5 bash -c \"exec 3<>/dev/tcp/${destination_ips[0]}/$port\" 2>/dev/null; then e=\$EPOCHREALTIME; echo \"tcp \$s \$e\"; fi; done'" 2>&1 || true)
+          average=$(echo "$output" | awk '$1 == "tcp" { total += ($3 - $2) * 1000; n++ } END { if (n > 0) printf "%.3f", total / n }')
+          if [[ -n "$average" ]]
+          then
+              log "⏱️ tcp connection time from $container to $destination:$port: $average ms (average of $(echo "$output" | grep -c "^tcp") connections)"
+          else
+              logwarn "⏱️ no tcp connection to $destination:$port could be opened in 5 seconds"
+          fi
+          return
+      fi
+      output=$(run_in_network_namespace "$container" "ping -c 4 -i 0.3 -W 2 ${destination_ips[0]} 2>&1 | tail -2" 2>&1 || true)
+      if grep -q "rtt" <<< "$output"
+      then
+          log "⏱️ round trip from $container to $destination: $(echo "$output" | grep rtt | awk -F '/' '{ print $5 }') ms (average of 4 pings)"
+      else
+          loss_line=$(echo "$output" | grep "packet loss" || true)
+          logwarn "⏱️ no ping answer from $destination${loss_line:+ ($loss_line)}"
+      fi
+  }
+
+  for container in "${containers[@]}"
+  do
+      container=$(resolve_container_name_for_environment "$container")
+      case "$action" in
+          start)
+              log "🐌 Applying $description on container $container $target"
+              ;;
+          stop)
+              log "🟢 Removing the traffic degradation of container $container"
+              ;;
+          status)
+              log "🔎 Traffic degradation of container $container"
+              ;;
+      esac
+
+      set +e
+      output=$(run_in_network_namespace "$container" "$cmd" 2>&1)
+      ret=$?
+      set -e
+      if [ $ret -ne 0 ]
+      then
+          logerror "❌ tc failed on container $container"
+          echo "$output"
+          exit 1
+      fi
+
+      case "$action" in
+          start)
+              measure_round_trip "$container"
+              ;;
+          stop)
+              log "✅ traffic of container $container is back to normal"
+              measure_round_trip "$container"
+              ;;
+          status)
+              if grep -q "netem" <<< "$output"
+              then
+                  echo "$output" | grep "netem" | sed -e 's/^/   /' -e 's/ seed [0-9]*//'
+              else
+                  log "✅ no degradation applied on container $container"
+              fi
+              measure_round_trip "$container"
+              ;;
+      esac
   done
 
 }
@@ -74356,6 +74587,13 @@ playground_debug_parse_requirements() {
       shift $#
       ;;
 
+    degrade-traffic)
+      action="degrade-traffic"
+      shift
+      playground_debug_degrade_traffic_parse_requirements "$@"
+      shift $#
+      ;;
+
     java-debug)
       action="java-debug"
       shift
@@ -75995,6 +76233,235 @@ playground_debug_block_traffic_parse_requirements() {
   # :command.whitelist_filter
   if [[ ${args['--action']:-} ]] && [[ ! ${args['--action']:-} =~ ^(start|stop)$ ]]; then
     printf "%s\n" "--action must be one of: start, stop" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_debug_degrade_traffic_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_debug_degrade_traffic_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="debug degrade-traffic"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --container | -c | --pod | -p)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--container requires an argument: --container, -c, --pod, -p CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --destination)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--destination']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--destination requires an argument: --destination DESTINATION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --port)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--port']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--port requires an argument: --port PORT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --latency)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--latency']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--latency requires an argument: --latency LATENCY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --jitter)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--jitter']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--jitter requires an argument: --jitter JITTER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --loss)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--loss']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--loss requires an argument: --loss LOSS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --corruption)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--corruption']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--corruption requires an argument: --corruption CORRUPTION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --duplicate)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--duplicate']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--duplicate requires an argument: --duplicate DUPLICATE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --rate)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--rate']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--rate requires an argument: --rate RATE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --action)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--action']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--action requires an argument: --action ACTION" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--action']+x} ]]; then
+    printf "missing required flag: --action ACTION\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--container']:-} ]] || args['--container']="connect"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--port'] ]]; then
+    validation_output="$(validate_integer "${args['--port']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--port PORT" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--action']:-} ]] && [[ ! ${args['--action']:-} =~ ^(start|stop|status)$ ]]; then
+    printf "%s\n" "--action must be one of: start, stop, status" >&2
     exit 1
   fi
 
@@ -99296,6 +99763,11 @@ playground_debug_completion() {
         playground_debug_block_traffic_completion "$completion_current" "$@"
         return
         ;;
+      degrade-traffic)
+        shift
+        playground_debug_degrade_traffic_completion "$completion_current" "$@"
+        return
+        ;;
       java-debug)
         shift
         playground_debug_java_debug_completion "$completion_current" "$@"
@@ -99330,7 +99802,7 @@ playground_debug_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" enable-remote-debugging disable-remote-debugging testssl generate-diagnostics thread-dump heap-dump tcp-dump block-traffic java-debug jscissors flight-recorder log-level cfk
+  completion_candidates "$completion_current" enable-remote-debugging disable-remote-debugging testssl generate-diagnostics thread-dump heap-dump tcp-dump block-traffic degrade-traffic java-debug jscissors flight-recorder log-level cfk
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -100104,6 +100576,153 @@ playground_debug_block_traffic_completion() {
     completion_flag_candidates --container "$completion_current" --container -c --pod -p
     completion_flag_candidates --destination "$completion_current" --destination
     completion_flag_candidates --port "$completion_current" --port
+    completion_flag_candidates --action "$completion_current" --action
+  fi
+
+}
+
+# :command.completion_function
+playground_debug_degrade_traffic_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --container | -c | --pod | -p)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-container-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+
+        ;;
+      --destination)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-container-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--destination"]=1
+
+        ;;
+      --port)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-docker-ports; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--port"]=1
+
+        ;;
+      --latency)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--latency"]=1
+
+        ;;
+      --jitter)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--jitter"]=1
+
+        ;;
+      --loss)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--loss"]=1
+
+        ;;
+      --corruption)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--corruption"]=1
+
+        ;;
+      --duplicate)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--duplicate"]=1
+
+        ;;
+      --rate)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--rate"]=1
+
+        ;;
+      --action)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "start"
+            "stop"
+            "status"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--action"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --container "$completion_current" --container -c --pod -p
+    completion_flag_candidates --destination "$completion_current" --destination
+    completion_flag_candidates --port "$completion_current" --port
+    completion_flag_candidates --latency "$completion_current" --latency
+    completion_flag_candidates --jitter "$completion_current" --jitter
+    completion_flag_candidates --loss "$completion_current" --loss
+    completion_flag_candidates --corruption "$completion_current" --corruption
+    completion_flag_candidates --duplicate "$completion_current" --duplicate
+    completion_flag_candidates --rate "$completion_current" --rate
     completion_flag_candidates --action "$completion_current" --action
   fi
 
@@ -108309,6 +108928,7 @@ run() {
     "debug gc-analyze") playground_debug_gc_analyze_command ;;
     "debug tcp-dump") playground_debug_tcp_dump_command ;;
     "debug block-traffic") playground_debug_block_traffic_command ;;
+    "debug degrade-traffic") playground_debug_degrade_traffic_command ;;
     "debug java-debug") playground_debug_java_debug_command ;;
     "debug jscissors") playground_debug_jscissors_command ;;
     "debug flight-recorder") playground_debug_flight_recorder_command ;;

@@ -147,6 +147,7 @@ environments where the raw command only works on `plaintext`.
 | `kafka-console-consumer` on `__consumer_offsets` | `playground topic display-consumer-offsets` |
 | `curl localhost:8081/subjects/...` | `playground schema get\|register\|get-compatibility\|set-compatibility` |
 | `jstack`, `jmap`, `jcmd`, `tcpdump`, JFR | `playground debug thread-dump\|heap-dump\|tcp-dump\|flight-recorder`, then `playground analyze thread-dump\|heap-dump\|gc-logs\|flight-recorder` |
+| `tc` / `iptables` in a container to slow down or cut its network (`add_latency`…) | `playground debug degrade-traffic` (`--latency`, `--jitter`, `--loss`, `--corruption`, `--rate`, `--action start\|stop\|status`) / `playground debug block-traffic` |
 | editing `log4j.properties` to raise a log level | `playground debug log-level set --package <pkg> --level TRACE` |
 
 Legitimate exceptions — use the raw command only for these, and only when no flag above covers it:

@@ -62,6 +62,144 @@ function resolve_container_name_for_environment() {
   echo "$mapped_name"
 }
 
+#
+# Network tools (iptables, tc, ping) run from this image, in the network namespace of the
+# target container or pod: nothing has to be installed in the target, whatever its image
+#
+PLAYGROUND_NETSHOOT_IMAGE="nicolaka/netshoot"
+
+# run a command in an ephemeral netshoot container of a cfk pod (same network namespace),
+# as root with the sysadmin profile (NET_ADMIN). Prints the output when $3 is true.
+function run_cfk_netshoot_command() {
+  local pod_name=$1
+  local cmd=$2
+  local emit_output=${3:-false}
+  local target_container
+  local debug_output
+  local cleaned_output
+  local debug_exit_code
+  local debug_custom_file
+
+  target_container=$(kubectl -n confluent get pod "$pod_name" -o jsonpath='{.spec.containers[0].name}' 2>/dev/null)
+  if [[ -z "$target_container" ]]
+  then
+    logerror "❌ Could not resolve target container for pod $pod_name"
+    exit 1
+  fi
+
+  debug_custom_file=$(mktemp -t pg-cfk-netshoot-XXXXXXXXXX.yaml)
+  cat << EOF > "$debug_custom_file"
+securityContext:
+  runAsUser: 0
+  runAsNonRoot: false
+EOF
+
+  # --attach waits for the command to finish and returns its output, otherwise the rule is applied asynchronously
+  set +e
+  debug_output=$(kubectl -n confluent debug "pod/$pod_name" --attach=true --profile=sysadmin --custom="$debug_custom_file" --image=$PLAYGROUND_NETSHOOT_IMAGE --target="$target_container" -- bash -lc "$cmd" 2>&1)
+  debug_exit_code=$?
+  set -e
+  rm -f "$debug_custom_file"
+  cleaned_output=$(echo "$debug_output" | sed -E '/^Targeting container /d; /^Defaulting debug container name to /d')
+  if [ $debug_exit_code -ne 0 ]
+  then
+    logerror "❌ failed to execute command on pod $pod_name"
+    if [[ -n "$cleaned_output" ]]
+    then
+      echo "$cleaned_output"
+    else
+      echo "$debug_output"
+    fi
+    exit 1
+  fi
+
+  if [[ "$emit_output" == "true" ]]
+  then
+    if [[ -n "$cleaned_output" ]]
+    then
+      echo "$cleaned_output"
+    else
+      log "(no output from: $cmd)"
+    fi
+  fi
+}
+
+# run a command in the network namespace of a container (docker, podman) or pod (cfk), with
+# NET_ADMIN, and print its output. The changes it makes (tc, iptables) stay after it exits.
+function run_in_network_namespace() {
+  local container=$1
+  local cmd=$2
+
+  if [[ -z "$environment" ]]
+  then
+    get_environment_used
+  fi
+
+  if [[ "$environment" == cfk* ]]
+  then
+    run_cfk_netshoot_command "$container" "$cmd" "true"
+    return
+  fi
+
+  if ! docker image inspect $PLAYGROUND_NETSHOOT_IMAGE > /dev/null 2>&1
+  then
+    log "📥 pulling $PLAYGROUND_NETSHOOT_IMAGE (network tools image, only the first time)"
+    docker pull $PLAYGROUND_NETSHOOT_IMAGE > /dev/null
+  fi
+  docker run --rm --network "container:$container" --cap-add NET_ADMIN --cap-add NET_RAW $PLAYGROUND_NETSHOOT_IMAGE sh -c "$cmd"
+}
+
+# ip addresses of a destination (ip, container, pod, service or hostname), one per line
+function resolve_traffic_destination_ips() {
+  local destination=$1
+  local ip_pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$"
+  local ip_address=""
+
+  if [[ -z "$environment" ]]
+  then
+    get_environment_used
+  fi
+
+  if [[ $destination =~ $ip_pattern ]]
+  then
+    echo "$destination"
+    return
+  fi
+
+  if [[ "$environment" == cfk* ]]
+  then
+    ip_address=$(kubectl -n confluent get pod "$destination" -o jsonpath='{.status.podIP}' 2>/dev/null)
+    if [[ -z "$ip_address" ]]
+    then
+      ip_address=$(kubectl -n confluent get svc "$destination" -o jsonpath='{.spec.clusterIP}' 2>/dev/null)
+      if [[ "$ip_address" == "None" || "$ip_address" == "none" ]]
+      then
+        ip_address=""
+      fi
+    fi
+  else
+    ip_address=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' "$destination" 2>/dev/null | awk '{ print $1 }')
+  fi
+  if [[ -n "$ip_address" ]]
+  then
+    echo "$ip_address"
+    return
+  fi
+
+  log "🌐 Using nslookup to get IP address of $destination..." >&2
+  if [[ "$environment" == cfk* ]]
+  then
+    local endpoint_ips
+    endpoint_ips=$(kubectl -n confluent get endpoints "$destination" -o jsonpath='{range .subsets[*].addresses[*]}{.ip}{"\n"}{end}' 2>/dev/null | grep -E "$ip_pattern" | sort -u || true)
+    if [[ -n "$endpoint_ips" ]]
+    then
+      echo "$endpoint_ips"
+      return
+    fi
+  fi
+  nslookup "$destination" 2>/dev/null | awk '/^Address: / { print $2 }' | grep -E "$ip_pattern" | sort -u || true
+}
+
 function is_container_running() {
   container_name=$1
   docker inspect -f '{{.State.Running}}' "$container_name" 2>/dev/null | grep -q "true"

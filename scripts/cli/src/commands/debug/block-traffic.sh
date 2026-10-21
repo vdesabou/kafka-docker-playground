@@ -13,60 +13,6 @@ do
 	resolved_container_array+=("$(resolve_container_name_for_environment "$container")")
 done
 
-ip_pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$"
-
-run_cfk_netfilter_command() {
-	local pod_name=$1
-	local cmd=$2
-	local emit_output=${3:-false}
-	local target_container
-	local debug_output
-	local cleaned_output
-	local debug_exit_code
-	local debug_custom_file
-
-	target_container=$(kubectl -n confluent get pod "$pod_name" -o jsonpath='{.spec.containers[0].name}' 2>/dev/null)
-	if [[ -z "$target_container" ]]
-	then
-		logerror "❌ Could not resolve target container for pod $pod_name"
-		exit 1
-	fi
-
-	debug_custom_file=$(mktemp -t pg-cfk-netfilter-XXXXXXXXXX.yaml)
-	cat << EOF > "$debug_custom_file"
-securityContext:
-  runAsUser: 0
-  runAsNonRoot: false
-EOF
-
-		# --attach waits for the command to finish and returns its output, otherwise the rule is applied asynchronously
-		debug_output=$(kubectl -n confluent debug "pod/$pod_name" --attach=true --profile=sysadmin --custom="$debug_custom_file" --image=nicolaka/netshoot --target="$target_container" -- bash -lc "$cmd" 2>&1)
-	debug_exit_code=$?
-	rm -f "$debug_custom_file"
-		cleaned_output=$(echo "$debug_output" | sed -E '/^Targeting container /d; /^Defaulting debug container name to /d')
-		if [ $debug_exit_code -ne 0 ]
-	then
-		logerror "❌ failed to execute netfilter command on pod $pod_name"
-		if [[ -n "$cleaned_output" ]]
-		then
-			echo "$cleaned_output"
-		else
-			echo "$debug_output"
-		fi
-		exit 1
-	fi
-
-	if [[ "$emit_output" == "true" ]]
-	then
-		if [[ -n "$cleaned_output" ]]
-		then
-			echo "$cleaned_output"
-		else
-			log "(no output from: $cmd)"
-		fi
-	fi
-}
-
 install_iptables_if_needed() {
 	local container=$1
 
@@ -107,73 +53,7 @@ do
 	install_iptables_if_needed "$container"
 done
 
-get_container_ip() {
-	if [[ "$environment" == cfk* ]]
-	then
-		local pod_ip
-		pod_ip=$(kubectl -n confluent get pod "$1" -o jsonpath='{.status.podIP}' 2>/dev/null)
-		if [[ -n "$pod_ip" ]]
-		then
-			echo "$pod_ip"
-			return
-		fi
-
-		local service_ip
-		service_ip=$(kubectl -n confluent get svc "$1" -o jsonpath='{.spec.clusterIP}' 2>/dev/null)
-		if [[ -n "$service_ip" && "$service_ip" != "None" && "$service_ip" != "none" ]]
-		then
-			echo "$service_ip"
-		fi
-	else
-		local container_ip
-		container_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$1" 2>/dev/null)
-		if [ $? -eq 0 ]
-		then
-			echo "$container_ip"
-		fi
-	fi
-}
-
-get_service_endpoint_ips() {
-	if [[ "$environment" != cfk* ]]
-	then
-		return
-	fi
-
-	kubectl -n confluent get endpoints "$1" -o jsonpath='{range .subsets[*].addresses[*]}{.ip}{"\n"}{end}' 2>/dev/null | grep -E "$ip_pattern" || true
-}
-
-get_ips_by_nslookup() {
-	nslookup "$1" 2>/dev/null | awk '/^Address: / { print $2 }' | grep -E "$ip_pattern" || true
-}
-
-destination_ips=()
-if [[ $destination =~ $ip_pattern ]]
-then
-	destination_ips+=("$destination")
-else
-	ip_address=$(get_container_ip "$destination")
-	if [[ -n $ip_address ]]
-	then
-		destination_ips+=("$ip_address")
-	else
-		log "🌐 Using nslookup to get IP address..."
-		mapfile -t service_endpoint_ips < <(get_service_endpoint_ips "$destination")
-		if [[ ${#service_endpoint_ips[@]} -gt 0 ]]
-		then
-			destination_ips=("${service_endpoint_ips[@]}")
-		else
-			mapfile -t nslookup_ips < <(get_ips_by_nslookup "$destination")
-			if [[ ${#nslookup_ips[@]} -gt 0 ]]
-			then
-				destination_ips=("${nslookup_ips[@]}")
-			else
-				logerror "❌ Unable to retrieve IP address for $destination using service endpoints/nslookup"
-				exit 1
-			fi
-		fi
-	fi
-fi
+mapfile -t destination_ips < <(resolve_traffic_destination_ips "$destination")
 
 if [[ ${#destination_ips[@]} -eq 0 ]]
 then
@@ -230,10 +110,10 @@ do
 			then
 					rule_cmd="iptables -${action} OUTPUT -p tcp -d ${ip} --dport ${port} -j DROP"
 					check_cmd="iptables -C OUTPUT -p tcp -d ${ip} --dport ${port} -j DROP"
-					run_cfk_netfilter_command "$container" "$rule_cmd"
+					run_cfk_netshoot_command "$container" "$rule_cmd"
 					if [[ "$action" == "A" ]]
 					then
-						run_cfk_netfilter_command "$container" "$check_cmd"
+						run_cfk_netshoot_command "$container" "$check_cmd"
 					fi
 			else
 				docker exec --privileged --user root ${container} bash -c "iptables -${action} OUTPUT -p tcp -d ${ip} --dport ${port} -j DROP"
@@ -243,10 +123,10 @@ do
 			then
 					rule_cmd="iptables -${action} OUTPUT -d ${ip} -j DROP"
 					check_cmd="iptables -C OUTPUT -d ${ip} -j DROP"
-					run_cfk_netfilter_command "$container" "$rule_cmd"
+					run_cfk_netshoot_command "$container" "$rule_cmd"
 					if [[ "$action" == "A" ]]
 					then
-						run_cfk_netfilter_command "$container" "$check_cmd"
+						run_cfk_netshoot_command "$container" "$check_cmd"
 					fi
 			else
 				docker exec --privileged --user root ${container} bash -c "iptables -${action} OUTPUT -d ${ip} -j DROP"
@@ -257,7 +137,7 @@ do
 	log "Output of command iptables-save for container $container"
 	if [[ "$environment" == cfk* ]]
 	then
-		run_cfk_netfilter_command "$container" "iptables-save" "true"
+		run_cfk_netshoot_command "$container" "iptables-save" "true"
 	else
 		docker exec --privileged --user root ${container} bash -c "iptables-save"
 	fi

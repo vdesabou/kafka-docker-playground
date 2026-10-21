@@ -2536,8 +2536,9 @@ subcommands:
     a .hprof, optionally as a histogram\n\n\U0001F310 It is a network or TLS problem\n
     \ tcp-dump            capture traffic, open it in Wireshark\n  testssl             probe
     a TLS endpoint, locally or in the cloud\n  block-traffic       cut a route with
-    iptables, to simulate an outage\n  java-debug          turn on the JVM SSL, Kerberos
-    or class loading traces\n\n\U0001F52C It is in the code\n  log-level set       raise
+    iptables, to simulate an outage\n  degrade-traffic     add latency, packet loss
+    or corruption with tc\n  java-debug          turn on the JVM SSL, Kerberos or
+    class loading traces\n\n\U0001F52C It is in the code\n  log-level set       raise
     the level of any package, without a restart\n  enable-remote-debugging   attach
     your IDE debugger to a container\n  jscissors           trace method calls, arguments
     and return values\n\n\U0001F4E6 Hand it over\n  generate-diagnostics   a support
@@ -2720,6 +2721,69 @@ subcommands:
       argument: ACTION
       description: "\U0001F7E2 start or stop\n\nRequired: ✓ Yes\nAllowed values: start,
         stop"
+  - name: degrade-traffic
+    description: "\U0001F40C Add latency, packet loss, corruption or a bandwidth limit
+      using tc\n\nSome issues only happen on a slow or unreliable network: request\ntimeouts,
+      retries, rebalances, producer or consumer errors. This makes\nthe traffic from
+      a container slow or lossy, to a destination (and\nport) or to everything, and
+      --action stop puts it back to normal\nwithout restarting anything.\n\nSeveral
+      effects can be combined in one call, e.g. --latency 100ms\n--loss 1%. A new
+      --action start replaces what was applied before on\nthe container. --action
+      status shows what is applied and the measured\nround trip to the destination.\n\ntc
+      runs from the nicolaka/netshoot image in the network namespace of\nthe container
+      (an ephemeral container of the pod with cfk): nothing is\ninstalled in the container,
+      so it works with any image.\n\n❕ tc only shapes the packets a container sends:
+      with --latency 100ms\nthe round trip to the destination grows by 100ms. A container
+      restart\nremoves the degradation."
+    usage: playground debug degrade-traffic [OPTIONS]
+    options:
+    - names:
+      - "--container"
+      - "-c"
+      - "--pod"
+      - "-p"
+      argument: CONTAINER
+      description: "\U0001F433 container name (or pod name when cfk environment is
+        used)\n\n\U0001F393 Tip: you can pass multiple containers by specifying --container
+        multiple times\n\nRepeatable: ✓ Yes\nDefault value: connect"
+    - names:
+      - "--destination"
+      argument: DESTINATION
+      description: "\U0001F3AF Destination: an ip address, a container name or a hostname
+        (default: all the traffic of the container)"
+    - names:
+      - "--port"
+      argument: PORT
+      description: "\U0001F6AA Only the tcp traffic to this port of the destination"
+    - names:
+      - "--latency"
+      argument: LATENCY
+      description: "⏱️ Added latency, e.g. 100ms, 1s"
+    - names:
+      - "--jitter"
+      argument: JITTER
+      description: "〰️ Random variation of the latency, e.g. 20ms (needs --latency)"
+    - names:
+      - "--loss"
+      argument: LOSS
+      description: "\U0001F573️ Percentage of packets dropped, e.g. 1%"
+    - names:
+      - "--corruption"
+      argument: CORRUPTION
+      description: "\U0001F9E8 Percentage of packets corrupted, e.g. 1%"
+    - names:
+      - "--duplicate"
+      argument: DUPLICATE
+      description: "\U0001F46F Percentage of packets duplicated, e.g. 1%"
+    - names:
+      - "--rate"
+      argument: RATE
+      description: "\U0001F6B0 Bandwidth limit, e.g. 1mbit, 500kbit"
+    - names:
+      - "--action"
+      argument: ACTION
+      description: "\U0001F7E2 start, stop or status\n\nRequired: ✓ Yes\nAllowed values:
+        start, stop, status"
   - name: java-debug
     description: "\U0001F90E JVM arguments for SSL, Kerberos or Class Loading\n\nTurns
       on the JVM's own diagnostic traces in a container and restarts it.\nThis is

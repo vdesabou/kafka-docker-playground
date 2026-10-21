@@ -242,8 +242,6 @@ playground connector create-or-update --connector s3-sink-with-put-latency  << E
           }
 EOF
 
-source ${DIR}/tc-utils.sh
-
 # connect-with-fetch-latency
 latency_fetch=$(get_latency connect-with-fetch-latency broker)
 log "Latency from connect-with-fetch-latency to broker BEFORE traffic control: $latency_fetch ms"
