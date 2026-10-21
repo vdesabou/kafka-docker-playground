@@ -32,6 +32,6 @@ The script always uses the `ccloud` environment, whatever the value of `PLAYGROU
 2. Produces one Avro metric record to `cloudwatch-metrics-topic` with `playground topic produce`.
 3. Creates the self-managed AWS CloudWatch Metrics Sink connector `OnPremCloudWatchMetricsSink_<USER>` and verifies with `aws cloudwatch list-metrics` that the metric `test_meter_fifteenMinuteRate` exists in namespace `service-namespace`.
 4. Runs `playground connector connect-migration-utility discovery` to generate the fully managed connector configuration.
-5. Runs `playground connector connect-migration-utility migrate --migration-mode create_latest_offset` with the AWS credentials passed as `--sensitive-property`, which creates the fully managed connector.
+5. Runs `playground connector connect-migration-utility migrate --migration-mode create_latest_offset` with the AWS credentials passed as `--sensitive-property`, which creates the fully managed connector. Outside CI, `migrate` opens the generated configuration in your editor and offers to open the connector in the browser; add `--no-open` to skip both.
 6. Produces one more record and checks the consumer lag with `playground connector show-lag`.
 7. Deletes the connector after confirmation.
