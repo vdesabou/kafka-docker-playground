@@ -1240,8 +1240,10 @@ subcommands:
       jar path written by\n'repro bootstrap --custom-smt') to the local ones.\n\n--cluster-creds
       / --cluster-schema-registry-creds are removed from the\nrun line: whoever imports
       runs with their own cluster.\n\nWithout --file, the current reproduction model
-      is exported.\n\n\U0001F393 Tip: start with --dry-run to see what would be packed,
-      and what the scan finds."
+      is exported.\n\n\U0001F4CB On macOS, the bundle is copied to the clipboard as
+      a file: paste it\n(Cmd+V) in a Slack conversation to attach it. This follows
+      the\n'playground config clipboard' setting; --clipboard copies it anyway.\n\n\U0001F393
+      Tip: start with --dry-run to see what would be packed, and what the scan finds."
     usage: playground repro export [OPTIONS]
     options:
     - names:
@@ -1277,6 +1279,11 @@ subcommands:
       argument: ''
       description: "\U0001F4CE Also pack the files outside the repository the models
         need (connector zip / jar, files referenced by absolute path)"
+    - names:
+      - "--clipboard"
+      argument: ''
+      description: "\U0001F4CB Copy the bundle to the clipboard as a file (macOS)
+        even when 'playground config clipboard' is false, to paste it in Slack"
   - name: import
     description: "\U0001F4E5 Import a tgz bundle created by 'playground repro export'\n\nThe
       bundle is extracted to a temporary folder first and checked: no\nabsolute paths,
