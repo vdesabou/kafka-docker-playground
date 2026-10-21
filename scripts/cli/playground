@@ -4579,7 +4579,7 @@ playground_repro_usage() {
 playground_repro_export_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground repro export\n\n"
-    printf "  📤 Export reproduction models as a self-contained tgz bundle\n  \n  Produces a single tgz that a colleague can feed to\n  'playground repro import' to run your scenario as is.\n  \n  The bundle holds what the model needs, committed or not: the script,\n  the files of its folder it mentions (docker compose override, producer,\n  SQL files…) and the support files linked by bootstrap (README.md,\n  stop.sh, benchmark-load.bash, config-*). Symlinks are stored as their\n  content, so the bundle does not depend on the version of the base\n  example. Git-ignored files, build output (target/), dumps, flight\n  recordings, logs and credential files (keyfile.json, *.pem, *.key) are\n  left out.\n  \n  A repro-manifest.json describes the bundle: the last 'playground run'\n  line of each model (from playground-run-history), its case number,\n  author, base example, the playground commit, the names (never the\n  values) of the credentials it needs, and the sha256 of every file.\n  \n  Before anything is written, the bundle is scanned. The export stops\n  (unless --force) when a file contains the value of a credential known\n  to this machine ('playground secrets' store, exported credential\n  variables, CLUSTER_CREDS / SCHEMA_REGISTRY_CREDS of playground.ini,\n  ~/.aws/credentials) or a well-known token format (AWS access key id,\n  private key, GitHub / Slack token, Google API key, JWT, Azure storage\n  account key). Email addresses, public IP addresses and hard-coded\n  passwords that do not come from the base example are reported as\n  possible customer data. Values are never printed.\n  \n  Files outside the repository that a model needs (--connector-zip /\n  --connector-jar of its run line, files whose absolute path appears in\n  the script or its compose files, like ~/Downloads/config.json) are\n  only listed, unless --include-artifacts packs them under\n  <model folder>/artifacts/. Import then points the run line, the script\n  and the compose files to the imported copies. Import also rewrites the\n  paths of the exporter's checkout (like the jar path written by\n  'repro bootstrap --custom-smt') to the local ones.\n  \n  --cluster-creds / --cluster-schema-registry-creds are removed from the\n  run line: whoever imports runs with their own cluster.\n  \n  Without --file, the current reproduction model is exported.\n  \n  📋 On macOS, the bundle is copied to the clipboard as a file: paste it\n  (Cmd+V) in a Slack conversation to attach it. This follows the\n  'playground config clipboard' setting; --clipboard copies it anyway.\n  \n  🎓 Tip: start with --dry-run to see what would be packed, and what the scan\n  finds.\n\n"
+    printf "  📤 Export reproduction models as a self-contained tgz bundle\n  \n  Produces a single tgz that a colleague can feed to\n  'playground repro import' to run your scenario as is.\n  \n  The bundle holds what the model needs, committed or not: the script,\n  the files of its folder it mentions (docker compose override, producer,\n  SQL files…) and the support files linked by bootstrap (README.md,\n  stop.sh, benchmark-load.bash, config-*). Symlinks are stored as their\n  content, so the bundle does not depend on the version of the base\n  example. Git-ignored files, build output (target/), dumps, flight\n  recordings, logs and credential files (keyfile.json, *.pem, *.key) are\n  left out.\n  \n  A repro-manifest.json describes the bundle: the last 'playground run'\n  line of each model (from playground-run-history), its case number,\n  author, base example, the playground commit, the names (never the\n  values) of the credentials it needs, and the sha256 of every file.\n  \n  Before anything is written, the bundle is scanned. The export stops\n  (unless --force) when a file contains the value of a credential known\n  to this machine ('playground secrets' store, exported credential\n  variables, CLUSTER_CREDS / SCHEMA_REGISTRY_CREDS of playground.ini,\n  ~/.aws/credentials) or a well-known token format (AWS access key id,\n  private key, GitHub / Slack token, Google API key, JWT, Azure storage\n  account key). Email addresses, public IP addresses and hard-coded\n  passwords that do not come from the base example are reported as\n  possible customer data. Values are never printed.\n  \n  Files outside the repository that a model needs (--connector-zip /\n  --connector-jar of its run line, files whose absolute path appears in\n  the script or its compose files, like ~/Downloads/config.json) are\n  only listed, unless --include-artifacts packs them under\n  <model folder>/artifacts/. Import then points the run line, the script\n  and the compose files to the imported copies. Import also rewrites the\n  paths of the exporter's checkout (like the jar path written by\n  'repro bootstrap --custom-smt') to the local ones.\n  \n  --cluster-creds / --cluster-schema-registry-creds are removed from the\n  run line: whoever imports runs with their own cluster.\n  \n  Without --file, the current reproduction model is exported.\n  \n  📋 On macOS, the bundle is copied to the clipboard as a file: paste it\n  (Cmd+V) in a Slack conversation to attach it (--no-clipboard to skip).\n  \n  🎓 Tip: start with --dry-run to see what would be packed, and what the scan\n  finds.\n\n"
   else
     printf "playground repro export - 📤 Export reproduction models as a self-contained tgz bundle\n\n"
   fi
@@ -4636,9 +4636,17 @@ playground_repro_export_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--clipboard")"
-    printf "    📋 Copy the bundle to the clipboard as a file (macOS) even when 'playground\n    config clipboard' is false, to paste it in Slack\n"
+    printf "  %s\n" "$(magenta "--no-clipboard")"
+    printf "    📋 Do not copy the bundle to the clipboard (macOS)\n"
     echo
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--clipboard")"
+      printf "    📋 Former flag: the bundle is now copied to the clipboard by default\n"
+      echo
+
+    fi
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -36369,7 +36377,7 @@ playground_repro_export_command() {
   dry_run="${args[--dry-run]}"
   force="${args[--force]}"
   include_artifacts="${args[--include-artifacts]}"
-  force_clipboard="${args[--clipboard]}"
+  no_clipboard="${args[--no-clipboard]}"
 
   if [ ! -z "$OUTPUT_FOLDER" ]
   then
@@ -36747,28 +36755,15 @@ playground_repro_export_command() {
   log "📤 Exported bundle is available: $final_archive ($(du -h "$final_archive" | cut -f 1 | tr -d ' '))"
   log "📥 To import it: playground repro import -f <path>/$(basename "$final_archive")"
 
-  # the bundle itself (not its path) goes to the clipboard: Cmd+V in Slack, Zendesk or a mail attaches it
-  if [[ "$OSTYPE" == "darwin"* ]]
+  # the bundle itself (not its path) goes to the clipboard: Cmd+V in Slack, Zendesk or a mail attaches it.
+  # Always, unless --no-clipboard: the 'clipboard' config is about the run line and connector configs
+  if [[ "$OSTYPE" == "darwin"* ]] && [[ ! -n "$no_clipboard" ]]
   then
-      clipboard=$(playground config get clipboard)
-      if [ "$clipboard" == "" ]
+      if osascript -e "set the clipboard to (POSIX file \"$final_archive\")" > /dev/null 2>&1
       then
-          playground config set clipboard true
-      fi
-
-      if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] || [[ -n "$force_clipboard" ]]
-      then
-          if osascript -e "set the clipboard to (POSIX file \"$final_archive\")" > /dev/null 2>&1
-          then
-              if [[ -n "$force_clipboard" ]]
-              then
-                  log "📋 bundle copied to the clipboard as a file: paste it (Cmd+V) in a Slack conversation to attach it"
-              else
-                  log "📋 bundle copied to the clipboard as a file: paste it (Cmd+V) in a Slack conversation to attach it (disable with 'playground config clipboard false')"
-              fi
-          else
-              logwarn "📋 could not copy the bundle to the clipboard, attach $final_archive by hand"
-          fi
+          log "📋 bundle copied to the clipboard as a file: paste it (Cmd+V) in a Slack conversation to attach it (--no-clipboard to skip)"
+      else
+          logwarn "📋 could not copy the bundle to the clipboard, attach $final_archive by hand"
       fi
   fi
 
@@ -69041,6 +69036,14 @@ playground_repro_export_parse_requirements() {
         ;;
 
       # :flag.case
+      --no-clipboard)
+
+        # :flag.case_no_arg
+        args['--no-clipboard']=1
+        shift
+        ;;
+
+      # :flag.case
       --clipboard)
 
         # :flag.case_no_arg
@@ -97182,8 +97185,8 @@ playground_repro_export_completion() {
 
         shift
         ;;
-      --clipboard)
-        completion_blocked_flags["--clipboard"]=1
+      --no-clipboard)
+        completion_blocked_flags["--no-clipboard"]=1
 
         shift
         ;;
@@ -97201,7 +97204,7 @@ playground_repro_export_completion() {
     completion_flag_candidates --dry-run "$completion_current" --dry-run
     completion_flag_candidates --force "$completion_current" --force
     completion_flag_candidates --include-artifacts "$completion_current" --include-artifacts
-    completion_flag_candidates --clipboard "$completion_current" --clipboard
+    completion_flag_candidates --no-clipboard "$completion_current" --no-clipboard
   fi
 
 }

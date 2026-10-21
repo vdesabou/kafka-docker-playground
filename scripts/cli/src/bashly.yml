@@ -2726,8 +2726,7 @@ commands:
       Without --file, the current reproduction model is exported.
 
       📋 On macOS, the bundle is copied to the clipboard as a file: paste it
-      (Cmd+V) in a Slack conversation to attach it. This follows the
-      'playground config clipboard' setting; --clipboard copies it anyway.
+      (Cmd+V) in a Slack conversation to attach it (--no-clipboard to skip).
 
       🎓 Tip: start with --dry-run to see what would be packed, and what the scan finds.
     dependencies:
@@ -2776,10 +2775,15 @@ commands:
         required: false
         help: |-
           📎 Also pack the files outside the repository the models need (connector zip / jar, files referenced by absolute path)
-      - long: --clipboard
+      - long: --no-clipboard
         required: false
         help: |-
-          📋 Copy the bundle to the clipboard as a file (macOS) even when 'playground config clipboard' is false, to paste it in Slack
+          📋 Do not copy the bundle to the clipboard (macOS)
+      - long: --clipboard
+        required: false
+        private: true
+        help: |-
+          📋 Former flag: the bundle is now copied to the clipboard by default
     examples:
     - playground repro export
     - playground repro export -f ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh --dry-run
