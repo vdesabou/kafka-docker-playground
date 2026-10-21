@@ -1,0 +1,123 @@
+==========================
+Exactly Once Support
+==========================
+🔘 exactly.once.support
+
+Permitted values are requested, required. If set to "required", forces a preflight check for the connector to ensure that it can provide exactly-once semantics with the given configuration. Some connectors may be capable of providing exactly-once semantics but not signal to Connect that they support this; in that case, documentation for the connector should be consulted carefully before creating it, and the value for this property should be set to "requested". Additionally, if the value is set to "required" but the worker that performs preflight validation does not have exactly-once support enabled for source connectors, requests to create or validate the connector will fail.
+
+	 - Type: STRING
+	 - Default: requested
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transaction.boundary
+
+Permitted values are: poll, interval, connector. If set to 'poll', a new producer transaction will be started and committed for every batch of records that each task from this connector provides to Connect. If set to 'connector', relies on connector-defined transaction boundaries; note that not all connectors are capable of defining their own transaction boundaries, and in that case, attempts to instantiate a connector with this value will fail. Finally, if set to 'interval', commits transactions only after a user-defined time interval has passed.
+
+	 - Type: STRING
+	 - Default: poll
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 transaction.boundary.interval.ms
+
+If 'transaction.boundary' is set to 'interval', determines the interval for producer transaction commits by connector tasks. If unset, defaults to the value of the worker-level 'offset.flush.interval.ms' property. It has no effect if a different transaction.boundary is specified.
+
+	 - Type: LONG
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+==========================
+null
+==========================
+🔘 kafka.topic
+
+Topic to write to
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 max.interval
+
+Max interval between messages (ms)
+
+	 - Type: LONG
+	 - Default: 500
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 iterations
+
+Number of messages to send from each task, or less than 1 for unlimited
+
+	 - Type: INT
+	 - Default: -1
+	 - Importance: HIGH
+	 - Required: false
+
+🔘 schema.string
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: The literal JSON-encoded Avro schema to use
+	 - Required: HIGH
+
+🔘 schema.filename
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Filename of schema to use
+	 - Required: HIGH
+
+🔘 schema.keyfield
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of field to use as the message key
+	 - Required: HIGH
+
+🔘 quickstart
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Name of quickstart to use
+	 - Required: HIGH
+
+🔘 random.seed
+
+Numeric seed for generating random data. Two connectors started with the same seed will deterministically produce the same data. Each task will generate different data than the other tasks in the same connector.
+
+	 - Type: LONG
+	 - Default: null
+	 - Importance: LOW
+	 - Required: false
+
+🔘 key.converter.converter.type
+
+How this converter will be used.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: LOW
+	 - Required: true
+
+🔘 key.converter.converter.encoding
+
+The name of the Java character set to use for encoding strings as byte arrays.
+
+	 - Type: STRING
+	 - Default: UTF-8
+	 - Importance: HIGH
+	 - Required: false
+
