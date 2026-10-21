@@ -81,9 +81,12 @@ public class SchemaValidator {
                 ObjectMapper mapper = new ObjectMapper();
                 File from = new File("/tmp/message.json");
                 JsonNode masterJSON = mapper.readTree(from);
-                CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient("http://schema-registry:8081",1000);
+                CachedSchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient("http://schema-registry:8081",1000,
+                        Collections.singletonList(new JsonSchemaProvider()), null);
                 schemaRegistryClient.register(randomName+"-value", new JsonSchema(rawSchemaJson));
                 KafkaJsonSchemaSerializer serializer = new KafkaJsonSchemaSerializer(schemaRegistryClient);
+                // without configure(), CP 8.x serializers ignore the envelope and look up a schema derived from ObjectNode
+                serializer.configure(properties, false);
                 JsonSchemaConverter converter = new JsonSchemaConverter();
                 byte[] serializedRecord1 = serializer.serialize(randomName,
                 JsonSchemaUtils.envelope(rawSchemaJson, masterJSON));
