@@ -82,10 +82,9 @@ PUSH_TOPICS_NAME=$(salesforce_push_topic_name bsptLead)
 LEAD_FIRSTNAME=John_$RANDOM
 LEAD_LASTNAME=Doe_$RANDOM
 
-# the PushTopic only matches the Lead of this run: the org is shared with the other CI jobs, and a Lead
-# they create (and delete) would otherwise reach the sink and fail with INVALID_CROSS_REFERENCE_KEY
+# no WHERE clause in the PushTopic query: with WHERE FirstName = '...' Salesforce sent no event (#9445).
+# Leads of other CI jobs sharing the org can reach the sink, see salesforce_assert_no_error_for_lead below
 sed -e "s|:PUSH_TOPIC_NAME:|$PUSH_TOPICS_NAME|g" \
-     -e "s|FROM Lead'|FROM Lead WHERE FirstName = \\\\'$LEAD_FIRSTNAME\\\\''|" \
      ../../connect/connect-salesforce-bulkapi-sink/MyLeadPushTopics-template.apex > ../../connect/connect-salesforce-bulkapi-sink/MyLeadPushTopics.apex
 
 salesforce_ensure_jwt_keystore "$PWD" > /dev/null
@@ -228,8 +227,8 @@ sleep 10
 log "Verify topic success-responses"
 playground topic consume --topic success-responses --min-expected-messages 1 --timeout 60
 
-log "Verify the connector reported no errors"
-assert_topic_empty error-responses
+log "Verify the connector reported no errors for the Lead of this test"
+salesforce_assert_no_error_for_lead "$SALESFORCE_USERNAME" "$LEAD_FIRSTNAME" "$LEAD_LASTNAME" error-responses
 
 log "Login with sfdx CLI on the account #2"
 salesforce_sfdx_login "$SALESFORCE_USERNAME_ACCOUNT2" "$SALESFORCE_CONSUMER_KEY_WITH_JWT_ACCOUNT2" "$SALESFORCE_INSTANCE_ACCOUNT2"
