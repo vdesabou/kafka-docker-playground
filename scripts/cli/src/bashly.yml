@@ -4573,6 +4573,7 @@ commands:
       tcp-dump            capture traffic, open it in Wireshark
       testssl             probe a TLS endpoint, locally or in the cloud
       block-traffic       cut a route with iptables, to simulate an outage
+      degrade-traffic     add latency, packet loss or corruption with tc
       java-debug          turn on the JVM SSL, Kerberos or class loading traces
 
     🔬 It is in the code
@@ -4802,6 +4803,91 @@ commands:
     - playground debug block-traffic -c broker -c connect --destination zookeeper --action start
     - playground debug block-traffic --container schema-registry --destination broker --port 9092 --action start
     - playground debug block-traffic -c connect -c ksqldb-server --destination schema-registry --action stop
+
+  - name: degrade-traffic
+    help: |-
+      🐌 Add latency, packet loss, corruption or a bandwidth limit using tc
+
+      Some issues only happen on a slow or unreliable network: request
+      timeouts, retries, rebalances, producer or consumer errors. This makes
+      the traffic from a container slow or lossy, to a destination (and
+      port) or to everything, and --action stop puts it back to normal
+      without restarting anything.
+
+      Several effects can be combined in one call, e.g. --latency 100ms
+      --loss 1%. A new --action start replaces what was applied before on
+      the container. --action status shows what is applied and the measured
+      round trip to the destination.
+
+      tc runs from the nicolaka/netshoot image in the network namespace of
+      the container (an ephemeral container of the pod with cfk): nothing is
+      installed in the container, so it works with any image.
+
+      ❕ tc only shapes the packets a container sends: with --latency 100ms
+      the round trip to the destination grows by 100ms. A container restart
+      removes the degradation.
+    flags:
+      - *container
+      - long: --destination
+        arg: destination
+        required: false
+        completions:
+          dynamic:
+          - playground get-container-list
+        help: |-
+          🎯 Destination: an ip address, a container name or a hostname (default: all the traffic of the container)
+      - long: --port
+        arg: port
+        validate: integer
+        required: false
+        completions:
+          dynamic:
+          - playground get-docker-ports
+        help: |-
+          🚪 Only the tcp traffic to this port of the destination
+      - long: --latency
+        arg: latency
+        required: false
+        help: |-
+          ⏱️ Added latency, e.g. 100ms, 1s
+      - long: --jitter
+        arg: jitter
+        required: false
+        help: |-
+          〰️ Random variation of the latency, e.g. 20ms (needs --latency)
+      - long: --loss
+        arg: loss
+        required: false
+        help: |-
+          🕳️ Percentage of packets dropped, e.g. 1%
+      - long: --corruption
+        arg: corruption
+        required: false
+        help: |-
+          🧨 Percentage of packets corrupted, e.g. 1%
+      - long: --duplicate
+        arg: duplicate
+        required: false
+        help: |-
+          👯 Percentage of packets duplicated, e.g. 1%
+      - long: --rate
+        arg: rate
+        required: false
+        help: |-
+          🚰 Bandwidth limit, e.g. 1mbit, 500kbit
+      - long: --action
+        allowed: [start, stop, status]
+        arg: action
+        required: true
+        help: |-
+          🟢 start, stop or status
+    examples:
+    - playground debug degrade-traffic --container connect --destination broker --latency 100ms --action start
+    - playground debug degrade-traffic -c connect --destination broker --latency 100ms --jitter 20ms --loss 1% --action start
+    - playground debug degrade-traffic -c connect -c ksqldb-server --destination broker --port 9092 --loss 5% --action start
+    - playground debug degrade-traffic -c connect --rate 1mbit --action start
+    - playground debug degrade-traffic -c connect --destination broker --action status
+    - playground debug degrade-traffic -c connect -c ksqldb-server --action stop
 
   - name: java-debug
     help: |-

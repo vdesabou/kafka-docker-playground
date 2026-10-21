@@ -5,13 +5,13 @@ services:
       - 12181:2181
     environment:
       ZOOKEEPER_SERVER_ID: "1"
-      EXTRA_ARGS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/zookeeper.yml
+      EXTRA_ARGS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.20.0.jar=1234:/usr/share/jmx_exporter/zookeeper.yml
     volumes:
     - ../../other/monitoring-sink-latency/jmx-exporter:/usr/share/jmx_exporter/
 
   broker:
     environment:
-      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-broker.yml
+      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.20.0.jar=1234:/usr/share/jmx_exporter/kafka-broker.yml
     volumes:
     - ../../other/monitoring-sink-latency/jmx-exporter:/usr/share/jmx_exporter/
 
@@ -22,7 +22,7 @@ services:
       - ../../other/monitoring-sink-latency/jmx-exporter:/usr/share/jmx_exporter/
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-datagen,/usr/share/confluent-hub-components/confluentinc-kafka-connect-http,/usr/share/confluent-hub-components/confluentinc-kafka-connect-s3
-      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml
+      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.20.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml
 
 
   connect-with-fetch-latency:
@@ -69,7 +69,7 @@ services:
       # CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'true'
       # CONNECT_CONFLUENT_TELEMETRY_API_KEY: 'CONFLUENT_CLOUD_API_KEY'
       # CONNECT_CONFLUENT_TELEMETRY_API_SECRET: 'CONFLUENT_CLOUD_API_SECRET'
-      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml
+      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.20.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml
 
   connect-with-put-latency:
     cap_add:
@@ -115,7 +115,7 @@ services:
       # CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'true'
       # CONNECT_CONFLUENT_TELEMETRY_API_KEY: 'CONFLUENT_CLOUD_API_KEY'
       # CONNECT_CONFLUENT_TELEMETRY_API_SECRET: 'CONFLUENT_CLOUD_API_SECRET'
-      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml
+      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.20.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml
 
   http-service-basic-auth:
     image: vdesabou/http-sink-demo
