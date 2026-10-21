@@ -283,8 +283,9 @@ Edit the `*-template.md` files (or the example `README.md`s / `bashly.yml` help 
 
 ```bash
 playground repro bootstrap              # scaffold a new model in reproduction-models/
-playground repro export --all           # package uncommitted models
-playground repro import --file playground_repro_export.tgz
+playground repro export [-f <repro script>] [--dry-run]   # self-contained bundle (+ repro-manifest.json), committed or not
+playground repro export --all-uncommitted                 # every new or modified model
+playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|overwrite]
 ```
 
 **⚠️ Always scaffold a new repro model with `playground repro bootstrap` — never hand-write the `.sh`

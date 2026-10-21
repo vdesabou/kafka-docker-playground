@@ -2663,8 +2663,8 @@ commands:
     problem, so that anyone can reproduce it with a single command.
 
       bootstrap   scaffold one from an existing example, then edit it
-      export      package the models you have not committed, as a tgz
-      import      unpack a tgz someone sent you, and run it
+      export      package one or more models as a self-contained tgz bundle
+      import      unpack a bundle someone sent you, and run it
 
     👉 Always scaffold with bootstrap rather than copying a script by hand: it
     creates the header, the docker compose override, the CLI cheat sheet and
@@ -2682,41 +2682,120 @@ commands:
 
   - name: export
     help: |-
-      📤 Export as tgz file uncommitted reproduction models from the folder of current reproduction model
+      📤 Export reproduction models as a self-contained tgz bundle
 
       Produces a single tgz that a colleague can feed to
-      'playground repro import' to run your scenario as is. Use --all to take
-      every uncommitted model rather than only the current folder.
+      'playground repro import' to run your scenario as is.
+
+      The bundle holds what the model needs, committed or not: the script,
+      the files of its folder it mentions (docker compose override, producer,
+      SQL files…) and the support files linked by bootstrap (README.md,
+      stop.sh, benchmark-load.bash, config-*). Symlinks are stored as their
+      content, so the bundle does not depend on the version of the base
+      example. Git-ignored files, build output (target/), dumps, flight
+      recordings, logs and credential files (keyfile.json, *.pem, *.key) are
+      left out.
+
+      A repro-manifest.json describes the bundle: the last 'playground run'
+      line of each model (from playground-run-history), its case number,
+      author, base example, the playground commit, the names (never the
+      values) of the credentials it needs, and the sha256 of every file.
+
+      Without --file, the current reproduction model is exported.
+
+      🎓 Tip: start with --dry-run to see what would be packed.
     dependencies:
       git: visit https://git-scm.com/downloads to install
     flags:
+      - long: --file
+        short: -f
+        arg: file
+        required: false
+        repeatable: true
+        conflicts: [--all-uncommitted, --all]
+        validate: file_exists_with_trick
+        completions:
+          dynamic:
+          - playground get-examples-list-with-fzf --repro-only "$completion_current"
+        help: |-
+          🔖 Reproduction model script to export (default: current one)
+
+          Can be repeated to put several models in one bundle.
+      - long: --all-uncommitted
+        required: false
+        conflicts: [--file]
+        help: |-
+          📦 Export every reproduction model with uncommitted changes (new or modified)
       - long: --all
         required: false
+        private: true
+        conflicts: [--file]
         help: |-
-          Export all uncommitted reproduction models
+          📦 Former name of --all-uncommitted
+      - long: --output
+        short: -o
+        arg: output
+        required: false
+        help: |-
+          📁 Folder where to write the bundle (default: current folder, or the repository root when run from reproduction-models)
+      - long: --dry-run
+        required: false
+        help: |-
+          🔍 Only list the models and files that would be packed
+    examples:
+    - playground repro export
+    - playground repro export -f ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh --dry-run
+    - playground repro export --all-uncommitted --output ~/Desktop
 
   - name: import
     help: |-
-      📥 Import tgz file which was created with export command
+      📥 Import a tgz bundle created by 'playground repro export'
 
-      Unpacks the models into your reproduction-models folder, from where you
-      can run them with 'playground run'.
+      The bundle is extracted to a temporary folder first and checked: no
+      absolute paths, no '..', no special files, and the sha256 of every file
+      must match its manifest. Bundles from older versions, without manifest,
+      are still accepted.
+
+      Files identical to yours are skipped. When a file differs, the import
+      stops unless --on-conflict says what to do. Files that were symlinks to
+      a public example are restored as symlinks when the public file is
+      identical, otherwise their content is kept.
+
+      Then the model becomes the current one, and the command prints the
+      'playground run' line to use and the credentials missing from your
+      'playground secrets' profile.
     flags:
     - long: --file
       short: -f
       arg: file
-      required: false
+      required: true
       validate: file_exists_with_trick
       completions:
         dynamic:
         - playground get-playground-repro-export-with-fzf "$completion_current"
-      help: |- 
-        🤐 playground_repro_export.tgz file
+      help: |-
+        🤐 Bundle file (playground_repro_*.tgz, any name is accepted)
 
-        ❕ It must be absolute full path
-
-        🎓 Tip: use <tab> completion to trigger fzf completion 
+        🎓 Tip: use <tab> completion to trigger fzf completion
                 use playground config folder_zip_or_jar <folder1> <folder2>... (default is home folder and current folder is always included) to configure where to search the files
+    - long: --on-conflict
+      arg: on-conflict
+      required: false
+      allowed: [abort, rename, overwrite]
+      default: abort
+      help: |-
+        ⚔️ What to do when a file of the bundle differs from your copy
+
+        abort: import nothing and list the differences
+        rename: import the differing files with an -imported-<date> suffix (references in the imported scripts are updated)
+        overwrite: replace your copy
+    - long: --dry-run
+      required: false
+      help: |-
+        🔍 Only show the manifest, the files and the conflicts
+    examples:
+    - playground repro import -f ~/Downloads/playground_repro_http-repro-123456-dlq_2026-10-21.tgz
+    - playground repro import -f ~/Downloads/playground_repro_http-repro-123456-dlq_2026-10-21.tgz --on-conflict rename
 
   - name: bootstrap
     help: |-

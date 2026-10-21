@@ -126,8 +126,8 @@ playground_usage() {
   echo
   printf "%s\n" "$(bold "Repro commands:")"
   printf "  %s   👷‍♂️ Reproduction model commands\n" "$(green "repro")                                     "
-  printf "  %s   📤 Export as tgz file uncommitted reproduction models from the folder of current reproduction model\n" "$(green "repro export")                              "
-  printf "  %s   📥 Import tgz file which was created with export command\n" "$(green "repro import")                              "
+  printf "  %s   📤 Export reproduction models as a self-contained tgz bundle\n" "$(green "repro export")                              "
+  printf "  %s   📥 Import a tgz bundle created by 'playground repro export'\n" "$(green "repro import")                              "
   printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "repro bootstrap")                           "
   echo
   printf "%s\n" "$(bold "Kafka commands:")"
@@ -4536,7 +4536,7 @@ playground_cleanup_cloud_resources_usage() {
 playground_repro_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground repro\n\n"
-    printf "  👷‍♂️ Reproduction model commands\n  \n  A reproduction model is an example written to demonstrate one specific\n  problem, so that anyone can reproduce it with a single command.\n  \n    bootstrap   scaffold one from an existing example, then edit it\n    export      package the models you have not committed, as a tgz\n    import      unpack a tgz someone sent you, and run it\n  \n  👉 Always scaffold with bootstrap rather than copying a script by hand: it\n  creates the header, the docker compose override, the CLI cheat sheet and\n  registers the model, which a hand-written file would be missing.\n  \n  Keep a model minimal and about one issue, state expected versus actual\n  behaviour in its comments header, and never put customer data in it.\n\n"
+    printf "  👷‍♂️ Reproduction model commands\n  \n  A reproduction model is an example written to demonstrate one specific\n  problem, so that anyone can reproduce it with a single command.\n  \n    bootstrap   scaffold one from an existing example, then edit it\n    export      package one or more models as a self-contained tgz bundle\n    import      unpack a bundle someone sent you, and run it\n  \n  👉 Always scaffold with bootstrap rather than copying a script by hand: it\n  creates the header, the docker compose override, the CLI cheat sheet and\n  registers the model, which a hand-written file would be missing.\n  \n  Keep a model minimal and about one issue, state expected versus actual\n  behaviour in its comments header, and never put customer data in it.\n\n"
   else
     printf "playground repro - 👷‍♂️ Reproduction model commands\n\n"
   fi
@@ -4547,8 +4547,8 @@ playground_repro_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   📤 Export as tgz file uncommitted reproduction models from the folder of current reproduction model\n" "$(green "export")   "
-  printf "  %s   📥 Import tgz file which was created with export command\n" "$(green "import")   "
+  printf "  %s   📤 Export reproduction models as a self-contained tgz bundle\n" "$(green "export")   "
+  printf "  %s   📥 Import a tgz bundle created by 'playground repro export'\n" "$(green "import")   "
   printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "bootstrap")"
   echo
 
@@ -4578,9 +4578,9 @@ playground_repro_usage() {
 playground_repro_export_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground repro export\n\n"
-    printf "  📤 Export as tgz file uncommitted reproduction models from the folder of\n  current reproduction model\n  \n  Produces a single tgz that a colleague can feed to\n  'playground repro import' to run your scenario as is. Use --all to take\n  every uncommitted model rather than only the current folder.\n\n"
+    printf "  📤 Export reproduction models as a self-contained tgz bundle\n  \n  Produces a single tgz that a colleague can feed to\n  'playground repro import' to run your scenario as is.\n  \n  The bundle holds what the model needs, committed or not: the script,\n  the files of its folder it mentions (docker compose override, producer,\n  SQL files…) and the support files linked by bootstrap (README.md,\n  stop.sh, benchmark-load.bash, config-*). Symlinks are stored as their\n  content, so the bundle does not depend on the version of the base\n  example. Git-ignored files, build output (target/), dumps, flight\n  recordings, logs and credential files (keyfile.json, *.pem, *.key) are\n  left out.\n  \n  A repro-manifest.json describes the bundle: the last 'playground run'\n  line of each model (from playground-run-history), its case number,\n  author, base example, the playground commit, the names (never the\n  values) of the credentials it needs, and the sha256 of every file.\n  \n  Without --file, the current reproduction model is exported.\n  \n  🎓 Tip: start with --dry-run to see what would be packed.\n\n"
   else
-    printf "playground repro export - 📤 Export as tgz file uncommitted reproduction models from the folder of current reproduction model\n\n"
+    printf "playground repro export - 📤 Export reproduction models as a self-contained tgz bundle\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -4595,13 +4595,45 @@ playground_repro_export_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--all")"
-    printf "    Export all uncommitted reproduction models\n"
+    printf "  %s\n" "$(magenta "--file, -f FILE (repeatable)")"
+    printf "    🔖 Reproduction model script to export (default: current one)\n    \n    Can be repeated to put several models in one bundle.\n"
+    printf "    %s\n" "Conflicts: --all-uncommitted, --all"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--all-uncommitted")"
+    printf "    📦 Export every reproduction model with uncommitted changes (new or modified)\n"
+    printf "    %s\n" "Conflicts: --file"
+    echo
+
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--all")"
+      printf "    📦 Former name of --all-uncommitted\n"
+      printf "    %s\n" "Conflicts: --file"
+      echo
+
+    fi
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output, -o OUTPUT")"
+    printf "    📁 Folder where to write the bundle (default: current folder, or the\n    repository root when run from reproduction-models)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--dry-run")"
+    printf "    🔍 Only list the models and files that would be packed\n"
     echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground repro export\n"
+    printf "  playground repro export -f\n  ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh\n  --dry-run\n"
+    printf "  playground repro export --all-uncommitted --output ~/Desktop\n"
     echo
 
   fi
@@ -4611,9 +4643,9 @@ playground_repro_export_usage() {
 playground_repro_import_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground repro import\n\n"
-    printf "  📥 Import tgz file which was created with export command\n  \n  Unpacks the models into your reproduction-models folder, from where you\n  can run them with 'playground run'.\n\n"
+    printf "  📥 Import a tgz bundle created by 'playground repro export'\n  \n  The bundle is extracted to a temporary folder first and checked: no\n  absolute paths, no '..', no special files, and the sha256 of every file\n  must match its manifest. Bundles from older versions, without manifest,\n  are still accepted.\n  \n  Files identical to yours are skipped. When a file differs, the import\n  stops unless --on-conflict says what to do. Files that were symlinks to\n  a public example are restored as symlinks when the public file is\n  identical, otherwise their content is kept.\n  \n  Then the model becomes the current one, and the command prints the\n  'playground run' line to use and the credentials missing from your\n  'playground secrets' profile.\n\n"
   else
-    printf "playground repro import - 📥 Import tgz file which was created with export command\n\n"
+    printf "playground repro import - 📥 Import a tgz bundle created by 'playground repro export'\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -4628,13 +4660,31 @@ playground_repro_import_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--file, -f FILE")"
-    printf "    🤐 playground_repro_export.tgz file\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
+    printf "  %s\n" "$(magenta "--file, -f FILE (required)")"
+    printf "    🤐 Bundle file (playground_repro_*.tgz, any name is accepted)\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n            use playground config folder_zip_or_jar <folder1> <folder2>...\n    (default is home folder and current folder is always included) to configure\n    where to search the files\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--on-conflict ON-CONFLICT")"
+    printf "    ⚔️ What to do when a file of the bundle differs from your copy\n    \n    abort: import nothing and list the differences\n    rename: import the differing files with an -imported-<date> suffix\n    (references in the imported scripts are updated)\n    overwrite: replace your copy\n"
+    printf "    %s\n" "Allowed: abort, rename, overwrite"
+    printf "    %s\n" "Default: abort"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--dry-run")"
+    printf "    🔍 Only show the manifest, the files and the conflicts\n"
     echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground repro import -f\n  ~/Downloads/playground_repro_http-repro-123456-dlq_2026-10-21.tgz\n"
+    printf "  playground repro import -f\n  ~/Downloads/playground_repro_http-repro-123456-dlq_2026-10-21.tgz\n  --on-conflict rename\n"
     echo
 
   fi
@@ -14930,7 +14980,8 @@ function get_playground_repro_export_with_fzf() {
   folder_zip_or_jar=${folder_zip_or_jar//\~/$HOME}
   folder_zip_or_jar=${folder_zip_or_jar//,/ }
 
-  fzf_output=$(cat /tmp/get_any_files_with_fzf | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="📃" --header="select file" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query --bind "alt-enter:print-query")
+  # playground_repro_export.tgz is the name used by the former export
+  fzf_output=$(find $folder_zip_or_jar $PWD \( -name 'playground_repro_*.tgz' -o -name 'playground_repro_*.tar.gz' \) ! -path '*/\.*' 2>/dev/null | sort -u | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="📃" --header="select repro bundle (use option+enter to use the value you typed manually)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query --bind "alt-enter:print-query")
 
   # Parse fzf output: first line is query, second line is selection (or query again if alt-enter was used)
   query_line=$(echo "$fzf_output" | head -n1)
@@ -14944,6 +14995,177 @@ function get_playground_repro_export_with_fzf() {
   fi
 
   echo "$cur@$res"
+}
+
+#
+# Reproduction model bundles (playground repro export / import)
+#
+
+# sha256 of a file, symlinks followed
+function repro_sha256 () {
+  if command -v sha256sum > /dev/null 2>&1
+  then
+    sha256sum "$1" | cut -d " " -f 1
+  else
+    shasum -a 256 "$1" | cut -d " " -f 1
+  fi
+}
+
+# true when a path (relative to the folder of the model) must never go into a bundle:
+# build output, dumps, recordings, logs, archives and credential files
+function repro_bundle_denied () {
+  local name="${1##*/}"
+  case "/$1/" in
+    */target/*|*/benchmark-history*|*-analysis-output/*|*/heap-analysis/*|*/cfk-reports/*) return 0 ;;
+  esac
+  case "$name" in
+    *.hprof|*.hprof.gz|*.jfr|*.log|*.tgz|*.tar.gz|.DS_Store|repro-manifest.json) return 0 ;;
+    keyfile.json|*.pem|*.key|*.p12|secrets.properties|playground.ini|playground-run-history) return 0 ;;
+  esac
+  return 1
+}
+
+# value of a line '# <key>: <value>' of the header written by repro bootstrap
+function repro_header_value () {
+  local script="$1"
+  local key="$2"
+  head -30 "$script" | grep -m1 "^# .*$key: " | sed -e "s/^# .*$key: //"
+}
+
+# normalize a relative path: remove '.' and resolve '..' (prints nothing when it goes above its root)
+function repro_normalize_path () {
+  local path="$1"
+  local -a parts=()
+  local part
+  local IFS='/'
+  for part in $path
+  do
+    case "$part" in
+      ''|.) ;;
+      ..)
+        if [ ${#parts[@]} -eq 0 ]
+        then
+          return 0
+        fi
+        unset 'parts[${#parts[@]}-1]'
+        ;;
+      *) parts+=("$part") ;;
+    esac
+  done
+  echo "${parts[*]}"
+}
+
+# path relative to the repository root of the target of a symlink, given its path
+# relative to the repository root (prints nothing when it points outside the repository)
+function repro_link_target () {
+  local link_rel="$1"
+  local target
+  target=$(readlink "$root_folder/$link_rel")
+  if [[ "$target" == /* ]]
+  then
+    return 0
+  fi
+  repro_normalize_path "$(dirname "$link_rel")/$target"
+}
+
+# files needed by a reproduction model, relative to the reproduction-models folder:
+# the script, the support files linked by bootstrap, and every entry of its folder that is
+# mentioned by the script or by a docker compose file it mentions (directories are expanded)
+function repro_bundle_files () {
+  local script="$1"
+  local repro_root="$2"
+  local dir=$(dirname "$script")
+  local dir_name=$(basename "$dir")
+  local script_name=$(basename "$script")
+  local references
+  local entry
+  local file
+  local -a selected=()
+
+  references=$(cat "$script")
+  for pass in 1 2
+  do
+    for entry in $(ls -A "$dir")
+    do
+      if [[ " ${selected[*]} " == *" $entry "* ]]
+      then
+        continue
+      fi
+      case "$entry" in
+        "$script_name"|README.md|stop.sh|benchmark-load.bash|sql-datagen|.gitignore|config-*.json|config-*.txt)
+          selected+=("$entry")
+          ;;
+        *)
+          if grep -qF -- "$entry" <<< "$references"
+          then
+            selected+=("$entry")
+          fi
+          ;;
+      esac
+    done
+    # second pass: what the selected docker compose files and load scripts mention
+    for entry in "${selected[@]}"
+    do
+      case "$entry" in
+        *.yml|*.yaml|benchmark-load*.bash)
+          if [ -f "$dir/$entry" ]
+          then
+            references="$references"$'\n'"$(cat "$dir/$entry")"
+          fi
+          ;;
+      esac
+    done
+  done
+
+  for entry in "${selected[@]}"
+  do
+    if [ -d "$dir/$entry" ] && [ ! -L "$dir/$entry" ]
+    then
+      if [ -e "$repro_root/.git" ]
+      then
+        git -C "$repro_root" ls-files --cached --others --exclude-standard -- "$dir_name/$entry" 2>/dev/null
+      else
+        (cd "$repro_root" && find "$dir_name/$entry" \( -type f -o -type l \))
+      fi
+    elif [ -e "$repro_root/.git" ] && git -C "$repro_root" check-ignore -q "$dir_name/$entry" 2>/dev/null
+    then
+      continue
+    else
+      echo "$dir_name/$entry"
+    fi
+  done | sort -u | while read -r file
+  do
+    if repro_bundle_denied "${file#*/}"
+    then
+      continue
+    fi
+    if [ ! -e "$repro_root/$file" ]
+    then
+      logwarn "⏭️ skipping $file: broken symlink or missing file" >&2
+      continue
+    fi
+    if [ -f "$repro_root/$file" ] && [ $(wc -c < "$repro_root/$file") -gt 52428800 ]
+    then
+      logwarn "⏭️ skipping $file: larger than 50 MB" >&2
+      continue
+    fi
+    echo "$file"
+  done
+}
+
+# names of the credentials a script uses: the variables it references that are known to the
+# 'playground secrets' store, plus the credential helpers it calls (names only, never values)
+function repro_required_credentials () {
+  local script="$1"
+  local known
+  known=$({ secret_store_names default; secret_store_names "$(get_active_secret_profile)"; } 2>/dev/null | sort -u)
+  {
+    if [ -n "$known" ]
+    then
+      grep -oE '\$\{?[A-Z][A-Z0-9_]+' "$script" | tr -d '${' | sort -u | grep -xF -- "$known"
+    fi
+    grep -oE 'handle_(aws|azure|gcp)_credentials|bootstrap_ccloud_environment' "$script" | sort -u
+  } | sort -u
 }
 
 function get_ccloud_environment_list_with_fzf() {
@@ -35732,7 +35954,10 @@ EOF
 playground_repro_export_command() {
 
   # src/commands/repro/export.sh
-  all="${args[--all]}"
+  eval "files=(${args[--file]:-})"
+  all_uncommitted="${args[--all-uncommitted]}${args[--all]}"
+  output="${args[--output]}"
+  dry_run="${args[--dry-run]}"
 
   if [ ! -z "$OUTPUT_FOLDER" ]
   then
@@ -35747,104 +35972,273 @@ playground_repro_export_command() {
       exit 1
   fi
 
-  repro_dir=$root_folder/$output_folder
-  cd $repro_dir
-
-  output_filename="playground_repro_export.tgz"
-  final_archive=$repro_dir/$output_filename
-  if [ -f $final_archive ]
+  if [ ! -d "$root_folder/$output_folder" ]
   then
-      rm -rf $final_archive
+      logerror "❌ folder $root_folder/$output_folder does not exist"
+      exit 1
   fi
-  set +e
-  if [[ -n "$all" ]]
+  repro_root=$(cd -P "$root_folder/$output_folder" && pwd)
+
+  # 1. the models to export
+  declare -a scripts=()
+  declare -a extra_files=()
+  if [[ -n "$all_uncommitted" ]]
   then
-      if [ -e .git ]
+      if [ ! -e "$repro_root/.git" ]
       then
-          new_files=$(git status --porcelain 2>/dev/null  | grep "^?? " | cut -d " " -f2-)
-          if [[ -n "$new_files" ]]
-          then
-              log "💫 detected new files:"
-              echo "$new_files"
-              tar cvfz "$output_filename" $new_files > /dev/null 2>&1
-              if [ -f $final_archive ]
-              then
-                  log "📤 Exported archive is available: $final_archive"
-              else
-                  logerror "❌ export failed as archive could not be created !"
-                  exit 1
-              fi
-          else
-              logerror "❌ No new files found !"
-              exit 1
-          fi
-      else
-          logwarn "output folder is not managed by git, creating a full tgz of $output_folder"
-          tar cvfz "$output_filename" * > /dev/null 2>&1
-          if [ -f $final_archive ]
-          then
-              log "📤 Exported archive is available: $final_archive"
-          else
-              logerror "❌ export failed as archive could not be created !"
-              exit 1
-          fi
+          logerror "❌ --all-uncommitted needs $repro_root to be a git repository"
+          exit 1
       fi
-  else
-      # copy only current example
+      # untracked and modified files, untracked folders expanded, deleted files left out
+      while IFS= read -r line
+      do
+          status="${line:0:2}"
+          path="${line:3}"
+          path="${path##* -> }"
+          if [[ "$status" == *D* ]] || [ ! -e "$repro_root/$path" ] || [ -d "$repro_root/$path" ] || [[ "$path" != */* ]]
+          then
+              continue
+          fi
+          if git -C "$repro_root" check-ignore -q "$path" 2>/dev/null || repro_bundle_denied "${path#*/}"
+          then
+              continue
+          fi
+          case "$path" in
+              */stop.sh) extra_files+=("$path") ;;
+              */*/*) extra_files+=("$path") ;;
+              *.sh) scripts+=("$repro_root/$path") ;;
+              *) extra_files+=("$path") ;;
+          esac
+      done < <(git -C "$repro_root" status --porcelain --untracked-files=all 2>/dev/null)
+
+      if [ ${#scripts[@]} -eq 0 ] && [ ${#extra_files[@]} -eq 0 ]
+      then
+          logerror "❌ No uncommitted reproduction model found in $repro_root"
+          exit 1
+      fi
+  elif [ ${#files[@]} -eq 0 ]
+  then
       test_file=$(playground state get run.test_file)
-
-      if [ ! -f $test_file ]
+      if [ -z "$test_file" ] || [ ! -f "$test_file" ]
       then
-
-          logerror "File $test_file retrieved from $root_folder/playground.ini does not exist!"
+          logerror "❌ No current reproduction model (run.test_file is <$test_file>), use --file to say which one to export"
           exit 1
       fi
-
-      test_file_directory="$(dirname "${test_file}")"
-      base1="${test_file_directory##*/}" # connect-connect-aws-s3-sink
-      dir1="${test_file_directory%/*}" # reproduction-models
-      dir2="${dir1##*/}/$base1" # reproduction-models/connect-connect-aws-s3-sink
-
-      if [[ "$dir2" != ${output_folder}* ]]
-      then
-          logerror "example <$dir2> is not from OUTPUT_FOLDER ${output_folder} folder, only examples in there can be exported"
-          exit 1
-      fi
-
-      if [ -e .git ]
-      then
-          cd $test_file_directory
-
-          new_files=$(git status --porcelain . 2>/dev/null  | grep "^?? " | cut -d " " -f2-)
-          if [[ -n "$new_files" ]]
+      scripts=("$test_file")
+  else
+      for file in "${files[@]}"
+      do
+          if [[ $file == *"@"* ]]
           then
-              log "💫 detected new files:"
-              echo "$new_files"
-              cd - >/dev/null
-              tar cvfz "$output_filename" $new_files > /dev/null 2>&1
-              if [ -f $final_archive ]
+              file=$(echo "$file" | cut -d "@" -f 2)
+          fi
+          scripts+=("$file")
+      done
+  fi
+
+  # every model must be a script directly in a folder of reproduction-models
+  declare -a model_scripts=()
+  for script in "${scripts[@]}"
+  do
+      script_dir=$(cd -P "$(dirname "$script")" 2>/dev/null && pwd)
+      if [ "$(dirname "$script_dir")" != "$repro_root" ]
+      then
+          logerror "❌ $script is not a reproduction model of $repro_root, only those can be exported"
+          exit 1
+      fi
+      model_scripts+=("$script_dir/$(basename "$script")")
+  done
+
+  # 2. the files of the bundle
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  for script in "${model_scripts[@]}"
+  do
+      repro_bundle_files "$script" "$repro_root"
+  done > "$tmp_dir/files"
+  for file in "${extra_files[@]}"
+  do
+      echo "$file"
+  done >> "$tmp_dir/files"
+  sort -u "$tmp_dir/files" -o "$tmp_dir/files"
+
+  if [ ! -s "$tmp_dir/files" ]
+  then
+      logerror "❌ No file to export"
+      exit 1
+  fi
+
+  # 3. the manifest
+  history_file="$root_folder/playground-run-history"
+  : > "$tmp_dir/models.json"
+  for script in "${model_scripts[@]}"
+  do
+      dir_name=$(basename "$(dirname "$script")")
+      script_name=$(basename "$script")
+
+      run_line=""
+      run_flags=""
+      if [ -f "$history_file" ]
+      then
+          run_line=$(grep -E "^playground run -f [^ ]*/$dir_name/$script_name( |$)" "$history_file" | tail -1)
+          run_flags=$(echo "${run_line#playground run -f }" | cut -s -d " " -f 2- | sed -e 's/[[:space:]]*$//')
+      fi
+      if [ -z "$run_line" ]
+      then
+          logwarn "🤷 $dir_name/$script_name: no 'playground run' found in playground-run-history, the bundle will not say which flags to use"
+      fi
+
+      # files given by absolute path on this machine are not in the bundle
+      external_files=$(grep -oE -- "--connector-(zip|jar)=[^ ]+" <<< "$run_flags" | cut -d "=" -f 2-)
+      for external_file in $external_files
+      do
+          logwarn "📎 $dir_name/$script_name runs with $external_file, which is not included in the bundle: send it too"
+      done
+
+      description=$(repro_header_value "$script" "description")
+      case_number=""
+      if [[ "$description" =~ ^[0-9]{6} ]]
+      then
+          case_number="${BASH_REMATCH[0]}"
+      fi
+      author=$(repro_header_value "$script" "author")
+
+      # the base example is where the symlinks created by bootstrap point to
+      base_example=""
+      for file in $(grep "^$dir_name/[^/]*$" "$tmp_dir/files")
+      do
+          if [ -L "$repro_root/$file" ]
+          then
+              target=$(repro_link_target "$output_folder/$file")
+              if [ -n "$target" ] && [[ "$target" != "$output_folder"/* ]]
               then
-                  log "📤 Exported archive is available: $final_archive"
-              else
-                  logerror "❌ export failed as archive could not be created !"
-                  exit 1
+                  base_example=$(dirname "$target")
+                  break
               fi
-          else
-              logerror "❌ No new files found !"
-              exit 1
           fi
-      else
-          logwarn "output folder is not managed by git, creating a full tgz of $test_file_directory"
-          tar cvfz "$output_filename" $test_file_directory > /dev/null 2>&1
-          if [ -f $final_archive ]
+      done
+
+      credentials=$(repro_required_credentials "$script")
+
+      jq -n \
+          --arg script "$dir_name/$script_name" \
+          --arg description "$description" \
+          --arg case "$case_number" \
+          --arg author "$author" \
+          --arg base_example "$base_example" \
+          --arg run_flags "$run_flags" \
+          --arg credentials "$credentials" \
+          --arg external_files "$external_files" \
+          '{
+              script: $script,
+              description: $description,
+              case: $case,
+              author: $author,
+              base_example: $base_example,
+              run_flags: $run_flags,
+              run_command: ("playground run -f {repro_dir}/" + ($script | split("/") | last) + (if $run_flags == "" then "" else " " + $run_flags end)),
+              credentials: ($credentials | split("\n") | map(select(. != ""))),
+              external_files: ($external_files | split("\n") | map(select(. != "")))
+          }' >> "$tmp_dir/models.json"
+  done
+
+  : > "$tmp_dir/files.json"
+  while IFS= read -r file
+  do
+      link_to=""
+      if [ -L "$repro_root/$file" ]
+      then
+          target=$(repro_link_target "$output_folder/$file")
+          # only links to the public examples can be restored on import
+          if [ -n "$target" ] && [[ "$target" != "$output_folder"/* ]]
           then
-              log "📤 Exported archive is available: $final_archive"
-          else
-              logerror "❌ export failed as archive could not be created !"
-              exit 1
+              link_to="$target"
           fi
+      fi
+      jq -n \
+          --arg path "$file" \
+          --arg sha256 "$(repro_sha256 "$repro_root/$file")" \
+          --arg link_to "$link_to" \
+          '{ path: $path, sha256: $sha256 } + (if $link_to == "" then {} else { link_to: $link_to } end)' >> "$tmp_dir/files.json"
+  done < "$tmp_dir/files"
+
+  playground_commit=$(git -C "$root_folder" rev-parse --short HEAD 2>/dev/null)
+  jq -n \
+      --arg exported_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+      --arg exported_by "$(whoami)" \
+      --arg playground_commit "$playground_commit" \
+      --slurpfile models "$tmp_dir/models.json" \
+      --slurpfile files "$tmp_dir/files.json" \
+      '{
+          format: 1,
+          exported_at: $exported_at,
+          exported_by: $exported_by,
+          playground_commit: $playground_commit,
+          models: $models,
+          files: $files
+      }' > "$tmp_dir/repro-manifest.json"
+
+  # 4. show what goes in
+  nb_files=$(wc -l < "$tmp_dir/files" | tr -d ' ')
+  log "👷‍♂️ ${#model_scripts[@]} reproduction model(s), $nb_files file(s):"
+  jq -r '.models[] | "   🔖 \(.script)\n      ▶️  \(.run_command)" + (if (.credentials | length) > 0 then "\n      🔑 needs: \(.credentials | join(", "))" else "" end)' "$tmp_dir/repro-manifest.json"
+  jq -r '.files[] | "   📄 \(.path)" + (if .link_to then "  (symlink to \(.link_to), stored as content)" else "" end)' "$tmp_dir/repro-manifest.json"
+
+  if [[ -n "$dry_run" ]]
+  then
+      log "🔍 dry run: no bundle written"
+      exit 0
+  fi
+
+  # 5. the bundle: symlinks are stored as their content
+  staging="$tmp_dir/staging"
+  mkdir -p "$staging"
+  while IFS= read -r file
+  do
+      mkdir -p "$staging/$(dirname "$file")"
+      cp -pL "$repro_root/$file" "$staging/$file"
+  done < "$tmp_dir/files"
+  cp "$tmp_dir/repro-manifest.json" "$staging/"
+
+  if [ ${#model_scripts[@]} -eq 1 ]
+  then
+      bundle_name=$(basename "${model_scripts[0]}" .sh)
+  elif [[ -n "$all_uncommitted" ]]
+  then
+      bundle_name="all-uncommitted"
+  else
+      bundle_name="${#model_scripts[@]}-models"
+  fi
+
+  if [[ -n "$output" ]]
+  then
+      output_dir="${output/#\~/$HOME}"
+  else
+      output_dir="$PWD"
+      # never inside the submodule: the bundle would end up in the next export
+      if [[ "$(cd -P "$output_dir" && pwd)/" == "$repro_root/"* ]]
+      then
+          output_dir="$root_folder"
       fi
   fi
+  mkdir -p "$output_dir"
+  output_dir=$(cd "$output_dir" && pwd)
+  final_archive="$output_dir/playground_repro_${bundle_name}_$(date +%Y-%m-%d).tgz"
+
+  if ! (cd "$staging" && tar czf "$final_archive" repro-manifest.json $(cut -d "/" -f 1 "$tmp_dir/files" | sort -u))
+  then
+      logerror "❌ export failed as archive $final_archive could not be created !"
+      exit 1
+  fi
+
+  log "📤 Exported bundle is available: $final_archive ($(du -h "$final_archive" | cut -f 1 | tr -d ' '))"
+  log "📥 To import it: playground repro import -f <path>/$(basename "$final_archive")"
 
 }
 
@@ -35853,6 +36247,8 @@ playground_repro_import_command() {
 
   # src/commands/repro/import.sh
   file="${args[--file]}"
+  on_conflict="${args[--on-conflict]}"
+  dry_run="${args[--dry-run]}"
 
   if [ ! -z "$OUTPUT_FOLDER" ]
   then
@@ -35871,20 +36267,332 @@ playground_repro_import_command() {
   then
     file=$(echo "$file" | cut -d "@" -f 2)
   fi
+  file=$(cd "$(dirname "$file")" && pwd)/$(basename "$file")
 
-  filename=$(basename $file)
+  mkdir -p "$root_folder/$output_folder"
+  repro_root=$(cd -P "$root_folder/$output_folder" && pwd)
 
-  if [ "playground_repro_export.tgz" != ${filename} ]
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
   then
-      logerror "file $file is not named playground_repro_export.tgz"
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  # 1. extract into an empty folder, the bundle is untrusted
+  if ! tar tzf "$file" > "$tmp_dir/entries" 2>/dev/null
+  then
+      logerror "❌ $file is not a tgz file"
+      exit 1
+  fi
+  if grep -qE '^/|(^|/)\.\.(/|$)' "$tmp_dir/entries"
+  then
+      logerror "❌ $file contains absolute paths or '..', refusing to import it:"
+      grep -E '^/|(^|/)\.\.(/|$)' "$tmp_dir/entries" | head -10
       exit 1
   fi
 
-  repro_dir=$root_folder/$output_folder
-  cd $repro_dir
+  extract="$tmp_dir/extract"
+  mkdir -p "$extract"
+  if ! tar xzf "$file" -C "$extract"
+  then
+      logerror "❌ could not extract $file"
+      exit 1
+  fi
 
-  log "📥 Installing $file"
-  tar xvfz $file
+  special_files=$(cd "$extract" && find . ! -type f ! -type d ! -type l)
+  if [ -n "$special_files" ]
+  then
+      logerror "❌ $file contains special files, refusing to import it:"
+      echo "$special_files" | head -10
+      exit 1
+  fi
+
+  manifest="$extract/repro-manifest.json"
+  (cd "$extract" && find . \( -type f -o -type l \) ! -path ./repro-manifest.json | sed -e 's|^\./||' | sort) > "$tmp_dir/files"
+
+  # 2. validate
+  if [ -f "$manifest" ]
+  then
+      if ! jq -e . "$manifest" > /dev/null 2>&1
+      then
+          logerror "❌ repro-manifest.json of $file is not valid json"
+          exit 1
+      fi
+      format=$(jq -r '.format // 0' "$manifest")
+      if [ "$format" != "1" ]
+      then
+          logerror "❌ bundle format $format is not supported by this version of the playground, update it with 'git pull'"
+          exit 1
+      fi
+      # a bundle has no symlink, they are stored as content
+      if [ -n "$(cd "$extract" && find . -type l)" ]
+      then
+          logerror "❌ $file contains symlinks, refusing to import it"
+          exit 1
+      fi
+      jq -r '.files[].path' "$manifest" | sort > "$tmp_dir/manifest_files"
+      if ! diff -q "$tmp_dir/files" "$tmp_dir/manifest_files" > /dev/null
+      then
+          logerror "❌ the files of $file do not match its manifest, refusing to import it:"
+          diff "$tmp_dir/files" "$tmp_dir/manifest_files" | grep '^[<>]' | head -10
+          exit 1
+      fi
+      while IFS=$'\t' read -r path sha256
+      do
+          if [ "$(repro_sha256 "$extract/$path")" != "$sha256" ]
+          then
+              logerror "❌ sha256 of $path does not match the manifest, refusing to import it"
+              exit 1
+          fi
+      done < <(jq -r '.files[] | "\(.path)\t\(.sha256)"' "$manifest")
+  else
+      logwarn "🗃️ legacy bundle without repro-manifest.json: no metadata (run flags, credentials), files are not verified"
+      # former export kept the symlinks: only relative ones to a public example are accepted
+      while IFS= read -r path
+      do
+          if [ -L "$extract/$path" ]
+          then
+              target=$(readlink "$extract/$path")
+              normalized=""
+              if [[ "$target" != /* ]]
+              then
+                  normalized=$(repro_normalize_path "$output_folder/$(dirname "$path")/$target")
+              fi
+              if [ -z "$normalized" ] || [[ "$normalized" == "$output_folder"/* ]] || [ ! -e "$root_folder/$normalized" ]
+              then
+                  logerror "❌ $path is a symlink to $target, which is not a file of a public example, refusing to import it"
+                  exit 1
+              fi
+          fi
+      done < "$tmp_dir/files"
+      # same layout as a manifest, without models nor checksums
+      jq -R -s '{ format: 0, models: [ split("\n")[] | select(test("^[^/]+/[^/]+\\.sh$") and (endswith("/stop.sh") | not)) | { script: ., run_flags: "", credentials: [], external_files: [] } ], files: [ split("\n")[] | select(. != "") | { path: . } ] }' "$tmp_dir/files" > "$tmp_dir/legacy-manifest.json"
+      manifest="$tmp_dir/legacy-manifest.json"
+  fi
+
+  # files at the top of the bundle are not in a model folder
+  top_files=$(grep -v "/" "$tmp_dir/files" || true)
+  if [ -n "$top_files" ]
+  then
+      logwarn "⏭️ skipping files that are not in a reproduction model folder: $(echo $top_files)"
+      grep "/" "$tmp_dir/files" > "$tmp_dir/files.tmp" || true
+      mv "$tmp_dir/files.tmp" "$tmp_dir/files"
+  fi
+  if [ ! -s "$tmp_dir/files" ]
+  then
+      logerror "❌ $file contains no reproduction model file"
+      exit 1
+  fi
+
+  # 3. what is in it
+  exported_at=$(jq -r '.exported_at // empty' "$manifest")
+  if [ -n "$exported_at" ]
+  then
+      log "📦 bundle exported on $exported_at by $(jq -r '.exported_by' "$manifest") from playground commit $(jq -r '.playground_commit' "$manifest")"
+      playground_commit=$(jq -r '.playground_commit // empty' "$manifest")
+      if [ -n "$playground_commit" ] && ! git -C "$root_folder" cat-file -e "$playground_commit^{commit}" 2>/dev/null
+      then
+          logwarn "🆕 commit $playground_commit is not in your checkout: the models may use features your playground does not have yet, consider 'git pull'"
+      fi
+  fi
+  while IFS= read -r model
+  do
+      log "🔖 $(jq -r '.script' <<< "$model")"
+      description=$(jq -r '.description // empty' <<< "$model")
+      [ -n "$description" ] && log "   💡 $description"
+      case_number=$(jq -r '.case // empty' <<< "$model")
+      [ -n "$case_number" ] && log "   🔮 https://confluent.zendesk.com/agent/tickets/$case_number"
+      author=$(jq -r '.author // empty' <<< "$model")
+      [ -n "$author" ] && log "   👤 $author"
+      base_example=$(jq -r '.base_example // empty' <<< "$model")
+      if [ -n "$base_example" ]
+      then
+          if [ -d "$root_folder/$base_example" ]
+          then
+              log "   🧬 based on $base_example"
+          else
+              logwarn "   🧬 based on $base_example, which does not exist in your checkout: the copies stored in the bundle are used"
+          fi
+      fi
+  done < <(jq -c '.models[]' "$manifest")
+
+  # 4. plan: new, identical or conflicting
+  date_suffix=$(date +%Y%m%d)
+  nb_new=0
+  nb_identical=0
+  declare -a conflicts=()
+  : > "$tmp_dir/plan"
+  while IFS= read -r path
+  do
+      dest="$repro_root/$path"
+      link_to=$(jq -r --arg path "$path" '.files[] | select(.path == $path) | .link_to // empty' "$manifest")
+      if [ -e "$dest" ]
+      then
+          # your copy links to the same public file (its content may have changed since, e.g. config-*.json)
+          if [ -n "$link_to" ] && [ -L "$dest" ] && [ "$(repro_link_target "$output_folder/$path")" == "$link_to" ]
+          then
+              status="identical"
+              nb_identical=$((nb_identical+1))
+          elif cmp -s "$extract/$path" "$dest"
+          then
+              status="identical"
+              nb_identical=$((nb_identical+1))
+          else
+              status="conflict"
+              conflicts+=("$path")
+          fi
+      else
+          status="new"
+          nb_new=$((nb_new+1))
+      fi
+      printf '%s\t%s\n' "$status" "$path" >> "$tmp_dir/plan"
+  done < "$tmp_dir/files"
+
+  log "📋 $nb_new new, $nb_identical identical, ${#conflicts[@]} conflicting file(s)"
+  if [[ -n "$dry_run" ]] || [ ${#conflicts[@]} -gt 0 ]
+  then
+      while IFS=$'\t' read -r status path
+      do
+          case "$status" in
+              new) echo "   ✨ new        $path" ;;
+              identical) echo "   🟰 identical  $path" ;;
+              conflict) echo "   ⚔️  conflict   $path" ;;
+          esac
+      done < "$tmp_dir/plan"
+  fi
+
+  if [[ -n "$dry_run" ]]
+  then
+      log "🔍 dry run: nothing imported"
+      exit 0
+  fi
+
+  if [ ${#conflicts[@]} -gt 0 ] && [ "$on_conflict" == "abort" ]
+  then
+      logerror "❌ ${#conflicts[@]} file(s) differ from your copy, nothing imported. Use --on-conflict rename (keeps yours) or --on-conflict overwrite"
+      exit 1
+  fi
+
+  # 5. import
+  declare -a renames=()
+  while IFS=$'\t' read -r status path
+  do
+      dest="$repro_root/$path"
+      if [ "$status" == "identical" ]
+      then
+          continue
+      fi
+      if [ "$status" == "conflict" ]
+      then
+          if [ "$on_conflict" == "rename" ]
+          then
+              name=$(basename "$path")
+              if [[ "$name" == *.* ]]
+              then
+                  new_name="${name%.*}-imported-$date_suffix.${name##*.}"
+              else
+                  new_name="$name-imported-$date_suffix"
+              fi
+              dest="$(dirname "$dest")/$new_name"
+              renames+=("$name	$new_name")
+              log "✏️  $path imported as $(dirname "$path")/$new_name"
+          fi
+          rm -f "$dest"
+      fi
+      mkdir -p "$(dirname "$dest")"
+
+      if [ -L "$extract/$path" ]
+      then
+          # legacy bundle: the symlink was validated above
+          rm -f "$dest"
+          ln -s "$(readlink "$extract/$path")" "$dest"
+          continue
+      fi
+
+      # restore the symlinks of bootstrap when the public file is identical
+      link_to=$(jq -r --arg path "$path" '.files[] | select(.path == $path) | .link_to // empty' "$manifest")
+      if [ -n "$link_to" ] && [ -f "$root_folder/$link_to" ] && cmp -s "$extract/$path" "$root_folder/$link_to"
+      then
+          up=$(echo "$output_folder/$(dirname "$path")" | sed -e 's|[^/][^/]*|..|g')
+          ln -s "$up/$link_to" "$dest"
+      else
+          if [ -n "$link_to" ]
+          then
+              logwarn "📄 $path differs from $link_to in your checkout, keeping the copy from the bundle"
+          fi
+          cp -p "$extract/$path" "$dest"
+      fi
+  done < "$tmp_dir/plan"
+
+  # the final path of each model, with references to renamed files updated
+  declare -a model_paths=()
+  while IFS= read -r model
+  do
+      script=$(jq -r '.script' <<< "$model")
+      name=$(basename "$script")
+      for rename in "${renames[@]}"
+      do
+          if [ "${rename%%	*}" == "$name" ]
+          then
+              name="${rename##*	}"
+          fi
+      done
+      model_path="$repro_root/$(dirname "$script")/$name"
+      model_paths+=("$model_path")
+      for rename in "${renames[@]}"
+      do
+          sed -e "s|${rename%%	*}|${rename##*	}|g" "$model_path" > "$tmp_dir/script"
+          cat "$tmp_dir/script" > "$model_path"
+      done
+  done < <(jq -c '.models[]' "$manifest")
+
+  log "📥 $file imported in $repro_root"
+
+  if [ ${#model_paths[@]} -eq 0 ]
+  then
+      exit 0
+  fi
+
+  # 6. register the first model as the current one, like bootstrap does
+  test_file="${model_paths[0]}"
+  playground state set run.test_file "$test_file"
+  playground state set run.connector_type "$(get_connector_type | tr -d '\n')"
+
+  # 7. how to run them
+  i=0
+  while IFS= read -r model
+  do
+      model_path="${model_paths[$i]}"
+      i=$((i+1))
+      run_flags=$(jq -r '.run_flags // empty' <<< "$model")
+      log "▶️  playground run -f $model_path${run_flags:+ $run_flags}"
+      while IFS= read -r external_file
+      do
+          if [ -n "$external_file" ] && [ ! -f "$external_file" ]
+          then
+              logwarn "   📎 it runs with $external_file, which is not on this machine: ask for it and fix the path"
+          fi
+      done < <(jq -r '.external_files[]?' <<< "$model")
+      while IFS= read -r credential
+      do
+          case "$credential" in
+              "")
+                  ;;
+              handle_*_credentials|bootstrap_ccloud_environment)
+                  log "   🔑 calls $credential, make sure the matching credentials are set up"
+                  ;;
+              *)
+                  if [ -z "$(secret_get "$credential" 2>/dev/null)" ]
+                  then
+                      logwarn "   🔑 $credential is not set: playground secrets set $credential"
+                  fi
+                  ;;
+          esac
+      done < <(jq -r '.credentials[]?' <<< "$model")
+  done < <(jq -c '.models[]' "$manifest")
+
 }
 
 # :command.function
@@ -67561,10 +68269,76 @@ playground_repro_export_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
+      --file | -f)
+        # :flag.conflicts
+        for conflict in --all-uncommitted --all; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--file']+x} ]]; then
+            args['--file']="$escaped"
+          else
+            args['--file']="${args['--file']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --all-uncommitted)
+        # :flag.conflicts
+        if [[ -n "${args['--file']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--file" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--all-uncommitted']=1
+        shift
+        ;;
+
+      # :flag.case
       --all)
+        # :flag.conflicts
+        if [[ -n "${args['--file']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--file" >&2
+          exit 1
+        fi
 
         # :flag.case_no_arg
         args['--all']=1
+        shift
+        ;;
+
+      # :flag.case
+      --output | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output requires an argument: --output, -o OUTPUT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --dry-run)
+
+        # :flag.case_no_arg
+        args['--dry-run']=1
         shift
         ;;
 
@@ -67596,6 +68370,20 @@ playground_repro_export_parse_requirements() {
 
     esac
   done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--file'] ]]; then
+    values=''
+    eval "values=(${args['--file']})"
+    for value in "${values[@]}"; do
+      validation_output="$(validate_file_exists_with_trick "$value")"
+      if [[ -n "$validation_output" ]]; then
+        printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
+        exit 1
+      fi
+    done
+  fi
 
 }
 
@@ -67641,6 +68429,28 @@ playground_repro_import_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --on-conflict)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--on-conflict']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--on-conflict requires an argument: --on-conflict ON-CONFLICT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --dry-run)
+
+        # :flag.case_no_arg
+        args['--dry-run']=1
+        shift
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -67670,6 +68480,15 @@ playground_repro_import_parse_requirements() {
     esac
   done
 
+  # :command.required_flags_filter
+  if [[ -z ${args['--file']+x} ]]; then
+    printf "missing required flag: --file, -f FILE\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['--on-conflict']:-} ]] || args['--on-conflict']="abort"
+
   # :command.validations
   # :flag.validations
   if [[ -v args['--file'] ]]; then
@@ -67678,6 +68497,12 @@ playground_repro_import_parse_requirements() {
       printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--on-conflict']:-} ]] && [[ ! ${args['--on-conflict']:-} =~ ^(abort|rename|overwrite)$ ]]; then
+    printf "%s\n" "--on-conflict must be one of: abort, rename, overwrite" >&2
+    exit 1
   fi
 
 }
@@ -95370,8 +96195,38 @@ playground_repro_export_completion() {
         completion_blocked_flags["--help"]=1
         shift
         ;;
-      --all)
+      --file | -f)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-examples-list-with-fzf --repro-only "$completion_current"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--all-uncommitted"]=1
         completion_blocked_flags["--all"]=1
+
+        ;;
+      --all-uncommitted)
+        completion_blocked_flags["--all-uncommitted"]=1
+        completion_blocked_flags["--file"]=1
+
+        shift
+        ;;
+      --output | -o)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output"]=1
+
+        ;;
+      --dry-run)
+        completion_blocked_flags["--dry-run"]=1
 
         shift
         ;;
@@ -95383,7 +96238,10 @@ playground_repro_export_completion() {
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
-    completion_flag_candidates --all "$completion_current" --all
+    completion_flag_candidates --file "$completion_current" --file -f
+    completion_flag_candidates --all-uncommitted "$completion_current" --all-uncommitted
+    completion_flag_candidates --output "$completion_current" --output -o
+    completion_flag_candidates --dry-run "$completion_current" --dry-run
   fi
 
 }
@@ -95412,6 +96270,27 @@ playground_repro_import_completion() {
         completion_blocked_flags["--file"]=1
 
         ;;
+      --on-conflict)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "abort"
+            "rename"
+            "overwrite"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--on-conflict"]=1
+
+        ;;
+      --dry-run)
+        completion_blocked_flags["--dry-run"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -95421,6 +96300,8 @@ playground_repro_import_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --file "$completion_current" --file -f
+    completion_flag_candidates --on-conflict "$completion_current" --on-conflict
+    completion_flag_candidates --dry-run "$completion_current" --dry-run
   fi
 
 }

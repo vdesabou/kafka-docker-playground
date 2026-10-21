@@ -871,20 +871,192 @@ function get_playground_repro_export_with_fzf() {
   folder_zip_or_jar=${folder_zip_or_jar//\~/$HOME}
   folder_zip_or_jar=${folder_zip_or_jar//,/ }
   
-  fzf_output=$(cat /tmp/get_any_files_with_fzf | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="📃" --header="select file" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query --bind "alt-enter:print-query")
-  
+  # playground_repro_export.tgz is the name used by the former export
+  fzf_output=$(find $folder_zip_or_jar $PWD \( -name 'playground_repro_*.tgz' -o -name 'playground_repro_*.tar.gz' \) ! -path '*/\.*' 2>/dev/null | sort -u | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="📃" --header="select repro bundle (use option+enter to use the value you typed manually)" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer --print-query --bind "alt-enter:print-query")
+
   # Parse fzf output: first line is query, second line is selection (or query again if alt-enter was used)
   query_line=$(echo "$fzf_output" | head -n1)
   selected_line=$(echo "$fzf_output" | tail -n1)
-  
+
   # If both lines are the same, user pressed alt-enter (use typed value)
   if [ "$query_line" = "$selected_line" ]; then
     res="$query_line"
   else
     res="$selected_line"
   fi
-  
+
   echo "$cur@$res"
+}
+
+#
+# Reproduction model bundles (playground repro export / import)
+#
+
+# sha256 of a file, symlinks followed
+function repro_sha256 () {
+  if command -v sha256sum > /dev/null 2>&1
+  then
+    sha256sum "$1" | cut -d " " -f 1
+  else
+    shasum -a 256 "$1" | cut -d " " -f 1
+  fi
+}
+
+# true when a path (relative to the folder of the model) must never go into a bundle:
+# build output, dumps, recordings, logs, archives and credential files
+function repro_bundle_denied () {
+  local name="${1##*/}"
+  case "/$1/" in
+    */target/*|*/benchmark-history*|*-analysis-output/*|*/heap-analysis/*|*/cfk-reports/*) return 0 ;;
+  esac
+  case "$name" in
+    *.hprof|*.hprof.gz|*.jfr|*.log|*.tgz|*.tar.gz|.DS_Store|repro-manifest.json) return 0 ;;
+    keyfile.json|*.pem|*.key|*.p12|secrets.properties|playground.ini|playground-run-history) return 0 ;;
+  esac
+  return 1
+}
+
+# value of a line '# <key>: <value>' of the header written by repro bootstrap
+function repro_header_value () {
+  local script="$1"
+  local key="$2"
+  head -30 "$script" | grep -m1 "^# .*$key: " | sed -e "s/^# .*$key: //"
+}
+
+# normalize a relative path: remove '.' and resolve '..' (prints nothing when it goes above its root)
+function repro_normalize_path () {
+  local path="$1"
+  local -a parts=()
+  local part
+  local IFS='/'
+  for part in $path
+  do
+    case "$part" in
+      ''|.) ;;
+      ..)
+        if [ ${#parts[@]} -eq 0 ]
+        then
+          return 0
+        fi
+        unset 'parts[${#parts[@]}-1]'
+        ;;
+      *) parts+=("$part") ;;
+    esac
+  done
+  echo "${parts[*]}"
+}
+
+# path relative to the repository root of the target of a symlink, given its path
+# relative to the repository root (prints nothing when it points outside the repository)
+function repro_link_target () {
+  local link_rel="$1"
+  local target
+  target=$(readlink "$root_folder/$link_rel")
+  if [[ "$target" == /* ]]
+  then
+    return 0
+  fi
+  repro_normalize_path "$(dirname "$link_rel")/$target"
+}
+
+# files needed by a reproduction model, relative to the reproduction-models folder:
+# the script, the support files linked by bootstrap, and every entry of its folder that is
+# mentioned by the script or by a docker compose file it mentions (directories are expanded)
+function repro_bundle_files () {
+  local script="$1"
+  local repro_root="$2"
+  local dir=$(dirname "$script")
+  local dir_name=$(basename "$dir")
+  local script_name=$(basename "$script")
+  local references
+  local entry
+  local file
+  local -a selected=()
+
+  references=$(cat "$script")
+  for pass in 1 2
+  do
+    for entry in $(ls -A "$dir")
+    do
+      if [[ " ${selected[*]} " == *" $entry "* ]]
+      then
+        continue
+      fi
+      case "$entry" in
+        "$script_name"|README.md|stop.sh|benchmark-load.bash|sql-datagen|.gitignore|config-*.json|config-*.txt)
+          selected+=("$entry")
+          ;;
+        *)
+          if grep -qF -- "$entry" <<< "$references"
+          then
+            selected+=("$entry")
+          fi
+          ;;
+      esac
+    done
+    # second pass: what the selected docker compose files and load scripts mention
+    for entry in "${selected[@]}"
+    do
+      case "$entry" in
+        *.yml|*.yaml|benchmark-load*.bash)
+          if [ -f "$dir/$entry" ]
+          then
+            references="$references"$'\n'"$(cat "$dir/$entry")"
+          fi
+          ;;
+      esac
+    done
+  done
+
+  for entry in "${selected[@]}"
+  do
+    if [ -d "$dir/$entry" ] && [ ! -L "$dir/$entry" ]
+    then
+      if [ -e "$repro_root/.git" ]
+      then
+        git -C "$repro_root" ls-files --cached --others --exclude-standard -- "$dir_name/$entry" 2>/dev/null
+      else
+        (cd "$repro_root" && find "$dir_name/$entry" \( -type f -o -type l \))
+      fi
+    elif [ -e "$repro_root/.git" ] && git -C "$repro_root" check-ignore -q "$dir_name/$entry" 2>/dev/null
+    then
+      continue
+    else
+      echo "$dir_name/$entry"
+    fi
+  done | sort -u | while read -r file
+  do
+    if repro_bundle_denied "${file#*/}"
+    then
+      continue
+    fi
+    if [ ! -e "$repro_root/$file" ]
+    then
+      logwarn "⏭️ skipping $file: broken symlink or missing file" >&2
+      continue
+    fi
+    if [ -f "$repro_root/$file" ] && [ $(wc -c < "$repro_root/$file") -gt 52428800 ]
+    then
+      logwarn "⏭️ skipping $file: larger than 50 MB" >&2
+      continue
+    fi
+    echo "$file"
+  done
+}
+
+# names of the credentials a script uses: the variables it references that are known to the
+# 'playground secrets' store, plus the credential helpers it calls (names only, never values)
+function repro_required_credentials () {
+  local script="$1"
+  local known
+  known=$({ secret_store_names default; secret_store_names "$(get_active_secret_profile)"; } 2>/dev/null | sort -u)
+  {
+    if [ -n "$known" ]
+    then
+      grep -oE '\$\{?[A-Z][A-Z0-9_]+' "$script" | tr -d '${' | sort -u | grep -xF -- "$known"
+    fi
+    grep -oE 'handle_(aws|azure|gcp)_credentials|bootstrap_ccloud_environment' "$script" | sort -u
+  } | sort -u
 }
 
 function get_ccloud_environment_list_with_fzf() {
