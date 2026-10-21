@@ -39,12 +39,7 @@ function cleanup_cloud_resources {
 }
 trap cleanup_cloud_resources EXIT
 log "Creating Azure Search service"
-az search service create \
-    --name $AZURE_SEARCH_SERVICE_NAME \
-    --resource-group $AZURE_RESOURCE_GROUP \
-    --location $AZURE_REGION \
-    --sku Basic \
-    --tags cflt_managed_by=user cflt_managed_id="$USER"
+azure_search_service_create_with_region_fallback
 AZURE_SEARCH_ADMIN_PRIMARY_KEY=$(az search admin-key show \
     --resource-group $AZURE_RESOURCE_GROUP \
     --service-name $AZURE_SEARCH_SERVICE_NAME | jq -r '.primaryKey')
