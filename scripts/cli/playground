@@ -4578,7 +4578,7 @@ playground_repro_usage() {
 playground_repro_export_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground repro export\n\n"
-    printf "  📤 Export reproduction models as a self-contained tgz bundle\n  \n  Produces a single tgz that a colleague can feed to\n  'playground repro import' to run your scenario as is.\n  \n  The bundle holds what the model needs, committed or not: the script,\n  the files of its folder it mentions (docker compose override, producer,\n  SQL files…) and the support files linked by bootstrap (README.md,\n  stop.sh, benchmark-load.bash, config-*). Symlinks are stored as their\n  content, so the bundle does not depend on the version of the base\n  example. Git-ignored files, build output (target/), dumps, flight\n  recordings, logs and credential files (keyfile.json, *.pem, *.key) are\n  left out.\n  \n  A repro-manifest.json describes the bundle: the last 'playground run'\n  line of each model (from playground-run-history), its case number,\n  author, base example, the playground commit, the names (never the\n  values) of the credentials it needs, and the sha256 of every file.\n  \n  Before anything is written, the bundle is scanned. The export stops\n  (unless --force) when a file contains the value of a credential known\n  to this machine ('playground secrets' store, exported credential\n  variables, CLUSTER_CREDS / SCHEMA_REGISTRY_CREDS of playground.ini,\n  ~/.aws/credentials) or a well-known token format (AWS access key id,\n  private key, GitHub / Slack token, Google API key, JWT, Azure storage\n  account key). Email addresses, public IP addresses and hard-coded\n  passwords that do not come from the base example are reported as\n  possible customer data. Values are never printed.\n  \n  Without --file, the current reproduction model is exported.\n  \n  🎓 Tip: start with --dry-run to see what would be packed, and what the scan\n  finds.\n\n"
+    printf "  📤 Export reproduction models as a self-contained tgz bundle\n  \n  Produces a single tgz that a colleague can feed to\n  'playground repro import' to run your scenario as is.\n  \n  The bundle holds what the model needs, committed or not: the script,\n  the files of its folder it mentions (docker compose override, producer,\n  SQL files…) and the support files linked by bootstrap (README.md,\n  stop.sh, benchmark-load.bash, config-*). Symlinks are stored as their\n  content, so the bundle does not depend on the version of the base\n  example. Git-ignored files, build output (target/), dumps, flight\n  recordings, logs and credential files (keyfile.json, *.pem, *.key) are\n  left out.\n  \n  A repro-manifest.json describes the bundle: the last 'playground run'\n  line of each model (from playground-run-history), its case number,\n  author, base example, the playground commit, the names (never the\n  values) of the credentials it needs, and the sha256 of every file.\n  \n  Before anything is written, the bundle is scanned. The export stops\n  (unless --force) when a file contains the value of a credential known\n  to this machine ('playground secrets' store, exported credential\n  variables, CLUSTER_CREDS / SCHEMA_REGISTRY_CREDS of playground.ini,\n  ~/.aws/credentials) or a well-known token format (AWS access key id,\n  private key, GitHub / Slack token, Google API key, JWT, Azure storage\n  account key). Email addresses, public IP addresses and hard-coded\n  passwords that do not come from the base example are reported as\n  possible customer data. Values are never printed.\n  \n  Files outside the repository that a model needs (--connector-zip /\n  --connector-jar of its run line, files whose absolute path appears in\n  the script or its compose files, like ~/Downloads/config.json) are\n  only listed, unless --include-artifacts packs them under\n  <model folder>/artifacts/. Import then points the run line, the script\n  and the compose files to the imported copies. Import also rewrites the\n  paths of the exporter's checkout (like the jar path written by\n  'repro bootstrap --custom-smt') to the local ones.\n  \n  --cluster-creds / --cluster-schema-registry-creds are removed from the\n  run line: whoever imports runs with their own cluster.\n  \n  Without --file, the current reproduction model is exported.\n  \n  🎓 Tip: start with --dry-run to see what would be packed, and what the scan\n  finds.\n\n"
   else
     printf "playground repro export - 📤 Export reproduction models as a self-contained tgz bundle\n\n"
   fi
@@ -4629,6 +4629,11 @@ playground_repro_export_usage() {
     printf "    🔓 Export even if the scan finds secrets (when they are not real ones)\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--include-artifacts")"
+    printf "    📎 Also pack the files outside the repository the models need (connector zip\n    / jar, files referenced by absolute path)\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -4639,6 +4644,7 @@ playground_repro_export_usage() {
     printf "  playground repro export\n"
     printf "  playground repro export -f\n  ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh\n  --dry-run\n"
     printf "  playground repro export --all-uncommitted --output ~/Desktop\n"
+    printf "  playground repro export --include-artifacts\n"
     echo
 
   fi
@@ -15173,6 +15179,55 @@ function repro_required_credentials () {
   } | sort -u
 }
 
+# files outside the repository that text files of a model mention by absolute path
+# ($HOME/…, ${HOME}/…, ~/…, /Users/…, /home/…): prints '<path as written>\t<absolute path>'
+# for the ones that exist. Dot folders of the home ($HOME/.aws, .ssh, .m2…) and credential
+# files are never returned, nor /tmp files, which the scripts write themselves.
+function repro_external_paths () {
+  local regex match path real_root
+  regex=$(cat << 'EOF'
+(\$\{HOME\}|\$HOME|~|/Users|/home)/[^[:space:]"'`:;,()<>|&{}]+
+EOF
+)
+  real_root=$(cd -P "$root_folder" && pwd)
+  grep -ohE -- "$regex" "$@" 2>/dev/null | sort -u | while IFS= read -r match
+  do
+    path="$match"
+    case "$path" in
+      '${HOME}'/*) path="$HOME/${path#'${HOME}'/}" ;;
+      '$HOME'/*) path="$HOME/${path#'$HOME'/}" ;;
+      '~'/*) path="$HOME/${path#'~'/}" ;;
+    esac
+    if [ ! -f "$path" ]
+    then
+      continue
+    fi
+    path="$(cd -P "$(dirname "$path")" && pwd)/$(basename "$path")"
+    case "$path" in
+      "$real_root"/*|"$HOME"/.*) continue ;;
+    esac
+    if repro_bundle_denied "$(basename "$path")"
+    then
+      continue
+    fi
+    printf '%s\t%s\n' "$match" "$path"
+  done
+}
+
+# where the content of a bundle path comes from: an artifact (outside the repository,
+# listed in the '<path>\t<source>\t<original>' file $3) or the reproduction-models folder $1
+function repro_bundle_source () {
+  local repro_root="$1"
+  local artifacts_file="$2"
+  local file="$3"
+  local source=""
+  if [ -n "$artifacts_file" ] && [ -f "$artifacts_file" ]
+  then
+    source=$(awk -F'\t' -v p="$file" '$1 == p { print $2; exit }' "$artifacts_file")
+  fi
+  echo "${source:-$repro_root/$file}"
+}
+
 # add the lines (8 chars or more) of a credential value to the pattern file of its label.
 # values only ever go to files of a 0700 folder, never to a command line
 function repro_scan_add_value () {
@@ -15183,19 +15238,26 @@ function repro_scan_add_value () {
   then
     return 0
   fi
+  # a path is not a secret
+  if [[ "$value" == /* ]] && [ -e "$value" ]
+  then
+    return 0
+  fi
   printf '%s\n' "$value" | awk 'length($0) >= 8' >> "$dir/$label"
 }
 
 # scan the files of a bundle for secrets and customer data, before it leaves the machine.
 # writes one '<block|warn>\t<file>:<line>\t<message>' line per finding to $4, never a value
 #   $1 reproduction-models folder, $2 file with the bundle paths (relative to $1),
-#   $3 manifest, $4 findings file, $5 base examples (relative to the repository root)
+#   $3 manifest, $4 findings file, $5 base examples (relative to the repository root),
+#   $6 artifacts file (see repro_bundle_source)
 function repro_bundle_scan () {
   local repro_root="$1"
   local files_list="$2"
   local manifest="$3"
   local findings="$4"
   local base_examples="$5"
+  local artifacts_file="${6:-}"
   local scan_dir
   scan_dir=$(mktemp -d)
   chmod 0700 "$scan_dir"
@@ -15209,7 +15271,8 @@ function repro_bundle_scan () {
   names=$(secret_store_dump "$(get_secrets_file)" 2>/dev/null | awk -F"\t" -v p="$profile" '$1==p || $1=="default" { print $2 }')
   for name in $(compgen -e)
   do
-    if is_secret_env_var_name "$name"
+    # PWD / OLDPWD match *PWD* but hold the current folder
+    if [ "$name" != "PWD" ] && [ "$name" != "OLDPWD" ] && is_secret_env_var_name "$name"
     then
       names="$names"$'\n'"$name"
     fi
@@ -15295,7 +15358,7 @@ function repro_bundle_scan () {
     then
       path="$manifest"
     else
-      path="$repro_root/$target"
+      path=$(repro_bundle_source "$repro_root" "$artifacts_file" "$target")
     fi
 
     # known credential values; a value that is also in the public base example is not a leak
@@ -36172,6 +36235,7 @@ playground_repro_export_command() {
   output="${args[--output]}"
   dry_run="${args[--dry-run]}"
   force="${args[--force]}"
+  include_artifacts="${args[--include-artifacts]}"
 
   if [ ! -z "$OUTPUT_FOLDER" ]
   then
@@ -36291,6 +36355,7 @@ playground_repro_export_command() {
   # 3. the manifest
   history_file="$root_folder/playground-run-history"
   : > "$tmp_dir/models.json"
+  : > "$tmp_dir/artifacts"
   for script in "${model_scripts[@]}"
   do
       dir_name=$(basename "$(dirname "$script")")
@@ -36308,12 +36373,58 @@ playground_repro_export_command() {
           logwarn "🤷 $dir_name/$script_name: no 'playground run' found in playground-run-history, the bundle will not say which flags to use"
       fi
 
-      # files given by absolute path on this machine are not in the bundle
-      external_files=$(grep -oE -- "--connector-(zip|jar)=[^ ]+" <<< "$run_flags" | cut -d "=" -f 2-)
-      for external_file in $external_files
+      # the importer runs with their own Confluent Cloud cluster
+      stripped_flags=$(sed -E -e 's/--cluster-(schema-registry-)?creds[ =][^ ]+ ?//g' -e 's/[[:space:]]*$//' <<< "$run_flags")
+      if [ "$stripped_flags" != "$run_flags" ]
+      then
+          log "🔐 $dir_name/$script_name: --cluster-creds / --cluster-schema-registry-creds removed from the run line"
+          run_flags="$stripped_flags"
+      fi
+
+      # files outside the repository: --connector-zip / --connector-jar, and absolute paths in
+      # the script or in the compose files it uses
+      external_files=$(grep -oE -- "--connector-(zip|jar)=[^ ]+" <<< "$run_flags" | cut -d "=" -f 2- || true)
+      {
+          for external_file in $external_files
+          do
+              if [ -f "$external_file" ]
+              then
+                  printf '%s\t%s\n' "$external_file" "$(cd -P "$(dirname "$external_file")" && pwd)/$(basename "$external_file")"
+              fi
+          done
+          text_files=("$script")
+          for file in $(grep -E "^$dir_name/[^/]*\.(yml|yaml)$" "$tmp_dir/files")
+          do
+              text_files+=("$repro_root/$file")
+          done
+          repro_external_paths "${text_files[@]}"
+      } | sort -u > "$tmp_dir/external"
+      while IFS=$'\t' read -r original source
       do
-          logwarn "📎 $dir_name/$script_name runs with $external_file, which is not included in the bundle: send it too"
-      done
+          if [[ -z "$include_artifacts" ]]
+          then
+              logwarn "📎 $dir_name/$script_name uses $original, which is outside the repository and not in the bundle: use --include-artifacts to add it"
+              continue
+          fi
+          # same file already packed for this model (written differently)?
+          artifact=$(awk -F'\t' -v s="$source" -v d="$dir_name/artifacts/" '$2 == s && index($1, d) == 1 { print $1; exit }' "$tmp_dir/artifacts")
+          if [ -z "$artifact" ]
+          then
+              artifact="$dir_name/artifacts/$(basename "$source")"
+              n=1
+              while grep -q "^$artifact	" "$tmp_dir/artifacts"
+              do
+                  n=$((n+1))
+                  artifact="$dir_name/artifacts/$n-$(basename "$source")"
+              done
+              if [ $(wc -c < "$source") -gt 52428800 ]
+              then
+                  logwarn "🐘 $source is larger than 50 MB, the bundle will be big"
+              fi
+              echo "$artifact" >> "$tmp_dir/files"
+          fi
+          printf '%s\t%s\t%s\n' "$artifact" "$source" "$original" >> "$tmp_dir/artifacts"
+      done < "$tmp_dir/external"
 
       description=$(repro_header_value "$script" "description")
       case_number=""
@@ -36362,6 +36473,8 @@ playground_repro_export_command() {
           }' >> "$tmp_dir/models.json"
   done
 
+  sort -u "$tmp_dir/files" -o "$tmp_dir/files"
+
   : > "$tmp_dir/files.json"
   while IFS= read -r file
   do
@@ -36377,16 +36490,20 @@ playground_repro_export_command() {
       fi
       jq -n \
           --arg path "$file" \
-          --arg sha256 "$(repro_sha256 "$repro_root/$file")" \
+          --arg sha256 "$(repro_sha256 "$(repro_bundle_source "$repro_root" "$tmp_dir/artifacts" "$file")")" \
           --arg link_to "$link_to" \
           '{ path: $path, sha256: $sha256 } + (if $link_to == "" then {} else { link_to: $link_to } end)' >> "$tmp_dir/files.json"
   done < "$tmp_dir/files"
 
   playground_commit=$(git -C "$root_folder" rev-parse --short HEAD 2>/dev/null)
+  # paths of this checkout, that import rewrites to the importer's (e.g. --custom-smt jar path)
   jq -n \
       --arg exported_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
       --arg exported_by "$(whoami)" \
       --arg playground_commit "$playground_commit" \
+      --arg repro_roots "$(printf '%s\n%s' "$root_folder/$output_folder" "$repro_root")" \
+      --arg root_folders "$(printf '%s\n%s' "$root_folder" "$(cd -P "$root_folder" && pwd)")" \
+      --rawfile artifacts "$tmp_dir/artifacts" \
       --slurpfile models "$tmp_dir/models.json" \
       --slurpfile files "$tmp_dir/files.json" \
       '{
@@ -36394,6 +36511,9 @@ playground_repro_export_command() {
           exported_at: $exported_at,
           exported_by: $exported_by,
           playground_commit: $playground_commit,
+          source_repro_roots: ($repro_roots | split("\n") | unique),
+          source_root_folders: ($root_folders | split("\n") | unique),
+          artifacts: [ $artifacts | split("\n")[] | select(. != "") | split("\t") | { path: .[0], original: .[2] } ],
           models: $models,
           files: $files
       }' > "$tmp_dir/repro-manifest.json"
@@ -36402,11 +36522,11 @@ playground_repro_export_command() {
   nb_files=$(wc -l < "$tmp_dir/files" | tr -d ' ')
   log "👷‍♂️ ${#model_scripts[@]} reproduction model(s), $nb_files file(s):"
   jq -r '.models[] | "   🔖 \(.script)\n      ▶️  \(.run_command)" + (if (.credentials | length) > 0 then "\n      🔑 needs: \(.credentials | join(", "))" else "" end)' "$tmp_dir/repro-manifest.json"
-  jq -r '.files[] | "   📄 \(.path)" + (if .link_to then "  (symlink to \(.link_to), stored as content)" else "" end)' "$tmp_dir/repro-manifest.json"
+  jq -r '.artifacts as $artifacts | .files[] | .path as $path | "   📄 \(.path)" + (if .link_to then "  (symlink to \(.link_to), stored as content)" else "" end) + ([ $artifacts[] | select(.path == $path) | .original ] | if length > 0 then "  (artifact, from \(join(", ")))" else "" end)' "$tmp_dir/repro-manifest.json"
 
   # 5. secrets and customer data, before anything leaves the machine
   log "🕵️ scanning the bundle for secrets and customer data"
-  repro_bundle_scan "$repro_root" "$tmp_dir/files" "$tmp_dir/repro-manifest.json" "$tmp_dir/findings" "$(jq -r '[.models[].base_example | select(. != "")] | unique | join(" ")' "$tmp_dir/repro-manifest.json")"
+  repro_bundle_scan "$repro_root" "$tmp_dir/files" "$tmp_dir/repro-manifest.json" "$tmp_dir/findings" "$(jq -r '[.models[].base_example | select(. != "")] | unique | join(" ")' "$tmp_dir/repro-manifest.json")" "$tmp_dir/artifacts"
   nb_blocks=$(grep -c "^block" "$tmp_dir/findings" || true)
   nb_warnings=$(grep -c "^warn" "$tmp_dir/findings" || true)
   for severity in block warn
@@ -36455,7 +36575,7 @@ playground_repro_export_command() {
   while IFS= read -r file
   do
       mkdir -p "$staging/$(dirname "$file")"
-      cp -pL "$repro_root/$file" "$staging/$file"
+      cp -pL "$(repro_bundle_source "$repro_root" "$tmp_dir/artifacts" "$file")" "$staging/$file"
   done < "$tmp_dir/files"
   cp "$tmp_dir/repro-manifest.json" "$staging/"
 
@@ -36639,6 +36759,52 @@ playground_repro_import_command() {
       exit 1
   fi
 
+  # paths of the exporter's machine, rewritten to this one in the text files of the bundle and in
+  # the run lines: artifacts (stored in <model folder>/artifacts/) and the exporter's checkout
+  : > "$tmp_dir/rewrites"
+  while IFS=$'\t' read -r original path
+  do
+      printf '%s\t%s\n' "$original" "$repro_root/$path" >> "$tmp_dir/rewrites"
+  done < <(jq -r '.artifacts[]? | "\(.original)\t\(.path)"' "$manifest")
+  while IFS= read -r source_path
+  do
+      printf '%s\t%s\n' "$source_path" "$repro_root" >> "$tmp_dir/rewrites"
+  done < <(jq -r '.source_repro_roots[]?' "$manifest")
+  while IFS= read -r source_path
+  do
+      printf '%s\t%s\n' "$source_path" "$root_folder" >> "$tmp_dir/rewrites"
+  done < <(jq -r '.source_root_folders[]?' "$manifest")
+
+  # one pass, longest path first, so that a path is never rewritten twice
+  rewrite_perl='BEGIN { open(my $r, "<", $ENV{REWRITES}) or die; while (<$r>) { chomp; my ($f, $t) = split(/\t/, $_, 2); next if $f eq "" || $f eq $t; $m{$f} = $t; } @k = sort { length($b) <=> length($a) } keys %m; $re = @k ? join("|", map { quotemeta } @k) : undef; } s/($re)/$m{$1}/g if defined $re;'
+
+  function apply_rewrites () {
+      printf '%s' "$1" | REWRITES="$tmp_dir/rewrites" perl -pe "$rewrite_perl"
+  }
+
+  if [ -s "$tmp_dir/rewrites" ]
+  then
+      while IFS= read -r path
+      do
+          case "$path" in
+              */artifacts/*) continue ;;
+              *.sh|*.bash|*.yml|*.yaml) ;;
+              *) continue ;;
+          esac
+          # files restored as symlinks to the public example are left as is
+          if [ -n "$(jq -r --arg path "$path" '.files[]? | select(.path == $path) | .link_to // empty' "$manifest")" ]
+          then
+              continue
+          fi
+          cp -p "$extract/$path" "$tmp_dir/before"
+          REWRITES="$tmp_dir/rewrites" perl -pi -e "$rewrite_perl" "$extract/$path"
+          if ! cmp -s "$tmp_dir/before" "$extract/$path"
+          then
+              log "🔀 $path: paths of the exporter's machine rewritten to this one"
+          fi
+      done < "$tmp_dir/files"
+  fi
+
   # 3. what is in it
   exported_at=$(jq -r '.exported_at // empty' "$manifest")
   if [ -n "$exported_at" ]
@@ -36819,10 +36985,11 @@ playground_repro_import_command() {
   do
       model_path="${model_paths[$i]}"
       i=$((i+1))
-      run_flags=$(jq -r '.run_flags // empty' <<< "$model")
+      run_flags=$(apply_rewrites "$(jq -r '.run_flags // empty' <<< "$model")")
       log "▶️  playground run -f $model_path${run_flags:+ $run_flags}"
       while IFS= read -r external_file
       do
+          external_file=$(apply_rewrites "$external_file")
           if [ -n "$external_file" ] && [ ! -f "$external_file" ]
           then
               logwarn "   📎 it runs with $external_file, which is not on this machine: ask for it and fix the path"
@@ -68603,6 +68770,14 @@ playground_repro_export_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --include-artifacts)
+
+        # :flag.case_no_arg
+        args['--include-artifacts']=1
+        shift
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -96496,6 +96671,11 @@ playground_repro_export_completion() {
 
         shift
         ;;
+      --include-artifacts)
+        completion_blocked_flags["--include-artifacts"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -96509,6 +96689,7 @@ playground_repro_export_completion() {
     completion_flag_candidates --output "$completion_current" --output -o
     completion_flag_candidates --dry-run "$completion_current" --dry-run
     completion_flag_candidates --force "$completion_current" --force
+    completion_flag_candidates --include-artifacts "$completion_current" --include-artifacts
   fi
 
 }

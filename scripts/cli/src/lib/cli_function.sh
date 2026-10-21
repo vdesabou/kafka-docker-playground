@@ -1059,6 +1059,55 @@ function repro_required_credentials () {
   } | sort -u
 }
 
+# files outside the repository that text files of a model mention by absolute path
+# ($HOME/…, ${HOME}/…, ~/…, /Users/…, /home/…): prints '<path as written>\t<absolute path>'
+# for the ones that exist. Dot folders of the home ($HOME/.aws, .ssh, .m2…) and credential
+# files are never returned, nor /tmp files, which the scripts write themselves.
+function repro_external_paths () {
+  local regex match path real_root
+  regex=$(cat << 'EOF'
+(\$\{HOME\}|\$HOME|~|/Users|/home)/[^[:space:]"'`:;,()<>|&{}]+
+EOF
+)
+  real_root=$(cd -P "$root_folder" && pwd)
+  grep -ohE -- "$regex" "$@" 2>/dev/null | sort -u | while IFS= read -r match
+  do
+    path="$match"
+    case "$path" in
+      '${HOME}'/*) path="$HOME/${path#'${HOME}'/}" ;;
+      '$HOME'/*) path="$HOME/${path#'$HOME'/}" ;;
+      '~'/*) path="$HOME/${path#'~'/}" ;;
+    esac
+    if [ ! -f "$path" ]
+    then
+      continue
+    fi
+    path="$(cd -P "$(dirname "$path")" && pwd)/$(basename "$path")"
+    case "$path" in
+      "$real_root"/*|"$HOME"/.*) continue ;;
+    esac
+    if repro_bundle_denied "$(basename "$path")"
+    then
+      continue
+    fi
+    printf '%s\t%s\n' "$match" "$path"
+  done
+}
+
+# where the content of a bundle path comes from: an artifact (outside the repository,
+# listed in the '<path>\t<source>\t<original>' file $3) or the reproduction-models folder $1
+function repro_bundle_source () {
+  local repro_root="$1"
+  local artifacts_file="$2"
+  local file="$3"
+  local source=""
+  if [ -n "$artifacts_file" ] && [ -f "$artifacts_file" ]
+  then
+    source=$(awk -F'\t' -v p="$file" '$1 == p { print $2; exit }' "$artifacts_file")
+  fi
+  echo "${source:-$repro_root/$file}"
+}
+
 # add the lines (8 chars or more) of a credential value to the pattern file of its label.
 # values only ever go to files of a 0700 folder, never to a command line
 function repro_scan_add_value () {
@@ -1069,19 +1118,26 @@ function repro_scan_add_value () {
   then
     return 0
   fi
+  # a path is not a secret
+  if [[ "$value" == /* ]] && [ -e "$value" ]
+  then
+    return 0
+  fi
   printf '%s\n' "$value" | awk 'length($0) >= 8' >> "$dir/$label"
 }
 
 # scan the files of a bundle for secrets and customer data, before it leaves the machine.
 # writes one '<block|warn>\t<file>:<line>\t<message>' line per finding to $4, never a value
 #   $1 reproduction-models folder, $2 file with the bundle paths (relative to $1),
-#   $3 manifest, $4 findings file, $5 base examples (relative to the repository root)
+#   $3 manifest, $4 findings file, $5 base examples (relative to the repository root),
+#   $6 artifacts file (see repro_bundle_source)
 function repro_bundle_scan () {
   local repro_root="$1"
   local files_list="$2"
   local manifest="$3"
   local findings="$4"
   local base_examples="$5"
+  local artifacts_file="${6:-}"
   local scan_dir
   scan_dir=$(mktemp -d)
   chmod 0700 "$scan_dir"
@@ -1095,7 +1151,8 @@ function repro_bundle_scan () {
   names=$(secret_store_dump "$(get_secrets_file)" 2>/dev/null | awk -F"\t" -v p="$profile" '$1==p || $1=="default" { print $2 }')
   for name in $(compgen -e)
   do
-    if is_secret_env_var_name "$name"
+    # PWD / OLDPWD match *PWD* but hold the current folder
+    if [ "$name" != "PWD" ] && [ "$name" != "OLDPWD" ] && is_secret_env_var_name "$name"
     then
       names="$names"$'\n'"$name"
     fi
@@ -1181,7 +1238,7 @@ function repro_bundle_scan () {
     then
       path="$manifest"
     else
-      path="$repro_root/$target"
+      path=$(repro_bundle_source "$repro_root" "$artifacts_file" "$target")
     fi
 
     # known credential values; a value that is also in the public base example is not a leak

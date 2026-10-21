@@ -2711,6 +2711,18 @@ commands:
       passwords that do not come from the base example are reported as
       possible customer data. Values are never printed.
 
+      Files outside the repository that a model needs (--connector-zip /
+      --connector-jar of its run line, files whose absolute path appears in
+      the script or its compose files, like ~/Downloads/config.json) are
+      only listed, unless --include-artifacts packs them under
+      <model folder>/artifacts/. Import then points the run line, the script
+      and the compose files to the imported copies. Import also rewrites the
+      paths of the exporter's checkout (like the jar path written by
+      'repro bootstrap --custom-smt') to the local ones.
+
+      --cluster-creds / --cluster-schema-registry-creds are removed from the
+      run line: whoever imports runs with their own cluster.
+
       Without --file, the current reproduction model is exported.
 
       🎓 Tip: start with --dry-run to see what would be packed, and what the scan finds.
@@ -2756,10 +2768,15 @@ commands:
         required: false
         help: |-
           🔓 Export even if the scan finds secrets (when they are not real ones)
+      - long: --include-artifacts
+        required: false
+        help: |-
+          📎 Also pack the files outside the repository the models need (connector zip / jar, files referenced by absolute path)
     examples:
     - playground repro export
     - playground repro export -f ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh --dry-run
     - playground repro export --all-uncommitted --output ~/Desktop
+    - playground repro export --include-artifacts
 
   - name: import
     help: |-
