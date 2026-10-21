@@ -2,6 +2,7 @@ eval "files=(${args[--file]:-})"
 all_uncommitted="${args[--all-uncommitted]}${args[--all]}"
 output="${args[--output]}"
 dry_run="${args[--dry-run]}"
+force="${args[--force]}"
 
 if [ ! -z "$OUTPUT_FOLDER" ]
 then
@@ -234,13 +235,52 @@ log "👷‍♂️ ${#model_scripts[@]} reproduction model(s), $nb_files file(s)
 jq -r '.models[] | "   🔖 \(.script)\n      ▶️  \(.run_command)" + (if (.credentials | length) > 0 then "\n      🔑 needs: \(.credentials | join(", "))" else "" end)' "$tmp_dir/repro-manifest.json"
 jq -r '.files[] | "   📄 \(.path)" + (if .link_to then "  (symlink to \(.link_to), stored as content)" else "" end)' "$tmp_dir/repro-manifest.json"
 
+# 5. secrets and customer data, before anything leaves the machine
+log "🕵️ scanning the bundle for secrets and customer data"
+repro_bundle_scan "$repro_root" "$tmp_dir/files" "$tmp_dir/repro-manifest.json" "$tmp_dir/findings" "$(jq -r '[.models[].base_example | select(. != "")] | unique | join(" ")' "$tmp_dir/repro-manifest.json")"
+nb_blocks=$(grep -c "^block" "$tmp_dir/findings" || true)
+nb_warnings=$(grep -c "^warn" "$tmp_dir/findings" || true)
+for severity in block warn
+do
+    grep "^$severity" "$tmp_dir/findings" | head -20 | while IFS=$'\t' read -r level location message
+    do
+        if [ "$level" == "block" ]
+        then
+            logerror "   🔐 $location $message"
+        else
+            logwarn "   👀 $location $message"
+        fi
+    done
+done
+if [ $((nb_blocks + nb_warnings)) -gt 40 ]
+then
+    logwarn "   … $((nb_blocks + nb_warnings)) findings in total, only the first 20 of each kind are shown"
+fi
+if [ $nb_warnings -gt 0 ]
+then
+    logwarn "👀 $nb_warnings possible customer data finding(s): check them, a bundle must not contain customer data"
+fi
+if [ $nb_blocks -gt 0 ]
+then
+    if [[ -n "$force" ]]
+    then
+        logwarn "🔓 $nb_blocks secret finding(s), exporting anyway as --force is set"
+    else
+        logerror "❌ $nb_blocks secret finding(s): remove them (use \${VAR} instead of the value), or use --force if they are not real secrets"
+        exit 1
+    fi
+elif [ $nb_warnings -eq 0 ]
+then
+    log "✅ no secret nor customer data found"
+fi
+
 if [[ -n "$dry_run" ]]
 then
     log "🔍 dry run: no bundle written"
     exit 0
 fi
 
-# 5. the bundle: symlinks are stored as their content
+# 6. the bundle: symlinks are stored as their content
 staging="$tmp_dir/staging"
 mkdir -p "$staging"
 while IFS= read -r file
