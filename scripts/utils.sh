@@ -668,6 +668,42 @@ function cloud_resource_environment_id() {
   echo "${environment:0:4}" | tr '[:upper:]' '[:lower:]'
 }
 
+# Create the Basic Azure AI Search service $AZURE_SEARCH_SERVICE_NAME in resource group
+# $AZURE_RESOURCE_GROUP, in $AZURE_REGION or, when that region is out of capacity, in the next
+# region of AZURE_SEARCH_FALLBACK_REGIONS. Basic search services are regularly unavailable in a
+# region for days ("ResourcesForSkuUnavailable", #9446). A search service can live in another
+# region than its resource group. Any other error fails at once.
+function azure_search_service_create_with_region_fallback() {
+  local region="" output="" rc=0
+
+  for region in $AZURE_REGION ${AZURE_SEARCH_FALLBACK_REGIONS:-northeurope francecentral swedencentral uksouth}
+  do
+    set +e
+    output=$(az search service create \
+        --name $AZURE_SEARCH_SERVICE_NAME \
+        --resource-group $AZURE_RESOURCE_GROUP \
+        --location $region \
+        --sku Basic \
+        --tags cflt_managed_by=user cflt_managed_id="$USER" 2>&1)
+    rc=$?
+    set -e
+    echo "$output"
+    if [ $rc -eq 0 ]
+    then
+      log "✅ Azure Search service $AZURE_SEARCH_SERVICE_NAME created in region $region"
+      return 0
+    fi
+    if ! echo "$output" | grep -q "ResourcesForSkuUnavailable"
+    then
+      logerror "❌ could not create Azure Search service $AZURE_SEARCH_SERVICE_NAME in region $region"
+      return 1
+    fi
+    logwarn "⚠️ region $region has no capacity for Basic search services, trying the next region"
+  done
+  logerror "❌ no region has capacity for Basic search services (tried $AZURE_REGION ${AZURE_SEARCH_FALLBACK_REGIONS:-northeurope francecentral swedencentral uksouth})"
+  return 1
+}
+
 # Wait until a streaming source task (PushTopic, CDC, Platform Events) has subscribed to its
 # channel, before the test creates the record or event it expects to receive.
 #
@@ -691,6 +727,37 @@ function salesforce_wait_for_subscription() {
   fi
   # The log line is written when the subscribe request is sent, give Salesforce time to ack it.
   sleep 5
+}
+
+# Checks that a sink wrote no error for the Lead created by the test. The Lead PushTopic matches
+# every Lead of the org, which is shared with the other CI jobs: a Lead they create and delete
+# also reaches the sink and fails with INVALID_CROSS_REFERENCE_KEY (#9411). Restricting the
+# PushTopic query with WHERE FirstName = '...' stopped all events (#9445), so the errors are
+# filtered here instead: only an error for the Id of the test's Lead fails.
+#
+#   salesforce_assert_no_error_for_lead "$SALESFORCE_USERNAME" "$LEAD_FIRSTNAME" "$LEAD_LASTNAME" error-responses
+function salesforce_assert_no_error_for_lead() {
+  local username="$1" firstname="$2" lastname="$3" topic="${4:-error-responses}"
+  local lead_id=""
+
+  if assert_topic_empty "$topic"
+  then
+    return 0
+  fi
+
+  lead_id=$(playground container exec --container sfdx-cli --command "sfdx data:query --target-org \"$username\" -q \"SELECT Id FROM Lead WHERE FirstName='$firstname' AND LastName='$lastname'\"" --shell sh 2>&1 | grep -oE '00Q[A-Za-z0-9]{15}' | head -1)
+  if [ -z "$lead_id" ]
+  then
+    logerror "❌ could not find the Id of the Lead $firstname $lastname, so the errors in $topic can't be ignored"
+    return 1
+  fi
+
+  if playground topic consume --topic "$topic" --max-messages -1 2>&1 | grep -q "$lead_id"
+  then
+    logerror "❌ $topic has an error for the Lead of this test ($lead_id)"
+    return 1
+  fi
+  logwarn "⚠️ $topic only has errors for Leads of other jobs sharing the org (Lead of this test: $lead_id), ignoring them"
 }
 
 function salesforce_cleanup_records() {
