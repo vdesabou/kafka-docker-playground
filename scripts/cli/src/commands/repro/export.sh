@@ -4,6 +4,7 @@ output="${args[--output]}"
 dry_run="${args[--dry-run]}"
 force="${args[--force]}"
 include_artifacts="${args[--include-artifacts]}"
+force_clipboard="${args[--clipboard]}"
 
 if [ ! -z "$OUTPUT_FOLDER" ]
 then
@@ -380,3 +381,28 @@ fi
 
 log "📤 Exported bundle is available: $final_archive ($(du -h "$final_archive" | cut -f 1 | tr -d ' '))"
 log "📥 To import it: playground repro import -f <path>/$(basename "$final_archive")"
+
+# the bundle itself (not its path) goes to the clipboard: Cmd+V in Slack, Zendesk or a mail attaches it
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+    clipboard=$(playground config get clipboard)
+    if [ "$clipboard" == "" ]
+    then
+        playground config set clipboard true
+    fi
+
+    if [ "$clipboard" == "true" ] || [ "$clipboard" == "" ] || [[ -n "$force_clipboard" ]]
+    then
+        if osascript -e "set the clipboard to (POSIX file \"$final_archive\")" > /dev/null 2>&1
+        then
+            if [[ -n "$force_clipboard" ]]
+            then
+                log "📋 bundle copied to the clipboard as a file: paste it (Cmd+V) in a Slack conversation to attach it"
+            else
+                log "📋 bundle copied to the clipboard as a file: paste it (Cmd+V) in a Slack conversation to attach it (disable with 'playground config clipboard false')"
+            fi
+        else
+            logwarn "📋 could not copy the bundle to the clipboard, attach $final_archive by hand"
+        fi
+    fi
+fi
