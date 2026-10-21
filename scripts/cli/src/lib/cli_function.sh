@@ -1059,6 +1059,214 @@ function repro_required_credentials () {
   } | sort -u
 }
 
+# add the lines (8 chars or more) of a credential value to the pattern file of its label.
+# values only ever go to files of a 0700 folder, never to a command line
+function repro_scan_add_value () {
+  local dir="$1"
+  local label="$2"
+  local value="$3"
+  if [ ${#value} -lt 8 ]
+  then
+    return 0
+  fi
+  printf '%s\n' "$value" | awk 'length($0) >= 8' >> "$dir/$label"
+}
+
+# scan the files of a bundle for secrets and customer data, before it leaves the machine.
+# writes one '<block|warn>\t<file>:<line>\t<message>' line per finding to $4, never a value
+#   $1 reproduction-models folder, $2 file with the bundle paths (relative to $1),
+#   $3 manifest, $4 findings file, $5 base examples (relative to the repository root)
+function repro_bundle_scan () {
+  local repro_root="$1"
+  local files_list="$2"
+  local manifest="$3"
+  local findings="$4"
+  local base_examples="$5"
+  local scan_dir
+  scan_dir=$(mktemp -d)
+  chmod 0700 "$scan_dir"
+  mkdir "$scan_dir/values"
+  : > "$findings"
+
+  # 1. the credentials known to this machine
+  local profile
+  profile=$(get_active_secret_profile)
+  local names name value
+  names=$(secret_store_dump "$(get_secrets_file)" 2>/dev/null | awk -F"\t" -v p="$profile" '$1==p || $1=="default" { print $2 }')
+  for name in $(compgen -e)
+  do
+    if is_secret_env_var_name "$name"
+    then
+      names="$names"$'\n'"$name"
+    fi
+  done
+  names=$(echo "$names" | awk 'NF' | sort -u)
+  if [ -n "$names" ]
+  then
+    local backend_ready=1
+    if secret_backend_ready > /dev/null 2>&1
+    then
+      log "🔐 reading the $(echo "$names" | wc -l | tr -d ' ') credentials known to this machine to look for their values ($(get_secret_backend) backend)" >&2
+      secret_prefetch "$profile" $names 2> /dev/null
+    else
+      backend_ready=0
+      logwarn "🔐 the secrets backend is not ready, only the exported variables are checked: $(secret_backend_ready 2>&1 | head -1)" >&2
+    fi
+    for name in $names
+    do
+      if [ $backend_ready -eq 1 ]
+      then
+        value=$(secret_get "$name" "$profile" 2>/dev/null || true)
+      else
+        value="${!name:-}"
+      fi
+      repro_scan_add_value "$scan_dir/values" "$name" "$value"
+    done
+  fi
+  # Confluent Cloud credentials of the playground (key:secret)
+  if [ -f "$root_folder/playground.ini" ]
+  then
+    while IFS= read -r line
+    do
+      name="${line%%=*}"
+      name="${name// /}"
+      value="${line#*=}"
+      value="${value#"${value%%[![:space:]]*}"}"
+      value="${value%"${value##*[![:space:]]}"}"
+      repro_scan_add_value "$scan_dir/values" "playground.ini-$name" "$value"
+      repro_scan_add_value "$scan_dir/values" "playground.ini-$name" "${value%%:*}"
+      repro_scan_add_value "$scan_dir/values" "playground.ini-$name" "${value#*:}"
+    done < <(grep -E '^[A-Z_]*CREDS *=' "$root_folder/playground.ini" 2>/dev/null || true)
+  fi
+  # AWS credentials file read by handle_aws_credentials
+  if [ -f "$HOME/.aws/credentials" ]
+  then
+    while IFS= read -r line
+    do
+      name="${line%%=*}"
+      name="${name// /}"
+      value="${line#*=}"
+      value="${value// /}"
+      repro_scan_add_value "$scan_dir/values" "aws-credentials-$name" "$value"
+    done < <(grep -E '^ *(aws_access_key_id|aws_secret_access_key|aws_session_token) *=' "$HOME/.aws/credentials" 2>/dev/null || true)
+  fi
+
+  # 2. what is scanned: the files of the bundle, except the ones that are a public file
+  # (symlink to the base example), plus the manifest (run flags)
+  local -a targets=()
+  local file
+  while IFS= read -r file
+  do
+    if [ -n "$(jq -r --arg path "$file" '.files[] | select(.path == $path) | .link_to // empty' "$manifest")" ]
+    then
+      continue
+    fi
+    targets+=("$file")
+  done < "$files_list"
+
+  local -a public_folders=()
+  local base
+  for base in $base_examples
+  do
+    if [ -d "$root_folder/$base" ]
+    then
+      public_folders+=("$root_folder/$base")
+    fi
+  done
+
+  local target path line_number value_file label
+  for target in "${targets[@]}" "repro-manifest.json"
+  do
+    if [ "$target" == "repro-manifest.json" ]
+    then
+      path="$manifest"
+    else
+      path="$repro_root/$target"
+    fi
+
+    # known credential values; a value that is also in the public base example is not a leak
+    for value_file in "$scan_dir"/values/*
+    do
+      [ -f "$value_file" ] || continue
+      label=$(basename "$value_file")
+      for line_number in $(grep -InFf "$value_file" -- "$path" 2>/dev/null | cut -d ":" -f 1)
+      do
+        if [ ${#public_folders[@]} -gt 0 ] && grep -rqIFf "$value_file" -- "${public_folders[@]}" 2>/dev/null
+        then
+          break
+        fi
+        printf 'block\t%s:%s\t%s\n' "$target" "$line_number" "contains the value of $label" >> "$findings"
+      done
+    done
+
+    # well-known token formats
+    local rule regex
+    while IFS='|' read -r rule regex
+    do
+      for line_number in $(grep -InE -- "$regex" "$path" 2>/dev/null | grep -v "EXAMPLE" | cut -d ":" -f 1)
+      do
+        printf 'block\t%s:%s\t%s\n' "$target" "$line_number" "looks like $rule" >> "$findings"
+      done
+    done <<'EOF'
+an AWS access key id|(AKIA|ASIA)[A-Z0-9]{16}
+a private key|-----BEGIN ([A-Z]+ )?PRIVATE KEY-----
+a GitHub token|(gh[pousr]_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{22,})
+a Slack token|xox[abposr]-[A-Za-z0-9-]{10,}
+a Google API key|AIza[0-9A-Za-z_-]{35}
+a JWT (license, token)|eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}
+an Azure storage account key|AccountKey=[A-Za-z0-9+/=]{40,}
+EOF
+
+    # possible customer data: warnings only
+    local match domain ip key literal o1 o2 o3 o4
+    while IFS=: read -r line_number match
+    do
+      domain=$(echo "${match#*@}" | tr '[:upper:]' '[:lower:]')
+      case "$domain" in
+        example.com|example.org|example.net|*.example.com|confluent.io|*.confluent.io|confluent.cloud|*.local|*.noreply.github.com|anthropic.com|*.svc|*.internal) continue ;;
+      esac
+      printf 'warn\t%s:%s\t%s\n' "$target" "$line_number" "email address at @$domain" >> "$findings"
+    done < <(grep -InoE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' "$path" 2>/dev/null || true)
+
+    # versions (7.7.12.1) are not addresses: lines about versions, tags, images or archives are skipped
+    while IFS=: read -r line_number match
+    do
+      if grep -qiE 'version|tag|image|\.jar|\.zip' <<< "$match"
+      then
+        continue
+      fi
+      ip=$(echo "$match" | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -1 || true)
+      IFS=. read -r o1 o2 o3 o4 <<< "$ip"
+      if [ "$o1" -gt 255 ] || [ "$o2" -gt 255 ] || [ "$o3" -gt 255 ] || [ "$o4" -gt 255 ]
+      then
+        continue
+      fi
+      case "$o1" in
+        0|10|127|255) continue ;;
+      esac
+      if [ "$o1" -ge 224 ] || { [ "$o1" -eq 172 ] && [ "$o2" -ge 16 ] && [ "$o2" -le 31 ]; } || { [ "$o1" -eq 192 ] && [ "$o2" -eq 168 ]; } || { [ "$o1" -eq 169 ] && [ "$o2" -eq 254 ]; }
+      then
+        continue
+      fi
+      printf 'warn\t%s:%s\t%s\n' "$target" "$line_number" "public IP address $ip" >> "$findings"
+    done < <(grep -InE '(^|[^0-9.])([0-9]{1,3}\.){3}[0-9]{1,3}([^0-9.]|$)' "$path" 2>/dev/null || true)
+
+    while IFS=: read -r line_number match
+    do
+      key=$(echo "$match" | cut -d '"' -f 2)
+      literal=$(echo "$match" | sed -E 's/.*:[[:space:]]*"([^"]*)"$/\1/')
+      if [ ${#public_folders[@]} -gt 0 ] && printf '%s\n' "$literal" | grep -rqIFf - -- "${public_folders[@]}" 2>/dev/null
+      then
+        continue
+      fi
+      printf 'warn\t%s:%s\t%s\n' "$target" "$line_number" "hard-coded value for $key, not from the base example" >> "$findings"
+    done < <(grep -InoiE '"[A-Za-z0-9._-]*(password|secret)[A-Za-z0-9._-]*"[[:space:]]*:[[:space:]]*"[^"$*]+"' "$path" 2>/dev/null || true)
+  done
+
+  rm -rf "$scan_dir"
+  sort -u "$findings" | sort -t $'\t' -k1,1 -k2,2V -o "$findings"
+}
+
 function get_ccloud_environment_list_with_fzf() {
   cur="$1"
 

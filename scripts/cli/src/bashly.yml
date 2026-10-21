@@ -2701,9 +2701,19 @@ commands:
       author, base example, the playground commit, the names (never the
       values) of the credentials it needs, and the sha256 of every file.
 
+      Before anything is written, the bundle is scanned. The export stops
+      (unless --force) when a file contains the value of a credential known
+      to this machine ('playground secrets' store, exported credential
+      variables, CLUSTER_CREDS / SCHEMA_REGISTRY_CREDS of playground.ini,
+      ~/.aws/credentials) or a well-known token format (AWS access key id,
+      private key, GitHub / Slack token, Google API key, JWT, Azure storage
+      account key). Email addresses, public IP addresses and hard-coded
+      passwords that do not come from the base example are reported as
+      possible customer data. Values are never printed.
+
       Without --file, the current reproduction model is exported.
 
-      🎓 Tip: start with --dry-run to see what would be packed.
+      🎓 Tip: start with --dry-run to see what would be packed, and what the scan finds.
     dependencies:
       git: visit https://git-scm.com/downloads to install
     flags:
@@ -2741,7 +2751,11 @@ commands:
       - long: --dry-run
         required: false
         help: |-
-          🔍 Only list the models and files that would be packed
+          🔍 Only list the models and files that would be packed, and run the scan
+      - long: --force
+        required: false
+        help: |-
+          🔓 Export even if the scan finds secrets (when they are not real ones)
     examples:
     - playground repro export
     - playground repro export -f ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh --dry-run
