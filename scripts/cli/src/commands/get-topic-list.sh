@@ -7,7 +7,7 @@ then
   if [[ -n "$skip_internal_topics" ]]
   then
     set +e
-    confluent kafka topic list | grep -v "connect-" | grep -v "_confluent-monitoring" | grep -v "_confluent-command" | awk '{if(NR>2) print $1}'
+    confluent kafka topic list | awk '{if(NR>2) print $1}' | grep -v "^connect-" | grep -v "^_confluent-monitoring" | grep -v "^_confluent-command"
     set -e
   else
     set +e
@@ -29,14 +29,14 @@ then
   then
     if [[ -n "$skip_internal_topics" ]]
     then
-      kubectl -n confluent exec "$kafka_pod" -- ls /mnt/data/data0/logs 2>/dev/null | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "connect-" | grep -v "^_" | grep -v "delete" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
+      kubectl -n confluent exec "$kafka_pod" -- ls /mnt/data/data0/logs 2>/dev/null | grep -E -- "-[0-9]+$" | grep -v "^connect-" | grep -v "^_" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
     else
-      kubectl -n confluent exec "$kafka_pod" -- ls /mnt/data/data0/logs 2>/dev/null | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "delete" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
+      kubectl -n confluent exec "$kafka_pod" -- ls /mnt/data/data0/logs 2>/dev/null | grep -E -- "-[0-9]+$" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
     fi
   else
     if [[ -n "$skip_internal_topics" ]]
     then
-    kubectl -n confluent exec connect-0 -- kafka-topics --bootstrap-server kafka:9071 $cfk_security --list 2>/dev/null | grep -v "connect-" | grep -v "^_"
+    kubectl -n confluent exec connect-0 -- kafka-topics --bootstrap-server kafka:9071 $cfk_security --list 2>/dev/null | grep -v "^connect-" | grep -v "^_"
     else
     kubectl -n confluent exec connect-0 -- kafka-topics --bootstrap-server kafka:9071 $cfk_security --list 2>/dev/null
     fi
@@ -50,9 +50,9 @@ else
   then
     if [[ -n "$skip_internal_topics" ]]
     then
-      docker exec $broker_container ls /var/lib/kafka/data | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "connect-" | grep -v "^_" | grep -v "delete" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
+      docker exec $broker_container ls /var/lib/kafka/data | grep -E -- "-[0-9]+$" | grep -v "^connect-" | grep -v "^_" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
     else
-      docker exec $broker_container ls /var/lib/kafka/data | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "delete" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
+      docker exec $broker_container ls /var/lib/kafka/data | grep -E -- "-[0-9]+$" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
     fi
   fi
 fi
