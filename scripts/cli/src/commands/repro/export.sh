@@ -3,6 +3,7 @@ all_uncommitted="${args[--all-uncommitted]}${args[--all]}"
 output="${args[--output]}"
 dry_run="${args[--dry-run]}"
 force="${args[--force]}"
+include_artifacts="${args[--include-artifacts]}"
 
 if [ ! -z "$OUTPUT_FOLDER" ]
 then
@@ -122,6 +123,7 @@ fi
 # 3. the manifest
 history_file="$root_folder/playground-run-history"
 : > "$tmp_dir/models.json"
+: > "$tmp_dir/artifacts"
 for script in "${model_scripts[@]}"
 do
     dir_name=$(basename "$(dirname "$script")")
@@ -139,12 +141,58 @@ do
         logwarn "🤷 $dir_name/$script_name: no 'playground run' found in playground-run-history, the bundle will not say which flags to use"
     fi
 
-    # files given by absolute path on this machine are not in the bundle
-    external_files=$(grep -oE -- "--connector-(zip|jar)=[^ ]+" <<< "$run_flags" | cut -d "=" -f 2-)
-    for external_file in $external_files
+    # the importer runs with their own Confluent Cloud cluster
+    stripped_flags=$(sed -E -e 's/--cluster-(schema-registry-)?creds[ =][^ ]+ ?//g' -e 's/[[:space:]]*$//' <<< "$run_flags")
+    if [ "$stripped_flags" != "$run_flags" ]
+    then
+        log "🔐 $dir_name/$script_name: --cluster-creds / --cluster-schema-registry-creds removed from the run line"
+        run_flags="$stripped_flags"
+    fi
+
+    # files outside the repository: --connector-zip / --connector-jar, and absolute paths in
+    # the script or in the compose files it uses
+    external_files=$(grep -oE -- "--connector-(zip|jar)=[^ ]+" <<< "$run_flags" | cut -d "=" -f 2- || true)
+    {
+        for external_file in $external_files
+        do
+            if [ -f "$external_file" ]
+            then
+                printf '%s\t%s\n' "$external_file" "$(cd -P "$(dirname "$external_file")" && pwd)/$(basename "$external_file")"
+            fi
+        done
+        text_files=("$script")
+        for file in $(grep -E "^$dir_name/[^/]*\.(yml|yaml)$" "$tmp_dir/files")
+        do
+            text_files+=("$repro_root/$file")
+        done
+        repro_external_paths "${text_files[@]}"
+    } | sort -u > "$tmp_dir/external"
+    while IFS=$'\t' read -r original source
     do
-        logwarn "📎 $dir_name/$script_name runs with $external_file, which is not included in the bundle: send it too"
-    done
+        if [[ -z "$include_artifacts" ]]
+        then
+            logwarn "📎 $dir_name/$script_name uses $original, which is outside the repository and not in the bundle: use --include-artifacts to add it"
+            continue
+        fi
+        # same file already packed for this model (written differently)?
+        artifact=$(awk -F'\t' -v s="$source" -v d="$dir_name/artifacts/" '$2 == s && index($1, d) == 1 { print $1; exit }' "$tmp_dir/artifacts")
+        if [ -z "$artifact" ]
+        then
+            artifact="$dir_name/artifacts/$(basename "$source")"
+            n=1
+            while grep -q "^$artifact	" "$tmp_dir/artifacts"
+            do
+                n=$((n+1))
+                artifact="$dir_name/artifacts/$n-$(basename "$source")"
+            done
+            if [ $(wc -c < "$source") -gt 52428800 ]
+            then
+                logwarn "🐘 $source is larger than 50 MB, the bundle will be big"
+            fi
+            echo "$artifact" >> "$tmp_dir/files"
+        fi
+        printf '%s\t%s\t%s\n' "$artifact" "$source" "$original" >> "$tmp_dir/artifacts"
+    done < "$tmp_dir/external"
 
     description=$(repro_header_value "$script" "description")
     case_number=""
@@ -193,6 +241,8 @@ do
         }' >> "$tmp_dir/models.json"
 done
 
+sort -u "$tmp_dir/files" -o "$tmp_dir/files"
+
 : > "$tmp_dir/files.json"
 while IFS= read -r file
 do
@@ -208,16 +258,20 @@ do
     fi
     jq -n \
         --arg path "$file" \
-        --arg sha256 "$(repro_sha256 "$repro_root/$file")" \
+        --arg sha256 "$(repro_sha256 "$(repro_bundle_source "$repro_root" "$tmp_dir/artifacts" "$file")")" \
         --arg link_to "$link_to" \
         '{ path: $path, sha256: $sha256 } + (if $link_to == "" then {} else { link_to: $link_to } end)' >> "$tmp_dir/files.json"
 done < "$tmp_dir/files"
 
 playground_commit=$(git -C "$root_folder" rev-parse --short HEAD 2>/dev/null)
+# paths of this checkout, that import rewrites to the importer's (e.g. --custom-smt jar path)
 jq -n \
     --arg exported_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     --arg exported_by "$(whoami)" \
     --arg playground_commit "$playground_commit" \
+    --arg repro_roots "$(printf '%s\n%s' "$root_folder/$output_folder" "$repro_root")" \
+    --arg root_folders "$(printf '%s\n%s' "$root_folder" "$(cd -P "$root_folder" && pwd)")" \
+    --rawfile artifacts "$tmp_dir/artifacts" \
     --slurpfile models "$tmp_dir/models.json" \
     --slurpfile files "$tmp_dir/files.json" \
     '{
@@ -225,6 +279,9 @@ jq -n \
         exported_at: $exported_at,
         exported_by: $exported_by,
         playground_commit: $playground_commit,
+        source_repro_roots: ($repro_roots | split("\n") | unique),
+        source_root_folders: ($root_folders | split("\n") | unique),
+        artifacts: [ $artifacts | split("\n")[] | select(. != "") | split("\t") | { path: .[0], original: .[2] } ],
         models: $models,
         files: $files
     }' > "$tmp_dir/repro-manifest.json"
@@ -233,11 +290,11 @@ jq -n \
 nb_files=$(wc -l < "$tmp_dir/files" | tr -d ' ')
 log "👷‍♂️ ${#model_scripts[@]} reproduction model(s), $nb_files file(s):"
 jq -r '.models[] | "   🔖 \(.script)\n      ▶️  \(.run_command)" + (if (.credentials | length) > 0 then "\n      🔑 needs: \(.credentials | join(", "))" else "" end)' "$tmp_dir/repro-manifest.json"
-jq -r '.files[] | "   📄 \(.path)" + (if .link_to then "  (symlink to \(.link_to), stored as content)" else "" end)' "$tmp_dir/repro-manifest.json"
+jq -r '.artifacts as $artifacts | .files[] | .path as $path | "   📄 \(.path)" + (if .link_to then "  (symlink to \(.link_to), stored as content)" else "" end) + ([ $artifacts[] | select(.path == $path) | .original ] | if length > 0 then "  (artifact, from \(join(", ")))" else "" end)' "$tmp_dir/repro-manifest.json"
 
 # 5. secrets and customer data, before anything leaves the machine
 log "🕵️ scanning the bundle for secrets and customer data"
-repro_bundle_scan "$repro_root" "$tmp_dir/files" "$tmp_dir/repro-manifest.json" "$tmp_dir/findings" "$(jq -r '[.models[].base_example | select(. != "")] | unique | join(" ")' "$tmp_dir/repro-manifest.json")"
+repro_bundle_scan "$repro_root" "$tmp_dir/files" "$tmp_dir/repro-manifest.json" "$tmp_dir/findings" "$(jq -r '[.models[].base_example | select(. != "")] | unique | join(" ")' "$tmp_dir/repro-manifest.json")" "$tmp_dir/artifacts"
 nb_blocks=$(grep -c "^block" "$tmp_dir/findings" || true)
 nb_warnings=$(grep -c "^warn" "$tmp_dir/findings" || true)
 for severity in block warn
@@ -286,7 +343,7 @@ mkdir -p "$staging"
 while IFS= read -r file
 do
     mkdir -p "$staging/$(dirname "$file")"
-    cp -pL "$repro_root/$file" "$staging/$file"
+    cp -pL "$(repro_bundle_source "$repro_root" "$tmp_dir/artifacts" "$file")" "$staging/$file"
 done < "$tmp_dir/files"
 cp "$tmp_dir/repro-manifest.json" "$staging/"
 

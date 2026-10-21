@@ -138,6 +138,52 @@ then
     exit 1
 fi
 
+# paths of the exporter's machine, rewritten to this one in the text files of the bundle and in
+# the run lines: artifacts (stored in <model folder>/artifacts/) and the exporter's checkout
+: > "$tmp_dir/rewrites"
+while IFS=$'\t' read -r original path
+do
+    printf '%s\t%s\n' "$original" "$repro_root/$path" >> "$tmp_dir/rewrites"
+done < <(jq -r '.artifacts[]? | "\(.original)\t\(.path)"' "$manifest")
+while IFS= read -r source_path
+do
+    printf '%s\t%s\n' "$source_path" "$repro_root" >> "$tmp_dir/rewrites"
+done < <(jq -r '.source_repro_roots[]?' "$manifest")
+while IFS= read -r source_path
+do
+    printf '%s\t%s\n' "$source_path" "$root_folder" >> "$tmp_dir/rewrites"
+done < <(jq -r '.source_root_folders[]?' "$manifest")
+
+# one pass, longest path first, so that a path is never rewritten twice
+rewrite_perl='BEGIN { open(my $r, "<", $ENV{REWRITES}) or die; while (<$r>) { chomp; my ($f, $t) = split(/\t/, $_, 2); next if $f eq "" || $f eq $t; $m{$f} = $t; } @k = sort { length($b) <=> length($a) } keys %m; $re = @k ? join("|", map { quotemeta } @k) : undef; } s/($re)/$m{$1}/g if defined $re;'
+
+function apply_rewrites () {
+    printf '%s' "$1" | REWRITES="$tmp_dir/rewrites" perl -pe "$rewrite_perl"
+}
+
+if [ -s "$tmp_dir/rewrites" ]
+then
+    while IFS= read -r path
+    do
+        case "$path" in
+            */artifacts/*) continue ;;
+            *.sh|*.bash|*.yml|*.yaml) ;;
+            *) continue ;;
+        esac
+        # files restored as symlinks to the public example are left as is
+        if [ -n "$(jq -r --arg path "$path" '.files[]? | select(.path == $path) | .link_to // empty' "$manifest")" ]
+        then
+            continue
+        fi
+        cp -p "$extract/$path" "$tmp_dir/before"
+        REWRITES="$tmp_dir/rewrites" perl -pi -e "$rewrite_perl" "$extract/$path"
+        if ! cmp -s "$tmp_dir/before" "$extract/$path"
+        then
+            log "🔀 $path: paths of the exporter's machine rewritten to this one"
+        fi
+    done < "$tmp_dir/files"
+fi
+
 # 3. what is in it
 exported_at=$(jq -r '.exported_at // empty' "$manifest")
 if [ -n "$exported_at" ]
@@ -318,10 +364,11 @@ while IFS= read -r model
 do
     model_path="${model_paths[$i]}"
     i=$((i+1))
-    run_flags=$(jq -r '.run_flags // empty' <<< "$model")
+    run_flags=$(apply_rewrites "$(jq -r '.run_flags // empty' <<< "$model")")
     log "▶️  playground run -f $model_path${run_flags:+ $run_flags}"
     while IFS= read -r external_file
     do
+        external_file=$(apply_rewrites "$external_file")
         if [ -n "$external_file" ] && [ ! -f "$external_file" ]
         then
             logwarn "   📎 it runs with $external_file, which is not on this machine: ask for it and fix the path"
