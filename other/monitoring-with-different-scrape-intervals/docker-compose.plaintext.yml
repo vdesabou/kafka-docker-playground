@@ -10,7 +10,7 @@ services:
       # -Djava.rmi.server.hostname=broker and -Dcom.sun.management.jmxremote.local.only=false are used to access JMX sever from outside of the container
       # the optins can be skipped if jmx_exporter standalone runs in the same host (default hostname is localhost)
       EXTRA_ARGS: >-
-        -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/broker-agent.yml
+        -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.20.0.jar=1234:/usr/share/jmx_exporter/broker-agent.yml
         -Dcom.sun.management.jmxremote        
         -Dcom.sun.management.jmxremote.port=5555
         -Dcom.sun.management.jmxremote.ssl=false
