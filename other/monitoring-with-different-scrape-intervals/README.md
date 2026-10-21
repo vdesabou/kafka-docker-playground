@@ -22,7 +22,7 @@ Run `./start.sh` and go to http://locahost:9090 to query metrics.
 
 JMX exporter is used as a java agent and embedded in the service commandline
 ```
--javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/broker-agent.yml
+-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.20.0.jar=1234:/usr/share/jmx_exporter/broker-agent.yml
 ```
 
 This agent will collect a set of metrics.
