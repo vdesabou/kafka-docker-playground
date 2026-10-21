@@ -8,7 +8,8 @@ then
     suffix_kebab="${suffix// /-}"
     suffix_kebab=$(echo "$suffix_kebab" | tr '[:upper:]' '[:lower:]')
 else
-    suffix_kebab=$(LC_ALL=C tr -dc 'a-z0-9' < /dev/urandom | fold -w 6 | head -n 1)
+    # bounded input: with SIGPIPE ignored by a parent process, tr reading /dev/urandom without end would never stop
+    suffix_kebab=$(head -c 256 /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' 2> /dev/null | head -c 6)
 fi
 name="pg-${username}-${suffix_kebab}"
 pem_file="$root_folder/$name.pem"
