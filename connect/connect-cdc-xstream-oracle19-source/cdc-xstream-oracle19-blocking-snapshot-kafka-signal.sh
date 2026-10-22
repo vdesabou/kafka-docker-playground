@@ -280,6 +280,9 @@ playground connector create-or-update --connector cdc-xstream-oracle-source << E
 }
 EOF
 
+log "Waiting for the 5 records of the initial snapshot: the DML below must run after the snapshot, RUNNING is not enough"
+playground topic wait-for-records --topic cflt.C__CFLTUSER.CUSTOMERS --min-expected-messages 5 --max-wait 120
+
 playground container exec --container oracle --command "sqlplus c\\#\\#cfltuser/password@//localhost:1521/ORCLCDB" << EOF
      insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('streaming', 'One', 'fkafka@confluent.io', 'Male', 'bronze', 'first streaming record');
      insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments) values ('Signal', 'One', 'fkafka@confluent.io', 'Male', 'bronze', 'first signal record');

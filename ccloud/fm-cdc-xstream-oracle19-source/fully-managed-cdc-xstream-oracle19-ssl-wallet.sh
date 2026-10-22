@@ -323,7 +323,8 @@ playground connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 180
 
-sleep 10
+log "Waiting for the 5 records of the initial snapshot: the DML below must run after the snapshot, RUNNING is not enough"
+playground topic wait-for-records --topic cflt.C__CFLTUSER.CUSTOMERS --min-expected-messages 5 --max-wait 300
 
 log "Insert 2 customers in CUSTOMERS table"
 docker exec -i oracle sqlplus c\#\#cfltuser/password@//localhost:1521/ORCLCDB << EOF

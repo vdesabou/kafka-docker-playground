@@ -48,8 +48,8 @@ With `--enable-sql-datagen` (`playground run -f fully-managed-cdc-xstream-oracle
 1. Gets or builds the Oracle 19c image, then starts Oracle and ngrok locally (the SSL variant first creates the Oracle wallets and TLS listener configuration from `ssl/`).
 2. Enables XStream, ARCHIVELOG mode and supplemental logging, creates the XStream administrator and the `c##cfltuser` connect user, and creates the XStream outbound server `XOUT`.
 3. Runs the [`orclcdc_readiness.sql`](https://docs.confluent.io/cloud/current/connectors/cc-oracle-xstream-cdc-source/prereqs-validation.html#validate-prerequisites-completion) check (basic and blocking-snapshot variants).
-4. Creates table `CUSTOMERS` with initial rows.
-5. Creates the fully managed `OracleXStreamSource` connector (Avro, `topic.prefix` `cflt`) pointing to the ngrok endpoint.
+4. Creates table `CUSTOMERS` with 5 initial rows.
+5. Creates the fully managed `OracleXStreamSource` connector (Avro, `topic.prefix` `cflt`) pointing to the ngrok endpoint, then waits with `playground topic wait-for-records` until the 5 snapshot records are in the topic. `RUNNING` doesn't mean the snapshot is done: changes made before the snapshot starts end up in the snapshot instead of being streamed.
 6. Runs DML (and a schema change) and verifies records in `cflt.C__CFLTUSER.CUSTOMERS` with `playground topic consume` (14 records; the blocking-snapshot variant checks 7, then 14 after the snapshot signal).
 7. Deletes the connector at the end of the run.
 
