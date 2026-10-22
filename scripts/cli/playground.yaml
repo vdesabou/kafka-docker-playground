@@ -6345,7 +6345,11 @@ subcommands:
       argument: ''
       description: "\U0001F3D7️ Deploy connector using Terraform instead of REST API\n\nDynamically
         converts JSON connector config to Terraform HCL and deploys using terraform
-        apply\n\n⚠️ Only available for Confluent Cloud connectors"
+        apply\n\nThe values of config_sensitive are masked in the output. The Terraform
+        folder of a connector\n(.terraform-playground/<connector>-*) is reused: running
+        the command again updates the connector, and a\nconnector created with the
+        REST API is imported first. playground connector delete runs terraform destroy.\n\n⚠️
+        Only available for Confluent Cloud connectors"
   - name: update
     description: "\U0001F6E0️ Update connector configuration by opening current connector
       config in text editor set with playground config editor <editor> (default is
