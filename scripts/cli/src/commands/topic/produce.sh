@@ -26,6 +26,9 @@ delete_topic="${args[--delete-topic]}"
 derive_key_schema_as="${args[--derive-key-schema-as]}"
 derive_value_schema_as="${args[--derive-value-schema-as]}"
 schema_id_in_header="${args[--schema-id-in-header]}"
+value_format="${args[--value-format]}"
+key_format="${args[--key-format]}"
+throughput="${args[--throughput]}"
 
 # Convert the space delimited string to an array
 eval "validate_config=(${args[--validate-config]})"
@@ -36,7 +39,20 @@ function identify_schema() {
     schema_file=$1
     type=$2
 
-    if grep -q "proto3" $schema_file
+    forced_format=""
+    if [ "$type" == "value" ]
+    then
+        forced_format="$value_format"
+    elif [ "$type" == "key" ]
+    then
+        forced_format="$key_format"
+    fi
+
+    if [ "$forced_format" != "" ]
+    then
+        log "🔮 $type schema type is set to $forced_format with --$type-format"
+        schema_type=$forced_format
+    elif grep -q "proto3" $schema_file
     then
         log "🔮 $type schema was identified as protobuf"
         schema_type=protobuf
@@ -86,6 +102,45 @@ then
 fi
 
 ref_schema_file=$tmp_dir/ref_schema
+
+if [[ -n "$value_format" ]] && [[ -n "$derive_value_schema_as" ]]
+then
+    logerror "❌ --value-format and --derive-value-schema-as cannot be used together"
+    exit 1
+fi
+if [[ -n "$key_format" ]] && [[ -n "$derive_key_schema_as" ]]
+then
+    logerror "❌ --key-format and --derive-key-schema-as cannot be used together"
+    exit 1
+fi
+if [[ -n "$key_format" ]] && [[ ! -n "$key" ]]
+then
+    logerror "❌ --key-format is set but not --key"
+    exit 1
+fi
+
+# separates headers, key and value in the records sent to the console producer: the ascii unit separator
+# never shows up in generated data, unlike "|" which can be part of a key, a value or a header
+record_separator=$'\x1f'
+# replaced by the number of the record in a key like key1 (see render_batch)
+key_number_marker=$'\x1e'
+key_number_start=""
+
+# records to send, %g being replaced by a counter that goes on from one batch to the next, starting at $2
+function render_batch() {
+    head -n "$1" "$output_final_file" | KEY_NUMBER_START="$key_number_start" MARKER="$key_number_marker" awk -v counter="$2" '
+    BEGIN {
+        # awk rather than bash arithmetic: a leading zero (key007) must be kept and must not be read as octal (key08)
+        n = ENVIRON["KEY_NUMBER_START"]
+        fmt = (length(n) > 1 && substr(n, 1, 1) == "0") ? "%0" length(n) ".0f" : "%.0f"
+    }
+    {
+        if (n != "") gsub(ENVIRON["MARKER"], sprintf(fmt, n + counter - 1))
+        gsub("%g", counter)
+        counter++
+        print
+    }'
+}
 key_schema_file=$tmp_dir/key_schema
 value_schema_file=$tmp_dir/value_schema
 
@@ -104,15 +159,15 @@ then
         fi
     fi
 else
-    if [[ $value == @* ]] || [[ $value == *predefined-schemas/* ]]
+    if [ -f "$value" ]
+    then
+        cp "$value" "$value_schema_file"
+    elif [[ $value == @* ]] || [[ $value == *predefined-schemas/* ]]
     then
         # this is a predefined schema file
         predefined_folder="$root_folder/scripts/cli/"
         predefined_selection=$(echo "$value" | cut -d "@" -f 2)
         cp "$predefined_folder/$predefined_selection" "$value_schema_file"
-    elif [ -f "$value" ]
-    then
-        cp "$value" "$value_schema_file"
     else
         value_content=$value
         echo "$value_content" > "$value_schema_file"
@@ -307,14 +362,14 @@ ref_array_schema_file=$tmp_dir/ref_array_schema
     do
         log "🖇️ ref is $ref"
 
-        if [[ $ref == @* ]]
+        if [ -f "$ref" ]
         then
-            # this is a schema file
+            cp "$ref" "$ref_schema_file"
+        elif [[ $ref == @* ]]
+        then
+            # this is a predefined schema file
             argument_schema_file=$(echo "$ref" | cut -d "@" -f 2)
-            cp $argument_schema_file $ref_schema_file
-        elif [ -f "$ref" ]
-        then
-            cp $ref $ref_schema_file
+            cp "$root_folder/scripts/cli/$argument_schema_file" "$ref_schema_file"
         else
             echo "$ref" > "$ref_schema_file"
         fi
@@ -381,15 +436,15 @@ fi
 
 if [[ -n "$key" ]]
 then
-    if [[ $key == @* ]] || [[ $key == *predefined-schemas/* ]]
+    if [ -f "$key" ]
+    then
+        cp "$key" "$key_schema_file"
+    elif [[ $key == @* ]] || [[ $key == *predefined-schemas/* ]]
     then
         # this is a predefined schema file
         predefined_folder="$root_folder/scripts/cli"
         predefined_selection=$(echo "$key" | cut -d "@" -f 2)
         cp "$predefined_folder/$predefined_selection" "$key_schema_file"
-    elif [ -f "$key" ]
-    then
-        cp "$key" "$key_schema_file"
     else
         echo "$key" > "$key_schema_file"
     fi
@@ -401,7 +456,7 @@ then
         is_key_datagen=1
     fi
 
-    if [[ "$is_key_datagen" == "1" ]]
+    if [[ -n "$derive_key_schema_as" ]] && [[ "$is_key_datagen" == "1" ]]
     then
         log "🍦 --derive-key-schema-as $derive_key_schema_as is used with datagen schema, generating a payload:"
         cp "${key_schema_file}" "$tmp_dir/original_key_datagen.avro"
@@ -544,9 +599,9 @@ function generate_data() {
                 nb_max_messages_to_generate=100000
             fi
         fi
-        if [ $nb_messages = -1 ]
+        if [ $nb_messages = -1 ] && [ $nb_max_messages_to_generate -gt 1000 ]
         then
-            nb_messages_to_generate=1000
+            nb_max_messages_to_generate=1000
         fi
     fi
     if [ $nb_messages = -1 ]
@@ -612,36 +667,25 @@ function generate_data() {
             ;;
             protobuf)
                 # https://github.com/JasonkayZK/mock-protobuf.js
-                docker run -u0 --rm -v $tmp_dir:/tmp/ -v $schema_file:/app/schema.proto -e NB_MESSAGES=$nb_messages_to_generate vdesabou/protobuf-faker bash -c "bash /app/produce.sh && chown -R $(id -u $USER):$(id -g $USER) /tmp/" > $tmp_dir/out.json
+                # produce.sh of the repo (not the one baked in the image) keeps 32-bit integers in range
+                docker run -u0 --rm -v $tmp_dir:/tmp/ -v $schema_file:/app/schema.proto -v "${root_folder}/scripts/cli/src/protobuf-faker/produce.sh:/app/produce.sh" -e NB_MESSAGES=$nb_messages_to_generate vdesabou/protobuf-faker bash -c "bash /app/produce.sh && chown -R $(id -u $USER):$(id -g $USER) /tmp/" > $tmp_dir/out.json
             ;;
             raw)
                 if jq -e . >/dev/null 2>&1 <<< "$(head -1 "$schema_file")"
                 then
                     log "💫 payload is one json per line, one json record per line will be sent"
-                    set +e
                     LINE=$(<"$schema_file")
-                    for ((i=0; i<nb_messages_to_generate; i++)); do
-                        printf "%s\n" "$LINE" > $tmp_dir/out.json
-                    done
-                    set -e
+                    printf "%s\n" "$LINE" > $tmp_dir/out.json
                 elif jq -e . >/dev/null 2>&1 <<< "$(cat "$schema_file")"
                 then
                     log "💫 payload is single json, it will be sent as one record"
                     jq -c . "$schema_file" > $tmp_dir/minified.json
-                    set +e
                     LINE=$(<"$tmp_dir/minified.json")
-                    for ((i=0; i<nb_messages_to_generate; i++)); do
-                        printf "%s\n" "$LINE" > $tmp_dir/out.json
-                    done
-                    set -e
+                    printf "%s\n" "$LINE" > $tmp_dir/out.json
                 else
                     log "💫 payload is not single json, one record per line will be sent"
-                    set +e
                     LINE=$(<"$schema_file")
-                    for ((i=0; i<nb_messages_to_generate; i++)); do
-                        printf "%s\n" "$LINE" > $tmp_dir/out.json
-                    done
-                    set -e
+                    printf "%s\n" "$LINE" > $tmp_dir/out.json
                 fi
             ;;
             *)
@@ -666,10 +710,20 @@ function generate_data() {
     lines_count=0
     counter=0
 
-    while IFS= read -r line
-    do
-        if [ $record_size != 0 ] && [ "$type" == "VALUE" ]
+    if [ $record_size = 0 ] || [ "$type" != "VALUE" ]
+    then
+        # nothing to change in the records: avoid a slow line by line copy
+        if [ $nb_messages = -1 ]
         then
+            cp "$input_file" "$input2_file"
+        else
+            head -n "$nb_messages" "$input_file" > "$input2_file"
+        fi
+        lines_count=$(wc -l < "$input2_file")
+        lines_count=${lines_count// /}
+    else
+        while IFS= read -r line
+        do
             if ! echo "$line" | jq -e .  > /dev/null 2>&1
             then
                 echo "${line}PLACEHOLDER" > $record_size_temp_file_output
@@ -710,33 +764,29 @@ function generate_data() {
                 # parent process, tr reading /dev/urandom without end would never stop after head exits
                 new_value_string=$(head -c $((new_value_size * 5 + 256)) /dev/urandom | LC_ALL=C tr -dc 'a-zA-Z0-9' 2> /dev/null | head -c$new_value_size)
 
-                echo -n "$new_value_string" > temp.txt
+                echo -n "$new_value_string" > "$tmp_dir/new_value.txt"
 
-                # Replace placeholder with the content of temp.txt file in $record_size_temp_file_output
+                # Replace placeholder with the content of new_value.txt file in $record_size_temp_file_output
                 # Perl can handle very large arguments and perform replacement effectively
-                perl -pi -e 'BEGIN{undef $/;} s/PLACEHOLDER/`cat temp.txt`/gse' $record_size_temp_file_output
+                NEW_VALUE_FILE="$tmp_dir/new_value.txt" perl -pi -e 'BEGIN{undef $/; open(my $fh, "<", $ENV{NEW_VALUE_FILE}) or die; $v = <$fh>; close($fh);} s/PLACEHOLDER/$v/gs' $record_size_temp_file_output
 
                 cat $record_size_temp_file_output >> "$input2_file"
-                # Remove temp file
-                rm temp.txt
             else
                 log "❌ record-size is too small"
                 exit 1
             fi
-        else
-            echo "$line" >> "$input2_file"
-        fi
 
-        lines_count=$((lines_count+1))
-        if [ $nb_messages != -1 ]
-        then
-            if [ $lines_count -ge $nb_messages ]
+            lines_count=$((lines_count+1))
+            if [ $nb_messages != -1 ]
             then
-                break
+                if [ $lines_count -ge $nb_messages ]
+                then
+                    break
+                fi
             fi
-        fi
-        counter=$((counter+1))
-    done < "$input_file"
+            counter=$((counter+1))
+        done < "$input_file"
+    fi
 
     if [ $nb_messages -gt $max_nb_messages_per_batch ] || [ $nb_messages = -1 ]
     then
@@ -810,6 +860,8 @@ else
     nb_generated_messages=$(wc -l < $output_key_file)
 fi
 nb_generated_messages=${nb_generated_messages// /}
+# number of different records, before they are repeated to fill --nb-messages or a batch
+nb_distinct_messages=$lines_count
 
 if [ "$nb_generated_messages" == "0" ]
 then
@@ -825,21 +877,15 @@ then
         suffix="${BASH_REMATCH[3]}"
         
         log "🗝️ key $key is set with a number $number, it will be used as starting point"
-        while read -r line
-        do
-            new_key="${prefix}${number}${suffix}"
-            echo "${new_key}" >> "$tmp_dir/temp_value_file"
-            number=$((number + 1))
-        done < "$output_key_file"
+        # the number is a marker replaced when the records are sent (render_batch), so that it goes on from one
+        # batch to the next
+        key_number_start="$number"
+        PREFIX="$prefix" SUFFIX="$suffix" MARKER="$key_number_marker" awk '{ print ENVIRON["PREFIX"] ENVIRON["MARKER"] ENVIRON["SUFFIX"] }' "$output_key_file" > "$tmp_dir/temp_value_file"
 
         mv "$tmp_dir/temp_value_file" "$output_key_file"
     else
-        counter=1
         log "🗝️ key is set with a string $key, it will be used for all records"
-        while read -r line
-        do
-            echo "${key}" >> "$tmp_dir/temp_value_file"
-        done < "$output_key_file"
+        KEY="$key" awk '{ print ENVIRON["KEY"] }' "$output_key_file" > "$tmp_dir/temp_value_file"
 
         mv "$tmp_dir/temp_value_file" "$output_key_file"
     fi
@@ -850,14 +896,11 @@ then
     if [[ ! -n "$tombstone" ]]
     then
         # merging key and value files
-        paste -d "|" $output_key_file $output_value_file > $output_final_file
+        paste -d "$record_separator" $output_key_file $output_value_file > $output_final_file
     else
-        touch "$output_value_file"
-        while read -r line; do
-            echo "NULL" >> "$output_value_file"
-        done < "$output_key_file"
+        awk '{ print "NULL" }' "$output_key_file" > "$output_value_file"
         # merging key and value files
-        paste -d "|" $output_key_file $output_value_file > $output_final_file
+        paste -d "$record_separator" $output_key_file $output_value_file > $output_final_file
     fi
 else
     cp $output_value_file $output_final_file
@@ -867,10 +910,8 @@ fi
 if [[ -n "$headers" ]]
 then
     log "🚏 headers are set $headers"
-    while read line
-    do
-        echo "${headers}|${line}" >> $tmp_dir/temp_headers_file
-    done < $output_final_file
+    # awk keeps the backslashes of the records (escaped json), unlike read without -r
+    HEADERS="$headers" SEPARATOR="$record_separator" awk '{ print ENVIRON["HEADERS"] ENVIRON["SEPARATOR"] $0 }' "$output_final_file" > $tmp_dir/temp_headers_file
 
     mv $tmp_dir/temp_headers_file $output_final_file
 fi
@@ -880,6 +921,10 @@ if [[ -n "$forced_value" ]]
 then
     value_str=" based on --forced-value "
 fi
+if [ "$nb_distinct_messages" != "" ] && [ "$nb_distinct_messages" -lt "$nb_generated_messages" ]
+then
+    value_str="$value_str ($nb_distinct_messages different records, repeated)"
+fi
 
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 
@@ -888,15 +933,15 @@ if [ $record_size -gt $size_limit_to_show ]
 then
     log "✨ $nb_generated_messages records were generated$value_str (only showing first 1 as record size is $record_size), $ELAPSED"
     log "✨ only showing first $size_limit_to_show characters"
-    head -n 1 "$output_final_file" | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | cut -c 1-${size_limit_to_show} | awk "{print \$0 \"...<truncated, only showing first $size_limit_to_show characters, out of $record_size>...\"}"
+    render_batch 1 1 | tr '\037' '|' | cut -c 1-${size_limit_to_show} | awk "{print \$0 \"...<truncated, only showing first $size_limit_to_show characters, out of $record_size>...\"}"
 else
     if (( nb_generated_messages < 10 ))
     then
         log "✨ $nb_generated_messages records were generated$value_str"
-        cat "$output_final_file" | awk -v counter=1 '{gsub("%g", counter); counter++; print}'
+        render_batch "$nb_generated_messages" 1 | tr '\037' '|'
     else
         log "✨ $nb_generated_messages records were generated$value_str (only showing first 10), $ELAPSED"
-        head -n 10 "$output_final_file" | awk -v counter=1 '{gsub("%g", counter); counter++; print}'
+        render_batch 10 1 | tr '\037' '|'
     fi
 fi
 
@@ -910,11 +955,19 @@ if [[ -n "$validate" ]]
 then
     log "✔️ --validate is set, validating schema now..."
 
+    if [[ "$environment" == cfk* ]] || [[ "$environment" == "ccloud" ]] || [ "$connect_container" == "" ]
+    then
+        logerror "❌ --validate needs a running connect container, it is not supported with environment $environment"
+        exit 1
+    fi
+
     if [ "$value_schema_type" == "json-schema" ]
     then
-        log "✨ also validating with https://raw.githubusercontent.com/conan-goldsmith/Python-Scripts/main/json_type_validator.py"
-        curl -s -L https://raw.githubusercontent.com/conan-goldsmith/Python-Scripts/main/json_type_validator.py -o /tmp/json_type_validator.py
-        docker run -i --rm -v "${PLAYGROUND_HOST_TMP_DIR}/json_type_validator.py:/tmp/json_type_validator.py" -v "$value_schema_file:/tmp/schema" python:3.7-slim python /tmp/json_type_validator.py -f /tmp/schema
+        # pinned to a commit: the script is downloaded from a third party repository and executed
+        json_type_validator_url="https://raw.githubusercontent.com/conan-goldsmith/Python-Scripts/bd04b0d3ba245d3b891d1a15aca424a27fde6062/json_type_validator.py"
+        log "✨ also validating with $json_type_validator_url"
+        curl -s -L "$json_type_validator_url" -o "$tmp_dir/json_type_validator.py"
+        docker run -i --rm -v "$tmp_dir/json_type_validator.py:/tmp/json_type_validator.py" -v "$value_schema_file:/tmp/schema" python:3.7-slim python /tmp/json_type_validator.py -f /tmp/schema
     fi
 
     set +e
@@ -925,12 +978,16 @@ then
         exit 1
     fi
     log "🏗 Building jar for schema-validator"
-    build_java_component_with_retry "schema-validator" docker run -i --rm -e TAG=$tag -v "${root_folder}/scripts/cli/src/schema-validator":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "${root_folder}/scripts/cli/src/schema-validator/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.9.11-eclipse-temurin-17 mvn -s /tmp/settings.xml -Dkafka.tag=$tag package
+    # built from a copy of the sources: an IDE java extension writes its own classes in target/classes (Eclipse
+    # compiler, "Unresolved compilation problem" at runtime) and recreates them as soon as they are deleted,
+    # maven would then consider them up to date and package them
+    mkdir -p "${root_folder}/scripts/cli/src/schema-validator/target"
+    build_java_component_with_retry "schema-validator" docker run -i --rm -e TAG=$tag -v "${root_folder}/scripts/cli/src/schema-validator:/usr/src/schema-validator:ro" -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "${root_folder}/scripts/cli/src/schema-validator/target:/usr/src/target" maven:3.9.11-eclipse-temurin-17 bash -c "mkdir -p /usr/src/mymaven && cp -r /usr/src/schema-validator/pom.xml /usr/src/schema-validator/src /usr/src/mymaven/ && cd /usr/src/mymaven && mvn -s /tmp/settings.xml -Dkafka.tag=$tag package && cp target/schema-validator-1.0.0-jar-with-dependencies.jar /usr/src/target/"
     set -e
 
-    playground container cp --source ${root_folder}/scripts/cli/src/schema-validator/target/schema-validator-1.0.0-jar-with-dependencies.jar --destination connect:/tmp/schema-validator-1.0.0-jar-with-dependencies.jar > /dev/null 2>&1
-    playground container cp --source $value_schema_file --destination connect:/tmp/schema > /dev/null 2>&1
-    playground container cp --source $output_value_file --destination connect:/tmp/message.json > /dev/null 2>&1
+    playground container cp --source ${root_folder}/scripts/cli/src/schema-validator/target/schema-validator-1.0.0-jar-with-dependencies.jar --destination $connect_container:/tmp/schema-validator-1.0.0-jar-with-dependencies.jar > /dev/null 2>&1
+    playground container cp --source $value_schema_file --destination $connect_container:/tmp/schema > /dev/null 2>&1
+    playground container cp --source $output_value_file --destination $connect_container:/tmp/message.json > /dev/null 2>&1
     env_list=""
     for conf in "${validate_config[@]}"
     do
@@ -987,7 +1044,7 @@ then
         esac
     done
 
-    docker exec $env_list -e SCHEMA_TYPE=$value_schema_type connect bash -c "java -jar /tmp/schema-validator-1.0.0-jar-with-dependencies.jar" > $tmp_dir/result.log
+    docker exec $env_list -e SCHEMA_TYPE=$value_schema_type $connect_container bash -c "java -jar /tmp/schema-validator-1.0.0-jar-with-dependencies.jar" > $tmp_dir/result.log
     set +e
     nb=$(grep -c "ERROR" $tmp_dir/result.log)
     if [ $nb -ne 0 ]
@@ -1003,7 +1060,7 @@ fi
 
 set +e
 existing_topics=$(playground get-topic-list)
-if ! echo "$existing_topics" | grep -qFw "$topic"
+if ! echo "$existing_topics" | grep -qFx "$topic"
 then
     log "✨ topic $topic does not exist, it will be created.."
     if [[ "$environment" == "ccloud" ]]
@@ -1026,7 +1083,16 @@ then
         fi
     fi
 else
+    current_nb_partitions=""
     if [ "$nb_partitions" != "1" ]
+    then
+        # PartitionCount: 3 (kafka-topics), Partition Count: 3 (cfk kafkatopic)
+        current_nb_partitions=$(playground topic describe --topic $topic 2>/dev/null | grep -oE 'Partition ?Count: *[0-9]+' | head -1 | grep -oE '[0-9]+')
+    fi
+    if [ "$nb_partitions" != "1" ] && [ "$current_nb_partitions" == "$nb_partitions" ]
+    then
+        log "🔢 topic $topic already has $nb_partitions partitions"
+    elif [ "$nb_partitions" != "1" ]
     then
         nb=$(playground topic get-number-records -t $topic | tail -1)
         if [ $nb == 0 ]
@@ -1037,7 +1103,7 @@ else
         else
             logerror "--nb-partitions is set, but topic is not empty, delete it first and retry"
             echo "playground topic delete --topic $topic"
-            exit 0
+            exit 1
         fi
     fi
 fi
@@ -1092,8 +1158,8 @@ case "${value_schema_type}" in
     ;;
 esac
 
-compression=""
-producer_properties=""
+# producer options common to every command: they go after the options of the console producer command
+producer_args=()
 
 set -e
 SECONDS=0
@@ -1112,46 +1178,190 @@ if [ $nb_messages -gt $max_nb_messages_per_batch ] || [ $nb_messages = -1 ]
 then
     log "✨ it will be done in batches of maximum $max_nb_messages_per_batch records$sleep_msg"
 
-    log "✨ setting $producer_property_name linger.ms=100 and $producer_property_name batch.size=500000"
-    producer_properties="$producer_properties $producer_property_name linger.ms=1000 $producer_property_name batch.size=500000"
+    log "✨ setting $producer_property_name linger.ms=1000 and $producer_property_name batch.size=500000"
+    producer_args+=("$producer_property_name" linger.ms=1000 "$producer_property_name" batch.size=500000)
 fi
 
 if [ $record_size -ge 1048576 ]
 then
     log "✨ record-size $record_size is greater than 1Mb (1048576), setting $producer_property_name max.request.size=$((record_size + 1000)) and $producer_property_name buffer.memory=67108864"
-    producer_properties="$producer_properties $producer_property_name max.request.size=$((record_size + 1000)) $producer_property_name buffer.memory=67108864"
+    producer_args+=("$producer_property_name" "max.request.size=$((record_size + 1000))" "$producer_property_name" buffer.memory=67108864)
     log "✨ topic $topic max.message.bytes is also set to $((record_size + 1000))"
     playground topic alter --topic $topic --add-config max.message.bytes=$((record_size + 1000))
 fi
 
 for producer_prop in "${producer_property[@]}"
 do
-    producer_properties="$producer_properties $producer_property_name $producer_prop"
+    producer_args+=("$producer_property_name" "$producer_prop")
 done
 
-if [ "$producer_properties" != "" ]
+if [ ${#producer_args[@]} -ne 0 ]
 then
-    log "⚙️  following producer properties will be used: $producer_properties"
+    log "⚙️  following producer properties will be used: ${producer_args[*]}"
 fi
 
 if [[ -n "$compression_codec" ]]
 then
     log "🤐 --compression-codec $compression_codec will be used"
-    compression="--compression-codec $compression_codec"
+    producer_args+=(--compression-codec "$compression_codec")
 fi
 
 if [[ -n "$tombstone" ]]
 then
     log "🧟 Sending tombstone(s)"
-    tombstone="$property_name null.marker=NULL"
+    producer_args+=("$property_name" null.marker=NULL)
 fi
 
-maybe_schema_id_in_header=""
-if [[ -n "$schema_id_in_header" ]]
+if [ "$throughput" -gt 0 ]
 then
-    log "🎯 Setting schema ID in kafka header"
-    maybe_schema_id_in_header="$property_name value.schema.id.serializer=io.confluent.kafka.serializers.schema.id.HeaderSchemaIdSerializer"
+    log "🐢 --throughput is set, sending at most $throughput records per second"
 fi
+
+if [[ -n "$tombstone" ]]
+then
+    switch_schema_type="${key_schema_type}"
+else
+    switch_schema_type="${value_schema_type}"
+fi
+
+is_schema_producer=1
+case "${switch_schema_type}" in
+    json|sql|raw|datagen)
+        is_schema_producer=0
+    ;;
+esac
+
+is_schema_key=0
+case "${key_schema_type}" in
+    avro|json-schema|protobuf)
+        is_schema_key=1
+    ;;
+esac
+
+if [ $is_schema_key = 1 ]
+then
+    producer_schema_type="$key_schema_type"
+else
+    producer_schema_type="$value_schema_type"
+fi
+
+# build the console producer command once, as an array: values with spaces (sasl.jaas.config,
+# --producer-property) are kept as one argument, and --verbose prints exactly what runs
+producer_cmd=()
+if [[ "$environment" == "ccloud" ]]
+then
+    if [ $is_schema_producer = 1 ]
+    then
+        # the schema files are read from the temporary folder of this run, so that concurrent runs don't overwrite each other
+        schema_folder="/tmp/pg-schemas"
+        key_schema_path="$schema_folder/$(basename "$key_schema_file")"
+        value_schema_path="$schema_folder/$(basename "$value_schema_file")"
+        producer_cmd=(docker run -i --rm -v "$tmp_dir:$schema_folder" -e "SCHEMA_REGISTRY_LOG4J_OPTS=$tool_log4j_jvm_arg" "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" "kafka-${producer_schema_type}-console-producer" "$parameter_for_list_broker" "$BOOTSTRAP_SERVERS" "$producer_property_name" ssl.endpoint.identification.algorithm=https "$producer_property_name" sasl.mechanism=PLAIN "$producer_property_name" security.protocol=SASL_SSL "$producer_property_name" "sasl.jaas.config=$SASL_JAAS_CONFIG" "$property_name" basic.auth.credentials.source=USER_INFO "$property_name" "schema.registry.basic.auth.user.info=$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$property_name" "schema.registry.url=$SCHEMA_REGISTRY_URL")
+    else
+        producer_cmd=(docker run -i --rm -v "$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties" "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" kafka-console-producer "$parameter_for_list_broker" "$BOOTSTRAP_SERVERS" "$producer_config_name" /tmp/configuration/ccloud.properties)
+    fi
+else
+    if [[ "$environment" == cfk* ]]
+    then
+        producer_cmd=(kubectl -n confluent exec -i connect-0 --)
+    elif [ $is_schema_producer = 1 ]
+    then
+        producer_cmd=(docker exec -e "SCHEMA_REGISTRY_LOG4J_OPTS=$tool_log4j_jvm_arg" -i "$container")
+    else
+        producer_cmd=(docker exec -e KAFKA_DEBUG= -i "$container")
+    fi
+
+    if [ $is_schema_producer = 1 ]
+    then
+        # 🧠 remove SLF4J traces from topic produce #6254
+        if [[ "$environment" == cfk* ]]
+        then
+            playground --output-level ERROR container exec --command "rm -f /usr/share/java/schema-registry/slf4j-reload4j-1.7.36.jar > /dev/null 2>&1"
+        else
+            playground --output-level ERROR container exec -c "$container" --command "rm -f /usr/share/java/schema-registry/slf4j-reload4j-1.7.36.jar > /dev/null 2>&1" --root
+        fi
+        key_schema_path="/tmp/key_schema_file"
+        value_schema_path="/tmp/value_schema_file"
+        if [ -f $key_schema_file ]
+        then
+            playground container cp --source $key_schema_file --destination $container:$key_schema_path > /dev/null 2>&1
+        fi
+        if [ -f $value_schema_file ]
+        then
+            playground container cp --source $value_schema_file --destination $container:$value_schema_path > /dev/null 2>&1
+        fi
+        producer_cmd+=("kafka-${producer_schema_type}-console-producer" "$parameter_for_list_broker" "$bootstrap_server" "$property_name" "schema.registry.url=$sr_url_cli")
+    else
+        producer_cmd+=(kafka-console-producer "$parameter_for_list_broker" "$bootstrap_server")
+    fi
+fi
+
+producer_cmd+=(--topic "$topic")
+
+# $security only holds options without spaces
+read -r -a security_args <<< "$security"
+producer_cmd+=("${security_args[@]}")
+
+if [ $is_schema_producer = 1 ]
+then
+    producer_cmd+=("$property_name" "value.schema.file=$value_schema_path")
+fi
+
+if [[ -n "$key" ]]
+then
+    producer_cmd+=("$property_name" parse.key=true "$property_name" "key.separator=$record_separator")
+    if [ $is_schema_producer = 1 ]
+    then
+        if [ $is_schema_key = 1 ]
+        then
+            producer_cmd+=("$property_name" "key.schema.file=$key_schema_path")
+        else
+            producer_cmd+=("$property_name" key.serializer=org.apache.kafka.common.serialization.StringSerializer)
+        fi
+    fi
+fi
+
+if [[ -n "$headers" ]]
+then
+    producer_cmd+=("$property_name" parse.headers=true "$property_name" "headers.delimiter=$record_separator" "$property_name" "headers.separator=," "$property_name" "headers.key.separator=:")
+fi
+
+if [ $is_schema_producer = 1 ]
+then
+    if [[ -n "$value_schema_id" ]]
+    then
+        log "🔰 --value-schema-id is set: adding $property_name value.schema.id=$value_schema_id $property_name auto.register=false $property_name use.latest.version=true"
+        producer_cmd+=("$property_name" "value.schema.id=$value_schema_id" "$property_name" auto.register=false "$property_name" use.latest.version=true)
+    fi
+    if [[ -n "$key_subject_name_strategy" ]]
+    then
+        producer_cmd+=("$property_name" "key.subject.name.strategy=io.confluent.kafka.serializers.subject.$key_subject_name_strategy")
+    fi
+    if [[ -n "$value_subject_name_strategy" ]]
+    then
+        producer_cmd+=("$property_name" "value.subject.name.strategy=io.confluent.kafka.serializers.subject.$value_subject_name_strategy")
+    fi
+    if [ "${value_schema_type}" == "avro" ]
+    then
+        producer_cmd+=("$property_name" avro.use.logical.type.converters=true)
+    fi
+    if [[ -n "$schema_id_in_header" ]]
+    then
+        log "🎯 Setting schema ID in kafka header"
+        producer_cmd+=("$property_name" value.schema.id.serializer=io.confluent.kafka.serializers.schema.id.HeaderSchemaIdSerializer)
+    fi
+fi
+
+producer_cmd+=("${producer_args[@]}")
+
+function throttle() {
+    if [ "$throughput" -gt 0 ]
+    then
+        perl -MTime::HiRes=time,sleep -e '$| = 1; my $rate = shift; my $start = time; my $i = 0; while (my $line = <STDIN>) { print $line; $i++; my $wait = $start + $i / $rate - time; sleep($wait) if $wait > 0 }' "$throughput"
+    else
+        cat
+    fi
+}
 
 function handle_signal {
   echo "Stopping..."
@@ -1159,48 +1369,6 @@ function handle_signal {
 }
 # Set the signal handler
 trap handle_signal SIGINT
-
-run_local_console_producer() {
-    if [[ "$environment" == cfk* ]]
-    then
-        kubectl -n confluent exec -i connect-0 -- kafka-console-producer "$@"
-    else
-        docker exec -e KAFKA_DEBUG="" -i $container kafka-console-producer "$@"
-    fi
-}
-
-run_local_schema_console_producer() {
-    local schema_type="$1"
-    shift
-
-    if [[ "$environment" == cfk* ]]
-    then
-        kubectl -n confluent exec -i connect-0 -- kafka-${schema_type}-console-producer "$@"
-    else
-        docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -i $container kafka-${schema_type}-console-producer "$@"
-    fi
-}
-
-print_local_console_producer_command() {
-    if [[ "$environment" == cfk* ]]
-    then
-        echo "cat /tmp/verbose_input_file.txt | kubectl -n confluent exec -i connect-0 -- kafka-console-producer $*"
-    else
-        echo "cat /tmp/verbose_input_file.txt | docker exec -e KAFKA_DEBUG=\"\" -i $container kafka-console-producer $*"
-    fi
-}
-
-print_local_schema_console_producer_command() {
-    local schema_type="$1"
-    shift
-
-    if [[ "$environment" == cfk* ]]
-    then
-        echo "cat /tmp/verbose_input_file.txt | kubectl -n confluent exec -i connect-0 -- kafka-${schema_type}-console-producer $*"
-    else
-        echo "cat /tmp/verbose_input_file.txt | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -i $container kafka-${schema_type}-console-producer $*"
-    fi
-}
 
 nb_messages_sent=0
 nb_messages_to_send=0
@@ -1234,275 +1402,26 @@ do
             log "💯 $nb_messages_sent/$nb_messages records sent so far..."
         fi
     fi
-    
+
     if [[ -n "$verbose" ]]
     then
-        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' > /tmp/verbose_input_file.txt
+        render_batch "$nb_messages_to_send" "$((nb_messages_sent + 1))" > /tmp/verbose_input_file.txt
+        log "🐞 CLI command used to produce data"
+        echo "cat /tmp/verbose_input_file.txt | $(printf '%q ' "${producer_cmd[@]}")"
     fi
-    switch_schema_type=""
-    if [[ -n "$tombstone" ]]
-    then
-        switch_schema_type="${key_schema_type}"
-    else
-        switch_schema_type="${value_schema_type}"
-    fi
-    case "${switch_schema_type}" in
-        json|sql|raw|datagen)
-            if [[ "$environment" == "ccloud" ]]
-            then
-                if [[ -n "$key" ]]
-                then
-                    if [[ -n "$headers" ]]
-                    then
-                        if [[ -n "$verbose" ]]
-                        then
-                            log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic $producer_config_name /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator=\"|\" $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\""
-                        fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic $producer_config_name /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator="|" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":"
-                    else
-                        if [[ -n "$verbose" ]]
-                        then
-                            log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic $producer_config_name /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator=\"|\" "
-                        fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic $producer_config_name /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator="|" 
-                    fi
-                else
-                    if [[ -n "$headers" ]]
-                    then
-                        if [[ -n "$verbose" ]]
-                        then
-                            log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic $producer_config_name /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\""
-                        fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic $producer_config_name /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":"
-                    else
-                        if [[ -n "$verbose" ]]
-                        then
-                            log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic $producer_config_name /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone"
-                        fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS --topic $topic $producer_config_name /tmp/configuration/ccloud.properties $security $producer_properties $compression $tombstone
-                    fi
-                fi
-            else
-                if [[ -n "$key" ]]
-                then
-                    if [[ -n "$headers" ]]
-                    then
-                        if [[ -n "$verbose" ]]
-                        then
-                            log "🐞 CLI command used to produce data"
-                            print_local_console_producer_command "$parameter_for_list_broker" "$bootstrap_server" "--topic" "$topic" $security $producer_properties $compression $tombstone "$property_name" "parse.key=true" "$property_name" "key.separator=|" "$property_name" "parse.headers=true" "$property_name" "headers.delimiter=|" "$property_name" "headers.separator=," "$property_name" "headers.key.separator=:"
-                        fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_console_producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator="|" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":"
-                    else
-                        if [[ -n "$verbose" ]]
-                        then
-                            log "🐞 CLI command used to produce data"
-                            print_local_console_producer_command "$parameter_for_list_broker" "$bootstrap_server" "--topic" "$topic" $security $producer_properties $compression $tombstone "$property_name" "parse.key=true" "$property_name" "key.separator=|"
-                        fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_console_producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone $property_name parse.key=true $property_name key.separator="|"
-                    fi
-                else
-                    if [[ -n "$headers" ]]
-                    then
-                        if [[ -n "$verbose" ]]
-                        then
-                            log "🐞 CLI command used to produce data"
-                            print_local_console_producer_command "$parameter_for_list_broker" "$bootstrap_server" "--topic" "$topic" $security $producer_properties $compression $tombstone "$property_name" "parse.headers=true" "$property_name" "headers.delimiter=|" "$property_name" "headers.separator=," "$property_name" "headers.key.separator=:"
-                        fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_console_producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":"
-                    else
-                        if [[ -n "$verbose" ]]
-                        then
-                            log "🐞 CLI command used to produce data"
-                            print_local_console_producer_command "$parameter_for_list_broker" "$bootstrap_server" "--topic" "$topic" $security $producer_properties $compression $tombstone
-                        fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_console_producer $parameter_for_list_broker $bootstrap_server --topic $topic $security $producer_properties $compression $tombstone
-                    fi
-                fi
-            fi
-        ;;
-        *)
-            force_schema_id=""
-            if [[ -n "$value_schema_id" ]]
-            then
-                log "🔰 --value-schema-id is set: adding $property_name value.schema.id=$value_schema_id $property_name auto.register=false $property_name use.latest.version=true"
-                force_schema_id="$property_name value.schema.id=$value_schema_id $property_name auto.register=false $property_name use.latest.version=true"
-            fi
 
-            key_subject_name_strategy_property=""
-            if [[ -n "$key_subject_name_strategy" ]]
-            then
-                key_subject_name_strategy_property="$property_name key.subject.name.strategy=io.confluent.kafka.serializers.subject.$key_subject_name_strategy"
-            fi
+    render_batch "$nb_messages_to_send" "$((nb_messages_sent + 1))" | throttle | "${producer_cmd[@]}"
 
-            value_subject_name_strategy_property=""
-            if [[ -n "$value_subject_name_strategy" ]]
-            then
-                value_subject_name_strategy_property="$property_name value.subject.name.strategy=io.confluent.kafka.serializers.subject.$value_subject_name_strategy"
-            fi
-
-            avro_use_logical_type_converters_property=""
-            if [ "${value_schema_type}" == "avro" ]
-            then
-                avro_use_logical_type_converters_property=" $property_name avro.use.logical.type.converters=true"
-            fi
-            if [[ "$environment" == "ccloud" ]]
-            then
-                if [ -f $key_schema_file ]
-                then
-                    cp $key_schema_file /tmp/key_schema_file > /dev/null 2>&1
-                fi
-                if [ -f $value_schema_file ]
-                then
-                    cp $value_schema_file /tmp/value_schema_file > /dev/null 2>&1
-                fi
-                if [[ -n "$key" ]]
-                then
-                    if [[ -n "$headers" ]]
-                    then
-                        if [ "$key_schema_type" = "avro" ] || [ "$key_schema_type" = "protobuf" ] || [ "$key_schema_type" = "json-schema" ]
-                        then
-                            if [[ -n "$verbose" ]]
-                            then
-                                log "🐞 CLI command used to produce data"
-                                echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.schema.file=\"/tmp/key_schema_file\" $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
-                            fi
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.schema.file="/tmp/key_schema_file" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
-                        else
-                            if [[ -n "$verbose" ]]
-                            then
-                                log "🐞 CLI command used to produce data"
-                                echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
-                            fi
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
-                        fi
-                    else
-                        if [ "$key_schema_type" = "avro" ] || [ "$key_schema_type" = "protobuf" ] || [ "$key_schema_type" = "json-schema" ]
-                        then
-                            if [[ -n "$verbose" ]]
-                            then
-                                log "🐞 CLI command used to produce data"
-                                echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.schema.file=\"/tmp/key_schema_file\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
-                            fi
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e key_schema_type=$key_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$key_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.schema.file="/tmp/key_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
-                        else
-                            if [[ -n "$verbose" ]]
-                            then
-                                log "🐞 CLI command used to produce data"
-                                echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.key=true $property_name key.separator=\"|\" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
-                            fi
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
-                        fi
-                    fi
-                else
-                    if [[ -n "$headers" ]]
-                    then
-                        if [[ -n "$verbose" ]]
-                        then
-                            log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $property_name parse.headers=true $property_name headers.delimiter=\"|\" $property_name headers.separator=\",\" $property_name headers.key.separator=\":\" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
-                        fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
-                    else
-                        if [[ -n "$verbose" ]]
-                        then
-                            log "🐞 CLI command used to produce data"
-                            echo "cat /tmp/verbose_input_file.txt | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS=\"$tool_log4j_jvm_arg\" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS=\"$BOOTSTRAP_SERVERS\" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" -e SCHEMA_REGISTRY_URL=\"$SCHEMA_REGISTRY_URL\" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file=/tmp/value_schema_file $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header"
-                        fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | docker run -i --rm -v ${PLAYGROUND_HOST_TMP_DIR}:/tmp -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_schema_type=$value_schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} kafka-$value_schema_type-console-producer $parameter_for_list_broker $BOOTSTRAP_SERVERS $producer_property_name ssl.endpoint.identification.algorithm=https $producer_property_name sasl.mechanism=PLAIN $producer_property_name security.protocol=SASL_SSL $producer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
-                    fi
-                fi
-            else
-                # 🧠 remove SLF4J traces from topic produce #6254
-                if [[ "$environment" == cfk* ]]
-                then
-                    playground --output-level ERROR container exec --command "rm -f /usr/share/java/schema-registry/slf4j-reload4j-1.7.36.jar > /dev/null 2>&1"
-                else
-                    playground --output-level ERROR container exec --command "rm -f /usr/share/java/schema-registry/slf4j-reload4j-1.7.36.jar > /dev/null 2>&1" --root
-                fi
-                if [ -f $key_schema_file ]
-                then
-                    playground container cp --source $key_schema_file --destination $container:/tmp/key_schema_file > /dev/null 2>&1
-                fi
-                if [ -f $value_schema_file ]
-                then
-                    playground container cp --source $value_schema_file --destination $container:/tmp/value_schema_file > /dev/null 2>&1
-                fi
-                if [[ -n "$key" ]]
-                then
-                    if [[ -n "$headers" ]]
-                    then
-                        if [ "$key_schema_type" = "avro" ] || [ "$key_schema_type" = "protobuf" ] || [ "$key_schema_type" = "json-schema" ]
-                        then
-                            if [[ -n "$verbose" ]]
-                            then
-                                log "🐞 CLI command used to produce data"
-                                print_local_schema_console_producer_command "$key_schema_type" "$parameter_for_list_broker" "$bootstrap_server" "$property_name" "schema.registry.url=$sr_url_cli" "--topic" "$topic" $security "$property_name" "value.schema.file=/tmp/value_schema_file" "$property_name" "parse.key=true" "$property_name" "key.separator=|" "$property_name" "key.schema.file=/tmp/key_schema_file" "$property_name" "parse.headers=true" "$property_name" "headers.delimiter=|" "$property_name" "headers.separator=," "$property_name" "headers.key.separator=:" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
-                            fi
-
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_schema_console_producer "$key_schema_type" $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.schema.file="/tmp/key_schema_file" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
-                        else
-                            if [[ -n "$verbose" ]]
-                            then
-                                log "🐞 CLI command used to produce data"
-                                print_local_schema_console_producer_command "$value_schema_type" "$parameter_for_list_broker" "$bootstrap_server" "$property_name" "schema.registry.url=$sr_url_cli" "--topic" "$topic" $security "$property_name" "value.schema.file=/tmp/value_schema_file" "$property_name" "parse.key=true" "$property_name" "key.separator=|" "$property_name" "key.serializer=org.apache.kafka.common.serialization.StringSerializer" "$property_name" "parse.headers=true" "$property_name" "headers.delimiter=|" "$property_name" "headers.separator=," "$property_name" "headers.key.separator=:" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
-                            fi
-
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_schema_console_producer "$value_schema_type" $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
-                        fi
-                    else
-                        if [ "$key_schema_type" = "avro" ] || [ "$key_schema_type" = "protobuf" ] || [ "$key_schema_type" = "json-schema" ]
-                        then
-                            if [[ -n "$verbose" ]]
-                            then
-                                log "🐞 CLI command used to produce data"
-                                print_local_schema_console_producer_command "$key_schema_type" "$parameter_for_list_broker" "$bootstrap_server" "$property_name" "schema.registry.url=$sr_url_cli" "--topic" "$topic" $security "$property_name" "value.schema.file=/tmp/value_schema_file" "$property_name" "parse.key=true" "$property_name" "key.separator=|" "$property_name" "key.schema.file=/tmp/key_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
-                            fi
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_schema_console_producer "$key_schema_type" $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.schema.file="/tmp/key_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
-                        else
-                            if [[ -n "$verbose" ]]
-                            then
-                                log "🐞 CLI command used to produce data"
-                                print_local_schema_console_producer_command "$value_schema_type" "$parameter_for_list_broker" "$bootstrap_server" "$property_name" "schema.registry.url=$sr_url_cli" "--topic" "$topic" $security "$property_name" "value.schema.file=/tmp/value_schema_file" "$property_name" "parse.key=true" "$property_name" "key.separator=|" "$property_name" "key.serializer=org.apache.kafka.common.serialization.StringSerializer" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
-                            fi
-                            head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_schema_console_producer "$value_schema_type" $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.key=true $property_name key.separator="|" $property_name key.serializer=org.apache.kafka.common.serialization.StringSerializer $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
-                        fi
-                    fi
-                else
-                    if [[ -n "$headers" ]]
-                    then
-                        if [[ -n "$verbose" ]]
-                        then
-                            log "🐞 CLI command used to produce data"
-                            print_local_schema_console_producer_command "$value_schema_type" "$parameter_for_list_broker" "$bootstrap_server" "$property_name" "schema.registry.url=$sr_url_cli" "--topic" "$topic" $security "$property_name" "value.schema.file=/tmp/value_schema_file" "$property_name" "parse.headers=true" "$property_name" "headers.delimiter=|" "$property_name" "headers.separator=," "$property_name" "headers.key.separator=:" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
-                        fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_schema_console_producer "$value_schema_type" $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $property_name parse.headers=true $property_name headers.delimiter="|" $property_name headers.separator="," $property_name headers.key.separator=":" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
-                    else
-                        if [[ -n "$verbose" ]]
-                        then
-                            log "🐞 CLI command used to produce data"
-                            print_local_schema_console_producer_command "$value_schema_type" "$parameter_for_list_broker" "$bootstrap_server" "$property_name" "schema.registry.url=$sr_url_cli" "--topic" "$topic" $security "$property_name" "value.schema.file=/tmp/value_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
-                        fi
-                        head -n $nb_messages_to_send $output_final_file | awk -v counter=1 '{gsub("%g", counter); counter++; print}' | run_local_schema_console_producer "$value_schema_type" $parameter_for_list_broker $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $security $property_name value.schema.file="/tmp/value_schema_file" $force_schema_id $key_subject_name_strategy_property $value_subject_name_strategy_property $avro_use_logical_type_converters_property $producer_properties $compression $tombstone $maybe_schema_id_in_header
-                    fi
-                fi
-            fi
-        ;;
-    esac
     # Increment the number of sent messages
     nb_messages_sent=$((nb_messages_sent + nb_messages_to_send))
 
-    if [[ $sleep_time_between_batch -gt 0 ]]
-    then
-        sleep $sleep_time_between_batch
-    fi
-    if [ $nb_messages != -1 ] && [ $should_stop -eq 1 ]
+    if [ $nb_messages != -1 ] && { [ $should_stop -eq 1 ] || [ $nb_messages_sent -ge $nb_messages ]; }
     then
         stop=1
+    fi
+    if [[ $sleep_time_between_batch -gt 0 ]] && [ $stop != 1 ]
+    then
+        sleep $sleep_time_between_batch
     fi
 done
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
@@ -1511,5 +1430,5 @@ log "📤 produced $nb_messages_sent records to topic $topic, $ELAPSED"
 if [[ -n "$consume" ]]
 then
     log "📥 --consume is set, consuming topic $topic"
-    playground topic consume --topic $topic
+    playground topic consume --topic $topic --min-expected-messages $nb_messages_sent --timeout 60
 fi
