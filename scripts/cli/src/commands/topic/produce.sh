@@ -1354,10 +1354,29 @@ fi
 
 producer_cmd+=("${producer_args[@]}")
 
+# with --throughput, a batch can last hours (300000 records at 10 records/s): the progress is logged every
+# 10 seconds from here, $1 being the number of records sent before this batch
 function throttle() {
     if [ "$throughput" -gt 0 ]
     then
-        perl -MTime::HiRes=time,sleep -e '$| = 1; my $rate = shift; my $start = time; my $i = 0; while (my $line = <STDIN>) { print $line; $i++; my $wait = $start + $i / $rate - time; sleep($wait) if $wait > 0 }' "$throughput"
+        PG_LOG_LEVEL="$PG_LOG_LEVEL" perl -MTime::HiRes=time,sleep -MPOSIX=strftime -e '
+            $| = 1;
+            my ($rate, $sent_before) = @ARGV;
+            my $start = time;
+            my $last_progress = $start;
+            my $i = 0;
+            my $quiet = ($ENV{PG_LOG_LEVEL} // "") =~ /^(WARN|ERROR)$/;
+            while (my $line = <STDIN>) {
+                print $line;
+                $i++;
+                my $now = time;
+                if (!$quiet && $now - $last_progress >= 10) {
+                    printf STDERR "\033[0;33m%s ℹ️ 💯 %d records sent so far...\033[0m\n", strftime("%H:%M:%S", localtime), $sent_before + $i;
+                    $last_progress = $now;
+                }
+                my $wait = $start + $i / $rate - $now;
+                sleep($wait) if $wait > 0;
+            }' "$throughput" "$1"
     else
         cat
     fi
@@ -1410,7 +1429,7 @@ do
         echo "cat /tmp/verbose_input_file.txt | $(printf '%q ' "${producer_cmd[@]}")"
     fi
 
-    render_batch "$nb_messages_to_send" "$((nb_messages_sent + 1))" | throttle | "${producer_cmd[@]}"
+    render_batch "$nb_messages_to_send" "$((nb_messages_sent + 1))" | throttle "$nb_messages_sent" | "${producer_cmd[@]}"
 
     # Increment the number of sent messages
     nb_messages_sent=$((nb_messages_sent + nb_messages_to_send))
