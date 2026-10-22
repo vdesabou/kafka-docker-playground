@@ -6100,6 +6100,80 @@ commands:
         help: |-
           🫥 The isolation level to use, see https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#isolation-level
           If not set, default is read_uncommitted
+
+      - long: --last
+        arg: last
+        validate: integer
+        required: false
+        help: |-
+          ⏮️ Display the last N records of the topic (the most recent ones, sorted by timestamp across partitions),
+          instead of the first --max-messages
+
+          Example: --last 10
+        conflicts: [--tail, --from-timestamp, --offset, --min-expected-messages, --open, --count]
+
+      - long: --from-timestamp
+        arg: from-timestamp
+        required: false
+        help: |-
+          ⏱️ Display the records from this time (sorted by timestamp across partitions, --max-messages still applies)
+
+          Accepted values:
+
+          * a date, in local time: "2026-10-22 10:30", "2026-10-22T10:30:00.250" (add Z for UTC: "2026-10-22T08:30:00Z")
+          * an epoch, in milliseconds or seconds: 1792660170522
+          * a duration ago: 30s, 10m, 2h, 1d
+        conflicts: [--tail, --last, --offset, --open]
+
+      - long: --partition
+        arg: partition
+        validate: integer
+        required: false
+        help: |-
+          🧩 Only consume this partition (with --offset, from that offset; otherwise from the beginning, or new records with --tail)
+        conflicts: [--open]
+
+      - long: --offset
+        arg: offset
+        required: false
+        needs: [--partition]
+        help: |-
+          📍 Offset of --partition to start from: a number, earliest or latest
+
+          Example: --partition 0 --offset 1234 --max-messages 1, the record a connector is stuck on
+        conflicts: [--tail, --last, --from-timestamp, --open]
+
+      - long: --json
+        required: false
+        help: |-
+          🧾 Print each record as a json object on one line (topic, partition, offset, timestamp, date, headers, key,
+          value, schema ids): key and value are embedded as json when they are valid json, as strings otherwise.
+
+          Only the records go to stdout, everything else goes to stderr, so the output can be piped to jq.
+
+          Example: playground topic consume --topic orders --json | jq -r '.value.id'
+        conflicts: [--open, --count, --plot-latencies-timestamp-field, --tail]
+
+      - long: --count
+        required: false
+        help: |-
+          🔢 Only print the number of records consumed (with --grep, the number of records containing that string),
+          on stdout: logs go to stderr. Without --topic, one "<topic> <number>" line per topic.
+
+          Unlike playground topic get-number-records, records are counted, not offsets (transaction markers,
+          compacted records and records that cannot be deserialized do not count)
+        conflicts: [--tail, --open, --json, --plot-latencies-timestamp-field]
+
+      - long: --no-decode
+        required: false
+        help: |-
+          🤖 Never decode the values, even when they look base64 encoded (by default, they are decoded when the first
+          record is valid base64 of printable utf-8)
+
+      - long: --print-schema
+        required: false
+        help: |-
+          📜 Also print the key and value schemas registered for the topic
       examples:
       - playground topic consume --topic filestream --min-expected-messages 2 --timeout 30
       x_example_outputs:
