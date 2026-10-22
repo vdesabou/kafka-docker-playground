@@ -1393,6 +1393,9 @@ then
   playground open --file "$repro_dir/$repro_test_filename"
 fi
 
+# commits of the new model get scanned for secrets and customer data
+repro_install_git_hook
+
 increment_cli_metric nb_reproduction_models
 log "👷 Number of repro models created so far: $(get_cli_metric nb_reproduction_models)"
 

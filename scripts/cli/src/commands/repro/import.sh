@@ -347,6 +347,8 @@ do
 done < <(jq -c '.models[]' "$manifest")
 
 log "📥 $file imported in $repro_root"
+# commits of the imported models get scanned for secrets and customer data
+repro_install_git_hook
 
 if [ ${#model_paths[@]} -eq 0 ]
 then

@@ -1202,7 +1202,8 @@ subcommands:
     is an example written to demonstrate one specific\nproblem, so that anyone can
     reproduce it with a single command.\n\n  bootstrap   scaffold one from an existing
     example, then edit it\n  export      package one or more models as a self-contained
-    tgz bundle\n  import      unpack a bundle someone sent you, and run it\n\n\U0001F449
+    tgz bundle\n  import      unpack a bundle someone sent you, and run it\n  check
+    \      scan models for secrets and customer data before committing them\n\n\U0001F449
     Always scaffold with bootstrap rather than copying a script by hand: it\ncreates
     the header, the docker compose override, the CLI cheat sheet and\nregisters the
     model, which a hand-written file would be missing.\n\nKeep a model minimal and
@@ -1243,7 +1244,8 @@ subcommands:
       is exported.\n\n\U0001F4CB On macOS, the bundle is copied to the clipboard as
       a file: paste it\n(Cmd+V) in a Slack conversation to attach it (--no-clipboard
       to skip).\n\n\U0001F393 Tip: start with --dry-run to see what would be packed,
-      and what the scan finds."
+      and what the scan finds.\nThe same scan runs on commits with 'playground repro
+      check'."
     usage: playground repro export [OPTIONS]
     options:
     - names:
@@ -1283,6 +1285,56 @@ subcommands:
       - "--no-clipboard"
       argument: ''
       description: "\U0001F4CB Do not copy the bundle to the clipboard (macOS)"
+  - name: check
+    description: "\U0001F575️ Scan reproduction models for secrets and customer data
+      before they are committed\n\nRuns the scan of 'playground repro export' on the
+      files of the\nreproduction models, without packing anything. It stops (exit
+      code 1)\nwhen a file contains the value of a credential known to this machine\n('playground
+      secrets' store, exported credential variables,\nCLUSTER_CREDS / SCHEMA_REGISTRY_CREDS
+      of playground.ini,\n~/.aws/credentials) or a well-known token format (AWS access
+      key id,\nprivate key, GitHub / Slack token, Google API key, JWT, Azure storage\naccount
+      key), and when a credential file (keyfile.json, *.pem, *.key,\n*.p12, *.jks,
+      secrets.properties, playground.ini) is about to be\ncommitted. Email addresses,
+      public IP addresses, hard-coded passwords\nthat do not come from the base example,
+      and dumps, logs or archives\nare reported as possible customer data, without
+      failing. Values are\nnever printed.\n\nWithout flag, the new and modified files
+      of reproduction-models are\nchecked. Symlinks to the public examples are not.\n\n\U0001FA9D
+      'playground repro bootstrap' and 'playground repro import' set up a\npre-commit
+      hook in reproduction-models (git config core.hooksPath\n<playground>/scripts/repro-git-hooks)
+      that runs\n'playground repro check --staged --skip-secrets-store' on every commit.\nAn
+      existing pre-commit hook or core.hooksPath is never replaced. To skip\nthe scan
+      of one commit: git commit --no-verify, or\nPLAYGROUND_REPRO_SCAN=skip git commit.
+      PLAYGROUND_REPRO_SCAN=full also\nreads the 'playground secrets' store."
+    usage: playground repro check [OPTIONS]
+    options:
+    - names:
+      - "--file"
+      - "-f"
+      argument: FILE
+      description: "\U0001F516 Reproduction model script to check (the files export
+        would pack), can be repeated\n\nRepeatable: ✓ Yes\nConflicts with: --staged,
+        --all"
+    - names:
+      - "--staged"
+      argument: ''
+      description: "\U0001FA9D Check the staged content of the files about to be committed
+        (what the pre-commit hook uses)\n\nConflicts with: --file, --all"
+    - names:
+      - "--all"
+      argument: ''
+      description: "\U0001F4DA Check every file of reproduction-models, committed
+        or not (one-time audit)\n\nConflicts with: --file, --staged"
+    - names:
+      - "--skip-secrets-store"
+      argument: ''
+      description: "⚡ Do not read the 'playground secrets' store, which can prompt
+        (1Password): only the exported variables, playground.ini and ~/.aws/credentials
+        values, and the token formats"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the findings as JSON (exit code 1 still means
+        a secret was found)"
   - name: import
     description: "\U0001F4E5 Import a tgz bundle created by 'playground repro export'\n\nThe
       bundle is extracted to a temporary folder first and checked: no\nabsolute paths,

@@ -1,0 +1,29 @@
+#!/bin/bash
+# pre-commit hook of the reproduction-models repository, set up by 'playground repro bootstrap' and
+# 'playground repro import' (git config core.hooksPath): scans the staged files of the reproduction
+# models for secrets and customer data with 'playground repro check --staged'.
+#
+#   PLAYGROUND_REPRO_SCAN=skip git commit ...   skip the scan (or git commit --no-verify)
+#   PLAYGROUND_REPRO_SCAN=full git commit ...   also read the 'playground secrets' store (it can prompt,
+#                                               e.g. 1Password), instead of the exported variables only
+
+case "${PLAYGROUND_REPRO_SCAN:-}" in
+  skip) exit 0 ;;
+  full) skip_secrets_store="" ;;
+  *) skip_secrets_store="--skip-secrets-store" ;;
+esac
+
+hooks_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+playground_cli="$hooks_dir/../cli/playground"
+if [ ! -x "$playground_cli" ]
+then
+  echo "⚠️  $playground_cli not found: reproduction models not scanned for secrets" >&2
+  exit 0
+fi
+
+if ! "$playground_cli" repro check --staged $skip_secrets_store
+then
+  echo "" >&2
+  echo "❌ commit aborted: fix the findings above, or if they are not real secrets: git commit --no-verify (or PLAYGROUND_REPRO_SCAN=skip)" >&2
+  exit 1
+fi

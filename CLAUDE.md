@@ -228,7 +228,13 @@ playground repro export [-f <repro script>] [--dry-run]   # self-contained bundl
 playground repro export --all-uncommitted                 # every new or modified model
 playground repro export --include-artifacts               # also pack connector zip/jar and files referenced by absolute path
 playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|overwrite]
+playground repro check [--staged | -f <repro script> | --all] [--json]   # same secret / customer data scan, before a commit
 ```
+
+`repro bootstrap` / `repro import` point `core.hooksPath` of the `reproduction-models` repository to
+`scripts/repro-git-hooks/`, whose `pre-commit` runs `playground repro check --staged --skip-secrets-store`: a
+commit holding a secret is refused. Remove the finding (use `${VAR}`), don't bypass the hook
+(`--no-verify`, `PLAYGROUND_REPRO_SCAN=skip`) unless it's a false positive.
 
 **⚠️ Always scaffold a new repro model with `playground repro bootstrap` — never hand-write the `.sh`
 file.** Bootstrap copies the base example, adds the standard header (date, author, description,
