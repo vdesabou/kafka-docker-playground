@@ -6227,7 +6227,10 @@ subcommands:
       and fail with the error\nif they are not, so a broken config stops the example
       immediately\ninstead of failing silently later.\n\n\U0001F393 Tip: add --validate
       to have the config checked by the plugin before\nit is deployed, which reports
-      every invalid property at once."
+      every invalid property at once.\n\nAn update shows the keys added, removed and
+      changed compared to the\nrunning config (secrets masked). The config can also
+      be given in the\nREST API format ({\"name\": ..., \"config\": {...}}, as returned
+      by\nGET /connectors/<name>), or as the path of a json file."
     usage: playground connector create-or-update [JSON] [OPTIONS]
     options:
     - names:
@@ -6254,7 +6257,8 @@ subcommands:
       - "--package"
       - "-p"
       argument: PACKAGE
-      description: Package name
+      description: 'Package name (with --level: the log level of that package instead
+        of the connector''s)'
     - names:
       - "--wait-for-zero-lag"
       argument: ''
@@ -6293,9 +6297,18 @@ subcommands:
     - names:
       - "--initial-state"
       argument: INITIAL-STATE
-      description: "\U0001FAB5 Create connector with specific status (https://cwiki.apache.org/confluence/display/KAFKA/KIP-980%3A+Allow+creating+connectors+in+a+stopped+state)\n\nOnly
-        available if CP > 7.7\n\n⚠️ not available for ccloud connectors\n\nAllowed
+      description: "\U0001FAB5 Create connector with specific status (https://cwiki.apache.org/confluence/display/KAFKA/KIP-980%3A+Allow+creating+connectors+in+a+stopped+state)\n\nIf
+        the connector already exists, its config is updated, then it is paused, stopped
+        or resumed.\n\nOnly available if CP > 7.7\n\n⚠️ not available for ccloud connectors\n\nAllowed
         values: RUNNING, PAUSED, STOPPED"
+    - names:
+      - "--dry-run"
+      argument: ''
+      description: "\U0001F335 Print the final config (with the automatic configuration
+        added for the environment, the CFK rewrites)\nand the request that would be
+        sent, without deploying anything\n\nWith --ccloud-service-account, the service
+        account and its ACLs are not created.\n\nConflicts with: --wait, --wait-for-zero-lag,
+        --terraform, --level"
     - names:
       - "--terraform"
       argument: ''
