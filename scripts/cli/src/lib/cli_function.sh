@@ -4650,6 +4650,8 @@ function json_to_terraform_connector() {
 
     # Extract connector.class from JSON
     local connector_class=$(echo "$json_content" | jq -r '."connector.class"')
+    # a terraform resource name: letters, digits, "_" and "-", not starting with a digit
+    local resource_name=$(echo "$connector_name" | sed -E 's/[^A-Za-z0-9_-]/_/g; s/^([^A-Za-z_])/_\1/')
 
     # Remove connector.class from config
     local config=$(echo "$json_content" | jq 'del(."connector.class")')
@@ -4675,7 +4677,7 @@ provider "confluent" {
   # Uses CONFLUENT_CLOUD_API_KEY and CONFLUENT_CLOUD_API_SECRET env vars
 }
 
-resource "confluent_connector" "${connector_name}" {
+resource "confluent_connector" "${resource_name}" {
   environment {
     id = "${environment_id}"
   }
@@ -4689,7 +4691,8 @@ resource "confluent_connector" "${connector_name}" {
 EOF
 
     # Add non-sensitive config parameters from JSON
-    echo "$config_nonsensitive" | jq -r 'to_entries[] | "    \"\(.key)\" = \"\(.value)\""' >> "$output_file"
+    # @json escapes quotes and backslashes (sasl.jaas.config...), $${ and %%{ keep "${" and "%{" from being interpolated
+    echo "$config_nonsensitive" | jq -r 'to_entries[] | "    \(.key | @json) = \(.value | tostring | @json | gsub("\\$\\{"; "$${") | gsub("%\\{"; "%%{"))"' >> "$output_file"
 
     # Add sensitive config parameters
     if [ "$(echo "$config_sensitive" | jq 'length')""%" != "0%" ]; then
@@ -4698,7 +4701,7 @@ EOF
 
   config_sensitive = {
 EOF
-        echo "$config_sensitive" | jq -r 'to_entries[] | "    \"\(.key)\" = \"\(.value)\""' >> "$output_file"
+        echo "$config_sensitive" | jq -r 'to_entries[] | "    \(.key | @json) = \(.value | tostring | @json | gsub("\\$\\{"; "$${") | gsub("%\\{"; "%%{"))"' >> "$output_file"
         cat >> "$output_file" << 'EOF'
   }
 EOF
@@ -4727,7 +4730,7 @@ output "connector_status" {
 EOF
 
     # Replace ${connector_name} in output with actual connector name
-    sed -i.bak "s/\${connector_name}/${connector_name}/g" "$output_file"
+    sed -i.bak "s/\${connector_name}/${resource_name}/g" "$output_file"
     rm -f "${output_file}.bak"
 }
 
@@ -4743,8 +4746,24 @@ function deploy_connector_with_terraform() {
     get_kafka_docker_playground_dir
 
     terraform_base_dir="$KAFKA_DOCKER_PLAYGROUND_DIR/.terraform-playground"
+    # the .tf files and the terraform.tfstate hold the secrets of the connectors
     mkdir -p "$terraform_base_dir"
-    terraform_dir=$(mktemp -d "$terraform_base_dir/${connector_name}-XXXXXXXXXX")
+    chmod 700 "$terraform_base_dir"
+    # the folder of a previous deployment of this connector: terraform apply then updates it, a new folder would try to
+    # create a connector that already exists
+    terraform_dir=$(playground state get "terraform.connector.$connector_name" 2> /dev/null)
+    local import_existing=0
+    if [ -n "$terraform_dir" ] && [ -f "$terraform_dir/terraform.tfstate" ]
+    then
+        log "♻️ connector $connector_name was deployed with Terraform before: its state is reused, terraform apply updates it"
+    else
+        terraform_dir=$(mktemp -d "$terraform_base_dir/${connector_name}-XXXXXXXXXX")
+        # created with the REST API (or the state is gone): imported, so that it is updated instead of created again
+        if [ "${is_create:-1}" == "0" ]
+        then
+            import_existing=1
+        fi
+    fi
     log "📂 Terraform directory: $terraform_dir"
 
     local tf_file="${terraform_dir}/connector.tf"
@@ -4752,10 +4771,13 @@ function deploy_connector_with_terraform() {
     log "🏗️ Generating Terraform configuration for connector $connector_name"
     json_to_terraform_connector "$connector_name" "$json_content" "$tf_file" "$environment_id" "$cluster_id"
 
+    chmod 600 "$tf_file"
+    local resource_name=$(echo "$connector_name" | sed -E 's/[^A-Za-z0-9_-]/_/g; s/^([^A-Za-z_])/_\1/')
+
     if [ -z "$GITHUB_RUN_NUMBER" ]
     then
-      log "📄 Generated Terraform configuration:"
-      sed 's/^/    /' "$tf_file"
+      log "📄 Generated Terraform configuration (values of config_sensitive masked):"
+      awk '/^  config_sensitive = \{$/ { in_sensitive = 1; print; next } in_sensitive && /^  \}/ { in_sensitive = 0 } in_sensitive { sub(/= .*/, "= \"****\"") } { print }' "$tf_file" | sed 's/^/    /'
     fi
 
     # Initialize Terraform
@@ -4786,6 +4808,17 @@ function deploy_connector_with_terraform() {
         exit 1
     fi
 
+    if [ $import_existing -eq 1 ]
+    then
+        log "📥 connector $connector_name already exists: importing it into the Terraform state"
+        if ! (cd "$terraform_dir" && terraform import -no-color "confluent_connector.$resource_name" "$environment_id/$cluster_id/$connector_name" > /tmp/terraform-import.log 2>&1)
+        then
+            logerror "❌ Terraform import failed. See /tmp/terraform-import.log for details"
+            cat /tmp/terraform-import.log
+            exit 1
+        fi
+    fi
+
     # Plan Terraform changes
     log "📋 Planning Terraform changes..."
     if [[ -n "$verbose" ]]
@@ -4809,7 +4842,17 @@ function deploy_connector_with_terraform() {
             log "🐞 CLI command used"
             echo "cd $terraform_dir && terraform show -no-color tfplan" >&2
         fi
-        (cd "$terraform_dir" && terraform show -no-color tfplan | grep -A 10 "Plan:")
+        # the resource actions (terraform shows "(sensitive value)" for config_sensitive), up to the Plan: line
+        # with "No changes" (the same config again) there is nothing between these lines: grep would return 1 and end
+        # the command under set -e
+        local plan_summary
+        plan_summary=$(cd "$terraform_dir" && terraform show -no-color tfplan | sed -n '/will perform the following actions/,/^Plan:/p' | grep -vE '^\s*$' || true)
+        if [ -n "$plan_summary" ]
+        then
+            echo "$plan_summary"
+        else
+            log "💤 No changes: the connector already matches the configuration"
+        fi
     fi
 
     # Apply Terraform changes
@@ -4856,6 +4899,35 @@ function deploy_connector_with_terraform() {
 
     # Return path via global variable to avoid stdout capture swallowing log output
     TERRAFORM_DEPLOY_DIR="$terraform_dir"
+}
+
+# connector deployed with 'connector create-or-update --terraform': terraform destroy in its folder, so that its state
+# does not keep a connector that no longer exists. Returns 1 when the connector was not deployed with Terraform, or when
+# destroy failed: the caller then deletes it with the REST API
+function destroy_terraform_connector() {
+    local connector_name="$1"
+    local terraform_dir
+    terraform_dir=$(playground state get "terraform.connector.$connector_name" 2> /dev/null)
+    if [ -z "$terraform_dir" ] || [ ! -f "$terraform_dir/terraform.tfstate" ]
+    then
+        return 1
+    fi
+    if ! command -v terraform > /dev/null 2>&1
+    then
+        logwarn "⚠️ connector $connector_name was deployed with Terraform ($terraform_dir), but terraform is not installed: it is deleted with the REST API"
+        return 1
+    fi
+    load_secrets_env_vars CONFLUENT_CLOUD_API_KEY CONFLUENT_CLOUD_API_SECRET
+    log "🏗️ connector $connector_name was deployed with Terraform: terraform destroy in $terraform_dir"
+    if (cd "$terraform_dir" && terraform destroy -no-color -auto-approve > /tmp/terraform-destroy.log 2>&1)
+    then
+        grep -E "Destroy complete" /tmp/terraform-destroy.log || true
+        rm -rf "$terraform_dir"
+        playground state del "terraform.connector.$connector_name"
+        return 0
+    fi
+    logwarn "⚠️ terraform destroy failed (see /tmp/terraform-destroy.log): connector $connector_name is deleted with the REST API"
+    return 1
 }
 
 # Check if Terraform is installed

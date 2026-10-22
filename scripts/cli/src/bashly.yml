@@ -10061,6 +10061,10 @@ commands:
 
         Dynamically converts JSON connector config to Terraform HCL and deploys using terraform apply
 
+        The values of config_sensitive are masked in the output. The Terraform folder of a connector
+        (.terraform-playground/<connector>-*) is reused: running the command again updates the connector, and a
+        connector created with the REST API is imported first. playground connector delete runs terraform destroy.
+
         ⚠️ Only available for Confluent Cloud connectors
 
     examples: |

@@ -43,7 +43,11 @@ do
                 related_topics=$(get_ccloud_connector_related_topics "$connector_id" "$connector_config")
             fi
         fi
-        handle_ccloud_connect_rest_api "curl -s --request DELETE \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector\" --header \"authorization: Basic $authorization\""
+        # deployed with 'create-or-update --terraform': terraform destroy, so that its state is not left behind
+        if ! destroy_terraform_connector "$connector"
+        then
+            handle_ccloud_connect_rest_api "curl -s --request DELETE \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector\" --header \"authorization: Basic $authorization\""
+        fi
         forget_ccloud_recorded_topic "$(get_ccloud_kafka_cluster_id)" "connector:$connector"
         # service account created by --ccloud-service-account for this connector
         cleanup_ccloud_connector_service_accounts "" "$connector"
