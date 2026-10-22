@@ -5994,8 +5994,13 @@ commands:
         the payload, so you do not have to pick a console consumer.
 
         🎓 Tip: --min-expected-messages turns it into an assertion. It waits
-        up to --timeout for that many records and fails otherwise, which is
-        how examples verify that data actually flowed.
+        up to --timeout for that many records, consumes them and fails if
+        fewer could be consumed (records that cannot be deserialized do not
+        count), which is how examples verify that data actually flowed.
+
+        The consumer stops when no record arrives for 10 seconds (30 seconds
+        on Confluent Cloud), so it never waits for records that cannot come
+        (transaction markers and compacted records use offsets).
       flags:
       - *verbose
       - *topic
@@ -6015,7 +6020,9 @@ commands:
         required: false
         default: "0"
         help: |-
-          Minimum expected number of messages to be present in topic, returns an error if this is not the case
+          Minimum expected number of records to be consumed from the topic, returns an error if this is not the case
+
+          Records that cannot be deserialized are reported and do not count.
 
           Note: --topic should be specified in this case.
       - long: --grep
@@ -6024,6 +6031,8 @@ commands:
         default: ""
         help: |-
           Verify that topic content contains record which contains specified string
+
+          It is searched in the records as displayed (decoded when base64 encoded), and the command fails when no record contains it.
       - long: --timeout
         arg: timeout
         validate: integer
@@ -6073,7 +6082,7 @@ commands:
         required: false
         default: "3000"
         help: |-
-          Max characters per message to display (default is 3000)
+          Max characters per message to display (default is 3000, 0 for no limit)
 
       - long: --open
         short: -o
