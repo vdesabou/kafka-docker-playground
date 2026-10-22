@@ -9912,6 +9912,11 @@ commands:
 
       🎓 Tip: add --validate to have the config checked by the plugin before
       it is deployed, which reports every invalid property at once.
+
+      An update shows the keys added, removed and changed compared to the
+      running config (secrets masked). The config can also be given in the
+      REST API format ({"name": ..., "config": {...}}, as returned by
+      GET /connectors/<name>), or as the path of a json file.
     environment_variables:
     - name: PG_CCLOUD_SERVICE_ACCOUNT
       help: "👤 true: create fully managed connectors with a service account and the ACLs of the documentation (set by playground run --ccloud-service-account)"
@@ -9926,7 +9931,7 @@ commands:
       
       # Set the default path value to -, which is the standard operator for stdin.
       default: "-"
-      help: json (reads from stdin if empty)
+      help: json, or the path of a json file (@file.json works too); reads from stdin if empty
 
     flags:
     - *verbose
@@ -9949,7 +9954,14 @@ commands:
         ❕Log level
 
         ⚠️ Not available for ccloud connectors
-    - *package
+    - long: --package
+      short: -p
+      required: false
+      validate: not_empty
+      arg: package
+      needs: [--level]
+      help: |-
+        Package name (with --level: the log level of that package instead of the connector's)
     - long: --wait-for-zero-lag
       help: |-
         😴 Wait until lag becomes 0
@@ -9965,6 +9977,7 @@ commands:
       arg: max_wait
       validate: integer
       required: false
+      needs: [--wait]
       help: |-
         ⏳ Max time in seconds to wait with --wait (default is 120, or 600 for fully managed connectors)
     - long: --validate
@@ -9996,9 +10009,20 @@ commands:
       help: |-
         🪵 Create connector with specific status (https://cwiki.apache.org/confluence/display/KAFKA/KIP-980%3A+Allow+creating+connectors+in+a+stopped+state)
 
+        If the connector already exists, its config is updated, then it is paused, stopped or resumed.
+
         Only available if CP > 7.7
 
         ⚠️ not available for ccloud connectors
+
+    - long: --dry-run
+      required: false
+      conflicts: [--wait, --wait-for-zero-lag, --terraform, --level]
+      help: |-
+        🌵 Print the final config (with the automatic configuration added for the environment, the CFK rewrites)
+        and the request that would be sent, without deploying anything
+
+        With --ccloud-service-account, the service account and its ACLs are not created.
 
     - long: --terraform
       required: false

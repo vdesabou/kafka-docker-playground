@@ -42,11 +42,11 @@ do
         log "🧰 Current config for $connector_type connector $connector"
         if [[ -n "$no_clipboard" ]]
         then
-            echo "playground connector create-or-update --connector $connector --no-clipboard << EOF"
+            echo "playground connector create-or-update --connector $connector --no-clipboard << 'EOF'"
         else
-            echo "playground connector create-or-update --connector $connector << EOF"
+            echo "playground connector create-or-update --connector $connector << 'EOF'"
         fi
-        cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g'
+        cat "/tmp/config-$connector" | jq -S .
         echo "EOF"
 
         if [[ "$OSTYPE" == "darwin"* ]]
@@ -66,8 +66,8 @@ do
                 else
                     log "🐛📂 not deleting tmp dir $tmp_dir"
                 fi
-                echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
-                cat "/tmp/config-$connector" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
+                echo "playground connector create-or-update --connector $connector << 'EOF'" > $tmp_dir/tmp
+                cat "/tmp/config-$connector" | jq -S . >> $tmp_dir/tmp
                 echo "EOF" >> $tmp_dir/tmp
 
                 cat $tmp_dir/tmp | pbcopy
@@ -88,11 +88,11 @@ do
 
         if [[ -n "$no_clipboard" ]]
         then
-            echo "playground connector create-or-update --connector $connector --no-clipboard << EOF"
+            echo "playground connector create-or-update --connector $connector --no-clipboard << 'EOF'"
         else
-            echo "playground connector create-or-update --connector $connector << EOF"
+            echo "playground connector create-or-update --connector $connector << 'EOF'"
         fi
-        echo "$curl_output" | jq -S . | sed 's/\$/\\$/g'
+        echo "$curl_output" | jq -S .
         echo "EOF"
 
         if [[ "$OSTYPE" == "darwin"* ]]
@@ -112,8 +112,8 @@ do
                 else
                     log "🐛📂 not deleting tmp dir $tmp_dir"
                 fi
-                echo "playground connector create-or-update --connector $connector << EOF" > $tmp_dir/tmp
-                echo "$curl_output" | jq -S . | sed 's/\$/\\$/g' >> $tmp_dir/tmp
+                echo "playground connector create-or-update --connector $connector << 'EOF'" > $tmp_dir/tmp
+                echo "$curl_output" | jq -S . >> $tmp_dir/tmp
                 echo "EOF" >> $tmp_dir/tmp
 
                 cat $tmp_dir/tmp | pbcopy
