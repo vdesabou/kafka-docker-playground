@@ -3451,7 +3451,7 @@
         },
         {
           "name": "consume",
-          "description": "📥 Consume topic from beginning\n\nReads from the earliest offset and deserialises records on its own:\navro, protobuf, json schema and plain formats are all detected from\nthe payload, so you do not have to pick a console consumer.\n\n🎓 Tip: --min-expected-messages turns it into an assertion. It waits\nup to --timeout for that many records and fails otherwise, which is\nhow examples verify that data actually flowed.",
+          "description": "📥 Consume topic from beginning\n\nReads from the earliest offset and deserialises records on its own:\navro, protobuf, json schema and plain formats are all detected from\nthe payload, so you do not have to pick a console consumer.\n\n🎓 Tip: --min-expected-messages turns it into an assertion. It waits\nup to --timeout for that many records, consumes them and fails if\nfewer could be consumed (records that cannot be deserialized do not\ncount), which is how examples verify that data actually flowed.\n\nThe consumer stops when no record arrives for 10 seconds (30 seconds\non Confluent Cloud), so it never waits for records that cannot come\n(transaction markers and compacted records use offsets).",
           "usage": "playground topic consume [OPTIONS]",
           "options": [
             {
@@ -3482,14 +3482,14 @@
                 "--min-expected-messages"
               ],
               "argument": "MIN-EXPECTED-MESSAGES",
-              "description": "Minimum expected number of messages to be present in topic, returns an error if this is not the case\n\nNote: --topic should be specified in this case.\n\nDefault value: 0"
+              "description": "Minimum expected number of records to be consumed from the topic, returns an error if this is not the case\n\nRecords that cannot be deserialized are reported and do not count.\n\nNote: --topic should be specified in this case.\n\nDefault value: 0"
             },
             {
               "names": [
                 "--grep"
               ],
               "argument": "GREP",
-              "description": "Verify that topic content contains record which contains specified string"
+              "description": "Verify that topic content contains record which contains specified string\n\nIt is searched in the records as displayed (decoded when base64 encoded), and the command fails when no record contains it."
             },
             {
               "names": [
@@ -3531,7 +3531,7 @@
                 "--max-characters"
               ],
               "argument": "MAX-CHARACTERS",
-              "description": "Max characters per message to display (default is 3000)\n\nDefault value: 3000"
+              "description": "Max characters per message to display (default is 3000, 0 for no limit)\n\nDefault value: 3000"
             },
             {
               "names": [

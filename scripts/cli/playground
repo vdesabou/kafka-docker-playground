@@ -9224,7 +9224,7 @@ playground_topic_set_schema_compatibility_usage() {
 playground_topic_consume_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground topic consume\n\n"
-    printf "  📥 Consume topic from beginning\n  \n  Reads from the earliest offset and deserialises records on its own:\n  avro, protobuf, json schema and plain formats are all detected from\n  the payload, so you do not have to pick a console consumer.\n  \n  🎓 Tip: --min-expected-messages turns it into an assertion. It waits\n  up to --timeout for that many records and fails otherwise, which is\n  how examples verify that data actually flowed.\n\n"
+    printf "  📥 Consume topic from beginning\n  \n  Reads from the earliest offset and deserialises records on its own:\n  avro, protobuf, json schema and plain formats are all detected from\n  the payload, so you do not have to pick a console consumer.\n  \n  🎓 Tip: --min-expected-messages turns it into an assertion. It waits\n  up to --timeout for that many records, consumes them and fails if\n  fewer could be consumed (records that cannot be deserialized do not\n  count), which is how examples verify that data actually flowed.\n  \n  The consumer stops when no record arrives for 10 seconds (30 seconds\n  on Confluent Cloud), so it never waits for records that cannot come\n  (transaction markers and compacted records use offsets).\n\n"
   else
     printf "playground topic consume - 📥 Consume topic from beginning\n\n"
   fi
@@ -9258,13 +9258,13 @@ playground_topic_consume_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--min-expected-messages MIN-EXPECTED-MESSAGES")"
-    printf "    Minimum expected number of messages to be present in topic, returns an error\n    if this is not the case\n    \n    Note: --topic should be specified in this case.\n"
+    printf "    Minimum expected number of records to be consumed from the topic, returns an\n    error if this is not the case\n    \n    Records that cannot be deserialized are reported and do not count.\n    \n    Note: --topic should be specified in this case.\n"
     printf "    %s\n" "Default: 0"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--grep GREP")"
-    printf "    Verify that topic content contains record which contains specified string\n"
+    printf "    Verify that topic content contains record which contains specified string\n    \n    It is searched in the records as displayed (decoded when base64 encoded),\n    and the command fails when no record contains it.\n"
     printf "    %s\n" "Default: "
     echo
 
@@ -9297,7 +9297,7 @@ playground_topic_consume_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--max-characters MAX-CHARACTERS")"
-    printf "    Max characters per message to display (default is 3000)\n"
+    printf "    Max characters per message to display (default is 3000, 0 for no limit)\n"
     printf "    %s\n" "Default: 3000"
     echo
 
@@ -46040,6 +46040,16 @@ playground_topic_consume_command() {
       tool_log4j_jvm_arg="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties"
   fi
 
+  # JVM options of the console consumer, passed in the *_LOG4J_OPTS variables as KAFKA_OPTS and SCHEMA_REGISTRY_OPTS
+  # can be set by the container (2way-ssl). The JDK 25 of CP 8.3+ warns when a library uses sun.misc.Unsafe or loads
+  # a native library: allow both, JDK 21 and older refuse to start with these options
+  tool_jvm_args="$tool_log4j_jvm_arg"
+  if version_gt $CP_CONNECT_TAG "8.2.99"
+  then
+      tool_jvm_args="$tool_jvm_args --sun-misc-unsafe-memory-access=allow --enable-native-access=ALL-UNNAMED"
+  fi
+  tool_env=(env "KAFKA_LOG4J_OPTS=$tool_jvm_args" "SCHEMA_REGISTRY_LOG4J_OPTS=$tool_jvm_args")
+
   if version_gt $CP_CONNECT_TAG "8.1.99"
   then
       property_name="--formatter-property"
@@ -46095,7 +46105,8 @@ playground_topic_consume_command() {
     bootstrap_server="$broker_container:9092"
     get_connect_container
     container=$connect_container
-      security="--group test-consumer-group $consumer_config_name /service/kafka/users/client.properties"
+      # the ACLs only allow this group: never commit its offsets, --from-beginning would be ignored on the next consume
+      security="--group test-consumer-group $consumer_property_name enable.auto.commit=false $consumer_config_name /service/kafka/users/client.properties"
   elif [[ "$environment" == "sasl-plain" ]] || [[ "$environment" == "sasl-scram" ]] || [[ "$environment" == "ldap-sasl-plain" ]]
   then
     get_broker_container
@@ -46127,15 +46138,6 @@ playground_topic_consume_command() {
     get_connect_container
     container=$connect_container
   fi
-
-  run_local_consumer() {
-    if [[ "$environment" == cfk* ]]
-    then
-      kubectl -n confluent exec "$container" -- "$@"
-    else
-      docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e KAFKA_DEBUG="" "$container" "$@"
-    fi
-  }
 
   get_topic_message_count() {
     local topic_name="$1"
@@ -46185,6 +46187,209 @@ playground_topic_consume_command() {
     done
   }
 
+  # separates the fields printed by the console consumer: the ascii unit separator never shows up in the data,
+  # unlike "|" which can be part of a key, a value or a header. Records are displayed with "|"
+  record_separator=$'\x1f'
+
+  # the consumer stops when no record arrives during this time, instead of waiting for a number of records that
+  # may never come (transaction markers and compacted records use offsets, but are not consumed)
+  if [[ "$environment" == "ccloud" ]]
+  then
+    idle_timeout_ms=30000
+  else
+    idle_timeout_ms=10000
+  fi
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+    trap 'rm -rf $tmp_dir' EXIT
+  else
+    log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  # formats the records printed by the console consumer, in a single process (a bash loop forked date and awk for
+  # each record): readable timestamps, labels, base64 decoding, --grep, truncation, latency csv.
+  # Counts are written to $tmp_dir/consume_counts: records consumed, records matching --grep, records displayed
+  function format_records() {
+    HAS_KEY_SCHEMA_ID="$has_key_schema_id" HAS_VALUE_SCHEMA_ID="$has_value_schema_id" MAX_CHARACTERS="$max_characters" \
+    DISPLAY_LIMIT="$display_limit" GREP_STRING="$grep_string" TIMESTAMP_FIELD="$timestamp_field" LATENCY_CSV="$latency_csv" \
+    COUNT_FILE="$tmp_dir/consume_counts" PG_LOG_LEVEL="$PG_LOG_LEVEL" perl -MPOSIX=strftime -MMIME::Base64=decode_base64 -MJSON::PP -e '
+      use strict;
+      use warnings;
+      $| = 1;
+      my $separator = "\x1f";
+      my $has_key_schema_id = $ENV{HAS_KEY_SCHEMA_ID};
+      my $has_value_schema_id = $ENV{HAS_VALUE_SCHEMA_ID};
+      my $max_characters = $ENV{MAX_CHARACTERS};
+      my $display_limit = $ENV{DISPLAY_LIMIT};
+      my $grep_string = $ENV{GREP_STRING} // "";
+      my $timestamp_field = $ENV{TIMESTAMP_FIELD} // "";
+      my ($nb_records, $nb_matched, $nb_displayed) = (0, 0, 0);
+      my $decode;
+      my $latency_fh;
+      if ($timestamp_field ne "") {
+        open($latency_fh, ">>", $ENV{LATENCY_CSV}) or die "cannot write $ENV{LATENCY_CSV}: $!";
+      }
+
+      sub save_counts {
+        if (open(my $fh, ">", $ENV{COUNT_FILE})) { print $fh "$nb_records $nb_matched $nb_displayed\n"; close($fh); }
+      }
+      $SIG{INT} = $SIG{TERM} = $SIG{PIPE} = sub { save_counts(); exit 0; };
+
+      # payload of a JsonConverter / ByteArrayConverter record, base64 encoded: decoded when it is printable utf-8
+      sub decode_payload {
+        my $payload = shift;
+        $payload =~ s/"//g;
+        return undef unless length($payload) > 0 && length($payload) % 4 == 0 && $payload =~ m{^[A-Za-z0-9+/]+={0,2}$};
+        my $decoded = decode_base64($payload);
+        $decoded =~ tr/\0//d;
+        my $check = $decoded;
+        return undef unless length($decoded) > 0 && utf8::decode($check) && $check !~ /[\x01-\x08\x0b\x0c\x0e-\x1f]/;
+        return $decoded;
+      }
+
+      sub display {
+        my ($line, $payload_length) = @_;
+        if ($max_characters > 0 && $payload_length >= $max_characters) {
+          $line = substr($line, 0, $max_characters) . "...<truncated, only showing first $max_characters characters, out of " . length($line) . ">...";
+        }
+        print "$line\n";
+      }
+
+      while (my $line = <STDIN>) {
+        chomp $line;
+        if ($has_value_schema_id) {
+          # a record skipped with --skip-message-on-error leaves its first fields, without new line, before the next
+          # record (or at the end of the output): drop them, the error is counted from stderr
+          my $record_start = qr/\w+:-?\d+\x1fPartition:\d+\x1fOffset:\d+\x1f/;
+          1 while $line =~ s/^$record_start.*?\x1f(?=$record_start)//;
+          next if $line =~ /^$record_start/ && $line =~ /\x1f$/;
+        }
+        my @fields = split /\x1f/, $line, -1;
+        if (@fields < 6 || $fields[0] !~ /^\w+(:-?\d+)?$/ || $fields[1] !~ /^Partition:/ || $fields[2] !~ /^Offset:/) {
+          # anything else on stdout, for example the next lines of a value containing new lines
+          next if $grep_string ne "" && index($line, $grep_string) < 0;
+          next if $timestamp_field ne "";
+          display($line, length($line));
+          next;
+        }
+        $nb_records++;
+        my $index = 3;
+        my $headers = $fields[$index++];
+        my $key = $fields[$index++];
+        my $key_schema_id = $has_key_schema_id ? $fields[$index++] : undef;
+        my $value_schema_id = ($has_value_schema_id && $#fields >= $index + 1) ? pop(@fields) : undef;
+        my $value = join($separator, @fields[$index .. $#fields]);
+
+        my $timestamp = $fields[0];
+        my ($timestamp_ms, $readable_date) = (undef, undef);
+        if ($fields[0] =~ /^(\w+):(\d+)$/) {
+          $timestamp_ms = $2;
+          $readable_date = strftime("%Y-%m-%d %H:%M:%S", localtime(int($timestamp_ms / 1000))) . sprintf(".%03d", $timestamp_ms % 1000);
+          $timestamp = "$1:$readable_date";
+        }
+
+        if (!defined $decode) {
+          $decode = (length($value) < 1000 && defined decode_payload($value)) ? 1 : 0;
+          if ($decode && ($ENV{PG_LOG_LEVEL} // "") ne "INFO") {
+            printf STDERR "\033[0;35m%s ❗ 🤖 Data is base64 encoded, payload will be decoded\033[0m\n", strftime("%H:%M:%S", localtime);
+          }
+        }
+        if ($decode) {
+          my $decoded = decode_payload($value);
+          $value = $decoded if defined $decoded;
+        }
+
+        my @output = ($timestamp, $fields[1], $fields[2], "Headers:$headers", "Key:$key");
+        push @output, "KeySchemaId:$key_schema_id" if defined $key_schema_id;
+        push @output, "Value:$value";
+        push @output, "ValueSchemaId:$value_schema_id" if defined $value_schema_id;
+        my $output = join("|", @output);
+
+        if ($grep_string ne "") {
+          next if index($output, $grep_string) < 0;
+          $nb_matched++;
+        }
+
+        if ($timestamp_field ne "") {
+          my $json = eval { JSON::PP->new->allow_nonref->decode($value) };
+          if (!defined $json || ref($json) ne "HASH") {
+            printf STDERR "\033[0;31m%s 🔥 --plot-latencies-timestamp-field is set but value content is not in json representation\033[0m\n", strftime("%H:%M:%S", localtime);
+            save_counts();
+            exit 3;
+          }
+          my $source = $json->{$timestamp_field};
+          $source = $source->{long} if ref($source) eq "HASH" && exists $source->{long};
+          print $latency_fh ($readable_date // ""), ",", ($timestamp_ms // ""), ",", ($source // ""), "\n";
+          next;
+        }
+
+        if ($display_limit < 0 || $nb_displayed < $display_limit) {
+          display($output, length($value));
+          $nb_displayed++;
+        }
+      }
+      close($latency_fh) if $latency_fh;
+      save_counts();'
+  }
+
+  # filters the stderr of the console consumer: drops the known noise, and replaces the stack trace of every record
+  # skipped with --skip-message-on-error by a count. Written to $tmp_dir/consume_errors: number of records skipped,
+  # first error, its root cause
+  function filter_consumer_stderr() {
+    ERRORS_FILE="$tmp_dir/consume_errors" perl -e '
+      use strict;
+      use warnings;
+      $| = 1;
+      my ($nb_skipped, $first_error, $root_cause) = (0, "", "");
+      my $in_skipped_trace = 0;
+      my $in_timeout_trace = 0;
+      sub save_errors {
+        if (open(my $fh, ">", $ENV{ERRORS_FILE})) { print $fh "$nb_skipped\n$first_error\n$root_cause\n"; close($fh); }
+      }
+      $SIG{INT} = $SIG{TERM} = $SIG{PIPE} = sub { save_errors(); exit 0; };
+      while (my $line = <STDIN>) {
+        next if $line =~ /WARNING:|SLF4J|Processed a total of|Unable to find FetchSessionHandler|Set group\.protocol=consumer to try it out/;
+        # end of the consumer with --timeout-ms: no record during the idle timeout
+        if ($line =~ /Error processing message, terminating consumer process/) { $in_timeout_trace = 1; next; }
+        if ($in_timeout_trace && $line =~ /TimeoutException/) { $in_timeout_trace = 0; next; }
+        $in_timeout_trace = 0;
+        if ($line =~ /Error processing message, skipping this message/) {
+          $nb_skipped++;
+          $in_skipped_trace = 1;
+          next;
+        }
+        if ($in_skipped_trace) {
+          (my $trimmed = $line) =~ s/^\s+|\s+$//g;
+          if ($trimmed eq "" || $trimmed =~ /^at / || $trimmed =~ /^\.\.\. \d+ more/) { next; }
+          if ($trimmed =~ /^Caused by: (.*)/) { $root_cause = $1 if $nb_skipped == 1; next; }
+          if ($trimmed =~ /^[\w.\$]+(Exception|Error)\b/) { $first_error = $trimmed if $nb_skipped == 1; next; }
+          $in_skipped_trace = 0;
+        }
+        print STDERR $line;
+      }
+      save_errors();'
+  }
+
+  # arguments of the consumer command, with the secrets masked, as a command line to paste
+  function printable_command() {
+    local arg
+    local printable=()
+    for arg in "$@"
+    do
+      if [[ "$arg" == sasl.jaas.config=* ]]
+      then
+        arg=$(echo "$arg" | sed -E 's/(password=")[^"]*"/\1***"/g')
+      elif [[ "$arg" == schema.registry.basic.auth.user.info=* ]]
+      then
+        arg="${arg%%:*}:***"
+      fi
+      printable+=("$arg")
+    done
+    printf '%q ' "${printable[@]}"
+  }
+
   if [[ -n "$timeout" ]] && [ "$timeout" != "60" ]
   then
     if [[ ! -n "$min_expected_messages" ]] || [ "$min_expected_messages" == "0" ]
@@ -46230,6 +46435,14 @@ playground_topic_consume_command() {
       fi
   fi
 
+  if [[ -n "$timestamp_field" ]]
+  then
+    rm -rf /tmp/latency
+    mkdir -p /tmp/latency
+    latency_csv="/tmp/latency/latency.csv"
+    latency_png="/tmp/latency/latency.png"
+  fi
+
   items=($topic)
   for topic in ${items[@]}
   do
@@ -46239,7 +46452,6 @@ playground_topic_consume_command() {
     then
       if [[ -n "$min_expected_messages" ]] && [ "$min_expected_messages" != "0" ]
       then
-
         start_time=$(date +%s)
         topic_missing_start_time=""
 
@@ -46299,7 +46511,8 @@ playground_topic_consume_command() {
           else
             logwarn "❌ problem while getting number of messages: $nb_messages"
           fi
-          break
+          # go on with the next topic when all topics are consumed
+          continue
         fi
       fi
     fi
@@ -46309,14 +46522,23 @@ playground_topic_consume_command() {
       filename="/tmp/dump-${topic}-$(date '+%Y-%m-%d-%H-%M-%S').log"
 
       log "📄 dumping topic content to $filename"
-      playground topic consume --topic $topic --max-messages -1 > $filename
-      if [ $? -eq 0 ]
+      # a full dump: no truncation, no log lines, same subjects and isolation level
+      dump_args=(--topic "$topic" --max-messages -1 --max-characters 0 --isolation-level "$isolation_level")
+      if [[ -n "$original_key_subject" ]]
+      then
+        dump_args+=(--key-subject "$original_key_subject")
+      fi
+      if [[ -n "$original_value_subject" ]]
+      then
+        dump_args+=(--value-subject "$original_value_subject")
+      fi
+      if playground --output-level ERROR topic consume "${dump_args[@]}" > "$filename"
       then
         playground open --file "${filename}"
       else
         logerror "❌ failed to dump topic $topic"
       fi
-      exit 0
+      continue
     fi
 
     if [ -n "$tail" ]
@@ -46325,18 +46547,15 @@ playground_topic_consume_command() {
     elif [[ -n "$max_messages" ]] && [ $max_messages -eq -1 ] && [[ ! -n "$timestamp_field" ]]
     then
       log "✨ --max-messages is set to -1, display full content of topic $topic, it contains $nb_messages messages"
-      max_messages=$nb_messages
-    elif [[ -n "$max_messages" ]] && [ $nb_messages -ge $max_messages ] && [[ ! -n "$timestamp_field" ]]
+    elif [[ -n "$max_messages" ]] && [ $nb_messages -gt $max_messages ] && [[ ! -n "$timestamp_field" ]]
     then
       log "✨ Display content of topic $topic, it contains $nb_messages messages, but displaying only --max-messages=$max_messages"
-      nb_messages=$max_messages
     else
-      if [ "$isolation_level" == "read_committed" ]
-      then
-          log "🔒 --isolation-level is set to $isolation_level, only committed messages will be displayed"
-      else
-          log "✨ Display content of topic $topic, it contains $nb_messages messages"
-      fi
+      log "✨ Display content of topic $topic, it contains $nb_messages messages"
+    fi
+    if [ "$isolation_level" == "read_committed" ]
+    then
+      log "🔒 --isolation-level is set to $isolation_level, only committed messages will be displayed"
     fi
 
     if [[ -n "$grep_string" ]]
@@ -46382,348 +46601,170 @@ playground_topic_consume_command() {
       log "🔮🙅 topic is not using any schema for value"
     fi
 
-    type=""
-    tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-    if [ -z "$PG_VERBOSE_MODE" ]
-  then
-      trap 'rm -rf $tmp_dir' EXIT
-  else
-      log "🐛📂 not deleting tmp dir $tmp_dir"
-  fi
-    fifo_path="$tmp_dir/kafka_output_fifo"
-    mkfifo "$fifo_path"
-
-    nottailing1=""
-    nottailing2=""
-    if [ ! -n "$tail" ]
-    then
-      if [ "$isolation_level" == "read_committed" ]
-      then
-          if [[ -n "$min_expected_messages" ]] && [ "$min_expected_messages" != "0" ]
-          then
-              log "✨ Display content of topic $topic, it contains $nb_messages messages, but this value may be lower than expected due to uncommitted messages, using --max-messages=$min_expected_messages"
-              nottailing1="--from-beginning --max-messages $min_expected_messages"
-          else
-              log "✨ Display content of topic $topic, it contains $nb_messages messages, but this value may be lower than expected due to uncommitted messages, using --max-messages=1"
-              nottailing1="--from-beginning --max-messages 1"
-          fi
-
-      else
-          nottailing1="--from-beginning --max-messages $nb_messages"
-      fi
-
-      if [[ ! -n "$timestamp_field" ]]
-      then
-        nottailing2="timeout $timeout"
-      fi
-    fi
-
-    # only keep the timeout when --max-messages is left to its default value (100)
-    if [ "$max_messages" != "100" ]
-    then
-      nottailing2=""
-    fi
-    case "${value_type}" in
-      avro|protobuf|json-schema)
-          if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
-          then
-              if [[ "$environment" == "ccloud" ]]
-              then
-                if [[ -n "$verbose" ]]
-                then
-                  log "🐞 CLI command used to consume data"
-                  echo "kafka-$value_type-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic $consumer_property_name ssl.endpoint.identification.algorithm=https $consumer_property_name sasl.mechanism=PLAIN $consumer_property_name security.protocol=SASL_SSL $consumer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL $property_name print.schema.ids=true $property_name schema.id.separator=\"|\" $property_name print.partition=true $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator=\"|\" --skip-message-on-error --isolation-level $isolation_level $security $nottailing1"
-                fi
-                get_connect_image
-                docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_type=$value_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $nottailing2 kafka-$value_type-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic $consumer_property_name ssl.endpoint.identification.algorithm=https $consumer_property_name sasl.mechanism=PLAIN $consumer_property_name security.protocol=SASL_SSL $consumer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL $property_name print.schema.ids=true $property_name schema.id.separator="|" $property_name print.partition=true $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator="|" --skip-message-on-error --isolation-level $isolation_level $security $nottailing1 > "$fifo_path" 2>&1 &
-              else
-                if [[ -n "$verbose" ]]
-                then
-                  log "🐞 CLI command used to consume data"
-                  echo "kafka-$value_type-console-consumer -bootstrap-server $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic  $property_name print.schema.ids=true $property_name schema.id.separator=\"|\" $property_name print.partition=true $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator=\"|\" --skip-message-on-error --isolation-level $isolation_level $security $nottailing1"
-                fi
-                run_local_consumer $nottailing2 kafka-$value_type-console-consumer -bootstrap-server $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic  $property_name print.schema.ids=true $property_name schema.id.separator="|" $property_name print.partition=true $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator="|" --skip-message-on-error --isolation-level $isolation_level $security $nottailing1 > "$fifo_path" 2>&1 &
-              fi
-          else
-              if [[ "$environment" == "ccloud" ]]
-              then
-                if [[ -n "$verbose" ]]
-                then
-                  log "🐞 CLI command used to consume data"
-                  echo "kafka-$value_type-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic $consumer_property_name ssl.endpoint.identification.algorithm=https $consumer_property_name sasl.mechanism=PLAIN $consumer_property_name security.protocol=SASL_SSL $consumer_property_name sasl.jaas.config=\"$SASL_JAAS_CONFIG\" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info=\"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL $property_name print.schema.ids=true $property_name schema.id.separator=\"|\" $property_name print.partition=true $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator=\"|\" $property_name key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error --isolation-level $isolation_level $security $nottailing1"
-                fi
-                get_connect_image
-                docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="$tool_log4j_jvm_arg" -e value_type=$value_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $nottailing2 kafka-$value_type-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic $consumer_property_name ssl.endpoint.identification.algorithm=https $consumer_property_name sasl.mechanism=PLAIN $consumer_property_name security.protocol=SASL_SSL $consumer_property_name sasl.jaas.config="$SASL_JAAS_CONFIG" $property_name basic.auth.credentials.source=USER_INFO $property_name schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" $property_name schema.registry.url=$SCHEMA_REGISTRY_URL $property_name print.schema.ids=true $property_name schema.id.separator="|" $property_name print.partition=true $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator="|" $property_name key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error --isolation-level $isolation_level $security $nottailing1 > "$fifo_path" 2>&1 &
-              else
-                if [[ -n "$verbose" ]]
-                then
-                  log "🐞 CLI command used to consume data"
-                  echo "kafka-$value_type-console-consumer --bootstrap-server $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $property_name print.partition=true  $property_name print.schema.ids=true $property_name schema.id.separator=\"|\" $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator=\"|\" $property_name key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error --isolation-level $isolation_level $security $nottailing1"
-                fi
-                run_local_consumer $nottailing2  kafka-$value_type-console-consumer --bootstrap-server $bootstrap_server $property_name schema.registry.url=$sr_url_cli --topic $topic $property_name print.partition=true  $property_name print.schema.ids=true $property_name schema.id.separator="|" $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator="|" $property_name key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error --isolation-level $isolation_level $security $nottailing1 > "$fifo_path" 2>&1 &
-              fi
-          fi
-          ;;
-      *)
-        if [[ "$environment" == "ccloud" ]]
-        then
-          if [[ -n "$verbose" ]]
-          then
-            log "🐞 CLI command used to consume data"
-            echo "kafka-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic $consumer_config_name /tmp/configuration/ccloud.properties $property_name print.partition=true $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator=\"|\" --isolation-level $isolation_level $security $nottailing1"
-          fi
-          get_connect_image
-          docker run -i --rm -v $KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG} $nottailing2 kafka-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic $consumer_config_name /tmp/configuration/ccloud.properties $property_name print.partition=true $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator="|" --isolation-level $isolation_level $security $nottailing1 > "$fifo_path" 2>&1 &
-        else
-          if [[ -n "$verbose" ]]
-          then
-            log "🐞 CLI command used to consume data"
-            echo "kafka-console-consumer --bootstrap-server $bootstrap_server --topic $topic $property_name print.partition=true $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator=\"|\" --isolation-level $isolation_level $security $nottailing1"
-          fi
-          run_local_consumer $nottailing2 kafka-console-consumer --bootstrap-server $bootstrap_server --topic $topic $property_name print.partition=true $property_name print.offset=true $property_name print.headers=true $property_name headers.separator=, $property_name headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer $property_name print.timestamp=true $property_name print.key=true $property_name key.separator="|" --isolation-level $isolation_level $security $nottailing1 > "$fifo_path" 2>&1  &
-        fi
-      ;;
-    esac
-    # Detect the platform (macOS or Linux) and set the date command accordingly
-    if [[ "$(uname)" == "Darwin" ]]; then
-      # macOS
-      date_command="date -r "
-    else
-      # Linux
-      date_command="date -d @"
-    fi
-
-    if [[ -n "$timestamp_field" ]]
-    then
-      rm -rf /tmp/latency
-      mkdir -p /tmp/latency
-      latency_csv="/tmp/latency/latency.csv"
-      latency_png="/tmp/latency/latency.png"
-    fi
-    found=0
-    first_record=1
-    is_base64=0
     has_key_schema_id=0
     has_value_schema_id=0
-    value_field_index=6
-    if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
+    case "${value_type}" in
+      avro|protobuf|json-schema)
+        has_value_schema_id=1
+        case "${key_type}" in
+          avro|protobuf|json-schema)
+            has_key_schema_id=1
+          ;;
+        esac
+      ;;
+    esac
+
+    # number of records to read, and to display
+    display_limit=-1
+    if [ ! -n "$tail" ]
     then
-      has_key_schema_id=1
-      value_field_index=7
-    fi
-    if [ "$value_type" == "avro" ] || [ "$value_type" == "protobuf" ] || [ "$value_type" == "json-schema" ]
-    then
-      has_value_schema_id=1
-    fi
-    export LC_ALL=C
-    # Loop through each line in the named pipe
-    while read -r line
-    do
-      display_line=1
-      if [[ $line =~ "CreateTime:" ]]
+      if [[ -n "$timestamp_field" ]] || [ $max_messages -eq -1 ]
       then
-        # Extract the timestamp from the line
-        # Extract millisecond timestamp without external cut pipelines
-        timestamp_ms_part=${line#CreateTime:}
-        timestamp_ms=${timestamp_ms_part%%|*}
-        if [[ ! "$timestamp_ms" =~ ^[0-9]+$ ]]
-        then
-          # stderr of the consumer (e.g. "Processed a total of N messages") was interleaved in the middle of a record line:
-          # skip the fragment, $((timestamp_ms / 1000)) would abort the whole script
-          continue
-        fi
-        # Convert milliseconds to seconds
-        timestamp_sec=$((timestamp_ms / 1000))
-        milliseconds=$((timestamp_ms % 1000))
-        readable_date="$(${date_command}${timestamp_sec} "+%Y-%m-%d %H:%M:%S.${milliseconds}")"
-        original_prefix="CreateTime:${timestamp_ms}"
-        line_with_date="${line/$original_prefix/$(printf 'CreateTime:%s' "$readable_date")}" || line_with_date="$line"
-
-        if [ $first_record -eq 1 ]
-        then
-          payload_section=${line#*|*|*|*|*|}
-          if [ $has_key_schema_id -eq 1 ]
-          then
-            payload_section=${payload_section#*|}
-          fi
-          if [ $has_value_schema_id -eq 1 ]
-          then
-            payload=${payload_section%|*}
-          else
-            payload=$payload_section
-          fi
-
-          if [ ${#payload} -lt 1000 ]
-          then
-            # check if it is base64 encoded
-            set +e
-            # Avoid command substitution on raw binary output (can contain NUL bytes).
-            if printf '%s' "$payload" | tr -d '"' | base64 -d 2>/dev/null | iconv -f UTF-8 -t UTF-8 >/dev/null 2>&1
-            then
-              logwarn "🤖 Data is base64 encoded, payload will be decoded"
-              is_base64=1
-            fi
-            set -e
-          fi
-
-          first_record=0
-        fi
-
-        if [ $is_base64 -eq 1 ]
-        then
-          decoded_payload=$(printf '%s' "$payload" | tr -d '"' | base64 -d 2>/dev/null | iconv -t UTF-8//IGNORE 2>/dev/null | tr -d '\000')
-          if [ -n "$decoded_payload" ]; then
-            line_with_date=$(awk -v new_value="$decoded_payload" -v l="$line_with_date" -v idx="$value_field_index" 'BEGIN{FS=OFS="|"} {
-              split(l,a,"|"); a[idx]=new_value;
-              for(i=1;i<=length(a);i++){printf i==length(a)?a[i]"\n":a[i]"|"}
-            }')
-          fi
-        fi
-
-        if [[ -n "$grep_string" ]]
-        then
-          if [[ $line =~ "$grep_string" ]]
-          then
-            log "✅ found $grep_string in topic $topic"
-            found=1
-          else
-            display_line=0
-          fi
-        fi
-
-        if [[ ! -n "$timestamp_field" ]]
-        then
-            if [ $display_line -eq 1 ]
-            then
-              payload_field=${line_with_date#*|*|*|*|*|}
-              if [ ${#payload} -lt $max_characters ]
-              then
-                  if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]; then
-                    # Use printf to safely pipe 8MB data to awk
-                    printf '%s\n' "$line_with_date" | awk -v hasv="$has_value_schema_id" 'BEGIN{FS=OFS="|"} {
-                      $4="Headers:"$4; $5="Key:"$5; $6="KeySchemaId:"$6; $7="Value:"$7;
-                      if (hasv == 1) {
-                        $8="ValueSchemaId:"$8
-                      }
-                      print
-                    }'
-                  else
-                    # Use printf to safely pipe 8MB data to awk
-                    printf '%s\n' "$line_with_date" | awk 'BEGIN{FS=OFS="|"} {$4="Headers:"$4; $5="Key:"$5; $6="Value:"$6} 1'
-                  fi
-              else
-                  if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]; then
-                    printf '%s\n' "$line_with_date" | awk -v max="$max_characters" -v hasv="$has_value_schema_id" 'BEGIN{FS=OFS="|"} {
-                      # 1. Label the fields
-                      $4="Headers:"$4; $5="Key:"$5; $6="KeySchemaId:"$6; $7="Value:"$7
-                      if (hasv == 1) {
-                        $8="ValueSchemaId:"$8
-                      }
-
-                      # 2. Reconstruct record implicit by field modification
-                      len = length($0)
-
-                      # 3. Truncate if necessary
-                      if (len > max) {
-                        print substr($0, 1, max) "...<truncated, only showing first " max " characters, out of " len ">..."
-                      } else {
-                        print $0
-                      }
-                    }'
-                  else
-                    printf '%s\n' "$line_with_date" | awk -v max="$max_characters" 'BEGIN{FS=OFS="|"} {
-                      # 1. Label the fields
-                      $4="Headers:"$4; $5="Key:"$5; $6="Value:"$6
-
-                      # 2. Reconstruct record implicit by field modification
-                      len = length($0)
-
-                      # 3. Truncate if necessary
-                      if (len > max) {
-                        print substr($0, 1, max) "...<truncated, only showing first " max " characters, out of " len ">..."
-                      } else {
-                        print $0
-                      }
-                    }'
-                  fi
-              fi
-          fi
-        fi
-
-        if [[ -n "$timestamp_field" ]]
-        then
-          payload_section=${line#*|*|*|*|*|}
-          if [ $has_key_schema_id -eq 1 ]
-          then
-            payload_section=${payload_section#*|}
-          fi
-          if [ $has_value_schema_id -eq 1 ]
-          then
-            payload=${payload_section%|*}
-          else
-            payload=$payload_section
-          fi
-          # JSON is invalid
-          if ! echo "$payload" | jq -e .  > /dev/null 2>&1
-          then
-              logerror "--plot-latencies-timestamp-field is set but value content is not in json representation"
-              exit 1
-          else
-            timestamp_source=$(echo "$payload" | jq -r ".${timestamp_field}.long? // .${timestamp_field}")
-            echo "$readable_date,$timestamp_ms,$timestamp_source" >> $latency_csv
-          fi
-        fi
-      elif [[ $line =~ "Unable to find FetchSessionHandler" ]]
-      then
-        continue
-      elif [[ $line =~ "Processed a total of" ]]
-      then
-        continue
-      elif [[ $line =~ "SLF4J" ]]
-      then
-        continue
-      elif [[ "$line" == *"WARNING:"* ]]
-      then
-        continue
-      elif [[ "$line" == *"Set group.protocol=consumer to try it out"* ]]
-      then
-        continue
+        nb_records_to_consume=$nb_messages
       else
+        nb_records_to_consume=$max_messages
+        display_limit=$max_messages
+      fi
+      if [[ -n "$min_expected_messages" ]] && [ $min_expected_messages -gt $nb_records_to_consume ]
+      then
+        nb_records_to_consume=$min_expected_messages
+      fi
+      if [ $nb_records_to_consume -gt $nb_messages ]
+      then
+        nb_records_to_consume=$nb_messages
+      fi
+
+      if [ $nb_records_to_consume -eq 0 ]
+      then
+        log "✨ topic $topic is empty"
         if [[ -n "$grep_string" ]]
         then
-          if [[ $line =~ "$grep_string" ]]
-          then
-            log "✅ found $grep_string in topic $topic"
-            found=1
-          else
-            display_line=0
-          fi
+          logerror "❌ could not find $grep_string in topic $topic"
+          exit 1
         fi
-
-          if [ $display_line -eq 1 ]; then
-          # We pass the raw line to awk. awk handles the parsing and length checks instantly.
-          printf '%s\n' "$line" | awk -v max="$max_characters" -F"|" '{
-              payload_len = length($6)
-
-              # 2. Compare length
-              if (payload_len < max) {
-                  print $0
-              } else {
-                  # 3. Truncate (equivalent to cut -c) and print message
-                  print substr($0, 1, max) "...<truncated, only showing first " max " characters, out of " payload_len ">..."
-              }
-          }'
-          fi
+        continue
       fi
-    done < "$fifo_path"
+    fi
+
+    # console consumer command, built once
+    consumer_cmd=()
+    if [[ "$environment" == "ccloud" ]]
+    then
+      get_connect_image
+      if [ $has_value_schema_id -eq 1 ]
+      then
+        consumer_cmd=(docker run -i --rm "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" "${tool_env[@]}" "kafka-$value_type-console-consumer" --bootstrap-server "$BOOTSTRAP_SERVERS" "$consumer_property_name" ssl.endpoint.identification.algorithm=https "$consumer_property_name" sasl.mechanism=PLAIN "$consumer_property_name" security.protocol=SASL_SSL "$consumer_property_name" "sasl.jaas.config=$SASL_JAAS_CONFIG" "$property_name" basic.auth.credentials.source=USER_INFO "$property_name" "schema.registry.basic.auth.user.info=$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$property_name" "schema.registry.url=$SCHEMA_REGISTRY_URL")
+      else
+        consumer_cmd=(docker run -i --rm -v "$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties" "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" "${tool_env[@]}" kafka-console-consumer --bootstrap-server "$BOOTSTRAP_SERVERS" "$consumer_config_name" /tmp/configuration/ccloud.properties)
+      fi
+    else
+      if [[ "$environment" == cfk* ]]
+      then
+        consumer_cmd=(kubectl -n confluent exec "$container" --)
+      else
+        consumer_cmd=(docker exec -e KAFKA_DEBUG= "$container")
+      fi
+      if [ $has_value_schema_id -eq 1 ]
+      then
+        consumer_cmd+=("${tool_env[@]}" "kafka-$value_type-console-consumer" --bootstrap-server "$bootstrap_server" "$property_name" "schema.registry.url=$sr_url_cli")
+      else
+        consumer_cmd+=("${tool_env[@]}" kafka-console-consumer --bootstrap-server "$bootstrap_server")
+      fi
+    fi
+
+    consumer_cmd+=(--topic "$topic")
+
+    # $security only holds options without spaces
+    read -r -a security_args <<< "$security"
+    consumer_cmd+=("${security_args[@]}")
+
+    consumer_cmd+=("$property_name" print.timestamp=true "$property_name" print.partition=true "$property_name" print.offset=true "$property_name" print.headers=true "$property_name" headers.separator=, "$property_name" headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer "$property_name" print.key=true "$property_name" "key.separator=$record_separator")
+    if [ $has_value_schema_id -eq 1 ]
+    then
+      consumer_cmd+=("$property_name" print.schema.ids=true "$property_name" "schema.id.separator=$record_separator" --skip-message-on-error)
+      if [ $has_key_schema_id -eq 0 ]
+      then
+        consumer_cmd+=("$property_name" key.deserializer=org.apache.kafka.common.serialization.StringDeserializer)
+      fi
+    fi
+    consumer_cmd+=(--isolation-level "$isolation_level")
+    if [ ! -n "$tail" ]
+    then
+      consumer_cmd+=(--from-beginning --max-messages "$nb_records_to_consume" --timeout-ms "$idle_timeout_ms")
+    fi
+
+    if [[ -n "$verbose" ]]
+    then
+      log "🐞 CLI command used to consume data"
+      printable_command "${consumer_cmd[@]}"
+      echo
+    fi
+
+    rm -f "$tmp_dir/consume_counts" "$tmp_dir/consume_errors" "$tmp_dir/consumer_exit_code"
+    # stdout of the consumer to format_records, its stderr to filter_consumer_stderr
+    { { "${consumer_cmd[@]}" 2>&1 1>&3 3>&-; echo $? > "$tmp_dir/consumer_exit_code"; } | filter_consumer_stderr >&2 3>&-; } 3>&1 | format_records
+    format_exit_code=${PIPESTATUS[1]}
+
+    consumer_exit_code=$(cat "$tmp_dir/consumer_exit_code" 2> /dev/null)
+    read -r nb_consumed nb_matched nb_displayed < "$tmp_dir/consume_counts" 2> /dev/null
+    nb_consumed=${nb_consumed:-0}
+    nb_matched=${nb_matched:-0}
+    nb_displayed=${nb_displayed:-0}
+    nb_skipped=0
+    first_error=""
+    root_cause=""
+    if [ -f "$tmp_dir/consume_errors" ]
+    then
+      { read -r nb_skipped; read -r first_error; read -r root_cause; } < "$tmp_dir/consume_errors"
+    fi
+
+    if [ "$format_exit_code" == "3" ]
+    then
+      exit 1
+    fi
+
+    if [ $nb_skipped -gt 0 ]
+    then
+      logwarn "⚠️ $nb_skipped record(s) of topic $topic could not be deserialized and were skipped, first error: $first_error${root_cause:+ (caused by: $root_cause)}"
+    fi
+
+    if [ ! -n "$tail" ] && [ "$consumer_exit_code" != "0" ]
+    then
+      if [[ -n "$min_expected_messages" && "$min_expected_messages" != "0" ]] || [[ -n "$grep_string" ]]
+      then
+        logerror "❌ the consumer of topic $topic failed with exit code $consumer_exit_code"
+        exit 1
+      fi
+      logwarn "❌ the consumer of topic $topic failed with exit code $consumer_exit_code"
+    fi
+
+    if [ $display_limit -ge 0 ] && [ $nb_displayed -lt $nb_consumed ] && [[ ! -n "$grep_string" ]]
+    then
+      log "✨ $nb_consumed records consumed, only the first $nb_displayed are displayed (--max-messages=$max_messages)"
+    fi
+
+    if [[ -n "$min_expected_messages" ]] && [ "$min_expected_messages" != "0" ]
+    then
+      if [ $nb_consumed -lt $min_expected_messages ]
+      then
+        skipped_msg=""
+        if [ $nb_skipped -gt 0 ]
+        then
+          skipped_msg=", $nb_skipped could not be deserialized"
+        fi
+        logerror "❌ --min-expected-messages is set with $min_expected_messages but only $nb_consumed records could be consumed from topic $topic ($nb_messages offsets$skipped_msg)"
+        exit 1
+      fi
+    fi
 
     if [[ -n "$grep_string" ]]
     then
-      if [ $found != 1 ]
+      if [ $nb_matched -eq 0 ]
       then
         logerror "❌ could not find $grep_string in topic $topic"
         exit 1
       fi
+      log "✅ found $grep_string in $nb_matched record(s) of topic $topic"
     fi
   done
 
@@ -46752,6 +46793,7 @@ playground_topic_consume_command() {
       open $latency_png
     fi
   fi
+
 }
 
 # :command.function
