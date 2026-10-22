@@ -48846,11 +48846,23 @@ playground_topic_produce_command() {
   then
       if [ $is_schema_producer = 1 ]
       then
-          # the schema files are read from the temporary folder of this run, so that concurrent runs don't overwrite each other
+          # the schema files are read from the temporary folder of this run, so that concurrent runs don't overwrite each other.
+          # $tmp_dir is 0700 (mktemp -d): on Linux the appuser of the image can't read it, so the schemas are copied to a
+          # world-readable sub-folder, and only that one is mounted
           schema_folder="/tmp/pg-schemas"
+          host_schema_folder="$tmp_dir/schemas"
+          mkdir -p "$host_schema_folder"
+          for schema_to_copy in "$key_schema_file" "$value_schema_file"
+          do
+              if [ -f "$schema_to_copy" ]
+              then
+                  cp "$schema_to_copy" "$host_schema_folder/"
+              fi
+          done
+          chmod -R a+rX "$host_schema_folder"
           key_schema_path="$schema_folder/$(basename "$key_schema_file")"
           value_schema_path="$schema_folder/$(basename "$value_schema_file")"
-          producer_cmd=(docker run -i --rm -v "$tmp_dir:$schema_folder" "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" "${tool_env[@]}" "kafka-${producer_schema_type}-console-producer" "$parameter_for_list_broker" "$BOOTSTRAP_SERVERS" "$producer_property_name" ssl.endpoint.identification.algorithm=https "$producer_property_name" sasl.mechanism=PLAIN "$producer_property_name" security.protocol=SASL_SSL "$producer_property_name" "sasl.jaas.config=$SASL_JAAS_CONFIG" "$property_name" basic.auth.credentials.source=USER_INFO "$property_name" "schema.registry.basic.auth.user.info=$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$property_name" "schema.registry.url=$SCHEMA_REGISTRY_URL")
+          producer_cmd=(docker run -i --rm -v "$host_schema_folder:$schema_folder" "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" "${tool_env[@]}" "kafka-${producer_schema_type}-console-producer" "$parameter_for_list_broker" "$BOOTSTRAP_SERVERS" "$producer_property_name" ssl.endpoint.identification.algorithm=https "$producer_property_name" sasl.mechanism=PLAIN "$producer_property_name" security.protocol=SASL_SSL "$producer_property_name" "sasl.jaas.config=$SASL_JAAS_CONFIG" "$property_name" basic.auth.credentials.source=USER_INFO "$property_name" "schema.registry.basic.auth.user.info=$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$property_name" "schema.registry.url=$SCHEMA_REGISTRY_URL")
       else
           producer_cmd=(docker run -i --rm -v "$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties" "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" "${tool_env[@]}" kafka-console-producer "$parameter_for_list_broker" "$BOOTSTRAP_SERVERS" "$producer_config_name" /tmp/configuration/ccloud.properties)
       fi
