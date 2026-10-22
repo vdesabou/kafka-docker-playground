@@ -53,6 +53,6 @@ playground connector benchmark --nb-records 5000 --shape small-txn
 # updates of 10000 existing documents (run a bulk load first)
 playground connector benchmark --nb-records 10000 --shape update
 
-# throughput during 2 minutes while batches of 10000 documents are inserted
+# throughput and end-to-end latency (kafka timestamp - source.ts_ms, the commit time) during 2 minutes while batches of 10000 documents are inserted
 playground connector benchmark --mode steady --duration 2m --nb-records 10000
 ```

@@ -3,7 +3,8 @@
 
 Self-contained file (inline SVG drawn by a small script, no external resource), light and dark themes:
 stat tiles, throughput / connect CPU / batch latency over time, history of the comparable runs, run details and
-the samples as a table.
+the samples as a table. For a source connector in steady mode, the end-to-end latency of its records (percentiles over
+time, distribution, slowest records), from the latency csv of tools/benchmark-report/benchmark_latency.py.
 
     benchmark_report.py --result <run.json> --samples <run.csv> [--history <benchmark-history>]
                         [--warning <text>]... [--jfr <flight recorder analysis.json>] --output <report.html>
@@ -22,7 +23,9 @@ import sys
 # no __pycache__ in the repository
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "jfr-analyzer"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import jfr_analyzer  # noqa: E402
+import benchmark_latency  # noqa: E402
 
 
 def load_samples(path, phase):
@@ -48,6 +51,7 @@ def load_samples(path, phase):
                 "ratio": num("running_ratio"),
                 "cpu": num("cpu_percent_of_one_core"),
                 "lag": num("consumer_lag_max"),
+                "epoch": num("epoch"),
             })
     return samples
 
@@ -176,9 +180,12 @@ __WARNINGS__
   <section class="card"><h2>🔥 Connect CPU</h2><p class="sub">% of one core, average of the workers running the tasks</p><div id="chart-cpu"></div></section>
   <section class="card"><h2>__BATCH_TITLE__</h2><p class="sub">average per task, ms</p><div id="chart-batch"></div></section>
   <section class="card"><h2>📜 Comparable runs</h2><p class="sub">records per second, same example, connector, mode and shape (benchmark-history); faded bars and * : another setup</p><div id="chart-history"></div></section>
+  <section class="card" id="latency-card" hidden><h2>⏱️ End-to-end latency</h2><p class="sub" id="latency-sub"></p><div class="legend" id="latency-legend"></div><div id="chart-latency"></div></section>
+  <section class="card" id="latency-hist-card" hidden><h2>📊 Latency distribution</h2><p class="sub">records per end-to-end latency range; grey: slower than p95 × 2, red: negative (clock skew)</p><div id="chart-latency-hist"></div></section>
 </div>
 __JFR__
 <details open id="versions-section" hidden><summary>__GROUP_TITLE__</summary><div class="card"><table id="versions-table"></table></div></details>
+<details id="latency-slowest-section" hidden><summary>🐢 Slowest records (end-to-end latency)</summary><div class="card"><table id="latency-slowest"></table></div></details>
 <details open><summary>📋 Run details</summary><div class="card"><table id="details"></table></div></details>
 <details open><summary>🖥️ Setup</summary><div class="card"><table id="setup"></table></div></details>
 <details><summary>⚙️ Connector configuration (secrets masked)</summary><div class="card"><pre id="connector-config"></pre></div></details>
@@ -248,6 +255,13 @@ __JFR__
   tile("⏱️ Duration", nf1.format(r.seconds), "s", r.incomplete ? "stopped by --max-wait" : r.mode === "drain" ? "time to process the backlog" : "measure, after the warm-up");
   tile("🧾 Records", nf.format(r.records), "", r.incomplete ? "of " + nf.format(r.expected_records) + ": the drain did not finish (--max-wait)" :
        r.mode === "drain" ? "backlog, loaded in " + r.load_seconds + " s" : "processed during the measure", r.incomplete ? "bad" : undefined);
+  const lat = r.latency || {};
+  const latencyText = v => v === null || v === undefined ? "-" : Math.abs(v) >= 10000 ? nf1.format(v / 1000) + " s" : nf.format(v) + " ms";
+  if (lat.enabled) {
+    tile("⏱️ End-to-end latency p95", latencyText(lat.p95_ms), "", "p50 " + latencyText(lat.p50_ms) + " · p99 " + latencyText(lat.p99_ms) + " · max " + latencyText(lat.max_ms));
+  } else if (r.type === "source" && r.mode === "steady" && lat.reason) {
+    tile("⏱️ End-to-end latency", "–", "", lat.reason);
+  }
   const previous = history.length > 1 ? history[history.length - 2] : null;
   const versionColor = version => "var(--series-" + (versions.findIndex(v => v.version === version) % 8 + 1) + ")";
   if (comparison) {
@@ -362,6 +376,105 @@ __JFR__
   }
   lineChart("chart-batch", "batch", "ms", v => nf1.format(v));
 
+  // end-to-end latency: p50 / p95 / p99 per time bucket of the measure, histogram, slowest records
+  (function () {
+    const lp = data.latency;
+    if (!lat.enabled || !lp) return;
+    document.getElementById("latency-card").hidden = false;
+    document.getElementById("latency-hist-card").hidden = false;
+    document.getElementById("latency-sub").textContent = "kafka record timestamp − " + lat.field + " (" + lat.field_source + "), p50 / p95 / p99 per " +
+      lp.bucket_s + " s of the measure, " + nf.format(lat.records) + " records";
+    const series = [["p50", "var(--series-1)"], ["p95", "var(--series-2)"], ["p99", "var(--series-3)"]];
+    const legend = document.getElementById("latency-legend");
+    series.forEach(([k, c]) => { const item = el("span", {}, k); item.style.setProperty("--c", c); legend.appendChild(item); });
+    const host = document.getElementById("chart-latency");
+    const pts = lp.buckets;
+    // same x axis as the charts over time above
+    const xs = niceScale(Math.max(...pts.map(p => p.elapsed), ...samples.filter(s => s.elapsed !== null).map(s => s.elapsed), 1));
+    const ys = niceScale(Math.max(...pts.map(p => p.p99), 1));
+    const sx = x => L + (W - L - R) * x / xs.max, sy = y => T + (H - T - B) * (1 - Math.max(0, y) / ys.max);
+    const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "end-to-end latency over time" });
+    axes(svg, xs, ys, "s", latencyText);
+    for (const [k, c] of series) {
+      // no line across a gap of more than 2 buckets (a measure read in slices)
+      svg.appendChild(svgEl("path", { d: pts.map((p, i) => (i && p.elapsed - pts[i - 1].elapsed <= 2.5 * lp.bucket_s ? "L" : "M") + sx(p.elapsed).toFixed(1) + "," + sy(p[k]).toFixed(1)).join(""),
+        fill: "none", stroke: c, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+      if (pts.length <= 40) for (const p of pts) svg.appendChild(svgEl("circle", { cx: sx(p.elapsed), cy: sy(p[k]), r: 4, fill: c, stroke: "var(--surface-1)", "stroke-width": 2 }));
+    }
+    const cross = svgEl("line", { y1: T, y2: H - B, stroke: "var(--text-muted)", "stroke-width": 1, visibility: "hidden" });
+    svg.appendChild(cross);
+    const hit = svgEl("rect", { x: L, y: T, width: W - L - R, height: H - T - B, fill: "transparent" });
+    svg.appendChild(hit);
+    host.appendChild(svg);
+    const tip = el("div", { class: "tooltip" });
+    host.parentElement.appendChild(tip);
+    hit.addEventListener("pointermove", evt => {
+      const box = svg.getBoundingClientRect(), scale = W / box.width, x = (evt.clientX - box.left) * scale;
+      let best = pts[0];
+      for (const p of pts) if (Math.abs(sx(p.elapsed) - x) < Math.abs(sx(best.elapsed) - x)) best = p;
+      cross.setAttribute("x1", sx(best.elapsed)); cross.setAttribute("x2", sx(best.elapsed)); cross.setAttribute("visibility", "visible");
+      tip.replaceChildren();
+      tip.appendChild(el("span", { class: "muted" }, nf1.format(best.elapsed) + " s · " + nf.format(best.n) + " records"));
+      for (const [k, c] of series.slice().reverse()) {
+        tip.appendChild(el("br"));
+        const key = el("span", { class: "key" }); key.style.background = c; tip.appendChild(key);
+        tip.appendChild(document.createTextNode(k + " "));
+        tip.appendChild(el("strong", {}, latencyText(best[k])));
+      }
+      tip.style.display = "block";
+      const hbox = host.parentElement.getBoundingClientRect();
+      tip.style.left = Math.min(box.left - hbox.left + sx(best.elapsed) / scale + 12, hbox.width - tip.offsetWidth - 8) + "px";
+      tip.style.top = (box.top - hbox.top + sy(best.p99) / scale - tip.offsetHeight - 10) + "px";
+    });
+    hit.addEventListener("pointerleave", () => { tip.style.display = "none"; cross.setAttribute("visibility", "hidden"); });
+
+    // histogram
+    const hhost = document.getElementById("chart-latency-hist");
+    const bins = lp.histogram;
+    const hsvg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "distribution of the end-to-end latency" });
+    const hys = niceScale(Math.max(...bins.map(b => b.n), 1));
+    yGrid(hsvg, hys, v => compact(v));
+    const n = bins.length, slot = (W - L - R) / n, bw = Math.max(1, slot - 2);
+    const hsy = y => T + (H - T - B) * (1 - y / hys.max);
+    const htip = el("div", { class: "tooltip" });
+    hhost.parentElement.appendChild(htip);
+    const every = Math.ceil(n / 6);
+    bins.forEach((b, i) => {
+      const x = L + slot * i + 1, y = hsy(b.n), base = hsy(0), rad = Math.min(4, bw / 2, base - y);
+      const g = svgEl("g");
+      g.appendChild(svgEl("rect", { x: L + slot * i, y: T, width: slot, height: H - T - B, fill: "transparent" }));
+      if (b.n) g.appendChild(svgEl("path", { d: `M${x},${base}V${y + rad}Q${x},${y} ${x + rad},${y}H${x + bw - rad}Q${x + bw},${y} ${x + bw},${y + rad}V${base}Z`,
+        fill: b.tail ? "var(--text-muted)" : b.to <= 0 ? "var(--critical)" : "var(--series-1)" }));
+      if (b.tail && b.n) {
+        const t = svgEl("text", { x: x + bw / 2, y: y - 6, "text-anchor": "middle", "font-size": 11, fill: "var(--text-secondary)" });
+        t.textContent = "> " + latencyText(b.from);
+        hsvg.appendChild(t);
+      }
+      if (!b.tail && i % every === 0) {
+        const t = svgEl("text", { x: L + slot * i, y: H - B + 18, "text-anchor": "middle", "font-size": 11, fill: "var(--text-muted)" });
+        t.textContent = latencyText(b.from);
+        hsvg.appendChild(t);
+      }
+      g.addEventListener("pointermove", () => {
+        htip.replaceChildren();
+        htip.appendChild(el("strong", {}, nf.format(b.n)));
+        htip.appendChild(document.createTextNode(" records"));
+        htip.appendChild(el("br"));
+        htip.appendChild(el("span", { class: "muted" }, latencyText(b.from) + " → " + latencyText(b.to) + (b.tail ? " (slower than p95 × 2)" : "")));
+        htip.style.display = "block";
+        const sbox = hsvg.getBoundingClientRect(), hb = hhost.parentElement.getBoundingClientRect(), scale = W / sbox.width;
+        htip.style.left = Math.max(8, Math.min(sbox.left - hb.left + (x + bw / 2) / scale - htip.offsetWidth / 2, hb.width - htip.offsetWidth - 8)) + "px";
+        htip.style.top = (sbox.top - hb.top + y / scale - htip.offsetHeight - 10) + "px";
+      });
+      g.addEventListener("pointerleave", () => htip.style.display = "none");
+      hsvg.appendChild(g);
+    });
+    hhost.appendChild(hsvg);
+    if (lp.slowest.length) {
+      document.getElementById("latency-slowest-section").hidden = false;
+    }
+  })();
+
   // history bars
   (function () {
     const host = document.getElementById("chart-history");
@@ -401,6 +514,10 @@ __JFR__
         tip.appendChild(el("span", { class: "muted" }, (h.date || "").replace("T", " ").replace("Z", " UTC")));
         tip.appendChild(el("br"));
         tip.appendChild(el("span", { class: "muted" }, h.plugin_version + " · CP " + h.cp_tag + " · " + h.tasks + " task(s) · " + nf.format(h.records) + " records"));
+        if (h.latency && h.latency.enabled) {
+          tip.appendChild(el("br"));
+          tip.appendChild(el("span", { class: "muted" }, "end-to-end latency p95 " + latencyText(h.latency.p95_ms) + " · p99 " + latencyText(h.latency.p99_ms)));
+        }
         tip.appendChild(el("br"));
         tip.appendChild(el("span", { class: "muted" }, (sameSetup(h) ? "" : "other setup: ") + setupShort(h.setup)));
         tip.style.display = "block";
@@ -446,19 +563,31 @@ __JFR__
     ["dlq / dropped records", r.dlq_records === undefined ? "-" : r.dlq_records + " sent to the dlq" + (r.skipped_records === "-" ? "" : ", " + r.skipped_records + " dropped without dlq")],
     ["load", r.load_seconds === "-" ? "-" : r.load_seconds + " s"],
     ["records in topics", r.topic_records_delta === "-" ? "-" : "+" + nf.format(+r.topic_records_delta)],
+    ...(r.type === "source" && r.latency ? [["end-to-end latency", lat.enabled ?
+      "p50 " + latencyText(lat.p50_ms) + " · p95 " + latencyText(lat.p95_ms) + " · p99 " + latencyText(lat.p99_ms) + " · max " + latencyText(lat.max_ms) +
+      " (kafka timestamp − " + lat.field + ", " + nf.format(lat.records) + " records" + (lat.csv ? ", " + lat.csv : "") + ")" : lat.reason]] : []),
     ["date", r.date], ["samples", r.samples_csv]
   ].filter(row => !(r.setup && r.setup.connect && r.setup.connect.fully_managed) ||
     !(["running ratio avg", "connect cpu avg / max", "gc pauses", "records per task"].includes(row[0]) ||
       (row[0] === "batch avg" && r.batch_avg_ms === "-") || (row[0] === "dlq / dropped records" && r.dlq_records === "-"))));
-  fillTable("history-table", [["date"], ["records/s", 1], ["records", 1], ["seconds", 1], ["plugin"], ["CP"], ["tasks", 1], ["setup"]],
-    history.slice().reverse().map(h => [h.date, nf1.format(h.records_per_second), nf.format(h.records), h.seconds, h.plugin_version, h.cp_tag, h.tasks,
+  const withLatency = history.some(h => h.latency && h.latency.enabled);
+  fillTable("history-table", [["date"], ["records/s", 1], ...(withLatency ? [["latency p95", 1]] : []), ["records", 1], ["seconds", 1], ["plugin"], ["CP"], ["tasks", 1], ["setup"]],
+    history.slice().reverse().map(h => [h.date, nf1.format(h.records_per_second),
+      ...(withLatency ? [h.latency && h.latency.enabled ? latencyText(h.latency.p95_ms) : "-"] : []), nf.format(h.records), h.seconds, h.plugin_version, h.cp_tag, h.tasks,
       (sameSetup(h) ? "" : "≠ ") + setupShort(h.setup)]));
+  if (lat.enabled && data.latency) {
+    fillTable("latency-slowest", [["latency", 1], ["elapsed s", 1], ["topic"], ["partition", 1], ["offset", 1], ["kafka timestamp"]],
+      data.latency.slowest.map(x => [latencyText(x.latency_ms), nf1.format(x.elapsed_s), x.topic, x.partition, x.offset, new Date(x.kafka_ts_ms).toISOString().replace("T", " ").replace("Z", " UTC")]));
+  }
   if (comparison) {
     document.getElementById("versions-section").hidden = false;
     const f1 = x => x === null ? "-" : nf1.format(x);
-    fillTable("versions-table", [[groupNoun], ["runs", 1], ["lower bounds", 1], ["records/s (mean)", 1], ["min", 1], ["max", 1], ["vs first " + groupNoun, 1]],
+    const versionsLatency = versions.some(v => v.latency_p95 !== null && v.latency_p95 !== undefined);
+    fillTable("versions-table", [[groupNoun], ["runs", 1], ["lower bounds", 1], ["records/s (mean)", 1], ["min", 1], ["max", 1], ["vs first " + groupNoun, 1],
+      ...(versionsLatency ? [["latency p95 (mean)", 1]] : [])],
       versions.map(v => [v.version, v.runs, v.lower_bounds, f1(v.mean), f1(v.min), f1(v.max),
-        v.delta === null ? "-" : (v.delta > 0 ? "+" : "") + nf.format(v.delta) + "%"]));
+        v.delta === null ? "-" : (v.delta > 0 ? "+" : "") + nf.format(v.delta) + "%",
+        ...(versionsLatency ? [v.latency_p95 === null ? "-" : latencyText(v.latency_p95)] : [])]));
     document.querySelector("#chart-history").previousElementSibling.textContent = "records per second of each run, in run order; faded: lower bound, not in the mean";
     const legend = el("div", { class: "legend" });
     versions.forEach(v => { const item = el("span", {}, v.version); item.style.setProperty("--c", versionColor(v.version)); legend.appendChild(item); });
@@ -574,6 +703,9 @@ def verdict(result, history, versions, warnings, jfr_findings, group_noun="versi
             severity = "var(--warning)"
     else:
         parts.append(f"🚀 {'≥ ' if result.get('lower_bound') else ''}{result.get('records_per_second') or 0:,.0f} records/s")
+        latency = result.get("latency") or {}
+        if latency.get("enabled"):
+            parts.append(f"⏱️ end-to-end latency p95 {latency['p95_ms']:,.0f} ms")
         if result.get("incomplete"):
             parts.append(f"🛑 the drain did not finish: {result.get('records') or 0:,} of {result.get('expected_records') or 0:,} records")
             severity = "var(--critical)"
@@ -662,6 +794,9 @@ def main():
                 entry["lower_bounds"] += 1
             else:
                 entry["rates"].append(run.get("records_per_second") or 0)
+            latency = run.get("latency") or {}
+            if latency.get("enabled") and latency.get("p95_ms") is not None:
+                entry.setdefault("latencies", []).append(latency["p95_ms"])
         for v in versions:
             rates = v["rates"]
             v["mean"] = sum(rates) / len(rates) if rates else None
@@ -669,6 +804,8 @@ def main():
             if first is None and v["mean"] is not None:
                 first = v["mean"]
             v["delta"] = (v["mean"] - first) / first * 100 if first and v["mean"] is not None else None
+            latencies = v.pop("latencies", [])
+            v["latency_p95"] = sum(latencies) / len(latencies) if latencies else None
     else:
         if not args.result or not args.samples:
             parser.error("--result and --samples are required without --runs")
@@ -699,7 +836,14 @@ def main():
         files = (result.get("flight_recorder") or {}).get("files") or []
         jfr_html = jfr_analyzer.render_section(analysis, recording_link=files[0] if len(files) == 1 else None,
                                                subtitle_prefix=("Recorded during the " + ("drain" if result.get("mode") == "drain" else "measure") + " · "))
-    payload = json.dumps({"result": result, "samples": samples, "history": history, "versions": versions,
+    latency = None
+    if (result.get("latency") or {}).get("enabled"):
+        interval = next((b["elapsed"] - a["elapsed"] for a, b in zip(samples, samples[1:]) if a.get("elapsed") is not None and b.get("elapsed") is not None), 5)
+        # same time axis as the other charts: seconds since the start of the benchmark
+        start = next((s["epoch"] - s["elapsed"] for s in samples if s.get("epoch") is not None and s.get("elapsed") is not None), None)
+        offset = result["measure_from_ms"] / 1000 - start if start is not None and result.get("measure_from_ms") else 0
+        latency = benchmark_latency.report_payload(result["latency"], max(1, round(interval)), offset)
+    payload = json.dumps({"result": result, "samples": samples, "history": history, "versions": versions, "latency": latency,
                           "group_key": args.group_by, "group_noun": group_noun, "group_title": group_title,
                           "grafana": grafana_links(history if versions else [result])}).replace("</", "<\\/")
     if versions:

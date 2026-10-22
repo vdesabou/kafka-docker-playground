@@ -57,7 +57,7 @@ playground connector benchmark --nb-records 1000000 --shape update
 # each deleted row gives a delete event and a tombstone (tombstones.on.delete, default true)
 playground connector benchmark --nb-records 500000 --shape bulk,update,delete
 
-# throughput during 2 minutes while batches of 10k rows are inserted continuously
+# throughput and end-to-end latency (kafka timestamp - source.ts_ms, the commit time) during 2 minutes while batches of 10k rows are inserted continuously
 playground connector benchmark --mode steady --duration 2m --nb-records 10000
 ```
 

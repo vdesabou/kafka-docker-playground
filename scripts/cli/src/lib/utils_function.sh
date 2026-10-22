@@ -2761,13 +2761,15 @@ function benchmark_oracle_client_from_example () {
 # custom: the statements of a table of the example, set by the load script for <records> rows: BENCHMARK_SQL_TABLE (for
 # the logs), BENCHMARK_SQL_CREATE (optional), BENCHMARK_SQL_BULK, BENCHMARK_SQL_SMALL_TXN, BENCHMARK_SQL_UPDATE,
 # BENCHMARK_SQL_DELETE (a shape without statement is refused), BENCHMARK_SQL_COUNT and BENCHMARK_SQL_COUNT_FLAGS
-# (row count, for update and delete)
+# (row count, for update and delete), BENCHMARK_SQL_LATENCY_FIELD (optional: the column holding the time of the change)
 # - bulk: one transaction inserting <records> rows
 # - small-txn: <records> transactions of one row
 # - update: updates <records> existing rows (run a bulk load first)
 # - delete: deletes <records> existing rows, the ones with the lowest ids (drain only; plus one tombstone per row for
 #   debezium / xstream with tombstones.on.delete, oracle cdc with emit.tombstone.on.delete)
 # - stream mode: repeats batches of <records> rows of the shape until killed
+# prints BENCHMARK_LATENCY_FIELD=<column>, the column holding the time of the change (create_ts, update_ts with --shape
+# update), for the end-to-end latency of the benchmark in steady mode (not for sqlserver, whose dbo.customers has none)
 # prints BENCHMARK_RECORDS=<n>, the number of records the connector should write, so that the benchmark waits for them:
 # changes x BENCHMARK_RECORDS_PER_CHANGE (default 1) + transactions x BENCHMARK_RECORDS_PER_TRANSACTION (default 0),
 # e.g. 2 and 1 for oracle cdc with a redo log topic, which gets the row change and the commit.
@@ -2776,7 +2778,8 @@ function benchmark_oracle_client_from_example () {
 function benchmark_sql_load () {
   local dialect="$1" container="$2" client="$3" records="$4" shape="$5" mode="${6:-preload}"
   local create_table insert_bulk insert_small_txn update count_flags count_sql="SELECT COUNT(*) FROM CUSTOMERS;" client_for_count="$client"
-  local table="CUSTOMERS"
+  local table="CUSTOMERS" latency_field="create_ts"
+  [ "$shape" == "update" ] && latency_field="update_ts"
   case "$dialect" in
     custom)
       table="${BENCHMARK_SQL_TABLE:-the table}"
@@ -2787,6 +2790,7 @@ function benchmark_sql_load () {
       delete="$BENCHMARK_SQL_DELETE"
       count_sql="$BENCHMARK_SQL_COUNT"
       count_flags="$BENCHMARK_SQL_COUNT_FLAGS"
+      latency_field="$BENCHMARK_SQL_LATENCY_FIELD"
       local shape_sql
       case "$shape" in
         bulk) shape_sql="$insert_bulk" ;;
@@ -2804,7 +2808,7 @@ function benchmark_sql_load () {
       create_table="CREATE TABLE IF NOT EXISTS CUSTOMERS (id SERIAL PRIMARY KEY, first_name VARCHAR(50), last_name VARCHAR(50), email VARCHAR(50), gender VARCHAR(50), club_status VARCHAR(20), comments VARCHAR(90), create_ts timestamp DEFAULT CURRENT_TIMESTAMP, update_ts timestamp DEFAULT CURRENT_TIMESTAMP);"
       insert_bulk="INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) SELECT 'first' || i, 'last' || i, 'user' || i || '@example.com', CASE WHEN i % 2 = 0 THEN 'Female' ELSE 'Male' END, (ARRAY['bronze','silver','gold','platinum'])[1 + i % 4], 'benchmark row ' || i FROM generate_series(1, $records) AS i;"
       insert_small_txn="DO \$\$ BEGIN FOR i IN 1..$records LOOP INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) VALUES ('first' || i, 'last' || i, 'user' || i || '@example.com', CASE WHEN i % 2 = 0 THEN 'Female' ELSE 'Male' END, (ARRAY['bronze','silver','gold','platinum'])[1 + i % 4], 'benchmark row ' || i); COMMIT; END LOOP; END \$\$;"
-      update="UPDATE CUSTOMERS SET comments = 'benchmark update ' || id || ' ' || floor(random() * 1000000) WHERE id IN (SELECT id FROM CUSTOMERS ORDER BY id LIMIT $records);"
+      update="UPDATE CUSTOMERS SET comments = 'benchmark update ' || id || ' ' || floor(random() * 1000000), update_ts = CURRENT_TIMESTAMP WHERE id IN (SELECT id FROM CUSTOMERS ORDER BY id LIMIT $records);"
       delete="DELETE FROM CUSTOMERS WHERE id IN (SELECT id FROM CUSTOMERS ORDER BY id LIMIT $records);"
       count_flags="-t -A"
     ;;
@@ -2812,7 +2816,7 @@ function benchmark_sql_load () {
       # the recursive cte of the bulk load is limited to 1000 levels by default, a setting named differently in mariadb
       local recursion_limit="SET SESSION cte_max_recursion_depth = $((records + 1));"
       [ "$dialect" == "mariadb" ] && recursion_limit="SET SESSION max_recursive_iterations = $((records + 1));"
-      create_table="CREATE TABLE IF NOT EXISTS CUSTOMERS (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, first_name VARCHAR(50), last_name VARCHAR(50), email VARCHAR(50), gender VARCHAR(50), club_status VARCHAR(20), comments VARCHAR(90), create_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP, update_ts TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);"
+      create_table="CREATE TABLE IF NOT EXISTS CUSTOMERS (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, first_name VARCHAR(50), last_name VARCHAR(50), email VARCHAR(50), gender VARCHAR(50), club_status VARCHAR(20), comments VARCHAR(90), create_ts TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3), update_ts TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3));"
       insert_bulk="$recursion_limit INSERT INTO CUSTOMERS (first_name, last_name, email, gender, club_status, comments) WITH RECURSIVE seq (i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM seq WHERE i < $records) SELECT CONCAT('first', i), CONCAT('last', i), CONCAT('user', i, '@example.com'), IF(i % 2 = 0, 'Female', 'Male'), ELT(1 + i % 4, 'bronze', 'silver', 'gold', 'platinum'), CONCAT('benchmark row ', i) FROM seq;"
       # a procedure name of its own: parallel sessions (--sessions, --enable-sql-datagen) would drop each other's
       local procedure="benchmark_small_txn_$$_$RANDOM"
@@ -2875,6 +2879,7 @@ GO"
 WITH c AS (SELECT TOP ($records) * FROM dbo.customers ORDER BY id) DELETE FROM c;
 GO"
       count_flags="-h -1"
+      latency_field=""
       count_sql="SET NOCOUNT ON;
 SELECT COUNT(*) FROM dbo.customers;
 GO"
@@ -2957,6 +2962,10 @@ GO"
     esac
   fi
   local expected_records=$((changes * (${BENCHMARK_RECORDS_PER_CHANGE:-1} + tombstones) + transactions * ${BENCHMARK_RECORDS_PER_TRANSACTION:-0}))
+  if [ -n "$latency_field" ] && [ "$shape" != "delete" ]
+  then
+    echo "BENCHMARK_LATENCY_FIELD=$latency_field"
+  fi
 
   if [ "$mode" == "stream" ]
   then
