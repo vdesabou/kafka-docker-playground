@@ -201,10 +201,37 @@ Specify a mapping between the Kafka record and the SingleStoreDB table name
 
 🔘 singlestore.upsert
 
-Update a row in case of a duplicate key
+Replaces the existing row when a duplicate key is found (LOAD DATA REPLACE). Use singlestore.onDuplicateKeyUpdate to update selected columns and leave the others unchanged.
 
 	 - Type: BOOLEAN
 	 - Default: false
 	 - Importance: LOW
+	 - Required: false
+
+🔘 singlestore.onDuplicateKeyUpdate
+
+Load rows into a temporary table, then insert them with INSERT ... ON DUPLICATE KEY UPDATE (default: false). Set the assignment list with singlestore.onDuplicateKeySQL, and override it per table with singlestore.onDuplicateKeySQL.<tableName>. Mutually exclusive with singlestore.upsert.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 singlestore.onDuplicateKeySQL
+
+Default assignment list for INSERT ... ON DUPLICATE KEY UPDATE. Requires singlestore.onDuplicateKeyUpdate. Override one table with singlestore.onDuplicateKeySQL.<tableName>. On a duplicate PRIMARY KEY or UNIQUE index, only these assignments run, so columns omitted from the list keep their current values. Example: `data` = VALUES(`data`). The value is inserted directly into the query and is not SQL-injection safe.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
+	 - Required: false
+
+🔘 singlestore.onDuplicateKeySQL.<tableName>
+
+Assignment list for one destination table when singlestore.onDuplicateKeyUpdate is true. Overrides singlestore.onDuplicateKeySQL for that table. <tableName> is case-sensitive and must exactly match the destination table name. The value is inserted directly into the query and is not SQL-injection safe.
+
+	 - Type: STRING
+	 - Default: null
+	 - Importance: MEDIUM
 	 - Required: false
 
