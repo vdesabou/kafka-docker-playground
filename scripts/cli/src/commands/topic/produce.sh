@@ -201,6 +201,20 @@ else
     tool_log4j_jvm_arg="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties"
 fi
 
+# JVM options of the console producer, passed in the *_LOG4J_OPTS variables as KAFKA_OPTS and SCHEMA_REGISTRY_OPTS
+# can be set by the container (2way-ssl). The JDK 25 of CP 8.3+ warns when a library uses sun.misc.Unsafe
+# (WARNING: sun.misc.Unsafe::arrayBaseOffset has been called by ...) or loads a native library (zstd-jni,
+# WARNING: A restricted method in java.lang.System has been called): allow both, JDK 21 and older refuse to start
+# with these options
+tool_jvm_args="$tool_log4j_jvm_arg"
+validator_jvm_args=""
+if version_gt $CP_CONNECT_TAG "8.2.99"
+then
+    tool_jvm_args="$tool_jvm_args --sun-misc-unsafe-memory-access=allow --enable-native-access=ALL-UNNAMED"
+    validator_jvm_args="--sun-misc-unsafe-memory-access=allow --enable-native-access=ALL-UNNAMED"
+fi
+tool_env=(env "KAFKA_LOG4J_OPTS=$tool_jvm_args" "SCHEMA_REGISTRY_LOG4J_OPTS=$tool_jvm_args")
+
 if version_gt $CP_CONNECT_TAG "8.1.99"
 then
     property_name="--reader-property"
@@ -1044,7 +1058,7 @@ then
         esac
     done
 
-    docker exec $env_list -e SCHEMA_TYPE=$value_schema_type $connect_container bash -c "java -jar /tmp/schema-validator-1.0.0-jar-with-dependencies.jar" > $tmp_dir/result.log
+    docker exec $env_list -e SCHEMA_TYPE=$value_schema_type $connect_container bash -c "java $validator_jvm_args -jar /tmp/schema-validator-1.0.0-jar-with-dependencies.jar" > $tmp_dir/result.log
     set +e
     nb=$(grep -c "ERROR" $tmp_dir/result.log)
     if [ $nb -ne 0 ]
@@ -1256,17 +1270,14 @@ then
         schema_folder="/tmp/pg-schemas"
         key_schema_path="$schema_folder/$(basename "$key_schema_file")"
         value_schema_path="$schema_folder/$(basename "$value_schema_file")"
-        producer_cmd=(docker run -i --rm -v "$tmp_dir:$schema_folder" -e "SCHEMA_REGISTRY_LOG4J_OPTS=$tool_log4j_jvm_arg" "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" "kafka-${producer_schema_type}-console-producer" "$parameter_for_list_broker" "$BOOTSTRAP_SERVERS" "$producer_property_name" ssl.endpoint.identification.algorithm=https "$producer_property_name" sasl.mechanism=PLAIN "$producer_property_name" security.protocol=SASL_SSL "$producer_property_name" "sasl.jaas.config=$SASL_JAAS_CONFIG" "$property_name" basic.auth.credentials.source=USER_INFO "$property_name" "schema.registry.basic.auth.user.info=$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$property_name" "schema.registry.url=$SCHEMA_REGISTRY_URL")
+        producer_cmd=(docker run -i --rm -v "$tmp_dir:$schema_folder" "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" "${tool_env[@]}" "kafka-${producer_schema_type}-console-producer" "$parameter_for_list_broker" "$BOOTSTRAP_SERVERS" "$producer_property_name" ssl.endpoint.identification.algorithm=https "$producer_property_name" sasl.mechanism=PLAIN "$producer_property_name" security.protocol=SASL_SSL "$producer_property_name" "sasl.jaas.config=$SASL_JAAS_CONFIG" "$property_name" basic.auth.credentials.source=USER_INFO "$property_name" "schema.registry.basic.auth.user.info=$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$property_name" "schema.registry.url=$SCHEMA_REGISTRY_URL")
     else
-        producer_cmd=(docker run -i --rm -v "$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties" "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" kafka-console-producer "$parameter_for_list_broker" "$BOOTSTRAP_SERVERS" "$producer_config_name" /tmp/configuration/ccloud.properties)
+        producer_cmd=(docker run -i --rm -v "$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties" "${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}" "${tool_env[@]}" kafka-console-producer "$parameter_for_list_broker" "$BOOTSTRAP_SERVERS" "$producer_config_name" /tmp/configuration/ccloud.properties)
     fi
 else
     if [[ "$environment" == cfk* ]]
     then
         producer_cmd=(kubectl -n confluent exec -i connect-0 --)
-    elif [ $is_schema_producer = 1 ]
-    then
-        producer_cmd=(docker exec -e "SCHEMA_REGISTRY_LOG4J_OPTS=$tool_log4j_jvm_arg" -i "$container")
     else
         producer_cmd=(docker exec -e KAFKA_DEBUG= -i "$container")
     fi
@@ -1290,9 +1301,9 @@ else
         then
             playground container cp --source $value_schema_file --destination $container:$value_schema_path > /dev/null 2>&1
         fi
-        producer_cmd+=("kafka-${producer_schema_type}-console-producer" "$parameter_for_list_broker" "$bootstrap_server" "$property_name" "schema.registry.url=$sr_url_cli")
+        producer_cmd+=("${tool_env[@]}" "kafka-${producer_schema_type}-console-producer" "$parameter_for_list_broker" "$bootstrap_server" "$property_name" "schema.registry.url=$sr_url_cli")
     else
-        producer_cmd+=(kafka-console-producer "$parameter_for_list_broker" "$bootstrap_server")
+        producer_cmd+=("${tool_env[@]}" kafka-console-producer "$parameter_for_list_broker" "$bootstrap_server")
     fi
 fi
 
@@ -1354,18 +1365,43 @@ fi
 
 producer_cmd+=("${producer_args[@]}")
 
-function throttle() {
-    if [ "$throughput" -gt 0 ]
-    then
-        perl -MTime::HiRes=time,sleep -e '$| = 1; my $rate = shift; my $start = time; my $i = 0; while (my $line = <STDIN>) { print $line; $i++; my $wait = $start + $i / $rate - time; sleep($wait) if $wait > 0 }' "$throughput"
-    else
-        cat
-    fi
+# passes the records of a batch to the producer, $1 being the number of records sent before this batch:
+# - counted, so that the number of records sent is right when the batch is interrupted with ctrl-c
+# - with --throughput, throttled, and the progress is logged every 10 seconds as a batch can last hours
+#   (300000 records at 10 records/s)
+function pass_records() {
+    rm -f "$tmp_dir/nb_records_passed"
+    PG_LOG_LEVEL="$PG_LOG_LEVEL" COUNT_FILE="$tmp_dir/nb_records_passed" perl -MTime::HiRes=time,sleep -MPOSIX=strftime -e '
+        my ($rate, $sent_before) = @ARGV;
+        $| = $rate > 0;
+        my $start = time;
+        my $last_progress = $start;
+        my $i = 0;
+        my $quiet = ($ENV{PG_LOG_LEVEL} // "") =~ /^(WARN|ERROR)$/;
+        sub save_count {
+            if (open(my $fh, ">", $ENV{COUNT_FILE})) { print $fh $i; close($fh); }
+        }
+        $SIG{INT} = $SIG{TERM} = $SIG{PIPE} = sub { save_count(); exit 0; };
+        while (my $line = <STDIN>) {
+            print $line;
+            $i++;
+            next if $rate <= 0;
+            my $now = time;
+            if (!$quiet && $now - $last_progress >= 10) {
+                printf STDERR "\033[0;33m%s ℹ️ 💯 %d records sent so far...\033[0m\n", strftime("%H:%M:%S", localtime), $sent_before + $i;
+                $last_progress = $now;
+            }
+            my $wait = $start + $i / $rate - $now;
+            sleep($wait) if $wait > 0;
+        }
+        save_count();' "$throughput" "$1"
 }
 
+interrupted=0
 function handle_signal {
   echo "Stopping..."
   stop=1
+  interrupted=1
 }
 # Set the signal handler
 trap handle_signal SIGINT
@@ -1410,9 +1446,14 @@ do
         echo "cat /tmp/verbose_input_file.txt | $(printf '%q ' "${producer_cmd[@]}")"
     fi
 
-    render_batch "$nb_messages_to_send" "$((nb_messages_sent + 1))" | throttle | "${producer_cmd[@]}"
+    render_batch "$nb_messages_to_send" "$((nb_messages_sent + 1))" | pass_records "$nb_messages_sent" | "${producer_cmd[@]}"
 
-    # Increment the number of sent messages
+    # Increment the number of sent messages: the records actually passed to the producer, fewer than
+    # $nb_messages_to_send when the batch was interrupted
+    if [ -s "$tmp_dir/nb_records_passed" ]
+    then
+        nb_messages_to_send=$(cat "$tmp_dir/nb_records_passed")
+    fi
     nb_messages_sent=$((nb_messages_sent + nb_messages_to_send))
 
     if [ $nb_messages != -1 ] && { [ $should_stop -eq 1 ] || [ $nb_messages_sent -ge $nb_messages ]; }
@@ -1425,7 +1466,12 @@ do
     fi
 done
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
-log "📤 produced $nb_messages_sent records to topic $topic, $ELAPSED"
+if [ $interrupted = 1 ]
+then
+    log "📤 produced $nb_messages_sent records to topic $topic (interrupted with ctrl-c, the last ones may not have been sent), $ELAPSED"
+else
+    log "📤 produced $nb_messages_sent records to topic $topic, $ELAPSED"
+fi
 
 if [[ -n "$consume" ]]
 then
