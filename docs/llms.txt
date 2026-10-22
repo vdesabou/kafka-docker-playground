@@ -1,0 +1,28 @@
+# kafka-docker-playground
+
+> Fully automated Apache Kafka® and Confluent® Docker (and CFK) based examples, with a CLI (`playground`) to run them and to easily build reproduction models. Source code: https://github.com/vdesabou/kafka-docker-playground
+
+The playground covers 150+ self-managed connector examples, 100+ fully-managed (Confluent Cloud) connector examples, 10+ secured environments (SASL, RBAC, SSL, mTLS...), Confluent commercial features, and multi data center deployments (Cluster Linking, Replicator, MirrorMaker 2). Examples run with any Confluent Platform version (default is CP 8.x, KRaft only) or connector version, with Docker or Podman.
+
+Pages are Markdown files rendered with Docsify: append `.md` to a page path to get its raw source, e.g. https://kafka-docker-playground.io/how-to-use.md
+
+## Guides
+
+- [Introduction](https://kafka-docker-playground.io/introduction.md): features overview
+- [Content](https://kafka-docker-playground.io/content.md): list of all examples (connectors, environments, ccloud, ksqlDB, multi-DC...) with versions and CI status
+- [How to Use](https://kafka-docker-playground.io/how-to-use.md): prerequisites, running examples, specifying CP/connector versions, options (ksqlDB, Control Center, Grafana...)
+- [CLI](https://kafka-docker-playground.io/cli.md): setup of the `playground` CLI and command reference
+- [How it works](https://kafka-docker-playground.io/how-it-works.md): environments, docker compose overrides, CI
+- [Reproduction toolkit](https://kafka-docker-playground.io/reusables.md): building custom examples and reproduction models (`playground repro bootstrap`), sharing them as a self-contained bundle (`playground repro export` / `playground repro import`), producing and consuming data, debugging tools (remote debugging, TCP/heap/thread dumps, flight recorder), analyzing what you collected (`playground analyze`), network fault injection (`playground debug block-traffic`, `playground debug degrade-traffic` for latency / packet loss / corruption), HTTPS proxy, specific JDKs, performance testing
+- [Academy](https://kafka-docker-playground.io/academy.md): step by step exercises on real-world connector issues
+- [Tips & Tricks](https://kafka-docker-playground.io/tips-and-tricks.md): useful docker and playground commands
+- [Claude Code](https://kafka-docker-playground.io/claude-code.md): using the repository with Claude Code (`CLAUDE.md` project guide, skills, agent-friendly CLI commands, permissions)
+
+## CLI reference
+
+Each command has its own page named after the command, e.g. [playground run](https://kafka-docker-playground.io/playground%20run.md), [playground connector](https://kafka-docker-playground.io/playground%20connector.md), [playground topic](https://kafka-docker-playground.io/playground%20topic.md), [playground container](https://kafka-docker-playground.io/playground%20container.md), [playground debug](https://kafka-docker-playground.io/playground%20debug.md), [playground analyze](https://kafka-docker-playground.io/playground%20analyze.md), [playground doctor](https://kafka-docker-playground.io/playground%20doctor.md), [playground repro](https://kafka-docker-playground.io/playground%20repro.md), [playground schema](https://kafka-docker-playground.io/playground%20schema.md), [playground secrets](https://kafka-docker-playground.io/playground%20secrets.md), [playground ec2](https://kafka-docker-playground.io/playground%20ec2.md). The full list is in [index.md](https://kafka-docker-playground.io/index.md).
+
+## Optional
+
+- [Changelog](https://kafka-docker-playground.io/changelog.md): monthly changelog
+- [Legacy Java producers](https://kafka-docker-playground.io/legacy-java-producer.md): deprecated `--producer` option of `playground repro bootstrap`

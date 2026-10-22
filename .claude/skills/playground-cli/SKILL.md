@@ -31,9 +31,15 @@ regenerated **and** committed alongside the source edit.
 The CLI reference pages (`docs/cli.md`, `docs/playground <command>.md`,
 `docs/cli-pages.js`) are **not** tracked in this repository. `playground update-docs`
 writes them into `docs/`, and the nightly CI `post-build` job ("Update DOCS")
-generates and publishes them to the documentation site. A CLI change
-needs nothing for docs. If you ran `update-docs` locally, remove the untracked
-pages before committing (`git clean -n docs/` to check, then `git clean -f docs/`).
+generates and publishes them to the documentation site. `update-docs.yml` also
+publishes them on every push to `master` touching `bashly.yml`. A CLI change
+needs nothing for those pages. If you ran `update-docs` locally, the pages it wrote
+are ignored by `.gitignore`: never force-add them.
+
+The **hand-written** pages (`docs/how-to-use.md`, `docs/reusables.md`,
+`docs/tips-and-tricks.md`, `docs/claude-code.md`…) are tracked here: when a
+command or flag is new and worth mentioning, or renamed, update them in the same PR
+(`grep -n "<old name>" docs/*.md`).
 
 ## The loop
 

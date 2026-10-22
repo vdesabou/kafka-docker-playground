@@ -141,12 +141,6 @@ jobs:
           fi
 
       - name: Pushes docs
-        uses: dmnemec/copy_file_to_another_repo_action@main
         env:
           API_TOKEN_GITHUB: ${{ secrets.CI_GITHUB_TOKEN }}
-        with:
-          source_file: './docs'
-          destination_repo: 'vdesabou/kafka-docker-playground-docs'
-          user_email: 'vincent.desaboulin@gmail.com'
-          user_name: 'vdesabou'
-          commit_message: "updating with milestone ${{ steps.milestone.outputs.title }}${{ github.event.issue.number && format(' (closed #{0})', github.event.issue.number) || '' }}"
+        run: ./scripts/publish-docs.sh "updating with milestone ${{ steps.milestone.outputs.title }}${{ github.event.issue.number && format(' (closed #{0})', github.event.issue.number) || '' }}"

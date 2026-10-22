@@ -1,0 +1,170 @@
+.markdown-section iframe[src*="buttons.github.io"] {
+    margin: 0;
+}
+
+figure.thumbnails img {
+    margin: 0.75em 0;
+    border-radius: 3px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.15);
+}
+
+@media (min-width: 30em) {
+    figure.thumbnails:after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+
+    figure.thumbnails img {
+        float: left;
+        width: calc(50% - 0.75em);
+    }
+
+    figure.thumbnails img:nth-child(even) {
+        margin-left: 1.5em;
+    }
+
+    @supports (display: flex) {
+        figure.thumbnails {
+            display: flex;
+            align-items: center;
+        }
+
+        figure.thumbnails img {
+            flex-grow: 1;
+            width: 0;
+        }
+
+        figure.thumbnails img + img {
+            margin: 0 0 0 1.5em;
+        }
+    }
+}
+
+/* CLI reference pages: option and argument headings are rendered as code (`--tag TAG`), keep them heading-sized */
+.markdown-section h4 code {
+    font-size: 1.05em;
+    font-weight: 600;
+    padding: 0.2em 0.5em;
+}
+
+/* reports gallery (reports.md) */
+.report-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(22em, 1fr));
+    gap: 1.5em;
+    margin: 1.5em 0;
+}
+
+.report-card {
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.03);
+}
+
+.report-card > a > img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 14 / 9;
+    object-fit: cover;
+    object-position: top;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    transition: opacity 0.2s;
+}
+
+.report-card > a:hover > img {
+    opacity: 0.85;
+}
+
+.report-card .report-body {
+    padding: 0.8em 1em 1em;
+}
+
+.report-card h3 {
+    margin: 0 0 0.4em;
+    font-size: 1.1em;
+}
+
+.report-card p {
+    margin: 0 0 0.6em;
+    font-size: 0.9em;
+}
+
+.markdown-section .report-card code {
+    font-size: 0.8em;
+    white-space: normal !important; /* the theme sets nowrap on inline code */
+    overflow-wrap: anywhere;
+}
+
+/* "On this page" table of contents (plugin in index.html): only shown when the screen has room for it next to the content */
+.page-toc {
+    display: none;
+}
+
+@media (min-width: 80em) {
+    body.has-page-toc:not(.page-toc-hidden) .page-toc {
+        display: block;
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 15rem;
+        max-height: 100vh;
+        overflow-y: auto;
+        padding: 5rem 1rem 2rem 0; /* below the GitHub corner */
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+
+    body.has-page-toc .content {
+        padding-right: 15rem;
+    }
+}
+
+@media print {
+    body.has-page-toc .page-toc {
+        display: none;
+    }
+}
+
+.page-toc-title {
+    margin: 0 0 0.6em;
+    padding-left: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.6;
+}
+
+.page-toc a {
+    display: block;
+    padding: 0.25em 0 0.25em 0.8rem;
+    border-left: 2px solid rgba(255,255,255,0.12);
+    color: var(--sidebar-nav-link-color);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+.page-toc a:hover,
+.page-toc a.active {
+    color: var(--theme-color);
+}
+
+.page-toc a.active {
+    border-left-color: var(--theme-color);
+}
+
+.page-toc a.page-toc-h3 {
+    padding-left: 1.6rem;
+}
+
+.page-toc a.page-toc-h4 {
+    padding-left: 2.4rem;
+}
+
+.page-toc code {
+    padding: 0;
+    background: none;
+    font-size: 0.95em;
+    white-space: normal;
+}

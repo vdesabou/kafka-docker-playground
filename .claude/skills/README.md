@@ -13,4 +13,4 @@ and `.claude/settings.json` are picked up.
 | [`kdp-xstream-report`](kdp-xstream-report/SKILL.md) | analyze Oracle XStream CDC diagnostics reports | `/kdp-xstream-report orclcdc_diag_20261013_0912.html` |
 
 Full documentation: <https://kafka-docker-playground.io/#/claude-code>. When you add a skill here, add it to this table
-and to `docs/claude-code.md` in [kafka-docker-playground-docs](https://github.com/vdesabou/kafka-docker-playground-docs).
+and to [`docs/claude-code.md`](../../docs/claude-code.md).
