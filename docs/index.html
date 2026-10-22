@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>kafka-docker-playground</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, shrink-to-fit=no, viewport-fit=cover">
+    <meta name="description" content="Fully automated Docker based examples for Kafka and Confluent">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="kafka-docker-playground">
+    <meta property="og:description" content="Fully automated Apache Kafka® and Confluent® Docker based examples. Easily build examples or reproduction models.">
+    <meta property="og:url" content="https://kafka-docker-playground.io/">
+    <meta property="og:image" content="https://kafka-docker-playground.io/assets/favicon/favicon-310.png">
+    <meta name="twitter:card" content="summary">
+
+    <!-- Stylesheets -->
+    <!-- Theme: Simple Dark -->
+    <!-- CDN dependencies are pinned to exact versions with an integrity hash: to upgrade, change the version and
+         recompute the hash (curl -s URL | openssl dgst -sha384 -binary | openssl base64 -A) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable@0.9.0/dist/css/theme-simple-dark.css" integrity="sha384-G+RAlt+LEfAH/nY+DZh3+XIhRboypMI32hiJ9BwnmjF41May5BWQKyrDrEkNdV/i" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="assets/css/main.css">
+
+    <!-- ****** faviconit.com favicons ****** -->
+    <link rel="shortcut icon" href="/assets/favicon/favicon.ico">
+    <link rel="icon" sizes="16x16 32x32 64x64" href="/assets/favicon/favicon.ico">
+    <link rel="icon" type="image/png" sizes="196x196" href="/assets/favicon/favicon-192.png">
+    <link rel="icon" type="image/png" sizes="160x160" href="/assets/favicon/favicon-160.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/assets/favicon/favicon-96.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="/assets/favicon/favicon-64.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16.png">
+    <link rel="apple-touch-icon" href="/assets/favicon/favicon-57.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/assets/favicon/favicon-114.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/assets/favicon/favicon-72.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/assets/favicon/favicon-144.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/assets/favicon/favicon-60.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/assets/favicon/favicon-120.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/assets/favicon/favicon-76.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/assets/favicon/favicon-152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/favicon-180.png">
+    <meta name="msapplication-TileColor" content="#FFFFFF">
+    <meta name="msapplication-TileImage" content="/assets/favicon/favicon-144.png">
+    <meta name="msapplication-config" content="/assets/favicon/browserconfig.xml">
+    <!-- ****** faviconit.com favicons ****** -->
+
+</head>
+<body>
+  <div id="app"></div>
+  <script src="cli-pages.js"></script>
+  <script>
+    window.$docsify = {
+      name: 'kafka-docker-playground',
+      repo: 'vdesabou/kafka-docker-playground',
+      coverpage: true,
+      themeColor: "#d7eff6",
+      homepage   : 'introduction.md',
+      loadSidebar: 'sidebar.md',
+      notFoundPage: '_404.md',
+
+      // NAVIGATION
+      // -----------------------------------------------------------------
+      auto2top   : true,
+      maxLevel   : 3,
+      // h4 sub-sections are in the "On this page" table of contents (plugin below), which keeps the sidebar short
+      subMaxLevel: 3,
+
+      // PLUGINS
+      // -----------------------------------------------------------------
+      search: {
+          // 'auto' only indexes pages linked from the sidebar: also index the CLI reference pages (cli-pages.js)
+          // keep in sync with sidebar.md
+          paths      : ['/introduction', '/content', '/how-to-use', '/cli', '/reports', '/sessions', '/how-it-works', '/reusables',
+                        '/academy', '/tips-and-tricks', '/claude-code', '/legacy-java-producer', '/changelog'].concat(window.KDP_CLI_PAGES || []),
+          namespace  : 'kdp',
+          // the index is cached in localStorage: rebuild it hourly, as CI updates the generated pages several times a day (default: 1 day)
+          maxAge     : 3600000,
+          depth      : 3,
+          noData     : 'No results!',
+          placeholder: 'Search...'
+      },
+      'flexible-alerts': {
+        style: 'callout'
+      },
+      // docsify-copy-code (defaults)
+      copyCode: {
+        buttonText : 'Copy to clipboard',
+        errorText  : 'Error',
+        successText: 'Copied'
+      },
+      tabs: {
+        persist    : true,      // default
+        sync       : true,      // default
+        theme      : 'classic', // default
+        tabComments: true,      // default
+        tabHeadings: true       // default
+      },
+      plugins: [
+        // "Edit on github" link to the source of the page in docs/ of https://github.com/vdesabou/kafka-docker-playground,
+        // except on generated pages (CLI reference, content, introduction, changelog), which have no source file there
+        function (hook, vm) {
+          var generated = /^(playground .*|index|cli|content|introduction|badges|changelog)\.md$/;
+          hook.afterEach(function (html) {
+            var file = vm.route.file && decodeURIComponent(vm.route.file);
+            if (!file || generated.test(file)) {
+              return html;
+            }
+            var url = 'https://github.com/vdesabou/kafka-docker-playground/edit/master/docs/' + encodeURI(file);
+            return '<div style="overflow: auto"><p style="float: right"><a style="text-decoration: underline" target="_blank" rel="noopener" href="' + url + '">Edit on github</a></p></div>' + html;
+          });
+        },
+        // Links to a section (?id=...): docsify scrolls once, right after rendering, but the images and videos above
+        // the section load afterwards and push it down (2455px for the benchmark section of reusables). Keep the
+        // section at the top while the page grows, until the reader scrolls or 10s have passed.
+        function (hook, vm) {
+          var stopPrevious = function () {};
+          hook.doneEach(function () {
+            // docsify reuses .markdown-section: stop the alignment started for the previous page
+            stopPrevious();
+            var id = vm.route.query.id;
+            var content = document.querySelector('.markdown-section');
+            if (!id || !content || !window.ResizeObserver) {
+              return;
+            }
+            var stopped = false, timer = null, observer = null;
+            var userEvents = ['wheel', 'touchstart', 'keydown', 'mousedown'];
+            function stop() {
+              stopped = true;
+              observer && observer.disconnect();
+              userEvents.forEach(function (e) { window.removeEventListener(e, stop); });
+            }
+            function align() {
+              // getElementById: the ids contain emojis, no CSS escaping needed
+              var target = document.getElementById(id);
+              if (!stopped && target) {
+                window.scrollTo(0, Math.round(target.getBoundingClientRect().top + window.pageYOffset - (vm.config.topMargin || 0)));
+              }
+            }
+            stopPrevious = stop;
+            userEvents.forEach(function (e) { window.addEventListener(e, stop, { passive: true }); });
+            // after the 500ms scroll animation of docsify, whose end position is computed when it starts
+            setTimeout(function () {
+              if (stopped) {
+                return;
+              }
+              align();
+              observer = new ResizeObserver(function () {
+                clearTimeout(timer);
+                timer = setTimeout(align, 100);
+              });
+              observer.observe(content);
+            }, 600);
+            setTimeout(stop, 10000);
+          });
+        },
+        // Videos: the introduction alone embeds 8 looping clips (autoplay loop muted), which the browser would all
+        // download as soon as the page opens. Load only their metadata (size and first frame, so the layout doesn't move)
+        // and play each clip while it is on screen. A clip paused by the reader stays paused; with "reduce motion"
+        // enabled in the OS, nothing plays by itself.
+        function (hook) {
+          var observer = null;
+          var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          hook.afterEach(function (html) {
+            // before the HTML is inserted: once in the DOM, an autoplay video starts downloading
+            return html.replace(/<video\b([^>]*)>/g, function (tag, attrs) {
+              if (!/\spreload=/.test(attrs)) {
+                attrs += ' preload="metadata"';
+              }
+              return '<video' + attrs.replace(/\sautoplay\b/, ' data-autoplay') + '>';
+            });
+          });
+          hook.doneEach(function () {
+            observer && observer.disconnect();
+            if (reduceMotion || !window.IntersectionObserver) {
+              return;
+            }
+            observer = new IntersectionObserver(function (entries) {
+              entries.forEach(function (entry) {
+                var video = entry.target;
+                if (entry.isIntersecting) {
+                  if (!video.kdpPausedByReader) {
+                    video.play().catch(function () {});
+                  }
+                } else if (!video.paused) {
+                  video.kdpPausedByObserver = true;
+                  video.pause();
+                }
+              });
+            }, { threshold: 0.25 });
+            document.querySelectorAll('.markdown-section video[data-autoplay]').forEach(function (video) {
+              video.addEventListener('pause', function () {
+                video.kdpPausedByReader = !video.kdpPausedByObserver;
+                video.kdpPausedByObserver = false;
+              });
+              video.addEventListener('play', function () {
+                video.kdpPausedByReader = false;
+              });
+              observer.observe(video);
+            });
+          });
+        },
+        // "On this page" table of contents on the right of long pages (6 headings or more), when the screen is wide
+        // enough (see main.css). The sidebar lists the sections down to h3 (subMaxLevel), this one also lists the h4
+        // sub-sections (academy, reusables, CLI options) and highlights the one being read.
+        function (hook) {
+          var MIN_HEADINGS = 6;
+          var toc = document.createElement('nav');
+          var entries = [];
+          var scheduled = false;
+          toc.className = 'page-toc';
+          toc.setAttribute('aria-label', 'On this page');
+
+          function update() {
+            scheduled = false;
+            // hidden while the cover page is on screen (homepage)
+            var cover = document.querySelector('section.cover.show');
+            document.body.classList.toggle('page-toc-hidden', !!cover && cover.getBoundingClientRect().bottom > 0);
+            var current = null;
+            for (var i = 0; i < entries.length && entries[i].heading.getBoundingClientRect().top <= 120; i++) {
+              current = entries[i];
+            }
+            entries.forEach(function (entry) {
+              entry.link.classList.toggle('active', entry === current);
+            });
+            // keep the active entry visible when the table of contents is taller than the screen, without scrolling the page
+            if (current) {
+              var top = current.link.offsetTop;
+              if (top < toc.scrollTop || top + current.link.offsetHeight > toc.scrollTop + toc.clientHeight) {
+                toc.scrollTop = top - toc.clientHeight / 3;
+              }
+            }
+          }
+          window.addEventListener('scroll', function () {
+            if (!scheduled) {
+              scheduled = true;
+              window.requestAnimationFrame(update);
+            }
+          }, { passive: true });
+
+          hook.doneEach(function () {
+            // headings inside tabs are skipped: they are hidden unless their tab is selected
+            var headings = Array.prototype.filter.call(
+              document.querySelectorAll('.markdown-section h2, .markdown-section h3, .markdown-section h4'),
+              function (h) { return h.id && !h.closest('.docsify-tabs'); }
+            );
+            entries = [];
+            toc.innerHTML = '<p class="page-toc-title">On this page</p>';
+            document.body.classList.toggle('has-page-toc', headings.length >= MIN_HEADINGS);
+            if (headings.length < MIN_HEADINGS) {
+              return;
+            }
+            headings.forEach(function (h) {
+              var anchor = h.querySelector('a.anchor');
+              var link = document.createElement('a');
+              link.href = anchor ? anchor.getAttribute('href') : '#';
+              // the heading's rendered HTML, so that CLI options keep their code style
+              link.innerHTML = anchor ? anchor.innerHTML : h.innerHTML;
+              link.className = 'page-toc-' + h.tagName.toLowerCase();
+              toc.appendChild(link);
+              entries.push({ heading: h, link: link });
+            });
+            if (!toc.parentNode) {
+              document.body.appendChild(toc);
+            }
+            toc.scrollTop = 0;
+            update();
+          });
+        }
+      ]
+    }
+  </script>
+  <!-- pinned with integrity hashes, see the comment above the theme stylesheet -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/docsify.min.js" integrity="sha384-KaHhgnx/OTLoJ4J33SSJsF4x1pk4I7q3s5ZOfIDHJYl6IG7Oyn2vNDsHiWJe46fD" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-themeable@0.9.0/dist/js/docsify-themeable.min.js" integrity="sha384-ibjVZCUwWPrRrNc9BNkbbJvtYmTh8GYDNQgj+2jQVNDudOFgSQWs+Es6JhdoTIvf" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-tabs@1.6.3/dist/docsify-tabs.min.js" integrity="sha384-QA3IVKzXq6xcKR8yQJHgDbI1FcJiQ137Cuetl1VWzUxJ6BQ7ew0MMq5fg2HbFK1o" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-pagination@2.10.1/dist/docsify-pagination.min.js" integrity="sha384-uFEp18/1vv2dYlO64J2lOcnbhirAQZPtruqAZZ7PZYoXenm5c+tIs3AqSMjVMRe8" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-pagination-keyboard-helper@1.0.5/dist/bundle.js" integrity="sha384-ZxsdRXvOL5Q4c+9sTkk0RWaRJQvsdEm6O9ENFBSKfl1XNUMX7C3yhfnpBQgB2+qI" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/plugins/search.min.js" integrity="sha384-LthJPBJ4RGco78kBY+EmKz5rmISZ5vrtAu3+l2ALQ2mrZHOe6Wyf6knyKjeC4cL6" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/plugins/zoom-image.min.js" integrity="sha384-fYBaBAsdPMjWt1AuA+txMoztHnl+zLgObSvwddIabbfUp+36gf/vNOKx88f37zix" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code@2.1.1/dist/docsify-copy-code.min.js" integrity="sha384-t4d9b4/0dEBkoJ5e77XEPBrqJ790jbFQFmEaTbBqIlTDeGosM1AbZvC1NQwqTg+5" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-bash.min.js" integrity="sha384-9WmlN8ABpoFSSHvBGGjhvB3E/D8UkNB9HpLJjBQFC2VSQsM1odiQDv4NbEo+7l15" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-java.min.js" integrity="sha384-DioAMZB4yk91W6LuFit5wJDh8c5Ov09f/MBvja94y0PodMqTpTZeBeejqpRUru7D" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-json.min.js" integrity="sha384-RhrmFFMb0ZCHImjFMpR/UE3VEtIVTCtNrtKQqXCzqXZNJala02N3UbVhi+qzw3CY" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-yaml.min.js" integrity="sha384-AKAiycghK0jDCjD+aavMHzDkLzRR7Yzcwh3+xL/295cvyVMe+cxQfyQC8xxGGcI8" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-docker.min.js" integrity="sha384-44ggPevoK6FC5kDMdbbWoMCAFkSCwaRoXXtKMkslR2lf8Ra3OSzCRrFIyeK+TQBi" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-properties.min.js" integrity="sha384-ERMA59XzNH+8QpVm1k3y1MH9gF5oU+zhioXiqJ9+PojFBbV0STwWy8H4x7e6Zexh" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-toml.min.js" integrity="sha384-Uh6n44GRSQeQSMIIfAjlbqojWR7F5KALTHNsspuLDrNCsXpDPRdZbJ5A42AP/cA4" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-ini.min.js" integrity="sha384-IzgZExoq7muPnVEjP/MVubbALJ4d+D++YULBQxvKKWLSoXut91gFAg36n+5WAFf6" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-protobuf.min.js" integrity="sha384-hizJtPv4Op9tYWsW5ubRJdG8ErQ7VJL/FrbypqxdsxIjdyw6QeS9QAuew7NX2k8u" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-nginx.min.js" integrity="sha384-OdjJsWuHX1UDLZwLom2vRDx/z4CJ3LJK1i9jqIT3OGyJ2y3n7bZ9XDW9jAjRu/W5" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-log.min.js" integrity="sha384-JzXaMmXoVH6MvXBXAok2yQwiR973aUkG3KUviEhYliOdY1Cmru7APkZNClZzorcN" crossorigin="anonymous"></script>
+  <!-- https://github.com/fzankl/docsify-plugin-flexible-alerts -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify-plugin-flexible-alerts@1.3.0/dist/docsify-plugin-flexible-alerts.min.js" integrity="sha384-62mB0esH4v+xjk8v2AlYluN29nnWLddo1FVuCmZJQJE3ULtg6NbWOPGyX4TWutgu" crossorigin="anonymous"></script>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PGJ49EJWVC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-PGJ49EJWVC');
+  </script>
+
+</body>
+</html>

@@ -66,6 +66,7 @@ Report each failed check with `file:line`, the rule, and the fix. Skip checks th
 | output meant for parsing (`--json`, a path) has no `log` lines on stdout | read |
 | works with BSD and GNU tools (`sed -i ''`, `\t` in sed, `date -v`) | grep |
 | helpers placed right: `cli_function.sh` (CLI only) vs `utils_function.sh` (also examples), not `scripts/utils.sh` | read |
+| a renamed or removed command / flag is also renamed in the hand-written website pages | `grep -n "<old name>" docs/*.md` |
 
 ### Never committed
 

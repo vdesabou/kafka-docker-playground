@@ -55,7 +55,7 @@ then
 fi
 
 content_file="$tmp_dir/content.md"
-curl -s -o $content_file  https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-docs/main/docs/content.md
+curl -s -o $content_file  https://kafka-docker-playground.io/content.md
 
 result_ok=""
 result_fail=""
