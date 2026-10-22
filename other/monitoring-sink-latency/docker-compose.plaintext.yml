@@ -127,7 +127,8 @@ services:
       SPRING_PROFILES_ACTIVE: 'basic-auth'
 
   s3:
-    image: localstack/localstack:latest
+    # localstack:latest (2026.x) exits without LOCALSTACK_AUTH_TOKEN, 4.9 still runs without it
+    image: localstack/localstack:4.9
     hostname: s3
     container_name: s3
     ports:
