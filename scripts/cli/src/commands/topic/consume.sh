@@ -11,6 +11,21 @@ value_subject="${args[--value-subject]}"
 max_characters="${args[--max-characters]}"
 open="${args[--open]}"
 isolation_level="${args[--isolation-level]}"
+last="${args[--last]}"
+from_timestamp="${args[--from-timestamp]}"
+partition="${args[--partition]}"
+offset="${args[--offset]}"
+json="${args[--json]}"
+count="${args[--count]}"
+no_decode="${args[--no-decode]}"
+print_schema="${args[--print-schema]}"
+
+if [[ -n "$json" ]] || [[ -n "$count" ]]
+then
+  # stdout only gets the records, one json object per line, or the counts: everything else (logs, schemas,
+  # errors) goes to stderr
+  exec 4>&1 1>&2
+fi
 
 # Optimized helpers (reduce repeated external calls and parsing) with caching
 declare -A SUBJECT_CACHE
@@ -223,11 +238,14 @@ else
 fi
 
 # formats the records printed by the console consumer, in a single process (a bash loop forked date and awk for
-# each record): readable timestamps, labels, base64 decoding, --grep, truncation, latency csv.
+# each record): readable timestamps, labels, base64 decoding, --grep, truncation, latency csv, --json.
+# With $sort_keep (first or last), the records are sorted by timestamp and only the first or last $display_limit
+# are displayed (--from-timestamp, --last: one consumer per partition).
 # Counts are written to $tmp_dir/consume_counts: records consumed, records matching --grep, records displayed
 function format_records() {
   HAS_KEY_SCHEMA_ID="$has_key_schema_id" HAS_VALUE_SCHEMA_ID="$has_value_schema_id" MAX_CHARACTERS="$max_characters" \
   DISPLAY_LIMIT="$display_limit" GREP_STRING="$grep_string" TIMESTAMP_FIELD="$timestamp_field" LATENCY_CSV="$latency_csv" \
+  NO_DECODE="$no_decode" OUTPUT_JSON="$json" SORT_KEEP="$sort_keep" TOPIC="$topic" \
   COUNT_FILE="$tmp_dir/consume_counts" PG_LOG_LEVEL="$PG_LOG_LEVEL" perl -MPOSIX=strftime -MMIME::Base64=decode_base64 -MJSON::PP -e '
     use strict;
     use warnings;
@@ -239,8 +257,13 @@ function format_records() {
     my $display_limit = $ENV{DISPLAY_LIMIT};
     my $grep_string = $ENV{GREP_STRING} // "";
     my $timestamp_field = $ENV{TIMESTAMP_FIELD} // "";
+    my $output_json = ($ENV{OUTPUT_JSON} // "") ne "";
+    my $sort_keep = $ENV{SORT_KEEP} // "";
     my ($nb_records, $nb_matched, $nb_displayed) = (0, 0, 0);
-    my $decode;
+    my $decode = ($ENV{NO_DECODE} // "") ne "" ? 0 : undef;
+    my $json_encoder = JSON::PP->new->canonical;
+    my $json_decoder = JSON::PP->new->allow_nonref;
+    my @sorted_records;
     my $latency_fh;
     if ($timestamp_field ne "") {
       open($latency_fh, ">>", $ENV{LATENCY_CSV}) or die "cannot write $ENV{LATENCY_CSV}: $!";
@@ -265,7 +288,7 @@ function format_records() {
 
     sub display {
       my ($line, $payload_length) = @_;
-      if ($max_characters > 0 && $payload_length >= $max_characters) {
+      if (!$output_json && $max_characters > 0 && $payload_length >= $max_characters) {
         $line = substr($line, 0, $max_characters) . "...<truncated, only showing first $max_characters characters, out of " . length($line) . ">...";
       }
       print "$line\n";
@@ -285,6 +308,7 @@ function format_records() {
         # anything else on stdout, for example the next lines of a value containing new lines
         next if $grep_string ne "" && index($line, $grep_string) < 0;
         next if $timestamp_field ne "";
+        if ($output_json) { print STDERR "$line\n"; next; }
         display($line, length($line));
         next;
       }
@@ -339,8 +363,48 @@ function format_records() {
         next;
       }
 
+      if ($output_json) {
+        # key and value are embedded as json when they are valid json, as strings otherwise
+        my %headers_map;
+        if ($headers ne "NO_HEADERS") {
+          for my $header (split /,/, $headers) {
+            my ($name, $header_value) = split /:/, $header, 2;
+            $headers_map{$name} = $header_value;
+          }
+        }
+        my %record = (
+          topic => $ENV{TOPIC},
+          partition => ($fields[1] =~ /(\d+)/)[0] + 0,
+          offset => ($fields[2] =~ /(\d+)/)[0] + 0,
+          timestamp_type => ($fields[0] =~ /^(\w+)/)[0],
+          timestamp => defined $timestamp_ms ? $timestamp_ms + 0 : undef,
+          date => $readable_date,
+          headers => \%headers_map,
+          key => ($key eq "null" ? undef : (eval { $json_decoder->decode($key) } // $key)),
+          value => ($value eq "null" ? undef : (eval { $json_decoder->decode($value) } // $value)),
+        );
+        $record{key_schema_id} = $key_schema_id + 0 if defined $key_schema_id && $key_schema_id =~ /^\d+$/;
+        $record{value_schema_id} = $value_schema_id + 0 if defined $value_schema_id && $value_schema_id =~ /^\d+$/;
+        $output = $json_encoder->encode(\%record);
+      }
+
+      if ($sort_keep ne "") {
+        push @sorted_records, [$timestamp_ms // 0, ($fields[1] =~ /(\d+)/)[0], ($fields[2] =~ /(\d+)/)[0], $output, length($value)];
+        next;
+      }
+
       if ($display_limit < 0 || $nb_displayed < $display_limit) {
         display($output, length($value));
+        $nb_displayed++;
+      }
+    }
+    if ($sort_keep ne "") {
+      my @records = sort { $a->[0] <=> $b->[0] || $a->[1] <=> $b->[1] || $a->[2] <=> $b->[2] } @sorted_records;
+      if ($display_limit >= 0 && @records > $display_limit) {
+        @records = $sort_keep eq "last" ? @records[-$display_limit .. -1] : @records[0 .. $display_limit - 1];
+      }
+      for my $record (@records) {
+        display($record->[3], $record->[4]);
         $nb_displayed++;
       }
     }
@@ -384,6 +448,30 @@ function filter_consumer_stderr() {
       print STDERR $line;
     }
     save_errors();'
+}
+
+# runs the console consumer once per element of consumer_runs (its positioning options), returns the last exit
+# code that is not 0
+function run_consumers() {
+  local exit_code=0
+  local consumer_run
+  local run_args
+  for consumer_run in "${consumer_runs[@]}"
+  do
+    read -r -a run_args <<< "$consumer_run"
+    "${consumer_cmd[@]}" "${run_args[@]}" || exit_code=$?
+  done
+  return $exit_code
+}
+
+# --count: the number alone when one topic is consumed, "<topic> <number>" for all topics
+function print_count() {
+  if [ ${#items[@]} -eq 1 ]
+  then
+    echo "$1" >&4
+  else
+    echo "$topic $1" >&4
+  fi
 }
 
 # arguments of the consumer command, with the secrets masked, as a command line to paste
@@ -448,6 +536,69 @@ then
         exit 1
     fi
 fi
+
+if [[ -n "$last" ]] && [ "$last" -le 0 ]
+then
+  logerror "❌ --last must be greater than 0"
+  exit 1
+fi
+
+from_timestamp_ms=""
+if [[ -n "$from_timestamp" ]]
+then
+  # epoch in ms or seconds, a date (local time, or UTC with a trailing Z), or a duration ago (30s, 10m, 2h, 1d)
+  # helpers of the cli can leave set -e on: test the parsing in the if
+  if ! from_timestamp_ms=$(perl -MTime::Local=timelocal,timegm -e '
+    my $value = shift;
+    my $now_ms = int(time * 1000);
+    if ($value =~ /^\d{12,}$/) { print $value; exit 0; }
+    if ($value =~ /^\d{9,11}$/) { print $value * 1000; exit 0; }
+    if ($value =~ /^-?(\d+)\s*(s|m|h|d)$/) { my %unit = (s => 1, m => 60, h => 3600, d => 86400); print $now_ms - $1 * $unit{$2} * 1000; exit 0; }
+    if ($value =~ /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?)?\s*(Z)?$/) {
+      my @time = ($6 // 0, $5 // 0, $4 // 0, $3, $2 - 1, $1);
+      my $seconds = defined $8 ? timegm(@time) : timelocal(@time);
+      print $seconds * 1000 + (defined $7 ? substr($7 . "00", 0, 3) : 0);
+      exit 0;
+    }
+    exit 1;' "$from_timestamp") || [ "$from_timestamp_ms" == "" ]
+  then
+    logerror "❌ --from-timestamp $from_timestamp is not valid: use an epoch (ms or s), a date like \"2026-10-22 10:30:00\" (local time, add Z for UTC), or a duration ago like 10m, 2h, 1d"
+    exit 1
+  fi
+  log "⏱️ --from-timestamp $from_timestamp: records from $(perl -MPOSIX=strftime -e 'print strftime("%Y-%m-%d %H:%M:%S", localtime(int($ARGV[0] / 1000)))' "$from_timestamp_ms") ($from_timestamp_ms)"
+fi
+
+if [[ -n "$offset" ]] && [[ ! "$offset" =~ ^([0-9]+|earliest|latest)$ ]]
+then
+  logerror "❌ --offset must be a number, earliest or latest"
+  exit 1
+fi
+
+if [[ -n "$last" ]] || [[ -n "$from_timestamp" ]] || [[ -n "$partition" && ! -n "$tail" ]]
+then
+  if ! version_gt "$CP_CONNECT_TAG" "6.9.9"
+  then
+    logerror "❌ --last, --from-timestamp and --partition require CP 7.0 or later (it is $CP_CONNECT_TAG)"
+    exit 1
+  fi
+  get_offsets_class="kafka.tools.GetOffsetShell"
+  if version_gt "$CP_CONNECT_TAG" "7.6.9"
+  then
+    get_offsets_class="org.apache.kafka.tools.GetOffsetShell"
+  fi
+fi
+
+# "partition offset" lines of the partitions of $topic, for --time $1: -2 earliest, -1 latest, or a timestamp in ms
+# (a partition without any record from that timestamp is not listed). In a subshell: run_kafka_admin_tool sets
+# $security, $container and $bootstrap_server for the admin tools
+function get_partition_offsets() {
+  local partition_args=()
+  if [[ -n "$partition" ]]
+  then
+    partition_args=(--partitions "$partition")
+  fi
+  (verbose=""; run_kafka_admin_tool kafka-run-class $get_offsets_class --topic "$topic" --time "$1" "${partition_args[@]}" 2>/dev/null) | grep -E ':[0-9]+:-?[0-9]+$' | awk -F: '{print $(NF-1), $NF}' | sort -n
+}
 
 if [[ -n "$timestamp_field" ]]
 then
@@ -558,6 +709,9 @@ do
   if [ -n "$tail" ]
   then
     log "✨ Tailing content of topic $topic"
+  elif [[ -n "$last" ]] || [[ -n "$from_timestamp" ]] || [[ -n "$count" ]]
+  then
+    log "✨ topic $topic contains $nb_messages messages"
   elif [[ -n "$max_messages" ]] && [ $max_messages -eq -1 ] && [[ ! -n "$timestamp_field" ]]
   then
     log "✨ --max-messages is set to -1, display full content of topic $topic, it contains $nb_messages messages"
@@ -592,7 +746,10 @@ do
   if [ "$key_type" != "" ]
   then
     log "🔮🔰 topic is using $key_type for key"
-    playground schema get --subject ${key_subject}
+    if [[ -n "$print_schema" ]]
+    then
+      playground schema get --subject ${key_subject}
+    fi
   else
     log "🔮🙅 topic is not using any schema for key"
   fi
@@ -610,7 +767,10 @@ do
   if [ "$value_type" != "" ]
   then
     log "🔮🔰 topic is using $value_type for value"
-    playground schema get --subject ${value_subject}
+    if [[ -n "$print_schema" ]]
+    then
+      playground schema get --subject ${value_subject}
+    fi
   else
     log "🔮🙅 topic is not using any schema for value"
   fi
@@ -628,11 +788,29 @@ do
     ;;
   esac
 
-  # number of records to read, and to display
+  # number of records to read and to display, and the positioning options of each console consumer to run:
+  # one consumer per partition with --last and --from-timestamp, the records are then sorted by timestamp
   display_limit=-1
-  if [ ! -n "$tail" ]
+  sort_keep=""
+  consumer_runs=()
+  if [ -n "$tail" ]
   then
-    if [[ -n "$timestamp_field" ]] || [ $max_messages -eq -1 ]
+    if [[ -n "$partition" ]]
+    then
+      consumer_runs=("--partition $partition")
+    else
+      consumer_runs=("")
+    fi
+  else
+    if [[ -n "$count" ]]
+    then
+      display_limit=0
+      nb_records_to_consume=$nb_messages
+    elif [[ -n "$last" ]]
+    then
+      display_limit=$last
+      nb_records_to_consume=$last
+    elif [[ -n "$timestamp_field" ]] || [ $max_messages -eq -1 ]
     then
       nb_records_to_consume=$nb_messages
     else
@@ -648,13 +826,106 @@ do
       nb_records_to_consume=$nb_messages
     fi
 
+    if [[ -n "$last" ]] || [[ -n "$from_timestamp" ]]
+    then
+      earliest_offsets=$(get_partition_offsets -2)
+      latest_offsets=$(get_partition_offsets -1)
+      if [[ -n "$from_timestamp" ]]
+      then
+        start_offsets=$(get_partition_offsets "$from_timestamp_ms")
+        sort_keep="first"
+        log "⏱️ Display records of topic $topic from $from_timestamp${partition:+, partition $partition}"
+      else
+        sort_keep="last"
+        log "⏮️ Display the last $last records of topic $topic${partition:+, partition $partition}"
+      fi
+      nb_records_per_partition_max=$nb_records_to_consume
+      nb_records_to_consume=0
+      while read -r partition_number latest_offset
+      do
+        [ -z "$partition_number" ] && continue
+        earliest_offset=$(echo "$earliest_offsets" | awk -v p="$partition_number" '$1 == p {print $2}')
+        earliest_offset=${earliest_offset:-0}
+        if [[ -n "$last" ]]
+        then
+          start_offset=$((latest_offset - last))
+        else
+          # no record from that timestamp in the partition: nothing to read
+          start_offset=$(echo "$start_offsets" | awk -v p="$partition_number" '$1 == p {print $2}')
+          start_offset=${start_offset:-$latest_offset}
+        fi
+        if [ $start_offset -lt $earliest_offset ]
+        then
+          start_offset=$earliest_offset
+        fi
+        nb_records_in_partition=$((latest_offset - start_offset))
+        if [ $nb_records_in_partition -gt $nb_records_per_partition_max ]
+        then
+          nb_records_in_partition=$nb_records_per_partition_max
+        fi
+        if [ $nb_records_in_partition -le 0 ]
+        then
+          continue
+        fi
+        consumer_runs+=("--partition $partition_number --offset $start_offset --max-messages $nb_records_in_partition --timeout-ms $idle_timeout_ms")
+        nb_records_to_consume=$((nb_records_to_consume + nb_records_in_partition))
+      done <<< "$latest_offsets"
+    elif [[ -n "$partition" ]]
+    then
+      log "🧭 Display records of topic $topic, partition $partition, from offset ${offset:-earliest}"
+      # records left in the partition from that offset, so that the consumer does not wait for the idle timeout
+      latest_offset=$(get_partition_offsets -1 | awk '{print $2}')
+      case "${offset:-earliest}" in
+        earliest)
+          start_offset=$(get_partition_offsets -2 | awk '{print $2}')
+        ;;
+        latest)
+          start_offset=$latest_offset
+        ;;
+        *)
+          start_offset=$offset
+        ;;
+      esac
+      if [[ ! "$latest_offset" =~ ^[0-9]+$ ]]
+      then
+        logerror "❌ partition $partition of topic $topic does not exist"
+        exit 1
+      fi
+      nb_records_in_partition=$((latest_offset - ${start_offset:-0}))
+      if [ $nb_records_in_partition -lt $nb_records_to_consume ]
+      then
+        nb_records_to_consume=$nb_records_in_partition
+      fi
+      if [ $nb_records_to_consume -lt 0 ]
+      then
+        nb_records_to_consume=0
+      fi
+      consumer_runs=("--partition $partition --offset ${offset:-earliest} --max-messages $nb_records_to_consume --timeout-ms $idle_timeout_ms")
+    else
+      consumer_runs=("--from-beginning --max-messages $nb_records_to_consume --timeout-ms $idle_timeout_ms")
+    fi
+
     if [ $nb_records_to_consume -eq 0 ]
     then
-      log "✨ topic $topic is empty"
+      if [[ -n "$last" ]] || [[ -n "$from_timestamp" ]]
+      then
+        log "✨ no record to display in topic $topic"
+      else
+        log "✨ topic $topic is empty"
+      fi
       if [[ -n "$grep_string" ]]
       then
         logerror "❌ could not find $grep_string in topic $topic"
         exit 1
+      fi
+      if [[ -n "$min_expected_messages" ]] && [ "$min_expected_messages" != "0" ]
+      then
+        logerror "❌ --min-expected-messages is set with $min_expected_messages but no record could be consumed from topic $topic"
+        exit 1
+      fi
+      if [[ -n "$count" ]]
+      then
+        print_count 0
       fi
       continue
     fi
@@ -702,25 +973,36 @@ do
     fi
   fi
   consumer_cmd+=(--isolation-level "$isolation_level")
-  if [ ! -n "$tail" ]
-  then
-    consumer_cmd+=(--from-beginning --max-messages "$nb_records_to_consume" --timeout-ms "$idle_timeout_ms")
-  fi
 
   if [[ -n "$verbose" ]]
   then
     log "🐞 CLI command used to consume data"
-    printable_command "${consumer_cmd[@]}"
-    echo
+    for consumer_run in "${consumer_runs[@]}"
+    do
+      read -r -a run_args <<< "$consumer_run"
+      printable_command "${consumer_cmd[@]}" "${run_args[@]}"
+      echo
+    done
   fi
 
   rm -f "$tmp_dir/consume_counts" "$tmp_dir/consume_errors" "$tmp_dir/consumer_exit_code"
   # stdout of the consumer to format_records, its stderr to filter_consumer_stderr
-  { { "${consumer_cmd[@]}" 2>&1 1>&3 3>&-; echo $? > "$tmp_dir/consumer_exit_code"; } | filter_consumer_stderr >&2 3>&-; } 3>&1 | format_records
+  if [[ -n "$json" ]]
+  then
+    { { run_consumers 2>&1 1>&3 3>&-; echo $? > "$tmp_dir/consumer_exit_code"; } | filter_consumer_stderr >&2 3>&-; } 3>&1 | format_records >&4
+  else
+    { { run_consumers 2>&1 1>&3 3>&-; echo $? > "$tmp_dir/consumer_exit_code"; } | filter_consumer_stderr >&2 3>&-; } 3>&1 | format_records
+  fi
   format_exit_code=${PIPESTATUS[1]}
 
   consumer_exit_code=$(cat "$tmp_dir/consumer_exit_code" 2> /dev/null)
-  read -r nb_consumed nb_matched nb_displayed < "$tmp_dir/consume_counts" 2> /dev/null
+  nb_consumed=""
+  nb_matched=""
+  nb_displayed=""
+  if [ -s "$tmp_dir/consume_counts" ]
+  then
+    read -r nb_consumed nb_matched nb_displayed < "$tmp_dir/consume_counts"
+  fi
   nb_consumed=${nb_consumed:-0}
   nb_matched=${nb_matched:-0}
   nb_displayed=${nb_displayed:-0}
@@ -752,7 +1034,7 @@ do
     logwarn "❌ the consumer of topic $topic failed with exit code $consumer_exit_code"
   fi
 
-  if [ $display_limit -ge 0 ] && [ $nb_displayed -lt $nb_consumed ] && [[ ! -n "$grep_string" ]]
+  if [ $display_limit -gt 0 ] && [ $nb_displayed -lt $nb_consumed ] && [[ ! -n "$grep_string" ]] && [[ ! -n "$last" ]]
   then
     log "✨ $nb_consumed records consumed, only the first $nb_displayed are displayed (--max-messages=$max_messages)"
   fi
@@ -779,6 +1061,16 @@ do
       exit 1
     fi
     log "✅ found $grep_string in $nb_matched record(s) of topic $topic"
+  fi
+
+  if [[ -n "$count" ]]
+  then
+    if [[ -n "$grep_string" ]]
+    then
+      print_count "$nb_matched"
+    else
+      print_count "$nb_consumed"
+    fi
   fi
 done
 

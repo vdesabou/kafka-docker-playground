@@ -3681,6 +3681,72 @@ subcommands:
       description: "\U0001FAE5 The isolation level to use, see https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#isolation-level\nIf
         not set, default is read_uncommitted\n\nDefault value: read_uncommitted\nAllowed
         values: read_uncommitted, read_committed"
+    - names:
+      - "--last"
+      argument: LAST
+      description: |-
+        ⏮️ Display the last N records of the topic (the most recent ones, sorted by timestamp across partitions),
+        instead of the first --max-messages
+
+        Example: --last 10
+
+        Conflicts with: --tail, --from-timestamp, --offset, --min-expected-messages, --open, --count
+    - names:
+      - "--from-timestamp"
+      argument: FROM-TIMESTAMP
+      description: |-
+        ⏱️ Display the records from this time (sorted by timestamp across partitions, --max-messages still applies)
+
+        Accepted values:
+
+        * a date, in local time: "2026-10-22 10:30", "2026-10-22T10:30:00.250" (add Z for UTC: "2026-10-22T08:30:00Z")
+        * an epoch, in milliseconds or seconds: 1792660170522
+        * a duration ago: 30s, 10m, 2h, 1d
+
+        Conflicts with: --tail, --last, --offset, --open
+    - names:
+      - "--partition"
+      argument: PARTITION
+      description: "\U0001F9E9 Only consume this partition (with --offset, from that
+        offset; otherwise from the beginning, or new records with --tail)\n\nConflicts
+        with: --open"
+    - names:
+      - "--offset"
+      argument: OFFSET
+      description: "\U0001F4CD Offset of --partition to start from: a number, earliest
+        or latest\n\nExample: --partition 0 --offset 1234 --max-messages 1, the record
+        a connector is stuck on\n\nConflicts with: --tail, --last, --from-timestamp,
+        --open"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F9FE Print each record as a json object on one line (topic,
+        partition, offset, timestamp, date, headers, key,\nvalue, schema ids): key
+        and value are embedded as json when they are valid json, as strings otherwise.\n\nOnly
+        the records go to stdout, everything else goes to stderr, so the output can
+        be piped to jq.\n\nExample: playground topic consume --topic orders --json
+        | jq -r '.value.id'\n\nConflicts with: --open, --count, --plot-latencies-timestamp-field,
+        --tail"
+    - names:
+      - "--count"
+      argument: ''
+      description: "\U0001F522 Only print the number of records consumed (with --grep,
+        the number of records containing that string),\non stdout: logs go to stderr.
+        Without --topic, one \"<topic> <number>\" line per topic.\n\nUnlike playground
+        topic get-number-records, records are counted, not offsets (transaction markers,\ncompacted
+        records and records that cannot be deserialized do not count)\n\nConflicts
+        with: --tail, --open, --json, --plot-latencies-timestamp-field"
+    - names:
+      - "--no-decode"
+      argument: ''
+      description: "\U0001F916 Never decode the values, even when they look base64
+        encoded (by default, they are decoded when the first\nrecord is valid base64
+        of printable utf-8)"
+    - names:
+      - "--print-schema"
+      argument: ''
+      description: "\U0001F4DC Also print the key and value schemas registered for
+        the topic"
   - name: produce
     description: "\U0001F4E4 Produce to a topic\n\nSee video tutorial https://youtu.be/mbzHCewG_XE\n\nGenerates
       records for you rather than making you write them. Give it\na schema, in avro,
