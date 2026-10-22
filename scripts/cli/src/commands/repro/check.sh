@@ -48,7 +48,8 @@ then
         script_dir=$(cd -P "$(dirname "$file")" 2>/dev/null && pwd)
         if [ "$(dirname "$script_dir")" != "$repro_root" ]
         then
-            logerror "❌ $file is not a reproduction model of $repro_root"
+            # stderr: the output of the loop goes to the candidates file
+            logerror "❌ $file is not a reproduction model of $repro_root (a script directly in one of its folders)" >&2
             exit 1
         fi
         repro_bundle_files "$script_dir/$(basename "$file")" "$repro_root"
