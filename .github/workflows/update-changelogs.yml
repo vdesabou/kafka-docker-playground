@@ -140,7 +140,16 @@ jobs:
             cat changelog_tmp.md >> ./docs/changelog.md
           fi
 
+      # values passed through env, not inlined in the script: in a plain YAML scalar ' #' starts a comment
       - name: Pushes docs
         env:
           API_TOKEN_GITHUB: ${{ secrets.CI_GITHUB_TOKEN }}
-        run: ./scripts/publish-docs.sh "updating with milestone ${{ steps.milestone.outputs.title }}${{ github.event.issue.number && format(' (closed #{0})', github.event.issue.number) || '' }}"
+          MILESTONE_TITLE: ${{ steps.milestone.outputs.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          message="updating with milestone ${MILESTONE_TITLE}"
+          if [ -n "${ISSUE_NUMBER}" ]
+          then
+            message="${message} (closed #${ISSUE_NUMBER})"
+          fi
+          ./scripts/publish-docs.sh "${message}"
