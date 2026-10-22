@@ -1264,6 +1264,104 @@ function repro_scan_add_value () {
   printf '%s\n' "$value" | awk 'length($0) >= 8' >> "$dir/$label"
 }
 
+# true when a key name is the one of a credential (password, secret, token, api key, access
+# key, private key) and not a setting about it (location, type, id, provider…)
+function repro_is_credential_key () {
+  local key
+  key=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+  if ! [[ "$key" =~ (password|passwd|pwd|secret|token|api[._-]?key|apikey|access[._-]?key|private[._-]?key|credentials?)([._-]|$) ]] && ! [[ "$key" =~ (password|passwd|secret|token)$ ]]
+  then
+    return 1
+  fi
+  if [[ "$key" =~ (location|path|file|type|provider|class|url|uri|mode|algorithm|enabled|size|name|format|prefix|header|field|policy|expir|ttl|length|version|[._-]id)$ ]]
+  then
+    return 1
+  fi
+  return 0
+}
+
+# true when a hard-coded value looks like a real secret rather than a placeholder: 12 chars or
+# more with 3 kinds of characters (lower case, upper case, digits, symbols), or 20 chars or more
+# with 2 kinds (AWS secret access keys: 40 chars of base64). Never with a space (generated text)
+function repro_is_strong_secret () {
+  local value="$1"
+  local lower
+  if [[ "$value" =~ [[:space:]] ]]
+  then
+    return 1
+  fi
+  lower=$(echo "$value" | tr '[:upper:]' '[:lower:]')
+  case "$lower" in
+    *confluent*|*password*|*changeit*|*changeme*|*example*|*dummy*|*redacted*|*placeholder*|*xxxx*|*'****'*|*'<'*|*'%'*) return 1 ;;
+  esac
+  local kinds=0
+  [[ "$value" =~ [a-z] ]] && kinds=$((kinds+1))
+  [[ "$value" =~ [A-Z] ]] && kinds=$((kinds+1))
+  [[ "$value" =~ [0-9] ]] && kinds=$((kinds+1))
+  [[ "$value" =~ [^A-Za-z0-9] ]] && kinds=$((kinds+1))
+  if { [ ${#value} -ge 12 ] && [ $kinds -ge 3 ]; } || { [ ${#value} -ge 20 ] && [ $kinds -ge 2 ]; }
+  then
+    return 0
+  fi
+  return 1
+}
+
+# hard-coded values of credential keys, in JSON ("key": "value"), shell / env / properties
+# (KEY=value, export KEY=value, - KEY=value) and YAML (key: value) lines: a value that looks
+# like a real secret is a block, a weak one (placeholder, short) a warn. Values from ${VAR},
+# and values also in the public base example, are not reported
+#   $1 target (as shown), $2 file, $3 findings file, $4… public folders
+function repro_scan_credential_literals () {
+  local target="$1"
+  local path="$2"
+  local findings="$3"
+  shift 3
+  local -a public_folders=("$@")
+  local line_number line key value regex_json regex_assign
+  regex_json='"([A-Za-z0-9._-]+)"[[:space:]]*:[[:space:]]*"([^"]*)"'
+  regex_assign='^[[:space:]]*(-[[:space:]]+)?(export[[:space:]]+)?([A-Za-z0-9._-]+)[[:space:]]*(=|:[[:space:]])[[:space:]]*(.*)$'
+  while IFS=: read -r line_number line
+  do
+    while IFS=$'\t' read -r key value
+    do
+      [ -n "$key" ] || continue
+      # strip quotes (escaped ones too, as in a JAAS config in a YAML string) and a trailing comment
+      value="${value//\\\"/\"}"
+      case "$value" in
+        \"*) value="${value#\"}"; value="${value%%\"*}" ;;
+        \'*) value="${value#\'}"; value="${value%%\'*}" ;;
+        *) value="${value%%[[:space:]]#*}"; value="${value%%[[:space:]]}" ;;
+      esac
+      value="${value%,}"
+      if [ -z "$value" ] || [[ "$value" == *'$'* ]] || ! repro_is_credential_key "$key"
+      then
+        continue
+      fi
+      if [ ${#public_folders[@]} -gt 0 ] && printf '%s\n' "$value" | grep -rqIFf - -- "${public_folders[@]}" 2>/dev/null
+      then
+        continue
+      fi
+      if repro_is_strong_secret "$value"
+      then
+        printf 'block\t%s:%s\t%s\n' "$target" "$line_number" "hard-coded value for $key that looks like a real secret: use \${VAR}" >> "$findings"
+      else
+        printf 'warn\t%s:%s\t%s\n' "$target" "$line_number" "hard-coded value for $key, not from the base example" >> "$findings"
+      fi
+    done < <(
+      rest="$line"
+      while [[ "$rest" =~ $regex_json ]]
+      do
+        printf '%s\t%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+        rest="${rest#*"${BASH_REMATCH[0]}"}"
+      done
+      if [[ ! "$line" =~ $regex_json ]] && [[ "$line" =~ $regex_assign ]]
+      then
+        printf '%s\t%s\n' "${BASH_REMATCH[3]}" "${BASH_REMATCH[5]}"
+      fi
+    )
+  done < <(grep -IniE '(password|passwd|pwd|secret|token|api.?key|access.?key|private.?key|credential)' "$path" 2>/dev/null || true)
+}
+
 # scan the files of a bundle for secrets and customer data, before it leaves the machine.
 # writes one '<block|warn>\t<file>:<line>\t<message>' line per finding to $4, never a value
 #   $1 reproduction-models folder, $2 file with the bundle paths (relative to $1),
@@ -1455,16 +1553,7 @@ EOF
       printf 'warn\t%s:%s\t%s\n' "$target" "$line_number" "public IP address $ip" >> "$findings"
     done < <(grep -InE '(^|[^0-9.])([0-9]{1,3}\.){3}[0-9]{1,3}([^0-9.]|$)' "$path" 2>/dev/null || true)
 
-    while IFS=: read -r line_number match
-    do
-      key=$(echo "$match" | cut -d '"' -f 2)
-      literal=$(echo "$match" | sed -E 's/.*:[[:space:]]*"([^"]*)"$/\1/')
-      if [ ${#public_folders[@]} -gt 0 ] && printf '%s\n' "$literal" | grep -rqIFf - -- "${public_folders[@]}" 2>/dev/null
-      then
-        continue
-      fi
-      printf 'warn\t%s:%s\t%s\n' "$target" "$line_number" "hard-coded value for $key, not from the base example" >> "$findings"
-    done < <(grep -InoiE '"[A-Za-z0-9._-]*(password|secret)[A-Za-z0-9._-]*"[[:space:]]*:[[:space:]]*"[^"$*]+"' "$path" 2>/dev/null || true)
+    repro_scan_credential_literals "$target" "$path" "$findings" "${public_folders[@]}"
   done
 
   rm -rf "$scan_dir"
