@@ -3973,8 +3973,9 @@ function display_ccloud_leftovers () {
 
   local nb_connectors
   local nb_topics
-  nb_connectors=$(echo "$connectors" | grep -c . )
-  nb_topics=$(echo "$topics" | grep -c . )
+  # grep -c exits with 1 when it counts 0: without || true, set -e ends the command right here
+  nb_connectors=$(echo "$connectors" | grep -c . || true)
+  nb_topics=$(echo "$topics" | grep -c . || true)
   if [ "$nb_connectors" -eq 0 ] && [ "$nb_topics" -eq 0 ]
   then
     log "✨ no connector or topic of yours left on cluster $cluster_name ($cluster_id)"
@@ -5598,8 +5599,8 @@ function benchmark_collect_setup () {
   jvm_cpus=$(echo "$jvm" | sed -n 's/^AvailableProcessors = \(.*\);$/\1/p')
   # HeapMemoryUsage is a composite value: { committed = ...; init = ...; max = <bytes>; used = ...; }
   heap_max=$(echo "$jvm" | sed -n 's/^ *max = \([0-9]*\);$/\1/p' | head -1)
-  nb_workers=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -c -E '^connect[0-9]*$')
-  nb_brokers=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -c -E '^broker[0-9]*$')
+  nb_workers=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -c -E '^connect[0-9]*$' || true)
+  nb_brokers=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -c -E '^broker[0-9]*$' || true)
   # the local containers have nothing to do with a fully managed connector
   if [ -n "$fully_managed" ]
   then
