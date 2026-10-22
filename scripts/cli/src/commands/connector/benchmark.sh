@@ -19,6 +19,8 @@ eval "connector_tags=(${args[--connector-tag]:-})"
 rounds="${args[--rounds]}"
 no_flight_recorder="${args[--no-flight-recorder]}"
 sessions="${args[--sessions]}"
+latency_field="${args[--latency-field]}"
+no_latency="${args[--no-latency]}"
 
 # with --json, logs go to stderr and only the result json to stdout
 exec 3>&1
@@ -1108,6 +1110,71 @@ else
     measure_to_ms=$(awk -v t="$sample_time" 'BEGIN { printf "%d", t * 1000 }')
 fi
 
+# end-to-end latency of a source in steady mode: kafka timestamp - timestamp of the change in the source system (a field
+# of the value), from the records written to the topics during the measure, read after it so that the consumer does not
+# take cpu from connect. In a drain, the latency of a record is the time it waited in the backlog: not measured
+latency_json='{"enabled": false, "reason": "not measured"}'
+if [ "$type" == "source" ] && [ "$mode" == "steady" ] && [ -z "$no_latency" ]
+then
+    # a source can create topics during the measure (a new table)
+    refresh_connector_topics
+fi
+if [ "$type" != "source" ]
+then
+    latency_json='{"enabled": false, "reason": "source connectors only"}'
+elif [ -n "$no_latency" ]
+then
+    latency_json='{"enabled": false, "reason": "disabled with --no-latency"}'
+elif [ "$mode" != "steady" ]
+then
+    latency_json='{"enabled": false, "reason": "measured in steady mode only (--mode steady): in a drain, the latency of a record is the time it waited in the backlog"}'
+    if [ -n "$latency_field" ]
+    then
+        logwarn "⚠️ --latency-field is only used with --mode steady"
+    fi
+elif [ ${#topics[@]} -eq 0 ]
+then
+    latency_json='{"enabled": false, "reason": "no topic of the connector found: set them with --topic"}'
+elif [ "$measured_records" -le 0 ]
+then
+    latency_json='{"enabled": false, "reason": "no record was processed during the measure"}'
+else
+    # BENCHMARK_LATENCY_FIELD=<field> printed by the load: the column it fills with the time of the change
+    latency_hint=$(grep -E '^BENCHMARK_LATENCY_FIELD=' "$load_log" 2> /dev/null | tail -1 | cut -d= -f2-)
+    # every record of the measure up to 100000 (one read: starting the consumers costs more than reading), otherwise 5
+    # slices of 20000 spread over the measure (per partition)
+    latency_budget=100000
+    latency_slices=1
+    latency_per_slice="$measured_records"
+    if [ "$measured_records" -gt "$latency_budget" ]
+    then
+        latency_slices=5
+        latency_per_slice=$((latency_budget / latency_slices))
+    fi
+    log "⏱️ end-to-end latency: reading $([ "$latency_slices" -gt 1 ] && echo "$latency_budget of the $measured_records records" || echo "the $measured_records records") written to ${topics[*]} during the measure"
+    latency_records="$output_dir/$run_id-latency-records.jsonl"
+    : > "$latency_records"
+    for topic in "${topics[@]}"
+    do
+        for ((slice = 0; slice < latency_slices; slice++))
+        do
+            slice_from=$((measure_from_ms + (measure_to_ms - measure_from_ms) * slice / latency_slices))
+            playground --output-level ERROR topic consume --topic "$topic" --from-timestamp "$slice_from" --max-messages "$latency_per_slice" --json >> "$latency_records" 2> /dev/null || true
+        done
+    done
+    latency_args=(--records "$latency_records" --from-ms "$measure_from_ms" --to-ms "$measure_to_ms"
+        --csv-out "$output_dir/$run_id-latency.csv" --json-out "$output_dir/$run_id-latency.json")
+    [ -n "$latency_field" ] && latency_args+=(--field "$latency_field")
+    [ -n "$latency_hint" ] && latency_args+=(--hint "$latency_hint")
+    if python3 -I "$root_folder/tools/benchmark-report/benchmark_latency.py" "${latency_args[@]}" > /dev/null && [ -s "$output_dir/$run_id-latency.json" ]
+    then
+        latency_json=$(jq -c . "$output_dir/$run_id-latency.json")
+    else
+        latency_json='{"enabled": false, "reason": "the records of the measure could not be analyzed"}'
+    fi
+    rm -f "$latency_records"
+fi
+
 # summary from the samples of the measure (drain or steady phase)
 phase="$mode"
 read -r rate_p50 rate_p95 rate_min batch_avg ratio_avg cpu_avg cpu_max <<< "$(awk -F, -v p="$phase" '
@@ -1269,7 +1336,7 @@ result=$(jq -n \
     --arg gc_percent "$gc_percent" --arg cpu_available_avg "$cpu_available_avg" --arg pause_ratio "$pause_avg" \
     --arg dlq_records "$dlq_delta" --arg skipped_records "$skipped_delta" --arg task_shares "$task_shares" \
     --argjson setup "$setup_json" --argjson flight_recorder "$flight_recorder_json" --argjson grafana "$grafana_json" --argjson metrics_api "$metrics_api_json" \
-    --argjson measure_from_ms "$measure_from_ms" --argjson measure_to_ms "$measure_to_ms" \
+    --argjson measure_from_ms "$measure_from_ms" --argjson measure_to_ms "$measure_to_ms" --argjson latency "$latency_json" \
     --arg load_script "$([ -n "$load_script" ] && [[ "$load_cmd" == *"$load_script"* ]] && basename "$load_script")" \
     '{date: $date, test_file: $test_file, connector: $connector, connector_class: $connector_class, plugin_version: $plugin_version,
       cp_tag: $cp_tag, type: $type, mode: $mode, shape: $shape, sessions: $sessions, tasks: $tasks, records: $records, seconds: $seconds,
@@ -1280,7 +1347,7 @@ result=$(jq -n \
       gc_percent: $gc_percent, cpu_percent_of_available_avg: $cpu_available_avg, pause_ratio: $pause_ratio,
       dlq_records: $dlq_records, skipped_records: $skipped_records, task_shares: $task_shares,
       samples_csv: $samples_csv, setup: $setup, flight_recorder: $flight_recorder, grafana: $grafana, metrics_api: $metrics_api,
-      measure_from_ms: $measure_from_ms, measure_to_ms: $measure_to_ms, load_script: $load_script}')
+      measure_from_ms: $measure_from_ms, measure_to_ms: $measure_to_ms, load_script: $load_script, latency: $latency}')
 echo "$result" > "$json_file"
 if [ -n "$BENCHMARK_MATRIX_RESULTS" ]
 then
@@ -1333,6 +1400,13 @@ then
     printf "   %-22s %s\n" "throughput" "≥ $throughput records/s   ($lower_bound_reason)"
 else
     printf "   %-22s %s\n" "throughput" "$throughput records/s   (per $([ -n "$consumer_group" ] && echo "offset commit, every ~${commit_interval}s" || echo "${interval}s sample"): p50 $rate_p50  p95 $rate_p95  min $rate_min)"
+fi
+if [ "$(echo "$latency_json" | jq -r '.enabled')" == "true" ]
+then
+    printf "   %-22s %s\n" "end-to-end latency" "$(echo "$latency_json" | jq -r '"p50 \(.p50_ms) ms  p95 \(.p95_ms) ms  p99 \(.p99_ms) ms  max \(.max_ms) ms   (\(.field), \(.records) records)"')"
+elif [ "$type" == "source" ] && [ "$mode" == "steady" ] && [ -z "$no_latency" ]
+then
+    printf "   %-22s %s\n" "end-to-end latency" "$(echo "$latency_json" | jq -r '.reason')"
 fi
 # no JMX for a fully managed connector
 if [ -z "$fully_managed" ]
@@ -1398,6 +1472,12 @@ then
     delta=$(awk -v n="$throughput" -v p="$previous_throughput" 'BEGIN { if (p > 0) printf "%+.0f%%", (n - p) / p * 100; else print "n/a" }')
     printf "   %-22s %s\n" "previous run" "$previous_throughput records/s on $(echo "$previous" | jq -r '.date'): $delta"
     printf "   %-22s %s\n" "" "($(echo "$previous" | jq -r '"\(.plugin_version), CP \(.cp_tag), \(.tasks) task(s), \(.records) records, shape \(.shape)"'))"
+    previous_p95=$(echo "$previous" | jq -r 'if .latency.enabled == true then .latency.p95_ms else empty end')
+    current_p95=$(echo "$latency_json" | jq -r 'if .enabled == true then .p95_ms else empty end')
+    if [ -n "$previous_p95" ] && [ -n "$current_p95" ]
+    then
+        printf "   %-22s %s\n" "" "end-to-end latency p95 $current_p95 ms, $previous_p95 ms in the previous run"
+    fi
 fi
 
 # warnings of the summary, also shown in the html report
@@ -1533,7 +1613,7 @@ then
         add_warning "the load generated $generated records during the measure but the connector processed only $measured_records: a backlog builds up in the source system, or a publish/subscribe broker (mqtt) drops the messages it cannot deliver"
     elif [ "$generated" -gt 0 ] && awk -v m="$measured_records" -v g="$generated" -v b="${largest_batch:-0}" 'BEGIN { exit !(m >= 0.9 * g || m >= g - b) }'
     then
-        add_warning "the connector kept up with the load ($measured_records records processed, $generated generated during the measure): this is the speed of the load, not of the connector, use --mode drain to measure its maximum"
+        add_warning "the connector kept up with the load ($measured_records records processed, $generated generated during the measure): this is the speed of the load, not of the connector, use --mode drain to measure its maximum$([ "$(echo "$latency_json" | jq -r '.enabled')" == "true" ] && echo ", or compare the end-to-end latency")"
     elif [ "$type" == "sink" ]
     then
         # a sink that keeps up never has more than a few records waiting in its topics
@@ -1545,6 +1625,10 @@ then
         fi
     fi
 fi
+while IFS= read -r latency_warning
+do
+    [ -n "$latency_warning" ] && add_warning "$latency_warning"
+done <<< "$(echo "$latency_json" | jq -r '.warnings // [] | .[]')"
 if [ "$mode" == "steady" ] && [ "$measured_records" -eq 0 ]
 then
     add_warning "no record was processed during the measure: is there any load?"
@@ -1552,6 +1636,10 @@ fi
 logwarn "⚠️ results are relative to this docker host: compare runs on the same machine only"
 log "📄 samples: $csv_file"
 log "📄 result: $json_file"
+if [ "$(echo "$latency_json" | jq -r '.enabled')" == "true" ]
+then
+    log "📄 latencies: $(echo "$latency_json" | jq -r '.csv')"
+fi
 if [ -n "$jfr_analysis" ]
 then
     log "🛩️ flight recording(s): $(echo $jfr_files) (open in JDK Mission Control, or playground analyze flight-recorder -f <file>)"

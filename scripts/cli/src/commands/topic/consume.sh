@@ -5,7 +5,6 @@ grep_string="${args[--grep]}"
 min_expected_messages="${args[--min-expected-messages]}"
 timeout="${args[--timeout]}"
 tail="${args[--tail]}"
-timestamp_field="${args[--plot-latencies-timestamp-field]}"
 key_subject="${args[--key-subject]}"
 value_subject="${args[--value-subject]}"
 max_characters="${args[--max-characters]}"
@@ -238,13 +237,13 @@ else
 fi
 
 # formats the records printed by the console consumer, in a single process (a bash loop forked date and awk for
-# each record): readable timestamps, labels, base64 decoding, --grep, truncation, latency csv, --json.
+# each record): readable timestamps, labels, base64 decoding, --grep, truncation, --json.
 # With $sort_keep (first or last), the records are sorted by timestamp and only the first or last $display_limit
 # are displayed (--from-timestamp, --last: one consumer per partition).
 # Counts are written to $tmp_dir/consume_counts: records consumed, records matching --grep, records displayed
 function format_records() {
   HAS_KEY_SCHEMA_ID="$has_key_schema_id" HAS_VALUE_SCHEMA_ID="$has_value_schema_id" MAX_CHARACTERS="$max_characters" \
-  DISPLAY_LIMIT="$display_limit" GREP_STRING="$grep_string" TIMESTAMP_FIELD="$timestamp_field" LATENCY_CSV="$latency_csv" \
+  DISPLAY_LIMIT="$display_limit" GREP_STRING="$grep_string" \
   NO_DECODE="$no_decode" OUTPUT_JSON="$json" SORT_KEEP="$sort_keep" TOPIC="$topic" \
   COUNT_FILE="$tmp_dir/consume_counts" PG_LOG_LEVEL="$PG_LOG_LEVEL" perl -MPOSIX=strftime -MMIME::Base64=decode_base64 -MJSON::PP -e '
     use strict;
@@ -256,7 +255,6 @@ function format_records() {
     my $max_characters = $ENV{MAX_CHARACTERS};
     my $display_limit = $ENV{DISPLAY_LIMIT};
     my $grep_string = $ENV{GREP_STRING} // "";
-    my $timestamp_field = $ENV{TIMESTAMP_FIELD} // "";
     my $output_json = ($ENV{OUTPUT_JSON} // "") ne "";
     my $sort_keep = $ENV{SORT_KEEP} // "";
     my ($nb_records, $nb_matched, $nb_displayed) = (0, 0, 0);
@@ -264,10 +262,6 @@ function format_records() {
     my $json_encoder = JSON::PP->new->canonical;
     my $json_decoder = JSON::PP->new->allow_nonref;
     my @sorted_records;
-    my $latency_fh;
-    if ($timestamp_field ne "") {
-      open($latency_fh, ">>", $ENV{LATENCY_CSV}) or die "cannot write $ENV{LATENCY_CSV}: $!";
-    }
 
     sub save_counts {
       if (open(my $fh, ">", $ENV{COUNT_FILE})) { print $fh "$nb_records $nb_matched $nb_displayed\n"; close($fh); }
@@ -307,7 +301,6 @@ function format_records() {
       if (@fields < 6 || $fields[0] !~ /^\w+(:-?\d+)?$/ || $fields[1] !~ /^Partition:/ || $fields[2] !~ /^Offset:/) {
         # anything else on stdout, for example the next lines of a value containing new lines
         next if $grep_string ne "" && index($line, $grep_string) < 0;
-        next if $timestamp_field ne "";
         if ($output_json) { print STDERR "$line\n"; next; }
         display($line, length($line));
         next;
@@ -348,19 +341,6 @@ function format_records() {
       if ($grep_string ne "") {
         next if index($output, $grep_string) < 0;
         $nb_matched++;
-      }
-
-      if ($timestamp_field ne "") {
-        my $json = eval { JSON::PP->new->allow_nonref->decode($value) };
-        if (!defined $json || ref($json) ne "HASH") {
-          printf STDERR "\033[0;31m%s 🔥 --plot-latencies-timestamp-field is set but value content is not in json representation\033[0m\n", strftime("%H:%M:%S", localtime);
-          save_counts();
-          exit 3;
-        }
-        my $source = $json->{$timestamp_field};
-        $source = $source->{long} if ref($source) eq "HASH" && exists $source->{long};
-        print $latency_fh ($readable_date // ""), ",", ($timestamp_ms // ""), ",", ($source // ""), "\n";
-        next;
       }
 
       if ($output_json) {
@@ -408,7 +388,6 @@ function format_records() {
         $nb_displayed++;
       }
     }
-    close($latency_fh) if $latency_fh;
     save_counts();'
 }
 
@@ -523,11 +502,6 @@ then
       logerror "--tail was provided without specifying --topic"
       exit 1
     fi
-    if [[ -n "$timestamp_field" ]]
-    then
-      logerror "--plot-latencies-timestamp-field was provided without specifying --topic"
-      exit 1
-    fi
     log "✨ --topic flag was not provided, applying command to all topics"
     topic=$(playground get-topic-list --skip-internal-topics)
     if [ "$topic" == "" ]
@@ -599,14 +573,6 @@ function get_partition_offsets() {
   fi
   (verbose=""; run_kafka_admin_tool kafka-run-class $get_offsets_class --topic "$topic" --time "$1" "${partition_args[@]}" 2>/dev/null) | grep -E ':[0-9]+:-?[0-9]+$' | awk -F: '{print $(NF-1), $NF}' | sort -n
 }
-
-if [[ -n "$timestamp_field" ]]
-then
-  rm -rf /tmp/latency
-  mkdir -p /tmp/latency
-  latency_csv="/tmp/latency/latency.csv"
-  latency_png="/tmp/latency/latency.png"
-fi
 
 items=($topic)
 for topic in ${items[@]}
@@ -712,10 +678,10 @@ do
   elif [[ -n "$last" ]] || [[ -n "$from_timestamp" ]] || [[ -n "$count" ]]
   then
     log "✨ topic $topic contains $nb_messages messages"
-  elif [[ -n "$max_messages" ]] && [ $max_messages -eq -1 ] && [[ ! -n "$timestamp_field" ]]
+  elif [[ -n "$max_messages" ]] && [ $max_messages -eq -1 ]
   then
     log "✨ --max-messages is set to -1, display full content of topic $topic, it contains $nb_messages messages"
-  elif [[ -n "$max_messages" ]] && [ $nb_messages -gt $max_messages ] && [[ ! -n "$timestamp_field" ]]
+  elif [[ -n "$max_messages" ]] && [ $nb_messages -gt $max_messages ]
   then
     log "✨ Display content of topic $topic, it contains $nb_messages messages, but displaying only --max-messages=$max_messages"
   else
@@ -731,10 +697,6 @@ do
     logwarn "--grep is set so only matched results will be displayed !"
   fi
 
-  if [[ -n "$timestamp_field" ]]
-  then
-    log "📈 plotting results.."
-  fi
   if [[ -n "$original_key_subject" ]]; then
     log "📛 key subject is set with $original_key_subject"
     key_subject=$original_key_subject
@@ -810,7 +772,7 @@ do
     then
       display_limit=$last
       nb_records_to_consume=$last
-    elif [[ -n "$timestamp_field" ]] || [ $max_messages -eq -1 ]
+    elif [ $max_messages -eq -1 ]
     then
       nb_records_to_consume=$nb_messages
     else
@@ -993,7 +955,6 @@ do
   else
     { { run_consumers 2>&1 1>&3 3>&-; echo $? > "$tmp_dir/consumer_exit_code"; } | filter_consumer_stderr >&2 3>&-; } 3>&1 | format_records
   fi
-  format_exit_code=${PIPESTATUS[1]}
 
   consumer_exit_code=$(cat "$tmp_dir/consumer_exit_code" 2> /dev/null)
   nb_consumed=""
@@ -1012,11 +973,6 @@ do
   if [ -f "$tmp_dir/consume_errors" ]
   then
     { read -r nb_skipped; read -r first_error; read -r root_cause; } < "$tmp_dir/consume_errors"
-  fi
-
-  if [ "$format_exit_code" == "3" ]
-  then
-    exit 1
   fi
 
   if [ $nb_skipped -gt 0 ]
@@ -1073,29 +1029,3 @@ do
     fi
   fi
 done
-
-if [[ -n "$timestamp_field" ]]
-then
-  log "Plot data using gnuplot, see ${latency_png}"
-  docker run --quiet --rm -i -v ${PLAYGROUND_HOST_TMP_DIR}/latency:/work remuslazar/gnuplot -e \
-  "
-  set grid;
-  set datafile separator ',';
-  set timefmt \"%Y-%m-%d %H:%M:%S.%s\";
-  set format x '%H:%M:%S';
-  set term png size 1200,600;
-  set output 'latency.png';
-  set xdata time;
-  set autoscale;
-  set xlabel 'Time';
-  set ylabel 'Latency in ms';
-  plot 'latency.csv' using 1:(\$2-\$3) with points;"
-
-  # open $latency_csv
-  if [[ $(type -f open 2>&1) =~ "not found" ]]
-  then
-    :
-  else
-    open $latency_png
-  fi
-fi

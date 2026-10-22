@@ -3697,11 +3697,6 @@ subcommands:
 
         Conflicts with: --min-expected-messages, --max-messages, --open
     - names:
-      - "--plot-latencies-timestamp-field"
-      argument: TIMESTAMP
-      description: "\U0001F5F3 Timestamp field name that represents when record was
-        created in source system"
-    - names:
       - "--key-subject"
       argument: KEY-SUBJECT
       description: "\U0001F4DB Subject for key in schema-registry to use (useful when
@@ -3777,8 +3772,7 @@ subcommands:
         and value are embedded as json when they are valid json, as strings otherwise.\n\nOnly
         the records go to stdout, everything else goes to stderr, so the output can
         be piped to jq.\n\nExample: playground topic consume --topic orders --json
-        | jq -r '.value.id'\n\nConflicts with: --open, --count, --plot-latencies-timestamp-field,
-        --tail"
+        | jq -r '.value.id'\n\nConflicts with: --open, --count, --tail"
     - names:
       - "--count"
       argument: ''
@@ -3787,7 +3781,7 @@ subcommands:
         Without --topic, one \"<topic> <number>\" line per topic.\n\nUnlike playground
         topic get-number-records, records are counted, not offsets (transaction markers,\ncompacted
         records and records that cannot be deserialized do not count)\n\nConflicts
-        with: --tail, --open, --json, --plot-latencies-timestamp-field"
+        with: --tail, --open, --json"
     - names:
       - "--no-decode"
       argument: ''
@@ -5676,19 +5670,32 @@ subcommands:
       (after\n--warmup), while --stream-load-command runs in the background. When
       the\nconnector simply keeps up with the load (consumer lag of a sink, records\ngenerated
       by the load of a source), the summary says so: the result is\nthen the speed
-      of the load, not of the connector.\n\nThe load comes from the example:\n\n  -
-      sink connectors: the 'playground topic produce' of the example\n    script that
-      feeds the connector is replayed with --nb-messages\n    <n> (same schema, key
-      and headers), so every sink example that\n    produces its data works without
-      anything else\n  - source connectors: benchmark-load.bash next to the example\n
-      \   script, called with --records <n> --mode preload|stream --shape\n    bulk|small-txn|update
-      (rows in the CUSTOMERS table for the\n    postgres, mysql, oracle and sql server
-      examples, documents for\n    mongodb, messages for ibm mq, mqtt, activemq, sqs,
-      kinesis,\n    pub/sub and cloudwatch logs, files for spool dir, filepulse,\n
-      \   filestream, sftp, ftps, hdfs 2 / 3 and the generalized s3, gcs and\n    azure
-      blob storage sources, see the README of the example). It is\n    called with
-      --check first, so that an unsupported\n    combination fails before the connector
-      is paused\n  - or --load-command / --stream-load-command, which take precedence\n\nBENCHMARK_LOAD_SCRIPT=<file>
+      of the load, not of the connector.\n\n⏱️ For a source connector, --mode steady
+      also measures the end-to-end\nlatency of the records: kafka record timestamp
+      - time of the change in\nthe source system (a field of the value). After the
+      measure, the\nbenchmark reads the records written to the topics of the connector\nduring
+      it (all of them up to 100000, a sample spread over the measure\notherwise),
+      and the summary, the result json and the report give its\np50 / p95 / p99 /
+      max (over time, distribution, slowest records), also\nin the comparable runs
+      and the --connector-tag comparisons. When the\nconnector simply keeps up with
+      the load, this is the number to compare.\nThe field is --latency-field, or the
+      one the load writes the time of\nthe change to (create_ts of the CUSTOMERS table,
+      update_ts with --shape\nupdate), or source.ts_ms of a CDC envelope (commit time
+      in the\ndatabase), or wallTime / clusterTime of a MongoDB change event. It is\nnot
+      measured in a drain, where the latency of a record is the time it\nwaited in
+      the backlog.\n\nThe load comes from the example:\n\n  - sink connectors: the
+      'playground topic produce' of the example\n    script that feeds the connector
+      is replayed with --nb-messages\n    <n> (same schema, key and headers), so every
+      sink example that\n    produces its data works without anything else\n  - source
+      connectors: benchmark-load.bash next to the example\n    script, called with
+      --records <n> --mode preload|stream --shape\n    bulk|small-txn|update (rows
+      in the CUSTOMERS table for the\n    postgres, mysql, oracle and sql server examples,
+      documents for\n    mongodb, messages for ibm mq, mqtt, activemq, sqs, kinesis,\n
+      \   pub/sub and cloudwatch logs, files for spool dir, filepulse,\n    filestream,
+      sftp, ftps, hdfs 2 / 3 and the generalized s3, gcs and\n    azure blob storage
+      sources, see the README of the example). It is\n    called with --check first,
+      so that an unsupported\n    combination fails before the connector is paused\n
+      \ - or --load-command / --stream-load-command, which take precedence\n\nBENCHMARK_LOAD_SCRIPT=<file>
       uses another load script than\nbenchmark-load.bash: a file name in the folder
       of the example (or an\nabsolute path), e.g. one per reproduction model named
       after its ticket\n(BENCHMARK_LOAD_SCRIPT=benchmark-load-123456.bash). It takes
@@ -5817,7 +5824,9 @@ subcommands:
         the connector until the end of the measure:\n\n  --stream-load-command 'while
         [ ! -f \"\\$BENCHMARK_STOP_FILE\" ]; do playground topic produce -t my-topic
         --nb-messages 10000 --value @predefined-schemas/avro/customer.avsc; echo \"BENCHMARK_BATCH=10000
-        \\$(date +%s)\"; done'"
+        \\$(date +%s)\"; done'\n\nA line BENCHMARK_LATENCY_FIELD=<field> tells which
+        field of the records of a source holds the time of the change, for the end-to-end
+        latency (see --latency-field)."
     - names:
       - "--topic"
       - "-t"
@@ -5898,6 +5907,28 @@ subcommands:
       description: "\U0001F6E9️ Do not record the connect workers with Java Flight
         Recorder during the measure (no \"where the time goes\" section in the report)\n\nThe
         recording costs a few % of throughput: compare runs recorded the same way."
+    - names:
+      - "--latency-field"
+      argument: LATENCY-FIELD
+      description: "⏱️ Field of the records of a source connector that holds the time
+        of the change in the source system, for the end-to-end latency measured in
+        --mode steady (kafka record timestamp - this field)\n\nA dotted path for a
+        nested field (after.create_ts, source.ts_ms), matched case insensitively,
+        through avro unions. Its value can be an epoch in s, ms, µs or ns, an ISO-8601
+        string, or a MongoDB date or timestamp.\n\nDefault: the field the load writes
+        the time of the change to (BENCHMARK_LATENCY_FIELD printed by benchmark-load.bash:
+        create_ts of the CUSTOMERS table, update_ts with --shape update), otherwise
+        source.ts_ms of a CDC envelope (commit time in the database), wallTime or
+        clusterTime of a MongoDB change event.\n\n\U0001F393 Tip: use a column with
+        milliseconds (TIMESTAMP(3)), and --shape small-txn: with --shape bulk, a default
+        CURRENT_TIMESTAMP is the start of the transaction of the whole batch.\n\nConflicts
+        with: --no-latency"
+    - names:
+      - "--no-latency"
+      argument: ''
+      description: "\U0001F648 Do not measure the end-to-end latency of a source connector
+        in --mode steady (it reads the records of the measure after it)\n\nConflicts
+        with: --latency-field"
     - names:
       - "--json"
       argument: ''

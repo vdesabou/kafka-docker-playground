@@ -1,13 +1,14 @@
 ---
 name: kdp-benchmark
 description: |
-  Measure or compare connector throughput with `playground connector benchmark` in
-  kafka-docker-playground — drain or steady mode, load shapes (bulk, small-txn, update, delete),
+  Measure or compare connector throughput (and the end-to-end latency of a source) with
+  `playground connector benchmark` in kafka-docker-playground — drain or steady mode, load shapes (bulk, small-txn, update, delete),
   several plugin versions (--connector-tag A --connector-tag B), parallel sessions, fully managed
   connectors, and writing or fixing a `benchmark-load.bash` load script (benchmark_sql_load,
   benchmark_python_load, benchmark_files_load…) for a source example or a repro model. Also covers
   `playground run --benchmark` and `playground run --enable-sql-datagen`. Use when asked how fast a
-  connector is, whether version Y is slower, to benchmark / load test a connector, or to add a
+  connector is, whether version Y is slower, what the latency of a source connector is, to
+  benchmark / load test a connector, or to add a
   benchmark load to an example.
 ---
 
@@ -25,6 +26,24 @@ playground connector benchmark [--connector <c>]
   `--no-flight-recorder` to skip it.
 - When Grafana runs (`--enable-jmx-grafana`), annotates the measure on its dashboards and links to them.
 - When it says the throughput is a lower bound, rerun with 10x `--nb-records`.
+
+## End-to-end latency of a source (steady mode)
+
+- `--mode steady` on a source also measures kafka record timestamp − time of the change in the source
+  system, from the records written during the measure (read after it: all up to 100000, else 5 slices of 20000 with
+  `topic consume --from-timestamp --max-messages --json`), computed by
+  `tools/benchmark-report/benchmark_latency.py`: p50 / p95 / p99 / max in the summary, `latency` in the result
+  json, a card over time + histogram + slowest records in the report, and a column in the comparable runs and
+  `--connector-tag` tables. It's the number to compare when the summary says the connector kept up with the load.
+- Field: `--latency-field <dotted path>` (case insensitive, through avro unions), else the
+  `BENCHMARK_LATENCY_FIELD=<field>` line of the load (`benchmark_sql_load`: `create_ts`, `update_ts` with
+  `--shape update`, `BENCHMARK_SQL_LATENCY_FIELD` for `custom`), else `source.ts_ms` of a CDC envelope (commit
+  time), `__source_ts_ms`, `wallTime` / `clusterTime` of a MongoDB change event. `--no-latency` disables it.
+- Not in a drain (the latency is then the time spent in the backlog). Warnings: negative latencies (clock
+  skew), a 1 s precision (MySQL `TIMESTAMP` without fsp), and all 0 ms (the connector sets the record
+  timestamp from the source). Prefer `--shape small-txn`: a default `CURRENT_TIMESTAMP` is the start of the
+  transaction of a whole bulk batch.
+- `playground topic consume --plot-latencies-timestamp-field` (gnuplot PNG) no longer exists.
 
 ## Comparing versions, shapes, sessions
 
@@ -65,6 +84,8 @@ Contract:
 - In stream mode it must stop at a batch boundary when `$BENCHMARK_STOP_FILE` exists — killing a producer
   mid-batch sends a truncated record that fails the connector — and print `BENCHMARK_BATCH=<records> <epoch>`
   per batch.
+- Optionally print `BENCHMARK_LATENCY_FIELD=<field>` when the records carry the time of the change (for the
+  end-to-end latency in steady mode).
 - It must source `scripts/cli/src/lib/utils_function.sh`, **not** `scripts/utils.sh` (that one records the
   script as the example being run).
 

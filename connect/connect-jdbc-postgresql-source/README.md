@@ -52,7 +52,7 @@ playground connector benchmark --nb-records 1000000 --shape bulk
 playground connector benchmark --nb-records 100000 --shape small-txn
 playground connector benchmark --nb-records 1000000 --shape update
 
-# throughput during 2 minutes while batches of 10k rows are inserted continuously
+# throughput and end-to-end latency (kafka timestamp - create_ts) during 2 minutes while batches of 10k rows are inserted continuously
 playground connector benchmark --mode steady --duration 2m --nb-records 10000
 ```
 
