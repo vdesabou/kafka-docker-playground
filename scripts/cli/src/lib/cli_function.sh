@@ -1125,7 +1125,8 @@ function repro_bundle_files () {
           selected+=("$entry")
           ;;
         *)
-          if grep -qF -- "$entry" <<< "$references"
+          # a substring test, not one grep per entry: model folders hold hundreds of files
+          if [[ "$references" == *"$entry"* ]]
           then
             selected+=("$entry")
           fi
@@ -1146,6 +1147,16 @@ function repro_bundle_files () {
     done
   done
 
+  # git-ignored entries, with one git call for all of them
+  local -A ignored=()
+  if [ -e "$repro_root/.git" ]
+  then
+    while IFS= read -r file
+    do
+      ignored[$file]=1
+    done < <(for entry in "${selected[@]}"; do printf '%s/%s\n' "$dir_name" "$entry"; done | git -C "$repro_root" check-ignore --stdin 2>/dev/null)
+  fi
+
   for entry in "${selected[@]}"
   do
     if [ -d "$dir/$entry" ] && [ ! -L "$dir/$entry" ]
@@ -1156,7 +1167,7 @@ function repro_bundle_files () {
       else
         (cd "$repro_root" && find "$dir_name/$entry" \( -type f -o -type l \))
       fi
-    elif [ -e "$repro_root/.git" ] && git -C "$repro_root" check-ignore -q "$dir_name/$entry" 2>/dev/null
+    elif [ -n "${ignored[$dir_name/$entry]+set}" ]
     then
       continue
     else
@@ -1267,8 +1278,7 @@ function repro_scan_add_value () {
 # true when a key name is the one of a credential (password, secret, token, api key, access
 # key, private key) and not a setting about it (location, type, id, provider…)
 function repro_is_credential_key () {
-  local key
-  key=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+  local key="${1,,}"
   if ! [[ "$key" =~ (password|passwd|pwd|secret|token|api[._-]?key|apikey|access[._-]?key|private[._-]?key|credentials?)([._-]|$) ]] && ! [[ "$key" =~ (password|passwd|secret|token)$ ]]
   then
     return 1
@@ -1282,16 +1292,20 @@ function repro_is_credential_key () {
 
 # true when a hard-coded value looks like a real secret rather than a placeholder: 12 chars or
 # more with 3 kinds of characters (lower case, upper case, digits, symbols), or 20 chars or more
-# with 2 kinds (AWS secret access keys: 40 chars of base64). Never with a space (generated text)
+# with 2 kinds (AWS secret access keys: 40 chars of base64). Never with a space (generated text),
+# nor for a variable name used as a placeholder
 function repro_is_strong_secret () {
   local value="$1"
-  local lower
   if [[ "$value" =~ [[:space:]] ]]
   then
     return 1
   fi
-  lower=$(echo "$value" | tr '[:upper:]' '[:lower:]')
-  case "$lower" in
+  # a variable name used as a placeholder: :AWS_SECRET_ACCESS_KEY:, {{TOKEN}}, [PASSWORD]
+  if [[ "$value" =~ ^[^A-Za-z0-9]*[A-Z_]+[^A-Za-z0-9]*$ ]]
+  then
+    return 1
+  fi
+  case "${value,,}" in
     *confluent*|*password*|*changeit*|*changeme*|*example*|*dummy*|*redacted*|*placeholder*|*xxxx*|*'****'*|*'<'*|*'%'*) return 1 ;;
   esac
   local kinds=0
@@ -1306,6 +1320,27 @@ function repro_is_strong_secret () {
   return 1
 }
 
+# true when a value is in the files of the public base example (then it is not a leak).
+# Cached in repro_public_value_cache (declared by repro_bundle_scan): one grep -r per value
+function repro_value_in_public_example () {
+  local value="$1"
+  shift
+  if [ $# -eq 0 ]
+  then
+    return 1
+  fi
+  if [ -z "${repro_public_value_cache[$value]+set}" ]
+  then
+    if printf '%s\n' "$value" | grep -rqIFf - -- "$@" 2>/dev/null
+    then
+      repro_public_value_cache[$value]=1
+    else
+      repro_public_value_cache[$value]=0
+    fi
+  fi
+  [ "${repro_public_value_cache[$value]}" == "1" ]
+}
+
 # hard-coded values of credential keys, in JSON ("key": "value"), shell / env / properties
 # (KEY=value, export KEY=value, - KEY=value) and YAML (key: value) lines: a value that looks
 # like a real secret is a block, a weak one (placeholder, short) a warn. Values from ${VAR},
@@ -1317,13 +1352,30 @@ function repro_scan_credential_literals () {
   local findings="$3"
   shift 3
   local -a public_folders=("$@")
-  local line_number line key value regex_json regex_assign
+  local line_number line key value regex_json regex_assign rest i
+  local -a keys values
   regex_json='"([A-Za-z0-9._-]+)"[[:space:]]*:[[:space:]]*"([^"]*)"'
   regex_assign='^[[:space:]]*(-[[:space:]]+)?(export[[:space:]]+)?([A-Za-z0-9._-]+)[[:space:]]*(=|:[[:space:]])[[:space:]]*(.*)$'
   while IFS=: read -r line_number line
   do
-    while IFS=$'\t' read -r key value
+    keys=()
+    values=()
+    rest="$line"
+    while [[ "$rest" =~ $regex_json ]]
     do
+      keys+=("${BASH_REMATCH[1]}")
+      values+=("${BASH_REMATCH[2]}")
+      rest="${rest#*"${BASH_REMATCH[0]}"}"
+    done
+    if [ ${#keys[@]} -eq 0 ] && [[ "$line" =~ $regex_assign ]]
+    then
+      keys+=("${BASH_REMATCH[3]}")
+      values+=("${BASH_REMATCH[5]}")
+    fi
+    for i in "${!keys[@]}"
+    do
+      key="${keys[$i]}"
+      value="${values[$i]}"
       [ -n "$key" ] || continue
       # strip quotes (escaped ones too, as in a JAAS config in a YAML string) and a trailing comment
       value="${value//\\\"/\"}"
@@ -1337,7 +1389,7 @@ function repro_scan_credential_literals () {
       then
         continue
       fi
-      if [ ${#public_folders[@]} -gt 0 ] && printf '%s\n' "$value" | grep -rqIFf - -- "${public_folders[@]}" 2>/dev/null
+      if repro_value_in_public_example "$value" "${public_folders[@]}"
       then
         continue
       fi
@@ -1347,18 +1399,7 @@ function repro_scan_credential_literals () {
       else
         printf 'warn\t%s:%s\t%s\n' "$target" "$line_number" "hard-coded value for $key, not from the base example" >> "$findings"
       fi
-    done < <(
-      rest="$line"
-      while [[ "$rest" =~ $regex_json ]]
-      do
-        printf '%s\t%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
-        rest="${rest#*"${BASH_REMATCH[0]}"}"
-      done
-      if [[ ! "$line" =~ $regex_json ]] && [[ "$line" =~ $regex_assign ]]
-      then
-        printf '%s\t%s\n' "${BASH_REMATCH[3]}" "${BASH_REMATCH[5]}"
-      fi
-    )
+    done
   done < <(grep -IniE '(password|passwd|pwd|secret|token|api.?key|access.?key|private.?key|credential)' "$path" 2>/dev/null || true)
 }
 
@@ -1451,16 +1492,37 @@ function repro_bundle_scan () {
 
   # 2. what is scanned: the files of the bundle, except the ones that are a public file
   # (symlink to the base example), plus the manifest (run flags)
-  local -a targets=()
+  local -A linked=()
   local file
+  if [ -n "$manifest" ]
+  then
+    while IFS= read -r file
+    do
+      linked[$file]=1
+    done < <(jq -r '.files[] | select(.link_to) | .path' "$manifest")
+  fi
+  local -a targets=()
   while IFS= read -r file
   do
-    if [ -n "$manifest" ] && [ -n "$(jq -r --arg path "$file" '.files[] | select(.path == $path) | .link_to // empty' "$manifest")" ]
+    if [ -z "${linked[$file]+set}" ]
     then
-      continue
+      targets+=("$file")
     fi
-    targets+=("$file")
   done < "$files_list"
+
+  # where each file is read from: artifacts come from outside the repository
+  local -A sources=()
+  local artifact source original
+  if [ -n "$artifacts_file" ] && [ -f "$artifacts_file" ]
+  then
+    while IFS=$'\t' read -r artifact source original
+    do
+      if [ -n "$artifact" ] && [ -z "${sources[$artifact]+set}" ]
+      then
+        sources[$artifact]="$source"
+      fi
+    done < "$artifacts_file"
+  fi
 
   local -a public_folders=()
   local base
@@ -1471,59 +1533,106 @@ function repro_bundle_scan () {
       public_folders+=("$root_folder/$base")
     fi
   done
+  local -A repro_public_value_cache=()
 
-  local target path line_number value_file label
+  # the credential values, in one pattern file: a credential whose value is also in the public
+  # base example is not a leak (checked once per credential, not once per file)
+  local -a value_lines=() value_labels=()
+  local value_file label value_line
+  : > "$scan_dir/patterns"
+  for value_file in "$scan_dir"/values/*
+  do
+    [ -f "$value_file" ] || continue
+    label="${value_file##*/}"
+    if [ ${#public_folders[@]} -gt 0 ] && grep -rqIFf "$value_file" -- "${public_folders[@]}" 2>/dev/null
+    then
+      continue
+    fi
+    while IFS= read -r value_line
+    do
+      value_lines+=("$value_line")
+      value_labels+=("$label")
+    done < "$value_file"
+    cat "$value_file" >> "$scan_dir/patterns"
+  done
+
+  # well-known token formats
+  local -a token_rules=(
+    "an AWS access key id|(AKIA|ASIA)[A-Z0-9]{16}"
+    "a private key|-----BEGIN ([A-Z]+ )?PRIVATE KEY-----"
+    "a GitHub token|(gh[pousr]_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{22,})"
+    "a Slack token|xox[abposr]-[A-Za-z0-9-]{10,}"
+    "a Google API key|AIza[0-9A-Za-z_-]{35}"
+    "a JWT (license, token)|eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}"
+    "an Azure storage account key|AccountKey=[A-Za-z0-9+/=]{40,}"
+  )
+  local -a token_grep_args=()
+  local rule regex
+  for rule in "${token_rules[@]}"
+  do
+    token_grep_args+=(-e "${rule#*|}")
+  done
+
+  local target path line_number line match domain ip o1 o2 o3 o4 i n nb_targets nb_done=0
+  local -A labels_seen
   if [ -n "$manifest" ]
   then
     targets+=("repro-manifest.json")
   fi
+  nb_targets=${#targets[@]}
   for target in "${targets[@]}"
   do
+    nb_done=$((nb_done + 1))
+    if [ $nb_targets -ge 200 ] && [ $((nb_done % 200)) -eq 0 ]
+    then
+      log "🕵️ $nb_done/$nb_targets files scanned" >&2
+    fi
     if [ "$target" == "repro-manifest.json" ]
     then
       path="$manifest"
     else
-      path=$(repro_bundle_source "$repro_root" "$artifacts_file" "$target")
+      path="${sources[$target]:-$repro_root/$target}"
     fi
 
-    # known credential values; a value that is also in the public base example is not a leak
-    for value_file in "$scan_dir"/values/*
-    do
-      [ -f "$value_file" ] || continue
-      label=$(basename "$value_file")
-      for line_number in $(grep -InFf "$value_file" -- "$path" 2>/dev/null | cut -d ":" -f 1)
+    # known credential values: one grep for all of them, then which ones matched
+    if [ ${#value_lines[@]} -gt 0 ]
+    then
+      while IFS=: read -r line_number line
       do
-        if [ ${#public_folders[@]} -gt 0 ] && grep -rqIFf "$value_file" -- "${public_folders[@]}" 2>/dev/null
-        then
-          break
-        fi
-        printf 'block\t%s:%s\t%s\n' "$target" "$line_number" "contains the value of $label" >> "$findings"
-      done
-    done
+        labels_seen=()
+        for i in "${!value_lines[@]}"
+        do
+          if [[ "$line" == *"${value_lines[$i]}"* ]] && [ -z "${labels_seen[${value_labels[$i]}]+set}" ]
+          then
+            labels_seen[${value_labels[$i]}]=1
+            printf 'block\t%s:%s\t%s\n' "$target" "$line_number" "contains the value of ${value_labels[$i]}" >> "$findings"
+          fi
+        done
+      done < <(grep -InFf "$scan_dir/patterns" -- "$path" 2>/dev/null || true)
+    fi
 
-    # well-known token formats
-    local rule regex
-    while IFS='|' read -r rule regex
+    # well-known token formats: one grep for all of them, then which ones matched
+    while IFS=: read -r line_number line
     do
-      for line_number in $(grep -InE -- "$regex" "$path" 2>/dev/null | grep -v "EXAMPLE" | cut -d ":" -f 1)
+      if [[ "$line" == *EXAMPLE* ]]
+      then
+        continue
+      fi
+      for rule in "${token_rules[@]}"
       do
-        printf 'block\t%s:%s\t%s\n' "$target" "$line_number" "looks like $rule" >> "$findings"
+        regex="${rule#*|}"
+        if [[ "$line" =~ $regex ]]
+        then
+          printf 'block\t%s:%s\t%s\n' "$target" "$line_number" "looks like ${rule%%|*}" >> "$findings"
+        fi
       done
-    done <<'EOF'
-an AWS access key id|(AKIA|ASIA)[A-Z0-9]{16}
-a private key|-----BEGIN ([A-Z]+ )?PRIVATE KEY-----
-a GitHub token|(gh[pousr]_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{22,})
-a Slack token|xox[abposr]-[A-Za-z0-9-]{10,}
-a Google API key|AIza[0-9A-Za-z_-]{35}
-a JWT (license, token)|eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}
-an Azure storage account key|AccountKey=[A-Za-z0-9+/=]{40,}
-EOF
+    done < <(grep -InE "${token_grep_args[@]}" -- "$path" 2>/dev/null || true)
 
     # possible customer data: warnings only
-    local match domain ip key literal o1 o2 o3 o4
     while IFS=: read -r line_number match
     do
-      domain=$(echo "${match#*@}" | tr '[:upper:]' '[:lower:]')
+      domain="${match#*@}"
+      domain="${domain,,}"
       case "$domain" in
         example.com|example.org|example.net|*.example.com|confluent.io|*.confluent.io|confluent.cloud|*.local|*.noreply.github.com|anthropic.com|*.svc|*.internal) continue ;;
       esac
@@ -1533,11 +1642,15 @@ EOF
     # versions (7.7.12.1) are not addresses: lines about versions, tags, images or archives are skipped
     while IFS=: read -r line_number match
     do
-      if grep -qiE 'version|tag|image|\.jar|\.zip' <<< "$match"
+      if [[ "${match,,}" =~ version|tag|image|\.jar|\.zip ]]
       then
         continue
       fi
-      ip=$(echo "$match" | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -1 || true)
+      ip=""
+      if [[ "$match" =~ ([0-9]{1,3}\.){3}[0-9]{1,3} ]]
+      then
+        ip="${BASH_REMATCH[0]}"
+      fi
       IFS=. read -r o1 o2 o3 o4 <<< "$ip"
       if [ "$o1" -gt 255 ] || [ "$o2" -gt 255 ] || [ "$o3" -gt 255 ] || [ "$o4" -gt 255 ]
       then
