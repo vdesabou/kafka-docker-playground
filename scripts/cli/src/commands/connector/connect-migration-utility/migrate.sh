@@ -1,5 +1,6 @@
 migration_mode=${args[--migration-mode]}
 eval "sensitive_property=(${args[--sensitive-property]})"
+no_open="${args[--no-open]}"
 
 get_connect_url_and_security
 
@@ -54,8 +55,11 @@ do
     if [ -f "$json_file" ]
     then
         log "📄 $(basename "$json_file")"
-        log "✨ Update the connector config file $(basename "$json_file") as per your needs, save and close the file to continue"
-        playground open --file "$json_file" --wait
+        if [[ -z "$no_open" ]]
+        then
+            log "✨ Update the connector config file $(basename "$json_file") as per your needs, save and close the file to continue"
+            playground open --file "$json_file" --wait
+        fi
     fi
 done
 
@@ -83,7 +87,7 @@ else
 
 	playground connector status
 
-	if [ -z "$GITHUB_RUN_NUMBER" ]
+	if [ -z "$GITHUB_RUN_NUMBER" ] && [[ -z "$no_open" ]]
 	then
 		# not running with CI
 		log "Do you want to see the connector in your browser ?"
