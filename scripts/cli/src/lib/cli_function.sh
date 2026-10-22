@@ -2310,7 +2310,7 @@ function get_ccloud_connector_service_account_acls() {
     ;;
     full)
       # same as the service account of the Confluent Cloud stack (ccloud::create_acls_all_resources_full_access)
-      printf '%s Topic:*\n' CREATE DELETE WRITE READ DESCRIBE DESCRIBE_CONFIGS
+      printf '%s Topic:*\n' CREATE DELETE WRITE READ DESCRIBE DESCRIBE_CONFIGS ALTER_CONFIGS
       printf '%s Group:*\n' READ WRITE CREATE DESCRIBE
       printf '%s TransactionalId:*\n' DESCRIBE WRITE
       printf '%s Cluster:kafka-cluster\n' IDEMPOTENT_WRITE DESCRIBE

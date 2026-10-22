@@ -4195,7 +4195,7 @@ function ccloud::create_acls_all_resources_full_access() {
   local failed=0
 
   # the ACLs are independent: create them concurrently
-  ccloud::create_acl --service-account $SERVICE_ACCOUNT_ID --operations CREATE,DELETE,WRITE,READ,DESCRIBE,DESCRIBE_CONFIGS --topic '*' &
+  ccloud::create_acl --service-account $SERVICE_ACCOUNT_ID --operations CREATE,DELETE,WRITE,READ,DESCRIBE,DESCRIBE_CONFIGS,ALTER_CONFIGS --topic '*' &
   pids+=($!)
   ccloud::create_acl --service-account $SERVICE_ACCOUNT_ID --operations READ,WRITE,CREATE,DESCRIBE --consumer-group '*' &
   pids+=($!)
@@ -4222,7 +4222,7 @@ function ccloud::delete_acls_ccloud_stack() {
 
   echo "Deleting ACLs for service account ID $SERVICE_ACCOUNT_ID"
 
-  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operations CREATE,DELETE,WRITE,READ,DESCRIBE,DESCRIBE_CONFIGS --topic '*' &>"$REDIRECT_TO"
+  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operations CREATE,DELETE,WRITE,READ,DESCRIBE,DESCRIBE_CONFIGS,ALTER_CONFIGS --topic '*' &>"$REDIRECT_TO"
 
   confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operations READ,WRITE,CREATE,DESCRIBE --consumer-group '*' &>"$REDIRECT_TO"
 
@@ -4995,62 +4995,6 @@ export KSQLDB_ENDPOINT="$KSQLDB_ENDPOINT"
 export KSQLDB_BASIC_AUTH_USER_INFO="$KSQLDB_BASIC_AUTH_USER_INFO"
 EOF
   chmod $PERM $ENV_CONFIG
-
-  ################################################################################
-  # CLAUDE CLI
-  ################################################################################
-  CLAUDE_MCP_CONFLUENT_CONFIG=$KAFKA_DOCKER_PLAYGROUND_DIR/.ccloud/.env
-  echo "$CLAUDE_MCP_CONFLUENT_CONFIG"
-  rm -f $CLAUDE_MCP_CONFLUENT_CONFIG
-
-  SCHEMA_REGISTRY_API_KEY=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | awk -F: '{print $1}')
-  SCHEMA_REGISTRY_API_SECRET=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | awk -F: '{print $2}')
-  KAFKA_REST_ENDPOINT=${CLUSTER_REST_ENDPOINT:-$(confluent kafka cluster describe $CLUSTER -o json | jq -r ".rest_endpoint")}
-
-  # example scripts source this file without the secrets library
-  if type load_secrets_env_vars > /dev/null 2>&1
-  then
-    load_secrets_env_vars CONFLUENT_CLOUD_API_KEY CONFLUENT_CLOUD_API_SECRET
-  fi
-
-  if [ -z $CONFLUENT_CLOUD_API_KEY ]
-  then
-    logwarn "❌ environment variable CONFLUENT_CLOUD_API_KEY should be set to use MCP confluent server for Confluent Cloud"
-    logwarn "Set it with Cloud API key, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys"
-  fi
-
-  if [ -z $CONFLUENT_CLOUD_API_SECRET ]
-  then
-    logwarn "❌ environment variable CONFLUENT_CLOUD_API_SECRET should be set to use MCP confluent server for Confluent Cloud"
-    logwarn "Set it with Cloud API secret, see https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys"
-  fi
-
-  cat <<EOF >> $CLAUDE_MCP_CONFLUENT_CONFIG
-# .env file
-BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS"
-KAFKA_API_KEY="$CLOUD_KEY"
-KAFKA_API_SECRET="$CLOUD_SECRET"
-KAFKA_REST_ENDPOINT="$KAFKA_REST_ENDPOINT"
-KAFKA_CLUSTER_ID="$CLUSTER"
-KAFKA_ENV_ID="$ENVIRONMENT"
-# FLINK_ENV_ID="env-..."
-# FLINK_ORG_ID=""
-# FLINK_REST_ENDPOINT="https://flink.us-east4.gcp.confluent.cloud"
-# FLINK_ENV_NAME=""
-# FLINK_DATABASE_NAME=""
-# FLINK_API_KEY=""
-# FLINK_API_SECRET=""
-# FLINK_COMPUTE_POOL_ID="lfcp-..."
-# TABLEFLOW_API_KEY=""
-# TABLEFLOW_API_SECRET=""
-CONFLUENT_CLOUD_API_KEY="$CONFLUENT_CLOUD_API_KEY"
-CONFLUENT_CLOUD_API_SECRET="$CONFLUENT_CLOUD_API_SECRET"
-CONFLUENT_CLOUD_REST_ENDPOINT="https://api.confluent.cloud"
-SCHEMA_REGISTRY_API_KEY="$SCHEMA_REGISTRY_API_KEY"
-SCHEMA_REGISTRY_API_SECRET="$SCHEMA_REGISTRY_API_SECRET"
-SCHEMA_REGISTRY_ENDPOINT="$SCHEMA_REGISTRY_URL"
-EOF
-  chmod $PERM $CLAUDE_MCP_CONFLUENT_CONFIG
 
   return 0
 }
