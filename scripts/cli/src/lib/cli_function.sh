@@ -2815,17 +2815,21 @@ function filter_plaintext_or_ccloud_environment() {
 }
 
 function filter_schema_registry_running() {
+  # bashly runs filters in $(...) under set -e: without this trap, an exit 1 in get_sr_url_and_security ends the cli
+  # before bashly prints the error message
+  trap 'exit 0' EXIT
   get_sr_url_and_security
 
+  local sr_ok=0
   for i in {1..30}; do
-    curl $sr_security -s "${sr_url}/config" > /dev/null 2>&1
-    if [ $? == 0 ]; then
+    if curl $sr_security -s "${sr_url}/config" > /dev/null 2>&1; then
+      sr_ok=1
       break
     fi
     sleep 1
   done
 
-  if [ $? != 0 ]; then
+  if [ $sr_ok == 0 ]; then
     logerror "schema registry rest api should be running to run this command"
   fi
 }
@@ -2838,6 +2842,9 @@ function filter_oracle_running() {
 }
 
 function filter_connect_running() {
+  # bashly runs filters in $(...) under set -e: without this trap, an exit 1 in get_connect_url_and_security ends the
+  # cli before bashly prints the error message
+  trap 'exit 0' EXIT
   # fully managed and custom connectors run in Confluent Cloud, not on a local worker
   local connector_type
   connector_type=$(playground state get run.connector_type)
@@ -6044,4 +6051,14 @@ function resolve_dlq_topic () {
     logerror "❌ no running connector has a dead letter queue (errors.deadletterqueue.topic.name), use --topic"
     exit 1
   fi
+}
+
+# filter (stdin to stdout) masking connector secrets in tool output before it is printed: the values of secret-looking
+# keys, in json ("key": "value") and python dict ('key': 'value') form, plus each exact value given as argument
+function redact_connector_secrets() {
+  REDACT_VALUES="$(printf '%s\n' "$@")" perl -pe '
+    BEGIN { @values = grep { length($_) >= 4 } split(/\n/, $ENV{REDACT_VALUES} // ""); }
+    s/((["\x27])[^"\x27]*(?:password|secret|token|credentials|access\.key\.id|api\.key|apikey|sasl\.jaas\.config)[^"\x27]*\2\s*:\s*)(["\x27])(?:\\.|(?!\3).)*\3/$1$3********$3/gi;
+    for my $v (@values) { s/\Q$v\E/********/g; }
+  '
 }

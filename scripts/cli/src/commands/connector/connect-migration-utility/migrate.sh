@@ -28,6 +28,12 @@ bootstrap_ccloud_environment "" "" "true"
 
 get_ccloud_connect
 
+# the output of the tool holds the configs of the connectors, secrets included: private file, removed on exit, printed
+# redacted (also masking the exact secret values known here)
+output_log=$(mktemp -t pg-cmu-migrate-XXXXXXXXXX)
+trap 'rm -f "$output_log"' EXIT
+secret_values=("$CONFLUENT_CLOUD_API_SECRET" "$CLOUD_SECRET")
+
 for json_file in "$discovery_output_dir/discovered_configs/successful_configs/fm_configs"/*.json
 do
     length=${#sensitive_property[@]}
@@ -38,6 +44,7 @@ do
             json_key=$(echo "$sensitive_prop" | cut -d'=' -f1)
             shell_var_name=$(echo "$sensitive_prop" | cut -d'=' -f2)
             actual_secret_value=$(eval echo "$shell_var_name")
+            secret_values+=("$actual_secret_value")
             escaped_secret_value=$(echo "$actual_secret_value" | sed 's/[\/&]/\\&/g')
             escaped_key=$(echo "$json_key" | sed 's/[\/&]/\\&/g')
 
@@ -64,21 +71,21 @@ do
 done
 
 set +e
-docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "python src/migrate_connector_script.py --worker-urls 'http://localhost:8083' --disable-ssl-verify --environment-id $environment --cluster-id $cluster --bearer-token $CONFLUENT_CLOUD_API_KEY:$CONFLUENT_CLOUD_API_SECRET --kafka-auth-mode KAFKA_API_KEY --kafka-api-key $CLOUD_KEY --kafka-api-secret $CLOUD_SECRET --fm-config-dir /discovery_output_dir/discovered_configs/successful_configs/fm_configs --migration-mode $migration_mode" > /tmp/output.log 2>&1
+docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "python src/migrate_connector_script.py --worker-urls 'http://localhost:8083' --disable-ssl-verify --environment-id $environment --cluster-id $cluster --bearer-token $CONFLUENT_CLOUD_API_KEY:$CONFLUENT_CLOUD_API_SECRET --kafka-auth-mode KAFKA_API_KEY --kafka-api-key $CLOUD_KEY --kafka-api-secret $CLOUD_SECRET --fm-config-dir /discovery_output_dir/discovered_configs/successful_configs/fm_configs --migration-mode $migration_mode" > "$output_log" 2>&1
 ret=$?
 set -e
 if [ $ret -ne 0 ]
 then
 	logerror "❌ Failed to Migrate Kafka Connectors, check output below"
-	cat /tmp/output.log
+	redact_connector_secrets "${secret_values[@]}" < "$output_log"
 	exit 1
 else
 	set +e
-	grep "ERROR" /tmp/output.log > /dev/null 2>&1
+	grep "ERROR" "$output_log" > /dev/null 2>&1
 	if [ $? -eq 0 ]
 	then
 		logerror "❌ Found ERROR in the output of the migration process, please check output below"
-		grep "ERROR" /tmp/output.log
+		grep "ERROR" "$output_log" | redact_connector_secrets "${secret_values[@]}"
 		exit 1
 	fi
 	set -e

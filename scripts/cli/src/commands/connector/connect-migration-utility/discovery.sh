@@ -13,22 +13,27 @@ get_ccloud_connect
 discovery_output_dir="$root_folder/connect-migration-utility-discovery-output"
 rm -rf "$discovery_output_dir"
 
+# the output of the tool holds the configs read from the worker, secrets included: private file, removed on exit,
+# printed redacted
+output_log=$(mktemp -t pg-cmu-discovery-XXXXXXXXXX)
+trap 'rm -f "$output_log"' EXIT
+
 set +e
 docker pull vdesabou/docker-connect-migration-utility:latest > /dev/null 2>&1
-docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "python src/discovery_script.py --worker-urls 'http://localhost:8083' --output-dir /discovery_output_dir --disable-ssl-verify --redact --environment-id $environment --cluster-id $cluster && chown -R $(id -u $USER):$(id -g $USER) /discovery_output_dir" > /tmp/output.log 2>&1
+docker run -i --rm --network=host -v "$discovery_output_dir:/discovery_output_dir" vdesabou/docker-connect-migration-utility:latest bash -c "python src/discovery_script.py --worker-urls 'http://localhost:8083' --output-dir /discovery_output_dir --disable-ssl-verify --redact --environment-id $environment --cluster-id $cluster && chown -R $(id -u $USER):$(id -g $USER) /discovery_output_dir" > "$output_log" 2>&1
 ret=$?
 set -e
 
 if [[ -n "$verbose" ]]
 then
   log "🐞 --verbose is set, full output of the discovery process:"
-  cat /tmp/output.log
+  redact_connector_secrets < "$output_log"
 fi
 
 if [ $ret -ne 0 ]
 then
     logerror "❌ Failed to Run Kafka Connector Migration Utility, check output below:"
-    cat /tmp/output.log
+    redact_connector_secrets < "$output_log"
     exit 1
 fi
 
