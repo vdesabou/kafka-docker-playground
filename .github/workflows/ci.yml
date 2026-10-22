@@ -9,7 +9,7 @@ on:
       # not on the hour: GitHub delays scheduled runs a lot at minute 0 (they started 2 to 5 hours late)
       - cron: '17 18 * * *' # every day at 6 pm, docker
       # podman: 12 hours apart, not in parallel with the docker run (shared ccloud cluster and connector names)
-      # keep in sync with the github.event.schedule checks of the build job
+      # keep in sync with the github.event.schedule checks of the build and post-build-cleanup jobs
       - cron: '17 6 * * *' # every day at 6 am, podman
 
   workflow_dispatch:
@@ -705,7 +705,8 @@ jobs:
   post-build-cleanup:
     name: Cleanup resources
     runs-on: ubuntu-latest
-    if: ${{ always() && github.event.inputs.test_name == '' }}
+    # not after podman runs: they end during the work day, the cleanup would delete cloud resources in use
+    if: ${{ always() && github.event.inputs.test_name == '' && github.event.inputs.container_engine != 'podman' && github.event.schedule != '17 6 * * *' }}
     needs: [build, execute_one_test]
     steps:
       - name: Checkout code
