@@ -298,22 +298,7 @@ log "🕵️ scanning the bundle for secrets and customer data"
 repro_bundle_scan "$repro_root" "$tmp_dir/files" "$tmp_dir/repro-manifest.json" "$tmp_dir/findings" "$(jq -r '[.models[].base_example | select(. != "")] | unique | join(" ")' "$tmp_dir/repro-manifest.json")" "$tmp_dir/artifacts"
 nb_blocks=$(grep -c "^block" "$tmp_dir/findings" || true)
 nb_warnings=$(grep -c "^warn" "$tmp_dir/findings" || true)
-for severity in block warn
-do
-    grep "^$severity" "$tmp_dir/findings" | head -20 | while IFS=$'\t' read -r level location message
-    do
-        if [ "$level" == "block" ]
-        then
-            logerror "   🔐 $location $message"
-        else
-            logwarn "   👀 $location $message"
-        fi
-    done
-done
-if [ $((nb_blocks + nb_warnings)) -gt 40 ]
-then
-    logwarn "   … $((nb_blocks + nb_warnings)) findings in total, only the first 20 of each kind are shown"
-fi
+repro_show_findings "$tmp_dir/findings"
 if [ $nb_warnings -gt 0 ]
 then
     logwarn "👀 $nb_warnings possible customer data finding(s): check them, a bundle must not contain customer data"

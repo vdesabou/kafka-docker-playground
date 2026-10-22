@@ -127,6 +127,7 @@ playground_usage() {
   printf "%s\n" "$(bold "Repro commands:")"
   printf "  %s   👷‍♂️ Reproduction model commands\n" "$(green "repro")                                     "
   printf "  %s   📤 Export reproduction models as a self-contained tgz bundle\n" "$(green "repro export")                              "
+  printf "  %s   🕵️ Scan reproduction models for secrets and customer data before they are committed\n" "$(green "repro check")                               "
   printf "  %s   📥 Import a tgz bundle created by 'playground repro export'\n" "$(green "repro import")                              "
   printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "repro bootstrap")                           "
   echo
@@ -4537,7 +4538,7 @@ playground_cleanup_cloud_resources_usage() {
 playground_repro_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground repro\n\n"
-    printf "  👷‍♂️ Reproduction model commands\n  \n  A reproduction model is an example written to demonstrate one specific\n  problem, so that anyone can reproduce it with a single command.\n  \n    bootstrap   scaffold one from an existing example, then edit it\n    export      package one or more models as a self-contained tgz bundle\n    import      unpack a bundle someone sent you, and run it\n  \n  👉 Always scaffold with bootstrap rather than copying a script by hand: it\n  creates the header, the docker compose override, the CLI cheat sheet and\n  registers the model, which a hand-written file would be missing.\n  \n  Keep a model minimal and about one issue, state expected versus actual\n  behaviour in its comments header, and never put customer data in it.\n\n"
+    printf "  👷‍♂️ Reproduction model commands\n  \n  A reproduction model is an example written to demonstrate one specific\n  problem, so that anyone can reproduce it with a single command.\n  \n    bootstrap   scaffold one from an existing example, then edit it\n    export      package one or more models as a self-contained tgz bundle\n    import      unpack a bundle someone sent you, and run it\n    check       scan models for secrets and customer data before committing them\n  \n  👉 Always scaffold with bootstrap rather than copying a script by hand: it\n  creates the header, the docker compose override, the CLI cheat sheet and\n  registers the model, which a hand-written file would be missing.\n  \n  Keep a model minimal and about one issue, state expected versus actual\n  behaviour in its comments header, and never put customer data in it.\n\n"
   else
     printf "playground repro - 👷‍♂️ Reproduction model commands\n\n"
   fi
@@ -4549,6 +4550,7 @@ playground_repro_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   📤 Export reproduction models as a self-contained tgz bundle\n" "$(green "export")   "
+  printf "  %s   🕵️ Scan reproduction models for secrets and customer data before they are committed\n" "$(green "check")    "
   printf "  %s   📥 Import a tgz bundle created by 'playground repro export'\n" "$(green "import")   "
   printf "  %s   🛠  Bootstrap reproduction model, just run <playground repro bootstrap> !\n" "$(green "bootstrap")"
   echo
@@ -4579,7 +4581,7 @@ playground_repro_usage() {
 playground_repro_export_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground repro export\n\n"
-    printf "  📤 Export reproduction models as a self-contained tgz bundle\n  \n  Produces a single tgz that a colleague can feed to\n  'playground repro import' to run your scenario as is.\n  \n  The bundle holds what the model needs, committed or not: the script,\n  the files of its folder it mentions (docker compose override, producer,\n  SQL files…) and the support files linked by bootstrap (README.md,\n  stop.sh, benchmark-load.bash, config-*). Symlinks are stored as their\n  content, so the bundle does not depend on the version of the base\n  example. Git-ignored files, build output (target/), dumps, flight\n  recordings, logs and credential files (keyfile.json, *.pem, *.key) are\n  left out.\n  \n  A repro-manifest.json describes the bundle: the last 'playground run'\n  line of each model (from playground-run-history), its case number,\n  author, base example, the playground commit, the names (never the\n  values) of the credentials it needs, and the sha256 of every file.\n  \n  Before anything is written, the bundle is scanned. The export stops\n  (unless --force) when a file contains the value of a credential known\n  to this machine ('playground secrets' store, exported credential\n  variables, CLUSTER_CREDS / SCHEMA_REGISTRY_CREDS of playground.ini,\n  ~/.aws/credentials) or a well-known token format (AWS access key id,\n  private key, GitHub / Slack token, Google API key, JWT, Azure storage\n  account key). Email addresses, public IP addresses and hard-coded\n  passwords that do not come from the base example are reported as\n  possible customer data. Values are never printed.\n  \n  Files outside the repository that a model needs (--connector-zip /\n  --connector-jar of its run line, files whose absolute path appears in\n  the script or its compose files, like ~/Downloads/config.json) are\n  only listed, unless --include-artifacts packs them under\n  <model folder>/artifacts/. Import then points the run line, the script\n  and the compose files to the imported copies. Import also rewrites the\n  paths of the exporter's checkout (like the jar path written by\n  'repro bootstrap --custom-smt') to the local ones.\n  \n  --cluster-creds / --cluster-schema-registry-creds are removed from the\n  run line: whoever imports runs with their own cluster.\n  \n  Without --file, the current reproduction model is exported.\n  \n  📋 On macOS, the bundle is copied to the clipboard as a file: paste it\n  (Cmd+V) in a Slack conversation to attach it (--no-clipboard to skip).\n  \n  🎓 Tip: start with --dry-run to see what would be packed, and what the scan\n  finds.\n\n"
+    printf "  📤 Export reproduction models as a self-contained tgz bundle\n  \n  Produces a single tgz that a colleague can feed to\n  'playground repro import' to run your scenario as is.\n  \n  The bundle holds what the model needs, committed or not: the script,\n  the files of its folder it mentions (docker compose override, producer,\n  SQL files…) and the support files linked by bootstrap (README.md,\n  stop.sh, benchmark-load.bash, config-*). Symlinks are stored as their\n  content, so the bundle does not depend on the version of the base\n  example. Git-ignored files, build output (target/), dumps, flight\n  recordings, logs and credential files (keyfile.json, *.pem, *.key) are\n  left out.\n  \n  A repro-manifest.json describes the bundle: the last 'playground run'\n  line of each model (from playground-run-history), its case number,\n  author, base example, the playground commit, the names (never the\n  values) of the credentials it needs, and the sha256 of every file.\n  \n  Before anything is written, the bundle is scanned. The export stops\n  (unless --force) when a file contains the value of a credential known\n  to this machine ('playground secrets' store, exported credential\n  variables, CLUSTER_CREDS / SCHEMA_REGISTRY_CREDS of playground.ini,\n  ~/.aws/credentials) or a well-known token format (AWS access key id,\n  private key, GitHub / Slack token, Google API key, JWT, Azure storage\n  account key). Email addresses, public IP addresses and hard-coded\n  passwords that do not come from the base example are reported as\n  possible customer data. Values are never printed.\n  \n  Files outside the repository that a model needs (--connector-zip /\n  --connector-jar of its run line, files whose absolute path appears in\n  the script or its compose files, like ~/Downloads/config.json) are\n  only listed, unless --include-artifacts packs them under\n  <model folder>/artifacts/. Import then points the run line, the script\n  and the compose files to the imported copies. Import also rewrites the\n  paths of the exporter's checkout (like the jar path written by\n  'repro bootstrap --custom-smt') to the local ones.\n  \n  --cluster-creds / --cluster-schema-registry-creds are removed from the\n  run line: whoever imports runs with their own cluster.\n  \n  Without --file, the current reproduction model is exported.\n  \n  📋 On macOS, the bundle is copied to the clipboard as a file: paste it\n  (Cmd+V) in a Slack conversation to attach it (--no-clipboard to skip).\n  \n  🎓 Tip: start with --dry-run to see what would be packed, and what the scan\n  finds.\n  The same scan runs on commits with 'playground repro check'.\n\n"
   else
     printf "playground repro export - 📤 Export reproduction models as a self-contained tgz bundle\n\n"
   fi
@@ -4659,6 +4661,70 @@ playground_repro_export_usage() {
     printf "  playground repro export -f\n  ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh\n  --dry-run\n"
     printf "  playground repro export --all-uncommitted --output ~/Desktop\n"
     printf "  playground repro export --include-artifacts\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_repro_check_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground repro check\n\n"
+    printf "  🕵️ Scan reproduction models for secrets and customer data before they are\n  committed\n  \n  Runs the scan of 'playground repro export' on the files of the\n  reproduction models, without packing anything. It stops (exit code 1)\n  when a file contains the value of a credential known to this machine\n  ('playground secrets' store, exported credential variables,\n  CLUSTER_CREDS / SCHEMA_REGISTRY_CREDS of playground.ini,\n  ~/.aws/credentials) or a well-known token format (AWS access key id,\n  private key, GitHub / Slack token, Google API key, JWT, Azure storage\n  account key), and when a credential file (keyfile.json, *.pem, *.key,\n  *.p12, *.jks, secrets.properties, playground.ini) is about to be\n  committed. Email addresses, public IP addresses, hard-coded passwords\n  that do not come from the base example, and dumps, logs or archives\n  are reported as possible customer data, without failing. Values are\n  never printed.\n  \n  Without flag, the new and modified files of reproduction-models are\n  checked. Symlinks to the public examples are not.\n  \n  🪝 'playground repro bootstrap' and 'playground repro import' set up a\n  pre-commit hook in reproduction-models (git config core.hooksPath\n  <playground>/scripts/repro-git-hooks) that runs\n  'playground repro check --staged --skip-secrets-store' on every commit.\n  An existing pre-commit hook or core.hooksPath is never replaced. To skip\n  the scan of one commit: git commit --no-verify, or\n  PLAYGROUND_REPRO_SCAN=skip git commit. PLAYGROUND_REPRO_SCAN=full also\n  reads the 'playground secrets' store.\n\n"
+  else
+    printf "playground repro check - 🕵️ Scan reproduction models for secrets and customer data before they are committed\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground repro check [OPTIONS]\n"
+  printf "  playground repro check --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file, -f FILE (repeatable)")"
+    printf "    🔖 Reproduction model script to check (the files export would pack), can be\n    repeated\n"
+    printf "    %s\n" "Conflicts: --staged, --all"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--staged")"
+    printf "    🪝 Check the staged content of the files about to be committed (what the\n    pre-commit hook uses)\n"
+    printf "    %s\n" "Conflicts: --file, --all"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--all")"
+    printf "    📚 Check every file of reproduction-models, committed or not (one-time audit)\n"
+    printf "    %s\n" "Conflicts: --file, --staged"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--skip-secrets-store")"
+    printf "    ⚡ Do not read the 'playground secrets' store, which can prompt (1Password):\n    only the exported variables, playground.ini and ~/.aws/credentials values,\n    and the token formats\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the findings as JSON (exit code 1 still means a secret was found)\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground repro check\n"
+    printf "  playground repro check --staged\n"
+    printf "  playground repro check -f\n  ~/kafka-docker-playground/reproduction-models/connect-connect-http-sink/http-repro-123456-dlq.sh\n"
+    printf "  playground repro check --all --json\n"
     echo
 
   fi
@@ -15568,8 +15634,9 @@ function repro_scan_add_value () {
 # scan the files of a bundle for secrets and customer data, before it leaves the machine.
 # writes one '<block|warn>\t<file>:<line>\t<message>' line per finding to $4, never a value
 #   $1 reproduction-models folder, $2 file with the bundle paths (relative to $1),
-#   $3 manifest, $4 findings file, $5 base examples (relative to the repository root),
-#   $6 artifacts file (see repro_bundle_source)
+#   $3 manifest (empty: no manifest, the files list has no symlink to skip), $4 findings file,
+#   $5 base examples (relative to the repository root), $6 artifacts file (see repro_bundle_source),
+#   $7 not empty: do not read the 'playground secrets' store (no backend prompt, for git hooks)
 function repro_bundle_scan () {
   local repro_root="$1"
   local files_list="$2"
@@ -15577,6 +15644,7 @@ function repro_bundle_scan () {
   local findings="$4"
   local base_examples="$5"
   local artifacts_file="${6:-}"
+  local skip_secrets_store="${7:-}"
   local scan_dir
   scan_dir=$(mktemp -d)
   chmod 0700 "$scan_dir"
@@ -15600,7 +15668,10 @@ function repro_bundle_scan () {
   if [ -n "$names" ]
   then
     local backend_ready=1
-    if secret_backend_ready > /dev/null 2>&1
+    if [ -n "$skip_secrets_store" ]
+    then
+      backend_ready=0
+    elif secret_backend_ready > /dev/null 2>&1
     then
       log "🔐 reading the $(echo "$names" | wc -l | tr -d ' ') credentials known to this machine to look for their values ($(get_secret_backend) backend)" >&2
       secret_prefetch "$profile" $names 2> /dev/null
@@ -15653,7 +15724,7 @@ function repro_bundle_scan () {
   local file
   while IFS= read -r file
   do
-    if [ -n "$(jq -r --arg path "$file" '.files[] | select(.path == $path) | .link_to // empty' "$manifest")" ]
+    if [ -n "$manifest" ] && [ -n "$(jq -r --arg path "$file" '.files[] | select(.path == $path) | .link_to // empty' "$manifest")" ]
     then
       continue
     fi
@@ -15671,7 +15742,11 @@ function repro_bundle_scan () {
   done
 
   local target path line_number value_file label
-  for target in "${targets[@]}" "repro-manifest.json"
+  if [ -n "$manifest" ]
+  then
+    targets+=("repro-manifest.json")
+  fi
+  for target in "${targets[@]}"
   do
     if [ "$target" == "repro-manifest.json" ]
     then
@@ -15761,6 +15836,87 @@ EOF
 
   rm -rf "$scan_dir"
   sort -u "$findings" | sort -t $'\t' -k1,1 -k2,2V -o "$findings"
+}
+
+# print the findings written by repro_bundle_scan, the first 20 of each kind
+function repro_show_findings () {
+  local findings="$1"
+  local nb_blocks nb_warnings severity level location message
+  nb_blocks=$(grep -c "^block" "$findings" || true)
+  nb_warnings=$(grep -c "^warn" "$findings" || true)
+  for severity in block warn
+  do
+    grep "^$severity" "$findings" | head -20 | while IFS=$'\t' read -r level location message
+    do
+      if [ "$level" == "block" ]
+      then
+        logerror "   🔐 $location $message"
+      else
+        logwarn "   👀 $location $message"
+      fi
+    done
+  done
+  if [ $((nb_blocks + nb_warnings)) -gt 40 ]
+  then
+    logwarn "   … $((nb_blocks + nb_warnings)) findings in total, only the first 20 of each kind are shown"
+  fi
+}
+
+# public base examples of the model folders of a files list (relative to the reproduction-models
+# folder $1): where the symlinks created by bootstrap point to, relative to the repository root
+function repro_model_base_examples () {
+  local repro_root="$1"
+  local files_list="$2"
+  local output_folder="reproduction-models"
+  local dir_name link target
+  for dir_name in $(grep '/' "$files_list" | cut -d "/" -f 1 | sort -u)
+  do
+    for link in "$repro_root/$dir_name"/*
+    do
+      if [ -L "$link" ]
+      then
+        target=$(repro_link_target "$output_folder/$dir_name/$(basename "$link")")
+        if [ -n "$target" ] && [[ "$target" != "$output_folder"/* ]]
+        then
+          dirname "$target"
+          break
+        fi
+      fi
+    done
+  done | sort -u | tr '\n' ' '
+}
+
+# point the git hooks of the reproduction-models repository to scripts/repro-git-hooks, whose
+# pre-commit runs 'playground repro check --staged'. Never replaces hooks set up by the user
+function repro_install_git_hook () {
+  local repro_root="$root_folder/reproduction-models"
+  local hooks_dir="$root_folder/scripts/repro-git-hooks"
+  local current git_hooks
+  if [ ! -e "$repro_root/.git" ] || [ ! -f "$hooks_dir/pre-commit" ]
+  then
+    return 0
+  fi
+  current=$(git -C "$repro_root" config --local --get core.hooksPath 2>/dev/null)
+  if [ "$current" == "$hooks_dir" ]
+  then
+    return 0
+  fi
+  # ours, from a checkout that moved
+  if [ -n "$current" ] && [[ "$current" != */scripts/repro-git-hooks ]]
+  then
+    logwarn "🪝 core.hooksPath of reproduction-models is set to $current: add 'playground repro check --staged' to your pre-commit hook to scan the commits for secrets"
+    return 0
+  fi
+  git_hooks=$(cd "$repro_root" && cd "$(git rev-parse --git-path hooks)" 2>/dev/null && pwd)
+  if [ -z "$current" ] && [ -n "$git_hooks" ] && [ -f "$git_hooks/pre-commit" ]
+  then
+    logwarn "🪝 reproduction-models already has a pre-commit hook: add 'playground repro check --staged' to it to scan the commits for secrets"
+    return 0
+  fi
+  if git -C "$repro_root" config --local core.hooksPath "$hooks_dir"
+  then
+    log "🪝 reproduction-models commits are now scanned for secrets and customer data (pre-commit hook running 'playground repro check --staged')"
+  fi
 }
 
 function get_ccloud_environment_list_with_fzf() {
@@ -36775,22 +36931,7 @@ playground_repro_export_command() {
   repro_bundle_scan "$repro_root" "$tmp_dir/files" "$tmp_dir/repro-manifest.json" "$tmp_dir/findings" "$(jq -r '[.models[].base_example | select(. != "")] | unique | join(" ")' "$tmp_dir/repro-manifest.json")" "$tmp_dir/artifacts"
   nb_blocks=$(grep -c "^block" "$tmp_dir/findings" || true)
   nb_warnings=$(grep -c "^warn" "$tmp_dir/findings" || true)
-  for severity in block warn
-  do
-      grep "^$severity" "$tmp_dir/findings" | head -20 | while IFS=$'\t' read -r level location message
-      do
-          if [ "$level" == "block" ]
-          then
-              logerror "   🔐 $location $message"
-          else
-              logwarn "   👀 $location $message"
-          fi
-      done
-  done
-  if [ $((nb_blocks + nb_warnings)) -gt 40 ]
-  then
-      logwarn "   … $((nb_blocks + nb_warnings)) findings in total, only the first 20 of each kind are shown"
-  fi
+  repro_show_findings "$tmp_dir/findings"
   if [ $nb_warnings -gt 0 ]
   then
       logwarn "👀 $nb_warnings possible customer data finding(s): check them, a bundle must not contain customer data"
@@ -36869,6 +37010,188 @@ playground_repro_export_command() {
       else
           logwarn "📋 could not copy the bundle to the clipboard, attach $final_archive by hand"
       fi
+  fi
+
+}
+
+# :command.function
+playground_repro_check_command() {
+
+  # src/commands/repro/check.sh
+  eval "files=(${args[--file]:-})"
+  staged="${args[--staged]}"
+  all="${args[--all]}"
+  skip_secrets_store="${args[--skip-secrets-store]}"
+  json="${args[--json]}"
+
+  repro_root="$root_folder/reproduction-models"
+  if [ ! -d "$repro_root" ]
+  then
+      logerror "❌ folder $repro_root does not exist"
+      exit 1
+  fi
+  repro_root=$(cd -P "$repro_root" && pwd)
+
+  if [ ${#files[@]} -eq 0 ] && [ ! -e "$repro_root/.git" ]
+  then
+      logerror "❌ $repro_root is not a git repository, use --file to say which model to check"
+      exit 1
+  fi
+
+  tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $tmp_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+  : > "$tmp_dir/candidates"
+  : > "$tmp_dir/artifacts"
+
+  # 1. the files to check, relative to reproduction-models
+  if [[ -n "$staged" ]]
+  then
+      git -C "$repro_root" diff --cached --name-only --diff-filter=ACMR > "$tmp_dir/candidates"
+      what="staged file(s)"
+  elif [[ -n "$all" ]]
+  then
+      git -C "$repro_root" ls-files --cached --others --exclude-standard > "$tmp_dir/candidates"
+      what="file(s)"
+  elif [ ${#files[@]} -gt 0 ]
+  then
+      for file in "${files[@]}"
+      do
+          if [[ $file == *"@"* ]]
+          then
+              file=$(echo "$file" | cut -d "@" -f 2)
+          fi
+          script_dir=$(cd -P "$(dirname "$file")" 2>/dev/null && pwd)
+          if [ "$(dirname "$script_dir")" != "$repro_root" ]
+          then
+              logerror "❌ $file is not a reproduction model of $repro_root"
+              exit 1
+          fi
+          repro_bundle_files "$script_dir/$(basename "$file")" "$repro_root"
+      done > "$tmp_dir/candidates"
+      what="file(s)"
+  else
+      # new and modified files, untracked folders expanded
+      git -C "$repro_root" status --porcelain --untracked-files=all 2>/dev/null | while IFS= read -r line
+      do
+          status="${line:0:2}"
+          path="${line:3}"
+          if [[ "$status" != *D* ]]
+          then
+              echo "${path##* -> }"
+          fi
+      done > "$tmp_dir/candidates"
+      what="uncommitted file(s)"
+  fi
+
+  # only the files of the model folders: not the dot folders (.github, .claude…), nor the
+  # symlinks to the public examples. Credential files, dumps, logs and archives are findings
+  # on their own: export leaves them out, but a commit would not
+  : > "$tmp_dir/files"
+  : > "$tmp_dir/file-findings"
+  while IFS= read -r path
+  do
+      case "$path" in
+          .*|*/.git/*|"") continue ;;
+          */*) ;;
+          *) continue ;;
+      esac
+      if [[ -n "$staged" ]]
+      then
+          mode=$(git -C "$repro_root" ls-files -s -- "$path" | awk '{ print $1; exit }')
+          if [ "$mode" == "120000" ]
+          then
+              continue
+          fi
+      elif [ -L "$repro_root/$path" ] || [ ! -f "$repro_root/$path" ]
+      then
+          continue
+      fi
+      name="${path##*/}"
+      case "$name" in
+          keyfile.json|*.pem|*.key|*.p12|*.jks|secrets.properties|playground.ini|playground-run-history|.env)
+              printf 'block\t%s\t%s\n' "$path" "is a credential file" >> "$tmp_dir/file-findings"
+              continue
+          ;;
+          *.hprof|*.hprof.gz|*.jfr|*.log|*.tgz|*.tar.gz|*.zip)
+              printf 'warn\t%s\t%s\n' "$path" "is a dump, log or archive: it may hold customer data" >> "$tmp_dir/file-findings"
+              continue
+          ;;
+          repro-manifest.json|.DS_Store)
+              continue
+          ;;
+      esac
+      echo "$path" >> "$tmp_dir/files"
+      if [[ -n "$staged" ]]
+      then
+          # what is committed is the staged content, not the working tree
+          mkdir -p "$tmp_dir/index/$(dirname "$path")"
+          git -C "$repro_root" show ":$path" > "$tmp_dir/index/$path" 2>/dev/null
+          printf '%s\t%s\t%s\n' "$path" "$tmp_dir/index/$path" "$path" >> "$tmp_dir/artifacts"
+      fi
+  done < <(sort -u "$tmp_dir/candidates")
+
+  nb_files=$(wc -l < "$tmp_dir/files" | tr -d ' ')
+  nb_file_findings=$(wc -l < "$tmp_dir/file-findings" | tr -d ' ')
+  if [ "$nb_files" -eq 0 ] && [ "$nb_file_findings" -eq 0 ]
+  then
+      if [[ -n "$json" ]]
+      then
+          jq -n '{ files: 0, blocks: [], warnings: [] }'
+      else
+          log "🤷 no $what of a reproduction model to check"
+      fi
+      exit 0
+  fi
+
+  # 2. the scan
+  if [[ ! -n "$json" ]]
+  then
+      log "🕵️ scanning $nb_files $what of reproduction models for secrets and customer data"
+  fi
+  : > "$tmp_dir/findings"
+  if [ "$nb_files" -gt 0 ]
+  then
+      repro_bundle_scan "$repro_root" "$tmp_dir/files" "" "$tmp_dir/findings" "$(repro_model_base_examples "$repro_root" "$tmp_dir/files")" "$tmp_dir/artifacts" "$skip_secrets_store"
+  fi
+  cat "$tmp_dir/file-findings" >> "$tmp_dir/findings"
+  sort -u "$tmp_dir/findings" | sort -t $'\t' -k1,1 -k2,2V -o "$tmp_dir/findings"
+
+  nb_blocks=$(grep -c "^block" "$tmp_dir/findings" || true)
+  nb_warnings=$(grep -c "^warn" "$tmp_dir/findings" || true)
+
+  # 3. the result
+  if [[ -n "$json" ]]
+  then
+      jq -R -s --argjson files "$nb_files" '
+          split("\n") | map(select(. != "") | split("\t") | { level: .[0], location: .[1], message: .[2] }) as $findings
+          | {
+              files: $files,
+              blocks: [ $findings[] | select(.level == "block") | { location, message } ],
+              warnings: [ $findings[] | select(.level == "warn") | { location, message } ]
+            }' "$tmp_dir/findings"
+  else
+      repro_show_findings "$tmp_dir/findings"
+      if [ $nb_warnings -gt 0 ]
+      then
+          logwarn "👀 $nb_warnings possible customer data finding(s): check them, a reproduction model must not contain customer data"
+      fi
+      if [ $nb_blocks -gt 0 ]
+      then
+          logerror "❌ $nb_blocks secret finding(s): remove them (use \${VAR} instead of the value)"
+      elif [ $nb_warnings -eq 0 ]
+      then
+          log "✅ no secret nor customer data found"
+      fi
+  fi
+
+  if [ $nb_blocks -gt 0 ]
+  then
+      exit 1
   fi
 
 }
@@ -37226,6 +37549,8 @@ playground_repro_import_command() {
   done < <(jq -c '.models[]' "$manifest")
 
   log "📥 $file imported in $repro_root"
+  # commits of the imported models get scanned for secrets and customer data
+  repro_install_git_hook
 
   if [ ${#model_paths[@]} -eq 0 ]
   then
@@ -38661,6 +38986,9 @@ EOF
 
     playground open --file "$repro_dir/$repro_test_filename"
   fi
+
+  # commits of the new model get scanned for secrets and customer data
+  repro_install_git_hook
 
   increment_cli_metric nb_reproduction_models
   log "👷 Number of repro models created so far: $(get_cli_metric nb_reproduction_models)"
@@ -69261,6 +69589,13 @@ playground_repro_parse_requirements() {
       shift $#
       ;;
 
+    check)
+      action="check"
+      shift
+      playground_repro_check_parse_requirements "$@"
+      shift $#
+      ;;
+
     import)
       action="import"
       shift
@@ -69470,6 +69805,166 @@ playground_repro_export_parse_requirements() {
 
         # :flag.case_no_arg
         args['--clipboard']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--file'] ]]; then
+    values=''
+    eval "values=(${args['--file']})"
+    for value in "${values[@]}"; do
+      validation_output="$(validate_file_exists_with_trick "$value")"
+      if [[ -n "$validation_output" ]]; then
+        printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
+        exit 1
+      fi
+    done
+  fi
+
+}
+
+# :command.parse_requirements
+playground_repro_check_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_repro_check_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+  missing_deps=
+  # :dependency.filter
+  if ! command -v git >/dev/null 2>&1; then
+    printf "missing dependency: git\n" >&2
+    printf "%s\n\n" "visit https://git-scm.com/downloads to install" >&2
+    missing_deps=1
+  else
+    deps['git']="$(command -v git | head -n1)"
+  fi
+
+  if [[ -n $missing_deps ]]; then
+    exit 1
+  fi
+
+  # :command.command_filter
+  action="repro check"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --file | -f)
+        # :flag.conflicts
+        for conflict in --staged --all; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--file']+x} ]]; then
+            args['--file']="$escaped"
+          else
+            args['--file']="${args['--file']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --staged)
+        # :flag.conflicts
+        for conflict in --file --all; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--staged']=1
+        shift
+        ;;
+
+      # :flag.case
+      --all)
+        # :flag.conflicts
+        for conflict in --file --staged; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--all']=1
+        shift
+        ;;
+
+      # :flag.case
+      --skip-secrets-store)
+
+        # :flag.case_no_arg
+        args['--skip-secrets-store']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
         shift
         ;;
 
@@ -97745,6 +98240,11 @@ playground_repro_completion() {
         playground_repro_export_completion "$completion_current" "$@"
         return
         ;;
+      check)
+        shift
+        playground_repro_check_completion "$completion_current" "$@"
+        return
+        ;;
       import)
         shift
         playground_repro_import_completion "$completion_current" "$@"
@@ -97764,7 +98264,7 @@ playground_repro_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" export import bootstrap
+  completion_candidates "$completion_current" export check import bootstrap
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -97848,6 +98348,72 @@ playground_repro_export_completion() {
     completion_flag_candidates --force "$completion_current" --force
     completion_flag_candidates --include-artifacts "$completion_current" --include-artifacts
     completion_flag_candidates --no-clipboard "$completion_current" --no-clipboard
+  fi
+
+}
+
+# :command.completion_function
+playground_repro_check_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --file | -f)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-examples-list-with-fzf --repro-only "$completion_current"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--staged"]=1
+        completion_blocked_flags["--all"]=1
+
+        ;;
+      --staged)
+        completion_blocked_flags["--staged"]=1
+        completion_blocked_flags["--file"]=1
+        completion_blocked_flags["--all"]=1
+
+        shift
+        ;;
+      --all)
+        completion_blocked_flags["--all"]=1
+        completion_blocked_flags["--file"]=1
+        completion_blocked_flags["--staged"]=1
+
+        shift
+        ;;
+      --skip-secrets-store)
+        completion_blocked_flags["--skip-secrets-store"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --file "$completion_current" --file -f
+    completion_flag_candidates --staged "$completion_current" --staged
+    completion_flag_candidates --all "$completion_current" --all
+    completion_flag_candidates --skip-secrets-store "$completion_current" --skip-secrets-store
+    completion_flag_candidates --json "$completion_current" --json
   fi
 
 }
@@ -109713,6 +110279,7 @@ run() {
     "cleanup-cloud-resources") playground_cleanup_cloud_resources_command ;;
     "repro") playground_repro_command ;;
     "repro export") playground_repro_export_command ;;
+    "repro check") playground_repro_check_command ;;
     "repro import") playground_repro_import_command ;;
     "repro bootstrap") playground_repro_bootstrap_command ;;
     "get-docker-compose") playground_get_docker_compose_command ;;

@@ -1267,8 +1267,9 @@ function repro_scan_add_value () {
 # scan the files of a bundle for secrets and customer data, before it leaves the machine.
 # writes one '<block|warn>\t<file>:<line>\t<message>' line per finding to $4, never a value
 #   $1 reproduction-models folder, $2 file with the bundle paths (relative to $1),
-#   $3 manifest, $4 findings file, $5 base examples (relative to the repository root),
-#   $6 artifacts file (see repro_bundle_source)
+#   $3 manifest (empty: no manifest, the files list has no symlink to skip), $4 findings file,
+#   $5 base examples (relative to the repository root), $6 artifacts file (see repro_bundle_source),
+#   $7 not empty: do not read the 'playground secrets' store (no backend prompt, for git hooks)
 function repro_bundle_scan () {
   local repro_root="$1"
   local files_list="$2"
@@ -1276,6 +1277,7 @@ function repro_bundle_scan () {
   local findings="$4"
   local base_examples="$5"
   local artifacts_file="${6:-}"
+  local skip_secrets_store="${7:-}"
   local scan_dir
   scan_dir=$(mktemp -d)
   chmod 0700 "$scan_dir"
@@ -1299,7 +1301,10 @@ function repro_bundle_scan () {
   if [ -n "$names" ]
   then
     local backend_ready=1
-    if secret_backend_ready > /dev/null 2>&1
+    if [ -n "$skip_secrets_store" ]
+    then
+      backend_ready=0
+    elif secret_backend_ready > /dev/null 2>&1
     then
       log "🔐 reading the $(echo "$names" | wc -l | tr -d ' ') credentials known to this machine to look for their values ($(get_secret_backend) backend)" >&2
       secret_prefetch "$profile" $names 2> /dev/null
@@ -1352,7 +1357,7 @@ function repro_bundle_scan () {
   local file
   while IFS= read -r file
   do
-    if [ -n "$(jq -r --arg path "$file" '.files[] | select(.path == $path) | .link_to // empty' "$manifest")" ]
+    if [ -n "$manifest" ] && [ -n "$(jq -r --arg path "$file" '.files[] | select(.path == $path) | .link_to // empty' "$manifest")" ]
     then
       continue
     fi
@@ -1370,7 +1375,11 @@ function repro_bundle_scan () {
   done
 
   local target path line_number value_file label
-  for target in "${targets[@]}" "repro-manifest.json"
+  if [ -n "$manifest" ]
+  then
+    targets+=("repro-manifest.json")
+  fi
+  for target in "${targets[@]}"
   do
     if [ "$target" == "repro-manifest.json" ]
     then
@@ -1460,6 +1469,87 @@ EOF
 
   rm -rf "$scan_dir"
   sort -u "$findings" | sort -t $'\t' -k1,1 -k2,2V -o "$findings"
+}
+
+# print the findings written by repro_bundle_scan, the first 20 of each kind
+function repro_show_findings () {
+  local findings="$1"
+  local nb_blocks nb_warnings severity level location message
+  nb_blocks=$(grep -c "^block" "$findings" || true)
+  nb_warnings=$(grep -c "^warn" "$findings" || true)
+  for severity in block warn
+  do
+    grep "^$severity" "$findings" | head -20 | while IFS=$'\t' read -r level location message
+    do
+      if [ "$level" == "block" ]
+      then
+        logerror "   🔐 $location $message"
+      else
+        logwarn "   👀 $location $message"
+      fi
+    done
+  done
+  if [ $((nb_blocks + nb_warnings)) -gt 40 ]
+  then
+    logwarn "   … $((nb_blocks + nb_warnings)) findings in total, only the first 20 of each kind are shown"
+  fi
+}
+
+# public base examples of the model folders of a files list (relative to the reproduction-models
+# folder $1): where the symlinks created by bootstrap point to, relative to the repository root
+function repro_model_base_examples () {
+  local repro_root="$1"
+  local files_list="$2"
+  local output_folder="reproduction-models"
+  local dir_name link target
+  for dir_name in $(grep '/' "$files_list" | cut -d "/" -f 1 | sort -u)
+  do
+    for link in "$repro_root/$dir_name"/*
+    do
+      if [ -L "$link" ]
+      then
+        target=$(repro_link_target "$output_folder/$dir_name/$(basename "$link")")
+        if [ -n "$target" ] && [[ "$target" != "$output_folder"/* ]]
+        then
+          dirname "$target"
+          break
+        fi
+      fi
+    done
+  done | sort -u | tr '\n' ' '
+}
+
+# point the git hooks of the reproduction-models repository to scripts/repro-git-hooks, whose
+# pre-commit runs 'playground repro check --staged'. Never replaces hooks set up by the user
+function repro_install_git_hook () {
+  local repro_root="$root_folder/reproduction-models"
+  local hooks_dir="$root_folder/scripts/repro-git-hooks"
+  local current git_hooks
+  if [ ! -e "$repro_root/.git" ] || [ ! -f "$hooks_dir/pre-commit" ]
+  then
+    return 0
+  fi
+  current=$(git -C "$repro_root" config --local --get core.hooksPath 2>/dev/null)
+  if [ "$current" == "$hooks_dir" ]
+  then
+    return 0
+  fi
+  # ours, from a checkout that moved
+  if [ -n "$current" ] && [[ "$current" != */scripts/repro-git-hooks ]]
+  then
+    logwarn "🪝 core.hooksPath of reproduction-models is set to $current: add 'playground repro check --staged' to your pre-commit hook to scan the commits for secrets"
+    return 0
+  fi
+  git_hooks=$(cd "$repro_root" && cd "$(git rev-parse --git-path hooks)" 2>/dev/null && pwd)
+  if [ -z "$current" ] && [ -n "$git_hooks" ] && [ -f "$git_hooks/pre-commit" ]
+  then
+    logwarn "🪝 reproduction-models already has a pre-commit hook: add 'playground repro check --staged' to it to scan the commits for secrets"
+    return 0
+  fi
+  if git -C "$repro_root" config --local core.hooksPath "$hooks_dir"
+  then
+    log "🪝 reproduction-models commits are now scanned for secrets and customer data (pre-commit hook running 'playground repro check --staged')"
+  fi
 }
 
 function get_ccloud_environment_list_with_fzf() {
