@@ -43,16 +43,26 @@ then
   fi
   set -e
 else
+  # trick to be faster: list the partition folders of the brokers of the cluster, all of them as a broker only
+  # holds the partitions it is a replica of (broker-us and broker-europe are two different clusters)
   get_broker_container
-  # trick to be faster
-  docker exec $broker_container ls /var/lib/kafka/data > /dev/null 2>&1
-  if [ $? -eq 0 ]
+  brokers="$broker_container"
+  if [ "$broker_container" == "broker" ]
   then
-    if [[ -n "$skip_internal_topics" ]]
+    brokers="broker broker2 broker3"
+  fi
+  partition_folders=""
+  for broker in $brokers
+  do
+    if is_container_running $broker
     then
-      docker exec $broker_container ls /var/lib/kafka/data | grep -E -- "-[0-9]+$" | grep -v "^connect-" | grep -v "^_" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
-    else
-      docker exec $broker_container ls /var/lib/kafka/data | grep -E -- "-[0-9]+$" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
+      partition_folders="$partition_folders"$'\n'"$(docker exec $broker ls /var/lib/kafka/data 2> /dev/null)"
     fi
+  done
+  if [[ -n "$skip_internal_topics" ]]
+  then
+    echo "$partition_folders" | grep -E -- "-[0-9]+$" | grep -v "^connect-" | grep -v "^_" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
+  else
+    echo "$partition_folders" | grep -E -- "-[0-9]+$" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
   fi
 fi

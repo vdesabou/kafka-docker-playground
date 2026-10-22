@@ -3571,6 +3571,20 @@
             },
             {
               "names": [
+                "--value-format"
+              ],
+              "argument": "VALUE-FORMAT",
+              "description": "🔮 Format of --value, instead of detecting it from its content\n\nDetection looks for keywords (proto3, \"type\": \"object\", \"_meta\", CREATE TABLE, arg.properties,\n\"type\": \"record\"), so a raw payload containing one of them is not sent as raw data:\nuse --value-format raw in that case.\n\nCannot be used with --derive-value-schema-as.\n\nAllowed values: avro, json-schema, protobuf, json, sql, datagen, raw"
+            },
+            {
+              "names": [
+                "--key-format"
+              ],
+              "argument": "KEY-FORMAT",
+              "description": "🔮 Format of --key, instead of detecting it from its content (see --value-format)\n\nCannot be used with --derive-key-schema-as.\n\nAllowed values: avro, json-schema, protobuf, json, sql, datagen, raw"
+            },
+            {
+              "names": [
                 "--verbose",
                 "-v"
               ],
@@ -3615,10 +3629,17 @@
             },
             {
               "names": [
+                "--throughput"
+              ],
+              "argument": "THROUGHPUT",
+              "description": "🐢 Maximum number of records per second (default is 0, no limit)\n\nUseful with --nb-messages -1 to get a steady flow of records, for example:\n\nplayground topic produce -t a-topic --nb-messages -1 --throughput 10 --value '{\"id\": %g}'\n\nDefault value: 0"
+            },
+            {
+              "names": [
                 "--nb-partitions"
               ],
               "argument": "NB-PARTITIONS",
-              "description": "🔢 Number of partitions for the topic. (default is 1)\n\n❌ Important: If topic is existing, it will be re-created before producing to topic.\n\nDefault value: 1"
+              "description": "🔢 Number of partitions for the topic. (default is 1)\n\n❌ Important: if the topic exists with another number of partitions, it is re-created when it\nis empty, and the command fails when it is not.\n\nDefault value: 1"
             },
             {
               "names": [
@@ -3653,7 +3674,7 @@
                 "--headers"
               ],
               "argument": "HEADERS",
-              "description": "🚏 Headers to use for all records. If not set, no header is used.\n\nExample: --headers \"header1:value1,header2:value2\"\n\nNote: CP 7.2+ is required."
+              "description": "🚏 Headers to use for all records. If not set, no header is used.\n\nExample: --headers \"header1:value1,header2:value2\"\n\nHeader keys and values cannot contain \",\" or \":\" (they are the separators).\n\nNote: CP 7.2+ is required."
             },
             {
               "names": [
@@ -3723,7 +3744,7 @@
                 "--consume"
               ],
               "argument": "",
-              "description": "📥 After producing, directly consume topic."
+              "description": "📥 After producing, directly consume topic (until at least the number of records produced\nare consumed, or 60 seconds)."
             },
             {
               "names": [

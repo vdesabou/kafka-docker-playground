@@ -878,7 +878,13 @@ then
   if [ ! -f /tmp/without-cli-workaround ]
   then
     trap cleanup-workaround-file EXIT
-    test_file="$PWD/$0"
+    # $0 is absolute when the script is started with its full path (playground start-environment)
+    if [[ "$0" == /* ]]
+    then
+      test_file="$0"
+    else
+      test_file="$PWD/$0"
+    fi
     filename=$(basename $test_file)
     if [[ "$filename" != "playground-command"* ]]
     then
