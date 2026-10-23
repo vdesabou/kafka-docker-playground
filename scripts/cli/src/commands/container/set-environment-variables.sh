@@ -398,9 +398,9 @@ EOF
     # Generate environment variables for each container
     for container in "${container_array[@]}"
     do
-                resolved_container=$(resolve_container_name_for_environment "$container")
+        resolved_container=$(resolve_container_name_for_environment "$container")
         cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
-    $resolved_container:
+  $resolved_container:
     environment:
       DUMMY: $RANDOM
 EOF
@@ -426,12 +426,20 @@ EOF
     echo "$docker_command" > $tmp_dir/playground-command-java-env
     sed -i -E -e "s|up -d --quiet-pull|-f $tmp_dir/docker-compose.override.java.env.yml up -d --quiet-pull|g" $tmp_dir/playground-command-java-env
     load_env_variables
-    bash $tmp_dir/playground-command-java-env
+    if ! bash $tmp_dir/playground-command-java-env
+    then
+        logerror "❌ could not recreate containers ${containers} with environment variables $env_list"
+        exit 1
+    fi
 else
     log "🧽 restore back original values before any changes was made for containers ${containers}"
     echo "$docker_command" > $tmp_dir/playground-command
     load_env_variables
-    bash $tmp_dir/playground-command
+    if ! bash $tmp_dir/playground-command
+    then
+        logerror "❌ could not recreate containers ${containers} with their original values"
+        exit 1
+    fi
 fi
 wait_container_ready
 
