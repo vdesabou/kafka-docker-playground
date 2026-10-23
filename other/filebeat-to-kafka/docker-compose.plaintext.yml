@@ -1,9 +1,7 @@
 ---
 services:
 
-  connect:
-    entrypoint: ["echo", "Service connect disabled"]
-
+  # connect is not disabled: playground topic consume runs the console consumer in it
   filebeat:
     image: docker.elastic.co/beats/filebeat:7.16.2
     container_name: filebeat
