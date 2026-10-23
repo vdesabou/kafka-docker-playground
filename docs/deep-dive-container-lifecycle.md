@@ -105,6 +105,10 @@ Gotchas:
 - **The exit code of the command is returned** (`exec … --command "test -f /tmp/x"` fails the script when the file is
   missing), with several `-c` too: a failure on any of them gives exit 1.
 - `--shell` accepts `bash` (default), `sh`, `ksh`, `zsh`: use `--shell sh` on images without bash.
+- `exec` runs the command with `KAFKA_DEBUG` unset: the environments enable remote debugging on `connect`, and a
+  `kafka-*` tool started there would otherwise try to open the worker's debug port (`bind failed: Address already in
+  use`). On a secured environment, those tools still need the client config (`--command-config …`, see the
+  [secured environments deep dive](/deep-dive-secured-environments.md)).
 - **`get-properties` reads the file from the `java` command line** (the last argument ending in `properties` of
   `ps -ef`), drops blank lines and `None` values, and prints it **as is: passwords included** (`sasl.jaas.config`,
   `ssl.keystore.password`). Don't paste it in a ticket unredacted.

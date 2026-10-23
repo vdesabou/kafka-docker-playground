@@ -23,6 +23,10 @@ shows up as a failing test: fix the CLI, or update the page and its lab together
 | `schema.sh` | [Schema Registry](https://kafka-docker-playground.io/#/deep-dive-schema) |
 | `jvm-diagnostics.sh` | [JVM diagnostics](https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics) |
 | `run-and-versions.sh` | [Running examples and changing versions (update-version steps only)](https://kafka-docker-playground.io/#/deep-dive-run-and-versions) |
+| `secured-environments.sh` | [Secured environments](https://kafka-docker-playground.io/#/deep-dive-secured-environments) (starts sasl-ssl then rbac-sasl-plain itself) |
+| `fully-managed.sh` | [Fully managed connectors (Confluent Cloud)](https://kafka-docker-playground.io/#/deep-dive-fully-managed) — skipped without Confluent Cloud credentials |
+| `topic-administration.sh` | [Topic administration](https://kafka-docker-playground.io/#/deep-dive-topic-administration) |
+| `connector-benchmark.sh` | [`connector benchmark`](https://kafka-docker-playground.io/#/deep-dive-connector-benchmark) |
 
 The helpers shared by the scripts are in `lab-utils.bash` (`lab_run`, `lab_expect_contains`, `lab_expect_exit`…).
 The labs need the plaintext environment (they exit 111 with another one).
