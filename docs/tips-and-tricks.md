@@ -47,15 +47,21 @@ playground container logs -c connect --errors --since 10m
 
 ### Wait for a connector or for records
 
-Instead of a fixed `sleep` after creating a connector, wait until the connector and all its tasks are RUNNING. It fails right away, with the stack trace, if a task is FAILED:
+No fixed `sleep` is needed after creating a self-managed connector: `playground connector create-or-update` waits until the connector and all its tasks are RUNNING, and fails right away, with the stack trace, if a task is FAILED. In a reproduction model, that failure is only a warning, since the connector often fails on purpose:
 
 ```bash
-playground connector create-or-update --connector my-connector --wait << EOF
+playground connector create-or-update --connector my-connector << EOF
 { ... }
 EOF
 
-# or, on an existing connector (--state RUNNING|PAUSED|STOPPED|FAILED)
-playground connector wait --connector my-connector --max-wait 120
+# --wait: fail in a reproduction model too, and wait for fully managed connectors
+# --no-wait: don't wait at all, for example to create a connector that is expected to fail
+playground connector create-or-update --connector my-connector --no-wait << EOF
+{ ... }
+EOF
+
+# on an existing connector (--state RUNNING|PAUSED|STOPPED|FAILED)
+playground connector wait --connector my-connector --state FAILED --max-wait 120
 ```
 
 To wait until a source connector has produced data:

@@ -46,12 +46,17 @@ function get_connector_states () {
     tasks_states=$(echo "$curl_output" | jq -r '.tasks[]?.state' 2>/dev/null)
 }
 
+# a connector can legitimately run without tasks (Replicator or MirrorMaker without matching topic yet, JDBC source
+# without table): RUNNING with 0 tasks for that long is accepted, with a warning
+zero_tasks_max_seconds=30
+
 for connector in ${connector}
 do
     log "⏳ Waiting up to $max_wait seconds for $connector_type connector $connector to be $state"
     start_time=$SECONDS
     last_seen=""
     running_seen=false
+    zero_tasks_since=""
     while true
     do
         get_connector_states "$connector"
@@ -78,6 +83,20 @@ do
             set +e
             playground connector status --connector "$connector"
             break
+        fi
+
+        if [ "$state" == "RUNNING" ] && [ "$connector_state" == "RUNNING" ] && [ "$nb_tasks" == "0" ]
+        then
+            if [ -z "$zero_tasks_since" ]
+            then
+                zero_tasks_since=$elapsed
+            elif [ $((elapsed - zero_tasks_since)) -ge $zero_tasks_max_seconds ]
+            then
+                logwarn "⚠️ $connector_type connector $connector is RUNNING without any task for $zero_tasks_max_seconds seconds (nothing to process yet?), not waiting for tasks"
+                break
+            fi
+        else
+            zero_tasks_since=""
         fi
 
         if [ "$state" != "FAILED" ] && [ "$connector_state" == "$state" ]

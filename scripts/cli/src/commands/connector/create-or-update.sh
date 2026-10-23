@@ -5,6 +5,7 @@ package=${args[--package]}
 validate=${args[--validate]}
 wait_for_zero_lag=${args[--wait-for-zero-lag]}
 wait=${args[--wait]}
+no_wait=${args[--no-wait]}
 max_wait=${args[--max-wait]}
 skip_automatic_connector_config=${args[--skip-automatic-connector-config]}
 verbose="${args[--verbose]}"
@@ -28,19 +29,54 @@ then
     is_ccloud_connector=1
 fi
 
-# --wait: fully managed connectors take minutes to be provisioned and can fail transiently while
+# self-managed connectors are waited for by default: strict (exit 1) in examples, warn-only in reproduction
+# models, which often create a failing connector on purpose and keep going. --wait is strict everywhere.
+# fully managed connectors are only waited for with --wait: their examples call wait_for_ccloud_connector_up
+wait_mode=""
+if [[ -n "$wait" ]]
+then
+    wait_mode="strict"
+elif [[ -z "$no_wait" ]] && [[ -z "$dry_run" ]] && [ $is_ccloud_connector -eq 0 ]
+then
+    test_file=$(playground state get run.test_file)
+    if [[ "$test_file" == */reproduction-models/* ]]
+    then
+        wait_mode="warn"
+    else
+        wait_mode="strict"
+    fi
+fi
+
+# an update keeps a PAUSED or STOPPED connector in that state: set before the update
+previous_state=""
+
+# fully managed connectors take minutes to be provisioned and can fail transiently while
 # being provisioned, wait_for_ccloud_connector_up restarts them, which 'connector wait' does not
 function wait_for_created_connector () {
     if [ $is_ccloud_connector -eq 1 ]
     then
         if [[ -n "$initial_state" ]] && [ "$initial_state" != "RUNNING" ]
         then
-            playground connector wait --connector "$connector" --state "$initial_state" --max-wait "${max_wait:-600}"
+            playground connector wait --connector "$connector" --state "$initial_state" --max-wait "${max_wait:-600}" || exit 1
         else
             wait_for_ccloud_connector_up "$connector" "${max_wait:-600}"
         fi
+        return
+    fi
+
+    local state="${initial_state:-${previous_state:-RUNNING}}"
+    # on failure, 'connector wait' displays the status with the stack trace
+    if playground connector wait --connector "$connector" --state "$state" --max-wait "${max_wait:-120}"
+    then
+        set +e
+        playground connector status --connector "$connector"
+        set -e
+    elif [ "$wait_mode" == "warn" ]
+    then
+        logwarn "⚠️ $connector_type connector $connector is not $state, continuing as $(basename "$test_file") is a reproduction model (use --wait to stop here, --no-wait to skip the wait)"
     else
-        playground connector wait --connector "$connector" --state "${initial_state:-RUNNING}" --max-wait "${max_wait:-120}"
+        logerror "❌ $connector_type connector $connector is not $state (use --no-wait to skip the wait)"
+        exit 1
     fi
 }
 
@@ -340,7 +376,7 @@ then
         playground connector show-config --connector "$connector" --no-clipboard
     fi
 
-    if [[ -n "$wait" ]]
+    if [[ -n "$wait_mode" ]]
     then
         wait_for_created_connector
     else
@@ -527,6 +563,16 @@ else
         then
             set +e
             handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors/$connector/config\"" > /dev/null 2>&1 && show_config_changes "$curl_output" "$json_content" 0
+            if [[ -z "$initial_state" ]] && handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors/$connector/status\"" > /dev/null 2>&1
+            then
+                previous_state=$(echo "$curl_output" | jq -r '.connector.state // empty' 2> /dev/null)
+                if [ "$previous_state" == "PAUSED" ] || [ "$previous_state" == "STOPPED" ]
+                then
+                    log "⏸️ $connector_type connector $connector is $previous_state, it stays $previous_state after the update"
+                else
+                    previous_state=""
+                fi
+            fi
             set -e
         fi
 
@@ -612,7 +658,7 @@ then
     then
         kubectl -n confluent get connector "$connector" -o yaml
     fi
-    if [[ -n "$wait" ]]
+    if [[ -n "$wait_mode" ]]
     then
         # the CR being app-ready does not mean that the tasks are RUNNING
         wait_for_created_connector
@@ -631,8 +677,8 @@ fi
 
 playground connector show-config-parameters --connector "$connector" --only-show-json
 set +e
-# with --wait, the status is displayed by 'connector wait' when it fails (right after the creation, it can also be a 404)
-if [[ -z "$wait" ]]
+# when waiting, the status is displayed once the wait is over (right after the creation, it can also be a 404)
+if [[ -z "$wait_mode" ]]
 then
     playground connector status --connector $connector
 fi
@@ -643,7 +689,7 @@ then
 fi
 set -e
 
-if [[ -n "$wait" ]]
+if [[ -n "$wait_mode" ]]
 then
     wait_for_created_connector
 fi
