@@ -7,6 +7,9 @@ link to a live report so you can click around it yourself.
 > [!TIP]
 > The shorter clips at the top of the [introduction](/introduction.md) (🍿 See it in action) show one command each. The
 > sessions here explain what the output means and what to do next.
+>
+> To go further on a topic, the [🍪 Deep dives](/deep-dives.md) are the written companions of some sessions: how the
+> commands work under the hood, their gotchas, a hands-on lab and recipes for support repros.
 
 | | Session | Needs |
 | --- | --- | --- |
@@ -476,6 +479,7 @@ Recorded on the example `connect/connect-jdbc-postgresql-sink/postgres-sink.sh`.
 
 **Links**
 
+- 🍪 Deep dive: [`block-traffic` and `degrade-traffic` under the hood, hands-on lab and repro recipes](/deep-dive-network-traffic.md)
 - 📖 [Blocking traffic](/reusables?id=🚫-blocking-traffic) and [Degrade traffic](/reusables?id=🐌-degrade-traffic---add-latency-packet-loss-or-corruption)
   in the Reproduction toolkit
 - 🧠 CLI reference: [playground debug degrade-traffic](/playground%20debug%20degrade-traffic),
