@@ -370,6 +370,7 @@ playground topic consume -t ticks --count
 
 **Links**
 
+- 🍪 Deep dive: [`topic produce` under the hood, hands-on lab and repro recipes](/deep-dive-topic-produce.md)
 - 🧠 CLI reference: [playground topic produce](/playground%20topic%20produce) (an example for each flag)
 
 ## 📥 Read a topic

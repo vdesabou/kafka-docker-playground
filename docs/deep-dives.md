@@ -8,7 +8,8 @@ to master the commands.
 | | Deep dive | Commands | Video session |
 | --- | --- | --- | --- |
 | 🐌 | [A slow or broken network, on purpose](/deep-dive-network-traffic.md) | `debug block-traffic`, `debug degrade-traffic` | [🐌 A slow or broken network, on purpose](/sessions?id=🐌-a-slow-or-broken-network-on-purpose) |
+| 📨 | [Produce test data: schemas, payloads, keys, load](/deep-dive-topic-produce.md) | `topic produce` | [📨 Produce realistic test data](/sessions?id=📨-produce-realistic-test-data) |
 
 > [!TIP]
-> Each deep dive follows the same outline, so you can jump to the part you need: **1.** mental model, **2.–3.** the
-> commands with their gotchas, **4.** hands-on lab, **5.** recipes for support repros, **6.** cheat sheet.
+> Each deep dive follows the same outline, so you can jump to the part you need: mental model first, then the commands
+> with their gotchas, a hands-on lab, recipes for support repros, and a cheat sheet at the end.
