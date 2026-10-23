@@ -2315,7 +2315,26 @@ function check_expected_ccloud_details () {
   fi
 }
 
+# in GitHub Actions (public logs), registers the Confluent Cloud credentials known so far as secrets, so that the
+# commands that print a connector config, a client config or a credential show *** instead
+function mask_ccloud_credentials_in_ci () {
+  if [ -z "$GITHUB_ACTIONS" ] && [ -z "$GITHUB_RUN_NUMBER" ]
+  then
+    return
+  fi
+  local value
+  for value in "$CLOUD_KEY" "$CLOUD_SECRET" "$CLUSTER_CREDS" "${CLUSTER_CREDS%%:*}" "${CLUSTER_CREDS#*:}" \
+               "$SCHEMA_REGISTRY_CREDS" "${SCHEMA_REGISTRY_CREDS%%:*}" "${SCHEMA_REGISTRY_CREDS#*:}"
+  do
+    if [ ${#value} -ge 8 ]
+    then
+      echo "::add-mask::$value"
+    fi
+  done
+}
+
 function bootstrap_ccloud_environment () {
+  mask_ccloud_credentials_in_ci
 
   local expected_cloud="$1"
   local expected_region="$2"
@@ -2542,7 +2561,12 @@ function bootstrap_ccloud_environment () {
       logerror "CLUSTER_NAME=$CLUSTER_NAME"
       logerror "CLUSTER_CLOUD=$CLUSTER_CLOUD"
       logerror "CLUSTER_REGION=$CLUSTER_REGION"
-      logerror "CLUSTER_CREDS=$CLUSTER_CREDS"
+      if [ -n "$CLUSTER_CREDS" ]
+      then
+        logerror "CLUSTER_CREDS is set (not shown)"
+      else
+        logerror "CLUSTER_CREDS="
+      fi
       exit 1
     fi
 
@@ -2569,6 +2593,7 @@ function bootstrap_ccloud_environment () {
       then
         source $DELTA_CONFIGS_ENV
         log "🌱 cluster $CLUSTER_NAME is ready to be used!"
+        mask_ccloud_credentials_in_ci
 
         if [[ ! -n "$connect_migration_utility" ]]
         then
@@ -2606,6 +2631,7 @@ function bootstrap_ccloud_environment () {
   playground state set ccloud.CLUSTER_REGION "$CLUSTER_REGION"
   playground state set ccloud.CLUSTER_CREDS "$CLUSTER_CREDS"
   playground state set ccloud.SCHEMA_REGISTRY_CREDS "$SCHEMA_REGISTRY_CREDS"
+  mask_ccloud_credentials_in_ci
 
   if [[ ! -n "$connect_migration_utility" ]]
   then
