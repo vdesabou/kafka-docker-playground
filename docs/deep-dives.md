@@ -3,7 +3,9 @@
 Written pages that go deep into one family of `playground` commands: the mental model, what runs under the hood, the
 gotchas, a hands-on lab you can run in about 10 minutes, and recipes for reproducing support cases. When a
 [🎬 Bite size session](/sessions.md) covers the same commands, watch the video for the overview and read the deep dive
-to master them. Every output shown in a lab comes from a real run.
+to master them. Every output shown in a lab comes from a real run, and CI replays the labs every night
+([`other/deep-dive-labs`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/deep-dive-labs)): a
+CLI change that makes a page wrong shows up as a failing test.
 
 | | Deep dive | Commands | Video session |
 | --- | --- | --- | --- |
@@ -18,6 +20,10 @@ to master them. Every output shown in a lab comes from a real run.
 | 🔀 | [Test a transform chain on a record](/deep-dive-connector-smt-test.md) | `connector smt test` | [🔀 What does this transform chain do to a record?](/sessions?id=🔀-what-does-this-transform-chain-do-to-a-record) |
 | 🛠 | [Reproduction models: bootstrap, check, export, import](/deep-dive-reproduction-models.md) | `repro bootstrap`, `repro check`, `repro export`, `repro import` | — |
 | 🐳 | [Containers: exec, cp, restart vs recreate, environment, JDK](/deep-dive-container-lifecycle.md) | `container exec`, `cp`, `restart`, `recreate`, `set-environment-variables`, `change-jdk`, `status` | — |
+| 🧑‍💻 | [Connector plugins: versions, config keys, source code, jars](/deep-dive-connector-plugin.md) | `connector-plugin versions`, `config-key`, `sourcecode`, `search-jar` | [🧑‍💻 The source code of a connector at the customer's version](/sessions?id=🧑💻-the-source-code-of-a-connector-at-the-customers-version) |
+| 🔰 | [Schema Registry: subjects, ids, compatibility, deletion](/deep-dive-schema.md) | `schema get`, `register`, `set-compatibility`, `delete`, `derive-schema` | — |
+| 🧵 | [JVM diagnostics: which collector, which analyzer](/deep-dive-jvm-diagnostics.md) | `debug thread-dump`, `heap-dump`, `flight-recorder`, `analyze thread-dump`, `gc-logs`, `flight-recorder`, `heap-dump` | [🧵 thread dumps](/sessions?id=🧵-a-connector-looks-stuck-analyze-thread-dumps), [♻️ GC logs](/sessions?id=♻️-long-gc-pauses-or-a-memory-leak-analyze-gc-logs), [🛩️ flight recorder](/sessions?id=🛩️-a-slow-connector-where-does-the-task-time-go) |
+| 🕹️ | [Running examples and changing versions](/deep-dive-run-and-versions.md) | `run`, `re-run`, `update-version`, `history` | [🕹️ Run an example](/sessions?id=🕹️-run-an-example-with-the-menu-or-with-flags) |
 
 > [!TIP]
 > Each deep dive follows the same outline, so you can jump to the part you need: mental model first, then the commands
