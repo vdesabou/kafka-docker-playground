@@ -42,6 +42,8 @@ fi
 #      wait_for_end_of_hibernation
 # fi
 
+servicenow_ensure_machine_identity
+
 PLAYGROUND_ENVIRONMENT=${PLAYGROUND_ENVIRONMENT:-"plaintext"}
 playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" --docker-compose-override-file "${PWD}/docker-compose.plaintext.nginx-proxy.yml"
 

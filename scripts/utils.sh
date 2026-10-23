@@ -872,6 +872,60 @@ function salesforce_get_jwt_keystore_base64() {
   base64 < "$keystore_path" | tr -d '\n'
 }
 
+# Make sure user admin of $SERVICENOW_URL (ending with /) can use basic authentication on the REST
+# API, which the ServiceNow examples and connectors use. Recent ServiceNow releases answer 401 to
+# basic authentication unless the Identity Type of the user is Machine (User Administration > Users >
+# admin > Identity Type). The UI login still works then, so this logs in with login.do like a browser,
+# takes the session token g_ck from a UI page, and sets identity_type=machine on admin with the REST
+# Table API in that session.
+function servicenow_ensure_machine_identity() {
+  local code="" jar="" ck="" gck="" sys_id="" page="" response=""
+
+  code=$(curl -s -o /dev/null -w "%{http_code}" -u admin:"$SERVICENOW_PASSWORD" "${SERVICENOW_URL}api/now/table/sys_user?sysparm_limit=1")
+  if [ "$code" != "401" ]
+  then
+    return 0
+  fi
+
+  log "🤖 ServiceNow answers 401 to basic authentication for admin, setting its Identity Type to Machine"
+  jar=$(mktemp)
+  ck=$(curl -s -c "$jar" -b "$jar" "${SERVICENOW_URL}login.do" | grep -oE 'name="sysparm_ck"[^>]*value="[^"]*"' | sed -E 's/.*value="([^"]*)".*/\1/' | head -1)
+  curl -s -o /dev/null -c "$jar" -b "$jar" -L \
+    --data-urlencode "user_name=admin" --data-urlencode "user_password=$SERVICENOW_PASSWORD" \
+    --data-urlencode "sys_action=sysverb_login" --data-urlencode "sysparm_ck=$ck" \
+    --data-urlencode "ni.nolog.user_password=true" "${SERVICENOW_URL}login.do"
+
+  for page in navpage.do home.do
+  do
+    gck=$(curl -s -c "$jar" -b "$jar" -L "${SERVICENOW_URL}${page}" | grep -oE "g_ck *= *['\"][a-f0-9]{20,}['\"]" | grep -oE '[a-f0-9]{20,}' | head -1)
+    if [ ! -z "$gck" ]
+    then
+      break
+    fi
+  done
+  if [ -z "$gck" ]
+  then
+    rm -f "$jar"
+    logerror "❌ could not log in to $SERVICENOW_URL as admin: check SERVICENOW_PASSWORD, or set Identity Type to Machine on admin by hand (see the README of the example)"
+    return 1
+  fi
+
+  sys_id=$(curl -s -c "$jar" -b "$jar" -H "X-UserToken: $gck" -H 'Accept: application/json' "${SERVICENOW_URL}api/now/table/sys_user?sysparm_query=user_name=admin&sysparm_fields=sys_id" | jq -r '.result[0].sys_id // empty' 2> /dev/null) || sys_id=""
+  if [ ! -z "$sys_id" ]
+  then
+    response=$(curl -s -c "$jar" -b "$jar" -X PATCH -H "X-UserToken: $gck" -H 'Accept: application/json' -H 'Content-Type: application/json' -d '{"identity_type": "machine"}' "${SERVICENOW_URL}api/now/table/sys_user/${sys_id}?sysparm_fields=identity_type")
+  fi
+  rm -f "$jar"
+
+  code=$(curl -s -o /dev/null -w "%{http_code}" -u admin:"$SERVICENOW_PASSWORD" "${SERVICENOW_URL}api/now/table/sys_user?sysparm_limit=1")
+  if [ "$code" != "200" ]
+  then
+    logerror "❌ basic authentication as admin still answers HTTP $code after setting its Identity Type to Machine (response: ${response:-admin user not found}). Set it by hand (see the README of the example)"
+    return 1
+  fi
+  log "🤖 Identity Type of admin is now Machine"
+}
+
 # Create the ServiceNow table used by the ServiceNow sink examples, with the REST Table API, as user
 # admin on $SERVICENOW_URL (ending with /): the table is a record of sys_db_object and each column a
 # record of sys_dictionary, like the System Definition > Tables form does. Without access controls,

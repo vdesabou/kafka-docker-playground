@@ -42,7 +42,7 @@ Click on *Manage* -> *Instance* and register for an instance. After some time on
 
 ## Verify user-level requirements
 
-The user account should have *Identity Type* set to `Machine`:
+The user account should have *Identity Type* set to `Machine`. The scripts do it themselves: when ServiceNow answers 401 to basic authentication as `admin`, they log in through the UI login page (`login.do`) and set `identity_type` to `machine` on `admin` with the REST Table API. To do it by hand instead:
 
 * Navigate to *User Administration* > *Users*.
 * Search for and open the admin record.
