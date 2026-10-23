@@ -5046,11 +5046,13 @@ subcommands:
       RUNNING, it fails right away if the connector or one of\nits tasks is FAILED,
       since a failed task does not recover on its own.\nA connector RUNNING without
       any task for 30 seconds (Replicator without\nmatching topic yet, JDBC source
-      without table) is accepted with a\nwarning.\nFor the same reason, --state FAILED
-      is reached as soon as the connector\nor one of its tasks is FAILED (the connector
-      itself usually stays\nRUNNING when only a task fails).\n\n\U0001F393 Tip: 'connector
-      create-or-update' already waits for RUNNING. Use\nit for another state, or after
-      'connector create-or-update --no-wait'."
+      without table) is accepted with a\nwarning. A Datagen task that failed with
+      \"Stopping connector: generated\nthe configured N number of messages\" (\"iterations\"
+      reached) is\ncompleted, not FAILED, and counts as RUNNING.\nFor the same reason,
+      --state FAILED is reached as soon as the connector\nor one of its tasks is FAILED
+      (the connector itself usually stays\nRUNNING when only a task fails).\n\n\U0001F393
+      Tip: 'connector create-or-update' already waits for RUNNING. Use\nit for another
+      state, or after 'connector create-or-update --no-wait'."
     usage: playground connector wait [OPTIONS]
     options:
     - names:

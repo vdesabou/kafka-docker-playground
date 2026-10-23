@@ -43,7 +43,8 @@ function get_connector_states () {
         fi
     fi
     connector_state=$(echo "$curl_output" | jq -r '.connector.state // empty' 2>/dev/null)
-    tasks_states=$(echo "$curl_output" | jq -r '.tasks[]?.state' 2>/dev/null)
+    # a datagen task with "iterations" set fails on purpose once it has generated its messages: it is COMPLETED, not FAILED
+    tasks_states=$(echo "$curl_output" | jq -r '.tasks[]? | if .state == "FAILED" and ((.trace // "") | test("Stopping connector: generated the configured [0-9]+ number of messages")) then "COMPLETED" else .state end' 2>/dev/null)
 }
 
 # a connector can legitimately run without tasks (Replicator or MirrorMaker without matching topic yet, JDBC source
@@ -66,6 +67,11 @@ do
         if [ "$state" == "PAUSED" ] && { [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]; }
         then
             task_state_pattern="PAUSED|STOPPED"
+        fi
+        # a completed datagen task has done its job
+        if [ "$state" == "RUNNING" ]
+        then
+            task_state_pattern="RUNNING|COMPLETED"
         fi
         nb_tasks_in_state=$(echo "$tasks_states" | { grep -cxE "$task_state_pattern" || true; } | tr -d ' ')
         elapsed=$((SECONDS - start_time))
