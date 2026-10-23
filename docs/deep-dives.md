@@ -1,15 +1,19 @@
 # 🍪 Deep dives
 
 Written pages that go deep into one family of `playground` commands: the mental model, what runs under the hood, the
-gotchas, a hands-on lab you can run in about 10 minutes, and recipes for reproducing support cases. They are the
-written companions of the [🎬 Bite size sessions](/sessions.md): watch the video for the overview, read the deep dive
-to master the commands.
+gotchas, a hands-on lab you can run in about 10 minutes, and recipes for reproducing support cases. When a
+[🎬 Bite size session](/sessions.md) covers the same commands, watch the video for the overview and read the deep dive
+to master them. Every output shown in a lab comes from a real run.
 
 | | Deep dive | Commands | Video session |
 | --- | --- | --- | --- |
 | 🐌 | [A slow or broken network, on purpose](/deep-dive-network-traffic.md) | `debug block-traffic`, `debug degrade-traffic` | [🐌 A slow or broken network, on purpose](/sessions?id=🐌-a-slow-or-broken-network-on-purpose) |
 | 📨 | [Produce test data: schemas, payloads, keys, load](/deep-dive-topic-produce.md) | `topic produce` | [📨 Produce realistic test data](/sessions?id=📨-produce-realistic-test-data) |
 | 📥 | [Read a topic: deserializers, positioning, assertions](/deep-dive-topic-consume.md) | `topic consume` | [📥 Read a topic](/sessions?id=📥-read-a-topic) |
+| 🔌 | [Deploy a connector: create, update, wait, validate, diff](/deep-dive-connector-create-or-update.md) | `connector create-or-update`, `wait`, `validate`, `diff`, `status`, `show-config` | — |
+| 🩺 | [A connector doesn't work: diagnose and the dead letter queue](/deep-dive-connector-troubleshooting.md) | `connector diagnose`, `topic dlq inspect`, `topic dlq replay` | [🩺 A sink is RUNNING but writes nothing](/sessions?id=🩺-a-sink-is-running-but-writes-nothing) |
+| 📜 | [Read logs: live digest, waiting for a line, customer bundles](/deep-dive-container-logs.md) | `container logs`, `analyze logs` | — |
+| 🧭 | [Offsets and lag: sinks, sources, consumer groups](/deep-dive-offsets-and-lag.md) | `connector show-lag`, `connector offsets`, `consumer-group` | — |
 
 > [!TIP]
 > Each deep dive follows the same outline, so you can jump to the part you need: mental model first, then the commands

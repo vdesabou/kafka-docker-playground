@@ -103,6 +103,7 @@ Recorded on the example `other/reprocess-dlq-messages-with-sink-connector/replay
 
 **Links**
 
+- 🍪 Deep dive: [`connector diagnose` and the dead letter queue: under the hood, hands-on lab and repro recipes](/deep-dive-connector-troubleshooting.md)
 - 🧠 CLI reference: [playground connector diagnose](/playground%20connector%20diagnose),
   [playground topic dlq inspect](/playground%20topic%20dlq%20inspect), [playground topic dlq replay](/playground%20topic%20dlq%20replay)
 
