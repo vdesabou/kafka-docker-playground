@@ -11693,7 +11693,7 @@ playground_connector_status_usage() {
 playground_connector_wait_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector wait\n\n"
-    printf "  ⏳ Wait for connectors to reach a state\n  \n  Polls the connector status every --interval seconds until the connector\n  and all its tasks are in --state (RUNNING by default), and fails after\n  --max-wait seconds, displaying the status with the stack trace.\n  \n  RUNNING is only reached when the connector and its tasks are still\n  RUNNING one --interval later, since a task is RUNNING before it\n  processes its first record and can fail right after.\n  \n  When waiting for RUNNING, it fails right away if the connector or one of\n  its tasks is FAILED, since a failed task does not recover on its own.\n  For the same reason, --state FAILED is reached as soon as the connector\n  or one of its tasks is FAILED (the connector itself usually stays\n  RUNNING when only a task fails).\n  \n  🎓 Tip: in an example script, use it right after 'connector\n  create-or-update' instead of a fixed sleep.\n\n"
+    printf "  ⏳ Wait for connectors to reach a state\n  \n  Polls the connector status every --interval seconds until the connector\n  and all its tasks are in --state (RUNNING by default), and fails after\n  --max-wait seconds, displaying the status with the stack trace.\n  \n  RUNNING is only reached when the connector and its tasks are still\n  RUNNING one --interval later, since a task is RUNNING before it\n  processes its first record and can fail right after.\n  \n  When waiting for RUNNING, it fails right away if the connector or one of\n  its tasks is FAILED, since a failed task does not recover on its own.\n  A connector RUNNING without any task for 30 seconds (Replicator without\n  matching topic yet, JDBC source without table) is accepted with a\n  warning.\n  For the same reason, --state FAILED is reached as soon as the connector\n  or one of its tasks is FAILED (the connector itself usually stays\n  RUNNING when only a task fails).\n  \n  🎓 Tip: 'connector create-or-update' already waits for RUNNING. Use\n  it for another state, or after 'connector create-or-update --no-wait'.\n\n"
   else
     printf "playground connector wait - ⏳ Wait for connectors to reach a state\n\n"
   fi
@@ -13671,7 +13671,7 @@ playground_connector_connect_migration_utility_migrate_usage() {
 playground_connector_create_or_update_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector create-or-update\n\n"
-    printf "  🧑‍🎨  Create or update connector\n  \n  The command every example uses to deploy its connector. The json config\n  is read from stdin, usually as a heredoc, so it stays readable in the\n  script. If the connector already exists it is updated in place, which\n  makes the command safe to re-run while you iterate on a configuration.\n  \n  The command then displays the connector status. Add --wait to wait for\n  the connector and all its tasks to be RUNNING and fail with the error\n  if they are not, so a broken config stops the example immediately\n  instead of failing silently later.\n  \n  🎓 Tip: add --validate to have the config checked by the plugin before\n  it is deployed, which reports every invalid property at once.\n  \n  An update shows the keys added, removed and changed compared to the\n  running config (secrets masked). The config can also be given in the\n  REST API format ({\"name\": ..., \"config\": {...}}, as returned by\n  GET /connectors/<name>), or as the path of a json file.\n\n"
+    printf "  🧑‍🎨  Create or update connector\n  \n  The command every example uses to deploy its connector. The json config\n  is read from stdin, usually as a heredoc, so it stays readable in the\n  script. If the connector already exists it is updated in place, which\n  makes the command safe to re-run while you iterate on a configuration.\n  \n  The command then waits for the connector and all its tasks to be\n  RUNNING, displays the connector status, and fails with the error if\n  they are not, so a broken config stops the example immediately instead\n  of failing silently later. When the script that runs is a reproduction\n  model, a connector that is not RUNNING is only reported as a warning,\n  since a reproduction model often creates a failing connector on\n  purpose. Use --wait to fail there too, --no-wait to skip the wait.\n  \n  Fully managed connectors are only waited for with --wait.\n  \n  🎓 Tip: add --validate to have the config checked by the plugin before\n  it is deployed, which reports every invalid property at once.\n  \n  An update shows the keys added, removed and changed compared to the\n  running config (secrets masked). The config can also be given in the\n  REST API format ({\"name\": ..., \"config\": {...}}, as returned by\n  GET /connectors/<name>), or as the path of a json file.\n\n"
   else
     printf "playground connector create-or-update - 🧑‍🎨  Create or update connector\n\n"
   fi
@@ -13723,13 +13723,20 @@ playground_connector_create_or_update_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--wait")"
-    printf "    ⏳ Wait until the connector and all its tasks are RUNNING (or in\n    --initial-state), and fail otherwise\n    \n    Same as running 'playground connector wait' right after the command. It\n    fails right away if the connector or one of its tasks is FAILED.\n    \n    With fully managed connectors, it waits for the connector to be provisioned\n    and restarts it if it fails while being provisioned (same as\n    wait_for_ccloud_connector_up in example scripts).\n"
+    printf "    ⏳ Wait until the connector and all its tasks are RUNNING (or in\n    --initial-state), and fail otherwise\n    \n    Self-managed connectors are waited for by default: --wait also makes the\n    command fail when the script that runs is a reproduction model (by default,\n    it is only a warning there).\n    \n    Same as running 'playground connector wait' right after the command. It\n    fails right away if the connector or one of its tasks is FAILED. An update\n    of a PAUSED or STOPPED connector waits for that state.\n    \n    With fully managed connectors, it waits for the connector to be provisioned\n    and restarts it if it fails while being provisioned (same as\n    wait_for_ccloud_connector_up in example scripts).\n"
+    printf "    %s\n" "Conflicts: --no-wait"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-wait")"
+    printf "    🏃 Do not wait for the connector and its tasks to be RUNNING, only display\n    the status\n    \n    🎓 Tip: use it to create a connector that is expected to fail, then check it\n    with 'playground connector wait --state FAILED'\n"
+    printf "    %s\n" "Conflicts: --wait, --max-wait"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--max-wait MAX_WAIT")"
-    printf "    ⏳ Max time in seconds to wait with --wait (default is 120, or 600 for fully\n    managed connectors)\n"
-    printf "    %s\n" "Needs: --wait"
+    printf "    ⏳ Max time in seconds to wait for the connector (default is 120, or 600 for\n    fully managed connectors with --wait)\n"
+    printf "    %s\n" "Conflicts: --no-wait"
     echo
 
     # :flag.usage
@@ -13803,7 +13810,7 @@ playground_connector_create_or_update_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground connector create-or-update -c filestream-sink --wait << EOF\n{\n    \"tasks.max\": \"1\",\n    \"connector.class\":\n\"org.apache.kafka.connect.file.FileStreamSinkConnector\",\n    \"topics\": \"filestream\",\n    \"file\": \"/tmp/output.json\",\n    \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\",\n    \"value.converter\": \"org.apache.kafka.connect.json.JsonConverter\",\n    \"value.converter.schemas.enable\": \"false\"\n}\nEOF\n  \n  playground connector create-or-update -c filestream-sink --offsets\n  '[{\"partition\":{\"kafka_topic\":\"filestream\",\"kafka_partition\":0},\"offset\":{\"kafka_offset\":8}}]'\n  << EOF\n{\n    \"tasks.max\": \"1\",\n    \"connector.class\":\n\"org.apache.kafka.connect.file.FileStreamSinkConnector\",\n    \"topics\": \"filestream\",\n    \"file\": \"/tmp/output.json\",\n    \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\",\n    \"value.converter\": \"org.apache.kafka.connect.json.JsonConverter\",\n    \"value.converter.schemas.enable\": \"false\"\n}\nEOF\n"
+    printf "  playground connector create-or-update -c filestream-sink << EOF\n{\n    \"tasks.max\": \"1\",\n    \"connector.class\":\n\"org.apache.kafka.connect.file.FileStreamSinkConnector\",\n    \"topics\": \"filestream\",\n    \"file\": \"/tmp/output.json\",\n    \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\",\n    \"value.converter\": \"org.apache.kafka.connect.json.JsonConverter\",\n    \"value.converter.schemas.enable\": \"false\"\n}\nEOF\n  \n  playground connector create-or-update -c filestream-sink --offsets\n  '[{\"partition\":{\"kafka_topic\":\"filestream\",\"kafka_partition\":0},\"offset\":{\"kafka_offset\":8}}]'\n  << EOF\n{\n    \"tasks.max\": \"1\",\n    \"connector.class\":\n\"org.apache.kafka.connect.file.FileStreamSinkConnector\",\n    \"topics\": \"filestream\",\n    \"file\": \"/tmp/output.json\",\n    \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\",\n    \"value.converter\": \"org.apache.kafka.connect.json.JsonConverter\",\n    \"value.converter.schemas.enable\": \"false\"\n}\nEOF\n"
 echo
 
 fi
@@ -24554,7 +24561,7 @@ function validate_ccloud_connector_up() {
   if [ -f "/tmp/config-$connector" ]
   then
     set +e
-    PG_SKIP_ERROR_RECOMMENDATIONS=1 playground connector create-or-update --connector "$connector" --no-clipboard < "/tmp/config-$connector" > /tmp/output.log 2>&1
+    PG_SKIP_ERROR_RECOMMENDATIONS=1 playground connector create-or-update --connector "$connector" --no-clipboard --no-wait < "/tmp/config-$connector" > /tmp/output.log 2>&1
     if [ $? -ne 0 ]
     then
       echo "💀"
@@ -51952,12 +51959,17 @@ playground_connector_wait_command() {
       tasks_states=$(echo "$curl_output" | jq -r '.tasks[]?.state' 2>/dev/null)
   }
 
+  # a connector can legitimately run without tasks (Replicator or MirrorMaker without matching topic yet, JDBC source
+  # without table): RUNNING with 0 tasks for that long is accepted, with a warning
+  zero_tasks_max_seconds=30
+
   for connector in ${connector}
   do
       log "⏳ Waiting up to $max_wait seconds for $connector_type connector $connector to be $state"
       start_time=$SECONDS
       last_seen=""
       running_seen=false
+      zero_tasks_since=""
       while true
       do
           get_connector_states "$connector"
@@ -51984,6 +51996,20 @@ playground_connector_wait_command() {
               set +e
               playground connector status --connector "$connector"
               break
+          fi
+
+          if [ "$state" == "RUNNING" ] && [ "$connector_state" == "RUNNING" ] && [ "$nb_tasks" == "0" ]
+          then
+              if [ -z "$zero_tasks_since" ]
+              then
+                  zero_tasks_since=$elapsed
+              elif [ $((elapsed - zero_tasks_since)) -ge $zero_tasks_max_seconds ]
+              then
+                  logwarn "⚠️ $connector_type connector $connector is RUNNING without any task for $zero_tasks_max_seconds seconds (nothing to process yet?), not waiting for tasks"
+                  break
+              fi
+          else
+              zero_tasks_since=""
           fi
 
           if [ "$state" != "FAILED" ] && [ "$connector_state" == "$state" ]
@@ -58007,6 +58033,7 @@ playground_connector_create_or_update_command() {
   validate=${args[--validate]}
   wait_for_zero_lag=${args[--wait-for-zero-lag]}
   wait=${args[--wait]}
+  no_wait=${args[--no-wait]}
   max_wait=${args[--max-wait]}
   skip_automatic_connector_config=${args[--skip-automatic-connector-config]}
   verbose="${args[--verbose]}"
@@ -58030,19 +58057,54 @@ playground_connector_create_or_update_command() {
       is_ccloud_connector=1
   fi
 
-  # --wait: fully managed connectors take minutes to be provisioned and can fail transiently while
+  # self-managed connectors are waited for by default: strict (exit 1) in examples, warn-only in reproduction
+  # models, which often create a failing connector on purpose and keep going. --wait is strict everywhere.
+  # fully managed connectors are only waited for with --wait: their examples call wait_for_ccloud_connector_up
+  wait_mode=""
+  if [[ -n "$wait" ]]
+  then
+      wait_mode="strict"
+  elif [[ -z "$no_wait" ]] && [[ -z "$dry_run" ]] && [ $is_ccloud_connector -eq 0 ]
+  then
+      test_file=$(playground state get run.test_file)
+      if [[ "$test_file" == */reproduction-models/* ]]
+      then
+          wait_mode="warn"
+      else
+          wait_mode="strict"
+      fi
+  fi
+
+  # an update keeps a PAUSED or STOPPED connector in that state: set before the update
+  previous_state=""
+
+  # fully managed connectors take minutes to be provisioned and can fail transiently while
   # being provisioned, wait_for_ccloud_connector_up restarts them, which 'connector wait' does not
   function wait_for_created_connector () {
       if [ $is_ccloud_connector -eq 1 ]
       then
           if [[ -n "$initial_state" ]] && [ "$initial_state" != "RUNNING" ]
           then
-              playground connector wait --connector "$connector" --state "$initial_state" --max-wait "${max_wait:-600}"
+              playground connector wait --connector "$connector" --state "$initial_state" --max-wait "${max_wait:-600}" || exit 1
           else
               wait_for_ccloud_connector_up "$connector" "${max_wait:-600}"
           fi
+          return
+      fi
+
+      local state="${initial_state:-${previous_state:-RUNNING}}"
+      # on failure, 'connector wait' displays the status with the stack trace
+      if playground connector wait --connector "$connector" --state "$state" --max-wait "${max_wait:-120}"
+      then
+          set +e
+          playground connector status --connector "$connector"
+          set -e
+      elif [ "$wait_mode" == "warn" ]
+      then
+          logwarn "⚠️ $connector_type connector $connector is not $state, continuing as $(basename "$test_file") is a reproduction model (use --wait to stop here, --no-wait to skip the wait)"
       else
-          playground connector wait --connector "$connector" --state "${initial_state:-RUNNING}" --max-wait "${max_wait:-120}"
+          logerror "❌ $connector_type connector $connector is not $state (use --no-wait to skip the wait)"
+          exit 1
       fi
   }
 
@@ -58342,7 +58404,7 @@ then
         playground connector show-config --connector "$connector" --no-clipboard
     fi
 
-    if [[ -n "$wait" ]]
+    if [[ -n "$wait_mode" ]]
     then
         wait_for_created_connector
     else
@@ -58529,6 +58591,16 @@ else
         then
             set +e
             handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors/$connector/config\"" > /dev/null 2>&1 && show_config_changes "$curl_output" "$json_content" 0
+            if [[ -z "$initial_state" ]] && handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors/$connector/status\"" > /dev/null 2>&1
+            then
+                previous_state=$(echo "$curl_output" | jq -r '.connector.state // empty' 2> /dev/null)
+                if [ "$previous_state" == "PAUSED" ] || [ "$previous_state" == "STOPPED" ]
+                then
+                    log "⏸️ $connector_type connector $connector is $previous_state, it stays $previous_state after the update"
+                else
+                    previous_state=""
+                fi
+            fi
             set -e
         fi
 
@@ -58614,7 +58686,7 @@ then
     then
         kubectl -n confluent get connector "$connector" -o yaml
     fi
-    if [[ -n "$wait" ]]
+    if [[ -n "$wait_mode" ]]
     then
         # the CR being app-ready does not mean that the tasks are RUNNING
         wait_for_created_connector
@@ -58633,8 +58705,8 @@ fi
 
 playground connector show-config-parameters --connector "$connector" --only-show-json
 set +e
-# with --wait, the status is displayed by 'connector wait' when it fails (right after the creation, it can also be a 404)
-if [[ -z "$wait" ]]
+# when waiting, the status is displayed once the wait is over (right after the creation, it can also be a 404)
+if [[ -z "$wait_mode" ]]
 then
     playground connector status --connector $connector
 fi
@@ -58645,7 +58717,7 @@ then
 fi
 set -e
 
-if [[ -n "$wait" ]]
+if [[ -n "$wait_mode" ]]
 then
     wait_for_created_connector
 fi
@@ -92458,6 +92530,11 @@ playground_connector_create_or_update_parse_requirements() {
 
       # :flag.case
       --wait)
+        # :flag.conflicts
+        if [[ -n "${args['--no-wait']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--no-wait" >&2
+          exit 1
+        fi
 
         # :flag.case_no_arg
         args['--wait']=1
@@ -92465,7 +92542,27 @@ playground_connector_create_or_update_parse_requirements() {
         ;;
 
       # :flag.case
+      --no-wait)
+        # :flag.conflicts
+        for conflict in --wait --max-wait; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--no-wait']=1
+        shift
+        ;;
+
+      # :flag.case
       --max-wait)
+        # :flag.conflicts
+        if [[ -n "${args['--no-wait']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--no-wait" >&2
+          exit 1
+        fi
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
@@ -92596,12 +92693,6 @@ playground_connector_create_or_update_parse_requirements() {
   # :flag.needs
   if [[ -n ${args['--package']+x} ]] && [[ -z "${args[--level]:-}" ]]; then
     printf "%s\n" "--package needs --level" >&2
-    exit 1
-  fi
-
-  # :flag.needs
-  if [[ -n ${args['--max-wait']+x} ]] && [[ -z "${args[--wait]:-}" ]]; then
-    printf "%s\n" "--max-wait needs --wait" >&2
     exit 1
   fi
 
@@ -109856,6 +109947,14 @@ playground_connector_create_or_update_completion() {
         ;;
       --wait)
         completion_blocked_flags["--wait"]=1
+        completion_blocked_flags["--no-wait"]=1
+
+        shift
+        ;;
+      --no-wait)
+        completion_blocked_flags["--no-wait"]=1
+        completion_blocked_flags["--wait"]=1
+        completion_blocked_flags["--max-wait"]=1
 
         shift
         ;;
@@ -109867,6 +109966,7 @@ playground_connector_create_or_update_completion() {
         fi
         shift
         completion_blocked_flags["--max-wait"]=1
+        completion_blocked_flags["--no-wait"]=1
 
         ;;
       --validate)
@@ -109938,6 +110038,7 @@ playground_connector_create_or_update_completion() {
     completion_flag_candidates --package "$completion_current" --package -p
     completion_flag_candidates --wait-for-zero-lag "$completion_current" --wait-for-zero-lag
     completion_flag_candidates --wait "$completion_current" --wait
+    completion_flag_candidates --no-wait "$completion_current" --no-wait
     completion_flag_candidates --max-wait "$completion_current" --max-wait
     completion_flag_candidates --validate "$completion_current" --validate
     completion_flag_candidates --skip-automatic-connector-config "$completion_current" --skip-automatic-connector-config

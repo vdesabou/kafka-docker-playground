@@ -98,7 +98,7 @@ environments where the raw command only works on `plaintext`.
 | `curl .../connectors/<c>/offsets` | `playground connector offsets get\|alter\|reset` |
 | `kafka-consumer-groups --describe` for a connector | `playground connector show-lag` |
 | `kafka-consumer-groups --describe\|--reset-offsets\|--delete` for any other group | `playground consumer-group describe\|reset-offsets\|delete --group <g>` (`--to-earliest`, `--to-datetime`, `--shift-by`…, `--dry-run`) |
-| `sleep N` waiting for a connector to start, or for a source connector to produce | `playground connector create-or-update --connector <c> --wait` (or `playground connector wait --connector <c>`, `--state RUNNING\|PAUSED\|STOPPED\|FAILED`, `--max-wait 120`) / `playground topic wait-for-records --topic <t> --min-expected-messages N --max-wait 120` |
+| `sleep N` waiting for a connector to start, or for a source connector to produce | nothing: `playground connector create-or-update` waits for a self-managed connector to be RUNNING by default (strict in examples, warn-only in repro models; `--wait` strict everywhere and for fully managed, `--no-wait` to skip). Otherwise `playground connector wait --connector <c>` (`--state RUNNING\|PAUSED\|STOPPED\|FAILED`, `--max-wait 120`) / `playground topic wait-for-records --topic <t> --min-expected-messages N --max-wait 120` |
 | `kafka-console-producer`, `kafka-avro-console-producer` | `playground topic produce -t <t> --nb-messages N` (+ schema on stdin) |
 | `kafka-console-consumer` | `playground topic consume --topic <t> --min-expected-messages N --timeout 60` |
 | `kafka-topics --create\|--list\|--delete\|--describe` | `playground topic create\|list\|delete\|describe` |
@@ -171,7 +171,7 @@ playground start-environment --environment "${PLAYGROUND_ENVIRONMENT}" \
   --docker-compose-override-file "${PWD}/docker-compose.plaintext.yml"
 
 # ... create external resources (buckets, DBs, queues) ...
-playground connector create-or-update --connector s3-sink --wait << EOF   # --wait: fails fast if a task is FAILED
+playground connector create-or-update --connector s3-sink << EOF   # waits for RUNNING, fails fast if a task is FAILED
 { ... }
 EOF
 playground topic produce -t s3-topic --nb-messages 10 ...

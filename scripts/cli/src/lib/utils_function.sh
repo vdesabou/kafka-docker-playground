@@ -2601,7 +2601,7 @@ function validate_ccloud_connector_up() {
   if [ -f "/tmp/config-$connector" ]
   then
     set +e
-    PG_SKIP_ERROR_RECOMMENDATIONS=1 playground connector create-or-update --connector "$connector" --no-clipboard < "/tmp/config-$connector" > /tmp/output.log 2>&1
+    PG_SKIP_ERROR_RECOMMENDATIONS=1 playground connector create-or-update --connector "$connector" --no-clipboard --no-wait < "/tmp/config-$connector" > /tmp/output.log 2>&1
     if [ $? -ne 0 ]
     then
       echo "💀"

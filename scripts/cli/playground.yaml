@@ -5044,11 +5044,13 @@ subcommands:
       tasks are still\nRUNNING one --interval later, since a task is RUNNING before
       it\nprocesses its first record and can fail right after.\n\nWhen waiting for
       RUNNING, it fails right away if the connector or one of\nits tasks is FAILED,
-      since a failed task does not recover on its own.\nFor the same reason, --state
-      FAILED is reached as soon as the connector\nor one of its tasks is FAILED (the
-      connector itself usually stays\nRUNNING when only a task fails).\n\n\U0001F393
-      Tip: in an example script, use it right after 'connector\ncreate-or-update'
-      instead of a fixed sleep."
+      since a failed task does not recover on its own.\nA connector RUNNING without
+      any task for 30 seconds (Replicator without\nmatching topic yet, JDBC source
+      without table) is accepted with a\nwarning.\nFor the same reason, --state FAILED
+      is reached as soon as the connector\nor one of its tasks is FAILED (the connector
+      itself usually stays\nRUNNING when only a task fails).\n\n\U0001F393 Tip: 'connector
+      create-or-update' already waits for RUNNING. Use\nit for another state, or after
+      'connector create-or-update --no-wait'."
     usage: playground connector wait [OPTIONS]
     options:
     - names:
@@ -6253,15 +6255,19 @@ subcommands:
       every example uses to deploy its connector. The json config\nis read from stdin,
       usually as a heredoc, so it stays readable in the\nscript. If the connector
       already exists it is updated in place, which\nmakes the command safe to re-run
-      while you iterate on a configuration.\n\nThe command then displays the connector
-      status. Add --wait to wait for\nthe connector and all its tasks to be RUNNING
-      and fail with the error\nif they are not, so a broken config stops the example
-      immediately\ninstead of failing silently later.\n\n\U0001F393 Tip: add --validate
-      to have the config checked by the plugin before\nit is deployed, which reports
-      every invalid property at once.\n\nAn update shows the keys added, removed and
-      changed compared to the\nrunning config (secrets masked). The config can also
-      be given in the\nREST API format ({\"name\": ..., \"config\": {...}}, as returned
-      by\nGET /connectors/<name>), or as the path of a json file."
+      while you iterate on a configuration.\n\nThe command then waits for the connector
+      and all its tasks to be\nRUNNING, displays the connector status, and fails with
+      the error if\nthey are not, so a broken config stops the example immediately
+      instead\nof failing silently later. When the script that runs is a reproduction\nmodel,
+      a connector that is not RUNNING is only reported as a warning,\nsince a reproduction
+      model often creates a failing connector on\npurpose. Use --wait to fail there
+      too, --no-wait to skip the wait.\n\nFully managed connectors are only waited
+      for with --wait.\n\n\U0001F393 Tip: add --validate to have the config checked
+      by the plugin before\nit is deployed, which reports every invalid property at
+      once.\n\nAn update shows the keys added, removed and changed compared to the\nrunning
+      config (secrets masked). The config can also be given in the\nREST API format
+      ({\"name\": ..., \"config\": {...}}, as returned by\nGET /connectors/<name>),
+      or as the path of a json file."
     usage: playground connector create-or-update [JSON] [OPTIONS]
     options:
     - names:
@@ -6300,14 +6306,27 @@ subcommands:
       description: |-
         ⏳ Wait until the connector and all its tasks are RUNNING (or in --initial-state), and fail otherwise
 
-        Same as running 'playground connector wait' right after the command. It fails right away if the connector or one of its tasks is FAILED.
+        Self-managed connectors are waited for by default: --wait also makes the command fail when the script that runs is a reproduction model (by default, it is only a warning there).
+
+        Same as running 'playground connector wait' right after the command. It fails right away if the connector or one of its tasks is FAILED. An update of a PAUSED or STOPPED connector waits for that state.
 
         With fully managed connectors, it waits for the connector to be provisioned and restarts it if it fails while being provisioned (same as wait_for_ccloud_connector_up in example scripts).
+
+        Conflicts with: --no-wait
+    - names:
+      - "--no-wait"
+      argument: ''
+      description: "\U0001F3C3 Do not wait for the connector and its tasks to be RUNNING,
+        only display the status\n\n\U0001F393 Tip: use it to create a connector that
+        is expected to fail, then check it with 'playground connector wait --state
+        FAILED'\n\nConflicts with: --wait, --max-wait"
     - names:
       - "--max-wait"
       argument: MAX_WAIT
-      description: "⏳ Max time in seconds to wait with --wait (default is 120, or
-        600 for fully managed connectors)"
+      description: |-
+        ⏳ Max time in seconds to wait for the connector (default is 120, or 600 for fully managed connectors with --wait)
+
+        Conflicts with: --no-wait
     - names:
       - "--validate"
       argument: ''
