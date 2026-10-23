@@ -446,6 +446,7 @@ Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 - 📃 [How to write connect logs to a kafka topic](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/write-logs-to-topic) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 📢 [Publish logs to kafka with Elastic Filebeat](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/filebeat-to-kafka) :other/filebeat-to-kafka:
 - 📬 [How to process DLQ records with a sink connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector), or replay them with `playground topic dlq replay` :other/reprocess-dlq-messages-with-sink-connector:
+- 🍪 [Deep dive labs](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/deep-dive-labs): the hands-on labs of the [Deep dives](https://kafka-docker-playground.io/#/deep-dives), with assertions on the outputs the pages quote :other/deep-dive-labs:
 - 💠 [.NET](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/client-dotnet) client (producer/consumer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🐚 [KafkaJS](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/client-kafkajs) client (producer/consumer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🐶 [Monitor Confluent Platform with Datadog](https://github.com/vdesabou/kafka-docker-playground/tools/datadog) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)

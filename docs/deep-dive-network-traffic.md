@@ -147,7 +147,7 @@ Any running example works. Here's one with just plaintext:
 
 ```bash
 playground start-environment --environment plaintext
-playground topic produce -t lab --nb-messages 10 --forced-value '{"f1":"x"}'   # any small payload is fine
+playground topic produce -t lab --nb-messages 10 --value '{"f1":"x"}'   # any small payload is fine
 ```
 
 **Step 1: baseline**

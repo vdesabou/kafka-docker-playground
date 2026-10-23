@@ -158,6 +158,10 @@ Gotchas:
 
 - **`--state FAILED` is reached when any task is FAILED**, even if the connector itself is still RUNNING (the usual
   case when only a task fails).
+- **A Datagen task that completed its `iterations` counts as RUNNING.** Datagen stops each task on purpose once it has
+  produced its messages (`ConnectException: Stopping connector: generated the configured N number of messages`), so
+  Connect shows it FAILED: the wait treats that trace as completed, any other FAILED task still fails it.
+  `connector status` keeps showing FAILED, the real state in Connect.
 - `--wait-for-zero-lag` additionally waits for the consumer lag of a sink to reach 0 (`connector show-lag`): the
   replacement for `sleep` before checking the data landed. A source connector is skipped with a warning.
 - The strict / warning choice comes from the **last `playground run`**, not from the script that calls the command.

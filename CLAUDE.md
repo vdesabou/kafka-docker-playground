@@ -274,7 +274,7 @@ block, and never include customer-sensitive data.
 
 ## Conventions
 
-- **Version defaults live in `scripts/utils.sh`** on the line ending in `# default tag` (currently `TAG=8.3.0`). `run-tests.sh` greps that exact comment, so keep the format.
+- **Version defaults live in `scripts/utils.sh`** on the line ending in `# default tag` (currently `TAG=8.3.2`). `run-tests.sh` greps that exact comment, so keep the format.
 - Guard version-specific behaviour with `connect_cp_version_greater_than_8`, `version_gt $CONNECTOR_TAG "10.5.99"`, `version_gt $TAG …`; `exit 111` when a combination is genuinely unsupported.
 - Use `log` / `logwarn` / `logerror`, not bare `echo`.
 - Examples run with `set -e`; wrap best-effort cleanup in `set +e` / `set -e` as the existing examples do.

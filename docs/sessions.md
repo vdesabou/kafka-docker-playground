@@ -70,6 +70,7 @@ playground history     # pick a previous run, edit its flags, run it
 
 **Links**
 
+- 🍪 Deep dive: [running examples and changing versions: under the hood, hands-on lab and repro recipes](/deep-dive-run-and-versions.md)
 - 📚 [Start an example](/how-to-use?id=🏎️-start-an-example), [The playground run menu](/how-to-use?id=🕹️-the-playground-run-menu)
 - 🧠 CLI reference: [playground run](/playground%20run), [playground re-run](/playground%20re-run),
   [playground history](/playground%20history)
@@ -162,6 +163,7 @@ playground connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --conn
 
 **Links**
 
+- 🍪 Deep dive: [`connector-plugin`: versions, config keys, source code, jars](/deep-dive-connector-plugin.md)
 - 🧠 CLI reference: [playground connector-plugin config-key](/playground%20connector-plugin%20config-key),
   [playground connector-plugin sourcecode](/playground%20connector-plugin%20sourcecode)
 
@@ -231,6 +233,7 @@ playground analyze thread-dump --sample deadlock_jdk21 --output-dir /tmp/thread-
 
 **Links**
 
+- 🍪 Deep dive: [JVM diagnostics: which collector, which analyzer](/deep-dive-jvm-diagnostics.md)
 - 🌐 <a href="reports/thread-dump.html" target="_blank" rel="noopener">The HTML report shown in the session</a> (the real report: click around)
 - 🧠 CLI reference: [playground analyze thread-dump](/playground%20analyze%20thread-dump)
 - 🔗 Next step: [playground connector-plugin sourcecode](/playground%20connector-plugin%20sourcecode)
@@ -259,6 +262,7 @@ playground analyze gc-logs --sample jdk21_g1_kafka_real --output-dir /tmp/gc-log
 
 **Links**
 
+- 🍪 Deep dive: [JVM diagnostics: which collector, which analyzer](/deep-dive-jvm-diagnostics.md)
 - 🌐 <a href="reports/gc-logs.html" target="_blank" rel="noopener">The HTML report shown in the session</a> (the real report: click around)
 - 🧠 CLI reference: [playground analyze gc-logs](/playground%20analyze%20gc-logs), next step [playground analyze heap-dump](/playground%20analyze%20heap-dump)
 
@@ -286,6 +290,7 @@ playground analyze flight-recorder --sample jdbc_postgres_sink --output-dir /tmp
 
 **Links**
 
+- 🍪 Deep dive: [JVM diagnostics: which collector, which analyzer](/deep-dive-jvm-diagnostics.md)
 - 🌐 <a href="reports/flight-recorder.html" target="_blank" rel="noopener">The HTML report shown in the session</a> (the real report: click around)
 - 🧠 CLI reference: [playground analyze flight-recorder](/playground%20analyze%20flight-recorder)
 
