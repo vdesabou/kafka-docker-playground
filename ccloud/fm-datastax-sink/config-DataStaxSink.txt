@@ -279,7 +279,7 @@ Table mapping
 
 🔘 topic.override.map
 
-Optional JSON object of per-table and per-topic overrides. Per-table keys are ``<topic>.<keyspace>.<table>.<setting>`` where ``<setting>`` is one of ``consistencyLevel``, ``ttl``, ``ttlTimeUnit``, ``timestampTimeUnit``, ``nullToUnset``, ``deletesEnabled`` or ``query``. Per-topic codec keys are ``<topic>.codec.<setting>`` where ``<setting>`` is one of ``locale``, ``timeZone``, ``timestamp``, ``date``, ``time`` or ``unit``. Example: ``{"orders.ecom.orders.consistencyLevel":"LOCAL_QUORUM", "orders.ecom.orders.ttl":"3600", "orders.codec.timeZone":"UTC"}``. Each entry materializes to the engine key ``topic.<entry-key>``.
+Optional JSON object of per-table and per-topic overrides. Per-table keys are ``<topic>.<keyspace>.<table>.<setting>`` where ``<setting>`` is one of ``consistencyLevel``, ``ttl``, ``ttlTimeUnit``, ``timestampTimeUnit``, ``nullToUnset``, ``deletesEnabled`` or ``query``. A ``query`` override must be a single ``INSERT`` or ``UPDATE`` statement targeting the same keyspace and table as its key. Per-topic codec keys are ``<topic>.codec.<setting>`` where ``<setting>`` is one of ``locale``, ``timeZone``, ``timestamp``, ``date``, ``time`` or ``unit``. Example: ``{"orders.ecom.orders.consistencyLevel":"LOCAL_QUORUM", "orders.ecom.orders.ttl":"3600", "orders.codec.timeZone":"UTC"}``. Each entry materializes to the engine key ``topic.<entry-key>``.
 
 	 - Type: STRING
 	 - Default: {}
