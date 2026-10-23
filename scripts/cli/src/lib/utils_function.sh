@@ -1254,6 +1254,37 @@ function timeout() {
   verbose_end
 }
 
+# The JDK 25 of CP 8.3+ warns when a library uses sun.misc.Unsafe (WARNING: sun.misc.Unsafe::arrayBaseOffset has been
+# called by ...) or loads a native library (zstd-jni, WARNING: A restricted method in java.lang.System has been called).
+# Print the JVM options that allow both, for a java tool run in container $1 (in the image ${CP_CONNECT_IMAGE}:${CP_CONNECT_TAG}
+# when empty). JDK 22 and older refuse to start with them (Unrecognized option: --sun-misc-unsafe-memory-access=allow),
+# and 'playground container change-jdk' puts a JDK 17 in the CP 8.3+ connect container of the HDFS 2 and HBase examples:
+# ask the container for its java version instead of trusting the CP version
+function get_tool_jdk_jvm_args() {
+  local container="$1"
+  local java_major=""
+
+  if ! version_gt $CP_CONNECT_TAG "8.2.99"
+  then
+    return
+  fi
+  if [ -n "$container" ]
+  then
+    # openjdk version "25.0.1" 2025-10-21 LTS (a "Picked up JAVA_TOOL_OPTIONS" line can come first)
+    if [[ "$environment" == cfk* ]]
+    then
+      java_major=$(kubectl -n confluent exec "$container" -- java -version 2>&1 | sed -nE 's/.* version "([0-9]+).*/\1/p' | head -1)
+    else
+      java_major=$(docker exec "$container" java -version 2>&1 | sed -nE 's/.* version "([0-9]+).*/\1/p' | head -1)
+    fi
+    if [ -z "$java_major" ] || [ "$java_major" -lt 23 ]
+    then
+      return
+    fi
+  fi
+  echo "--sun-misc-unsafe-memory-access=allow --enable-native-access=ALL-UNNAMED"
+}
+
 function get_connect_image() {
   set +e
   CP_CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)

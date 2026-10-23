@@ -70,14 +70,8 @@ else
 fi
 
 # JVM options of the console consumer, passed in the *_LOG4J_OPTS variables as KAFKA_OPTS and SCHEMA_REGISTRY_OPTS
-# can be set by the container (2way-ssl). The JDK 25 of CP 8.3+ warns when a library uses sun.misc.Unsafe or loads
-# a native library: allow both, JDK 21 and older refuse to start with these options
+# can be set by the container (2way-ssl). The JDK 25 options are added once the container is known (get_tool_jdk_jvm_args)
 tool_jvm_args="$tool_log4j_jvm_arg"
-if version_gt $CP_CONNECT_TAG "8.2.99"
-then
-    tool_jvm_args="$tool_jvm_args --sun-misc-unsafe-memory-access=allow --enable-native-access=ALL-UNNAMED"
-fi
-tool_env=(env "KAFKA_LOG4J_OPTS=$tool_jvm_args" "SCHEMA_REGISTRY_LOG4J_OPTS=$tool_jvm_args")
 
 if version_gt $CP_CONNECT_TAG "8.1.99"
 then
@@ -166,6 +160,16 @@ else
   get_connect_container
   container=$connect_container
 fi
+
+if [[ "$environment" == "ccloud" ]]
+then
+    # the console consumer runs in the image itself
+    tool_jdk_jvm_args=$(get_tool_jdk_jvm_args "")
+else
+    tool_jdk_jvm_args=$(get_tool_jdk_jvm_args "$container")
+fi
+tool_jvm_args="$tool_jvm_args${tool_jdk_jvm_args:+ $tool_jdk_jvm_args}"
+tool_env=(env "KAFKA_LOG4J_OPTS=$tool_jvm_args" "SCHEMA_REGISTRY_LOG4J_OPTS=$tool_jvm_args")
 
 get_topic_message_count() {
   local topic_name="$1"
