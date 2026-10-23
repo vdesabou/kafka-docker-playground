@@ -295,7 +295,9 @@ issue and deliver it as a pull request linked to that issue.
   already be there.
 - **Issue:**
   - Title: emoji prefix + short sentence, matching existing issues: `🐛 …` bug, `🧠 …` CLI improvement,
-    `🧹 …` cleanup, `👾 Add … Fully Managed Connector example`, `⭐ …` big feature.
+    `🧹 …` cleanup, `👾 Add … Fully Managed Connector example`, `⭐ …` big feature. Add a second emoji
+    for the topic of the change after the type one (2 emojis max), e.g. `🐛⏱️ connector wait times out…`,
+    `🐛🔐 sasl-ssl …`, `🧠📊 benchmark …`, `🧠📚 docs …`, `🧠🔍 find-example …`.
   - Labels: `enhancement ✨` for features and `bug 🐛` for fixes, written exactly like that (emoji
     included). Add `cfk` if the change is specific to the cfk environment. Never use `new 🆕`,
     `CI failing 🔥` or `CI ignore ⏭️`: they are reserved for CI-generated issues.
