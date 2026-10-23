@@ -11693,7 +11693,7 @@ playground_connector_status_usage() {
 playground_connector_wait_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector wait\n\n"
-    printf "  ⏳ Wait for connectors to reach a state\n  \n  Polls the connector status every --interval seconds until the connector\n  and all its tasks are in --state (RUNNING by default), and fails after\n  --max-wait seconds, displaying the status with the stack trace.\n  \n  RUNNING is only reached when the connector and its tasks are still\n  RUNNING one --interval later, since a task is RUNNING before it\n  processes its first record and can fail right after.\n  \n  When waiting for RUNNING, it fails right away if the connector or one of\n  its tasks is FAILED, since a failed task does not recover on its own.\n  A connector RUNNING without any task for 30 seconds (Replicator without\n  matching topic yet, JDBC source without table) is accepted with a\n  warning.\n  For the same reason, --state FAILED is reached as soon as the connector\n  or one of its tasks is FAILED (the connector itself usually stays\n  RUNNING when only a task fails).\n  \n  🎓 Tip: 'connector create-or-update' already waits for RUNNING. Use\n  it for another state, or after 'connector create-or-update --no-wait'.\n\n"
+    printf "  ⏳ Wait for connectors to reach a state\n  \n  Polls the connector status every --interval seconds until the connector\n  and all its tasks are in --state (RUNNING by default), and fails after\n  --max-wait seconds, displaying the status with the stack trace.\n  \n  RUNNING is only reached when the connector and its tasks are still\n  RUNNING one --interval later, since a task is RUNNING before it\n  processes its first record and can fail right after.\n  \n  When waiting for RUNNING, it fails right away if the connector or one of\n  its tasks is FAILED, since a failed task does not recover on its own.\n  A connector RUNNING without any task for 30 seconds (Replicator without\n  matching topic yet, JDBC source without table) is accepted with a\n  warning. A Datagen task that failed with \"Stopping connector: generated\n  the configured N number of messages\" (\"iterations\" reached) is\n  completed, not FAILED, and counts as RUNNING.\n  For the same reason, --state FAILED is reached as soon as the connector\n  or one of its tasks is FAILED (the connector itself usually stays\n  RUNNING when only a task fails).\n  \n  🎓 Tip: 'connector create-or-update' already waits for RUNNING. Use\n  it for another state, or after 'connector create-or-update --no-wait'.\n\n"
   else
     printf "playground connector wait - ⏳ Wait for connectors to reach a state\n\n"
   fi
@@ -43555,7 +43555,8 @@ playground_debug_log_level_get_command() {
   if [[ -n "$package" ]]
   then
     log "🧬 Get log level for package $package"
-    curl $security -s "$connect_url/admin/loggers/$package"
+    # echo: the REST API answers without a final new line
+    echo "$(curl $security -s "$connect_url/admin/loggers/$package")"
   else
     log "🧬 Get log level for all packages"
     curl $security -s "$connect_url/admin/loggers" | jq .
@@ -48588,7 +48589,13 @@ playground_topic_produce_command() {
 
           mv "$tmp_dir/temp_value_file" "$output_key_file"
       else
-          log "🗝️ key is set with a string $key, it will be used for all records"
+          if [[ "$key" == *%g* ]]
+          then
+              # %g is replaced by the number of the record when the records are sent (render_batch)
+              log "🗝️ key is set with $key, %g being replaced by the number of each record"
+          else
+              log "🗝️ key is set with a string $key, it will be used for all records"
+          fi
           KEY="$key" awk '{ print ENVIRON["KEY"] }' "$output_key_file" > "$tmp_dir/temp_value_file"
 
           mv "$tmp_dir/temp_value_file" "$output_key_file"
@@ -51990,7 +51997,8 @@ playground_connector_wait_command() {
           fi
       fi
       connector_state=$(echo "$curl_output" | jq -r '.connector.state // empty' 2>/dev/null)
-      tasks_states=$(echo "$curl_output" | jq -r '.tasks[]?.state' 2>/dev/null)
+      # a datagen task with "iterations" set fails on purpose once it has generated its messages: it is COMPLETED, not FAILED
+      tasks_states=$(echo "$curl_output" | jq -r '.tasks[]? | if .state == "FAILED" and ((.trace // "") | test("Stopping connector: generated the configured [0-9]+ number of messages")) then "COMPLETED" else .state end' 2>/dev/null)
   }
 
   # a connector can legitimately run without tasks (Replicator or MirrorMaker without matching topic yet, JDBC source
@@ -52013,6 +52021,11 @@ playground_connector_wait_command() {
           if [ "$state" == "PAUSED" ] && { [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]; }
           then
               task_state_pattern="PAUSED|STOPPED"
+          fi
+          # a completed datagen task has done its job
+          if [ "$state" == "RUNNING" ]
+          then
+              task_state_pattern="RUNNING|COMPLETED"
           fi
           nb_tasks_in_state=$(echo "$tasks_states" | { grep -cxE "$task_state_pattern" || true; } | tr -d ' ')
           elapsed=$((SECONDS - start_time))

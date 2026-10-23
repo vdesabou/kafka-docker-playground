@@ -8487,7 +8487,9 @@ commands:
       its tasks is FAILED, since a failed task does not recover on its own.
       A connector RUNNING without any task for 30 seconds (Replicator without
       matching topic yet, JDBC source without table) is accepted with a
-      warning.
+      warning. A Datagen task that failed with "Stopping connector: generated
+      the configured N number of messages" ("iterations" reached) is
+      completed, not FAILED, and counts as RUNNING.
       For the same reason, --state FAILED is reached as soon as the connector
       or one of its tasks is FAILED (the connector itself usually stays
       RUNNING when only a task fails).
