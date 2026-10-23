@@ -36359,7 +36359,9 @@ playground_stop_command() {
   sed -e "s|--quiet-pull||g" \
       $tmp_dir/tmp2 > $tmp_dir/playground-command-stop
 
-  bash $tmp_dir/playground-command-stop
+  # the command sources utils.sh: with CONNECTOR_TAG/ZIP/JAR set, it looks for the docker-compose override of this
+  # temporary script, does not find one and exits before 'docker compose down' (a stop installs no connector anyway)
+  env -u CONNECTOR_TAG -u CONNECTOR_ZIP -u CONNECTOR_JAR bash $tmp_dir/playground-command-stop
 }
 
 # :command.function
