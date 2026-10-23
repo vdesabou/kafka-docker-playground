@@ -37,15 +37,6 @@ trap cleanup_fully_managed_lab EXIT
 
 log "Step 1: the cluster, and a topic"
 bootstrap_ccloud_environment
-# create-or-update prints the config it sends, API secret included: in CI (public logs), mask the credentials first
-if [ -n "$GITHUB_RUN_NUMBER" ]
-then
-    source "${DIR}/../../.ccloud/env.delta"
-    for credential in "$CLOUD_KEY" "$CLOUD_SECRET" "${SCHEMA_REGISTRY_CREDS#*:}"
-    do
-        [ -n "$credential" ] && echo "::add-mask::$credential"
-    done
-fi
 set +e
 playground topic delete --topic "$topic" > /dev/null 2>&1
 set -e
