@@ -14,6 +14,10 @@ to master them. Every output shown in a lab comes from a real run.
 | 🩺 | [A connector doesn't work: diagnose and the dead letter queue](/deep-dive-connector-troubleshooting.md) | `connector diagnose`, `topic dlq inspect`, `topic dlq replay` | [🩺 A sink is RUNNING but writes nothing](/sessions?id=🩺-a-sink-is-running-but-writes-nothing) |
 | 📜 | [Read logs: live digest, waiting for a line, customer bundles](/deep-dive-container-logs.md) | `container logs`, `analyze logs` | — |
 | 🧭 | [Offsets and lag: sinks, sources, consumer groups](/deep-dive-offsets-and-lag.md) | `connector show-lag`, `connector offsets`, `consumer-group` | — |
+| 🔊 | [Log levels: TRACE without a restart](/deep-dive-log-levels.md) | `debug log-level`, `connector log-level` | — |
+| 🔀 | [Test a transform chain on a record](/deep-dive-connector-smt-test.md) | `connector smt test` | [🔀 What does this transform chain do to a record?](/sessions?id=🔀-what-does-this-transform-chain-do-to-a-record) |
+| 🛠 | [Reproduction models: bootstrap, check, export, import](/deep-dive-reproduction-models.md) | `repro bootstrap`, `repro check`, `repro export`, `repro import` | — |
+| 🐳 | [Containers: exec, cp, restart vs recreate, environment, JDK](/deep-dive-container-lifecycle.md) | `container exec`, `cp`, `restart`, `recreate`, `set-environment-variables`, `change-jdk`, `status` | — |
 
 > [!TIP]
 > Each deep dive follows the same outline, so you can jump to the part you need: mental model first, then the commands

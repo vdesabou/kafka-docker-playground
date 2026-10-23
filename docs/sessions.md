@@ -133,6 +133,7 @@ playground connector smt test --connector my-sink --record '{"topic":"orders","v
 
 **Links**
 
+- 🍪 Deep dive: [`connector smt test` under the hood, hands-on lab and repro recipes](/deep-dive-connector-smt-test.md)
 - 🌐 <a href="reports/smt-test.html" target="_blank" rel="noopener">An SMT test report</a> (another chain, CP 7.9.0 vs 8.3.2: click around)
 - 🧠 CLI reference: [playground connector smt test](/playground%20connector%20smt%20test)
 
