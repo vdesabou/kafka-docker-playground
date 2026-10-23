@@ -10,6 +10,7 @@ link to a live report so you can click around it yourself.
 
 | | Session | Needs |
 | --- | --- | --- |
+| 🕹️ | [Run an example: with the menu or with flags](/sessions?id=🕹️-run-an-example-with-the-menu-or-with-flags) | docker |
 | 🩺 | [A sink is RUNNING but writes nothing: diagnose, dead letter queue, replay](/sessions?id=🩺-a-sink-is-running-but-writes-nothing) | a running example |
 | 🔀 | [What does this transform chain (SMT) do to a record?](/sessions?id=🔀-what-does-this-transform-chain-do-to-a-record) | a running example |
 | 🧑‍💻 | [The source code of a connector at the customer's version](/sessions?id=🧑💻-the-source-code-of-a-connector-at-the-customers-version) | nothing |
@@ -25,6 +26,50 @@ link to a live report so you can click around it yourself.
 | 🐌 | [A slow or broken network, on purpose: degrade and block traffic](/sessions?id=🐌-a-slow-or-broken-network-on-purpose) | a running example |
 | 🚚 | [Move a self-managed connector to fully managed](/sessions?id=🚚-move-a-self-managed-connector-to-fully-managed) | Confluent Cloud, AWS credentials |
 | 🏗️ | [Deploy a fully managed connector with Terraform](/sessions?id=🏗️-deploy-a-fully-managed-connector-with-terraform) | Confluent Cloud, terraform |
+
+## 🕹️ Run an example: with the menu or with flags
+
+New to the playground? Start here. `playground run` runs any example: without arguments it opens a menu that guides you
+through the options of the example, and `playground run -f <example> <flags>` runs it directly, with the same options as
+flags.
+
+<video src="videos/session-run.mp4" poster="images/sessions/run.png" controls playsinline width="100%"></video>
+
+**In this session**
+
+- the menu: pick a category, find an example by typing a few words, then the options of that example, group by group
+- versions: Confluent Platform (`--tag`, or one component only), connector (`--connector-tag`, `--connector-zip`,
+  `--connector-jar`)
+- add-ons toggled on and off (Grafana, kcat, Control Center, ksqlDB...), several at once with `<tab>`
+- a bad combination (legacy Control Center with CP 8) blocks 🚀 in the menu, and is refused before anything is stopped
+  with `-f`
+- the same example under another security environment (`--environment sasl-ssl`), another connector version, DEBUG logs
+  for the connector (`--connect-log-level`)
+- `playground re-run`, `playground history`, `-o` to open the example files, `playground secrets set`
+
+**Commands**
+
+```bash
+# the menu
+playground run
+
+# no menu: the example (absolute path, <tab> completion opens a picker) and the flags
+playground run -f $PWD/connect/connect-jdbc-postgresql-sink/postgres-sink.sh --tag 8.2.0 --connector-tag 10.8.12 --enable-jmx-grafana --enable-kcat
+playground run -f $PWD/connect/connect-jdbc-postgresql-sink/postgres-sink.sh --environment sasl-ssl --connector-tag 10.8.4 --connect-log-level io.confluent.connect.jdbc=DEBUG
+
+playground re-run      # the last example again, same flags
+playground history     # pick a previous run, edit its flags, run it
+```
+
+> [!TIP]
+> Each run stops what was running before starting the example (`playground config container-kill-all-before-run false`
+> to only stop the previous example).
+
+**Links**
+
+- 📚 [Start an example](/how-to-use?id=🏎️-start-an-example), [The playground run menu](/how-to-use?id=🕹️-the-playground-run-menu)
+- 🧠 CLI reference: [playground run](/playground%20run), [playground re-run](/playground%20re-run),
+  [playground history](/playground%20history)
 
 ## 🩺 A sink is RUNNING but writes nothing
 
