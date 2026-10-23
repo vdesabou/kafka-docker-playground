@@ -206,18 +206,8 @@ else
 fi
 
 # JVM options of the console producer, passed in the *_LOG4J_OPTS variables as KAFKA_OPTS and SCHEMA_REGISTRY_OPTS
-# can be set by the container (2way-ssl). The JDK 25 of CP 8.3+ warns when a library uses sun.misc.Unsafe
-# (WARNING: sun.misc.Unsafe::arrayBaseOffset has been called by ...) or loads a native library (zstd-jni,
-# WARNING: A restricted method in java.lang.System has been called): allow both, JDK 21 and older refuse to start
-# with these options
+# can be set by the container (2way-ssl). The JDK 25 options are added once the container is known (get_tool_jdk_jvm_args)
 tool_jvm_args="$tool_log4j_jvm_arg"
-validator_jvm_args=""
-if version_gt $CP_CONNECT_TAG "8.2.99"
-then
-    tool_jvm_args="$tool_jvm_args --sun-misc-unsafe-memory-access=allow --enable-native-access=ALL-UNNAMED"
-    validator_jvm_args="--sun-misc-unsafe-memory-access=allow --enable-native-access=ALL-UNNAMED"
-fi
-tool_env=(env "KAFKA_LOG4J_OPTS=$tool_jvm_args" "SCHEMA_REGISTRY_LOG4J_OPTS=$tool_jvm_args")
 
 if version_gt $CP_CONNECT_TAG "8.1.99"
 then
@@ -1068,6 +1058,7 @@ then
         esac
     done
 
+    validator_jvm_args=$(get_tool_jdk_jvm_args "$connect_container")
     docker exec $env_list -e SCHEMA_TYPE=$value_schema_type $connect_container bash -c "java $validator_jvm_args -jar /tmp/schema-validator-1.0.0-jar-with-dependencies.jar" > $tmp_dir/result.log
     set +e
     nb=$(grep -c "ERROR" $tmp_dir/result.log)
@@ -1268,6 +1259,16 @@ then
 else
     producer_schema_type="$value_schema_type"
 fi
+
+if [[ "$environment" == "ccloud" ]]
+then
+    # the console producer runs in the image itself
+    tool_jdk_jvm_args=$(get_tool_jdk_jvm_args "")
+else
+    tool_jdk_jvm_args=$(get_tool_jdk_jvm_args "$container")
+fi
+tool_jvm_args="$tool_jvm_args${tool_jdk_jvm_args:+ $tool_jdk_jvm_args}"
+tool_env=(env "KAFKA_LOG4J_OPTS=$tool_jvm_args" "SCHEMA_REGISTRY_LOG4J_OPTS=$tool_jvm_args")
 
 # build the console producer command once, as an array: values with spaces (sasl.jaas.config,
 # --producer-property) are kept as one argument, and --verbose prints exactly what runs
