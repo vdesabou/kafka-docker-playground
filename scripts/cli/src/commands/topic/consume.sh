@@ -218,6 +218,9 @@ get_topic_message_count_with_retry() {
 # separates the fields printed by the console consumer: the ascii unit separator never shows up in the data,
 # unlike "|" which can be part of a key, a value or a header. Records are displayed with "|"
 record_separator=$'\x1f'
+# separates the headers: "," can be part of a header value (the stack trace of a dead letter queue record). Displayed
+# with "," by format_records. The key of a header is followed by ":" (not configurable): split on the first one
+headers_separator=$'\x1d'
 
 # the consumer stops when no record arrives during this time, instead of waiting for a number of records that
 # may never come (transaction markers and compacted records use offsets, but are not consumed)
@@ -288,8 +291,19 @@ function format_records() {
       print "$line\n";
     }
 
+    my $pending = "";
     while (my $line = <STDIN>) {
       chomp $line;
+      # a header or a key containing new lines (the stack trace header of a dead letter queue record) splits a record
+      # over several lines: join them until the record has all its fields (at least 5 separators)
+      if ($pending ne "") {
+        $line = "$pending\n$line";
+        $pending = "";
+      }
+      if ($line =~ /^\w+:-?\d+\x1fPartition:\d+\x1fOffset:\d+\x1f/ && $line !~ /\x1f$/ && ($line =~ tr/\x1f//) < 5) {
+        $pending = $line;
+        next;
+      }
       if ($has_value_schema_id) {
         # a record skipped with --skip-message-on-error leaves its first fields, without new line, before the next
         # record (or at the end of the output): drop them, the error is counted from stderr
@@ -332,7 +346,13 @@ function format_records() {
         $value = $decoded if defined $decoded;
       }
 
-      my @output = ($timestamp, $fields[1], $fields[2], "Headers:$headers", "Key:$key");
+      # headers are separated by \x1d (see headers.separator): displayed with ",", and the new lines of a header or a key
+      # as \n, so that a record stays on one line
+      my $headers_display = $headers;
+      $headers_display =~ tr/\x1d/,/;
+      $headers_display =~ s/\n/\\n/g;
+      (my $key_display = $key) =~ s/\n/\\n/g;
+      my @output = ($timestamp, $fields[1], $fields[2], "Headers:$headers_display", "Key:$key_display");
       push @output, "KeySchemaId:$key_schema_id" if defined $key_schema_id;
       push @output, "Value:$value";
       push @output, "ValueSchemaId:$value_schema_id" if defined $value_schema_id;
@@ -347,7 +367,7 @@ function format_records() {
         # key and value are embedded as json when they are valid json, as strings otherwise
         my %headers_map;
         if ($headers ne "NO_HEADERS") {
-          for my $header (split /,/, $headers) {
+          for my $header (split /\x1d/, $headers) {
             my ($name, $header_value) = split /:/, $header, 2;
             $headers_map{$name} = $header_value;
           }
@@ -377,6 +397,10 @@ function format_records() {
         display($output, length($value));
         $nb_displayed++;
       }
+    }
+    # a record that never got all its fields (output interrupted): shown as it is
+    if ($pending ne "" && !$output_json) {
+      display($pending, length($pending));
     }
     if ($sort_keep ne "") {
       my @records = sort { $a->[0] <=> $b->[0] || $a->[1] <=> $b->[1] || $a->[2] <=> $b->[2] } @sorted_records;
@@ -925,7 +949,7 @@ do
   read -r -a security_args <<< "$security"
   consumer_cmd+=("${security_args[@]}")
 
-  consumer_cmd+=("$property_name" print.timestamp=true "$property_name" print.partition=true "$property_name" print.offset=true "$property_name" print.headers=true "$property_name" headers.separator=, "$property_name" headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer "$property_name" print.key=true "$property_name" "key.separator=$record_separator")
+  consumer_cmd+=("$property_name" print.timestamp=true "$property_name" print.partition=true "$property_name" print.offset=true "$property_name" print.headers=true "$property_name" "headers.separator=$headers_separator" "$property_name" headers.deserializer=org.apache.kafka.common.serialization.StringDeserializer "$property_name" print.key=true "$property_name" "key.separator=$record_separator")
   if [ $has_value_schema_id -eq 1 ]
   then
     consumer_cmd+=("$property_name" print.schema.ids=true "$property_name" "schema.id.separator=$record_separator" --skip-message-on-error)

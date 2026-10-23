@@ -131,8 +131,9 @@ Gotchas:
   `${connector}` stands for the lcc id). `--connector` resolves it for you.
 - The first run downloads `kafka-clients` from Maven Central and compiles the tool in an `eclipse-temurin:17-jdk`
   container: slow once, then cached.
-- **Prefer `dlq inspect` to `topic consume` on a DLQ**: the `__connect.errors.exception.stacktrace` header spans
-  several lines, and `topic consume` prints those records garbled (raw timestamp, missing separators).
+- To see the raw records: `playground topic consume -t dlq --last 1` prints the `__connect.errors.*` headers on the
+  record's line (the new lines of the stack trace as `\n`), and `--json` gives them as a map:
+  `playground topic consume -t dlq --json | jq -r '.headers["__connect.errors.exception.stacktrace"]'`.
 
 ---
 

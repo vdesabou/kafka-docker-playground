@@ -3632,15 +3632,15 @@ subcommands:
       description: "\U0001F41E Show command being ran."
   - name: consume
     description: "\U0001F4E5 Consume topic from beginning\n\nReads from the earliest
-      offset and deserialises records on its own:\navro, protobuf, json schema and
-      plain formats are all detected from\nthe payload, so you do not have to pick
-      a console consumer.\n\n\U0001F393 Tip: --min-expected-messages turns it into
-      an assertion. It waits\nup to --timeout for that many records, consumes them
-      and fails if\nfewer could be consumed (records that cannot be deserialized do
-      not\ncount), which is how examples verify that data actually flowed.\n\nThe
-      consumer stops when no record arrives for 10 seconds (30 seconds\non Confluent
-      Cloud), so it never waits for records that cannot come\n(transaction markers
-      and compacted records use offsets)."
+      offset and deserialises records on its own:\nthe subjects <topic>-key and <topic>-value
+      of Schema Registry decide\nbetween the avro, protobuf, json schema and plain
+      console consumers\n(use --key-subject / --value-subject for other subject names).\n\n\U0001F393
+      Tip: --min-expected-messages turns it into an assertion. It waits\nup to --timeout
+      for that many records, consumes them and fails if\nfewer could be consumed (records
+      that cannot be deserialized do not\ncount), which is how examples verify that
+      data actually flowed.\n\nThe consumer stops when no record arrives for 10 seconds
+      (30 seconds\non Confluent Cloud), so it never waits for records that cannot
+      come\n(transaction markers and compacted records use offsets)."
     usage: playground topic consume [OPTIONS]
     options:
     - names:
