@@ -235,9 +235,11 @@ do
 	elif [[ -n "$root" ]]
 	then
 	log "🪄👑 Executing command as root in container $container with $shell"
-	docker exec -i --privileged --user root $resolved_container $shell -c "$command"
+	# KAFKA_DEBUG is set on connect by the environments (remote debugging): a kafka-* tool run here would try to open
+	# the same debug port as the worker and fail (bind failed: Address already in use), as topic produce/consume avoid
+	docker exec -i -e KAFKA_DEBUG= --privileged --user root $resolved_container $shell -c "$command"
 	else
 	log "🪄 Executing command in container $container with $shell"
-	docker exec -i $resolved_container $shell -c "$command"
+	docker exec -i -e KAFKA_DEBUG= $resolved_container $shell -c "$command"
 	fi
 done

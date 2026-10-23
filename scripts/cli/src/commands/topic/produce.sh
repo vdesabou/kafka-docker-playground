@@ -1469,7 +1469,9 @@ do
         echo "cat /tmp/verbose_input_file.txt | $(printf '%q ' "${producer_cmd[@]}")"
     fi
 
-    render_batch "$nb_messages_to_send" "$((nb_messages_sent + 1))" | pass_records "$nb_messages_sent" | "${producer_cmd[@]}"
+    # the stderr of the producer is shown as it comes and kept: a record it could not send (RecordTooLargeException,
+    # authorization…) is only logged by the console producer, which still exits 0
+    render_batch "$nb_messages_to_send" "$((nb_messages_sent + 1))" | pass_records "$nb_messages_sent" | { "${producer_cmd[@]}" 2>&1 1>&3 3>&- | tee -a "$tmp_dir/producer_stderr" >&2; } 3>&1
 
     # Increment the number of sent messages: the records actually passed to the producer, fewer than
     # $nb_messages_to_send when the batch was interrupted
@@ -1493,6 +1495,17 @@ if [ $interrupted = 1 ]
 then
     log "📤 produced $nb_messages_sent records to topic $topic (interrupted with ctrl-c, the last ones may not have been sent), $ELAPSED"
 else
+    nb_send_errors=0
+    if [ -f "$tmp_dir/producer_stderr" ]
+    then
+        nb_send_errors=$(grep -c "Error when sending message" "$tmp_dir/producer_stderr" || true)
+    fi
+    if [ "$nb_send_errors" -gt 0 ]
+    then
+        first_send_error=$(grep -m1 -E "^[a-z][a-zA-Z0-9_.]*(Exception|Error):" "$tmp_dir/producer_stderr" || true)
+        logerror "❌ $nb_send_errors record(s) could not be sent to topic $topic${first_send_error:+: $first_send_error}"
+        exit 1
+    fi
     log "📤 produced $nb_messages_sent records to topic $topic, $ELAPSED"
 fi
 

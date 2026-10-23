@@ -43,12 +43,17 @@ elif grep -q "proto3" $schema_file
 then
     log "🔮 schema was identified as protobuf"
     schema_type=PROTOBUF
-elif grep -q "\"type\"\s*:\s*\"object\"" $schema_file
+elif grep -q "\"type\"\s*:\s*\"object\"" $schema_file || grep -q "\"\\\$schema\"\s*:" $schema_file
 then
     log "🔮 schema was identified as json schema"
     schema_type=JSON
 elif grep -q "\"type\"\s*:\s*\"record\"" $schema_file
 then
+    log "🔮 schema was identified as avro"
+    schema_type=AVRO
+elif grep -xq "\s*\"[a-z]*\"\s*" $schema_file || { grep -qE "\"type\"\s*:\s*\"(enum|array|map|fixed|string|bytes|int|long|float|double|boolean|null)\"" $schema_file && ! grep -qE "\"\\\$schema\"|\"properties\"" $schema_file; }
+then
+    # the other avro schemas: a primitive alone ("string") or an enum, array, map, fixed or primitive type
     log "🔮 schema was identified as avro"
     schema_type=AVRO
 else
