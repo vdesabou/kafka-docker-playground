@@ -37,6 +37,7 @@
     "salesforce.password.token": "PASSWORD",
     "salesforce.username": "STRING",
     "schema.context.name": "default",
+    "set.is.deleted.on.delete": "false",
     "since": "STRING",
     "skip.epoch.conversion.fields": "LIST",
     "sobject.names": "LIST",

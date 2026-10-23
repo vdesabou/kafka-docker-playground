@@ -364,6 +364,15 @@ Whether Bulk API queries must include soft-deleted records by using queryAll
 	 - Importance: Date or datetime field names that stay as ISO 8601 strings instead of epoch milliseconds across all SObjects.
 	 - Required: LOW
 
+🔘 set.is.deleted.on.delete
+
+When enabled, delete events set ``IsDeleted`` to ``true`` in the record value and ``source.changed.fields`` to ``IsDeleted`` in the record headers, for SObjects that have an ``IsDeleted`` field. Applies only to Event-Driven Sync mode.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 Additional Configs
 ==========================
