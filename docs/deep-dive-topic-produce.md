@@ -310,6 +310,7 @@ playground topic produce -t <topic> [--nb-messages N|-1] \
 **Links**
 
 - 🎬 Video session: [📨 Produce realistic test data](/sessions?id=📨-produce-realistic-test-data)
+- 🍪 Deep dive: [`topic consume`](/deep-dive-topic-consume.md), to read back and assert what you produced
 - 📖 [Producing data](/reusables?id=👉-producing-data) in the Reproduction toolkit
 - 🧠 CLI reference: [playground topic produce](/playground%20topic%20produce) (an example for each flag),
   [playground topic consume](/playground%20topic%20consume), [playground schema](/playground%20schema)
