@@ -802,7 +802,8 @@ jobs:
     # runs in parallel with post-build-cleanup, they don't depend on each other
     name: Update README
     runs-on: ubuntu-latest
-    if: ${{ always() && github.event.inputs.test_name == '' }}
+    # throwaway branch ci-9502-full-matrix: never publish docs / README from it
+    if: ${{ always() && github.event.inputs.test_name == '' && github.ref == 'refs/heads/master' }}
     needs: [build, execute_one_test]
     steps:
       - name: Checkout code
