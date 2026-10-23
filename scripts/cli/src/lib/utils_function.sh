@@ -5250,6 +5250,11 @@ function get_connector_paths () {
     then
       docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
       test_file_directory="$(dirname "${test_file}")"
+      if [ "${docker_compose_file}" == "" ] && [ -f "${test_file_directory}/docker-compose.plaintext.yml" ]
+      then
+        # the environment is started by a helper function (other/deep-dive-labs): the override of the convention
+        docker_compose_file="docker-compose.plaintext.yml"
+      fi
       docker_compose_file="${test_file_directory}/${docker_compose_file}"
     fi
 

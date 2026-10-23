@@ -5,7 +5,7 @@ get_environment_used
 
 set +e
 existing_topics=$(playground get-topic-list)
-if ! echo "$existing_topics" | grep -qFw "$topic"
+if ! echo "$existing_topics" | grep -qFx "$topic"
 then
     logwarn "🆕 topic $topic does not exist, creating it..."
     playground topic create --topic $topic

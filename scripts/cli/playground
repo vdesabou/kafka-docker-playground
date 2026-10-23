@@ -27177,6 +27177,11 @@ function get_connector_paths () {
     then
       docker_compose_file=$(grep "start-environment" "$test_file" |  awk '{print $6}' | cut -d "/" -f 2 | cut -d '"' -f 1 | tail -n1 | xargs)
       test_file_directory="$(dirname "${test_file}")"
+      if [ "${docker_compose_file}" == "" ] && [ -f "${test_file_directory}/docker-compose.plaintext.yml" ]
+      then
+        # the environment is started by a helper function (other/deep-dive-labs): the override of the convention
+        docker_compose_file="docker-compose.plaintext.yml"
+      fi
       docker_compose_file="${test_file_directory}/${docker_compose_file}"
     fi
 
@@ -39570,12 +39575,17 @@ playground_schema_register_command() {
   then
       log "🔮 schema was identified as protobuf"
       schema_type=PROTOBUF
-  elif grep -q "\"type\"\s*:\s*\"object\"" $schema_file
+  elif grep -q "\"type\"\s*:\s*\"object\"" $schema_file || grep -q "\"\\\$schema\"\s*:" $schema_file
   then
       log "🔮 schema was identified as json schema"
       schema_type=JSON
   elif grep -q "\"type\"\s*:\s*\"record\"" $schema_file
   then
+      log "🔮 schema was identified as avro"
+      schema_type=AVRO
+  elif grep -xq "\s*\"[a-z]*\"\s*" $schema_file || { grep -qE "\"type\"\s*:\s*\"(enum|array|map|fixed|string|bytes|int|long|float|double|boolean|null)\"" $schema_file && ! grep -qE "\"\\\$schema\"|\"properties\"" $schema_file; }
+  then
+      # the other avro schemas: a primitive alone ("string") or an enum, array, map, fixed or primitive type
       log "🔮 schema was identified as avro"
       schema_type=AVRO
   else
@@ -45263,10 +45273,12 @@ playground_container_exec_command() {
   	elif [[ -n "$root" ]]
   	then
   	log "🪄👑 Executing command as root in container $container with $shell"
-  	docker exec -i --privileged --user root $resolved_container $shell -c "$command"
+  	# KAFKA_DEBUG is set on connect by the environments (remote debugging): a kafka-* tool run here would try to open
+  	# the same debug port as the worker and fail (bind failed: Address already in use), as topic produce/consume avoid
+  	docker exec -i -e KAFKA_DEBUG= --privileged --user root $resolved_container $shell -c "$command"
   	else
   	log "🪄 Executing command in container $container with $shell"
-  	docker exec -i $resolved_container $shell -c "$command"
+  	docker exec -i -e KAFKA_DEBUG= $resolved_container $shell -c "$command"
   	fi
   done
 }
@@ -46168,7 +46180,7 @@ playground_topic_get_number_records_command() {
       log "💯 Get number of records in topic $topic"
       set +e
       existing_topics=$(playground get-topic-list)
-      if ! echo "$existing_topics" | grep -qFw "$topic"
+      if ! echo "$existing_topics" | grep -qFx "$topic"
       then
           logwarn "topic $topic does not exist !"
           continue
@@ -46213,13 +46225,10 @@ playground_topic_get_number_records_command() {
               cfk_parameter_for_list_broker="--broker-list"
           fi
 
-          offsets=$(kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server $security --topic $topic --time -1 2>/dev/null")
-          if [ -z "$offsets" ]
-          then
-              echo "0"
-          else
-              echo "$offsets" | awk -F: '{sum += $3} END {print sum+0}'
-          fi
+          # records = latest - earliest offsets: the earliest is not 0 any more once retention or a deletion removed records
+          latest=$(kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server $security --topic $topic --time -1 2>/dev/null" | awk -F: '{sum += $3} END {print sum+0}')
+          earliest=$(kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server $security --topic $topic --time -2 2>/dev/null" | awk -F: '{sum += $3} END {print sum+0}')
+          echo $((latest - earliest))
       else
           # --- ON-PREM / LOCAL LOGIC ---
           tag="$cached_tag"
@@ -46246,7 +46255,10 @@ playground_topic_get_number_records_command() {
               # container and bootstrap come from get_security_broker: the broker container and
               # broker:9092 by default, but the kerberized client container and the broker FQDN
               # with kerberos, whose client config needs a ticket and the real principal host
-              docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -1 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum}'
+              # records = latest - earliest offsets: the earliest is not 0 any more once retention or a deletion removed records
+              latest=$(docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -1 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum+0}')
+              earliest=$(docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -2 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum+0}')
+              echo $((latest - earliest))
           fi
       fi
   done
@@ -49253,7 +49265,9 @@ playground_topic_produce_command() {
           echo "cat /tmp/verbose_input_file.txt | $(printf '%q ' "${producer_cmd[@]}")"
       fi
 
-      render_batch "$nb_messages_to_send" "$((nb_messages_sent + 1))" | pass_records "$nb_messages_sent" | "${producer_cmd[@]}"
+      # the stderr of the producer is shown as it comes and kept: a record it could not send (RecordTooLargeException,
+      # authorization…) is only logged by the console producer, which still exits 0
+      render_batch "$nb_messages_to_send" "$((nb_messages_sent + 1))" | pass_records "$nb_messages_sent" | { "${producer_cmd[@]}" 2>&1 1>&3 3>&- | tee -a "$tmp_dir/producer_stderr" >&2; } 3>&1
 
       # Increment the number of sent messages: the records actually passed to the producer, fewer than
       # $nb_messages_to_send when the batch was interrupted
@@ -49277,6 +49291,17 @@ playground_topic_produce_command() {
   then
       log "📤 produced $nb_messages_sent records to topic $topic (interrupted with ctrl-c, the last ones may not have been sent), $ELAPSED"
   else
+      nb_send_errors=0
+      if [ -f "$tmp_dir/producer_stderr" ]
+      then
+          nb_send_errors=$(grep -c "Error when sending message" "$tmp_dir/producer_stderr" || true)
+      fi
+      if [ "$nb_send_errors" -gt 0 ]
+      then
+          first_send_error=$(grep -m1 -E "^[a-z][a-zA-Z0-9_.]*(Exception|Error):" "$tmp_dir/producer_stderr" || true)
+          logerror "❌ $nb_send_errors record(s) could not be sent to topic $topic${first_send_error:+: $first_send_error}"
+          exit 1
+      fi
       log "📤 produced $nb_messages_sent records to topic $topic, $ELAPSED"
   fi
 
@@ -49492,7 +49517,7 @@ playground_topic_alter_command() {
 
   set +e
   existing_topics=$(playground get-topic-list)
-  if ! echo "$existing_topics" | grep -qFw "$topic"
+  if ! echo "$existing_topics" | grep -qFx "$topic"
   then
       logwarn "🆕 topic $topic does not exist, creating it..."
       playground topic create --topic $topic
@@ -54962,7 +54987,8 @@ playground_connector_benchmark_command() {
   then
       test_file=$(playground state get run.test_file)
       original_version="$plugin_version"
-      original_value=$(benchmark_connector_tag_value "$connector_class" "$original_version")
+      # no plugin found is not an error here (set -e): the message below explains it
+      original_value=$(benchmark_connector_tag_value "$connector_class" "$original_version" || true)
       if [ -z "$original_value" ]
       then
           logerror "❌ could not find the confluent hub plugin of $connector_class in the example (CONNECT_PLUGIN_PATH of its docker compose file): --connector-tag needs a connector installed from confluent hub"

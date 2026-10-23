@@ -82,7 +82,7 @@ do
     log "💯 Get number of records in topic $topic"
     set +e
     existing_topics=$(playground get-topic-list)
-    if ! echo "$existing_topics" | grep -qFw "$topic"
+    if ! echo "$existing_topics" | grep -qFx "$topic"
     then
         logwarn "topic $topic does not exist !"
         continue
@@ -127,13 +127,10 @@ do
             cfk_parameter_for_list_broker="--broker-list"
         fi
 
-        offsets=$(kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server $security --topic $topic --time -1 2>/dev/null")
-        if [ -z "$offsets" ]
-        then
-            echo "0"
-        else
-            echo "$offsets" | awk -F: '{sum += $3} END {print sum+0}'
-        fi
+        # records = latest - earliest offsets: the earliest is not 0 any more once retention or a deletion removed records
+        latest=$(kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server $security --topic $topic --time -1 2>/dev/null" | awk -F: '{sum += $3} END {print sum+0}')
+        earliest=$(kubectl -n confluent exec "$container" -c connect -- bash -c "kafka-run-class $cfk_class_name $cfk_parameter_for_list_broker $bootstrap_server $security --topic $topic --time -2 2>/dev/null" | awk -F: '{sum += $3} END {print sum+0}')
+        echo $((latest - earliest))
     else
         # --- ON-PREM / LOCAL LOGIC ---
         tag="$cached_tag"
@@ -160,7 +157,10 @@ do
             # container and bootstrap come from get_security_broker: the broker container and
             # broker:9092 by default, but the kerberized client container and the broker FQDN
             # with kerberos, whose client config needs a ticket and the real principal host
-            docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -1 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum}'
+            # records = latest - earliest offsets: the earliest is not 0 any more once retention or a deletion removed records
+            latest=$(docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -1 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum+0}')
+            earliest=$(docker exec "$container" kafka-run-class "$class_name" "$parameter_for_list_broker" "$bootstrap_server" $security --topic "$topic" --time -2 | grep -v "No configuration found" | awk -F ":" '{sum += $3} END {print sum+0}')
+            echo $((latest - earliest))
         fi
     fi
 done

@@ -257,7 +257,8 @@ if [ ${#connector_tags[@]} -gt 0 ] && [ -z "$BENCHMARK_MATRIX_CHILD" ]
 then
     test_file=$(playground state get run.test_file)
     original_version="$plugin_version"
-    original_value=$(benchmark_connector_tag_value "$connector_class" "$original_version")
+    # no plugin found is not an error here (set -e): the message below explains it
+    original_value=$(benchmark_connector_tag_value "$connector_class" "$original_version" || true)
     if [ -z "$original_value" ]
     then
         logerror "❌ could not find the confluent hub plugin of $connector_class in the example (CONNECT_PLUGIN_PATH of its docker compose file): --connector-tag needs a connector installed from confluent hub"
