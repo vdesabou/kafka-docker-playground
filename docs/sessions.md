@@ -437,6 +437,7 @@ playground connector benchmark --mode steady --duration 5m          # a throughp
 
 **Links**
 
+- 🍪 Deep dive: [`connector benchmark`: drain vs steady, loads, versions, hands-on lab](/deep-dive-connector-benchmark.md)
 - 🌐 <a href="reports/benchmark.html" target="_blank" rel="noopener">A benchmark report</a> (JDBC PostgreSQL sink 10.8.4 vs 10.9.9: click around)
 - 🧠 CLI reference: [playground connector benchmark](/playground%20connector%20benchmark), and
   [⏱️ Benchmark a connector](/reusables?id=⏱️-benchmark-a-connector) in the Reproduction toolkit
@@ -538,6 +539,7 @@ playground connector connect-migration-utility migrate --migration-mode stop_cre
 
 **Links**
 
+- 🍪 Deep dive: [fully managed connectors: what differs from self-managed, hands-on lab](/deep-dive-fully-managed.md)
 - 📁 The example: [ccloud/connect-migration-utility](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-migration-utility)
 - 🧠 CLI reference: [playground connector connect-migration-utility discovery](/playground%20connector%20connect-migration-utility%20discovery),
   [playground connector connect-migration-utility migrate](/playground%20connector%20connect-migration-utility%20migrate)
@@ -575,6 +577,7 @@ Recorded on the example `ccloud/fm-datagen-source/fully-managed-datagen-source.s
 
 **Links**
 
+- 🍪 Deep dive: [fully managed connectors: what differs from self-managed, hands-on lab](/deep-dive-fully-managed.md)
 - 📖 [Fully managed connectors with Terraform](/reusables?id=🏗️-fully-managed-connectors-with-terraform)
 - 🧠 CLI reference: [playground connector create-or-update](/playground%20connector%20create-or-update),
   [playground connector delete](/playground%20connector%20delete)

@@ -76,6 +76,37 @@ out of context.
   comparing versions, load the `kdp-benchmark` skill.
 - To understand one example, read its `.sh` and `ls` its folder (compose overrides, sibling variants).
 
+### 🍪 Deep dives: read the page before going deep on a command family
+
+`docs/deep-dive-*.md` explain one family of commands each: the mental model, what runs under the hood, the gotchas,
+and a **"Recipes for support repros"** table (customer symptom → commands). For a support case or a "why does X
+behave like this" question, read the matching page first:
+
+| Question about | Page |
+| --- | --- |
+| producing test data, schemas, keys, load | `docs/deep-dive-topic-produce.md` |
+| reading a topic, deserializers, assertions | `docs/deep-dive-topic-consume.md` |
+| deploying a connector, wait, validate, diff | `docs/deep-dive-connector-create-or-update.md` |
+| a connector that doesn't work, dead letter queue | `docs/deep-dive-connector-troubleshooting.md` |
+| logs, error digest, customer bundles | `docs/deep-dive-container-logs.md` |
+| offsets, lag, consumer groups | `docs/deep-dive-offsets-and-lag.md` |
+| log levels | `docs/deep-dive-log-levels.md` |
+| SMTs | `docs/deep-dive-connector-smt-test.md` |
+| reproduction models, bundles | `docs/deep-dive-reproduction-models.md` |
+| containers, restart vs recreate, env vars, JDK | `docs/deep-dive-container-lifecycle.md` |
+| connector versions, config keys, source code, jars | `docs/deep-dive-connector-plugin.md` |
+| Schema Registry, compatibility, deletion | `docs/deep-dive-schema.md` |
+| thread dumps, heap, GC, flight recorder | `docs/deep-dive-jvm-diagnostics.md` |
+| running examples, versions, update-version | `docs/deep-dive-run-and-versions.md` |
+| slow or broken network | `docs/deep-dive-network-traffic.md` |
+| topics: create, configs, counts | `docs/deep-dive-topic-administration.md` |
+| SASL / SSL / Kerberos / RBAC environments | `docs/deep-dive-secured-environments.md` |
+| connector throughput, version comparison | `docs/deep-dive-connector-benchmark.md` |
+| fully managed connectors, Confluent Cloud | `docs/deep-dive-fully-managed.md` |
+
+Each page has a lab in `other/deep-dive-labs/<page>.sh` (run nightly by CI) that asserts the outputs the page quotes:
+when a change alters what a command prints or how it behaves, update the page **and** its lab in the same PR.
+
 ## 🥈 Use the `playground` CLI, not raw `docker` / `curl` / `kafka-*`
 
 **Every time you are about to type `docker`, `curl` on a REST API, or a `kafka-*` shell command — in an

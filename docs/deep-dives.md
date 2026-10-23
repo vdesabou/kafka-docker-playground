@@ -24,6 +24,10 @@ CLI change that makes a page wrong shows up as a failing test.
 | 🔰 | [Schema Registry: subjects, ids, compatibility, deletion](/deep-dive-schema.md) | `schema get`, `register`, `set-compatibility`, `delete`, `derive-schema` | — |
 | 🧵 | [JVM diagnostics: which collector, which analyzer](/deep-dive-jvm-diagnostics.md) | `debug thread-dump`, `heap-dump`, `flight-recorder`, `analyze thread-dump`, `gc-logs`, `flight-recorder`, `heap-dump` | [🧵 thread dumps](/sessions?id=🧵-a-connector-looks-stuck-analyze-thread-dumps), [♻️ GC logs](/sessions?id=♻️-long-gc-pauses-or-a-memory-leak-analyze-gc-logs), [🛩️ flight recorder](/sessions?id=🛩️-a-slow-connector-where-does-the-task-time-go) |
 | 🕹️ | [Running examples and changing versions](/deep-dive-run-and-versions.md) | `run`, `re-run`, `update-version`, `history` | [🕹️ Run an example](/sessions?id=🕹️-run-an-example-with-the-menu-or-with-flags) |
+| 🗂️ | [Topic administration: create, alter, counts, waiting](/deep-dive-topic-administration.md) | `topic create`, `alter`, `describe`, `list`, `get-number-records`, `get-offsets`, `wait-for-records`, `delete` | — |
+| 🔐 | [Secured environments: SASL, SSL, Kerberos, RBAC](/deep-dive-secured-environments.md) | `start-environment --environment …`, `run --environment …`, `rbac role-binding` | — |
+| 📈 | [Benchmark a connector](/deep-dive-connector-benchmark.md) | `connector benchmark` | [📈 Is version Y slower?](/sessions?id=📈-is-version-y-slower-benchmark-two-versions) |
+| 🌤️ | [Fully managed connectors (Confluent Cloud)](/deep-dive-fully-managed.md) | `connector create-or-update`, `status`, `offsets`… on Confluent Cloud | [🚚 Move to fully managed](/sessions?id=🚚-move-a-self-managed-connector-to-fully-managed), [🏗️ Terraform](/sessions?id=🏗️-deploy-a-fully-managed-connector-with-terraform) |
 
 > [!TIP]
 > Each deep dive follows the same outline, so you can jump to the part you need: mental model first, then the commands
