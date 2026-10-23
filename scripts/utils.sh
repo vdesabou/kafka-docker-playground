@@ -872,6 +872,64 @@ function salesforce_get_jwt_keystore_base64() {
   base64 < "$keystore_path" | tr -d '\n'
 }
 
+# Create the ServiceNow table used by the ServiceNow sink examples, with the REST Table API, as user
+# admin on $SERVICENOW_URL (ending with /): the table is a record of sys_db_object and each column a
+# record of sys_dictionary, like the System Definition > Tables form does. Without access controls,
+# so that admin can write to it. The table and the columns that already exist are left as they are.
+#
+#   servicenow_create_table u_test_table test_table "u_name:name:string" "u_price:price:float" "u_quantity:quantity:integer"
+function servicenow_create_table() {
+  local table="$1" label="$2"
+  shift 2
+  local spec="" element="" column_label="" type="" response=""
+
+  response=$(servicenow_table_api GET "sys_db_object?sysparm_query=name=${table}&sysparm_fields=sys_id") || return 1
+  if [ "$(echo "$response" | jq -r '.result | length')" == "0" ]
+  then
+    log "🧱 Creating ServiceNow table $table"
+    servicenow_table_api POST "sys_db_object" "{\"name\": \"$table\", \"label\": \"$label\", \"create_access_controls\": \"false\"}" > /dev/null || return 1
+  else
+    log "🧱 ServiceNow table $table already exists"
+  fi
+
+  for spec in "$@"
+  do
+    IFS=: read -r element column_label type <<< "$spec"
+    response=$(servicenow_table_api GET "sys_dictionary?sysparm_query=name=${table}%5Eelement=${element}&sysparm_fields=sys_id") || return 1
+    if [ "$(echo "$response" | jq -r '.result | length')" == "0" ]
+    then
+      log "🧱 Creating column $element ($type) in ServiceNow table $table"
+      servicenow_table_api POST "sys_dictionary" "{\"name\": \"$table\", \"element\": \"$element\", \"column_label\": \"$column_label\", \"internal_type\": \"$type\", \"max_length\": \"40\"}" > /dev/null || return 1
+    fi
+  done
+}
+
+# Call the ServiceNow Table API (<method> <path after /api/now/table/> [json body]) and print the JSON
+# response. Fails when the response is not JSON (hibernating instance, wrong credentials) or holds an
+# error.
+function servicenow_table_api() {
+  local method="$1" path="$2" body="$3"
+  local response=""
+
+  if [ -z "$body" ]
+  then
+    response=$(curl -s -X "$method" "${SERVICENOW_URL}api/now/table/${path}" --user admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json')
+  else
+    response=$(curl -s -X "$method" "${SERVICENOW_URL}api/now/table/${path}" --user admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' -H 'Content-Type: application/json' -d "$body")
+  fi
+
+  if ! echo "$response" | jq -e '.result' > /dev/null 2>&1
+  then
+    {
+      logerror "❌ ServiceNow $method /api/now/table/$path failed (is the instance awake? are SERVICENOW_URL and SERVICENOW_PASSWORD right?):"
+      echo "$response" | head -c 1000
+      echo ""
+    } >&2
+    return 1
+  fi
+  echo "$response"
+}
+
 if [ ! -f /tmp/playground-run-command-used ]
 then
   # fm examples not working without using CLI #5635

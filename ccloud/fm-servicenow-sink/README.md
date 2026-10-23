@@ -9,7 +9,7 @@ Quickly test the [ServiceNow Sink](https://docs.confluent.io/cloud/current/conne
 See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8c%a4%ef%b8%8f-confluent-cloud-examples).
 
 * A ServiceNow instance (see [ServiceNow setup](#servicenow-setup))
-* A table `u_test_table` with fields `u_name` (string), `u_price` (decimal) and `u_quantity` (integer) (see [Create the test table](#create-the-test-table))
+* The script creates the table `u_test_table` with fields `u_name` (string), `u_price` (floating point number) and `u_quantity` (integer) itself (see [The test table](#the-test-table))
 
 | Variable | Description |
 | --- | --- |
@@ -28,11 +28,12 @@ playground run -f fully-managed-servicenow-sink.sh
 
 ## What the script does
 
-1. Bootstraps the Confluent Cloud environment and recreates topic `test_table`.
-2. Creates the fully managed `ServiceNowSink` connector writing to table `u_test_table` as user `admin`.
-3. Produces 3 Avro records (`u_name`, `u_price`, `u_quantity`) to topic `test_table`.
-4. Verifies 3 records in the `success-<connector id>` topic and checks the `error-<connector id>` topic.
-5. Asks whether to delete the connector.
+1. Creates the ServiceNow table `u_test_table` and its columns, if they do not exist yet.
+2. Bootstraps the Confluent Cloud environment and recreates topic `test_table`.
+3. Creates the fully managed `ServiceNowSink` connector writing to table `u_test_table` as user `admin`.
+4. Produces 3 Avro records (`u_name`, `u_price`, `u_quantity`) to topic `test_table`.
+5. Verifies 3 records in the `success-<connector id>` topic and checks the `error-<connector id>` topic.
+6. Asks whether to delete the connector.
 
 ## ServiceNow setup
 
@@ -48,9 +49,11 @@ The `admin` user must have *Identity Type* set to *Machine*:
 * Search for and open the `admin` record.
 * Make sure *Identity Type* is set to *Machine*.
 
-### Create the test table
+### The test table
 
-Search for *Tables* in the *All* menu and select the one from *System Definition*:
+The script creates the table `u_test_table` and its columns with the ServiceNow REST Table API (records in `sys_db_object` and `sys_dictionary`), as user `admin`, without access controls. A table or column that already exists is left as is.
+
+To create it by hand instead, search for *Tables* in the *All* menu and select the one from *System Definition*:
 
 ![create table](screenshot2.png)
 
