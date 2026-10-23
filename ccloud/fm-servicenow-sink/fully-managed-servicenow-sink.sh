@@ -35,6 +35,8 @@ fi
 #      wait_for_end_of_hibernation
 # fi
 
+servicenow_ensure_machine_identity
+
 servicenow_create_table u_test_table test_table "u_name:name:string" "u_price:price:float" "u_quantity:quantity:integer"
 
 bootstrap_ccloud_environment

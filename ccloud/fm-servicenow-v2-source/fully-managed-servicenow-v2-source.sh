@@ -35,6 +35,8 @@ fi
 #      wait_for_end_of_hibernation
 # fi
 
+servicenow_ensure_machine_identity
+
 bootstrap_ccloud_environment
 
 set +e

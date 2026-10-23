@@ -43,7 +43,7 @@ Go to the [ServiceNow developer portal](https://developer.servicenow.com) and re
 
 ### Verify user-level requirements
 
-The `admin` user must have *Identity Type* set to *Machine*:
+The `admin` user must have *Identity Type* set to *Machine*. The script does it itself: when ServiceNow answers 401 to basic authentication as `admin`, it logs in through the UI login page (`login.do`) and sets `identity_type` to `machine` on `admin` with the REST Table API. To do it by hand instead:
 
 * Navigate to *User Administration* -> *Users*.
 * Search for and open the `admin` record.
