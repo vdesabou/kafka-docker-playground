@@ -2694,8 +2694,9 @@ subcommands:
   - name: heap-dump
     description: "\U0001F47B Take a heap dump\n\n\U0001F516 It will save output to
       a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/)
-      can be used to read the file.\n\nIt will run a full gc first. If you don't want
-      this, use"
+      can be used to read the file.\n\nWith --live, only the live objects are dumped,
+      which runs a full GC first. Without it, every object of the\nheap is dumped,
+      without a GC."
     usage: playground debug heap-dump [OPTIONS]
     options:
     - names:

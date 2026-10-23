@@ -14,8 +14,9 @@ then
     exit 0
 fi
 
-string=$(grep "Quickly test " $readme_file)
-url=$(echo "$string" | grep -oE 'https?://[^ ]+')
+# no match is not an error (set -e): handled below
+string=$(grep "Quickly test " $readme_file || true)
+url=$(echo "$string" | grep -oE 'https?://[^ ]+' || true)
 url=${url//)/}
 
 if [[ $url =~ "http" ]]
@@ -29,6 +30,10 @@ then
         log "🌐 opening documentation $short_url"
         open "$short_url"
     fi
+elif [[ -n "$only_show_url" ]]
+then
+    # informational (playground status, run…): an example without documentation link (other/…) must not stop them
+    logwarn "no documentation link in README file $readme_file"
 else
     logerror "Could not find documentation link in README file $readme_file"
     exit 1

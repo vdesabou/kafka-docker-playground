@@ -7138,7 +7138,7 @@ playground_debug_thread_analyze_usage() {
 playground_debug_heap_dump_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground debug heap-dump\n\n"
-    printf "  👻 Take a heap dump\n  \n  🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/)\n  or MAT (https://www.eclipse.org/mat/) can be used to read the file.\n  \n  It will run a full gc first. If you don't want this, use\n\n"
+    printf "  👻 Take a heap dump\n  \n  🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/)\n  or MAT (https://www.eclipse.org/mat/) can be used to read the file.\n  \n  With --live, only the live objects are dumped, which runs a full GC first.\n  Without it, every object of the\n  heap is dumped, without a GC.\n\n"
   else
     printf "playground debug heap-dump - 👻 Take a heap dump\n\n"
   fi
@@ -16428,7 +16428,7 @@ function choose_connector_tag() {
   owner=$(echo "$connector_plugin" | cut -d "/" -f 1)
   name=$(echo "$connector_plugin" | cut -d "/" -f 2)
 
-  filename="/tmp/version_$owner_$name"
+  filename="/tmp/version_${owner}_${name}"
 
   if [ ! -f $filename ]
   then
@@ -36174,6 +36174,16 @@ playground_update_version_command() {
     done # end while loop stop
   fi
 
+  # removes --<flag>=<value> from the flags shown and passed on (a substitution would leave "=<value>")
+  function remove_flag_from_list () {
+    local flag="$1" kept=() item
+    for item in "${array_flag_list[@]}"
+    do
+      [[ "$item" == "$flag="* ]] || kept+=("$item")
+    done
+    array_flag_list=("${kept[@]}")
+  }
+
   tag_changed=0
   IFS=' ' flag_list="${array_flag_list[*]}"
   if [[ -n "$tag" ]]
@@ -36189,7 +36199,7 @@ playground_update_version_command() {
     if [ "$current_tag" == "$tag" ]
     then
       logwarn "--tag=$tag is same as current tag, ignoring..."
-      array_flag_list=("${array_flag_list[@]/"--tag"}")
+      remove_flag_from_list "--tag"
     else
       tag_changed=1
     fi
@@ -36208,7 +36218,7 @@ playground_update_version_command() {
     if [ "$current_connect_tag" == "$connect_tag" ]
     then
       logwarn "--connect-tag=$connect_tag is same as current connect-tag, ignoring..."
-      array_flag_list=("${array_flag_list[@]/"--connect-tag"}")
+      remove_flag_from_list "--connect-tag"
     else
       tag_changed=1
     fi
@@ -36230,6 +36240,12 @@ playground_update_version_command() {
   if [ $tag_changed -eq 1 ]
   then
       log "💣 Detected confluent version change, restarting containers"
+      if [[ -z "$tag" ]]
+      then
+          # --connect-tag alone: the other components keep their running version (--ignore-current-versions would
+          # otherwise give them the default tag)
+          export TAG=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
+      fi
       playground container recreate --ignore-current-versions
   else
       # in case there is a change in docker-compose...
@@ -36474,8 +36490,9 @@ playground_open_docs_command() {
       exit 0
   fi
 
-  string=$(grep "Quickly test " $readme_file)
-  url=$(echo "$string" | grep -oE 'https?://[^ ]+')
+  # no match is not an error (set -e): handled below
+  string=$(grep "Quickly test " $readme_file || true)
+  url=$(echo "$string" | grep -oE 'https?://[^ ]+' || true)
   url=${url//)/}
 
   if [[ $url =~ "http" ]]
@@ -36489,6 +36506,10 @@ playground_open_docs_command() {
           log "🌐 opening documentation $short_url"
           open "$short_url"
       fi
+  elif [[ -n "$only_show_url" ]]
+  then
+      # informational (playground status, run…): an example without documentation link (other/…) must not stop them
+      logwarn "no documentation link in README file $readme_file"
   else
       logerror "Could not find documentation link in README file $readme_file"
       exit 1
@@ -39690,7 +39711,14 @@ playground_schema_register_command() {
       log "🐞 curl command used"
       echo "curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions${maybe_normalize}" --header 'Content-Type: application/vnd.schemaregistry.v1+json' --data "$json_new""
   fi
-  curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" --header 'Content-Type: application/vnd.schemaregistry.v1+json' --data "$json_new" | jq .
+  curl_output=$(curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions${maybe_normalize}" --header 'Content-Type: application/vnd.schemaregistry.v1+json' --data "$json_new" | jq .)
+  echo "$curl_output"
+  # a refused schema (incompatible: 40901, invalid: 42201…) comes back as an error json: fail, so that scripts can tell
+  if echo "$curl_output" | jq -e 'has("error_code")' > /dev/null 2>&1
+  then
+      logerror "❌ schema registry refused the schema for subject ${subject} (error code $(echo "$curl_output" | jq -r .error_code))"
+      exit 1
+  fi
 
 }
 
@@ -39759,7 +39787,8 @@ playground_schema_set_compatibility_command() {
           logerror "$message"
           exit 1
       else
-          compatibilityLevel=$(echo "$curl_output" | jq -r .compatibilityLevel)
+          # PUT /config answers {"compatibility": …} (GET answers compatibilityLevel)
+          compatibilityLevel=$(echo "$curl_output" | jq -r '.compatibility // .compatibilityLevel')
           echo "$compatibilityLevel"
       fi
   else
@@ -40914,6 +40943,11 @@ playground_analyze_thread_dump_command() {
   json_out="${args[--json]}"
   top="${args[--top]}"
 
+  # with --json, logs go to stderr and only the analysis to stdout (same as analyze flight-recorder)
+  if [[ -n "$json_out" ]]; then
+      exec 3>&1 1>&2
+  fi
+
   set +e
 
   nb_modes=0
@@ -40991,7 +41025,7 @@ playground_analyze_thread_dump_command() {
   analyzer_args=("${file_array[@]}" --top "$top")
 
   if [[ -n "$json_out" ]]; then
-      python3 -I "$analyzer" "${analyzer_args[@]}" --json
+      python3 -I "$analyzer" "${analyzer_args[@]}" --json >&3
       exit $?
   fi
 
@@ -41302,6 +41336,11 @@ playground_analyze_gc_logs_command() {
   top_pauses="${args[--top-pauses]}"
   run="${args[--run]}"
 
+  # with --json, logs go to stderr and only the analysis to stdout (same as analyze flight-recorder)
+  if [[ -n "$json_out" ]]; then
+      exec 3>&1 1>&2
+  fi
+
   set +e
 
   # ── Validate input: one of --file, --container or --sample ─────────────────
@@ -41402,7 +41441,7 @@ playground_analyze_gc_logs_command() {
   fi
 
   if [[ -n "$json_out" ]]; then
-      python3 -I "$analyzer" "${analyzer_args[@]}" --json
+      python3 -I "$analyzer" "${analyzer_args[@]}" --json >&3
       exit $?
   fi
 
@@ -42129,8 +42168,13 @@ playground_debug_thread_dump_command() {
           playground open --file "${filename}"
       else
           logerror "❌ failed to take thread dump on container $container"
+          failed=1
       fi
   done
+  if [[ -n "$failed" ]]
+  then
+      exit 1
+  fi
 
 }
 
@@ -42146,6 +42190,11 @@ playground_debug_thread_analyze_command() {
   output_dir="${args[--output-dir]}"
   json_out="${args[--json]}"
   top="${args[--top]}"
+
+  # with --json, logs go to stderr and only the analysis to stdout (same as analyze flight-recorder)
+  if [[ -n "$json_out" ]]; then
+      exec 3>&1 1>&2
+  fi
 
   set +e
 
@@ -42224,7 +42273,7 @@ playground_debug_thread_analyze_command() {
   analyzer_args=("${file_array[@]}" --top "$top")
 
   if [[ -n "$json_out" ]]; then
-      python3 -I "$analyzer" "${analyzer_args[@]}" --json
+      python3 -I "$analyzer" "${analyzer_args[@]}" --json >&3
       exit $?
   fi
 
@@ -42677,6 +42726,11 @@ playground_debug_gc_analyze_command() {
   top_pauses="${args[--top-pauses]}"
   run="${args[--run]}"
 
+  # with --json, logs go to stderr and only the analysis to stdout (same as analyze flight-recorder)
+  if [[ -n "$json_out" ]]; then
+      exec 3>&1 1>&2
+  fi
+
   set +e
 
   # ── Validate input: one of --file, --container or --sample ─────────────────
@@ -42777,7 +42831,7 @@ playground_debug_gc_analyze_command() {
   fi
 
   if [[ -n "$json_out" ]]; then
-      python3 -I "$analyzer" "${analyzer_args[@]}" --json
+      python3 -I "$analyzer" "${analyzer_args[@]}" --json >&3
       exit $?
   fi
 
@@ -46614,7 +46668,8 @@ playground_topic_set_schema_compatibility_command() {
         log "🐞 curl command used"
         echo "curl $sr_security -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${topic}-value""
     fi
-    curl $sr_security -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${topic}-value"
+    curl $sr_security -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${topic}-value"
+    echo
   done
 }
 
@@ -47836,7 +47891,11 @@ playground_topic_produce_command() {
       if [[ ! -n "$tombstone" ]]
       then
           # stdin
-          if [ -t 0 ]
+          if [ -t 0 ] && [[ -n "$forced_value" ]]
+          then
+              # --forced-value alone: the payload is the schema-less value itself
+              echo "$forced_value" > $value_schema_file
+          elif [ -t 0 ]
           then
               logerror "❌ stdin is empty you probably forgot to set --value !"
               exit 1
@@ -50475,7 +50534,7 @@ playground_connector_plugin_versions_command() {
   owner=$(echo "$connector_plugin" | cut -d "/" -f 1)
   name=$(echo "$connector_plugin" | cut -d "/" -f 2)
 
-  filename="/tmp/version_$owner_$name"
+  filename="/tmp/version_${owner}_${name}"
   if [[ -n "$force_refresh" ]]
   then
       if [ -f $filename ]
@@ -51426,7 +51485,9 @@ playground_connector_plugin_sourcecode_command() {
   if [ $ret -eq 0 ]
   then
       is_confluent_employee=1
-  else
+  elif [ $is_fully_managed -eq 1 ]
+  then
+      # the public plugin list has the source code url of self-managed plugins: only fully managed ones need the employee list
       logerror "❌ playground connector-plugin sourcecode is not working with fully managed connectors"
       logerror "❌ if you're a Confluent employee, make sure your aws creds are set and then run <playground generate-connector-plugin-list>"
       exit 1
@@ -52763,6 +52824,10 @@ playground_connector_smt_test_command() {
 
   harness_args=(--type "$type")
   [[ -n "$json" ]] && harness_args+=(--json)
+
+  # the files keep their mode and owner when copied into a container: a --config @file or --record @file made by
+  # mktemp (0600) could not be read by the user of the image (AccessDeniedException on /tmp/smt-tester/config.json)
+  chmod -R a+rX "$work"
 
   # ---- run in the connect worker
   function run_in_worker () {

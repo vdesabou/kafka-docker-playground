@@ -7,6 +7,11 @@ output_dir="${args[--output-dir]}"
 json_out="${args[--json]}"
 top="${args[--top]}"
 
+# with --json, logs go to stderr and only the analysis to stdout (same as analyze flight-recorder)
+if [[ -n "$json_out" ]]; then
+    exec 3>&1 1>&2
+fi
+
 set +e
 
 nb_modes=0
@@ -84,7 +89,7 @@ done
 analyzer_args=("${file_array[@]}" --top "$top")
 
 if [[ -n "$json_out" ]]; then
-    python3 -I "$analyzer" "${analyzer_args[@]}" --json
+    python3 -I "$analyzer" "${analyzer_args[@]}" --json >&3
     exit $?
 fi
 

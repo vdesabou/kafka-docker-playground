@@ -120,6 +120,10 @@ fi
 harness_args=(--type "$type")
 [[ -n "$json" ]] && harness_args+=(--json)
 
+# the files keep their mode and owner when copied into a container: a --config @file or --record @file made by
+# mktemp (0600) could not be read by the user of the image (AccessDeniedException on /tmp/smt-tester/config.json)
+chmod -R a+rX "$work"
+
 # ---- run in the connect worker
 function run_in_worker () {
     local jar_dir java_version release classes classpath worker_config plugin_path container_plugins=""

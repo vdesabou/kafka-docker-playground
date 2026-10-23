@@ -522,7 +522,9 @@ ret=$?
 if [ $ret -eq 0 ]
 then
     is_confluent_employee=1
-else
+elif [ $is_fully_managed -eq 1 ]
+then
+    # the public plugin list has the source code url of self-managed plugins: only fully managed ones need the employee list
     logerror "❌ playground connector-plugin sourcecode is not working with fully managed connectors"
     logerror "❌ if you're a Confluent employee, make sure your aws creds are set and then run <playground generate-connector-plugin-list>"
     exit 1
