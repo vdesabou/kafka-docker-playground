@@ -10,7 +10,7 @@ fi
 owner=$(echo "$connector_plugin" | cut -d "/" -f 1)
 name=$(echo "$connector_plugin" | cut -d "/" -f 2)
 
-filename="/tmp/version_$owner_$name"
+filename="/tmp/version_${owner}_${name}"
 if [[ -n "$force_refresh" ]]
 then
     if [ -f $filename ]

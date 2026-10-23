@@ -98,5 +98,10 @@ do
         playground open --file "${filename}"
     else
         logerror "❌ failed to take thread dump on container $container"
+        failed=1
     fi
 done
+if [[ -n "$failed" ]]
+then
+    exit 1
+fi

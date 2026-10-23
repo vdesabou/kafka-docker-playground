@@ -4775,7 +4775,8 @@ commands:
 
       🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/) can be used to read the file.
 
-      It will run a full gc first. If you don't want this, use
+      With --live, only the live objects are dumped, which runs a full GC first. Without it, every object of the
+      heap is dumped, without a GC.
     flags:
       - *container
       - long: --live

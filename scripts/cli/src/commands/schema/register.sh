@@ -211,4 +211,11 @@ then
     log "🐞 curl command used"
     echo "curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions${maybe_normalize}" --header 'Content-Type: application/vnd.schemaregistry.v1+json' --data "$json_new""
 fi
-curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions" --header 'Content-Type: application/vnd.schemaregistry.v1+json' --data "$json_new" | jq .
+curl_output=$(curl $sr_security --request POST -s "${sr_url}/subjects/${subject}/versions${maybe_normalize}" --header 'Content-Type: application/vnd.schemaregistry.v1+json' --data "$json_new" | jq .)
+echo "$curl_output"
+# a refused schema (incompatible: 40901, invalid: 42201…) comes back as an error json: fail, so that scripts can tell
+if echo "$curl_output" | jq -e 'has("error_code")' > /dev/null 2>&1
+then
+    logerror "❌ schema registry refused the schema for subject ${subject} (error code $(echo "$curl_output" | jq -r .error_code))"
+    exit 1
+fi

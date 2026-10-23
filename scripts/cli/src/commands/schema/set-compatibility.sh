@@ -22,7 +22,8 @@ then
         logerror "$message"
         exit 1
     else
-        compatibilityLevel=$(echo "$curl_output" | jq -r .compatibilityLevel)
+        # PUT /config answers {"compatibility": …} (GET answers compatibilityLevel)
+        compatibilityLevel=$(echo "$curl_output" | jq -r '.compatibility // .compatibilityLevel')
         echo "$compatibilityLevel"
     fi
 else

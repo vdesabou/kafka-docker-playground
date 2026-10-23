@@ -414,6 +414,16 @@ then
   done # end while loop stop
 fi
 
+# removes --<flag>=<value> from the flags shown and passed on (a substitution would leave "=<value>")
+function remove_flag_from_list () {
+  local flag="$1" kept=() item
+  for item in "${array_flag_list[@]}"
+  do
+    [[ "$item" == "$flag="* ]] || kept+=("$item")
+  done
+  array_flag_list=("${kept[@]}")
+}
+
 tag_changed=0
 IFS=' ' flag_list="${array_flag_list[*]}"
 if [[ -n "$tag" ]]
@@ -429,7 +439,7 @@ then
   if [ "$current_tag" == "$tag" ]
   then
     logwarn "--tag=$tag is same as current tag, ignoring..."
-    array_flag_list=("${array_flag_list[@]/"--tag"}")
+    remove_flag_from_list "--tag"
   else
     tag_changed=1
   fi
@@ -448,7 +458,7 @@ then
   if [ "$current_connect_tag" == "$connect_tag" ]
   then
     logwarn "--connect-tag=$connect_tag is same as current connect-tag, ignoring..."
-    array_flag_list=("${array_flag_list[@]/"--connect-tag"}")
+    remove_flag_from_list "--connect-tag"
   else
     tag_changed=1
   fi
@@ -470,6 +480,12 @@ fi
 if [ $tag_changed -eq 1 ]
 then
     log "💣 Detected confluent version change, restarting containers"
+    if [[ -z "$tag" ]]
+    then
+        # --connect-tag alone: the other components keep their running version (--ignore-current-versions would
+        # otherwise give them the default tag)
+        export TAG=$(docker inspect -f '{{.Config.Image}}' broker 2> /dev/null | cut -d ":" -f 2)
+    fi
     playground container recreate --ignore-current-versions
 else
     # in case there is a change in docker-compose...

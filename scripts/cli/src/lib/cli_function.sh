@@ -2038,7 +2038,7 @@ function choose_connector_tag() {
   owner=$(echo "$connector_plugin" | cut -d "/" -f 1)
   name=$(echo "$connector_plugin" | cut -d "/" -f 2)
 
-  filename="/tmp/version_$owner_$name"
+  filename="/tmp/version_${owner}_${name}"
 
   if [ ! -f $filename ]
   then

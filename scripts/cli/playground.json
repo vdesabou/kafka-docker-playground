@@ -2488,7 +2488,7 @@
         },
         {
           "name": "heap-dump",
-          "description": "👻 Take a heap dump\n\n🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/) can be used to read the file.\n\nIt will run a full gc first. If you don't want this, use",
+          "description": "👻 Take a heap dump\n\n🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/) can be used to read the file.\n\nWith --live, only the live objects are dumped, which runs a full GC first. Without it, every object of the\nheap is dumped, without a GC.",
           "usage": "playground debug heap-dump [OPTIONS]",
           "options": [
             {

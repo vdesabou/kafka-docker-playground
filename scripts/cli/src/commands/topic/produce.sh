@@ -149,7 +149,11 @@ then
     if [[ ! -n "$tombstone" ]]
     then
         # stdin
-        if [ -t 0 ]
+        if [ -t 0 ] && [[ -n "$forced_value" ]]
+        then
+            # --forced-value alone: the payload is the schema-less value itself
+            echo "$forced_value" > $value_schema_file
+        elif [ -t 0 ]
         then
             logerror "❌ stdin is empty you probably forgot to set --value !"
             exit 1
@@ -898,7 +902,13 @@ then
 
         mv "$tmp_dir/temp_value_file" "$output_key_file"
     else
-        log "🗝️ key is set with a string $key, it will be used for all records"
+        if [[ "$key" == *%g* ]]
+        then
+            # %g is replaced by the number of the record when the records are sent (render_batch)
+            log "🗝️ key is set with $key, %g being replaced by the number of each record"
+        else
+            log "🗝️ key is set with a string $key, it will be used for all records"
+        fi
         KEY="$key" awk '{ print ENVIRON["KEY"] }' "$output_key_file" > "$tmp_dir/temp_value_file"
 
         mv "$tmp_dir/temp_value_file" "$output_key_file"
