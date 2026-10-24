@@ -27390,6 +27390,36 @@ function handle_onprem_connect_rest_api () {
 
 function display_ngrok_warning () {
 
+  # BORE_SERVER set: the ngrok service of the example runs tools/bore-tunnel instead, a drop-in image that opens the
+  # tunnels on that bore server (bore server --secret $BORE_SECRET) and answers the same agent API on port 4040
+  if [ -n "$BORE_SERVER" ]
+  then
+    local bore_tunnel_dir
+    bore_tunnel_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../../../tools/bore-tunnel" >/dev/null 2>&1 && pwd )"
+    if [ -z "$bore_tunnel_dir" ] || [ ! -f "$bore_tunnel_dir/Dockerfile" ]
+    then
+      logerror "❌ BORE_SERVER is set but tools/bore-tunnel could not be found"
+      exit 1
+    fi
+    log "🚇 BORE_SERVER is set: tunnels are opened on bore server $BORE_SERVER instead of ngrok"
+    if ! docker build --quiet -t kdp-bore-tunnel:latest "$bore_tunnel_dir" > /dev/null
+    then
+      logerror "❌ could not build the bore tunnel image from $bore_tunnel_dir"
+      exit 1
+    fi
+    export NGROK_IMAGE="kdp-bore-tunnel:latest"
+  else
+    display_ngrok_token_checks
+  fi
+
+  if [ "$USER" == "vsaboulin" ]
+  then
+    return
+  fi
+  check_if_continue
+}
+
+function display_ngrok_token_checks () {
   set +e
   docker pull ngrok/ngrok > /dev/null 2>&1
   set +e
@@ -27426,12 +27456,6 @@ function display_ngrok_warning () {
       export NGROK_AUTH_TOKEN=$NGROK_CI_AUTH_TOKEN_BACKUP
     fi
   fi
-
-  if [ "$USER" == "vsaboulin" ]
-  then
-    return
-  fi
-  check_if_continue
 }
 
 function login_and_maybe_set_azure_subscription () {
@@ -27534,7 +27558,8 @@ function get_mandatory_env_vars () {
 
     # a few variables are required by a shared helper the example calls, so the
     # marker is in this library rather than in the example itself
-    if grep -q "display_ngrok_warning" "$test_file"
+    # with BORE_SERVER, the tunnels are opened on a bore server instead of ngrok
+    if grep -q "display_ngrok_warning" "$test_file" && [ -z "${BORE_SERVER:-}" ]
     then
       echo "NGROK_AUTH_TOKEN"
     fi
@@ -27573,6 +27598,12 @@ function get_optional_env_vars () {
     if grep -q "handle_aws_credentials" "$test_file"
     then
       echo "AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION"
+    fi
+
+    # tunnels on a bore server instead of ngrok (tools/bore-tunnel)
+    if grep -q "display_ngrok_warning" "$test_file"
+    then
+      echo "BORE_SERVER BORE_SECRET"
     fi
 
     if grep -q "login_and_maybe_set_azure_subscription" "$test_file"

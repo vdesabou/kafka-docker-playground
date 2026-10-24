@@ -67,6 +67,13 @@ cleanup. Takes about 15 minutes to read, and the lab costs a few cents.
    created it too (no `ENVIRONMENT`). Your own cluster and environment are never deleted. The examples delete their
    connector at the end, after `check_if_continue`.
 
+**Local systems are reached through a tunnel.** When the connector reads or writes a container of the example (Postgres,
+MongoDB, an HTTP server…), an `ngrok` service exposes it and the example reads the public endpoint from
+`http://127.0.0.1:4040/api/tunnels`. That needs `NGROK_AUTH_TOKEN`, or `BORE_SERVER` and `BORE_SECRET`: with those set, the same
+service opens the tunnels on a [bore](https://github.com/ekzhang/bore) server instead (image built from
+[`tools/bore-tunnel`](https://github.com/vdesabou/kafka-docker-playground/tree/master/tools/bore-tunnel), same API, no ngrok
+quota). CI uses bore.
+
 ---
 
 ## 2. Choosing the cluster: `bootstrap_ccloud_environment`
