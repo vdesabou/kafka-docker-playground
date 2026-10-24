@@ -41,7 +41,11 @@ do
         display="$display  ⚠️ overridden by the environment"
     fi
 
-    if [[ -n "$show_source" ]]
+    if [[ -n "$show_source" ]] && [ "$backend" == "file" ]
+    then
+        # the file backend has no reference: it is the value itself
+        printf "%-45s %-14s %s\n" "$name" "$backend" "secrets.ini (clear text)"
+    elif [[ -n "$show_source" ]]
     then
         printf "%-45s %-14s %s\n" "$name" "$backend" "$ref"
     else

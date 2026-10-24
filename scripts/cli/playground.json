@@ -131,7 +131,7 @@
       "subcommands": [
         {
           "name": "set",
-          "description": "🔐 Store a credential\n\nWithout --value the value is prompted without echo, so it never lands in\nthe shell history.\n\nA name that looks like a credential (PASSWORD, SECRET, TOKEN, KEY, CREDS,\nPWD, PASSPHRASE, LICENSE) goes to the secure backend, anything else is\nkept as a plain variable. Use --secret or --plain to decide yourself.\n\nRun again on a name already stored to rotate it. The value is then\nupdated where the existing reference points, which is not necessarily\nthe backend currently configured.\n\n🎓 Tip: set the config key secrets.github-repo and every value stored\nhere is also pushed to that repository's GitHub Actions secrets.",
+          "description": "🔐 Store a credential\n\nWithout --value the value is prompted without echo, so it never lands in\nthe shell history.\n\nA name that looks like a credential (PASSWORD, SECRET, TOKEN, KEY, CREDS,\nPWD, PASSPHRASE, LICENSE) goes to the secure backend, anything else is\nkept as a plain variable. Use --secret or --plain to decide yourself.\n\nRun again on a name already stored to rotate it. The value is then\nupdated where the existing reference points, which is not necessarily\nthe backend currently configured.\n\n🎓 Tip: set the config key secrets.github-repo and every value stored\nhere is also pushed to that repository's GitHub Actions secrets\n(not when PLAYGROUND_SECRETS_DIR points at another store).",
           "usage": "playground secrets set NAME [OPTIONS]",
           "options": [
             {

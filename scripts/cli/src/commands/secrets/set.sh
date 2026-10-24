@@ -38,8 +38,16 @@ secret_store_value "$name" "$value" "$profile" "$force"
 # gh call per line, and the "save this for next time" menu of `playground run`
 # would quietly publish to GitHub.
 #
+#
+# Not from a throwaway store either: PLAYGROUND_SECRETS_DIR is how a test, a
+# deep dive lab or a demo isolates itself, and its dummy values must never
+# overwrite the real ones the workflows use.
+#
 github_repo=$(playground config get secrets.github-repo 2> /dev/null)
-if [ -n "$github_repo" ] && [ -z "$GITHUB_RUN_NUMBER" ] && command -v gh > /dev/null 2>&1
+if [ -n "$github_repo" ] && [ -n "${PLAYGROUND_SECRETS_DIR:-}" ]
+then
+    log "🐙 not pushed to $github_repo: PLAYGROUND_SECRETS_DIR points at another store"
+elif [ -n "$github_repo" ] && [ -z "$GITHUB_RUN_NUMBER" ] && command -v gh > /dev/null 2>&1
 then
     #
     # Never fail `secrets set` on this: the value is already stored and rotated
