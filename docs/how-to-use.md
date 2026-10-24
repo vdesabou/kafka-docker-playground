@@ -239,6 +239,9 @@ playground run -f <example>                   # 🚀 loaded for you
 
 They are stored in `~/.config/kafka-docker-playground` (never in the repository), with credential values kept in a backend such as macOS Keychain, secret-tool, pass, 1Password or HashiCorp Vault (see [playground secrets backend](/playground%20secrets%20backend)).
 
+> [!TIP]
+> 🍪 The deep dive [Credentials and the 1Password setup](/deep-dive-secrets.md) explains the store, the backends, profiles, and how to set up 1Password (desktop app, service account, shared team vault), with a hands-on lab.
+
 ## 🌤️ Confluent Cloud examples
 
 Simply use [playground run](/playground%20run) command ! Below, the menu shows the Confluent Cloud options of a fully managed connector example (it quits before running it):
