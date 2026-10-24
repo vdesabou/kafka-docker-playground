@@ -15,7 +15,7 @@ services:
 
   # https://ngrok.com/docs/using-ngrok-with/docker/
   ngrok:
-    image: ngrok/ngrok:latest
+    image: ${NGROK_IMAGE:-ngrok/ngrok:latest}
     hostname: ngrok
     container_name: ngrok
     ports:
@@ -32,4 +32,6 @@ services:
     volumes:
       - ../../ccloud/fm-debezium-sqlserver-v2-source/ngrok.yml:/etc/ngrok.yml
     environment:
-      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN
+      NGROK_AUTHTOKEN: ${NGROK_AUTH_TOKEN:-}
+      BORE_SERVER: ${BORE_SERVER:-}
+      BORE_SECRET: ${BORE_SECRET:-}
