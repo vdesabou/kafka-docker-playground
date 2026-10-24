@@ -6,6 +6,8 @@ logs that don't come from a running container: a customer support bundle, a CI a
 Takes about 15 minutes to read and run.
 
 > [!TIP]
+> 🎬 Short on time? The video session [🕵️ A connector failed: read the logs, live or from a customer bundle](/sessions?id=🕵️-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle) shows it in 3 minutes: the `--errors` digest of a failed sink, `--grep`, `--wait-for-log`, and `analyze logs` on a customer bundle.
+>
 > The video session [🐌 A slow or broken network, on purpose](/sessions?id=🐌-a-slow-or-broken-network-on-purpose)
 > uses `container logs --errors` to see what a connector does when the network breaks. This page goes further: how
 > the digest works, the traps of following, a hands-on lab and recipes for support repros.
@@ -348,7 +350,7 @@ playground analyze logs --sample connect_task_failure|support_bundle
 
 **Links**
 
-- 🎬 Video session: [🐌 A slow or broken network, on purpose](/sessions?id=🐌-a-slow-or-broken-network-on-purpose) (uses `--errors`)
+- 🎬 Video sessions: [🕵️ A connector failed: read the logs, live or from a customer bundle](/sessions?id=🕵️-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle), [🐌 A slow or broken network, on purpose](/sessions?id=🐌-a-slow-or-broken-network-on-purpose) (uses `--errors`)
 - 📖 [Analyze what you collected](/reusables?id=🔎-analyze-what-you-collected) in the Reproduction toolkit
 - 💡 [Tail container logs](/tips-and-tricks?id=tail-container-logs) in Tips & Tricks
 - 🧠 CLI reference: [playground container logs](/playground%20container%20logs),

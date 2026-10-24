@@ -7,6 +7,8 @@ JSON record. This is how you reproduce "the consumer can't find the schema", "th
 or "the sink reads the wrong subject". Takes about 15 minutes to read and run.
 
 > [!TIP]
+> 🎬 Short on time? The video session [🔰 Schema not found after a cleanup](/sessions?id=🔰-schema-not-found-after-a-cleanup) shows it in 3 minutes: a version refused by `BACKWARD`, the fix with a default, then soft vs permanent delete and what happens to the schema ids.
+>
 > The [`topic produce` deep dive](/deep-dive-topic-produce.md) shows how schemas get registered when you produce
 > (format detection, subject name strategies, `--derive-value-schema-as`), and the
 > [`topic consume` deep dive](/deep-dive-topic-consume.md) how the deserializer is chosen from the subjects. This page
@@ -404,6 +406,7 @@ playground schema get-alias|set-alias --subject <s> [--alias <a>]
 
 **Links**
 
+- 🎬 Video session: [🔰 Schema not found after a cleanup](/sessions?id=🔰-schema-not-found-after-a-cleanup)
 - 🍪 Deep dives: [`topic produce`](/deep-dive-topic-produce.md) (schemas registered while producing, subject name
   strategies), [`topic consume`](/deep-dive-topic-consume.md) (deserializer chosen from the subjects, skipped records)
 - 👉 Examples: [`other/schema-references`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-references),

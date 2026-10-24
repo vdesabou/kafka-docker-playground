@@ -7,6 +7,8 @@ deploy it (`validate`), compare it with a customer's (`diff`), wait for any stat
 (`status`, `show-config`, `update`). Takes about 15 minutes to read and run.
 
 > [!TIP]
+> 🎬 Short on time? The video session [🔌 The sink fails right after it is deployed](/sessions?id=🔌-the-sink-fails-right-after-it-is-deployed) shows it in 3 minutes: a config that validates but fails on its first record, the wait that stops on the FAILED task, `--dry-run` and the update in place.
+>
 > The video session [🩺 A sink is RUNNING but writes nothing](/sessions?id=🩺-a-sink-is-running-but-writes-nothing)
 > picks up where this page stops: the connector is deployed, now why doesn't it work? This page covers getting it
 > deployed: how the command works under the hood, its gotchas, a hands-on lab and recipes for support repros.
@@ -426,7 +428,7 @@ playground connector status | show-config [--force-rest-endpoint] | update   [-c
 
 **Links**
 
-- 🎬 Video session: [🩺 A sink is RUNNING but writes nothing](/sessions?id=🩺-a-sink-is-running-but-writes-nothing)
+- 🎬 Video sessions: [🔌 The sink fails right after it is deployed](/sessions?id=🔌-the-sink-fails-right-after-it-is-deployed), [🩺 A sink is RUNNING but writes nothing](/sessions?id=🩺-a-sink-is-running-but-writes-nothing)
 - 🍪 Deep dives: [`topic produce`](/deep-dive-topic-produce.md) for the data the connector reads,
   [`topic consume`](/deep-dive-topic-consume.md) for what a source writes
 - 🧠 CLI reference: [playground connector create-or-update](/playground%20connector%20create-or-update),

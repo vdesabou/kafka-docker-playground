@@ -6,6 +6,8 @@ scans it for secrets and customer data before a commit, `repro export` packs it 
 colleague, and `repro import` unpacks one. Takes about 15 minutes to read and run.
 
 > [!TIP]
+> 🎬 Short on time? The video session [🧪 The life of a reproduction model](/sessions?id=🧪-the-life-of-a-reproduction-model) shows it in 4 minutes: `repro bootstrap --no-run`, a scenario edited and run, `repro check` catching a key, then `export` and `import` on another machine.
+>
 > The [🛠 Bootstrap reproduction model](/reusables?id=🛠-bootstrap-reproduction-model) and
 > [📦 Share a reproduction model](/reusables?id=📦-share-a-reproduction-model) sections of the Reproduction toolkit show
 > the commands, with a video of the interactive bootstrap. This page goes further: what each command generates or
@@ -338,6 +340,7 @@ playground repro import -f <bundle.tgz> [--dry-run] [--on-conflict abort|rename|
 
 **Links**
 
+- 🎬 Video session: [🧪 The life of a reproduction model](/sessions?id=🧪-the-life-of-a-reproduction-model)
 - 📖 [Bootstrap reproduction model](/reusables?id=🛠-bootstrap-reproduction-model) and
   [Share a reproduction model](/reusables?id=📦-share-a-reproduction-model) in the Reproduction toolkit
 - 🍪 Deep dives: [`connector create-or-update`](/deep-dive-connector-create-or-update.md) (the warn-only wait of models),
