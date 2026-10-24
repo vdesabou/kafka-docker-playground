@@ -6,6 +6,8 @@ restart, crash, freeze or rebuild a container, change its environment variables 
 Kubernetes pods with the `cfk` environment (`pod` is an alias of `container`). Takes about 15 minutes to read and run.
 
 > [!TIP]
+> 🎬 Short on time? The video session [🐳 Restart or recreate? What a container keeps](/sessions?id=🐳-restart-or-recreate-what-a-container-keeps) shows it in 3 minutes: another JDK with `change-jdk`, what `restart` and `recreate` keep, and `set-environment-variables` building a new container.
+>
 > The video session [🐌 A slow or broken network, on purpose](/sessions?id=🐌-a-slow-or-broken-network-on-purpose)
 > shows one thing a restart undoes. This page goes further: what each command keeps and loses, its gotchas, a hands-on
 > lab and recipes for support repros.
@@ -328,6 +330,7 @@ playground container kill-all          # every container on the machine + volume
 
 **Links**
 
+- 🎬 Video session: [🐳 Restart or recreate? What a container keeps](/sessions?id=🐳-restart-or-recreate-what-a-container-keeps)
 - 🍪 Deep dives: [network faults](/deep-dive-network-traffic.md) (what a restart undoes),
   [`container logs`](/deep-dive-container-logs.md) (what a recreation loses),
   [`connector create-or-update`](/deep-dive-connector-create-or-update.md)

@@ -6,6 +6,8 @@ until a connector has written something, and delete topics (with their Schema Re
 work on every environment the playground starts, local or Confluent Cloud. Takes about 15 minutes to read and run.
 
 > [!TIP]
+> 🎬 Short on time? The video session [🪛 A producer gets RecordTooLargeException](/sessions?id=🪛-a-producer-gets-recordtoolargeexception) shows it in 3 minutes: a topic created with the customer's configs, a `max.message.bytes` override that reproduces `RecordTooLargeException`, and the fix.
+>
 > Writing and reading records have their own pages: [`topic produce`](/deep-dive-topic-produce.md),
 > [`topic consume`](/deep-dive-topic-consume.md), and [`topic dlq`](/deep-dive-connector-troubleshooting.md) for dead
 > letter queues. This page covers the topic around them: partitions, configs, counts, sizes and deletion, a hands-on lab
@@ -348,6 +350,7 @@ playground topic tag list|create|delete|add|remove|show|search   # Confluent Clo
 
 **Links**
 
+- 🎬 Video session: [🪛 A producer gets RecordTooLargeException](/sessions?id=🪛-a-producer-gets-recordtoolargeexception)
 - 🍪 Deep dives: [`topic produce`](/deep-dive-topic-produce.md), [`topic consume`](/deep-dive-topic-consume.md),
   [Schema Registry](/deep-dive-schema.md) (the subjects `delete` removes),
   [offsets and lag](/deep-dive-offsets-and-lag.md) (consumer groups)

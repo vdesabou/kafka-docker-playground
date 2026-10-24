@@ -7,6 +7,8 @@ failed" and seeing the request that failed, the record that broke it and what th
 15 minutes to read and run.
 
 > [!TIP]
+> 🎬 Short on time? The video session [🧬 TRACE on a running connector, without a restart](/sessions?id=🧬-trace-on-a-running-connector-without-a-restart) shows it in 3 minutes: TRACE on a running connector, the packages `connector log-level` picks, back to INFO, and the TRACE lost on a restart.
+>
 > The video session [🕹️ Run an example: with the menu or with flags](/sessions?id=🕹️-run-an-example-with-the-menu-or-with-flags)
 > shows `--connect-log-level`, which sets the levels before the example creates its connector. This page goes
 > further: how the levels are set under the hood, what survives a restart, a hands-on lab and recipes for support
@@ -320,7 +322,7 @@ playground run -f <example> --connect-log-level "<pkg>=TRACE,<pkg2>=DEBUG"
 
 **Links**
 
-- 🎬 Video session: [🕹️ Run an example: with the menu or with flags](/sessions?id=🕹️-run-an-example-with-the-menu-or-with-flags) (`--connect-log-level`)
+- 🎬 Video sessions: [🧬 TRACE on a running connector, without a restart](/sessions?id=🧬-trace-on-a-running-connector-without-a-restart), [🕹️ Run an example: with the menu or with flags](/sessions?id=🕹️-run-an-example-with-the-menu-or-with-flags) (`--connect-log-level`)
 - 🍪 Deep dives: [`container logs` and `analyze logs`](/deep-dive-container-logs.md) to read what the new levels print,
   [`connector diagnose` and the dead letter queue](/deep-dive-connector-troubleshooting.md) for what to look at first
 - 📖 [Connectors logging](/reusables?id=🔗-connectors) in the Reproduction toolkit, and the Confluent docs on

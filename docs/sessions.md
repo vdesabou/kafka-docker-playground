@@ -14,7 +14,15 @@ link to a live report so you can click around it yourself.
 | | Session | Needs |
 | --- | --- | --- |
 | 🕹️ | [Run an example: with the menu or with flags](/sessions?id=🕹️-run-an-example-with-the-menu-or-with-flags) | docker |
+| 🎯 | [Is it fixed in a newer version? Swap versions on the running example](/sessions?id=🎯-is-it-fixed-in-a-newer-version) | a running example |
+| 🔐 | [The same example under SASL_SSL and RBAC: what the CLI does for you](/sessions?id=🔐-the-same-example-under-sasl_ssl-and-rbac) | docker |
+| 🐳 | [Restart or recreate? What a container keeps: an environment variable, another JDK](/sessions?id=🐳-restart-or-recreate-what-a-container-keeps) | a running example |
+| 🧪 | [The life of a reproduction model: bootstrap, check, export, import](/sessions?id=🧪-the-life-of-a-reproduction-model) | docker |
 | 🩺 | [A sink is RUNNING but writes nothing: diagnose, dead letter queue, replay](/sessions?id=🩺-a-sink-is-running-but-writes-nothing) | a running example |
+| 🔌 | [The sink fails right after it is deployed: validate, wait, update in place](/sessions?id=🔌-the-sink-fails-right-after-it-is-deployed) | a running example |
+| ⏪ | [The lag of a sink is stuck: follow it, then rewind the sink](/sessions?id=⏪-the-lag-of-a-sink-is-stuck) | a running example |
+| 🕵️ | [A connector failed: read the logs, live or from a customer bundle](/sessions?id=🕵️-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle) | a running example |
+| 🧬 | [TRACE on a running connector, without a restart](/sessions?id=🧬-trace-on-a-running-connector-without-a-restart) | a running example |
 | 🔀 | [What does this transform chain (SMT) do to a record?](/sessions?id=🔀-what-does-this-transform-chain-do-to-a-record) | a running example |
 | 🧑‍💻 | [The source code of a connector at the customer's version](/sessions?id=🧑💻-the-source-code-of-a-connector-at-the-customers-version) | nothing |
 | 🐞 | [A breakpoint in a running connector: remote debugging](/sessions?id=🐞-a-breakpoint-in-a-running-connector-remote-debugging) | a running example |
@@ -25,6 +33,8 @@ link to a live report so you can click around it yourself.
 | ☸️ | [What is wrong in this CFK cluster? Analyze a support bundle](/sessions?id=☸️-what-is-wrong-in-this-cfk-cluster) | nothing (`--sample`) |
 | 📨 | [Produce realistic test data](/sessions?id=📨-produce-realistic-test-data) | a running environment |
 | 📥 | [Read a topic: the last records, one offset, from a time, as JSON](/sessions?id=📥-read-a-topic) | a running environment |
+| 🪛 | [A producer gets RecordTooLargeException: a topic config, reproduced and fixed](/sessions?id=🪛-a-producer-gets-recordtoolargeexception) | a running environment |
+| 🔰 | [Schema not found after a cleanup: a refused version, soft vs permanent delete](/sessions?id=🔰-schema-not-found-after-a-cleanup) | a running environment |
 | 📈 | [Is version Y slower? Benchmark two versions](/sessions?id=📈-is-version-y-slower-benchmark-two-versions) | a running example |
 | 🐌 | [A slow or broken network, on purpose: degrade and block traffic](/sessions?id=🐌-a-slow-or-broken-network-on-purpose) | a running example |
 | 🚚 | [Move a self-managed connector to fully managed](/sessions?id=🚚-move-a-self-managed-connector-to-fully-managed) | Confluent Cloud, AWS credentials |
@@ -75,6 +85,103 @@ playground history     # pick a previous run, edit its flags, run it
 - 🧠 CLI reference: [playground run](/playground%20run), [playground re-run](/playground%20re-run),
   [playground history](/playground%20history)
 
+## 🎯 Is it fixed in a newer version?
+
+The customer runs the JDBC sink 10.8.4 on CP 8.2.0. Is the bug fixed in the latest patch? In the build engineering just
+sent? With a newer Connect worker? `playground update-version` swaps the connector or Confluent Platform version of the
+example that runs, without running it again: the topics, the data and the connectors stay, so you can bisect a version
+in a few commands.
+
+<video src="videos/session-versions.mp4" poster="images/sessions/versions.png" controls playsinline width="100%"></video>
+
+**In this session**
+
+- `connector versions`: the CP version and the connector version that run, the last versions on Confluent Hub, and
+  whether yours is the latest
+- `update-version --connector-tag`: the plugin installed again, `connect` restarted, the connector back to `RUNNING`
+  with the same config: the example script is not run again
+- `update-version --connector-zip`: a build from engineering (the whole plugin), checked by producing one more record and
+  counting the rows in PostgreSQL; `--connector-jar` replaces a single jar of the installed plugin
+- `update-version --connect-tag`: only `connect` is recreated, the brokers keep their version (an older or newer
+  Connect cluster than the brokers); `--tag` moves every component
+- `update-version` writes nothing to the run history: a `re-run` goes back to the flags of the last `playground run`
+
+**Commands**
+
+## 🔐 The same example under SASL_SSL and RBAC
+
+"It works in dev, not in our SSL cluster", "the connector gets `TopicAuthorizationException`": run the same example
+under the customer's security setup with one flag. The CLI then talks to the secured cluster for you: same `topic
+consume`, same `connector` commands, security keys added to the connector config. Then remove a role binding to
+reproduce the authorization error.
+
+<video src="videos/session-secured-environments.mp4" poster="images/sessions/secured-environments.png" controls playsinline width="100%"></video>
+
+**In this session**
+
+- `playground run -f <example> --environment sasl-ssl`: every environment is plaintext plus one compose file
+  (listeners, JAAS, keystores), the example script does not change
+- the CLI reads `run.environment`: `topic produce` / `topic consume` use the client config of the environment, the
+  Connect REST calls go to `https` with the client certificate
+- `container get-properties -c connect`: what the worker really loaded (`SASL_SSL`, `listeners=https://0.0.0.0:8083`)
+- `connector create-or-update --dry-run`: the security keys added when the connector opens its own connection
+  (`*.converter.schema.registry.url` becomes `https` + keystore / truststore)
+- a `kafka-*` tool run by hand without the client config fails on the TLS listener (often `OutOfMemoryError: Java heap
+  space`), and works with `--command-config`
+- `--environment rbac-sasl-plain`: connectors run as `connectorSA`; delete its `ResourceOwner` role binding on `Topic:*`,
+  restart, `TopicAuthorizationException`; create it back, restart, `RUNNING`
+
+**Commands**
+
+## 🐳 Restart or recreate? What a container keeps
+
+The customer says "it only fails on our workers: Java 17, and these JVM options". Build that worker on the example you
+run, without editing a compose file: another JDK in the `connect` container, an environment variable, and see which
+command keeps what. Restart, recreate and a new container are three different things, and the order of the commands
+matters.
+
+<video src="videos/session-container-lifecycle.mp4" poster="images/sessions/container-lifecycle.png" controls playsinline width="100%"></video>
+
+**In this session**
+
+- `container exec`: one command inside the container, as the image user, without remembering container names
+- `container change-jdk`: Azul Zulu 17 installed as root inside `connect`, then a restart (`java -version` shows it)
+- `container restart` keeps the container: the JDK, the files you copied and the logs stay (network rules from
+  `debug block-traffic` / `degrade-traffic` don't)
+- `container recreate` only rebuilds the containers whose definition changed: `Container connect Running`, nothing done,
+  so it is not a way to get a clean container
+- `container set-environment-variables` builds a **new** container with your variables (`KAFKA_HEAP_OPTS`): Java 17 is
+  gone. Set the variables first, then change the JDK, copy files or degrade traffic
+- the next `recreate` replays the original command: the variables are gone too, and the connector comes back on its own
+  (its config and offsets live in Kafka)
+
+**Commands**
+
+## 🧪 The life of a reproduction model
+
+A reproduction model is an example rewritten to show one problem, so that anyone can reproduce it with a single
+`playground run`. Scaffold it from the closest example, build the scenario, run it, make sure it holds no secret, and
+hand it to a colleague as one bundle that they import and run.
+
+<video src="videos/session-repro-models.mp4" poster="images/sessions/repro-models.png" controls playsinline width="100%"></video>
+
+**In this session**
+
+- `repro bootstrap -f <absolute path> -d "<case> <symptom>" --no-run`: the model and its own docker compose override,
+  without menus, editor or run
+- what bootstrap adds to a plain copy: a header (author, 🔮 ticket link from the 6 leading digits, documentation,
+  `💬 comments:` for expected vs actual), symlinks to the support files of the public example
+- edit the scenario, then `playground run -f <model>`: a model runs like an example (`create-or-update` warns instead of
+  stopping when the connector is not RUNNING)
+- `repro check`: a credential value or a token format blocks (exit 1, file and line, never the value), emails and
+  public IPs only warn
+- `repro export --dry-run`, then `repro export`: the run line from the history, symlinks stored as content, a manifest
+  with credential names and sha256
+- `repro import --dry-run`, then `repro import`: new / identical / conflicting files, the model becomes the current one,
+  and the line to run it
+
+**Commands**
+
 ## 🩺 A sink is RUNNING but writes nothing
 
 The connector is `RUNNING`, its status shows no error, but nothing reaches the destination. One command says why, the dead
@@ -107,6 +214,84 @@ Recorded on the example `other/reprocess-dlq-messages-with-sink-connector/replay
 - 🍪 Deep dive: [`connector diagnose` and the dead letter queue: under the hood, hands-on lab and repro recipes](/deep-dive-connector-troubleshooting.md)
 - 🧠 CLI reference: [playground connector diagnose](/playground%20connector%20diagnose),
   [playground topic dlq inspect](/playground%20topic%20dlq%20inspect), [playground topic dlq replay](/playground%20topic%20dlq%20replay)
+
+## 🔌 The sink fails right after it is deployed
+
+A customer sends the config of their connector: "it fails right after we deploy it". `playground connector create-or-update`
+deploys it the way every example does, takes the file as it comes from the REST API, and waits for the connector **and its
+tasks** to be `RUNNING`: a config that doesn't run stops the script right there, with the stack trace.
+
+<video src="videos/session-create-or-update.mp4" poster="images/sessions/create-or-update.png" controls playsinline width="100%"></video>
+
+**In this session**
+
+- a customer's config in the REST API format (`{"name": ..., "config": {...}}`) deployed as is: the outer name is ignored
+- `--validate`: the plugin checks every key at once (types, required keys, values), but not paths or hostnames
+- the wait: the first `FAILED` task stops it with its stack trace (`NoSuchFileException`), exit code 1
+- a failure on purpose for a reproduction: `--no-wait`, then `connector wait --state FAILED`, no `sleep`
+- create = update: `--dry-run` shows the changed keys and the request, then the same command updates the connector in place
+
+**Commands**
+
+## ⏪ The lag of a sink is stuck
+
+"The lag of our sink is stuck at 20." Read the lag where a sink keeps it (its consumer group), find why it doesn't move,
+follow it back to 0, then write the last records again by moving the sink back in its topic, without touching the example.
+
+<video src="videos/session-offsets-and-lag.mp4" poster="images/sessions/offsets-and-lag.png" controls playsinline width="100%"></video>
+
+**In this session**
+
+- a sink's offsets live in the consumer group `connect-<connector>`: `consumer-group describe` shows the lag and the members
+- `connector show-lag` checks the connector first: a paused sink keeps its place in the group, consumes nothing, and fails
+  the check after 60 s
+- lag and offsets are **committed** values: after the resume, the lag stays at 20 until the next commit
+  (`offset.flush.interval.ms`, 60 s), then drops to 0
+- `connector offsets get`: the same position through the Connect offsets API (KIP-875), sources included
+- Kafka refuses to reset the group of a running sink; to go back N records or to a date: `connector stop`,
+  `consumer-group reset-offsets` (`--dry-run` first), `connector resume`
+- the last 3 records are written again: at least once, duplicates but no loss
+
+**Commands**
+
+## 🕵️ A connector failed: read the logs, live or from a customer bundle
+
+The task is `FAILED` and the answer is somewhere in a worker log of thousands of lines. One flag turns the live log into a
+digest of the ERROR records with their root cause, two more give the raw lines or wait for one, and the same digest works
+offline on the support bundle a customer sent.
+
+<video src="videos/session-container-logs.mp4" poster="images/sessions/container-logs.png" controls playsinline width="100%"></video>
+
+**In this session**
+
+- `container logs --errors`: ERROR/FATAL records only, stack traces collapsed to the `Caused by:` chain and 3 frames of
+  the deepest cause; read the last `Caused by:` first (`Unknown magic byte!`: an AvroConverter on records that are not Avro)
+- the same failure after a restart is one finding, counted (`ERROR x2`), with its first and last seen lines
+- `--grep` and `--no-follow` for the raw lines; the trap: `--grep` and `--since` alone follow the log forever
+- `--wait-for-log` instead of a `sleep` in a repro, and why it matches old lines too
+- `playground analyze logs` on a `.zip` bundle: one digest per file, `--include-warnings`, `--max-findings` per file
+
+**Commands**
+
+## 🧬 TRACE on a running connector, without a restart
+
+"The task failed" is rarely enough: you want the request that failed, the record that broke it, what the transforms did
+to it. Raise the log level of the connector's packages on the running worker, reproduce, read the new lines, then put it
+back. No restart, no log4j file to edit.
+
+<video src="videos/session-log-levels.mp4" poster="images/sessions/log-levels.png" controls playsinline width="100%"></video>
+
+**In this session**
+
+- `debug log-level get`: a `404 Logger … not found` only means the package has no level of its own (it inherits `INFO`)
+- `debug log-level set --level TRACE` on the package of `connector.class`: live, for the package and everything below it,
+  on every worker on CP 7.7+ (`scope=cluster`), then one TRACE line per record in the log
+- `connector log-level`: the connector's package + `RestService` (schema registry requests), `TransformationChain` (records
+  before and after each SMT), `WorkerSinkTask` / `WorkerSourceTask`; a level already set is skipped
+- back to normal is `--level INFO`, there is no reset; TRACE logs can hold records: check them before sharing
+- a worker restart forgets every level: `CONNECT_LOG4J_LOGGERS` in the compose override for levels that must survive it
+
+**Commands**
 
 ## 🔀 What does this transform chain do to a record?
 
@@ -413,6 +598,46 @@ playground topic consume -t payments --min-expected-messages 5
 
 - 🍪 Deep dive: [`topic consume` under the hood, hands-on lab and repro recipes](/deep-dive-topic-consume.md)
 - 🧠 CLI reference: [playground topic consume](/playground%20topic%20consume) (an example for each flag)
+
+## 🪛 A producer gets RecordTooLargeException
+
+Nobody changed the producer, but somebody changed the topic. Build a topic like the customer's with `playground topic`,
+apply the config that breaks the producer, find it in the overrides of the topic, and fix it. The same commands work on
+every environment, local or Confluent Cloud.
+
+<video src="videos/session-topic-administration.mp4" poster="images/sessions/topic-administration.png" controls playsinline width="100%"></video>
+
+**In this session**
+
+- `topic create` with the partitions and configs of the case (any `kafka-topics --create` argument is passed through),
+  and why it fails on an existing topic
+- `topic get-offsets`: earliest and latest offset per partition; the total counts offsets, not records
+- `topic alter --add-config max.message.bytes=1000` on a live topic, seen in the `Configs:` overrides of `topic describe`
+- a 5 KB record refused by the broker: `RecordTooLargeException`
+- the fix with `topic alter --delete-config`, and the same record accepted
+- `topic delete`: the `<topic>-value` subject goes with the topic, permanently
+
+**Commands**
+
+## 🔰 Schema not found after a cleanup
+
+The producer was refused a new schema version, somebody "cleaned up" the subject, and now the consumers fail with
+`Error retrieving Avro schema for id 2`. Replay the story with `playground schema`: register a schema without producing,
+a version refused by the compatibility rule and its real fix, then the difference between a soft delete, which keeps the
+ids readable, and a permanent one, which loses them.
+
+<video src="videos/session-schema.mp4" poster="images/sessions/schema.png" controls playsinline width="100%"></video>
+
+**In this session**
+
+- `schema register`: subject, version and id; the id is global and travels in every record
+- `schema set-compatibility BACKWARD`, and a v2 refused with `40901 READER_FIELD_MISSING_DEFAULT_VALUE` (exit 1)
+- the real fix: a default on the new field, accepted as version 2
+- `ValueSchemaId:2` in `topic consume`: a consumer only needs the id, never the subject
+- soft delete: the subject is hidden, `schema get --id 2` still resolves, re-registering gives the same id
+- `--permanent`: `40403 Schema 2 not found`, what the consumers get; registering again gives a new id
+
+**Commands**
 
 ## 📈 Is version Y slower? Benchmark two versions
 

@@ -7,6 +7,8 @@ Schema Registry REST calls carry the right certificate or user. This is how you 
 SSL cluster" or "the connector gets `TopicAuthorizationException`". Takes about 15 minutes to read and run.
 
 > [!TIP]
+> 🎬 Short on time? The video session [🔐 The same example under SASL_SSL and RBAC](/sessions?id=🔐-the-same-example-under-sasl_ssl-and-rbac) shows it in 5 minutes: the same commands under `sasl-ssl`, the security keys `create-or-update` adds, then a role binding removed under RBAC and the `TopicAuthorizationException` it causes.
+>
 > The video session [🕹️ Run an example: with the menu or with flags](/sessions?id=🕹️-run-an-example-with-the-menu-or-with-flags)
 > runs an example under `--environment sasl-ssl`. This page goes further: what each environment sets up, how the CLI
 > adapts, where the credentials are, a hands-on lab and recipes for support repros.
@@ -273,7 +275,7 @@ playground rbac role-binding list|create|delete …    playground rbac user add|
 
 **Links**
 
-- 🎬 Video session: [🕹️ Run an example: with the menu or with flags](/sessions?id=🕹️-run-an-example-with-the-menu-or-with-flags) (`--environment sasl-ssl`)
+- 🎬 Video sessions: [🔐 The same example under SASL_SSL and RBAC](/sessions?id=🔐-the-same-example-under-sasl_ssl-and-rbac), [🕹️ Run an example: with the menu or with flags](/sessions?id=🕹️-run-an-example-with-the-menu-or-with-flags) (`--environment sasl-ssl`)
 - 🍪 Deep dives: [running examples and changing versions](/deep-dive-run-and-versions.md),
   [`connector create-or-update`](/deep-dive-connector-create-or-update.md) (`--dry-run`, `--skip-automatic-connector-config`),
   [containers](/deep-dive-container-lifecycle.md) (`get-properties`)

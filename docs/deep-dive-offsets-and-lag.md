@@ -6,8 +6,10 @@ same on self-managed and fully managed connectors, and stop / resume the connect
 Takes about 15 minutes to read and run.
 
 > [!TIP]
-> In a hurry? Watch the short video session [🩺 A sink is RUNNING but writes nothing](/sessions?id=🩺-a-sink-is-running-but-writes-nothing)
-> first: it uses `connector show-lag` to tell a stuck sink from a slow one. This page goes further: how the commands
+> 🎬 Short on time? The video session [⏪ The lag of a sink is stuck](/sessions?id=⏪-the-lag-of-a-sink-is-stuck) shows it in 4 minutes: a lag stuck at 20, a lag that only moves at a commit, a reset refused on a running sink, then stop, `--dry-run`, reset and resume.
+>
+> The video session [🩺 A sink is RUNNING but writes nothing](/sessions?id=🩺-a-sink-is-running-but-writes-nothing)
+> also uses `connector show-lag`, to tell a stuck sink from a slow one. This page goes further: how the commands
 > work under the hood, their gotchas, a hands-on lab and recipes for support repros.
 
 | You want | Command |
@@ -331,7 +333,7 @@ playground topic display-consumer-offsets                               # follow
 
 **Links**
 
-- 🎬 Video session: [🩺 A sink is RUNNING but writes nothing](/sessions?id=🩺-a-sink-is-running-but-writes-nothing)
+- 🎬 Video sessions: [⏪ The lag of a sink is stuck](/sessions?id=⏪-the-lag-of-a-sink-is-stuck), [🩺 A sink is RUNNING but writes nothing](/sessions?id=🩺-a-sink-is-running-but-writes-nothing)
 - 🍪 Deep dive: [`topic consume`](/deep-dive-topic-consume.md), to look at the record behind an offset
 - 💡 [Check Kafka Connect offsets](/tips-and-tricks?id=check-kafka-connect-offsets) in Tips & Tricks
 - 📖 KIP-875 offsets API: [Confluent Cloud connector offsets](https://docs.confluent.io/cloud/current/connectors/offsets.html)

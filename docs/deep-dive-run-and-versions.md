@@ -7,8 +7,10 @@ from scratch. This is how you get the customer's exact versions, try a connector
 version where a behaviour changed. Takes about 15 minutes to read and run.
 
 > [!TIP]
-> In a hurry? Watch the short video session [🕹️ Run an example: with the menu or with flags](/sessions?id=🕹️-run-an-example-with-the-menu-or-with-flags)
-> first: the menu, the main flags, `re-run` and `history`. This page goes further: what `run` does under the hood, how
+> 🎬 Short on time? The video session [🎯 Is it fixed in a newer version?](/sessions?id=🎯-is-it-fixed-in-a-newer-version) shows it in 4 minutes: `connector versions`, then `update-version` with `--connector-tag`, a `--connector-zip` build and `--connect-tag`, on the example that runs.
+>
+> The video session [🕹️ Run an example: with the menu or with flags](/sessions?id=🕹️-run-an-example-with-the-menu-or-with-flags)
+> shows the menu, the main flags, `re-run` and `history`. This page goes further: what `run` does under the hood, how
 > versions are resolved, what `update-version` can change without a new run, a hands-on lab and recipes for support
 > repros.
 
@@ -295,7 +297,7 @@ playground stop                      # down -v: containers and volumes
 
 **Links**
 
-- 🎬 Video session: [🕹️ Run an example: with the menu or with flags](/sessions?id=🕹️-run-an-example-with-the-menu-or-with-flags)
+- 🎬 Video sessions: [🎯 Is it fixed in a newer version?](/sessions?id=🎯-is-it-fixed-in-a-newer-version), [🕹️ Run an example: with the menu or with flags](/sessions?id=🕹️-run-an-example-with-the-menu-or-with-flags)
 - 🍪 Deep dives: [containers](/deep-dive-container-lifecycle.md) (what a recreation loses),
   [log levels](/deep-dive-log-levels.md) (`--connect-log-level`), [reproduction models](/deep-dive-reproduction-models.md)
   (the run line of a model)
