@@ -33,7 +33,8 @@ services:
     environment:
       # in secured environments (CONNECT_SECURITY_PROTOCOL != PLAINTEXT), the image runs 'ub/cub kafka-ready --config kafka-connect.properties',
       # which then instantiates metric.reporters: add the telemetry jars to its classpath, otherwise it fails with ClassNotFoundException
-      UB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-java-micro/*
+      # cp-base-java-micro only exists from CP 8.3: cp-base-new is kept for older versions (KafkaReadyCommand not found otherwise)
+      UB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-java-micro/*:/usr/share/java/cp-base-new/*
       CUB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-new/*
       CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter,org.apache.kafka.common.metrics.JmxReporter
       CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'true'
@@ -42,7 +43,7 @@ services:
 
   connect2:
     environment:
-      UB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-java-micro/*
+      UB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-java-micro/*:/usr/share/java/cp-base-new/*
       CUB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-new/*
       CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter,org.apache.kafka.common.metrics.JmxReporter
       CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'true'
@@ -51,7 +52,7 @@ services:
 
   connect3:
     environment:
-      UB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-java-micro/*
+      UB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-java-micro/*:/usr/share/java/cp-base-new/*
       CUB_CLASSPATH: /usr/share/java/confluent-telemetry/*:/usr/share/java/kafka/*:/usr/share/java/cp-base-new/*
       CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter,org.apache.kafka.common.metrics.JmxReporter
       CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'true'
