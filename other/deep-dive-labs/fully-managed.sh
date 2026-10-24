@@ -37,6 +37,9 @@ trap cleanup_fully_managed_lab EXIT
 
 log "Step 1: the cluster, and a topic"
 bootstrap_ccloud_environment
+# 'playground run' only marks the connectors as fully managed for the ccloud/fm-* examples: this lab is in other/, so
+# without this the connector commands go to the on-prem connect REST API
+playground state set run.connector_type "$CONNECTOR_TYPE_FULLY_MANAGED"
 set +e
 playground topic delete --topic "$topic" > /dev/null 2>&1
 set -e

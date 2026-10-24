@@ -164,7 +164,8 @@ lab_expect_contains "Skipping source connector filestream-source, it must be a s
 
 # back to the start of line-10 (byte 63): line-10 is sent again
 echo '.offsets[0].offset.position = 63' > "$lab_tmp/filter"
-lab_run playground connector offsets alter --connector filestream-source
+# the editor is never opened on CI (GITHUB_RUN_NUMBER set): clear it for this command, so that the scripted editor runs
+GITHUB_RUN_NUMBER="" lab_run playground connector offsets alter --connector filestream-source
 lab_expect_contains "The offsets for this connector have been altered successfully"
 lab_expect_contains '"position": 63'
 wait_for_record_count lab-source 11

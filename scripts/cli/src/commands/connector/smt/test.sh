@@ -123,6 +123,9 @@ harness_args=(--type "$type")
 # the files keep their mode and owner when copied into a container: a --config @file or --record @file made by
 # mktemp (0600) could not be read by the user of the image (AccessDeniedException on /tmp/smt-tester/config.json)
 chmod -R a+rX "$work"
+# with --cp-version, the throwaway container writes result-<version>.json in it as appuser (uid 1000): on Linux, where
+# bind mounts keep the owner (uid 1001 on GitHub runners), the folder must be writable or every version gives "no result"
+chmod a+w "$work"
 
 # ---- run in the connect worker
 function run_in_worker () {
