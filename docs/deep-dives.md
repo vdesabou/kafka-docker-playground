@@ -28,6 +28,7 @@ CLI change that makes a page wrong shows up as a failing test.
 | 🔐 | [Secured environments: SASL, SSL, Kerberos, RBAC](/deep-dive-secured-environments.md) | `start-environment --environment …`, `run --environment …`, `rbac role-binding` | [🔐 The same example under SASL_SSL and RBAC](/sessions?id=🔐-the-same-example-under-sasl_ssl-and-rbac) |
 | 📈 | [Benchmark a connector](/deep-dive-connector-benchmark.md) | `connector benchmark` | [📈 Is version Y slower?](/sessions?id=📈-is-version-y-slower-benchmark-two-versions) |
 | 🌤️ | [Fully managed connectors (Confluent Cloud)](/deep-dive-fully-managed.md) | `connector create-or-update`, `status`, `offsets`… on Confluent Cloud | [🚚 Move to fully managed](/sessions?id=🚚-move-a-self-managed-connector-to-fully-managed), [🏗️ Terraform](/sessions?id=🏗️-deploy-a-fully-managed-connector-with-terraform) |
+| 🔑 | [Credentials and the 1Password setup](/deep-dive-secrets.md) | `secrets check`, `set`, `import`, `list`, `link`, `backend`, `profile`, `env`, `scan` | [🕹️ Run an example](/sessions?id=🕹️-run-an-example-with-the-menu-or-with-flags) (`secrets set`) |
 
 > [!TIP]
 > Each deep dive follows the same outline, so you can jump to the part you need: mental model first, then the commands
