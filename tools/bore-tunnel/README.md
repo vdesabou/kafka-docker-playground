@@ -23,7 +23,7 @@ playground secrets set BORE_SECRET --value "$(cat ~/.kdp-bore/secret)"
 playground run -f ccloud/fm-chromadb-sink/fully-managed-chromadb-sink.sh
 ```
 
-(or `export BORE_SERVER=… BORE_SECRET=…`, which always wins over the secrets.)
+`display_ngrok_warning` reads them from `playground secrets` when they are not exported, so this also works when the example is started with `bash` or with an older `playground run`. An exported `BORE_SERVER` / `BORE_SECRET` always wins over the secrets.
 
 ## The server
 

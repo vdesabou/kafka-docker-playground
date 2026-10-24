@@ -103,6 +103,6 @@ services:
     volumes:
       - ../../ccloud/custom-connector-connect-iceberg-sink/ngrok.yml:/etc/ngrok.yml
     environment:
-      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN
-      BORE_SERVER: $BORE_SERVER
-      BORE_SECRET: $BORE_SECRET
+      NGROK_AUTHTOKEN: ${NGROK_AUTH_TOKEN:-}
+      BORE_SERVER: ${BORE_SERVER:-}
+      BORE_SECRET: ${BORE_SECRET:-}

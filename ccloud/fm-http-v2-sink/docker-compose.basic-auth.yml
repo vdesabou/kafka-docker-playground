@@ -29,6 +29,6 @@ services:
     volumes:
       - ../../ccloud/fm-http-sink/ngrok-basic-auth.yml:/etc/ngrok.yml
     environment:
-      NGROK_AUTHTOKEN: $NGROK_AUTH_TOKEN
-      BORE_SERVER: $BORE_SERVER
-      BORE_SECRET: $BORE_SECRET
+      NGROK_AUTHTOKEN: ${NGROK_AUTH_TOKEN:-}
+      BORE_SERVER: ${BORE_SERVER:-}
+      BORE_SECRET: ${BORE_SECRET:-}

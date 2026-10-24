@@ -5462,6 +5462,22 @@ function handle_onprem_connect_rest_api () {
 
 function display_ngrok_warning () {
 
+  # not exported: look in the playground secrets too ('playground run' only loads the variables it knows about, and an
+  # example can also be started with bash). The values are never printed
+  if [ -z "$BORE_SERVER" ]
+  then
+    BORE_SERVER=$(playground secrets get BORE_SERVER --reveal 2> /dev/null)
+    if [ -n "$BORE_SERVER" ]
+    then
+      export BORE_SERVER
+      if [ -z "$BORE_SECRET" ]
+      then
+        BORE_SECRET=$(playground secrets get BORE_SECRET --reveal 2> /dev/null)
+        export BORE_SECRET
+      fi
+    fi
+  fi
+
   # BORE_SERVER set: the ngrok service of the example runs tools/bore-tunnel instead, a drop-in image that opens the
   # tunnels on that bore server (bore server --secret $BORE_SECRET) and answers the same agent API on port 4040
   if [ -n "$BORE_SERVER" ]
@@ -5474,6 +5490,10 @@ function display_ngrok_warning () {
       exit 1
     fi
     log "🚇 BORE_SERVER is set: tunnels are opened on bore server $BORE_SERVER instead of ngrok"
+    if [ -z "$BORE_SECRET" ]
+    then
+      logwarn "⚠️ BORE_SECRET is not set: the bore server will refuse the tunnels if it requires a secret (playground secrets set BORE_SECRET)"
+    fi
     if ! docker build --quiet -t kdp-bore-tunnel:latest "$bore_tunnel_dir" > /dev/null
     then
       logerror "❌ could not build the bore tunnel image from $bore_tunnel_dir"
