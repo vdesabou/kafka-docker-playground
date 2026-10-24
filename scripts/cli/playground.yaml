@@ -182,7 +182,8 @@ subcommands:
       to rotate it. The value is then\nupdated where the existing reference points,
       which is not necessarily\nthe backend currently configured.\n\n\U0001F393 Tip:
       set the config key secrets.github-repo and every value stored\nhere is also
-      pushed to that repository's GitHub Actions secrets."
+      pushed to that repository's GitHub Actions secrets\n(not when PLAYGROUND_SECRETS_DIR
+      points at another store)."
     usage: playground secrets set NAME [OPTIONS]
     options:
     - names:

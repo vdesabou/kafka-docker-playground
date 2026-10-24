@@ -56,7 +56,19 @@ else
         ref=$(secret_lookup_reference "$name" "$profile" || true)
         if [ -n "$ref" ] && value=$(secret_get "$name" "$profile")
         then
-            echo -e "🔐 ${GREEN}${name}${NC} set ($(secret_reference_backend "$ref"): ${ref})"
+            #
+            # With the file backend, and for a plain variable, the reference is
+            # the value itself: only a plain variable may be shown as is.
+            #
+            if [ "$(secret_store_location "$name" "$profile" || true)" == "plain" ]
+            then
+                echo -e "🔐 ${GREEN}${name}${NC} set (plain: ${ref})"
+            elif [ "$(secret_reference_backend "$ref")" == "file" ]
+            then
+                echo -e "🔐 ${GREEN}${name}${NC} set (file: secrets.ini)"
+            else
+                echo -e "🔐 ${GREEN}${name}${NC} set ($(secret_reference_backend "$ref"): ${ref})"
+            fi
         elif [ -n "$ref" ]
         then
             echo -e "❌ ${RED}${name}${NC} stored as ${ref} but it cannot be resolved"
