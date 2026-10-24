@@ -49021,8 +49021,10 @@ playground_topic_produce_command() {
 
   if [ $record_size -ge 1048576 ]
   then
-      log "✨ record-size $record_size is greater than 1Mb (1048576), setting $producer_property_name max.request.size=$((record_size + 1000)) and $producer_property_name buffer.memory=67108864"
-      producer_args+=("$producer_property_name" "max.request.size=$((record_size + 1000))" "$producer_property_name" buffer.memory=67108864)
+      # the console producer defaults to request.timeout.ms=1500 (--request-timeout-ms): too short to upload a record of several Mb
+      # to a remote cluster (Confluent Cloud), the request times out with 'Disconnected from node N due to timeout'
+      log "✨ record-size $record_size is greater than 1Mb (1048576), setting $producer_property_name max.request.size=$((record_size + 1000)), $producer_property_name buffer.memory=67108864 and $producer_property_name request.timeout.ms=60000"
+      producer_args+=("$producer_property_name" "max.request.size=$((record_size + 1000))" "$producer_property_name" buffer.memory=67108864 "$producer_property_name" request.timeout.ms=60000)
       log "✨ topic $topic max.message.bytes is also set to $((record_size + 1000))"
       playground topic alter --topic $topic --add-config max.message.bytes=$((record_size + 1000))
   fi

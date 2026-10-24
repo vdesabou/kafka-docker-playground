@@ -148,7 +148,7 @@ What happens behind the flags:
 | `--nb-messages -1` | infinite, in batches; ctrl-c stops and prints the exact number of records sent |
 | `--throughput N` | at most N records per second (paced on the host, before the producer) |
 | `--sleep-time-between-batch N` | pause N seconds between batches (bursty load) |
-| `--record-size N` | pads the **first string field** of each record; above 1 MB, also sets `max.request.size`, `buffer.memory` and the topic's `max.message.bytes` for you |
+| `--record-size N` | pads the **first string field** of each record; above 1 MB, also sets `max.request.size`, `buffer.memory`, `request.timeout.ms` (60 s instead of the 1.5 s of the console producer) and the topic's `max.message.bytes` for you |
 | `--nb-partitions N` | creates the topic with N partitions. If it exists with another count: **re-created when empty, error when not** |
 | `--delete-topic` | deletes the topic and its subjects first: a clean slate on re-runs |
 | `--consume` | reads the topic back right after (`topic consume --min-expected-messages <sent>`) |
