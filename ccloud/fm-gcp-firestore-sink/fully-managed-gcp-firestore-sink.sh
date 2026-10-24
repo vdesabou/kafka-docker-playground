@@ -294,13 +294,13 @@ sleep 60
 log "Querying collection kafka_products from Firestore MongoDB-compatible endpoint"
 docker run --rm -i mongo:7 mongosh "mongodb://$GCP_FIRESTORE_CONNECTION_HOST/$GCP_FIRESTORE_DATABASE?loadBalanced=true&authMechanism=SCRAM-SHA-256&tls=true&retryWrites=false" \
   --username "$GCP_FIRESTORE_CONNECTION_USER" \
-  --password "$GCP_FIRESTORE_CONNECTION_PASSWORD" << 'EOF'
+  --password="$GCP_FIRESTORE_CONNECTION_PASSWORD" << 'EOF'
 db.kafka_products.find().pretty();
 EOF
 
 docker run --rm -i mongo:7 mongosh "mongodb://$GCP_FIRESTORE_CONNECTION_HOST/$GCP_FIRESTORE_DATABASE?loadBalanced=true&authMechanism=SCRAM-SHA-256&tls=true&retryWrites=false" \
   --username "$GCP_FIRESTORE_CONNECTION_USER" \
-  --password "$GCP_FIRESTORE_CONNECTION_PASSWORD" << EOF > output.txt
+  --password="$GCP_FIRESTORE_CONNECTION_PASSWORD" << EOF > output.txt
 db.kafka_products.find().pretty();
 EOF
 grep "notebooks" output.txt
