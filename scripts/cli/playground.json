@@ -1947,7 +1947,7 @@
     },
     {
       "name": "analyze",
-      "description": "🔎 Analyze commands\n\nTurn what you collected into findings: each command reads a file (a\ndump, a log, a bundle, a report, yours or one a customer sent) or takes\nit from a running container, and prints a digest with what is wrong and\nwhat to do, plus an HTML report to share (opened in your browser). They\nall work offline, and --sample runs them on the samples shipped with the\nplayground, to see what they report.\n\n  thread-dump             deadlocks, lock contention, stuck threads\n  gc-logs                 GC pauses, failures, live set, leak trend\n  heap-dump               Eclipse MAT leak suspects, retained sizes\n  logs                    ERROR/FATAL digest of logs, folders, zips\n  oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n  cfk-bundle              CFK support bundle: pods, events, CRs, logs\n  flight-recorder         JFR: where the time of the connector tasks goes\n\nTo collect them: playground debug thread-dump, heap-dump, flight-recorder,\nplayground connector oracle-cdc-xstream generate-report,\nplayground debug cfk generate-bundle.",
+      "description": "🔎 Analyze commands\n\nTurn what you collected into findings: each command reads a file (a\ndump, a log, a bundle, a report, yours or one a customer sent) or takes\nit from a running container, and prints a digest with what is wrong and\nwhat to do, plus an HTML report to share (opened in your browser). They\nall work offline, and --sample runs them on the samples shipped with the\nplayground, to see what they report.\n\n  thread-dump             deadlocks, lock contention, stuck threads\n  gc-logs                 GC pauses, failures, live set, leak trend\n  heap-dump               Eclipse MAT leak suspects, retained sizes\n  logs                    ERROR/FATAL digest of logs, folders, zips\n  oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n  cfk-bundle              CFK support bundle: pods, events, CRs, logs\n  flight-recorder         JFR: where the time of the connector tasks goes\n  tcp-dump                network capture: resets, TLS alerts, Kafka errors\n\nTo collect them: playground debug thread-dump, heap-dump, flight-recorder, tcp-dump,\nplayground connector oracle-cdc-xstream generate-report,\nplayground debug cfk generate-bundle.",
       "usage": "playground analyze COMMAND",
       "options": [],
       "aliases": [
@@ -2388,12 +2388,109 @@
               "description": "📊 Number of rows per section (default: 10)\n\nDefault value: 10"
             }
           ]
+        },
+        {
+          "name": "tcp-dump",
+          "description": "🦈 Analyze a network capture (.pcap, .pcapng): refused and reset connections, retransmissions, TLS alerts, DNS errors, Kafka and HTTP errors and response times\n\n📊 Reads a capture taken by playground debug tcp-dump, or sent by a customer (tcpdump, Wireshark), and reports: the TCP conversations with their handshake time, the connections refused (SYN answered with a reset) or unanswered, the resets of established connections, retransmissions and zero windows, the TLS handshakes (SNI) and alerts with their likely cause, DNS errors, the Kafka requests by API with their response times and error codes (port 9092, the KRaft controller and the host listeners of the playground, plus --kafka-port), and the HTTP requests by endpoint with their status codes and response times, the error responses with an excerpt of the request and response bodies (plain HTTP on the usual ports of the playground: 8081 to 8083, 8088, 9006, 9021, plus --http-port).\n\n🏷️ Container names instead of ip addresses: with --hosts (<ip> <name> per line), or the .hosts file that playground debug tcp-dump writes next to the capture (found automatically).\n\n🐳 With --container, it captures for --duration with playground debug tcp-dump, then analyzes the captures.\n\n🔧 tshark runs in the nicolaka/netshoot image (pulled the first time): nothing to install but python3.\n\n🌐 Also writes a self-contained HTML report (inline SVG charts, works offline) in --output-dir, opened in the browser in an interactive terminal\n\n🧪 With --sample, it analyzes the captures shipped in tools/tcp-dump/samples: a quick way to see what it reports.\n\n🔖 Exit code is 0 when the analysis completed, 2 when the capture has no packet\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics",
+          "usage": "playground analyze tcp-dump [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--file",
+                "-f"
+              ],
+              "argument": "FILE",
+              "description": "🦈 Capture file (.pcap or .pcapng), repeat --file for several captures (one report each)\n\n❕ Provide only one of --file, --container and --sample\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n        use <option+enter> to use the value you typed manually\n\nRepeatable: ✓ Yes"
+            },
+            {
+              "names": [
+                "--sample",
+                "-s"
+              ],
+              "argument": "SAMPLE",
+              "description": "🧪 Sample of tools/tcp-dump/samples\n\n  kafka_and_network_errors   a Kafka client producing and consuming, a refused connection, a connection without answer, a TLS handshake rejected (certificate_unknown) and a DNS NXDOMAIN\n  http_errors                an HTTP client posting JSON records (like the HTTP sink): 200, 429, 500, 401 and 404 responses with their bodies, a slow endpoint and a request without response\n\nRepeatable: ✓ Yes\nAllowed values: kafka_and_network_errors, http_errors"
+            },
+            {
+              "names": [
+                "--container",
+                "-c",
+                "--pod",
+                "-p"
+              ],
+              "argument": "CONTAINER",
+              "description": "🐳 Container name (or pod name when cfk environment is used) to capture for --duration, then analyze (default: connect)\n\nRepeatable: ✓ Yes"
+            },
+            {
+              "names": [
+                "--duration"
+              ],
+              "argument": "DURATION",
+              "description": "⏱️ Duration of the capture with --container, in seconds or with a s/m/h suffix (default is 30 seconds)\n\nDefault value: 30"
+            },
+            {
+              "names": [
+                "--port"
+              ],
+              "argument": "PORT",
+              "description": "🚪 With --container, only the traffic to or from this port"
+            },
+            {
+              "names": [
+                "--filter"
+              ],
+              "argument": "FILTER",
+              "description": "🔍 With --container, a tcpdump filter expression (pcap-filter syntax)"
+            },
+            {
+              "names": [
+                "--hosts"
+              ],
+              "argument": "HOSTS",
+              "description": "🏷️ Hosts file (<ip> <name> per line) to show names instead of ip addresses (default: the .hosts file next to the capture, when there is one)"
+            },
+            {
+              "names": [
+                "--kafka-port"
+              ],
+              "argument": "KAFKA_PORT",
+              "description": "📨 Other port to decode as Kafka (9092, 9093, 29092, 29292 and 29392 are always decoded)\n\nRepeatable: ✓ Yes"
+            },
+            {
+              "names": [
+                "--http-port"
+              ],
+              "argument": "HTTP_PORT",
+              "description": "🌍 Other port to decode as HTTP (80, 8080, 8081, 8082, 8083, 8088, 9006 and 9021 are always decoded)\n\nRepeatable: ✓ Yes"
+            },
+            {
+              "names": [
+                "--output-dir",
+                "-o"
+              ],
+              "argument": "OUTPUT_DIR",
+              "description": "📂 Output directory for the HTML report (default: ./tcp-dump-analysis-output)\n\nDefault value: ./tcp-dump-analysis-output"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🗂️  Output JSON (no text report, no HTML report)"
+            },
+            {
+              "names": [
+                "--top"
+              ],
+              "argument": "TOP",
+              "description": "📊 Number of rows per section (default: 10)\n\nDefault value: 10"
+            }
+          ]
         }
       ]
     },
     {
       "name": "debug",
-      "description": "🐞 Debug commands\n\nThe heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\nthe analysis tools are run inside the right container, installed on the\nfly when missing, and their output is brought back to your machine.\n\n🐌 It hangs, or it is slow\n  thread-dump         what every thread is doing right now\n  flight-recorder     record the JVM from start to stop, then analyze it\n\n💾 It eats memory\n  heap-dump           take a .hprof, optionally as a histogram\n\n🌐 It is a network or TLS problem\n  tcp-dump            capture traffic, open it in Wireshark\n  testssl             probe a TLS endpoint, locally or in the cloud\n  block-traffic       cut a route with iptables, to simulate an outage\n  degrade-traffic     add latency, packet loss or corruption with tc\n  java-debug          turn on the JVM SSL, Kerberos or class loading traces\n\n🔬 It is in the code\n  log-level set       raise the level of any package, without a restart\n  enable-remote-debugging   attach your IDE debugger to a container\n  jscissors           trace method calls, arguments and return values\n\n📦 Hand it over\n  generate-diagnostics   a support bundle for connect or broker\n\n🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,\nlogs, Oracle XStream reports, CFK bundles, flight recordings): playground analyze",
+      "description": "🐞 Debug commands\n\nThe heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\nthe analysis tools are run inside the right container, installed on the\nfly when missing, and their output is brought back to your machine.\n\n🐌 It hangs, or it is slow\n  thread-dump         what every thread is doing right now\n  flight-recorder     record the JVM from start to stop, then analyze it\n\n💾 It eats memory\n  heap-dump           take a .hprof, optionally as a histogram\n\n🌐 It is a network or TLS problem\n  tcp-dump            capture traffic, analyze it, open it in Wireshark\n  testssl             probe a TLS endpoint, locally or in the cloud\n  block-traffic       cut a route with iptables, to simulate an outage\n  degrade-traffic     add latency, packet loss or corruption with tc\n  java-debug          turn on the JVM SSL, Kerberos or class loading traces\n\n🔬 It is in the code\n  log-level set       raise the level of any package, without a restart\n  enable-remote-debugging   attach your IDE debugger to a container\n  jscissors           trace method calls, arguments and return values\n\n📦 Hand it over\n  generate-diagnostics   a support bundle for connect or broker\n\n🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,\nlogs, Oracle XStream reports, CFK bundles, flight recordings, network\ncaptures): playground analyze",
       "usage": "playground debug COMMAND",
       "options": [],
       "subcommands": [
@@ -2519,7 +2616,7 @@
         },
         {
           "name": "tcp-dump",
-          "description": "🕵️‍♂️ Take a tcp dump (sniffing network)\n\nCaptures the traffic in or out of a container for --duration seconds and\nbrings the capture file back, ready to open in Wireshark. Narrow it with\n--port when you know which one you care about.\n\n❕ On an encrypted listener you will see the handshake and the failures,\n   but not the records themselves.",
+          "description": "🕵️‍♂️ Take a tcp dump (sniffing network)\n\nCaptures the traffic in or out of one or more containers and brings the capture files back, with a summary and\nready to open in Wireshark. Narrow it with --port and/or --filter (any tcpdump expression) when you know what you\ncare about.\n\n⏱️ Without --action, it captures for --duration (default 30s): reproduce the issue meanwhile, Ctrl+C stops it\nearlier and keeps the capture. With several --container, the captures run at the same time, so both sides of a\nconnection can be compared. For a window of any length, in a script or by hand: --action start, reproduce,\n--action stop (--action status shows the running captures, kept in playground.ini as tcp_dump.<container>).\n\n📂 For each container, --output-dir (default: current folder) gets:\n\n  tcp-dump-<container>-<port>-<date>.pcap                     the capture\n  tcp-dump-<container>-<port>-<date>.hosts                    ip address → container name\n  tcp-dump-<container>-<port>-<date>-tcp-dump-report.html     the HTML report of the analysis\n\n🔎 Each capture is then analyzed with playground analyze tcp-dump (--no-analyze to skip it): refused and reset\nconnections, retransmissions, TLS alerts, DNS errors, Kafka and HTTP errors and response times (with the bodies of\nthe HTTP error responses), with container names instead of ip addresses, as a text digest and an HTML report.\n\n🐳 tcpdump runs from the nicolaka/netshoot image in the network namespace of the container (an ephemeral\ncontainer of the pod with cfk): nothing is installed in the container, so it works with any image.\n\n❕ On an encrypted listener you will see the handshake and the failures (TLS alerts), but not the records\n   themselves.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics",
           "usage": "playground debug tcp-dump [OPTIONS]",
           "options": [
             {
@@ -2537,14 +2634,56 @@
                 "--port"
               ],
               "argument": "PORT",
-              "description": "Port on which tcp dump should be done, if not set sniffing is done on every port"
+              "description": "🚪 Only the traffic to or from this port (default: every port)"
+            },
+            {
+              "names": [
+                "--filter"
+              ],
+              "argument": "FILTER",
+              "description": "🔍 tcpdump filter expression (pcap-filter syntax), combined with --port when both are set\n\nExamples: 'host postgres', 'tcp[tcpflags] & tcp-rst != 0', 'not port 22'"
             },
             {
               "names": [
                 "--duration"
               ],
               "argument": "DURATION",
-              "description": "Duration of the dump (default is 30 seconds).\n\nDefault value: 30"
+              "description": "⏱️ Duration of the capture without --action, in seconds or with a s/m/h suffix (default is 30 seconds)\n\nDefault value: 30"
+            },
+            {
+              "names": [
+                "--snaplen"
+              ],
+              "argument": "SNAPLEN",
+              "description": "✂️ Bytes kept from each packet (default: the whole packet). 128 keeps the headers only, for long captures"
+            },
+            {
+              "names": [
+                "--action"
+              ],
+              "argument": "ACTION",
+              "description": "🟢 start, stop (copy and summarize the capture) or status, for a capture of any length (default: capture for --duration)\n\nAllowed values: start, stop, status"
+            },
+            {
+              "names": [
+                "--output-dir"
+              ],
+              "argument": "OUTPUT_DIR",
+              "description": "📂 Folder for the capture files (default: current folder)\n\nDefault value: ."
+            },
+            {
+              "names": [
+                "--no-analyze"
+              ],
+              "argument": "",
+              "description": "🙈 Only copy the captures, do not analyze them with playground analyze tcp-dump"
+            },
+            {
+              "names": [
+                "--no-open"
+              ],
+              "argument": "",
+              "description": "🦈 Do not open the captures in Wireshark (they are never opened in CI or outside a terminal)"
             }
           ]
         },

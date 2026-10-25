@@ -186,6 +186,7 @@ playground_usage() {
   printf "  %s   🅾️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)\n" "$(green "analyze oracle-xstream-report")             "
   printf "  %s   📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n" "$(green "analyze cfk-bundle")                        "
   printf "  %s   🛩️ Analyze a Java Flight Recorder recording: where the time of the connector tasks goes\n" "$(green "analyze flight-recorder")                   "
+  printf "  %s   🦈 Analyze a network capture (.pcap, .pcapng): refused and reset connections, retransmissions, TLS alerts, DNS errors, Kafka and HTTP errors and response times\n" "$(green "analyze tcp-dump")                          "
   echo
   printf "%s\n" "$(bold "Debug commands:")"
   printf "  %s   🐞 Debug commands\n" "$(green "debug")                                     "
@@ -6180,7 +6181,7 @@ playground_tools_redos_check_usage() {
 playground_analyze_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze\n\n"
-    printf "  🔎 Analyze commands\n  \n  Turn what you collected into findings: each command reads a file (a\n  dump, a log, a bundle, a report, yours or one a customer sent) or takes\n  it from a running container, and prints a digest with what is wrong and\n  what to do, plus an HTML report to share (opened in your browser). They\n  all work offline, and --sample runs them on the samples shipped with the\n  playground, to see what they report.\n  \n    thread-dump             deadlocks, lock contention, stuck threads\n    gc-logs                 GC pauses, failures, live set, leak trend\n    heap-dump               Eclipse MAT leak suspects, retained sizes\n    logs                    ERROR/FATAL digest of logs, folders, zips\n    oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n    cfk-bundle              CFK support bundle: pods, events, CRs, logs\n    flight-recorder         JFR: where the time of the connector tasks goes\n  \n  To collect them: playground debug thread-dump, heap-dump, flight-recorder,\n  playground connector oracle-cdc-xstream generate-report,\n  playground debug cfk generate-bundle.\n\n"
+    printf "  🔎 Analyze commands\n  \n  Turn what you collected into findings: each command reads a file (a\n  dump, a log, a bundle, a report, yours or one a customer sent) or takes\n  it from a running container, and prints a digest with what is wrong and\n  what to do, plus an HTML report to share (opened in your browser). They\n  all work offline, and --sample runs them on the samples shipped with the\n  playground, to see what they report.\n  \n    thread-dump             deadlocks, lock contention, stuck threads\n    gc-logs                 GC pauses, failures, live set, leak trend\n    heap-dump               Eclipse MAT leak suspects, retained sizes\n    logs                    ERROR/FATAL digest of logs, folders, zips\n    oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n    cfk-bundle              CFK support bundle: pods, events, CRs, logs\n    flight-recorder         JFR: where the time of the connector tasks goes\n    tcp-dump                network capture: resets, TLS alerts, Kafka errors\n  \n  To collect them: playground debug thread-dump, heap-dump, flight-recorder,\n  tcp-dump,\n  playground connector oracle-cdc-xstream generate-report,\n  playground debug cfk generate-bundle.\n\n"
   else
     printf "playground analyze - 🔎 Analyze commands\n\n"
   fi
@@ -6200,6 +6201,7 @@ playground_analyze_usage() {
   printf "  %s   🅾️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)\n" "$(green "oracle-xstream-report")"
   printf "  %s   📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n" "$(green "cfk-bundle")           "
   printf "  %s   🛩️ Analyze a Java Flight Recorder recording: where the time of the connector tasks goes\n" "$(green "flight-recorder")      "
+  printf "  %s   🦈 Analyze a network capture (.pcap, .pcapng): refused and reset connections, retransmissions, TLS alerts, DNS errors, Kafka and HTTP errors and response times\n" "$(green "tcp-dump")             "
   echo
 
   # :command.long_usage
@@ -6803,10 +6805,112 @@ playground_analyze_flight_recorder_usage() {
 }
 
 # :command.usage
+playground_analyze_tcp_dump_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground analyze tcp-dump\n\n"
+    printf "  🦈 Analyze a network capture (.pcap, .pcapng): refused and reset connections,\n  retransmissions, TLS alerts, DNS errors, Kafka and HTTP errors and response\n  times\n  \n  📊 Reads a capture taken by playground debug tcp-dump, or sent by a customer\n  (tcpdump, Wireshark), and reports: the TCP conversations with their handshake\n  time, the connections refused (SYN answered with a reset) or unanswered, the\n  resets of established connections, retransmissions and zero windows, the TLS\n  handshakes (SNI) and alerts with their likely cause, DNS errors, the Kafka\n  requests by API with their response times and error codes (port 9092, the\n  KRaft controller and the host listeners of the playground, plus --kafka-port),\n  and the HTTP requests by endpoint with their status codes and response times,\n  the error responses with an excerpt of the request and response bodies (plain\n  HTTP on the usual ports of the playground: 8081 to 8083, 8088, 9006, 9021,\n  plus --http-port).\n  \n  🏷️ Container names instead of ip addresses: with --hosts (<ip> <name> per\n  line), or the .hosts file that playground debug tcp-dump writes next to the\n  capture (found automatically).\n  \n  🐳 With --container, it captures for --duration with playground debug tcp-dump,\n  then analyzes the captures.\n  \n  🔧 tshark runs in the nicolaka/netshoot image (pulled the first time): nothing\n  to install but python3.\n  \n  🌐 Also writes a self-contained HTML report (inline SVG charts, works offline)\n  in --output-dir, opened in the browser in an interactive terminal\n  \n  🧪 With --sample, it analyzes the captures shipped in tools/tcp-dump/samples: a\n  quick way to see what it reports.\n  \n  🔖 Exit code is 0 when the analysis completed, 2 when the capture has no packet\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics\n\n"
+  else
+    printf "playground analyze tcp-dump - 🦈 Analyze a network capture (.pcap, .pcapng): refused and reset connections, retransmissions, TLS alerts, DNS errors, Kafka and HTTP errors and response times\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground analyze tcp-dump [OPTIONS]\n"
+  printf "  playground analyze tcp-dump --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file, -f FILE (repeatable)")"
+    printf "    🦈 Capture file (.pcap or .pcapng), repeat --file for several captures (one\n    report each)\n    \n    ❕ Provide only one of --file, --container and --sample\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n            use <option+enter> to use the value you typed manually\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--sample, -s SAMPLE (repeatable)")"
+    printf "    🧪 Sample of tools/tcp-dump/samples\n    \n      kafka_and_network_errors   a Kafka client producing and consuming, a\n    refused connection, a connection without answer, a TLS handshake rejected\n    (certificate_unknown) and a DNS NXDOMAIN\n      http_errors                an HTTP client posting JSON records (like the\n    HTTP sink): 200, 429, 500, 401 and 404 responses with their bodies, a slow\n    endpoint and a request without response\n"
+    printf "    %s\n" "Allowed: kafka_and_network_errors, http_errors"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--container, -c, --pod, -p CONTAINER (repeatable)")"
+    printf "    🐳 Container name (or pod name when cfk environment is used) to capture for\n    --duration, then analyze (default: connect)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--duration DURATION")"
+    printf "    ⏱️ Duration of the capture with --container, in seconds or with a s/m/h\n    suffix (default is 30 seconds)\n"
+    printf "    %s\n" "Default: 30"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--port PORT")"
+    printf "    🚪 With --container, only the traffic to or from this port\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--filter FILTER")"
+    printf "    🔍 With --container, a tcpdump filter expression (pcap-filter syntax)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--hosts HOSTS")"
+    printf "    🏷️ Hosts file (<ip> <name> per line) to show names instead of ip addresses\n    (default: the .hosts file next to the capture, when there is one)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--kafka-port KAFKA_PORT (repeatable)")"
+    printf "    📨 Other port to decode as Kafka (9092, 9093, 29092, 29292 and 29392 are\n    always decoded)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--http-port HTTP_PORT (repeatable)")"
+    printf "    🌍 Other port to decode as HTTP (80, 8080, 8081, 8082, 8083, 8088, 9006 and\n    9021 are always decoded)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
+    printf "    📂 Output directory for the HTML report (default: ./tcp-dump-analysis-output)\n"
+    printf "    %s\n" "Default: ./tcp-dump-analysis-output"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🗂️  Output JSON (no text report, no HTML report)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--top TOP")"
+    printf "    📊 Number of rows per section (default: 10)\n"
+    printf "    %s\n" "Default: 10"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground analyze tcp-dump --sample kafka_and_network_errors\n"
+    printf "  playground analyze tcp-dump --sample http_errors\n"
+    printf "  playground analyze tcp-dump -f tcp-dump-connect-9092-2026-10-25-09-25-35.pcap\n"
+    printf "  playground analyze tcp-dump -f customer.pcapng --kafka-port 9094 --json\n"
+    printf "  playground analyze tcp-dump -f http-sink.pcap --http-port 8443\n"
+    printf "  playground analyze tcp-dump -c connect -c broker --port 9092 --duration 1m\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_debug_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground debug\n\n"
-    printf "  🐞 Debug commands\n  \n  The heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\n  the analysis tools are run inside the right container, installed on the\n  fly when missing, and their output is brought back to your machine.\n  \n  🐌 It hangs, or it is slow\n    thread-dump         what every thread is doing right now\n    flight-recorder     record the JVM from start to stop, then analyze it\n  \n  💾 It eats memory\n    heap-dump           take a .hprof, optionally as a histogram\n  \n  🌐 It is a network or TLS problem\n    tcp-dump            capture traffic, open it in Wireshark\n    testssl             probe a TLS endpoint, locally or in the cloud\n    block-traffic       cut a route with iptables, to simulate an outage\n    degrade-traffic     add latency, packet loss or corruption with tc\n    java-debug          turn on the JVM SSL, Kerberos or class loading traces\n  \n  🔬 It is in the code\n    log-level set       raise the level of any package, without a restart\n    enable-remote-debugging   attach your IDE debugger to a container\n    jscissors           trace method calls, arguments and return values\n  \n  📦 Hand it over\n    generate-diagnostics   a support bundle for connect or broker\n  \n  🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,\n  logs, Oracle XStream reports, CFK bundles, flight recordings): playground\n  analyze\n\n"
+    printf "  🐞 Debug commands\n  \n  The heavy tooling, made usable: the JDK utilities, tcpdump, iptables and\n  the analysis tools are run inside the right container, installed on the\n  fly when missing, and their output is brought back to your machine.\n  \n  🐌 It hangs, or it is slow\n    thread-dump         what every thread is doing right now\n    flight-recorder     record the JVM from start to stop, then analyze it\n  \n  💾 It eats memory\n    heap-dump           take a .hprof, optionally as a histogram\n  \n  🌐 It is a network or TLS problem\n    tcp-dump            capture traffic, analyze it, open it in Wireshark\n    testssl             probe a TLS endpoint, locally or in the cloud\n    block-traffic       cut a route with iptables, to simulate an outage\n    degrade-traffic     add latency, packet loss or corruption with tc\n    java-debug          turn on the JVM SSL, Kerberos or class loading traces\n  \n  🔬 It is in the code\n    log-level set       raise the level of any package, without a restart\n    enable-remote-debugging   attach your IDE debugger to a container\n    jscissors           trace method calls, arguments and return values\n  \n  📦 Hand it over\n    generate-diagnostics   a support bundle for connect or broker\n  \n  🔎 To analyze what you collected (thread dumps, GC logs, heap dumps,\n  logs, Oracle XStream reports, CFK bundles, flight recordings, network\n  captures): playground analyze\n\n"
   else
     printf "playground debug - 🐞 Debug commands\n\n"
   fi
@@ -7365,7 +7469,7 @@ playground_debug_gc_analyze_usage() {
 playground_debug_tcp_dump_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground debug tcp-dump\n\n"
-    printf "  🕵️‍♂️ Take a tcp dump (sniffing network)\n  \n  Captures the traffic in or out of a container for --duration seconds and\n  brings the capture file back, ready to open in Wireshark. Narrow it with\n  --port when you know which one you care about.\n  \n  ❕ On an encrypted listener you will see the handshake and the failures,\n     but not the records themselves.\n\n"
+    printf "  🕵️‍♂️ Take a tcp dump (sniffing network)\n  \n  Captures the traffic in or out of one or more containers and brings the\n  capture files back, with a summary and\n  ready to open in Wireshark. Narrow it with --port and/or --filter (any tcpdump\n  expression) when you know what you\n  care about.\n  \n  ⏱️ Without --action, it captures for --duration (default 30s): reproduce the\n  issue meanwhile, Ctrl+C stops it\n  earlier and keeps the capture. With several --container, the captures run at\n  the same time, so both sides of a\n  connection can be compared. For a window of any length, in a script or by\n  hand: --action start, reproduce,\n  --action stop (--action status shows the running captures, kept in\n  playground.ini as tcp_dump.<container>).\n  \n  📂 For each container, --output-dir (default: current folder) gets:\n  \n    tcp-dump-<container>-<port>-<date>.pcap                     the capture\n    tcp-dump-<container>-<port>-<date>.hosts                    ip address →\n  container name\n    tcp-dump-<container>-<port>-<date>-tcp-dump-report.html     the HTML report\n  of the analysis\n  \n  🔎 Each capture is then analyzed with playground analyze tcp-dump (--no-analyze\n  to skip it): refused and reset\n  connections, retransmissions, TLS alerts, DNS errors, Kafka and HTTP errors\n  and response times (with the bodies of\n  the HTTP error responses), with container names instead of ip addresses, as a\n  text digest and an HTML report.\n  \n  🐳 tcpdump runs from the nicolaka/netshoot image in the network namespace of\n  the container (an ephemeral\n  container of the pod with cfk): nothing is installed in the container, so it\n  works with any image.\n  \n  ❕ On an encrypted listener you will see the handshake and the failures (TLS\n  alerts), but not the records\n     themselves.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics\n\n"
   else
     printf "playground debug tcp-dump - 🕵️‍♂️ Take a tcp dump (sniffing network)\n\n"
   fi
@@ -7389,13 +7493,45 @@ playground_debug_tcp_dump_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--port PORT")"
-    printf "    Port on which tcp dump should be done, if not set sniffing is done on every\n    port\n"
+    printf "    🚪 Only the traffic to or from this port (default: every port)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--filter FILTER")"
+    printf "    🔍 tcpdump filter expression (pcap-filter syntax), combined with --port when\n    both are set\n    \n    Examples: 'host postgres', 'tcp[tcpflags] & tcp-rst != 0', 'not port 22'\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--duration DURATION")"
-    printf "    Duration of the dump (default is 30 seconds).\n"
+    printf "    ⏱️ Duration of the capture without --action, in seconds or with a s/m/h\n    suffix (default is 30 seconds)\n"
     printf "    %s\n" "Default: 30"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--snaplen SNAPLEN")"
+    printf "    ✂️ Bytes kept from each packet (default: the whole packet). 128 keeps the\n    headers only, for long captures\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--action ACTION")"
+    printf "    🟢 start, stop (copy and summarize the capture) or status, for a capture of\n    any length (default: capture for --duration)\n"
+    printf "    %s\n" "Allowed: start, stop, status"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir OUTPUT_DIR")"
+    printf "    📂 Folder for the capture files (default: current folder)\n"
+    printf "    %s\n" "Default: ."
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-analyze")"
+    printf "    🙈 Only copy the captures, do not analyze them with playground analyze\n    tcp-dump\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-open")"
+    printf "    🦈 Do not open the captures in Wireshark (they are never opened in CI or\n    outside a terminal)\n"
     echo
 
     # :command.usage_fixed_flags
@@ -7406,6 +7542,10 @@ playground_debug_tcp_dump_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground debug tcp-dump --container control-center --port 9021 --duration 60\n"
+    printf "  playground debug tcp-dump -c connect -c broker --port 9092 --duration 2m\n"
+    printf "  playground debug tcp-dump -c connect --filter \"host postgres and tcp[tcpflags]\n  & tcp-rst != 0\"\n"
+    printf "  playground debug tcp-dump -c connect --action start\n"
+    printf "  playground debug tcp-dump -c connect --action stop --output-dir /tmp/captures\n"
     echo
 
   fi
@@ -42090,6 +42230,163 @@ playground_analyze_flight_recorder_command() {
 }
 
 # :command.function
+playground_analyze_tcp_dump_command() {
+
+  # src/commands/analyze/tcp-dump.sh
+  eval "file_array=(${args[--file]})"
+  eval "sample_array=(${args[--sample]})"
+  eval "container_array=(${args[--container]})"
+  eval "kafka_port_array=(${args[--kafka-port]})"
+  eval "http_port_array=(${args[--http-port]})"
+  hosts="${args[--hosts]}"
+  duration="${args[--duration]}"
+  port="${args[--port]}"
+  filter="${args[--filter]}"
+  output_dir="${args[--output-dir]}"
+  json_out="${args[--json]}"
+  top="${args[--top]}"
+
+  # with --json, logs go to stderr and only the analysis to stdout (same as analyze thread-dump)
+  if [[ -n "$json_out" ]]; then
+      exec 3>&1 1>&2
+  fi
+
+  nb_modes=0
+  [[ ${#file_array[@]} -gt 0 ]] && nb_modes=$((nb_modes + 1))
+  [[ ${#sample_array[@]} -gt 0 ]] && nb_modes=$((nb_modes + 1))
+  [[ ${#container_array[@]} -gt 0 ]] && nb_modes=$((nb_modes + 1))
+  if [[ $nb_modes -gt 1 ]]; then
+      logerror "❌ Provide only one of --file, --container and --sample"
+      exit 1
+  fi
+  if [[ $nb_modes -eq 0 ]]; then
+      container_array=("connect")
+  fi
+
+  # ── Container mode: capture for --duration with playground debug tcp-dump, which analyzes the captures ──
+  if [[ ${#container_array[@]} -gt 0 ]]; then
+      if [[ -n "$json_out" ]]; then
+          logerror "❌ --json works with --file and --sample: capture first, then analyze the .pcap"
+          exit 1
+      fi
+      capture_args=(--duration "$duration" --output-dir "$output_dir")
+      for container in "${container_array[@]}"
+      do
+          capture_args+=(--container "$container")
+      done
+      [[ -n "$port" ]] && capture_args+=(--port "$port")
+      [[ -n "$filter" ]] && capture_args+=(--filter "$filter")
+      playground debug tcp-dump "${capture_args[@]}"
+      exit $?
+  fi
+
+  # ── Sample mode: captures shipped with the analyzer ──
+  samples_dir="$root_folder/tools/tcp-dump/samples"
+  for sample in "${sample_array[@]}"
+  do
+      file_array+=("$samples_dir/$sample.pcap")
+  done
+
+  analyzer="$root_folder/tools/tcp-dump/tcp_dump_analyzer.py"
+  extractor="$root_folder/tools/tcp-dump/extract.sh"
+  if ! command -v python3 &>/dev/null; then
+      logerror "❌ python3 is required but not found on PATH"
+      exit 1
+  fi
+  if ! docker image inspect $PLAYGROUND_NETSHOOT_IMAGE > /dev/null 2>&1; then
+      log "📥 pulling $PLAYGROUND_NETSHOOT_IMAGE (tshark, only the first time)"
+      docker pull $PLAYGROUND_NETSHOOT_IMAGE > /dev/null
+  fi
+
+  mkdir -p "$output_dir"
+  output_dir=$(cd "$output_dir" && pwd)
+
+  # listener ports decoded as Kafka, besides 9092: the KRaft controller and the host listeners of the playground brokers
+  kafka_ports="9093 29092 29292 29392 ${kafka_port_array[*]}"
+  # ports decoded as HTTP, besides the defaults of tshark (80, 8080, 8088...): schema registry, rest proxy, connect,
+  # ksqldb, the test HTTP server of the examples (httpserver), control center
+  http_ports="8081 8082 8083 8088 9006 9021 ${http_port_array[*]}"
+
+  tmp_dir=$(mktemp -d -t pg-tcp-dump-XXXXXXXXXX)
+  extract_container="pg-tcpdump-analyze-$$"
+  if [ -z "$PG_VERBOSE_MODE" ]; then
+      trap 'rm -rf "$tmp_dir"; docker rm -f "$extract_container" > /dev/null 2>&1' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $tmp_dir"
+  fi
+
+  # tshark runs in a netshoot container: the capture goes in and the extracted fields come out with docker cp (no bind
+  # mount, so any folder works, /tmp included, with docker and podman)
+  docker rm -f "$extract_container" > /dev/null 2>&1
+  if ! docker run -d --name "$extract_container" --entrypoint sleep $PLAYGROUND_NETSHOOT_IMAGE 3600 > /dev/null; then
+      logerror "❌ could not start the $PLAYGROUND_NETSHOOT_IMAGE container that runs tshark"
+      exit 1
+  fi
+  docker cp "$extractor" "$extract_container:/extract.sh" > /dev/null
+
+  failed=0
+  reports=()
+  for i in "${!file_array[@]}"
+  do
+      file="${file_array[$i]}"
+      # fzf @path trick
+      if [[ ! -e "$file" && "$file" == *"@"* ]]; then
+          file=$(echo "$file" | cut -d "@" -f 2)
+      fi
+      base=$(basename "$file")
+      stem="${base%.*}"
+      file_hosts="$hosts"
+      # the .hosts file written by playground debug tcp-dump next to the capture
+      if [[ -z "$file_hosts" ]] && [[ -f "${file%.*}.hosts" ]]; then
+          file_hosts="${file%.*}.hosts"
+      fi
+
+      log "🦈 Analyzing $file${file_hosts:+ (names from $file_hosts)}"
+      data_dir="$tmp_dir/$i"
+      docker exec "$extract_container" rm -rf /data /capture > /dev/null 2>&1
+      if ! docker cp "$file" "$extract_container:/capture" > /dev/null \
+          || ! docker exec -e KAFKA_PORTS="$kafka_ports" -e HTTP_PORTS="$http_ports" "$extract_container" sh /extract.sh /capture /data \
+          || ! docker cp "$extract_container:/data" "$data_dir" > /dev/null; then
+          logerror "❌ could not read $file with tshark"
+          failed=1
+          continue
+      fi
+
+      analyzer_args=(--data "$data_dir" --title "$base" --top "$top")
+      [[ -n "$file_hosts" ]] && analyzer_args+=(--hosts "$file_hosts")
+      if [[ -n "$json_out" ]]; then
+          python3 -I "$analyzer" "${analyzer_args[@]}" --json >&3 || failed=1
+          continue
+      fi
+      html_out="$output_dir/${stem}-tcp-dump-report.html"
+      log ""
+      python3 -I "$analyzer" "${analyzer_args[@]}" --html-out "$html_out"
+      exit_code=$?
+      if [[ $exit_code -ne 0 ]]; then
+          failed=$exit_code
+          continue
+      fi
+      log ""
+      log "✅ HTML report saved: $html_out"
+      reports+=("$html_out")
+  done
+
+  for html_out in "${reports[@]}"
+  do
+      # only open a browser in an interactive terminal
+      if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ] && command -v open &>/dev/null; then
+          log "🌐 Opening $html_out in browser..."
+          open "$html_out"
+      else
+          log "🔗 Open in browser: file://$html_out"
+      fi
+  done
+
+  exit $failed
+
+}
+
+# :command.function
 playground_debug_enable_remote_debugging_command() {
 
   # src/commands/debug/enable-remote-debugging.sh
@@ -43039,99 +43336,461 @@ playground_debug_gc_analyze_command() {
 playground_debug_tcp_dump_command() {
 
   # src/commands/debug/tcp-dump.sh
-  containers="${args[--container]}"
+  eval "containers=(${args[--container]})"
   port="${args[--port]}"
+  filter="${args[--filter]}"
   duration="${args[--duration]}"
+  snaplen="${args[--snaplen]}"
+  action="${args[--action]}"
+  output_dir="${args[--output-dir]}"
+  no_analyze="${args[--no-analyze]}"
+  no_open="${args[--no-open]}"
 
-  # Convert space-separated string to array
-  IFS=' ' read -ra container_array <<< "$containers"
+  get_environment_used
 
+  #
+  # tcpdump runs from the netshoot image in the network namespace of each container (an ephemeral container of the pod
+  # with cfk): nothing is installed in the container, so it works with any image. The capture container stays up after
+  # tcpdump stops, so that the capture can be copied out (no bind mount: no root-owned files, no shared folder needed),
+  # then it is removed. playground analyze tcp-dump then analyzes each capture.
+  #
+  #   -U --immediate-mode   every packet is written as soon as it is captured: none is lost when the capture stops
+  #   timeout -s INT        tcpdump stops by itself after --duration and closes the file properly
+  #
+
+  capture_script='mkdir -p /captures
+  set -- -i any -U --immediate-mode -w "/captures/$TCPDUMP_FILE"
+  if [ -n "$TCPDUMP_SNAPLEN" ]; then set -- "$@" -s "$TCPDUMP_SNAPLEN"; fi
+  if [ -n "$TCPDUMP_FILTER" ]; then set -- "$@" "$TCPDUMP_FILTER"; fi
+  if [ -n "$TCPDUMP_TIMEOUT" ]
+  then
+      timeout -s INT "$TCPDUMP_TIMEOUT" tcpdump "$@" 2> /captures/tcpdump.log
+  else
+      tcpdump "$@" 2> /captures/tcpdump.log
+  fi
+  touch /captures/.done
+  exec sleep 3600'
+
+  if [[ -n "$port" ]] && [[ -n "$filter" ]]
+  then
+      expression="port $port and ($filter)"
+  elif [[ -n "$port" ]]
+  then
+      expression="port $port"
+  else
+      expression="$filter"
+  fi
+
+  duration_seconds=$(duration_to_seconds "$duration")
+  if [[ -z "$action" ]] && [[ "$duration_seconds" -le 0 ]]
+  then
+      logerror "❌ --duration must be greater than 0"
+      exit 1
+  fi
+  if [[ -n "$snaplen" ]] && [[ "$snaplen" -le 0 ]]
+  then
+      logerror "❌ --snaplen must be greater than 0"
+      exit 1
+  fi
+
+  if [ "$action" == "start" ] || [ -z "$action" ]
+  then
+      if [[ "$environment" != cfk* ]] && ! docker image inspect $PLAYGROUND_NETSHOOT_IMAGE > /dev/null 2>&1
+      then
+          log "📥 pulling $PLAYGROUND_NETSHOOT_IMAGE (network tools image, only the first time)"
+          docker pull $PLAYGROUND_NETSHOOT_IMAGE > /dev/null
+      fi
+  fi
+
+  #
+  # backend: a capture is identified by a handle, the name of the capture container (docker, podman) or <pod>/<ephemeral
+  # container> (cfk)
+  #
+  function capture_start () {
+      local container=$1
+      local file=$2
+      local timeout_seconds=$3
+      local handle
+      local pod_name
+      local target_container
+      local debug_container
+      local debug_custom_file
+
+      if [[ "$environment" == cfk* ]]
+      then
+          pod_name=$(resolve_container_name_for_environment "$container")
+          target_container=$(kubectl -n confluent get pod "$pod_name" -o jsonpath='{.spec.containers[0].name}' 2> /dev/null)
+          if [[ -z "$target_container" ]]
+          then
+              logerror "❌ pod $pod_name not found" >&2
+              return 1
+          fi
+          debug_container="pg-tcpdump-$(date +%s)"
+          debug_custom_file=$(mktemp -t pg-cfk-netshoot-XXXXXXXXXX.yaml)
+          printf 'securityContext:\n  runAsUser: 0\n  runAsNonRoot: false\n' > "$debug_custom_file"
+          if ! kubectl -n confluent debug "pod/$pod_name" --attach=false --profile=sysadmin --custom="$debug_custom_file" \
+              --image=$PLAYGROUND_NETSHOOT_IMAGE --target="$target_container" --container="$debug_container" \
+              --env="TCPDUMP_FILE=$file" --env="TCPDUMP_FILTER=$expression" --env="TCPDUMP_SNAPLEN=$snaplen" --env="TCPDUMP_TIMEOUT=$timeout_seconds" \
+              -- sh -c "$capture_script" > /dev/null
+          then
+              rm -f "$debug_custom_file"
+              logerror "❌ could not start an ephemeral container in pod $pod_name" >&2
+              return 1
+          fi
+          rm -f "$debug_custom_file"
+          handle="$pod_name/$debug_container"
+      else
+          handle="pg-tcpdump-$container"
+          if docker inspect "$handle" > /dev/null 2>&1
+          then
+              logerror "❌ a capture is already running on $container (container $handle): stop it with --action stop" >&2
+              return 1
+          fi
+          if ! docker run -d --name "$handle" --network "container:$container" --cap-add NET_RAW --cap-add NET_ADMIN \
+              -e "TCPDUMP_FILE=$file" -e "TCPDUMP_FILTER=$expression" -e "TCPDUMP_SNAPLEN=$snaplen" -e "TCPDUMP_TIMEOUT=$timeout_seconds" \
+              $PLAYGROUND_NETSHOOT_IMAGE sh -c "$capture_script" > /dev/null
+          then
+              logerror "❌ could not start the capture container in the network namespace of $container" >&2
+              return 1
+          fi
+      fi
+      echo "$handle"
+  }
+
+  function capture_exec () {
+      local handle=$1
+      shift
+      if [[ "$environment" == cfk* ]]
+      then
+          kubectl -n confluent exec -i "${handle%%/*}" -c "${handle#*/}" -- "$@"
+      else
+          docker exec -i "$handle" "$@"
+      fi
+  }
+
+  function capture_copy_in () {
+      local handle=$1
+      local source=$2
+      local destination=$3
+      capture_exec "$handle" sh -c "cat > '$destination'" < "$source"
+  }
+
+  function capture_copy_out () {
+      local handle=$1
+      local source=$2
+      local destination=$3
+      capture_exec "$handle" cat "$source" > "$destination"
+  }
+
+  function capture_remove () {
+      local handle=$1
+      if [[ "$environment" == cfk* ]]
+      then
+          # an ephemeral container can't be removed from its pod: ending its last process stops it
+          capture_exec "$handle" pkill sleep > /dev/null 2>&1
+      else
+          docker rm -f "$handle" > /dev/null 2>&1
+      fi
+  }
+
+  function capture_is_running () {
+      capture_exec "$1" sh -c "pgrep tcpdump > /dev/null" > /dev/null 2>&1
+  }
+
+  # waits until tcpdump listens (or fails): a bad --filter or interface stops it at once
+  function capture_wait_listening () {
+      local handle=$1
+      local container=$2
+      local log
+      for _ in $(seq 1 20)
+      do
+          log=$(capture_exec "$handle" cat /captures/tcpdump.log 2> /dev/null)
+          if [[ "$log" == *"listening on"* ]]
+          then
+              return 0
+          fi
+          if capture_exec "$handle" test -f /captures/.done > /dev/null 2>&1
+          then
+              break
+          fi
+          sleep 1
+      done
+      logerror "❌ tcpdump did not start on $container${expression:+ with filter '$expression'}"
+      # the warning about the promiscuous mode of the any device is printed every time
+      echo "$log" | grep -v -i "promiscuous"
+      return 1
+  }
+
+  # ip address → name of every container (or pod and service), for tshark and Wireshark name resolution
+  function write_hosts_file () {
+      local destination=$1
+      local name
+      local ip
+      if [[ "$environment" == cfk* ]]
+      then
+          {
+              kubectl -n confluent get pods -o jsonpath='{range .items[*]}{.status.podIP}{"\t"}{.metadata.name}{"\n"}{end}' 2> /dev/null
+              kubectl -n confluent get svc -o jsonpath='{range .items[*]}{.spec.clusterIP}{"\t"}{.metadata.name}{"\n"}{end}' 2> /dev/null
+          } | awk -F '\t' '$1 != "" && $1 != "None" && !seen[$1]++' > "$destination"
+      else
+          : > "$destination"
+          for name in $(docker ps --format '{{.Names}}' | grep -v '^pg-tcpdump-')
+          do
+              for ip in $(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' "$name" 2> /dev/null)
+              do
+                  printf '%s\t%s\n' "$ip" "$name" >> "$destination"
+              done
+          done
+      fi
+  }
+
+  # stops the capture (if still running), writes the pcap and the hosts file in --output-dir, then analyzes the capture
+  function capture_collect () {
+      local container=$1
+      local handle=$2
+      local file=$3
+      local local_file="$output_dir/$file"
+      local hosts_file="${local_file%.pcap}.hosts"
+      local stats
+
+      capture_exec "$handle" pkill -INT tcpdump > /dev/null 2>&1
+      for _ in $(seq 1 30)
+      do
+          if capture_exec "$handle" test -f /captures/.done > /dev/null 2>&1
+          then
+              break
+          fi
+          sleep 1
+      done
+
+      if ! capture_copy_out "$handle" "/captures/$file" "$local_file" || [ ! -s "$local_file" ]
+      then
+          logerror "❌ the capture of $container could not be copied"
+          capture_exec "$handle" cat /captures/tcpdump.log 2> /dev/null
+          capture_remove "$handle"
+          return 1
+      fi
+
+      # tcpdump prints "N packets captured", "M packets dropped by kernel" when it stops
+      stats=$(capture_exec "$handle" cat /captures/tcpdump.log 2> /dev/null | grep -E "packets (captured|dropped by kernel)" | tr '\n' ',' | sed 's/,$//; s/,/, /g')
+      log "🌶️ capture of $container: $local_file${stats:+ ($stats)}"
+      if [[ "$stats" =~ ([1-9][0-9]*)\ packets\ dropped\ by\ kernel ]]
+      then
+          logwarn "⚠️ the kernel dropped packets: narrow the capture with --port / --filter, or reduce --snaplen"
+      fi
+
+      write_hosts_file "$hosts_file"
+      capture_remove "$handle"
+      collected_files+=("$local_file")
+  }
+
+  # playground analyze tcp-dump: text digest, findings and HTML report next to each capture
+  function analyze_captures () {
+      local file
+      if [[ -n "$no_analyze" ]]
+      then
+          for file in "${collected_files[@]}"
+          do
+              log "🔎 analyze it with: playground analyze tcp-dump -f $file"
+          done
+          return
+      fi
+      for file in "${collected_files[@]}"
+      do
+          log "🔎 analyzing $file (--no-analyze to skip it)"
+          playground analyze tcp-dump -f "$file" --output-dir "$output_dir"
+          # 2: the capture has no packet, already explained by the analysis
+          case $? in
+              0|2) ;;
+              *) logwarn "⚠️ the capture could not be analyzed, open it with Wireshark" ;;
+          esac
+      done
+  }
+
+  function capture_file_name () {
+      echo "tcp-dump-${1}-${port:-all-ports}-$(date '+%Y-%m-%d-%H-%M-%S').pcap"
+  }
+
+  # opens the captures in Wireshark, in the background, when it runs in a terminal
+  function open_in_wireshark () {
+      local file
+      if [[ ${#collected_files[@]} -eq 0 ]] || [[ -n "$no_open" ]] || [ -n "$GITHUB_RUN_NUMBER" ] || [ ! -t 1 ]
+      then
+          return
+      fi
+      log "🏷️ each .hosts file maps the ip addresses to container names: to see the names in Wireshark, copy it as 'hosts' into the Wireshark personal configuration folder (Help → About Wireshark → Folders) and enable View → Name Resolution → Resolve Network Addresses"
+      if [[ "$(uname)" == "Darwin" ]] && [ -d "/Applications/Wireshark.app" ]
+      then
+          for file in "${collected_files[@]}"
+          do
+              log "🦈 opening $file with Wireshark (--no-open to skip it)"
+              open -a Wireshark "$file"
+          done
+      elif command -v wireshark > /dev/null 2>&1
+      then
+          for file in "${collected_files[@]}"
+          do
+              log "🦈 opening $file with Wireshark (--no-open to skip it)"
+              nohup wireshark "$file" > /dev/null 2>&1 &
+          done
+      else
+          log "🦈 open the captures with Wireshark: https://www.wireshark.org/"
+      fi
+  }
+
+  # true when the container was (re)started after the capture began: the capture stays in the network namespace of the
+  # previous run of the container and sees nothing new (with cfk, a pod restart removes the ephemeral container)
+  function target_restarted_since () {
+      local container=$1
+      local since=$2
+      local started_at
+      local started_epoch
+      if [[ "$environment" == cfk* ]]
+      then
+          return 1
+      fi
+      started_at=$(docker inspect -f '{{.State.StartedAt}}' "$container" 2> /dev/null)
+      started_at=${started_at%%.*}
+      started_at=${started_at%Z}
+      started_epoch=$(date -u -d "$started_at" +%s 2> /dev/null || date -u -j -f "%Y-%m-%dT%H:%M:%S" "$started_at" +%s 2> /dev/null)
+      [[ -n "$started_epoch" ]] && [[ "$started_epoch" -gt "$since" ]]
+  }
+
+  function format_epoch () {
+      date -r "$1" "$2" 2> /dev/null || date -d "@$1" "$2" 2> /dev/null || echo "$1"
+  }
+
+  mkdir -p "$output_dir"
+  output_dir=$(cd "$output_dir" && pwd)
+  collected_files=()
   failed=0
 
-  for container in "${container_array[@]}"
-  do
-  	# one capture file per container (with several --container, they must not overwrite each other)
-  	filename="tcp-dump-${container}-${port:-all-ports}-$(date '+%Y-%m-%d-%H-%M-%S').pcap"
-  	set +e
-  	playground --output-level ERROR container exec --container "$container" --command "type tcpdump" > /dev/null 2>&1
-  	if [ $? != 0 ]
-  	then
+  case "$action" in
+      "")
+          # 1. every capture starts at the same time, so that both sides of a connection can be compared
+          handles=()
+          files=()
+          started=()
+          for container in "${containers[@]}"
+          do
+              file=$(capture_file_name "$container")
+              if ! handle=$(capture_start "$container" "$file" "$duration_seconds")
+              then
+                  failed=1
+                  continue
+              fi
+              if ! capture_wait_listening "$handle" "$container"
+              then
+                  capture_remove "$handle"
+                  failed=1
+                  continue
+              fi
+              handles+=("$handle")
+              files+=("$file")
+              started+=("$container")
+          done
+          if [[ ${#started[@]} -eq 0 ]]
+          then
+              exit 1
+          fi
 
-  	tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
-  	if [ -z "$PG_VERBOSE_MODE" ]
-  	then
-  		trap 'rm -rf $tmp_dir' EXIT
-  	else
-  		log "🐛📂 not deleting tmp dir $tmp_dir"
-  	fi
-  	output_install_log="$tmp_dir/output_install.log"
+          log "🕵️‍♂️ capturing the traffic of ${started[*]}${expression:+ ($expression)} for ${duration_seconds} seconds, reproduce the issue now (Ctrl+C stops it earlier and keeps the capture)"
 
-  	logwarn "tcpdump is not installed on container $container, attempting to install it"
-  	echo "using rpm" > $output_install_log
-  	docker exec --privileged --user root $container bash -c "rpm -i --nosignature https://rpmfind.net/linux/centos/8-stream/AppStream/aarch64/os/Packages/tcpdump-4.9.3-2.el8.aarch64.rpm" >> $output_install_log 2>&1
-      # for 8.x install yum
-      playground container exec --container "$container" --root --command "microdnf -y install yum" > /dev/null 2>&1
-  	echo "using yum" >> $output_install_log
-  	docker exec --privileged --user root $container bash -c "yum update -y && yum install tcpdump -y" >> $output_install_log 2>&1
+          # 2. wait, Ctrl+C included
+          interrupted=""
+          trap 'interrupted=1' INT
+          end=$((SECONDS + duration_seconds))
+          while [ $SECONDS -lt $end ] && [ -z "$interrupted" ]
+          do
+              sleep 1
+          done
+          trap - INT
+          if [ -n "$interrupted" ]
+          then
+              log "✋ stopped after $((duration_seconds - (end - SECONDS))) seconds"
+          fi
 
-  	if [ "$container" == "ngrok" ]
-  	then
-  		playground container exec -c ngrok --command "adduser --force-badname --system --no-create-home _apt --gid 1000" --root >> $output_install_log 2>&1
-  	fi
-  	echo "using apt-get" >> $output_install_log
-  	docker exec --privileged --user root $container bash -c "apt-get update && echo tcpdump | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/*" >> $output_install_log 2>&1
-  	fi
-  	playground --output-level ERROR container exec --container "$container" --command "type tcpdump" > /dev/null 2>&1
-  	if [ $? != 0 ]
-  	then
-  		logerror "❌ tcpdump could not be installed on container $container, see output below"
-  		cat $output_install_log
-  		# go on with the next containers, exit 1 at the end
-  		failed=1
-  		set -e
-  		continue
-  	fi
-  	set -e
-
-  	set +e
-  	docker exec --privileged --user root ${container} bash -c "killall tcpdump" > /dev/null 2>&1
-  	set -e
-
-  	if [[ -n "$port" ]]
-  	then
-  	log "🕵️‍♂️ Taking tcp dump on container ${container} and port ${port} for ${duration} seconds..."
-  	docker exec -d --privileged --user root ${container} bash -c "tcpdump -w /tmp/${filename} -i any port ${port}"
-  	else
-  	log "🕵️‍♂️ Taking tcp dump on container ${container} and all ports for ${duration} seconds..."
-  	docker exec -d --privileged --user root ${container} bash -c "tcpdump -w /tmp/${filename} -i any"
-  	fi
-
-  	if [ $? -eq 0 ]
-  	then
-  		playground container get-ip-addresses
-  		sleep $duration
-  		set +e
-  		docker exec --privileged --user root ${container} bash -c "killall tcpdump" > /dev/null 2>&1
-  		set -e
-  		log "🌶️ tcp dump is available at ${filename}"
-  		playground container cp --source ${container}:/tmp/${filename} --destination ${filename}
-  		if [[ $(type -f wireshark 2>&1) =~ "not found" ]]
-  		then
-  			# no exit here: the next containers still have to be captured
-  			logwarn "🦈 wireshark is not installed, grab it at https://www.wireshark.org/"
-  		else
-  			log "🦈 Opening ${filename} with wireshark"
-  			wireshark ${filename}
-  		fi
-
-  	else
-  		logerror "❌ Failed to take tcp dump"
-  	fi
-  done
+          # 3. stop, copy, summarize
+          for i in "${!handles[@]}"
+          do
+              capture_collect "${started[$i]}" "${handles[$i]}" "${files[$i]}" || failed=1
+          done
+          analyze_captures
+          open_in_wireshark
+          ;;
+      start)
+          for container in "${containers[@]}"
+          do
+              state=$(playground state get "tcp_dump.$container" 2> /dev/null)
+              if [[ -n "$state" ]]
+              then
+                  read -r handle file started_at <<< "$state"
+                  logwarn "🕵️‍♂️ a capture is already running on $container (since $(format_epoch "$started_at" '+%H:%M:%S')): stop it with --action stop"
+                  continue
+              fi
+              file=$(capture_file_name "$container")
+              if ! handle=$(capture_start "$container" "$file" "")
+              then
+                  failed=1
+                  continue
+              fi
+              if ! capture_wait_listening "$handle" "$container"
+              then
+                  capture_remove "$handle"
+                  failed=1
+                  continue
+              fi
+              playground state set "tcp_dump.$container" "$handle $file $(date +%s)"
+              log "🕵️‍♂️ capturing the traffic of $container${expression:+ ($expression)}: stop it with playground debug tcp-dump -c $container --action stop"
+          done
+          ;;
+      stop)
+          for container in "${containers[@]}"
+          do
+              state=$(playground state get "tcp_dump.$container" 2> /dev/null)
+              if [[ -z "$state" ]]
+              then
+                  logwarn "🤷 no capture started on $container with --action start"
+                  continue
+              fi
+              read -r handle file started_at <<< "$state"
+              playground state del "tcp_dump.$container" > /dev/null 2>&1
+              log "✋ stopping the capture of $container, started at $(format_epoch "$started_at" '+%H:%M:%S')"
+              if target_restarted_since "$container" "$started_at"
+              then
+                  logwarn "⚠️ $container was restarted after the capture started: it only has the traffic before the restart"
+              fi
+              capture_collect "$container" "$handle" "$file" || failed=1
+          done
+          analyze_captures
+          open_in_wireshark
+          ;;
+      status)
+          for container in "${containers[@]}"
+          do
+              state=$(playground state get "tcp_dump.$container" 2> /dev/null)
+              if [[ -z "$state" ]]
+              then
+                  log "💤 no capture running on $container"
+                  continue
+              fi
+              read -r handle file started_at <<< "$state"
+              if target_restarted_since "$container" "$started_at"
+              then
+                  logwarn "⚠️ $container was restarted after the capture started at $(format_epoch "$started_at" '+%H:%M:%S'): the capture only has the traffic before the restart, --action stop collects it, then start a new one"
+              elif capture_is_running "$handle"
+              then
+                  log "🕵️‍♂️ capturing the traffic of $container since $(format_epoch "$started_at" '+%H:%M:%S') ($file)"
+              else
+                  logwarn "⚠️ the capture of $container started at $(format_epoch "$started_at" '+%H:%M:%S') is no longer running (container restarted?): --action stop collects what was captured"
+              fi
+          done
+          ;;
+  esac
 
   if [ $failed -eq 1 ]
   then
-  	exit 1
+      exit 1
   fi
 
 }
@@ -74707,6 +75366,13 @@ playground_analyze_parse_requirements() {
       shift $#
       ;;
 
+    tcp-dump)
+      action="tcp-dump"
+      shift
+      playground_analyze_tcp_dump_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_analyze_usage >&2
@@ -76185,6 +76851,343 @@ playground_analyze_flight_recorder_parse_requirements() {
     printf "%s\n" "--sample must be one of: jdbc_postgres_sink" >&2
     exit 1
   fi
+
+}
+
+# :command.parse_requirements
+playground_analyze_tcp_dump_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_analyze_tcp_dump_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="analyze tcp-dump"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --file | -f)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--file']+x} ]]; then
+            args['--file']="$escaped"
+          else
+            args['--file']="${args['--file']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --sample | -s)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--sample']+x} ]]; then
+            args['--sample']="$escaped"
+          else
+            args['--sample']="${args['--sample']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--sample requires an argument: --sample, -s SAMPLE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --container | -c | --pod | -p)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--container']+x} ]]; then
+            args['--container']="$escaped"
+          else
+            args['--container']="${args['--container']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--container requires an argument: --container, -c, --pod, -p CONTAINER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --duration)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--duration']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--duration requires an argument: --duration DURATION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --port)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--port']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--port requires an argument: --port PORT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --filter)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--filter']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--filter requires an argument: --filter FILTER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --hosts)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--hosts']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--hosts requires an argument: --hosts HOSTS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --kafka-port)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--kafka-port']+x} ]]; then
+            args['--kafka-port']="$escaped"
+          else
+            args['--kafka-port']="${args['--kafka-port']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--kafka-port requires an argument: --kafka-port KAFKA_PORT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --http-port)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--http-port']+x} ]]; then
+            args['--http-port']="$escaped"
+          else
+            args['--http-port']="${args['--http-port']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--http-port requires an argument: --http-port HTTP_PORT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --output-dir | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir, -o OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --top)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--top']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--top requires an argument: --top TOP" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--duration']:-} ]] || args['--duration']="30"
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="./tcp-dump-analysis-output"
+  [[ -n ${args['--top']:-} ]] || args['--top']="10"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--file'] ]]; then
+    values=''
+    eval "values=(${args['--file']})"
+    for value in "${values[@]}"; do
+      validation_output="$(validate_file_exists "$value")"
+      if [[ -n "$validation_output" ]]; then
+        printf "validation error in %s:\n%s\n" "--file, -f FILE" "$validation_output" >&2
+        exit 1
+      fi
+    done
+  fi
+
+  # :flag.validations
+  if [[ -v args['--duration'] ]]; then
+    validation_output="$(validate_duration "${args['--duration']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--duration DURATION" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--port'] ]]; then
+    validation_output="$(validate_integer "${args['--port']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--port PORT" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--hosts'] ]]; then
+    validation_output="$(validate_file_exists "${args['--hosts']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--hosts HOSTS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--kafka-port'] ]]; then
+    values=''
+    eval "values=(${args['--kafka-port']})"
+    for value in "${values[@]}"; do
+      validation_output="$(validate_integer "$value")"
+      if [[ -n "$validation_output" ]]; then
+        printf "validation error in %s:\n%s\n" "--kafka-port KAFKA_PORT" "$validation_output" >&2
+        exit 1
+      fi
+    done
+  fi
+
+  # :flag.validations
+  if [[ -v args['--http-port'] ]]; then
+    values=''
+    eval "values=(${args['--http-port']})"
+    for value in "${values[@]}"; do
+      validation_output="$(validate_integer "$value")"
+      if [[ -n "$validation_output" ]]; then
+        printf "validation error in %s:\n%s\n" "--http-port HTTP_PORT" "$validation_output" >&2
+        exit 1
+      fi
+    done
+  fi
+
+  # :flag.validations
+  if [[ -v args['--top'] ]]; then
+    validation_output="$(validate_integer "${args['--top']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--top TOP" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  input_array=''
+  eval "input_array=(${args[--sample]})"
+  for i in "${input_array[@]}"; do
+    if [[ ! $i =~ ^(kafka_and_network_errors|http_errors)$ ]]; then
+      printf "%s\n" "--sample must be one of: kafka_and_network_errors, http_errors" >&2
+      exit 1
+    fi
+  done
 
 }
 
@@ -77734,6 +78737,20 @@ playground_debug_tcp_dump_parse_requirements() {
         ;;
 
       # :flag.case
+      --filter)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--filter']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--filter requires an argument: --filter FILTER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --duration)
 
         # :flag.case_arg
@@ -77745,6 +78762,64 @@ playground_debug_tcp_dump_parse_requirements() {
           printf "%s\n" "--duration requires an argument: --duration DURATION" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --snaplen)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--snaplen']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--snaplen requires an argument: --snaplen SNAPLEN" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --action)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--action']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--action requires an argument: --action ACTION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --output-dir)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-analyze)
+
+        # :flag.case_no_arg
+        args['--no-analyze']=1
+        shift
+        ;;
+
+      # :flag.case
+      --no-open)
+
+        # :flag.case_no_arg
+        args['--no-open']=1
+        shift
         ;;
 
       --)
@@ -77779,6 +78854,7 @@ playground_debug_tcp_dump_parse_requirements() {
   # :command.default_assignments
   [[ -n ${args['--container']:-} ]] || args['--container']="connect"
   [[ -n ${args['--duration']:-} ]] || args['--duration']="30"
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="."
 
   # :command.validations
   # :flag.validations
@@ -77792,11 +78868,26 @@ playground_debug_tcp_dump_parse_requirements() {
 
   # :flag.validations
   if [[ -v args['--duration'] ]]; then
-    validation_output="$(validate_integer "${args['--duration']:-}")"
+    validation_output="$(validate_duration "${args['--duration']:-}")"
     if [[ -n "${validation_output}" ]]; then
       printf "validation error in %s:\n%s\n" "--duration DURATION" "$validation_output" >&2
       exit 1
     fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--snaplen'] ]]; then
+    validation_output="$(validate_integer "${args['--snaplen']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--snaplen SNAPLEN" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--action']:-} ]] && [[ ! ${args['--action']:-} =~ ^(start|stop|status)$ ]]; then
+    printf "%s\n" "--action must be one of: start, stop, status" >&2
+    exit 1
   fi
 
 }
@@ -100998,6 +102089,11 @@ playground_analyze_completion() {
         playground_analyze_flight_recorder_completion "$completion_current" "$@"
         return
         ;;
+      tcp-dump)
+        shift
+        playground_analyze_tcp_dump_completion "$completion_current" "$@"
+        return
+        ;;
       --help | -h)
         completion_blocked_flags["--help"]=1
         shift
@@ -101007,7 +102103,7 @@ playground_analyze_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" thread-dump heap-dump logs gc-logs oracle-xstream-report cfk-bundle flight-recorder
+  completion_candidates "$completion_current" thread-dump heap-dump logs gc-logs oracle-xstream-report cfk-bundle flight-recorder tcp-dump
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -101792,6 +102888,162 @@ playground_analyze_flight_recorder_completion() {
 }
 
 # :command.completion_function
+playground_analyze_tcp_dump_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --file | -f)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-specific-file-extension "$completion_current" --extension "pcap"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+
+        ;;
+      --sample | -s)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "kafka_and_network_errors"
+            "http_errors"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+
+        ;;
+      --container | -c | --pod | -p)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-container-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+
+        ;;
+      --duration)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--duration"]=1
+
+        ;;
+      --port)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--port"]=1
+
+        ;;
+      --filter)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--filter"]=1
+
+        ;;
+      --hosts)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--hosts"]=1
+
+        ;;
+      --kafka-port)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
+      --http-port)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
+      --output-dir | -o)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --top)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--top"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --file "$completion_current" --file -f
+    completion_flag_candidates --sample "$completion_current" --sample -s
+    completion_flag_candidates --container "$completion_current" --container -c --pod -p
+    completion_flag_candidates --duration "$completion_current" --duration
+    completion_flag_candidates --port "$completion_current" --port
+    completion_flag_candidates --filter "$completion_current" --filter
+    completion_flag_candidates --hosts "$completion_current" --hosts
+    completion_flag_candidates --kafka-port "$completion_current" --kafka-port
+    completion_flag_candidates --http-port "$completion_current" --http-port
+    completion_flag_candidates --output-dir "$completion_current" --output-dir -o
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --top "$completion_current" --top
+  fi
+
+}
+
+# :command.completion_function
 playground_debug_completion() {
   local completion_current="$1"
   shift
@@ -102554,6 +103806,16 @@ playground_debug_tcp_dump_completion() {
         completion_blocked_flags["--port"]=1
 
         ;;
+      --filter)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--filter"]=1
+
+        ;;
       --duration)
         shift
         if [[ $# -eq 0 ]]; then
@@ -102563,6 +103825,52 @@ playground_debug_tcp_dump_completion() {
         shift
         completion_blocked_flags["--duration"]=1
 
+        ;;
+      --snaplen)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--snaplen"]=1
+
+        ;;
+      --action)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "start"
+            "stop"
+            "status"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--action"]=1
+
+        ;;
+      --output-dir)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --no-analyze)
+        completion_blocked_flags["--no-analyze"]=1
+
+        shift
+        ;;
+      --no-open)
+        completion_blocked_flags["--no-open"]=1
+
+        shift
         ;;
       *)
         return
@@ -102574,7 +103882,13 @@ playground_debug_tcp_dump_completion() {
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --container "$completion_current" --container -c --pod -p
     completion_flag_candidates --port "$completion_current" --port
+    completion_flag_candidates --filter "$completion_current" --filter
     completion_flag_candidates --duration "$completion_current" --duration
+    completion_flag_candidates --snaplen "$completion_current" --snaplen
+    completion_flag_candidates --action "$completion_current" --action
+    completion_flag_candidates --output-dir "$completion_current" --output-dir
+    completion_flag_candidates --no-analyze "$completion_current" --no-analyze
+    completion_flag_candidates --no-open "$completion_current" --no-open
   fi
 
 }
@@ -111167,6 +112481,7 @@ run() {
     "analyze oracle-xstream-report") playground_analyze_oracle_xstream_report_command ;;
     "analyze cfk-bundle") playground_analyze_cfk_bundle_command ;;
     "analyze flight-recorder") playground_analyze_flight_recorder_command ;;
+    "analyze tcp-dump") playground_analyze_tcp_dump_command ;;
     "debug") playground_debug_command ;;
     "debug enable-remote-debugging") playground_debug_enable_remote_debugging_command ;;
     "debug disable-remote-debugging") playground_debug_disable_remote_debugging_command ;;

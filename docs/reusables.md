@@ -942,13 +942,19 @@ playground container logs --open --container mitmproxy
 
 When logs are not enough to understand a connectivity problem (connection resets, timeouts, TLS handshake failures, a client talking to the wrong host or port, unexpected retries…), capturing the network traffic of a container shows exactly what goes over the wire.
 
-Just use [CLI](/playground%20debug%20tcp-dump) `playground debug tcp-dump`. It installs `tcpdump` in the container if needed, captures the traffic for `--duration` seconds (default 30, all ports unless `--port` is set), copies the resulting `.pcap` file to the current directory and opens it with [Wireshark](https://www.wireshark.org/) if it is installed. Start it, then reproduce the issue while the capture is running.
+Just use [CLI](/playground%20debug%20tcp-dump) `playground debug tcp-dump`. It runs `tcpdump` from the `nicolaka/netshoot` image in the network namespace of the container (nothing is installed in the container, so it works with any image), captures the traffic for `--duration` (default 30s, all ports unless `--port` or `--filter` is set), copies the `.pcap` file to `--output-dir` (default: current folder), analyzes it with [`playground analyze tcp-dump`](/playground%20analyze%20tcp-dump) (refused and reset connections, retransmissions, TLS alerts, DNS errors, Kafka and HTTP errors and response times, the bodies of the HTTP error responses, with container names instead of ip addresses, in a text digest and an HTML report), then opens it with [Wireshark](https://www.wireshark.org/) if it is installed. Start it, then reproduce the issue while the capture is running: Ctrl+C stops it earlier and keeps the capture.
+
+With several `--container`, the captures run at the same time, so both sides of a connection can be compared. For a window of any length, use `--action start`, reproduce, then `--action stop`.
 
 > [!NOTE]
 > On an encrypted listener (SSL, SASL_SSL) you will see the TCP connections and the TLS handshake, but not the content of the requests. To read HTTPS traffic in clear text, use [mitmproxy](/reusables?id=%f0%9f%95%b5%ef%b8%8f%e2%99%82%ef%b8%8f-see-tls-traffic-with-mitmproxy) instead.
 
 ```bash
 playground debug tcp-dump --container control-center --port 9021 --duration 60
+playground debug tcp-dump -c connect -c broker --port 9092 --duration 2m
+playground debug tcp-dump -c connect --filter "host postgres" --action start
+playground debug tcp-dump -c connect --action stop
+playground analyze tcp-dump -f customer.pcapng          # a capture a customer sent
 ```
 
 ### 👻 Heap Dump
@@ -1039,6 +1045,7 @@ real data.
 | [`playground analyze oracle-xstream-report`](/playground%20analyze%20oracle-xstream-report) | 🅾️ Oracle XStream CDC diagnostics reports (`orclcdc_diag.sql`) | `--sample synthetic_failures` |
 | [`playground analyze cfk-bundle`](/playground%20analyze%20cfk-bundle) | 📦 CFK support bundles: pods, events, custom resources, logs | `--sample synthetic` |
 | [`playground analyze flight-recorder`](/playground%20analyze%20flight-recorder) | 🛩️ Java Flight Recorder recordings: where the time of the connector tasks goes (network I/O by remote, Kafka client, locks, CPU by layer, hot methods) | `--sample jdbc_postgres_sink` |
+| [`playground analyze tcp-dump`](/playground%20analyze%20tcp-dump) | 🦈 network captures (`.pcap`, `.pcapng`): refused and reset connections, retransmissions, TLS alerts, DNS errors, Kafka and HTTP errors and response times, with the bodies of the HTTP error responses | `--sample kafka_and_network_errors`, `--sample http_errors` |
 
 ```bash
 playground analyze thread-dump --sample deadlock_jdk21

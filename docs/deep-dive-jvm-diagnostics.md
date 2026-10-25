@@ -23,7 +23,7 @@ Takes about 15 minutes to read and run.
 | slow: where does the time of the tasks go (I/O, Kafka, locks, converters) | (included) | `playground analyze flight-recorder -c connect --duration 60s --connector <c>` |
 | the same, for an open-ended window | `playground debug flight-recorder --action start` … `--action stop` | analyzed on `stop` |
 | `OutOfMemoryError`, what fills the heap | `playground debug heap-dump -c connect` | `playground analyze heap-dump -f <.hprof>` (Eclipse MAT, slow) |
-| what really goes over the wire | `playground debug tcp-dump -c connect --port 9092 --duration 30` | Wireshark |
+| what really goes over the wire: refused or reset connections, TLS alerts, Kafka errors | `playground debug tcp-dump -c connect --port 9092 --duration 30` (`--action start` … `--action stop` for an open-ended window) | analyzed at the end (`playground analyze tcp-dump -f <.pcap>` for a customer's capture), then Wireshark |
 | step through the code | `playground debug enable-remote-debugging -c connect` (see the 🐞 session) | your IDE |
 
 ---
@@ -51,7 +51,7 @@ Takes about 15 minutes to read and run.
    | GC logs | already written: the playground environments start every JVM with `-loggc` (`/var/log/kafka/<name>-gc.log`) | nothing: they are copied with their rotated files | a few MB |
    | flight recorder | a JFR recording driven **over JMX** (`FlightRecorderMXBean`, port `KAFKA_JMX_PORT`), settings `tools/jfr-analyzer/playground.jfc` | low overhead while it records (JFR is built for production), no restart, no jcmd needed | ~200 KB for 20 s on a lightly loaded worker, more under load |
    | heap dump | `jmap -dump` (`-dump:live` with `--live`) in the container | **stops the JVM** while it writes, seconds to minutes; `--live` forces a full GC first | about the used heap |
-   | tcp dump | `tcpdump` as root in the container, installed if missing | nothing for the JVM; needs package repositories reachable | depends on traffic |
+   | tcp dump | `tcpdump` from the `nicolaka/netshoot` image, in the network namespace of the container (an ephemeral container of the pod on CFK): nothing installed in the container | nothing for the JVM | depends on traffic (`--snaplen 128` keeps the headers only) |
 
    On Docker, **a missing JDK tool can restart the container**: `debug heap-dump` installs JDK 17 with
    `container change-jdk` when `jmap` is missing, and `change-jdk` restarts the container, so the state you wanted to
@@ -65,11 +65,12 @@ Takes about 15 minutes to read and run.
    | `debug thread-dump` | `/tmp/thread-dump-<container>-<date>.log`, then opened in your editor |
    | `debug heap-dump` | `./heap-dump-<container>-<date>.hprof` (current folder); `--histo`: `/tmp/heap-dump-<container>-histo-<date>.txt` |
    | `debug flight-recorder --action stop` | `--output-dir`, default `.` |
-   | `debug tcp-dump` | `./tcp-dump-<container>-<port>-<date>.pcap` |
+   | `debug tcp-dump` | `--output-dir`, default `.` (`tcp-dump-<container>-<port>-<date>.pcap`, `.hosts` and the HTML report) |
    | `analyze thread-dump` | `--output-dir`, default `./thread-analysis-output` (dumps taken with `-c` and the HTML report) |
    | `analyze gc-logs` | `--output-dir`, default `./gc-analysis-output` (logs copied with `-c` and the HTML report) |
    | `analyze flight-recorder` | `--output-dir`, default `./jfr-analysis-output` (recording, `.digest.json`, HTML report) |
    | `analyze heap-dump` | `--output-dir`, default `./heap-analysis` (`summary.txt`, MAT reports, `mat.log`) |
+   | `analyze tcp-dump` | `--output-dir`, default `./tcp-dump-analysis-output` (HTML report) |
 
    Running from the repository leaves these folders in it: use `--output-dir /tmp/<something>`. The HTML report is
    opened in the browser only in an interactive terminal; otherwise its `file://` path is printed.
@@ -183,8 +184,15 @@ playground debug heap-dump -c connect
 playground analyze heap-dump -f heap-dump-connect-<date>.hprof --output-dir /tmp/heap
 playground analyze heap-dump --sample leak_growth --output-dir /tmp/heap      # two dumps compared
 
-# 30 s of traffic of connect on port 9092, for Wireshark
-playground debug tcp-dump -c connect --port 9092 --duration 30
+# 30 s of traffic of connect and broker on port 9092, at the same time, analyzed at the end
+playground debug tcp-dump -c connect -c broker --port 9092 --duration 30 --output-dir /tmp/tcp
+# any tcpdump filter; for an open-ended window, start, reproduce, stop
+playground debug tcp-dump -c connect --filter "host postgres" --action start
+playground debug tcp-dump -c connect --action stop --output-dir /tmp/tcp
+# a capture a customer sent (.pcap, .pcapng), or the sample
+playground analyze tcp-dump -f customer.pcapng --output-dir /tmp/tcp
+playground analyze tcp-dump --sample kafka_and_network_errors --output-dir /tmp/tcp
+playground analyze tcp-dump --sample http_errors --output-dir /tmp/tcp           # an HTTP sink endpoint answering 429, 500, 401
 ```
 
 Gotchas:
@@ -197,8 +205,18 @@ Gotchas:
 - `analyze heap-dump` builds an Eclipse MAT image on the first run (~100 MB download), then gives MAT 80% of the
   Docker memory (`--max-memory 8g` to change it): a dump bigger than that fails to parse (non-zero exit, `mat.log`).
   The digest is in `<output-dir>/summary.txt`, the MAT reports in `<output-dir>/*/index.html`. No `--json`.
-- `tcp-dump` sees the TLS handshake and the failures on an encrypted listener, not the records. It opens Wireshark
-  when it's installed.
+- `tcp-dump` sees the TLS handshake and the failures on an encrypted listener, not the records: `analyze tcp-dump`
+  reports the TLS alerts sent before encryption (`certificate_unknown`, `unknown_ca`, `handshake_failure`…) with their
+  likely cause. TLS 1.3 encrypts the alerts sent after the server certificate.
+- `analyze tcp-dump` decodes Kafka on 9092, 9093 and the host listeners of the playground (29092, 29292, 29392), and
+  plain HTTP on 80, 8080 to 8083, 8088, 9006 (the `httpserver` of the examples) and 9021, with the request and response
+  bodies of each error (`429`, `500`…); `--kafka-port` / `--http-port` add others. The response time of a request is seen from the capture: Fetch waits up to
+  `fetch.max.wait.ms` on purpose, and a `JoinGroup` waits for the rebalance.
+- The `.hosts` file next to each capture maps the ip addresses to container names: `analyze tcp-dump` uses it, and
+  Wireshark does too when it is copied as `hosts` into its personal configuration folder.
+- A capture follows the network namespace of the container: if the container restarts, `--action status` and `stop`
+  say so, and the capture only has the traffic before the restart. It opens Wireshark when it's installed, in an
+  interactive terminal (`--no-open`).
 
 ---
 
@@ -223,6 +241,10 @@ playground analyze flight-recorder --sample jdbc_postgres_sink --output-dir /tmp
 playground analyze thread-dump -f /etc/hosts --output-dir /tmp/jvm-lab/threads; echo "exit=$?"
 # ❌ No thread dump found in hosts. Expected jstack, jcmd Thread.print or kill -3 output …
 # exit=2
+playground analyze tcp-dump --sample kafka_and_network_errors --output-dir /tmp/jvm-lab/tcp
+# 🟠 HIGH: 1 connection attempt(s) to sample-broker:9999 refused (the SYN was answered with a reset) …
+# 🟠 HIGH: TLS fatal alert certificate_unknown sent by sample-client to sample-tls-server (1x) …
+# ✅ HTML report saved: /tmp/jvm-lab/tcp/kafka_and_network_errors-tcp-dump-report.html
 ```
 
 **Step 2: thread dumps of the running worker**
@@ -297,7 +319,10 @@ playground stop
 | "the worker freezes every few minutes" | `analyze gc-logs -f <their gc logs folder>`: longest pauses, Full GC causes, heap floor trend |
 | "throughput dropped after the upgrade" | `analyze flight-recorder -c connect --duration 60s --connector <c>` on both versions (or `connector benchmark --connector-tag A --connector-tag B`, which records the same way) |
 | "OutOfMemoryError in the task" | `debug heap-dump --histo` while it grows, then a full dump + `analyze heap-dump` (`--compare` two dumps for the growth) |
-| "the database / SaaS closes the connection" | `debug tcp-dump -c connect --port <port> --duration 60` while it happens |
+| "the database / SaaS closes the connection" | `debug tcp-dump -c connect --port <port> --duration 60` while it happens: resets, retransmissions and TLS alerts in the report |
+| "the client can't connect to the SSL listener" | `debug tcp-dump -c <client> --port <port>`: the TLS alert and who sent it (`unknown_ca` = the CA is not in the truststore) |
+| "the HTTP sink gets errors from the API" | `debug tcp-dump -c connect --port <port of the API>` (plain HTTP): each error status with the request the connector sent and the body the API answered (`--http-port` for a port the playground doesn't decode) |
+| "the customer sent a pcap" | `analyze tcp-dump -f <file>` (`--kafka-port <p>` for their listener ports) |
 | "a lock between two tasks" | `analyze thread-dump`: the locks section names the owner and the waiters; `debug thread-dump --jstack` on CFK adds `java.util.concurrent` owners |
 
 In a repro model, collect into `/tmp` and print the digest, so the run log shows the finding:
@@ -319,13 +344,14 @@ playground analyze heap-dump      -f <.hprof[.gz]> | --sample leak|leak_growth [
 playground debug thread-dump      [-c <c>]… [--jstack]
 playground debug heap-dump        [-c <c>]… [--live] [--histo]
 playground debug flight-recorder  [-c <c>]… --action start|stop|status [--settings playground|profile|default|all] [--output-dir <d>] [--no-analyze]
-playground debug tcp-dump         [-c <c>]… [--port <p>] [--duration 30]
+playground analyze tcp-dump      [-c <c>… [--duration 30] [--port <p>] [--filter <bpf>] | -f <.pcap>… | --sample kafka_and_network_errors|http_errors] [--hosts <file>] [--kafka-port <p>]… [--http-port <p>]… [--json] [--output-dir <d>]
+playground debug tcp-dump         [-c <c>]… [--port <p>] [--filter <bpf>] [--duration 30] [--snaplen <n>] [--action start|stop|status] [--output-dir <d>] [--no-analyze] [--no-open]
 ```
 
 - Live (`-c`), offline (`-f`) or `--sample`: one at a time. `analyze heap-dump` is offline only.
 - `kill -3` and JMX need no JDK in the image; `jstack` / `jmap` do (and `debug heap-dump` installs one, restarting the container).
 - Always `--output-dir /tmp/…`. HTML report opened only in an interactive terminal.
-- Exit 2 = nothing to analyze in the input (thread-dump, gc-logs, flight-recorder). `--json` everywhere but heap-dump.
+- Exit 2 = nothing to analyze in the input (thread-dump, gc-logs, flight-recorder, tcp-dump). `--json` everywhere but heap-dump.
 - Sources: [`commands/debug/`](https://github.com/vdesabou/kafka-docker-playground/tree/master/scripts/cli/src/commands/debug),
   [`commands/analyze/`](https://github.com/vdesabou/kafka-docker-playground/tree/master/scripts/cli/src/commands/analyze),
   `take_thread_dumps_with_kill_quit` in [`cli_function.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/lib/cli_function.sh),
