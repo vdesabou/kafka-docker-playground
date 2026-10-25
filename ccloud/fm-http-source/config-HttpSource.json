@@ -19,6 +19,7 @@
     "http.request.parameters.separator": "&",
     "http.request.sensitive.headers": "PASSWORD",
     "http.response.data.json.pointer": "STRING",
+    "http.template.variable.literal.substitution.enabled": "false",
     "https.ssl.enabled": "false",
     "https.ssl.key.password": "PASSWORD",
     "https.ssl.keystore.password": "PASSWORD",

@@ -265,6 +265,15 @@ The character that separates multiple distinct request parameters in the config 
 	 - Importance: MEDIUM
 	 - Required: false
 
+🔘 http.template.variable.literal.substitution.enabled
+
+Whether to substitute the values of the template variables `${offset}` and `${entityName}` literally. Set this to true if a value can contain `$` or `\`, for example a next page URL with `$skiptoken`. If false, a `$` in a value can make the connector fail, and a `\` is removed from the value.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
 ==========================
 Authentication and SSL
 ==========================
@@ -346,7 +355,7 @@ Authentication type of the endpoint. Valid values are ``none``, ``basic``, ``oau
 
 	 - Type: false
 	 - Default: STRING
-	 - Importance: The scope parameter sent to the service when fetching the OAuth2 token.
+	 - Importance: The scope parameter sent to the service when fetching the OAuth2 token. The default value is ``any``. To avoid passing ``any`` to the endpoint, set this property to an empty string when using the API or CLI. When using the Confluent Cloud Console, enter a single space (``" "``) instead of leaving the field empty.
 	 - Required: MEDIUM
 
 🔘 oauth2.client.mode
