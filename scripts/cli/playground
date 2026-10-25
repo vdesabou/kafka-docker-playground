@@ -186,6 +186,7 @@ playground_usage() {
   printf "  %s   🅾️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)\n" "$(green "analyze oracle-xstream-report")             "
   printf "  %s   📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n" "$(green "analyze cfk-bundle")                        "
   printf "  %s   🛩️ Analyze a Java Flight Recorder recording: where the time of the connector tasks goes\n" "$(green "analyze flight-recorder")                   "
+  printf "  %s   ✂️ Analyze a jscissors trace: what the traced methods did, call by call\n" "$(green "analyze jscissors")                         "
   printf "  %s   🦈 Analyze a network capture (.pcap, .pcapng): refused and reset connections, retransmissions, TLS alerts, DNS errors, Kafka and HTTP errors and response times\n" "$(green "analyze tcp-dump")                          "
   echo
   printf "%s\n" "$(bold "Debug commands:")"
@@ -204,7 +205,7 @@ playground_usage() {
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "debug block-traffic")                       "
   printf "  %s   🐌 Add latency, packet loss, corruption or a bandwidth limit using tc\n" "$(green "debug degrade-traffic")                     "
   printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "debug java-debug")                          "
-  printf "  %s   ✂️ jscissors is an instrumentation framework and can help to analyse control flow and perform some specific logging\n" "$(green "debug jscissors")                           "
+  printf "  %s   ✂️ Trace the calls of any method of a running JVM: arguments, return values, durations, exceptions, call tree\n" "$(green "debug jscissors")                           "
   printf "  %s   🛩️ Record a JVM with Java Flight Recorder, from --action start to --action stop\n" "$(green "debug flight-recorder")                     "
   printf "  %s   🧬 Set log level for any package\n" "$(green "debug log-level")                           "
   printf "  %s   🧱 CFK debug sub-commands\n" "$(green "debug cfk")                                 "
@@ -6195,7 +6196,7 @@ playground_tools_redos_check_usage() {
 playground_analyze_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze\n\n"
-    printf "  🔎 Analyze commands\n  \n  Turn what you collected into findings: each command reads a file (a\n  dump, a log, a bundle, a report, yours or one a customer sent) or takes\n  it from a running container, and prints a digest with what is wrong and\n  what to do, plus an HTML report to share (opened in your browser). They\n  all work offline, and --sample runs them on the samples shipped with the\n  playground, to see what they report.\n  \n    thread-dump             deadlocks, lock contention, stuck threads\n    gc-logs                 GC pauses, failures, live set, leak trend\n    heap-dump               Eclipse MAT leak suspects, retained sizes\n    logs                    ERROR/FATAL digest of logs, folders, zips\n    oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n    cfk-bundle              CFK support bundle: pods, events, CRs, logs\n    flight-recorder         JFR: where the time of the connector tasks goes\n    tcp-dump                network capture: resets, TLS alerts, Kafka errors\n  \n  To collect them: playground debug thread-dump, heap-dump, flight-recorder,\n  tcp-dump,\n  playground connector oracle-cdc-xstream generate-report,\n  playground debug cfk generate-bundle.\n\n"
+    printf "  🔎 Analyze commands\n  \n  Turn what you collected into findings: each command reads a file (a\n  dump, a log, a bundle, a report, yours or one a customer sent) or takes\n  it from a running container, and prints a digest with what is wrong and\n  what to do, plus an HTML report to share (opened in your browser). They\n  all work offline, and --sample runs them on the samples shipped with the\n  playground, to see what they report.\n  \n    thread-dump             deadlocks, lock contention, stuck threads\n    gc-logs                 GC pauses, failures, live set, leak trend\n    heap-dump               Eclipse MAT leak suspects, retained sizes\n    logs                    ERROR/FATAL digest of logs, folders, zips\n    oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n    cfk-bundle              CFK support bundle: pods, events, CRs, logs\n    flight-recorder         JFR: where the time of the connector tasks goes\n    tcp-dump                network capture: resets, TLS alerts, Kafka errors\n    jscissors               traced method calls: arguments, durations,\n  exceptions\n  \n  To collect them: playground debug thread-dump, heap-dump, flight-recorder,\n  tcp-dump, jscissors,\n  playground connector oracle-cdc-xstream generate-report,\n  playground debug cfk generate-bundle.\n\n"
   else
     printf "playground analyze - 🔎 Analyze commands\n\n"
   fi
@@ -6215,6 +6216,7 @@ playground_analyze_usage() {
   printf "  %s   🅾️ Analyze Oracle XStream CDC diagnostics reports (orclcdc_diag.sql)\n" "$(green "oracle-xstream-report")"
   printf "  %s   📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n" "$(green "cfk-bundle")           "
   printf "  %s   🛩️ Analyze a Java Flight Recorder recording: where the time of the connector tasks goes\n" "$(green "flight-recorder")      "
+  printf "  %s   ✂️ Analyze a jscissors trace: what the traced methods did, call by call\n" "$(green "jscissors")            "
   printf "  %s   🦈 Analyze a network capture (.pcap, .pcapng): refused and reset connections, retransmissions, TLS alerts, DNS errors, Kafka and HTTP errors and response times\n" "$(green "tcp-dump")             "
   echo
 
@@ -6798,6 +6800,11 @@ playground_analyze_flight_recorder_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--trace-method METHOD (repeatable)")"
+    printf "    🎯 Also record every call of this method, with its duration and its caller\n    (method tracing of JDK 25+, JEP 520: the cp 8.3.2 images ship JDK 25): a\n    class (all its methods), Class::method or @Annotation. The report gets a\n    \"Traced methods\" section: calls, total, avg, max, the slowest calls and\n    their stack. No argument values: for them, use playground debug jscissors\n    \n    🎓 Tip: you can pass multiple methods by specifying --trace-method multiple\n    times\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--threads REGEX")"
     printf "    🧵 Regular expression of the thread names to analyze (default: ^task-thread-,\n    or the task threads of --connector)\n"
     echo
@@ -6832,6 +6839,70 @@ playground_analyze_flight_recorder_usage() {
     printf "  playground analyze flight-recorder --file\n  flight-recorder-connect-2026-10-16-09-12-00.jfr\n"
     printf "  playground analyze flight-recorder -f\n  /tmp/playground-benchmark/my-sink-20261016-091200-connect.jfr -f\n  /tmp/playground-benchmark/my-sink-20261016-091200-connect2.jfr\n"
     printf "  playground analyze flight-recorder -f recording.jfr --threads '^pool-.*'\n  --json\n"
+    printf "  playground analyze flight-recorder -c connect --duration 60s --trace-method\n  io.confluent.connect.jdbc.sink.JdbcDbWriter::write\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_analyze_jscissors_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground analyze jscissors\n\n"
+    printf "  ✂️ Analyze a jscissors trace: what the traced methods did, call by call\n  \n  Reads the folder copied by playground debug jscissors --action stop (it runs\n  this command itself, unless --no-analyze), a pid-<pid> folder of it, or its\n  events.jsonl.\n  \n  📊 The methods by total time (calls, average, p95, max, self time and\n  exceptions: exact, counted by the agent for every call), the exceptions thrown\n  by the traced methods with their stack trace and the arguments of a failing\n  call, the calls still running when the trace stopped (a hang), the slowest\n  calls with their arguments and return values, the call trees of each thread,\n  the thread and heap dumps taken (with the command to analyze them), and\n  findings with next steps (no class matched the rules, limits reached, agent\n  errors...).\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal\n  \n  🧪 With --sample, it analyzes a trace shipped in tools/jscissors/samples: a\n  quick way to see what it reports.\n  \n  🔖 Exit code is 0 when the analysis completed, 2 when the folder holds no trace\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics\n\n"
+  else
+    printf "playground analyze jscissors - ✂️ Analyze a jscissors trace: what the traced methods did, call by call\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground analyze jscissors [OPTIONS]\n"
+  printf "  playground analyze jscissors --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--file, -f FILE")"
+    printf "    📂 Trace folder copied by playground debug jscissors --action stop\n    (jscissors-<container>-<date>), a pid-<pid> folder of it, or its\n    events.jsonl\n    \n    ❕ Provide only one of --file and --sample\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--sample, -s SAMPLE")"
+    printf "    🧪 Sample of tools/jscissors/samples\n    \n      filestream_sink_bad_json   FileStream sink with errors.tolerance=all,\n    records that are not JSON: the conversion of each record, the DataException\n    of the bad ones (with their content), the batches written\n"
+    printf "    %s\n" "Allowed: filestream_sink_bad_json"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
+    printf "    📂 Output directory for the HTML report (default:\n    ./jscissors-analysis-output)\n"
+    printf "    %s\n" "Default: ./jscissors-analysis-output"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🗂️  Output JSON (no text report, no HTML report)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--top TOP")"
+    printf "    📊 Number of rows per section (default: 15)\n"
+    printf "    %s\n" "Default: 15"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground analyze jscissors --sample filestream_sink_bad_json\n"
+    printf "  playground analyze jscissors -f jscissors-connect-2026-10-25-10-12-00\n"
+    printf "  playground analyze jscissors -f jscissors-connect-2026-10-25-10-12-00 --json\n"
     echo
 
   fi
@@ -6968,7 +7039,7 @@ playground_debug_usage() {
   printf "  %s   🚫 Blocking traffic using iptables\n" "$(green "block-traffic")           "
   printf "  %s   🐌 Add latency, packet loss, corruption or a bandwidth limit using tc\n" "$(green "degrade-traffic")         "
   printf "  %s   🤎 JVM arguments for SSL, Kerberos or Class Loading\n" "$(green "java-debug")              "
-  printf "  %s   ✂️ jscissors is an instrumentation framework and can help to analyse control flow and perform some specific logging\n" "$(green "jscissors")               "
+  printf "  %s   ✂️ Trace the calls of any method of a running JVM: arguments, return values, durations, exceptions, call tree\n" "$(green "jscissors")               "
   printf "  %s   🛩️ Record a JVM with Java Flight Recorder, from --action start to --action stop\n" "$(green "flight-recorder")         "
   printf "  %s   🧬 Set log level for any package\n" "$(green "log-level")               "
   echo
@@ -7806,9 +7877,9 @@ playground_debug_java_debug_usage() {
 playground_debug_jscissors_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground debug jscissors\n\n"
-    printf "  ✂️ jscissors is an instrumentation framework and can help to analyse control\n  flow and perform some specific logging\n  \n  * Control Flow Tracing: By dynamically instrumenting Java code, the tool\n  meticulously tracks the precise sequence of executed methods at runtime. This\n  capability offers invaluable insights into how an application navigates its\n  logic. The tool provides a way to generate a stack trace when a method is\n  called.\n  * Additional Logging: This enhanced logging capability provides a way to print\n  the input arguments to a method and return value from a method.\n  * Delve into heap area: Generating heap dump at a method call will be crucial\n  to analyze the state of JVM at a given point. The tool has capabilities to\n  generate thread dump as well to track the state of all the threads when a\n  method is called.\n\n"
+    printf "  ✂️ Trace the calls of any method of a running JVM: arguments, return values,\n  durations, exceptions, call tree\n  \n  A java agent (tools/jscissors/agent, byte-buddy) loaded in the JVM of the\n  container instruments the methods matching --class and --method, and records\n  every call with what the --operation flags ask for. For a window of any\n  length: --action start, reproduce the problem, --action stop, which copies the\n  trace to --output-dir and analyzes it with playground analyze jscissors\n  (methods by total time, exceptions, calls still running, slowest calls, call\n  trees, HTML report), unless --no-analyze. With --duration, start, wait and\n  stop in one command.\n  \n  💉 No restart: the agent is loaded in the running JVM with the attach protocol\n  (what jcmd does, without jcmd, which the cp images do not have), or over JMX\n  for a JDK older than 16. --action stop restores the original classes. Starting\n  again replaces the rules. With --restart, the container is recreated with the\n  agent in JAVA_TOOL_OPTIONS, to trace the startup of the JVM too (or when the\n  JVM refuses the attach).\n  \n  🎯 --class and --method are exact names, or java regular expressions as soon as\n  they hold other characters than letters, digits, '.', '$' and '_'\n  (io.confluent.connect.jdbc.*, .*[Ww]rite.*). Only concrete methods are traced\n  (trace the implementation class, not the interface), constructors and JDK\n  classes (java.*, javax.*) are not. A class loaded after the start is\n  instrumented when it loads.\n  \n  🛡️ Safe by default: values are cut to --max-value-length and the secrets found\n  in them are masked (passwords of maps, JAAS, connection strings), at most\n  --max-calls calls (--max-calls-per-method per method) are recorded with their\n  details (every call is counted in the statistics), or only the ones that throw\n  (--only-failed) or are slow (--slower-than), at most 10 thread dumps and 1\n  heap dump, the agent can never throw in the traced code, and a toString() of\n  an argument is never traced. Trace what you need: a regex matching thousands\n  of hot methods slows the JVM down.\n  \n  📂 In the trace folder (jscissors-<container>-<date>/pid-<pid>/): events.jsonl\n  (one event per call enter / exit / dump), summary.json (statistics),\n  agent.log, instrumented.txt, dumps/, and the HTML report.\n  \n  🔖 The session of each container is kept in playground.ini\n  (jscissors.<container>), --action status shows it with the calls so far. The\n  agent jar is built from tools/jscissors/agent with maven in a container the\n  first time (and after a change of its sources).\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics\n\n"
   else
-    printf "playground debug jscissors - ✂️ jscissors is an instrumentation framework and can help to analyse control flow and perform some specific logging\n\n"
+    printf "playground debug jscissors - ✂️ Trace the calls of any method of a running JVM: arguments, return values, durations, exceptions, call tree\n\n"
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
@@ -7829,28 +7900,85 @@ playground_debug_jscissors_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--operation OPERATION (repeatable)")"
-    printf "    🥼 operation to perform:\n    \n    * VALUES: print method input arguments\n    * RETURN_VALUE: print method return value\n    * THREADS: print thread dump when method is called\n    * HEAP: print heap dump when method is called\n    * STACK: print stack trace when method is called\n    * EXCEPTION_HEAP: print heap dump when an exception is thrown during method\n    execution\n    * DELAY: print time taken for method execution\n    \n    Default values: VALUES, RETURN_VALUE, DELAY and STACK\n    \n    🎓 Tip: you can pass multiple operations by specifying --operation multiple\n    times\n"
-    printf "    %s\n" "Allowed: VALUES, RETURN_VALUE, THREADS, HEAP, STACK, EXCEPTION_HEAP, DELAY"
-    printf "    %s\n" "Default: VALUES, RETURN_VALUE, DELAY, STACK"
+    printf "  %s\n" "$(magenta "--action ACTION")"
+    printf "    🟢 start (default), stop (copy the trace and analyze it) or status\n    \n    enable and disable are the former names of start and stop\n"
+    printf "    %s\n" "Allowed: start, stop, status, enable, disable"
+    printf "    %s\n" "Default: start"
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--class CLASS (required)")"
-    printf "    class name to instrument (it supports regex like oracle.jdbc.*)\n"
+    printf "  %s\n" "$(magenta "--class CLASS (repeatable)")"
+    printf "    🎯 Class to trace: exact name (io.confluent.connect.jdbc.sink.JdbcDbWriter, a\n    nested class with $), or a regex (io.confluent.connect.jdbc.sink.*)\n    \n    🎓 Tip: you can pass multiple classes by specifying --class multiple times\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--method METHOD (repeatable)")"
-    printf "    method name to instrument (it supports regex like .*find.*)\n    \n    🎓 Tip: you can pass multiple methods by specifying --method multiple times\n"
+    printf "    🎯 Method to trace, in each --class: exact name (write) or regex\n    (.*[Ww]rite.*), default: every method\n    \n    🎓 Tip: you can pass multiple methods by specifying --method multiple times\n"
     printf "    %s\n" "Default: .*"
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--action ACTION")"
-    printf "    🟢 enable or disable\n"
-    printf "    %s\n" "Allowed: enable, disable"
-    printf "    %s\n" "Default: enable"
+    printf "  %s\n" "$(magenta "--operation OPERATION (repeatable)")"
+    printf "    🥼 What to record on top of each call (its duration, its exception and its\n    place in the call tree are always recorded):\n    \n    * VALUES: arguments\n    * RETURN_VALUE: return value\n    * STACK: stack trace of the caller\n    * THREADS / RETURN_THREADS / EXCEPTION_THREADS: thread dump when the method\n    is called / returns / throws\n    * HEAP / RETURN_HEAP / EXCEPTION_HEAP: heap dump when the method is called /\n    returns / throws\n    * DELAY: duration (always recorded, kept for compatibility)\n    \n    Default values: VALUES and RETURN_VALUE\n    \n    🎓 Tip: you can pass multiple operations by specifying --operation multiple\n    times\n"
+    printf "    %s\n" "Allowed: VALUES, RETURN_VALUE, STACK, THREADS, RETURN_THREADS, EXCEPTION_THREADS, HEAP, RETURN_HEAP, EXCEPTION_HEAP, DELAY"
+    printf "    %s\n" "Default: VALUES, RETURN_VALUE"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--config-file CONFIG_FILE")"
+    printf "    📜 Rules file, for different operations per class: one class{method}=OP+OP\n    rule per line\n    (io.confluent.connect.jdbc.sink.JdbcDbWriter{write}=VALUES+STACK), added to\n    the rules of --class\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--duration DURATION")"
+    printf "    ⏱️ With --action start: trace for this long (in seconds, or with a s/m/h\n    suffix), then stop and analyze\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--restart")"
+    printf "    🔁 Load the agent at the start of the JVM: the container is recreated (and\n    recreated again without the agent by --action stop). To trace the startup,\n    or when the JVM refuses the attach\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--pid PID")"
+    printf "    🔢 Process to attach to in the container (default: auto, the oldest java\n    process)\n"
+    printf "    %s\n" "Default: auto"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-calls MAX_CALLS")"
+    printf "    ✂️ Calls recorded with their details in events.jsonl (default: 50000), the\n    next ones are only counted in the statistics\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-calls-per-method MAX_CALLS_PER_METHOD")"
+    printf "    ✂️ Calls of one method recorded with their details (default: 2000), so that\n    a hot method does not use the whole budget\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-value-length MAX_VALUE_LENGTH")"
+    printf "    ✂️ Characters kept of each argument, return value and exception message\n    (default: 300)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--only-failed")"
+    printf "    🎯 Record with their details (arguments, return value, stack) only the calls\n    that throw an exception: the others are only counted in the statistics. With\n    --slower-than, the calls that throw or are slow\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--slower-than DURATION")"
+    printf "    🐢 Record with their details only the calls that take at least this long\n    (500ms, 2s, 1m): the others are only counted in the statistics. With\n    --only-failed, the calls that are slow or throw\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
+    printf "    📂 Folder for the trace and its HTML report, used by --action stop (default:\n    current folder)\n"
+    printf "    %s\n" "Default: ."
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-analyze")"
+    printf "    🙈 With --action stop, only copy the trace, do not analyze it\n"
     echo
 
     # :command.usage_fixed_flags
@@ -7860,8 +7988,14 @@ playground_debug_jscissors_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground debug jscissors\n"
-    printf "  playground debug jscissors --container broker\n"
+    printf "  playground debug jscissors --class io.confluent.connect.jdbc.sink.JdbcDbWriter\n  --method write --action start\n"
+    printf "  playground debug jscissors --action stop\n"
+    printf "  playground debug jscissors --action status\n"
+    printf "  playground debug jscissors --class 'io.confluent.connect.jdbc.sink.*'\n  --duration 60s\n"
+    printf "  playground debug jscissors --class\n  org.apache.kafka.connect.runtime.WorkerSinkTask --method\n  'poll|convertMessages' --operation VALUES --operation EXCEPTION_THREADS\n"
+    printf "  playground debug jscissors -c broker --class kafka.server.KafkaApis --method\n  handleProduceRequest --restart\n"
+    printf "  playground debug jscissors --class\n  io.confluent.connect.jdbc.sink.BufferedRecords --only-failed --duration 2m\n"
+    printf "  playground debug jscissors --class 'io.confluent.connect.s3.*' --slower-than\n  500ms --action start\n"
     echo
 
   fi
@@ -7907,6 +8041,11 @@ playground_debug_flight_recorder_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--trace-method METHOD (repeatable)")"
+    printf "    🎯 With --action start, also record every call of this method, with its\n    duration and its caller (method tracing of JDK 25+, JEP 520: the cp 8.3.2\n    images ship JDK 25): a class (all its methods), Class::method or\n    @Annotation. The report gets a \"Traced methods\" section: calls, total, avg,\n    max, the slowest calls and their stack. No argument values: for them, use\n    playground debug jscissors\n    \n    🎓 Tip: you can pass multiple methods by specifying --trace-method multiple\n    times\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
     printf "    📂 Folder for the .jfr and the HTML report of the analysis, used by --action\n    stop (default: current folder)\n"
     printf "    %s\n" "Default: ."
@@ -7929,6 +8068,7 @@ playground_debug_flight_recorder_usage() {
     printf "  playground debug flight-recorder --action status\n"
     printf "  playground debug flight-recorder -c connect -c connect2 --action start\n  --settings profile\n"
     printf "  playground debug flight-recorder --action stop --output-dir /tmp/jfr\n  --no-analyze\n"
+    printf "  playground debug flight-recorder --action start --trace-method\n  io.confluent.connect.jdbc.sink.BufferedRecords --trace-method\n  io.confluent.connect.jdbc.sink.JdbcDbWriter::write\n"
     echo
 
   fi
@@ -20360,6 +20500,84 @@ function jfr_digest () {
   return $ret
 }
 JFR_ANALYZER_IMAGE="eclipse-temurin:25-jdk"
+
+# --trace-method of the flight recorder commands: the .jfc $1 with the method tracing of JDK 25 (JEP 520) for the
+# filters $2... (a class, Class::method or @Annotation): jdk.MethodTrace records every call of the methods with its
+# duration and caller stack, jdk.MethodTiming the calls and min / avg / max of each method. Prints the path of the .jfc
+function jfr_settings_with_method_trace () {
+  local base="$1" filter jfc
+  shift
+  for filter in "$@"
+  do
+    if [[ ! "$filter" =~ ^@?[A-Za-z0-9_.$]+(::[A-Za-z0-9_$\<\>]+)?$ ]]
+    then
+      logerror "❌ --trace-method $filter: expected a class (io.confluent.connect.jdbc.sink.JdbcDbWriter), Class::method or @Annotation" >&2
+      return 1
+    fi
+  done
+  filter=$(IFS=';'; echo "$*")
+  jfc="$(mktemp -t playground-trace-XXXXXXXXXX).jfc"
+  sed '/<\/configuration>/d' "$base" > "$jfc"
+  {
+    echo "  <event name='jdk.MethodTrace'><setting name='enabled'>true</setting><setting name='filter'>$filter</setting><setting name='stackTrace'>true</setting><setting name='threshold'>0 ms</setting></event>"
+    echo "  <event name='jdk.MethodTiming'><setting name='enabled'>true</setting><setting name='filter'>$filter</setting><setting name='period'>1 s</setting></event>"
+    echo "</configuration>"
+  } >> "$jfc"
+  echo "$jfc"
+}
+
+# major version of the JDK of the java process of a container (8 for 1.8), empty when it cannot be read
+function container_java_major () {
+  local version
+  version=$(playground --output-level ERROR container exec --container "$1" --command "java -version 2>&1" 2> /dev/null | sed -n 's/.*version "\([0-9.]*\).*/\1/p' | head -1)
+  case "$version" in
+    1.*) echo "${version#1.}" | cut -d . -f 1 ;;
+    *) echo "${version%%.*}" ;;
+  esac
+}
+
+# --trace-method needs the method tracing of JDK 25 (JEP 520): exits with the alternative when the JDK is older
+function check_method_trace_supported () {
+  local container="$1" major
+  major=$(container_java_major "$container")
+  if [[ -n "$major" && "$major" -lt 25 ]]
+  then
+    logerror "❌ --trace-method needs JDK 25 or later (method tracing, JEP 520): $container runs JDK $major"
+    log "💡 playground debug jscissors -c $container --class <class> traces the calls on any JDK (8+), with their arguments"
+    exit 1
+  fi
+}
+
+# java agent of playground debug jscissors, built from tools/jscissors/agent with maven in a container the first time
+# and after each change of its sources (no jar in the repository): prints the path of the jar. The sources are mounted
+# read only and the jar comes back on stdout, so it works with podman and from any folder
+function jscissors_agent_jar () {
+  local src="$root_folder/tools/jscissors/agent" dir="/tmp/playground-jscissors" sum jar log
+  sum=$(cd "$src" && find pom.xml src -type f | LC_ALL=C sort | xargs cat | cksum | cut -d ' ' -f 1)
+  jar="$dir/jscissors-$sum.jar"
+  if [ -s "$jar" ]
+  then
+    echo "$jar"
+    return 0
+  fi
+  mkdir -p "$dir"
+  log "📦 building the jscissors agent with maven ($JSCISSORS_BUILD_IMAGE), first run after a change of tools/jscissors/agent only" >&2
+  log=$(mktemp -t jscissors-build-XXXXXXXXXX)
+  if docker run --rm -v "$src:/src:ro" -v playground-jscissors-m2:/root/.m2 "$JSCISSORS_BUILD_IMAGE" \
+      sh -c 'cp -r /src /build && cd /build && mvn -q -B package >&2 && cat target/jscissors.jar' > "$jar.tmp" 2> "$log" \
+      && unzip -l "$jar.tmp" 2> /dev/null | grep -q 'jscissors/Agent.class'
+  then
+    mv "$jar.tmp" "$jar"
+    rm -f "$log"
+    echo "$jar"
+    return 0
+  fi
+  rm -f "$jar.tmp"
+  logerror "❌ failed to build the jscissors agent, see $log" >&2
+  tail -20 "$log" >&2
+  return 1
+}
+JSCISSORS_BUILD_IMAGE="maven:3.9.11-eclipse-temurin-17"
 
 # one sample of the JMX metrics of the tasks of a connector, printed as space separated values:
 #   1 records total (summed over the tasks)    2 batch avg ms        3 running ratio avg    4 cpu % of one core
@@ -42316,6 +42534,7 @@ playground_analyze_flight_recorder_command() {
   output_dir="${args[--output-dir]}"
   json_out="${args[--json]}"
   top="${args[--top]}"
+  eval "trace_methods=(${args[--trace-method]})"
 
   set +e
 
@@ -42356,6 +42575,10 @@ playground_analyze_flight_recorder_command() {
   fi
   [[ -z "$threads" ]] && threads="^task-thread-"
 
+  if [[ ${#trace_methods[@]} -gt 0 && -z "$container" ]]; then
+      logwarn "⚠️ --trace-method is only used when recording a container (-c): a recording made with method tracing already holds its events"
+  fi
+
   # fzf completion returns <display>@<path>
   for i in "${!file_array[@]}"
   do
@@ -42372,8 +42595,14 @@ playground_analyze_flight_recorder_command() {
           exit 1
       fi
       workers="$container $port"
+      settings_file=""
+      if [[ ${#trace_methods[@]} -gt 0 ]]; then
+          check_method_trace_supported "$container"
+          settings_file=$(jfr_settings_with_method_trace "$root_folder/tools/jfr-analyzer/playground.jfc" "${trace_methods[@]}") || exit 1
+          log "🎯 tracing every call of ${trace_methods[*]} (JDK 25 method tracing)"
+      fi
       benchmark_jmx_init "$workers"
-      recordings=$(jfr_jmx_start "$workers")
+      recordings=$(jfr_jmx_start "$workers" "$settings_file")
       if [[ $? -ne 0 || -z "$recordings" ]]; then
           logerror "❌ could not start the flight recorder of $container over JMX (localhost:$port): JDK 8 before 8u262, or JMX not reachable"
           exit 1
@@ -42454,6 +42683,76 @@ playground_analyze_flight_recorder_command() {
   exit_code=$?
   if [[ $exit_code -ne 0 ]]; then
       logerror "❌ flight recording analysis failed (exit code $exit_code)"
+      exit $exit_code
+  fi
+
+  if [[ -f "$html_out" ]]; then
+      log ""
+      log "✅ HTML report saved: $html_out"
+      # only open a browser in an interactive terminal
+      if [[ -t 1 ]] && command -v open &>/dev/null; then
+          log "🌐 Opening report in browser..."
+          open "$html_out"
+      else
+          log "🔗 Open in browser: file://$html_out"
+      fi
+  fi
+
+  exit 0
+
+}
+
+# :command.function
+playground_analyze_jscissors_command() {
+
+  # src/commands/analyze/jscissors.sh
+  file="${args[--file]}"
+  sample="${args[--sample]}"
+  output_dir="${args[--output-dir]}"
+  json_out="${args[--json]}"
+  top="${args[--top]}"
+
+  set +e
+
+  if [[ -n "$file" && -n "$sample" ]]; then
+      logerror "❌ Provide either --file or --sample, not both"
+      exit 1
+  fi
+  if [[ -z "$file" && -z "$sample" ]]; then
+      logerror "❌ Must provide --file <trace folder> (copied by playground debug jscissors --action stop), or --sample demo to try it"
+      exit 1
+  fi
+  if [[ -n "$sample" ]]; then
+      file="$root_folder/tools/jscissors/samples/$sample"
+  fi
+  # fzf completion returns <display>@<path>
+  if [[ ! -e "$file" && "$file" == *"@"* ]]; then
+      file=$(echo "$file" | cut -d "@" -f 2)
+  fi
+  if [[ ! -e "$file" ]]; then
+      logerror "❌ $file not found"
+      exit 1
+  fi
+
+  if ! command -v python3 &>/dev/null; then
+      logerror "❌ python3 is required but not found on PATH"
+      exit 1
+  fi
+  analyzer="$root_folder/tools/jscissors/jscissors_report.py"
+
+  if [[ -n "$json_out" ]]; then
+      python3 -I "$analyzer" --dir "$file" --top "$top" --json
+      exit $?
+  fi
+
+  mkdir -p "$output_dir"
+  output_dir_abs=$(cd "$output_dir" && pwd)
+  html_out="$output_dir_abs/$(basename "$(cd "$(dirname "$file")" && pwd)/$(basename "$file")")-jscissors-report.html"
+
+  python3 -I "$analyzer" --dir "$file" --top "$top" --html-out "$html_out"
+  exit_code=$?
+  if [[ $exit_code -ne 0 ]]; then
+      logerror "❌ jscissors trace analysis failed (exit code $exit_code)"
       exit $exit_code
   fi
 
@@ -44509,60 +44808,323 @@ playground_debug_jscissors_command() {
 
   # src/commands/debug/jscissors.sh
   containers="${args[--container]}"
-  # Convert the space delimited string to an array
-  eval "operations=(${args[--operation]})"
-  class="${args[--class]}"
-
-  # Convert the space delimited string to an array
-  eval "methods=(${args[--method]})"
-
   action="${args[--action]}"
+  # Convert the space delimited strings to arrays
+  eval "operations=(${args[--operation]})"
+  eval "classes=(${args[--class]})"
+  eval "methods=(${args[--method]})"
+  config_file="${args[--config-file]}"
+  duration="${args[--duration]}"
+  restart="${args[--restart]}"
+  pid="${args[--pid]}"
+  max_calls="${args[--max-calls]}"
+  max_calls_per_method="${args[--max-calls-per-method]}"
+  max_value_length="${args[--max-value-length]}"
+  only_failed="${args[--only-failed]}"
+  slower_than="${args[--slower-than]}"
+  output_dir="${args[--output-dir]}"
+  no_analyze="${args[--no-analyze]}"
+
+  # names of jscissors 1.0
+  case "$action" in
+      enable) action="start" ;;
+      disable) action="stop" ;;
+  esac
 
   get_environment_used
 
   # Convert space-separated string to array
   IFS=' ' read -ra container_array <<< "$containers"
 
+  # in the container: the agent, its rules and the files of the session (out/pid-<pid>/)
+  remote_dir="/tmp/jscissors"
+  agent_args="config=$remote_dir/jscissors.props,out=$remote_dir/out"
+
+  function format_epoch () {
+      date -r "$1" "$2" 2> /dev/null || date -d "@$1" "$2" 2> /dev/null || echo "$1"
+  }
+
+  function jmx_port_of () {
+      if [[ "$environment" == cfk* ]]
+      then
+          return 0
+      fi
+      docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$1" 2> /dev/null | sed -n 's/^[A-Z_]*JMX_PORT=//p' | head -1
+  }
+
+  function in_container () {
+      playground --output-level ERROR container exec --container "$1" --command "$2"
+  }
+
+  # loads the agent in the running JVM of the container (jscissors.Attach), with the agent arguments $2
+  function attach () {
+      local container="$1" arguments="$2" port jmx_arg=""
+      port=$(jmx_port_of "$container")
+      if [[ -n "$port" ]]
+      then
+          jmx_arg="--jmx localhost:$port"
+      fi
+      in_container "$container" "env -u JAVA_TOOL_OPTIONS -u _JAVA_OPTIONS java -Xmx64m -cp $remote_dir/jscissors.jar jscissors.Attach --pid $pid $jmx_arg --agent-args $arguments"
+  }
+
+  # summary.json of the traced JVM: with --restart, every JVM started in the container (kafka tools...) loads the agent
+  # too, so the one with the most calls, then the most classes instrumented, then the oldest
+  function summary_of () {
+      in_container "$1" "cat $remote_dir/out/pid-*/summary.json 2> /dev/null" 2> /dev/null \
+          | jq -c -s 'sort_by(-.calls, -(.instrumented | length), .pid) | first // empty' 2> /dev/null
+  }
+
+  function write_rules () {
+      local file="$1" class method operation_string
+      operation_string=$(IFS=+; echo "${operations[*]}")
+      {
+          echo "# written by playground debug jscissors on $(date '+%Y-%m-%d %H:%M:%S')"
+          if [[ -n "$config_file" ]]
+          then
+              cat "$config_file"
+          fi
+          for class in "${classes[@]}"
+          do
+              for method in "${methods[@]}"
+              do
+                  echo "${class}{${method}}=${operation_string}"
+              done
+          done
+          if [[ -n "$max_calls" ]]
+          then
+              echo "jscissors.maxCalls=$max_calls"
+          fi
+          if [[ -n "$max_calls_per_method" ]]
+          then
+              echo "jscissors.maxCallsPerMethod=$max_calls_per_method"
+          fi
+          if [[ -n "$max_value_length" ]]
+          then
+              echo "jscissors.maxValueLength=$max_value_length"
+          fi
+          if [[ -n "$only_failed" ]]
+          then
+              echo "jscissors.onlyFailed=1"
+          fi
+          if [[ -n "$slower_than_ms" ]]
+          then
+              echo "jscissors.slowerThanMs=$slower_than_ms"
+          fi
+      } > "$file"
+  }
+
+  # prints what the agent instrumented, from its summary.json
+  function report_start () {
+      local container="$1" summary="$2" instrumented
+      instrumented=$(echo "$summary" | jq -r '.instrumented | length' 2> /dev/null)
+      echo "$summary" | jq -r '.warnings[]?, .errors[]?' 2> /dev/null | while read -r line
+      do
+          logwarn "⚠️ $line"
+      done
+      if [[ "$instrumented" == "0" ]]
+      then
+          logwarn "🔍 no class of $container matches the rules yet: they are instrumented when they load (start the connector now), unless the class name is wrong (exact name, or a regex like io.confluent.connect.jdbc.*) or it is a JDK class (java.*: not supported)"
+      else
+          log "✂️ $instrumented class(es) instrumented in $container: $(echo "$summary" | jq -r '.instrumented[:5] | join(", ")')$([[ $instrumented -gt 5 ]] && echo ", ...")"
+      fi
+  }
+
+  function start_one () {
+      local container="$1" stage="/tmp/playground-jscissors/$1" summary output i
+      rm -rf "$stage"
+      mkdir -p "$stage/out"
+      cp "$jar" "$stage/jscissors.jar"
+      write_rules "$stage/jscissors.props"
+      log "✂️ rules for $container:"
+      grep -v '^#' "$stage/jscissors.props" | sed 's/^/     /'
+
+      if [[ -n "$restart" ]]
+      then
+          # the container is recreated with the agent in JAVA_TOOL_OPTIONS: the startup of the JVM is traced too.
+          # docker: $stage is mounted on $remote_dir (written by appuser, uid 1000); cfk: copied in a new image
+          chmod -R a+rwX "$stage"
+          log "🔁 recreating $container with the agent loaded at the start of the JVM"
+          if ! playground container set-environment-variables --container "$container" --env "JAVA_TOOL_OPTIONS: -javaagent:$remote_dir/jscissors.jar=$agent_args" --mount-jscissors-files
+          then
+              logerror "❌ could not recreate $container with the agent"
+              exit 1
+          fi
+          playground state set "jscissors.$container" "restart $(date +%s)"
+      else
+          in_container "$container" "mkdir -p $remote_dir && rm -rf $remote_dir/out $remote_dir/jscissors.jar $remote_dir/jscissors.props"
+          playground container cp --source "$stage/jscissors.jar" --destination "$container:$remote_dir/jscissors.jar" > /dev/null 2>&1
+          playground container cp --source "$stage/jscissors.props" --destination "$container:$remote_dir/jscissors.props" > /dev/null 2>&1
+          log "💉 loading the agent in the running JVM of $container (no restart)"
+          if ! output=$(attach "$container" "$agent_args" 2>&1)
+          then
+              echo "$output" | sed 's/^/     /'
+              logerror "❌ could not load the agent in $container: the JVM refuses the attach (-XX:+DisableAttachMechanism), or its JDK is older than 16 and it has no JMX port"
+              log "💡 use --restart to load the agent at the start of the JVM (the container is recreated)"
+              exit 1
+          fi
+          echo "$output" | sed 's/^/     /'
+          playground state set "jscissors.$container" "attach $(date +%s)"
+      fi
+
+      for i in $(seq 1 30)
+      do
+          summary=$(summary_of "$container")
+          [[ -n "$summary" ]] && break
+          sleep 2
+      done
+      if [[ -z "$summary" ]]
+      then
+          logerror "❌ the agent did not start in $container, see: playground container logs -c $container --grep jscissors --no-follow"
+          exit 1
+      fi
+      report_start "$container" "$summary"
+  }
+
+  function stop_one () {
+      local container="$1" stage="/tmp/playground-jscissors/$1" state mode started_at dest file files output
+      state=$(playground state get "jscissors.$container" 2> /dev/null)
+      read -r mode started_at <<< "$state"
+      if [[ -z "$state" ]]
+      then
+          logerror "✂️ jscissors is not started on $container !"
+          exit 1
+      fi
+      dest="$output_dir/jscissors-$container-$(date '+%Y-%m-%d-%H-%M-%S')"
+      mkdir -p "$dest"
+
+      # stops the session: original classes restored, final summary.json written
+      if ! output=$(attach "$container" "action=stop" 2>&1)
+      then
+          echo "$output" | sed 's/^/     /'
+          logwarn "⚠️ could not stop the agent in $container cleanly: copying what it wrote so far"
+      fi
+      if [[ "$mode" == "restart" && "$environment" != cfk* ]]
+      then
+          # mounted from the host: the files are already there, and survive the recreation of the container
+          log "🧽 recreating $container without the agent"
+          playground container set-environment-variables --container "$container" --restore-original-values
+          cp -R "$stage/out/." "$dest/"
+      else
+          files=$(in_container "$container" "cd $remote_dir/out 2> /dev/null && find . -type f")
+          for file in $files
+          do
+              mkdir -p "$dest/$(dirname "$file")"
+              playground container cp --source "$container:$remote_dir/out/${file#./}" --destination "$dest/${file#./}" > /dev/null 2>&1
+          done
+          in_container "$container" "rm -rf $remote_dir/out" > /dev/null 2>&1
+          if [[ "$mode" == "restart" ]]
+          then
+              log "🧽 restoring $container without the agent"
+              playground container set-environment-variables --container "$container" --restore-original-values
+          fi
+      fi
+      playground state del "jscissors.$container" > /dev/null 2>&1
+      if ! ls "$dest"/pid-*/summary.json > /dev/null 2>&1
+      then
+          logerror "❌ no trace copied from $container to $dest"
+          exit 1
+      fi
+      log "✂️ trace of $container ($(( $(date +%s) - started_at ))s) copied to $dest"
+      if [[ -n "$no_analyze" ]]
+      then
+          log "🔎 analyze it with: playground analyze jscissors -f $dest"
+          return
+      fi
+      playground analyze jscissors -f "$dest" --output-dir "$dest" || logwarn "⚠️ the trace could not be analyzed: the raw events are in $dest/pid-*/events.jsonl"
+  }
+
+  function status_one () {
+      local container="$1" state mode started_at summary
+      state=$(playground state get "jscissors.$container" 2> /dev/null)
+      read -r mode started_at <<< "$state"
+      if [[ -z "$state" ]]
+      then
+          log "✂️ jscissors is not started on $container by the playground"
+          return
+      fi
+      summary=$(summary_of "$container")
+      log "✂️ jscissors running on $container since $(format_epoch "$started_at" '+%Y-%m-%d %H:%M:%S') ($(( $(date +%s) - started_at ))s), $([[ "$mode" == "restart" ]] && echo "loaded at the start of the JVM" || echo "attached")"
+      if [[ -n "$summary" ]]
+      then
+          echo "$summary" | jq -r '"     \(.calls) call(s) (summary refreshed every 5s), \(.calls_recorded) with details, \(.instrumented | length) class(es) instrumented, \(.error_count) agent error(s)", (.rules[] | "     rule \(.)")'
+          echo "$summary" | jq -r '.methods | sort_by(-.total_us) | .[:5][] | "     \(.calls) call(s) \(.total_us / 1000 | floor) ms  \(.class | split(".") | last).\(.method)"'
+      fi
+  }
+
+  # --slower-than: 500ms, 2s, 1m or a number of milliseconds
+  slower_than_ms=""
+  if [[ -n "$slower_than" ]]
+  then
+      case "$slower_than" in
+          *ms) slower_than_ms="${slower_than%ms}" ;;
+          *s|*m|*h) slower_than_ms=$(( $(duration_to_seconds "$slower_than") * 1000 )) ;;
+          *) slower_than_ms="$slower_than" ;;
+      esac
+      if ! [[ "$slower_than_ms" =~ ^[0-9]+$ ]] || [[ "$slower_than_ms" -eq 0 ]]
+      then
+          logerror "❌ --slower-than $slower_than: expected a duration like 500ms, 2s or 1m"
+          exit 1
+      fi
+  fi
+
+  if [[ "$action" == "start" ]]
+  then
+      if [[ ${#classes[@]} -eq 0 && -z "$config_file" ]]
+      then
+          logerror "❌ --class (or --config-file) is required with --action start"
+          exit 1
+      fi
+      if [[ -n "$config_file" && ! -f "$config_file" ]]
+      then
+          logerror "❌ --config-file $config_file not found"
+          exit 1
+      fi
+      if ! jar=$(jscissors_agent_jar)
+      then
+          exit 1
+      fi
+  fi
+
+  mkdir -p "$output_dir"
+  output_dir=$(cd "$output_dir" && pwd)
+
   for container in "${container_array[@]}"
   do
-      if [[ "$action" == "enable" ]]
-      then
-          operation_string=$(printf "+%s" "${operations[@]}")
-          methods_string=$(printf "%s," "${methods[@]}")
-          # remove + at beginning and end of operation_string
-          operation_string=${operation_string%+}
-          operation_string=${operation_string#+}
-          # remove trailing comma from methods string
-          methods_string=${methods_string%,}
-
-          log "🔧 enabling jscissors for container ${container} with operation(s) ${operation_string}, class ${class} and method(s) ${methods_string}"
-
-          : > /tmp/scissors.props
-          for method in "${methods[@]}"
-          do
-              echo "${class}{${method}}=$operation_string" >> /tmp/scissors.props
-          done
-
-          cp ${root_folder}/scripts/cli/src/jscissors/jscissors-1.0-SNAPSHOT.jar /tmp/
-          playground container set-environment-variables --container "${container}" --env "_JAVA_OPTIONS: -javaagent:/tmp/jscissors-1.0-SNAPSHOT.jar=configFile=/tmp/scissors.props" --mount-jscissors-files
-
-          playground container logs --container "${container}" --wait-for-log "Core Logger" --max-wait 30
-
-          scissors_file=$(playground --output-level WARN container logs --container "${container}" --wait-for-log "Core Logger" | tail -1 | cut -d " " -f 4)
-
-          log "✂️ jscissors file is available ${scissors_file}"
-          if [[ "$environment" == cfk* ]]
-          then
-              local_scissors_file="/tmp/jscissors-${container}-$(date '+%Y-%m-%d-%H-%M-%S').log"
-              playground --output-level WARN container cp --source "${container}:${scissors_file}" --destination "${local_scissors_file}"
-              playground open --file "${local_scissors_file}"
-          else
-              playground open --file "${scissors_file}"
-          fi
-      else
-          playground container set-environment-variables --container "${container}" --restore-original-values
-      fi
+      case "${action}" in
+          start)
+              if [[ -n "$(playground state get "jscissors.$container" 2> /dev/null)" ]]
+              then
+                  logwarn "✂️ jscissors is already started on $container: its rules are replaced (the trace so far is discarded)"
+              fi
+              start_one "$container"
+          ;;
+          stop)
+              stop_one "$container"
+          ;;
+          status)
+              status_one "$container"
+          ;;
+          *)
+              logerror "should not happen"
+              exit 1
+          ;;
+      esac
   done
+
+  if [[ "$action" == "start" && -n "$duration" ]]
+  then
+      seconds=$(duration_to_seconds "$duration")
+      log "⏱️ tracing for ${seconds}s, then stopping and analyzing (reproduce the problem now)"
+      sleep "$seconds"
+      for container in "${container_array[@]}"
+      do
+          stop_one "$container"
+      done
+  elif [[ "$action" == "start" ]]
+  then
+      log "🛑 stop it, copy the trace and analyze it with: playground debug jscissors --action stop$(for c in "${container_array[@]}"; do printf ' -c %s' "$c"; done)"
+  fi
+
 }
 
 # :command.function
@@ -44574,6 +45136,7 @@ playground_debug_flight_recorder_command() {
   settings="${args[--settings]}"
   output_dir="${args[--output-dir]}"
   no_analyze="${args[--no-analyze]}"
+  eval "trace_methods=(${args[--trace-method]})"
 
   # Convert space-separated string to array
   IFS=' ' read -ra container_array <<< "$containers"
@@ -44586,6 +45149,21 @@ playground_debug_flight_recorder_command() {
   esac
 
   get_environment_used
+
+  if [[ ${#trace_methods[@]} -gt 0 && "$action" == "start" ]]
+  then
+      if [[ -z "$settings_file" ]]
+      then
+          logerror "❌ --trace-method needs --settings playground or all (the settings $settings of the JDK cannot be extended)"
+          exit 1
+      fi
+      for container in "${container_array[@]}"
+      do
+          check_method_trace_supported "$container"
+      done
+      settings_file=$(jfr_settings_with_method_trace "$settings_file" "${trace_methods[@]}") || exit 1
+      log "🎯 tracing every call of ${trace_methods[*]} (JDK 25 method tracing)"
+  fi
 
   # the recording of each container is kept in playground.ini, flight_recorder.<container>:
   #   jmx <jmx port> <recording id> <settings> <start epoch>   recording driven over JMX (FlightRecorderMXBean)
@@ -46850,8 +47428,8 @@ playground_container_set_environment_variables_command() {
           local existing_backup
           local local_image
           local build_dir
-          local jar_source="/tmp/jscissors-1.0-SNAPSHOT.jar"
-          local props_source="/tmp/scissors.props"
+          # staged by playground debug jscissors --restart
+          local stage_dir="/tmp/playground-jscissors/${container}"
 
           if [[ "$resource_kind" != "connect" ]]
           then
@@ -46859,20 +47437,9 @@ playground_container_set_environment_variables_command() {
               exit 1
           fi
 
-          if [[ ! -f "$props_source" ]]
+          if [[ ! -f "$stage_dir/jscissors.jar" || ! -f "$stage_dir/jscissors.props" ]]
           then
-              logerror "❌ missing $props_source"
-              logerror "jscissors props file must exist before using --mount-jscissors-files in cfk mode"
-              exit 1
-          fi
-
-          if [[ ! -f "$jar_source" ]]
-          then
-              jar_source="${root_folder}/scripts/cli/src/jscissors/jscissors-1.0-SNAPSHOT.jar"
-          fi
-          if [[ ! -f "$jar_source" ]]
-          then
-              logerror "❌ missing jscissors jar file in /tmp and in repository"
+              logerror "❌ missing $stage_dir/jscissors.jar or $stage_dir/jscissors.props: use playground debug jscissors --restart"
               exit 1
           fi
 
@@ -46891,15 +47458,13 @@ playground_container_set_environment_variables_command() {
 
           local_image="playground-cfk-jscissors:$(date '+%Y%m%d%H%M%S')"
           build_dir=$(mktemp -d -t pg-cfk-jscissors-XXXXXXXXXX)
-          cp "$jar_source" "$build_dir/jscissors-1.0-SNAPSHOT.jar"
-          cp "$props_source" "$build_dir/scissors.props"
+          cp "$stage_dir/jscissors.jar" "$stage_dir/jscissors.props" "$build_dir/"
 
           cat << EOF > "$build_dir/Dockerfile"
 FROM ${current_image}
 USER root
-COPY jscissors-1.0-SNAPSHOT.jar /tmp/jscissors-1.0-SNAPSHOT.jar
-COPY scissors.props /tmp/scissors.props
-RUN chown 1000:1000 /tmp/jscissors-1.0-SNAPSHOT.jar /tmp/scissors.props || true
+COPY jscissors.jar jscissors.props /tmp/jscissors/
+RUN chown -R 1000:1000 /tmp/jscissors || true
 USER 1000
 EOF
 
@@ -47104,7 +47669,7 @@ EOF
           then
               cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
     volumes:
-      - ${PLAYGROUND_HOST_TMP_DIR:-/tmp}/:/tmp/
+      - ${PLAYGROUND_HOST_TMP_DIR:-/tmp}/playground-jscissors/${container}/:/tmp/jscissors/
 EOF
           fi
       done
@@ -75843,6 +76408,13 @@ playground_analyze_parse_requirements() {
       shift $#
       ;;
 
+    jscissors)
+      action="jscissors"
+      shift
+      playground_analyze_jscissors_parse_requirements "$@"
+      shift $#
+      ;;
+
     tcp-dump)
       action="tcp-dump"
       shift
@@ -77239,6 +77811,25 @@ playground_analyze_flight_recorder_parse_requirements() {
         ;;
 
       # :flag.case
+      --trace-method)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--trace-method']+x} ]]; then
+            args['--trace-method']="$escaped"
+          else
+            args['--trace-method']="${args['--trace-method']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--trace-method requires an argument: --trace-method METHOD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --threads)
 
         # :flag.case_arg
@@ -77357,6 +77948,149 @@ playground_analyze_flight_recorder_parse_requirements() {
   # :command.whitelist_filter
   if [[ ${args['--sample']:-} ]] && [[ ! ${args['--sample']:-} =~ ^(jdbc_postgres_sink)$ ]]; then
     printf "%s\n" "--sample must be one of: jdbc_postgres_sink" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_analyze_jscissors_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_analyze_jscissors_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="analyze jscissors"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --file | -f)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --sample | -s)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--sample']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--sample requires an argument: --sample, -s SAMPLE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --output-dir | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir, -o OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      # :flag.case
+      --top)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--top']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--top requires an argument: --top TOP" >&2
+          exit 1
+        fi
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="./jscissors-analysis-output"
+  [[ -n ${args['--top']:-} ]] || args['--top']="15"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--top'] ]]; then
+    validation_output="$(validate_integer "${args['--top']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--top TOP" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :command.whitelist_filter
+  if [[ ${args['--sample']:-} ]] && [[ ! ${args['--sample']:-} =~ ^(filestream_sink_bad_json)$ ]]; then
+    printf "%s\n" "--sample must be one of: filestream_sink_bad_json" >&2
     exit 1
   fi
 
@@ -79983,21 +80717,15 @@ playground_debug_jscissors_parse_requirements() {
         ;;
 
       # :flag.case
-      --operation)
+      --action)
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          escaped="$(printf '%q' "$2")"
-          if [[ -z ${args['--operation']+x} ]]; then
-            args['--operation']="$escaped"
-          elif [[ -z "${unique_lookup["--operation:${escaped}"]:-}" ]]; then
-            args['--operation']="${args['--operation']} $escaped"
-          fi
-          unique_lookup["--operation:${escaped}"]=1
+          args['--action']="$2"
           shift
           shift
         else
-          printf "%s\n" "--operation requires an argument: --operation OPERATION" >&2
+          printf "%s\n" "--action requires an argument: --action ACTION" >&2
           exit 1
         fi
         ;;
@@ -80007,7 +80735,12 @@ playground_debug_jscissors_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--class']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--class']+x} ]]; then
+            args['--class']="$escaped"
+          else
+            args['--class']="${args['--class']} $escaped"
+          fi
           shift
           shift
         else
@@ -80036,17 +80769,159 @@ playground_debug_jscissors_parse_requirements() {
         ;;
 
       # :flag.case
-      --action)
+      --operation)
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          args['--action']="$2"
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--operation']+x} ]]; then
+            args['--operation']="$escaped"
+          elif [[ -z "${unique_lookup["--operation:${escaped}"]:-}" ]]; then
+            args['--operation']="${args['--operation']} $escaped"
+          fi
+          unique_lookup["--operation:${escaped}"]=1
           shift
           shift
         else
-          printf "%s\n" "--action requires an argument: --action ACTION" >&2
+          printf "%s\n" "--operation requires an argument: --operation OPERATION" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --config-file)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--config-file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--config-file requires an argument: --config-file CONFIG_FILE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --duration)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--duration']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--duration requires an argument: --duration DURATION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --restart)
+
+        # :flag.case_no_arg
+        args['--restart']=1
+        shift
+        ;;
+
+      # :flag.case
+      --pid)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--pid']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--pid requires an argument: --pid PID" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-calls)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-calls']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-calls requires an argument: --max-calls MAX_CALLS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-calls-per-method)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-calls-per-method']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-calls-per-method requires an argument: --max-calls-per-method MAX_CALLS_PER_METHOD" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-value-length)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-value-length']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-value-length requires an argument: --max-value-length MAX_VALUE_LENGTH" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --only-failed)
+
+        # :flag.case_no_arg
+        args['--only-failed']=1
+        shift
+        ;;
+
+      # :flag.case
+      --slower-than)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--slower-than']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--slower-than requires an argument: --slower-than DURATION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --output-dir | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir, -o OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-analyze)
+
+        # :flag.case_no_arg
+        args['--no-analyze']=1
+        shift
         ;;
 
       --)
@@ -80078,31 +80953,64 @@ playground_debug_jscissors_parse_requirements() {
     esac
   done
 
-  # :command.required_flags_filter
-  if [[ -z ${args['--class']+x} ]]; then
-    printf "missing required flag: --class CLASS\n" >&2
-    exit 1
-  fi
-
   # :command.default_assignments
   [[ -n ${args['--container']:-} ]] || args['--container']="connect"
-  [[ -n ${args['--operation']:-} ]] || args['--operation']="VALUES RETURN_VALUE DELAY STACK"
+  [[ -n ${args['--action']:-} ]] || args['--action']="start"
   [[ -n ${args['--method']:-} ]] || args['--method']=".\*"
-  [[ -n ${args['--action']:-} ]] || args['--action']="enable"
+  [[ -n ${args['--operation']:-} ]] || args['--operation']="VALUES RETURN_VALUE"
+  [[ -n ${args['--pid']:-} ]] || args['--pid']="auto"
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="."
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--duration'] ]]; then
+    validation_output="$(validate_duration "${args['--duration']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--duration DURATION" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--max-calls'] ]]; then
+    validation_output="$(validate_integer "${args['--max-calls']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-calls MAX_CALLS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--max-calls-per-method'] ]]; then
+    validation_output="$(validate_integer "${args['--max-calls-per-method']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-calls-per-method MAX_CALLS_PER_METHOD" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+  # :flag.validations
+  if [[ -v args['--max-value-length'] ]]; then
+    validation_output="$(validate_integer "${args['--max-value-length']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-value-length MAX_VALUE_LENGTH" "$validation_output" >&2
+      exit 1
+    fi
+  fi
 
   # :command.whitelist_filter
+  if [[ ${args['--action']:-} ]] && [[ ! ${args['--action']:-} =~ ^(start|stop|status|enable|disable)$ ]]; then
+    printf "%s\n" "--action must be one of: start, stop, status, enable, disable" >&2
+    exit 1
+  fi
   input_array=''
   eval "input_array=(${args[--operation]})"
   for i in "${input_array[@]}"; do
-    if [[ ! $i =~ ^(VALUES|RETURN_VALUE|THREADS|HEAP|STACK|EXCEPTION_HEAP|DELAY)$ ]]; then
-      printf "%s\n" "--operation must be one of: VALUES, RETURN_VALUE, THREADS, HEAP, STACK, EXCEPTION_HEAP, DELAY" >&2
+    if [[ ! $i =~ ^(VALUES|RETURN_VALUE|STACK|THREADS|RETURN_THREADS|EXCEPTION_THREADS|HEAP|RETURN_HEAP|EXCEPTION_HEAP|DELAY)$ ]]; then
+      printf "%s\n" "--operation must be one of: VALUES, RETURN_VALUE, STACK, THREADS, RETURN_THREADS, EXCEPTION_THREADS, HEAP, RETURN_HEAP, EXCEPTION_HEAP, DELAY" >&2
       exit 1
     fi
   done
-  if [[ ${args['--action']:-} ]] && [[ ! ${args['--action']:-} =~ ^(enable|disable)$ ]]; then
-    printf "%s\n" "--action must be one of: enable, disable" >&2
-    exit 1
-  fi
 
 }
 
@@ -80177,6 +81085,25 @@ playground_debug_flight_recorder_parse_requirements() {
           shift
         else
           printf "%s\n" "--settings requires an argument: --settings SETTINGS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --trace-method)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--trace-method']+x} ]]; then
+            args['--trace-method']="$escaped"
+          else
+            args['--trace-method']="${args['--trace-method']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--trace-method requires an argument: --trace-method METHOD" >&2
           exit 1
         fi
         ;;
@@ -102738,6 +103665,11 @@ playground_analyze_completion() {
         playground_analyze_flight_recorder_completion "$completion_current" "$@"
         return
         ;;
+      jscissors)
+        shift
+        playground_analyze_jscissors_completion "$completion_current" "$@"
+        return
+        ;;
       tcp-dump)
         shift
         playground_analyze_tcp_dump_completion "$completion_current" "$@"
@@ -102752,7 +103684,7 @@ playground_analyze_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" thread-dump heap-dump logs gc-logs oracle-xstream-report cfk-bundle flight-recorder tcp-dump
+  completion_candidates "$completion_current" thread-dump heap-dump logs gc-logs oracle-xstream-report cfk-bundle flight-recorder jscissors tcp-dump
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -103502,6 +104434,15 @@ playground_analyze_flight_recorder_completion() {
         completion_blocked_flags["--connector-class"]=1
 
         ;;
+      --trace-method)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
       --threads)
         shift
         if [[ $# -eq 0 ]]; then
@@ -103551,7 +104492,85 @@ playground_analyze_flight_recorder_completion() {
     completion_flag_candidates --duration "$completion_current" --duration
     completion_flag_candidates --connector "$completion_current" --connector
     completion_flag_candidates --connector-class "$completion_current" --connector-class
+    completion_flag_candidates --trace-method "$completion_current" --trace-method
     completion_flag_candidates --threads "$completion_current" --threads
+    completion_flag_candidates --output-dir "$completion_current" --output-dir -o
+    completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --top "$completion_current" --top
+  fi
+
+}
+
+# :command.completion_function
+playground_analyze_jscissors_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --file | -f)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--file"]=1
+
+        ;;
+      --sample | -s)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "filestream_sink_bad_json"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--sample"]=1
+
+        ;;
+      --output-dir | -o)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --top)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--top"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --file "$completion_current" --file -f
+    completion_flag_candidates --sample "$completion_current" --sample -s
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --top "$completion_current" --top
@@ -104906,15 +105925,54 @@ playground_debug_jscissors_completion() {
         shift
 
         ;;
+      --action)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "start"
+            "stop"
+            "status"
+            "enable"
+            "disable"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--action"]=1
+
+        ;;
+      --class)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
+      --method)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
       --operation)
         shift
         if [[ $# -eq 0 ]]; then
           local -a completion_values=(
             "VALUES"
             "RETURN_VALUE"
-            "THREADS"
-            "HEAP"
             "STACK"
+            "THREADS"
+            "RETURN_THREADS"
+            "EXCEPTION_THREADS"
+            "HEAP"
+            "RETURN_HEAP"
             "EXCEPTION_HEAP"
             "DELAY"
           )
@@ -104931,39 +105989,103 @@ playground_debug_jscissors_completion() {
         shift
 
         ;;
-      --class)
+      --config-file)
         shift
         if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-any-file-with-fzf "$completion_current"; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
 
           return
         fi
         shift
-        completion_blocked_flags["--class"]=1
+        completion_blocked_flags["--config-file"]=1
 
         ;;
-      --method)
+      --duration)
         shift
         if [[ $# -eq 0 ]]; then
 
           return
         fi
         shift
+        completion_blocked_flags["--duration"]=1
 
         ;;
-      --action)
+      --restart)
+        completion_blocked_flags["--restart"]=1
+
+        shift
+        ;;
+      --pid)
         shift
         if [[ $# -eq 0 ]]; then
-          local -a completion_values=(
-            "enable"
-            "disable"
-          )
-          completion_candidates "$completion_current" "${completion_values[@]}"
 
           return
         fi
         shift
-        completion_blocked_flags["--action"]=1
+        completion_blocked_flags["--pid"]=1
 
+        ;;
+      --max-calls)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-calls"]=1
+
+        ;;
+      --max-calls-per-method)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-calls-per-method"]=1
+
+        ;;
+      --max-value-length)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-value-length"]=1
+
+        ;;
+      --only-failed)
+        completion_blocked_flags["--only-failed"]=1
+
+        shift
+        ;;
+      --slower-than)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--slower-than"]=1
+
+        ;;
+      --output-dir | -o)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --no-analyze)
+        completion_blocked_flags["--no-analyze"]=1
+
+        shift
         ;;
       *)
         return
@@ -104974,10 +106096,21 @@ playground_debug_jscissors_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --container "$completion_current" --container -c --pod -p
-    completion_flag_candidates --operation "$completion_current" --operation
+    completion_flag_candidates --action "$completion_current" --action
     completion_flag_candidates --class "$completion_current" --class
     completion_flag_candidates --method "$completion_current" --method
-    completion_flag_candidates --action "$completion_current" --action
+    completion_flag_candidates --operation "$completion_current" --operation
+    completion_flag_candidates --config-file "$completion_current" --config-file
+    completion_flag_candidates --duration "$completion_current" --duration
+    completion_flag_candidates --restart "$completion_current" --restart
+    completion_flag_candidates --pid "$completion_current" --pid
+    completion_flag_candidates --max-calls "$completion_current" --max-calls
+    completion_flag_candidates --max-calls-per-method "$completion_current" --max-calls-per-method
+    completion_flag_candidates --max-value-length "$completion_current" --max-value-length
+    completion_flag_candidates --only-failed "$completion_current" --only-failed
+    completion_flag_candidates --slower-than "$completion_current" --slower-than
+    completion_flag_candidates --output-dir "$completion_current" --output-dir -o
+    completion_flag_candidates --no-analyze "$completion_current" --no-analyze
   fi
 
 }
@@ -105038,6 +106171,15 @@ playground_debug_flight_recorder_completion() {
         completion_blocked_flags["--settings"]=1
 
         ;;
+      --trace-method)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
       --output-dir | -o)
         shift
         if [[ $# -eq 0 ]]; then
@@ -105064,6 +106206,7 @@ playground_debug_flight_recorder_completion() {
     completion_flag_candidates --container "$completion_current" --container -c --pod -p
     completion_flag_candidates --action "$completion_current" --action
     completion_flag_candidates --settings "$completion_current" --settings
+    completion_flag_candidates --trace-method "$completion_current" --trace-method
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
     completion_flag_candidates --no-analyze "$completion_current" --no-analyze
   fi
@@ -113239,6 +114382,7 @@ run() {
     "analyze oracle-xstream-report") playground_analyze_oracle_xstream_report_command ;;
     "analyze cfk-bundle") playground_analyze_cfk_bundle_command ;;
     "analyze flight-recorder") playground_analyze_flight_recorder_command ;;
+    "analyze jscissors") playground_analyze_jscissors_command ;;
     "analyze tcp-dump") playground_analyze_tcp_dump_command ;;
     "debug") playground_debug_command ;;
     "debug enable-remote-debugging") playground_debug_enable_remote_debugging_command ;;

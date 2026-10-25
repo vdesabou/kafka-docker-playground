@@ -1017,7 +1017,7 @@ The recording is driven over JMX (`FlightRecorderMXBean`): the Confluent images 
 | `all` | every event, with no threshold, for a deep dive in JDK Mission Control | high |
 
 > [!TIP]
-> To record for a fixed time and analyze in one command: `playground analyze flight-recorder -c connect --duration 2m`. During a benchmark, [playground connector benchmark](/reusables?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector) records the workers on its own.
+> To record for a fixed time and analyze in one command: `playground analyze flight-recorder -c connect --duration 2m`. On JDK 25+ (cp 8.3.2), `--trace-method <Class::method>` also records every call of a method with its duration and caller. During a benchmark, [playground connector benchmark](/reusables?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector) records the workers on its own.
 
 ### 🧰 More debug commands
 
@@ -1025,7 +1025,7 @@ The recording is driven over JMX (`FlightRecorderMXBean`): the Confluent images 
 |---|---|
 | [`playground debug java-debug`](/playground%20debug%20java-debug) | 🤎 JVM arguments for SSL, Kerberos or Class Loading |
 | [`playground debug generate-diagnostics`](/playground%20debug%20generate-diagnostics) | ⛑️ Generate a diagnostic bundle with Diagnostics Bundle Tool |
-| [`playground debug jscissors`](/playground%20debug%20jscissors) | ✂️ Instrumentation framework to analyse control flow and perform specific logging |
+| [`playground debug jscissors`](/playground%20debug%20jscissors) | ✂️ Trace the calls of any method of a running JVM, without restart: arguments, return values, durations, exceptions, call tree, analyzed on `--action stop` (see the [deep dive](/deep-dive-jvm-diagnostics?id=_6-jscissors-what-the-code-does-call-by-call)) |
 | [`playground debug testssl`](/playground%20debug%20testssl) | 🔐 Test TLS/SSL encryption using [testssl.sh](https://testssl.sh/) |
 | [`playground debug disable-remote-debugging`](/playground%20debug%20disable-remote-debugging) | Disable java remote debugging for a container |
 
@@ -1045,6 +1045,7 @@ real data.
 | [`playground analyze oracle-xstream-report`](/playground%20analyze%20oracle-xstream-report) | 🅾️ Oracle XStream CDC diagnostics reports (`orclcdc_diag.sql`) | `--sample synthetic_failures` |
 | [`playground analyze cfk-bundle`](/playground%20analyze%20cfk-bundle) | 📦 CFK support bundles: pods, events, custom resources, logs | `--sample synthetic` |
 | [`playground analyze flight-recorder`](/playground%20analyze%20flight-recorder) | 🛩️ Java Flight Recorder recordings: where the time of the connector tasks goes (network I/O by remote, Kafka client, locks, CPU by layer, hot methods) | `--sample jdbc_postgres_sink` |
+| [`playground analyze jscissors`](/playground%20analyze%20jscissors) | ✂️ traces of `playground debug jscissors`: methods by total time, exceptions with the arguments of the failing call, calls still running (hangs), slowest calls, call trees | `--sample filestream_sink_bad_json` |
 | [`playground analyze tcp-dump`](/playground%20analyze%20tcp-dump) | 🦈 network captures (`.pcap`, `.pcapng`): refused and reset connections, retransmissions, TLS alerts, DNS errors, Kafka and HTTP errors and response times, with the bodies of the HTTP error responses | `--sample kafka_and_network_errors`, `--sample http_errors` |
 
 ```bash

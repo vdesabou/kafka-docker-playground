@@ -5697,6 +5697,84 @@ function jfr_digest () {
 }
 JFR_ANALYZER_IMAGE="eclipse-temurin:25-jdk"
 
+# --trace-method of the flight recorder commands: the .jfc $1 with the method tracing of JDK 25 (JEP 520) for the
+# filters $2... (a class, Class::method or @Annotation): jdk.MethodTrace records every call of the methods with its
+# duration and caller stack, jdk.MethodTiming the calls and min / avg / max of each method. Prints the path of the .jfc
+function jfr_settings_with_method_trace () {
+  local base="$1" filter jfc
+  shift
+  for filter in "$@"
+  do
+    if [[ ! "$filter" =~ ^@?[A-Za-z0-9_.$]+(::[A-Za-z0-9_$\<\>]+)?$ ]]
+    then
+      logerror "❌ --trace-method $filter: expected a class (io.confluent.connect.jdbc.sink.JdbcDbWriter), Class::method or @Annotation" >&2
+      return 1
+    fi
+  done
+  filter=$(IFS=';'; echo "$*")
+  jfc="$(mktemp -t playground-trace-XXXXXXXXXX).jfc"
+  sed '/<\/configuration>/d' "$base" > "$jfc"
+  {
+    echo "  <event name='jdk.MethodTrace'><setting name='enabled'>true</setting><setting name='filter'>$filter</setting><setting name='stackTrace'>true</setting><setting name='threshold'>0 ms</setting></event>"
+    echo "  <event name='jdk.MethodTiming'><setting name='enabled'>true</setting><setting name='filter'>$filter</setting><setting name='period'>1 s</setting></event>"
+    echo "</configuration>"
+  } >> "$jfc"
+  echo "$jfc"
+}
+
+# major version of the JDK of the java process of a container (8 for 1.8), empty when it cannot be read
+function container_java_major () {
+  local version
+  version=$(playground --output-level ERROR container exec --container "$1" --command "java -version 2>&1" 2> /dev/null | sed -n 's/.*version "\([0-9.]*\).*/\1/p' | head -1)
+  case "$version" in
+    1.*) echo "${version#1.}" | cut -d . -f 1 ;;
+    *) echo "${version%%.*}" ;;
+  esac
+}
+
+# --trace-method needs the method tracing of JDK 25 (JEP 520): exits with the alternative when the JDK is older
+function check_method_trace_supported () {
+  local container="$1" major
+  major=$(container_java_major "$container")
+  if [[ -n "$major" && "$major" -lt 25 ]]
+  then
+    logerror "❌ --trace-method needs JDK 25 or later (method tracing, JEP 520): $container runs JDK $major"
+    log "💡 playground debug jscissors -c $container --class <class> traces the calls on any JDK (8+), with their arguments"
+    exit 1
+  fi
+}
+
+# java agent of playground debug jscissors, built from tools/jscissors/agent with maven in a container the first time
+# and after each change of its sources (no jar in the repository): prints the path of the jar. The sources are mounted
+# read only and the jar comes back on stdout, so it works with podman and from any folder
+function jscissors_agent_jar () {
+  local src="$root_folder/tools/jscissors/agent" dir="/tmp/playground-jscissors" sum jar log
+  sum=$(cd "$src" && find pom.xml src -type f | LC_ALL=C sort | xargs cat | cksum | cut -d ' ' -f 1)
+  jar="$dir/jscissors-$sum.jar"
+  if [ -s "$jar" ]
+  then
+    echo "$jar"
+    return 0
+  fi
+  mkdir -p "$dir"
+  log "📦 building the jscissors agent with maven ($JSCISSORS_BUILD_IMAGE), first run after a change of tools/jscissors/agent only" >&2
+  log=$(mktemp -t jscissors-build-XXXXXXXXXX)
+  if docker run --rm -v "$src:/src:ro" -v playground-jscissors-m2:/root/.m2 "$JSCISSORS_BUILD_IMAGE" \
+      sh -c 'cp -r /src /build && cd /build && mvn -q -B package >&2 && cat target/jscissors.jar' > "$jar.tmp" 2> "$log" \
+      && unzip -l "$jar.tmp" 2> /dev/null | grep -q 'jscissors/Agent.class'
+  then
+    mv "$jar.tmp" "$jar"
+    rm -f "$log"
+    echo "$jar"
+    return 0
+  fi
+  rm -f "$jar.tmp"
+  logerror "❌ failed to build the jscissors agent, see $log" >&2
+  tail -20 "$log" >&2
+  return 1
+}
+JSCISSORS_BUILD_IMAGE="maven:3.9.11-eclipse-temurin-17"
+
 # one sample of the JMX metrics of the tasks of a connector, printed as space separated values:
 #   1 records total (summed over the tasks)    2 batch avg ms        3 running ratio avg    4 cpu % of one core
 #   5 consumer lag max (sink)                  6 cpu % of the cpus available to the worker JVM

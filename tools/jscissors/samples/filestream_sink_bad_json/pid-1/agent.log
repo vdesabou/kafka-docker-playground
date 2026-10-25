@@ -1,0 +1,11 @@
+2026-10-25 14:50:01.230 jscissors 2.0 attached in pid 1 (OpenJDK 64-Bit Server VM 25.0.4.1)
+2026-10-25 14:50:01.230 rule org.apache.kafka.connect.json.JsonConverter{toConnectData}=VALUES+RETURN_VALUE+EXCEPTION_THREADS
+2026-10-25 14:50:01.230 rule org.apache.kafka.connect.file.FileStreamSinkTask{put|flush}=VALUES
+2026-10-25 14:50:01.230 rule org.apache.kafka.connect.runtime.WorkerSinkTask{convertMessages|deliverMessages|commitOffsets}=DELAY
+2026-10-25 14:50:01.507 instrumented org.apache.kafka.connect.file.FileStreamSinkTask
+2026-10-25 14:50:01.528 instrumented org.apache.kafka.connect.runtime.WorkerSinkTask
+2026-10-25 14:50:01.537 instrumented org.apache.kafka.connect.json.JsonConverter
+2026-10-25 14:50:01.567 transformer installed in 333 ms, 3 class(es) instrumented so far
+2026-10-25 14:50:03.262 threads dump written to dumps/threads-1-1792939803221.txt (exception org.apache.kafka.connect.json.JsonConverter.toConnectData(java.lang.String,[B))
+2026-10-25 14:50:12.654 original classes restored in 57 ms
+2026-10-25 14:50:12.766 stopped: stopped

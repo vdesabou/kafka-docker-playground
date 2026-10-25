@@ -46,6 +46,10 @@ lab_run playground analyze tcp-dump --sample http_errors --output-dir "$out/tcp"
 lab_expect_exit 0
 lab_expect_contains "🟠 HIGH: HTTP 500 Internal Server Error from sample-httpserver:9006 for POST /api/payments (2x)"
 lab_expect_contains "response: {\"error\": \"Too Many Requests\", \"message\": \"rate limit of 10 requests per second exceeded\"}"
+lab_run playground analyze jscissors --sample filestream_sink_bad_json --output-dir "$out/jsc"
+lab_expect_exit 0
+lab_expect_contains "🟡 MEDIUM: 💥 3 call(s) of JsonConverter.toConnectData threw org.apache.kafka.connect.errors.DataException"
+lab_expect_contains "✅ HTML report saved: $out/jsc/filestream_sink_bad_json-jscissors-report.html"
 
 log "Step 2: thread dumps of the running worker"
 lab_run playground analyze thread-dump -c connect --count 2 --interval 3 --output-dir "$out/threads"
@@ -71,9 +75,11 @@ log "Step 4: a flight recording while data flows"
 timeout 60 "$playground_cli" topic produce -t filestream --nb-messages -1 --throughput 200 --value '{"id": %g}' > /dev/null 2>&1 &
 producer=$!
 sleep 5
-lab_run playground analyze flight-recorder -c connect --duration 20s --connector filestream-sink --output-dir "$out/jfr"
+lab_run playground analyze flight-recorder -c connect --duration 20s --connector filestream-sink --trace-method org.apache.kafka.connect.file.FileStreamSinkTask::put --output-dir "$out/jfr"
 lab_expect_exit 0
+lab_expect_contains "🎯 tracing every call of org.apache.kafka.connect.file.FileStreamSinkTask::put (JDK 25 method tracing)"
 lab_expect_contains "🛩️ recording connect for 20s with the settings of tools/jfr-analyzer/playground.jfc"
+lab_expect_contains "org.apache.kafka.connect.file.FileStreamSinkTask.put(Collection)"
 lab_expect_contains "✅ recording saved in $out/jfr/flight-recorder-"
 lab_expect_contains "Task thread time, by state"
 lab_run playground debug flight-recorder -c connect --action start
@@ -86,6 +92,23 @@ sleep 10
 lab_run playground debug flight-recorder -c connect --action stop --output-dir "$out/jfr" --no-analyze
 lab_expect_contains "🛩️ flight recording of connect ("
 lab_expect_contains "is available at $out/jfr/flight-recorder-connect-"
+kill "$producer" > /dev/null 2>&1 || true
+producer=""
+
+log "Step 5: trace the calls of the FileStream sink with jscissors"
+timeout 90 "$playground_cli" topic produce -t filestream --nb-messages -1 --throughput 20 --value '{"id": %g}' > /dev/null 2>&1 &
+producer=$!
+lab_run playground debug jscissors -c connect --class org.apache.kafka.connect.file.FileStreamSinkTask --method 'put|flush' --action start
+lab_expect_exit 0
+lab_expect_contains "💉 loading the agent in the running JVM of connect (no restart)"
+lab_expect_contains "✂️ 1 class(es) instrumented in connect: org.apache.kafka.connect.file.FileStreamSinkTask"
+sleep 10
+lab_run playground debug jscissors -c connect --action status
+lab_expect_contains "✂️ jscissors running on connect since"
+lab_run playground debug jscissors -c connect --action stop --output-dir "$out/jsc"
+lab_expect_exit 0
+lab_expect_contains "copied to $out/jsc/jscissors-connect-"
+lab_expect_contains "FileStreamSinkTask.put(java.util.Collection)"
 kill "$producer" > /dev/null 2>&1 || true
 producer=""
 

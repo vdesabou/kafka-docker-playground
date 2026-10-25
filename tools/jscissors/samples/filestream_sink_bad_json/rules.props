@@ -1,0 +1,3 @@
+org.apache.kafka.connect.json.JsonConverter{toConnectData}=VALUES+RETURN_VALUE+EXCEPTION_THREADS
+org.apache.kafka.connect.file.FileStreamSinkTask{put|flush}=VALUES
+org.apache.kafka.connect.runtime.WorkerSinkTask{convertMessages|deliverMessages|commitOffsets}=DELAY

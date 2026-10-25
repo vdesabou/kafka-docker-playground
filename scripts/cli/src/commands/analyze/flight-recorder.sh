@@ -8,6 +8,7 @@ threads="${args[--threads]}"
 output_dir="${args[--output-dir]}"
 json_out="${args[--json]}"
 top="${args[--top]}"
+eval "trace_methods=(${args[--trace-method]})"
 
 set +e
 
@@ -48,6 +49,10 @@ if [[ -n "$connector" ]]; then
 fi
 [[ -z "$threads" ]] && threads="^task-thread-"
 
+if [[ ${#trace_methods[@]} -gt 0 && -z "$container" ]]; then
+    logwarn "⚠️ --trace-method is only used when recording a container (-c): a recording made with method tracing already holds its events"
+fi
+
 # fzf completion returns <display>@<path>
 for i in "${!file_array[@]}"
 do
@@ -64,8 +69,14 @@ if [[ -n "$container" ]]; then
         exit 1
     fi
     workers="$container $port"
+    settings_file=""
+    if [[ ${#trace_methods[@]} -gt 0 ]]; then
+        check_method_trace_supported "$container"
+        settings_file=$(jfr_settings_with_method_trace "$root_folder/tools/jfr-analyzer/playground.jfc" "${trace_methods[@]}") || exit 1
+        log "🎯 tracing every call of ${trace_methods[*]} (JDK 25 method tracing)"
+    fi
     benchmark_jmx_init "$workers"
-    recordings=$(jfr_jmx_start "$workers")
+    recordings=$(jfr_jmx_start "$workers" "$settings_file")
     if [[ $? -ne 0 || -z "$recordings" ]]; then
         logerror "❌ could not start the flight recorder of $container over JMX (localhost:$port): JDK 8 before 8u262, or JMX not reachable"
         exit 1
