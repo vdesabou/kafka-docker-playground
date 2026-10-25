@@ -6,6 +6,9 @@ help: |-
   🧠 CLI for Kafka Docker Playground 🐳
 
   👉 Check documentation https://kafka-docker-playground.io/#/cli
+
+  🎬 Bite size sessions (short videos): https://kafka-docker-playground.io/#/sessions
+  🍪 Deep dives (one family of commands each): https://kafka-docker-playground.io/#/deep-dives
 filters:
 - docker_running
 environment_variables:
@@ -21,6 +24,10 @@ help_header_override: |
   echo $'██████  ██      ███████   ████   ██   ███ ██████  ██    ██ ██    ██ ██ ██  ██ ██   ██ '
   echo $'██      ██      ██   ██    ██    ██    ██ ██   ██ ██    ██ ██    ██ ██  ██ ██ ██   ██ '
   echo $'██      ███████ ██   ██    ██     ██████  ██   ██  ██████   ██████  ██   ████ ██████  '
+  echo
+  echo "👉 Documentation: https://kafka-docker-playground.io/#/cli"
+  echo "🎬 Bite size sessions (short videos): https://kafka-docker-playground.io/#/sessions"
+  echo "🍪 Deep dives (one family of commands each): https://kafka-docker-playground.io/#/deep-dives"
   echo
   
 flags:
@@ -730,6 +737,8 @@ commands:
     PLAYGROUND_SECRETS_DIR, PLAYGROUND_SECRETS_BACKEND,
     PLAYGROUND_SECRETS_PROFILE and PLAYGROUND_OP_VAULT override them for a
     single command.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-secrets
 
   commands:
   - name: set
@@ -1525,6 +1534,9 @@ commands:
 
     ❗ this command will kill all containers using "playground container kill-all", you can disable this by running "playground config container-kill-all-before-run false"
 
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions
+    🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B9%EF%B8%8F-run-an-example-with-the-menu-or-with-flags
+
   flags:
   - &environment-run
     long: --environment
@@ -2020,6 +2032,9 @@ commands:
 
     🎓 Tip: to re-run with a different version, use 'playground run' again and
     change the flag, or 'playground update-version' on the running example.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions
+    🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B9%EF%B8%8F-run-an-example-with-the-menu-or-with-flags
   dependencies:
     fzf: visit https://github.com/junegunn/fzf#installation to install
   examples:
@@ -2142,6 +2157,9 @@ commands:
     Opens a picker over every 'playground run' command you have executed,
     most recent first and de-duplicated. The command you select is shown for
     editing before it runs, so you can change a --tag or add a flag on the way.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions
+    🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B9%EF%B8%8F-run-an-example-with-the-menu-or-with-flags
   dependencies:
     fzf: visit https://github.com/junegunn/fzf#installation to install
 
@@ -2273,6 +2291,9 @@ commands:
     Any running environment is stopped first, and the full docker compose
     command is saved in playground.ini so that 'playground stop',
     'playground container recreate' and 'playground re-run' can replay it.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-secured-environments
+    🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%90-the-same-example-under-sasl_ssl-and-rbac
   flags:
     - &environment
       long: --environment
@@ -2422,6 +2443,9 @@ commands:
 
     🎓 Tip: this is a version bisect tool. Keep the example running and call it
     repeatedly until you find the version where the behaviour changes.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions
+    🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%8E%AF-is-it-fixed-in-a-newer-version
   flags:
   - *tag
   - *connect-tag
@@ -2674,6 +2698,9 @@ commands:
 
     Keep a model minimal and about one issue, state expected versus actual
     behaviour in its comments header, and never put customer data in it.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-reproduction-models
+    🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%AA-the-life-of-a-reproduction-model
   environment_variables:
   - name: OUTPUT_FOLDER
     help: 📁 Output folder where to generate bootstrapped files
@@ -3075,6 +3102,9 @@ commands:
      A subject is normally named after the topic: <topic>-key and
      <topic>-value. 'playground topic delete' removes both along with the
      topic.
+
+     🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema
+     🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%B0-schema-not-found-after-a-cleanup
   commands:
 
   - name: get
@@ -3992,6 +4022,9 @@ commands:
       🧪 With --sample, it analyzes the samples shipped in tools/thread-analyzer/samples: a quick way to see what it reports.
 
       🔖 Exit code is 0 when the analysis completed, 2 when no thread dump was found
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%B5-a-connector-looks-stuck-analyze-thread-dumps
     flags: &analyze_thread_dump_flags
       - long: --file
         short: -f
@@ -4090,6 +4123,8 @@ commands:
       🧪 With --sample, it analyzes the samples shipped in tools/heap-analyzer/samples: a quick way to see what it reports.
 
       🔖 Exit code is 0 when the analysis completed, non-zero when MAT could not parse the dump (truncated file, out of memory): never a "healthy" verdict on a failed parse
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics
     flags: &analyze_heap_dump_flags
       - long: --file
         short: -f
@@ -4175,6 +4210,9 @@ commands:
       📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files
       are extracted in a temporary folder, .gz files are decompressed on the
       fly, binary files are skipped. Only files with findings are shown.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B5%EF%B8%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle
     flags: &analyze_logs_flags
       - long: --file
         short: -f
@@ -4256,6 +4294,9 @@ commands:
       🔖 Exit code is 0 when the analysis completed, 2 when no GC event was found
 
       🌐 Also writes a self-contained HTML dashboard (pause timeline, heap before / after GC, pause distribution, KPI cards, recommendations; no external resource) in --output-dir, opened in the browser in an interactive terminal
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%99%BB%EF%B8%8F-long-gc-pauses-or-a-memory-leak-analyze-gc-logs
     flags: &analyze_gc_logs_flags
       - long: --file
         short: -f
@@ -4361,6 +4402,8 @@ commands:
       🔖 Exit code is 0 when the analysis completed, 2 when the file is not an orclcdc_diag report
 
       👉 Check documentation https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script
+
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%85%BE%EF%B8%8F-oracle-xstream-cdc-lags-or-is-idle
     flags: &analyze_oracle_xstream_report_flags
       - long: --file
         short: -f
@@ -4462,6 +4505,8 @@ commands:
       🧪 With --sample, it analyzes the samples shipped in cfk-analysis/samples: a quick way to see what it reports.
 
       🔖 Exit code is 0 when the analysis completed (whatever was found, read the summary), 64 for an invalid, unsafe or empty bundle.
+
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%98%B8%EF%B8%8F-what-is-wrong-in-this-cfk-cluster
     flags: &analyze_cfk_bundle_flags
       - long: --bundle
         short: -b
@@ -4549,6 +4594,9 @@ commands:
       🧪 With --sample, it analyzes the digests shipped in tools/jfr-analyzer/samples (no Docker needed): a quick way to see what it reports.
 
       🔖 Exit code is 0 when the analysis completed, 2 when the file is not a flight recording or has no event
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%9B%A9%EF%B8%8F-a-slow-connector-where-does-the-task-time-go
     flags:
       - long: --file
         short: -f
@@ -4676,6 +4724,8 @@ commands:
       ✨ Enable java remote debugging for container
       
       👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%e2%9c%a8-remote-debugging
+
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%9E-a-breakpoint-in-a-running-connector-remote-debugging
     flags:
       - &container
         long: --container
@@ -4750,6 +4800,9 @@ commands:
 
       🎓 Tip: take two or three dumps a few seconds apart. Threads that appear
       in the same place every time are the ones that are really blocked. playground analyze thread-dump does it and analyzes them.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%B5-a-connector-looks-stuck-analyze-thread-dumps
     flags:
       - *container
       - long: --jstack
@@ -4778,6 +4831,8 @@ commands:
 
       With --live, only the live objects are dumped, which runs a full GC first. Without it, every object of the
       heap is dumped, without a GC.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics
     flags:
       - *container
       - long: --live
@@ -4858,6 +4913,9 @@ commands:
 
       Blocking with --action start and restoring with --action stop, so the
       failure is reversible without restarting anything.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-network-traffic
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%8C-a-slow-or-broken-network-on-purpose
     flags:
       - *container
       - long: --destination
@@ -4910,6 +4968,9 @@ commands:
       ❕ tc only shapes the packets a container sends: with --latency 100ms
       the round trip to the destination grows by 100ms. A container restart
       removes the degradation.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-network-traffic
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%8C-a-slow-or-broken-network-on-purpose
     flags:
       - *container
       - long: --destination
@@ -5088,6 +5149,9 @@ commands:
       with no threshold (scripts/cli/all.jfc), for a deep dive in JDK Mission Control, with a high overhead.
 
       🔖 The recording of each container is kept in playground.ini (flight_recorder.<container>), --action status shows it.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%9B%A9%EF%B8%8F-a-slow-connector-where-does-the-task-time-go
     flags:
       - *container
       - long: --action
@@ -5137,6 +5201,9 @@ commands:
       🎓 Tip: raise only the package you suspect, for instance
       io.confluent.connect.s3 or org.apache.kafka.clients.consumer, rather
       than the root logger, or the useful lines will be lost in the noise.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-log-levels
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%AC-trace-on-a-running-connector-without-a-restart
     filters:
     - connect_running
     commands:
@@ -5299,6 +5366,9 @@ commands:
 
     🎓 Tip: the usual names are broker, connect, schema-registry,
     control-center, ksqldb-server, plus whatever the example adds.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-lifecycle
+    🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%B3-restart-or-recreate-what-a-container-keeps
   commands:
 
     - name: get-properties
@@ -5409,6 +5479,9 @@ commands:
 
         The last one is what example scripts use to synchronise on a component
         being ready, instead of sleeping and hoping.
+
+        🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs
+        🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B5%EF%B8%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle
       flags:
       - *container
       - long: --open
@@ -5849,6 +5922,9 @@ commands:
         Counts the records currently in the topic, from the partition offsets.
         The cheap way to check that a source connector produced something, or
         that a sink has data to read.
+
+        🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration
+        🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception
       flags:
       - &topic
         long: --topic
@@ -5893,6 +5969,9 @@ commands:
 
         🎓 Tip: in an example script, use it instead of a fixed sleep before
         checking what a source connector produced.
+
+        🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration
+        🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception
       flags:
       - long: --topic
         short: -t
@@ -5940,6 +6019,9 @@ commands:
         records in between. Useful to see whether retention has already
         deleted data, which partitions received records, or which offsets a
         connector should be at.
+
+        🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration
+        🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception
       flags:
       - *topic
       - *verbose
@@ -5975,6 +6057,9 @@ commands:
 
         Add --sort-by-size to show the size and number of partitions of each
         topic, largest first (same as 'playground topic get-size').
+
+        🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration
+        🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception
       flags:
       - long: --show-internal
         help: |-
@@ -6027,6 +6112,9 @@ commands:
         Partitions, replicas, in-sync replicas and the configuration overrides
         set on the topic. Where to look when records go to an unexpected
         partition, or when a topic is not retaining what you expected.
+
+        🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration
+        🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception
       flags:
       - *topic
       - *verbose
@@ -6074,6 +6162,9 @@ commands:
         The consumer stops when no record arrives for 10 seconds (30 seconds
         on Confluent Cloud), so it never waits for records that cannot come
         (transaction markers and compacted records use offsets).
+
+        🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-consume
+        🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%93%A5-read-a-topic
       flags:
       - *verbose
       - *topic
@@ -6275,6 +6366,9 @@ commands:
 
          🎓 Tip: pipe the schema with a quoted heredoc, << 'EOF', so that the
          %g placeholders survive the shell.
+
+         🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-produce
+         🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%93%A8-produce-realistic-test-data
       flags:
 
       - long: --key
@@ -7136,6 +7230,9 @@ commands:
         'playground topic produce' creates the topic on the fly. Any extra
         argument is passed through to kafka-topics --create, so --config works
         as usual.
+
+        🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration
+        🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception
       flags:
       - *verbose
       - long: --topic
@@ -7172,6 +7269,9 @@ commands:
 
         A regex is accepted, matched in full, to clean up a family of topics
         at once.
+
+        🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration
+        🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception
       flags:
       - *verbose
       - long: --topic
@@ -7199,6 +7299,9 @@ commands:
         reproduce behaviour driven by configuration: a small
         max.message.bytes to trigger a record too large error, a short
         retention.ms to expire data, a compacted cleanup.policy, and so on.
+
+        🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration
+        🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception
       flags:
       - *verbose
       - long: --topic
@@ -7243,6 +7346,9 @@ commands:
         ('playground connector snippets --dlq' has it).
 
         👉 Example: https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector
+
+        🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting
+        🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A9%BA-a-sink-is-running-but-writes-nothing
       commands:
 
         - name: inspect
@@ -7511,6 +7617,9 @@ commands:
 
     🎓 Tip: for a sink connector, 'playground connector show-lag' follows the
     lag until it reaches 0.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag
+    🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%8F%AA-the-lag-of-a-sink-is-stuck
   commands:
 
     - name: list
@@ -7712,6 +7821,9 @@ commands:
                      Cloud run, ACLs of the Confluent Cloud cluster
 
     🎓 Tip: principals are User:<name> or Group:<name>, a bare name means User:<name>.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-secured-environments
+    🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%90-the-same-example-under-sasl_ssl-and-rbac
   commands:
 
     - name: role-binding
@@ -8070,6 +8182,9 @@ commands:
     🎓 Tip: search-jar answers "is this class really in the plugin, and with
     which signature", which is the question behind most NoSuchMethodError and
     ClassNotFoundException reports.
+
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin
+    🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version
   commands:
   - name: search-jar
     help: |-
@@ -8273,6 +8388,9 @@ commands:
       You can compare different sourcecode versions by specifying --connector-tag two times, in such case it will open github in comparison mode
       
       🏗️ Compile code and generate zip file(s) by providing --compile flag
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version
 
     environment_variables:
     - name: GH_TOKEN
@@ -8498,6 +8616,9 @@ commands:
 
       🎓 Tip: 'connector create-or-update' already waits for RUNNING. Use
       it for another state, or after 'connector create-or-update --no-wait'.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%8C-the-sink-fails-right-after-it-is-deployed
     flags:
     - *verbose
     - *connector
@@ -8553,6 +8674,9 @@ commands:
 
       🎓 Tip: works for fully managed connectors too, with the validate
       endpoint of Confluent Cloud.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%8C-the-sink-fails-right-after-it-is-deployed
     args:
     - name: json
       default: "-"
@@ -8613,6 +8737,8 @@ commands:
 
       🎓 Tip: run it with the config of a customer and the config of the
       example to see right away what differs.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update
     flags:
     - *verbose
     - *connector
@@ -8732,6 +8858,9 @@ commands:
       🧪 Single message transforms (SMT)
 
         test                         apply a transform chain to a record, step by step
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-smt-test
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%80-what-does-this-transform-chain-do-to-a-record
     commands:
     - name: test
       help: |-
@@ -8857,6 +8986,9 @@ commands:
 
       🎓 Tip: a sink that reprocesses everything and a source that re-snapshots
       are usually offsets problems, not connector problems. Look here first.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%8F%AA-the-lag-of-a-sink-is-stuck
     commands:
     - name: get
       help: |
@@ -8975,6 +9107,9 @@ commands:
       Tells you in one line whether you are testing an outdated connector.
       To move to the version reported as latest, re-run the example with
       'playground update-version --connector-tag <version>'.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%8E%AF-is-it-fixed-in-a-newer-version
 
   - name: sourcecode
     help: |
@@ -9154,6 +9289,9 @@ commands:
 
       It never follows logs and never waits for the lag to reach 0, so it is
       safe to use from scripts and AI agents.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A9%BA-a-sink-is-running-but-writes-nothing
     flags:
     - *verbose
     - *connector
@@ -9233,6 +9371,9 @@ commands:
       are stuck rather than slow.
 
       It will run until all lag becomes 0 (press ctrl-c to exit)
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%8F%AA-the-lag-of-a-sink-is-stuck
     flags:
     - *verbose
     - *connector
@@ -9394,6 +9535,9 @@ commands:
       (CONFLUENT_CLOUD_API_KEY) and does not answer for a deleted connector.
 
       ⚠️ Not available with the cfk environment yet.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-benchmark
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%93%88-is-version-y-slower-benchmark-two-versions
     environment_variables:
     - name: BENCHMARK_LOAD_SCRIPT
       help: "📜 Load script to use instead of benchmark-load.bash: a file of the example folder, or an absolute path"
@@ -9774,6 +9918,9 @@ commands:
 
       🎓 Tip: it will also set io.confluent.kafka.schemaregistry.client.rest.RestService (to see schema registry rest requests) and org.apache.kafka.connect.runtime.TransformationChain (to see records before and after SMTs)
               it will also set org.apache.kafka.connect.runtime.WorkerSinkTask for sink and org.apache.kafka.connect.runtime.WorkerSourceTask for source connectors.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-log-levels
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%AC-trace-on-a-running-connector-without-a-restart
     flags:
     - *connector
     - *level
@@ -9884,6 +10031,9 @@ commands:
       The connector example should be ran with --environment flag set to ccloud.
 
       See a full example at https://github.com/vdesabou/kafka-docker-playground/blob/master/ccloud/connect-migration-utility/README.md
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-fully-managed
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%9A%9A-move-a-self-managed-connector-to-fully-managed
     filters:
     - ccloud_environment
     dependencies:
@@ -9960,6 +10110,10 @@ commands:
       running config (secrets masked). The config can also be given in the
       REST API format ({"name": ..., "config": {...}}, as returned by
       GET /connectors/<name>), or as the path of a json file.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%8C-the-sink-fails-right-after-it-is-deployed
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%8F%97%EF%B8%8F-deploy-a-fully-managed-connector-with-terraform
     environment_variables:
     - name: PG_CCLOUD_SERVICE_ACCOUNT
       help: "👤 true: create fully managed connectors with a service account and the ACLs of the documentation (set by playground run --ccloud-service-account)"

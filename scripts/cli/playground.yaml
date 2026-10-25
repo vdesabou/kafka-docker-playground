@@ -1,7 +1,9 @@
 ---
 name: playground
 description: "\U0001F9E0 CLI for Kafka Docker Playground \U0001F433\n\n\U0001F449
-  Check documentation https://kafka-docker-playground.io/#/cli"
+  Check documentation https://kafka-docker-playground.io/#/cli\n\n\U0001F3AC Bite
+  size sessions (short videos): https://kafka-docker-playground.io/#/sessions\n\U0001F36A
+  Deep dives (one family of commands each): https://kafka-docker-playground.io/#/deep-dives"
 usage: playground [OPTIONS] COMMAND
 options:
 - names:
@@ -169,7 +171,8 @@ subcommands:
     <backend>      \U0001F3E6 see above\n  - playground config set secrets.profile
     <name>         \U0001F5C2️ active profile\n  - playground config set secrets.op-vault
     <vault>       \U0001F511 1Password vault\n\nPLAYGROUND_SECRETS_DIR, PLAYGROUND_SECRETS_BACKEND,\nPLAYGROUND_SECRETS_PROFILE
-    and PLAYGROUND_OP_VAULT override them for a\nsingle command."
+    and PLAYGROUND_OP_VAULT override them for a\nsingle command.\n\n\U0001F36A Deep
+    dive: https://kafka-docker-playground.io/#/deep-dive-secrets"
   usage: playground secrets COMMAND
   options: []
   subcommands:
@@ -626,7 +629,9 @@ subcommands:
     will be created): The Schema Registry api key and secret to use, it should be
     separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\n❗ this command
     will kill all containers using \"playground container kill-all\", you can disable
-    this by running \"playground config container-kill-all-before-run false\""
+    this by running \"playground config container-kill-all-before-run false\"\n\n\U0001F36A
+    Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n\U0001F3AC
+    Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B9%EF%B8%8F-run-an-example-with-the-menu-or-with-flags"
   usage: playground run [OPTIONS]
   options:
   - names:
@@ -902,7 +907,8 @@ subcommands:
     and --enable-* you picked are replayed from playground.ini,\nso there is nothing
     to retype after a code change.\n\n\U0001F393 Tip: to re-run with a different version,
     use 'playground run' again and\nchange the flag, or 'playground update-version'
-    on the running example."
+    on the running example.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n\U0001F3AC
+    Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B9%EF%B8%8F-run-an-example-with-the-menu-or-with-flags"
   usage: playground re-run
   options: []
 - name: get-ci-result
@@ -952,7 +958,8 @@ subcommands:
     command and run it again\n\nOpens a picker over every 'playground run' command
     you have executed,\nmost recent first and de-duplicated. The command you select
     is shown for\nediting before it runs, so you can change a --tag or add a flag
-    on the way."
+    on the way.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n\U0001F3AC
+    Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B9%EF%B8%8F-run-an-example-with-the-menu-or-with-flags"
   usage: playground history
   options: []
 - name: find-example
@@ -1032,7 +1039,9 @@ subcommands:
     with the versions available. The versions\ncurrently running are read from the
     broker and connect containers, so the\nexample must be up.\n\n\U0001F393 Tip:
     this is a version bisect tool. Keep the example running and call it\nrepeatedly
-    until you find the version where the behaviour changes."
+    until you find the version where the behaviour changes.\n\n\U0001F36A Deep dive:
+    https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n\U0001F3AC Bite
+    size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%8E%AF-is-it-fixed-in-a-newer-version"
   usage: playground update-version [OPTIONS]
   options:
   - names:
@@ -1209,7 +1218,8 @@ subcommands:
     the header, the docker compose override, the CLI cheat sheet and\nregisters the
     model, which a hand-written file would be missing.\n\nKeep a model minimal and
     about one issue, state expected versus actual\nbehaviour in its comments header,
-    and never put customer data in it."
+    and never put customer data in it.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-reproduction-models\n\U0001F3AC
+    Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%AA-the-life-of-a-reproduction-model"
   usage: playground repro COMMAND
   options: []
   subcommands:
@@ -1437,7 +1447,8 @@ subcommands:
     derive-schema turns a sample payload into an avro, json schema or\nprotobuf schema,
     which saves writing one by hand.\n\nA subject is normally named after the topic:
     <topic>-key and\n<topic>-value. 'playground topic delete' removes both along with
-    the\ntopic."
+    the\ntopic.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-schema\n\U0001F3AC
+    Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%B0-schema-not-found-after-a-cleanup"
   usage: playground schema COMMAND
   options: []
   subcommands:
@@ -2107,7 +2118,8 @@ subcommands:
       SVG charts, works offline) in --output-dir, opened in the browser in an interactive
       terminal\n\n\U0001F9EA With --sample, it analyzes the samples shipped in tools/thread-analyzer/samples:
       a quick way to see what it reports.\n\n\U0001F516 Exit code is 0 when the analysis
-      completed, 2 when no thread dump was found"
+      completed, 2 when no thread dump was found\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%B5-a-connector-looks-stuck-analyze-thread-dumps"
     usage: playground analyze thread-dump [OPTIONS]
     options:
     - names:
@@ -2176,7 +2188,8 @@ subcommands:
       --sample, it analyzes the samples shipped in tools/heap-analyzer/samples: a
       quick way to see what it reports.\n\n\U0001F516 Exit code is 0 when the analysis
       completed, non-zero when MAT could not parse the dump (truncated file, out of
-      memory): never a \"healthy\" verdict on a failed parse"
+      memory): never a \"healthy\" verdict on a failed parse\n\n\U0001F36A Deep dive:
+      https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics"
     usage: playground analyze heap-dump [OPTIONS]
     options:
     - names:
@@ -2232,7 +2245,8 @@ subcommands:
       lines that merely contain \"error\" or \"failed\", never are.\n\n\U0001F4C2
       Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\nare extracted
       in a temporary folder, .gz files are decompressed on the\nfly, binary files
-      are skipped. Only files with findings are shown."
+      are skipped. Only files with findings are shown.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B5%EF%B8%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle"
     usage: playground analyze logs [OPTIONS]
     options:
     - names:
@@ -2278,7 +2292,8 @@ subcommands:
       2 when no GC event was found\n\n\U0001F310 Also writes a self-contained HTML
       dashboard (pause timeline, heap before / after GC, pause distribution, KPI cards,
       recommendations; no external resource) in --output-dir, opened in the browser
-      in an interactive terminal"
+      in an interactive terminal\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%99%BB%EF%B8%8F-long-gc-pauses-or-a-memory-leak-analyze-gc-logs"
     usage: playground analyze gc-logs [OPTIONS]
     options:
     - names:
@@ -2357,7 +2372,8 @@ subcommands:
       streams pool advice chart, deltas between reports) in --output-dir, to share
       in a case; opened in the browser in an interactive terminal\n\n\U0001F516 Exit
       code is 0 when the analysis completed, 2 when the file is not an orclcdc_diag
-      report\n\n\U0001F449 Check documentation https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script"
+      report\n\n\U0001F449 Check documentation https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script\n\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%85%BE%EF%B8%8F-oracle-xstream-cdc-lags-or-is-idle"
     usage: playground analyze oracle-xstream-report [OPTIONS]
     options:
     - names:
@@ -2444,7 +2460,8 @@ subcommands:
       opened in the browser in an interactive terminal.\n\n\U0001F9EA With --sample,
       it analyzes the samples shipped in cfk-analysis/samples: a quick way to see
       what it reports.\n\n\U0001F516 Exit code is 0 when the analysis completed (whatever
-      was found, read the summary), 64 for an invalid, unsafe or empty bundle."
+      was found, read the summary), 64 for an invalid, unsafe or empty bundle.\n\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%98%B8%EF%B8%8F-what-is-wrong-in-this-cfk-cluster"
     usage: playground analyze cfk-bundle [OPTIONS]
     options:
     - names:
@@ -2520,7 +2537,9 @@ subcommands:
       browser in an interactive terminal\n\n\U0001F9EA With --sample, it analyzes
       the digests shipped in tools/jfr-analyzer/samples (no Docker needed): a quick
       way to see what it reports.\n\n\U0001F516 Exit code is 0 when the analysis completed,
-      2 when the file is not a flight recording or has no event"
+      2 when the file is not a flight recording or has no event\n\n\U0001F36A Deep
+      dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%9B%A9%EF%B8%8F-a-slow-connector-where-does-the-task-time-go"
     usage: playground analyze flight-recorder [OPTIONS]
     options:
     - names:
@@ -2609,7 +2628,8 @@ subcommands:
   subcommands:
   - name: enable-remote-debugging
     description: "✨ Enable java remote debugging for container\n\n\U0001F449 Check
-      documentation https://kafka-docker-playground.io/#/reusables?id=%e2%9c%a8-remote-debugging"
+      documentation https://kafka-docker-playground.io/#/reusables?id=%e2%9c%a8-remote-debugging\n\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%9E-a-breakpoint-in-a-running-connector-remote-debugging"
     usage: playground debug enable-remote-debugging [OPTIONS]
     options:
     - names:
@@ -2673,7 +2693,8 @@ subcommands:
       when the dump does not reach the logs.\n\n\U0001F393 Tip: take two or three
       dumps a few seconds apart. Threads that appear\nin the same place every time
       are the ones that are really blocked. playground analyze thread-dump does it
-      and analyzes them."
+      and analyzes them.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%B5-a-connector-looks-stuck-analyze-thread-dumps"
     usage: playground debug thread-dump [OPTIONS]
     options:
     - names:
@@ -2697,7 +2718,7 @@ subcommands:
       a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/)
       can be used to read the file.\n\nWith --live, only the live objects are dumped,
       which runs a full GC first. Without it, every object of the\nheap is dumped,
-      without a GC."
+      without a GC.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics"
     usage: playground debug heap-dump [OPTIONS]
     options:
     - names:
@@ -2753,7 +2774,8 @@ subcommands:
       a network outage: a broker that loses the\ncontroller, a connector that can
       no longer reach its database, a client\nthat cannot resolve the schema registry.\n\nBlocking
       with --action start and restoring with --action stop, so the\nfailure is reversible
-      without restarting anything."
+      without restarting anything.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-network-traffic\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%8C-a-slow-or-broken-network-on-purpose"
     usage: playground debug block-traffic [OPTIONS]
     options:
     - names:
@@ -2794,7 +2816,8 @@ subcommands:
       (an ephemeral container of the pod with cfk): nothing is\ninstalled in the container,
       so it works with any image.\n\n❕ tc only shapes the packets a container sends:
       with --latency 100ms\nthe round trip to the destination grows by 100ms. A container
-      restart\nremoves the degradation."
+      restart\nremoves the degradation.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-network-traffic\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%8C-a-slow-or-broken-network-on-purpose"
     usage: playground debug degrade-traffic [OPTIONS]
     options:
     - names:
@@ -2949,7 +2972,9 @@ subcommands:
       profile and default are the settings of the JDK; all records every event\nwith
       no threshold (scripts/cli/all.jfc), for a deep dive in JDK Mission Control,
       with a high overhead.\n\n\U0001F516 The recording of each container is kept
-      in playground.ini (flight_recorder.<container>), --action status shows it."
+      in playground.ini (flight_recorder.<container>), --action status shows it.\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%9B%A9%EF%B8%8F-a-slow-connector-where-does-the-task-time-go"
     usage: playground debug flight-recorder [OPTIONS]
     options:
     - names:
@@ -2996,7 +3021,8 @@ subcommands:
       so you do not have to edit log4j properties\nand rebuild the container.\n\n\U0001F393
       Tip: raise only the package you suspect, for instance\nio.confluent.connect.s3
       or org.apache.kafka.clients.consumer, rather\nthan the root logger, or the useful
-      lines will be lost in the noise."
+      lines will be lost in the noise.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-log-levels\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%AC-trace-on-a-running-connector-without-a-restart"
     usage: playground debug log-level COMMAND
     options: []
     subcommands:
@@ -3094,7 +3120,9 @@ subcommands:
     JDK, to reproduce a JVM-specific issue\n  kill-all             kill everything
     and prune volumes\n\nMost commands accept --container several times to act on
     a few containers\nat once.\n\n\U0001F393 Tip: the usual names are broker, connect,
-    schema-registry,\ncontrol-center, ksqldb-server, plus whatever the example adds."
+    schema-registry,\ncontrol-center, ksqldb-server, plus whatever the example adds.\n\n\U0001F36A
+    Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-lifecycle\n\U0001F3AC
+    Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%90%B3-restart-or-recreate-what-a-container-keeps"
   usage: playground container COMMAND
   options: []
   aliases:
@@ -3171,7 +3199,8 @@ subcommands:
       \ --open                            read the whole log in your editor\n  --wait-for-log
       \"Started\" -m 120   block until the line shows up\n\nThe last one is what example
       scripts use to synchronise on a component\nbeing ready, instead of sleeping
-      and hoping."
+      and hoping.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B5%EF%B8%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle"
     usage: playground container logs [OPTIONS]
     options:
     - names:
@@ -3487,7 +3516,9 @@ subcommands:
   - name: get-number-records
     description: "\U0001F4AF Get number of records in a topic\n\nCounts the records
       currently in the topic, from the partition offsets.\nThe cheap way to check
-      that a source connector produced something, or\nthat a sink has data to read."
+      that a source connector produced something, or\nthat a sink has data to read.\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception"
     usage: playground topic get-number-records [OPTIONS]
     options:
     - names:
@@ -3502,7 +3533,8 @@ subcommands:
       seconds. A topic\nthat does not exist yet counts as empty, so it can be used
       before a\nsource connector has created its topic.\n\n\U0001F393 Tip: in an example
       script, use it instead of a fixed sleep before\nchecking what a source connector
-      produced."
+      produced.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception"
     usage: playground topic wait-for-records [OPTIONS]
     options:
     - names:
@@ -3531,7 +3563,9 @@ subcommands:
     description: "\U0001F4CD Get earliest and latest offsets per partition of a topic\n\nThe
       low and high watermarks of every partition, and the number of\nrecords in between.
       Useful to see whether retention has already\ndeleted data, which partitions
-      received records, or which offsets a\nconnector should be at."
+      received records, or which offsets a\nconnector should be at.\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception"
     usage: playground topic get-offsets [OPTIONS]
     options:
     - names:
@@ -3559,7 +3593,9 @@ subcommands:
     description: "\U0001F518 List topics\n\nAdd --show-internal to also see the topics
       Kafka and Connect maintain\nfor themselves, such as the connect configs, offsets
       and status\ntopics.\n\nAdd --sort-by-size to show the size and number of partitions
-      of each\ntopic, largest first (same as 'playground topic get-size')."
+      of each\ntopic, largest first (same as 'playground topic get-size').\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception"
     usage: playground topic list [OPTIONS]
     options:
     - names:
@@ -3594,7 +3630,9 @@ subcommands:
   - name: describe
     description: "\U0001F52C Describe topic\n\nPartitions, replicas, in-sync replicas
       and the configuration overrides\nset on the topic. Where to look when records
-      go to an unexpected\npartition, or when a topic is not retaining what you expected."
+      go to an unexpected\npartition, or when a topic is not retaining what you expected.\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception"
     usage: playground topic describe [OPTIONS]
     options:
     - names:
@@ -3642,7 +3680,9 @@ subcommands:
       that cannot be deserialized do not\ncount), which is how examples verify that
       data actually flowed.\n\nThe consumer stops when no record arrives for 10 seconds
       (30 seconds\non Confluent Cloud), so it never waits for records that cannot
-      come\n(transaction markers and compacted records use offsets)."
+      come\n(transaction markers and compacted records use offsets).\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-consume\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%93%A5-read-a-topic"
     usage: playground topic consume [OPTIONS]
     options:
     - names:
@@ -3804,7 +3844,8 @@ subcommands:
       that schema\n  --value <predefined>        one of the bundled schemas\n  --forced-value
       '{...}'      your exact payload, %g being the index\n\n\U0001F393 Tip: pipe
       the schema with a quoted heredoc, << 'EOF', so that the\n%g placeholders survive
-      the shell."
+      the shell.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-produce\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%93%A8-produce-realistic-test-data"
     usage: playground topic produce [OPTIONS]
     options:
     - names:
@@ -4026,7 +4067,8 @@ subcommands:
     description: "\U0001F195 Create topic\n\nOnly needed when you want something other
       than the defaults, since\n'playground topic produce' creates the topic on the
       fly. Any extra\nargument is passed through to kafka-topics --create, so --config
-      works\nas usual."
+      works\nas usual.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception"
     usage: playground topic create [OPTIONS] [--] [ARGUMENTS...]
     options:
     - names:
@@ -4047,16 +4089,13 @@ subcommands:
 
         Default value: 1
   - name: delete
-    description: |-
-      ❌ Delete topic and associated schema/subject if applicable
-
-      Also removes the key and value subjects from the schema registry,
-      which is what you usually want: a topic re-created with a leftover
-      subject keeps the old compatibility rules and the old schema history.
-      Keep them with --skip-delete-schema.
-
-      A regex is accepted, matched in full, to clean up a family of topics
-      at once.
+    description: "❌ Delete topic and associated schema/subject if applicable\n\nAlso
+      removes the key and value subjects from the schema registry,\nwhich is what
+      you usually want: a topic re-created with a leftover\nsubject keeps the old
+      compatibility rules and the old schema history.\nKeep them with --skip-delete-schema.\n\nA
+      regex is accepted, matched in full, to clean up a family of topics\nat once.\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception"
     usage: playground topic delete [OPTIONS]
     options:
     - names:
@@ -4078,7 +4117,9 @@ subcommands:
     description: "\U0001FA9B Alter topic config\n\nChanges topic level settings on
       a live topic, which is how you\nreproduce behaviour driven by configuration:
       a small\nmax.message.bytes to trigger a record too large error, a short\nretention.ms
-      to expire data, a compacted cleanup.policy, and so on."
+      to expire data, a compacted cleanup.policy, and so on.\n\n\U0001F36A Deep dive:
+      https://kafka-docker-playground.io/#/deep-dive-topic-administration\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception"
     usage: playground topic alter [OPTIONS] [--] [ARGUMENTS...]
     options:
     - names:
@@ -4102,7 +4143,9 @@ subcommands:
       queue of --connector, or of the only\nrunning connector that has one, is used.\n\nThe
       errors are in the __connect.errors.* headers, which are only\nwritten with \"errors.deadletterqueue.context.headers.enable\":
       \"true\"\n('playground connector snippets --dlq' has it).\n\n\U0001F449 Example:
-      https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector"
+      https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A9%BA-a-sink-is-running-but-writes-nothing"
     usage: playground topic dlq COMMAND
     options: []
     subcommands:
@@ -4332,7 +4375,8 @@ subcommands:
     or --members\n  reset-offsets   rewind or fast-forward a group (earliest, latest,
     datetime...)\n  delete          delete a group, or its offsets for one topic\n\n\U0001F393
     Tip: for a sink connector, 'playground connector show-lag' follows the\nlag until
-    it reaches 0."
+    it reaches 0.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag\n\U0001F3AC
+    Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%8F%AA-the-lag-of-a-sink-is-stuck"
   usage: playground consumer-group COMMAND
   options: []
   subcommands:
@@ -4470,7 +4514,8 @@ subcommands:
     delete and list ACLs (MDS centralized ACLs, or\n                 regular Kafka
     ACLs with --kafka-acls). On a Confluent\n                 Cloud run, ACLs of the
     Confluent Cloud cluster\n\n\U0001F393 Tip: principals are User:<name> or Group:<name>,
-    a bare name means User:<name>."
+    a bare name means User:<name>.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-secured-environments\n\U0001F3AC
+    Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%90-the-same-example-under-sasl_ssl-and-rbac"
   usage: playground rbac COMMAND
   options: []
   subcommands:
@@ -4819,7 +4864,8 @@ subcommands:
     its default, since when, who sets it\n  sourcecode            open the source
     on GitHub\n\n\U0001F393 Tip: search-jar answers \"is this class really in the
     plugin, and with\nwhich signature\", which is the question behind most NoSuchMethodError
-    and\nClassNotFoundException reports."
+    and\nClassNotFoundException reports.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n\U0001F3AC
+    Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version"
   usage: playground connector-plugin COMMAND
   options: []
   subcommands:
@@ -4930,7 +4976,8 @@ subcommands:
       your editor when used with --open)\n\nYou can compare different sourcecode versions
       by specifying --connector-tag two times, in such case it will open github in
       comparison mode\n\n\U0001F3D7️ Compile code and generate zip file(s) by providing
-      --compile flag"
+      --compile flag\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version"
     usage: playground connector-plugin sourcecode [OPTIONS]
     options:
     - names:
@@ -5054,7 +5101,9 @@ subcommands:
       --state FAILED is reached as soon as the connector\nor one of its tasks is FAILED
       (the connector itself usually stays\nRUNNING when only a task fails).\n\n\U0001F393
       Tip: 'connector create-or-update' already waits for RUNNING. Use\nit for another
-      state, or after 'connector create-or-update --no-wait'."
+      state, or after 'connector create-or-update --no-wait'.\n\n\U0001F36A Deep dive:
+      https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%8C-the-sink-fails-right-after-it-is-deployed"
     usage: playground connector wait [OPTIONS]
     options:
     - names:
@@ -5096,7 +5145,8 @@ subcommands:
       as 'create-or-update' is added for the\nenvironment of the example (security
       settings on sasl-ssl...),\nunless --skip-automatic-connector-config is set.\n\n\U0001F393
       Tip: works for fully managed connectors too, with the validate\nendpoint of
-      Confluent Cloud."
+      Confluent Cloud.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%8C-the-sink-fails-right-after-it-is-deployed"
     usage: playground connector validate [JSON] [OPTIONS]
     options:
     - names:
@@ -5127,7 +5177,7 @@ subcommands:
       that could be removed\n\nKeys only on one side, and keys with different values,
       are listed.\nPasswords masked by the REST API are not compared.\n\n\U0001F393
       Tip: run it with the config of a customer and the config of the\nexample to
-      see right away what differs."
+      see right away what differs.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update"
     usage: playground connector diff [OPTIONS]
     options:
     - names:
@@ -5214,7 +5264,8 @@ subcommands:
       options: []
   - name: smt
     description: "\U0001F9EA Single message transforms (SMT)\n\n  test                         apply
-      a transform chain to a record, step by step"
+      a transform chain to a record, step by step\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-smt-test\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%80-what-does-this-transform-chain-do-to-a-record"
     usage: playground connector smt COMMAND
     options: []
     subcommands:
@@ -5332,7 +5383,8 @@ subcommands:
       connector must not be running while its offsets change: alter and\nreset stop
       it and resume it for you.\n\n\U0001F393 Tip: a sink that reprocesses everything
       and a source that re-snapshots\nare usually offsets problems, not connector
-      problems. Look here first."
+      problems. Look here first.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%8F%AA-the-lag-of-a-sink-is-stuck"
     usage: playground connector offsets COMMAND
     options: []
     subcommands:
@@ -5463,7 +5515,9 @@ subcommands:
     description: "\U0001F9DE Get current and latest versions available on Confluent
       Hub for connector(s) used in example\n\nTells you in one line whether you are
       testing an outdated connector.\nTo move to the version reported as latest, re-run
-      the example with\n'playground update-version --connector-tag <version>'."
+      the example with\n'playground update-version --connector-tag <version>'.\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%8E%AF-is-it-fixed-in-a-newer-version"
     usage: playground connector versions
     options: []
   - name: sourcecode
@@ -5603,7 +5657,8 @@ subcommands:
       sink (its committed offsets when a task is not\n                  RUNNING),
       or offsets of a source\n  \U0001F449 next steps   the commands to dig further\n\nIt
       never follows logs and never waits for the lag to reach 0, so it is\nsafe to
-      use from scripts and AI agents."
+      use from scripts and AI agents.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A9%BA-a-sink-is-running-but-writes-nothing"
     usage: playground connector diagnose [OPTIONS]
     options:
     - names:
@@ -5634,7 +5689,8 @@ subcommands:
       sink, refreshed every --interval seconds, so you\nsee whether it is catching
       up, standing still or falling behind. A lag\nthat does not move while the connector
       reports RUNNING means the tasks\nare stuck rather than slow.\n\nIt will run
-      until all lag becomes 0 (press ctrl-c to exit)"
+      until all lag becomes 0 (press ctrl-c to exit)\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%8F%AA-the-lag-of-a-sink-is-stuck"
     usage: playground connector show-lag [OPTIONS]
     options:
     - names:
@@ -5760,7 +5816,8 @@ subcommands:
       put batch\ntime, batch size and dlq records fill the rows that JMX gives for
       a\nself managed connector. The Metrics API uses the Cloud API key\n(CONFLUENT_CLOUD_API_KEY)
       and does not answer for a deleted connector.\n\n⚠️ Not available with the cfk
-      environment yet."
+      environment yet.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-benchmark\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%93%88-is-version-y-slower-benchmark-two-versions"
     usage: playground connector benchmark [OPTIONS]
     options:
     - names:
@@ -6093,7 +6150,9 @@ subcommands:
       will also set io.confluent.kafka.schemaregistry.client.rest.RestService (to
       see schema registry rest requests) and org.apache.kafka.connect.runtime.TransformationChain
       (to see records before and after SMTs)\n        it will also set org.apache.kafka.connect.runtime.WorkerSinkTask
-      for sink and org.apache.kafka.connect.runtime.WorkerSourceTask for source connectors."
+      for sink and org.apache.kafka.connect.runtime.WorkerSourceTask for source connectors.\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-log-levels\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%AC-trace-on-a-running-connector-without-a-restart"
     usage: playground connector log-level [OPTIONS]
     options:
     - names:
@@ -6210,7 +6269,9 @@ subcommands:
       \    create the equivalent connectors on Confluent Cloud\n\nRun discovery first,
       migrate second. Use it to rehearse a customer's\nmigration and see what their
       configuration turns into.\n\nThe connector example should be ran with --environment
-      flag set to ccloud.\n\nSee a full example at https://github.com/vdesabou/kafka-docker-playground/blob/master/ccloud/connect-migration-utility/README.md"
+      flag set to ccloud.\n\nSee a full example at https://github.com/vdesabou/kafka-docker-playground/blob/master/ccloud/connect-migration-utility/README.md\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-fully-managed\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%9A%9A-move-a-self-managed-connector-to-fully-managed"
     usage: playground connector connect-migration-utility COMMAND
     options: []
     subcommands:
@@ -6271,7 +6332,9 @@ subcommands:
       once.\n\nAn update shows the keys added, removed and changed compared to the\nrunning
       config (secrets masked). The config can also be given in the\nREST API format
       ({\"name\": ..., \"config\": {...}}, as returned by\nGET /connectors/<name>),
-      or as the path of a json file."
+      or as the path of a json file.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%8C-the-sink-fails-right-after-it-is-deployed\n\U0001F3AC
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%8F%97%EF%B8%8F-deploy-a-fully-managed-connector-with-terraform"
     usage: playground connector create-or-update [JSON] [OPTIONS]
     options:
     - names:
