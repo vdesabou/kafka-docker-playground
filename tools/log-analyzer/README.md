@@ -11,7 +11,9 @@ With `PG_LOG_DIGEST_RECORDS_FILE` set, `summarize_log_errors` also appends every
 `log_report.py` reads it and writes the HTML report (`--html-out`) or prints the analysis (`--json`): known causes
 (task killed, authentication, TLS, unknown magic byte, `OutOfMemoryError`…), occurrences over time, root causes
 (deepest exception of each record) and every record. `tools/connector-diagnose/diagnose_report.py` imports it for the
-errors section of the `playground connector diagnose` report.
+errors section of the `playground connector diagnose` report. `get-ci-result --logs`, `container logs --errors --html`
+and `container display-error-all --html` write the same report (`--unit script|container`, `--section` for the last
+lines of a failed CI script, `--link` for the issue and the job).
 
 ```bash
 playground analyze logs --sample support_bundle --output-dir /tmp/log-reports   # support_bundle-log-report.html

@@ -101,6 +101,8 @@ playground container logs -c connect --errors
 playground container logs -c connect --errors --since 10m                         # only the recent records
 playground container logs -c connect --errors --include-warnings --max-findings 10
 playground container logs -c connect -c broker -c schema-registry --errors        # one digest per container
+playground container logs -c connect -c broker --errors --html                    # + an HTML report of the digests
+playground container display-error-all --html                                     # every container, + an HTML report
 ```
 
 What a finding looks like (from the shipped sample, see section 4):
@@ -133,6 +135,10 @@ Gotchas:
 - `--errors` conflicts with `--grep` and `--wait-for-log`, and needs nothing else: it never follows.
 - A digest printed in a log (a CI log containing `container logs --errors` output) is not counted twice: its headers
   are recognized and skipped.
+- `--html` (with `--errors`, and on `display-error-all`) writes the same HTML report as `analyze logs`, one card per
+  container, to `/tmp/playground-log-reports/`, and opens it from a terminal. It's opt-in, because these commands are
+  run all the time. `get-ci-result --logs` writes one for the failing scripts of a CI job too (see
+  [run and versions](/deep-dive-run-and-versions.md)).
 
 ---
 
@@ -359,7 +365,7 @@ playground container logs -c connect --errors --since 5m
 
 ```bash
 playground container logs -c <container> [-c <c2>] \
-  [--errors [--since 10m] [--tail N|all] [--include-warnings] [--max-findings N]] \
+  [--errors [--since 10m] [--tail N|all] [--include-warnings] [--max-findings N] [--html]] \
   [--no-follow [--tail N|all] [--since 10m] [--grep <pattern>]] \
   [--wait-for-log "<text>" [--max-wait S]] [--open] [--previous]
 playground analyze logs -f <file|folder|.zip|.tar.gz|.gz> [-f …] [--include-warnings] [--max-findings N] [--output-dir <dir>] [--json]

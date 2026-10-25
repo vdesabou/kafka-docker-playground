@@ -4,6 +4,8 @@ max_messages="${args[--max-messages]}"
 grep_regex="${args[--grep]}"
 json="${args[--json]}"
 verbose="${args[--verbose]}"
+output_dir="${args[--output-dir]}"
+no_open="${args[--no-open]}"
 
 resolve_dlq_topic "$topic" "$connector"
 
@@ -105,3 +107,19 @@ jq -r '.[] |
 ' $tmp_dir/groups.json
 echo ""
 log "🎓 replay them once the cause is fixed: playground topic dlq replay --topic $dlq_topic"
+
+if ! command -v python3 > /dev/null 2>&1
+then
+    logwarn "⚠️ python3 is not on PATH: no HTML report"
+    exit 0
+fi
+mkdir -p "$output_dir"
+output_dir=$(cd "$output_dir" && pwd)
+html_out="$output_dir/dlq-$(printf '%s' "$dlq_topic" | tr -c 'A-Za-z0-9._-' '_')-$(date '+%Y%m%d-%H%M%S').html"
+if ! python3 -I "$root_folder/tools/dlq-tool/dlq_report.py" --groups $tmp_dir/groups.json --records $tmp_dir/records.json \
+    --summary "$summary" --topic "$dlq_topic" --grep "$grep_regex" --max-messages "$max_messages" --html-out "$html_out"
+then
+    logerror "❌ could not write the HTML report"
+    exit 1
+fi
+open_html_report "$html_out" "$no_open"

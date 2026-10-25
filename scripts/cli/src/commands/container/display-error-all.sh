@@ -1,6 +1,7 @@
 since="${args[--since]}"
 include_warnings="${args[--include-warnings]}"
 max_findings="${args[--max-findings]}"
+html="${args[--html]}"
 
 get_environment_used
 
@@ -108,6 +109,13 @@ else
     fi
     log "####################################################"
 
+    # with --html, every distinct record of the digests, for the HTML report (see summarize_log_errors)
+    records_file=""
+    if [[ -n "$html" ]]
+    then
+        records_file=$(mktemp -t pg-log-records-XXXXXXXXXX)
+        trap 'rm -f "$records_file"' EXIT
+    fi
     clean_containers=()
     while IFS= read -r container
     do
@@ -116,9 +124,9 @@ else
         fi
         if [[ "$environment" == cfk* ]]
         then
-            digest=$(kubectl -n confluent logs "$container" --all-containers=true "${since_opt[@]}" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings")
+            digest=$(kubectl -n confluent logs "$container" --all-containers=true "${since_opt[@]}" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings")
         else
-            digest=$(docker container logs "${since_opt[@]}" "$container" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings")
+            digest=$(docker container logs "${since_opt[@]}" "$container" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings")
         fi
         # a failed assertion (no record received, wrong count) usually logs no error at all, so connect tail is always shown
         if [[ "$digest" == "✅"* ]] && [[ "$container" != connect* ]]
@@ -149,5 +157,12 @@ else
     if [ ${#clean_containers[@]} -gt 0 ]
     then
         log "✅ no $([[ -n "$include_warnings" ]] && echo "ERROR/FATAL/WARN" || echo "ERROR/FATAL") record${since:+ since $since} in: ${clean_containers[*]}"
+    fi
+    if [[ -n "$html" ]]
+    then
+        write_log_records_report "$records_file" "/tmp/playground-log-reports/all-containers-errors-$(date '+%Y%m%d-%H%M%S').html" "" \
+            --title "all containers${since:+ since $since}" --unit container --heading "🔥 Errors of all containers" \
+            --levels "$([[ -n "$include_warnings" ]] && echo "ERROR/FATAL/WARN" || echo "ERROR/FATAL")" \
+            --command "playground container display-error-all"
     fi
 fi

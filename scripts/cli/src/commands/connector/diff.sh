@@ -4,6 +4,8 @@ with_connector="${args[--with-connector]}"
 defaults="${args[--defaults]}"
 json="${args[--json]}"
 verbose="${args[--verbose]}"
+output_dir="${args[--output-dir]}"
+no_open="${args[--no-open]}"
 
 connector_type=$(playground state get run.connector_type)
 
@@ -147,6 +149,36 @@ then
     exit 0
 fi
 
+# side by side HTML report, with the documentation and default of each key from the configuration reference of the plugin
+function write_diff_report () {
+    local connector_class reference report
+    if ! command -v python3 > /dev/null 2>&1
+    then
+        logwarn "⚠️ python3 is not on PATH: no HTML report"
+        return 0
+    fi
+    connector_class=$(jq -r '."connector.class" // empty' $tmp_dir/a.json)
+    # the reference of the running version (written by playground connector status / show-config), else the one recorded by CI
+    reference=$(ls -t "$root_folder"/.connector_config/config-"$connector_class"-*.txt 2>/dev/null | head -1)
+    if [[ -z "$reference" ]] && [[ -n "$connector_class" ]]
+    then
+        reference=$(cd "$root_folder" && git ls-files -- "*/config-$connector_class.txt" 2>/dev/null | head -1)
+        [[ -n "$reference" ]] && reference="$root_folder/$reference"
+    fi
+    mkdir -p "$output_dir"
+    output_dir=$(cd "$output_dir" && pwd)
+    report="$output_dir/diff-$(printf '%s' "$connector-$label_b" | tr -c 'A-Za-z0-9._-' '_')-$(date '+%Y%m%d-%H%M%S').html"
+    report_args=(--diff $tmp_dir/diff.json --a "$label_a" --b "$label_b" --connector-class "$connector_class" --html-out "$report")
+    [[ -n "$defaults" ]] && report_args+=(--defaults)
+    [[ -n "$reference" ]] && report_args+=(--reference "$reference")
+    if ! python3 -I "$root_folder/tools/connector-diff/diff_report.py" "${report_args[@]}"
+    then
+        logerror "❌ could not write the HTML report"
+        return 1
+    fi
+    open_html_report "$report" "$no_open"
+}
+
 if [[ -n "$defaults" ]]
 then
     log "🔀 Parameters of connector $connector that are not at their default value"
@@ -160,7 +192,8 @@ then
     different=$(jq '[.[] | select(.status == "different")] | length' $tmp_dir/diff.json)
     log "📊 $different parameter(s) differ from their default, $same are set to their default value (they could be removed)"
     jq -r '.[] | select(.status == "same") | "  💤 \(.key) = \(.a)"' $tmp_dir/diff.json
-    exit 0
+    write_diff_report
+    exit $?
 fi
 
 log "🔀 Diff of connector $connector (➖) with $label_b (➕)"
@@ -178,3 +211,4 @@ then
 else
     log "📊 $differ key(s) differ, $same identical"
 fi
+write_diff_report

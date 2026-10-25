@@ -21,19 +21,17 @@ import json
 import os
 import re
 import sys
-from datetime import datetime
 from typing import List, Optional, Tuple
 
 # no __pycache__ left in the repository
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "log-analyzer"))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "report-common"))
 import log_report as lr  # noqa: E402
+import report_html as rh  # noqa: E402
 
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 LAG_RE = re.compile(r"topic:\s*(\S+)\s+partition:\s*(\d+)\s+current-offset:\s*(\S+)\s+end-offset:\s*(\S+)\s+lag:\s*(\S+)")
-SECRET_KEY_RE = re.compile(r"password|secret|token|credential|jaas|api\.key|apikey|private\.key|keytab|\.key$", re.I)
-NOT_SECRET_KEY_RE = re.compile(r"(^|\.)(key|value|header)\.converter|key\.ignore|\.key\.field|key\.fields|key\.mode|primary\.key|"
-                               r"\.keys?$|secret\.manager|\.provider", re.I)
 
 
 def read(path: str) -> str:
@@ -49,13 +47,6 @@ def read_json(path: str):
         return json.loads(read(path))
     except ValueError:
         return None
-
-
-def mask(key: str, value) -> str:
-    value = "" if value is None else str(value)
-    if SECRET_KEY_RE.search(key) and not NOT_SECRET_KEY_RE.search(key) and value and not value.startswith("${"):
-        return "********"
-    return value
 
 
 def first_json_block(text: str):
@@ -164,7 +155,7 @@ def assess(c: dict) -> dict:
         if others:
             f.append({"severity": "INFO", "text": f"ℹ️ {others} other distinct ERROR/FATAL record(s) in the worker logs do not name "
                                                   "this connector: they can still explain it (worker, other connectors, Kafka clients)"})
-    f.sort(key=lambda x: lr.SEVERITY_ORDER.index(x["severity"]))
+    f.sort(key=lambda x: rh.SEVERITY_ORDER.index(x["severity"]))
     c["findings"] = f
 
     if c["state"] == "FAILED" or failed:
@@ -185,13 +176,13 @@ def assess(c: dict) -> dict:
 
 
 def st(state: str) -> str:
-    return f"<span class='st {lr.e(state.lower())}'>{lr.e(state)}</span>"
+    return f"<span class='st {rh.e(state.lower())}'>{rh.e(state)}</span>"
 
 
 def tasks_html(c: dict) -> str:
-    rows = [f"<tr><td>connector</td><td>{st(c['state'])}</td><td class='mono' style='white-space:nowrap'>{lr.e(c['worker'])}</td>"
+    rows = [f"<tr><td>connector</td><td>{st(c['state'])}</td><td class='mono' style='white-space:nowrap'>{rh.e(c['worker'])}</td>"
             f"<td>{trace_html(c['connector_trace'])}</td></tr>"]
-    rows += [f"<tr><td style='white-space:nowrap'>task {t.get('id')}</td><td>{st(t.get('state', '?'))}</td><td class='mono' style='white-space:nowrap'>{lr.e(t.get('worker_id', ''))}</td>"
+    rows += [f"<tr><td style='white-space:nowrap'>task {t.get('id')}</td><td>{st(t.get('state', '?'))}</td><td class='mono' style='white-space:nowrap'>{rh.e(t.get('worker_id', ''))}</td>"
              f"<td>{trace_html(t.get('trace', ''))}</td></tr>" for t in c["tasks"]]
     return ("<div class='table-card'><h2>🗺️ Status</h2><table><tr><th>What</th><th>State</th><th>Worker</th><th>Trace</th></tr>"
             + "".join(rows) + "</table></div>")
@@ -201,27 +192,27 @@ def trace_html(trace: str) -> str:
     if not trace:
         return "<span class='legend'>-</span>"
     # the summary is the deepest cause, the full trace is one click away
-    return f"<details><summary class='mono'>{lr.e(trace_summary(trace)[:240])}</summary><pre>{lr.e(trace)}</pre></details>"
+    return f"<details><summary class='mono'>{rh.e(trace_summary(trace)[:240])}</summary><pre>{rh.e(trace)}</pre></details>"
 
 
 def errors_html(c: dict) -> str:
     if c["is_cloud"]:
-        body = f"<pre>{lr.e(c['recommendations'])}</pre>" if c["recommendations"] else "<p>✅ No error recommendation.</p>"
+        body = f"<pre>{rh.e(c['recommendations'])}</pre>" if c["recommendations"] else "<p>✅ No error recommendation.</p>"
         return f"<div class='table-card'><h2>🔥 Confluent Cloud error recommendations</h2>{body}</div>"
     if c["log_files"] is None:
         return ""
     since = c["meta"].get("since", "")
     if not c["records"]:
-        return (f"<div class='table-card'><h2>🔥 Errors in the connect logs (since {lr.e(since)})</h2>"
+        return (f"<div class='table-card'><h2>🔥 Errors in the connect logs (since {rh.e(since)})</h2>"
                 "<p>✅ No ERROR/FATAL record in the connect logs.</p></div>")
     mine, others = c["my_records"], [r for r in c["records"] if r not in c["my_records"]]
     body = ""
     if mine:
-        body += f"<h3>Naming {lr.e(c['name'])} ({len(mine)})</h3>{lr.records_html(mine, open_first=3)}"
+        body += f"<h3>Naming {rh.e(c['name'])} ({len(mine)})</h3>{lr.records_html(mine, open_first=3)}"
     if others:
         body += (f"<h3>Elsewhere in the worker ({len(others)})</h3>"
                  f"{lr.records_html(others, open_first=0 if mine else 2)}")
-    return (f"<div class='table-card'><h2>🔥 Errors in the connect logs (since {lr.e(since)}, whole worker)</h2>{body}"
+    return (f"<div class='table-card'><h2>🔥 Errors in the connect logs (since {rh.e(since)}, whole worker)</h2>{body}"
             "<p class='legend' style='margin-top:10px'>De-duplicated like playground container logs --errors: one block per "
             "distinct record, with its number of occurrences and its exception chain.</p></div>")
 
@@ -235,10 +226,10 @@ def lag_html(c: dict) -> str:
             cur, end = to_int(x["current"]), to_int(x["end"])
             pct = 100 if not end else int(100 * (cur or 0) / end)
             bar = (f"<svg viewBox='0 0 200 12' width='200' height='12'><rect width='200' height='12' rx='2' fill='#e2e8f0'/>"
-                   f"<rect width='{2 * pct}' height='12' rx='2' fill='{lr.SERIES_1}'><title>{pct}% consumed</title></rect></svg>")
+                   f"<rect width='{2 * pct}' height='12' rx='2' fill='{rh.SERIES_1}'><title>{pct}% consumed</title></rect></svg>")
             lag_style = ' style="color:#c2410c;font-weight:600"' if lag else ""
-            rows.append(f"<tr><td class='mono'>{lr.e(x['topic'])}</td><td class='num'>{x['partition']}</td><td class='num'>{lr.e(x['current'])}</td>"
-                        f"<td class='num'>{lr.e(x['end'])}</td><td class='num'{lag_style}>{lr.e(x['lag'])}</td>"
+            rows.append(f"<tr><td class='mono'>{rh.e(x['topic'])}</td><td class='num'>{x['partition']}</td><td class='num'>{rh.e(x['current'])}</td>"
+                        f"<td class='num'>{rh.e(x['end'])}</td><td class='num'{lag_style}>{rh.e(x['lag'])}</td>"
                         f"<td>{bar}</td></tr>")
         return (f"<div class='table-card'><h2>🐢 Consumer lag ({c['total_lag']} record(s))</h2><table><tr><th>Topic</th>"
                 "<th class='num'>Partition</th><th class='num'>Committed</th><th class='num'>End offset</th><th class='num'>Lag</th>"
@@ -246,25 +237,25 @@ def lag_html(c: dict) -> str:
     if c["offsets"] is not None:
         items = c["offsets"].get("offsets") if isinstance(c["offsets"], dict) else None
         if items:
-            rows = "".join(f"<tr><td class='mono'>{lr.e(json.dumps(o.get('partition'), sort_keys=True))}</td>"
-                           f"<td class='mono'>{lr.e(json.dumps(o.get('offset'), sort_keys=True))}</td></tr>" for o in items)
+            rows = "".join(f"<tr><td class='mono'>{rh.e(json.dumps(o.get('partition'), sort_keys=True))}</td>"
+                           f"<td class='mono'>{rh.e(json.dumps(o.get('offset'), sort_keys=True))}</td></tr>" for o in items)
             what = "committed offsets of the sink" if c["type"] == "sink" else "offsets of the source"
             return (f"<div class='table-card'><h2>🐢 Progress: {what}</h2><table><tr><th>Partition</th><th>Offset</th></tr>{rows}</table>"
                     "<p class='legend' style='margin-top:10px'>Run playground connector diagnose again to see whether they move.</p></div>")
         if isinstance(c["offsets"], dict) and c["offsets"].get("offsets") == []:
             why = ("no offset committed yet: it failed or started less than offset.flush.interval.ms (60 s by default) ago"
                    if c["type"] == "sink" else "no offset committed yet")
-            return f"<div class='table-card'><h2>🐢 Progress: offsets</h2><p>ℹ️ {lr.e(why)}.</p></div>"
-        return f"<div class='table-card'><h2>🐢 Progress: offsets</h2><pre>{lr.e(json.dumps(c['offsets'], indent=2))}</pre></div>"
+            return f"<div class='table-card'><h2>🐢 Progress: offsets</h2><p>ℹ️ {rh.e(why)}.</p></div>"
+        return f"<div class='table-card'><h2>🐢 Progress: offsets</h2><pre>{rh.e(json.dumps(c['offsets'], indent=2))}</pre></div>"
     if c["offsets_text"]:
-        return f"<div class='table-card'><h2>🐢 Progress</h2><pre>{lr.e(c['offsets_text'])}</pre></div>"
+        return f"<div class='table-card'><h2>🐢 Progress</h2><pre>{rh.e(c['offsets_text'])}</pre></div>"
     return ""
 
 
 def config_html(c: dict) -> str:
     if not c["config"]:
         return ""
-    rows = "".join(f"<tr><td class='mono'>{lr.e(k)}</td><td class='mono'>{lr.e(mask(k, v))}</td></tr>" for k, v in sorted(c["config"].items()))
+    rows = "".join(f"<tr><td class='mono'>{rh.e(k)}</td><td class='mono'>{rh.e(rh.mask_secret(k, v))}</td></tr>" for k, v in sorted(c["config"].items()))
     return (f"<div class='table-card'><details><summary><b>⚙️ Configuration ({len(c['config'])} keys, secrets masked)</b></summary>"
             f"<table><tr><th>Key</th><th>Value</th></tr>{rows}</table></details></div>")
 
@@ -272,7 +263,7 @@ def config_html(c: dict) -> str:
 def next_steps_html(c: dict) -> str:
     if not c["next_steps"]:
         return ""
-    items = "".join(f"<pre>{lr.e(s.strip())}</pre>" if s.strip().startswith("playground ") else f"<p class='rec-text' style='margin:6px 0'>{lr.e(s.strip())}</p>"
+    items = "".join(f"<pre>{rh.e(s.strip())}</pre>" if s.strip().startswith("playground ") else f"<p class='rec-text' style='margin:6px 0'>{rh.e(s.strip())}</p>"
                     for s in c["next_steps"])
     return f"<div class='table-card'><h2>👉 Next steps</h2>{items}</div>"
 
@@ -280,47 +271,46 @@ def next_steps_html(c: dict) -> str:
 def connector_html(c: dict, several: bool) -> str:
     klass = (c["config"] or {}).get("connector.class", "")
     kind = "☁️ fully managed" if c["is_cloud"] else "🌎 self-managed"
-    errors_kpi = (lr.kpi("🔥 Error records", len(c["error_records"]), f"{len(c['my_records'])} naming the connector",
+    errors_kpi = (rh.kpi("🔥 Error records", len(c["error_records"]), f"{len(c['my_records'])} naming the connector",
                          "danger" if c["my_records"] else "warn" if c["error_records"] else "ok")
                   if c["log_files"] is not None else "")
-    progress_kpi = (lr.kpi("🐢 Lag", c["total_lag"], f"{len(c['lag'])} partition(s)", "warn" if c["total_lag"] else "ok") if c["lag"] else "")
+    progress_kpi = (rh.kpi("🐢 Lag", c["total_lag"], f"{len(c['lag'])} partition(s)", "warn" if c["total_lag"] else "ok") if c["lag"] else "")
     kpis = "".join([
-        lr.kpi("🧩 Connector", c["state"], f"{c['type']} · {kind}", "ok" if c["state"] == "RUNNING" else "danger" if c["state"] == "FAILED" else "warn"),
-        lr.kpi("⚙️ Tasks", f"{c['running_tasks']}/{len(c['tasks'])}", "RUNNING",
+        rh.kpi("🧩 Connector", c["state"], f"{c['type']} · {kind}", "ok" if c["state"] == "RUNNING" else "danger" if c["state"] == "FAILED" else "warn"),
+        rh.kpi("⚙️ Tasks", f"{c['running_tasks']}/{len(c['tasks'])}", "RUNNING",
                "danger" if c["failed_tasks"] else "ok" if c["tasks"] and c["running_tasks"] == len(c["tasks"]) else "warn"),
         errors_kpi, progress_kpi,
     ])
-    head = (f"<div class='section-title' style='font-size:1.25rem;margin-top:12px'>🩺 {lr.e(c['name'])}"
-            + (f" <span class='legend mono'>{lr.e(klass)}</span>" if klass else "") + "</div>") if several else ""
-    return (head + f"<div class='verdict {c['verdict'][0]}'>{lr.e(c['verdict'][1])}</div>"
-            + f"<div class='kpi-grid'>{kpis}</div>" + lr.findings_html(c["findings"])
+    head = (f"<div class='section-title' style='font-size:1.25rem;margin-top:12px'>🩺 {rh.e(c['name'])}"
+            + (f" <span class='legend mono'>{rh.e(klass)}</span>" if klass else "") + "</div>") if several else ""
+    return (head + f"<div class='verdict {c['verdict'][0]}'>{rh.e(c['verdict'][1])}</div>"
+            + f"<div class='kpi-grid'>{kpis}</div>" + rh.findings_html(c["findings"])
             + tasks_html(c) + errors_html(c) + lag_html(c) + next_steps_html(c) + config_html(c))
 
 
 def html_report(connectors: List[dict]) -> str:
     several = len(connectors) > 1
     first = connectors[0]
-    meta = [f"🔗 {lr.e(', '.join(c['name'] for c in connectors))}",
-            f"{'☁️ fully managed' if first['is_cloud'] else '🌎 ' + lr.e(first['meta'].get('environment') or 'self-managed')}",
-            f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"]
+    meta = [f"🔗 {rh.e(', '.join(c['name'] for c in connectors))}",
+            f"{'☁️ fully managed' if first['is_cloud'] else '🌎 ' + rh.e(first['meta'].get('environment') or 'self-managed')}"]
     if not several:
         klass = (first["config"] or {}).get("connector.class")
         if klass:
-            meta.insert(1, f"<span class='mono'>{lr.e(klass)}</span>")
+            meta.insert(1, f"<span class='mono'>{rh.e(klass)}</span>")
     body = ""
     if several:
         rank = {"danger": 0, "warn": 1, "ok": 2}
-        rows = "".join(f"<tr><td class='mono'>{lr.e(c['name'])}</td><td>{lr.e(c['type'])}</td><td>{st(c['state'])}</td>"
-                       f"<td>{c['running_tasks']}/{len(c['tasks'])}</td><td>{lr.e(c['verdict'][1])}</td></tr>"
+        rows = "".join(f"<tr><td class='mono'>{rh.e(c['name'])}</td><td>{rh.e(c['type'])}</td><td>{st(c['state'])}</td>"
+                       f"<td>{c['running_tasks']}/{len(c['tasks'])}</td><td>{rh.e(c['verdict'][1])}</td></tr>"
                        for c in sorted(connectors, key=lambda c: rank[c["verdict"][0]]))
         worst = min(connectors, key=lambda c: rank[c["verdict"][0]])["verdict"][0]
         n_bad = sum(1 for c in connectors if c["verdict"][0] != "ok")
         text = f"✅ All {len(connectors)} connectors look healthy." if not n_bad else f"{'🚨' if worst == 'danger' else '⚠️'} {n_bad} of {len(connectors)} connectors need a look."
-        body += (f"<div class='verdict {worst}'>{lr.e(text)}</div><div class='table-card'><h2>🧩 Connectors</h2><table><tr><th>Connector</th>"
+        body += (f"<div class='verdict {worst}'>{rh.e(text)}</div><div class='table-card'><h2>🧩 Connectors</h2><table><tr><th>Connector</th>"
                  f"<th>Type</th><th>State</th><th>Tasks RUNNING</th><th>Verdict</th></tr>{rows}</table></div>")
     body += "".join(connector_html(c, several) for c in connectors)
     title = ", ".join(c["name"] for c in connectors)
-    return lr.page(f"Connector diagnose — {title}", "🩺 Connector Diagnose", meta, body,
+    return rh.page(f"Connector diagnose — {title}", "🩺 Connector Diagnose", meta, body,
                    "🛠️ Generated by playground connector diagnose (self-contained, no external resource). "
                    "A snapshot: run it again to see whether the state, the lag or the offsets move.")
 

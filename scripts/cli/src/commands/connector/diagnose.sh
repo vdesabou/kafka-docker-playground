@@ -170,12 +170,4 @@ then
     logerror "❌ could not write the HTML report"
     exit 1
 fi
-log "✅ HTML report saved: $html_out"
-# only open a browser in an interactive terminal
-if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ] && [[ ! -n "$no_open" ]] && command -v open &>/dev/null
-then
-    log "🌐 Opening $html_out in browser..."
-    open "$html_out"
-else
-    log "🔗 Open in browser: file://$html_out"
-fi
+open_html_report "$html_out" "$no_open"

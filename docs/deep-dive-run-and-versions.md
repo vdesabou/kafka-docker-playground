@@ -263,7 +263,7 @@ playground stop
 | "it only fails with SASL_SSL / mTLS / Kerberos" | `--environment sasl-ssl` / `2way-ssl` / `kerberos` on the same example |
 | "logs from the very start of the connector" | `--connect-log-level "<package>=TRACE"` (set before the example creates its connector) |
 | "the example is skipped" | `⏭ RESULT: SKIPPED`: read the top of the script, a version guard refused the combination (`exit 111`) |
-| "does it fail in CI too?" | `playground get-ci-result --test <folder> --logs` |
+| "does it fail in CI too?" | `playground get-ci-result --test <folder> --logs`: tail and digest of each failing script, plus an HTML report (known causes, last lines, every record, links to the issue and the job) in `/tmp/playground-ci-result` |
 
 In a repro model, write the versions in the run line you share (`playground repro export` takes it from
 `playground-run-history`), so the next person reproduces with the same ones.

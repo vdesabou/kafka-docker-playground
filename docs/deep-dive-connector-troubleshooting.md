@@ -134,6 +134,12 @@ How it works:
 - `--grep` is a **Java regex** matched against the exception class, message and root cause only, not the payload.
 - `--json` prints `{topic, total, read, skipped_by_grep, groups: [{count, connector, stage, class, exception, message,
   root_cause, original_topics, dlq_offsets, sample_value}]}`.
+- It also writes a self-contained **HTML report**, `dlq-<topic>-<date>.html` in `--output-dir` (default
+  `/tmp/playground-dlq-inspect`), opened in the browser from a terminal (`--no-open` to skip). The report has:
+  - the known causes with what to do (unknown magic byte, serialization error, authentication…), the same as `analyze logs`
+  - a missing `__connect.errors.*` headers warning
+  - when the records arrived (their timestamps)
+  - one card per group: original offsets, sample value, and a `dlq replay --grep … --dry-run` for that group
 
 Gotchas:
 
@@ -259,6 +265,7 @@ playground topic dlq inspect --connector orders-sink
 # 🔢 2 record(s) of connector orders-sink, stage VALUE_CONVERTER (io.confluent.connect.avro.AvroConverter)
 #   🌱 root cause: java.lang.IllegalArgumentException: Unknown magic byte!
 #   📍 original records: topic orders partition 0 offsets 3..4 (2)
+# ✅ HTML report saved: /tmp/playground-dlq-inspect/dlq-dlq-<date>.html   <- 🧲 Unknown magic byte: 2 record(s) in 1 group(s)
 playground topic dlq inspect --topic dlq --grep 'magic byte' --json | jq -c '.groups[] | {count, stage, exception, original_topics}'
 # {"count":2,"stage":"VALUE_CONVERTER","exception":"org.apache.kafka.connect.errors.DataException","original_topics":[{"topic":"orders","partition":"0","first_offset":3,"last_offset":4,"count":2}]}
 ```
@@ -334,7 +341,7 @@ nb=$(playground topic dlq inspect --topic dlq --json | jq '[.groups[] | select(.
 
 ```bash
 playground connector diagnose [--connector <c>] [--since 1h] [--max-findings 15] [--output-dir /tmp/playground-diagnose] [--no-open] [--verbose]
-playground topic dlq inspect  [--connector <c> | --topic <dlq>] [--grep <java regex>] [--max-messages 10000] [--json]
+playground topic dlq inspect  [--connector <c> | --topic <dlq>] [--grep <java regex>] [--max-messages 10000] [--json] [--output-dir <dir>] [--no-open]
 playground topic dlq replay   [--connector <c> | --topic <dlq>] [--to <topic>] [--grep <java regex>] [--keep-error-headers] [--dry-run]
 ```
 
@@ -351,9 +358,11 @@ playground topic dlq replay   [--connector <c> | --topic <dlq>] [--to <topic>] [
 - Context headers = error details + automatic replay target.
 - Inspect groups by connector, stage, exception and message. `--grep` matches the error, not the payload.
 - Replay: exact bytes, error headers stripped, new partition and offset, DLQ never truncated. Fix first.
-- Diagnose also writes an HTML report per run (verdict, traces, records naming the connector, lag, masked config).
+- Diagnose and dlq inspect also write an HTML report per run (diagnose: verdict, traces, records naming the connector,
+  lag, masked config; dlq inspect: known causes, arrival time, groups, replay commands).
 - Sources: [`connector/diagnose.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/connector/diagnose.sh),
   [`tools/connector-diagnose/diagnose_report.py`](https://github.com/vdesabou/kafka-docker-playground/blob/master/tools/connector-diagnose/diagnose_report.py),
+  [`tools/dlq-tool/dlq_report.py`](https://github.com/vdesabou/kafka-docker-playground/blob/master/tools/dlq-tool/dlq_report.py),
   [`topic/dlq/inspect.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/topic/dlq/inspect.sh),
   [`topic/dlq/replay.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/topic/dlq/replay.sh),
   [`tools/dlq-tool/DlqTool.java`](https://github.com/vdesabou/kafka-docker-playground/blob/master/tools/dlq-tool/DlqTool.java),

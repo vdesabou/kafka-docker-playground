@@ -73,6 +73,9 @@ lab_expect_contains "root cause: java.lang.IllegalArgumentException: Unknown mag
 lab_expect_contains "original records: topic orders partition 0 offsets 3..4 (2)"
 lab_expect_contains "dlq partition 0 offsets 0..1"
 lab_expect_contains 'sample value: {"id": 1}'
+lab_expect_contains "✅ HTML report saved: /tmp/playground-dlq-inspect/dlq-dlq-"
+dlq_report=$(echo "$LAB_OUTPUT" | sed -n 's/.*HTML report saved: //p' | tail -1)
+lab_expect_equals "$(grep -o 'Unknown magic byte: 2 record(s) in 1 group(s)' "$dlq_report" | head -1)" "Unknown magic byte: 2 record(s) in 1 group(s)" "known cause in the DLQ HTML report"
 lab_run bash -c "playground topic dlq inspect --topic dlq --grep 'magic byte' --json | jq -c '.groups[] | {count, stage, exception, original_topics}'"
 lab_expect_contains '{"count":2,"stage":"VALUE_CONVERTER","exception":"org.apache.kafka.connect.errors.DataException","original_topics":[{"topic":"orders","partition":"0","first_offset":3,"last_offset":4,"count":2}]}'
 lab_run playground topic consume -t dlq --last 1 --max-characters 0

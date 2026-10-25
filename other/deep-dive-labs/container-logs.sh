@@ -93,8 +93,14 @@ lab_run playground analyze logs -f "$saved_log.gz" --json
 lab_expect_exit 0
 lab_expect_contains '"files_with_findings": 1'
 lab_expect_contains '"title": "🧲 Unknown magic byte"'
-lab_run playground container logs -c connect --errors
+lab_run playground container logs -c connect --errors --html
 lab_expect_exit 0
+lab_expect_contains "✅ HTML report saved: /tmp/playground-log-reports/connect-errors-"
+errors_report=$(echo "$LAB_OUTPUT" | sed -n 's/.*HTML report saved: //p' | tail -1)
+lab_expect_equals "$(grep -o 'A connector task was killed' "$errors_report" | head -1)" "A connector task was killed" "known cause in the container logs HTML report"
+lab_run playground container display-error-all --html --max-findings 1
+lab_expect_exit 0
+lab_expect_contains "✅ HTML report saved: /tmp/playground-log-reports/all-containers-errors-"
 playground connector delete --connector bad-sink
 
 log "✅ all the outputs of the page are as expected"

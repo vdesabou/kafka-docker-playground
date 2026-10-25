@@ -4,8 +4,14 @@ output_dir="${args[--output-dir]}"
 report_type="${args[--report-type]}"
 max_memory="${args[--max-memory]}"
 compare_file="${args[--compare]}"
+json_out="${args[--json]}"
 
 set +e
+
+# with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
+if [[ -n "$json_out" ]]; then
+    exec 3>&1 1>&2
+fi
 
 if [[ -n "$heap_file" && -n "$sample" ]]; then
     logerror "❌ Provide either --file or --sample, not both"
@@ -100,15 +106,25 @@ if [ $exit_code -ne 0 ]; then
 fi
 
 log "📄 Digest saved in $output_dir_abs/summary.txt"
-report="$output_dir_abs/Leak_Suspects/index.html"
-[ -f "$report" ] || report=$(ls "$output_dir_abs"/*/index.html 2>/dev/null | head -1)
-# only open a browser in an interactive terminal
-if [[ -n "$report" && -t 1 ]]; then
-    if [[ $(type -f open 2>&1) =~ "not found" ]]
-    then
-        log "🔗 Cannot open browser, use url: $report"
-    else
-        log "📊 Opening $report in default browser"
-        open "$report"
-    fi
+
+if ! command -v python3 &>/dev/null; then
+    logwarn "⚠️ python3 is not on PATH: no HTML report, MAT reports in $output_dir_abs"
+    exit 0
 fi
+report_args=(--output-dir "$output_dir_abs" --heap-file "$(basename "$heap_file")")
+if [[ -n "$compare_file" ]]; then
+    report_args+=(--compare-file "$(basename "$compare_file")")
+fi
+if [[ -n "$json_out" ]]; then
+    python3 -I "$root_folder/tools/heap-analyzer/heap_report.py" "${report_args[@]}" --json >&3
+    exit $?
+fi
+stem=$(basename "$heap_file")
+stem="${stem%.gz}"
+stem="${stem%.hprof}"
+html_out="$output_dir_abs/${stem}-heap-report.html"
+if ! python3 -I "$root_folder/tools/heap-analyzer/heap_report.py" "${report_args[@]}" --html-out "$html_out"; then
+    logerror "❌ could not write the HTML report"
+    exit 1
+fi
+open_html_report "$html_out"

@@ -2059,6 +2059,8 @@ commands:
     with a digest of the ERROR/FATAL records (same digest as 'playground
     container logs --errors').
 
+    🌐 With --logs, also writes a self-contained HTML report of the failure in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): known causes, last lines before the failure of each failing script, root causes and every distinct record, with links to the issue and the job.
+
     Use --test to ask about any example, without running it.
   flags:
   - long: --test
@@ -2094,12 +2096,26 @@ commands:
     default: "20"
     needs: [--logs]
     help: |-
-      ✂️ With --logs, maximum number of distinct records to show per failing script (default 20)
+      ✂️ With --logs, maximum number of distinct records to show per failing script (default 20). The HTML report has them all
+  - long: --output-dir
+    short: -o
+    arg: output_dir
+    required: false
+    default: "/tmp/playground-ci-result"
+    needs: [--logs]
+    help: |-
+      📂 With --logs, output directory for the HTML report (default: /tmp/playground-ci-result)
+  - long: --no-open
+    required: false
+    needs: [--logs]
+    help: |-
+      🙈 With --logs, do not open the HTML report in the browser
   examples:
   - playground get-ci-result
   - playground get-ci-result --logs
   - playground get-ci-result --test other/connect-secret-registry --logs
   - playground get-ci-result --test connect/connect-mqtt-sink --environment cfk --podman --logs
+  - playground get-ci-result --test connect/connect-replicator --logs --no-open
   x_example_outputs:
   - command: playground get-ci-result --test connect/connect-http-sink
     output: |-
@@ -2126,6 +2142,9 @@ commands:
               at org.apache.kafka.common.config.AbstractConfig.getConfiguredInstance(AbstractConfig.java:429)
 
       ✂️ 2 more distinct record(s) not shown, increase --max-findings
+
+      17:24:17 ℹ️ ✅ HTML report saved: /tmp/playground-ci-result/ci-result-connect_connect-replicator-plaintext-115072055973.html
+      17:24:17 ℹ️ 🔗 Open in browser: file:///tmp/playground-ci-result/ci-result-connect_connect-replicator-plaintext-115072055973.html
   footer: |-
     Example output:
       $ playground get-ci-result --test connect/connect-replicator --logs --max-findings 2
@@ -2148,6 +2167,9 @@ commands:
               at org.apache.kafka.common.config.AbstractConfig.getConfiguredInstance(AbstractConfig.java:429)
 
       ✂️ 2 more distinct record(s) not shown, increase --max-findings
+
+      17:24:17 ℹ️ ✅ HTML report saved: /tmp/playground-ci-result/ci-result-connect_connect-replicator-plaintext-115072055973.html
+      17:24:17 ℹ️ 🔗 Open in browser: file:///tmp/playground-ci-result/ci-result-connect_connect-replicator-plaintext-115072055973.html
 
 - name: history
   group: Run
@@ -4119,6 +4141,8 @@ commands:
 
       📈 Use --compare with a second dump of the same JVM, taken later under the same load, to see which classes grow
 
+      🌐 Also writes a self-contained HTML report, <dump>-heap-report.html in --output-dir, opened in the browser in an interactive terminal: verdict, leak suspects in plain words, Kafka-aware hints (producer buffers, consumer fetch buffers, records held by the tasks, storage sink writers, CDC queues, schema caches), retained heap by class, growth between the two dumps, and links to the MAT reports
+
       🐳 MAT needs roughly as much memory as the used heap of the dump (1 to 1.5x the .hprof size): give Docker enough memory or use --max-memory
 
       🧪 With --sample, it analyzes the samples shipped in tools/heap-analyzer/samples: a quick way to see what it reports.
@@ -4184,6 +4208,10 @@ commands:
         validate: file_exists_and_hprof
         help: |-
           📈 Second heap dump of the same JVM, taken later: prints the classes whose instance count and shallow size grew
+      - long: --json
+        required: false
+        help: |-
+          🗂️  Output JSON on stdout: overview, leak suspects, retained heap by class, growth and findings (text digest on stderr, no HTML report)
     examples:
     - playground analyze heap-dump --sample leak
     - playground analyze heap-dump --sample leak_growth
@@ -4192,6 +4220,7 @@ commands:
     - playground analyze heap-dump -f heap-dump-connect.hprof --report-type leaks
     - playground analyze heap-dump -f heap-1.hprof --compare heap-2.hprof
     - playground analyze heap-dump -f big-heap-dump.hprof --max-memory 12g
+    - playground analyze heap-dump --sample leak_growth --json
 
   - name: logs
     help: |-
@@ -5772,9 +5801,16 @@ commands:
         default: "40"
         help: |-
           ✂️ With --errors, maximum number of distinct records to show (default 40)
+
+      - long: --html
+        required: false
+        needs: [--errors]
+        help: |-
+          🌐 With --errors, also write a self-contained HTML report of the digest in /tmp/playground-log-reports (known causes, timeline, root causes, every distinct record), opened in the browser in an interactive terminal
       examples:
       - playground container logs --container connect
       - playground container logs -c connect --errors
+      - playground container logs -c connect -c broker --errors --html
       - playground container logs -c connect --errors --since 10m --include-warnings
       - playground container logs -c connect --grep "Caused by" --no-follow
       - playground container logs -c connect --no-follow --tail 500
@@ -5844,9 +5880,15 @@ commands:
         default: "15"
         help: |-
           ✂️ Maximum number of distinct records to show per container (default 15)
+
+      - long: --html
+        required: false
+        help: |-
+          🌐 Also write a self-contained HTML report of all the containers in /tmp/playground-log-reports (known causes, timeline, root causes, every distinct record), opened in the browser in an interactive terminal
       examples:
       - playground container display-error-all
       - playground container display-error-all --since 10m --include-warnings
+      - playground container display-error-all --html
 
     - name: ssh
       group: Container
@@ -7566,6 +7608,8 @@ commands:
             Keys and values are read as raw bytes, so it works whatever the
             format of the records (avro, protobuf, json schema, plain json).
 
+            🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): known causes, when the records arrived, the groups with their original offsets and a sample value, and the replay commands.
+
             👉 Example: https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector
           flags:
           - &dlq-topic
@@ -7607,12 +7651,24 @@ commands:
           - long: --json
             required: false
             help: |-
-              🤖 Print the groups as JSON
+              🤖 Print the groups as JSON (no HTML report)
+          - long: --output-dir
+            short: -o
+            arg: output_dir
+            required: false
+            default: "/tmp/playground-dlq-inspect"
+            help: |-
+              📂 Output directory for the HTML report (default: /tmp/playground-dlq-inspect)
+          - long: --no-open
+            required: false
+            help: |-
+              🙈 Do not open the HTML report in the browser
           - *verbose
           examples:
           - playground topic dlq inspect --topic dlq
           - playground topic dlq inspect --connector http-sink
           - playground topic dlq inspect --topic dlq --grep "Unknown magic byte"
+          - playground topic dlq inspect --topic dlq --output-dir ./case-123456 --no-open
           x_example_outputs:
           - command: playground topic dlq inspect --topic dlq
             output: |-
@@ -7627,6 +7683,8 @@ commands:
                 🔎 sample value: {"f1":"value1"}
 
               17:22:09 ℹ️ 🎓 replay them once the cause is fixed: playground topic dlq replay --topic dlq
+              17:22:09 ℹ️ ✅ HTML report saved: /tmp/playground-dlq-inspect/dlq-dlq-20261013-172209.html
+              17:22:09 ℹ️ 🔗 Open in browser: file:///tmp/playground-dlq-inspect/dlq-dlq-20261013-172209.html
 
         - name: replay
           group: Topic
@@ -8938,6 +8996,8 @@ commands:
       🎓 Tip: run it with the config of a customer and the config of the
       example to see right away what differs.
 
+      🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): the keys side by side with the documentation, type and default of each one (from the configuration reference of the plugin), what the important differences mean (converters, error handling, transforms...), and the secrets masked.
+
       🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update
     flags:
     - *verbose
@@ -8967,7 +9027,18 @@ commands:
     - long: --json
       required: false
       help: |-
-        🤖 Print the result as JSON
+        🤖 Print the result as JSON (no HTML report)
+    - long: --output-dir
+      short: -o
+      arg: output_dir
+      required: false
+      default: "/tmp/playground-connector-diff"
+      help: |-
+        📂 Output directory for the HTML report (default: /tmp/playground-connector-diff)
+    - long: --no-open
+      required: false
+      help: |-
+        🙈 Do not open the HTML report in the browser
     examples:
     - playground connector diff --connector filestream-sink --file customer-config.json
     - playground connector diff --connector filestream-sink --with-connector filestream-sink2
@@ -8989,6 +9060,8 @@ commands:
                ➕ 4
           ➕ errors.tolerance = all   (only in customer-config.json)
         17:22:05 ℹ️ 📊 2 key(s) differ, 6 identical
+        17:22:05 ℹ️ ✅ HTML report saved: /tmp/playground-connector-diff/diff-filestream-sink-customer-config.json-20261013-172205.html
+        17:22:05 ℹ️ 🔗 Open in browser: file:///tmp/playground-connector-diff/diff-filestream-sink-customer-config.json-20261013-172205.html
 
   - name: error-recommendations
     filters:

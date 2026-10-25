@@ -106,6 +106,9 @@ lab_expect_exit 0
 lab_expect_contains "✏️  tasks.max"
 lab_expect_contains "➖ key.converter = org.apache.kafka.connect.storage.StringConverter   (only in filestream-sink)"
 lab_expect_contains "📊 4 key(s) differ, 4 identical"
+lab_expect_contains "✅ HTML report saved: /tmp/playground-connector-diff/diff-filestream-sink-"
+diff_report=$(echo "$LAB_OUTPUT" | sed -n 's/.*HTML report saved: //p' | tail -1)
+lab_expect_equals "$(grep -o 'another converter: the records are read' "$diff_report" | head -1)" "another converter: the records are read" "converter finding in the diff HTML report"
 lab_run playground connector diff -c filestream-sink --defaults
 lab_expect_exit 0
 lab_expect_contains "✏️  errors.tolerance = all   (default: none)"
