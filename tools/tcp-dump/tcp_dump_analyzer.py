@@ -19,6 +19,11 @@ from collections import Counter, OrderedDict, defaultdict
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
+# the look shared with the other reports (tools/report-common/report_html.py); no __pycache__ left in the repository
+sys.dont_write_bytecode = True
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "report-common"))
+import report_html  # noqa: E402
+
 # ── Reference data ────────────────────────────────────────────────────────────
 
 KAFKA_APIS = ("Produce Fetch ListOffsets Metadata LeaderAndIsr StopReplica UpdateMetadata ControlledShutdown OffsetCommit "
@@ -650,52 +655,10 @@ def text_report(res: dict, title: str, top: int) -> str:
 
 # ── HTML report (same look as analyze thread-dump / gc-logs) ─────────────────
 
-_HTML_CSS = """<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:#1e293b;line-height:1.5}
-.page{max-width:1300px;margin:0 auto;padding:24px}
-h1{font-size:1.55rem;font-weight:700}
-h2{font-size:1.05rem;font-weight:600;margin-bottom:12px;color:#334155}
-.header{background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);color:#fff;border-radius:12px;padding:22px 28px;margin-bottom:22px}
-.header-meta{font-size:.83rem;opacity:.85;margin-top:6px}
-.header-meta span{margin-right:18px}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:14px;margin-bottom:22px}
-.kpi-card{background:#fff;border-radius:10px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.07);border-left:4px solid #2563eb}
-.kpi-card.warn{border-left-color:#d97706}.kpi-card.danger{border-left-color:#dc2626}.kpi-card.ok{border-left-color:#16a34a}
-.kpi-label{font-size:.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
-.kpi-value{font-size:1.75rem;font-weight:700;margin:3px 0 2px}
-.kpi-unit{font-size:.73rem;color:#94a3b8}
-.charts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(560px,1fr));gap:18px;margin-bottom:22px}
-.chart-card{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
-.chart-card svg{width:100%;height:auto}
-.chart-card svg rect:hover{opacity:.75}
-.legend{font-size:.78rem;color:#475569;margin-bottom:6px}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 5px 0 12px;vertical-align:-1px}
-.section-title{font-size:1.05rem;font-weight:600;color:#334155;margin:0 0 12px;padding-top:4px}
-.recs-list{display:flex;flex-direction:column;gap:9px;margin-bottom:22px}
-.rec-card{background:#fff;border-radius:8px;padding:12px 14px 12px 18px;box-shadow:0 1px 3px rgba(0,0,0,.06);border-left:5px solid #94a3b8;display:flex;align-items:flex-start;gap:10px}
-.rec-card.critical{border-left-color:#dc2626}.rec-card.high{border-left-color:#ea580c}.rec-card.medium{border-left-color:#d97706}
-.rec-card.low{border-left-color:#16a34a}.rec-card.info{border-left-color:#3b82f6}.rec-card.ok{border-left-color:#0891b2}
-.rec-badge{font-size:.68rem;font-weight:700;text-transform:uppercase;padding:2px 7px;border-radius:20px;white-space:nowrap;margin-top:2px}
-.rec-badge.critical{background:#fee2e2;color:#dc2626}.rec-badge.high{background:#ffedd5;color:#ea580c}.rec-badge.medium{background:#fef3c7;color:#d97706}
-.rec-badge.low{background:#dcfce7;color:#16a34a}.rec-badge.info{background:#dbeafe;color:#2563eb}.rec-badge.ok{background:#cffafe;color:#0891b2}
-.rec-text{font-size:.88rem;flex:1;color:#334155}
-.table-card{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.07);overflow-x:auto;margin-bottom:22px}
-table{width:100%;border-collapse:collapse;font-size:.84rem}
-th{text-align:left;padding:7px 11px;background:#f8fafc;font-weight:600;border-bottom:2px solid #e2e8f0;color:#475569}
-td{padding:7px 11px;border-bottom:1px solid #f1f5f9;vertical-align:top}
-td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
-tr:hover td{background:#f8fafc}
-.mono{font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:.78rem;word-break:break-all}
-details summary{cursor:pointer;font-weight:600;font-size:.86rem;padding:6px 0}
-.st{display:inline-block;font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:12px;background:#f1f5f9;color:#475569}
+_HTML_CSS = report_html.style("""
 .st.established,.st.closed{background:#dcfce7;color:#15803d}.st.refused,.st.no-answer{background:#fee2e2;color:#dc2626}
 .st.reset{background:#ffedd5;color:#c2410c}
-.verdict{background:#fff;border-radius:10px;padding:14px 18px;box-shadow:0 1px 3px rgba(0,0,0,.07);border-left:4px solid #16a34a;font-size:1rem;font-weight:500;margin-bottom:22px}
-.verdict.danger{border-left-color:#dc2626}.verdict.warn{border-left-color:#d97706}.verdict.ok{border-left-color:#16a34a}
-pre{font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.76rem;background:#f8fafc;padding:10px;border-radius:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-all}
-.footer{text-align:center;font-size:.78rem;color:#94a3b8;padding:14px}
-</style>"""
+""")
 
 
 def _e(s) -> str:

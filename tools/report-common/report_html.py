@@ -3,8 +3,13 @@
 Look shared by the HTML reports of the playground commands (same as analyze thread-dump / gc-logs / tcp-dump):
 header, verdict banner, tiles, findings with severity badges, tables, SVG charts. Self-contained: no external resource.
 
-Imported by tools/log-analyzer/log_report.py, tools/connector-diagnose/diagnose_report.py, tools/dlq-tool/dlq_report.py,
-tools/heap-analyzer/heap_report.py and tools/connector-diff/diff_report.py, which add this folder to sys.path.
+Imported, after adding this folder to sys.path, by:
+  - the newer reports, which use page() and every helper: tools/log-analyzer/log_report.py,
+    tools/connector-diagnose/diagnose_report.py, tools/dlq-tool/dlq_report.py, tools/heap-analyzer/heap_report.py,
+    tools/connector-diff/diff_report.py
+  - the older ones, which only take BASE_CSS through style() with their own rules: tools/thread-analyzer,
+    gc-analysis, tools/xstream-analyzer, tools/tcp-dump
+The benchmark, flight recorder, SMT test and CFK bundle reports have their own design (light / dark theme, filters).
 """
 
 import re
@@ -18,13 +23,13 @@ SEVERITY_ICONS = {"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "LOW": "
 SERIES_1 = "#2a78d6"
 SERIES_2 = "#eb6834"
 
-HTML_CSS = """<style>
+# the look of analyze thread-dump, gc-logs, oracle-xstream-report and tcp-dump, which add their own rules with style()
+BASE_CSS = """
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:#1e293b;line-height:1.5}
 .page{max-width:1300px;margin:0 auto;padding:24px}
 h1{font-size:1.55rem;font-weight:700}
 h2{font-size:1.05rem;font-weight:600;margin-bottom:12px;color:#334155}
-h3{font-size:.95rem;font-weight:600;margin:14px 0 8px;color:#334155}
 .header{background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);color:#fff;border-radius:12px;padding:22px 28px;margin-bottom:22px}
 .header-meta{font-size:.83rem;opacity:.85;margin-top:6px}
 .header-meta span{margin-right:18px}
@@ -32,7 +37,7 @@ h3{font-size:.95rem;font-weight:600;margin:14px 0 8px;color:#334155}
 .kpi-card{background:#fff;border-radius:10px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.07);border-left:4px solid #2563eb}
 .kpi-card.warn{border-left-color:#d97706}.kpi-card.danger{border-left-color:#dc2626}.kpi-card.ok{border-left-color:#16a34a}
 .kpi-label{font-size:.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
-.kpi-value{font-size:1.75rem;font-weight:700;margin:3px 0 2px;word-break:break-word}
+.kpi-value{font-size:1.75rem;font-weight:700;margin:3px 0 2px}
 .kpi-unit{font-size:.73rem;color:#94a3b8}
 .charts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(560px,1fr));gap:18px;margin-bottom:22px}
 .chart-card{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
@@ -56,18 +61,35 @@ td{padding:7px 11px;border-bottom:1px solid #f1f5f9;vertical-align:top}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 tr:hover td{background:#f8fafc}
 .mono{font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:.78rem;word-break:break-all}
-details{border-top:1px solid #f1f5f9;padding:2px 0}
-details summary{cursor:pointer;font-size:.84rem;padding:6px 0}
-.st{display:inline-block;font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:12px;background:#f1f5f9;color:#475569;white-space:nowrap}
-.st.fatal,.st.failed{background:#fee2e2;color:#dc2626}.st.error{background:#ffedd5;color:#c2410c}.st.warn,.st.paused,.st.unassigned{background:#fef3c7;color:#b45309}
-.st.running{background:#dcfce7;color:#15803d}.st.mine{background:#dbeafe;color:#1d4ed8}
+details summary{cursor:pointer;font-weight:600;font-size:.86rem;padding:6px 0}
+.st{display:inline-block;font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:12px;background:#f1f5f9;color:#475569}
 .verdict{background:#fff;border-radius:10px;padding:14px 18px;box-shadow:0 1px 3px rgba(0,0,0,.07);border-left:4px solid #16a34a;font-size:1rem;font-weight:500;margin-bottom:22px}
 .verdict.danger{border-left-color:#dc2626}.verdict.warn{border-left-color:#d97706}.verdict.ok{border-left-color:#16a34a}
-pre{font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.76rem;background:#f8fafc;padding:10px;border-radius:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;margin:4px 0 8px}
+pre{font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.76rem;background:#f8fafc;padding:10px;border-radius:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-all}
+.footer{text-align:center;font-size:.78rem;color:#94a3b8;padding:14px}
+"""
+
+# what the newer reports (logs, diagnose, dlq, heap dump, diff, CI result) add to it
+NEWER_REPORTS_CSS = """
+h3{font-size:.95rem;font-weight:600;margin:14px 0 8px;color:#334155}
+.kpi-value{word-break:break-word}
+details{border-top:1px solid #f1f5f9;padding:2px 0}
+details summary{font-size:.84rem;font-weight:normal}
+.st{white-space:nowrap}
+.st.fatal,.st.failed{background:#fee2e2;color:#dc2626}.st.error{background:#ffedd5;color:#c2410c}.st.warn,.st.paused,.st.unassigned{background:#fef3c7;color:#b45309}
+.st.running{background:#dcfce7;color:#15803d}.st.mine{background:#dbeafe;color:#1d4ed8}
+pre{margin:4px 0 8px}
 .diff-a{background:#fee2e2}.diff-b{background:#dcfce7}.muted{color:#94a3b8}
 code{font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.8rem;background:#f1f5f9;padding:1px 5px;border-radius:4px}
-.footer{text-align:center;font-size:.78rem;color:#94a3b8;padding:14px}
-</style>"""
+"""
+
+
+def style(extra: str = "") -> str:
+    """<style> element: the shared look, then the rules of one report (they win over the shared ones)"""
+    return f"<style>{BASE_CSS}{extra}</style>"
+
+
+HTML_CSS = style(NEWER_REPORTS_CSS)
 
 
 def e(s) -> str:

@@ -24,6 +24,11 @@ from datetime import datetime
 from html.parser import HTMLParser
 from typing import Dict, List, Optional
 
+# the look shared with the other reports (tools/report-common/report_html.py); no __pycache__ left in the repository
+sys.dont_write_bytecode = True
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "report-common"))
+import report_html  # noqa: E402
+
 SEVERITIES = ("CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO")
 ICONS = {"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "LOW": "🔵", "INFO": "⚪"}
 
@@ -1105,47 +1110,23 @@ def print_deltas(deltas: List[dict]):
 
 # ── HTML output (same look as analyze gc-logs / thread-dump, self-contained, every report value escaped) ──────────
 
-_HTML_CSS = """<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:#1e293b;line-height:1.5}
-.page{max-width:1300px;margin:0 auto;padding:24px}
-h1{font-size:1.55rem;font-weight:700}
-h2{font-size:1.05rem;font-weight:600;margin-bottom:12px;color:#334155}
-.header{background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);color:#fff;border-radius:12px;padding:22px 28px;margin-bottom:22px}
-.header-meta{font-size:.83rem;opacity:.85;margin-top:6px}
-.header-meta span{margin-right:18px}
+_HTML_CSS = report_html.style("""
 .health{display:inline-block;margin-top:10px;padding:3px 12px;border-radius:20px;font-weight:700;font-size:.85rem;background:#fff}
 .health.CRITICAL{color:#dc2626}.health.DEGRADED{color:#ea580c}.health.AT-RISK{color:#d97706}.health.HEALTHY{color:#16a34a}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:14px;margin-bottom:22px}
-.kpi-card{background:#fff;border-radius:10px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.07);border-left:4px solid #2563eb}
-.kpi-card.warn{border-left-color:#d97706}.kpi-card.danger{border-left-color:#dc2626}.kpi-card.ok{border-left-color:#16a34a}
-.kpi-label{font-size:.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
-.kpi-value{font-size:1.45rem;font-weight:700;margin:3px 0 2px;word-break:break-word}
-.kpi-unit{font-size:.73rem;color:#94a3b8}
-.section-title{font-size:1.05rem;font-weight:600;color:#334155;margin:0 0 12px;padding-top:4px}
-.recs-list{display:flex;flex-direction:column;gap:9px;margin-bottom:22px}
-.rec-card{background:#fff;border-radius:8px;padding:12px 14px 12px 18px;box-shadow:0 1px 3px rgba(0,0,0,.06);border-left:5px solid #94a3b8;display:flex;align-items:flex-start;gap:10px}
-.rec-card.critical{border-left-color:#dc2626}.rec-card.high{border-left-color:#ea580c}.rec-card.medium{border-left-color:#d97706}
-.rec-card.low{border-left-color:#16a34a}.rec-card.info{border-left-color:#3b82f6}
-.rec-badge{font-size:.68rem;font-weight:700;text-transform:uppercase;padding:2px 7px;border-radius:20px;white-space:nowrap;margin-top:2px}
-.rec-badge.critical{background:#fee2e2;color:#dc2626}.rec-badge.high{background:#ffedd5;color:#ea580c}.rec-badge.medium{background:#fef3c7;color:#d97706}
-.rec-badge.low{background:#dcfce7;color:#16a34a}.rec-badge.info{background:#dbeafe;color:#2563eb}
-.rec-text{font-size:.88rem;flex:1;color:#334155}
+.kpi-value{font-size:1.45rem;word-break:break-word}
 .rec-meta{font-size:.78rem;color:#64748b;margin-top:3px}
 .rec-action{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:6px 9px;margin-top:6px;white-space:pre-wrap}
-.table-card{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.07);overflow-x:auto;margin-bottom:22px}
-.chart-card{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.07);margin-bottom:22px}
-.chart-card svg{width:100%;height:auto}
-table{width:100%;border-collapse:collapse;font-size:.84rem}
-th{text-align:left;padding:7px 11px;background:#f8fafc;font-weight:600;border-bottom:2px solid #e2e8f0;color:#475569}
-td{padding:6px 11px;border-bottom:1px solid #f1f5f9;vertical-align:top}
-.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem}
-.st{font-weight:600}.st.PASS{color:#16a34a}.st.FAIL{color:#dc2626}.st.WARNING{color:#d97706}.st.CHECK{color:#2563eb}.st.INFO,.st.UNKNOWN{color:#64748b}
-.verdict{background:#fff;border-radius:10px;padding:14px 18px;box-shadow:0 1px 3px rgba(0,0,0,.07);border-left:4px solid #16a34a;margin-bottom:22px;font-size:1rem;font-weight:500;color:#1e293b}
+.chart-card{margin-bottom:22px}
+td{padding:6px 11px}
+tr:hover td{background:transparent}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;word-break:normal}
+.st{display:inline;font-size:inherit;padding:0;border-radius:0;background:transparent;color:inherit;font-weight:600}
+.st.PASS{color:#16a34a}.st.FAIL{color:#dc2626}.st.WARNING{color:#d97706}.st.CHECK{color:#2563eb}.st.INFO,.st.UNKNOWN{color:#64748b}
+.verdict{color:#1e293b}
 .verdict.critical{border-left-color:#dc2626}.verdict.high{border-left-color:#ea580c}.verdict.medium{border-left-color:#d97706}.verdict.good{border-left-color:#16a34a}
 .report-sep{border:none;border-top:2px dashed #cbd5e1;margin:30px 0}
-.footer{font-size:.75rem;color:#94a3b8;text-align:center;margin-top:20px}
-</style>"""
+.footer{font-size:.75rem;padding:0;margin-top:20px}
+""")
 
 
 def _e(v) -> str:

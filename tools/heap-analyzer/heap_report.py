@@ -97,7 +97,8 @@ def growth(out: str) -> Optional[dict]:
         if d_size >= 10 * 1024 or d_obj >= 100:
             rows.append({"class": name, "objects_before": digest.number(b.get("Objects", 0)),
                          "objects_after": digest.number(a.get("Objects", 0)), "delta_objects": d_obj, "delta_shallow": d_size})
-    rows.sort(key=lambda r: r["delta_shallow"], reverse=True)
+    # the class name breaks the ties: the order of a set changes from one run to the next
+    rows.sort(key=lambda r: (-r["delta_shallow"], r["class"]))
     return {"overview_after": ov_after, "classes": rows}
 
 

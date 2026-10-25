@@ -129,7 +129,8 @@ def compare(output_dir, heap_file, compare_file):
                 "Δ shallow heap": f"{d_size:+,}",
                 "_d_size": d_size,
             })
-    rows.sort(key=lambda r: r["_d_size"], reverse=True)
+    # the class name breaks the ties: the order of a set changes from one run to the next
+    rows.sort(key=lambda r: (-r["_d_size"], r["Class Name"]))
     if not rows:
         print("  no class grew by more than 100 objects or 10 KB between the two dumps")
     else:
