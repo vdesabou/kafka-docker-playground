@@ -18217,7 +18217,9 @@ function get_run_flag_combination_problems () {
     echo "warning|--control-center-tag has no effect without --enable-control-center"
   fi
 
-  if [ -n "$ENABLE_KRAFT" ]
+  # the flag, not ENABLE_KRAFT: utils.sh exports ENABLE_KRAFT for every CP >= 8, so a run started from a shell that sourced
+  # it (scripts/run-tests.sh, a nested playground run) inherits it without --enable-kraft
+  if [[ " ${array_flag_list[*]} " == *" --enable-kraft "* ]]
   then
     if ! version_gt "$tag_base" "7.3.99"
     then
