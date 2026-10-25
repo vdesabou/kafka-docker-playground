@@ -1112,6 +1112,15 @@ playground analyze flight-recorder --sample jdbc_postgres_sink
 
 ![playground analyze flight-recorder report](./images/report-flight-recorder.jpg)
 
+#### **🦈 tcp-dump**
+
+```bash
+playground analyze tcp-dump --sample kafka_and_network_errors
+playground analyze tcp-dump --sample http_errors
+```
+
+![playground analyze tcp-dump report](./images/report-tcp-dump.jpg)
+
 <!-- tabs:end -->
 
 #### 🛩️ What `analyze flight-recorder` reports

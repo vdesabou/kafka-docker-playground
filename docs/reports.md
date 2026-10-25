@@ -73,6 +73,15 @@ report and click around: this is what you get on your own data.
       <p>Try it: <code>playground analyze cfk-bundle --sample synthetic</code></p>
     </div>
   </div>
+  <div class="report-card">
+    <a href="reports/tcp-dump.html" target="_blank" rel="noopener"><img src="images/reports/tcp-dump.png" alt="🦈 Network capture report" loading="lazy"></a>
+    <div class="report-body">
+      <h3><a href="#/playground%20analyze%20tcp-dump">🦈 Network capture</a></h3>
+      <p>What goes over the wire? Refused, unanswered and reset connections, retransmissions, TLS alerts with their likely cause, DNS errors, Kafka and HTTP errors with response times, and the bodies of the HTTP error responses.</p>
+      <p><code>playground debug tcp-dump -c connect --port 9092 --duration 30s</code></p>
+      <p>Try it: <code>playground analyze tcp-dump --sample kafka_and_network_errors</code> (or <code>--sample http_errors</code>)</p>
+    </div>
+  </div>
 </div>
 
 ## 🔁 Regenerate this page
