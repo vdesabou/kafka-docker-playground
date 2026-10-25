@@ -2078,7 +2078,7 @@
         },
         {
           "name": "logs",
-          "description": "🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n\nThe offline counterpart of 'playground container logs --errors', for\nlogs that do not come from a running container: a customer support\nbundle, a CI artifact, a log file you were sent.\n\nRepeated records are de-duplicated with an occurrence count, stack\ntraces are collapsed to the exception chain (\"Caused by:\") plus a few\nframes of the deepest cause. Only records with an explicit level are\nreported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\nuncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\nlevel-less lines that merely contain \"error\" or \"failed\", never are.\n\n📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\nare extracted in a temporary folder, .gz files are decompressed on the\nfly, binary files are skipped. Only files with findings are shown.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B5%EF%B8%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle",
+          "description": "🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n\nThe offline counterpart of 'playground container logs --errors', for\nlogs that do not come from a running container: a customer support\nbundle, a CI artifact, a log file you were sent.\n\nRepeated records are de-duplicated with an occurrence count, stack\ntraces are collapsed to the exception chain (\"Caused by:\") plus a few\nframes of the deepest cause. Only records with an explicit level are\nreported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\nuncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\nlevel-less lines that merely contain \"error\" or \"failed\", never are.\n\n📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\nare extracted in a temporary folder, .gz files are decompressed on the\nfly, binary files are skipped. Only files with findings are shown.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal: verdict, known causes (task killed, authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences over time, root causes (deepest exception of each record), files with findings, and every distinct record.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B5%EF%B8%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle",
           "usage": "playground analyze logs [OPTIONS]",
           "options": [
             {
@@ -2109,7 +2109,22 @@
                 "--max-findings"
               ],
               "argument": "MAX_FINDINGS",
-              "description": "✂️ Maximum number of distinct records to show per file (default 40)\n\nDefault value: 40"
+              "description": "✂️ Maximum number of distinct records to show per file (default 40). The HTML report and --json have them all\n\nDefault value: 40"
+            },
+            {
+              "names": [
+                "--output-dir",
+                "-o"
+              ],
+              "argument": "OUTPUT_DIR",
+              "description": "📂 Output directory for the HTML report (default: ./log-analysis-output)\n\nDefault value: ./log-analysis-output"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🗂️  Output JSON on stdout: summary, findings, root causes and every distinct record (text digest on stderr, no HTML report)"
             }
           ]
         },
@@ -5788,7 +5803,7 @@
         },
         {
           "name": "diagnose",
-          "description": "🩺 Diagnose a connector in one call: status, errors and progress\n\nChains the commands you would run one after the other when a connector\nmisbehaves, and returns:\n\n  🗺️  status       connector and task states, with the trace of a failed task\n  🔥 errors       digest of the connect ERROR/FATAL records (self-managed),\n                  or Confluent Cloud error recommendations (fully managed)\n  🐢 progress     consumer lag of a sink (its committed offsets when a task is not\n                  RUNNING), or offsets of a source\n  👉 next steps   the commands to dig further\n\nIt never follows logs and never waits for the lag to reach 0, so it is\nsafe to use from scripts and AI agents.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A9%BA-a-sink-is-running-but-writes-nothing",
+          "description": "🩺 Diagnose a connector in one call: status, errors and progress\n\nChains the commands you would run one after the other when a connector\nmisbehaves, and returns:\n\n  🗺️  status       connector and task states, with the trace of a failed task\n  🔥 errors       digest of the connect ERROR/FATAL records (self-managed),\n                  or Confluent Cloud error recommendations (fully managed)\n  🐢 progress     consumer lag of a sink (its committed offsets when a task is not\n                  RUNNING), or offsets of a source\n  👉 next steps   the commands to dig further\n\nIt never follows logs and never waits for the lag to reach 0, so it is\nsafe to use from scripts and AI agents.\n\n🌐 Also writes a self-contained HTML report in --output-dir, to attach to a case, opened in the browser in an interactive terminal (--no-open to skip): verdict, findings, status and traces of the tasks, error records naming the connector, lag per partition or offsets, next steps, and the configuration (secrets masked).\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A9%BA-a-sink-is-running-but-writes-nothing",
           "usage": "playground connector diagnose [OPTIONS]",
           "options": [
             {
@@ -5819,7 +5834,22 @@
                 "--max-findings"
               ],
               "argument": "MAX_FINDINGS",
-              "description": "✂️ Maximum number of distinct error records to show (default 15)\n\nDefault value: 15"
+              "description": "✂️ Maximum number of distinct error records to show (default 15). The HTML report has them all\n\nDefault value: 15"
+            },
+            {
+              "names": [
+                "--output-dir",
+                "-o"
+              ],
+              "argument": "OUTPUT_DIR",
+              "description": "📂 Output directory for the HTML report (default: /tmp/playground-diagnose)\n\nDefault value: /tmp/playground-diagnose"
+            },
+            {
+              "names": [
+                "--no-open"
+              ],
+              "argument": "",
+              "description": "🙈 Do not open the HTML report in the browser"
             }
           ]
         },

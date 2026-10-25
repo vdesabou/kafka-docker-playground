@@ -172,7 +172,33 @@ The output names each file with its path inside the archive, and only shows file
 ✂️ 9 more distinct record(s) not shown, increase --max-findings
 
 📊 2 file(s) with findings out of 2 scanned (binary files skipped: 0)
+✅ HTML report saved: /home/me/log-analysis-output/support_bundle-log-report.html
 ```
+
+### 🌐 The HTML report, and `--json`
+
+Besides the terminal digest, `analyze logs` writes a self-contained HTML report, `<first input>-log-report.html`, in
+`--output-dir` (default `./log-analysis-output`). It opens in the browser when you run the command from a terminal.
+It holds **every** distinct record, not only the first `--max-findings` of each file:
+
+| Section | What it shows |
+| --- | --- |
+| verdict and tiles | files scanned and with findings, distinct records, FATAL / ERROR / WARN occurrences |
+| 🔎 findings | well-known causes first (task killed, authentication, authorization, TLS, unknown magic byte, connection refused, `OutOfMemoryError`, class loading…), each with what to do, then the most frequent root causes no known cause explains |
+| 📈 occurrences over time | ERROR/FATAL and WARN per time bucket, from the timestamps of the records |
+| 🌳 root causes | records grouped by their deepest exception (or by message when they have none), with occurrences and files |
+| 📄 one card per file | every distinct record, with its count, first and last line and timestamp, and its exception chain |
+
+`--json` prints the same analysis on stdout (summary, findings, known causes, root causes, every record) and the text
+digest on stderr, without an HTML report:
+
+```bash
+playground analyze logs -f support-bundle.zip --json 2>/dev/null | jq '.findings[] | .severity + " " + .text'
+```
+
+> [!NOTE]
+> The report and the JSON use the same parser as the terminal digest (`summarize_log_errors`): records are cut to 300
+> characters per line and to 3 frames of the deepest cause there too.
 
 Gotchas:
 
@@ -284,10 +310,15 @@ playground container logs -c connect --wait-for-log "this line never shows up" -
 ```bash
 playground container logs -c connect --no-follow --tail all > /tmp/lab-connect.log 2>&1
 gzip -kf /tmp/lab-connect.log
-playground analyze logs -f /tmp/lab-connect.log.gz
+playground analyze logs -f /tmp/lab-connect.log.gz --output-dir /tmp/lab-log-reports
 # 🔥 ERROR/FATAL digest for /tmp/lab-connect.log.gz
 # 🔴 ERROR x2 … WorkerSinkTask{id=bad-sink-0} …      <- the same findings as the live digest
 # 📊 1 file(s) with findings out of 1 scanned (binary files skipped: 0)
+# ✅ HTML report saved: /tmp/lab-log-reports/lab-connect-log-report.html   <- 🧨 A connector task was killed, 🧲 Unknown magic byte
+playground analyze logs -f /tmp/lab-connect.log.gz --json 2>/dev/null | jq -r '.known_causes[].title'
+# 🧨 A connector task was killed
+# 🧲 Unknown magic byte
+# …
 playground connector delete --connector bad-sink
 ```
 
@@ -331,7 +362,7 @@ playground container logs -c <container> [-c <c2>] \
   [--errors [--since 10m] [--tail N|all] [--include-warnings] [--max-findings N]] \
   [--no-follow [--tail N|all] [--since 10m] [--grep <pattern>]] \
   [--wait-for-log "<text>" [--max-wait S]] [--open] [--previous]
-playground analyze logs -f <file|folder|.zip|.tar.gz|.gz> [-f …] [--include-warnings] [--max-findings N]
+playground analyze logs -f <file|folder|.zip|.tar.gz|.gz> [-f …] [--include-warnings] [--max-findings N] [--output-dir <dir>] [--json]
 playground analyze logs --sample connect_task_failure|support_bundle
 ```
 
@@ -340,9 +371,11 @@ playground analyze logs --sample connect_task_failure|support_bundle
 - `xN` + first / last seen line tell "once at startup" from "every minute until now".
 - `--errors` and `analyze logs` exit 0: not assertions. `--wait-for-log` matches old lines too, every 10 s.
 - Offline: one digest per file, archives extracted, `.gz` read on the fly, binaries skipped.
+- Offline also writes an HTML report (known causes, timeline, root causes, every record) in `--output-dir`; `--json` for scripts.
 - Sources: [`container/logs.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/container/logs.sh),
   [`analyze/logs.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/analyze/logs.sh),
   `summarize_log_errors` in [`cli_function.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/lib/cli_function.sh),
+  [`tools/log-analyzer/log_report.py`](https://github.com/vdesabou/kafka-docker-playground/blob/master/tools/log-analyzer/log_report.py),
   `wait_for_log` in [`utils_function.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/lib/utils_function.sh),
   samples in [`tools/log-analyzer/samples/`](https://github.com/vdesabou/kafka-docker-playground/tree/master/tools/log-analyzer/samples).
 

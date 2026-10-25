@@ -6385,7 +6385,7 @@ playground_analyze_heap_dump_usage() {
 playground_analyze_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze logs\n\n"
-    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped. Only files with findings are shown.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
+    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped. Only files with findings are shown.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
   else
     printf "playground analyze logs - 🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n\n"
   fi
@@ -6419,8 +6419,19 @@ playground_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--max-findings MAX_FINDINGS")"
-    printf "    ✂️ Maximum number of distinct records to show per file (default 40)\n"
+    printf "    ✂️ Maximum number of distinct records to show per file (default 40). The\n    HTML report and --json have them all\n"
     printf "    %s\n" "Default: 40"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
+    printf "    📂 Output directory for the HTML report (default: ./log-analysis-output)\n"
+    printf "    %s\n" "Default: ./log-analysis-output"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🗂️  Output JSON on stdout: summary, findings, root causes and every distinct\n    record (text digest on stderr, no HTML report)\n"
     echo
 
     # :command.usage_fixed_flags
@@ -6435,10 +6446,12 @@ playground_analyze_logs_usage() {
     printf "  playground analyze logs --file connect.log\n"
     printf "  playground analyze logs --file connect-logs.zip --include-warnings\n"
     printf "  playground analyze logs -f ./logs -f broker.log.gz --max-findings 10\n"
+    printf "  playground analyze logs -f support-bundle.zip --output-dir /tmp/log-reports\n"
+    printf "  playground analyze logs -f connect.log --json\n"
     echo
 
     # :command.footer
-    printf "Example output:\n  $ playground analyze logs -f connect.log\n  17:23:19 ℹ️ 🔥 ERROR/FATAL digest for connect.log\n  🔎 1 distinct record(s), 2 occurrence(s), in 12 lines\n\n  🔴 ERROR x2 (first seen line 2, last seen line 10)\n  [2026-10-13 10:00:05,123] ERROR [http-sink|task-0] WorkerSinkTask{id=http-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:234)\n      org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.\n      Caused by: org.apache.kafka.connect.errors.ConnectException: Error while processing HTTP request with Url : http://httpserver:9006/api/messages, Status code : 500\n          at io.confluent.connect.http.writer.HttpWriterImpl.handleErrors(HttpWriterImpl.java:405)\n\n  17:23:19 ℹ️ 📊 1 file(s) with findings out of 1 scanned (binary files skipped: 0)\n"
+    printf "Example output:\n  $ playground analyze logs -f connect.log\n  17:23:19 ℹ️ 🔥 ERROR/FATAL digest for connect.log\n  🔎 1 distinct record(s), 2 occurrence(s), in 12 lines\n\n  🔴 ERROR x2 (first seen line 2, last seen line 10)\n  [2026-10-13 10:00:05,123] ERROR [http-sink|task-0] WorkerSinkTask{id=http-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:234)\n      org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.\n      Caused by: org.apache.kafka.connect.errors.ConnectException: Error while processing HTTP request with Url : http://httpserver:9006/api/messages, Status code : 500\n          at io.confluent.connect.http.writer.HttpWriterImpl.handleErrors(HttpWriterImpl.java:405)\n\n  17:23:19 ℹ️ 📊 1 file(s) with findings out of 1 scanned (binary files skipped: 0)\n  17:23:19 ℹ️ ✅ HTML report saved: /home/me/log-analysis-output/connect-log-report.html\n  17:23:19 ℹ️ 🔗 Open in browser: file:///home/me/log-analysis-output/connect-log-report.html\n"
     echo
 
   fi
@@ -7385,8 +7398,19 @@ playground_debug_analyze_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--max-findings MAX_FINDINGS")"
-    printf "    ✂️ Maximum number of distinct records to show per file (default 40)\n"
+    printf "    ✂️ Maximum number of distinct records to show per file (default 40). The\n    HTML report and --json have them all\n"
     printf "    %s\n" "Default: 40"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
+    printf "    📂 Output directory for the HTML report (default: ./log-analysis-output)\n"
+    printf "    %s\n" "Default: ./log-analysis-output"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🗂️  Output JSON on stdout: summary, findings, root causes and every distinct\n    record (text digest on stderr, no HTML report)\n"
     echo
 
     # :command.usage_fixed_flags
@@ -12880,7 +12904,7 @@ playground_connector_delete_usage() {
 playground_connector_diagnose_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector diagnose\n\n"
-    printf "  🩺 Diagnose a connector in one call: status, errors and progress\n  \n  Chains the commands you would run one after the other when a connector\n  misbehaves, and returns:\n  \n    🗺️  status       connector and task states, with the trace of a failed task\n    🔥 errors       digest of the connect ERROR/FATAL records (self-managed),\n                    or Confluent Cloud error recommendations (fully managed)\n    🐢 progress     consumer lag of a sink (its committed offsets when a task is\n  not\n                    RUNNING), or offsets of a source\n    👉 next steps   the commands to dig further\n  \n  It never follows logs and never waits for the lag to reach 0, so it is\n  safe to use from scripts and AI agents.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A9%%BA-a-sink-is-running-but-writes-nothing\n\n"
+    printf "  🩺 Diagnose a connector in one call: status, errors and progress\n  \n  Chains the commands you would run one after the other when a connector\n  misbehaves, and returns:\n  \n    🗺️  status       connector and task states, with the trace of a failed task\n    🔥 errors       digest of the connect ERROR/FATAL records (self-managed),\n                    or Confluent Cloud error recommendations (fully managed)\n    🐢 progress     consumer lag of a sink (its committed offsets when a task is\n  not\n                    RUNNING), or offsets of a source\n    👉 next steps   the commands to dig further\n  \n  It never follows logs and never waits for the lag to reach 0, so it is\n  safe to use from scripts and AI agents.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, to attach to a\n  case, opened in the browser in an interactive terminal (--no-open to skip):\n  verdict, findings, status and traces of the tasks, error records naming the\n  connector, lag per partition or offsets, next steps, and the configuration\n  (secrets masked).\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%A9%%BA-a-sink-is-running-but-writes-nothing\n\n"
   else
     printf "playground connector diagnose - 🩺 Diagnose a connector in one call: status, errors and progress\n\n"
   fi
@@ -12914,8 +12938,19 @@ playground_connector_diagnose_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--max-findings MAX_FINDINGS")"
-    printf "    ✂️ Maximum number of distinct error records to show (default 15)\n"
+    printf "    ✂️ Maximum number of distinct error records to show (default 15). The HTML\n    report has them all\n"
     printf "    %s\n" "Default: 15"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
+    printf "    📂 Output directory for the HTML report (default: /tmp/playground-diagnose)\n"
+    printf "    %s\n" "Default: /tmp/playground-diagnose"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-open")"
+    printf "    🙈 Do not open the HTML report in the browser\n"
     echo
 
     # :command.usage_fixed_flags
@@ -12928,10 +12963,11 @@ playground_connector_diagnose_usage() {
     printf "  playground connector diagnose\n"
     printf "  playground connector diagnose --connector http-sink\n"
     printf "  playground connector diagnose --connector http-sink --since 10m --max-findings\n  5\n"
+    printf "  playground connector diagnose --connector http-sink --output-dir ./case-123456\n  --no-open\n"
     echo
 
     # :command.footer
-    printf "Example output:\n  $ playground connector diagnose\n  17:22:06 ℹ️ 🩺 diagnosing 🌎onprem connector filestream-sink\n\n  17:22:06 ℹ️ 🗺️  1/4 status\n  17:22:07 ℹ️ 🧩 Displaying status for 🌎onprem connector filestream-sink\n  Name                           Status       Tasks                                                        Stack Trace\n  -------------------------------------------------------------------------------------------------------------\n  filestream-sink                ✅ RUNNING  0:🟢 RUNNING                 -\n  -------------------------------------------------------------------------------------------------------------\n\n  17:22:07 ℹ️ 🔥 2/4 errors: digest of connect ERROR/FATAL records since 1h (whole worker, not only this connector)\n  ✅ no ERROR/FATAL record found in 12523 lines\n\n  17:22:07 ℹ️ 🐢 3/4 progress: consumer lag of sink filestream-sink\n  topic: filestream partition: 0   current-offset: 5          end-offset: 5          lag: 0          [🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹] 100%% 🏁\n\n  17:22:10 ℹ️ 👉 4/4 next steps\n     🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move\n     playground connector show-config --connector filestream-sink\n     playground container logs -c connect --grep \"filestream-sink\" --no-follow --tail 200\n     playground debug log-level set --package <connector package> --level TRACE\n     playground debug thread-dump --container connect\n"
+    printf "Example output:\n  $ playground connector diagnose\n  17:22:06 ℹ️ 🩺 diagnosing 🌎onprem connector filestream-sink\n\n  17:22:06 ℹ️ 🗺️  1/4 status\n  17:22:07 ℹ️ 🧩 Displaying status for 🌎onprem connector filestream-sink\n  Name                           Status       Tasks                                                        Stack Trace\n  -------------------------------------------------------------------------------------------------------------\n  filestream-sink                ✅ RUNNING  0:🟢 RUNNING                 -\n  -------------------------------------------------------------------------------------------------------------\n\n  17:22:07 ℹ️ 🔥 2/4 errors: digest of connect ERROR/FATAL records since 1h (whole worker, not only this connector)\n  ✅ no ERROR/FATAL record found in 12523 lines\n\n  17:22:07 ℹ️ 🐢 3/4 progress: consumer lag of sink filestream-sink\n  topic: filestream partition: 0   current-offset: 5          end-offset: 5          lag: 0          [🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹🔹] 100%% 🏁\n\n  17:22:10 ℹ️ 👉 4/4 next steps\n     🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move\n     playground connector show-config --connector filestream-sink\n     playground container logs -c connect --grep \"filestream-sink\" --no-follow --tail 200\n     playground debug log-level set --package <connector package> --level TRACE\n     playground debug thread-dump --container connect\n\n  17:22:10 ℹ️ ✅ HTML report saved: /tmp/playground-diagnose/connector-diagnose-filestream-sink-20261013-172210.html\n  17:22:10 ℹ️ 🔗 Open in browser: file:///tmp/playground-diagnose/connector-diagnose-filestream-sink-20261013-172210.html\n"
     echo
 
   fi
@@ -19677,10 +19713,17 @@ function install_confluent_plugin() {
 # (optionally WARN), each with an occurrence count, the exception chain and a
 # few frames of the deepest cause, instead of tens of thousands of raw lines.
 # $1: max number of findings to print, $2: non-empty to include WARN records
+# When PG_LOG_DIGEST_RECORDS_FILE is set, every distinct record (not only the first $1) is also appended to that
+# file for the HTML reports (tools/log-analyzer/log_report.py), labelled with PG_LOG_DIGEST_LABEL:
+#   @@PGFILE@@<tab>label<tab>lines<tab>distinct records<tab>occurrences
+#   @@PGREC@@<tab>level<tab>count<tab>first line<tab>last line<tab>first timestamp<tab>last timestamp
+#   <the record as printed in the digest, on one or more lines>
+#   @@PGTS@@<tab>timestamps of the occurrences, space separated (1000 per record at most)
 function summarize_log_errors() {
     local max_findings="${1:-40}"
     local include_warnings="${2:-}"
 
+    PG_LOG_DIGEST_RECORDS_FILE="${PG_LOG_DIGEST_RECORDS_FILE:-}" PG_LOG_DIGEST_LABEL="${PG_LOG_DIGEST_LABEL:-}" \
     awk -v max_findings="$max_findings" -v include_warnings="$include_warnings" '
     # anything that does not look like the continuation of a stack trace or of a
     # multi-line message (indented line, "Caused by:", exception line) starts a record
@@ -19719,6 +19762,14 @@ function summarize_log_errors() {
     function short(s) {
         return length(s) > 300 ? substr(s, 1, 300) "..." : s
     }
+    # "2026-10-13 10:00:05" or "2026-10-13T10:00:05" at the start of the record, as 2026-10-13T10:00:05
+    function timestamp_of(head,    h, t) {
+        h = substr(head, 1, 80)
+        if (!match(h, /[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][ T][0-9][0-9]:[0-9][0-9]:[0-9][0-9]/)) return ""
+        t = substr(h, RSTART, RLENGTH)
+        sub(/ /, "T", t)
+        return t
+    }
     function flush(    lvl, key, i, chain, frames, nframes, line, cause) {
         if (nlines == 0) return
         # header of a digest already printed in the log (CI logs contain "playground container logs --errors" output)
@@ -19754,17 +19805,26 @@ function summarize_log_errors() {
 
         total_occurrences++
         nlines = 0
+        ts = timestamp_of(rec[1])
+        if (records_file != "" && ts != "" && nts[key] < 1000) { timestamps[key] = timestamps[key] " " ts; nts[key]++ }
         if (key in count) {
             count[key]++
             last_seen[key] = rec_line
+            if (ts != "") last_ts[key] = ts
             return
         }
         count[key] = 1
         first_seen[key] = rec_line
         last_seen[key] = rec_line
+        first_ts[key] = ts
+        last_ts[key] = ts
         level[key] = lvl
         order[++nkeys] = key
         text[key] = short(rec[1]) chain frames
+    }
+    BEGIN {
+        records_file = ENVIRON["PG_LOG_DIGEST_RECORDS_FILE"]
+        label = ENVIRON["PG_LOG_DIGEST_LABEL"]
     }
     {
         gsub(/\033\[[0-9;]*m/, "")
@@ -19777,6 +19837,14 @@ function summarize_log_errors() {
     }
     END {
         flush()
+        if (records_file != "") {
+            printf "@@PGFILE@@\t%s\t%d\t%d\t%d\n", label, NR, nkeys, total_occurrences >> records_file
+            for (i = 1; i <= nkeys; i++) {
+                k = order[i]
+                printf "@@PGREC@@\t%s\t%d\t%d\t%d\t%s\t%s\n%s\n@@PGTS@@\t%s\n", level[k], count[k], first_seen[k], last_seen[k], first_ts[k], last_ts[k], text[k], substr(timestamps[k], 2) >> records_file
+            }
+            close(records_file)
+        }
         if (nkeys == 0) {
             printf "✅ no %s record found in %d lines\n", (include_warnings == "" ? "ERROR/FATAL" : "ERROR/FATAL/WARN"), NR
             exit 0
@@ -41495,6 +41563,14 @@ playground_analyze_logs_command() {
   eval "sample_array=(${args[--sample]})"
   include_warnings="${args[--include-warnings]}"
   max_findings="${args[--max-findings]}"
+  output_dir="${args[--output-dir]}"
+  json_out="${args[--json]}"
+
+  # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
+  if [[ -n "$json_out" ]]
+  then
+      exec 3>&1 1>&2
+  fi
 
   if [[ ${#file_array[@]} -gt 0 && ${#sample_array[@]} -gt 0 ]]
   then
@@ -41533,6 +41609,9 @@ playground_analyze_logs_command() {
       log "🐛📂 not deleting tmp dir $tmp_dir"
   fi
 
+  # every distinct record, for the HTML report and --json (see summarize_log_errors)
+  records_file="$tmp_dir/records"
+  : > "$records_file"
   nb_files=0
   nb_files_with_findings=0
   nb_skipped=0
@@ -41542,7 +41621,7 @@ playground_analyze_logs_command() {
   # $1: label to display
   function analyze_logs_digest () {
       label="$1"
-      output=$(summarize_log_errors "$max_findings" "$include_warnings")
+      output=$(PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
       nb_files=$((nb_files+1))
       if [[ "$output" == "✅"* ]]
       then
@@ -41623,6 +41702,47 @@ playground_analyze_logs_command() {
       log "✅ no $levels record found in $nb_files file(s) (binary files skipped: $nb_skipped)"
   else
       log "📊 $nb_files_with_findings file(s) with findings out of $nb_files scanned (binary files skipped: $nb_skipped)"
+  fi
+
+  if ! command -v python3 &>/dev/null
+  then
+      logwarn "⚠️ python3 is not on PATH: no HTML report"
+      exit 0
+  fi
+  title="${file_array[*]}"
+  if [[ ${#sample_array[@]} -gt 0 ]]
+  then
+      title="sample ${sample_array[*]}"
+  fi
+  report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped")
+  if [[ -n "$json_out" ]]
+  then
+      python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --json >&3
+      exit $?
+  fi
+
+  mkdir -p "$output_dir"
+  output_dir=$(cd "$output_dir" && pwd)
+  stem=$(basename "${file_array[0]%/}")
+  stem="${stem%%.*}"
+  if [[ ${#sample_array[@]} -gt 0 ]]
+  then
+      stem="${sample_array[0]}"
+  fi
+  html_out="$output_dir/${stem}-log-report.html"
+  if ! python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --html-out "$html_out"
+  then
+      logerror "❌ could not write the HTML report"
+      exit 1
+  fi
+  log "✅ HTML report saved: $html_out"
+  # only open a browser in an interactive terminal
+  if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ] && command -v open &>/dev/null
+  then
+      log "🌐 Opening $html_out in browser..."
+      open "$html_out"
+  else
+      log "🔗 Open in browser: file://$html_out"
   fi
 
 }
@@ -43042,6 +43162,14 @@ playground_debug_analyze_logs_command() {
   eval "sample_array=(${args[--sample]})"
   include_warnings="${args[--include-warnings]}"
   max_findings="${args[--max-findings]}"
+  output_dir="${args[--output-dir]}"
+  json_out="${args[--json]}"
+
+  # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
+  if [[ -n "$json_out" ]]
+  then
+      exec 3>&1 1>&2
+  fi
 
   if [[ ${#file_array[@]} -gt 0 && ${#sample_array[@]} -gt 0 ]]
   then
@@ -43080,6 +43208,9 @@ playground_debug_analyze_logs_command() {
       log "🐛📂 not deleting tmp dir $tmp_dir"
   fi
 
+  # every distinct record, for the HTML report and --json (see summarize_log_errors)
+  records_file="$tmp_dir/records"
+  : > "$records_file"
   nb_files=0
   nb_files_with_findings=0
   nb_skipped=0
@@ -43089,7 +43220,7 @@ playground_debug_analyze_logs_command() {
   # $1: label to display
   function analyze_logs_digest () {
       label="$1"
-      output=$(summarize_log_errors "$max_findings" "$include_warnings")
+      output=$(PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$label" summarize_log_errors "$max_findings" "$include_warnings")
       nb_files=$((nb_files+1))
       if [[ "$output" == "✅"* ]]
       then
@@ -43170,6 +43301,47 @@ playground_debug_analyze_logs_command() {
       log "✅ no $levels record found in $nb_files file(s) (binary files skipped: $nb_skipped)"
   else
       log "📊 $nb_files_with_findings file(s) with findings out of $nb_files scanned (binary files skipped: $nb_skipped)"
+  fi
+
+  if ! command -v python3 &>/dev/null
+  then
+      logwarn "⚠️ python3 is not on PATH: no HTML report"
+      exit 0
+  fi
+  title="${file_array[*]}"
+  if [[ ${#sample_array[@]} -gt 0 ]]
+  then
+      title="sample ${sample_array[*]}"
+  fi
+  report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped")
+  if [[ -n "$json_out" ]]
+  then
+      python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --json >&3
+      exit $?
+  fi
+
+  mkdir -p "$output_dir"
+  output_dir=$(cd "$output_dir" && pwd)
+  stem=$(basename "${file_array[0]%/}")
+  stem="${stem%%.*}"
+  if [[ ${#sample_array[@]} -gt 0 ]]
+  then
+      stem="${sample_array[0]}"
+  fi
+  html_out="$output_dir/${stem}-log-report.html"
+  if ! python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --html-out "$html_out"
+  then
+      logerror "❌ could not write the HTML report"
+      exit 1
+  fi
+  log "✅ HTML report saved: $html_out"
+  # only open a browser in an interactive terminal
+  if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ] && command -v open &>/dev/null
+  then
+      log "🌐 Opening $html_out in browser..."
+      open "$html_out"
+  else
+      log "🔗 Open in browser: file://$html_out"
   fi
 
 }
@@ -55054,9 +55226,13 @@ playground_connector_diagnose_command() {
   verbose="${args[--verbose]}"
   since="${args[--since]}"
   max_findings="${args[--max-findings]}"
+  output_dir="${args[--output-dir]}"
+  no_open="${args[--no-open]}"
 
   connector_type=$(playground state get run.connector_type)
   get_environment_used
+  # get_ccloud_connect overwrites $environment with the Confluent Cloud environment id
+  playground_environment="$environment"
 
   if [[ ! -n "$connector" ]]
   then
@@ -55087,8 +55263,22 @@ playground_connector_diagnose_command() {
       is_cloud=1
   fi
 
+  # each step also lands in a folder per connector, for the HTML report (tools/connector-diagnose/diagnose_report.py)
+  report_tmp=$(mktemp -d -t pg-diagnose-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $report_tmp' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $report_tmp"
+  fi
+  connector_dirs=()
+
   for connector in "${items[@]}"
   do
+      cdir="$report_tmp/${#connector_dirs[@]}"
+      mkdir -p "$cdir"
+      connector_dirs+=("$cdir")
+
       log "####################################################"
       log "🩺 diagnosing $connector_type connector $connector"
       log "####################################################"
@@ -55109,16 +55299,26 @@ playground_connector_diagnose_command() {
       type=$(echo "$curl_output" | jq -r '.type // empty')
       connector_state=$(echo "$curl_output" | jq -r '.connector.state // empty')
       task_states=$(echo "$curl_output" | jq -r '[.tasks[]?.state] | unique | join(",")')
+      echo "$curl_output" > "$cdir/status.json"
+      jq -n --arg connector "$connector" --arg connector_type "$connector_type" --arg is_cloud "$is_cloud" --arg type "$type" \
+          --arg since "$since" --arg environment "$playground_environment" \
+          '{connector: $connector, connector_type: $connector_type, is_cloud: $is_cloud, type: $type, since: $since, environment: $environment}' > "$cdir/meta.json"
+      if [ $is_cloud -eq 1 ]
+      then
+          handle_ccloud_connect_rest_api "curl -s --request GET \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config\" --header \"authorization: Basic $authorization\"" > /dev/null 2>&1 && echo "$curl_output" > "$cdir/config.json"
+      else
+          handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/config\"" > /dev/null 2>&1 && echo "$curl_output" > "$cdir/config.json"
+      fi
 
       echo ""
       if [ $is_cloud -eq 1 ]
       then
           log "🔥 2/4 errors: Confluent Cloud error recommendations"
-          playground connector error-recommendations --connector "$connector" $maybe_verbose
+          playground connector error-recommendations --connector "$connector" $maybe_verbose | tee "$cdir/recommendations.txt"
           display_ccloud_connector_service_account_acl_check "$connector"
       else
           log "🔥 2/4 errors: digest of connect ERROR/FATAL records since $since (whole worker, not only this connector)"
-          playground container logs --container connect --errors --since "$since" --max-findings "$max_findings"
+          PG_LOG_DIGEST_RECORDS_FILE="$cdir/errors.records" PG_LOG_DIGEST_LABEL="connect" playground container logs --container connect --errors --since "$since" --max-findings "$max_findings"
       fi
 
       echo ""
@@ -55127,43 +55327,82 @@ playground_connector_diagnose_command() {
           if [[ "$connector_state" == "RUNNING" ]] && [[ "$task_states" == "RUNNING" ]]
           then
               log "🐢 3/4 progress: consumer lag of sink $connector"
-              playground connector show-lag --connector "$connector" --interval 1 --max-wait 1 $maybe_verbose || true
+              { playground connector show-lag --connector "$connector" --interval 1 --max-wait 1 $maybe_verbose || true; } | tee "$cdir/lag.txt"
           else
               # show-lag waits 60s for a RUNNING task and then fails, which would hide the next steps
               log "🐢 3/4 progress: committed offsets of sink $connector (no lag while the connector and all its tasks are not RUNNING)"
-              playground connector offsets get --connector "$connector" $maybe_verbose || true
+              { playground connector offsets get --connector "$connector" $maybe_verbose || true; } | tee "$cdir/offsets.txt"
           fi
       elif [ "$type" == "source" ]
       then
           log "🐢 3/4 progress: offsets of source $connector (run it again to see whether they move)"
-          playground connector offsets get --connector "$connector" $maybe_verbose || true
+          { playground connector offsets get --connector "$connector" $maybe_verbose || true; } | tee "$cdir/offsets.txt"
       else
           logwarn "🐢 3/4 progress: unknown connector type <$type>, skipped"
       fi
 
       echo ""
       log "👉 4/4 next steps"
+      next_steps=()
       if [[ "$connector_state" == "FAILED" ]] || [[ "$task_states" == *"FAILED"* ]]
       then
-          echo "   🔥 a task or the connector FAILED: read the trace above, then after a fix: playground connector restart --connector $connector"
+          next_steps+=("🔥 a task or the connector FAILED: read the trace above, then after a fix: playground connector restart --connector $connector")
       elif [[ "$connector_state" == "PAUSED" ]] || [[ "$task_states" == *"PAUSED"* ]]
       then
-          echo "   ⏸️  the connector is PAUSED: playground connector resume --connector $connector"
+          next_steps+=("⏸️  the connector is PAUSED: playground connector resume --connector $connector")
       elif [[ "$connector_state" == "RUNNING" ]]
       then
-          echo "   🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move"
+          next_steps+=("🐌 RUNNING but no progress? run this command again, then take a thread dump if lag or offsets do not move")
       fi
-      echo "   playground connector show-config --connector $connector"
+      next_steps+=("playground connector show-config --connector $connector")
       if [ $is_cloud -eq 1 ]
       then
-          echo "   playground connector logs --connector $connector"
+          next_steps+=("playground connector logs --connector $connector")
       else
-          echo "   playground container logs -c connect --grep \"$connector\" --no-follow --tail 200"
-          echo "   playground debug log-level set --package <connector package> --level TRACE"
-          echo "   playground debug thread-dump --container connect"
+          next_steps+=("playground container logs -c connect --grep \"$connector\" --no-follow --tail 200")
+          next_steps+=("playground debug log-level set --package <connector package> --level TRACE")
+          next_steps+=("playground debug thread-dump --container connect")
       fi
+      for step in "${next_steps[@]}"
+      do
+          echo "   $step"
+      done
+      printf '%s\n' "${next_steps[@]}" > "$cdir/next_steps.txt"
       echo ""
   done
+
+  if ! command -v python3 &>/dev/null
+  then
+      logwarn "⚠️ python3 is not on PATH: no HTML report"
+      exit 0
+  fi
+  report_name="all"
+  if ((length == 1))
+  then
+      report_name=$(printf '%s' "$connector" | tr -c 'A-Za-z0-9._-' '_')
+  fi
+  mkdir -p "$output_dir"
+  output_dir=$(cd "$output_dir" && pwd)
+  html_out="$output_dir/connector-diagnose-${report_name}-$(date '+%Y%m%d-%H%M%S').html"
+  report_args=()
+  for cdir in "${connector_dirs[@]}"
+  do
+      report_args+=(--connector-dir "$cdir")
+  done
+  if ! python3 -I "$root_folder/tools/connector-diagnose/diagnose_report.py" "${report_args[@]}" --html-out "$html_out"
+  then
+      logerror "❌ could not write the HTML report"
+      exit 1
+  fi
+  log "✅ HTML report saved: $html_out"
+  # only open a browser in an interactive terminal
+  if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ] && [[ ! -n "$no_open" ]] && command -v open &>/dev/null
+  then
+      log "🌐 Opening $html_out in browser..."
+      open "$html_out"
+  else
+      log "🔗 Open in browser: file://$html_out"
+  fi
 
 }
 
@@ -75926,6 +76165,28 @@ playground_analyze_logs_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --output-dir | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir, -o OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -75957,6 +76218,7 @@ playground_analyze_logs_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--max-findings']:-} ]] || args['--max-findings']="40"
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="./log-analysis-output"
 
   # :command.validations
   # :flag.validations
@@ -78406,6 +78668,28 @@ playground_debug_analyze_logs_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --output-dir | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir, -o OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -78437,6 +78721,7 @@ playground_debug_analyze_logs_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--max-findings']:-} ]] || args['--max-findings']="40"
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="./log-analysis-output"
 
   # :command.validations
   # :flag.validations
@@ -91761,6 +92046,28 @@ playground_connector_diagnose_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --output-dir | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir, -o OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-open)
+
+        # :flag.case_no_arg
+        args['--no-open']=1
+        shift
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -91793,6 +92100,7 @@ playground_connector_diagnose_parse_requirements() {
   # :command.default_assignments
   [[ -n ${args['--since']:-} ]] || args['--since']="1h"
   [[ -n ${args['--max-findings']:-} ]] || args['--max-findings']="15"
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="/tmp/playground-diagnose"
 
   # :command.validations
   # :flag.validations
@@ -102383,6 +102691,21 @@ playground_analyze_logs_completion() {
         completion_blocked_flags["--max-findings"]=1
 
         ;;
+      --output-dir | -o)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -102395,6 +102718,8 @@ playground_analyze_logs_completion() {
     completion_flag_candidates --sample "$completion_current" --sample -s
     completion_flag_candidates --include-warnings "$completion_current" --include-warnings
     completion_flag_candidates --max-findings "$completion_current" --max-findings
+    completion_flag_candidates --output-dir "$completion_current" --output-dir -o
+    completion_flag_candidates --json "$completion_current" --json
   fi
 
 }
@@ -103641,6 +103966,21 @@ playground_debug_analyze_logs_completion() {
         completion_blocked_flags["--max-findings"]=1
 
         ;;
+      --output-dir | -o)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -103653,6 +103993,8 @@ playground_debug_analyze_logs_completion() {
     completion_flag_candidates --sample "$completion_current" --sample -s
     completion_flag_candidates --include-warnings "$completion_current" --include-warnings
     completion_flag_candidates --max-findings "$completion_current" --max-findings
+    completion_flag_candidates --output-dir "$completion_current" --output-dir -o
+    completion_flag_candidates --json "$completion_current" --json
   fi
 
 }
@@ -110476,6 +110818,21 @@ playground_connector_diagnose_completion() {
         completion_blocked_flags["--max-findings"]=1
 
         ;;
+      --output-dir | -o)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --no-open)
+        completion_blocked_flags["--no-open"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -110488,6 +110845,8 @@ playground_connector_diagnose_completion() {
     completion_flag_candidates --connector "$completion_current" --connector -c
     completion_flag_candidates --since "$completion_current" --since
     completion_flag_candidates --max-findings "$completion_current" --max-findings
+    completion_flag_candidates --output-dir "$completion_current" --output-dir -o
+    completion_flag_candidates --no-open "$completion_current" --no-open
   fi
 
 }
