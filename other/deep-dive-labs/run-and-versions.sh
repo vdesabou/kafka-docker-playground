@@ -9,6 +9,13 @@ source ${DIR}/lab-utils.bash
 
 lab_require_plaintext
 
+# the image of each container. Podman shows it fully qualified (docker.io/confluentinc/cp-server:8.2.0): drop the
+# registry, so that the assertions hold with both engines
+function lab_run_inspect_images () {
+    lab_run docker inspect -f '{{.Name}} {{.Config.Image}}' "$@"
+    LAB_OUTPUT=${LAB_OUTPUT//docker.io\//}
+}
+
 older_tag="8.2.0"
 newer_tag=$(docker inspect -f '{{.Config.Image}}' connect 2> /dev/null | cut -d ":" -f 2)
 newer_tag=${newer_tag:-$TAG}
@@ -29,7 +36,7 @@ for tag_variable in TAG TAG_BASE $(compgen -e | grep -E '^CP_[A-Z_]+_TAG$')
 do
     unset "$tag_variable"
 done
-lab_run docker inspect -f '{{.Name}} {{.Config.Image}}' broker connect
+lab_run_inspect_images broker connect
 lab_expect_contains "/broker confluentinc/cp-server:$older_tag"
 lab_expect_contains "/connect confluentinc/cp-server-connect:$older_tag"
 
@@ -40,7 +47,7 @@ lab_expect_contains "✨ Loading new version(s) based on flags ⛳ --connect-tag
 lab_expect_contains "💣 Detected confluent version change, restarting containers"
 lab_expect_contains "Container connect Recreate"
 lab_expect_not_contains "Container broker Recreate" "the broker keeps its version"
-lab_run docker inspect -f '{{.Name}} {{.Config.Image}}' broker connect schema-registry
+lab_run_inspect_images broker connect schema-registry
 lab_expect_contains "/broker confluentinc/cp-server:$older_tag"
 lab_expect_contains "/connect confluentinc/cp-server-connect:8.3.2"
 lab_expect_contains "/schema-registry confluentinc/cp-schema-registry:$older_tag"
@@ -50,7 +57,7 @@ lab_expect_exit 0
 log "Step 4: every component"
 lab_run playground update-version --tag 8.3.2
 lab_expect_exit 0
-lab_run docker inspect -f '{{.Name}} {{.Config.Image}}' broker connect
+lab_run_inspect_images broker connect
 lab_expect_contains "/broker confluentinc/cp-server:8.3.2"
 lab_expect_contains "/connect confluentinc/cp-server-connect:8.3.2"
 lab_run playground update-version --tag 8.3.2
