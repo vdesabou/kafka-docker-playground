@@ -156,7 +156,7 @@ Output messages
 ==========================
 🔘 output.data.format
 
-Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
+Sets the output Kafka record value format. Valid entries are AVRO, JSON_SR, PROTOBUF, or BYTES. BYTES passes the record value through unchanged using ``io.debezium.converters.BinaryDataConverter`` and requires ``output.delegate.format`` to serialize structured records that are not raw byte payloads, such as heartbeats, transaction-metadata markers, and schema-change events. Use the converter only with outbox table setups. Note that you need to have Confluent Cloud Schema Registry configured if using a schema-based message format like AVRO, JSON_SR, and PROTOBUF.
 
 	 - Type: STRING
 	 - Default: AVRO
@@ -171,6 +171,15 @@ Sets the output Kafka record key format. Valid entries are AVRO, JSON_SR, PROTOB
 	 - Default: JSON
 	 - Importance: HIGH
 	 - Required: false
+
+🔘 output.delegate.format
+
+
+
+	 - Type: false
+	 - Default: STRING
+	 - Importance: Sets the delegate value format used by the BYTES output (``io.debezium.converters.BinaryDataConverter``) to serialize structured records that are not raw byte payloads, such as heartbeats, transaction-metadata markers, and schema-change events (where the connector publishes them). Required and applicable only when ``output.data.format`` is set to BYTES. Valid entries are AVRO, JSON_SR, or JSON. You need to have Confluent Cloud Schema Registry configured if using a schema-based delegate format like AVRO and JSON_SR. Note that the delegate format currently does not support PROTOBUF.
+	 - Required: HIGH
 
 🔘 after.state.only
 
@@ -741,6 +750,15 @@ The maximum number of rows that the connector fetches and reads into memory duri
 	 - Default: 1024
 	 - Importance: MEDIUM
 	 - Required: false
+
+🔘 value.converter.delegate.converter.type.schemas.enable
+
+
+
+	 - Type: false
+	 - Default: BOOLEAN
+	 - Importance: Include schemas within each serialized values. Input messages must contain ``schema`` and ``payload`` fields and may not contain additional fields. For plain JSON data, set this property to ``false``. Applicable only for the JSON Converter.
+	 - Required: LOW
 
 🔘 snapshot.delay.ms
 
