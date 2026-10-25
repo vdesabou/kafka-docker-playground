@@ -34,6 +34,10 @@ fi
 # Bootstrap Confluent Cloud environment
 # ---------------------------------------------------------------------------
 
+NGROK_AUTH_TOKEN=${NGROK_AUTH_TOKEN:-$1}
+
+display_ngrok_warning
+
 bootstrap_ccloud_environment
 
 # ---------------------------------------------------------------------------
