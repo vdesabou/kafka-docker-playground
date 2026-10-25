@@ -163,8 +163,8 @@ then
         local existing_backup
         local local_image
         local build_dir
-        local jar_source="/tmp/jscissors-1.0-SNAPSHOT.jar"
-        local props_source="/tmp/scissors.props"
+        # staged by playground debug jscissors --restart
+        local stage_dir="/tmp/playground-jscissors/${container}"
 
         if [[ "$resource_kind" != "connect" ]]
         then
@@ -172,20 +172,9 @@ then
             exit 1
         fi
 
-        if [[ ! -f "$props_source" ]]
+        if [[ ! -f "$stage_dir/jscissors.jar" || ! -f "$stage_dir/jscissors.props" ]]
         then
-            logerror "❌ missing $props_source"
-            logerror "jscissors props file must exist before using --mount-jscissors-files in cfk mode"
-            exit 1
-        fi
-
-        if [[ ! -f "$jar_source" ]]
-        then
-            jar_source="${root_folder}/scripts/cli/src/jscissors/jscissors-1.0-SNAPSHOT.jar"
-        fi
-        if [[ ! -f "$jar_source" ]]
-        then
-            logerror "❌ missing jscissors jar file in /tmp and in repository"
+            logerror "❌ missing $stage_dir/jscissors.jar or $stage_dir/jscissors.props: use playground debug jscissors --restart"
             exit 1
         fi
 
@@ -204,15 +193,13 @@ then
 
         local_image="playground-cfk-jscissors:$(date '+%Y%m%d%H%M%S')"
         build_dir=$(mktemp -d -t pg-cfk-jscissors-XXXXXXXXXX)
-        cp "$jar_source" "$build_dir/jscissors-1.0-SNAPSHOT.jar"
-        cp "$props_source" "$build_dir/scissors.props"
+        cp "$stage_dir/jscissors.jar" "$stage_dir/jscissors.props" "$build_dir/"
 
         cat << EOF > "$build_dir/Dockerfile"
 FROM ${current_image}
 USER root
-COPY jscissors-1.0-SNAPSHOT.jar /tmp/jscissors-1.0-SNAPSHOT.jar
-COPY scissors.props /tmp/scissors.props
-RUN chown 1000:1000 /tmp/jscissors-1.0-SNAPSHOT.jar /tmp/scissors.props || true
+COPY jscissors.jar jscissors.props /tmp/jscissors/
+RUN chown -R 1000:1000 /tmp/jscissors || true
 USER 1000
 EOF
 
@@ -417,7 +404,7 @@ EOF
         then
             cat << EOF >> $tmp_dir/docker-compose.override.java.env.yml
     volumes:
-      - ${PLAYGROUND_HOST_TMP_DIR:-/tmp}/:/tmp/
+      - ${PLAYGROUND_HOST_TMP_DIR:-/tmp}/playground-jscissors/${container}/:/tmp/jscissors/
 EOF
         fi
     done

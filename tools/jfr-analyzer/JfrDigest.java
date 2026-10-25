@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import jdk.jfr.consumer.RecordedClass;
 import jdk.jfr.consumer.RecordedEvent;
 import jdk.jfr.consumer.RecordedFrame;
+import jdk.jfr.consumer.RecordedMethod;
 import jdk.jfr.consumer.RecordedObject;
 import jdk.jfr.consumer.RecordedStackTrace;
 import jdk.jfr.consumer.RecordedThread;
@@ -47,6 +48,15 @@ public class JfrDigest {
         // running, with the same name as the new one
         final Set<Long> javaIds = new HashSet<>();
     }
+
+    // jdk.MethodTrace (JDK 25+, --trace-method): every call of a traced method
+    static class TracedMethod {
+        long count, ns, maxNs;
+    }
+
+    record TracedCall(String method, long ns, String thread, String start, String stack) { }
+
+    static final int TRACED_SLOWEST = 20;
 
     static class Agg {
         long count, ns, bytes;
@@ -121,6 +131,10 @@ public class JfrDigest {
         Instant start = null, end = null;
         String jvmVersion = null;
         Integer effectiveCpus = null, hwThreads = null;
+        Map<String, TracedMethod> traced = new LinkedHashMap<>();
+        List<TracedCall> tracedSlowest = new ArrayList<>();
+        // jdk.MethodTiming is emitted every period with the counts since the method was instrumented: the last one wins
+        Map<String, RecordedEvent> timings = new LinkedHashMap<>();
 
         for (Path file : files) {
             try (RecordingFile rf = new RecordingFile(file)) {
@@ -258,6 +272,24 @@ public class JfrDigest {
                                 heapAfterN++;
                             }
                         }
+                        case "jdk.MethodTrace" -> {
+                            String m = methodName(e);
+                            long ns = e.getDuration().toNanos();
+                            TracedMethod tm = traced.computeIfAbsent(m, k -> new TracedMethod());
+                            tm.count++;
+                            tm.ns += ns;
+                            tm.maxNs = Math.max(tm.maxNs, ns);
+                            if (tracedSlowest.size() < TRACED_SLOWEST || ns > tracedSlowest.get(tracedSlowest.size() - 1).ns()) {
+                                tracedSlowest.add(new TracedCall(m, ns, threadName(e, "eventThread"), e.getStartTime().toString(), stackKey(e.getStackTrace(), EVENT_DEPTH)));
+                                tracedSlowest.sort((a, b) -> Long.compare(b.ns(), a.ns()));
+                                if (tracedSlowest.size() > TRACED_SLOWEST) tracedSlowest.remove(TRACED_SLOWEST);
+                            }
+                        }
+                        case "jdk.MethodTiming" -> {
+                            String m = methodName(e);
+                            RecordedEvent previous = timings.get(m);
+                            if (previous == null || !e.getEndTime().isBefore(previous.getEndTime())) timings.put(m, e);
+                        }
                         case "jdk.ExceptionStatistics" -> {
                             long n = e.getLong("throwables");
                             if (throwablesFirst == null || st.isBefore(throwablesFirstTime)) { throwablesFirst = n; throwablesFirstTime = st; }
@@ -386,6 +418,34 @@ public class JfrDigest {
            .append(",\"jvm_system\":").append(cpuLoadN > 0 ? num(jvmSystem / cpuLoadN) : "null")
            .append(",\"machine_total\":").append(cpuLoadN > 0 ? num(machine / cpuLoadN) : "null").append("}");
 
+        out.append(",\"method_traces\":{\"methods\":[");
+        first = true;
+        for (Map.Entry<String, TracedMethod> en : traced.entrySet()) {
+            TracedMethod tm = en.getValue();
+            out.append(first ? "" : ",").append("{\"method\":").append(json(en.getKey())).append(",\"count\":").append(tm.count)
+               .append(",\"total_ms\":").append(num(tm.ns / 1e6)).append(",\"max_ms\":").append(num(tm.maxNs / 1e6)).append("}");
+            first = false;
+        }
+        out.append("],\"slowest\":[");
+        for (int i = 0; i < tracedSlowest.size(); i++) {
+            TracedCall c = tracedSlowest.get(i);
+            out.append(i > 0 ? "," : "").append("{\"method\":").append(json(c.method())).append(",\"ms\":").append(num(c.ns() / 1e6))
+               .append(",\"thread\":").append(json(c.thread())).append(",\"start\":").append(json(c.start()))
+               .append(",\"stack\":[").append(c.stack()).append("]}");
+        }
+        out.append("]},\"method_timing\":[");
+        first = true;
+        for (Map.Entry<String, RecordedEvent> en : timings.entrySet()) {
+            RecordedEvent t = en.getValue();
+            long invocations = t.hasField("invocations") ? t.getLong("invocations") : 0;
+            out.append(first ? "" : ",").append("{\"method\":").append(json(en.getKey())).append(",\"invocations\":").append(invocations)
+               .append(",\"min_ms\":").append(invocations > 0 ? num(ms(t.getDuration("minimum"))) : "null")
+               .append(",\"avg_ms\":").append(invocations > 0 ? num(ms(t.getDuration("average"))) : "null")
+               .append(",\"max_ms\":").append(invocations > 0 ? num(ms(t.getDuration("maximum"))) : "null").append("}");
+            first = false;
+        }
+        out.append("]");
+
         out.append(",\"frames\":[");
         for (int i = 0; i < frames.size(); i++) out.append(i > 0 ? "," : "").append(json(frames.get(i)));
         out.append("]}");
@@ -402,6 +462,38 @@ public class JfrDigest {
         if (t == null) return null;
         String name = t.getJavaName();
         return name != null ? name : t.getOSName();
+    }
+
+    // "package.Class.method(parameter types)" of the method field of jdk.MethodTrace / jdk.MethodTiming
+    static String methodName(RecordedEvent e) {
+        RecordedMethod m = e.getValue("method");
+        if (m == null) return "?";
+        String descriptor = m.getDescriptor();
+        String params = descriptor.substring(1, descriptor.indexOf(')'));
+        return m.getType().getName() + "." + m.getName() + "(" + parameterTypes(params) + ")";
+    }
+
+    static String parameterTypes(String d) {
+        StringBuilder sb = new StringBuilder();
+        int i = 0;
+        while (i < d.length()) {
+            int dims = 0;
+            while (d.charAt(i) == '[') { dims++; i++; }
+            String t;
+            char c = d.charAt(i);
+            if (c == 'L') {
+                int end = d.indexOf(';', i);
+                t = d.substring(i + 1, end).replace('/', '.');
+                t = t.substring(t.lastIndexOf('.') + 1);
+                i = end + 1;
+            } else {
+                t = switch (c) { case 'Z' -> "boolean"; case 'B' -> "byte"; case 'C' -> "char"; case 'S' -> "short"; case 'I' -> "int";
+                                 case 'J' -> "long"; case 'F' -> "float"; case 'D' -> "double"; default -> "?"; };
+                i++;
+            }
+            sb.append(sb.length() > 0 ? ", " : "").append(t).append("[]".repeat(dims));
+        }
+        return sb.toString();
     }
 
     static String className(RecordedEvent e, String field) {

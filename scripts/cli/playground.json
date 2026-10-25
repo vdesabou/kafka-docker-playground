@@ -1962,7 +1962,7 @@
     },
     {
       "name": "analyze",
-      "description": "🔎 Analyze commands\n\nTurn what you collected into findings: each command reads a file (a\ndump, a log, a bundle, a report, yours or one a customer sent) or takes\nit from a running container, and prints a digest with what is wrong and\nwhat to do, plus an HTML report to share (opened in your browser). They\nall work offline, and --sample runs them on the samples shipped with the\nplayground, to see what they report.\n\n  thread-dump             deadlocks, lock contention, stuck threads\n  gc-logs                 GC pauses, failures, live set, leak trend\n  heap-dump               Eclipse MAT leak suspects, retained sizes\n  logs                    ERROR/FATAL digest of logs, folders, zips\n  oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n  cfk-bundle              CFK support bundle: pods, events, CRs, logs\n  flight-recorder         JFR: where the time of the connector tasks goes\n  tcp-dump                network capture: resets, TLS alerts, Kafka errors\n\nTo collect them: playground debug thread-dump, heap-dump, flight-recorder, tcp-dump,\nplayground connector oracle-cdc-xstream generate-report,\nplayground debug cfk generate-bundle.",
+      "description": "🔎 Analyze commands\n\nTurn what you collected into findings: each command reads a file (a\ndump, a log, a bundle, a report, yours or one a customer sent) or takes\nit from a running container, and prints a digest with what is wrong and\nwhat to do, plus an HTML report to share (opened in your browser). They\nall work offline, and --sample runs them on the samples shipped with the\nplayground, to see what they report.\n\n  thread-dump             deadlocks, lock contention, stuck threads\n  gc-logs                 GC pauses, failures, live set, leak trend\n  heap-dump               Eclipse MAT leak suspects, retained sizes\n  logs                    ERROR/FATAL digest of logs, folders, zips\n  oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n  cfk-bundle              CFK support bundle: pods, events, CRs, logs\n  flight-recorder         JFR: where the time of the connector tasks goes\n  tcp-dump                network capture: resets, TLS alerts, Kafka errors\n  jscissors               traced method calls: arguments, durations, exceptions\n\nTo collect them: playground debug thread-dump, heap-dump, flight-recorder, tcp-dump, jscissors,\nplayground connector oracle-cdc-xstream generate-report,\nplayground debug cfk generate-bundle.",
       "usage": "playground analyze COMMAND",
       "options": [],
       "aliases": [
@@ -2397,6 +2397,13 @@
             },
             {
               "names": [
+                "--trace-method"
+              ],
+              "argument": "METHOD",
+              "description": "🎯 Also record every call of this method, with its duration and its caller (method tracing of JDK 25+, JEP 520: the cp 8.3.2 images ship JDK 25): a class (all its methods), Class::method or @Annotation. The report gets a \"Traced methods\" section: calls, total, avg, max, the slowest calls and their stack. No argument values: for them, use playground debug jscissors\n\n🎓 Tip: you can pass multiple methods by specifying --trace-method multiple times\n\nRepeatable: ✓ Yes"
+            },
+            {
+              "names": [
                 "--threads"
               ],
               "argument": "REGEX",
@@ -2423,6 +2430,51 @@
               ],
               "argument": "TOP",
               "description": "📊 Number of rows per section (default: 10)\n\nDefault value: 10"
+            }
+          ]
+        },
+        {
+          "name": "jscissors",
+          "description": "✂️ Analyze a jscissors trace: what the traced methods did, call by call\n\nReads the folder copied by playground debug jscissors --action stop (it runs this command itself, unless --no-analyze), a pid-<pid> folder of it, or its events.jsonl.\n\n📊 The methods by total time (calls, average, p95, max, self time and exceptions: exact, counted by the agent for every call), the exceptions thrown by the traced methods with their stack trace and the arguments of a failing call, the calls still running when the trace stopped (a hang), the slowest calls with their arguments and return values, the call trees of each thread, the thread and heap dumps taken (with the command to analyze them), and findings with next steps (no class matched the rules, limits reached, agent errors...).\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal\n\n🧪 With --sample, it analyzes a trace shipped in tools/jscissors/samples: a quick way to see what it reports.\n\n🔖 Exit code is 0 when the analysis completed, 2 when the folder holds no trace\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics",
+          "usage": "playground analyze jscissors [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--file",
+                "-f"
+              ],
+              "argument": "FILE",
+              "description": "📂 Trace folder copied by playground debug jscissors --action stop (jscissors-<container>-<date>), a pid-<pid> folder of it, or its events.jsonl\n\n❕ Provide only one of --file and --sample"
+            },
+            {
+              "names": [
+                "--sample",
+                "-s"
+              ],
+              "argument": "SAMPLE",
+              "description": "🧪 Sample of tools/jscissors/samples\n\n  filestream_sink_bad_json   FileStream sink with errors.tolerance=all, records that are not JSON: the conversion of each record, the DataException of the bad ones (with their content), the batches written\n\nAllowed values: filestream_sink_bad_json"
+            },
+            {
+              "names": [
+                "--output-dir",
+                "-o"
+              ],
+              "argument": "OUTPUT_DIR",
+              "description": "📂 Output directory for the HTML report (default: ./jscissors-analysis-output)\n\nDefault value: ./jscissors-analysis-output"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🗂️  Output JSON (no text report, no HTML report)"
+            },
+            {
+              "names": [
+                "--top"
+              ],
+              "argument": "TOP",
+              "description": "📊 Number of rows per section (default: 15)\n\nDefault value: 15"
             }
           ]
         },
@@ -2875,7 +2927,7 @@
         },
         {
           "name": "jscissors",
-          "description": "✂️ jscissors is an instrumentation framework and can help to analyse control flow and perform some specific logging\n\n* Control Flow Tracing: By dynamically instrumenting Java code, the tool meticulously tracks the precise sequence of executed methods at runtime. This capability offers invaluable insights into how an application navigates its logic. The tool provides a way to generate a stack trace when a method is called. \n* Additional Logging: This enhanced logging capability provides a way to print the input arguments to a method and return value from a method. \n* Delve into heap area: Generating heap dump at a method call will be crucial to analyze the state of JVM at a given point. The tool has capabilities to generate thread dump as well to track the state of all the threads when a method is called.",
+          "description": "✂️ Trace the calls of any method of a running JVM: arguments, return values, durations, exceptions, call tree\n\nA java agent (tools/jscissors/agent, byte-buddy) loaded in the JVM of the container instruments the methods matching --class and --method, and records every call with what the --operation flags ask for. For a window of any length: --action start, reproduce the problem, --action stop, which copies the trace to --output-dir and analyzes it with playground analyze jscissors (methods by total time, exceptions, calls still running, slowest calls, call trees, HTML report), unless --no-analyze. With --duration, start, wait and stop in one command.\n\n💉 No restart: the agent is loaded in the running JVM with the attach protocol (what jcmd does, without jcmd, which the cp images do not have), or over JMX for a JDK older than 16. --action stop restores the original classes. Starting again replaces the rules. With --restart, the container is recreated with the agent in JAVA_TOOL_OPTIONS, to trace the startup of the JVM too (or when the JVM refuses the attach).\n\n🎯 --class and --method are exact names, or java regular expressions as soon as they hold other characters than letters, digits, '.', '$' and '_' (io.confluent.connect.jdbc.*, .*[Ww]rite.*). Only concrete methods are traced (trace the implementation class, not the interface), constructors and JDK classes (java.*, javax.*) are not. A class loaded after the start is instrumented when it loads.\n\n🛡️ Safe by default: values are cut to --max-value-length and the secrets found in them are masked (passwords of maps, JAAS, connection strings), at most --max-calls calls (--max-calls-per-method per method) are recorded with their details (every call is counted in the statistics), or only the ones that throw (--only-failed) or are slow (--slower-than), at most 10 thread dumps and 1 heap dump, the agent can never throw in the traced code, and a toString() of an argument is never traced. Trace what you need: a regex matching thousands of hot methods slows the JVM down.\n\n📂 In the trace folder (jscissors-<container>-<date>/pid-<pid>/): events.jsonl (one event per call enter / exit / dump), summary.json (statistics), agent.log, instrumented.txt, dumps/, and the HTML report.\n\n🔖 The session of each container is kept in playground.ini (jscissors.<container>), --action status shows it with the calls so far. The agent jar is built from tools/jscissors/agent with maven in a container the first time (and after a change of its sources).\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics",
           "usage": "playground debug jscissors [OPTIONS]",
           "options": [
             {
@@ -2890,31 +2942,109 @@
             },
             {
               "names": [
-                "--operation"
+                "--action"
               ],
-              "argument": "OPERATION",
-              "description": "🥼 operation to perform:\n\n* VALUES: print method input arguments\n* RETURN_VALUE: print method return value\n* THREADS: print thread dump when method is called\n* HEAP: print heap dump when method is called\n* STACK: print stack trace when method is called\n* EXCEPTION_HEAP: print heap dump when an exception is thrown during method execution\n* DELAY: print time taken for method execution\n\nDefault values: VALUES, RETURN_VALUE, DELAY and STACK\n\n🎓 Tip: you can pass multiple operations by specifying --operation multiple times\n\nRepeatable: ✓ Yes\nDefault value: [\"VALUES\", \"RETURN_VALUE\", \"DELAY\", \"STACK\"]\nAllowed values: VALUES, RETURN_VALUE, THREADS, HEAP, STACK, EXCEPTION_HEAP, DELAY"
+              "argument": "ACTION",
+              "description": "🟢 start (default), stop (copy the trace and analyze it) or status\n\nenable and disable are the former names of start and stop\n\nDefault value: start\nAllowed values: start, stop, status, enable, disable"
             },
             {
               "names": [
                 "--class"
               ],
               "argument": "CLASS",
-              "description": "class name to instrument (it supports regex like oracle.jdbc.*)\n\nRequired: ✓ Yes"
+              "description": "🎯 Class to trace: exact name (io.confluent.connect.jdbc.sink.JdbcDbWriter, a nested class with $), or a regex (io.confluent.connect.jdbc.sink.*)\n\n🎓 Tip: you can pass multiple classes by specifying --class multiple times\n\nRepeatable: ✓ Yes"
             },
             {
               "names": [
                 "--method"
               ],
               "argument": "METHOD",
-              "description": "method name to instrument (it supports regex like .*find.*)\n\n🎓 Tip: you can pass multiple methods by specifying --method multiple times\n\nRepeatable: ✓ Yes\nDefault value: .*"
+              "description": "🎯 Method to trace, in each --class: exact name (write) or regex (.*[Ww]rite.*), default: every method\n\n🎓 Tip: you can pass multiple methods by specifying --method multiple times\n\nRepeatable: ✓ Yes\nDefault value: .*"
             },
             {
               "names": [
-                "--action"
+                "--operation"
               ],
-              "argument": "ACTION",
-              "description": "🟢 enable or disable\n\nDefault value: enable\nAllowed values: enable, disable"
+              "argument": "OPERATION",
+              "description": "🥼 What to record on top of each call (its duration, its exception and its place in the call tree are always recorded):\n\n* VALUES: arguments\n* RETURN_VALUE: return value\n* STACK: stack trace of the caller\n* THREADS / RETURN_THREADS / EXCEPTION_THREADS: thread dump when the method is called / returns / throws\n* HEAP / RETURN_HEAP / EXCEPTION_HEAP: heap dump when the method is called / returns / throws\n* DELAY: duration (always recorded, kept for compatibility)\n\nDefault values: VALUES and RETURN_VALUE\n\n🎓 Tip: you can pass multiple operations by specifying --operation multiple times\n\nRepeatable: ✓ Yes\nDefault value: [\"VALUES\", \"RETURN_VALUE\"]\nAllowed values: VALUES, RETURN_VALUE, STACK, THREADS, RETURN_THREADS, EXCEPTION_THREADS, HEAP, RETURN_HEAP, EXCEPTION_HEAP, DELAY"
+            },
+            {
+              "names": [
+                "--config-file"
+              ],
+              "argument": "CONFIG_FILE",
+              "description": "📜 Rules file, for different operations per class: one class{method}=OP+OP rule per line (io.confluent.connect.jdbc.sink.JdbcDbWriter{write}=VALUES+STACK), added to the rules of --class"
+            },
+            {
+              "names": [
+                "--duration"
+              ],
+              "argument": "DURATION",
+              "description": "⏱️ With --action start: trace for this long (in seconds, or with a s/m/h suffix), then stop and analyze"
+            },
+            {
+              "names": [
+                "--restart"
+              ],
+              "argument": "",
+              "description": "🔁 Load the agent at the start of the JVM: the container is recreated (and recreated again without the agent by --action stop). To trace the startup, or when the JVM refuses the attach"
+            },
+            {
+              "names": [
+                "--pid"
+              ],
+              "argument": "PID",
+              "description": "🔢 Process to attach to in the container (default: auto, the oldest java process)\n\nDefault value: auto"
+            },
+            {
+              "names": [
+                "--max-calls"
+              ],
+              "argument": "MAX_CALLS",
+              "description": "✂️ Calls recorded with their details in events.jsonl (default: 50000), the next ones are only counted in the statistics"
+            },
+            {
+              "names": [
+                "--max-calls-per-method"
+              ],
+              "argument": "MAX_CALLS_PER_METHOD",
+              "description": "✂️ Calls of one method recorded with their details (default: 2000), so that a hot method does not use the whole budget"
+            },
+            {
+              "names": [
+                "--max-value-length"
+              ],
+              "argument": "MAX_VALUE_LENGTH",
+              "description": "✂️ Characters kept of each argument, return value and exception message (default: 300)"
+            },
+            {
+              "names": [
+                "--only-failed"
+              ],
+              "argument": "",
+              "description": "🎯 Record with their details (arguments, return value, stack) only the calls that throw an exception: the others are only counted in the statistics. With --slower-than, the calls that throw or are slow"
+            },
+            {
+              "names": [
+                "--slower-than"
+              ],
+              "argument": "DURATION",
+              "description": "🐢 Record with their details only the calls that take at least this long (500ms, 2s, 1m): the others are only counted in the statistics. With --only-failed, the calls that are slow or throw"
+            },
+            {
+              "names": [
+                "--output-dir",
+                "-o"
+              ],
+              "argument": "OUTPUT_DIR",
+              "description": "📂 Folder for the trace and its HTML report, used by --action stop (default: current folder)\n\nDefault value: ."
+            },
+            {
+              "names": [
+                "--no-analyze"
+              ],
+              "argument": "",
+              "description": "🙈 With --action stop, only copy the trace, do not analyze it"
             }
           ]
         },
@@ -2946,6 +3076,13 @@
               ],
               "argument": "SETTINGS",
               "description": "⚙️ Settings of the recording, used by --action start (default: playground)\n\n  playground   what playground analyze flight-recorder needs, low overhead (tools/jfr-analyzer/playground.jfc)\n  profile      settings of the JDK for profiling, about 2% overhead\n  default      settings of the JDK for continuous recording, about 1% overhead\n  all          every event, no threshold (scripts/cli/all.jfc): high overhead, for JDK Mission Control\n\nDefault value: playground\nAllowed values: playground, profile, default, all"
+            },
+            {
+              "names": [
+                "--trace-method"
+              ],
+              "argument": "METHOD",
+              "description": "🎯 With --action start, also record every call of this method, with its duration and its caller (method tracing of JDK 25+, JEP 520: the cp 8.3.2 images ship JDK 25): a class (all its methods), Class::method or @Annotation. The report gets a \"Traced methods\" section: calls, total, avg, max, the slowest calls and their stack. No argument values: for them, use playground debug jscissors\n\n🎓 Tip: you can pass multiple methods by specifying --trace-method multiple times\n\nRepeatable: ✓ Yes"
             },
             {
               "names": [

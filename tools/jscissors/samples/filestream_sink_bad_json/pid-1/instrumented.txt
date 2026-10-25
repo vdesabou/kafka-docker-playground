@@ -1,0 +1,3 @@
+org.apache.kafka.connect.file.FileStreamSinkTask
+org.apache.kafka.connect.json.JsonConverter
+org.apache.kafka.connect.runtime.WorkerSinkTask

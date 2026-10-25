@@ -3,6 +3,7 @@ action="${args[--action]}"
 settings="${args[--settings]}"
 output_dir="${args[--output-dir]}"
 no_analyze="${args[--no-analyze]}"
+eval "trace_methods=(${args[--trace-method]})"
 
 # Convert space-separated string to array
 IFS=' ' read -ra container_array <<< "$containers"
@@ -15,6 +16,21 @@ case "${settings}" in
 esac
 
 get_environment_used
+
+if [[ ${#trace_methods[@]} -gt 0 && "$action" == "start" ]]
+then
+    if [[ -z "$settings_file" ]]
+    then
+        logerror "❌ --trace-method needs --settings playground or all (the settings $settings of the JDK cannot be extended)"
+        exit 1
+    fi
+    for container in "${container_array[@]}"
+    do
+        check_method_trace_supported "$container"
+    done
+    settings_file=$(jfr_settings_with_method_trace "$settings_file" "${trace_methods[@]}") || exit 1
+    log "🎯 tracing every call of ${trace_methods[*]} (JDK 25 method tracing)"
+fi
 
 # the recording of each container is kept in playground.ini, flight_recorder.<container>:
 #   jmx <jmx port> <recording id> <settings> <start epoch>   recording driven over JMX (FlightRecorderMXBean)

@@ -168,7 +168,8 @@ def load_digests(paths):
     model = {"files": [], "digests": [], "threads": [], "exec": Counter(), "monitor": [], "park": [], "alloc_classes": Counter(),
              "alloc_stacks": Counter(), "alloc_all": 0, "file_io": [], "gc": {"count": 0, "pause_total_ms": 0.0, "pause_max_ms": 0.0,
              "pause_p99_ms": None, "by_name": Counter(), "heap_after_gc_max_bytes": None}, "throwables": 0, "throwable_seconds": 0.0,
-             "duration_s": 0.0, "jvm_versions": set(), "selection": set(), "thread_filter": None, "events": 0}
+             "duration_s": 0.0, "jvm_versions": set(), "selection": set(), "thread_filter": None, "events": 0,
+             "traced": {}, "traced_slowest": [], "timing": {}}
     for path in paths:
         with open(path) as f:
             d = json.load(f)
@@ -220,6 +221,22 @@ def load_digests(paths):
             mg["by_name"][name] += n
         if gc.get("heap_after_gc_max_bytes") is not None:
             mg["heap_after_gc_max_bytes"] = max(mg["heap_after_gc_max_bytes"] or 0, gc["heap_after_gc_max_bytes"])
+        # --trace-method (jdk.MethodTrace and jdk.MethodTiming, JDK 25+): summed over the workers
+        for m in (d.get("method_traces") or {}).get("methods", []):
+            t = model["traced"].setdefault(m["method"], {"count": 0, "total_ms": 0.0, "max_ms": 0.0})
+            t["count"] += m["count"]
+            t["total_ms"] += m["total_ms"] or 0
+            t["max_ms"] = max(t["max_ms"], m["max_ms"] or 0)
+        for c in (d.get("method_traces") or {}).get("slowest", []):
+            model["traced_slowest"].append(dict(c, stack=list(stack(c.get("stack", [])))))
+        for m in d.get("method_timing") or []:
+            t = model["timing"].setdefault(m["method"], {"invocations": 0, "min_ms": None, "max_ms": None, "total_ms": 0.0})
+            n = m.get("invocations") or 0
+            t["invocations"] += n
+            if n:
+                t["total_ms"] += (m.get("avg_ms") or 0) * n
+                t["min_ms"] = m["min_ms"] if t["min_ms"] is None else min(t["min_ms"], m["min_ms"])
+                t["max_ms"] = m["max_ms"] if t["max_ms"] is None else max(t["max_ms"], m["max_ms"])
         ex = d.get("exceptions", {})
         if ex.get("throwables") is not None and ex.get("seconds"):
             model["throwables"] += ex["throwables"]
@@ -416,9 +433,30 @@ def analyze(model, connector_class=None, connector_type=None, mode=None, source_
         "locks": locks, "waits": waits, "io": io, "top_threads": top_threads, "gc": gc,
         "exceptions_per_s": exceptions_per_s,
         "file_io": sorted(model["file_io"], key=lambda x: -x["ms"])[:top],
+        "traced_methods": traced_methods(model, top),
     }
     analysis["findings"], analysis["normal"] = findings(analysis)
     return analysis
+
+
+def traced_methods(model, top):
+    """--trace-method: every call of the traced methods (jdk.MethodTrace) and the counts of the timed classes
+    (jdk.MethodTiming), JDK 25+. None when the recording has neither."""
+    if not model["traced"] and not model["timing"]:
+        return None
+    rows = {}
+    for m, t in model["timing"].items():
+        if t["invocations"]:
+            rows[m] = {"method": m, "calls": t["invocations"], "total_ms": t["total_ms"], "avg_ms": t["total_ms"] / t["invocations"],
+                       "min_ms": t["min_ms"], "max_ms": t["max_ms"], "traced": False}
+    for m, t in model["traced"].items():
+        # the trace has every call of the recording, with its duration: it wins over the timing
+        rows[m] = {"method": m, "calls": t["count"], "total_ms": t["total_ms"], "avg_ms": t["total_ms"] / t["count"] if t["count"] else 0,
+                   "min_ms": rows.get(m, {}).get("min_ms"), "max_ms": t["max_ms"], "traced": True}
+    slowest = sorted(model["traced_slowest"], key=lambda c: -c["ms"])[:top]
+    return {"methods": sorted(rows.values(), key=lambda r: -r["total_ms"]),
+            "timed_not_called": sorted(m for m, t in model["timing"].items() if not t["invocations"]),
+            "slowest": [dict(c, caller=first_non_neutral(tuple(c["stack"])) if c["stack"] else None) for c in slowest]}
 
 
 def infer_type(model, selected):
@@ -692,6 +730,17 @@ def text_report(a, top):
             lines.append(f"  {x['remote']:<30} {x['count']:>8,} calls  {x['ms'] / 1000:>8.1f} s  {pct(x['share']):>5} + {pct(x.get('short_share', 0)):>4} shorter"
                          " of the task time")
         lines.append("")
+    tm = a.get("traced_methods")
+    if tm:
+        lines.append("Traced methods (--trace-method: every call, JDK 25 method tracing)")
+        lines.append(f"  {'calls':>9} {'total ms':>10} {'avg ms':>9} {'max ms':>9}  method")
+        for r in tm["methods"][:top]:
+            lines.append(f"  {r['calls']:>9,} {r['total_ms']:>10,.1f} {r['avg_ms']:>9.3f} {r['max_ms'] or 0:>9.3f}  {r['method']}")
+        for c in tm["slowest"][:3]:
+            lines.append(f"  slowest: {c['ms']:.1f} ms {c['method']} on {c['thread']}" + (f", called by {c['caller']}" if c.get("caller") else ""))
+        if not tm["methods"]:
+            lines.append("  no call of the traced methods during the recording")
+        lines.append("")
     if a["normal"]:
         lines.append("Checked and normal: " + "; ".join(f"{n['label']}: {n['text']}" for n in a["normal"]))
     return "\n".join(lines)
@@ -897,6 +946,20 @@ def render_section(a, title="🛩️ Where the time goes", recording_link=None, 
     if top_rows:
         cards.append('<div class="card"><h2>🔥 Busiest threads of the JVM</h2><p class="sub">CPU cores used, average over the recording</p>'
                      + table(["Thread", "Cores"], top_rows, nums=(1,)) + "</div>")
+    tm = a.get("traced_methods")
+    if tm:
+        rows = [[f'<code>{e(r["method"])}</code>' + ("" if r["traced"] else ' <span class="muted">timing</span>'), f'{r["calls"]:,}',
+                 f'{r["total_ms"]:,.1f}', f'{r["avg_ms"]:.3f}', "-" if r["min_ms"] is None else f'{r["min_ms"]:.3f}',
+                 "-" if r["max_ms"] is None else f'{r["max_ms"]:.3f}'] for r in tm["methods"]]
+        slow = "".join(f'<details><summary><code>{c["ms"]:.1f} ms</code> <code>{e(c["method"])}</code> <span class="muted">{e(c["thread"] or "")}'
+                       f' {e((c["start"] or "")[11:23])}</span></summary><pre>{e(chr(10).join(c["stack"]))}</pre></details>'
+                       for c in tm["slowest"])
+        body = table(["Method", "Calls", "Total ms", "Avg ms", "Min ms", "Max ms"], rows, nums=(1, 2, 3, 4, 5)) if rows else \
+            '<p class="sub">No call of the traced methods during the recording.</p>'
+        cards.append('<div class="card full"><h2>🎯 Traced methods</h2><p class="sub">--trace-method: every call of the traced methods '
+                     '(jdk.MethodTrace) and the calls of the timed classes (jdk.MethodTiming), JDK 25+. Durations and callers, '
+                     'no argument: for the values, use playground debug jscissors</p>' + body
+                     + (f'<p class="sub" style="margin-top:10px">🐢 Slowest calls, with their caller stack</p>{slow}' if slow else "") + "</div>")
     if normal_rows:
         cards.append('<div class="card"><h2>✅ Other signals</h2><p class="sub">Checked and found normal</p>' + table(["Signal", "Value"], normal_rows) + "</div>")
     return (f'<section class="jfr-section"><h2>{e(title)}</h2><p class="sub">{sub}</p>{findings_html(a["findings"])}'
