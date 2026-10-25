@@ -78,6 +78,9 @@ end
 
 if commands.any?
   grouped_commands.each do |group, commands|
+    # private commands have no page (see render.rb): don't link to them
+    commands = commands.reject(&:private)
+    next if commands.empty?
     > ## {{ group.gsub(/:$/, '').gsub(/\A=+\s*|\s*=+\z/, '') }}
     >
     commands.each do |subcommand|

@@ -18,8 +18,9 @@ gtxindex = GTX.load_file template
 # Render the file for the main command
 save "#{target}/index.md", gtxindex.parse(command)
 
-# Render a file for each subcommand
-command.deep_commands.reject(&:private).each do |subcommand|
+# Render a file for each public subcommand (private commands and their subcommands are skipped)
+public_deep_commands = ->(cmd) { cmd.commands.reject(&:private).flat_map { |c| [c] + public_deep_commands.(c) } }
+public_deep_commands.(command).each do |subcommand|
   save "#{target}/#{subcommand.full_name}.md", gtx.parse(subcommand)
 end
 

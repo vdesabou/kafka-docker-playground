@@ -280,5 +280,5 @@ playground rbac role-binding list|create|delete …    playground rbac user add|
   [`connector create-or-update`](/deep-dive-connector-create-or-update.md) (`--dry-run`, `--skip-automatic-connector-config`),
   [containers](/deep-dive-container-lifecycle.md) (`get-properties`)
 - 📖 [How it works: environments](/how-it-works.md) and [🚦 Reproduce an authorization error](/reusables?id=🚦-reproduce-an-authorization-error)
-- 🧠 CLI reference: [playground start-environment](/playground%20start-environment), [playground run](/playground%20run),
+- 🧠 CLI reference: [playground run](/playground%20run),
   [playground rbac](/playground%20rbac), [playground tools certs-create](/playground%20tools%20certs-create)
