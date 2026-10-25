@@ -91,6 +91,13 @@ def load(path: str) -> Optional[dict]:
 
 # ── Analysis ─────────────────────────────────────────────────────────────────
 
+def shown(path: str) -> str:
+    """A path as printed in the reports: relative to the current folder when it is under it (a published report must not
+    hold the path of a user folder), absolute otherwise"""
+    rel = os.path.relpath(path)
+    return path if rel.startswith("..") else rel
+
+
 def short_class(name: str) -> str:
     return (name or "").split(".")[-1]
 
@@ -301,14 +308,14 @@ def findings(a: dict) -> List[dict]:
                                                "narrow --class / --method"})
     written = [d for d in a["dumps"] if d.get("file")]
     if len(written) > 3:
-        res.append({"severity": "INFO", "text": f"📸 {len(written)} dumps in {os.path.join(a['dir'], 'dumps')}, the first ones below"})
+        res.append({"severity": "INFO", "text": f"📸 {len(written)} dumps in {shown(os.path.join(a['dir'], 'dumps'))}, the first ones below"})
     for d in written[:3]:
         if d.get("file", "").endswith(".txt"):
             res.append({"severity": "INFO", "text": f"🧵 Thread dump at the {d.get('when')} of {d.get('origin')}: playground analyze "
-                                                    f"thread-dump -f {os.path.join(a['dir'], d['file'])}"})
+                                                    f"thread-dump -f {shown(os.path.join(a['dir'], d['file']))}"})
         elif d.get("file"):
             res.append({"severity": "INFO", "text": f"💾 Heap dump at the {d.get('when')} of {d.get('origin')}: playground analyze "
-                                                    f"heap-dump -f {os.path.join(a['dir'], d['file'])}"})
+                                                    f"heap-dump -f {shown(os.path.join(a['dir'], d['file']))}"})
     if s.get("dumps_skipped"):
         res.append({"severity": "INFO", "text": f"📸 {s['dumps_skipped']} dump(s) skipped by the limits (maxThreadDumps, maxHeapDumps, "
                                                 "dumpIntervalMs)"})
@@ -339,7 +346,7 @@ def verdict(a: dict) -> Tuple[str, str]:
 def text_report(a: dict, top: int) -> str:
     s = a["summary"]
     out = [f"✂️  jscissors trace of pid {s.get('pid', '?')} {s.get('main') or ''} ({s.get('jvm', '?')}), {s.get('mode', '')}",
-           f"   {a['dir']}",
+           f"   {shown(a['dir'])}",
            f"   {a['duration_s']:.0f}s, {len(s.get('rules', []))} rule(s), {len(s.get('instrumented', []))} class(es) instrumented, "
            f"{a['calls_total']:,} call(s) ({a['calls_recorded']:,} with details), {a['errors_total']:,} exception(s)",
            "", a["verdict"][1], ""]
@@ -449,7 +456,16 @@ def tree_html(c: dict, budget: List[int], slow_us: float) -> str:
     return f"<details><summary>{call_line(c, slow_us)}</summary>{inner}</details>"
 
 
-def html_report(a: dict, top: int) -> str:
+def file_item(path: str, label: str, html_dir: str) -> str:
+    """linked relative to the report when the file is next to it or below (the trace folder of debug jscissors), so that
+    the folder can be moved or zipped; only named otherwise"""
+    rel = os.path.relpath(path, html_dir)
+    if rel.startswith(".."):
+        return f"<li><code>{rh.e(label)}</code></li>"
+    return f"<li><a href='{rh.e(rel)}'>{rh.e(label)}</a></li>"
+
+
+def html_report(a: dict, top: int, html_dir: str) -> str:
     s = a["summary"]
     instrumented = s.get("instrumented", [])
     kpis = rh.kpis_html([
@@ -539,7 +555,7 @@ def html_report(a: dict, top: int) -> str:
     body.append(rh.card("📜 Rules and files", f"<ul style='margin-left:18px'>{rules}</ul><p class='legend'>{rh.e(settings)}</p>"
                         f"<details><summary>{len(instrumented)} class(es) instrumented</summary>{classes}</details>"
                         "<h3>Files</h3><ul style='margin-left:18px'>"
-                        + "".join(f"<li><a href='{rh.e(os.path.join(a['dir'], f))}'>{rh.e(f)}</a></li>" for f in files
+                        + "".join(file_item(os.path.join(a["dir"], f), f, html_dir) for f in files
                                   if os.path.exists(os.path.join(a["dir"], f))) + "</ul>"))
 
     meta = [f"✂️ pid {rh.e(s.get('pid', '?'))} {rh.e(s.get('main') or '')}", rh.e(s.get("jvm", "")),
@@ -569,7 +585,7 @@ def main() -> int:
     print(text_report(a, args.top))
     if args.html_out:
         with open(args.html_out, "w", encoding="utf-8") as fh:
-            fh.write(html_report(a, args.top))
+            fh.write(html_report(a, args.top, os.path.dirname(os.path.abspath(args.html_out))))
     return 0
 
 

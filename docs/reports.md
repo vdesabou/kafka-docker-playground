@@ -85,9 +85,18 @@ report and click around: this is what you get on your own data.
     <a href="reports/flight-recorder.html" target="_blank" rel="noopener"><img src="images/reports/flight-recorder.png" alt="🛩️ Flight recorder report" loading="lazy"></a>
     <div class="report-body">
       <h3><a href="#/playground%20analyze%20flight-recorder">🛩️ Flight recorder</a></h3>
-      <p>Where does the time of the connector tasks go? Records the worker with Java Flight Recorder over JMX and splits the task time between I/O, Kafka, locks, converters and the hot methods.</p>
+      <p>Where does the time of the connector tasks go? Records the worker with Java Flight Recorder over JMX and splits the task time between I/O, Kafka, locks, converters and the hot methods. On JDK 25+, <code>--trace-method</code> adds every call of a method with its duration and caller.</p>
       <p><code>playground analyze flight-recorder -c connect --duration 60s</code></p>
       <p>Try it: <code>playground analyze flight-recorder --sample jdbc_postgres_sink</code></p>
+    </div>
+  </div>
+  <div class="report-card">
+    <a href="reports/jscissors.html" target="_blank" rel="noopener"><img src="images/reports/jscissors.png" alt="✂️ jscissors trace report" loading="lazy"></a>
+    <div class="report-body">
+      <h3><a href="#/playground%20analyze%20jscissors">✂️ jscissors trace</a></h3>
+      <p>What did this method receive, return or throw? Traces the calls of any method of the running worker, without restart: methods by total time, the exceptions with the arguments of the failing call, the calls still running (a hang), the slowest calls and the call trees.</p>
+      <p><code>playground debug jscissors --class io.confluent.connect.jdbc.sink.JdbcDbWriter --duration 60s</code></p>
+      <p>Try it: <code>playground analyze jscissors --sample filestream_sink_bad_json</code></p>
     </div>
   </div>
   <div class="report-card">
