@@ -921,8 +921,12 @@ subcommands:
     latest failing CI job of the\nexample is located from its '\U0001F525' GitHub
     issue, its full log is downloaded,\nand for each failing script the last lines
     before the failure are shown\nwith a digest of the ERROR/FATAL records (same digest
-    as 'playground\ncontainer logs --errors').\n\nUse --test to ask about any example,
-    without running it."
+    as 'playground\ncontainer logs --errors').\n\n\U0001F310 With --logs, also writes
+    a self-contained HTML report of the failure in --output-dir, opened in the browser
+    in an interactive terminal (--no-open to skip): known causes, last lines before
+    the failure of each failing script, root causes and every distinct record, with
+    links to the issue and the job.\n\nUse --test to ask about any example, without
+    running it."
   usage: playground get-ci-result [OPTIONS]
   options:
   - names:
@@ -950,9 +954,19 @@ subcommands:
     - "--max-findings"
     argument: MAX_FINDINGS
     description: |-
-      ✂️ With --logs, maximum number of distinct records to show per failing script (default 20)
+      ✂️ With --logs, maximum number of distinct records to show per failing script (default 20). The HTML report has them all
 
       Default value: 20
+  - names:
+    - "--output-dir"
+    - "-o"
+    argument: OUTPUT_DIR
+    description: "\U0001F4C2 With --logs, output directory for the HTML report (default:
+      /tmp/playground-ci-result)\n\nDefault value: /tmp/playground-ci-result"
+  - names:
+    - "--no-open"
+    argument: ''
+    description: "\U0001F648 With --logs, do not open the HTML report in the browser"
 - name: history
   description: "\U0001F3F0 Get an history of the examples which were run with run
     command and run it again\n\nOpens a picker over every 'playground run' command
@@ -2183,7 +2197,12 @@ subcommands:
       leak suspects (accumulation point and who holds it) and the top retained sizes
       by class (dominator tree), and saves the MAT HTML reports (Leak_Suspects, System_Overview,
       Top_Components) in --output-dir\n\n\U0001F4C8 Use --compare with a second dump
-      of the same JVM, taken later under the same load, to see which classes grow\n\n\U0001F433
+      of the same JVM, taken later under the same load, to see which classes grow\n\n\U0001F310
+      Also writes a self-contained HTML report, <dump>-heap-report.html in --output-dir,
+      opened in the browser in an interactive terminal: verdict, leak suspects in
+      plain words, Kafka-aware hints (producer buffers, consumer fetch buffers, records
+      held by the tasks, storage sink writers, CDC queues, schema caches), retained
+      heap by class, growth between the two dumps, and links to the MAT reports\n\n\U0001F433
       MAT needs roughly as much memory as the used heap of the dump (1 to 1.5x the
       .hprof size): give Docker enough memory or use --max-memory\n\n\U0001F9EA With
       --sample, it analyzes the samples shipped in tools/heap-analyzer/samples: a
@@ -2234,6 +2253,11 @@ subcommands:
       argument: FILE
       description: "\U0001F4C8 Second heap dump of the same JVM, taken later: prints
         the classes whose instance count and shallow size grew"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F5C2️  Output JSON on stdout: overview, leak suspects, retained
+        heap by class, growth and findings (text digest on stderr, no HTML report)"
   - name: logs
     description: "\U0001F525 Show a digest of ERROR/FATAL records found in log files,
       folders or zip bundles\n\nThe offline counterpart of 'playground container logs
@@ -3453,6 +3477,12 @@ subcommands:
         ✂️ With --errors, maximum number of distinct records to show (default 40)
 
         Default value: 40
+    - names:
+      - "--html"
+      argument: ''
+      description: "\U0001F310 With --errors, also write a self-contained HTML report
+        of the digest in /tmp/playground-log-reports (known causes, timeline, root
+        causes, every distinct record), opened in the browser in an interactive terminal"
   - name: display-error-all
     description: "\U0001F525 Display all ERROR/FATAL logs in all containers/pods.
       Useful for quick troubleshooting\n\nThe first command to run when an example
@@ -3481,6 +3511,12 @@ subcommands:
         ✂️ Maximum number of distinct records to show per container (default 15)
 
         Default value: 15
+    - names:
+      - "--html"
+      argument: ''
+      description: "\U0001F310 Also write a self-contained HTML report of all the
+        containers in /tmp/playground-log-reports (known causes, timeline, root causes,
+        every distinct record), opened in the browser in an interactive terminal"
   - name: ssh
     description: "\U0001F6EC SSH into container\n\nInteractive shell inside the container,
       as the user the component runs\nwith. Use 'playground container exec' instead
@@ -4327,8 +4363,11 @@ subcommands:
         message, the root cause (last\n\"Caused by:\" of the stack trace), the original
         topic, partition and\noffsets, the offsets in the dead letter queue and a
         sample value.\n\nKeys and values are read as raw bytes, so it works whatever
-        the\nformat of the records (avro, protobuf, json schema, plain json).\n\n\U0001F449
-        Example: https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector"
+        the\nformat of the records (avro, protobuf, json schema, plain json).\n\n\U0001F310
+        Also writes a self-contained HTML report in --output-dir, opened in the browser
+        in an interactive terminal (--no-open to skip): known causes, when the records
+        arrived, the groups with their original offsets and a sample value, and the
+        replay commands.\n\n\U0001F449 Example: https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector"
       usage: playground topic dlq inspect [OPTIONS]
       options:
       - names:
@@ -4356,7 +4395,17 @@ subcommands:
       - names:
         - "--json"
         argument: ''
-        description: "\U0001F916 Print the groups as JSON"
+        description: "\U0001F916 Print the groups as JSON (no HTML report)"
+      - names:
+        - "--output-dir"
+        - "-o"
+        argument: OUTPUT_DIR
+        description: "\U0001F4C2 Output directory for the HTML report (default: /tmp/playground-dlq-inspect)\n\nDefault
+          value: /tmp/playground-dlq-inspect"
+      - names:
+        - "--no-open"
+        argument: ''
+        description: "\U0001F648 Do not open the HTML report in the browser"
       - names:
         - "--verbose"
         - "-v"
@@ -5347,7 +5396,12 @@ subcommands:
       that could be removed\n\nKeys only on one side, and keys with different values,
       are listed.\nPasswords masked by the REST API are not compared.\n\n\U0001F393
       Tip: run it with the config of a customer and the config of the\nexample to
-      see right away what differs.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update"
+      see right away what differs.\n\n\U0001F310 Also writes a self-contained HTML
+      report in --output-dir, opened in the browser in an interactive terminal (--no-open
+      to skip): the keys side by side with the documentation, type and default of
+      each one (from the configuration reference of the plugin), what the important
+      differences mean (converters, error handling, transforms...), and the secrets
+      masked.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update"
     usage: playground connector diff [OPTIONS]
     options:
     - names:
@@ -5379,7 +5433,17 @@ subcommands:
     - names:
       - "--json"
       argument: ''
-      description: "\U0001F916 Print the result as JSON"
+      description: "\U0001F916 Print the result as JSON (no HTML report)"
+    - names:
+      - "--output-dir"
+      - "-o"
+      argument: OUTPUT_DIR
+      description: "\U0001F4C2 Output directory for the HTML report (default: /tmp/playground-connector-diff)\n\nDefault
+        value: /tmp/playground-connector-diff"
+    - names:
+      - "--no-open"
+      argument: ''
+      description: "\U0001F648 Do not open the HTML report in the browser"
   - name: error-recommendations
     description: "\U0001F4A1 Show error recommendations for fully managed connectors\n\nConfluent
       Cloud analyses the failure stack trace of a failed fully\nmanaged or custom

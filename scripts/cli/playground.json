@@ -839,7 +839,7 @@
     },
     {
       "name": "get-ci-result",
-      "description": "🤖 get CI result for current example\n\nTells you whether the example you are running is green in the nightly CI,\nboth for the default environment and for cfk, by reading the published\nbadges from kafka-docker-playground.io.\n\n👉 Useful before you spend time debugging: if CI is red too, the breakage\nis probably not on your side. Reproduction models are always reported as\nfine, they are not part of the CI matrix.\n\n🔥 With --logs, also tells why it is red: the latest failing CI job of the\nexample is located from its '🔥' GitHub issue, its full log is downloaded,\nand for each failing script the last lines before the failure are shown\nwith a digest of the ERROR/FATAL records (same digest as 'playground\ncontainer logs --errors').\n\nUse --test to ask about any example, without running it.",
+      "description": "🤖 get CI result for current example\n\nTells you whether the example you are running is green in the nightly CI,\nboth for the default environment and for cfk, by reading the published\nbadges from kafka-docker-playground.io.\n\n👉 Useful before you spend time debugging: if CI is red too, the breakage\nis probably not on your side. Reproduction models are always reported as\nfine, they are not part of the CI matrix.\n\n🔥 With --logs, also tells why it is red: the latest failing CI job of the\nexample is located from its '🔥' GitHub issue, its full log is downloaded,\nand for each failing script the last lines before the failure are shown\nwith a digest of the ERROR/FATAL records (same digest as 'playground\ncontainer logs --errors').\n\n🌐 With --logs, also writes a self-contained HTML report of the failure in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): known causes, last lines before the failure of each failing script, root causes and every distinct record, with links to the issue and the job.\n\nUse --test to ask about any example, without running it.",
       "usage": "playground get-ci-result [OPTIONS]",
       "options": [
         {
@@ -876,7 +876,22 @@
             "--max-findings"
           ],
           "argument": "MAX_FINDINGS",
-          "description": "✂️ With --logs, maximum number of distinct records to show per failing script (default 20)\n\nDefault value: 20"
+          "description": "✂️ With --logs, maximum number of distinct records to show per failing script (default 20). The HTML report has them all\n\nDefault value: 20"
+        },
+        {
+          "names": [
+            "--output-dir",
+            "-o"
+          ],
+          "argument": "OUTPUT_DIR",
+          "description": "📂 With --logs, output directory for the HTML report (default: /tmp/playground-ci-result)\n\nDefault value: /tmp/playground-ci-result"
+        },
+        {
+          "names": [
+            "--no-open"
+          ],
+          "argument": "",
+          "description": "🙈 With --logs, do not open the HTML report in the browser"
         }
       ]
     },
@@ -2025,7 +2040,7 @@
         },
         {
           "name": "heap-dump",
-          "description": "🔬 Analyze a heap dump with Eclipse Memory Analyzer (MAT), run headless in Docker\n\n🕵️ Prints a text digest: heap overview, MAT leak suspects (accumulation point and who holds it) and the top retained sizes by class (dominator tree), and saves the MAT HTML reports (Leak_Suspects, System_Overview, Top_Components) in --output-dir\n\n📈 Use --compare with a second dump of the same JVM, taken later under the same load, to see which classes grow\n\n🐳 MAT needs roughly as much memory as the used heap of the dump (1 to 1.5x the .hprof size): give Docker enough memory or use --max-memory\n\n🧪 With --sample, it analyzes the samples shipped in tools/heap-analyzer/samples: a quick way to see what it reports.\n\n🔖 Exit code is 0 when the analysis completed, non-zero when MAT could not parse the dump (truncated file, out of memory): never a \"healthy\" verdict on a failed parse\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics",
+          "description": "🔬 Analyze a heap dump with Eclipse Memory Analyzer (MAT), run headless in Docker\n\n🕵️ Prints a text digest: heap overview, MAT leak suspects (accumulation point and who holds it) and the top retained sizes by class (dominator tree), and saves the MAT HTML reports (Leak_Suspects, System_Overview, Top_Components) in --output-dir\n\n📈 Use --compare with a second dump of the same JVM, taken later under the same load, to see which classes grow\n\n🌐 Also writes a self-contained HTML report, <dump>-heap-report.html in --output-dir, opened in the browser in an interactive terminal: verdict, leak suspects in plain words, Kafka-aware hints (producer buffers, consumer fetch buffers, records held by the tasks, storage sink writers, CDC queues, schema caches), retained heap by class, growth between the two dumps, and links to the MAT reports\n\n🐳 MAT needs roughly as much memory as the used heap of the dump (1 to 1.5x the .hprof size): give Docker enough memory or use --max-memory\n\n🧪 With --sample, it analyzes the samples shipped in tools/heap-analyzer/samples: a quick way to see what it reports.\n\n🔖 Exit code is 0 when the analysis completed, non-zero when MAT could not parse the dump (truncated file, out of memory): never a \"healthy\" verdict on a failed parse\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics",
           "usage": "playground analyze heap-dump [OPTIONS]",
           "options": [
             {
@@ -2073,6 +2088,13 @@
               ],
               "argument": "FILE",
               "description": "📈 Second heap dump of the same JVM, taken later: prints the classes whose instance count and shallow size grew"
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🗂️  Output JSON on stdout: overview, leak suspects, retained heap by class, growth and findings (text digest on stderr, no HTML report)"
             }
           ]
         },
@@ -3212,6 +3234,13 @@
               ],
               "argument": "MAX_FINDINGS",
               "description": "✂️ With --errors, maximum number of distinct records to show (default 40)\n\nDefault value: 40"
+            },
+            {
+              "names": [
+                "--html"
+              ],
+              "argument": "",
+              "description": "🌐 With --errors, also write a self-contained HTML report of the digest in /tmp/playground-log-reports (known causes, timeline, root causes, every distinct record), opened in the browser in an interactive terminal"
             }
           ]
         },
@@ -3240,6 +3269,13 @@
               ],
               "argument": "MAX_FINDINGS",
               "description": "✂️ Maximum number of distinct records to show per container (default 15)\n\nDefault value: 15"
+            },
+            {
+              "names": [
+                "--html"
+              ],
+              "argument": "",
+              "description": "🌐 Also write a self-contained HTML report of all the containers in /tmp/playground-log-reports (known causes, timeline, root causes, every distinct record), opened in the browser in an interactive terminal"
             }
           ]
         },
@@ -4113,7 +4149,7 @@
           "subcommands": [
             {
               "name": "inspect",
-              "description": "🩺 Show what is in a dead letter queue, grouped by error\n\nReads the whole dead letter queue (up to --max-messages) and groups\nthe records by connector, stage (key / value converter,\ntransformation, task put...) and exception, most frequent first.\nFor each group: the exception and its message, the root cause (last\n\"Caused by:\" of the stack trace), the original topic, partition and\noffsets, the offsets in the dead letter queue and a sample value.\n\nKeys and values are read as raw bytes, so it works whatever the\nformat of the records (avro, protobuf, json schema, plain json).\n\n👉 Example: https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector",
+              "description": "🩺 Show what is in a dead letter queue, grouped by error\n\nReads the whole dead letter queue (up to --max-messages) and groups\nthe records by connector, stage (key / value converter,\ntransformation, task put...) and exception, most frequent first.\nFor each group: the exception and its message, the root cause (last\n\"Caused by:\" of the stack trace), the original topic, partition and\noffsets, the offsets in the dead letter queue and a sample value.\n\nKeys and values are read as raw bytes, so it works whatever the\nformat of the records (avro, protobuf, json schema, plain json).\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): known causes, when the records arrived, the groups with their original offsets and a sample value, and the replay commands.\n\n👉 Example: https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector",
               "usage": "playground topic dlq inspect [OPTIONS]",
               "options": [
                 {
@@ -4151,7 +4187,22 @@
                     "--json"
                   ],
                   "argument": "",
-                  "description": "🤖 Print the groups as JSON"
+                  "description": "🤖 Print the groups as JSON (no HTML report)"
+                },
+                {
+                  "names": [
+                    "--output-dir",
+                    "-o"
+                  ],
+                  "argument": "OUTPUT_DIR",
+                  "description": "📂 Output directory for the HTML report (default: /tmp/playground-dlq-inspect)\n\nDefault value: /tmp/playground-dlq-inspect"
+                },
+                {
+                  "names": [
+                    "--no-open"
+                  ],
+                  "argument": "",
+                  "description": "🙈 Do not open the HTML report in the browser"
                 },
                 {
                   "names": [
@@ -5306,7 +5357,7 @@
         },
         {
           "name": "diff",
-          "description": "🔀 Diff the config of a running connector with another config\n\nCompares the config of a running connector, key by key, with:\n\n  stdin              a config (plain json, or the heredoc printed by\n                     'show-config')\n  --file             the same, from a file, e.g. the config of a\n                     customer\n  --with-connector   another running connector\n  --defaults         the default value of each parameter of the plugin:\n                     shows only what the connector changes, and the\n                     keys set to their default that could be removed\n\nKeys only on one side, and keys with different values, are listed.\nPasswords masked by the REST API are not compared.\n\n🎓 Tip: run it with the config of a customer and the config of the\nexample to see right away what differs.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update",
+          "description": "🔀 Diff the config of a running connector with another config\n\nCompares the config of a running connector, key by key, with:\n\n  stdin              a config (plain json, or the heredoc printed by\n                     'show-config')\n  --file             the same, from a file, e.g. the config of a\n                     customer\n  --with-connector   another running connector\n  --defaults         the default value of each parameter of the plugin:\n                     shows only what the connector changes, and the\n                     keys set to their default that could be removed\n\nKeys only on one side, and keys with different values, are listed.\nPasswords masked by the REST API are not compared.\n\n🎓 Tip: run it with the config of a customer and the config of the\nexample to see right away what differs.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): the keys side by side with the documentation, type and default of each one (from the configuration reference of the plugin), what the important differences mean (converters, error handling, transforms...), and the secrets masked.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update",
           "usage": "playground connector diff [OPTIONS]",
           "options": [
             {
@@ -5352,7 +5403,22 @@
                 "--json"
               ],
               "argument": "",
-              "description": "🤖 Print the result as JSON"
+              "description": "🤖 Print the result as JSON (no HTML report)"
+            },
+            {
+              "names": [
+                "--output-dir",
+                "-o"
+              ],
+              "argument": "OUTPUT_DIR",
+              "description": "📂 Output directory for the HTML report (default: /tmp/playground-connector-diff)\n\nDefault value: /tmp/playground-connector-diff"
+            },
+            {
+              "names": [
+                "--no-open"
+              ],
+              "argument": "",
+              "description": "🙈 Do not open the HTML report in the browser"
             }
           ]
         },

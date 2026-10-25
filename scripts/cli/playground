@@ -3786,7 +3786,7 @@ playground_re_run_usage() {
 playground_get_ci_result_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground get-ci-result\n\n"
-    printf "  🤖 get CI result for current example\n  \n  Tells you whether the example you are running is green in the nightly CI,\n  both for the default environment and for cfk, by reading the published\n  badges from kafka-docker-playground.io.\n  \n  👉 Useful before you spend time debugging: if CI is red too, the breakage\n  is probably not on your side. Reproduction models are always reported as\n  fine, they are not part of the CI matrix.\n  \n  🔥 With --logs, also tells why it is red: the latest failing CI job of the\n  example is located from its '🔥' GitHub issue, its full log is downloaded,\n  and for each failing script the last lines before the failure are shown\n  with a digest of the ERROR/FATAL records (same digest as 'playground\n  container logs --errors').\n  \n  Use --test to ask about any example, without running it.\n\n"
+    printf "  🤖 get CI result for current example\n  \n  Tells you whether the example you are running is green in the nightly CI,\n  both for the default environment and for cfk, by reading the published\n  badges from kafka-docker-playground.io.\n  \n  👉 Useful before you spend time debugging: if CI is red too, the breakage\n  is probably not on your side. Reproduction models are always reported as\n  fine, they are not part of the CI matrix.\n  \n  🔥 With --logs, also tells why it is red: the latest failing CI job of the\n  example is located from its '🔥' GitHub issue, its full log is downloaded,\n  and for each failing script the last lines before the failure are shown\n  with a digest of the ERROR/FATAL records (same digest as 'playground\n  container logs --errors').\n  \n  🌐 With --logs, also writes a self-contained HTML report of the failure in\n  --output-dir, opened in the browser in an interactive terminal (--no-open to\n  skip): known causes, last lines before the failure of each failing script,\n  root causes and every distinct record, with links to the issue and the job.\n  \n  Use --test to ask about any example, without running it.\n\n"
   else
     printf "playground get-ci-result - 🤖 get CI result for current example\n\n"
   fi
@@ -3825,8 +3825,21 @@ playground_get_ci_result_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--max-findings MAX_FINDINGS")"
-    printf "    ✂️ With --logs, maximum number of distinct records to show per failing\n    script (default 20)\n"
+    printf "    ✂️ With --logs, maximum number of distinct records to show per failing\n    script (default 20). The HTML report has them all\n"
     printf "    %s\n" "Default: 20"
+    printf "    %s\n" "Needs: --logs"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
+    printf "    📂 With --logs, output directory for the HTML report (default:\n    /tmp/playground-ci-result)\n"
+    printf "    %s\n" "Default: /tmp/playground-ci-result"
+    printf "    %s\n" "Needs: --logs"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-open")"
+    printf "    🙈 With --logs, do not open the HTML report in the browser\n"
     printf "    %s\n" "Needs: --logs"
     echo
 
@@ -3841,10 +3854,11 @@ playground_get_ci_result_usage() {
     printf "  playground get-ci-result --logs\n"
     printf "  playground get-ci-result --test other/connect-secret-registry --logs\n"
     printf "  playground get-ci-result --test connect/connect-mqtt-sink --environment cfk\n  --podman --logs\n"
+    printf "  playground get-ci-result --test connect/connect-replicator --logs --no-open\n"
     echo
 
     # :command.footer
-    printf "Example output:\n  $ playground get-ci-result --test connect/connect-replicator --logs --max-findings 2\n  17:24:15 ℹ️ 🔥 latest failure reported in https://github.com/vdesabou/kafka-docker-playground/issues/9054\n     🔥 CP 8.3.2 🔢 Connector v7.3.2 (📅 release date 2023-02-25) 🕐 2026-10-13 00:45\n     🔗 https://github.com/vdesabou/kafka-docker-playground/actions/runs/38328314041/job/115072055973\n     🕐 run of 2026-10-13T00:39:22Z on commit 141b0aa0d\n\n  17:24:17 ℹ️ 🔥 replicator-2way-ssl.sh failed, last lines before the failure:\n     00:45:48 ❗ ❌ topic test-topic-ssl-duplicate does not exist, retrying in 1 second (elapsed time: 59 seconds), waiting max for 60 seconds\n     00:45:50 ❗ ❌ topic test-topic-ssl-duplicate does not exist !\n     00:45:50 🔥 ####################################################\n\n  17:24:17 ℹ️ 🔎 ERROR/FATAL digest of replicator-2way-ssl.sh in the CI job\n  🔎 4 distinct record(s), 4 occurrence(s), in 797 lines\n\n  🔴 ERROR x1 (first seen line 717, last seen line 717)\n  [2026-10-13 00:44:31,858] ERROR [duplicate-topic-ssl|task-0] Failed to start task duplicate-topic-ssl-0 (org.apache.kafka.connect.runtime.Worker:1005)\n          org.apache.kafka.common.KafkaException: Failed to construct kafka producer\n          at org.apache.kafka.common.config.AbstractConfig.getConfiguredInstance(AbstractConfig.java:429)\n\n  ✂️ 2 more distinct record(s) not shown, increase --max-findings\n"
+    printf "Example output:\n  $ playground get-ci-result --test connect/connect-replicator --logs --max-findings 2\n  17:24:15 ℹ️ 🔥 latest failure reported in https://github.com/vdesabou/kafka-docker-playground/issues/9054\n     🔥 CP 8.3.2 🔢 Connector v7.3.2 (📅 release date 2023-02-25) 🕐 2026-10-13 00:45\n     🔗 https://github.com/vdesabou/kafka-docker-playground/actions/runs/38328314041/job/115072055973\n     🕐 run of 2026-10-13T00:39:22Z on commit 141b0aa0d\n\n  17:24:17 ℹ️ 🔥 replicator-2way-ssl.sh failed, last lines before the failure:\n     00:45:48 ❗ ❌ topic test-topic-ssl-duplicate does not exist, retrying in 1 second (elapsed time: 59 seconds), waiting max for 60 seconds\n     00:45:50 ❗ ❌ topic test-topic-ssl-duplicate does not exist !\n     00:45:50 🔥 ####################################################\n\n  17:24:17 ℹ️ 🔎 ERROR/FATAL digest of replicator-2way-ssl.sh in the CI job\n  🔎 4 distinct record(s), 4 occurrence(s), in 797 lines\n\n  🔴 ERROR x1 (first seen line 717, last seen line 717)\n  [2026-10-13 00:44:31,858] ERROR [duplicate-topic-ssl|task-0] Failed to start task duplicate-topic-ssl-0 (org.apache.kafka.connect.runtime.Worker:1005)\n          org.apache.kafka.common.KafkaException: Failed to construct kafka producer\n          at org.apache.kafka.common.config.AbstractConfig.getConfiguredInstance(AbstractConfig.java:429)\n\n  ✂️ 2 more distinct record(s) not shown, increase --max-findings\n\n  17:24:17 ℹ️ ✅ HTML report saved: /tmp/playground-ci-result/ci-result-connect_connect-replicator-plaintext-115072055973.html\n  17:24:17 ℹ️ 🔗 Open in browser: file:///tmp/playground-ci-result/ci-result-connect_connect-replicator-plaintext-115072055973.html\n"
     echo
 
   fi
@@ -6312,7 +6326,7 @@ playground_analyze_thread_dump_usage() {
 playground_analyze_heap_dump_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze heap-dump\n\n"
-    printf "  🔬 Analyze a heap dump with Eclipse Memory Analyzer (MAT), run headless in\n  Docker\n  \n  🕵️ Prints a text digest: heap overview, MAT leak suspects (accumulation point\n  and who holds it) and the top retained sizes by class (dominator tree), and\n  saves the MAT HTML reports (Leak_Suspects, System_Overview, Top_Components) in\n  --output-dir\n  \n  📈 Use --compare with a second dump of the same JVM, taken later under the same\n  load, to see which classes grow\n  \n  🐳 MAT needs roughly as much memory as the used heap of the dump (1 to 1.5x the\n  .hprof size): give Docker enough memory or use --max-memory\n  \n  🧪 With --sample, it analyzes the samples shipped in\n  tools/heap-analyzer/samples: a quick way to see what it reports.\n  \n  🔖 Exit code is 0 when the analysis completed, non-zero when MAT could not\n  parse the dump (truncated file, out of memory): never a \"healthy\" verdict on a\n  failed parse\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics\n\n"
+    printf "  🔬 Analyze a heap dump with Eclipse Memory Analyzer (MAT), run headless in\n  Docker\n  \n  🕵️ Prints a text digest: heap overview, MAT leak suspects (accumulation point\n  and who holds it) and the top retained sizes by class (dominator tree), and\n  saves the MAT HTML reports (Leak_Suspects, System_Overview, Top_Components) in\n  --output-dir\n  \n  📈 Use --compare with a second dump of the same JVM, taken later under the same\n  load, to see which classes grow\n  \n  🌐 Also writes a self-contained HTML report, <dump>-heap-report.html in\n  --output-dir, opened in the browser in an interactive terminal: verdict, leak\n  suspects in plain words, Kafka-aware hints (producer buffers, consumer fetch\n  buffers, records held by the tasks, storage sink writers, CDC queues, schema\n  caches), retained heap by class, growth between the two dumps, and links to\n  the MAT reports\n  \n  🐳 MAT needs roughly as much memory as the used heap of the dump (1 to 1.5x the\n  .hprof size): give Docker enough memory or use --max-memory\n  \n  🧪 With --sample, it analyzes the samples shipped in\n  tools/heap-analyzer/samples: a quick way to see what it reports.\n  \n  🔖 Exit code is 0 when the analysis completed, non-zero when MAT could not\n  parse the dump (truncated file, out of memory): never a \"healthy\" verdict on a\n  failed parse\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics\n\n"
   else
     printf "playground analyze heap-dump - 🔬 Analyze a heap dump with Eclipse Memory Analyzer (MAT), run headless in Docker\n\n"
   fi
@@ -6362,6 +6376,11 @@ playground_analyze_heap_dump_usage() {
     printf "    📈 Second heap dump of the same JVM, taken later: prints the classes whose\n    instance count and shallow size grew\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🗂️  Output JSON on stdout: overview, leak suspects, retained heap by class,\n    growth and findings (text digest on stderr, no HTML report)\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -6376,6 +6395,7 @@ playground_analyze_heap_dump_usage() {
     printf "  playground analyze heap-dump -f heap-dump-connect.hprof --report-type leaks\n"
     printf "  playground analyze heap-dump -f heap-1.hprof --compare heap-2.hprof\n"
     printf "  playground analyze heap-dump -f big-heap-dump.hprof --max-memory 12g\n"
+    printf "  playground analyze heap-dump --sample leak_growth --json\n"
     echo
 
   fi
@@ -7355,6 +7375,11 @@ playground_debug_heap_analyze_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--compare FILE")"
     printf "    📈 Second heap dump of the same JVM, taken later: prints the classes whose\n    instance count and shallow size grew\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🗂️  Output JSON on stdout: overview, leak suspects, retained heap by class,\n    growth and findings (text digest on stderr, no HTML report)\n"
     echo
 
     # :command.usage_fixed_flags
@@ -8541,6 +8566,12 @@ playground_container_logs_usage() {
     printf "    %s\n" "Default: 40"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--html")"
+    printf "    🌐 With --errors, also write a self-contained HTML report of the digest in\n    /tmp/playground-log-reports (known causes, timeline, root causes, every\n    distinct record), opened in the browser in an interactive terminal\n"
+    printf "    %s\n" "Needs: --errors"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -8550,6 +8581,7 @@ playground_container_logs_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground container logs --container connect\n"
     printf "  playground container logs -c connect --errors\n"
+    printf "  playground container logs -c connect -c broker --errors --html\n"
     printf "  playground container logs -c connect --errors --since 10m --include-warnings\n"
     printf "  playground container logs -c connect --grep \"Caused by\" --no-follow\n"
     printf "  playground container logs -c connect --no-follow --tail 500\n"
@@ -8606,6 +8638,11 @@ playground_container_display_error_all_usage() {
     printf "    %s\n" "Default: 15"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--html")"
+    printf "    🌐 Also write a self-contained HTML report of all the containers in\n    /tmp/playground-log-reports (known causes, timeline, root causes, every\n    distinct record), opened in the browser in an interactive terminal\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -8615,6 +8652,7 @@ playground_container_display_error_all_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground container display-error-all\n"
     printf "  playground container display-error-all --since 10m --include-warnings\n"
+    printf "  playground container display-error-all --html\n"
     echo
 
   fi
@@ -10014,7 +10052,7 @@ playground_topic_dlq_usage() {
 playground_topic_dlq_inspect_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground topic dlq inspect\n\n"
-    printf "  🩺 Show what is in a dead letter queue, grouped by error\n  \n  Reads the whole dead letter queue (up to --max-messages) and groups\n  the records by connector, stage (key / value converter,\n  transformation, task put...) and exception, most frequent first.\n  For each group: the exception and its message, the root cause (last\n  \"Caused by:\" of the stack trace), the original topic, partition and\n  offsets, the offsets in the dead letter queue and a sample value.\n  \n  Keys and values are read as raw bytes, so it works whatever the\n  format of the records (avro, protobuf, json schema, plain json).\n  \n  👉 Example:\n  https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector\n\n"
+    printf "  🩺 Show what is in a dead letter queue, grouped by error\n  \n  Reads the whole dead letter queue (up to --max-messages) and groups\n  the records by connector, stage (key / value converter,\n  transformation, task put...) and exception, most frequent first.\n  For each group: the exception and its message, the root cause (last\n  \"Caused by:\" of the stack trace), the original topic, partition and\n  offsets, the offsets in the dead letter queue and a sample value.\n  \n  Keys and values are read as raw bytes, so it works whatever the\n  format of the records (avro, protobuf, json schema, plain json).\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal (--no-open to skip): known causes, when the\n  records arrived, the groups with their original offsets and a sample value,\n  and the replay commands.\n  \n  👉 Example:\n  https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector\n\n"
   else
     printf "playground topic dlq inspect - 🩺 Show what is in a dead letter queue, grouped by error\n\n"
   fi
@@ -10053,7 +10091,18 @@ playground_topic_dlq_inspect_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
-    printf "    🤖 Print the groups as JSON\n"
+    printf "    🤖 Print the groups as JSON (no HTML report)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
+    printf "    📂 Output directory for the HTML report (default:\n    /tmp/playground-dlq-inspect)\n"
+    printf "    %s\n" "Default: /tmp/playground-dlq-inspect"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-open")"
+    printf "    🙈 Do not open the HTML report in the browser\n"
     echo
 
     # :flag.usage
@@ -10071,6 +10120,7 @@ playground_topic_dlq_inspect_usage() {
     printf "  playground topic dlq inspect --topic dlq\n"
     printf "  playground topic dlq inspect --connector http-sink\n"
     printf "  playground topic dlq inspect --topic dlq --grep \"Unknown magic byte\"\n"
+    printf "  playground topic dlq inspect --topic dlq --output-dir ./case-123456 --no-open\n"
     echo
 
   fi
@@ -11982,7 +12032,7 @@ fi
 playground_connector_diff_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector diff\n\n"
-    printf "  🔀 Diff the config of a running connector with another config\n  \n  Compares the config of a running connector, key by key, with:\n  \n    stdin              a config (plain json, or the heredoc printed by\n                       'show-config')\n    --file             the same, from a file, e.g. the config of a\n                       customer\n    --with-connector   another running connector\n    --defaults         the default value of each parameter of the plugin:\n                       shows only what the connector changes, and the\n                       keys set to their default that could be removed\n  \n  Keys only on one side, and keys with different values, are listed.\n  Passwords masked by the REST API are not compared.\n  \n  🎓 Tip: run it with the config of a customer and the config of the\n  example to see right away what differs.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n\n"
+    printf "  🔀 Diff the config of a running connector with another config\n  \n  Compares the config of a running connector, key by key, with:\n  \n    stdin              a config (plain json, or the heredoc printed by\n                       'show-config')\n    --file             the same, from a file, e.g. the config of a\n                       customer\n    --with-connector   another running connector\n    --defaults         the default value of each parameter of the plugin:\n                       shows only what the connector changes, and the\n                       keys set to their default that could be removed\n  \n  Keys only on one side, and keys with different values, are listed.\n  Passwords masked by the REST API are not compared.\n  \n  🎓 Tip: run it with the config of a customer and the config of the\n  example to see right away what differs.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal (--no-open to skip): the keys side by side\n  with the documentation, type and default of each one (from the configuration\n  reference of the plugin), what the important differences mean (converters,\n  error handling, transforms...), and the secrets masked.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n\n"
   else
     printf "playground connector diff - 🔀 Diff the config of a running connector with another config\n\n"
   fi
@@ -12025,7 +12075,18 @@ playground_connector_diff_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--json")"
-    printf "    🤖 Print the result as JSON\n"
+    printf "    🤖 Print the result as JSON (no HTML report)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
+    printf "    📂 Output directory for the HTML report (default:\n    /tmp/playground-connector-diff)\n"
+    printf "    %s\n" "Default: /tmp/playground-connector-diff"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-open")"
+    printf "    🙈 Do not open the HTML report in the browser\n"
     echo
 
     # :command.usage_fixed_flags
@@ -19863,6 +19924,47 @@ function summarize_log_errors() {
         }
         if (shown < nkeys) printf "\n✂️ %d more distinct record(s) not shown, increase --max-findings or narrow with --since\n", nkeys - shown
     }'
+}
+
+# Prints where an HTML report was saved, and opens it in the browser when the command runs in an interactive terminal
+# $1: report, $2: non-empty to never open it (--no-open)
+function open_html_report() {
+    local report="$1"
+    local no_open="$2"
+    log "✅ HTML report saved: $report"
+    if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ] && [[ -z "$no_open" ]] && { command -v open > /dev/null 2>&1 || command -v xdg-open > /dev/null 2>&1; }
+    then
+        log "🌐 Opening $report in browser..."
+        if command -v open > /dev/null 2>&1
+        then
+            open "$report"
+        else
+            xdg-open "$report" > /dev/null 2>&1 || true
+        fi
+    else
+        log "🔗 Open in browser: file://$report"
+    fi
+}
+
+# HTML report of the records written by summarize_log_errors in PG_LOG_DIGEST_RECORDS_FILE (tools/log-analyzer/log_report.py)
+# $1: records file, $2: report, $3: non-empty to never open it, then the options of log_report.py (--title, --heading...)
+function write_log_records_report() {
+    local records_file="$1"
+    local report="$2"
+    local no_open="$3"
+    shift 3
+    if ! command -v python3 > /dev/null 2>&1
+    then
+        logwarn "⚠️ python3 is not on PATH: no HTML report"
+        return 0
+    fi
+    mkdir -p "$(dirname "$report")"
+    if ! python3 -I "$root_folder/tools/log-analyzer/log_report.py" --records "$records_file" --html-out "$report" "$@"
+    then
+        logerror "❌ could not write the HTML report"
+        return 1
+    fi
+    open_html_report "$report" "$no_open"
 }
 
 # Ranked search over every runnable example script (a .sh sourcing scripts/utils.sh).
@@ -35488,6 +35590,8 @@ playground_get_ci_result_command() {
   podman="${args[--podman]}"
   logs="${args[--logs]}"
   max_findings="${args[--max-findings]}"
+  output_dir="${args[--output-dir]}"
+  no_open="${args[--no-open]}"
 
   if [[ -n "$test" ]]
   then
@@ -35699,6 +35803,10 @@ playground_get_ci_result_command() {
       }
   ' "$tmp_dir/clean.log"
 
+  # every distinct record of the failing scripts, for the HTML report (see summarize_log_errors)
+  records_file="$tmp_dir/records"
+  : > "$records_file"
+  section_args=()
   nb_failures=0
   for status_file in "$tmp_dir"/section-*.status
   do
@@ -35712,14 +35820,28 @@ playground_get_ci_result_command() {
       nb_failures=$((nb_failures+1))
       echo ""
       log "🔥 $script failed, last lines before the failure:"
-      awk '/RESULT: FAILURE for .* \(took/ { exit } { print }' "$section" | tail -25 | sed 's/^/   /'
+      awk '/RESULT: FAILURE for .* \(took/ { exit } { print }' "$section" | tail -25 > "$section.tail"
+      sed 's/^/   /' "$section.tail"
+      section_args+=(--section "🔥 $script: last lines before the failure" "$section.tail")
       echo ""
       log "🔎 ERROR/FATAL digest of $script in the CI job"
       # the runner's own failure messages are already shown above, keep the causes
       grep -v -E "RESULT: FAILURE|has failed after [0-9]+ attempts|^playground container display-error-all$|🔥 #+$" "$section" \
-          | summarize_log_errors "$max_findings" \
+          | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$script" summarize_log_errors "$max_findings" \
           | sed 's/ or narrow with --since$//'
   done
+
+  if [ $nb_failures -gt 0 ]
+  then
+      echo ""
+      report_name=$(printf '%s' "$dir2-${job_label%% *}${podman:+-podman}" | tr -c 'A-Za-z0-9._-' '_')
+      write_log_records_report "$records_file" "$output_dir/ci-result-${report_name}-${job_id}.html" "$no_open" \
+          --title "$dir2 ($job_label)" --heading "🤖 CI failure" --unit script \
+          --command "playground get-ci-result --test $dir2 --logs" \
+          --link "🐛 issue #$issue_number" "https://github.com/$repo/issues/$issue_number" \
+          --link "🔗 job $job_id (run of $run_date, commit ${head_sha:0:9})" "https://github.com/$repo/actions/runs/$run_id/job/$job_id" \
+          "${section_args[@]}"
+  fi
 
   if [ $nb_failures -eq 0 ]
   then
@@ -41444,8 +41566,14 @@ playground_analyze_heap_dump_command() {
   report_type="${args[--report-type]}"
   max_memory="${args[--max-memory]}"
   compare_file="${args[--compare]}"
+  json_out="${args[--json]}"
 
   set +e
+
+  # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
+  if [[ -n "$json_out" ]]; then
+      exec 3>&1 1>&2
+  fi
 
   if [[ -n "$heap_file" && -n "$sample" ]]; then
       logerror "❌ Provide either --file or --sample, not both"
@@ -41540,18 +41668,28 @@ playground_analyze_heap_dump_command() {
   fi
 
   log "📄 Digest saved in $output_dir_abs/summary.txt"
-  report="$output_dir_abs/Leak_Suspects/index.html"
-  [ -f "$report" ] || report=$(ls "$output_dir_abs"/*/index.html 2>/dev/null | head -1)
-  # only open a browser in an interactive terminal
-  if [[ -n "$report" && -t 1 ]]; then
-      if [[ $(type -f open 2>&1) =~ "not found" ]]
-      then
-          log "🔗 Cannot open browser, use url: $report"
-      else
-          log "📊 Opening $report in default browser"
-          open "$report"
-      fi
+
+  if ! command -v python3 &>/dev/null; then
+      logwarn "⚠️ python3 is not on PATH: no HTML report, MAT reports in $output_dir_abs"
+      exit 0
   fi
+  report_args=(--output-dir "$output_dir_abs" --heap-file "$(basename "$heap_file")")
+  if [[ -n "$compare_file" ]]; then
+      report_args+=(--compare-file "$(basename "$compare_file")")
+  fi
+  if [[ -n "$json_out" ]]; then
+      python3 -I "$root_folder/tools/heap-analyzer/heap_report.py" "${report_args[@]}" --json >&3
+      exit $?
+  fi
+  stem=$(basename "$heap_file")
+  stem="${stem%.gz}"
+  stem="${stem%.hprof}"
+  html_out="$output_dir_abs/${stem}-heap-report.html"
+  if ! python3 -I "$root_folder/tools/heap-analyzer/heap_report.py" "${report_args[@]}" --html-out "$html_out"; then
+      logerror "❌ could not write the HTML report"
+      exit 1
+  fi
+  open_html_report "$html_out"
 
 }
 
@@ -41729,21 +41867,7 @@ playground_analyze_logs_command() {
   then
       stem="${sample_array[0]}"
   fi
-  html_out="$output_dir/${stem}-log-report.html"
-  if ! python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --html-out "$html_out"
-  then
-      logerror "❌ could not write the HTML report"
-      exit 1
-  fi
-  log "✅ HTML report saved: $html_out"
-  # only open a browser in an interactive terminal
-  if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ] && command -v open &>/dev/null
-  then
-      log "🌐 Opening $html_out in browser..."
-      open "$html_out"
-  else
-      log "🔗 Open in browser: file://$html_out"
-  fi
+  write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "" "${report_args[@]:2}"
 
 }
 
@@ -43043,8 +43167,14 @@ playground_debug_heap_analyze_command() {
   report_type="${args[--report-type]}"
   max_memory="${args[--max-memory]}"
   compare_file="${args[--compare]}"
+  json_out="${args[--json]}"
 
   set +e
+
+  # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
+  if [[ -n "$json_out" ]]; then
+      exec 3>&1 1>&2
+  fi
 
   if [[ -n "$heap_file" && -n "$sample" ]]; then
       logerror "❌ Provide either --file or --sample, not both"
@@ -43139,18 +43269,28 @@ playground_debug_heap_analyze_command() {
   fi
 
   log "📄 Digest saved in $output_dir_abs/summary.txt"
-  report="$output_dir_abs/Leak_Suspects/index.html"
-  [ -f "$report" ] || report=$(ls "$output_dir_abs"/*/index.html 2>/dev/null | head -1)
-  # only open a browser in an interactive terminal
-  if [[ -n "$report" && -t 1 ]]; then
-      if [[ $(type -f open 2>&1) =~ "not found" ]]
-      then
-          log "🔗 Cannot open browser, use url: $report"
-      else
-          log "📊 Opening $report in default browser"
-          open "$report"
-      fi
+
+  if ! command -v python3 &>/dev/null; then
+      logwarn "⚠️ python3 is not on PATH: no HTML report, MAT reports in $output_dir_abs"
+      exit 0
   fi
+  report_args=(--output-dir "$output_dir_abs" --heap-file "$(basename "$heap_file")")
+  if [[ -n "$compare_file" ]]; then
+      report_args+=(--compare-file "$(basename "$compare_file")")
+  fi
+  if [[ -n "$json_out" ]]; then
+      python3 -I "$root_folder/tools/heap-analyzer/heap_report.py" "${report_args[@]}" --json >&3
+      exit $?
+  fi
+  stem=$(basename "$heap_file")
+  stem="${stem%.gz}"
+  stem="${stem%.hprof}"
+  html_out="$output_dir_abs/${stem}-heap-report.html"
+  if ! python3 -I "$root_folder/tools/heap-analyzer/heap_report.py" "${report_args[@]}" --html-out "$html_out"; then
+      logerror "❌ could not write the HTML report"
+      exit 1
+  fi
+  open_html_report "$html_out"
 
 }
 
@@ -43328,21 +43468,7 @@ playground_debug_analyze_logs_command() {
   then
       stem="${sample_array[0]}"
   fi
-  html_out="$output_dir/${stem}-log-report.html"
-  if ! python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --html-out "$html_out"
-  then
-      logerror "❌ could not write the HTML report"
-      exit 1
-  fi
-  log "✅ HTML report saved: $html_out"
-  # only open a browser in an interactive terminal
-  if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ] && command -v open &>/dev/null
-  then
-      log "🌐 Opening $html_out in browser..."
-      open "$html_out"
-  else
-      log "🔗 Open in browser: file://$html_out"
-  fi
+  write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "" "${report_args[@]:2}"
 
 }
 
@@ -45333,6 +45459,7 @@ playground_container_logs_command() {
   errors="${args[--errors]}"
   include_warnings="${args[--include-warnings]}"
   max_findings="${args[--max-findings]}"
+  html="${args[--html]}"
 
   get_environment_used
 
@@ -45379,6 +45506,14 @@ playground_container_logs_command() {
   # Convert space-separated string to array
   IFS=' ' read -ra container_array <<< "$containers"
 
+  # with --html, every distinct record of the digests, for the HTML report (see summarize_log_errors)
+  records_file=""
+  if [[ -n "$html" ]]
+  then
+      records_file=$(mktemp -t pg-log-records-XXXXXXXXXX)
+      trap 'rm -f "$records_file"' EXIT
+  fi
+
   # Followed logs of several containers are streamed in parallel; otherwise one after the other
   run_in_background=""
   if [ ${#container_array[@]} -gt 1 ] && [[ -z "$no_follow" ]]
@@ -45400,9 +45535,9 @@ playground_container_logs_command() {
               then
                   maybe_previous="--previous"
               fi
-              kubectl -n confluent logs "$resolved_container" --all-containers=true $maybe_previous "${since_opt[@]}" --tail="$kubectl_tail" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings"
+              kubectl -n confluent logs "$resolved_container" --all-containers=true $maybe_previous "${since_opt[@]}" --tail="$kubectl_tail" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings"
           else
-              docker container logs "${since_opt[@]}" --tail "$tail_lines" "$resolved_container" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings"
+              docker container logs "${since_opt[@]}" --tail "$tail_lines" "$resolved_container" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings"
           fi
           continue
       fi
@@ -45513,6 +45648,15 @@ playground_container_logs_command() {
       wait
   fi
 
+  if [[ -n "$html" ]]
+  then
+      report_name=$(printf '%s' "${container_array[*]}" | tr -c 'A-Za-z0-9._-' '_')
+      write_log_records_report "$records_file" "/tmp/playground-log-reports/${report_name}-errors-$(date '+%Y%m%d-%H%M%S').html" "" \
+          --title "${container_array[*]}${since:+ since $since}" --unit container \
+          --levels "$([[ -n "$include_warnings" ]] && echo "ERROR/FATAL/WARN" || echo "ERROR/FATAL")" \
+          --command "playground container logs --errors"
+  fi
+
 }
 
 # :command.function
@@ -45522,6 +45666,7 @@ playground_container_display_error_all_command() {
   since="${args[--since]}"
   include_warnings="${args[--include-warnings]}"
   max_findings="${args[--max-findings]}"
+  html="${args[--html]}"
 
   get_environment_used
 
@@ -45629,6 +45774,13 @@ playground_container_display_error_all_command() {
       fi
       log "####################################################"
 
+      # with --html, every distinct record of the digests, for the HTML report (see summarize_log_errors)
+      records_file=""
+      if [[ -n "$html" ]]
+      then
+          records_file=$(mktemp -t pg-log-records-XXXXXXXXXX)
+          trap 'rm -f "$records_file"' EXIT
+      fi
       clean_containers=()
       while IFS= read -r container
       do
@@ -45637,9 +45789,9 @@ playground_container_display_error_all_command() {
           fi
           if [[ "$environment" == cfk* ]]
           then
-              digest=$(kubectl -n confluent logs "$container" --all-containers=true "${since_opt[@]}" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings")
+              digest=$(kubectl -n confluent logs "$container" --all-containers=true "${since_opt[@]}" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings")
           else
-              digest=$(docker container logs "${since_opt[@]}" "$container" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings")
+              digest=$(docker container logs "${since_opt[@]}" "$container" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings")
           fi
           # a failed assertion (no record received, wrong count) usually logs no error at all, so connect tail is always shown
           if [[ "$digest" == "✅"* ]] && [[ "$container" != connect* ]]
@@ -45670,6 +45822,13 @@ playground_container_display_error_all_command() {
       if [ ${#clean_containers[@]} -gt 0 ]
       then
           log "✅ no $([[ -n "$include_warnings" ]] && echo "ERROR/FATAL/WARN" || echo "ERROR/FATAL") record${since:+ since $since} in: ${clean_containers[*]}"
+      fi
+      if [[ -n "$html" ]]
+      then
+          write_log_records_report "$records_file" "/tmp/playground-log-reports/all-containers-errors-$(date '+%Y%m%d-%H%M%S').html" "" \
+              --title "all containers${since:+ since $since}" --unit container --heading "🔥 Errors of all containers" \
+              --levels "$([[ -n "$include_warnings" ]] && echo "ERROR/FATAL/WARN" || echo "ERROR/FATAL")" \
+              --command "playground container display-error-all"
       fi
   fi
 }
@@ -50521,6 +50680,8 @@ playground_topic_dlq_inspect_command() {
   grep_regex="${args[--grep]}"
   json="${args[--json]}"
   verbose="${args[--verbose]}"
+  output_dir="${args[--output-dir]}"
+  no_open="${args[--no-open]}"
 
   resolve_dlq_topic "$topic" "$connector"
 
@@ -50622,6 +50783,22 @@ playground_topic_dlq_inspect_command() {
   ' $tmp_dir/groups.json
   echo ""
   log "🎓 replay them once the cause is fixed: playground topic dlq replay --topic $dlq_topic"
+
+  if ! command -v python3 > /dev/null 2>&1
+  then
+      logwarn "⚠️ python3 is not on PATH: no HTML report"
+      exit 0
+  fi
+  mkdir -p "$output_dir"
+  output_dir=$(cd "$output_dir" && pwd)
+  html_out="$output_dir/dlq-$(printf '%s' "$dlq_topic" | tr -c 'A-Za-z0-9._-' '_')-$(date '+%Y%m%d-%H%M%S').html"
+  if ! python3 -I "$root_folder/tools/dlq-tool/dlq_report.py" --groups $tmp_dir/groups.json --records $tmp_dir/records.json \
+      --summary "$summary" --topic "$dlq_topic" --grep "$grep_regex" --max-messages "$max_messages" --html-out "$html_out"
+  then
+      logerror "❌ could not write the HTML report"
+      exit 1
+  fi
+  open_html_report "$html_out" "$no_open"
 
 }
 
@@ -53281,6 +53458,8 @@ playground_connector_diff_command() {
   defaults="${args[--defaults]}"
   json="${args[--json]}"
   verbose="${args[--verbose]}"
+  output_dir="${args[--output-dir]}"
+  no_open="${args[--no-open]}"
 
   connector_type=$(playground state get run.connector_type)
 
@@ -53424,6 +53603,36 @@ playground_connector_diff_command() {
       exit 0
   fi
 
+  # side by side HTML report, with the documentation and default of each key from the configuration reference of the plugin
+  function write_diff_report () {
+      local connector_class reference report
+      if ! command -v python3 > /dev/null 2>&1
+      then
+          logwarn "⚠️ python3 is not on PATH: no HTML report"
+          return 0
+      fi
+      connector_class=$(jq -r '."connector.class" // empty' $tmp_dir/a.json)
+      # the reference of the running version (written by playground connector status / show-config), else the one recorded by CI
+      reference=$(ls -t "$root_folder"/.connector_config/config-"$connector_class"-*.txt 2>/dev/null | head -1)
+      if [[ -z "$reference" ]] && [[ -n "$connector_class" ]]
+      then
+          reference=$(cd "$root_folder" && git ls-files -- "*/config-$connector_class.txt" 2>/dev/null | head -1)
+          [[ -n "$reference" ]] && reference="$root_folder/$reference"
+      fi
+      mkdir -p "$output_dir"
+      output_dir=$(cd "$output_dir" && pwd)
+      report="$output_dir/diff-$(printf '%s' "$connector-$label_b" | tr -c 'A-Za-z0-9._-' '_')-$(date '+%Y%m%d-%H%M%S').html"
+      report_args=(--diff $tmp_dir/diff.json --a "$label_a" --b "$label_b" --connector-class "$connector_class" --html-out "$report")
+      [[ -n "$defaults" ]] && report_args+=(--defaults)
+      [[ -n "$reference" ]] && report_args+=(--reference "$reference")
+      if ! python3 -I "$root_folder/tools/connector-diff/diff_report.py" "${report_args[@]}"
+      then
+          logerror "❌ could not write the HTML report"
+          return 1
+      fi
+      open_html_report "$report" "$no_open"
+  }
+
   if [[ -n "$defaults" ]]
   then
       log "🔀 Parameters of connector $connector that are not at their default value"
@@ -53437,7 +53646,8 @@ playground_connector_diff_command() {
       different=$(jq '[.[] | select(.status == "different")] | length' $tmp_dir/diff.json)
       log "📊 $different parameter(s) differ from their default, $same are set to their default value (they could be removed)"
       jq -r '.[] | select(.status == "same") | "  💤 \(.key) = \(.a)"' $tmp_dir/diff.json
-      exit 0
+      write_diff_report
+      exit $?
   fi
 
   log "🔀 Diff of connector $connector (➖) with $label_b (➕)"
@@ -53455,6 +53665,7 @@ playground_connector_diff_command() {
   else
       log "📊 $differ key(s) differ, $same identical"
   fi
+  write_diff_report
 
 }
 
@@ -55394,15 +55605,7 @@ playground_connector_diagnose_command() {
       logerror "❌ could not write the HTML report"
       exit 1
   fi
-  log "✅ HTML report saved: $html_out"
-  # only open a browser in an interactive terminal
-  if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ] && [[ ! -n "$no_open" ]] && command -v open &>/dev/null
-  then
-      log "🌐 Opening $html_out in browser..."
-      open "$html_out"
-  else
-      log "🔗 Open in browser: file://$html_out"
-  fi
+  open_html_report "$html_out" "$no_open"
 
 }
 
@@ -69629,6 +69832,28 @@ playground_get_ci_result_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --output-dir | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir, -o OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-open)
+
+        # :flag.case_no_arg
+        args['--no-open']=1
+        shift
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -69665,8 +69890,21 @@ playground_get_ci_result_parse_requirements() {
     exit 1
   fi
 
+  # :flag.needs
+  if [[ -n ${args['--output-dir']+x} ]] && [[ -z "${args[--logs]:-}" ]]; then
+    printf "%s\n" "--output-dir needs --logs" >&2
+    exit 1
+  fi
+
+  # :flag.needs
+  if [[ -n ${args['--no-open']+x} ]] && [[ -z "${args[--logs]:-}" ]]; then
+    printf "%s\n" "--no-open needs --logs" >&2
+    exit 1
+  fi
+
   # :command.default_assignments
   [[ -n ${args['--max-findings']:-} ]] || args['--max-findings']="20"
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="/tmp/playground-ci-result"
 
   # :command.validations
   # :flag.validations
@@ -76013,6 +76251,14 @@ playground_analyze_heap_dump_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -78514,6 +78760,14 @@ playground_debug_heap_analyze_parse_requirements() {
           printf "%s\n" "--compare requires an argument: --compare FILE" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
         ;;
 
       --)
@@ -81593,6 +81847,14 @@ playground_container_logs_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --html)
+
+        # :flag.case_no_arg
+        args['--html']=1
+        shift
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -81626,6 +81888,12 @@ playground_container_logs_parse_requirements() {
   # :flag.needs
   if [[ -n ${args['--include-warnings']+x} ]] && [[ -z "${args[--errors]:-}" ]]; then
     printf "%s\n" "--include-warnings needs --errors" >&2
+    exit 1
+  fi
+
+  # :flag.needs
+  if [[ -n ${args['--html']+x} ]] && [[ -z "${args[--errors]:-}" ]]; then
+    printf "%s\n" "--html needs --errors" >&2
     exit 1
   fi
 
@@ -81736,6 +82004,14 @@ playground_container_display_error_all_parse_requirements() {
           printf "%s\n" "--max-findings requires an argument: --max-findings MAX_FINDINGS" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --html)
+
+        # :flag.case_no_arg
+        args['--html']=1
+        shift
         ;;
 
       --)
@@ -85261,6 +85537,28 @@ playground_topic_dlq_inspect_parse_requirements() {
         ;;
 
       # :flag.case
+      --output-dir | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir, -o OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-open)
+
+        # :flag.case_no_arg
+        args['--no-open']=1
+        shift
+        ;;
+
+      # :flag.case
       --verbose | -v)
 
         # :flag.case_no_arg
@@ -85299,6 +85597,7 @@ playground_topic_dlq_inspect_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--max-messages']:-} ]] || args['--max-messages']="10000"
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="/tmp/playground-dlq-inspect"
 
   # :command.validations
   # :flag.validations
@@ -89954,6 +90253,28 @@ playground_connector_diff_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --output-dir | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir, -o OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-open)
+
+        # :flag.case_no_arg
+        args['--no-open']=1
+        shift
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -89982,6 +90303,9 @@ playground_connector_diff_parse_requirements() {
 
     esac
   done
+
+  # :command.default_assignments
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="/tmp/playground-connector-diff"
 
   # :command.validations
   # :flag.validations
@@ -99770,6 +100094,21 @@ playground_get_ci_result_completion() {
         completion_blocked_flags["--max-findings"]=1
 
         ;;
+      --output-dir | -o)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --no-open)
+        completion_blocked_flags["--no-open"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -99783,6 +100122,8 @@ playground_get_ci_result_completion() {
     completion_flag_candidates --podman "$completion_current" --podman
     completion_flag_candidates --logs "$completion_current" --logs
     completion_flag_candidates --max-findings "$completion_current" --max-findings
+    completion_flag_candidates --output-dir "$completion_current" --output-dir -o
+    completion_flag_candidates --no-open "$completion_current" --no-open
   fi
 
 }
@@ -102624,6 +102965,11 @@ playground_analyze_heap_dump_completion() {
         completion_blocked_flags["--compare"]=1
 
         ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -102638,6 +102984,7 @@ playground_analyze_heap_dump_completion() {
     completion_flag_candidates --report-type "$completion_current" --report-type -r
     completion_flag_candidates --max-memory "$completion_current" --max-memory
     completion_flag_candidates --compare "$completion_current" --compare
+    completion_flag_candidates --json "$completion_current" --json
   fi
 
 }
@@ -103899,6 +104246,11 @@ playground_debug_heap_analyze_completion() {
         completion_blocked_flags["--compare"]=1
 
         ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -103913,6 +104265,7 @@ playground_debug_heap_analyze_completion() {
     completion_flag_candidates --report-type "$completion_current" --report-type -r
     completion_flag_candidates --max-memory "$completion_current" --max-memory
     completion_flag_candidates --compare "$completion_current" --compare
+    completion_flag_candidates --json "$completion_current" --json
   fi
 
 }
@@ -105462,6 +105815,11 @@ playground_container_logs_completion() {
         completion_blocked_flags["--max-findings"]=1
 
         ;;
+      --html)
+        completion_blocked_flags["--html"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -105482,6 +105840,7 @@ playground_container_logs_completion() {
     completion_flag_candidates --errors "$completion_current" --errors
     completion_flag_candidates --include-warnings "$completion_current" --include-warnings
     completion_flag_candidates --max-findings "$completion_current" --max-findings
+    completion_flag_candidates --html "$completion_current" --html
   fi
 
 }
@@ -105522,6 +105881,11 @@ playground_container_display_error_all_completion() {
         completion_blocked_flags["--max-findings"]=1
 
         ;;
+      --html)
+        completion_blocked_flags["--html"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -105533,6 +105897,7 @@ playground_container_display_error_all_completion() {
     completion_flag_candidates --since "$completion_current" --since
     completion_flag_candidates --include-warnings "$completion_current" --include-warnings
     completion_flag_candidates --max-findings "$completion_current" --max-findings
+    completion_flag_candidates --html "$completion_current" --html
   fi
 
 }
@@ -107355,6 +107720,21 @@ playground_topic_dlq_inspect_completion() {
 
         shift
         ;;
+      --output-dir | -o)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --no-open)
+        completion_blocked_flags["--no-open"]=1
+
+        shift
+        ;;
       --verbose | -v)
         completion_blocked_flags["--verbose"]=1
 
@@ -107373,6 +107753,8 @@ playground_topic_dlq_inspect_completion() {
     completion_flag_candidates --max-messages "$completion_current" --max-messages
     completion_flag_candidates --grep "$completion_current" --grep
     completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --output-dir "$completion_current" --output-dir -o
+    completion_flag_candidates --no-open "$completion_current" --no-open
     completion_flag_candidates --verbose "$completion_current" --verbose -v
   fi
 
@@ -109849,6 +110231,21 @@ playground_connector_diff_completion() {
 
         shift
         ;;
+      --output-dir | -o)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --no-open)
+        completion_blocked_flags["--no-open"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -109863,6 +110260,8 @@ playground_connector_diff_completion() {
     completion_flag_candidates --with-connector "$completion_current" --with-connector
     completion_flag_candidates --defaults "$completion_current" --defaults
     completion_flag_candidates --json "$completion_current" --json
+    completion_flag_candidates --output-dir "$completion_current" --output-dir -o
+    completion_flag_candidates --no-open "$completion_current" --no-open
   fi
 
 }

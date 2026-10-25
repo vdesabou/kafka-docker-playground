@@ -3,6 +3,8 @@ environment_flag="${args[--environment]}"
 podman="${args[--podman]}"
 logs="${args[--logs]}"
 max_findings="${args[--max-findings]}"
+output_dir="${args[--output-dir]}"
+no_open="${args[--no-open]}"
 
 if [[ -n "$test" ]]
 then
@@ -213,6 +215,10 @@ awk -v dir="$dir2" -v out="$tmp_dir/section" '
     }
 ' "$tmp_dir/clean.log"
 
+# every distinct record of the failing scripts, for the HTML report (see summarize_log_errors)
+records_file="$tmp_dir/records"
+: > "$records_file"
+section_args=()
 nb_failures=0
 for status_file in "$tmp_dir"/section-*.status
 do
@@ -226,14 +232,28 @@ do
     nb_failures=$((nb_failures+1))
     echo ""
     log "🔥 $script failed, last lines before the failure:"
-    awk '/RESULT: FAILURE for .* \(took/ { exit } { print }' "$section" | tail -25 | sed 's/^/   /'
+    awk '/RESULT: FAILURE for .* \(took/ { exit } { print }' "$section" | tail -25 > "$section.tail"
+    sed 's/^/   /' "$section.tail"
+    section_args+=(--section "🔥 $script: last lines before the failure" "$section.tail")
     echo ""
     log "🔎 ERROR/FATAL digest of $script in the CI job"
     # the runner's own failure messages are already shown above, keep the causes
     grep -v -E "RESULT: FAILURE|has failed after [0-9]+ attempts|^playground container display-error-all$|🔥 #+$" "$section" \
-        | summarize_log_errors "$max_findings" \
+        | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$script" summarize_log_errors "$max_findings" \
         | sed 's/ or narrow with --since$//'
 done
+
+if [ $nb_failures -gt 0 ]
+then
+    echo ""
+    report_name=$(printf '%s' "$dir2-${job_label%% *}${podman:+-podman}" | tr -c 'A-Za-z0-9._-' '_')
+    write_log_records_report "$records_file" "$output_dir/ci-result-${report_name}-${job_id}.html" "$no_open" \
+        --title "$dir2 ($job_label)" --heading "🤖 CI failure" --unit script \
+        --command "playground get-ci-result --test $dir2 --logs" \
+        --link "🐛 issue #$issue_number" "https://github.com/$repo/issues/$issue_number" \
+        --link "🔗 job $job_id (run of $run_date, commit ${head_sha:0:9})" "https://github.com/$repo/actions/runs/$run_id/job/$job_id" \
+        "${section_args[@]}"
+fi
 
 if [ $nb_failures -eq 0 ]
 then

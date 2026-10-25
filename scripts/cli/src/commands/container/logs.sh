@@ -10,6 +10,7 @@ no_follow="${args[--no-follow]}"
 errors="${args[--errors]}"
 include_warnings="${args[--include-warnings]}"
 max_findings="${args[--max-findings]}"
+html="${args[--html]}"
 
 get_environment_used
 
@@ -56,6 +57,14 @@ fi
 # Convert space-separated string to array
 IFS=' ' read -ra container_array <<< "$containers"
 
+# with --html, every distinct record of the digests, for the HTML report (see summarize_log_errors)
+records_file=""
+if [[ -n "$html" ]]
+then
+    records_file=$(mktemp -t pg-log-records-XXXXXXXXXX)
+    trap 'rm -f "$records_file"' EXIT
+fi
+
 # Followed logs of several containers are streamed in parallel; otherwise one after the other
 run_in_background=""
 if [ ${#container_array[@]} -gt 1 ] && [[ -z "$no_follow" ]]
@@ -77,9 +86,9 @@ do
             then
                 maybe_previous="--previous"
             fi
-            kubectl -n confluent logs "$resolved_container" --all-containers=true $maybe_previous "${since_opt[@]}" --tail="$kubectl_tail" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings"
+            kubectl -n confluent logs "$resolved_container" --all-containers=true $maybe_previous "${since_opt[@]}" --tail="$kubectl_tail" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings"
         else
-            docker container logs "${since_opt[@]}" --tail "$tail_lines" "$resolved_container" 2>&1 | summarize_log_errors "$max_findings" "$include_warnings"
+            docker container logs "${since_opt[@]}" --tail "$tail_lines" "$resolved_container" 2>&1 | PG_LOG_DIGEST_RECORDS_FILE="$records_file" PG_LOG_DIGEST_LABEL="$container" summarize_log_errors "$max_findings" "$include_warnings"
         fi
         continue
     fi
@@ -188,4 +197,13 @@ done
 # If multiple containers were followed in parallel, wait for all background processes
 if [[ -n "$run_in_background" ]]; then
     wait
+fi
+
+if [[ -n "$html" ]]
+then
+    report_name=$(printf '%s' "${container_array[*]}" | tr -c 'A-Za-z0-9._-' '_')
+    write_log_records_report "$records_file" "/tmp/playground-log-reports/${report_name}-errors-$(date '+%Y%m%d-%H%M%S').html" "" \
+        --title "${container_array[*]}${since:+ since $since}" --unit container \
+        --levels "$([[ -n "$include_warnings" ]] && echo "ERROR/FATAL/WARN" || echo "ERROR/FATAL")" \
+        --command "playground container logs --errors"
 fi

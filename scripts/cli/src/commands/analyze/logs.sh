@@ -168,18 +168,4 @@ if [[ ${#sample_array[@]} -gt 0 ]]
 then
     stem="${sample_array[0]}"
 fi
-html_out="$output_dir/${stem}-log-report.html"
-if ! python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --html-out "$html_out"
-then
-    logerror "❌ could not write the HTML report"
-    exit 1
-fi
-log "✅ HTML report saved: $html_out"
-# only open a browser in an interactive terminal
-if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ] && command -v open &>/dev/null
-then
-    log "🌐 Opening $html_out in browser..."
-    open "$html_out"
-else
-    log "🔗 Open in browser: file://$html_out"
-fi
+write_log_records_report "$records_file" "$output_dir/${stem}-log-report.html" "" "${report_args[@]:2}"

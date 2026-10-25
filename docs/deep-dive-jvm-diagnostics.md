@@ -69,7 +69,7 @@ Takes about 15 minutes to read and run.
    | `analyze thread-dump` | `--output-dir`, default `./thread-analysis-output` (dumps taken with `-c` and the HTML report) |
    | `analyze gc-logs` | `--output-dir`, default `./gc-analysis-output` (logs copied with `-c` and the HTML report) |
    | `analyze flight-recorder` | `--output-dir`, default `./jfr-analysis-output` (recording, `.digest.json`, HTML report) |
-   | `analyze heap-dump` | `--output-dir`, default `./heap-analysis` (`summary.txt`, MAT reports, `mat.log`) |
+   | `analyze heap-dump` | `--output-dir`, default `./heap-analysis` (`summary.txt`, `<dump>-heap-report.html`, MAT reports, `mat.log`) |
    | `analyze tcp-dump` | `--output-dir`, default `./tcp-dump-analysis-output` (HTML report) |
 
    Running from the repository leaves these folders in it: use `--output-dir /tmp/<something>`. The HTML report is
@@ -204,7 +204,17 @@ Gotchas:
   you may be chasing is gone).
 - `analyze heap-dump` builds an Eclipse MAT image on the first run (~100 MB download), then gives MAT 80% of the
   Docker memory (`--max-memory 8g` to change it): a dump bigger than that fails to parse (non-zero exit, `mat.log`).
-  The digest is in `<output-dir>/summary.txt`, the MAT reports in `<output-dir>/*/index.html`. No `--json`.
+  The digest is in `<output-dir>/summary.txt`, the MAT reports in `<output-dir>/*/index.html`.
+- `analyze heap-dump` also writes its own **HTML report**, `<dump>-heap-report.html` in `--output-dir`. It's opened
+  instead of the MAT pages and links to them. The report has:
+  - a verdict, and the leak suspects of MAT in plain words
+  - **Kafka-aware hints** when one of these retains 5% of the heap or more, or grows between the two dumps: producer
+    buffers (`buffer.memory`), consumer fetch buffers (`fetch.max.bytes`), records held by the tasks, storage sink
+    writers (`s3.part.size` × partitions), CDC queues, schema caches, plugin class loaders
+  - the retained heap by class, and the growth between the two dumps with `--compare`
+
+  `--json` prints the overview, leak suspects, dominators, growth and findings on stdout, with the text digest on
+  stderr.
 - `tcp-dump` sees the TLS handshake and the failures on an encrypted listener, not the records: `analyze tcp-dump`
   reports the TLS alerts sent before encryption (`certificate_unknown`, `unknown_ca`, `handshake_failure`…) with their
   likely cause. TLS 1.3 encrypts the alerts sent after the server certificate.
@@ -302,6 +312,7 @@ playground debug heap-dump -c connect --histo
 # 👻 heap dump is available at /tmp/heap-dump-connect-histo-<date>.txt
 playground analyze heap-dump --sample leak --output-dir /tmp/jvm-lab/heap
 # 📄 Digest saved in /tmp/jvm-lab/heap/summary.txt
+# ✅ HTML report saved: /tmp/jvm-lab/heap/session-cache-leak-2-heap-report.html   <- 🕵️ Problem Suspect 1: The class SessionCacheLeak …
 ```
 
 ```bash
@@ -340,7 +351,7 @@ playground analyze gc-logs -c connect --output-dir /tmp/repro-gc
 playground analyze thread-dump    [-c <c> [--count 3] [--interval 5] | -f <dump>… | --sample deadlock_jdk21|deadlock_jdk8|healthy_connect] [--json] [--top 10] [--output-dir <d>]
 playground analyze gc-logs        [-c <c> | -f <log|folder>… | --sample <name>] [--run <n>] [--json] [--top-pauses 10] [--output-dir <d>]
 playground analyze flight-recorder [-c <c> [--duration 60s] | -f <.jfr|.digest.json>… | --sample jdbc_postgres_sink] [--connector <c>] [--threads <regex>] [--json] [--output-dir <d>]
-playground analyze heap-dump      -f <.hprof[.gz]> | --sample leak|leak_growth [--compare <.hprof>] [--report-type all|leaks|overview|top-components] [--max-memory 8g] [--output-dir <d>]
+playground analyze heap-dump      -f <.hprof[.gz]> | --sample leak|leak_growth [--compare <.hprof>] [--report-type all|leaks|overview|top-components] [--max-memory 8g] [--json] [--output-dir <d>]
 playground debug thread-dump      [-c <c>]… [--jstack]
 playground debug heap-dump        [-c <c>]… [--live] [--histo]
 playground debug flight-recorder  [-c <c>]… --action start|stop|status [--settings playground|profile|default|all] [--output-dir <d>] [--no-analyze]
@@ -351,7 +362,7 @@ playground debug tcp-dump         [-c <c>]… [--port <p>] [--filter <bpf>] [--d
 - Live (`-c`), offline (`-f`) or `--sample`: one at a time. `analyze heap-dump` is offline only.
 - `kill -3` and JMX need no JDK in the image; `jstack` / `jmap` do (and `debug heap-dump` installs one, restarting the container).
 - Always `--output-dir /tmp/…`. HTML report opened only in an interactive terminal.
-- Exit 2 = nothing to analyze in the input (thread-dump, gc-logs, flight-recorder, tcp-dump). `--json` everywhere but heap-dump.
+- Exit 2 = nothing to analyze in the input (thread-dump, gc-logs, flight-recorder, tcp-dump). `--json` everywhere.
 - Sources: [`commands/debug/`](https://github.com/vdesabou/kafka-docker-playground/tree/master/scripts/cli/src/commands/debug),
   [`commands/analyze/`](https://github.com/vdesabou/kafka-docker-playground/tree/master/scripts/cli/src/commands/analyze),
   `take_thread_dumps_with_kill_quit` in [`cli_function.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/lib/cli_function.sh),

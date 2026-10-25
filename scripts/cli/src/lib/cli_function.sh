@@ -5262,6 +5262,47 @@ function summarize_log_errors() {
     }'
 }
 
+# Prints where an HTML report was saved, and opens it in the browser when the command runs in an interactive terminal
+# $1: report, $2: non-empty to never open it (--no-open)
+function open_html_report() {
+    local report="$1"
+    local no_open="$2"
+    log "✅ HTML report saved: $report"
+    if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ] && [[ -z "$no_open" ]] && { command -v open > /dev/null 2>&1 || command -v xdg-open > /dev/null 2>&1; }
+    then
+        log "🌐 Opening $report in browser..."
+        if command -v open > /dev/null 2>&1
+        then
+            open "$report"
+        else
+            xdg-open "$report" > /dev/null 2>&1 || true
+        fi
+    else
+        log "🔗 Open in browser: file://$report"
+    fi
+}
+
+# HTML report of the records written by summarize_log_errors in PG_LOG_DIGEST_RECORDS_FILE (tools/log-analyzer/log_report.py)
+# $1: records file, $2: report, $3: non-empty to never open it, then the options of log_report.py (--title, --heading...)
+function write_log_records_report() {
+    local records_file="$1"
+    local report="$2"
+    local no_open="$3"
+    shift 3
+    if ! command -v python3 > /dev/null 2>&1
+    then
+        logwarn "⚠️ python3 is not on PATH: no HTML report"
+        return 0
+    fi
+    mkdir -p "$(dirname "$report")"
+    if ! python3 -I "$root_folder/tools/log-analyzer/log_report.py" --records "$records_file" --html-out "$report" "$@"
+    then
+        logerror "❌ could not write the HTML report"
+        return 1
+    fi
+    open_html_report "$report" "$no_open"
+}
+
 # Ranked search over every runnable example script (a .sh sourcing scripts/utils.sh).
 # Each query term must match somewhere; path and connector class matches weigh
 # more than the script body or README.

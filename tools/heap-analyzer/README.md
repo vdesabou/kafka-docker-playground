@@ -1,7 +1,7 @@
 # heap-analyzer
 
 Docker image behind `playground analyze heap-dump`: [Eclipse Memory Analyzer (MAT)](https://eclipse.dev/mat/)
-run headless on a heap dump, plus a text digest of the result.
+run headless on a heap dump, plus a text digest and an HTML report of the result.
 
 ## What it does
 
@@ -20,6 +20,12 @@ run headless on a heap dump, plus a text digest of the result.
 3. With `--compare <second dump>`: the `histogram` query on both dumps, diffed per class.
 4. `digest.py` prints the digest and saves it to `summary.txt`: heap overview, MAT leak suspects (accumulation
    point and who holds it), top retained heap by class and, with `--compare`, the classes that grew.
+5. Back on the host, `heap_report.py` reads the same files (with the parsers of `digest.py`) and writes
+   `<dump>-heap-report.html`, or prints JSON with `--json`. The report has:
+   - a verdict, and the leak suspects in plain words
+   - Kafka-aware hints: producer buffers, consumer fetch buffers, records held by the tasks, storage sink writers,
+     CDC queues, schema caches, plugin class loaders
+   - retained heap and growth charts, and links to the MAT reports
 
 The full MAT output is in `mat.log`. When MAT can't parse a dump (truncated file, out of memory), the command
 exits non-zero with MAT's error and a hint. It never reports a healthy heap on a failed parse.
@@ -31,6 +37,8 @@ exits non-zero with MAT's error and a hint. It never reports a healthy heap on a
 - `analyze-heap.sh`: entrypoint. It runs MAT through the Equinox launcher jar (no GTK needed) in a writable
   work directory, because MAT writes its indexes next to the dump. Mounted at run time.
 - `digest.py`: text digest. Mounted at run time.
+- `heap_report.py`: HTML report and JSON, run on the host with `python3` (look shared with the other reports in
+  `tools/report-common/report_html.py`).
 
 ## Memory
 

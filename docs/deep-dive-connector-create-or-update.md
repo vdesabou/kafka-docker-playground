@@ -219,6 +219,13 @@ Gotchas:
   by the REST API (`****`, `[hidden]`) are listed as not compared, never as different.
 - `diff --defaults` lists the keys set to a non-default value, the keys set to their default (they could be removed),
   and the keys that are not plugin parameters (converters, transforms, worker overrides). Not on CFK.
+- `diff` also writes a self-contained **HTML report**, `diff-<connector>-<other>-<date>.html` in `--output-dir`
+  (default `/tmp/playground-connector-diff`), opened in the browser from a terminal (`--no-open` to skip; never with
+  `--json`). The report has:
+  - the keys side by side, with the documentation, type and default of each one, from the configuration reference of
+    the plugin (`.connector_config/config-<class>-<version>.txt`, else the one recorded by CI)
+  - what the important differences mean: converters, error handling, transforms, topics, client overrides, security
+  - the secrets masked (the REST API of a self-managed worker returns them in clear)
 - `status` on a FAILED connector ends with a hint: `playground connector diagnose --connector <name>` gives the error
   digest, the lag and the next steps.
 - `update` opens the config **and** the list of every parameter of the plugin in your editor: it's interactive, not for
@@ -339,6 +346,7 @@ playground connector diff -c filestream-sink --file /tmp/customer-connector.json
 # ✏️  tasks.max  ➖ 1  ➕ 4
 # ➖ key.converter = org.apache.kafka.connect.storage.StringConverter   (only in filestream-sink)
 # 📊 4 key(s) differ, 4 identical
+# ✅ HTML report saved: /tmp/playground-connector-diff/diff-filestream-sink-customer-connector.json-<date>.html   <- 🔀 another converter
 playground connector diff -c filestream-sink --defaults
 #   ✏️  errors.tolerance = all   (default: none)
 #   ✏️  value.converter = org.apache.kafka.connect.json.JsonConverter   (default: io.confluent.connect.avro.AvroConverter)
@@ -408,7 +416,7 @@ playground connector create-or-update -c <name> [<file>|@<file>] [<< EOF … EOF
   [--skip-automatic-connector-config] [--offsets '<json>' (fully managed)] [--terraform (fully managed)] [--verbose]
 playground connector validate [-c <name>] [<< EOF … EOF]
 playground connector wait -c <name> [--state RUNNING|PAUSED|STOPPED|FAILED] [--max-wait 120] [--interval 5]
-playground connector diff -c <name> --file <cfg> | --with-connector <other> | --defaults [--json]
+playground connector diff -c <name> --file <cfg> | --with-connector <other> | --defaults [--json] [--output-dir <dir>] [--no-open]
 playground connector status | show-config [--force-rest-endpoint] | update   [-c <name>]
 ```
 
@@ -418,9 +426,11 @@ playground connector status | show-config [--force-rest-endpoint] | update   [-c
 - The environment's settings are added for you: `--dry-run` shows them, `--skip-automatic-connector-config` removes
   them.
 - `show-config` = what you sent (`/tmp/config-<name>`). `--force-rest-endpoint` = what runs.
+- `diff` writes a side-by-side HTML report with the doc and default of each key, and the secrets masked.
 - Sources: [`connector/create-or-update.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/connector/create-or-update.sh),
   [`connector/wait.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/connector/wait.sh),
   [`connector/diff.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/connector/diff.sh),
+  [`tools/connector-diff/diff_report.py`](https://github.com/vdesabou/kafka-docker-playground/blob/master/tools/connector-diff/diff_report.py),
   helpers `validate_connector_config` / `add_connector_config_based_on_environment` in
   [`cli_function.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/lib/cli_function.sh).
 
