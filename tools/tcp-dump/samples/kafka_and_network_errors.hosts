@@ -1,0 +1,4 @@
+192.168.80.5	sample-tls-server
+192.168.80.4	sample-firewalled
+192.168.80.3	sample-client
+192.168.80.2	sample-broker

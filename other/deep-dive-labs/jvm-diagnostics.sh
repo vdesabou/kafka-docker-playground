@@ -37,6 +37,15 @@ lab_expect_contains "✅ HTML report saved: $out/jfr/jdbc_postgres_sink-jfr-repo
 lab_run playground analyze thread-dump -f /etc/hosts --output-dir "$out/threads"
 lab_expect_exit 2
 lab_expect_contains "❌ No thread dump found in hosts"
+lab_run playground analyze tcp-dump --sample kafka_and_network_errors --output-dir "$out/tcp"
+lab_expect_exit 0
+lab_expect_contains "🟠 HIGH: 1 connection attempt(s) to sample-broker:9999 refused (the SYN was answered with a reset)"
+lab_expect_contains "🟠 HIGH: TLS fatal alert certificate_unknown sent by sample-client to sample-tls-server (1x)"
+lab_expect_contains "✅ HTML report saved: $out/tcp/kafka_and_network_errors-tcp-dump-report.html"
+lab_run playground analyze tcp-dump --sample http_errors --output-dir "$out/tcp"
+lab_expect_exit 0
+lab_expect_contains "🟠 HIGH: HTTP 500 Internal Server Error from sample-httpserver:9006 for POST /api/payments (2x)"
+lab_expect_contains "response: {\"error\": \"Too Many Requests\", \"message\": \"rate limit of 10 requests per second exceeded\"}"
 
 log "Step 2: thread dumps of the running worker"
 lab_run playground analyze thread-dump -c connect --count 2 --interval 3 --output-dir "$out/threads"
