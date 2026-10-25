@@ -46,6 +46,6 @@ aws ec2 authorize-security-group-ingress --region eu-west-3 --group-name kdp-bor
 ```
 
 To create it, run [`create-server.sh`](create-server.sh) (`AWS_PROFILE=<profile> tools/bore-tunnel/create-server.sh [region]`): it
-generates the secret in `~/.kdp-bore/secret` and launches the instance with [`server-user-data.sh`](server-user-data.sh). The secret and the host are the `BORE_SECRET` and `BORE_SERVER` secrets of the
-GitHub repository. Check the server with `bore local 1 --to <host> --secret <secret>`: it prints
+generates the secret in `~/.kdp-bore/secret` and launches the instance with [`server-user-data.sh`](server-user-data.sh). In the GitHub repository, the secret is the `BORE_SECRET`
+secret and the host is the `BORE_SERVER` variable (`ci.yml` also accepts a `BORE_SERVER` secret). Check the server with `bore local 1 --to <host> --secret <secret>`: it prints
 `listening at <host>:<port>`.
