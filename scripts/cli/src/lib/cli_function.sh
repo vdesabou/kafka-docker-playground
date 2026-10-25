@@ -5110,10 +5110,17 @@ function install_confluent_plugin() {
 # (optionally WARN), each with an occurrence count, the exception chain and a
 # few frames of the deepest cause, instead of tens of thousands of raw lines.
 # $1: max number of findings to print, $2: non-empty to include WARN records
+# When PG_LOG_DIGEST_RECORDS_FILE is set, every distinct record (not only the first $1) is also appended to that
+# file for the HTML reports (tools/log-analyzer/log_report.py), labelled with PG_LOG_DIGEST_LABEL:
+#   @@PGFILE@@<tab>label<tab>lines<tab>distinct records<tab>occurrences
+#   @@PGREC@@<tab>level<tab>count<tab>first line<tab>last line<tab>first timestamp<tab>last timestamp
+#   <the record as printed in the digest, on one or more lines>
+#   @@PGTS@@<tab>timestamps of the occurrences, space separated (1000 per record at most)
 function summarize_log_errors() {
     local max_findings="${1:-40}"
     local include_warnings="${2:-}"
 
+    PG_LOG_DIGEST_RECORDS_FILE="${PG_LOG_DIGEST_RECORDS_FILE:-}" PG_LOG_DIGEST_LABEL="${PG_LOG_DIGEST_LABEL:-}" \
     awk -v max_findings="$max_findings" -v include_warnings="$include_warnings" '
     # anything that does not look like the continuation of a stack trace or of a
     # multi-line message (indented line, "Caused by:", exception line) starts a record
@@ -5152,6 +5159,14 @@ function summarize_log_errors() {
     function short(s) {
         return length(s) > 300 ? substr(s, 1, 300) "..." : s
     }
+    # "2026-10-13 10:00:05" or "2026-10-13T10:00:05" at the start of the record, as 2026-10-13T10:00:05
+    function timestamp_of(head,    h, t) {
+        h = substr(head, 1, 80)
+        if (!match(h, /[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][ T][0-9][0-9]:[0-9][0-9]:[0-9][0-9]/)) return ""
+        t = substr(h, RSTART, RLENGTH)
+        sub(/ /, "T", t)
+        return t
+    }
     function flush(    lvl, key, i, chain, frames, nframes, line, cause) {
         if (nlines == 0) return
         # header of a digest already printed in the log (CI logs contain "playground container logs --errors" output)
@@ -5187,17 +5202,26 @@ function summarize_log_errors() {
 
         total_occurrences++
         nlines = 0
+        ts = timestamp_of(rec[1])
+        if (records_file != "" && ts != "" && nts[key] < 1000) { timestamps[key] = timestamps[key] " " ts; nts[key]++ }
         if (key in count) {
             count[key]++
             last_seen[key] = rec_line
+            if (ts != "") last_ts[key] = ts
             return
         }
         count[key] = 1
         first_seen[key] = rec_line
         last_seen[key] = rec_line
+        first_ts[key] = ts
+        last_ts[key] = ts
         level[key] = lvl
         order[++nkeys] = key
         text[key] = short(rec[1]) chain frames
+    }
+    BEGIN {
+        records_file = ENVIRON["PG_LOG_DIGEST_RECORDS_FILE"]
+        label = ENVIRON["PG_LOG_DIGEST_LABEL"]
     }
     {
         gsub(/\033\[[0-9;]*m/, "")
@@ -5210,6 +5234,14 @@ function summarize_log_errors() {
     }
     END {
         flush()
+        if (records_file != "") {
+            printf "@@PGFILE@@\t%s\t%d\t%d\t%d\n", label, NR, nkeys, total_occurrences >> records_file
+            for (i = 1; i <= nkeys; i++) {
+                k = order[i]
+                printf "@@PGREC@@\t%s\t%d\t%d\t%d\t%s\t%s\n%s\n@@PGTS@@\t%s\n", level[k], count[k], first_seen[k], last_seen[k], first_ts[k], last_ts[k], text[k], substr(timestamps[k], 2) >> records_file
+            }
+            close(records_file)
+        }
         if (nkeys == 0) {
             printf "✅ no %s record found in %d lines\n", (include_warnings == "" ? "ERROR/FATAL" : "ERROR/FATAL/WARN"), NR
             exit 0

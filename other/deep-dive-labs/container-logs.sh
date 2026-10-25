@@ -9,7 +9,8 @@ lab_require_plaintext
 lab_start_environment
 
 saved_log=/tmp/lab-connect-$$.log
-trap 'rm -f "$saved_log" "$saved_log.gz"' EXIT
+report_dir=/tmp/lab-log-reports-$$
+trap 'rm -rf "$saved_log" "$saved_log.gz" "$report_dir"' EXIT
 
 log "Step 1: a baseline, then a broken connector"
 lab_run playground container logs -c connect --errors
@@ -81,11 +82,17 @@ lab_expect_contains "The logs in connect container do not show 'this line never 
 log "Step 5: the same digest, offline"
 playground container logs -c connect --no-follow --tail all > "$saved_log" 2>&1
 gzip -kf "$saved_log"
-lab_run playground analyze logs -f "$saved_log.gz"
+lab_run playground analyze logs -f "$saved_log.gz" --output-dir "$report_dir"
 lab_expect_exit 0
 lab_expect_contains "ERROR/FATAL digest for $saved_log.gz"
 lab_expect_contains "WorkerSinkTask{id=bad-sink-0}"
 lab_expect_contains "1 file(s) with findings out of 1 scanned (binary files skipped: 0)"
+lab_expect_contains "✅ HTML report saved: $report_dir/lab-connect-$$-log-report.html"
+lab_expect_equals "$(grep -o 'A connector task was killed' "$report_dir/lab-connect-$$-log-report.html" | head -1)" "A connector task was killed" "known cause in the HTML report"
+lab_run playground analyze logs -f "$saved_log.gz" --json
+lab_expect_exit 0
+lab_expect_contains '"files_with_findings": 1'
+lab_expect_contains '"title": "🧲 Unknown magic byte"'
 lab_run playground container logs -c connect --errors
 lab_expect_exit 0
 playground connector delete --connector bad-sink

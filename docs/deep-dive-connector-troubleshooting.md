@@ -70,6 +70,18 @@ playground connector diagnose --connector orders-sink --since 10m --max-findings
 | 🐢 3/4 progress | sink `RUNNING`: one `show-lag` snapshot. Sink not `RUNNING`: its committed offsets (`offsets get`). Source: its offsets | same |
 | 👉 4/4 next steps | `restart` if FAILED, `resume` if PAUSED, otherwise run again / thread dump; `show-config`, `container logs --grep`, `debug log-level`, `debug thread-dump` | `show-config`, `connector logs` |
 
+Then it writes a self-contained **HTML report** to attach to a case, `connector-diagnose-<connector>-<date>.html` in
+`--output-dir` (default `/tmp/playground-diagnose`), opened in the browser from a terminal (`--no-open` to skip). It
+has one section per connector:
+
+| Section | What it shows |
+| --- | --- |
+| verdict, tiles, 🔎 findings | FAILED / PAUSED / UNASSIGNED / lag / clean, the root cause of each failed task (its last `Caused by:`), the known causes found in the records naming the connector (authentication, TLS, unknown magic byte…) |
+| 🗺️ status | connector and tasks, worker, full trace |
+| 🔥 errors | the digest of the worker, split between the records **naming the connector** (`[name\|task-0]`, `id=name-0`) and the rest of the worker, all of them, not only `--max-findings` (fully managed: the error recommendations) |
+| 🐢 progress | the lag per partition with a progress bar, or the offsets as a table |
+| 👉 next steps, ⚙️ configuration | the commands of step 4/4, the connector configuration with its secrets masked |
+
 Gotchas:
 
 - **It never follows logs and never waits for the lag to reach 0**: it's safe in scripts and for AI agents.
@@ -82,6 +94,8 @@ Gotchas:
   sink offsets are committed every `offset.flush.interval.ms` (60 s by default). Run it again a minute later.
 - The exit code doesn't reflect the connector state (0, even with a FAILED task; 1 only when no connector exists):
   read the output, or use `playground connector wait --state RUNNING` in a script.
+- **Each run writes a new report** (the date is in the name): run it twice and open both reports to compare the
+  lag or the offsets.
 
 ---
 
@@ -207,6 +221,7 @@ playground connector diagnose --connector strict-sink --since 5m --max-findings 
 # 🐢 3/4 progress: committed offsets of sink strict-sink (no lag while the connector and all its tasks are not RUNNING)
 # { "offsets": [] }                     <- it failed on offset 3, before its first commit
 # 👉 4/4 next steps    🔥 a task or the connector FAILED … playground connector restart --connector strict-sink
+# ✅ HTML report saved: /tmp/playground-diagnose/connector-diagnose-strict-sink-<date>.html   <- 🔴 Task 0 FAILED on connect:8083 …
 playground connector delete --connector strict-sink
 ```
 
@@ -318,7 +333,7 @@ nb=$(playground topic dlq inspect --topic dlq --json | jq '[.groups[] | select(.
 ## 7. Cheat sheet
 
 ```bash
-playground connector diagnose [--connector <c>] [--since 1h] [--max-findings 15] [--verbose]
+playground connector diagnose [--connector <c>] [--since 1h] [--max-findings 15] [--output-dir /tmp/playground-diagnose] [--no-open] [--verbose]
 playground topic dlq inspect  [--connector <c> | --topic <dlq>] [--grep <java regex>] [--max-messages 10000] [--json]
 playground topic dlq replay   [--connector <c> | --topic <dlq>] [--to <topic>] [--grep <java regex>] [--keep-error-headers] [--dry-run]
 ```
@@ -336,7 +351,9 @@ playground topic dlq replay   [--connector <c> | --topic <dlq>] [--to <topic>] [
 - Context headers = error details + automatic replay target.
 - Inspect groups by connector, stage, exception and message. `--grep` matches the error, not the payload.
 - Replay: exact bytes, error headers stripped, new partition and offset, DLQ never truncated. Fix first.
+- Diagnose also writes an HTML report per run (verdict, traces, records naming the connector, lag, masked config).
 - Sources: [`connector/diagnose.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/connector/diagnose.sh),
+  [`tools/connector-diagnose/diagnose_report.py`](https://github.com/vdesabou/kafka-docker-playground/blob/master/tools/connector-diagnose/diagnose_report.py),
   [`topic/dlq/inspect.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/topic/dlq/inspect.sh),
   [`topic/dlq/replay.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/topic/dlq/replay.sh),
   [`tools/dlq-tool/DlqTool.java`](https://github.com/vdesabou/kafka-docker-playground/blob/master/tools/dlq-tool/DlqTool.java),

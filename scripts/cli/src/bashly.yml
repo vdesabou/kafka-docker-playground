@@ -4212,6 +4212,8 @@ commands:
       are extracted in a temporary folder, .gz files are decompressed on the
       fly, binary files are skipped. Only files with findings are shown.
 
+      🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal: verdict, known causes (task killed, authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences over time, root causes (deepest exception of each record), files with findings, and every distinct record.
+
       🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs
       🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B5%EF%B8%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle
     flags: &analyze_logs_flags
@@ -4246,13 +4248,26 @@ commands:
         validate: integer
         default: "40"
         help: |-
-          ✂️ Maximum number of distinct records to show per file (default 40)
+          ✂️ Maximum number of distinct records to show per file (default 40). The HTML report and --json have them all
+      - long: --output-dir
+        short: -o
+        arg: output_dir
+        required: false
+        default: "./log-analysis-output"
+        help: |-
+          📂 Output directory for the HTML report (default: ./log-analysis-output)
+      - long: --json
+        required: false
+        help: |-
+          🗂️  Output JSON on stdout: summary, findings, root causes and every distinct record (text digest on stderr, no HTML report)
     examples:
     - playground analyze logs --sample connect_task_failure
     - playground analyze logs --sample support_bundle --include-warnings
     - playground analyze logs --file connect.log
     - playground analyze logs --file connect-logs.zip --include-warnings
     - playground analyze logs -f ./logs -f broker.log.gz --max-findings 10
+    - playground analyze logs -f support-bundle.zip --output-dir /tmp/log-reports
+    - playground analyze logs -f connect.log --json
     x_example_outputs:
     - command: playground analyze logs -f connect.log
       output: |-
@@ -4266,6 +4281,8 @@ commands:
                 at io.confluent.connect.http.writer.HttpWriterImpl.handleErrors(HttpWriterImpl.java:405)
 
         17:23:19 ℹ️ 📊 1 file(s) with findings out of 1 scanned (binary files skipped: 0)
+        17:23:19 ℹ️ ✅ HTML report saved: /home/me/log-analysis-output/connect-log-report.html
+        17:23:19 ℹ️ 🔗 Open in browser: file:///home/me/log-analysis-output/connect-log-report.html
     footer: |-
       Example output:
         $ playground analyze logs -f connect.log
@@ -4279,6 +4296,8 @@ commands:
                 at io.confluent.connect.http.writer.HttpWriterImpl.handleErrors(HttpWriterImpl.java:405)
 
         17:23:19 ℹ️ 📊 1 file(s) with findings out of 1 scanned (binary files skipped: 0)
+        17:23:19 ℹ️ ✅ HTML report saved: /home/me/log-analysis-output/connect-log-report.html
+        17:23:19 ℹ️ 🔗 Open in browser: file:///home/me/log-analysis-output/connect-log-report.html
 
   - name: gc-logs
     help: |-
@@ -9471,6 +9490,8 @@ commands:
       It never follows logs and never waits for the lag to reach 0, so it is
       safe to use from scripts and AI agents.
 
+      🌐 Also writes a self-contained HTML report in --output-dir, to attach to a case, opened in the browser in an interactive terminal (--no-open to skip): verdict, findings, status and traces of the tasks, error records naming the connector, lag per partition or offsets, next steps, and the configuration (secrets masked).
+
       🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting
       🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A9%BA-a-sink-is-running-but-writes-nothing
     flags:
@@ -9488,11 +9509,23 @@ commands:
       validate: integer
       default: "15"
       help: |-
-        ✂️ Maximum number of distinct error records to show (default 15)
+        ✂️ Maximum number of distinct error records to show (default 15). The HTML report has them all
+    - long: --output-dir
+      short: -o
+      arg: output_dir
+      required: false
+      default: "/tmp/playground-diagnose"
+      help: |-
+        📂 Output directory for the HTML report (default: /tmp/playground-diagnose)
+    - long: --no-open
+      required: false
+      help: |-
+        🙈 Do not open the HTML report in the browser
     examples:
     - playground connector diagnose
     - playground connector diagnose --connector http-sink
     - playground connector diagnose --connector http-sink --since 10m --max-findings 5
+    - playground connector diagnose --connector http-sink --output-dir ./case-123456 --no-open
     x_example_outputs:
     - command: playground connector diagnose
       output: |-
@@ -9517,6 +9550,9 @@ commands:
            playground container logs -c connect --grep "filestream-sink" --no-follow --tail 200
            playground debug log-level set --package <connector package> --level TRACE
            playground debug thread-dump --container connect
+
+        17:22:10 ℹ️ ✅ HTML report saved: /tmp/playground-diagnose/connector-diagnose-filestream-sink-20261013-172210.html
+        17:22:10 ℹ️ 🔗 Open in browser: file:///tmp/playground-diagnose/connector-diagnose-filestream-sink-20261013-172210.html
     footer: |-
       Example output:
         $ playground connector diagnose
@@ -9541,6 +9577,9 @@ commands:
            playground container logs -c connect --grep "filestream-sink" --no-follow --tail 200
            playground debug log-level set --package <connector package> --level TRACE
            playground debug thread-dump --container connect
+
+        17:22:10 ℹ️ ✅ HTML report saved: /tmp/playground-diagnose/connector-diagnose-filestream-sink-20261013-172210.html
+        17:22:10 ℹ️ 🔗 Open in browser: file:///tmp/playground-diagnose/connector-diagnose-filestream-sink-20261013-172210.html
 
   - name: show-lag
     help: |

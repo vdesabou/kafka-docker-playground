@@ -1,8 +1,22 @@
 # log-analyzer
 
-Samples of `playground analyze logs`, the ERROR/FATAL digest of log files, folders and bundles. The command
-itself is plain bash (`scripts/cli/src/commands/analyze/logs.sh`): it de-duplicates records with an occurrence
-count and collapses stack traces to their `Caused by:` chain.
+Samples and HTML report of `playground analyze logs`, the ERROR/FATAL digest of log files, folders and bundles. The
+digest itself is plain bash (`scripts/cli/src/commands/analyze/logs.sh`, `summarize_log_errors` in
+`scripts/cli/src/lib/cli_function.sh`): it de-duplicates records with an occurrence count and collapses stack traces
+to their `Caused by:` chain.
+
+## HTML report and JSON
+
+With `PG_LOG_DIGEST_RECORDS_FILE` set, `summarize_log_errors` also appends every distinct record to that file.
+`log_report.py` reads it and writes the HTML report (`--html-out`) or prints the analysis (`--json`): known causes
+(task killed, authentication, TLS, unknown magic byte, `OutOfMemoryError`…), occurrences over time, root causes
+(deepest exception of each record) and every record. `tools/connector-diagnose/diagnose_report.py` imports it for the
+errors section of the `playground connector diagnose` report.
+
+```bash
+playground analyze logs --sample support_bundle --output-dir /tmp/log-reports   # support_bundle-log-report.html
+playground analyze logs --sample connect_task_failure --json 2>/dev/null | jq '.known_causes[].title'
+```
 
 ## Samples
 

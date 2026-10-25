@@ -35,6 +35,9 @@ lab_expect_contains "3/4 progress: committed offsets of sink strict-sink (no lag
 lab_expect_contains '"offsets": []'
 lab_expect_contains "a task or the connector FAILED"
 lab_expect_contains "playground connector restart --connector strict-sink"
+lab_expect_contains "✅ HTML report saved: /tmp/playground-diagnose/connector-diagnose-strict-sink-"
+diagnose_report=$(echo "$LAB_OUTPUT" | sed -n 's/.*HTML report saved: //p' | tail -1)
+lab_expect_equals "$(grep -o 'Task 0 FAILED on' "$diagnose_report" | head -1)" "Task 0 FAILED on" "failed task in the HTML report"
 playground connector delete --connector strict-sink
 
 log "Step 2: errors.tolerance=all, a silent one"

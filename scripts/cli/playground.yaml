@@ -2246,7 +2246,12 @@ subcommands:
       lines that merely contain \"error\" or \"failed\", never are.\n\n\U0001F4C2
       Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\nare extracted
       in a temporary folder, .gz files are decompressed on the\nfly, binary files
-      are skipped. Only files with findings are shown.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n\U0001F3AC
+      are skipped. Only files with findings are shown.\n\n\U0001F310 Also writes a
+      self-contained HTML report in --output-dir, opened in the browser in an interactive
+      terminal: verdict, known causes (task killed, authentication, TLS, unknown magic
+      byte, OutOfMemoryError...), occurrences over time, root causes (deepest exception
+      of each record), files with findings, and every distinct record.\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B5%EF%B8%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle"
     usage: playground analyze logs [OPTIONS]
     options:
@@ -2274,9 +2279,20 @@ subcommands:
       - "--max-findings"
       argument: MAX_FINDINGS
       description: |-
-        ✂️ Maximum number of distinct records to show per file (default 40)
+        ✂️ Maximum number of distinct records to show per file (default 40). The HTML report and --json have them all
 
         Default value: 40
+    - names:
+      - "--output-dir"
+      - "-o"
+      argument: OUTPUT_DIR
+      description: "\U0001F4C2 Output directory for the HTML report (default: ./log-analysis-output)\n\nDefault
+        value: ./log-analysis-output"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F5C2️  Output JSON on stdout: summary, findings, root causes
+        and every distinct record (text digest on stderr, no HTML report)"
   - name: gc-logs
     description: "\U0001F4C8 Analyze JVM Garbage Collection logs\n\n\U0001F4CA Parses
       GC logs from local files / folders or a running container: pause statistics,
@@ -5811,7 +5827,11 @@ subcommands:
       sink (its committed offsets when a task is not\n                  RUNNING),
       or offsets of a source\n  \U0001F449 next steps   the commands to dig further\n\nIt
       never follows logs and never waits for the lag to reach 0, so it is\nsafe to
-      use from scripts and AI agents.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting\n\U0001F3AC
+      use from scripts and AI agents.\n\n\U0001F310 Also writes a self-contained HTML
+      report in --output-dir, to attach to a case, opened in the browser in an interactive
+      terminal (--no-open to skip): verdict, findings, status and traces of the tasks,
+      error records naming the connector, lag per partition or offsets, next steps,
+      and the configuration (secrets masked).\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A9%BA-a-sink-is-running-but-writes-nothing"
     usage: playground connector diagnose [OPTIONS]
     options:
@@ -5835,9 +5855,19 @@ subcommands:
       - "--max-findings"
       argument: MAX_FINDINGS
       description: |-
-        ✂️ Maximum number of distinct error records to show (default 15)
+        ✂️ Maximum number of distinct error records to show (default 15). The HTML report has them all
 
         Default value: 15
+    - names:
+      - "--output-dir"
+      - "-o"
+      argument: OUTPUT_DIR
+      description: "\U0001F4C2 Output directory for the HTML report (default: /tmp/playground-diagnose)\n\nDefault
+        value: /tmp/playground-diagnose"
+    - names:
+      - "--no-open"
+      argument: ''
+      description: "\U0001F648 Do not open the HTML report in the browser"
   - name: show-lag
     description: "\U0001F422 Show lag of sink connector\n\nThe consumer lag of the
       sink, refreshed every --interval seconds, so you\nsee whether it is catching
