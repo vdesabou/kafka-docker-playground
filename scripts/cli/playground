@@ -27395,16 +27395,18 @@ function handle_onprem_connect_rest_api () {
 function display_ngrok_warning () {
 
   # not exported: look in the playground secrets too ('playground run' only loads the variables it knows about, and an
-  # example can also be started with bash). The values are never printed
+  # example can also be started with bash). The values are never printed. For a name that is not stored, 'secrets get'
+  # prints its error on stdout and exits 1: that means no bore, and must neither become the value nor stop an example
+  # running with set -e
   if [ -z "$BORE_SERVER" ]
   then
-    BORE_SERVER=$(playground secrets get BORE_SERVER --reveal 2> /dev/null)
+    BORE_SERVER=$(playground secrets get BORE_SERVER --reveal 2> /dev/null) || BORE_SERVER=""
     if [ -n "$BORE_SERVER" ]
     then
       export BORE_SERVER
       if [ -z "$BORE_SECRET" ]
       then
-        BORE_SECRET=$(playground secrets get BORE_SECRET --reveal 2> /dev/null)
+        BORE_SECRET=$(playground secrets get BORE_SECRET --reveal 2> /dev/null) || BORE_SECRET=""
         export BORE_SECRET
       fi
     fi
