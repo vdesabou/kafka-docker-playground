@@ -10,6 +10,8 @@
 - 🧠 Easily run commands with playground [CLI](https://kafka-docker-playground.io/#/cli)
 - 📈 [Benchmark](https://kafka-docker-playground.io/#/reusables?id=%e2%8f%b1%ef%b8%8f-benchmark-a-connector) a connector: throughput, version comparison, and where the time of the tasks goes (Java Flight Recorder)
 - 📊 Find what is wrong with shareable [reports](https://kafka-docker-playground.io/#/reports): thread dumps, GC logs, flight recordings, connector benchmarks, SMT tests, Oracle XStream and CFK diagnostics
+- 🎬 Learn with [bite size sessions](https://kafka-docker-playground.io/#/sessions): short narrated videos, each about one thing the playground does for you, with the commands to copy
+- 🍪 Master a family of commands with the [deep dives](https://kafka-docker-playground.io/#/deep-dives): mental model, what runs under the hood, gotchas, a hands-on lab replayed nightly by CI, and recipes for support repros
 - 🤖 Use it with [Claude Code](https://kafka-docker-playground.io/#/claude-code): project guide, skills to add examples, review PRs, change the CLI or analyze Oracle XStream reports
 - 🎓 Learn how the playground [works](https://kafka-docker-playground.io/#/how-it-works)
 - 🧰 Build your own examples or reproduction models with the [reproduction toolkit](https://kafka-docker-playground.io/#/reusables)

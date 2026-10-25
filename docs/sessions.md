@@ -108,6 +108,25 @@ in a few commands.
 
 **Commands**
 
+```bash
+# the customer's versions (off camera)
+playground run -f $PWD/connect/connect-jdbc-postgresql-sink/postgres-sink.sh --tag 8.2.0 --connector-tag 10.8.4
+
+playground connector versions                       # what runs, and the latest on Confluent Hub
+playground update-version --connector-tag 10.8.12   # another connector version, the example is not run again
+playground connector wait --connector postgres-sink --max-wait 120
+playground update-version --connector-zip /tmp/engineering-build/confluentinc-kafka-connect-jdbc-10.9.9.zip   # or --connector-jar
+playground update-version --connect-tag 8.3.2       # connect only (--tag: every component)
+playground status
+playground update-version                           # no flag: a menu with the versions running now
+```
+
+**Links**
+
+- 🍪 Deep dive: [running examples and changing versions: under the hood, hands-on lab and repro recipes](/deep-dive-run-and-versions.md)
+- 📚 [Specify versions](/how-to-use?id=🪄-specify-versions)
+- 🧠 CLI reference: [playground update-version](/playground%20update-version), [playground connector versions](/playground%20connector%20versions)
+
 ## 🔐 The same example under SASL_SSL and RBAC
 
 "It works in dev, not in our SSL cluster", "the connector gets `TopicAuthorizationException`": run the same example
@@ -133,6 +152,33 @@ reproduce the authorization error.
 
 **Commands**
 
+```bash
+playground run -f $PWD/connect/connect-filestream-sink/filestream-sink.sh --environment sasl-ssl
+playground state get run.environment
+playground topic produce -t filestream --nb-messages 3 --value '{"id": %g}'
+playground topic consume -t filestream --min-expected-messages 8 --timeout 60
+playground container get-properties -c connect | grep -E 'security.protocol|sasl.mechanism|listeners'
+playground connector create-or-update -c filestream-sink --dry-run < /tmp/filestream-avro.json   # the security keys added for you
+playground container exec -c connect --command 'kafka-topics --bootstrap-server broker:9092 --command-config /etc/kafka/secrets/client_without_interceptors.config --list'
+
+# RBAC, and an authorization error on purpose
+playground run -f $PWD/connect/connect-filestream-sink/filestream-sink.sh --environment rbac-sasl-plain
+playground rbac role-binding list --principal User:connectorSA
+playground rbac role-binding delete --principal User:connectorSA --role ResourceOwner --resource 'Topic:*'
+playground connector restart -c filestream-sink
+playground connector wait -c filestream-sink --state FAILED --max-wait 180   # TopicAuthorizationException
+playground rbac role-binding create --principal User:connectorSA --role ResourceOwner --resource 'Topic:*'
+playground connector restart -c filestream-sink
+playground connector wait -c filestream-sink --max-wait 180
+```
+
+**Links**
+
+- 🍪 Deep dive: [secured environments: under the hood, hands-on lab and repro recipes](/deep-dive-secured-environments.md)
+- 👾 [Environments](/content?id=🔐-environments)
+- 🧠 CLI reference: [playground run](/playground%20run), [playground rbac role-binding](/playground%20rbac%20role-binding),
+  [playground container get-properties](/playground%20container%20get-properties)
+
 ## 🐳 Restart or recreate? What a container keeps
 
 The customer says "it only fails on our workers: Java 17, and these JVM options". Build that worker on the example you
@@ -156,6 +202,26 @@ matters.
   (its config and offsets live in Kafka)
 
 **Commands**
+
+```bash
+playground container exec -c connect --command 'java -version 2>&1 | head -1'
+playground container change-jdk -c connect --version 17
+playground container restart -c connect      # keeps the JDK
+playground container recreate                # nothing changed in the definition: nothing done
+playground container set-environment-variables -c connect --env "KAFKA_HEAP_OPTS: -Xms1G -Xmx2G"   # a new container: Java 17 is gone
+playground container exec -c connect --command 'echo "KAFKA_HEAP_OPTS=$KAFKA_HEAP_OPTS"'
+playground container recreate                # the original command again: the variables are gone too
+playground connector wait --connector postgres-sink --max-wait 120
+```
+
+Recorded on the example `connect/connect-jdbc-postgresql-sink/postgres-sink.sh`.
+
+**Links**
+
+- 🍪 Deep dive: [containers: under the hood, hands-on lab and repro recipes](/deep-dive-container-lifecycle.md)
+- 🧠 CLI reference: [playground container exec](/playground%20container%20exec), [playground container change-jdk](/playground%20container%20change-jdk),
+  [playground container restart](/playground%20container%20restart), [playground container recreate](/playground%20container%20recreate),
+  [playground container set-environment-variables](/playground%20container%20set-environment-variables)
 
 ## 🧪 The life of a reproduction model
 
@@ -181,6 +247,25 @@ hand it to a colleague as one bundle that they import and run.
   and the line to run it
 
 **Commands**
+
+```bash
+playground repro bootstrap -f $PWD/connect/connect-filestream-sink/filestream-sink.sh -d '000000 bite size session' --no-run
+m=$PWD/reproduction-models/connect-connect-filestream-sink/filestream-sink-repro-000000-bite-size-session.sh
+# edit the scenario and the 💬 comments: block, then
+playground run -f $m
+playground repro check -f $m                 # exit 1 on a credential: file and line, never the value
+playground repro export -f $m --dry-run
+playground repro export -f $m --output /tmp/kdp-session-repro
+playground repro import -f /tmp/kdp-session-repro/playground_repro_*.tgz --dry-run
+playground repro import -f /tmp/kdp-session-repro/playground_repro_*.tgz
+```
+
+**Links**
+
+- 🍪 Deep dive: [reproduction models: under the hood, hands-on lab and repro recipes](/deep-dive-reproduction-models.md)
+- 🧰 [Reproduction toolkit](/reusables.md)
+- 🧠 CLI reference: [playground repro bootstrap](/playground%20repro%20bootstrap), [playground repro check](/playground%20repro%20check),
+  [playground repro export](/playground%20repro%20export), [playground repro import](/playground%20repro%20import)
 
 ## 🩺 A sink is RUNNING but writes nothing
 
@@ -233,6 +318,23 @@ tasks** to be `RUNNING`: a config that doesn't run stops the script right there,
 
 **Commands**
 
+```bash
+playground connector create-or-update -c broken-sink --validate /tmp/customer-connector.json   # stops at the first FAILED task, exit 1
+playground connector create-or-update -c broken-sink --no-wait /tmp/customer-connector.json    # a failure on purpose
+playground connector wait -c broken-sink --state FAILED --max-wait 60
+playground connector create-or-update -c broken-sink --dry-run /tmp/customer-connector-fixed.json   # the changed keys
+playground connector create-or-update -c broken-sink /tmp/customer-connector-fixed.json             # updated in place
+```
+
+Recorded on the example `connect/connect-filestream-sink/filestream-sink.sh`, with the customer's config in the REST API
+format (`{"name": ..., "config": {...}}`).
+
+**Links**
+
+- 🍪 Deep dive: [`connector create-or-update`: under the hood, hands-on lab and repro recipes](/deep-dive-connector-create-or-update.md)
+- 🧠 CLI reference: [playground connector create-or-update](/playground%20connector%20create-or-update),
+  [playground connector wait](/playground%20connector%20wait), [playground connector validate](/playground%20connector%20validate)
+
 ## ⏪ The lag of a sink is stuck
 
 "The lag of our sink is stuck at 20." Read the lag where a sink keeps it (its consumer group), find why it doesn't move,
@@ -254,6 +356,30 @@ follow it back to 0, then write the last records again by moving the sink back i
 
 **Commands**
 
+```bash
+playground consumer-group describe --group connect-filestream-sink
+playground connector show-lag --connector filestream-sink --interval 5 --max-wait 30
+playground connector resume --connector filestream-sink
+playground connector show-lag --connector filestream-sink --interval 5 --max-wait 90
+playground connector offsets get --connector filestream-sink
+
+# write the last 3 records again
+playground connector stop --connector filestream-sink
+playground consumer-group reset-offsets --group connect-filestream-sink --topic filestream --shift-by -3 --dry-run
+playground consumer-group reset-offsets --group connect-filestream-sink --topic filestream --shift-by -3
+playground connector resume --connector filestream-sink
+```
+
+Recorded on the example `connect/connect-filestream-sink/filestream-sink.sh` (connector paused, 20 more records produced).
+
+**Links**
+
+- 🍪 Deep dive: [offsets and lag: under the hood, hands-on lab and repro recipes](/deep-dive-offsets-and-lag.md)
+- 🧠 CLI reference: [playground connector show-lag](/playground%20connector%20show-lag),
+  [playground connector offsets get](/playground%20connector%20offsets%20get),
+  [playground consumer-group describe](/playground%20consumer-group%20describe),
+  [playground consumer-group reset-offsets](/playground%20consumer-group%20reset-offsets)
+
 ## 🕵️ A connector failed: read the logs, live or from a customer bundle
 
 The task is `FAILED` and the answer is somewhere in a worker log of thousands of lines. One flag turns the live log into a
@@ -272,6 +398,22 @@ offline on the support bundle a customer sent.
 - `playground analyze logs` on a `.zip` bundle: one digest per file, `--include-warnings`, `--max-findings` per file
 
 **Commands**
+
+```bash
+playground container logs -c connect --errors --since 10m
+playground container logs -c connect --grep 'Unknown magic byte' --no-follow
+playground container logs -c connect --wait-for-log 'Unknown magic byte' --max-wait 30
+playground analyze logs --sample support_bundle                 # or -f <file|folder|.zip|.tar.gz>
+playground analyze logs --sample support_bundle --include-warnings --max-findings 3
+```
+
+Recorded on the example `connect/connect-filestream-sink/filestream-sink.sh`, plus a connector `bad-sink` with an
+AvroConverter on JSON records.
+
+**Links**
+
+- 🍪 Deep dive: [`container logs` and `analyze logs`: under the hood, hands-on lab and repro recipes](/deep-dive-container-logs.md)
+- 🧠 CLI reference: [playground container logs](/playground%20container%20logs), [playground analyze logs](/playground%20analyze%20logs)
 
 ## 🧬 TRACE on a running connector, without a restart
 
@@ -292,6 +434,21 @@ back. No restart, no log4j file to edit.
 - a worker restart forgets every level: `CONNECT_LOG4J_LOGGERS` in the compose override for levels that must survive it
 
 **Commands**
+
+```bash
+playground debug log-level get --package org.apache.kafka.connect.file
+playground debug log-level set --package org.apache.kafka.connect.file --level TRACE
+playground container logs -c connect --grep 'Writing line' --no-follow
+playground connector log-level --connector filestream-sink --level TRACE    # + RestService, TransformationChain, WorkerSinkTask
+playground connector log-level --connector filestream-sink --level INFO     # back to normal, there is no reset
+```
+
+Recorded on the example `connect/connect-filestream-sink/filestream-sink.sh`.
+
+**Links**
+
+- 🍪 Deep dive: [log levels: under the hood, hands-on lab and repro recipes](/deep-dive-log-levels.md)
+- 🧠 CLI reference: [playground debug log-level](/playground%20debug%20log-level), [playground connector log-level](/playground%20connector%20log-level)
 
 ## 🔀 What does this transform chain do to a record?
 
@@ -619,6 +776,24 @@ every environment, local or Confluent Cloud.
 
 **Commands**
 
+```bash
+playground topic create -t orders --nb-partitions 3 --config retention.ms=600000
+playground topic produce -t orders --nb-messages 10 --key 'k%g' --value '{"id": %g}'
+playground topic get-offsets -t orders
+playground topic alter -t orders --add-config max.message.bytes=1000
+playground topic describe -t orders
+playground topic produce -t orders --nb-messages 1 --record-size 5000 < scripts/cli/predefined-schemas/avro/lead.avsc   # RecordTooLargeException
+playground topic alter -t orders --delete-config max.message.bytes
+playground topic delete -t orders
+```
+
+**Links**
+
+- 🍪 Deep dive: [topic administration: under the hood, hands-on lab and repro recipes](/deep-dive-topic-administration.md)
+- 🧠 CLI reference: [playground topic create](/playground%20topic%20create), [playground topic alter](/playground%20topic%20alter),
+  [playground topic describe](/playground%20topic%20describe), [playground topic get-offsets](/playground%20topic%20get-offsets),
+  [playground topic delete](/playground%20topic%20delete)
+
 ## 🔰 Schema not found after a cleanup
 
 The producer was refused a new schema version, somebody "cleaned up" the subject, and now the consumers fail with
@@ -638,6 +813,26 @@ ids readable, and a permanent one, which loses them.
 - `--permanent`: `40403 Schema 2 not found`, what the consumers get; registering again gives a new id
 
 **Commands**
+
+```bash
+playground schema register --subject orders-value < /tmp/order-v1.avsc
+playground schema set-compatibility --subject orders-value --compatibility BACKWARD
+playground schema register --subject orders-value < /tmp/order-v2-bad.avsc     # 40901, exit 1
+playground schema register --subject orders-value < /tmp/order-v2.avsc         # the new field has a default
+playground topic produce -t orders --nb-messages 2 < /tmp/order-v2.avsc
+playground topic consume -t orders --min-expected-messages 2 --timeout 60
+playground schema delete --subject orders-value                # soft delete
+playground schema get --id 2                                   # still resolves
+playground schema delete --subject orders-value --permanent
+playground schema get --id 2                                   # 40403 Schema 2 not found
+```
+
+**Links**
+
+- 🍪 Deep dive: [Schema Registry: under the hood, hands-on lab and repro recipes](/deep-dive-schema.md)
+- 🧠 CLI reference: [playground schema register](/playground%20schema%20register),
+  [playground schema set-compatibility](/playground%20schema%20set-compatibility),
+  [playground schema get](/playground%20schema%20get), [playground schema delete](/playground%20schema%20delete)
 
 ## 📈 Is version Y slower? Benchmark two versions
 
