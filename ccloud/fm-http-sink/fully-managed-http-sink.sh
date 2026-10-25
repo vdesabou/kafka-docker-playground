@@ -4,6 +4,10 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+NGROK_AUTH_TOKEN=${NGROK_AUTH_TOKEN:-$1}
+
+display_ngrok_warning
+
 bootstrap_ccloud_environment
 
 
