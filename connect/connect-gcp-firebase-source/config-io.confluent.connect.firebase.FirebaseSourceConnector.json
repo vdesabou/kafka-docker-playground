@@ -3,5 +3,8 @@
     "gcp.firebase.credentials.path": "STRING",
     "gcp.firebase.database.reference": "",
     "gcp.firebase.snapshot": "false",
+    "task.parallel.transform.chunk.size": "10000",
+    "task.parallel.transform.enabled": "false",
+    "task.parallel.transform.threads": "2",
     "transaction.boundary": "poll",
     "transaction.boundary.interval.ms": "",

@@ -29,6 +29,36 @@ If 'transaction.boundary' is set to 'interval', determines the interval for prod
 	 - Required: false
 
 ==========================
+null
+==========================
+🔘 task.parallel.transform.enabled
+
+If true, transform and convert operations for this source task run on a per-task thread pool instead of on the task thread. Producer.send() remains sequential to preserve ordering. REQUIREMENT: every SMT and converter configured on the task must be thread-safe — they will be invoked concurrently from multiple worker threads on disjoint records. Leave disabled for connectors whose transforms or converters hold mutable per-instance state without synchronization. Disabled by default.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 task.parallel.transform.threads
+
+Number of threads in the per-task pool used when task.parallel.transform.enabled is true. Bounded to [1, 3] to prevent any single task from monopolizing CPU.
+
+	 - Type: INT
+	 - Default: 2
+	 - Importance: LOW
+	 - Required: false
+
+🔘 task.parallel.transform.chunk.size
+
+Number of records processed per parallel chunk when task.parallel.transform.enabled is true. Caps in-flight memory: peak extra heap per chunk ≈ chunkSize × 2 × avg_record_size. Tune down for connectors shipping records larger than 20 KB. Bounded to [100, 50000].
+
+	 - Type: INT
+	 - Default: 10000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
 Firebase
 ==========================
 🔘 gcp.firebase.database.reference
