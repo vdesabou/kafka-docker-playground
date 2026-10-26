@@ -13,5 +13,8 @@
     "gcp.pubsub.subscription.id": "STRING",
     "gcp.pubsub.topic.id": "STRING",
     "kafka.topic": "",
+    "task.parallel.transform.chunk.size": "10000",
+    "task.parallel.transform.enabled": "false",
+    "task.parallel.transform.threads": "2",
     "transaction.boundary": "poll",
     "transaction.boundary.interval.ms": "",
