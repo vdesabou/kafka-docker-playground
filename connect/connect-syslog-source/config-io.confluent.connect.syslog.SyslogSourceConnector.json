@@ -28,5 +28,8 @@
     "syslog.tcp.max.frame.size": "10000",
     "syslog.time.zone": "UTC",
     "syslog.use.length.as.delimiter": "false",
+    "task.parallel.transform.chunk.size": "10000",
+    "task.parallel.transform.enabled": "false",
+    "task.parallel.transform.threads": "2",
     "transaction.boundary": "poll",
     "transaction.boundary.interval.ms": "",
