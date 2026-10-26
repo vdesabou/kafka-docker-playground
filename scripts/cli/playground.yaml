@@ -812,10 +812,13 @@ subcommands:
       the load of a source (benchmark-load.bash next to the example\nscript) or of
       the records produced by a sink example, then the\nthroughput, the HTML report
       and where the task time went. Self-managed\nand fully managed connectors, not
-      with the cfk environment.\n\nBENCHMARK_ARGS adds flags to playground connector
-      benchmark (e.g.\nBENCHMARK_ARGS=\"--mode steady --duration 5m\"), and BENCHMARK_LOAD_SCRIPT\nselects
-      another load script than benchmark-load.bash. If the benchmark\nfails, the command
-      exits with its exit code."
+      with the cfk environment.\n\n--benchmark takes no value: the flags of playground
+      connector benchmark\ngo in the BENCHMARK_ARGS environment variable, for instance
+      a backlog of\n10 million records of 100 bytes:\n\nBENCHMARK_ARGS=\"--nb-records
+      10000000 --record-size 100\" playground run -f csv.sh --benchmark\n\nor a steady
+      run: BENCHMARK_ARGS=\"--mode steady --duration 5m\".\nBENCHMARK_LOAD_SCRIPT
+      selects another load script than benchmark-load.bash.\nIf the benchmark fails,
+      the command exits with its exit code."
   - names:
     - "--run-log-file"
     argument: FILE

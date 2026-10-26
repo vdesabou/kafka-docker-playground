@@ -20,7 +20,7 @@ one or with other plugin versions. Takes about 15 minutes to read and run.
 | another load shape (source) | `… --shape small-txn` / `update` / `delete`, or a sequence `bulk,update,delete` |
 | the result as data | `… --json` (the result JSON on stdout, logs on stderr) |
 | your own load | `… --load-command "<cmd>"` / `--stream-load-command "<cmd>"`, or `BENCHMARK_LOAD_SCRIPT=<file>` |
-| right after the example | `playground run -f <example> --benchmark` |
+| right after the example | `playground run -f <example> --benchmark` (flags in `BENCHMARK_ARGS="--nb-records 1000000"`) |
 
 ---
 
@@ -168,7 +168,18 @@ Gotchas:
 ## 5. From `playground run`
 
 - `playground run -f <example> --benchmark` (also a toggle in the `run` menu) runs `connector benchmark` right after
-  the example succeeds, with `BENCHMARK_ARGS` for its flags, and exits with its code when it fails.
+  the example succeeds, and exits with its code when it fails. `--benchmark` takes no value: the flags of
+  `connector benchmark` go in the `BENCHMARK_ARGS` environment variable, for instance a backlog of 10 million records
+  of 100 bytes for the spool dir source:
+
+  ```bash
+  BENCHMARK_ARGS="--nb-records 10000000 --record-size 100" \
+    playground run -f connect/connect-spool-dir-source/csv.sh --benchmark
+  ```
+
+  `playground run … --benchmark "--nb-records 10000000"` fails with `invalid argument`, and the
+  `BENCHMARK_LOAD_RECORDS` / `BENCHMARK_LOAD_RECORD_SIZE` variables seen in the load scripts are not inputs: they are
+  set from `--nb-records` / `--record-size` by `benchmark_load_args`.
 - `playground run -f <example> --enable-sql-datagen` uses the same load scripts: after the example, one-row
   transactions are streamed from `SQL_DATAGEN_SESSIONS` (5) sessions for `SQL_DATAGEN_DURATION` (10) minutes, to watch
   a source under load (with `--enable-jmx-grafana`, for instance).
@@ -277,7 +288,7 @@ playground connector benchmark [--connector <c>] [--mode drain|steady] [--nb-rec
   [--latency-field <path>] [--no-latency] [--no-flight-recorder]
   [--output-dir /tmp/playground-benchmark] [--compare <result.json>] [--no-history] [--json]
 BENCHMARK_LOAD_SCRIPT=<file> playground connector benchmark …
-playground run -f <example> --benchmark          # BENCHMARK_ARGS for its flags
+BENCHMARK_ARGS="--nb-records 1000000 --record-size 100" playground run -f <example> --benchmark
 playground run -f <example> --enable-sql-datagen
 ```
 

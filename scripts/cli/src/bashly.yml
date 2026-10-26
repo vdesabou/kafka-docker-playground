@@ -1509,7 +1509,7 @@ commands:
   - name: BENCHMARK_LOAD_SCRIPT
     help: "📜 With --enable-sql-datagen or --benchmark, load script to use instead of benchmark-load.bash (file of the example folder, or absolute path)"
   - name: BENCHMARK_ARGS
-    help: "🏎️ With --benchmark, extra flags for playground connector benchmark (e.g. \"--mode steady --duration 5m\")"
+    help: "🏎️ With --benchmark, extra flags for playground connector benchmark (e.g. \"--nb-records 10000000 --record-size 100\" or \"--mode steady --duration 5m\")"
   - name: PG_CCLOUD_SERVICE_ACCOUNT_ACL_EXCLUDE
     help: "🙈 With --ccloud-service-account, regex of the ACLs not to create, matched on <OPERATION> <ResourceType>:<name> [prefix] (e.g. \"READ Group:\")"
   dependencies:
@@ -1870,10 +1870,15 @@ commands:
       throughput, the HTML report and where the task time went. Self-managed
       and fully managed connectors, not with the cfk environment.
 
-      BENCHMARK_ARGS adds flags to playground connector benchmark (e.g.
-      BENCHMARK_ARGS="--mode steady --duration 5m"), and BENCHMARK_LOAD_SCRIPT
-      selects another load script than benchmark-load.bash. If the benchmark
-      fails, the command exits with its exit code.
+      --benchmark takes no value: the flags of playground connector benchmark
+      go in the BENCHMARK_ARGS environment variable, for instance a backlog of
+      10 million records of 100 bytes:
+
+      BENCHMARK_ARGS="--nb-records 10000000 --record-size 100" playground run -f csv.sh --benchmark
+
+      or a steady run: BENCHMARK_ARGS="--mode steady --duration 5m".
+      BENCHMARK_LOAD_SCRIPT selects another load script than benchmark-load.bash.
+      If the benchmark fails, the command exits with its exit code.
 
   - long: --run-log-file
     required: false
@@ -2086,6 +2091,7 @@ commands:
       Force interactive mode
   examples:
   - playground run (interactive mode)
+  - BENCHMARK_ARGS="--nb-records 10000000 --record-size 100" playground run -f connect/connect-spool-dir-source/csv.sh --benchmark
 
 - name: re-run
   group: Run

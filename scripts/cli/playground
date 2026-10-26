@@ -3694,7 +3694,7 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--benchmark")"
-    printf "    🏎️ Benchmark the connector once the example succeeded\n    \n    Runs playground connector benchmark on the connector of the example: a\n    drain of the load of a source (benchmark-load.bash next to the example\n    script) or of the records produced by a sink example, then the\n    throughput, the HTML report and where the task time went. Self-managed\n    and fully managed connectors, not with the cfk environment.\n    \n    BENCHMARK_ARGS adds flags to playground connector benchmark (e.g.\n    BENCHMARK_ARGS=\"--mode steady --duration 5m\"), and BENCHMARK_LOAD_SCRIPT\n    selects another load script than benchmark-load.bash. If the benchmark\n    fails, the command exits with its exit code.\n"
+    printf "    🏎️ Benchmark the connector once the example succeeded\n    \n    Runs playground connector benchmark on the connector of the example: a\n    drain of the load of a source (benchmark-load.bash next to the example\n    script) or of the records produced by a sink example, then the\n    throughput, the HTML report and where the task time went. Self-managed\n    and fully managed connectors, not with the cfk environment.\n    \n    --benchmark takes no value: the flags of playground connector benchmark\n    go in the BENCHMARK_ARGS environment variable, for instance a backlog of\n    10 million records of 100 bytes:\n    \n    BENCHMARK_ARGS=\"--nb-records 10000000 --record-size 100\" playground run -f\n    csv.sh --benchmark\n    \n    or a steady run: BENCHMARK_ARGS=\"--mode steady --duration 5m\".\n    BENCHMARK_LOAD_SCRIPT selects another load script than benchmark-load.bash.\n    If the benchmark fails, the command exits with its exit code.\n"
     echo
 
     # :flag.usage
@@ -3832,7 +3832,7 @@ playground_run_usage() {
 
     # :environment_variable.usage
     printf "  %s\n" "$(cyan "BENCHMARK_ARGS")"
-    printf "    🏎️ With --benchmark, extra flags for playground connector benchmark (e.g.\n    \"--mode steady --duration 5m\")\n"
+    printf "    🏎️ With --benchmark, extra flags for playground connector benchmark (e.g.\n    \"--nb-records 10000000 --record-size 100\" or \"--mode steady --duration 5m\")\n"
     echo
 
     # :environment_variable.usage
@@ -3843,6 +3843,7 @@ playground_run_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground run (interactive mode)\n"
+    printf "  BENCHMARK_ARGS=\"--nb-records 10000000 --record-size 100\" playground run -f\n  connect/connect-spool-dir-source/csv.sh --benchmark\n"
     echo
 
   fi

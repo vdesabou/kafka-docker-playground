@@ -121,7 +121,9 @@ All the database source examples (mysql and mariadb included) use the same `CUST
 ## From `playground run`
 
 - `playground run --benchmark` (also a toggle in the `run` menu) runs `connector benchmark` right after the
-  example succeeds, with `BENCHMARK_ARGS` for its flags, and exits with its code if it fails.
+  example succeeds, with `BENCHMARK_ARGS` for its flags, and exits with its code if it fails. `--benchmark` takes no
+  value: `BENCHMARK_ARGS="--nb-records 10000000 --record-size 100" playground run -f <example> --benchmark`
+  (`BENCHMARK_LOAD_RECORDS` / `BENCHMARK_LOAD_RECORD_SIZE` are set from those flags, not read from the environment).
 - `playground run --enable-sql-datagen` uses the same load: after the example, `sql_datagen_inject` streams
   one-row transactions from `SQL_DATAGEN_SESSIONS` (5) sessions for `SQL_DATAGEN_DURATION` (10) minutes.
   There is no Java datagen nor `sql-datagen` container anymore.
