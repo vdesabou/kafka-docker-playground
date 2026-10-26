@@ -21,6 +21,19 @@ else
 
     if [ $grep_status -ne 0 ] || [ -z "$topics_to_delete" ]; then
         log "❌ topic $topic_pattern does not exist and regex does not match any topic !"
+        # the subjects can outlive the topic (deleted by a cleanup or by another tool): delete them anyway, otherwise
+        # the next producer of this topic with another schema fails with 40901 (incompatible schema)
+        if [[ -z "$skip_delete_schema" ]] && [[ "$topic_pattern" =~ ^[a-zA-Z0-9._-]+$ ]]
+        then
+            for subject in "$topic_pattern-key" "$topic_pattern-value"
+            do
+                if playground schema get --subject "$subject" > /dev/null 2>&1
+                then
+                    log "🔰 Delete subject $subject (its topic does not exist)"
+                    playground schema delete --subject "$subject" --permanent
+                fi
+            done
+        fi
         exit 0
     fi
 

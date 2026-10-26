@@ -4453,9 +4453,10 @@ subcommands:
     description: "❌ Delete topic and associated schema/subject if applicable\n\nAlso
       removes the key and value subjects from the schema registry,\nwhich is what
       you usually want: a topic re-created with a leftover\nsubject keeps the old
-      compatibility rules and the old schema history.\nKeep them with --skip-delete-schema.\n\nA
-      regex is accepted, matched in full, to clean up a family of topics\nat once.\n\n\U0001F36A
-      Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration\n\U0001F3AC
+      compatibility rules and the old schema history.\nKeep them with --skip-delete-schema.
+      When the topic no longer exists,\nits leftover key and value subjects are still
+      deleted.\n\nA regex is accepted, matched in full, to clean up a family of topics\nat
+      once.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-topic-administration\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%AA%9B-a-producer-gets-recordtoolargeexception"
     usage: playground topic delete [OPTIONS]
     options:

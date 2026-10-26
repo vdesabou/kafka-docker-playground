@@ -177,6 +177,9 @@ Gotchas:
 - **`--topic` is a regex when no topic has that exact name**, matched in full (`^(…)$`): `lab-.*` deletes every topic
   starting with `lab-`, internal ones included if they match. The matching topics are printed before they're deleted.
 - **Nothing matching is not an error**: `❌ topic lab-nope does not exist and regex does not match any topic !`, exit 0.
+  When `--topic` is a plain topic name (no regex characters other than `.`), leftover `<topic>-key` / `<topic>-value`
+  subjects are still deleted (`🔰 Delete subject <topic>-value (its topic does not exist)`): a subject that outlived its
+  topic would otherwise make the next producer with another schema fail with `40901` (incompatible schema).
 - Deletion is asynchronous in Kafka: a topic re-created right after can fail with `TopicExistsException` or
   `marked for deletion` for a moment.
 - **A subject goes with the topic**: `delete` hard-deletes `<topic>-key` / `<topic>-value` (soft, then hard: the

@@ -10067,7 +10067,7 @@ playground_topic_create_usage() {
 playground_topic_delete_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground topic delete\n\n"
-    printf "  ❌ Delete topic and associated schema/subject if applicable\n  \n  Also removes the key and value subjects from the schema registry,\n  which is what you usually want: a topic re-created with a leftover\n  subject keeps the old compatibility rules and the old schema history.\n  Keep them with --skip-delete-schema.\n  \n  A regex is accepted, matched in full, to clean up a family of topics\n  at once.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-topic-administration\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%AA%%9B-a-producer-gets-recordtoolargeexception\n\n"
+    printf "  ❌ Delete topic and associated schema/subject if applicable\n  \n  Also removes the key and value subjects from the schema registry,\n  which is what you usually want: a topic re-created with a leftover\n  subject keeps the old compatibility rules and the old schema history.\n  Keep them with --skip-delete-schema. When the topic no longer exists,\n  its leftover key and value subjects are still deleted.\n  \n  A regex is accepted, matched in full, to clean up a family of topics\n  at once.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-topic-administration\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%AA%%9B-a-producer-gets-recordtoolargeexception\n\n"
   else
     printf "playground topic delete - ❌ Delete topic and associated schema/subject if applicable\n\n"
   fi
@@ -51105,6 +51105,19 @@ playground_topic_delete_command() {
 
       if [ $grep_status -ne 0 ] || [ -z "$topics_to_delete" ]; then
           log "❌ topic $topic_pattern does not exist and regex does not match any topic !"
+          # the subjects can outlive the topic (deleted by a cleanup or by another tool): delete them anyway, otherwise
+          # the next producer of this topic with another schema fails with 40901 (incompatible schema)
+          if [[ -z "$skip_delete_schema" ]] && [[ "$topic_pattern" =~ ^[a-zA-Z0-9._-]+$ ]]
+          then
+              for subject in "$topic_pattern-key" "$topic_pattern-value"
+              do
+                  if playground schema get --subject "$subject" > /dev/null 2>&1
+                  then
+                      log "🔰 Delete subject $subject (its topic does not exist)"
+                      playground schema delete --subject "$subject" --permanent
+                  fi
+              done
+          fi
           exit 0
       fi
 
