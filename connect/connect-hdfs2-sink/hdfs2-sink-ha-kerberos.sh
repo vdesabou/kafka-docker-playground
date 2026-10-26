@@ -27,7 +27,20 @@ then
 fi
 
 log "namenode1 becomes primary"
-playground container exec --container namenode1 --command "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local;hdfs haadmin -transitionToActive nn1"
+# both namenodes must be up: namenode2 bootstraps from namenode1 first, which can take minutes on podman
+MAX_WAIT=300
+CUR_WAIT=0
+until playground container exec --container namenode1 --command "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local;hdfs haadmin -transitionToActive nn1"
+do
+     if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]
+     then
+          logerror "❌ namenode1 could not become primary after $MAX_WAIT seconds, check the namenode1 and namenode2 logs"
+          exit 1
+     fi
+     log "⏳ namenodes not ready yet, retrying in 10 seconds"
+     sleep 10
+     CUR_WAIT=$(( CUR_WAIT+10 ))
+done
 
 sleep 10
 
