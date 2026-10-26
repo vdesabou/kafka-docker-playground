@@ -22600,121 +22600,58 @@ function yq() {
   verbose_end
 }
 
+# Apache Kafka version of the java clients that some examples build (mvn -Dkafka.client.tag=$KAFKA_CLIENT_TAG): derived
+# from the CP version (CP 5.y = AK 2.y, 6.y = 2.(y+6), 7.y = 3.y, 8.y = 4.y…), so a new CP version needs no change here.
+# A new CP release can come before its AK release on Maven Central: then the newest published X.Y.0 below is used
 function set_kafka_client_tag()
 {
-    if [[ $TAG_BASE = 8.3.* ]]
+    local cp_major cp_minor ak_major ak_minor
+    cp_major=$(echo "$TAG_BASE" | cut -d '.' -f 1)
+    cp_minor=$(echo "$TAG_BASE" | cut -d '.' -f 2)
+    if ! [[ "$cp_major" =~ ^[0-9]+$ ]] || ! [[ "$cp_minor" =~ ^[0-9]+$ ]] || [ "$cp_major" -lt 5 ]
     then
-      export KAFKA_CLIENT_TAG="4.2.0"
+      return
     fi
+    case "$cp_major" in
+      5) ak_major=2; ak_minor=$cp_minor ;;
+      6) ak_major=2; ak_minor=$((cp_minor + 6)) ;;
+      *) ak_major=$((cp_major - 4)); ak_minor=$cp_minor ;;
+    esac
+    export KAFKA_CLIENT_TAG="$ak_major.$ak_minor.0"
 
-    if [[ $TAG_BASE = 8.2.* ]]
+    # list of published versions, cached for a day: no network call once the version is in it
+    local versions_file="${TMPDIR:-/tmp}/playground-kafka-clients-versions.txt"
+    if grep -qx "$KAFKA_CLIENT_TAG" "$versions_file" 2> /dev/null
     then
-      export KAFKA_CLIENT_TAG="4.2.0"
+      return
     fi
-
-    if [[ $TAG_BASE = 8.1.* ]]
+    if [ -z "$(find "$versions_file" -mtime -1 2> /dev/null)" ]
     then
-      export KAFKA_CLIENT_TAG="4.1.0"
+      curl -s --max-time 5 https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/maven-metadata.xml 2> /dev/null | sed -n 's|.*<version>\([0-9]*\.[0-9]*\.0\)</version>.*|\1|p' > "$versions_file.tmp" 2> /dev/null
+      if [ -s "$versions_file.tmp" ]
+      then
+        mv "$versions_file.tmp" "$versions_file"
+      else
+        # offline: keep the derived version
+        rm -f "$versions_file.tmp"
+        return
+      fi
+      if grep -qx "$KAFKA_CLIENT_TAG" "$versions_file"
+      then
+        return
+      fi
     fi
-
-    if [[ $TAG_BASE = 8.0.* ]]
+    local version fallback=""
+    for version in $(cat "$versions_file" 2> /dev/null)
+    do
+      if ! version_gt "$version" "$KAFKA_CLIENT_TAG" && { [ -z "$fallback" ] || version_gt "$version" "$fallback"; }
+      then
+        fallback="$version"
+      fi
+    done
+    if [ -n "$fallback" ]
     then
-      export KAFKA_CLIENT_TAG="4.0.0"
-    fi
-
-    if [[ $TAG_BASE = 7.9.* ]]
-    then
-      export KAFKA_CLIENT_TAG="3.9.0"
-    fi
-
-    if [[ $TAG_BASE = 7.8.* ]]
-    then
-      export KAFKA_CLIENT_TAG="3.8.0"
-    fi
-
-    if [[ $TAG_BASE = 7.7.* ]]
-    then
-      export KAFKA_CLIENT_TAG="3.7.0"
-    fi
-
-    if [[ $TAG_BASE = 7.6.* ]]
-    then
-      export KAFKA_CLIENT_TAG="3.6.0"
-    fi
-
-    if [[ $TAG_BASE = 7.5.* ]]
-    then
-      export KAFKA_CLIENT_TAG="3.5.0"
-    fi
-
-    if [[ $TAG_BASE = 7.4.* ]]
-    then
-      export KAFKA_CLIENT_TAG="3.4.0"
-    fi
-
-    if [[ $TAG_BASE = 7.3.* ]]
-    then
-      export KAFKA_CLIENT_TAG="3.3.0"
-    fi
-
-    if [[ $TAG_BASE = 7.2.* ]]
-    then
-      export KAFKA_CLIENT_TAG="3.2.0"
-    fi
-
-    if [[ $TAG_BASE = 7.1.* ]]
-    then
-      export KAFKA_CLIENT_TAG="3.1.0"
-    fi
-
-    if [[ $TAG_BASE = 7.0.* ]]
-    then
-      export KAFKA_CLIENT_TAG="3.0.0"
-    fi
-
-    if [[ $TAG_BASE = 6.2.* ]]
-    then
-      export KAFKA_CLIENT_TAG="2.8.0"
-    fi
-
-    if [[ $TAG_BASE = 6.1.* ]]
-    then
-      export KAFKA_CLIENT_TAG="2.7.0"
-    fi
-
-    if [[ $TAG_BASE = 6.0.* ]]
-    then
-      export KAFKA_CLIENT_TAG="2.6.0"
-    fi
-
-    if [[ $TAG_BASE = 5.5.* ]]
-    then
-      export KAFKA_CLIENT_TAG="2.5.0"
-    fi
-
-    if [[ $TAG_BASE = 5.4.* ]]
-    then
-      export KAFKA_CLIENT_TAG="2.4.0"
-    fi
-
-    if [[ $TAG_BASE = 5.3.* ]]
-    then
-      export KAFKA_CLIENT_TAG="2.3.0"
-    fi
-
-    if [[ $TAG_BASE = 5.2.* ]]
-    then
-      export KAFKA_CLIENT_TAG="2.2.0"
-    fi
-
-    if [[ $TAG_BASE = 5.1.* ]]
-    then
-      export KAFKA_CLIENT_TAG="2.1.0"
-    fi
-
-    if [[ $TAG_BASE = 5.0.* ]]
-    then
-      export KAFKA_CLIENT_TAG="2.0.0"
+      export KAFKA_CLIENT_TAG="$fallback"
     fi
 }
 

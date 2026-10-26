@@ -41,27 +41,27 @@ lab_expect_contains "/broker confluentinc/cp-server:$older_tag"
 lab_expect_contains "/connect confluentinc/cp-server-connect:$older_tag"
 
 log "Step 3: connect only, on another version"
-lab_run playground update-version --connect-tag 8.3.2
+lab_run playground update-version --connect-tag 8.4.0
 lab_expect_exit 0
-lab_expect_contains "✨ Loading new version(s) based on flags ⛳ --connect-tag=8.3.2"
+lab_expect_contains "✨ Loading new version(s) based on flags ⛳ --connect-tag=8.4.0"
 lab_expect_contains "💣 Detected confluent version change, restarting containers"
 lab_expect_contains "Container connect Recreate"
 lab_expect_not_contains "Container broker Recreate" "the broker keeps its version"
 lab_run_inspect_images broker connect schema-registry
 lab_expect_contains "/broker confluentinc/cp-server:$older_tag"
-lab_expect_contains "/connect confluentinc/cp-server-connect:8.3.2"
+lab_expect_contains "/connect confluentinc/cp-server-connect:8.4.0"
 lab_expect_contains "/schema-registry confluentinc/cp-schema-registry:$older_tag"
 lab_run playground connector wait --connector filestream-sink --max-wait 180
 lab_expect_exit 0
 
 log "Step 4: every component"
-lab_run playground update-version --tag 8.3.2
+lab_run playground update-version --tag 8.4.0
 lab_expect_exit 0
 lab_run_inspect_images broker connect
-lab_expect_contains "/broker confluentinc/cp-server:8.3.2"
-lab_expect_contains "/connect confluentinc/cp-server-connect:8.3.2"
-lab_run playground update-version --tag 8.3.2
-lab_expect_contains "--tag=8.3.2 is same as current tag, ignoring..."
-lab_expect_not_contains "based on flags ⛳ =8.3.2" "no leftover of the ignored flag"
+lab_expect_contains "/broker confluentinc/cp-server:8.4.0"
+lab_expect_contains "/connect confluentinc/cp-server-connect:8.4.0"
+lab_run playground update-version --tag 8.4.0
+lab_expect_contains "--tag=8.4.0 is same as current tag, ignoring..."
+lab_expect_not_contains "based on flags ⛳ =8.4.0" "no leftover of the ignored flag"
 
 log "✅ all the outputs of the page are as expected"
