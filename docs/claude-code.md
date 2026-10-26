@@ -52,6 +52,7 @@ request matches it, and follows its steps. They are versioned with the repositor
 | [`playground-cli`](https://github.com/vdesabou/kafka-docker-playground/blob/master/.claude/skills/playground-cli/SKILL.md) | add or change a `playground` command, flag or help text | "add a `--sort-by-size` flag to playground topic list" |
 | [`kdp-benchmark`](https://github.com/vdesabou/kafka-docker-playground/blob/master/.claude/skills/kdp-benchmark/SKILL.md) | measure or compare the throughput of a connector, write a `benchmark-load.bash` load | "is version 10.8 of the JDBC sink slower than 10.7?", `/kdp-benchmark` |
 | [`kdp-xstream-report`](https://github.com/vdesabou/kafka-docker-playground/blob/master/.claude/skills/kdp-xstream-report/SKILL.md) | analyze an Oracle XStream CDC diagnostics report and write the summary | `/kdp-xstream-report <orclcdc_diag.html>`, "why is my XStream connector idle? here is the report" |
+| [`kdp-bump-cp-version`](https://github.com/vdesabou/kafka-docker-playground/blob/master/.claude/skills/kdp-bump-cp-version/SKILL.md) | update the default CP version: images check, `scripts/utils.sh`, CI matrix, docs, CLI regeneration, smoke test | `/kdp-bump-cp-version 8.4.0`, "CP 8.5.0 is out, make it the default" |
 
 ### 👾 kdp-new-example
 

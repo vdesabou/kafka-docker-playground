@@ -341,7 +341,7 @@ Add `--ccloud-service-account` (or tick *👤 Connector service account* in the 
 
 ### 🎯 For Confluent Platform (CP)
 
-By default, the latest Confluent Platform version supported by the playground is used (currently CP 8.3.2, which is [KRaft](/how-to-use?id=📡-kraft-mode) only). Use `--tag` option of [playground run](/playground%20run) (or `TAG` environment variable) to run with another version.
+By default, the latest Confluent Platform version supported by the playground is used (currently CP 8.4.0, which is [KRaft](/how-to-use?id=📡-kraft-mode) only). Use `--tag` option of [playground run](/playground%20run) (or `TAG` environment variable) to run with another version.
 
 > [!TIP]
 > You can also change cp version while running an example using [playground update-version](/playground%20update-version)

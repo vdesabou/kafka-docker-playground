@@ -169,7 +169,7 @@ How it works:
 
 | Flag | What happens |
 | --- | --- |
-| `--tag` / `--connect-tag` | the docker compose command of the run is replayed (`container recreate --ignore-current-versions`): only the containers whose image changes are recreated. With `--connect-tag` alone, the other components keep their running version (`Container connect Recreate`, done in about 15 s). A flag equal to the running version is ignored (`--tag=8.3.2 is same as current tag, ignoring...`) |
+| `--tag` / `--connect-tag` | the docker compose command of the run is replayed (`container recreate --ignore-current-versions`): only the containers whose image changes are recreated. With `--connect-tag` alone, the other components keep their running version (`Container connect Recreate`, done in about 15 s). A flag equal to the running version is ignored (`--tag=8.4.0 is same as current tag, ignoring...`) |
 | `--connector-tag` / `--connector-zip` / `--connector-jar` | the plugin is installed again in `confluent-hub/` (the compose override of the example tells which), then `connect` is restarted and `playground connector versions` prints what's loaded |
 
 Gotchas:
