@@ -43,6 +43,8 @@ ccloud_service_account_acls="${args[--ccloud-service-account-acls]}"
 ccloud_service_account_id="${args[--ccloud-service-account-id]}"
 force_interactive_re_run="${args[--force-interactive-re-run]}"
 force_interactive_repro="${args[--force-interactive-repro]}"
+run_log_file_flag="${args[--run-log-file]}"
+no_run_log_flag="${args[--no-run-log]}"
 
 interactive_mode=0
 
@@ -2111,6 +2113,10 @@ array_declaration=$(declare -p array_flag_list)
 encoded_array=$(echo "$array_declaration" | base64)
 playground state set run.array_flag_list_base64 "$encoded_array"
 
+# 📄 from now on, the output also goes to a masked run log that can be shared (playground config run-log)
+run_log_start
+trap 'run_log_finish $?' EXIT
+
 if [ "$flag_list" != "" ]
 then
   if [[ $test_file == *"ccloud"* ]]
@@ -2187,6 +2193,7 @@ function cleanup {
   then
     if [ "$original_exit_status" -ne 0 ]
     then
+        run_log_finish "$original_exit_status"
         # 💡 Exit the function (and the script) with the captured status
         exit "$original_exit_status"
     fi
@@ -2234,6 +2241,7 @@ function cleanup {
   then
     playground connector open-docs --only-show-url
   fi
+  run_log_finish "$original_exit_status"
   # 💡 Exit the function (and the script) with the captured status
   exit "$original_exit_status"
 }
@@ -2290,7 +2298,7 @@ then
   logwarn "   replace that line with: export ENABLE_SQL_DATAGEN=true (rows are then injected with the benchmark-load.bash of the example)"
 fi
 set +e
-bash $filename
+run_log_exec bash $filename
 ret=$?
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 let ELAPSED_TOTAL+=$SECONDS
