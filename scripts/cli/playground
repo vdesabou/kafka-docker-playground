@@ -48258,6 +48258,13 @@ playground_topic_get_number_records_command() {
               docker exec "$container" timeout 15 kafka-console-consumer --bootstrap-server "$bootstrap_server" --topic "$topic" $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
               set -e
           else
+              # GetOffsetShell runs in $container (the broker, or the kerberos client): its version, not the one of
+              # connect (--connect-tag), decides the class name
+              container_tag=$(docker inspect -f '{{.Config.Image}}' "$container" 2>/dev/null | awk -F ':' '{print $NF}')
+              if [[ "$container_tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]
+              then
+                  tag="$container_tag"
+              fi
               class_name="kafka.tools.GetOffsetShell"
               if version_gt "$tag" "7.6.9"
               then
