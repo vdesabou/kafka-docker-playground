@@ -26,5 +26,8 @@
     "provider.integration.max.retries": "5",
     "provider.integration.retry.delay.millis": "2000",
     "resource.crn": "STRING",
+    "task.parallel.transform.chunk.size": "10000",
+    "task.parallel.transform.enabled": "false",
+    "task.parallel.transform.threads": "2",
     "transaction.boundary": "poll",
     "transaction.boundary.interval.ms": "",

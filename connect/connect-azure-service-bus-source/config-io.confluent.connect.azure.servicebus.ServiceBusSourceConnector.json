@@ -11,5 +11,8 @@
     "azure.servicebus.subscription": "STRING",
     "exactly.once.support": "requested",
     "kafka.topic": "",
+    "task.parallel.transform.chunk.size": "10000",
+    "task.parallel.transform.enabled": "false",
+    "task.parallel.transform.threads": "2",
     "transaction.boundary": "poll",
     "transaction.boundary.interval.ms": "",
