@@ -18,5 +18,8 @@
     "records.buffer.queue.full.timeout": "60000",
     "records.buffer.queue.max.batch.size": "4096",
     "records.buffer.queue.size": "50000",
+    "task.parallel.transform.chunk.size": "10000",
+    "task.parallel.transform.enabled": "false",
+    "task.parallel.transform.threads": "2",
     "transaction.boundary": "poll",
     "transaction.boundary.interval.ms": "",
