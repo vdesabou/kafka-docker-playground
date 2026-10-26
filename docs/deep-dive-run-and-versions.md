@@ -124,6 +124,11 @@ Gotchas:
 - `--connector-tag` and `--connector-zip` are exclusive. `--connector-jar` combines with either: it replaces the jar of
   the installed plugin whose name contains the connector version, and warns when it can't find it.
 - On macOS the run line is copied to the clipboard (`playground config clipboard false` to stop it).
+- **Each run writes a masked run log** to share it: header (re-run command, versions, host, result), the whole output
+  with passwords, api keys and tokens masked and, for a failure, the errors of the connect container. Its path is the
+  last line of the run (`📄 masked log of this run …`). `--run-log-file <file>` / `--no-run-log` for one run,
+  `playground config run-log false` / `run-log-folder <folder>` for all of them. The masking is best-effort: read the
+  file before sharing it outside Confluent. Not written in CI.
 - The examples guard unsupported versions themselves: many connector examples `exit 111` when the connector is too old
   for CP 8 (`connect_cp_version_greater_than_8` and `version_gt $CONNECTOR_TAG …` at the top of the script).
 
@@ -263,6 +268,7 @@ playground stop
 | "it only fails with SASL_SSL / mTLS / Kerberos" | `--environment sasl-ssl` / `2way-ssl` / `kerberos` on the same example |
 | "logs from the very start of the connector" | `--connect-log-level "<package>=TRACE"` (set before the example creates its connector) |
 | "the example is skipped" | `⏭ RESULT: SKIPPED`: read the top of the script, a version guard refused the combination (`exit 111`) |
+| "send engineering what I ran and what failed" | the `📄 masked log of this run` printed at the end of the run: versions, re-run command, whole output, connect errors, secrets masked |
 | "does it fail in CI too?" | `playground get-ci-result --test <folder> --logs`: tail and digest of each failing script, plus an HTML report (known causes, last lines, every record, links to the issue and the job) in `/tmp/playground-ci-result` |
 
 In a repro model, write the versions in the run line you share (`playground repro export` takes it from
@@ -287,6 +293,7 @@ playground stop                      # down -v: containers and volumes
 - `playground.ini` + `playground-run-history` record the run; `re-run`, `update-version`, `recreate`, `stop` replay it.
 - `update-version` changes containers, not the scenario: the script is not run again.
 - Exit codes: 0 success, 111 skipped, anything else failure.
+- Each run writes a masked, shareable run log (`--run-log-file`, `--no-run-log`, `playground config run-log`).
 - Sources: [`commands/run.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/run.sh),
   [`commands/re-run.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/re-run.sh),
   [`commands/update-version.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/update-version.sh),

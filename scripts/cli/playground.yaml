@@ -61,10 +61,13 @@ subcommands:
     delete the Confluent Cloud connectors\n                                     and
     topics of the last ccloud run on\n                                     stop and
     before the next run\n                                     (ask, true or false)\n
-    \ check-and-update-repo-version      warn when your clone is out of date\n  open-ccloud-connector-in-browser
-    \  open fully managed connectors, and in\n  open-grafana-in-browser            which
-    browser\n\n\U0001F393 Tip: all of them can also be changed from the '⚙️ CLI preferences'\nentry
-    of the 'playground run' menu."
+    \ check-and-update-repo-version      warn when your clone is out of date\n  run-log
+    true|false                 write a masked log of each\n                                     'playground
+    run' to share it\n  run-log-folder <dir>               where to write the run
+    logs\n  open-ccloud-connector-in-browser   open fully managed connectors, and
+    in\n  open-grafana-in-browser            which browser\n\n\U0001F393 Tip: all
+    of them can also be changed from the '⚙️ CLI preferences'\nentry of the 'playground
+    run' menu."
   usage: playground config COMMAND
   options: []
   subcommands:
@@ -113,6 +116,19 @@ subcommands:
     description: when running an example, always call playground container kill-all
       first. If set to false, it will call playground stop instead.
     usage: playground config container-kill-all-before-run [ENABLED]
+    options: []
+  - name: run-log
+    description: "\U0001F4C4 write a masked log of each 'playground run' (default
+      true)\n\nThe output of the run is also written to a text file, with the\npasswords,
+      api keys and tokens masked, to share it with a colleague or\nengineering. Its
+      path is printed at the end of the run.\n\nThe masking is best-effort: review
+      the file before sharing it outside\nConfluent."
+    usage: playground config run-log [ENABLED]
+    options: []
+  - name: run-log-folder
+    description: "\U0001F5C2️ folder of the run logs\n\nDefault is ~/.local/state/kafka-docker-playground/run-logs.\n\nThe
+      last 50 run logs of the folder are kept."
+    usage: playground config run-log-folder FOLDER
     options: []
   - name: cleanup-ccloud-resources-after-run
     description: "\U0001F9F9 delete the Confluent Cloud resources left by the last
@@ -627,11 +643,19 @@ subcommands:
     be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)\n  --cluster-schema-registry-creds
     (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one
     will be created): The Schema Registry api key and secret to use, it should be
-    separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\n❗ this command
-    will kill all containers using \"playground container kill-all\", you can disable
-    this by running \"playground config container-kill-all-before-run false\"\n\n\U0001F36A
-    Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n\U0001F3AC
-    Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B9%EF%B8%8F-run-an-example-with-the-menu-or-with-flags"
+    separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\n\U0001F4C4
+    Run log\n  The output is also written to a text file, passwords, api keys and\n
+    \ tokens masked, ready to share with a colleague or engineering: the\n  command
+    to re-run, the versions, the host, the result and, for a\n  failure, the errors
+    of the connect container. Its path is printed at\n  the end of the run. The last
+    50 are kept in\n  ~/.local/state/kafka-docker-playground/run-logs.\n\n  --run-log-file
+    \   write it to that file\n  --no-run-log      don't write it\n  playground config
+    run-log false | run-log-folder <folder>\n\n  The masking is best-effort: review
+    the file before sharing it\n  outside Confluent.\n\n❗ this command will kill all
+    containers using \"playground container kill-all\", you can disable this by running
+    \"playground config container-kill-all-before-run false\"\n\n\U0001F36A Deep dive:
+    https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n\U0001F3AC Bite
+    size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B9%EF%B8%8F-run-an-example-with-the-menu-or-with-flags"
   usage: playground run [OPTIONS]
   options:
   - names:
@@ -792,6 +816,17 @@ subcommands:
       benchmark (e.g.\nBENCHMARK_ARGS=\"--mode steady --duration 5m\"), and BENCHMARK_LOAD_SCRIPT\nselects
       another load script than benchmark-load.bash. If the benchmark\nfails, the command
       exits with its exit code."
+  - names:
+    - "--run-log-file"
+    argument: FILE
+    description: "\U0001F4C4 Write the masked log of this run to this file, instead
+      of the run log folder\n\nSame file as the one written by default (see 'playground
+      config run-log'), at this path.\n\nConflicts with: --no-run-log"
+  - names:
+    - "--no-run-log"
+    argument: ''
+    description: "\U0001F648 Don't write the masked log of this run (see 'playground
+      config run-log')\n\nConflicts with: --run-log-file"
   - names:
     - "--connect-community-image"
     argument: ''

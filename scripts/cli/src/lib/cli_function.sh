@@ -3847,6 +3847,8 @@ function interactive_config_menu () {
     "container-kill-all-before-run|🔪|Kill all containers before each run|false"
     "cleanup-ccloud-resources-after-run|🧹|Delete ccloud resources left by the last run|ask"
     "check-and-update-repo-version|🔄|Check that the repo is up to date|true"
+    "run-log|📄|Write a masked log of each run, to share it|true"
+    "run-log-folder|🗂️|Folder of the run logs|$(run_log_default_folder)"
     "open-ccloud-connector-in-browser.automatically|☁️|Open fully managed connectors in browser|true"
     "open-ccloud-connector-in-browser.browser|🧭|Browser for fully managed connectors|default browser"
     "open-grafana-in-browser.automatically|📊|Open Grafana in browser|true"
@@ -3901,6 +3903,9 @@ function interactive_config_menu () {
         ;;
       *.browser)
         new_value=$(printf '%s\n' "default browser" "Safari" "Google Chrome" "Firefox" "Microsoft Edge" "Arc" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🧭" --header="select the browser, or type one and use <option+enter>" --color="$fzf_colors" $fzf_option_pointer --bind "alt-enter:print-query")
+        ;;
+      run-log-folder)
+        new_value=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🗂️" --header="enter the folder of the run logs" --color="$fzf_colors" $fzf_option_empty_pointer --print-query --query "${value:-$(run_log_default_folder)}")
         ;;
       cleanup-ccloud-resources-after-run)
         new_value=$(printf '%s\n' ask true false | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🧹" --header="ask: list and confirm, true: delete without asking, false: never delete" --color="$fzf_colors" $fzf_option_pointer)
@@ -5263,12 +5268,13 @@ function summarize_log_errors() {
 }
 
 # Prints where an HTML report was saved, and opens it in the browser when the command runs in an interactive terminal
+# (PLAYGROUND_RUN_LOG_TERMINAL: still a terminal behind the run log of 'playground run', see run_log_start)
 # $1: report, $2: non-empty to never open it (--no-open)
 function open_html_report() {
     local report="$1"
     local no_open="$2"
     log "✅ HTML report saved: $report"
-    if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ] && [[ -z "$no_open" ]] && { command -v open > /dev/null 2>&1 || command -v xdg-open > /dev/null 2>&1; }
+    if { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ] && [[ -z "$no_open" ]] && { command -v open > /dev/null 2>&1 || command -v xdg-open > /dev/null 2>&1; }
     then
         log "🌐 Opening $report in browser..."
         if command -v open > /dev/null 2>&1
@@ -6579,4 +6585,272 @@ function redact_connector_secrets() {
     s/((["\x27])[^"\x27]*(?:password|secret|token|credentials|access\.key\.id|api\.key|apikey|sasl\.jaas\.config)[^"\x27]*\2\s*:\s*)(["\x27])(?:\\.|(?!\3).)*\3/$1$3********$3/gi;
     for my $v (@values) { s/\Q$v\E/********/g; }
   '
+}
+
+################################################################################
+# 📄 run log: a masked copy of the output of 'playground run', to share with a colleague or engineering
+################################################################################
+
+function run_log_default_folder () {
+  echo "${XDG_STATE_HOME:-$HOME/.local/state}/kafka-docker-playground/run-logs"
+}
+
+# values to mask in a run log, one per line: the secret-looking variables exported for the example (loaded from
+# 'playground secrets' by load_secrets_for_example), the secret-looking values of playground.ini (ccloud api keys),
+# the values kept in clear in the secrets store (file backend: no keychain or 1Password prompt at the end of a run)
+# and ~/.aws/credentials, which the aws examples read themselves.
+# Doesn't depend on IFS: 'playground run' sets it to a space
+function run_log_secret_values () {
+  local name value profile_or_key
+  while read -r name
+  do
+    # PWD / OLDPWD match *PWD* but hold the current folder
+    if [[ "$name" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] && [ "$name" != "PWD" ] && [ "$name" != "OLDPWD" ] && is_secret_env_var_name "$name"
+    then
+      printf '%s\n' "${!name}"
+    fi
+  done < <(compgen -e)
+  if [ -f "$root_folder/playground.ini" ]
+  then
+    secret_store_dump "$root_folder/playground.ini" | while IFS=$'\t' read -r profile_or_key name value
+    do
+      if is_secret_env_var_name "${name^^}"
+      then
+        printf '%s\n' "$value"
+      fi
+    done
+  fi
+  secret_store_dump "$(get_secrets_file)" 2> /dev/null | while IFS=$'\t' read -r profile_or_key name value
+  do
+    if [ "$(secret_reference_backend "$value")" == "file" ]
+    then
+      printf '%s\n' "$value"
+    fi
+  done
+  local aws_credentials_file="${AWS_SHARED_CREDENTIALS_FILE:-$HOME/.aws/credentials}"
+  if [ -f "$aws_credentials_file" ]
+  then
+    awk '/^[ \t]*aws_(access_key_id|secret_access_key|session_token)[ \t]*=/ { v=substr($0, index($0, "=")+1); gsub(/^[ \t]+|[ \t]+$/, "", v); print v }' "$aws_credentials_file"
+  fi
+}
+
+# filter (stdin to stdout) turning a raw terminal capture into a shareable text: terminal control sequences and
+# carriage returns removed, then secrets masked:
+#   - each value of the file $1 (one per line, see run_log_secret_values), and each part of a key:secret value
+#   - the value of secret-looking keys: "password": "x" (json, python dict), password=x (properties, jdbc urls,
+#     jaas), password: x (yaml), except ${...} config provider references
+#   - well-known shapes: private key blocks, AWS access key ids, JWTs, Bearer / Basic tokens, user:password@ in urls,
+#     GitHub, Slack and Google api keys
+# the number of masked strings is printed on stderr
+function run_log_mask () {
+  RUN_LOG_VALUES_FILE="${1:-}" perl -e '
+    my %skip = map { $_ => 1 } qw(confluent password passwd changeit changeme secret admin true false null none playground localhost default);
+    my (%seen, @values);
+    if ($ENV{RUN_LOG_VALUES_FILE} ne "" && open(my $f, "<", $ENV{RUN_LOG_VALUES_FILE})) {
+      while (my $v = <$f>) {
+        chomp $v;
+        $v =~ s/\r//g;
+        for my $c ($v, split(/:/, $v)) {
+          $c =~ s/^\s+|\s+$//g;
+          next if length($c) < 6 || $skip{lc $c} || $c =~ /^[0-9]+$/ || $seen{$c}++;
+          push @values, $c;
+        }
+      }
+      close $f;
+    }
+    @values = sort { length($b) <=> length($a) } @values;
+    my $secret_key = qr/[\w.\-]*(?:password|passwd|secret|token|credentials?|apikey|api[_.\-]key|access[_.\-]key|session[_.\-]key|private[_.\-]key|sasl\.jaas\.config)[\w.\-]*/i;
+    my ($n, $in_key) = (0, 0);
+    # value of a secret-looking key: kept when it is not a secret (config provider reference, already masked, enum such
+    # as USER_INFO, boolean, number), masked otherwise
+    sub mask_value {
+      my $v = shift;
+      (my $u = $v) =~ s/^["\x27]|["\x27]$//g;
+      return $v if $u eq "" || $u =~ /^\$\{/ || $u =~ /^\*+$/ || $u =~ /^[A-Z_]+$/ || $u =~ /^(?:true|false|null|none)$/i || $u =~ /^[0-9]+$/;
+      $n++;
+      return $v =~ /^(["\x27])/ ? "$1********$1" : "********";
+    }
+    while (my $line = <STDIN>) {
+      $line =~ s/\e\][^\a\e]*(?:\a|\e\\)//g;
+      $line =~ s/\e\[[0-9;?]*[ -\/]*[@-~]//g;
+      $line =~ s/\e[()][0-9A-Za-z]//g;
+      $line =~ s/\e[=>78]//g;
+      $line =~ s/\r+\n/\n/g;
+      # a progress line redrawn in place: keep what was shown last
+      $line =~ s/^.*\r//;
+      $line =~ s/[\x00-\x08\x0b-\x1f\x7f]//g;
+      if ($in_key) {
+        if ($line =~ /-----END [A-Z ]*PRIVATE KEY-----/) { $in_key = 0; print $line; }
+        next;
+      }
+      $n += ($line =~ s/(-----BEGIN [A-Z ]*PRIVATE KEY-----).*?(-----END [A-Z ]*PRIVATE KEY-----)/$1********$2/g);
+      if ($line =~ /-----BEGIN [A-Z ]*PRIVATE KEY-----/ && $line !~ /-----END [A-Z ]*PRIVATE KEY-----/) {
+        print $line, "********\n";
+        $in_key = 1;
+        $n++;
+        next;
+      }
+      for my $v (@values) { $n += ($line =~ s/\Q$v\E/********/g); }
+      $line =~ s/((["\x27])$secret_key\2\s*:\s*)(["\x27])((?:\\.|(?!\3).)*)\3/$1 . $3 . mask_value($4) . $3/ge;
+      $line =~ s/(?<![\w.\-])($secret_key\s*=\s*)("(?:\\.|[^"\\])*"|\x27[^\x27]*\x27|[^\s,;&"\x27)\]]+)/$1 . mask_value($2)/ge;
+      $line =~ s/^(\s*(?:-\s+)?$secret_key:\s+)(\S.*)$/$1 . mask_value($2)/e;
+      $n += ($line =~ s/\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/********/g);
+      $n += ($line =~ s/\beyJ[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}/********/g);
+      $n += ($line =~ s/\b(Bearer|Basic)\s+(?!\*{8})[A-Za-z0-9\-._~+\/]{8,}=*/$1 ********/g);
+      $n += ($line =~ s/\b([a-z][a-z0-9+.\-]*:\/\/[^\s\/:@\x27"]+:)(?!\*{8}@)[^\s@\/\x27"]+@/$1********@/gi);
+      $n += ($line =~ s/\b(?:gh[pousr]_[A-Za-z0-9]{30,}|xox[abprs]-[A-Za-z0-9\-]{10,}|AIza[0-9A-Za-z_\-]{35})/********/g);
+      print $line;
+    }
+    print STDERR "$n\n";
+  '
+}
+
+# 📄 start the run log of 'playground run': from now on, everything this shell prints (the example included) also goes
+# to a raw capture in a private folder, masked into the run log by run_log_finish. The example itself is run with
+# run_log_exec, so that it still writes to a terminal.
+# globals read: test_file, run_log_file_flag, no_run_log_flag
+function run_log_start () {
+  run_log_raw=""
+  run_log_finished=""
+  if [ -n "$GITHUB_RUN_NUMBER" ] || [ -n "$no_run_log_flag" ] || [ -n "${PLAYGROUND_RUN_LOG_ACTIVE:-}" ]
+  then
+    return 0
+  fi
+  if [ -z "$run_log_file_flag" ] && [ "$(playground config get run-log)" == "false" ]
+  then
+    return 0
+  fi
+  if [ -n "$run_log_file_flag" ]
+  then
+    run_log_file="$run_log_file_flag"
+  else
+    local folder
+    folder=$(playground config get run-log-folder)
+    folder="${folder:-$(run_log_default_folder)}"
+    run_log_file="${folder/#\~/$HOME}/$(basename "$test_file" .sh)-$(date +%Y%m%d-%H%M%S).log"
+  fi
+  if ! mkdir -p "$(dirname "$run_log_file")" 2> /dev/null
+  then
+    logwarn "⚠️ cannot create the folder of the run log $run_log_file, this run is not logged"
+    return 0
+  fi
+  run_log_tmp_dir=$(mktemp -d)
+  chmod 0700 "$run_log_tmp_dir"
+  run_log_raw="$run_log_tmp_dir/raw.log"
+  : > "$run_log_raw"
+  run_log_started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  run_log_started_seconds=$(date +%s)
+  # the shell is behind a pipe from now on: let the commands of the run know they still print to a terminal (HTML
+  # reports opened in the browser), and don't start a second run log in a nested 'playground run'
+  if [ -t 1 ]
+  then
+    export PLAYGROUND_RUN_LOG_TERMINAL=1
+  fi
+  export PLAYGROUND_RUN_LOG_ACTIVE=1
+  exec 8>&1 9>&2
+  # tee ignores ctrl-c, so that the end of the run (cleanup trap) is still printed and logged
+  exec > >(trap '' INT; exec tee -a "$run_log_raw") 2>&1
+  run_log_tee_pid=$!
+}
+
+# run a command (the example) with the run log on: under script(1) when stdin is a terminal, so that the command
+# keeps writing to a terminal (colors, prompts, docker run -it) while its output goes through the run log
+function run_log_exec () {
+  if [ -n "$run_log_raw" ] && [ -t 0 ] && command -v script > /dev/null 2>&1
+  then
+    local command_line
+    command_line=$(printf '%q ' "$@")
+    if [[ "$OSTYPE" == "darwin"* ]]
+    then
+      script -q /dev/null "$@"
+    else
+      script -q -e -c "$command_line" /dev/null
+    fi
+  else
+    "$@"
+  fi
+}
+
+# 📄 end of the run log: back to the terminal, then the header, the masked capture and, for a failure, the error digest
+# of the connect container go to the run log file (0600), and its path is printed. Does nothing if run_log_start did not
+# start one, and only runs once.
+# $1: exit code of the run
+# globals read: test_file, flag_list, environment, tag, connector_tag, connector_zip, connector_jar, cluster_creds,
+# cluster_schema_registry_creds
+function run_log_finish () {
+  local exit_code="${1:-0}"
+  if [ -z "$run_log_raw" ] || [ -n "$run_log_finished" ]
+  then
+    return 0
+  fi
+  run_log_finished=1
+  exec 1>&8 2>&9 8>&- 9>&-
+  # an example that left a background job behind keeps the pipe open: don't wait for it
+  local i
+  for ((i = 0; i < 20; i++))
+  do
+    kill -0 "$run_log_tee_pid" 2> /dev/null || break
+    sleep 0.1
+  done
+  unset PLAYGROUND_RUN_LOG_TERMINAL PLAYGROUND_RUN_LOG_ACTIVE
+
+  local result="FAILURE"
+  if [ "$exit_code" == "0" ]
+  then
+    result="SUCCESS"
+  elif [ "$exit_code" == "111" ]
+  then
+    result="SKIPPED"
+  fi
+  local duration=$(( $(date +%s) - run_log_started_seconds ))
+  local default_tag
+  default_tag=$(grep "# default tag" "$root_folder/scripts/utils.sh" | head -1 | sed -e 's/.*TAG=\([^ ]*\).*/\1/')
+  local connector="${connector_tag:-${connector_zip:-${connector_jar:-default}}}"
+  local commit dirty=""
+  commit=$(git -C "$root_folder" rev-parse --short HEAD 2> /dev/null)
+  if [ -n "$(git -C "$root_folder" status --porcelain -uno 2> /dev/null)" ]
+  then
+    dirty=" (with local changes)"
+  fi
+  local engine engine_version
+  engine=$(get_container_engine 2> /dev/null)
+  engine_version=$(docker version --format '{{.Server.Version}}' 2> /dev/null)
+
+  {
+    echo "# 📄 playground run log"
+    echo "command:      playground run -f ${test_file#$(cd "$root_folder" && pwd)/} $flag_list"
+    echo "environment:  ${environment:-${PLAYGROUND_ENVIRONMENT:-plaintext}}"
+    echo "CP version:   ${tag:-$default_tag}"
+    echo "connector:    $connector"
+    echo "playground:   ${commit:-unknown}$dirty"
+    echo "host:         $(uname -sr), $engine ${engine_version:-unknown}"
+    echo "started:      $run_log_started_at, duration $((duration / 60))min $((duration % 60))sec"
+    echo "result:       $result (exit code $exit_code)"
+    echo "masking:      secrets are masked with ********, best-effort: review this file before sharing it outside Confluent"
+    echo ""
+    cat "$run_log_raw"
+    if [ "$result" == "FAILURE" ] && is_container_running connect
+    then
+      echo ""
+      echo "# 🔥 errors of the connect container (playground container logs -c connect --errors)"
+      playground --output-level ERROR container logs -c connect --errors 2>&1
+    fi
+  } > "$run_log_tmp_dir/full.log"
+
+  { run_log_secret_values; printf '%s\n' "$cluster_creds" "$cluster_schema_registry_creds"; } > "$run_log_tmp_dir/values" 2> /dev/null
+  local masked
+  (umask 077 && run_log_mask "$run_log_tmp_dir/values" < "$run_log_tmp_dir/full.log" > "$run_log_file" 2> "$run_log_tmp_dir/count")
+  masked=$(tail -1 "$run_log_tmp_dir/count" 2> /dev/null)
+  chmod 0600 "$run_log_file" 2> /dev/null
+  rm -rf "$run_log_tmp_dir"
+
+  # keep the last 50 run logs of the default folder
+  if [ -z "$run_log_file_flag" ]
+  then
+    ls -1t "$(dirname "$run_log_file")"/*.log 2> /dev/null | tail -n +51 | while read -r old
+    do
+      rm -f "$old"
+    done
+  fi
+  log "📄 masked log of this run (${masked:-0} secrets masked), to share with a colleague or engineering: $run_log_file"
 }

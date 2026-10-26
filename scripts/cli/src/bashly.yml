@@ -486,6 +486,9 @@ commands:
                                          stop and before the next run
                                          (ask, true or false)
       check-and-update-repo-version      warn when your clone is out of date
+      run-log true|false                 write a masked log of each
+                                         'playground run' to share it
+      run-log-folder <dir>               where to write the run logs
       open-ccloud-connector-in-browser   open fully managed connectors, and in
       open-grafana-in-browser            which browser
 
@@ -614,6 +617,39 @@ commands:
     examples:
     - playground config container-kill-all-before-run false
     - playground config container-kill-all-before-run true
+
+  - name: run-log
+    help: |-
+      📄 write a masked log of each 'playground run' (default true)
+
+      The output of the run is also written to a text file, with the
+      passwords, api keys and tokens masked, to share it with a colleague or
+      engineering. Its path is printed at the end of the run.
+
+      The masking is best-effort: review the file before sharing it outside
+      Confluent.
+    args:
+    - name: enabled
+      required: false
+      default: "true"
+      allowed: ["true", "false"]
+    examples:
+    - playground config run-log false
+    - playground config run-log true
+
+  - name: run-log-folder
+    help: |-
+      🗂️ folder of the run logs
+
+      Default is ~/.local/state/kafka-docker-playground/run-logs.
+
+      The last 50 run logs of the folder are kept.
+    args:
+    - name: folder
+      required: true
+      help: folder
+    examples:
+    - playground config run-log-folder ~/Documents/playground-run-logs
 
   - name: cleanup-ccloud-resources-after-run
     help: |-
@@ -1532,6 +1568,21 @@ commands:
       --cluster-creds (or CLUSTER_CREDS environment variable): The Kafka api key and secret to use, it should be separated with colon (example: <API_KEY>:<API_KEY_SECRET>)
       --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable) (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)
 
+    📄 Run log
+      The output is also written to a text file, passwords, api keys and
+      tokens masked, ready to share with a colleague or engineering: the
+      command to re-run, the versions, the host, the result and, for a
+      failure, the errors of the connect container. Its path is printed at
+      the end of the run. The last 50 are kept in
+      ~/.local/state/kafka-docker-playground/run-logs.
+
+      --run-log-file    write it to that file
+      --no-run-log      don't write it
+      playground config run-log false | run-log-folder <folder>
+
+      The masking is best-effort: review the file before sharing it
+      outside Confluent.
+
     ❗ this command will kill all containers using "playground container kill-all", you can disable this by running "playground config container-kill-all-before-run false"
 
     🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions
@@ -1823,6 +1874,21 @@ commands:
       BENCHMARK_ARGS="--mode steady --duration 5m"), and BENCHMARK_LOAD_SCRIPT
       selects another load script than benchmark-load.bash. If the benchmark
       fails, the command exits with its exit code.
+
+  - long: --run-log-file
+    required: false
+    arg: file
+    conflicts: [--no-run-log]
+    help: |-
+      📄 Write the masked log of this run to this file, instead of the run log folder
+
+      Same file as the one written by default (see 'playground config run-log'), at this path.
+
+  - long: --no-run-log
+    required: false
+    conflicts: [--run-log-file]
+    help: |-
+      🙈 Don't write the masked log of this run (see 'playground config run-log')
 
   - &connect-community-image
     long: --connect-community-image

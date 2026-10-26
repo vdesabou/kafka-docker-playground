@@ -234,7 +234,7 @@ then
     if python3 -I "$root_folder/tools/benchmark-report/benchmark_report.py" --runs $(cat "$sequence_results") --group-by shape --output "$html_file" > /dev/null
     then
         log "📊 report: $html_file"
-        if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ]
+        if { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ]
         then
             if command -v open > /dev/null 2>&1
             then
@@ -378,7 +378,7 @@ then
     if python3 -I "$root_folder/tools/benchmark-report/benchmark_report.py" --runs $(cat "$matrix_results") --output "$html_file" > /dev/null
     then
         log "📊 report: $html_file"
-        if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ]
+        if { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ]
         then
             if command -v open > /dev/null 2>&1
             then
@@ -1660,7 +1660,7 @@ if python3 -I "$root_folder/tools/benchmark-report/benchmark_report.py" "${repor
 then
     log "📊 report: $html_file"
     # only open a browser in an interactive terminal, never in CI nor for the runs of a --connector-tag comparison
-    if [[ -t 1 ]] && [ -z "$GITHUB_RUN_NUMBER" ] && [ -z "$BENCHMARK_NO_OPEN" ]
+    if { [[ -t 1 ]] || [ -n "${PLAYGROUND_RUN_LOG_TERMINAL:-}" ]; } && [ -z "$GITHUB_RUN_NUMBER" ] && [ -z "$BENCHMARK_NO_OPEN" ]
     then
         if command -v open > /dev/null 2>&1
         then
