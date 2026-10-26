@@ -1392,7 +1392,10 @@ then
             logwarn "CONNECTOR_TAG (--connector-tag option) was not set for element $i, setting it to latest"
             CONNECTOR_VERSION="latest"
           fi
-          export CP_CONNECT_TAG="$TAG"
+          if [ -z "$CP_CONNECT_TAG" ]
+          then
+            export CP_CONNECT_TAG="$TAG"
+          fi
 
           if [ "$first_loop" = true ]
           then
