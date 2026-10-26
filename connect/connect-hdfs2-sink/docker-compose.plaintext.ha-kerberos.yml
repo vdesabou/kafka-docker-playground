@@ -21,12 +21,16 @@ services:
       - ../../connect/connect-hdfs2-sink/ha-kerberos/config
     environment:
         ENSURE_NAMENODE_DIR: "/tmp/hadoop-hadoop/dfs/name"
+        # the namenode is formatted only once (never retried): wait for the journal nodes, slow to install on podman
+        WAITFOR: "journal1.kerberos-demo.local:8485 journal2.kerberos-demo.local:8485 journal3.kerberos-demo.local:8485"
+        WAITFOR_TIMEOUT: 300
         SLEEP_SECONDS: 20
         # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug -Dsun.security.krb5.disableReferrals=true -Djdk.security.allowNonCaAnchor=true"
     command: ["hdfs", "namenode"]
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
         - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/waitfor.sh:/opt/launcher/plugins/006_waitfor/waitfor.sh
         - ../../connect/connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
 
   namenode2:
@@ -40,12 +44,16 @@ services:
     environment:
         ENSURE_STANDBY_NAMENODE_DIR: "/tmp/hadoop-hadoop/dfs/name"
         #ENSURE_NAMENODE_CLUSTERID: "sh"
-        SLEEP_SECONDS: 50
+        # the standby is bootstrapped only once (never retried): wait for namenode1
+        WAITFOR: "namenode1.kerberos-demo.local:9820"
+        WAITFOR_TIMEOUT: 300
+        SLEEP_SECONDS: 10
         # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug -Dsun.security.krb5.disableReferrals=true -Djdk.security.allowNonCaAnchor=true"
     command: ["hdfs", "namenode"]
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
         - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/waitfor.sh:/opt/launcher/plugins/006_waitfor/waitfor.sh
         - ../../connect/connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
 
   journal1:

@@ -29,4 +29,6 @@ playground run -f hdfs2-sink.sh
 4. Lists `/topics/hdfs-topic/partition=0` in HDFS and displays one Avro file with `playground tools read-avro-file`.
 5. Basic example: queries table `hdfs_topic` with `beeline` and checks `value1` is present.
 
-The Kerberos variant first makes `namenode1` the active namenode, creates a `connect` principal and keytab in the KDC and configures `hdfs.authentication.kerberos`, `connect.hdfs.principal`, `connect.hdfs.keytab` and `hdfs.namenode.principal`.
+The Kerberos variant first makes `namenode1` the active namenode (retried for up to 5 minutes, until both namenodes answer), creates a `connect` principal and keytab in the KDC and configures `hdfs.authentication.kerberos`, `connect.hdfs.principal`, `connect.hdfs.keytab` and `hdfs.namenode.principal`.
+
+The namenodes are formatted (`namenode1`) and bootstrapped (`namenode2`) only once, at container start: `ha-kerberos/waitfor.sh` replaces the `006_waitfor` launcher plugin of the `flokkr/hadoop` image so that `namenode1` waits for the 3 journal nodes (port `8485`) and `namenode2` waits for `namenode1` (port `9820`) first (`WAITFOR`, `WAITFOR_TIMEOUT` in `docker-compose.plaintext.ha-kerberos.yml`).
