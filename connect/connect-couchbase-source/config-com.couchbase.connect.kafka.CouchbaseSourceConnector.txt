@@ -29,6 +29,36 @@ If 'transaction.boundary' is set to 'interval', determines the interval for prod
 	 - Required: false
 
 ==========================
+null
+==========================
+🔘 task.parallel.transform.enabled
+
+If true, transform and convert operations for this source task run on a per-task thread pool instead of on the task thread. Producer.send() remains sequential to preserve ordering. REQUIREMENT: every SMT and converter configured on the task must be thread-safe — they will be invoked concurrently from multiple worker threads on disjoint records. Leave disabled for connectors whose transforms or converters hold mutable per-instance state without synchronization. Disabled by default.
+
+	 - Type: BOOLEAN
+	 - Default: false
+	 - Importance: LOW
+	 - Required: false
+
+🔘 task.parallel.transform.threads
+
+Number of threads in the per-task pool used when task.parallel.transform.enabled is true. Bounded to [1, 3] to prevent any single task from monopolizing CPU.
+
+	 - Type: INT
+	 - Default: 2
+	 - Importance: LOW
+	 - Required: false
+
+🔘 task.parallel.transform.chunk.size
+
+Number of records processed per parallel chunk when task.parallel.transform.enabled is true. Caps in-flight memory: peak extra heap per chunk ≈ chunkSize × 2 × avg_record_size. Tune down for connectors shipping records larger than 20 KB. Bounded to [100, 50000].
+
+	 - Type: INT
+	 - Default: 10000
+	 - Importance: LOW
+	 - Required: false
+
+==========================
 Connection
 ==========================
 🔘 couchbase.password
@@ -36,6 +66,15 @@ Connection
 Password of the Couchbase user.
 
 	 - Type: PASSWORD
+	 - Default: null
+	 - Importance: HIGH
+	 - Required: true
+
+🔘 couchbase.username
+
+Name of the Couchbase user to authenticate as.
+
+	 - Type: STRING
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: true
@@ -49,14 +88,14 @@ This property is required unless using the experimental AnalyticsSinkHandler.
 	 - Importance: Name of the Couchbase bucket to use.
 	 - Required: HIGH
 
-🔘 couchbase.username
+🔘 couchbase.bootstrap.timeout
 
-Name of the Couchbase user to authenticate as.
+On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
 
 	 - Type: STRING
-	 - Default: null
-	 - Importance: HIGH
-	 - Required: true
+	 - Default: 30s
+	 - Importance: MEDIUM
+	 - Required: false
 
 🔘 couchbase.seed.nodes
 
@@ -73,15 +112,6 @@ The network selection strategy for connecting to a Couchbase Server cluster that
 
 	 - Type: STRING
 	 - Default: auto
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.bootstrap.timeout
-
-On startup, the connector will wait this long for a Couchbase connection to be established. If a connection is not established before the timeout expires, the connector will terminate.
-
-	 - Type: STRING
-	 - Default: 30s
 	 - Importance: MEDIUM
 	 - Required: false
 
@@ -202,6 +232,15 @@ If you specify neither "couchbase.scope" nor "couchbase.collections", the connec
 	 - Importance: If you wish to stream from all collections within a scope, specify the scope name here.
 	 - Required: MEDIUM
 
+🔘 couchbase.collections
+
+If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket.
+
+	 - Type: false
+	 - Default: LIST
+	 - Importance: If you wish to stream from specific collections, specify the qualified collection names here, separated by commas. A qualified name is the name of the scope followed by a dot (.) and then the name of the collection. For example: "tenant-foo.invoices".
+	 - Required: MEDIUM
+
 🔘 couchbase.collection.to.topic
 
 Collection and Topic are joined by an equals sign. Map entries are delimited by commas.
@@ -319,18 +358,18 @@ Name of the Kafka topic to publish data to.
 	 - Importance: Comma-delimited list of Couchbase metadata headers to add to records. Recognized values:
 	 - Required: MEDIUM
 
-🔘 couchbase.collections
-
-If you specify neither "couchbase.scope" nor "couchbase.collections", the connector will stream from all collections of all scopes in the bucket.
-
-	 - Type: false
-	 - Default: LIST
-	 - Importance: If you wish to stream from specific collections, specify the qualified collection names here, separated by commas. A qualified name is the name of the scope followed by a dot (.) and then the name of the collection. For example: "tenant-foo.invoices".
-	 - Required: MEDIUM
-
 ==========================
 Schema
 ==========================
+🔘 couchbase.dlq.topic
+
+This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in `com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler` supports this property.
+
+	 - Type: STRING
+	 - Default: couchbase.dlq
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.schema.failure.action
 
 Determines the behaviour when a Schema Mismatch or Missing Schema is encountered for a document using the Schema Registry. This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in `com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler` supports this property.
@@ -349,18 +388,18 @@ This property will be ignored unless the source handler specified by `couchbase.
 	 - Importance: The schema to apply to the value of each record.
 	 - Required: MEDIUM
 
-🔘 couchbase.dlq.topic
-
-This property will be ignored unless the source handler specified by `couchbase.source.handler` supports it. The built-in `com.couchbase.connect.kafka.handler.source.SchemaRegistrySourceHandler` supports this property.
-
-	 - Type: STRING
-	 - Default: couchbase.dlq
-	 - Importance: MEDIUM
-	 - Required: false
-
 ==========================
 Database Change Protocol
 ==========================
+🔘 couchbase.compression
+
+To reduce bandwidth usage, Couchbase Server 5.5 and later can send documents to the connector in compressed form. (Messages are always published to the Kafka topic in uncompressed form, regardless of this setting.)
+
+	 - Type: STRING
+	 - Default: ENABLED
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 couchbase.persistence.polling.interval
 
 When a Couchbase Server node fails over, documents on the failing node that haven't been fully replicated may be "rolled back" to a previous state. To ensure consistency between Couchbase and the Kafka topic, the connector can defer publishing a document to Kafka until it has been saved to disk on all replicas.
@@ -403,15 +442,6 @@ When DCP trace is enabled, set this property to limit the trace to only document
 
 	 - Type: STRING
 	 - Default: .*
-	 - Importance: MEDIUM
-	 - Required: false
-
-🔘 couchbase.compression
-
-To reduce bandwidth usage, Couchbase Server 5.5 and later can send documents to the connector in compressed form. (Messages are always published to the Kafka topic in uncompressed form, regardless of this setting.)
-
-	 - Type: STRING
-	 - Default: ENABLED
 	 - Importance: MEDIUM
 	 - Required: false
 

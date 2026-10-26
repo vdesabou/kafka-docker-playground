@@ -40,5 +40,8 @@
     "couchbase.value.schema": "STRING",
     "couchbase.xattrs": "false",
     "exactly.once.support": "requested",
+    "task.parallel.transform.chunk.size": "10000",
+    "task.parallel.transform.enabled": "false",
+    "task.parallel.transform.threads": "2",
     "transaction.boundary": "poll",
     "transaction.boundary.interval.ms": "",

@@ -15,7 +15,7 @@ Class for the 'createKey' transformation.
 Version of the 'createKey' transformation.
 
 	 - Type: STRING
-	 - Default: 8.3.2-ce
+	 - Default: 8.4.0-ce
 	 - Importance: HIGH
 	 - Required: false
 
@@ -27,6 +27,15 @@ Field names on the record value to extract as the record key.
 	 - Default: null
 	 - Importance: HIGH
 	 - Required: true
+
+🔘 transforms.createKey.field.syntax.version
+
+Defines the version of the syntax to access fields. If set to <code>V1</code>, then the field paths are limited to access the elements at the root level of the struct or map. If set to <code>V2</code>, the syntax will support accessing nested elements. To access nested elements, dotted notation is used. If dots are already included in the field name, then backtick pairs can be used to wrap field names containing dots. E.g. to access the subfield <code>baz</code> from a field named "foo.bar" in a struct/map the following format can be used to access its elements: "<code>foo.bar</code>.baz".
+
+	 - Type: STRING
+	 - Default: V1
+	 - Importance: HIGH
+	 - Required: false
 
 🔘 transforms.createKey.negate
 
