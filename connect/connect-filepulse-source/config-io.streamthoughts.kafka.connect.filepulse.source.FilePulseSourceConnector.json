@@ -4,6 +4,7 @@
     "filters": "LIST",
     "fs.cleanup.policy.class": "",
     "fs.cleanup.policy.triggered.on": "COMPLETED",
+    "fs.completion.strategy.class": "io.streamthoughts.kafka.connect.filepulse.source.EofCompletionStrategy",
     "fs.listing.class": "",
     "fs.listing.filters": "LIST",
     "fs.listing.interval.ms": "10000",

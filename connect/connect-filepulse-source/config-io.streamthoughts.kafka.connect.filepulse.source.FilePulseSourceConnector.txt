@@ -124,6 +124,15 @@ Specify if leading underscores should be kept when generating schema record name
 ==========================
 null
 ==========================
+🔘 fs.completion.strategy.class
+
+The FileCompletionStrategy class to determine when files should be marked as COMPLETED. Default is EofCompletionStrategy (completes when fully read). Use DailyCompletionStrategy for time-based completion (e.g., daily files).
+
+	 - Type: CLASS
+	 - Default: io.streamthoughts.kafka.connect.filepulse.source.EofCompletionStrategy
+	 - Importance: MEDIUM
+	 - Required: false
+
 🔘 fs.listing.interval.ms
 
 The time interval, in milliseconds, in which the connector invokes the scan of the filesystem.
