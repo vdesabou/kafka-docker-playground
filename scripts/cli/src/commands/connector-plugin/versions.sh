@@ -1,6 +1,7 @@
 connector_plugin="${args[--connector-plugin]}"
 last="${args[--last]}"
 force_refresh="${args[--force-refresh]}"
+with_changelog="${args[--with-changelog]}"
 
 if [[ $connector_plugin == *"@"* ]]
 then
@@ -128,7 +129,36 @@ fi
 if [[ -n "$last" ]]
 then
     last=$((last + 1))
-    tail -${last} $filename
+    versions_output=$(tail -${last} $filename)
 else
-    cat $filename
+    versions_output=$(cat $filename)
 fi
+
+if [[ -z "$with_changelog" ]]
+then
+    echo "$versions_output"
+    exit 0
+fi
+
+# release notes under each version, from the docs.confluent.io changelog feeds (see connector-plugin changelog)
+first_version=$(echo "$versions_output" | grep "🔢 v" | head -1 | sed -E 's/^🔢 v([^ ]+) .*/\1/')
+changelog_json=$(mktemp -t pg-XXXXXXXXXX)
+trap 'rm -f $changelog_json' EXIT
+changelog_args=(--connector-plugin "$owner/$name" --from "$first_version" --include-from)
+[[ -n "$force_refresh" ]] && changelog_args+=(--force-refresh)
+if ! command -v python3 > /dev/null 2>&1 || ! python3 -I "$root_folder/tools/connector-changelog/changelog.py" "${changelog_args[@]}" > $changelog_json 2> /dev/null || [ "$(jq '.feeds | length' $changelog_json)" == "0" ]
+then
+    logwarn "📜 no changelog feed for connector plugin $owner/$name, release notes are not shown"
+    echo "$versions_output"
+    exit 0
+fi
+while IFS= read -r line
+do
+    echo "$line"
+    if [[ "$line" == "🔢 v"* ]]
+    then
+        version=$(echo "$line" | sed -E 's/^🔢 v([^ ]+) .*/\1/')
+        jq -r --arg v "$version" '.versions[] | select(.version == $v) | .changes[] | "   • \(.)"' $changelog_json
+    fi
+done <<< "$versions_output"
+jq -r '.feeds[] | "📜 changelog: \(sub("\\.xml$"; ".html"))"' $changelog_json

@@ -2064,7 +2064,14 @@ function choose_connector_tag() {
     fzf_option_rounded=""
   fi
 
-  cat $filename | grep -v "documentation"| sed '1!G;h;$!d' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔢" --header="select connector version for $owner/$name" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer
+  # release notes of the selected version, from the docs.confluent.io changelog feeds (Confluent plugins only)
+  fzf_option_preview=()
+  if [ "$owner" == "confluentinc" ] && command -v python3 > /dev/null 2>&1
+  then
+    fzf_option_preview=(--preview "python3 -I '$root_folder/tools/connector-changelog/changelog.py' --connector-plugin '$owner/$name' --version {2} --format text 2>&1")
+  fi
+
+  cat $filename | grep -v "documentation"| sed '1!G;h;$!d' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔢" --header="select connector version for $owner/$name" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer "${fzf_option_preview[@]}"
 }
 
 function filter_not_mdc_environment() {

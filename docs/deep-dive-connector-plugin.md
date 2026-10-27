@@ -13,7 +13,7 @@ run.
 
 | You want | Command |
 | --- | --- |
-| every released version, with its release date | `playground connector-plugin versions -c confluentinc/kafka-connect-jdbc` (`--last 5`) |
+| every released version, with its release date | `playground connector-plugin versions -c confluentinc/kafka-connect-jdbc` (`--last 5`, `--with-changelog`) |
 | what changed since version X (release notes), is a bug fixed after it | `playground connector-plugin changelog -c confluentinc/kafka-connect-jdbc --from 10.9.6` (`--grep "CVE\|NullPointer"`, `--to`, `--json`) |
 | what was released on the Hub in the last days | `playground connector-plugin display-last-updated --days 7` (`--vendor confluentinc`) |
 | what a config key does, its default, since when, values used | `playground connector-plugin config-key --key batch.size` (`-c JdbcSinkConnector`) |
@@ -71,6 +71,10 @@ Gotchas:
   as printed, the number of days computed that day: a week later it still says `36 days ago`, and a release published
   since is missing. Use `--force-refresh` after a release, or before quoting a date.
 - Oldest first: `--last N` shows the N most recent, in release order, then the documentation link.
+- `--with-changelog` adds the release notes of each version under it (same source and limits as `changelog` below):
+  `versions -c confluentinc/kafka-connect-jdbc --last 3 --with-changelog`.
+- The `--connector-tag` picker (`--connector-tag " "` of `run`, `update-version`, `sourcecode`, `search-jar`) shows the
+  release notes of the highlighted version in its preview, for `confluentinc` plugins.
 - `display-last-updated` calls `versions --force-refresh` for every self-managed plugin of the list (fully managed ones
   are skipped): it takes minutes. Narrow it with `--vendor`.
 - A self-managed `playground run` can compute it in the background (last 3 days, `confluentinc`) and print it at the
@@ -340,7 +344,7 @@ GH_TOKEN=… playground connector-plugin sourcecode -c confluentinc/SalesforceBu
 ## 8. Cheat sheet
 
 ```bash
-playground connector-plugin versions -c <owner/name> [--last N] [--force-refresh]
+playground connector-plugin versions -c <owner/name> [--last N] [--with-changelog] [--force-refresh]
 playground connector-plugin changelog -c <owner/name> [--from X] [--to Y] [--grep <regex>] [--json]
 playground connector-plugin display-last-updated [--days 3] [--vendor <vendor>]
 playground connector-plugin config-key -k <key> [-c <class or FM type>] [--max-examples 10]

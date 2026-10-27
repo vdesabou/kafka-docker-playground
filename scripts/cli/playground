@@ -3821,7 +3821,7 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
-    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically (for Confluent\n    plugins, the preview shows the release notes of each version)\n"
     printf "    %s\n" "Conflicts: --connector-zip"
     echo
 
@@ -4474,7 +4474,7 @@ playground_update_version_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
-    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically (for Confluent\n    plugins, the preview shows the release notes of each version)\n"
     printf "    %s\n" "Conflicts: --connector-zip"
     echo
 
@@ -11945,7 +11945,7 @@ playground_connector_plugin_search_jar_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
-    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically (for Confluent\n    plugins, the preview shows the release notes of each version)\n"
     printf "    %s\n" "Conflicts: --connector-zip"
     echo
 
@@ -12003,6 +12003,11 @@ playground_connector_plugin_versions_usage() {
     printf "    %s\n" "Conflicts: --all"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--with-changelog")"
+    printf "    📜 Show the release notes of each version under it\n    \n    From the changelog feeds of docs.confluent.io, like playground\n    connector-plugin changelog: Confluent self-managed plugins only.\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -12010,7 +12015,7 @@ playground_connector_plugin_versions_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground connector-plugin versions --connector-plugin\n  confluentinc/kafka-connect-s3\n"
+    printf "  playground connector-plugin versions --connector-plugin\n  confluentinc/kafka-connect-s3\n  playground connector-plugin versions --connector-plugin\n  confluentinc/kafka-connect-jdbc --last 3 --with-changelog\n"
     echo
 
   fi
@@ -12211,7 +12216,7 @@ playground_connector_plugin_sourcecode_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG (repeatable)")"
-    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used (for Confluent employees, it will also get latest versions for\n    fully managed connectors)\n    \n    💌 Confluent employees only: for fully managed connectors, use the cc-connect\n    image version for the pcc. You must have a Confluent Github token set with\n    GITHUB_TOKEN or GH_TOKEN environment variable and also be using Confluent\n    VPN.\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n    \n    🎓 Tip: you can compare different sourcecode versions by specifying\n    --connector-tag two times, in such case it will open github in comparison\n    mode\n"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used (for Confluent employees, it will also get latest versions for\n    fully managed connectors)\n    \n    💌 Confluent employees only: for fully managed connectors, use the cc-connect\n    image version for the pcc. You must have a Confluent Github token set with\n    GITHUB_TOKEN or GH_TOKEN environment variable and also be using Confluent\n    VPN.\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically (for Confluent\n    plugins, the preview shows the release notes of each version)\n    \n    🎓 Tip: you can compare different sourcecode versions by specifying\n    --connector-tag two times, in such case it will open github in comparison\n    mode\n"
     echo
 
     # :flag.usage
@@ -13195,7 +13200,7 @@ playground_connector_sourcecode_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG (repeatable)")"
-    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the current version is used (for Confluent\n    employees, it will also get latest versions for fully managed connectors)\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically\n    \n    🎓 Tip: you can compare different sourcecode versions by specifying\n    --connector-tag two times, in such case it will open github in comparison\n    mode\n"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the current version is used (for Confluent\n    employees, it will also get latest versions for fully managed connectors)\n    \n    🎓 Tip: set to \" \" in order to select the version dynamically (for Confluent\n    plugins, the preview shows the release notes of each version)\n    \n    🎓 Tip: you can compare different sourcecode versions by specifying\n    --connector-tag two times, in such case it will open github in comparison\n    mode\n"
     echo
 
     if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
@@ -17198,7 +17203,14 @@ function choose_connector_tag() {
     fzf_option_rounded=""
   fi
 
-  cat $filename | grep -v "documentation"| sed '1!G;h;$!d' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔢" --header="select connector version for $owner/$name" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer
+  # release notes of the selected version, from the docs.confluent.io changelog feeds (Confluent plugins only)
+  fzf_option_preview=()
+  if [ "$owner" == "confluentinc" ] && command -v python3 > /dev/null 2>&1
+  then
+    fzf_option_preview=(--preview "python3 -I '$root_folder/tools/connector-changelog/changelog.py' --connector-plugin '$owner/$name' --version {2} --format text 2>&1")
+  fi
+
+  cat $filename | grep -v "documentation"| sed '1!G;h;$!d' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🔢" --header="select connector version for $owner/$name" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer "${fzf_option_preview[@]}"
 }
 
 function filter_not_mdc_environment() {
@@ -53211,6 +53223,7 @@ playground_connector_plugin_versions_command() {
   connector_plugin="${args[--connector-plugin]}"
   last="${args[--last]}"
   force_refresh="${args[--force-refresh]}"
+  with_changelog="${args[--with-changelog]}"
 
   if [[ $connector_plugin == *"@"* ]]
   then
@@ -53338,10 +53351,39 @@ playground_connector_plugin_versions_command() {
   if [[ -n "$last" ]]
   then
       last=$((last + 1))
-      tail -${last} $filename
+      versions_output=$(tail -${last} $filename)
   else
-      cat $filename
+      versions_output=$(cat $filename)
   fi
+
+  if [[ -z "$with_changelog" ]]
+  then
+      echo "$versions_output"
+      exit 0
+  fi
+
+  # release notes under each version, from the docs.confluent.io changelog feeds (see connector-plugin changelog)
+  first_version=$(echo "$versions_output" | grep "🔢 v" | head -1 | sed -E 's/^🔢 v([^ ]+) .*/\1/')
+  changelog_json=$(mktemp -t pg-XXXXXXXXXX)
+  trap 'rm -f $changelog_json' EXIT
+  changelog_args=(--connector-plugin "$owner/$name" --from "$first_version" --include-from)
+  [[ -n "$force_refresh" ]] && changelog_args+=(--force-refresh)
+  if ! command -v python3 > /dev/null 2>&1 || ! python3 -I "$root_folder/tools/connector-changelog/changelog.py" "${changelog_args[@]}" > $changelog_json 2> /dev/null || [ "$(jq '.feeds | length' $changelog_json)" == "0" ]
+  then
+      logwarn "📜 no changelog feed for connector plugin $owner/$name, release notes are not shown"
+      echo "$versions_output"
+      exit 0
+  fi
+  while IFS= read -r line
+  do
+      echo "$line"
+      if [[ "$line" == "🔢 v"* ]]
+      then
+          version=$(echo "$line" | sed -E 's/^🔢 v([^ ]+) .*/\1/')
+          jq -r --arg v "$version" '.versions[] | select(.version == $v) | .changes[] | "   • \(.)"' $changelog_json
+      fi
+  done <<< "$versions_output"
+  jq -r '.feeds[] | "📜 changelog: \(sub("\\.xml$"; ".html"))"' $changelog_json
 }
 
 # :command.function
@@ -91594,6 +91636,14 @@ playground_connector_plugin_versions_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --with-changelog)
+
+        # :flag.case_no_arg
+        args['--with-changelog']=1
+        shift
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -112821,6 +112871,11 @@ playground_connector_plugin_versions_completion() {
         completion_blocked_flags["--all"]=1
 
         ;;
+      --with-changelog)
+        completion_blocked_flags["--with-changelog"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -112832,6 +112887,7 @@ playground_connector_plugin_versions_completion() {
     completion_flag_candidates --connector-plugin "$completion_current" --connector-plugin -c
     completion_flag_candidates --force-refresh "$completion_current" --force-refresh
     completion_flag_candidates --last "$completion_current" --last
+    completion_flag_candidates --with-changelog "$completion_current" --with-changelog
   fi
 
 }
