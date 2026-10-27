@@ -28,7 +28,6 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.record.TimestampType;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
-import org.apache.kafka.common.utils.AppInfoParser;
 import org.apache.kafka.connect.connector.ConnectRecord;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
@@ -70,6 +69,19 @@ public class SmtTester {
     static List<String> priorityDirs = new ArrayList<>();
     static Map<String, ClassLoader> priorityLoaders = new HashMap<>();
 
+    // AppInfoParser moved to org.apache.kafka.common.utils.internals in CP 8.4: found through
+    // reflection, so that the harness compiles against the jars of every version
+    static String kafkaVersion() {
+        for (String name : new String[] {"org.apache.kafka.common.utils.internals.AppInfoParser", "org.apache.kafka.common.utils.AppInfoParser"}) {
+            try {
+                return (String) Class.forName(name).getMethod("getVersion").invoke(null);
+            } catch (Exception ignored) {
+                // not in this version
+            }
+        }
+        return "unknown";
+    }
+
     public static void main(String[] argv) throws Exception {
         System.setOut(System.err);
         Map<String, String> args = new HashMap<>();
@@ -106,7 +118,7 @@ public class SmtTester {
 
         ObjectNode out = MAPPER.createObjectNode();
         out.put("label", label);
-        out.put("kafka_version", AppInfoParser.getVersion());
+        out.put("kafka_version", kafkaVersion());
         out.put("connector_type", source ? "source" : "sink");
         if (pluginLoadingNote != null) {
             out.put("plugin_loading", pluginLoadingNote);
@@ -335,7 +347,7 @@ public class SmtTester {
             }
         }
         if (klass.getName().startsWith("org.apache.kafka.")) {
-            return "Kafka " + AppInfoParser.getVersion() + " (worker)";
+            return "Kafka " + kafkaVersion() + " (worker)";
         }
         String version = klass.getPackage() != null ? klass.getPackage().getImplementationVersion() : null;
         boolean testPlugin = priorityLoaders.containsValue(klass.getClassLoader());
