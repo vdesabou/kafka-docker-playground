@@ -1570,7 +1570,7 @@ commands:
 
     📄 Run log
       The output is also written to a text file, passwords, api keys and
-      tokens masked, ready to share with a colleague or engineering: the
+      tokens masked, ready to share with a colleague: the
       command to re-run, the versions, the host, the result and, for a
       failure, the errors of the connect container. Its path is printed at
       the end of the run. The last 50 are kept in

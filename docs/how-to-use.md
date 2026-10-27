@@ -233,7 +233,7 @@ Pick a preference, then its new value: `true`/`false`, or a list of suggestions 
 Every `playground run` also writes its output to a text file, with passwords, api keys and tokens masked, ready to attach to a ticket or to send to a colleague or engineering. Its path is the last line of the run:
 
 ```
-📄 masked log of this run (4 secrets masked), to share with a colleague or engineering: ~/.local/state/kafka-docker-playground/run-logs/filestream-sink-20261026-151903.log
+📄 masked log of this run (4 secrets masked), to share with a colleague: ~/.local/state/kafka-docker-playground/run-logs/filestream-sink-20261026-151903.log
 ```
 
 The file starts with a header (the command to re-run, environment, CP and connector versions, playground commit, host and container engine, duration and result), then the whole output of the run without colors and, for a failure, the errors of the connect container (`playground container logs -c connect --errors`):

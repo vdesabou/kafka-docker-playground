@@ -6588,7 +6588,7 @@ function redact_connector_secrets() {
 }
 
 ################################################################################
-# 📄 run log: a masked copy of the output of 'playground run', to share with a colleague or engineering
+# 📄 run log: a masked copy of the output of 'playground run', to share with a colleague
 ################################################################################
 
 function run_log_default_folder () {
@@ -6852,5 +6852,5 @@ function run_log_finish () {
       rm -f "$old"
     done
   fi
-  log "📄 masked log of this run (${masked:-0} secrets masked), to share with a colleague or engineering: $run_log_file"
+  log "📄 masked log of this run (${masked:-0} secrets masked), to share with a colleague: $run_log_file"
 }
