@@ -3849,6 +3849,9 @@ function interactive_config_menu () {
     "check-and-update-repo-version|🔄|Check that the repo is up to date|true"
     "run-log|📄|Write a masked log of each run, to share it|true"
     "run-log-folder|🗂️|Folder of the run logs|$(run_log_default_folder)"
+    "display-last-updated-connector-plugins|🆕|List recently released connector plugins at the end of a run|false"
+    "display-last-updated-connector-plugins-days|📅|Days to look back for recently released connector plugins|3"
+    "display-last-updated-connector-plugins-vendor|🏢|Vendor of recently released connector plugins (all: every vendor)|confluentinc"
     "open-ccloud-connector-in-browser.automatically|☁️|Open fully managed connectors in browser|true"
     "open-ccloud-connector-in-browser.browser|🧭|Browser for fully managed connectors|default browser"
     "open-grafana-in-browser.automatically|📊|Open Grafana in browser|true"
@@ -3906,6 +3909,12 @@ function interactive_config_menu () {
         ;;
       run-log-folder)
         new_value=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🗂️" --header="enter the folder of the run logs" --color="$fzf_colors" $fzf_option_empty_pointer --print-query --query "${value:-$(run_log_default_folder)}")
+        ;;
+      display-last-updated-connector-plugins-days)
+        new_value=$(printf '%s\n' 1 3 7 14 30 | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="📅" --header="select the number of days, or type one and use <option+enter>" --color="$fzf_colors" $fzf_option_pointer --bind "alt-enter:print-query")
+        ;;
+      display-last-updated-connector-plugins-vendor)
+        new_value=$(printf '%s\n' confluentinc all debezium | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🏢" --header="select the vendor (all: every vendor), or type one and use <option+enter>" --color="$fzf_colors" $fzf_option_pointer --bind "alt-enter:print-query")
         ;;
       cleanup-ccloud-resources-after-run)
         new_value=$(printf '%s\n' ask true false | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🧹" --header="ask: list and confirm, true: delete without asking, false: never delete" --color="$fzf_colors" $fzf_option_pointer)

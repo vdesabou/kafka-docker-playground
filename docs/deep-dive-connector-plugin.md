@@ -71,6 +71,10 @@ Gotchas:
 - Oldest first: `--last N` shows the N most recent, in release order, then the documentation link.
 - `display-last-updated` calls `versions --force-refresh` for every self-managed plugin of the list (fully managed ones
   are skipped): it takes minutes. Narrow it with `--vendor`.
+- A self-managed `playground run` can compute it in the background (last 3 days, `confluentinc`) and print it at the
+  end: off by default, `playground config display-last-updated-connector-plugins true` turns it on,
+  `display-last-updated-connector-plugins-days <n>` / `display-last-updated-connector-plugins-vendor <vendor|all>`
+  change the window and the vendor (also in the `⚙️ CLI preferences` entry of the `playground run` menu).
 - A version without a Hub release date prints `📅 release date: <unknown>`.
 
 ---

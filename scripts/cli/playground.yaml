@@ -64,10 +64,13 @@ subcommands:
     \ check-and-update-repo-version      warn when your clone is out of date\n  run-log
     true|false                 write a masked log of each\n                                     'playground
     run' to share it\n  run-log-folder <dir>               where to write the run
-    logs\n  open-ccloud-connector-in-browser   open fully managed connectors, and
-    in\n  open-grafana-in-browser            which browser\n\n\U0001F393 Tip: all
-    of them can also be changed from the '⚙️ CLI preferences'\nentry of the 'playground
-    run' menu."
+    logs\n  display-last-updated-connector-plugins\n                                     list
+    the connector plugins released\n                                     recently
+    at the end of a\n                                     self-managed run (true or
+    false,\n                                     -days <n>, -vendor <vendor|all>)\n
+    \ open-ccloud-connector-in-browser   open fully managed connectors, and in\n  open-grafana-in-browser
+    \           which browser\n\n\U0001F393 Tip: all of them can also be changed from
+    the '⚙️ CLI preferences'\nentry of the 'playground run' menu."
   usage: playground config COMMAND
   options: []
   subcommands:
@@ -129,6 +132,24 @@ subcommands:
     description: "\U0001F5C2️ folder of the run logs\n\nDefault is /tmp/playground-run-logs.\n\nThe
       last 50 run logs of the folder are kept."
     usage: playground config run-log-folder FOLDER
+    options: []
+  - name: display-last-updated-connector-plugins
+    description: "\U0001F195 at the end of a self-managed connector run, list the
+      connector plugins released recently on Confluent Hub (default false)\n\nSame
+      as 'playground connector-plugin display-last-updated', computed\nin the background
+      during the run. Look-back window and vendor are set\nwith display-last-updated-connector-plugins-days
+      and\ndisplay-last-updated-connector-plugins-vendor."
+    usage: playground config display-last-updated-connector-plugins [ENABLED]
+    options: []
+  - name: display-last-updated-connector-plugins-days
+    description: "\U0001F4C5 number of days to look back for display-last-updated-connector-plugins\n\nDefault
+      is 3."
+    usage: playground config display-last-updated-connector-plugins-days DAYS
+    options: []
+  - name: display-last-updated-connector-plugins-vendor
+    description: "\U0001F3E2 vendor of the connector plugins listed by display-last-updated-connector-plugins\n\nDefault
+      is confluentinc. Use 'all' for every vendor."
+    usage: playground config display-last-updated-connector-plugins-vendor VENDOR
     options: []
   - name: cleanup-ccloud-resources-after-run
     description: "\U0001F9F9 delete the Confluent Cloud resources left by the last

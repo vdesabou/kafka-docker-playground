@@ -2205,7 +2205,7 @@ function cleanup {
   if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
   then
       # playground connector-plugin display-last-updated
-    if ! pgrep -f "playground connector-plugin display-last-updated" > /dev/null
+    if [ "$connector_plugin_display_last_updated" == "true" ] && ! pgrep -f "playground connector-plugin display-last-updated" > /dev/null
     then
       if [ -f ${connector_plugin_display_last_updated_file} ]
       then
@@ -2268,13 +2268,24 @@ then
         docker pull confluentinc/cp-enterprise-control-center-next-gen:latest > /dev/null 2>&1
       fi
 fi
-connector_plugin_display_last_updated_file="/tmp/connector-plugin-display-last-updated-$(date +%Y-%m-%d).txt"
+connector_plugin_display_last_updated=$(playground config get display-last-updated-connector-plugins)
+connector_plugin_display_last_updated_days=$(playground config get display-last-updated-connector-plugins-days)
+connector_plugin_display_last_updated_days="${connector_plugin_display_last_updated_days:-3}"
+connector_plugin_display_last_updated_vendor=$(playground config get display-last-updated-connector-plugins-vendor)
+connector_plugin_display_last_updated_vendor="${connector_plugin_display_last_updated_vendor:-confluentinc}"
+connector_plugin_display_last_updated_file="/tmp/connector-plugin-display-last-updated-$(date +%Y-%m-%d)-${connector_plugin_display_last_updated_days}-${connector_plugin_display_last_updated_vendor}.txt"
 connector_type=$(playground state get run.connector_type)
-if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
+if [ "$connector_plugin_display_last_updated" == "true" ] && { [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]; }
 then
   if [ ! -f ${connector_plugin_display_last_updated_file} ]
   then
-    playground connector-plugin display-last-updated --days 3 --vendor confluentinc > ${connector_plugin_display_last_updated_file} 2>/dev/null &
+    # 'all': every vendor
+    connector_plugin_display_last_updated_vendor_flag=()
+    if [ "$connector_plugin_display_last_updated_vendor" != "all" ]
+    then
+      connector_plugin_display_last_updated_vendor_flag=(--vendor "$connector_plugin_display_last_updated_vendor")
+    fi
+    playground connector-plugin display-last-updated --days "$connector_plugin_display_last_updated_days" "${connector_plugin_display_last_updated_vendor_flag[@]}" > ${connector_plugin_display_last_updated_file} 2>/dev/null &
   fi
 fi
 set -e

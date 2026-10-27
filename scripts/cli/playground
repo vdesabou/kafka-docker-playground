@@ -1660,7 +1660,7 @@ playground_state_del_usage() {
 playground_config_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground config\n\n"
-    printf "  ⚙️ Configure CLI\n  \n  Your preferences, kept between sessions:\n  \n    editor <name>                      the editor every command opens files\n                                       with (code, vi, nano...)\n    folder_zip_or_jar <dir>...         where to look for connector zips and\n                                       jars, in addition to the current\n                                       folder\n    clipboard true|false               copy connector config to the\n                                       clipboard (macOS only)\n    container-kill-all-before-run      kill every container before each run,\n                                       or just stop the example\n    cleanup-ccloud-resources-after-run delete the Confluent Cloud connectors\n                                       and topics of the last ccloud run on\n                                       stop and before the next run\n                                       (ask, true or false)\n    check-and-update-repo-version      warn when your clone is out of date\n    run-log true|false                 write a masked log of each\n                                       'playground run' to share it\n    run-log-folder <dir>               where to write the run logs\n    open-ccloud-connector-in-browser   open fully managed connectors, and in\n    open-grafana-in-browser            which browser\n  \n  🎓 Tip: all of them can also be changed from the '⚙️ CLI preferences'\n  entry of the 'playground run' menu.\n\n"
+    printf "  ⚙️ Configure CLI\n  \n  Your preferences, kept between sessions:\n  \n    editor <name>                      the editor every command opens files\n                                       with (code, vi, nano...)\n    folder_zip_or_jar <dir>...         where to look for connector zips and\n                                       jars, in addition to the current\n                                       folder\n    clipboard true|false               copy connector config to the\n                                       clipboard (macOS only)\n    container-kill-all-before-run      kill every container before each run,\n                                       or just stop the example\n    cleanup-ccloud-resources-after-run delete the Confluent Cloud connectors\n                                       and topics of the last ccloud run on\n                                       stop and before the next run\n                                       (ask, true or false)\n    check-and-update-repo-version      warn when your clone is out of date\n    run-log true|false                 write a masked log of each\n                                       'playground run' to share it\n    run-log-folder <dir>               where to write the run logs\n    display-last-updated-connector-plugins\n                                       list the connector plugins released\n                                       recently at the end of a\n                                       self-managed run (true or false,\n                                       -days <n>, -vendor <vendor|all>)\n    open-ccloud-connector-in-browser   open fully managed connectors, and in\n    open-grafana-in-browser            which browser\n  \n  🎓 Tip: all of them can also be changed from the '⚙️ CLI preferences'\n  entry of the 'playground run' menu.\n\n"
   else
     printf "playground config - ⚙️ Configure CLI\n\n"
   fi
@@ -1671,19 +1671,22 @@ playground_config_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Show the entire playground_config.ini file\n" "$(green "show")                              "
-  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Read a value from the playground_config.ini file\n" "$(green "get")                               "
-  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Save a value in the playground_config.ini file\n" "$(green "set")                               "
-  printf "  %s   editor to use to open files\n" "$(green "editor")                            "
-  printf "  %s   📂 list of folders where to search for zip or jar\n" "$(green "folder_zip_or_jar")                 "
-  printf "  %s   copy to clipboard connector config (only working on MacOS)\n" "$(green "clipboard")                         "
-  printf "  %s   when running a fully managed connector example, it opens the connector in browser\n" "$(green "open-ccloud-connector-in-browser")  "
-  printf "  %s   when running an example with --enable-jmx-grafana flag, it opens grafana in browser\n" "$(green "open-grafana-in-browser")           "
-  printf "  %s   when running an example, always call playground container kill-all first. If set to false, it will call playground stop instead.\n" "$(green "container-kill-all-before-run")     "
-  printf "  %s   📄 write a masked log of each 'playground run' (default true)\n" "$(green "run-log")                           "
-  printf "  %s   🗂️ folder of the run logs\n" "$(green "run-log-folder")                    "
-  printf "  %s   🧹 delete the Confluent Cloud resources left by the last ccloud example\n" "$(green "cleanup-ccloud-resources-after-run")"
-  printf "  %s   when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.\n" "$(green "check-and-update-repo-version")     "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Show the entire playground_config.ini file\n" "$(green "show")                                         "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Read a value from the playground_config.ini file\n" "$(green "get")                                          "
+  [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   Save a value in the playground_config.ini file\n" "$(green "set")                                          "
+  printf "  %s   editor to use to open files\n" "$(green "editor")                                       "
+  printf "  %s   📂 list of folders where to search for zip or jar\n" "$(green "folder_zip_or_jar")                            "
+  printf "  %s   copy to clipboard connector config (only working on MacOS)\n" "$(green "clipboard")                                    "
+  printf "  %s   when running a fully managed connector example, it opens the connector in browser\n" "$(green "open-ccloud-connector-in-browser")             "
+  printf "  %s   when running an example with --enable-jmx-grafana flag, it opens grafana in browser\n" "$(green "open-grafana-in-browser")                      "
+  printf "  %s   when running an example, always call playground container kill-all first. If set to false, it will call playground stop instead.\n" "$(green "container-kill-all-before-run")                "
+  printf "  %s   📄 write a masked log of each 'playground run' (default true)\n" "$(green "run-log")                                      "
+  printf "  %s   🗂️ folder of the run logs\n" "$(green "run-log-folder")                               "
+  printf "  %s   🆕 at the end of a self-managed connector run, list the connector plugins released recently on Confluent Hub (default false)\n" "$(green "display-last-updated-connector-plugins")       "
+  printf "  %s   📅 number of days to look back for display-last-updated-connector-plugins\n" "$(green "display-last-updated-connector-plugins-days")  "
+  printf "  %s   🏢 vendor of the connector plugins listed by display-last-updated-connector-plugins\n" "$(green "display-last-updated-connector-plugins-vendor")"
+  printf "  %s   🧹 delete the Confluent Cloud resources left by the last ccloud example\n" "$(green "cleanup-ccloud-resources-after-run")           "
+  printf "  %s   when running an example, always check if repo version is older than 3 days, if disabled, it will skip this check.\n" "$(green "check-and-update-repo-version")                "
   echo
 
   # :command.long_usage
@@ -2242,6 +2245,130 @@ playground_config_run_log_folder_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground config run-log-folder ~/Documents/playground-run-logs\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_config_display_last_updated_connector_plugins_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground config display-last-updated-connector-plugins\n\n"
+    printf "  🆕 at the end of a self-managed connector run, list the connector plugins\n  released recently on Confluent Hub (default false)\n  \n  Same as 'playground connector-plugin display-last-updated', computed\n  in the background during the run. Look-back window and vendor are set\n  with display-last-updated-connector-plugins-days and\n  display-last-updated-connector-plugins-vendor.\n\n"
+  else
+    printf "playground config display-last-updated-connector-plugins - 🆕 at the end of a self-managed connector run, list the connector plugins released recently on Confluent Hub (default false)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground config display-last-updated-connector-plugins [ENABLED]\n"
+  printf "  playground config display-last-updated-connector-plugins --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "ENABLED")"
+    printf "\n"
+    printf "    %s\n" "Allowed: true, false"
+    printf "    %s\n" "Default: true"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground config display-last-updated-connector-plugins false\n"
+    printf "  playground config display-last-updated-connector-plugins true\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_config_display_last_updated_connector_plugins_days_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground config display-last-updated-connector-plugins-days\n\n"
+    printf "  📅 number of days to look back for display-last-updated-connector-plugins\n  \n  Default is 3.\n\n"
+  else
+    printf "playground config display-last-updated-connector-plugins-days - 📅 number of days to look back for display-last-updated-connector-plugins\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground config display-last-updated-connector-plugins-days DAYS\n"
+  printf "  playground config display-last-updated-connector-plugins-days --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "DAYS")"
+    printf "    days\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground config display-last-updated-connector-plugins-days 7\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_config_display_last_updated_connector_plugins_vendor_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground config display-last-updated-connector-plugins-vendor\n\n"
+    printf "  🏢 vendor of the connector plugins listed by\n  display-last-updated-connector-plugins\n  \n  Default is confluentinc. Use 'all' for every vendor.\n\n"
+  else
+    printf "playground config display-last-updated-connector-plugins-vendor - 🏢 vendor of the connector plugins listed by display-last-updated-connector-plugins\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground config display-last-updated-connector-plugins-vendor VENDOR\n"
+  printf "  playground config display-last-updated-connector-plugins-vendor --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "VENDOR")"
+    printf "    vendor\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground config display-last-updated-connector-plugins-vendor debezium\n"
+    printf "  playground config display-last-updated-connector-plugins-vendor all\n"
     echo
 
   fi
@@ -18751,6 +18878,9 @@ function interactive_config_menu () {
     "check-and-update-repo-version|🔄|Check that the repo is up to date|true"
     "run-log|📄|Write a masked log of each run, to share it|true"
     "run-log-folder|🗂️|Folder of the run logs|$(run_log_default_folder)"
+    "display-last-updated-connector-plugins|🆕|List recently released connector plugins at the end of a run|false"
+    "display-last-updated-connector-plugins-days|📅|Days to look back for recently released connector plugins|3"
+    "display-last-updated-connector-plugins-vendor|🏢|Vendor of recently released connector plugins (all: every vendor)|confluentinc"
     "open-ccloud-connector-in-browser.automatically|☁️|Open fully managed connectors in browser|true"
     "open-ccloud-connector-in-browser.browser|🧭|Browser for fully managed connectors|default browser"
     "open-grafana-in-browser.automatically|📊|Open Grafana in browser|true"
@@ -18808,6 +18938,12 @@ function interactive_config_menu () {
         ;;
       run-log-folder)
         new_value=$(echo "" | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🗂️" --header="enter the folder of the run logs" --color="$fzf_colors" $fzf_option_empty_pointer --print-query --query "${value:-$(run_log_default_folder)}")
+        ;;
+      display-last-updated-connector-plugins-days)
+        new_value=$(printf '%s\n' 1 3 7 14 30 | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="📅" --header="select the number of days, or type one and use <option+enter>" --color="$fzf_colors" $fzf_option_pointer --bind "alt-enter:print-query")
+        ;;
+      display-last-updated-connector-plugins-vendor)
+        new_value=$(printf '%s\n' confluentinc all debezium | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🏢" --header="select the vendor (all: every vendor), or type one and use <option+enter>" --color="$fzf_colors" $fzf_option_pointer --bind "alt-enter:print-query")
         ;;
       cleanup-ccloud-resources-after-run)
         new_value=$(printf '%s\n' ask true false | fzf --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🧹" --header="ask: list and confirm, true: delete without asking, false: never delete" --color="$fzf_colors" $fzf_option_pointer)
@@ -31486,6 +31622,33 @@ playground_config_run_log_folder_command() {
 }
 
 # :command.function
+playground_config_display_last_updated_connector_plugins_command() {
+
+  # src/commands/config/display-last-updated-connector-plugins.sh
+  log "🆕 configuring display-last-updated-connector-plugins with ${args[enabled]}"
+  playground config set display-last-updated-connector-plugins "${args[enabled]}"
+
+}
+
+# :command.function
+playground_config_display_last_updated_connector_plugins_days_command() {
+
+  # src/commands/config/display-last-updated-connector-plugins-days.sh
+  log "📅 configuring display-last-updated-connector-plugins-days with ${args[days]}"
+  playground config set display-last-updated-connector-plugins-days "${args[days]}"
+
+}
+
+# :command.function
+playground_config_display_last_updated_connector_plugins_vendor_command() {
+
+  # src/commands/config/display-last-updated-connector-plugins-vendor.sh
+  log "🏢 configuring display-last-updated-connector-plugins-vendor with ${args[vendor]}"
+  playground config set display-last-updated-connector-plugins-vendor "${args[vendor]}"
+
+}
+
+# :command.function
 playground_config_cleanup_ccloud_resources_after_run_command() {
 
   # src/commands/config/cleanup-ccloud-resources-after-run.sh
@@ -35804,7 +35967,7 @@ playground_run_command() {
     if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
     then
         # playground connector-plugin display-last-updated
-      if ! pgrep -f "playground connector-plugin display-last-updated" > /dev/null
+      if [ "$connector_plugin_display_last_updated" == "true" ] && ! pgrep -f "playground connector-plugin display-last-updated" > /dev/null
       then
         if [ -f ${connector_plugin_display_last_updated_file} ]
         then
@@ -35868,13 +36031,24 @@ playground_run_command() {
           docker pull confluentinc/cp-enterprise-control-center-next-gen:latest > /dev/null 2>&1
         fi
   fi
-  connector_plugin_display_last_updated_file="/tmp/connector-plugin-display-last-updated-$(date +%Y-%m-%d).txt"
+  connector_plugin_display_last_updated=$(playground config get display-last-updated-connector-plugins)
+  connector_plugin_display_last_updated_days=$(playground config get display-last-updated-connector-plugins-days)
+  connector_plugin_display_last_updated_days="${connector_plugin_display_last_updated_days:-3}"
+  connector_plugin_display_last_updated_vendor=$(playground config get display-last-updated-connector-plugins-vendor)
+  connector_plugin_display_last_updated_vendor="${connector_plugin_display_last_updated_vendor:-confluentinc}"
+  connector_plugin_display_last_updated_file="/tmp/connector-plugin-display-last-updated-$(date +%Y-%m-%d)-${connector_plugin_display_last_updated_days}-${connector_plugin_display_last_updated_vendor}.txt"
   connector_type=$(playground state get run.connector_type)
-  if [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]
+  if [ "$connector_plugin_display_last_updated" == "true" ] && { [ "$connector_type" == "$CONNECTOR_TYPE_ONPREM" ] || [ "$connector_type" == "$CONNECTOR_TYPE_SELF_MANAGED" ]; }
   then
     if [ ! -f ${connector_plugin_display_last_updated_file} ]
     then
-      playground connector-plugin display-last-updated --days 3 --vendor confluentinc > ${connector_plugin_display_last_updated_file} 2>/dev/null &
+      # 'all': every vendor
+      connector_plugin_display_last_updated_vendor_flag=()
+      if [ "$connector_plugin_display_last_updated_vendor" != "all" ]
+      then
+        connector_plugin_display_last_updated_vendor_flag=(--vendor "$connector_plugin_display_last_updated_vendor")
+      fi
+      playground connector-plugin display-last-updated --days "$connector_plugin_display_last_updated_days" "${connector_plugin_display_last_updated_vendor_flag[@]}" > ${connector_plugin_display_last_updated_file} 2>/dev/null &
     fi
   fi
   set -e
@@ -65877,6 +66051,27 @@ playground_config_parse_requirements() {
       shift $#
       ;;
 
+    display-last-updated-connector-plugins)
+      action="display-last-updated-connector-plugins"
+      shift
+      playground_config_display_last_updated_connector_plugins_parse_requirements "$@"
+      shift $#
+      ;;
+
+    display-last-updated-connector-plugins-days)
+      action="display-last-updated-connector-plugins-days"
+      shift
+      playground_config_display_last_updated_connector_plugins_days_parse_requirements "$@"
+      shift $#
+      ;;
+
+    display-last-updated-connector-plugins-vendor)
+      action="display-last-updated-connector-plugins-vendor"
+      shift
+      playground_config_display_last_updated_connector_plugins_vendor_parse_requirements "$@"
+      shift $#
+      ;;
+
     cleanup-ccloud-resources-after-run)
       action="cleanup-ccloud-resources-after-run"
       shift
@@ -67169,6 +67364,272 @@ playground_config_run_log_folder_parse_requirements() {
     printf "  playground config run-log-folder ~/Documents/playground-run-logs\n" >&2
 
     exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_config_display_last_updated_connector_plugins_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_config_display_last_updated_connector_plugins_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="config display-last-updated-connector-plugins"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          # :argument.case
+          if [[ -z ${args['enabled']+x} ]]; then
+            args['enabled']=$1
+            shift
+          else
+            printf "invalid argument: %s\n" "$key" >&2
+            exit 1
+          fi
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['enabled']+x} ]]; then
+          args['enabled']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['enabled']:-} ]] || args['enabled']="true"
+
+  # :command.whitelist_filter
+  if [[ -n ${args['enabled']:-} ]] && [[ ! ${args['enabled']:-} =~ ^(true|false)$ ]]; then
+    printf "%s\n" "enabled must be one of: true, false" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_config_display_last_updated_connector_plugins_days_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_config_display_last_updated_connector_plugins_days_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="config display-last-updated-connector-plugins-days"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          # :argument.case
+          if [[ -z ${args['days']+x} ]]; then
+            args['days']=$1
+            shift
+          else
+            printf "invalid argument: %s\n" "$key" >&2
+            exit 1
+          fi
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['days']+x} ]]; then
+          args['days']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['days']+x} ]]; then
+    printf "missing required argument: DAYS\nusage: playground config display-last-updated-connector-plugins-days DAYS\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground config display-last-updated-connector-plugins-days 7\n" >&2
+
+    exit 1
+  fi
+
+  # :command.validations
+  # :argument.validations
+  if [[ -v args['days'] ]]; then
+    validation_output="$(validate_integer "${args['days']:-}")"
+    if [[ -n "$validation_output" ]]; then
+      printf "validation error in %s:\n%s\n" "DAYS" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_config_display_last_updated_connector_plugins_vendor_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_config_display_last_updated_connector_plugins_vendor_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="config display-last-updated-connector-plugins-vendor"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          # :argument.case
+          if [[ -z ${args['vendor']+x} ]]; then
+            args['vendor']=$1
+            shift
+          else
+            printf "invalid argument: %s\n" "$key" >&2
+            exit 1
+          fi
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['vendor']+x} ]]; then
+          args['vendor']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['vendor']+x} ]]; then
+    printf "missing required argument: VENDOR\nusage: playground config display-last-updated-connector-plugins-vendor VENDOR\n" >&2
+    # :command.examples_on_error
+    printf "examples:\n" >&2
+    printf "  playground config display-last-updated-connector-plugins-vendor debezium\n" >&2
+    printf "  playground config display-last-updated-connector-plugins-vendor all\n" >&2
+
+    exit 1
+  fi
+
+  # :command.validations
+  # :argument.validations
+  if [[ -v args['vendor'] ]]; then
+    validation_output="$(validate_not_empty "${args['vendor']:-}")"
+    if [[ -n "$validation_output" ]]; then
+      printf "validation error in %s:\n%s\n" "VENDOR" "$validation_output" >&2
+      exit 1
+    fi
   fi
 
 }
@@ -99308,6 +99769,21 @@ playground_config_completion() {
         playground_config_run_log_folder_completion "$completion_current" "$@"
         return
         ;;
+      display-last-updated-connector-plugins)
+        shift
+        playground_config_display_last_updated_connector_plugins_completion "$completion_current" "$@"
+        return
+        ;;
+      display-last-updated-connector-plugins-days)
+        shift
+        playground_config_display_last_updated_connector_plugins_days_completion "$completion_current" "$@"
+        return
+        ;;
+      display-last-updated-connector-plugins-vendor)
+        shift
+        playground_config_display_last_updated_connector_plugins_vendor_completion "$completion_current" "$@"
+        return
+        ;;
       cleanup-ccloud-resources-after-run)
         shift
         playground_config_cleanup_ccloud_resources_after_run_completion "$completion_current" "$@"
@@ -99327,7 +99803,7 @@ playground_config_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" editor folder_zip_or_jar clipboard open-ccloud-connector-in-browser open-grafana-in-browser container-kill-all-before-run run-log run-log-folder cleanup-ccloud-resources-after-run check-and-update-repo-version
+  completion_candidates "$completion_current" editor folder_zip_or_jar clipboard open-ccloud-connector-in-browser open-grafana-in-browser container-kill-all-before-run run-log run-log-folder display-last-updated-connector-plugins display-last-updated-connector-plugins-days display-last-updated-connector-plugins-vendor cleanup-ccloud-resources-after-run check-and-update-repo-version
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -99764,6 +100240,105 @@ playground_config_run_log_completion() {
 
 # :command.completion_function
 playground_config_run_log_folder_completion() {
+  local completion_current="$1"
+  local completion_arg_index=0
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        if [[ $completion_arg_index -ge 1 ]]; then
+          return
+        fi
+        completion_arg_index=$((completion_arg_index + 1))
+        shift
+
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_config_display_last_updated_connector_plugins_completion() {
+  local completion_current="$1"
+  local completion_arg_index=0
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        if [[ $completion_arg_index -ge 1 ]]; then
+          return
+        fi
+        completion_arg_index=$((completion_arg_index + 1))
+        shift
+
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+  if [[ $completion_current != -* ]]; then
+    case "$completion_arg_index" in
+      0)
+        local -a completion_values=(
+          "true"
+          "false"
+        )
+        completion_candidates "$completion_current" "${completion_values[@]}"
+        ;;
+    esac
+  fi
+
+}
+
+# :command.completion_function
+playground_config_display_last_updated_connector_plugins_days_completion() {
+  local completion_current="$1"
+  local completion_arg_index=0
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        if [[ $completion_arg_index -ge 1 ]]; then
+          return
+        fi
+        completion_arg_index=$((completion_arg_index + 1))
+        shift
+
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_config_display_last_updated_connector_plugins_vendor_completion() {
   local completion_current="$1"
   local completion_arg_index=0
   shift
@@ -114936,6 +115511,9 @@ run() {
     "config container-kill-all-before-run") playground_config_container_kill_all_before_run_command ;;
     "config run-log") playground_config_run_log_command ;;
     "config run-log-folder") playground_config_run_log_folder_command ;;
+    "config display-last-updated-connector-plugins") playground_config_display_last_updated_connector_plugins_command ;;
+    "config display-last-updated-connector-plugins-days") playground_config_display_last_updated_connector_plugins_days_command ;;
+    "config display-last-updated-connector-plugins-vendor") playground_config_display_last_updated_connector_plugins_vendor_command ;;
     "config cleanup-ccloud-resources-after-run") playground_config_cleanup_ccloud_resources_after_run_command ;;
     "config check-and-update-repo-version") playground_config_check_and_update_repo_version_command ;;
     "secrets") playground_secrets_command ;;

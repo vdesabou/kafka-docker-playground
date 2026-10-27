@@ -489,6 +489,11 @@ commands:
       run-log true|false                 write a masked log of each
                                          'playground run' to share it
       run-log-folder <dir>               where to write the run logs
+      display-last-updated-connector-plugins
+                                         list the connector plugins released
+                                         recently at the end of a
+                                         self-managed run (true or false,
+                                         -days <n>, -vendor <vendor|all>)
       open-ccloud-connector-in-browser   open fully managed connectors, and in
       open-grafana-in-browser            which browser
 
@@ -650,6 +655,50 @@ commands:
       help: folder
     examples:
     - playground config run-log-folder ~/Documents/playground-run-logs
+
+  - name: display-last-updated-connector-plugins
+    help: |-
+      🆕 at the end of a self-managed connector run, list the connector plugins released recently on Confluent Hub (default false)
+
+      Same as 'playground connector-plugin display-last-updated', computed
+      in the background during the run. Look-back window and vendor are set
+      with display-last-updated-connector-plugins-days and
+      display-last-updated-connector-plugins-vendor.
+    args:
+    - name: enabled
+      required: false
+      default: "true"
+      allowed: ["true", "false"]
+    examples:
+    - playground config display-last-updated-connector-plugins false
+    - playground config display-last-updated-connector-plugins true
+
+  - name: display-last-updated-connector-plugins-days
+    help: |-
+      📅 number of days to look back for display-last-updated-connector-plugins
+
+      Default is 3.
+    args:
+    - name: days
+      required: true
+      help: days
+      validate: integer
+    examples:
+    - playground config display-last-updated-connector-plugins-days 7
+
+  - name: display-last-updated-connector-plugins-vendor
+    help: |-
+      🏢 vendor of the connector plugins listed by display-last-updated-connector-plugins
+
+      Default is confluentinc. Use 'all' for every vendor.
+    args:
+    - name: vendor
+      required: true
+      help: vendor
+      validate: not_empty
+    examples:
+    - playground config display-last-updated-connector-plugins-vendor debezium
+    - playground config display-last-updated-connector-plugins-vendor all
 
   - name: cleanup-ccloud-resources-after-run
     help: |-
