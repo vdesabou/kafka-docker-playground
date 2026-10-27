@@ -31,6 +31,20 @@ cd ${DIR}/..
 
 latest_tag=$(grep "default tag" ./scripts/utils.sh | cut -d "=" -f 2 | cut -d " " -f 1)
 
+# A hung example is killed after PLAYGROUND_TEST_TIMEOUT (default 60m, the slowest examples take about 45 min)
+# instead of blocking its CI job until the 6 hours limit: the other examples of the job still run, and the EXIT
+# trap of 'playground run' deletes the fully managed connectors it created.
+# 'run -f <script>' must stay the words 2 to 4: retry reads the script name in the 4th one.
+function playground_with_timeout() {
+    if ! command -v timeout > /dev/null 2>&1
+    then
+        playground "$@"
+        return $?
+    fi
+    # --kill-after: time left to the EXIT trap of 'playground run' to delete the connectors
+    timeout --signal=TERM --kill-after=120s "${PLAYGROUND_TEST_TIMEOUT:-60m}" "${DIR}/cli/playground" "$@"
+}
+
 nb_test_failed=0
 nb_test_skipped=0
 failed_tests=""
@@ -363,8 +377,12 @@ do
         file_output="$file_output.log"
         rm -f $file_output
         touch $file_output
-        retry playground run -f "$PWD/$script" $flag_tag $flag_environment 2>&1 | tee "$file_output"
+        retry playground_with_timeout run -f "$PWD/$script" $flag_tag $flag_environment 2>&1 | tee "$file_output"
         ret=${PIPESTATUS[0]}
+        if [ $ret -eq 124 ] || [ $ret -eq 137 ]
+        then
+            logerror "⏱️ $script in dir $dir was killed after ${PLAYGROUND_TEST_TIMEOUT:-60m} (PLAYGROUND_TEST_TIMEOUT): it hung"
+        fi
         ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
         let ELAPSED_TOTAL+=$SECONDS
         CUMULATED="cumulated time: $((($ELAPSED_TOTAL / 60) % 60))min $(($ELAPSED_TOTAL % 60))sec"

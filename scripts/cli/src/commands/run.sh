@@ -2189,6 +2189,13 @@ function cleanup {
   rm /tmp/playground-run-command-used
   echo ""
 
+  if [ -n "$GITHUB_RUN_NUMBER" ]
+  then
+    # 🧹 fully managed connectors created by this run: deleted now, also when the example failed or was killed by
+    # the timeout of run-tests.sh, rather than billed until the cleanup at the end of the nightly
+    maybe_cleanup_ccloud_run_resources
+  fi
+
   if [ -z "$GITHUB_RUN_NUMBER" ]
   then
     if [ "$original_exit_status" -ne 0 ]
@@ -2246,6 +2253,8 @@ function cleanup {
   exit "$original_exit_status"
 }
 trap cleanup EXIT
+# killed by the timeout of run-tests.sh (or kill): without it, bash 5 dies on SIGTERM without running the EXIT trap
+trap 'exit 143' TERM
 
 # background jobs must not inherit stdout/stderr: 'playground run | tee' (run-tests.sh) would wait for them to exit
 playground generate-fzf-find-files > /dev/null 2>&1 &
