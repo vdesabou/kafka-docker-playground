@@ -173,6 +173,7 @@ and how to contribute are in the plugin README, at `reproduction-models/claude-p
 | what goes over the wire? refused or reset connections, TLS alerts, Kafka errors | [`playground debug tcp-dump -c connect --duration 30s`](/playground%20debug%20tcp-dump), [`playground analyze tcp-dump -f <.pcap>`](/playground%20analyze%20tcp-dump) |
 | is this example red in CI too? | [`playground get-ci-result --test <dir> --logs`](/playground%20get-ci-result) |
 | what does this transform chain (SMT) do to a record? why does it fail? | [`playground connector smt test --connector <c>`](/playground%20connector%20smt%20test) |
+| is this bug fixed after version X? what changed since? | [`playground connector-plugin changelog --from X --grep <symptom>`](/playground%20connector-plugin%20changelog) |
 | where is the source code of connector X, version Y? | [`playground connector-plugin sourcecode --only-show-url`](/playground%20connector-plugin%20sourcecode) |
 | scaffold a reproduction model | [`playground repro bootstrap -f <example> -d "<description>" --no-run`](/playground%20repro%20bootstrap) |
 

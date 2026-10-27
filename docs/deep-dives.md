@@ -37,10 +37,10 @@ CLI change that makes a page wrong shows up as a failing test.
 - 🧠 Commands: `connector smt test`
 - 🎬 Bite size session: [🔀 What does this transform chain do to a record?](/sessions?id=🔀-what-does-this-transform-chain-do-to-a-record)
 
-### 🧑‍💻 Connector plugins: versions, config keys, source code, jars
+### 🧑‍💻 Connector plugins: versions, release notes, config keys, source code, jars
 
 - 📖 [Read the deep dive](/deep-dive-connector-plugin.md)
-- 🧠 Commands: `connector-plugin versions`, `config-key`, `sourcecode`, `search-jar`
+- 🧠 Commands: `connector-plugin versions`, `changelog`, `config-key`, `sourcecode`, `search-jar`
 - 🎬 Bite size session: [🧑‍💻 The source code of a connector at the customer's version](/sessions?id=🧑💻-the-source-code-of-a-connector-at-the-customers-version)
 
 ### 📈 Benchmark a connector

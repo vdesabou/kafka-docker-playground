@@ -8,7 +8,7 @@ source ${DIR}/lab-utils.bash
 lab_require_plaintext
 playground_cli="${DIR}/../../scripts/cli/playground"
 
-log "Step 1: versions, and the cache"
+log "Step 1: versions, the cache, and what changed"
 lab_run playground connector-plugin versions -c confluentinc/kafka-connect-jdbc --last 3
 lab_expect_exit 0
 lab_expect_contains "💯 Listing last 3 versions for connector plugin confluentinc/kafka-connect-jdbc"
@@ -20,6 +20,13 @@ then
     exit 1
 fi
 log "✅ cache file /tmp/version_confluentinc_kafka-connect-jdbc"
+lab_run playground connector-plugin changelog -c confluentinc/kafka-connect-jdbc --from 10.9.6 --to 10.9.8
+lab_expect_exit 0
+lab_expect_contains "📜 Release notes of confluentinc/kafka-connect-jdbc after 10.9.6 up to 10.9.8: 2 version(s)"
+lab_expect_contains "🔢 v10.9.8 - 📅 release date: 2026-09-16"
+lab_expect_contains "PR-1691 - Fix high CPU: JDBC source task busy-spins while waiting for table list"
+lab_expect_contains "🌐 changelog: https://docs.confluent.io/kafka-connectors/jdbc/10.9/changelog.html"
+lab_expect_not_contains "v10.9.6 -"
 
 log "Step 2: a config key, everywhere then for one connector"
 lab_run playground connector-plugin config-key --key flush.size

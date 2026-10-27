@@ -5305,7 +5305,7 @@
     },
     {
       "name": "connector-plugin",
-      "description": "🔌 Connector-plugin commands\n\nQuestions about connector plugins on Confluent Hub, answered without a\nrunning environment:\n\n  versions              every released version of a plugin\n  display-last-updated  what was published recently, by vendor\n  search-jar            which jars ship in it, and which class is where\n  config-key            what a config key does, its default, since when, who sets it\n  sourcecode            open the source on GitHub\n\n🎓 Tip: search-jar answers \"is this class really in the plugin, and with\nwhich signature\", which is the question behind most NoSuchMethodError and\nClassNotFoundException reports.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version",
+      "description": "🔌 Connector-plugin commands\n\nQuestions about connector plugins on Confluent Hub, answered without a\nrunning environment:\n\n  versions              every released version of a plugin\n  changelog             what changed between two versions (release notes)\n  display-last-updated  what was published recently, by vendor\n  search-jar            which jars ship in it, and which class is where\n  config-key            what a config key does, its default, since when, who sets it\n  sourcecode            open the source on GitHub\n\n🎓 Tip: search-jar answers \"is this class really in the plugin, and with\nwhich signature\", which is the question behind most NoSuchMethodError and\nClassNotFoundException reports.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-plugin\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%A7%91%F0%9F%92%BB-the-source-code-of-a-connector-at-the-customers-version",
       "usage": "playground connector-plugin COMMAND",
       "options": [],
       "subcommands": [
@@ -5364,6 +5364,56 @@
               ],
               "argument": "LAST",
               "description": "🆕 Number of last versions to show\n\nConflicts with: --all"
+            }
+          ]
+        },
+        {
+          "name": "changelog",
+          "description": "📜 Show the release notes of a connector plugin between two versions\n\nReads the changelog feeds of docs.confluent.io (one per minor line, for\nexample https://docs.confluent.io/kafka-connectors/s3-sink/12.1/changelog.xml)\nand lists every change after --from, up to --to, newest first, with the\nrelease date from Confluent Hub.\n\nIt answers \"the customer runs 10.5.7: is their bug fixed in a later\nversion, and in which one?\" in one call: pass the customer version as\n--from and the symptom as --grep. The CC-xxxxx ids are the Jira tickets\nof the fixes.\n\nWithout --from, only the minor line of --to is shown (for example every\n12.1.x up to 12.1.15).\n\nOnly Confluent self-managed plugins documented under\ndocs.confluent.io/kafka-connectors have a feed. Fully managed connectors\nand partner plugins don't. Answers are cached for one day in\n/tmp/connector-plugin-changelog (--force-refresh).\n\n🎓 Tip: then read the code of the fix with playground connector-plugin sourcecode --checkout-only",
+          "usage": "playground connector-plugin changelog [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--connector-plugin",
+                "-c"
+              ],
+              "argument": "CONNECTOR-PLUGIN",
+              "description": "🔌 Connector plugin name\n\n🎓 Tip: use <tab> completion to trigger fzf completion\n\nRequired: ✓ Yes"
+            },
+            {
+              "names": [
+                "--from"
+              ],
+              "argument": "FROM",
+              "description": "🔢 Version in use: show the changes of the versions after it (excluded)"
+            },
+            {
+              "names": [
+                "--to"
+              ],
+              "argument": "TO",
+              "description": "🔢 Show the changes up to this version (included)\n\nDefault is the latest version on Confluent Hub"
+            },
+            {
+              "names": [
+                "--grep"
+              ],
+              "argument": "GREP",
+              "description": "🔎 Only show the changes matching this regular expression (case insensitive)\n\nExample: --grep \"CVE|offset|NullPointerException\""
+            },
+            {
+              "names": [
+                "--json"
+              ],
+              "argument": "",
+              "description": "🤖 Print the result as JSON"
+            },
+            {
+              "names": [
+                "--force-refresh"
+              ],
+              "argument": "",
+              "description": "☢️ Force refresh."
             }
           ]
         },
