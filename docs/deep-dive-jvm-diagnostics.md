@@ -10,8 +10,9 @@ Takes about 15 minutes to read and run.
 > [!TIP]
 > The video sessions show each analyzer on its own:
 > [🧵 A connector looks stuck: analyze thread dumps](/sessions?id=🧵-a-connector-looks-stuck-analyze-thread-dumps),
-> [♻️ Long GC pauses or a memory leak: analyze GC logs](/sessions?id=♻️-long-gc-pauses-or-a-memory-leak-analyze-gc-logs) and
-> [🛩️ A slow connector: where does the task time go?](/sessions?id=🛩️-a-slow-connector-where-does-the-task-time-go).
+> [♻️ Long GC pauses or a memory leak: analyze GC logs](/sessions?id=♻️-long-gc-pauses-or-a-memory-leak-analyze-gc-logs),
+> [🛩️ A slow connector: where does the task time go?](/sessions?id=🛩️-a-slow-connector-where-does-the-task-time-go) and
+> [✂️ Records vanish, a task hangs: what does the code do?](/sessions?id=✂️-records-vanish-a-task-hangs-what-does-the-code-do).
 > This page goes further: which one to reach for, what they cost the JVM, their gotchas, a hands-on lab and recipes for
 > support repros.
 
@@ -504,6 +505,7 @@ playground debug tcp-dump         [-c <c>]… [--port <p>] [--filter <bpf>] [--d
 - 🎬 Video sessions: [🧵 thread dumps](/sessions?id=🧵-a-connector-looks-stuck-analyze-thread-dumps),
   [♻️ GC logs](/sessions?id=♻️-long-gc-pauses-or-a-memory-leak-analyze-gc-logs),
   [🛩️ flight recorder](/sessions?id=🛩️-a-slow-connector-where-does-the-task-time-go),
+  [✂️ jscissors](/sessions?id=✂️-records-vanish-a-task-hangs-what-does-the-code-do),
   [🐞 remote debugging](/sessions?id=🐞-a-breakpoint-in-a-running-connector-remote-debugging)
 - 📖 [Analyze what you collected](/reusables?id=🔎-analyze-what-you-collected) in the Reproduction toolkit
 - 🍪 Deep dives: [`container logs` and `analyze logs`](/deep-dive-container-logs.md) (the same digest for logs),
