@@ -4,7 +4,7 @@
 
 Quickly test the [File Pulse Source](https://github.com/streamthoughts/kafka-connect-file-pulse) connector.
 
-The connector zip is downloaded from the GitHub releases (default version `2.15.0`, override with `--connector-tag`). Connector versions 2.x and later require CP 6.0 or later (JDK 11), the script exits with code 111 otherwise.
+The connector zip is downloaded from the GitHub releases (default: the latest GitHub release, falling back to `2.15.0` if GitHub cannot be reached; override with `--connector-tag`). Connector versions 2.x and later require CP 6.0 or later (JDK 11), the script exits with code 111 otherwise.
 
 ## Prerequisites
 

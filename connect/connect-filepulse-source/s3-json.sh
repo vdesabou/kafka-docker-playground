@@ -3,7 +3,9 @@ set -e
 
 if [ -z "$CONNECTOR_TAG" ]
 then
-    CONNECTOR_TAG=2.15.0
+    # latest GitHub release (follow the releases/latest redirect, no API rate limit), 2.15.0 if GitHub can't be reached
+    CONNECTOR_TAG=$(curl -sI -o /dev/null -w '%{redirect_url}' https://github.com/streamthoughts/kafka-connect-file-pulse/releases/latest | sed -n 's|.*/tag/v||p')
+    CONNECTOR_TAG=${CONNECTOR_TAG:-2.15.0}
 fi
 
 if [ ! -f streamthoughts-kafka-connect-file-pulse-${CONNECTOR_TAG}.zip ]
