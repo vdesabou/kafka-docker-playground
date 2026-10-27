@@ -1,6 +1,7 @@
 start_date="${args[--start-date]}"
 end_date="${args[--end-date]}"
 display_only_total_cost="${args[--display-only-total-cost]}"
+raw_output_file="${args[--raw-output-file]}"
 
 if [[ ! -n "$start_date" ]]
 then
@@ -72,6 +73,10 @@ then
     logerror "❌ failed to retrieve ccloud costs with command: confluent billing cost list --start-date $start_date --end-date $end_date"
     cat "$INPUT_FILE"
     exit 1
+fi
+if [[ -n "$raw_output_file" ]]
+then
+    cp "$INPUT_FILE" "$raw_output_file"
 fi
 if [[ ! -n "$display_only_total_cost" ]]
 then

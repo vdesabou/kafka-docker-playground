@@ -2,6 +2,7 @@ user="${args[--user]}"
 display_only_total_cost="${args[--display-only-total-cost]}"
 start_date="${args[--start-date]}"
 end_date="${args[--end-date]}"
+raw_output_file="${args[--raw-output-file]}"
 
 if [[ ! -n "$start_date" ]]
 then
@@ -153,7 +154,7 @@ cat > "$DEF_FILE" << JSON
         "aggregation": {
             "totalCost": { "name": "Cost", "function": "Sum" }
         },
-        "grouping": [ { "type": "Dimension", "name": "ServiceName" } ],
+        "grouping": [ { "type": "Dimension", "name": "ServiceName" }, { "type": "Dimension", "name": "ResourceId" } ],
         "filter": {
             "and": [
                 { "tags": { "name": "cflt_managed_id", "operator": "In", "values": ["${user}"] } },
@@ -184,6 +185,26 @@ OUT_JSON="$tmp_dir/out.json"
 if ! run_cost_query "/subscriptions/$sub_id" "$DEF_FILE" "$OUT_JSON"; then
     logerror "Failed to run Azure cost query even via REST."
     exit 1
+fi
+
+# grouped by resource too (for the HTML report of costs-history): rows can come on several pages
+next_link=$(jq -r '.properties.nextLink // empty' "$OUT_JSON")
+while [[ -n "$next_link" ]]
+do
+    az rest --method post --url "$next_link" --headers "Content-Type=application/json" --headers "Accept=application/json" --body @"$DEF_FILE" --output json > "$tmp_dir/next.json" 2>/dev/null || true
+    if ! jq -e '.properties.rows' "$tmp_dir/next.json" > /dev/null 2>&1
+    then
+        logwarn "⚠️ could not retrieve the next page of Azure costs, total may be incomplete"
+        break
+    fi
+    jq -s '.[0].properties.rows += .[1].properties.rows | .[0]' "$OUT_JSON" "$tmp_dir/next.json" > "$tmp_dir/merged.json"
+    mv "$tmp_dir/merged.json" "$OUT_JSON"
+    next_link=$(jq -r '.properties.nextLink // empty' "$tmp_dir/next.json")
+done
+
+if [[ -n "$raw_output_file" ]]
+then
+    jq 'del(.properties.nextLink)' "$OUT_JSON" > "$raw_output_file"
 fi
 
 if [[ ! -n "$display_only_total_cost" ]]

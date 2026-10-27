@@ -2305,7 +2305,8 @@ function bootstrap_ccloud_environment () {
     confluent login --save
   fi
 
-  playground ccloud-costs-history > /tmp/ccloud-costs-history.txt &
+  # --no-open: the end of playground run prints the link of the HTML report
+  playground ccloud-costs-history --no-open > /tmp/ccloud-costs-history.txt &
 
   suggest_use_previous_example_ccloud=1
   test_file=$(playground state get run.test_file)

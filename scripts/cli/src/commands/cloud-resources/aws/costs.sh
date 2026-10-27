@@ -2,6 +2,7 @@ user="${args[--user]}"
 display_only_total_cost="${args[--display-only-total-cost]}"
 start_date="${args[--start-date]}"
 end_date="${args[--end-date]}"
+raw_output_file="${args[--raw-output-file]}"
 if [[ ! -n "$start_date" ]]
 then
     if [[ "$OSTYPE" == "darwin"* ]]
@@ -134,20 +135,48 @@ if [[ ! -n "$display_only_total_cost" ]]
 then
     log "💰 Overall costs by service:"
 fi
-cost_data=$(aws ce get-cost-and-usage \
-    --time-period Start=$start_date,End=$end_date \
-    --granularity MONTHLY \
-    --metrics "UnblendedCost" \
-    --group-by Type=DIMENSION,Key=SERVICE \
-    --filter '{
-        "Tags": {
-            "Key": "cflt_managed_id",
-            "Values": ["'"$user"'"]
-        }
-    }' \
-    --region us-east-1 2>/dev/null)
+# also grouped by usage type, for the HTML report of costs-history: with two group-by, groups can come on several pages
+cost_data=""
+next_page_token=()
+while true
+do
+    page=$(aws ce get-cost-and-usage \
+        --time-period Start=$start_date,End=$end_date \
+        --granularity MONTHLY \
+        --metrics "UnblendedCost" \
+        --group-by Type=DIMENSION,Key=SERVICE Type=DIMENSION,Key=USAGE_TYPE \
+        --filter '{
+            "Tags": {
+                "Key": "cflt_managed_id",
+                "Values": ["'"$user"'"]
+            }
+        }' \
+        "${next_page_token[@]}" \
+        --region us-east-1 2>/dev/null)
+    if [ $? -ne 0 ] || [ -z "$page" ]
+    then
+        cost_data=""
+        break
+    fi
+    if [ -z "$cost_data" ]
+    then
+        cost_data="$page"
+    else
+        cost_data=$(jq -s '.[0].ResultsByTime += .[1].ResultsByTime | .[0]' <(echo "$cost_data") <(echo "$page"))
+    fi
+    token=$(echo "$page" | jq -r '.NextPageToken // empty')
+    if [ -z "$token" ]
+    then
+        break
+    fi
+    next_page_token=(--next-page-token "$token")
+done
 
-if [ $? -eq 0 ] && [ -n "$cost_data" ]; then
+if [ -n "$cost_data" ]; then
+    if [[ -n "$raw_output_file" ]]
+    then
+        echo "$cost_data" | jq 'del(.NextPageToken)' > "$raw_output_file"
+    fi
     # Build histogram input file: "Service total Service"
     HIST_FILE="$tmp_dir/aws_service_costs.txt"
     echo "$cost_data" | jq -r '[.ResultsByTime[].Groups[]] | group_by(.Keys[0]) | map({service: .[0].Keys[0], total: (map(.Metrics.UnblendedCost.Amount | tonumber) | add)}) | sort_by(-.total) | .[] | select(.total != 0) | "\(.service)\t\(.total)\t\(.service)"' > "$HIST_FILE"

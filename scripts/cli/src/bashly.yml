@@ -1411,6 +1411,12 @@ commands:
         private: true
         help: |-
           💰 display only total cost
+      - &raw-output-file
+        long: --raw-output-file
+        private: true
+        arg: raw_output_file
+        help: |-
+          📄 also save the raw response of the cost API in this file (used by costs-history for its HTML report)
     - name: costs-history
       help: |-
         👛  Retrieve aws costs for each month since last year
@@ -1420,10 +1426,24 @@ commands:
         then want to know which service it was.
 
         By default it will only display total cost in dollars. Use the --detailed flag to see more information.
+
+        🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month, per service and usage type, the month x service matrix, the top usage types with the ones still billing, and the details of each month.
       flags:
         - long: --detailed
           help: |-
             💹 display all details for each month
+        - &cloud-costs-output-dir
+          long: --output-dir
+          short: -o
+          arg: output_dir
+          required: false
+          default: "/tmp/playground-cloud-costs"
+          help: |-
+            📂 Output directory for the HTML report (default: /tmp/playground-cloud-costs)
+        - &cloud-costs-no-open
+          long: --no-open
+          help: |-
+            🚫 Do not open the HTML report in the browser
 
   - name: azure
     help: |
@@ -1481,6 +1501,7 @@ commands:
         private: true
         help: |-
           💰 display only total cost
+      - *raw-output-file
     - name: costs-history
       help: |-
         👛  Retrieve azure costs for each month since last year
@@ -1489,10 +1510,14 @@ commands:
         went wrong before digging into it with costs.
 
         By default it will only display total cost in dollars. Use the --detailed flag to see more information.
+
+        🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month, per service and resource group, the month x service matrix, the top resources with the ones still billing, and the details of each month.
       flags:
         - long: --detailed
           help: |-
             💹 display all details for each month
+        - *cloud-costs-output-dir
+        - *cloud-costs-no-open
 
 - name: ccloud-costs
   dependencies:
@@ -1530,6 +1555,7 @@ commands:
       private: true
       help: |-
         💰 display only total cost
+    - *raw-output-file
 
 - name: ccloud-costs-history
   dependencies:
@@ -1541,10 +1567,26 @@ commands:
 
     By default it will only display total cost in dollars. Use the --detailed flag to see more information.
 
+    🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month and per day, per product, environment and line type, the month x product matrix, the top resources with the ones still billing, and the details of each month.
+
   flags:
     - long: --detailed
       help: |-
         💹 display all details for each month
+    - *cloud-costs-output-dir
+    - *cloud-costs-no-open
+    - long: --sample
+      short: -s
+      required: false
+      arg: sample
+      allowed: [ccloud_dummy]
+      help: |-
+        🧪 Sample of tools/cloud-costs/samples: writes the HTML report from this dummy billing data, without calling Confluent Cloud
+
+        To see what the report looks like before running it on your organization.
+  examples:
+    - playground ccloud-costs-history
+    - playground ccloud-costs-history --sample ccloud_dummy
 
 - name: run
   group: Run

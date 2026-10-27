@@ -541,13 +541,27 @@ subcommands:
         line per month over the past year, drawn as a histogram, which\nmakes a month
         that went wrong obvious at a glance. Use costs when you\nthen want to know
         which service it was.\n\nBy default it will only display total cost in dollars.
-        Use the --detailed flag to see more information."
+        Use the --detailed flag to see more information.\n\n\U0001F310 Also writes
+        a self-contained HTML report in --output-dir, opened in the browser in an
+        interactive terminal (--no-open to skip): cost per month, per service and
+        usage type, the month x service matrix, the top usage types with the ones
+        still billing, and the details of each month."
       usage: playground cloud-resources aws costs-history [OPTIONS]
       options:
       - names:
         - "--detailed"
         argument: ''
         description: "\U0001F4B9 display all details for each month"
+      - names:
+        - "--output-dir"
+        - "-o"
+        argument: OUTPUT_DIR
+        description: "\U0001F4C2 Output directory for the HTML report (default: /tmp/playground-cloud-costs)\n\nDefault
+          value: /tmp/playground-cloud-costs"
+      - names:
+        - "--no-open"
+        argument: ''
+        description: "\U0001F6AB Do not open the HTML report in the browser"
   - name: azure
     description: |-
       ☁️ What is still running in Azure, and what it costs
@@ -589,13 +603,27 @@ subcommands:
       description: "\U0001F45B  Retrieve azure costs for each month since last year\n\nOne
         line per month over the past year, so you can spot the month that\nwent wrong
         before digging into it with costs.\n\nBy default it will only display total
-        cost in dollars. Use the --detailed flag to see more information."
+        cost in dollars. Use the --detailed flag to see more information.\n\n\U0001F310
+        Also writes a self-contained HTML report in --output-dir, opened in the browser
+        in an interactive terminal (--no-open to skip): cost per month, per service
+        and resource group, the month x service matrix, the top resources with the
+        ones still billing, and the details of each month."
       usage: playground cloud-resources azure costs-history [OPTIONS]
       options:
       - names:
         - "--detailed"
         argument: ''
         description: "\U0001F4B9 display all details for each month"
+      - names:
+        - "--output-dir"
+        - "-o"
+        argument: OUTPUT_DIR
+        description: "\U0001F4C2 Output directory for the HTML report (default: /tmp/playground-cloud-costs)\n\nDefault
+          value: /tmp/playground-cloud-costs"
+      - names:
+        - "--no-open"
+        argument: ''
+        description: "\U0001F6AB Do not open the HTML report in the browser"
 - name: ccloud-costs
   description: "\U0001F4B0  Retrieve ccloud costs for a range of dates\n\nAll you
     have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n\nCost
@@ -619,13 +647,35 @@ subcommands:
   description: "\U0001F45B  Retrieve ccloud costs for each month since last year\n\nAll
     you have to do is to be already logged in with confluent CLI. It is using https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n\nBy
     default it will only display total cost in dollars. Use the --detailed flag to
-    see more information."
+    see more information.\n\n\U0001F310 Also writes a self-contained HTML report in
+    --output-dir, opened in the browser in an interactive terminal (--no-open to skip):
+    cost per month and per day, per product, environment and line type, the month
+    x product matrix, the top resources with the ones still billing, and the details
+    of each month."
   usage: playground ccloud-costs-history [OPTIONS]
   options:
   - names:
     - "--detailed"
     argument: ''
     description: "\U0001F4B9 display all details for each month"
+  - names:
+    - "--output-dir"
+    - "-o"
+    argument: OUTPUT_DIR
+    description: "\U0001F4C2 Output directory for the HTML report (default: /tmp/playground-cloud-costs)\n\nDefault
+      value: /tmp/playground-cloud-costs"
+  - names:
+    - "--no-open"
+    argument: ''
+    description: "\U0001F6AB Do not open the HTML report in the browser"
+  - names:
+    - "--sample"
+    - "-s"
+    argument: SAMPLE
+    description: "\U0001F9EA Sample of tools/cloud-costs/samples: writes the HTML
+      report from this dummy billing data, without calling Confluent Cloud\n\nTo see
+      what the report looks like before running it on your organization.\n\nAllowed
+      values: ccloud_dummy"
 - name: run
   description: "\U0001F579️ Run any example !\n\n\U0001F525 It start an interactive
     mode where you'll be fully guided !\n\n  playground run                       \U0001F50D

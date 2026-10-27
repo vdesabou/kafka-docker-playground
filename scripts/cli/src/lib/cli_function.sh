@@ -5311,6 +5311,31 @@ function open_html_report() {
     fi
 }
 
+# HTML report of ccloud-costs-history / cloud-resources aws|azure costs-history (tools/cloud-costs/costs_report.py)
+# $1: ccloud, aws or azure, $2: folder with one raw cost API response per month (<start date>_<end date>.json),
+# $3: output dir, $4: non-empty to never open it, $5: user of the cflt_managed_id tag (aws, azure)
+function write_cloud_costs_report() {
+    local cloud="$1"
+    local data_dir="$2"
+    local output_dir="$3"
+    local no_open="$4"
+    local user="$5"
+    if ! command -v python3 > /dev/null 2>&1
+    then
+        logwarn "⚠️ python3 is not on PATH: no HTML report"
+        return 0
+    fi
+    mkdir -p "$output_dir"
+    output_dir=$(cd "$output_dir" && pwd)
+    local report="$output_dir/${cloud}-costs-history-$(date '+%Y%m%d-%H%M%S').html"
+    if ! python3 -I "$root_folder/tools/cloud-costs/costs_report.py" --cloud "$cloud" --data-dir "$data_dir" --user "$user" --html-out "$report"
+    then
+        logerror "❌ could not write the HTML report"
+        return 1
+    fi
+    open_html_report "$report" "$no_open"
+}
+
 # HTML report of the records written by summarize_log_errors in PG_LOG_DIGEST_RECORDS_FILE (tools/log-analyzer/log_report.py)
 # $1: records file, $2: report, $3: non-empty to never open it, then the options of log_report.py (--title, --heading...)
 function write_log_records_report() {
