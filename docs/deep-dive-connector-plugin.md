@@ -14,6 +14,7 @@ run.
 | You want | Command |
 | --- | --- |
 | every released version, with its release date | `playground connector-plugin versions -c confluentinc/kafka-connect-jdbc` (`--last 5`) |
+| what changed since version X (release notes), is a bug fixed after it | `playground connector-plugin changelog -c confluentinc/kafka-connect-jdbc --from 10.9.6` (`--grep "CVE\|NullPointer"`, `--to`, `--json`) |
 | what was released on the Hub in the last days | `playground connector-plugin display-last-updated --days 7` (`--vendor confluentinc`) |
 | what a config key does, its default, since when, values used | `playground connector-plugin config-key --key batch.size` (`-c JdbcSinkConnector`) |
 | the GitHub tree of the code at version X | `playground connector-plugin sourcecode -c confluentinc/kafka-connect-jdbc --connector-tag 10.8.4 --only-show-url` |
@@ -30,6 +31,7 @@ run.
    | Command | Source | Fresh as of |
    | --- | --- | --- |
    | `versions`, `display-last-updated` | Confluent Hub API (`api.hub.confluent.io/api/plugins/<owner>/<name>/versions`) | the first call: cached in `/tmp/version_<owner>_<name>` until `--force-refresh` |
+   | `changelog` | the changelog feeds of docs.confluent.io, one per minor line (`docs.confluent.io/kafka-connectors/<slug>/<major.minor>/changelog.xml`), found from the `documentation_url` of the plugin manifest; release dates from the Hub API | one day: cached in `/tmp/connector-plugin-changelog` until `--force-refresh` |
    | `config-key` | the `config-<class>.txt` references next to the examples (about 290 files, tracked in git, refreshed by CI with the latest connector version), plus the versions you ran locally (`.connector_config/`) | your last `git pull` |
    | `sourcecode` | `scripts/cli/confluent-hub-plugin-list.txt` (plugin → repository), built from the Hub on first use; fully managed versions from `cc-docker-connect` | the list: until you regenerate it (`playground generate-connector-plugin-list`) |
    | `search-jar` | the plugin itself, downloaded with `confluent-hub install` in a throw-away container of the connect image | now (needs Docker, not an environment) |
@@ -76,6 +78,37 @@ Gotchas:
   `display-last-updated-connector-plugins-days <n>` / `display-last-updated-connector-plugins-vendor <vendor|all>`
   change the window and the vendor (also in the `⚙️ CLI preferences` entry of the `playground run` menu).
 - A version without a Hub release date prints `📅 release date: <unknown>`.
+
+### What changed: `changelog`
+
+```bash
+playground connector-plugin changelog -c confluentinc/kafka-connect-jdbc --from 10.9.6 --to 10.9.8
+# 📜 Release notes of confluentinc/kafka-connect-jdbc after 10.9.6 up to 10.9.8: 2 version(s)
+# 🔢 v10.9.8 - 📅 release date: 2026-09-16
+#    • PR-1691 - Fix high CPU: JDBC source task busy-spins while waiting for table list
+#    • PR-1678 - Guard stop() against a task whose start() never completed
+#    • PR-1686 - fix: redact sensitive JDBC connector data reaching logs and task-status
+# 🔢 v10.9.7 - 📅 release date: 2026-08-19
+#    • PR-1679 - CC-43056: Bump org.postgresql:postgresql to 42.7.12 to address CVE-2026-54291
+#    • PR-1669 - Enrich redacted JDBC sink SQL exception messages with non-sensitive diagnostic details
+#    • PR-1665 - Redact sensitive values in JDBC sink SQL exception messages
+# 🌐 changelog: https://docs.confluent.io/kafka-connectors/jdbc/10.9/changelog.html
+
+# "is it fixed after the customer's version?"
+playground connector-plugin changelog -c confluentinc/kafka-connect-jdbc --from 10.7.4 --grep "CVE"
+```
+
+Gotchas:
+
+- `--from` is excluded, `--to` included (default: the latest on the Hub). Without `--from`, only the minor line of
+  `--to` is shown. `--from` at the latest version prints `✅ … is the latest version`.
+- **Only Confluent self-managed plugins documented under `docs.confluent.io/kafka-connectors/`** have a feed (about
+  70 of the 80 on the Hub). The others print `⚠️ no changelog feed for …` and exit 0: fully managed connectors,
+  partner plugins, Replicator, retired connectors.
+- The feed URL is not in the manifest: it is derived from the manifest's `documentation_url` after its redirects
+  (`docs.confluent.io/kafka-connect-jdbc/current/` → `kafka-connectors/jdbc/current/`).
+- The notes are only as complete as the docs (`Updated hadoop and jose4j dependencies`). A match gives the version
+  and the `CC-xxxxx` Jira id; confirm it in the code at that tag and the previous one (`sourcecode --connector-tag`).
 
 ---
 
@@ -204,7 +237,7 @@ Gotchas:
 
 Steps 1 to 4 need internet access only; step 5 needs Docker; step 6 is for Confluent employees (`GH_TOKEN` + VPN).
 
-**Step 1: versions, and the cache**
+**Step 1: versions, the cache, and what changed**
 
 ```bash
 playground connector-plugin versions -c confluentinc/kafka-connect-jdbc --last 3
@@ -214,6 +247,12 @@ playground connector-plugin versions -c confluentinc/kafka-connect-jdbc --last 3
 # 🔢 v10.9.9 - 📅 release date: 2026-09-16 (36 days ago)
 # 🌐 documentation: https://docs.confluent.io/kafka-connect-jdbc/current/
 ls -l /tmp/version_confluentinc_kafka-connect-jdbc                                      # the cache
+playground connector-plugin changelog -c confluentinc/kafka-connect-jdbc --from 10.9.6 --to 10.9.8
+# 📜 Release notes of confluentinc/kafka-connect-jdbc after 10.9.6 up to 10.9.8: 2 version(s)
+# 🔢 v10.9.8 - 📅 release date: 2026-09-16
+#    • PR-1691 - Fix high CPU: JDBC source task busy-spins while waiting for table list
+# …
+# 🌐 changelog: https://docs.confluent.io/kafka-connectors/jdbc/10.9/changelog.html
 ```
 
 **Step 2: a config key, everywhere then for one connector**
@@ -293,6 +332,7 @@ GH_TOKEN=… playground connector-plugin sourcecode -c confluentinc/SalesforceBu
 | "NoSuchMethodError / ClassNotFoundException" | `search-jar --class <Class> --connector-tag <theirs>`: is the class shipped, with which signature; then the worker side with `container exec` |
 | "read the code of the version that fails" | `sourcecode --connector-tag <theirs> --checkout-only`, then grep the folder it prints |
 | "fully managed connector behaves differently" | `sourcecode -c confluentinc/<Type> --connector-tag <cc-connect version of the cluster>` (`GH_TOKEN` + VPN) |
+| "is our bug fixed in a later version? which one?" / "which CVEs are fixed after our version?" | `changelog --from <theirs> --grep "<symptom>\|CVE"`, then the `CC-xxxxx` Jira and the code at that tag |
 | "something changed overnight" | `display-last-updated --days 2 --vendor <vendor>` |
 
 ---
@@ -301,6 +341,7 @@ GH_TOKEN=… playground connector-plugin sourcecode -c confluentinc/SalesforceBu
 
 ```bash
 playground connector-plugin versions -c <owner/name> [--last N] [--force-refresh]
+playground connector-plugin changelog -c <owner/name> [--from X] [--to Y] [--grep <regex>] [--json]
 playground connector-plugin display-last-updated [--days 3] [--vendor <vendor>]
 playground connector-plugin config-key -k <key> [-c <class or FM type>] [--max-examples 10]
 playground connector-plugin sourcecode -c <owner/name> [--connector-tag X [--connector-tag Y]] --only-show-url|--checkout-only
@@ -308,6 +349,7 @@ playground connector-plugin search-jar -c <owner/name> [--connector-tag X] [--cl
 ```
 
 - `versions` = Hub API, cached in `/tmp/version_<owner>_<name>` ("days ago" frozen): `--force-refresh`.
+- `changelog` = docs.confluent.io feeds, self-managed Confluent plugins only, `--from` excluded.
 - `config-key` = CI references in git + versions run locally. "Since" = CI date, not a version.
 - `sourcecode`: always pass the customer's `--connector-tag`. Scripts: `--only-show-url` / `--checkout-only`, never
   `--open` / `--compile`.
@@ -327,4 +369,5 @@ playground connector-plugin search-jar -c <owner/name> [--connector-tag X] [--cl
   [playground connector-plugin config-key](/playground%20connector-plugin%20config-key),
   [playground connector-plugin sourcecode](/playground%20connector-plugin%20sourcecode),
   [playground connector-plugin versions](/playground%20connector-plugin%20versions),
+  [playground connector-plugin changelog](/playground%20connector-plugin%20changelog),
   [playground connector-plugin search-jar](/playground%20connector-plugin%20search-jar)

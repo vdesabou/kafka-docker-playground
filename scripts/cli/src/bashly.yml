@@ -8766,6 +8766,7 @@ commands:
     running environment:
 
       versions              every released version of a plugin
+      changelog             what changed between two versions (release notes)
       display-last-updated  what was published recently, by vendor
       search-jar            which jars ship in it, and which class is where
       config-key            what a config key does, its default, since when, who sets it
@@ -8859,6 +8860,64 @@ commands:
         🔢 v1.7.13 - 📅 release date: 2026-05-05 (160 days ago)
         🔢 v1.7.14 - 📅 release date: 2026-10-01 (11 days ago)
         🌐 documentation: https://docs.confluent.io/kafka-connect-http/current/index.html
+
+  - name: changelog
+    help: |-
+      📜 Show the release notes of a connector plugin between two versions
+
+      Reads the changelog feeds of docs.confluent.io (one per minor line, for
+      example https://docs.confluent.io/kafka-connectors/s3-sink/12.1/changelog.xml)
+      and lists every change after --from, up to --to, newest first, with the
+      release date from Confluent Hub.
+
+      It answers "the customer runs 10.5.7: is their bug fixed in a later
+      version, and in which one?" in one call: pass the customer version as
+      --from and the symptom as --grep. The CC-xxxxx ids are the Jira tickets
+      of the fixes.
+
+      Without --from, only the minor line of --to is shown (for example every
+      12.1.x up to 12.1.15).
+
+      Only Confluent self-managed plugins documented under
+      docs.confluent.io/kafka-connectors have a feed. Fully managed connectors
+      and partner plugins don't. Answers are cached for one day in
+      /tmp/connector-plugin-changelog (--force-refresh).
+
+      🎓 Tip: then read the code of the fix with playground connector-plugin sourcecode --checkout-only
+    flags:
+    - *connector-plugin
+    - long: --from
+      arg: from
+      required: false
+      validate: not_empty
+      help: |-
+        🔢 Version in use: show the changes of the versions after it (excluded)
+    - long: --to
+      arg: to
+      required: false
+      validate: not_empty
+      help: |-
+        🔢 Show the changes up to this version (included)
+
+        Default is the latest version on Confluent Hub
+    - long: --grep
+      arg: grep
+      required: false
+      validate: not_empty
+      help: |-
+        🔎 Only show the changes matching this regular expression (case insensitive)
+
+        Example: --grep "CVE|offset|NullPointerException"
+    - long: --json
+      required: false
+      help: |-
+        🤖 Print the result as JSON
+    - *force_refresh
+    examples: |
+      playground connector-plugin changelog --connector-plugin confluentinc/kafka-connect-s3 --from 12.0.10
+      playground connector-plugin changelog --connector-plugin confluentinc/kafka-connect-jdbc --from 10.7.4 --grep "timestamp|CVE"
+      playground connector-plugin changelog --connector-plugin confluentinc/kafka-connect-http --to 1.7.10
+      playground connector-plugin changelog --connector-plugin confluentinc/kafka-connect-oracle-cdc --from 2.14.0 --json
 
   - name: display-last-updated
     help: |-
