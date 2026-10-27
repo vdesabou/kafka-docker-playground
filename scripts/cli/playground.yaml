@@ -790,7 +790,8 @@ subcommands:
     argument: CONNECTOR_TAG
     description: "\U0001F517 Connector version to use\n\nBy default, for each connector,
       the latest available version on Confluent Hub is used\n\n\U0001F393 Tip: set
-      to \" \" in order to select the version dynamically\n\nConflicts with: --connector-zip"
+      to \" \" in order to select the version dynamically (for Confluent plugins,
+      the preview shows the release notes of each version)\n\nConflicts with: --connector-zip"
   - names:
     - "--connector-zip"
     argument: CONNECTOR_ZIP
@@ -1184,7 +1185,8 @@ subcommands:
     argument: CONNECTOR_TAG
     description: "\U0001F517 Connector version to use\n\nBy default, for each connector,
       the latest available version on Confluent Hub is used\n\n\U0001F393 Tip: set
-      to \" \" in order to select the version dynamically\n\nConflicts with: --connector-zip"
+      to \" \" in order to select the version dynamically (for Confluent plugins,
+      the preview shows the release notes of each version)\n\nConflicts with: --connector-zip"
   - names:
     - "--connector-zip"
     argument: CONNECTOR_ZIP
@@ -5380,7 +5382,8 @@ subcommands:
       argument: CONNECTOR_TAG
       description: "\U0001F517 Connector version to use\n\nBy default, for each connector,
         the latest available version on Confluent Hub is used\n\n\U0001F393 Tip: set
-        to \" \" in order to select the version dynamically\n\nConflicts with: --connector-zip"
+        to \" \" in order to select the version dynamically (for Confluent plugins,
+        the preview shows the release notes of each version)\n\nConflicts with: --connector-zip"
     - names:
       - "--class"
       argument: CLASS
@@ -5407,6 +5410,12 @@ subcommands:
       argument: LAST
       description: "\U0001F195 Number of last versions to show\n\nConflicts with:
         --all"
+    - names:
+      - "--with-changelog"
+      argument: ''
+      description: "\U0001F4DC Show the release notes of each version under it\n\nFrom
+        the changelog feeds of docs.confluent.io, like playground connector-plugin
+        changelog: Confluent self-managed plugins only."
   - name: changelog
     description: "\U0001F4DC Show the release notes of a connector plugin between
       two versions\n\nReads the changelog feeds of docs.confluent.io (one per minor
@@ -5530,7 +5539,8 @@ subcommands:
         Confluent employees only: for fully managed connectors, use the cc-connect
         image version for the pcc. You must have a Confluent Github token set with
         GITHUB_TOKEN or GH_TOKEN environment variable and also be using Confluent
-        VPN.\n\n\U0001F393 Tip: set to \" \" in order to select the version dynamically\n\n\U0001F393
+        VPN.\n\n\U0001F393 Tip: set to \" \" in order to select the version dynamically
+        (for Confluent plugins, the preview shows the release notes of each version)\n\n\U0001F393
         Tip: you can compare different sourcecode versions by specifying --connector-tag
         two times, in such case it will open github in comparison mode\n\nRepeatable:
         ✓ Yes"
@@ -6085,7 +6095,8 @@ subcommands:
       description: "\U0001F517 Connector version to use\n\nBy default, for each connector,
         the current version is used (for Confluent employees, it will also get latest
         versions for fully managed connectors)\n\n\U0001F393 Tip: set to \" \" in
-        order to select the version dynamically\n\n\U0001F393 Tip: you can compare
+        order to select the version dynamically (for Confluent plugins, the preview
+        shows the release notes of each version)\n\n\U0001F393 Tip: you can compare
         different sourcecode versions by specifying --connector-tag two times, in
         such case it will open github in comparison mode\n\nRepeatable: ✓ Yes"
   - name: enable-remote-debugging

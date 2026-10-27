@@ -6,7 +6,8 @@ docs.confluent.io publishes one RSS feed per minor line of a connector
 The feed location is not in the plugin manifest: it is derived from the documentation_url of the
 manifest, after following its redirects (many manifests still use old URL forms).
 
-Prints a JSON document on stdout; warnings go to stderr. Network answers are cached in --cache-dir
+Prints a JSON document on stdout (--format text: the same as playground prints it, used by the fzf
+preview of the --connector-tag picker); warnings go to stderr. Network answers are cached in --cache-dir
 for one day.
 """
 import argparse
@@ -126,10 +127,16 @@ def main():
     p.add_argument("--connector-plugin", required=True, help="owner/name on Confluent Hub")
     p.add_argument("--from", dest="from_version", help="exclusive lower bound (the version in use)")
     p.add_argument("--to", dest="to_version", help="inclusive upper bound, default: latest on Hub")
+    p.add_argument("--include-from", action="store_true", help="--from is included")
+    p.add_argument("--version", help="only this version (same as --from X --to X --include-from)")
     p.add_argument("--grep", help="case-insensitive regex, keep only the matching changes")
+    p.add_argument("--format", choices=["json", "text"], default="json")
     p.add_argument("--cache-dir", default="/tmp/connector-plugin-changelog")
     p.add_argument("--force-refresh", action="store_true")
     a = p.parse_args()
+    if a.version:
+        a.from_version = a.to_version = a.version.lstrip("v")
+        a.include_from = True
 
     owner, _, name = a.connector_plugin.partition("/")
     if not owner or not name:
@@ -147,8 +154,13 @@ def main():
     release_dates = {v["version"]: v.get("release_date") for v in hub_versions}
 
     to_version = a.to_version or hub_versions[-1]["version"]
-    up_to_date = bool(a.from_version and not a.to_version and vkey(a.from_version) >= vkey(to_version))
-    if a.from_version and a.to_version and vkey(a.from_version) >= vkey(to_version):
+    def after_from(version):
+        if not a.from_version:
+            return True
+        return vkey(version) >= vkey(a.from_version) if a.include_from else vkey(version) > vkey(a.from_version)
+
+    up_to_date = bool(a.from_version and not a.to_version and not after_from(to_version))
+    if a.from_version and a.to_version and not after_from(to_version):
         raise SystemExit(f"❌ --from {a.from_version} must be lower than --to {to_version}")
 
     # documentation_url of the most recent manifest, resolved to the current docs URL
@@ -169,16 +181,16 @@ def main():
         "versions": [],
     }
     if up_to_date:
-        print(json.dumps(result, indent=2))
+        output(result, a.format)
         return
     if not base:
         warn(f"⚠️ no changelog feed for {a.connector_plugin}: its documentation ({documentation_url} -> {resolved}) is not a docs.confluent.io/kafka-connectors page")
-        print(json.dumps(result, indent=2))
+        output(result, a.format)
         return
 
     # minor lines to read: the ones of the Hub versions in range, plus the ones of the bounds
     if a.from_version:
-        in_range = [v["version"] for v in hub_versions if vkey(a.from_version) < vkey(v["version"]) <= vkey(to_version)]
+        in_range = [v["version"] for v in hub_versions if after_from(v["version"]) and vkey(v["version"]) <= vkey(to_version)]
         lines = {minor(v) for v in in_range} | {minor(to_version)}
     else:
         lines = {minor(to_version)}
@@ -194,7 +206,7 @@ def main():
         for item in ET.fromstring(feed).iter("item"):
             version = re.sub(r"^\s*Version\s+", "", item.findtext("title") or "").strip()
             k = vkey(version)
-            if k > vkey(to_version) or (a.from_version and k <= vkey(a.from_version)):
+            if k > vkey(to_version) or not after_from(version):
                 continue
             changes = changes_of(item.findtext("description"))
             if pattern:
@@ -208,7 +220,23 @@ def main():
                 "changes": changes,
             }
     result["versions"] = sorted(entries.values(), key=lambda e: vkey(e["version"]), reverse=True)
-    print(json.dumps(result, indent=2))
+    output(result, a.format)
+
+
+def output(result, fmt):
+    if fmt == "json":
+        print(json.dumps(result, indent=2))
+        return
+    if result["up_to_date"]:
+        print(f"✅ {result['from']} is the latest version on Confluent Hub")
+    elif not result["versions"]:
+        print("🤷 no release notes for this version" if result["feeds"] else "📜 no changelog feed for this connector plugin")
+    for v in result["versions"]:
+        print(f"🔢 v{v['version']} - 📅 release date: {v['release_date'] or '<unknown>'}")
+        for c in v["changes"]:
+            print(f"   • {c}")
+    for f in result["feeds"]:
+        print(f"🌐 changelog: {f[:-len('.xml')]}.html")
 
 
 if __name__ == "__main__":
