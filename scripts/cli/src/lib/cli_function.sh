@@ -4335,11 +4335,14 @@ function prune_ccloud_recorded_entries () {
 # and at the start of the next 'playground run', so interrupted examples don't leave billed
 # connectors behind. Each run is handled once: deleted, or kept when the user says no.
 # Behaviour: 'playground config cleanup-ccloud-resources-after-run ask|true|false' (default ask)
+# In CI it is also called at the end of every 'playground run' (success, failure or timeout), and only deletes the
+# connectors: the cluster is shared by the parallel jobs, and a recorded topic prefix could match the topics of an
+# example running in another job. Topics are left to the cleanup-cloud-resources at the end of the nightly.
 function maybe_cleanup_ccloud_run_resources () {
+  local ci_mode=0
   if [ ! -z "$GITHUB_RUN_NUMBER" ]
   then
-    # CI runs a full cleanup-cloud-resources
-    return 0
+    ci_mode=1
   fi
   if [ "$(playground state get run.environment)" != "ccloud" ]
   then
@@ -4354,6 +4357,10 @@ function maybe_cleanup_ccloud_run_resources () {
   local mode
   mode=$(playground config get cleanup-ccloud-resources-after-run)
   mode=${mode:-ask}
+  if [ $ci_mode -eq 1 ]
+  then
+    mode="true"
+  fi
   if [ "$mode" == "false" ]
   then
     return 0
@@ -4372,7 +4379,7 @@ function maybe_cleanup_ccloud_run_resources () {
   fi
   local run_connectors
   run_connectors=$(get_ccloud_recorded_connectors "$cluster_id" "$run_id")
-  if [ -z "$run_connectors" ] && [ -z "$(get_ccloud_recorded_topics "$cluster_id" "$run_id")" ]
+  if [ -z "$run_connectors" ] && { [ $ci_mode -eq 1 ] || [ -z "$(get_ccloud_recorded_topics "$cluster_id" "$run_id")" ]; }
   then
     playground state set run.ccloud_run_cleaned "$run_id"
     return 0
@@ -4402,12 +4409,19 @@ function maybe_cleanup_ccloud_run_resources () {
       if [ -n "$id" ]
       then
           connectors_to_delete="$connectors_to_delete$id $name"$'\n'
-          connector_config=$(confluent connect cluster describe $id $cluster_flags --output json 2>/dev/null | jq -c '(.configs // []) | map({(.config): .value}) | add // {}' 2>/dev/null)
-          related_topics="$related_topics $(get_ccloud_connector_related_topics "$id" "$connector_config")"
+          if [ $ci_mode -eq 0 ]
+          then
+              connector_config=$(confluent connect cluster describe $id $cluster_flags --output json 2>/dev/null | jq -c '(.configs // []) | map({(.config): .value}) | add // {}' 2>/dev/null)
+              related_topics="$related_topics $(get_ccloud_connector_related_topics "$id" "$connector_config")"
+          fi
       fi
   done
   connectors_to_delete=$(echo "$connectors_to_delete" | grep -v '^$')
-  topics_to_delete=$( { get_ccloud_recorded_topics_matching "$cluster_id" "$existing_topics" "$run_id"; echo "$related_topics" | tr ' ' '\n' | grep -Fx -f <(echo "$existing_topics"); } | grep -v '^$' | sort -u)
+  topics_to_delete=""
+  if [ $ci_mode -eq 0 ]
+  then
+      topics_to_delete=$( { get_ccloud_recorded_topics_matching "$cluster_id" "$existing_topics" "$run_id"; echo "$related_topics" | tr ' ' '\n' | grep -Fx -f <(echo "$existing_topics"); } | grep -v '^$' | sort -u)
+  fi
 
   if [ -z "$connectors_to_delete" ] && [ -z "$topics_to_delete" ]
   then
@@ -6757,8 +6771,8 @@ function run_log_start () {
   fi
   export PLAYGROUND_RUN_LOG_ACTIVE=1
   exec 8>&1 9>&2
-  # tee ignores ctrl-c, so that the end of the run (cleanup trap) is still printed and logged
-  exec > >(trap '' INT; exec tee -a "$run_log_raw") 2>&1
+  # tee ignores ctrl-c and kill, so that the end of the run (cleanup trap) is still printed and logged
+  exec > >(trap '' INT TERM; exec tee -a "$run_log_raw") 2>&1
   run_log_tee_pid=$!
 }
 

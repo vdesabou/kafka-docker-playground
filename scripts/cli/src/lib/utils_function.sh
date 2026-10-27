@@ -1277,6 +1277,9 @@ function retry() {
     elif [ $ret -eq 107 ] # known issue https://github.com/vdesabou/kafka-docker-playground/issues/907
     then
       return 107
+    elif [ $ret -eq 124 ] || [ $ret -eq 137 ] # killed by the timeout of run-tests.sh: a hung example would hang again
+    then
+      return $ret
     else
       test_file=$(echo "$@" | awk '{ print $4}')
       script=$(basename $test_file)

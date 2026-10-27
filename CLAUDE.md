@@ -247,6 +247,7 @@ scripts/run-tests.sh ALL 8.3.0 cfk                        # pin CP version + env
 - **Exit codes are meaningful**: `0` success, `111` skipped (use this when a connector/CP version combination is unsupported — see the `connect_cp_version_greater_than_8` guard at the top of many examples), `107` known issue #907, anything else = failure.
 - `scripts/tests-ignored.txt` — scripts never run by CI (helper scripts, broken examples).
 - `scripts/tests-retriable.txt` — scripts retried on failure (flaky, e.g. kerberos/hdfs).
+- **Each example is killed after `PLAYGROUND_TEST_TIMEOUT` (default `60m`)** by `run-tests.sh` (exit `124`, not retried), so a hung example no longer blocks its job until the 6 hours GitHub limit. In CI, the EXIT trap of `playground run` then deletes the fully managed connectors the run created (success, failure or timeout); their topics are left to `post-build-cleanup`.
 - CI also auto-skips a test if a GitHub issue titled `🔥 <dir>` is open with the label `CI ignore ⏭️`.
 
 CI (`.github/workflows/ci.yml`) runs nightly (cron) and on `workflow_dispatch` with optional `test_name` / `playground_environment` inputs; `playground force-ci` / `scripts/launch-github-action.sh` trigger it.
