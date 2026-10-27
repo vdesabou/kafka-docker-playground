@@ -1966,11 +1966,9 @@ function remove_cdb_oracle_image() {
       export ORACLE_IMAGE="db-prebuilt-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
   fi
 
-  if ! test -z "$(docker images -q $ORACLE_IMAGE)"
-  then
-    log "🧹 Removing Oracle image $ORACLE_IMAGE"
-    docker image rm $ORACLE_IMAGE
-  fi
+  # only remember it: create_or_get_oracle_image removes it if it is not the image it is about to use
+  # (cdb and pdb setups can share the same image, removing it here would download it again)
+  export ORACLE_IMAGE_TO_REMOVE="$ORACLE_IMAGE"
 }
 
 function create_or_get_oracle_image() {
@@ -2009,6 +2007,13 @@ function create_or_get_oracle_image() {
       export ORACLE_IMAGE="db-prebuilt-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
   fi
   TEMP_CONTAINER="oracle-build-$ORACLE_VERSION-$(basename $SETUP_FOLDER)"
+
+  if [ -n "$ORACLE_IMAGE_TO_REMOVE" ] && [ "$ORACLE_IMAGE_TO_REMOVE" != "$ORACLE_IMAGE" ] && ! test -z "$(docker images -q $ORACLE_IMAGE_TO_REMOVE)"
+  then
+    log "🧹 Removing Oracle image $ORACLE_IMAGE_TO_REMOVE"
+    docker image rm $ORACLE_IMAGE_TO_REMOVE
+  fi
+  unset ORACLE_IMAGE_TO_REMOVE
 
   if test -z "$(docker images -q $ORACLE_IMAGE)"
   then
