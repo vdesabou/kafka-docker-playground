@@ -2262,10 +2262,10 @@ generate_connector_versions > /dev/null 2>&1 &
 
 if [[ $test_file == *"aws"* ]]
 then
-    playground cloud-resources aws costs-history > /tmp/aws-costs-history.txt 2>/dev/null &
+    playground cloud-resources aws costs-history --no-open > /tmp/aws-costs-history.txt 2>/dev/null &
 elif [[ $test_file == *"azure"* ]]
 then
-    playground cloud-resources azure costs-history > /tmp/azure-costs-history.txt 2>/dev/null &
+    playground cloud-resources azure costs-history --no-open > /tmp/azure-costs-history.txt 2>/dev/null &
 fi
 set +e
 
@@ -2470,7 +2470,7 @@ then
       log "📅💰 monthly ccloud costs"
       cat /tmp/ccloud-costs-history.txt
     fi
-    log "👀 if you want more details, run <playground ccloud-costs-history --detailed>"
+    log "👀 all the details are in the HTML report above, or run <playground ccloud-costs-history --detailed>"
     display_ccloud_leftovers
   elif [[ $test_file == *"aws"* ]]
   then
@@ -2488,7 +2488,7 @@ then
       log "📅💰 monthly aws costs"
       cat /tmp/aws-costs-history.txt
     fi
-    log "👀 if you want more details, run <playground cloud-resources aws costs-history --detailed>"
+    log "👀 all the details are in the HTML report above, or run <playground cloud-resources aws costs-history --detailed>"
   elif [[ $test_file == *"azure"* ]]
   then
     echo ""
@@ -2505,7 +2505,7 @@ then
       log "📅💰 monthly azure costs"
       cat /tmp/azure-costs-history.txt
     fi
-    log "👀 if you want more details, run <playground cloud-resources azure costs-history --detailed>"
+    log "👀 all the details are in the HTML report above, or run <playground cloud-resources azure costs-history --detailed>"
   fi
 fi
 

@@ -1,8 +1,8 @@
 # 📊 Reports
 
 The playground does not only start environments: it also tells you **what is wrong** with them. The `playground analyze`
-commands, the connector diagnose, diff and benchmark, the dead letter queue inspector, the CI result and the SMT tester
-print a short digest in the terminal (made to be read by you or by
+commands, the connector diagnose, diff and benchmark, the dead letter queue inspector, the CI result, the SMT tester and the cloud
+costs history print a short digest in the terminal (made to be read by you or by
 [Claude Code](/claude-code.md)) and write a **self-contained HTML report** you can share with a colleague or a customer.
 
 The reports below are real ones, generated from the samples shipped in the repository. Click a screenshot to open the
@@ -140,6 +140,15 @@ report and click around: this is what you get on your own data.
       <p>What goes over the wire? Refused, unanswered and reset connections, retransmissions, TLS alerts with their likely cause, DNS errors, Kafka and HTTP errors with response times, and the bodies of the HTTP error responses.</p>
       <p><code>playground debug tcp-dump -c connect --port 9092 --duration 30s</code></p>
       <p>Try it: <code>playground analyze tcp-dump --sample kafka_and_network_errors</code> (or <code>--sample http_errors</code>)</p>
+    </div>
+  </div>
+  <div class="report-card">
+    <a href="reports/cloud-costs.html" target="_blank" rel="noopener"><img src="images/reports/cloud-costs.png" alt="💰 Cloud costs report" loading="lazy"></a>
+    <div class="report-body">
+      <h3><a href="#/playground%20ccloud-costs-history">💰 Cloud costs</a></h3>
+      <p>What did the playground cost, and what is still billing? Cost per month and per day, per product, environment and line type, the resources still billing with a monthly estimate (a connector left behind…), and the details of each month. Same report for the AWS and Azure resources of the playground. This one uses dummy data.</p>
+      <p><code>playground ccloud-costs-history</code> (also linked at the end of <code>playground run</code> of a ccloud, AWS or Azure example)</p>
+      <p>Try it: <code>playground ccloud-costs-history --sample ccloud_dummy</code></p>
     </div>
   </div>
 </div>

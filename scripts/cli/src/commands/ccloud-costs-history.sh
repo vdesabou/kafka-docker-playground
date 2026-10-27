@@ -1,4 +1,24 @@
 detailed="${args[--detailed]}"
+output_dir="${args[--output-dir]}"
+no_open="${args[--no-open]}"
+sample="${args[--sample]}"
+
+if [[ -n "$sample" ]]
+then
+    # dummy billing data, in the same format as the monthly files saved below
+    log "🧪 writing the HTML report from the dummy billing data of tools/cloud-costs/samples/$sample"
+    write_cloud_costs_report "ccloud" "$root_folder/tools/cloud-costs/samples/$sample" "$output_dir" "$no_open" "${USER}"
+    exit $?
+fi
+
+# raw cost API response of each month, for the HTML report
+data_dir=$(mktemp -d -t pg-ccloud-costs-history-XXXXXXXXXX)
+if [ -z "$PG_VERBOSE_MODE" ]
+then
+    trap 'rm -rf $data_dir' EXIT
+else
+    log "🐛📂 not deleting tmp dir $data_dir"
+fi
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
@@ -44,7 +64,7 @@ while true; do
     # Break the loop if end_date is in the future
     if [[ "$end_date" > "$(date +%Y-%m-%d)" ]]; then
         end_date=$(date +%Y-%m-%d) # Set end_date to today
-        cost=$(playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost)
+        cost=$(playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost --raw-output-file "$data_dir/${current_date}_${end_date}.json")
         display_histogram "$(readable_date $current_date) to $(readable_date $end_date)" "$cost"
         if [[ -n "$detailed" ]]
         then
@@ -54,7 +74,7 @@ while true; do
     fi
 
     # Call playground  --output-level ERROR ccloud-costs for the current range
-    cost=$(playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost)
+    cost=$(playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost --raw-output-file "$data_dir/${current_date}_${end_date}.json")
     display_histogram "$(readable_date $current_date) to $(readable_date $end_date)" "$cost"
 
     if [[ -n "$detailed" ]]
@@ -65,3 +85,5 @@ while true; do
     # Move to the next range
     current_date="$end_date"
 done
+
+write_cloud_costs_report "ccloud" "$data_dir" "$output_dir" "$no_open" "${USER}"

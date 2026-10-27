@@ -3414,6 +3414,13 @@ playground_cloud_resources_aws_costs_usage() {
       echo
 
     fi
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--raw-output-file RAW_OUTPUT_FILE")"
+      printf "    📄 also save the raw response of the cost API in this file (used by\n    costs-history for its HTML report)\n"
+      echo
+
+    fi
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -3427,7 +3434,7 @@ playground_cloud_resources_aws_costs_usage() {
 playground_cloud_resources_aws_costs_history_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cloud-resources aws costs-history\n\n"
-    printf "  👛  Retrieve aws costs for each month since last year\n  \n  One line per month over the past year, drawn as a histogram, which\n  makes a month that went wrong obvious at a glance. Use costs when you\n  then want to know which service it was.\n  \n  By default it will only display total cost in dollars. Use the --detailed flag\n  to see more information.\n\n"
+    printf "  👛  Retrieve aws costs for each month since last year\n  \n  One line per month over the past year, drawn as a histogram, which\n  makes a month that went wrong obvious at a glance. Use costs when you\n  then want to know which service it was.\n  \n  By default it will only display total cost in dollars. Use the --detailed flag\n  to see more information.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal (--no-open to skip): cost per month, per\n  service and usage type, the month x service matrix, the top usage types with\n  the ones still billing, and the details of each month.\n\n"
   else
     printf "playground cloud-resources aws costs-history - 👛  Retrieve aws costs for each month since last year\n\n"
   fi
@@ -3446,6 +3453,17 @@ playground_cloud_resources_aws_costs_history_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--detailed")"
     printf "    💹 display all details for each month\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
+    printf "    📂 Output directory for the HTML report (default:\n    /tmp/playground-cloud-costs)\n"
+    printf "    %s\n" "Default: /tmp/playground-cloud-costs"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-open")"
+    printf "    🚫 Do not open the HTML report in the browser\n"
     echo
 
     # :command.usage_fixed_flags
@@ -3569,6 +3587,13 @@ playground_cloud_resources_azure_costs_usage() {
       echo
 
     fi
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--raw-output-file RAW_OUTPUT_FILE")"
+      printf "    📄 also save the raw response of the cost API in this file (used by\n    costs-history for its HTML report)\n"
+      echo
+
+    fi
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -3582,7 +3607,7 @@ playground_cloud_resources_azure_costs_usage() {
 playground_cloud_resources_azure_costs_history_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground cloud-resources azure costs-history\n\n"
-    printf "  👛  Retrieve azure costs for each month since last year\n  \n  One line per month over the past year, so you can spot the month that\n  went wrong before digging into it with costs.\n  \n  By default it will only display total cost in dollars. Use the --detailed flag\n  to see more information.\n\n"
+    printf "  👛  Retrieve azure costs for each month since last year\n  \n  One line per month over the past year, so you can spot the month that\n  went wrong before digging into it with costs.\n  \n  By default it will only display total cost in dollars. Use the --detailed flag\n  to see more information.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal (--no-open to skip): cost per month, per\n  service and resource group, the month x service matrix, the top resources with\n  the ones still billing, and the details of each month.\n\n"
   else
     printf "playground cloud-resources azure costs-history - 👛  Retrieve azure costs for each month since last year\n\n"
   fi
@@ -3601,6 +3626,17 @@ playground_cloud_resources_azure_costs_history_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--detailed")"
     printf "    💹 display all details for each month\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
+    printf "    📂 Output directory for the HTML report (default:\n    /tmp/playground-cloud-costs)\n"
+    printf "    %s\n" "Default: /tmp/playground-cloud-costs"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-open")"
+    printf "    🚫 Do not open the HTML report in the browser\n"
     echo
 
     # :command.usage_fixed_flags
@@ -3648,6 +3684,13 @@ playground_ccloud_costs_usage() {
       echo
 
     fi
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--raw-output-file RAW_OUTPUT_FILE")"
+      printf "    📄 also save the raw response of the cost API in this file (used by\n    costs-history for its HTML report)\n"
+      echo
+
+    fi
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -3661,7 +3704,7 @@ playground_ccloud_costs_usage() {
 playground_ccloud_costs_history_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground ccloud-costs-history\n\n"
-    printf "  👛  Retrieve ccloud costs for each month since last year\n  \n  All you have to do is to be already logged in with confluent CLI. It is using\n  https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n  \n  By default it will only display total cost in dollars. Use the --detailed flag\n  to see more information.\n\n"
+    printf "  👛  Retrieve ccloud costs for each month since last year\n  \n  All you have to do is to be already logged in with confluent CLI. It is using\n  https://docs.confluent.io/cloud/current/billing/overview.html#retrieve-costs-for-a-range-of-dates\n  \n  By default it will only display total cost in dollars. Use the --detailed flag\n  to see more information.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal (--no-open to skip): cost per month and per\n  day, per product, environment and line type, the month x product matrix, the\n  top resources with the ones still billing, and the details of each month.\n\n"
   else
     printf "playground ccloud-costs-history - 👛  Retrieve ccloud costs for each month since last year\n\n"
   fi
@@ -3682,9 +3725,32 @@ playground_ccloud_costs_history_usage() {
     printf "    💹 display all details for each month\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--output-dir, -o OUTPUT_DIR")"
+    printf "    📂 Output directory for the HTML report (default:\n    /tmp/playground-cloud-costs)\n"
+    printf "    %s\n" "Default: /tmp/playground-cloud-costs"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-open")"
+    printf "    🚫 Do not open the HTML report in the browser\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--sample, -s SAMPLE")"
+    printf "    🧪 Sample of tools/cloud-costs/samples: writes the HTML report from this\n    dummy billing data, without calling Confluent Cloud\n    \n    To see what the report looks like before running it on your organization.\n"
+    printf "    %s\n" "Allowed: ccloud_dummy"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground ccloud-costs-history\n"
+    printf "  playground ccloud-costs-history --sample ccloud_dummy\n"
     echo
 
   fi
@@ -20340,6 +20406,31 @@ function open_html_report() {
     fi
 }
 
+# HTML report of ccloud-costs-history / cloud-resources aws|azure costs-history (tools/cloud-costs/costs_report.py)
+# $1: ccloud, aws or azure, $2: folder with one raw cost API response per month (<start date>_<end date>.json),
+# $3: output dir, $4: non-empty to never open it, $5: user of the cflt_managed_id tag (aws, azure)
+function write_cloud_costs_report() {
+    local cloud="$1"
+    local data_dir="$2"
+    local output_dir="$3"
+    local no_open="$4"
+    local user="$5"
+    if ! command -v python3 > /dev/null 2>&1
+    then
+        logwarn "⚠️ python3 is not on PATH: no HTML report"
+        return 0
+    fi
+    mkdir -p "$output_dir"
+    output_dir=$(cd "$output_dir" && pwd)
+    local report="$output_dir/${cloud}-costs-history-$(date '+%Y%m%d-%H%M%S').html"
+    if ! python3 -I "$root_folder/tools/cloud-costs/costs_report.py" --cloud "$cloud" --data-dir "$data_dir" --user "$user" --html-out "$report"
+    then
+        logerror "❌ could not write the HTML report"
+        return 1
+    fi
+    open_html_report "$report" "$no_open"
+}
+
 # HTML report of the records written by summarize_log_errors in PG_LOG_DIGEST_RECORDS_FILE (tools/log-analyzer/log_report.py)
 # $1: records file, $2: report, $3: non-empty to never open it, then the options of log_report.py (--title, --heading...)
 function write_log_records_report() {
@@ -25316,7 +25407,8 @@ function bootstrap_ccloud_environment () {
     confluent login --save
   fi
 
-  playground ccloud-costs-history > /tmp/ccloud-costs-history.txt &
+  # --no-open: the end of playground run prints the link of the HTML report
+  playground ccloud-costs-history --no-open > /tmp/ccloud-costs-history.txt &
 
   suggest_use_previous_example_ccloud=1
   test_file=$(playground state get run.test_file)
@@ -32924,6 +33016,7 @@ playground_cloud_resources_aws_costs_command() {
   display_only_total_cost="${args[--display-only-total-cost]}"
   start_date="${args[--start-date]}"
   end_date="${args[--end-date]}"
+  raw_output_file="${args[--raw-output-file]}"
   if [[ ! -n "$start_date" ]]
   then
       if [[ "$OSTYPE" == "darwin"* ]]
@@ -33056,20 +33149,48 @@ playground_cloud_resources_aws_costs_command() {
   then
       log "💰 Overall costs by service:"
   fi
-  cost_data=$(aws ce get-cost-and-usage \
-      --time-period Start=$start_date,End=$end_date \
-      --granularity MONTHLY \
-      --metrics "UnblendedCost" \
-      --group-by Type=DIMENSION,Key=SERVICE \
-      --filter '{
-          "Tags": {
-              "Key": "cflt_managed_id",
-              "Values": ["'"$user"'"]
-          }
-      }' \
-      --region us-east-1 2>/dev/null)
+  # also grouped by usage type, for the HTML report of costs-history: with two group-by, groups can come on several pages
+  cost_data=""
+  next_page_token=()
+  while true
+  do
+      page=$(aws ce get-cost-and-usage \
+          --time-period Start=$start_date,End=$end_date \
+          --granularity MONTHLY \
+          --metrics "UnblendedCost" \
+          --group-by Type=DIMENSION,Key=SERVICE Type=DIMENSION,Key=USAGE_TYPE \
+          --filter '{
+              "Tags": {
+                  "Key": "cflt_managed_id",
+                  "Values": ["'"$user"'"]
+              }
+          }' \
+          "${next_page_token[@]}" \
+          --region us-east-1 2>/dev/null)
+      if [ $? -ne 0 ] || [ -z "$page" ]
+      then
+          cost_data=""
+          break
+      fi
+      if [ -z "$cost_data" ]
+      then
+          cost_data="$page"
+      else
+          cost_data=$(jq -s '.[0].ResultsByTime += .[1].ResultsByTime | .[0]' <(echo "$cost_data") <(echo "$page"))
+      fi
+      token=$(echo "$page" | jq -r '.NextPageToken // empty')
+      if [ -z "$token" ]
+      then
+          break
+      fi
+      next_page_token=(--next-page-token "$token")
+  done
 
-  if [ $? -eq 0 ] && [ -n "$cost_data" ]; then
+  if [ -n "$cost_data" ]; then
+      if [[ -n "$raw_output_file" ]]
+      then
+          echo "$cost_data" | jq 'del(.NextPageToken)' > "$raw_output_file"
+      fi
       # Build histogram input file: "Service total Service"
       HIST_FILE="$tmp_dir/aws_service_costs.txt"
       echo "$cost_data" | jq -r '[.ResultsByTime[].Groups[]] | group_by(.Keys[0]) | map({service: .[0].Keys[0], total: (map(.Metrics.UnblendedCost.Amount | tonumber) | add)}) | sort_by(-.total) | .[] | select(.total != 0) | "\(.service)\t\(.total)\t\(.service)"' > "$HIST_FILE"
@@ -33110,6 +33231,17 @@ playground_cloud_resources_aws_costs_history_command() {
 
   # src/commands/cloud-resources/aws/costs-history.sh
   detailed="${args[--detailed]}"
+  output_dir="${args[--output-dir]}"
+  no_open="${args[--no-open]}"
+
+  # raw cost API response of each month, for the HTML report
+  data_dir=$(mktemp -d -t pg-aws-costs-history-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $data_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $data_dir"
+  fi
 
   if [[ "$OSTYPE" == "darwin"* ]]
   then
@@ -33155,7 +33287,7 @@ playground_cloud_resources_aws_costs_history_command() {
       # Break the loop if end_date is in the future
       if [[ "$end_date" > "$(date +%Y-%m-%d)" ]]; then
           end_date=$(date +%Y-%m-%d) # Set end_date to today
-          cost=$(playground  --output-level ERROR cloud-resources aws costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost)
+          cost=$(playground  --output-level ERROR cloud-resources aws costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost --raw-output-file "$data_dir/${current_date}_${end_date}.json")
           display_histogram "$(readable_date $current_date) to $(readable_date $end_date)" "$cost"
           if [[ -n "$detailed" ]]
           then
@@ -33166,7 +33298,7 @@ playground_cloud_resources_aws_costs_history_command() {
       fi
 
       # Call playground  --output-level ERROR cloud-resources aws costs for the current range
-      cost=$(playground  --output-level ERROR cloud-resources aws costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost)
+      cost=$(playground  --output-level ERROR cloud-resources aws costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost --raw-output-file "$data_dir/${current_date}_${end_date}.json")
       display_histogram "$(readable_date $current_date) to $(readable_date $end_date)" "$cost"
 
       if [[ -n "$detailed" ]]
@@ -33178,6 +33310,9 @@ playground_cloud_resources_aws_costs_history_command() {
       # Move to the next range
       current_date="$end_date"
   done
+
+  write_cloud_costs_report "aws" "$data_dir" "$output_dir" "$no_open" "${USER}"
+
 }
 
 # :command.function
@@ -33258,6 +33393,7 @@ playground_cloud_resources_azure_costs_command() {
   display_only_total_cost="${args[--display-only-total-cost]}"
   start_date="${args[--start-date]}"
   end_date="${args[--end-date]}"
+  raw_output_file="${args[--raw-output-file]}"
 
   if [[ ! -n "$start_date" ]]
   then
@@ -33409,7 +33545,7 @@ playground_cloud_resources_azure_costs_command() {
         "aggregation": {
             "totalCost": { "name": "Cost", "function": "Sum" }
         },
-        "grouping": [ { "type": "Dimension", "name": "ServiceName" } ],
+        "grouping": [ { "type": "Dimension", "name": "ServiceName" }, { "type": "Dimension", "name": "ResourceId" } ],
         "filter": {
             "and": [
                 { "tags": { "name": "cflt_managed_id", "operator": "In", "values": ["${user}"] } },
@@ -33442,6 +33578,26 @@ JSON
       exit 1
   fi
 
+  # grouped by resource too (for the HTML report of costs-history): rows can come on several pages
+  next_link=$(jq -r '.properties.nextLink // empty' "$OUT_JSON")
+  while [[ -n "$next_link" ]]
+  do
+      az rest --method post --url "$next_link" --headers "Content-Type=application/json" --headers "Accept=application/json" --body @"$DEF_FILE" --output json > "$tmp_dir/next.json" 2>/dev/null || true
+      if ! jq -e '.properties.rows' "$tmp_dir/next.json" > /dev/null 2>&1
+      then
+          logwarn "⚠️ could not retrieve the next page of Azure costs, total may be incomplete"
+          break
+      fi
+      jq -s '.[0].properties.rows += .[1].properties.rows | .[0]' "$OUT_JSON" "$tmp_dir/next.json" > "$tmp_dir/merged.json"
+      mv "$tmp_dir/merged.json" "$OUT_JSON"
+      next_link=$(jq -r '.properties.nextLink // empty' "$tmp_dir/next.json")
+  done
+
+  if [[ -n "$raw_output_file" ]]
+  then
+      jq 'del(.properties.nextLink)' "$OUT_JSON" > "$raw_output_file"
+  fi
+
   if [[ ! -n "$display_only_total_cost" ]]
   then
       log "💰 Overall costs by service:"
@@ -33470,6 +33626,17 @@ playground_cloud_resources_azure_costs_history_command() {
 
   # src/commands/cloud-resources/azure/costs-history.sh
   detailed="${args[--detailed]}"
+  output_dir="${args[--output-dir]}"
+  no_open="${args[--no-open]}"
+
+  # raw cost API response of each month, for the HTML report
+  data_dir=$(mktemp -d -t pg-azure-costs-history-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $data_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $data_dir"
+  fi
 
   if [[ "$OSTYPE" == "darwin"* ]]
   then
@@ -33515,7 +33682,7 @@ playground_cloud_resources_azure_costs_history_command() {
       # Break the loop if end_date is in the future
       if [[ "$end_date" > "$(date +%Y-%m-%d)" ]]; then
           end_date=$(date +%Y-%m-%d) # Set end_date to today
-          cost=$(playground  --output-level ERROR cloud-resources azure costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost)
+          cost=$(playground  --output-level ERROR cloud-resources azure costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost --raw-output-file "$data_dir/${current_date}_${end_date}.json")
           display_histogram "$(readable_date $current_date) to $(readable_date $end_date)" "$cost"
           if [[ -n "$detailed" ]]
           then
@@ -33526,7 +33693,7 @@ playground_cloud_resources_azure_costs_history_command() {
       fi
 
       # Call playground  --output-level ERROR cloud-resources azure costs for the current range
-      cost=$(playground  --output-level ERROR cloud-resources azure costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost)
+      cost=$(playground  --output-level ERROR cloud-resources azure costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost --raw-output-file "$data_dir/${current_date}_${end_date}.json")
       display_histogram "$(readable_date $current_date) to $(readable_date $end_date)" "$cost"
 
       if [[ -n "$detailed" ]]
@@ -33538,6 +33705,9 @@ playground_cloud_resources_azure_costs_history_command() {
       # Move to the next range
       current_date="$end_date"
   done
+
+  write_cloud_costs_report "azure" "$data_dir" "$output_dir" "$no_open" "${USER}"
+
 }
 
 # :command.function
@@ -33547,6 +33717,7 @@ playground_ccloud_costs_command() {
   start_date="${args[--start-date]}"
   end_date="${args[--end-date]}"
   display_only_total_cost="${args[--display-only-total-cost]}"
+  raw_output_file="${args[--raw-output-file]}"
 
   if [[ ! -n "$start_date" ]]
   then
@@ -33618,6 +33789,10 @@ playground_ccloud_costs_command() {
       logerror "❌ failed to retrieve ccloud costs with command: confluent billing cost list --start-date $start_date --end-date $end_date"
       cat "$INPUT_FILE"
       exit 1
+  fi
+  if [[ -n "$raw_output_file" ]]
+  then
+      cp "$INPUT_FILE" "$raw_output_file"
   fi
   if [[ ! -n "$display_only_total_cost" ]]
   then
@@ -33700,6 +33875,26 @@ playground_ccloud_costs_history_command() {
 
   # src/commands/ccloud-costs-history.sh
   detailed="${args[--detailed]}"
+  output_dir="${args[--output-dir]}"
+  no_open="${args[--no-open]}"
+  sample="${args[--sample]}"
+
+  if [[ -n "$sample" ]]
+  then
+      # dummy billing data, in the same format as the monthly files saved below
+      log "🧪 writing the HTML report from the dummy billing data of tools/cloud-costs/samples/$sample"
+      write_cloud_costs_report "ccloud" "$root_folder/tools/cloud-costs/samples/$sample" "$output_dir" "$no_open" "${USER}"
+      exit $?
+  fi
+
+  # raw cost API response of each month, for the HTML report
+  data_dir=$(mktemp -d -t pg-ccloud-costs-history-XXXXXXXXXX)
+  if [ -z "$PG_VERBOSE_MODE" ]
+  then
+      trap 'rm -rf $data_dir' EXIT
+  else
+      log "🐛📂 not deleting tmp dir $data_dir"
+  fi
 
   if [[ "$OSTYPE" == "darwin"* ]]
   then
@@ -33745,7 +33940,7 @@ playground_ccloud_costs_history_command() {
       # Break the loop if end_date is in the future
       if [[ "$end_date" > "$(date +%Y-%m-%d)" ]]; then
           end_date=$(date +%Y-%m-%d) # Set end_date to today
-          cost=$(playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost)
+          cost=$(playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost --raw-output-file "$data_dir/${current_date}_${end_date}.json")
           display_histogram "$(readable_date $current_date) to $(readable_date $end_date)" "$cost"
           if [[ -n "$detailed" ]]
           then
@@ -33756,7 +33951,7 @@ playground_ccloud_costs_history_command() {
       fi
 
       # Call playground  --output-level ERROR ccloud-costs for the current range
-      cost=$(playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost)
+      cost=$(playground  --output-level ERROR ccloud-costs --start-date "$current_date" --end-date "$end_date" --display-only-total-cost --raw-output-file "$data_dir/${current_date}_${end_date}.json")
       display_histogram "$(readable_date $current_date) to $(readable_date $end_date)" "$cost"
 
       if [[ -n "$detailed" ]]
@@ -33768,6 +33963,9 @@ playground_ccloud_costs_history_command() {
       # Move to the next range
       current_date="$end_date"
   done
+
+  write_cloud_costs_report "ccloud" "$data_dir" "$output_dir" "$no_open" "${USER}"
+
 }
 
 # :command.function
@@ -36042,10 +36240,10 @@ playground_run_command() {
 
   if [[ $test_file == *"aws"* ]]
   then
-      playground cloud-resources aws costs-history > /tmp/aws-costs-history.txt 2>/dev/null &
+      playground cloud-resources aws costs-history --no-open > /tmp/aws-costs-history.txt 2>/dev/null &
   elif [[ $test_file == *"azure"* ]]
   then
-      playground cloud-resources azure costs-history > /tmp/azure-costs-history.txt 2>/dev/null &
+      playground cloud-resources azure costs-history --no-open > /tmp/azure-costs-history.txt 2>/dev/null &
   fi
   set +e
 
@@ -36250,7 +36448,7 @@ playground_run_command() {
         log "📅💰 monthly ccloud costs"
         cat /tmp/ccloud-costs-history.txt
       fi
-      log "👀 if you want more details, run <playground ccloud-costs-history --detailed>"
+      log "👀 all the details are in the HTML report above, or run <playground ccloud-costs-history --detailed>"
       display_ccloud_leftovers
     elif [[ $test_file == *"aws"* ]]
     then
@@ -36268,7 +36466,7 @@ playground_run_command() {
         log "📅💰 monthly aws costs"
         cat /tmp/aws-costs-history.txt
       fi
-      log "👀 if you want more details, run <playground cloud-resources aws costs-history --detailed>"
+      log "👀 all the details are in the HTML report above, or run <playground cloud-resources aws costs-history --detailed>"
     elif [[ $test_file == *"azure"* ]]
     then
       echo ""
@@ -36285,7 +36483,7 @@ playground_run_command() {
         log "📅💰 monthly azure costs"
         cat /tmp/azure-costs-history.txt
       fi
-      log "👀 if you want more details, run <playground cloud-resources azure costs-history --detailed>"
+      log "👀 all the details are in the HTML report above, or run <playground cloud-resources azure costs-history --detailed>"
     fi
   fi
 
@@ -69918,6 +70116,20 @@ playground_cloud_resources_aws_costs_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --raw-output-file)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--raw-output-file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--raw-output-file requires an argument: --raw-output-file RAW_OUTPUT_FILE" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -70004,6 +70216,28 @@ playground_cloud_resources_aws_costs_history_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --output-dir | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir, -o OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-open)
+
+        # :flag.case_no_arg
+        args['--no-open']=1
+        shift
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -70032,6 +70266,9 @@ playground_cloud_resources_aws_costs_history_parse_requirements() {
 
     esac
   done
+
+  # :command.default_assignments
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="/tmp/playground-cloud-costs"
 
 }
 
@@ -70283,6 +70520,20 @@ playground_cloud_resources_azure_costs_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --raw-output-file)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--raw-output-file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--raw-output-file requires an argument: --raw-output-file RAW_OUTPUT_FILE" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -70369,6 +70620,28 @@ playground_cloud_resources_azure_costs_history_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --output-dir | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir, -o OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-open)
+
+        # :flag.case_no_arg
+        args['--no-open']=1
+        shift
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -70397,6 +70670,9 @@ playground_cloud_resources_azure_costs_history_parse_requirements() {
 
     esac
   done
+
+  # :command.default_assignments
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="/tmp/playground-cloud-costs"
 
 }
 
@@ -70477,6 +70753,20 @@ playground_ccloud_costs_parse_requirements() {
         # :flag.case_no_arg
         args['--display-only-total-cost']=1
         shift
+        ;;
+
+      # :flag.case
+      --raw-output-file)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--raw-output-file']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--raw-output-file requires an argument: --raw-output-file RAW_OUTPUT_FILE" >&2
+          exit 1
+        fi
         ;;
 
       --)
@@ -70580,6 +70870,42 @@ playground_ccloud_costs_history_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --output-dir | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--output-dir']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--output-dir requires an argument: --output-dir, -o OUTPUT_DIR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --no-open)
+
+        # :flag.case_no_arg
+        args['--no-open']=1
+        shift
+        ;;
+
+      # :flag.case
+      --sample | -s)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--sample']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--sample requires an argument: --sample, -s SAMPLE" >&2
+          exit 1
+        fi
+        ;;
+
       --)
         shift
         while [[ $# -gt 0 ]]; do
@@ -70608,6 +70934,15 @@ playground_ccloud_costs_history_parse_requirements() {
 
     esac
   done
+
+  # :command.default_assignments
+  [[ -n ${args['--output-dir']:-} ]] || args['--output-dir']="/tmp/playground-cloud-costs"
+
+  # :command.whitelist_filter
+  if [[ ${args['--sample']:-} ]] && [[ ! ${args['--sample']:-} =~ ^(ccloud_dummy)$ ]]; then
+    printf "%s\n" "--sample must be one of: ccloud_dummy" >&2
+    exit 1
+  fi
 
 }
 
@@ -101537,6 +101872,21 @@ playground_cloud_resources_aws_costs_history_completion() {
 
         shift
         ;;
+      --output-dir | -o)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --no-open)
+        completion_blocked_flags["--no-open"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -101546,6 +101896,8 @@ playground_cloud_resources_aws_costs_history_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --detailed "$completion_current" --detailed
+    completion_flag_candidates --output-dir "$completion_current" --output-dir -o
+    completion_flag_candidates --no-open "$completion_current" --no-open
   fi
 
 }
@@ -101673,6 +102025,21 @@ playground_cloud_resources_azure_costs_history_completion() {
 
         shift
         ;;
+      --output-dir | -o)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --no-open)
+        completion_blocked_flags["--no-open"]=1
+
+        shift
+        ;;
       *)
         return
         ;;
@@ -101682,6 +102049,8 @@ playground_cloud_resources_azure_costs_history_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --detailed "$completion_current" --detailed
+    completion_flag_candidates --output-dir "$completion_current" --output-dir -o
+    completion_flag_candidates --no-open "$completion_current" --no-open
   fi
 
 }
@@ -101747,6 +102116,35 @@ playground_ccloud_costs_history_completion() {
 
         shift
         ;;
+      --output-dir | -o)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--output-dir"]=1
+
+        ;;
+      --no-open)
+        completion_blocked_flags["--no-open"]=1
+
+        shift
+        ;;
+      --sample | -s)
+        shift
+        if [[ $# -eq 0 ]]; then
+          local -a completion_values=(
+            "ccloud_dummy"
+          )
+          completion_candidates "$completion_current" "${completion_values[@]}"
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--sample"]=1
+
+        ;;
       *)
         return
         ;;
@@ -101756,6 +102154,9 @@ playground_ccloud_costs_history_completion() {
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
     completion_flag_candidates --detailed "$completion_current" --detailed
+    completion_flag_candidates --output-dir "$completion_current" --output-dir -o
+    completion_flag_candidates --no-open "$completion_current" --no-open
+    completion_flag_candidates --sample "$completion_current" --sample -s
   fi
 
 }
