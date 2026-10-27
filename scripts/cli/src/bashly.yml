@@ -641,7 +641,7 @@ commands:
     help: |-
       🗂️ folder of the run logs
 
-      Default is ~/.local/state/kafka-docker-playground/run-logs.
+      Default is /tmp/playground-run-logs.
 
       The last 50 run logs of the folder are kept.
     args:
@@ -1574,7 +1574,7 @@ commands:
       command to re-run, the versions, the host, the result and, for a
       failure, the errors of the connect container. Its path is printed at
       the end of the run. The last 50 are kept in
-      ~/.local/state/kafka-docker-playground/run-logs.
+      /tmp/playground-run-logs.
 
       --run-log-file    write it to that file
       --no-run-log      don't write it

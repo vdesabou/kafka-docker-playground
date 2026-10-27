@@ -233,7 +233,7 @@ Pick a preference, then its new value: `true`/`false`, or a list of suggestions 
 Every `playground run` also writes its output to a text file, with passwords, api keys and tokens masked, ready to attach to a ticket or to send to a colleague or engineering. Its path is the last line of the run:
 
 ```
-📄 masked log of this run (4 secrets masked), to share with a colleague: ~/.local/state/kafka-docker-playground/run-logs/filestream-sink-20261026-151903.log
+📄 masked log of this run (4 secrets masked), to share with a colleague: /tmp/playground-run-logs/filestream-sink-20261026-151903.log
 ```
 
 The file starts with a header (the command to re-run, environment, CP and connector versions, playground commit, host and container engine, duration and result), then the whole output of the run without colors and, for a failure, the errors of the connect container (`playground container logs -c connect --errors`):
@@ -254,7 +254,7 @@ masking:      secrets are masked with ********, best-effort: review this file be
 What is masked: the values of the credentials exported for the example (loaded from `playground secrets`, or variables named `*PASSWORD*`, `*SECRET*`, `*TOKEN*`, `*KEY*`, `*CREDS*`…), the api keys of `playground.ini`, `~/.aws/credentials`, the value of secret-looking keys (`"connection.password": "…"`, `password=…` in properties, JDBC urls and JAAS configs, `password: …` in yaml), private keys, AWS access key ids, JWTs, `Bearer` tokens and `user:password@` in urls. A secret that the example builds itself is not known in advance: **the masking is best-effort, read the file before sharing it outside Confluent**.
 
 * `--run-log-file <file>` writes it to that file, `--no-run-log` skips it for one run
-* `playground config run-log false` never writes it, `playground config run-log-folder <folder>` changes the folder (default `~/.local/state/kafka-docker-playground/run-logs`, the last 50 files are kept, readable by you only)
+* `playground config run-log false` never writes it, `playground config run-log-folder <folder>` changes the folder (default `/tmp/playground-run-logs`, the last 50 files are kept, readable by you only)
 * the example still runs in a terminal (it is run under `script`), so colors, prompts and HTML reports behave as before
 * nothing is written in CI, which already keeps the output of each run
 

@@ -6592,7 +6592,7 @@ function redact_connector_secrets() {
 ################################################################################
 
 function run_log_default_folder () {
-  echo "${XDG_STATE_HOME:-$HOME/.local/state}/kafka-docker-playground/run-logs"
+  echo "/tmp/playground-run-logs"
 }
 
 # values to mask in a run log, one per line: the secret-looking variables exported for the example (loaded from

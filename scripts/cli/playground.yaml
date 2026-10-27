@@ -126,7 +126,7 @@ subcommands:
     usage: playground config run-log [ENABLED]
     options: []
   - name: run-log-folder
-    description: "\U0001F5C2️ folder of the run logs\n\nDefault is ~/.local/state/kafka-docker-playground/run-logs.\n\nThe
+    description: "\U0001F5C2️ folder of the run logs\n\nDefault is /tmp/playground-run-logs.\n\nThe
       last 50 run logs of the folder are kept."
     usage: playground config run-log-folder FOLDER
     options: []
@@ -645,17 +645,16 @@ subcommands:
     will be created): The Schema Registry api key and secret to use, it should be
     separated with colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n\n\U0001F4C4
     Run log\n  The output is also written to a text file, passwords, api keys and\n
-    \ tokens masked, ready to share with a colleague: the\n  command
-    to re-run, the versions, the host, the result and, for a\n  failure, the errors
-    of the connect container. Its path is printed at\n  the end of the run. The last
-    50 are kept in\n  ~/.local/state/kafka-docker-playground/run-logs.\n\n  --run-log-file
-    \   write it to that file\n  --no-run-log      don't write it\n  playground config
-    run-log false | run-log-folder <folder>\n\n  The masking is best-effort: review
-    the file before sharing it\n  outside Confluent.\n\n❗ this command will kill all
-    containers using \"playground container kill-all\", you can disable this by running
-    \"playground config container-kill-all-before-run false\"\n\n\U0001F36A Deep dive:
-    https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n\U0001F3AC Bite
-    size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B9%EF%B8%8F-run-an-example-with-the-menu-or-with-flags"
+    \ tokens masked, ready to share with a colleague: the\n  command to re-run, the
+    versions, the host, the result and, for a\n  failure, the errors of the connect
+    container. Its path is printed at\n  the end of the run. The last 50 are kept
+    in\n  /tmp/playground-run-logs.\n\n  --run-log-file    write it to that file\n
+    \ --no-run-log      don't write it\n  playground config run-log false | run-log-folder
+    <folder>\n\n  The masking is best-effort: review the file before sharing it\n
+    \ outside Confluent.\n\n❗ this command will kill all containers using \"playground
+    container kill-all\", you can disable this by running \"playground config container-kill-all-before-run
+    false\"\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n\U0001F3AC
+    Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%95%B9%EF%B8%8F-run-an-example-with-the-menu-or-with-flags"
   usage: playground run [OPTIONS]
   options:
   - names:
