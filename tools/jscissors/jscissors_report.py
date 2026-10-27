@@ -121,8 +121,9 @@ def normalize_message(msg: str) -> str:
     return re.sub(r"\d+", "N", msg or "")[:200]
 
 
-def build_calls(events: List[dict]) -> Tuple[Dict[int, dict], List[dict], int]:
-    """calls by id (enter + exit merged), dump events, last timestamp (µs since the start of the session)"""
+def build_calls(events: List[dict], ended_ms: int = 0) -> Tuple[Dict[int, dict], List[dict], int]:
+    """calls by id (enter + exit merged), dump events, last timestamp (µs since the start of the session)
+    ended_ms: when the session stopped (epoch ms, summary.json), the end of the calls still running"""
     calls: Dict[int, dict] = {}
     dumps = []
     last_us = 0
@@ -150,8 +151,11 @@ def build_calls(events: List[dict]) -> Tuple[Dict[int, dict], List[dict], int]:
     for c in calls.values():
         if "dur_us" not in c:
             # still running when the session stopped (or when the JVM exited)
+            # a hung call is often the last event: measure it up to the stop of the session, not to the last event
             c["open"] = True
             c["dur_us"] = max(0, last_us - c.get("start_us", 0))
+            if ended_ms and c.get("ts"):
+                c["dur_us"] = max(c["dur_us"], (ended_ms - c["ts"]) * 1000)
     for c in calls.values():
         parent = calls.get(c.get("parent") or 0)
         if parent is not None and parent is not c:
@@ -171,7 +175,7 @@ def percentile(values: List[float], p: float) -> Optional[float]:
 
 def analyze(jvm: dict, top: int) -> dict:
     s = jvm["summary"]
-    calls, dumps, last_us = build_calls(jvm["events"])
+    calls, dumps, last_us = build_calls(jvm["events"], s.get("stopped") or s.get("updated") or 0)
     recorded = [c for c in calls.values() if not c.get("exit_only")]
 
     # per method: exact counts from summary.json, distribution and self time from the recorded calls
@@ -334,7 +338,11 @@ def verdict(a: dict) -> Tuple[str, str]:
     parts = [f"✂️ {a['calls_total']:,} call(s) of {len(a['methods'])} method(s) in {a['duration_s']:.0f}s"]
     if a["errors_total"]:
         parts.append(f"{a['errors_total']:,} threw an exception")
-    if a["methods"]:
+    if a["open_calls"]:
+        c = a["open_calls"][0]
+        parts.append(f"{len(a['open_calls'])} still running when the trace stopped, the longest {method_label(c)} for {fmt_us(c['dur_us'])}")
+    # a call is counted when it returns: a method whose calls all hang has no time yet
+    if a["methods"] and a["methods"][0]["total_us"]:
         m = a["methods"][0]
         parts.append(f"most time in {short_class(m['class'])}.{m['method']} ({fmt_us(m['total_us'])})")
     cls = "danger" if any(c["dur_us"] >= 5000000 for c in a["open_calls"]) else "warn" if a["errors_total"] else "ok"
@@ -365,7 +373,8 @@ def text_report(a: dict, top: int) -> str:
     if a["open_calls"]:
         out.append("⏳ Still running when the trace stopped")
         for c in a["open_calls"][:top]:
-            out.append(f"   {fmt_us(c['dur_us']):>10}  {method_label(c)} on {c.get('thread')}")
+            args = ", ".join(c.get("args", []))
+            out.append(f"   {fmt_us(c['dur_us']):>10}  {method_label(c)}({args[:120]}) on {c.get('thread')}")
         out.append("")
     if a["slowest"]:
         out.append("🐢 Slowest calls")
