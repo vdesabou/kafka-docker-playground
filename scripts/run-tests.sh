@@ -450,6 +450,14 @@ do
     cd - > /dev/null
 done
 
+if [ -n "$GITHUB_RUN_NUMBER" ]
+then
+    # 🧹 Confluent Cloud topics created by the runs of this job and still on the shared cluster (kept at the end of a run
+    # because a connector of another job used them): partitions are billed per hour, and the podman nightly has no
+    # cleanup job. Without a ccloud example in the job, there is nothing recorded and it returns right away.
+    "${DIR}/cli/playground" cleanup-cloud-resources --recorded-topics-only --force
+fi
+
 if [ $nb_test_failed -eq 0 ]
 then
     log "####################################################"
