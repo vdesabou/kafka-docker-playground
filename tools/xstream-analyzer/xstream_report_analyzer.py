@@ -1126,7 +1126,15 @@ tr:hover td{background:transparent}
 .verdict.critical{border-left-color:#dc2626}.verdict.high{border-left-color:#ea580c}.verdict.medium{border-left-color:#d97706}.verdict.good{border-left-color:#16a34a}
 .report-sep{border:none;border-top:2px dashed #cbd5e1;margin:30px 0}
 .footer{font-size:.75rem;padding:0;margin-top:20px}
-""")
+""" + report_html.dark("""
+.health{background:#0f172a}
+.rec-meta{color:#94a3b8}
+.rec-action{background:#0b1220;border-color:#334155;color:#e2e8f0}
+tr:hover td{background:transparent}
+.st{background:transparent}
+.st.PASS{color:#4ade80}.st.FAIL{color:#f87171}.st.WARNING{color:#fbbf24}.st.CHECK{color:#60a5fa}.st.INFO,.st.UNKNOWN{color:#94a3b8}
+.report-sep{border-top-color:#334155}
+"""))
 
 
 def _e(v) -> str:

@@ -79,7 +79,11 @@ pre{white-space:pre;word-break:normal}
 .st.RUNNABLE{background:#dcfce7;color:#15803d}.st.BLOCKED{background:#fee2e2;color:#dc2626}
 .st.WAITING{background:#dbeafe;color:#1d4ed8}.st.TIMED_WAITING{background:#e0e7ff;color:#4338ca}.st.OTHER{background:#f1f5f9;color:#475569}
 .warn-box{background:#fff7ed;border-left:5px solid #ea580c;border-radius:8px;padding:12px 16px;margin-bottom:22px;font-size:.88rem}
-""")
+""" + report_html.dark("""
+.st.RUNNABLE{background:#052e16;color:#86efac}.st.BLOCKED{background:#450a0a;color:#fca5a5}
+.st.WAITING{background:#172554;color:#93c5fd}.st.TIMED_WAITING{background:#1e1b4b;color:#a5b4fc}.st.OTHER{background:#334155;color:#cbd5e1}
+.warn-box{background:#431407}
+"""))
 
 # coloured circle in front of the severity badges of the HTML report (text and colours unchanged)
 SEVERITY_ICONS = {"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "LOW": "🟢", "INFO": "ℹ️", "OK": "✅"}

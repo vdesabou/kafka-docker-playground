@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Look shared by the HTML reports of the playground commands (same as analyze thread-dump / gc-logs / tcp-dump):
-header, verdict banner, tiles, findings with severity badges, tables, SVG charts. Self-contained: no external resource.
+header, verdict banner, tiles, findings with severity badges, tables, SVG charts, light / dark theme with a
+"Toggle theme" button. Self-contained: no external resource.
 
 Imported, after adding this folder to sys.path, by:
   - the newer reports, which use page() and every helper: tools/log-analyzer/log_report.py,
@@ -9,7 +10,8 @@ Imported, after adding this folder to sys.path, by:
     tools/connector-diff/diff_report.py
   - the older ones, which only take BASE_CSS through style() with their own rules: tools/thread-analyzer,
     gc-analysis, tools/xstream-analyzer, tools/tcp-dump
-The benchmark, flight recorder, SMT test and CFK bundle reports have their own design (light / dark theme, filters).
+The benchmark, flight recorder and SMT test reports have their own design (light / dark theme, filters), and so does
+the CFK bundle report (light only).
 """
 
 import re
@@ -84,9 +86,75 @@ code{font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.8rem;backg
 """
 
 
+DARK_SELECTOR = 'html[data-theme="dark"]'
+
+
+def dark(css: str) -> str:
+    """Rules that only apply in the dark theme: one 'selectors{declarations}' per line, each selector gets the dark prefix
+    (which also makes it win over the light rules of the reports)"""
+    out = []
+    for line in css.strip().splitlines():
+        for sel, decl in re.findall(r"([^{}]+)\{([^{}]*)\}", line):
+            out.append(",".join(f"{DARK_SELECTOR} {s.strip()}" for s in sel.split(",")) + "{" + decl + "}")
+    return "\n".join(out) + "\n"
+
+
+# dark theme of BASE_CSS and NEWER_REPORTS_CSS, plus the SVG colors the charts write as attributes
+DARK_CSS = dark("""
+body{background:#0f172a;color:#e2e8f0}
+h2,h3,.section-title,.rec-text,.verdict{color:#cbd5e1}
+.kpi-card,.chart-card,.rec-card,.table-card,.verdict{background:#1e293b;box-shadow:none}
+.kpi-label,.legend,.kpi-unit,.footer,.muted{color:#94a3b8}
+th{background:#273449;border-bottom-color:#334155;color:#cbd5e1}
+td{border-bottom-color:#273449}
+tr:hover td{background:#273449}
+pre,code{background:#0b1220;color:#e2e8f0}
+details{border-top-color:#334155}
+a{color:#93c5fd}
+.header a{color:#fff}
+.st{background:#334155;color:#cbd5e1}
+.rec-badge.critical,.st.fatal,.st.failed{background:#450a0a;color:#fca5a5}
+.rec-badge.high,.st.error{background:#431407;color:#fdba74}
+.rec-badge.medium,.st.warn,.st.paused,.st.unassigned{background:#422006;color:#fcd34d}
+.rec-badge.low,.st.running{background:#052e16;color:#86efac}
+.rec-badge.info,.st.mine{background:#172554;color:#93c5fd}
+.rec-badge.ok{background:#083344;color:#67e8f9}
+.diff-a{background:#450a0a}.diff-b{background:#052e16}
+svg [fill="#64748b"],svg [fill="#94a3b8"]{fill:#94a3b8}
+svg [fill="#1e293b"],svg [fill="#334155"],svg [fill="#475569"]{fill:#cbd5e1}
+svg [stroke="#e2e8f0"],svg [stroke="#f1f5f9"]{stroke:#334155}
+svg [fill="#e2e8f0"],svg [fill="#f1f5f9"]{fill:#334155}
+svg text:not([fill]){fill:#cbd5e1}
+""")
+
+# in the top margin of the page, above the header (whose right side holds the health score of some reports)
+THEME_TOGGLE_CSS = """
+.theme-toggle{position:absolute;top:2px;right:12px;font:inherit;font-size:.72rem;line-height:1.4;color:#475569;background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:1px 9px;cursor:pointer}
+""" + dark("""
+.theme-toggle{color:#cbd5e1;background:#1e293b;border-color:#334155}
+""")
+
+# dark theme when the system is dark, until the "Toggle theme" button (top right of the page) switches it
+THEME_SCRIPT = """<script>
+(function () {
+  const root = document.documentElement;
+  if (!root.dataset.theme) root.dataset.theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  document.addEventListener("DOMContentLoaded", function () {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "theme-toggle";
+    button.textContent = "Toggle theme";
+    button.addEventListener("click", function () { root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark"; });
+    document.body.appendChild(button);
+  });
+})();
+</script>"""
+
+
 def style(extra: str = "") -> str:
-    """<style> element: the shared look, then the rules of one report (they win over the shared ones)"""
-    return f"<style>{BASE_CSS}{extra}</style>"
+    """<style> element: the shared look, then the rules of one report (they win over the shared ones), then the dark theme
+    (a report adds its own dark rules to extra with dark()); followed by the script of the "Toggle theme" button"""
+    return f"<style>{BASE_CSS}{extra}{DARK_CSS}{THEME_TOGGLE_CSS}</style>{THEME_SCRIPT}"
 
 
 HTML_CSS = style(NEWER_REPORTS_CSS)

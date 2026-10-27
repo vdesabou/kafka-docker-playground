@@ -409,7 +409,11 @@ TREE_CSS = """<style>
 .tree .thr{color:#94a3b8}
 .callinfo{margin:4px 0 6px 18px}
 .tree.flat .leaf{margin-left:0;border-top:1px solid #f1f5f9}.tree.flat>details{margin-left:0}
-</style>"""
+""" + rh.dark("""
+.tree>details,.tree.flat .leaf{border-top-color:#334155}
+.tree .dur{color:#94a3b8}
+.tree .slow{color:#fdba74}.tree .exc{color:#f87171}.tree .ret{color:#4ade80}.tree .args{color:#93c5fd}
+""") + "</style>"
 
 
 def call_line(c: dict, slow_us: float) -> str:

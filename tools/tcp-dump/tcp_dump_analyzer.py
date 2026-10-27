@@ -658,7 +658,10 @@ def text_report(res: dict, title: str, top: int) -> str:
 _HTML_CSS = report_html.style("""
 .st.established,.st.closed{background:#dcfce7;color:#15803d}.st.refused,.st.no-answer{background:#fee2e2;color:#dc2626}
 .st.reset{background:#ffedd5;color:#c2410c}
-""")
+""" + report_html.dark("""
+.st.established,.st.closed{background:#052e16;color:#86efac}.st.refused,.st.no-answer{background:#450a0a;color:#fca5a5}
+.st.reset{background:#431407;color:#fdba74}
+"""))
 
 
 def _e(s) -> str:

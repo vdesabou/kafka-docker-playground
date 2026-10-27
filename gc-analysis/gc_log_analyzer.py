@@ -130,7 +130,13 @@ td{vertical-align:inherit}
 .pause-hi{font-weight:700;color:#dc2626}
 .full-gc-row td{background:#fff1f2!important}
 .flag-cell{font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:.8rem;color:#1e293b;word-break:break-all}
-""")
+""" + report_html.dark("""
+.health-badge{background:#1e293b}.health-label{color:#94a3b8}
+.rec-flag,.flag-cell{color:#e2e8f0}
+.warn-box{background:#431407}
+.pause-hi{color:#f87171}
+.full-gc-row td{background:#4c0519!important}
+"""))
 
 
 # ── Data ──────────────────────────────────────────────────────────────────────
