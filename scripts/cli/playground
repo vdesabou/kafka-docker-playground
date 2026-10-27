@@ -4809,6 +4809,14 @@ playground_cleanup_cloud_resources_usage() {
     printf "    %s\n" "Default: aws, gcp, azure, ccloud, salesforce"
     echo
 
+    if [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]]; then
+      # :flag.usage
+      printf "  %s\n" "$(magenta "--recorded-topics-only")"
+      printf "    🧹 only delete the Confluent Cloud topics recorded as created by the\n    playground runs (playground-ccloud-created-topics) that are still on the\n    cluster, except the ones a connector of the cluster uses\n    \n    Used by run-tests.sh at the end of each CI job.\n"
+      echo
+
+    fi
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -19425,14 +19433,122 @@ function prune_ccloud_recorded_entries () {
   done
 }
 
+# Topics that the connectors of the cluster read or write, as set in their config, in one call to the Connect API:
+# "exact <topic> <connector>", "prefix <topic prefix> <connector>" and "regex <topics.regex> <connector>" lines.
+# Fails when the API can't be reached.
+function get_ccloud_topics_used_by_connectors () {
+  local output
+  # in a subshell: get_ccloud_connect exits when a setting is missing
+  output=$(get_ccloud_connect > /dev/null 2>&1 && curl -s --fail --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors?expand=info" --header "authorization: Basic $authorization") || return 1
+  echo "$output" | jq -r 'to_entries[] | .key as $c | (.value.info.config // {}) | to_entries[]
+    | if (.key | test("^topics\\.regex$")) then (.value | tostring | select(. != "") | "regex \(.) \($c)")
+      elif (.key | test("(^|\\.)topic\\.prefix$|^database\\.server\\.name$")) then (.value | tostring | select(. != "") | "prefix \(.) \($c)")
+      elif (.key | test("(^|\\.)topics?(\\.name)?$")) then (.value | tostring | split(",")[] | gsub(" "; "") | select(. != "") | "exact \(.) \($c)")
+      else empty end' 2>/dev/null
+}
+
+# The topics of $1 (one per line) that no connector of the cluster reads or writes, except the connectors named in $2
+# (being deleted). The cluster can be shared: by the parallel CI jobs, which use the same topic names in a few examples
+# (users, http-topic...), or by people of a team. Logs on stderr the topics kept and why.
+function filter_ccloud_topics_not_used_by_connectors () {
+  local topics="$1"
+  local ignored_connectors="$2"
+  local used
+  if ! used=$(get_ccloud_topics_used_by_connectors)
+  then
+    logwarn "🧹 could not read the configs of the connectors of the cluster, keeping the topics: $(echo "$topics" | paste -sd ',' - | sed 's/,/, /g')" >&2
+    return 0
+  fi
+  local topic
+  local kind
+  local value
+  local connector
+  local kept
+  for topic in $topics
+  do
+    kept=""
+    while read -r kind value connector
+    do
+      if [ -z "$kind" ] || echo "$ignored_connectors" | grep -Fxq -- "$connector"
+      then
+        continue
+      fi
+      case "$kind" in
+        exact) [ "$topic" == "$value" ] && kept="$connector" ;;
+        prefix) [[ "$topic" == "$value"* ]] && kept="$connector" ;;
+        regex) [[ "$topic" =~ ^($value)$ ]] && kept="$connector" ;;
+      esac
+      if [ -n "$kept" ]
+      then
+        break
+      fi
+    done <<< "$used"
+    if [ -n "$kept" ]
+    then
+      log "⏭️ keeping topic $topic: connector $kept uses it" >&2
+    else
+      echo "$topic"
+    fi
+  done
+}
+
+# Delete the topics recorded in playground-ccloud-created-topics (by every run) that are still on the cluster, except
+# the ones a connector of the cluster uses. Called by run-tests.sh at the end of each CI job
+# (playground cleanup-cloud-resources --recorded-topics-only): it catches the topics kept at the end of a run because a
+# connector of another job used them, and the ones of a run killed before its cleanup. The podman nightly has no
+# cleanup job, which would delete the resources of people using the cluster during the day.
+function cleanup_ccloud_recorded_topics () {
+  if ! command -v confluent > /dev/null 2>&1
+  then
+    return 0
+  fi
+  local cluster_id
+  local environment_id
+  cluster_id=$(get_ccloud_kafka_cluster_id)
+  environment_id=$(get_ccloud_environment_id)
+  if [ -z "$cluster_id" ] || [ -z "$environment_id" ]
+  then
+    return 0
+  fi
+  local cluster_flags="--environment $environment_id --cluster $cluster_id"
+  local topics_json
+  local connectors_json
+  local topics_to_delete
+  local topic
+  if ! topics_json=$(confluent kafka topic list $cluster_flags --output json 2>/dev/null)
+  then
+    logwarn "🧹 could not list the topics of cluster $cluster_id, skipping the cleanup of the recorded topics"
+    return 0
+  fi
+  topics_to_delete=$(get_ccloud_recorded_topics_matching "$cluster_id" "$(echo "$topics_json" | jq -r '.[].name' 2>/dev/null)")
+  if [ -n "$topics_to_delete" ]
+  then
+    topics_to_delete=$(filter_ccloud_topics_not_used_by_connectors "$topics_to_delete")
+  fi
+  if [ -z "$topics_to_delete" ]
+  then
+    log "🧹 no recorded topic to delete on cluster $cluster_id"
+    return 0
+  fi
+  for topic in $topics_to_delete
+  do
+      log "❌ deleting topic $topic"
+      confluent kafka topic delete "$topic" $cluster_flags --force > /dev/null 2>&1 || logwarn "❌ failed to delete topic $topic"
+  done
+  if topics_json=$(confluent kafka topic list $cluster_flags --output json 2>/dev/null) && connectors_json=$(confluent connect cluster list $cluster_flags --output json 2>/dev/null)
+  then
+    prune_ccloud_recorded_entries "$cluster_id" "$(echo "$topics_json" | jq -r '.[].name' 2>/dev/null)" "$(echo "$connectors_json" | jq -r '.[].name' 2>/dev/null)"
+  fi
+}
+
 # Delete the Confluent Cloud connectors and topics created by the last ccloud 'playground run'
 # (recorded with its run id in playground-ccloud-created-topics). Called by 'playground stop'
 # and at the start of the next 'playground run', so interrupted examples don't leave billed
 # connectors behind. Each run is handled once: deleted, or kept when the user says no.
 # Behaviour: 'playground config cleanup-ccloud-resources-after-run ask|true|false' (default ask)
-# In CI it is also called at the end of every 'playground run' (success, failure or timeout), and only deletes the
-# connectors: the cluster is shared by the parallel jobs, and a recorded topic prefix could match the topics of an
-# example running in another job. Topics are left to the cleanup-cloud-resources at the end of the nightly.
+# In CI it is also called at the end of every 'playground run' (success, failure or timeout), without asking: the
+# cluster is shared by the parallel jobs, so a topic of the run is kept when a connector of another job uses it (same
+# topic name or prefix in a few examples). run-tests.sh deletes those at the end of the job.
 function maybe_cleanup_ccloud_run_resources () {
   local ci_mode=0
   if [ ! -z "$GITHUB_RUN_NUMBER" ]
@@ -19474,7 +19590,7 @@ function maybe_cleanup_ccloud_run_resources () {
   fi
   local run_connectors
   run_connectors=$(get_ccloud_recorded_connectors "$cluster_id" "$run_id")
-  if [ -z "$run_connectors" ] && { [ $ci_mode -eq 1 ] || [ -z "$(get_ccloud_recorded_topics "$cluster_id" "$run_id")" ]; }
+  if [ -z "$run_connectors" ] && [ -z "$(get_ccloud_recorded_topics "$cluster_id" "$run_id")" ]
   then
     playground state set run.ccloud_run_cleaned "$run_id"
     return 0
@@ -19504,19 +19620,12 @@ function maybe_cleanup_ccloud_run_resources () {
       if [ -n "$id" ]
       then
           connectors_to_delete="$connectors_to_delete$id $name"$'\n'
-          if [ $ci_mode -eq 0 ]
-          then
-              connector_config=$(confluent connect cluster describe $id $cluster_flags --output json 2>/dev/null | jq -c '(.configs // []) | map({(.config): .value}) | add // {}' 2>/dev/null)
-              related_topics="$related_topics $(get_ccloud_connector_related_topics "$id" "$connector_config")"
-          fi
+          connector_config=$(confluent connect cluster describe $id $cluster_flags --output json 2>/dev/null | jq -c '(.configs // []) | map({(.config): .value}) | add // {}' 2>/dev/null)
+          related_topics="$related_topics $(get_ccloud_connector_related_topics "$id" "$connector_config")"
       fi
   done
   connectors_to_delete=$(echo "$connectors_to_delete" | grep -v '^$')
-  topics_to_delete=""
-  if [ $ci_mode -eq 0 ]
-  then
-      topics_to_delete=$( { get_ccloud_recorded_topics_matching "$cluster_id" "$existing_topics" "$run_id"; echo "$related_topics" | tr ' ' '\n' | grep -Fx -f <(echo "$existing_topics"); } | grep -v '^$' | sort -u)
-  fi
+  topics_to_delete=$( { get_ccloud_recorded_topics_matching "$cluster_id" "$existing_topics" "$run_id"; echo "$related_topics" | tr ' ' '\n' | grep -Fx -f <(echo "$existing_topics"); } | grep -v '^$' | sort -u)
 
   if [ -z "$connectors_to_delete" ] && [ -z "$topics_to_delete" ]
   then
@@ -19565,6 +19674,11 @@ function maybe_cleanup_ccloud_run_resources () {
   done <<< "$connectors_to_delete"
   # service accounts created by --ccloud-service-account for the connectors of the run
   cleanup_ccloud_connector_service_accounts "$run_id"
+  if [ $ci_mode -eq 1 ] && [ -n "$topics_to_delete" ]
+  then
+      # shared by the parallel jobs: keep the topics a connector of another job uses (the ones of the run, just deleted, can still be listed)
+      topics_to_delete=$(filter_ccloud_topics_not_used_by_connectors "$topics_to_delete" "$(echo "$connectors_to_delete" | awk '{print $2}')")
+  fi
   for topic in $topics_to_delete
   do
       log "❌ deleting topic $topic"
@@ -37963,6 +38077,13 @@ playground_cleanup_cloud_resources_command() {
   force="${args[--force]}"
   # Convert the space delimited string to an array
   eval "resources=(${args[--resource]})"
+  recorded_topics_only="${args[--recorded-topics-only]}"
+
+  if [[ -n "$recorded_topics_only" ]]
+  then
+      cleanup_ccloud_recorded_topics
+      exit 0
+  fi
 
   set +e
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
@@ -73312,6 +73433,14 @@ playground_cleanup_cloud_resources_parse_requirements() {
           printf "%s\n" "--resource requires an argument: --resource RESOURCE" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --recorded-topics-only)
+
+        # :flag.case_no_arg
+        args['--recorded-topics-only']=1
+        shift
         ;;
 
       --)

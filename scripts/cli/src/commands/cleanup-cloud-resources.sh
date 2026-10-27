@@ -2,6 +2,13 @@ user="${args[--user]}"
 force="${args[--force]}"
 # Convert the space delimited string to an array
 eval "resources=(${args[--resource]})"
+recorded_topics_only="${args[--recorded-topics-only]}"
+
+if [[ -n "$recorded_topics_only" ]]
+then
+    cleanup_ccloud_recorded_topics
+    exit 0
+fi
 
 set +e
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)

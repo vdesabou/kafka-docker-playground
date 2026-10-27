@@ -2862,6 +2862,12 @@ commands:
       - azure
       - ccloud
       - salesforce
+  - long: --recorded-topics-only
+    private: true
+    help: |-
+      🧹 only delete the Confluent Cloud topics recorded as created by the playground runs (playground-ccloud-created-topics) that are still on the cluster, except the ones a connector of the cluster uses
+
+      Used by run-tests.sh at the end of each CI job.
 
 - name: repro
   expose: always
