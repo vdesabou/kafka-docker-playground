@@ -12,5 +12,8 @@
     "sqs.region": "STRING",
     "sqs.url": "",
     "sqs.waittime.seconds": "20",
+    "task.parallel.transform.chunk.size": "10000",
+    "task.parallel.transform.enabled": "false",
+    "task.parallel.transform.threads": "2",
     "transaction.boundary": "poll",
     "transaction.boundary.interval.ms": "",
