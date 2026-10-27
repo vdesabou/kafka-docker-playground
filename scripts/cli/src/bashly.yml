@@ -4926,6 +4926,7 @@ commands:
       🔖 Exit code is 0 when the analysis completed, 2 when the folder holds no trace
 
       🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%9C%82%EF%B8%8F-records-vanish-a-task-hangs-what-does-the-code-do
     flags:
       - long: --file
         short: -f
@@ -5549,6 +5550,7 @@ commands:
       🔖 The session of each container is kept in playground.ini (jscissors.<container>), --action status shows it with the calls so far. The agent jar is built from tools/jscissors/agent with maven in a container the first time (and after a change of its sources).
 
       🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-jvm-diagnostics
+      🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%9C%82%EF%B8%8F-records-vanish-a-task-hangs-what-does-the-code-do
     flags:
       - *container
       - long: --action

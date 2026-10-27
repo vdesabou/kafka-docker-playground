@@ -98,8 +98,8 @@ CLI change that makes a page wrong shows up as a failing test.
 ### 🧵 JVM diagnostics: which collector, which analyzer
 
 - 📖 [Read the deep dive](/deep-dive-jvm-diagnostics.md)
-- 🧠 Commands: `debug thread-dump`, `heap-dump`, `flight-recorder`, `analyze thread-dump`, `gc-logs`, `flight-recorder`, `heap-dump`
-- 🎬 Bite size session: [🧵 thread dumps](/sessions?id=🧵-a-connector-looks-stuck-analyze-thread-dumps), [♻️ GC logs](/sessions?id=♻️-long-gc-pauses-or-a-memory-leak-analyze-gc-logs), [🛩️ flight recorder](/sessions?id=🛩️-a-slow-connector-where-does-the-task-time-go)
+- 🧠 Commands: `debug thread-dump`, `heap-dump`, `flight-recorder`, `jscissors`, `analyze thread-dump`, `gc-logs`, `flight-recorder`, `heap-dump`, `jscissors`
+- 🎬 Bite size session: [🧵 thread dumps](/sessions?id=🧵-a-connector-looks-stuck-analyze-thread-dumps), [♻️ GC logs](/sessions?id=♻️-long-gc-pauses-or-a-memory-leak-analyze-gc-logs), [🛩️ flight recorder](/sessions?id=🛩️-a-slow-connector-where-does-the-task-time-go), [✂️ jscissors](/sessions?id=✂️-records-vanish-a-task-hangs-what-does-the-code-do)
 
 ## ⚙️ Run, environments and reproductions
 

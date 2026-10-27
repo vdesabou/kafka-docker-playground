@@ -29,6 +29,7 @@ link to a live report so you can click around it yourself.
 | 🧵 | [A connector looks stuck: analyze thread dumps](/sessions?id=🧵-a-connector-looks-stuck-analyze-thread-dumps) | nothing (`--sample`) |
 | ♻️ | [Long GC pauses or a memory leak: analyze GC logs](/sessions?id=♻️-long-gc-pauses-or-a-memory-leak-analyze-gc-logs) | nothing (`--sample`) |
 | 🛩️ | [A slow connector: where does the task time go?](/sessions?id=🛩️-a-slow-connector-where-does-the-task-time-go) | nothing (`--sample`) |
+| ✂️ | [Records vanish, a task hangs: what does the code do? jscissors, call by call](/sessions?id=✂️-records-vanish-a-task-hangs-what-does-the-code-do) | a running example |
 | 🅾️ | [Oracle XStream CDC lags or is idle: analyze the orclcdc_diag report](/sessions?id=🅾️-oracle-xstream-cdc-lags-or-is-idle) | nothing (`--sample`) |
 | ☸️ | [What is wrong in this CFK cluster? Analyze a support bundle](/sessions?id=☸️-what-is-wrong-in-this-cfk-cluster) | nothing (`--sample`) |
 | 📨 | [Produce realistic test data](/sessions?id=📨-produce-realistic-test-data) | a running environment |
@@ -635,6 +636,50 @@ playground analyze flight-recorder --sample jdbc_postgres_sink --output-dir /tmp
 - 🍪 Deep dive: [JVM diagnostics: which collector, which analyzer](/deep-dive-jvm-diagnostics.md)
 - 🌐 <a href="reports/flight-recorder.html" target="_blank" rel="noopener">The HTML report shown in the session</a> (the real report: click around)
 - 🧠 CLI reference: [playground analyze flight-recorder](/playground%20analyze%20flight-recorder)
+
+## ✂️ Records vanish, a task hangs: what does the code do?
+
+The sink is `RUNNING`, rows are missing in the database, and there is no error in the logs. A thread dump says where the
+threads are, a flight recording where the time goes on average: jscissors records **what the methods you pick receive,
+return and throw, and how long each call takes**. A java agent is loaded in the running worker: no restart, no debugger
+that freezes it, no log line to add and no connector to rebuild.
+
+<video src="videos/session-jscissors.mp4" poster="images/sessions/jscissors.png" controls playsinline width="100%"></video>
+
+**In this session**
+
+- a JDBC sink with `errors.tolerance=all` and no dead letter queue: 10 orders sent, 8 rows, no ERROR in the logs
+- `--only-failed` on the converter: every call is counted, only the 2 that threw are kept, with their arguments (plain
+  JSON bytes on an avro topic: a legacy producer)
+- the route to postgres cut on purpose: the task stays `RUNNING`, the lag grows. At `stop`, the call still running, for
+  how long, and the batch it holds (its first offset)
+- a regex for several classes and methods, `--slower-than`, `--operation EXCEPTION_THREADS`, `--duration`, `--restart`
+- what is masked (passwords, tokens) and what is not (record values): read the report before sharing it
+
+**Commands**
+
+```bash
+# which records does the converter reject? only the calls that throw, with their arguments
+playground debug jscissors -c connect --class io.confluent.connect.avro.AvroConverter --method toConnectData --only-failed --action start
+playground debug jscissors -c connect --action stop --output-dir /tmp/jscissors     # restores the classes, copies, analyzes
+
+# where does the task hang, since when, on which records?
+playground debug jscissors -c connect --class 'io.confluent.connect.jdbc.sink.(JdbcDbWriter|BufferedRecords)' --method 'write|flush' --action start
+playground debug jscissors -c connect --action stop --output-dir /tmp/jscissors
+
+# start, wait, stop and analyze in one command; the sample, without docker
+playground debug jscissors -c connect --class <class> --method <method> --duration 60s
+playground analyze jscissors --sample filestream_sink_bad_json --output-dir /tmp/jscissors
+```
+
+Recorded on the example `connect/connect-jdbc-postgresql-sink/postgres-sink.sh`.
+
+**Links**
+
+- 🍪 Deep dive: [JVM diagnostics: jscissors, call by call](/deep-dive-jvm-diagnostics?id=_6-jscissors-what-the-code-does-call-by-call)
+- 🌐 <a href="reports/jscissors.html" target="_blank" rel="noopener">A jscissors report</a> (another trace, the shipped sample: click around)
+- 🧠 CLI reference: [playground debug jscissors](/playground%20debug%20jscissors), [playground analyze jscissors](/playground%20analyze%20jscissors)
+- 🔗 Next step on a hang: [playground analyze thread-dump](/playground%20analyze%20thread-dump)
 
 ## 🅾️ Oracle XStream CDC lags or is idle
 
