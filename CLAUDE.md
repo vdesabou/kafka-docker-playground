@@ -110,6 +110,7 @@ behave like this" question, read the matching page first:
 | slow or broken network | `docs/deep-dive-network-traffic.md` |
 | topics: create, configs, counts | `docs/deep-dive-topic-administration.md` |
 | SASL / SSL / Kerberos / RBAC environments | `docs/deep-dive-secured-environments.md` |
+| two clusters (`mdc-*`), Replicator, MirrorMaker 2, Cluster Linking, offset translation | `docs/deep-dive-replication.md` |
 | connector throughput, version comparison | `docs/deep-dive-connector-benchmark.md` |
 | fully managed connectors, Confluent Cloud | `docs/deep-dive-fully-managed.md` |
 | credentials, `playground secrets`, 1Password | `docs/deep-dive-secrets.md` |

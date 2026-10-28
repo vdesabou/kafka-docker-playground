@@ -2494,6 +2494,7 @@ commands:
     'playground container recreate' and 'playground re-run' can replay it.
 
     🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-secured-environments
+    🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-replication
     🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%90-the-same-example-under-sasl_ssl-and-rbac
   flags:
     - &environment

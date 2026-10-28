@@ -76,7 +76,7 @@ SSL cluster" or "the connector gets `TopicAuthorizationException`". Takes about 
 
 Other types, with their own pages: `cfk` / `cfk-rbac` (Confluent for Kubernetes, see the
 [`analyze cfk-bundle` session](/sessions?id=☸️-what-is-wrong-in-this-cfk-cluster)), `mdc-plaintext` /
-`mdc-sasl-plain` / `mdc-kerberos` (two clusters, Replicator / Cluster Linking examples in `multi-data-center/`), and
+`mdc-sasl-plain` / `mdc-kerberos` (two clusters, see [replication between clusters](/deep-dive-replication.md)), and
 `ccloud` (Confluent Cloud, `bootstrap_ccloud_environment` in `ccloud/` examples).
 
 Gotchas:
