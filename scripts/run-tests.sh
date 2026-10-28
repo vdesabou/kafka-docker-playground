@@ -99,19 +99,21 @@ do
     cd $dir > /dev/null
 
     # 🤖 CI: ignore examples with github issues opened and with label 'CI ignore ⏭️' #7203
-    title="🔥 ${dir}"
+    # same name as the issues created by update-readme: only the first '-' becomes a '/' (multi-data-center/replicator-executable -> multi/data-center-replicator-executable)
+    issue_dir=$(echo "$dir" | sed 's/\//-/g' | sed 's/-/\//')
+    title="🔥 ${issue_dir}"
     if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
     then
-        title="🔥 ${dir} ($PLAYGROUND_ENVIRONMENT)"
+        title="🔥 ${issue_dir} ($PLAYGROUND_ENVIRONMENT)"
     fi
     # podman failures have their own issues (see update-readme): "(podman)", "(cfk, podman)"
     if [ "$container_engine" = "podman" ]
     then
         if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]]
         then
-            title="🔥 ${dir} ($PLAYGROUND_ENVIRONMENT, podman)"
+            title="🔥 ${issue_dir} ($PLAYGROUND_ENVIRONMENT, podman)"
         else
-            title="🔥 ${dir} (podman)"
+            title="🔥 ${issue_dir} (podman)"
         fi
     fi
     set +e

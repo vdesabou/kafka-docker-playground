@@ -36828,23 +36828,24 @@ playground_get_ci_result_command() {
 
   repo="vdesabou/kafka-docker-playground"
 
-  # CI issue titles, see scripts/run-tests.sh
-  title="🔥 $dir2"
+  # CI issue titles, see update-readme: only the first '-' becomes a '/' (multi-data-center/replicator-executable -> multi/data-center-replicator-executable)
+  issue_dir=$(echo "$dir2" | sed 's/\//-/g' | sed 's/-/\//')
+  title="🔥 $issue_dir"
   job_suffix_regex=" plaintext ?$"
   job_label="plaintext"
   if [[ "$environment" == cfk* ]] && [[ -n "$podman" ]]
   then
-      title="🔥 $dir2 (cfk, podman)"
+      title="🔥 $issue_dir (cfk, podman)"
       job_suffix_regex=" cfk 🦭$"
       job_label="cfk 🦭"
   elif [[ "$environment" == cfk* ]]
   then
-      title="🔥 $dir2 (cfk)"
+      title="🔥 $issue_dir (cfk)"
       job_suffix_regex=" cfk ?$"
       job_label="cfk"
   elif [[ -n "$podman" ]]
   then
-      title="🔥 $dir2 (podman)"
+      title="🔥 $issue_dir (podman)"
       job_suffix_regex=" plaintext 🦭$"
       job_label="plaintext 🦭"
   fi
