@@ -7,10 +7,11 @@ This page is about what changes when there is no worker you can reach: names, wa
 cleanup. Takes about 15 minutes to read, and the lab costs a few cents.
 
 > [!TIP]
-> Two video sessions cover the neighbours of this page:
+> Three video sessions cover the neighbours of this page:
 > [🚚 Move a self-managed connector to fully managed](/sessions?id=🚚-move-a-self-managed-connector-to-fully-managed)
-> (the Connector Migration Utility) and
-> [🏗️ Deploy a fully managed connector with Terraform](/sessions?id=🏗️-deploy-a-fully-managed-connector-with-terraform).
+> (the Connector Migration Utility),
+> [🏗️ Deploy a fully managed connector with Terraform](/sessions?id=🏗️-deploy-a-fully-managed-connector-with-terraform)
+> and [👤 A fully managed connector with a service account loses an ACL](/sessions?id=👤-a-fully-managed-connector-with-a-service-account-loses-an-acl).
 > This page covers the everyday commands: how the cluster is chosen, what each connector command does on Confluent
 > Cloud, a hands-on lab and recipes for support cases.
 
@@ -27,6 +28,7 @@ cleanup. Takes about 15 minutes to read, and the lab costs a few cents.
 | its page in the console | `playground connector open-ccloud-connector-in-browser -c <name>` |
 | the fully managed equivalent of a self-managed config | `playground connector translate`, `playground connector connect-migration-utility discovery\|migrate` |
 | deploy it with Terraform | `playground connector create-or-update -c <name> --terraform << EOF … EOF` |
+| run it with a service account and the ACLs of the documentation | `playground run -f <example> --ccloud-service-account`, then `playground rbac acl list\|delete\|create --connector <name>` |
 | what you spent | `playground ccloud-costs-history`, `playground ccloud-costs` |
 | delete what the playground created | `playground stop` in the example folder (`maybe_delete_ccloud_environment`), `playground cleanup-cloud-resources` |
 
@@ -257,6 +259,7 @@ playground stop                                                              # d
 | --- | --- |
 | "here is our fully managed config" | the matching `ccloud/fm-*` example (`playground find-example "<type>" --category ccloud`), the customer's keys in its heredoc, `create-or-update --wait` |
 | "our connector is FAILED" | `connector status`, then `connector error-recommendations`; `connector diagnose` adds the ACL check |
+| "Missing write permission on topic(s)", our connector uses a service account | `playground run --ccloud-service-account`, delete the ACL the customer lacks with `rbac acl delete --connector`, restart, `connector diagnose` (👤 session) |
 | "it's RUNNING but nothing arrives" | `display-metrics-api` (records in/out), `topic dlq inspect --connector <name>` (`dlq-<lcc id>`) |
 | "skip a poison record / replay from an offset" | `connector offsets get`, then `offsets alter` (asynchronous, watch `get-offsets-request-status`) |
 | "will our self-managed config work on Confluent Cloud?" | `connector translate` on the self-managed example run with `--environment ccloud`, or the Connector Migration Utility (🚚 session) |
@@ -297,7 +300,8 @@ playground stop                                           # in the ccloud/fm-* f
 **Links**
 
 - 🎬 Video sessions: [🚚 Move a self-managed connector to fully managed](/sessions?id=🚚-move-a-self-managed-connector-to-fully-managed),
-  [🏗️ Deploy a fully managed connector with Terraform](/sessions?id=🏗️-deploy-a-fully-managed-connector-with-terraform)
+  [🏗️ Deploy a fully managed connector with Terraform](/sessions?id=🏗️-deploy-a-fully-managed-connector-with-terraform),
+  [👤 A fully managed connector with a service account loses an ACL](/sessions?id=👤-a-fully-managed-connector-with-a-service-account-loses-an-acl)
 - 🍪 Deep dives: [`connector create-or-update`](/deep-dive-connector-create-or-update.md) (the waits),
   [offsets and lag](/deep-dive-offsets-and-lag.md), [`connector diagnose` and the DLQ](/deep-dive-connector-troubleshooting.md),
   [connector plugins](/deep-dive-connector-plugin.md)

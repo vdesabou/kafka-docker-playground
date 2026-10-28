@@ -40,6 +40,7 @@ link to a live report so you can click around it yourself.
 | 🐌 | [A slow or broken network, on purpose: degrade and block traffic](/sessions?id=🐌-a-slow-or-broken-network-on-purpose) | a running example |
 | 🚚 | [Move a self-managed connector to fully managed](/sessions?id=🚚-move-a-self-managed-connector-to-fully-managed) | Confluent Cloud, AWS credentials |
 | 🏗️ | [Deploy a fully managed connector with Terraform](/sessions?id=🏗️-deploy-a-fully-managed-connector-with-terraform) | Confluent Cloud, terraform |
+| 👤 | [A fully managed connector with a service account loses an ACL: reproduce it, diagnose it](/sessions?id=👤-a-fully-managed-connector-with-a-service-account-loses-an-acl) | Confluent Cloud |
 
 ## 🕹️ Run an example: with the menu or with flags
 
@@ -1056,3 +1057,59 @@ Recorded on the example `ccloud/fm-datagen-source/fully-managed-datagen-source.s
 - 📖 [Fully managed connectors with Terraform](/reusables?id=🏗️-fully-managed-connectors-with-terraform)
 - 🧠 CLI reference: [playground connector create-or-update](/playground%20connector%20create-or-update),
   [playground connector delete](/playground%20connector%20delete)
+
+## 👤 A fully managed connector with a service account loses an ACL
+
+The examples run their fully managed connectors with an API key that can do anything on the cluster. The customer's
+connector runs with a [service account](https://docs.confluent.io/cloud/current/connectors/service-account.html) and the
+least ACLs, and fails with `Missing write permission on topic(s)`. Run the example the customer's way, remove the ACL they
+lack, and let `connector diagnose` find it.
+
+<video src="videos/session-ccloud-service-account.mp4" poster="images/sessions/ccloud-service-account.png" controls playsinline width="100%"></video>
+
+**In this session**
+
+- `PG_CCLOUD_SERVICE_ACCOUNT=true` (what `playground run --ccloud-service-account` sets): the connector gets its own
+  service account, the ACLs of the documentation derived from its config, and the API key is removed from its config
+- `rbac acl list --connector`: the ACLs of the service account of the connector
+- the customer's case: `WRITE` on the topic deleted, the connector restarted, the task `FAILED`
+- `connector diagnose`: the missing ACL, and the command that creates it again
+- `connector delete` deletes the service account and its ACLs too
+
+**Commands**
+
+```bash
+playground run -f ccloud/fm-datagen-source/fully-managed-datagen-source.sh --ccloud-service-account   # every connector of the example
+
+playground rbac acl list   --connector DatagenSource_$USER
+playground rbac acl delete --connector DatagenSource_$USER --operation WRITE --resource Topic:datagen_pageviews
+playground connector restart --connector DatagenSource_$USER
+playground connector wait --connector DatagenSource_$USER --state FAILED --max-wait 600
+playground connector diagnose --connector DatagenSource_$USER
+playground rbac acl create --connector DatagenSource_$USER --operation WRITE --resource Topic:datagen_pageviews
+playground connector delete --connector DatagenSource_$USER
+```
+
+| Option of `playground run` | ACLs of the service account |
+| --- | --- |
+| `--ccloud-service-account` | the ACLs of the documentation, derived from the connector config |
+| `--ccloud-service-account-acls full` | every operation on every topic, group and transactional id: to rule ACLs out |
+| `--ccloud-service-account-acls none` | none: add them one by one with `playground rbac acl create --connector` |
+| `--ccloud-service-account-id sa-xxxxx` | an existing service account (set up like the customer's), as is: no ACL created nor deleted |
+| `PG_CCLOUD_SERVICE_ACCOUNT_ACL_EXCLUDE="READ Group:"` | the ACLs of the documentation, except the ones matching the regex |
+
+> [!NOTE]
+> An ACL change takes up to a minute to be applied in Confluent Cloud: wait a minute before restarting the connector. A
+> restart is asynchronous: right after it, the status can still be `FAILED`, and `connector wait` stops on it, so retry
+> the restart and the wait (the session does it in a loop). The
+> principal that creates the connector needs the Assigner role on the service account: the playground grants it to the
+> owner of `CONFLUENT_CLOUD_API_KEY`. Recorded on the example `ccloud/fm-datagen-source/fully-managed-datagen-source.sh`,
+> its config in `/tmp/datagen-sa.json` with `"$CLOUD_KEY"` / `"$CLOUD_SECRET"` placeholders replaced by `envsubst`.
+
+**Links**
+
+- 📖 [Fully managed connectors with a service account](/reusables?id=👤-fully-managed-connectors-with-a-service-account)
+  in the Reproduction toolkit
+- 🍪 Deep dive: [fully managed connectors: what differs from self-managed, hands-on lab](/deep-dive-fully-managed.md)
+- 🧠 CLI reference: [playground run](/playground%20run), [playground rbac acl](/playground%20rbac%20acl),
+  [playground connector diagnose](/playground%20connector%20diagnose)

@@ -1225,6 +1225,8 @@ export PG_CCLOUD_SERVICE_ACCOUNT=true
 export PG_CCLOUD_SERVICE_ACCOUNT_ACL_EXCLUDE="READ Group:.*-schemahistory"
 ```
 
+🎬 Bite size session: [A fully managed connector with a service account loses an ACL](/sessions?id=👤-a-fully-managed-connector-with-a-service-account-loses-an-acl)
+
 ## 🏗️ Fully managed connectors with Terraform
 
 Customers often manage their fully managed connectors with Terraform. Add `--terraform` to [playground connector create-or-update](/playground%20connector%20create-or-update) to deploy the connector of any fully managed or custom connector example that way. The JSON config stays as is: it is converted to HCL for the [confluentinc/confluent](https://registry.terraform.io/providers/confluentinc/confluent/latest/docs/resources/confluent_connector) provider, then `terraform init`, `plan` and `apply` run.
