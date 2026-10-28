@@ -13150,7 +13150,7 @@ playground_connector_pause_usage() {
 playground_connector_versions_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector versions\n\n"
-    printf "  🧞 Get current and latest versions available on Confluent Hub for connector(s)\n  used in example\n  \n  Tells you in one line whether you are testing an outdated connector.\n  To move to the version reported as latest, re-run the example with\n  'playground update-version --connector-tag <version>'.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%8E%%AF-is-it-fixed-in-a-newer-version\n\n"
+    printf "  🧞 Get current and latest versions available on Confluent Hub for connector(s)\n  used in example\n  \n  Tells you in one line whether you are testing an outdated connector.\n  To move to the version reported as latest, re-run the example with\n  'playground update-version --connector-tag <version>'.\n  \n  For Confluent plugins, the last 5 versions come with their release notes\n  (playground connector-plugin versions --with-changelog), and an outdated\n  version with the playground connector-plugin changelog command that lists\n  everything that changed since.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%8E%%AF-is-it-fixed-in-a-newer-version\n\n"
   else
     printf "playground connector versions - 🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n\n"
   fi
@@ -56536,7 +56536,13 @@ playground_connector_versions_command() {
               continue
           fi
 
-          playground connector-plugin versions --connector-plugin $owner/$name --last 5
+          # release notes under each version: Confluent plugins only, the others have no changelog feed
+          with_changelog_flag=()
+          if [ "$owner" == "confluentinc" ]
+          then
+              with_changelog_flag=(--with-changelog)
+          fi
+          playground connector-plugin versions --connector-plugin $owner/$name --last 5 "${with_changelog_flag[@]}"
 
           # latest
           latest=$(playground connector-plugin versions --connector-plugin $owner/$name --last 1)
@@ -56563,6 +56569,10 @@ playground_connector_versions_command() {
               echo "$current"
               log "Latest on Hub"
               echo "$latest"
+              if [ "$owner" == "confluentinc" ]
+              then
+                  log "📜 To see everything that changed since v$version: playground connector-plugin changelog --connector-plugin $owner/$name --from $version"
+              fi
           fi
 
       done

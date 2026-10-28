@@ -9781,6 +9781,11 @@ commands:
       To move to the version reported as latest, re-run the example with
       'playground update-version --connector-tag <version>'.
 
+      For Confluent plugins, the last 5 versions come with their release notes
+      (playground connector-plugin versions --with-changelog), and an outdated
+      version with the playground connector-plugin changelog command that lists
+      everything that changed since.
+
       🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions
       🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%8E%AF-is-it-fixed-in-a-newer-version
 
