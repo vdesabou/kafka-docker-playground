@@ -4,7 +4,18 @@ keystore="${args[--keystore]}"
 
 if [[ ! -n "$keystore" ]]
 then
-    keystore="$root_folder/connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks"
+    # what the examples use: the keystore of 'playground salesforce setup', else the one in the examples
+    keystore="$(salesforce_user_keystore_path)"
+    if [ ! -f "$keystore" ]
+    then
+        keystore="$root_folder/connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks"
+    fi
+fi
+if [ ! -f "$keystore" ]
+then
+    logerror "❌ keystore $keystore is missing"
+    logerror "👉 playground salesforce setup generates one"
+    exit 1
 fi
 for tool in openssl curl jq
 do
@@ -47,9 +58,8 @@ then
     exit 1
 fi
 
-salesforce_setup_load_keystore "$keystore" ""
+salesforce_setup_load_keystore "$keystore"
 
-failed=0
 log "🔑 JWT bearer login of $username on $instance_url ($consumer_key_var ${consumer_key:0:12}…, certificate of $keystore)"
 if salesforce_setup_jwt_token "$instance_url" "$consumer_key" "$username" "$sf_jwt_key_file" > "$sf_tmp_dir/token.out"
 then
@@ -73,6 +83,7 @@ else
     exit 1
 fi
 
+missing_objects=0
 function salesforce_check_query () {
     curl -sS -m 30 -G -H "Authorization: Bearer $sf_access_token" "$sf_token_instance_url/services/data/v66.0/$1" --data-urlencode "q=$2"
 }
@@ -82,8 +93,8 @@ if [ "${nb:-0}" -ge 1 ]
 then
     log "✅ Platform Event MyPlatformEvent__e exists"
 else
-    logerror "❌ Platform Event MyPlatformEvent__e is missing (needed by the platform events examples)"
-    failed=1
+    logwarn "⚠️ Platform Event MyPlatformEvent__e is missing: only the Platform Events examples need it"
+    missing_objects=1
 fi
 
 cdc_entities=$(salesforce_check_query tooling/query "SELECT SelectedEntity FROM PlatformEventChannelMember WHERE EventChannel = 'ChangeEvents'" | jq -r '.records[]?.SelectedEntity' 2> /dev/null | sort | tr '\n' ' ')
@@ -91,13 +102,13 @@ if [[ " $cdc_entities" == *" ContactChangeEvent "* ]]
 then
     log "✅ Change Data Capture is enabled on Contact (entities: $cdc_entities)"
 else
-    logerror "❌ Change Data Capture is not enabled on Contact (needed by the CDC examples), entities: ${cdc_entities:-none}"
-    failed=1
+    logwarn "⚠️ Change Data Capture is not enabled on Contact (entities: ${cdc_entities:-none}): only the CDC examples need it"
+    missing_objects=1
 fi
 
-if [ $failed -eq 1 ]
+if [ $missing_objects -eq 1 ]
 then
-    logerror "👉 playground salesforce setup$( [[ -n "$suffix" ]] && echo " --suffix $suffix" )$( [[ -n "$account2" ]] && echo " --account2" ) deploys what is missing"
-    exit 1
+    log "👉 playground salesforce setup$( [[ -n "$suffix" ]] && echo " --suffix $suffix" )$( [[ -n "$account2" ]] && echo " --account2" ) deploys what is missing"
+    exit 0
 fi
-log "🎉 the org is ready for the Salesforce examples"
+log "🎉 the org is ready for all the Salesforce examples"

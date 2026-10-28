@@ -11,7 +11,7 @@ Quickly test the [Salesforce Bulk API Source](https://docs.confluent.io/current/
 
 * A Salesforce account (see [Register a test account](#register-a-test-account)).
 * An External Client App with the JWT Bearer flow enabled (see [OAuth with JWT Bearer Flow](#oauth-with-jwt-bearer-flow)). It is always used by the sfdx CLI, and also by the connector for versions that support `JWT_BEARER` (3.0.15 to 3.0.x, and later than 3.1.8). Older versions authenticate with username, password and security token.
-* `salesforce-confluent.keystore.jks` (password `confluent`) in this folder. If it is missing, the script tries to download it from the playground S3 bucket (Confluent employees only, with AWS credentials set).
+* `salesforce-confluent.keystore.jks` (password `confluent`) in this folder. The keystore of `playground salesforce setup` (`~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks`) is copied here automatically; without it, the script tries to download the shared one from the playground S3 bucket (Confluent employees only, with AWS credentials set).
 * With CP 8.x, connector version 2.0.29 or later (the script exits with code 111 otherwise).
 
 | Variable | Description |

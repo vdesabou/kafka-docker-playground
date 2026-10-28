@@ -7157,59 +7157,91 @@ function salesforce_setup_resolve_org () {
   sf_org_id=$(echo "$org_json" | jq -r '.result.id')
 }
 
-# Salesforce example folders that read salesforce-confluent.keystore.jks from their own folder.
-function salesforce_setup_keystore_folders () {
-  grep -rl "salesforce_ensure_jwt_keystore\|salesforce_sfdx_login" "$root_folder/connect" "$root_folder/ccloud" --include='*.sh' 2> /dev/null | xargs -n1 dirname | sort -u
+# Generate a new JWT key pair as a PKCS12 keystore (password confluent). PBE-SHA1-3DES keeps it
+# readable by every JDK of the Connect images (OpenSSL 3 defaults need JDK 11.0.12 or later).
+function salesforce_setup_generate_keystore () {
+  out="$1"
+  if ! openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
+      -subj "/C=US/ST=Ca/L=PaloAlto/O=CONFLUENT/OU=TEST/CN=kafka-docker-playground-$USER" \
+      -keyout "$sf_tmp_dir/new.key" -out "$sf_tmp_dir/new.crt" > /dev/null 2>&1 \
+    || ! openssl pkcs12 -export -name salesforce-confluent -in "$sf_tmp_dir/new.crt" -inkey "$sf_tmp_dir/new.key" \
+      -keypbe PBE-SHA1-3DES -certpbe PBE-SHA1-3DES -macalg sha1 \
+      -passout pass:confluent -out "$out" > /dev/null 2>&1
+  then
+    rm -f "$sf_tmp_dir/new.key" "$sf_tmp_dir/new.crt"
+    logerror "❌ failed to generate the keystore"
+    exit 1
+  fi
+  rm -f "$sf_tmp_dir/new.key" "$sf_tmp_dir/new.crt"
+  chmod 600 "$out"
 }
 
-# Makes sure the keystore exists (download from the playground S3 bucket, or generate a new key pair
-# with --generate-keystore), then sets sf_certificate (base64 body of the certificate, as the External
-# Client App metadata wants it) and sf_jwt_key_file (unencrypted private key, in sf_tmp_dir).
-function salesforce_setup_load_keystore () {
+# Install a keystore as the user keystore (salesforce_user_keystore_path), keeping the previous one
+# as .bak, then copy it into the Salesforce example folders.
+function salesforce_setup_install_keystore () {
+  src="$1"
+  user_keystore="$(salesforce_user_keystore_path)"
+  mkdir -p "$(dirname "$user_keystore")"
+  if [ -f "$user_keystore" ] && ! cmp -s "$src" "$user_keystore"
+  then
+    mv "$user_keystore" "$user_keystore.bak"
+    logwarn "⚠️ previous keystore kept as $user_keystore.bak: the orgs set up with it must be set up again (playground salesforce setup)"
+  fi
+  if ! cmp -s "$src" "$user_keystore" 2> /dev/null
+  then
+    cp "$src" "$user_keystore"
+    chmod 600 "$user_keystore"
+  fi
+  salesforce_sync_user_keystore "$root_folder"
+}
+
+# The keystore 'playground salesforce setup' uses, made the user keystore:
+#   --keystore <file>      that file
+#   --generate-keystore    a new key pair
+#   otherwise              the user keystore, else the one already in the examples (the shared one of
+#                          the S3 bucket, so the orgs that trust it keep working), else a new key pair
+function salesforce_setup_resolve_keystore () {
   keystore="$1"
   generate="$2"
+  user_keystore="$(salesforce_user_keystore_path)"
+  example_keystore="$root_folder/connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks"
 
-  if [ ! -f "$keystore" ] && [ "$keystore" == "$root_folder/connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks" ]
+  if [[ -n "$keystore" ]]
   then
-    (cd "$(dirname "$keystore")" && get_3rdparty_file "salesforce-confluent.keystore.jks") >&2 || true
-  fi
-
-  if [ ! -f "$keystore" ]
-  then
-    if [[ ! -n "$generate" ]]
+    if [ ! -f "$keystore" ]
     then
-      logerror "❌ keystore $keystore is missing"
-      logerror "   pass --generate-keystore to create a new key pair (the External Client App then trusts this new certificate)"
+      logerror "❌ keystore $keystore does not exist"
       exit 1
     fi
-    log "🔐 generating a new key pair in $keystore (PKCS12, password confluent)"
-    if ! openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
-        -subj "/C=US/ST=Ca/L=PaloAlto/O=CONFLUENT/OU=TEST/CN=ca1.test.confluent.io" \
-        -keyout "$sf_tmp_dir/new.key" -out "$sf_tmp_dir/new.crt" > /dev/null 2>&1 \
-      || ! openssl pkcs12 -export -name salesforce-confluent -in "$sf_tmp_dir/new.crt" -inkey "$sf_tmp_dir/new.key" \
-        -passout pass:confluent -out "$keystore" > /dev/null 2>&1
-    then
-      logerror "❌ failed to generate the keystore"
-      exit 1
-    fi
-    rm -f "$sf_tmp_dir/new.key" "$sf_tmp_dir/new.crt"
-    if [ "$(basename "$keystore")" == "salesforce-confluent.keystore.jks" ]
-    then
-      for folder in $(salesforce_setup_keystore_folders)
-      do
-        if [ "$folder/salesforce-confluent.keystore.jks" != "$keystore" ]
-        then
-          if [ -f "$folder/salesforce-confluent.keystore.jks" ]
-          then
-            mv "$folder/salesforce-confluent.keystore.jks" "$folder/salesforce-confluent.keystore.jks.bak"
-          fi
-          cp "$keystore" "$folder/salesforce-confluent.keystore.jks"
-        fi
-      done
-      log "📋 copied it into every Salesforce example folder (previous ones kept as salesforce-confluent.keystore.jks.bak)"
-    fi
+    salesforce_setup_load_keystore "$keystore"
+    salesforce_setup_install_keystore "$keystore"
+  elif [[ -n "$generate" ]]
+  then
+    log "🔐 generating a new key pair (PKCS12, password confluent)"
+    salesforce_setup_generate_keystore "$sf_tmp_dir/generated.jks"
+    salesforce_setup_install_keystore "$sf_tmp_dir/generated.jks"
+  elif [ -f "$user_keystore" ]
+  then
+    salesforce_sync_user_keystore "$root_folder"
+  elif [ -f "$example_keystore" ]
+  then
+    log "🔐 reusing the keystore already in the examples ($example_keystore), so the orgs that trust it keep working"
+    log "   pass --generate-keystore for a key pair of your own"
+    salesforce_setup_load_keystore "$example_keystore"
+    salesforce_setup_install_keystore "$example_keystore"
+  else
+    log "🔐 generating your key pair (PKCS12, password confluent): the private key never leaves this machine"
+    salesforce_setup_generate_keystore "$sf_tmp_dir/generated.jks"
+    salesforce_setup_install_keystore "$sf_tmp_dir/generated.jks"
   fi
+  salesforce_setup_load_keystore "$user_keystore"
+  log "🔐 using the certificate of $user_keystore"
+}
 
+# Sets sf_certificate (base64 body of the certificate, as the External Client App metadata wants it)
+# and sf_jwt_key_file (unencrypted private key, in sf_tmp_dir) from a keystore (password confluent).
+function salesforce_setup_load_keystore () {
+  keystore="$1"
   sf_certificate=$(openssl pkcs12 -in "$keystore" -nokeys -clcerts -passin pass:confluent 2> /dev/null | openssl x509 2> /dev/null | grep -v -- "-----") || true
   if [ -z "$sf_certificate" ]
   then
@@ -7217,6 +7249,7 @@ function salesforce_setup_load_keystore () {
     exit 1
   fi
   sf_jwt_key_file="$sf_tmp_dir/jwt.key"
+  rm -f "$sf_jwt_key_file"
   (umask 077 && openssl pkcs12 -in "$keystore" -nocerts -nodes -passin pass:confluent -out "$sf_jwt_key_file" > /dev/null 2>&1) || true
   if [ ! -s "$sf_jwt_key_file" ]
   then

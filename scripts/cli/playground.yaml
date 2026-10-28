@@ -511,15 +511,20 @@ subcommands:
   - name: setup
     description: "\U0001F6E0️ Configure a Salesforce org for the Salesforce examples\n\nDeploys,
       with the Salesforce CLI (sf) installed on your machine:\n\n  • an External Client
-      App with the OAuth JWT bearer flow, trusting the\n    certificate of salesforce-confluent.keystore.jks,
-      pre-authorized for\n    the profile of your user (no browser approval) and with
-      IP\n    restrictions relaxed\n  • the Platform Event MyPlatformEvent__e with
-      the text field Message__c\n  • Change Data Capture on Contact\n\nthen reads
-      the consumer key back, waits until a JWT bearer login works\n(a new app takes
-      2 to 10 minutes to be active), and stores\nSALESFORCE_USERNAME, SALESFORCE_INSTANCE
+      App with the OAuth JWT bearer flow, trusting the\n    certificate of your keystore,
+      pre-authorized for the profile of your\n    user (no browser approval) and with
+      IP restrictions relaxed\n  • the Platform Event MyPlatformEvent__e with the
+      text field Message__c\n  • Change Data Capture on Contact\n\nthen reads the
+      consumer key back, waits until a JWT bearer login works\n(a new app takes 2
+      to 10 minutes to be active), and stores\nSALESFORCE_USERNAME, SALESFORCE_INSTANCE
       and\nSALESFORCE_CONSUMER_KEY_WITH_JWT with 'playground secrets set'.\n\nWithout
       --target-org, 'sf org login web' opens the browser once to log\nin: that is
-      the only manual step. Running it again on the same org\nchanges nothing.\n\nSALESFORCE_PASSWORD
+      the only manual step. Running it again on the same org\nchanges nothing.\n\n\U0001F510
+      Your keystore (JWT private key and certificate, password confluent)\nis ~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks,\noutside
+      the repository, and is copied into the Salesforce example\nfolders, where the
+      examples read it. The first time, the command\nreuses the keystore already in
+      the examples if there is one (so the\norgs that trust it keep working), else
+      generates a key pair that never\nleaves your machine.\n\nSALESFORCE_PASSWORD
       and SALESFORCE_SECURITY_TOKEN can't be read from\nSalesforce: the command tells
       you how to store them.\n\n\U0001F393 Tip: use --suffix KDP_CDC (or --account2
       for the second org of the\nsink examples) to store the per-test variables read
@@ -561,13 +566,15 @@ subcommands:
       - "--keystore"
       argument: KEYSTORE
       description: "\U0001F510 PKCS12 keystore (password confluent) holding the JWT
-        private key and certificate\n\nDefault is connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks,\ndownloaded
-        from the playground S3 bucket when missing (Confluent employees only)."
+        private key and certificate\n\nsetup: it becomes your keystore (~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks),\ncopied
+        into the Salesforce example folders.\ncheck: default is your keystore, else
+        connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks."
     - names:
       - "--generate-keystore"
       argument: ''
-      description: "\U0001F195 Generate a new key pair when the keystore is missing\n\nIt
-        is copied into every Salesforce example folder, so the examples use it."
+      description: "\U0001F195 Generate a new key pair, even if you already have a
+        keystore\n\nThe previous one is kept as .bak: the orgs set up with it must
+        be set up again."
     - names:
       - "--max-wait"
       argument: MAX_WAIT
@@ -590,8 +597,8 @@ subcommands:
       in with the OAuth JWT bearer flow, exactly like a connector with\nsalesforce.grant.type=JWT_BEARER
       (stored SALESFORCE_USERNAME,\nSALESFORCE_CONSUMER_KEY_WITH_JWT, SALESFORCE_INSTANCE
       and the keystore),\nexplains a rejection, then checks that the org has MyPlatformEvent__e
-      and\nChange Data Capture on Contact. Needs neither Docker nor the sf CLI.\n\nExits
-      with 1 when something is missing."
+      and\nChange Data Capture on Contact (warnings: only some examples need them).\nNeeds
+      neither Docker nor the sf CLI.\n\nExits with 1 when the login fails."
     usage: playground salesforce check [OPTIONS]
     options:
     - names:
@@ -608,8 +615,9 @@ subcommands:
       - "--keystore"
       argument: KEYSTORE
       description: "\U0001F510 PKCS12 keystore (password confluent) holding the JWT
-        private key and certificate\n\nDefault is connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks,\ndownloaded
-        from the playground S3 bucket when missing (Confluent employees only)."
+        private key and certificate\n\nsetup: it becomes your keystore (~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks),\ncopied
+        into the Salesforce example folders.\ncheck: default is your keystore, else
+        connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks."
 - name: cloud-resources
   description: "☁️ What the playground left behind in your cloud accounts, and what
     it costs\n\nExamples that talk to a real cloud create real resources, and an\ninterrupted
