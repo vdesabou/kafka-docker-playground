@@ -4,26 +4,29 @@ No external CDN dependencies — produces a single offline-viewable file.
 """
 
 import html
+import os
+import sys
 from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List
 
 import recommendations
 
+# the light / dark theme and "Toggle theme" button shared with the other playground reports
+# (tools/report-common/report_html.py, mounted in /tmp/report-common by playground analyze cfk-bundle); without it, the
+# report stays light only. No __pycache__ left in the repository.
+sys.dont_write_bytecode = True
+for _path in (os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools", "report-common"), "/tmp/report-common"):
+    if os.path.isfile(os.path.join(_path, "report_html.py")):
+        sys.path.insert(0, _path)
+        break
+try:
+    import report_html
+except ImportError:
+    report_html = None
+
 
 SEVERITY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-SEVERITY_COLOR = {
-    "critical": "#b91c1c",
-    "high": "#c2410c",
-    "medium": "#a16207",
-    "low": "#15803d",
-}
-SEVERITY_BG = {
-    "critical": "#fef2f2",
-    "high": "#fff7ed",
-    "medium": "#fefce8",
-    "low": "#f0fdf4",
-}
 # coloured circle shown before the severity text (badges, filters, tiles)
 SEVERITY_EMOJI = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}
 
@@ -96,13 +99,12 @@ body {
   line-height: 1.5;
 }
 header {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: #f9fafb;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+  color: #fff;
   padding: 32px 40px;
-  border-bottom: 1px solid #0f172a;
 }
 header h1 { margin: 0 0 8px 0; font-size: 24px; font-weight: 600; }
-header .meta { color: #cbd5e1; font-size: 13px; }
+header .meta { color: #fff; opacity: .85; font-size: 13px; }
 .verdict {
   background: white;
   border: 1px solid #e5e7eb;
@@ -224,6 +226,10 @@ main { max-width: 1180px; margin: 0 auto; padding: 32px 40px 80px 40px; }
   padding: 3px 8px;
   border-radius: 4px;
 }
+.severity-pill.critical { background: #fef2f2; color: #b91c1c; }
+.severity-pill.high { background: #fff7ed; color: #c2410c; }
+.severity-pill.medium { background: #fefce8; color: #a16207; }
+.severity-pill.low { background: #f0fdf4; color: #15803d; }
 .count {
   background: #e5e7eb;
   color: #374151;
@@ -320,6 +326,41 @@ footer {
 }
 footer a { color: #6b7280; }
 """
+
+
+# the dark theme of CSS (same palette as the other reports)
+DARK_CSS = """
+body{background:#0f172a;color:#e2e8f0}
+.verdict,.card,.category,.panel{background:#1e293b;border-color:#334155}
+.card .label,.panel .label,.controls .label,.issue .location,footer,footer a,.category > summary::before{color:#94a3b8}
+.card.critical .value{color:#fca5a5}.card.high .value{color:#fdba74}.card.medium .value{color:#fcd34d}.card.low .value{color:#86efac}
+.filter-btn,.component-btn,.instance-btn,.search{background:#1e293b;border-color:#334155;color:#cbd5e1}
+.filter-btn:hover,.component-btn:hover,.instance-btn:hover{border-color:#94a3b8}
+.filter-btn.active{background:#e2e8f0;color:#0f172a;border-color:#e2e8f0}
+.component-btn.active,.instance-btn.active{background:#2563eb;color:#fff;border-color:#2563eb}
+.component-tag{background:#172554;color:#93c5fd}
+.category > summary{background:#273449}
+.category[open] > summary{border-bottom-color:#334155}
+.count{background:#334155;color:#cbd5e1}
+table.env th{color:#94a3b8;border-bottom-color:#334155}
+table.env td{border-bottom-color:#273449}
+.affected > summary,.recommendation .why{color:#94a3b8}
+.recommendation{background:#172033;border-bottom-color:#334155}
+.recommendation ol li,.issue .message{color:#e2e8f0}
+.recommendation .docs,.issue details summary,a{color:#93c5fd}
+.issue{border-top-color:#273449}
+.issue pre{background:#0b1220}
+.no-issues{background:#1e293b;border-color:#14532d;color:#86efac}
+.severity-pill.critical{background:#450a0a;color:#fca5a5}.severity-pill.high{background:#431407;color:#fdba74}
+.severity-pill.medium{background:#422006;color:#fcd34d}.severity-pill.low{background:#052e16;color:#86efac}
+"""
+
+
+def _theme() -> str:
+    """the dark rules, the "Toggle theme" button and its script, when the shared report module is there"""
+    if report_html is None:
+        return f"<style>{CSS}</style>"
+    return f"<style>{CSS}{report_html.dark(DARK_CSS)}{report_html.THEME_TOGGLE_CSS}</style>{report_html.THEME_SCRIPT}"
 
 
 JS = """
@@ -600,7 +641,7 @@ def render(results: Dict, bundle_label: str = "") -> str:
                 issue_rows.append(f"""
                 <div class="issue" data-severity="{_esc(sev)}" data-component="{_esc(component)}" data-instance="{_esc(instance)}">
                   <div class="head">
-                    <span class="severity-pill" style="background:{SEVERITY_BG[sev]};color:{SEVERITY_COLOR[sev]}">{SEVERITY_EMOJI.get(sev, "")} {_esc(sev)}</span>
+                    <span class="severity-pill {_esc(sev)}">{SEVERITY_EMOJI.get(sev, "")} {_esc(sev)}</span>
                     <span class="component-tag">{_esc(tag)}</span>
                     <span class="location">{loc}</span>
                   </div>
@@ -617,7 +658,7 @@ def render(results: Dict, bundle_label: str = "") -> str:
             cat_blocks.append(f"""
             <details class="category" data-severity="{_esc(worst)}" open>
               <summary>
-                <span class="severity-pill" style="background:{SEVERITY_BG[worst]};color:{SEVERITY_COLOR[worst]}">{SEVERITY_EMOJI.get(worst, "")} {_esc(worst)}</span>
+                <span class="severity-pill {_esc(worst)}">{SEVERITY_EMOJI.get(worst, "")} {_esc(worst)}</span>
                 <span class="title">{CATEGORY_EMOJI.get(cat, DEFAULT_CATEGORY_EMOJI)} {_esc(cat)}</span>
                 <span class="count">{len(items)}</span>
               </summary>
@@ -652,7 +693,7 @@ def render(results: Dict, bundle_label: str = "") -> str:
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CFK Bundle Analysis Report</title>
-  <style>{CSS}</style>
+  {_theme()}
 </head>
 <body>
   <header>

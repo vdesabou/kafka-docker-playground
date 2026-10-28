@@ -995,24 +995,24 @@ def render_comparison(cmp, noun="version"):
 STANDALONE_CSS = """
 .viz-root {
   color-scheme: light;
-  --page: #f9f9f7; --surface-1: #fcfcfb; --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #898781;
-  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10); --series-1: #2a78d6;
+  --page: #f1f5f9; --surface-1: #ffffff; --text-primary: #1e293b; --text-secondary: #475569; --text-muted: #64748b;
+  --grid: #e2e8f0; --axis: #cbd5e1; --border: rgba(15,23,42,0.10); --series-1: #2a78d6;
   --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100; --series-5: #e87ba4; --series-6: #008300; --series-7: #6250d6; --series-8: #e34948;
   --good: #0ca30c; --good-text: #006300; --critical: #d03b3b; --warning: #fab219;
 }
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) .viz-root {
     color-scheme: dark;
-    --page: #0d0d0d; --surface-1: #1a1a19; --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #898781;
-    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10); --series-1: #3987e5;
+    --page: #0f172a; --surface-1: #1e293b; --text-primary: #e2e8f0; --text-secondary: #cbd5e1; --text-muted: #94a3b8;
+    --grid: #334155; --axis: #475569; --border: rgba(255,255,255,0.10); --series-1: #3987e5;
     --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
     --good-text: #0ca30c;
   }
 }
 :root[data-theme="dark"] .viz-root {
   color-scheme: dark;
-  --page: #0d0d0d; --surface-1: #1a1a19; --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #898781;
-  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10); --series-1: #3987e5;
+  --page: #0f172a; --surface-1: #1e293b; --text-primary: #e2e8f0; --text-secondary: #cbd5e1; --text-muted: #94a3b8;
+  --grid: #334155; --axis: #475569; --border: rgba(255,255,255,0.10); --series-1: #3987e5;
   --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
   --good-text: #0ca30c;
 }
@@ -1021,6 +1021,12 @@ body { margin: 0; }
 .viz-root { background: var(--page); color: var(--text-primary); min-height: 100vh;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif; padding: 28px 32px 48px; }
 header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+/* the blue header banner of the other playground reports (tools/report-common/report_html.py) */
+header { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); color: #fff; border-radius: 12px; padding: 22px 28px; }
+header .sub { color: #fff; opacity: .85; }
+header a { color: #fff; }
+header .theme-toggle { color: #fff; background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.35); }
+
 h1 { font-size: 1.35rem; margin: 0 0 4px; font-weight: 600; }
 h2 { font-size: 1rem; margin: 0 0 2px; font-weight: 600; }
 .sub { color: var(--text-secondary); font-size: .875rem; margin: 0; }

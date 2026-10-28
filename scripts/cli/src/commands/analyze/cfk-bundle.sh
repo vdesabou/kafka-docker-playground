@@ -90,6 +90,7 @@ docker_args=(
     --rm
     --user "$(id -u):$(id -g)"
     -v "$analyzer_dir:/tmp/cfk-analysis:ro"
+    -v "$root_folder/tools/report-common:/tmp/report-common:ro"
     -v "$bundle_abs:$bundle_container:ro"
 )
 

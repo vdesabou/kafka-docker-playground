@@ -398,18 +398,24 @@ PAGE = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>__TITLE__</title>
 <style>
-.root { color-scheme: light; --page: #f9f9f7; --surface: #fcfcfb; --text: #0b0b0b; --text2: #52514e; --muted: #898781; --grid: #e1e0d9;
-  --border: rgba(11,11,11,0.10); --accent: #2a78d6; --good: #0ca30c; --good-bg: #e7f6e7; --warning: #b77900; --warning-bg: #fdf2dc;
+.root { color-scheme: light; --page: #f1f5f9; --surface: #ffffff; --text: #1e293b; --text2: #475569; --muted: #64748b; --grid: #e2e8f0;
+  --border: rgba(15,23,42,0.10); --accent: #2a78d6; --good: #0ca30c; --good-bg: #e7f6e7; --warning: #b77900; --warning-bg: #fdf2dc;
   --critical: #d03b3b; --critical-bg: #fbe9e9; --added: #e3f5e3; --changed: #fdf0d2; --removed: #fbe4e4; }
-@media (prefers-color-scheme: dark) { :root:where(:not([data-theme="light"])) .root { color-scheme: dark; --page: #0d0d0d; --surface: #1a1a19;
-  --text: #f0efec; --text2: #c3c2b7; --muted: #898781; --grid: #2c2c2a; --border: rgba(255,255,255,0.10); --accent: #3987e5;
+@media (prefers-color-scheme: dark) { :root:where(:not([data-theme="light"])) .root { color-scheme: dark; --page: #0f172a; --surface: #1e293b;
+  --text: #e2e8f0; --text2: #cbd5e1; --muted: #94a3b8; --grid: #334155; --border: rgba(255,255,255,0.10); --accent: #3987e5;
   --good-bg: #12301a; --warning: #fab219; --warning-bg: #3a2f12; --critical-bg: #3a1717; --added: #163a1f; --changed: #3d3216; --removed: #421c1c; } }
-:root[data-theme="dark"] .root { color-scheme: dark; --page: #0d0d0d; --surface: #1a1a19; --text: #f0efec; --text2: #c3c2b7; --muted: #898781;
-  --grid: #2c2c2a; --border: rgba(255,255,255,0.10); --accent: #3987e5; --good-bg: #12301a; --warning: #fab219; --warning-bg: #3a2f12;
+:root[data-theme="dark"] .root { color-scheme: dark; --page: #0f172a; --surface: #1e293b; --text: #e2e8f0; --text2: #cbd5e1; --muted: #94a3b8;
+  --grid: #334155; --border: rgba(255,255,255,0.10); --accent: #3987e5; --good-bg: #12301a; --warning: #fab219; --warning-bg: #3a2f12;
   --critical-bg: #3a1717; --added: #163a1f; --changed: #3d3216; --removed: #421c1c; }
 * { box-sizing: border-box; } body { margin: 0; }
 .root { background: var(--page); color: var(--text); min-height: 100vh; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; padding: 28px 32px 48px; }
 header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+/* the blue header banner of the other playground reports (tools/report-common/report_html.py) */
+header { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); color: #fff; border-radius: 12px; padding: 22px 28px; }
+header .sub { color: #fff; opacity: .85; }
+header a { color: #fff; }
+header .theme-toggle { color: #fff; background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.35); }
+
 h1 { font-size: 1.35rem; margin: 0 0 4px; font-weight: 600; } h2 { font-size: 1.05rem; margin: 26px 0 10px; } h3 { font-size: 1rem; margin: 0; font-weight: 600; }
 .sub, .muted { color: var(--text2); font-size: .875rem; } .muted { color: var(--muted); }
 .theme-toggle { white-space: nowrap; font: inherit; font-size: .8rem; color: var(--text2); background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
