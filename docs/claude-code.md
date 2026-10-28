@@ -174,6 +174,7 @@ and how to contribute are in the plugin README, at `reproduction-models/claude-p
 | is this example red in CI too? | [`playground get-ci-result --test <dir> --logs`](/playground%20get-ci-result) |
 | what does this transform chain (SMT) do to a record? why does it fail? | [`playground connector smt test --connector <c>`](/playground%20connector%20smt%20test) |
 | is this bug fixed after version X? what changed since? | [`playground connector-plugin changelog --from X --grep <symptom>`](/playground%20connector-plugin%20changelog) |
+| what changed in Confluent Platform (Kafka, Schema Registry, ksqlDB…) after version X? | [`playground cp-changelog --from X --grep <symptom>`](/playground%20cp-changelog) |
 | where is the source code of connector X, version Y? | [`playground connector-plugin sourcecode --only-show-url`](/playground%20connector-plugin%20sourcecode) |
 | scaffold a reproduction model | [`playground repro bootstrap -f <example> -d "<description>" --no-run`](/playground%20repro%20bootstrap) |
 

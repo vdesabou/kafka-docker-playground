@@ -25,6 +25,7 @@ version where a behaviour changed. Takes about 15 minutes to read and run.
 | DEBUG / TRACE before the connector is created | `--connect-log-level "io.confluent.connect.jdbc=TRACE"` |
 | the last run again, same flags | `playground re-run` (menu), or the last line of `playground-run-history` (scripts) |
 | another version, keeping the example running | `playground update-version --tag 8.2.0` / `--connect-tag` / `--connector-tag` / `--connector-zip` |
+| what changed in Confluent Platform since the customer's version | `playground cp-changelog --from 8.1.4 [--component schema-registry] [--grep <symptom> \| --security]` |
 | stop everything, volumes included | `playground stop` |
 
 ---
@@ -99,7 +100,14 @@ What the run prints, in order:
 ```
 
 then the connector versions (for Confluent plugins, the last 5 with their release notes, and the `connector-plugin changelog --from <yours>`
-command when yours is not the latest) and status, and the links to the docs and the source code.
+command when yours is not the latest) and status, a hint when a newer patch of the Confluent Platform version you run is published,
+and the links to the docs and the source code:
+
+```text
+📢 Confluent Platform 8.3.2 is published (you run 8.3.0): 185 change(s), 19 security related
+📜 To see them: playground cp-changelog --from 8.3.0 --to 8.3.2 (--security for the security ones only)
+🔄 To update: playground update-version --tag 8.3.2
+```
 
 | Exit code | Printed | Meaning |
 | --- | --- | --- |
@@ -264,6 +272,7 @@ playground stop
 | "we run CP 7.9.1 and connector 10.8.4" | `playground run -f <example> --tag 7.9.1 --connector-tag 10.8.4` |
 | "our Connect cluster is older than our brokers" | `--connect-tag <their connect version>` (and `--tag` for the brokers) |
 | "is it fixed in the latest connector?" | run with their version, reproduce, then `playground update-version --connector-tag <newer>` and check again |
+| "is this Schema Registry / ksqlDB / Kafka bug fixed after our CP version? which patch bumped Netty?" | `playground cp-changelog --from <their version> --component schema-registry --grep <symptom>` (or `--security`), then `update-version --tag <the version with the fix>` to check. The feeds only cover the community components (no Confluent Server, Control Center) and list commit titles, without CVE ids |
 | "which version broke it?" | keep the example running, `update-version --connector-tag` (or `--tag`) on each candidate: a bisect without re-running the scenario |
 | "engineering sent a SNAPSHOT build" | `--connector-zip <zip>` (whole plugin) or `--connector-jar <jar>` (one jar of the installed plugin) |
 | "it only fails with SASL_SSL / mTLS / Kerberos" | `--environment sasl-ssl` / `2way-ssl` / `kerberos` on the same example |
@@ -287,6 +296,7 @@ playground re-run                    # menu, last example and flags
 playground history                   # picker over playground-run-history
 playground update-version [--tag X | --connect-tag X | --connector-tag A[,B] | --connector-zip zip | --connector-jar jar]
 playground stop                      # down -v: containers and volumes
+playground cp-changelog --from X [--to Y] [--component kafka|schema-registry|ksqldb|rest-proxy|common] [--grep re | --security] [--json]
 ```
 
 - A run = check flags, stop the previous example, flags → environment variables, `bash <example>.sh`.
@@ -311,5 +321,5 @@ playground stop                      # down -v: containers and volumes
   (the run line of a model)
 - 📚 [Start an example](/how-to-use?id=🏎️-start-an-example) in How to Use
 - 🧠 CLI reference: [playground run](/playground%20run), [playground re-run](/playground%20re-run),
-  [playground update-version](/playground%20update-version), [playground history](/playground%20history),
+  [playground update-version](/playground%20update-version), [playground cp-changelog](/playground%20cp-changelog), [playground history](/playground%20history),
   [playground stop](/playground%20stop)

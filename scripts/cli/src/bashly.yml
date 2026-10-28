@@ -2789,6 +2789,87 @@ commands:
     help: |-
       🌐 Only show url
 
+- name: cp-changelog
+  group: Run
+  help: |-
+    📜 Show what changed in Confluent Platform between two versions
+
+    Reads the changelog feeds of docs.confluent.io (one per minor line, for
+    example https://docs.confluent.io/platform/8.3/release-notes/changelog.xml)
+    and lists the commits of every version after --from, up to --to, newest
+    first, grouped by component.
+
+    It answers "the customer runs 8.1.4: is their Schema Registry bug fixed in
+    a later version, and in which one?" or "which CP patch bumped Netty?" in
+    one call: pass the customer version as --from, and the symptom as --grep.
+
+    Without --from and --to, the versions of the latest minor line are shown.
+    Feeds exist from 7.4 onwards.
+
+    ⚠️ The feeds only cover the community components (Common, Kafka, ksqlDB,
+    REST Proxy, Schema Registry): nothing for Confluent Server, Control Center
+    or Connect enterprise features. They list commit titles, not curated
+    release notes, and have no CVE ids (--security matches security fixes and
+    library upgrades). Answers are cached for one day in /tmp/cp-changelog
+    (--force-refresh).
+
+    🎓 Tip: the end of playground run tells you when a newer patch of the version you run is published
+  flags:
+  - long: --from
+    arg: from
+    required: false
+    validate: not_empty
+    completions:
+      dynamic:
+      - playground get-tag-list "$completion_current"
+    help: |-
+      🔢 Version in use: show the changes of the versions after it (excluded)
+  - long: --to
+    arg: to
+    required: false
+    validate: not_empty
+    completions:
+      dynamic:
+      - playground get-tag-list "$completion_current"
+    help: |-
+      🔢 Show the changes up to this version (included)
+
+      Default is the latest version with a changelog
+  - long: --component
+    arg: component
+    required: false
+    repeatable: true
+    allowed: [kafka, schema-registry, ksqldb, rest-proxy, common]
+    help: |-
+      🧩 Only show the changes of this component (can be repeated)
+  - long: --grep
+    arg: grep
+    required: false
+    validate: not_empty
+    conflicts: [--security]
+    help: |-
+      🔎 Only show the changes matching this regular expression (case insensitive)
+
+      Example: --grep "netty|anyOf|KAFKA-20843"
+  - long: --security
+    required: false
+    conflicts: [--grep]
+    help: |-
+      🔐 Only show security fixes and upgrades of libraries with frequent CVEs (Netty, Jetty, Jackson, log4j…)
+  - long: --json
+    required: false
+    help: |-
+      🤖 Print the result as JSON
+  - long: --force-refresh
+    required: false
+    help: |-
+      ☢️ Force refresh.
+  examples: |
+    playground cp-changelog --from 8.3.0
+    playground cp-changelog --from 8.1.4 --to 8.3.2 --component schema-registry --grep "anyOf|allOf"
+    playground cp-changelog --from 7.9.3 --security
+    playground cp-changelog --from 8.2.0 --component kafka --json
+
 - name: cleanup-cloud-resources
   group: Run
   dependencies:

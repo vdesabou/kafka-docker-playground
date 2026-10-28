@@ -64,4 +64,17 @@ lab_run playground update-version --tag 8.4.0
 lab_expect_contains "--tag=8.4.0 is same as current tag, ignoring..."
 lab_expect_not_contains "based on flags ⛳ =8.4.0" "no leftover of the ignored flag"
 
+log "Step 5: what changed in Confluent Platform between two versions"
+lab_run playground cp-changelog --from 8.3.0 --to 8.3.1
+lab_expect_exit 0
+lab_expect_contains "📜 Changes of Confluent Platform after 8.3.0 up to 8.3.1: 3 change(s) in 1 version(s)"
+lab_expect_contains "🔢 8.3.1 - 📅 released: August 2026 - 3 change(s)"
+lab_expect_contains "🔐 Update Netty to 4.1.135 (0eaea7a9)"
+lab_expect_contains "🌐 changelog: https://docs.confluent.io/platform/8.3/release-notes/changelog.html"
+lab_expect_not_contains "🔢 8.3.0 -"
+lab_run playground cp-changelog --from 8.1.4 --to 8.3.2 --component schema-registry --grep "anyOf|allOf"
+lab_expect_exit 0
+lab_expect_contains "Handle anyOf/allOf in JSON transforms (560bf4ca)"
+lab_expect_not_contains "🧩 ksqlDB"
+
 log "✅ all the outputs of the page are as expected"

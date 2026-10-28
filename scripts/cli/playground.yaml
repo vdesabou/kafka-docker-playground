@@ -1296,6 +1296,57 @@ subcommands:
     - "--only-show-url"
     argument: ''
     description: "\U0001F310 Only show url"
+- name: cp-changelog
+  description: "\U0001F4DC Show what changed in Confluent Platform between two versions\n\nReads
+    the changelog feeds of docs.confluent.io (one per minor line, for\nexample https://docs.confluent.io/platform/8.3/release-notes/changelog.xml)\nand
+    lists the commits of every version after --from, up to --to, newest\nfirst, grouped
+    by component.\n\nIt answers \"the customer runs 8.1.4: is their Schema Registry
+    bug fixed in\na later version, and in which one?\" or \"which CP patch bumped
+    Netty?\" in\none call: pass the customer version as --from, and the symptom as
+    --grep.\n\nWithout --from and --to, the versions of the latest minor line are
+    shown.\nFeeds exist from 7.4 onwards.\n\n⚠️ The feeds only cover the community
+    components (Common, Kafka, ksqlDB,\nREST Proxy, Schema Registry): nothing for
+    Confluent Server, Control Center\nor Connect enterprise features. They list commit
+    titles, not curated\nrelease notes, and have no CVE ids (--security matches security
+    fixes and\nlibrary upgrades). Answers are cached for one day in /tmp/cp-changelog\n(--force-refresh).\n\n\U0001F393
+    Tip: the end of playground run tells you when a newer patch of the version you
+    run is published"
+  usage: playground cp-changelog [OPTIONS]
+  options:
+  - names:
+    - "--from"
+    argument: FROM
+    description: "\U0001F522 Version in use: show the changes of the versions after
+      it (excluded)"
+  - names:
+    - "--to"
+    argument: TO
+    description: "\U0001F522 Show the changes up to this version (included)\n\nDefault
+      is the latest version with a changelog"
+  - names:
+    - "--component"
+    argument: COMPONENT
+    description: "\U0001F9E9 Only show the changes of this component (can be repeated)\n\nRepeatable:
+      ✓ Yes\nAllowed values: kafka, schema-registry, ksqldb, rest-proxy, common"
+  - names:
+    - "--grep"
+    argument: GREP
+    description: "\U0001F50E Only show the changes matching this regular expression
+      (case insensitive)\n\nExample: --grep \"netty|anyOf|KAFKA-20843\"\n\nConflicts
+      with: --security"
+  - names:
+    - "--security"
+    argument: ''
+    description: "\U0001F510 Only show security fixes and upgrades of libraries with
+      frequent CVEs (Netty, Jetty, Jackson, log4j…)\n\nConflicts with: --grep"
+  - names:
+    - "--json"
+    argument: ''
+    description: "\U0001F916 Print the result as JSON"
+  - names:
+    - "--force-refresh"
+    argument: ''
+    description: "☢️ Force refresh."
 - name: cleanup-cloud-resources
   description: "\U0001F9F9 Cleanup cloud resources that were created by running examples
     from the playground\n\n❗it will remove all resources created by the playground,

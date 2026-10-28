@@ -1189,6 +1189,62 @@
       ]
     },
     {
+      "name": "cp-changelog",
+      "description": "📜 Show what changed in Confluent Platform between two versions\n\nReads the changelog feeds of docs.confluent.io (one per minor line, for\nexample https://docs.confluent.io/platform/8.3/release-notes/changelog.xml)\nand lists the commits of every version after --from, up to --to, newest\nfirst, grouped by component.\n\nIt answers \"the customer runs 8.1.4: is their Schema Registry bug fixed in\na later version, and in which one?\" or \"which CP patch bumped Netty?\" in\none call: pass the customer version as --from, and the symptom as --grep.\n\nWithout --from and --to, the versions of the latest minor line are shown.\nFeeds exist from 7.4 onwards.\n\n⚠️ The feeds only cover the community components (Common, Kafka, ksqlDB,\nREST Proxy, Schema Registry): nothing for Confluent Server, Control Center\nor Connect enterprise features. They list commit titles, not curated\nrelease notes, and have no CVE ids (--security matches security fixes and\nlibrary upgrades). Answers are cached for one day in /tmp/cp-changelog\n(--force-refresh).\n\n🎓 Tip: the end of playground run tells you when a newer patch of the version you run is published",
+      "usage": "playground cp-changelog [OPTIONS]",
+      "options": [
+        {
+          "names": [
+            "--from"
+          ],
+          "argument": "FROM",
+          "description": "🔢 Version in use: show the changes of the versions after it (excluded)"
+        },
+        {
+          "names": [
+            "--to"
+          ],
+          "argument": "TO",
+          "description": "🔢 Show the changes up to this version (included)\n\nDefault is the latest version with a changelog"
+        },
+        {
+          "names": [
+            "--component"
+          ],
+          "argument": "COMPONENT",
+          "description": "🧩 Only show the changes of this component (can be repeated)\n\nRepeatable: ✓ Yes\nAllowed values: kafka, schema-registry, ksqldb, rest-proxy, common"
+        },
+        {
+          "names": [
+            "--grep"
+          ],
+          "argument": "GREP",
+          "description": "🔎 Only show the changes matching this regular expression (case insensitive)\n\nExample: --grep \"netty|anyOf|KAFKA-20843\"\n\nConflicts with: --security"
+        },
+        {
+          "names": [
+            "--security"
+          ],
+          "argument": "",
+          "description": "🔐 Only show security fixes and upgrades of libraries with frequent CVEs (Netty, Jetty, Jackson, log4j…)\n\nConflicts with: --grep"
+        },
+        {
+          "names": [
+            "--json"
+          ],
+          "argument": "",
+          "description": "🤖 Print the result as JSON"
+        },
+        {
+          "names": [
+            "--force-refresh"
+          ],
+          "argument": "",
+          "description": "☢️ Force refresh."
+        }
+      ]
+    },
+    {
       "name": "cleanup-cloud-resources",
       "description": "🧹 Cleanup cloud resources that were created by running examples from the playground\n\n❗it will remove all resources created by the playground, including topics, connectors, clusters, buckets, redshift cluster, etc...\n\nExamples that talk to a real cloud create real, billable resources, and an\ninterrupted run leaves them behind. This sweeps them, scoped to the ones\nwhose name contains your username, across AWS, GCP, Azure, Confluent Cloud\nand Salesforce. Restrict the scope with --resource, and run it regularly.\n\nConfluent Cloud: connectors whose name contains your username are deleted,\nwith their dlq, success and error topics. All topics of the cluster are\ndeleted only when the cluster was created by the playground for you\n(pg-<user>-*). On a cluster you provided with CLUSTER_NAME, which may be\nshared with your team, only the topics recorded as created by your own\nruns are deleted (local file playground-ccloud-created-topics): topics\ncreated with playground topic create / produce, and topics your fully\nmanaged source connectors write to, as set in their config (kafka.topic,\napi1.topics, topic.prefix...).\n\nYou are asked to confirm every deletion, unless --force is given.\n\n☢️ Deletions are permanent. Use a dedicated cloud account for the\n   playground rather than one that also hosts resources you care about.",
       "usage": "playground cleanup-cloud-resources [OPTIONS]",
