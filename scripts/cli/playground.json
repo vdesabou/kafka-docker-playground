@@ -2253,9 +2253,6 @@
       "description": "🔎 Analyze commands\n\nTurn what you collected into findings: each command reads a file (a\ndump, a log, a bundle, a report, yours or one a customer sent) or takes\nit from a running container, and prints a digest with what is wrong and\nwhat to do, plus an HTML report to share (opened in your browser). They\nall work offline, and --sample runs them on the samples shipped with the\nplayground, to see what they report.\n\n  thread-dump             deadlocks, lock contention, stuck threads\n  gc-logs                 GC pauses, failures, live set, leak trend\n  heap-dump               Eclipse MAT leak suspects, retained sizes\n  logs                    ERROR/FATAL digest of logs, folders, zips\n  oracle-xstream-report   Oracle XStream diagnostics (orclcdc_diag)\n  cfk-bundle              CFK support bundle: pods, events, CRs, logs\n  flight-recorder         JFR: where the time of the connector tasks goes\n  tcp-dump                network capture: resets, TLS alerts, Kafka errors\n  jscissors               traced method calls: arguments, durations, exceptions\n\nTo collect them: playground debug thread-dump, heap-dump, flight-recorder, tcp-dump, jscissors,\nplayground connector oracle-cdc-xstream generate-report,\nplayground debug cfk generate-bundle.",
       "usage": "playground analyze COMMAND",
       "options": [],
-      "aliases": [
-        "analyse"
-      ],
       "subcommands": [
         {
           "name": "thread-dump",

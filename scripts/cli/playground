@@ -6810,8 +6810,6 @@ playground_analyze_usage() {
   else
     printf "playground analyze - 🔎 Analyze commands\n\n"
   fi
-  printf "Alias: analyse\n"
-  echo
 
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground analyze COMMAND\n"
@@ -64382,7 +64380,7 @@ parse_requirements() {
       shift $#
       ;;
 
-    analyze | analyse)
+    analyze)
       action="analyze"
       shift
       playground_analyze_parse_requirements "$@"
@@ -101114,7 +101112,7 @@ playground_completion() {
         playground_tools_completion "$completion_current" "$@"
         return
         ;;
-      analyze | analyse)
+      analyze)
         shift
         playground_analyze_completion "$completion_current" "$@"
         return
@@ -101198,7 +101196,7 @@ playground_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" help status doctor config secrets salesforce cloud-resources ccloud-costs ccloud-costs-history run re-run get-ci-result history find-example switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog cleanup-cloud-resources repro get-docker-compose schema tcp-proxy tools analyze analyse debug get-jmx-metrics container pod topic consumer-group rbac connector-plugin connector ec2
+  completion_candidates "$completion_current" help status doctor config secrets salesforce cloud-resources ccloud-costs ccloud-costs-history run re-run get-ci-result history find-example switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog cleanup-cloud-resources repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic consumer-group rbac connector-plugin connector ec2
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h

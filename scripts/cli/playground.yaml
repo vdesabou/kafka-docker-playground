@@ -2425,8 +2425,6 @@ subcommands:
     debug cfk generate-bundle."
   usage: playground analyze COMMAND
   options: []
-  aliases:
-  - analyse
   subcommands:
   - name: thread-dump
     description: "\U0001F9F5 Analyze java thread dumps: deadlocks, lock contention,

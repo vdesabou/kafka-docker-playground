@@ -4437,7 +4437,6 @@ commands:
           Default is 1 second
 
 - name: analyze
-  alias: analyse
   expose: always
   group: Analyze
   help: |-
