@@ -29,7 +29,9 @@ scheduling, …) with concrete remediation steps per category:
   it matches a known category, or always with `--include-warnings`) and uncaught exceptions. Each record is
   classified on its `Caused by:` chain first, identical records are counted, and ERRORs matching no category
   are reported as "Other … (Unclassified)". Connector task / client ids are not part of the identity: one root
-  cause failing 27 tasks is one issue, with the tasks listed in `affected`.
+  cause failing 27 tasks is one issue, with the tasks listed in `affected` and their connectors (the
+  `[connector|task-0]` context of the log record) in `connectors`. Classifications are cached on the record text with
+  its digits folded, so a WARN storm of millions of records costs seconds, not minutes.
 - `False` conditions are reported only when `True` is the healthy value (`*-ready`, `*-available`…) or their
   reason says something failed: `garbage-collecting` / `config-revision-hash` `False` are normal.
 
@@ -38,8 +40,8 @@ Each issue is attributed to a `component` (`kafka`, `kraftcontroller`, `zookeepe
 known, to an `instance` (the CR name, e.g. `connect-peh`). They come from the bundle layout
 (`cluster-resources/<type>/<name>/`), the CFK custom resources (a `Connector` belongs to its `connectClusterRef`),
 the `platform.confluent.io/type` / `app` pod labels and, for events, the involved object. `--component connect`
-keeps only the Connect issues (text, JSON and HTML); the HTML report also has Component / Instance buttons, and its
-search filters single issues.
+keeps only the Connect issues (text, JSON and HTML); the HTML report also has Component / Instance buttons, a
+Connector picker when log records have a Connect connector context, and its search filters single issues.
 
 Sensitive values (secrets, IPs, hostnames, emails, LDAP DNs) are sanitized by default. This is best effort:
 review the output before sharing it.

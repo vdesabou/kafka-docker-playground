@@ -199,7 +199,8 @@ playground analyze cfk-bundle --bundle /tmp/cfk-support-bundle/<bundle>.tar.gz -
   yours. It prints the environment (Kubernetes and CFK versions, images, checked against the support matrix), the
   recent changes, and the issues by category (pod failures, resources, TLS, auth, connect…) with the next steps. It
   sanitizes secrets, IPs and hostnames by default (best effort), and writes an HTML report in `--output-dir` (default
-  `./cfk-reports`: pass a `/tmp` folder). `--component connect`, `--severity high`, `--json`;
+  `./cfk-reports`: pass a `/tmp` folder), with Component / Instance / Connector filters. `--component connect`,
+  `--severity high`, `--json`;
   `--sample synthetic` to see a report without a bundle.
 
 ---

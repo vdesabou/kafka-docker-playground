@@ -39,6 +39,11 @@ _LEVEL_RE = re.compile(
 )
 _KLOG_LEVEL = {'F': 'FATAL', 'E': 'ERROR', 'W': 'WARN'}
 
+# Cache key of _classify: digits replaced one for one by 0 (same length, so `.{0,N}` match the same), which folds
+# records that only differ by timestamps, offsets or ids. Texts with the only digits of the patterns are kept as is.
+_CLASSIFY_DIGITS = str.maketrans('123456789', '000000000')
+_PATTERN_DIGITS_RE = re.compile(r'40[13]|509')
+
 # Uncaught exception head: "org.foo.BarException: msg", "Exception in thread ...", "Caused by: ..."
 _EXCEPTION_HEAD_RE = re.compile(
     r'^(?:Exception in thread "[^"]*" )?(?:[a-z_$][\w$]*\.)+[A-Z][\w$]*(?:Exception|Error)(?::|$)'
@@ -85,6 +90,10 @@ _FAILURE_WORDS_RE = re.compile(r'fail|error|invalid|denied|unable|cannot|timeout
 
 # Connect task / client of a log record, to list the connectors one root cause affects
 _TASK_RE = re.compile(r'(?:Task|Worker\w*Task|task)\{id=([^}]+)\}|connector-(?:producer|consumer|dlq-producer|adminclient)-([\w.-]+?)(?:-\d+)?[\],\s]')
+# Connector of a log record, for the connector filter of the report (same as tools/log-analyzer/log_report.py): the
+# [connector|task-0] / [connector|worker] MDC context of Connect, with an optional scope ([connector|task-0|offsets]),
+# or the id of the task
+_CONNECTOR_RE = re.compile(r'\[([^\s|\]]+)\|(?:task-\d+|worker)(?:\|[^\s|\]]+)?\]|Worker(?:Source|Sink)Task\{id=(\S+)-\d+\}')
 
 # pod name suffixes: statefulset ordinal (kafka-0), deployment hash (confluent-operator-7d9c8b6f5-x2x7k)
 _POD_SUFFIX_RES = (re.compile(r'-\d+$'), re.compile(r'-[a-z0-9]{6,10}-[a-z0-9]{5}$'))
@@ -323,6 +332,7 @@ class CFKBundleAnalyzer:
 
         # Cheap literal screen for kubectl text output: a line with none of these
         # tokens cannot match a k8s pattern nor be a Warning event row.
+        self._classify_cache = {}  # see _classify
         self._k8s_screen = (
             'warning', 'backoff', 'oomkill', 'out of memory', 'evicted', 'low on resource',
             'imagepull', 'errimagepull', 'pull image', 'failedscheduling', 'insufficient',
@@ -447,7 +457,7 @@ class CFKBundleAnalyzer:
                    file_path: str, line_number: int = None, context: str = None,
                    caused_by: List[str] = None, count: int = 1, timestamp: str = None,
                    dedupe_key: str = None, resource: str = None, resource_kind: str = None,
-                   affected: str = None):
+                   affected: str = None, connector: str = None):
         """Add an issue, or bump the occurrence count of an identical one.
 
         Identical means same category, same file (rotated logs of the same pod count
@@ -455,6 +465,7 @@ class CFKBundleAnalyzer:
         removed, `affected` lists them).
         `resource` / `resource_kind` name the pod or CR the issue is about, to find its
         component when the file is shared (events, pods.yaml).
+        `connector` is the Connect connector of the log record, `connectors` lists them.
         """
         file_key = re.sub(r'\.log(?:\.[\w-]+)?(?:\.gz)?$', '.log', file_path)
         signature = f"{category}:{file_key}:{dedupe_key or self._normalize_signature(message)}"
@@ -466,6 +477,8 @@ class CFKBundleAnalyzer:
                 existing['severity'] = severity
             if affected and affected not in existing.setdefault('affected', []):
                 existing['affected'].append(affected)
+            if connector and connector not in existing.setdefault('connectors', []):
+                existing['connectors'].append(connector)
             return
 
         issue = {
@@ -487,6 +500,8 @@ class CFKBundleAnalyzer:
             issue['_resource'] = (resource_kind or '', resource or '')
         if affected:
             issue['affected'] = [affected]
+        if connector:
+            issue['connectors'] = [connector]
 
         self.issue_index[signature] = issue
         self.issues.append(issue)
@@ -588,13 +603,23 @@ class CFKBundleAnalyzer:
         return level
 
     def _classify(self, compiled, text: str):
-        """Return (severity, category, name) of the first pattern, in declaration order, that matches"""
+        """Return (severity, category, name) of the first pattern, in declaration order, that matches.
+
+        Cached: a WARN storm repeats the same record millions of times with other timestamps and ids,
+        and the combined regex costs ~50µs per record.
+        """
         regex, meta, priority = compiled
+        key = (id(regex), text if _PATTERN_DIGITS_RE.search(text) else text.translate(_CLASSIFY_DIGITS))
+        if key in self._classify_cache:
+            return self._classify_cache[key]
         best = None
         for m in regex.finditer(text.lower()):
             if best is None or priority[m.lastgroup] < priority[best]:
                 best = m.lastgroup
-        return meta[best] if best else None
+        if len(self._classify_cache) >= 200000:
+            self._classify_cache.clear()
+        self._classify_cache[key] = meta[best] if best else None
+        return self._classify_cache[key]
 
     def _analyze_text_file(self, file_path: str):
         """Analyze a log or kubectl text file.
@@ -685,11 +710,13 @@ class CFKBundleAnalyzer:
             label = level.title()
 
         task = _TASK_RE.search(head + ' ')
+        connector = _CONNECTOR_RE.search(head)
         context_lines = lines[max(0, line_num - 3):min(len(lines), line_num + 2)]
         self._add_issue(
             severity=severity,
             category=category,
             affected=(task.group(1) or task.group(2)) if task else None,
+            connector=(connector.group(1) or connector.group(2)) if connector else None,
             message=f"{label}: {head.strip()[:300]}",
             file_path=rel,
             line_number=line_num,

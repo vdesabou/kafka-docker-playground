@@ -74,6 +74,9 @@ CATEGORY_EMOJI = {
 }
 DEFAULT_CATEGORY_EMOJI = "🔎"
 
+# value of the connector filter for the issues without a connector context
+NO_CONNECTOR = "-"
+
 # component filter buttons, in this order (keys of analyzer.COMPONENTS)
 COMPONENT_LABEL = {
     "kafka": "📨 Kafka",
@@ -167,6 +170,8 @@ main { max-width: 1180px; margin: 0 auto; padding: 32px 40px 80px 40px; }
 .search:focus { outline: 2px solid #2563eb; outline-offset: -1px; border-color: transparent; }
 .controls.components { margin-top: -12px; }
 .controls.instances { margin-top: -12px; }
+.controls.connectors { margin-top: -12px; }
+.connector-filter { font-family: inherit; font-size: 13px; max-width: 420px; padding: 4px 6px; border-radius: 6px; border: 1px solid #d1d5db; background: white; }
 .controls .label { font-size: 12px; color: #6b7280; font-weight: 600; }
 .component-btn, .instance-btn {
   background: white;
@@ -334,7 +339,7 @@ body{background:#0f172a;color:#e2e8f0}
 .verdict,.card,.category,.panel{background:#1e293b;border-color:#334155}
 .card .label,.panel .label,.controls .label,.issue .location,footer,footer a,.category > summary::before{color:#94a3b8}
 .card.critical .value{color:#fca5a5}.card.high .value{color:#fdba74}.card.medium .value{color:#fcd34d}.card.low .value{color:#86efac}
-.filter-btn,.component-btn,.instance-btn,.search{background:#1e293b;border-color:#334155;color:#cbd5e1}
+.filter-btn,.component-btn,.instance-btn,.search,.connector-filter{background:#1e293b;border-color:#334155;color:#cbd5e1}
 .filter-btn:hover,.component-btn:hover,.instance-btn:hover{border-color:#94a3b8}
 .filter-btn.active{background:#e2e8f0;color:#0f172a;border-color:#e2e8f0}
 .component-btn.active,.instance-btn.active{background:#2563eb;color:#fff;border-color:#2563eb}
@@ -370,23 +375,45 @@ const instanceButtons = document.querySelectorAll('.instance-btn');
 const instanceBar = document.querySelector('.controls.instances');
 const categories = document.querySelectorAll('.category');
 const searchInput = document.getElementById('search');
+const connectorSelect = document.getElementById('connector-filter');
 const noMatch = document.querySelector('.no-match');
 
 let currentFilter = 'all';
 let currentComponent = 'all';
 let currentInstance = 'all';
 let currentSearch = '';
+let currentConnector = 'all';
+
+// connector options of the selected component / instance / search only, with their issue count there
+function updateConnectorOptions(byConnector) {
+  if (!connectorSelect) return;
+  let names = 0;
+  connectorSelect.querySelectorAll('option').forEach(opt => {
+    if (opt.value === 'all') return;
+    const n = byConnector[opt.value] || 0;
+    opt.textContent = (opt.value === '-' ? '— no connector context —' : opt.value) + ` (${n})`;
+    // disabled too: Safari ignores hidden on an option
+    opt.hidden = opt.disabled = n === 0 && opt.value !== currentConnector;
+    if (n && opt.value !== '-') names++;
+  });
+  connectorSelect.querySelector('option[value="all"]').textContent =
+    `All (${names} connector(s)${byConnector['-'] ? ' + no connector' : ''})`;
+}
 
 function applyFilters() {
   const counts = { total: 0, critical: 0, high: 0, medium: 0, low: 0 };
+  const byConnector = {};
   categories.forEach(cat => {
     const title = cat.querySelector('summary .title').textContent.toLowerCase();
     let visible = 0;
     cat.querySelectorAll('.issue').forEach(issue => {
-      const inScope =
+      const connectors = issue.dataset.connectors.split(' ');
+      const inContext =
         (currentComponent === 'all' || issue.dataset.component === currentComponent) &&
         (currentInstance === 'all' || issue.dataset.instance === currentInstance) &&
         (!currentSearch || title.includes(currentSearch) || issue.textContent.toLowerCase().includes(currentSearch));
+      if (inContext) connectors.forEach(c => { byConnector[c] = (byConnector[c] || 0) + 1; });
+      const inScope = inContext && (currentConnector === 'all' || connectors.includes(currentConnector));
       const show = inScope && (currentFilter === 'all' || issue.dataset.severity === currentFilter);
       issue.style.display = show ? '' : 'none';
       if (show) visible++;
@@ -404,6 +431,7 @@ function applyFilters() {
   });
   const anyVisible = [...categories].some(cat => cat.style.display !== 'none');
   if (noMatch) noMatch.style.display = anyVisible ? 'none' : 'block';
+  updateConnectorOptions(byConnector);
 }
 
 function activate(buttons, btn) {
@@ -444,6 +472,13 @@ instanceButtons.forEach(btn => {
     applyFilters();
   });
 });
+
+if (connectorSelect) {
+  connectorSelect.addEventListener('change', () => {
+    currentConnector = connectorSelect.value;
+    applyFilters();
+  });
+}
 
 if (searchInput) {
   searchInput.addEventListener('input', () => {
@@ -527,6 +562,25 @@ def _component_controls(issues: List[Dict], summary: Dict) -> str:
     )
 
 
+def _connector_controls(issues: List[Dict]) -> str:
+    """Connector picker with the issue count of each connector, when log records have a Connect connector context"""
+    by_connector: Dict[str, int] = defaultdict(int)
+    for i in issues:
+        for name in i.get("connectors") or []:
+            by_connector[name] += 1
+    if not by_connector:
+        return ""
+    without = sum(1 for i in issues if not i.get("connectors"))
+    options = [f'<option value="all">All ({len(by_connector)} connector(s){" + no connector" if without else ""})</option>']
+    options += [f'<option value="{_esc(name)}">{_esc(name)} ({n})</option>'
+                for name, n in sorted(by_connector.items(), key=lambda kv: (-kv[1], kv[0]))]
+    if without:
+        options.append(f'<option value="{NO_CONNECTOR}">— no connector context — ({without})</option>')
+    return (f'<div class="controls connectors"><span class="label">Connector</span>'
+            f'<select id="connector-filter" class="connector-filter" title="only the issues of this connector '
+            f'([connector|task-0] context of the log record)">{"".join(options)}</select></div>')
+
+
 def _environment_html(results: Dict, timeline_limit: int = 40) -> str:
     """Versions / images table and the latest changes, both collapsible"""
     env = results.get("environment") or {}
@@ -602,6 +656,7 @@ def render(results: Dict, bundle_label: str = "") -> str:
       <input id="search" class="search" type="search" placeholder="Search messages, files, categories, pods…" />
     </div>
     {_component_controls(issues, summary)}
+    {_connector_controls(issues)}
     """
 
     if not issues:
@@ -639,7 +694,7 @@ def render(results: Dict, bundle_label: str = "") -> str:
                         f'<pre>{_esc(context)}</pre></details>'
                     )
                 issue_rows.append(f"""
-                <div class="issue" data-severity="{_esc(sev)}" data-component="{_esc(component)}" data-instance="{_esc(instance)}">
+                <div class="issue" data-severity="{_esc(sev)}" data-component="{_esc(component)}" data-instance="{_esc(instance)}" data-connectors="{_esc(" ".join(issue.get("connectors") or [NO_CONNECTOR]))}">
                   <div class="head">
                     <span class="severity-pill {_esc(sev)}">{SEVERITY_EMOJI.get(sev, "")} {_esc(sev)}</span>
                     <span class="component-tag">{_esc(tag)}</span>
