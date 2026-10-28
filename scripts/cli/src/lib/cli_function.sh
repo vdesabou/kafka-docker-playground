@@ -5391,6 +5391,14 @@ function summarize_log_errors() {
         label = ENVIRON["PG_LOG_DIGEST_LABEL"]
     }
     {
+        # most lines of a big log have no level or exception word and do not continue a record: one regex (a
+        # single pass over the line) sets them aside, as the start of a level-less record, without the work below
+        if ($0 !~ /ERROR|FATAL|SEVERE|PANIC|WARN|level|Exception|Error|Throwable|[EFW][0-9][0-9][0-9][0-9] [0-9][0-9]:|^[ \t]|^Caused by:|\033/) {
+            flush()
+            rec_line = NR
+            rec[nlines = 1] = ""
+            next
+        }
         gsub(/\033\[[0-9;]*m/, "")
         sub(/\r$/, "")
         if (!is_continuation($0) || nlines == 0 || nlines >= 400) {
