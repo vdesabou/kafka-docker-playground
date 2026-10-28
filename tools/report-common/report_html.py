@@ -10,8 +10,10 @@ Imported, after adding this folder to sys.path, by:
     tools/connector-diff/diff_report.py
   - the older ones, which only take BASE_CSS through style() with their own rules: tools/thread-analyzer,
     gc-analysis, tools/xstream-analyzer, tools/tcp-dump
-The benchmark, flight recorder and SMT test reports have their own design (light / dark theme, filters), and so does
-the CFK bundle report (light only).
+  - the CFK bundle report (cfk-analysis/html_report.py), which keeps its own rules and adds dark() rules, THEME_TOGGLE_CSS
+    and THEME_SCRIPT (playground analyze cfk-bundle mounts this folder in its container, in /tmp/report-common)
+The benchmark, flight recorder and SMT test reports have their own layout (charts drawn by a script, filters) and their
+own "Toggle theme" button, with the same blue header and the same light / dark palette (slate) as these.
 """
 
 import re
