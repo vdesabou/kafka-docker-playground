@@ -1,5 +1,5 @@
 ---
-name: playground-cli
+name: kdp-playground-cli
 description: |
   Add or change a command in the `playground` CLI of kafka-docker-playground.
   Use when editing `scripts/cli/src/bashly.yml`, adding or renaming a command /
