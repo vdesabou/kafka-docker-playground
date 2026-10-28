@@ -101,6 +101,11 @@ playground_usage() {
   printf "  %s   🔎 Look for stored credentials in clear text in the repository\n" "$(green "secrets scan")                              "
   [[ -n "${PLAYGROUND_SHOW_PRIVATE:-}" ]] && printf "  %s   🧹 List the examples whose environment variables are not auto-detected\n" "$(green "secrets lint")                              "
   echo
+  printf "%s\n" "$(bold "Salesforce commands:")"
+  printf "  %s   ☁️ Set up a Salesforce org for the Salesforce examples, and check it\n" "$(green "salesforce")                                "
+  printf "  %s   🛠️ Configure a Salesforce org for the Salesforce examples\n" "$(green "salesforce setup")                          "
+  printf "  %s   🩺 Check that the stored Salesforce credentials work\n" "$(green "salesforce check")                          "
+  echo
   printf "%s\n" "$(bold "Cloud Resources commands:")"
   printf "  %s   ☁️ What the playground left behind in your cloud accounts, and what it costs\n" "$(green "cloud-resources")                           "
   printf "  %s   ☁️ What is still running in AWS, and what it costs\n" "$(green "cloud-resources aws")                       "
@@ -3310,6 +3315,183 @@ playground_secrets_lint_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground secrets lint\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_salesforce_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground salesforce\n\n"
+    printf "  ☁️ Set up a Salesforce org for the Salesforce examples, and check it\n  \n    setup   configure an org: External Client App (JWT bearer), Platform Event,\n  Change Data Capture\n    check   verify that the stored credentials can log in, and that the org has\n  what the examples need\n  \n  Replaces the manual steps of the Salesforce example READMEs. Only signing\n  up for the Developer Edition org stays manual.\n\n"
+  else
+    printf "playground salesforce - ☁️ Set up a Salesforce org for the Salesforce examples, and check it\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground salesforce COMMAND\n"
+  printf "  playground salesforce [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🛠️ Configure a Salesforce org for the Salesforce examples\n" "$(green "setup")"
+  printf "  %s   🩺 Check that the stored Salesforce credentials work\n" "$(green "check")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_salesforce_setup_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground salesforce setup\n\n"
+    printf "  🛠️ Configure a Salesforce org for the Salesforce examples\n  \n  Deploys, with the Salesforce CLI (sf) installed on your machine:\n  \n    • an External Client App with the OAuth JWT bearer flow, trusting the\n      certificate of salesforce-confluent.keystore.jks, pre-authorized for\n      the profile of your user (no browser approval) and with IP\n      restrictions relaxed\n    • the Platform Event MyPlatformEvent__e with the text field Message__c\n    • Change Data Capture on Contact\n  \n  then reads the consumer key back, waits until a JWT bearer login works\n  (a new app takes 2 to 10 minutes to be active), and stores\n  SALESFORCE_USERNAME, SALESFORCE_INSTANCE and\n  SALESFORCE_CONSUMER_KEY_WITH_JWT with 'playground secrets set'.\n  \n  Without --target-org, 'sf org login web' opens the browser once to log\n  in: that is the only manual step. Running it again on the same org\n  changes nothing.\n  \n  SALESFORCE_PASSWORD and SALESFORCE_SECURITY_TOKEN can't be read from\n  Salesforce: the command tells you how to store them.\n  \n  🎓 Tip: use --suffix KDP_CDC (or --account2 for the second org of the\n  sink examples) to store the per-test variables read by\n  salesforce_use_test_creds.\n\n"
+  else
+    printf "playground salesforce setup - 🛠️ Configure a Salesforce org for the Salesforce examples\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground salesforce setup [OPTIONS]\n"
+  printf "  playground salesforce setup --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--target-org, -o TARGET_ORG")"
+    printf "    🔑 Alias or username of an org the sf CLI is already logged into\n    \n    Without it, 'sf org login web' opens the browser to log in.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--alias ALIAS")"
+    printf "    🏷️ Alias given to the org by 'sf org login web' (ignored with --target-org)\n"
+    printf "    %s\n" "Default: kdp-salesforce"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--instance-url INSTANCE_URL")"
+    printf "    🌐 Login URL, stored as SALESFORCE_INSTANCE\n    \n    https://test.salesforce.com for a sandbox.\n"
+    printf "    %s\n" "Default: https://login.salesforce.com"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--app-name APP_NAME")"
+    printf "    📛 API name of the External Client App\n"
+    printf "    %s\n" "Default: kdp_jwt"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--suffix SUFFIX")"
+    printf "    🧩 Store the variables with this suffix, e.g. KDP_CDC gives\n    SALESFORCE_USERNAME_KDP_CDC\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--account2")"
+    printf "    2️⃣ Store the variables of the second org (SALESFORCE_USERNAME_ACCOUNT2…),\n    used by the sink examples\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--keystore KEYSTORE")"
+    printf "    🔐 PKCS12 keystore (password confluent) holding the JWT private key and\n    certificate\n    \n    Default is\n    connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks,\n    downloaded from the playground S3 bucket when missing (Confluent employees\n    only).\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--generate-keystore")"
+    printf "    🆕 Generate a new key pair when the keystore is missing\n    \n    It is copied into every Salesforce example folder, so the examples use it.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-wait MAX_WAIT")"
+    printf "    ⏳ Max seconds to wait for the JWT bearer login to work after the deploy\n    (default 600)\n"
+    printf "    %s\n" "Default: 600"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--dry-run")"
+    printf "    🧪 Only render the metadata in /tmp/playground-salesforce-setup, deploy and\n    store nothing\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--no-store")"
+    printf "    🚫 Print the values instead of storing them with 'playground secrets set'\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground salesforce setup\n"
+    printf "  playground salesforce setup --target-org my-dev-org --suffix KDP_CDC\n"
+    printf "  playground salesforce setup --account2\n"
+    printf "  playground salesforce setup --instance-url https://test.salesforce.com\n  --no-store\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_salesforce_check_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground salesforce check\n\n"
+    printf "  🩺 Check that the stored Salesforce credentials work\n  \n  Logs in with the OAuth JWT bearer flow, exactly like a connector with\n  salesforce.grant.type=JWT_BEARER (stored SALESFORCE_USERNAME,\n  SALESFORCE_CONSUMER_KEY_WITH_JWT, SALESFORCE_INSTANCE and the keystore),\n  explains a rejection, then checks that the org has MyPlatformEvent__e and\n  Change Data Capture on Contact. Needs neither Docker nor the sf CLI.\n  \n  Exits with 1 when something is missing.\n\n"
+  else
+    printf "playground salesforce check - 🩺 Check that the stored Salesforce credentials work\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground salesforce check [OPTIONS]\n"
+  printf "  playground salesforce check --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--suffix SUFFIX")"
+    printf "    🧩 Store the variables with this suffix, e.g. KDP_CDC gives\n    SALESFORCE_USERNAME_KDP_CDC\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--account2")"
+    printf "    2️⃣ Store the variables of the second org (SALESFORCE_USERNAME_ACCOUNT2…),\n    used by the sink examples\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--keystore KEYSTORE")"
+    printf "    🔐 PKCS12 keystore (password confluent) holding the JWT private key and\n    certificate\n    \n    Default is\n    connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks,\n    downloaded from the playground S3 bucket when missing (Confluent employees\n    only).\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground salesforce check\n"
+    printf "  playground salesforce check --suffix KDP_CDC\n"
+    printf "  playground salesforce check --account2\n"
     echo
 
   fi
@@ -22428,6 +22610,175 @@ function display_newer_cp_patch_hint () {
   log "🔄 To update: playground update-version --tag $newer_cp_version"
 }
 
+# playground salesforce setup|check: the org is driven with the Salesforce CLI (sf) installed on the
+# host. The sfdx-cli image of the examples is too old to know the External Client App metadata types,
+# and 'sf org login web' needs the host browser anyway.
+function salesforce_setup_require_tools () {
+  if ! command -v sf > /dev/null 2>&1
+  then
+    logerror "❌ the Salesforce CLI (sf) is not installed"
+    logerror "   install it with: npm install --global @salesforce/cli (or see https://developer.salesforce.com/tools/salesforcecli)"
+    exit 1
+  fi
+  for tool in openssl curl jq
+  do
+    if ! command -v $tool > /dev/null 2>&1
+    then
+      logerror "❌ $tool is not installed"
+      exit 1
+    fi
+  done
+}
+
+# Sets sf_username, sf_instance_url and sf_org_id from an org the host sf CLI is logged into.
+function salesforce_setup_resolve_org () {
+  target_org="$1"
+  org_json=$(sf org display --target-org "$target_org" --json 2> /dev/null) || true
+  if [ "$(echo "$org_json" | jq -r '.status // 1')" != "0" ]
+  then
+    logerror "❌ the Salesforce CLI is not logged into org $target_org"
+    echo "$org_json" | jq -r '.message // empty' >&2
+    logerror "   run without --target-org to log in with the browser, or log in first with: sf org login web --alias $target_org"
+    exit 1
+  fi
+  sf_username=$(echo "$org_json" | jq -r '.result.username')
+  sf_instance_url=$(echo "$org_json" | jq -r '.result.instanceUrl')
+  sf_org_id=$(echo "$org_json" | jq -r '.result.id')
+}
+
+# Salesforce example folders that read salesforce-confluent.keystore.jks from their own folder.
+function salesforce_setup_keystore_folders () {
+  grep -rl "salesforce_ensure_jwt_keystore\|salesforce_sfdx_login" "$root_folder/connect" "$root_folder/ccloud" --include='*.sh' 2> /dev/null | xargs -n1 dirname | sort -u
+}
+
+# Makes sure the keystore exists (download from the playground S3 bucket, or generate a new key pair
+# with --generate-keystore), then sets sf_certificate (base64 body of the certificate, as the External
+# Client App metadata wants it) and sf_jwt_key_file (unencrypted private key, in sf_tmp_dir).
+function salesforce_setup_load_keystore () {
+  keystore="$1"
+  generate="$2"
+
+  if [ ! -f "$keystore" ] && [ "$keystore" == "$root_folder/connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks" ]
+  then
+    (cd "$(dirname "$keystore")" && get_3rdparty_file "salesforce-confluent.keystore.jks") >&2 || true
+  fi
+
+  if [ ! -f "$keystore" ]
+  then
+    if [[ ! -n "$generate" ]]
+    then
+      logerror "❌ keystore $keystore is missing"
+      logerror "   pass --generate-keystore to create a new key pair (the External Client App then trusts this new certificate)"
+      exit 1
+    fi
+    log "🔐 generating a new key pair in $keystore (PKCS12, password confluent)"
+    if ! openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
+        -subj "/C=US/ST=Ca/L=PaloAlto/O=CONFLUENT/OU=TEST/CN=ca1.test.confluent.io" \
+        -keyout "$sf_tmp_dir/new.key" -out "$sf_tmp_dir/new.crt" > /dev/null 2>&1 \
+      || ! openssl pkcs12 -export -name salesforce-confluent -in "$sf_tmp_dir/new.crt" -inkey "$sf_tmp_dir/new.key" \
+        -passout pass:confluent -out "$keystore" > /dev/null 2>&1
+    then
+      logerror "❌ failed to generate the keystore"
+      exit 1
+    fi
+    rm -f "$sf_tmp_dir/new.key" "$sf_tmp_dir/new.crt"
+    if [ "$(basename "$keystore")" == "salesforce-confluent.keystore.jks" ]
+    then
+      for folder in $(salesforce_setup_keystore_folders)
+      do
+        if [ "$folder/salesforce-confluent.keystore.jks" != "$keystore" ]
+        then
+          if [ -f "$folder/salesforce-confluent.keystore.jks" ]
+          then
+            mv "$folder/salesforce-confluent.keystore.jks" "$folder/salesforce-confluent.keystore.jks.bak"
+          fi
+          cp "$keystore" "$folder/salesforce-confluent.keystore.jks"
+        fi
+      done
+      log "📋 copied it into every Salesforce example folder (previous ones kept as salesforce-confluent.keystore.jks.bak)"
+    fi
+  fi
+
+  sf_certificate=$(openssl pkcs12 -in "$keystore" -nokeys -clcerts -passin pass:confluent 2> /dev/null | openssl x509 2> /dev/null | grep -v -- "-----") || true
+  if [ -z "$sf_certificate" ]
+  then
+    logerror "❌ could not read the certificate of $keystore (password confluent expected)"
+    exit 1
+  fi
+  sf_jwt_key_file="$sf_tmp_dir/jwt.key"
+  (umask 077 && openssl pkcs12 -in "$keystore" -nocerts -nodes -passin pass:confluent -out "$sf_jwt_key_file" > /dev/null 2>&1) || true
+  if [ ! -s "$sf_jwt_key_file" ]
+  then
+    logerror "❌ could not read the private key of $keystore"
+    exit 1
+  fi
+}
+
+# Prints the consumer key of an External Client App created by 'playground salesforce setup', empty if
+# the app does not exist. Retrieving ExtlClntAppGlobalOauthSettings returns it.
+function salesforce_setup_get_consumer_key () {
+  target_org="$1"
+  app_name="$2"
+  retrieve_dir="$sf_tmp_dir/retrieve-$app_name"
+  rm -rf "$retrieve_dir"
+  sf project retrieve start --metadata "ExtlClntAppGlobalOauthSettings:${app_name}_glbloauth" \
+    --target-metadata-dir "$retrieve_dir" --unzip --target-org "$target_org" --json > "$sf_tmp_dir/retrieve.json" 2>&1 || true
+  file=$(find "$retrieve_dir" -name "${app_name}_glbloauth.ecaGlblOauth" 2> /dev/null | head -1)
+  if [ -n "$file" ]
+  then
+    sed -n 's#.*<consumerKey>\(.*\)</consumerKey>.*#\1#p' "$file" | head -1
+  fi
+}
+
+function salesforce_setup_base64url () {
+  openssl base64 -A | tr '+/' '-_' | tr -d '='
+}
+
+# One OAuth JWT bearer token request, exactly what a connector with salesforce.grant.type=JWT_BEARER
+# does. Prints Salesforce's answer (without the token), returns 0 when it contains an access token,
+# kept in sf_access_token / sf_token_instance_url for the REST calls of 'playground salesforce check'
+# (so don't call it in a subshell). Nothing is stored and the sf CLI logins are left alone.
+function salesforce_setup_jwt_token () {
+  login_url="${1%/}"
+  consumer_key="$2"
+  username="$3"
+  key_file="$4"
+
+  audience="https://login.salesforce.com"
+  if [[ "$login_url" == *test.salesforce.com* ]] || [[ "$login_url" == *.sandbox.my.salesforce.com* ]]
+  then
+    audience="https://test.salesforce.com"
+  fi
+  header=$(printf '{"alg":"RS256"}' | salesforce_setup_base64url)
+  claims=$(jq -cn --arg iss "$consumer_key" --arg sub "$username" --arg aud "$audience" --argjson exp "$(( $(date +%s) + 300 ))" \
+    '{iss: $iss, sub: $sub, aud: $aud, exp: $exp}' | salesforce_setup_base64url)
+  signature=$(printf '%s.%s' "$header" "$claims" | openssl dgst -sha256 -sign "$key_file" -binary | salesforce_setup_base64url)
+  response=$(curl -sS -m 30 -X POST "$login_url/services/oauth2/token" \
+    --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
+    --data-urlencode "assertion=$header.$claims.$signature" 2>&1) || true
+  sf_access_token=$(echo "$response" | jq -r '.access_token // empty' 2> /dev/null) || true
+  sf_token_instance_url=$(echo "$response" | jq -r '.instance_url // empty' 2> /dev/null) || true
+  echo "$response" | jq -c 'del(.access_token, .signature)' 2> /dev/null || echo "$response"
+  [ -n "$sf_access_token" ]
+}
+
+# Name of the variable for one value: SALESFORCE_USERNAME, SALESFORCE_USERNAME_KDP_CDC,
+# SALESFORCE_USERNAME_ACCOUNT2 or SALESFORCE_USERNAME_KDP_CDC_ACCOUNT2, as read by salesforce_use_test_creds.
+function salesforce_setup_var_name () {
+  name="$1"
+  suffix="$2"
+  account2="$3"
+  if [[ -n "$suffix" ]]
+  then
+    name="${name}_${suffix}"
+  fi
+  if [[ -n "$account2" ]]
+  then
+    name="${name}_ACCOUNT2"
+  fi
+  echo "$name"
+}
+
 # src/lib/colors.sh
 print_in_color() {
   local color="$1"
@@ -33381,6 +33732,305 @@ playground_secrets_lint_command() {
   logwarn "⚠️ $nb variable(s) are not auto-detected by 'playground run' and 'playground secrets check'"
   logwarn "👉 in the example, replace the bare check with:"
   logwarn '   logerror "FOO is not set. Export it as environment variable or pass it as argument"'
+
+}
+
+# :command.function
+playground_salesforce_setup_command() {
+
+  # src/commands/salesforce/setup.sh
+  target_org="${args[--target-org]}"
+  alias="${args[--alias]}"
+  instance_url="${args[--instance-url]%/}"
+  app_name="${args[--app-name]}"
+  suffix="${args[--suffix]}"
+  account2="${args[--account2]}"
+  keystore="${args[--keystore]}"
+  generate_keystore="${args[--generate-keystore]}"
+  max_wait="${args[--max-wait]}"
+  dry_run="${args[--dry-run]}"
+  no_store="${args[--no-store]}"
+
+  if [[ ! "$app_name" =~ ^[A-Za-z][A-Za-z0-9_]*$ ]] || [[ "$app_name" == *__* ]] || [[ "$app_name" == *_ ]]
+  then
+      logerror "❌ --app-name $app_name is not a valid API name (letters, digits and single underscores, starting with a letter)"
+      exit 1
+  fi
+  suffix="$(echo "$suffix" | tr '[:lower:]' '[:upper:]')"
+  if [[ -n "$suffix" ]] && [[ ! "$suffix" =~ ^[A-Z0-9_]+$ ]]
+  then
+      logerror "❌ --suffix $suffix must only contain letters, digits and underscores"
+      exit 1
+  fi
+  if [[ ! -n "$keystore" ]]
+  then
+      keystore="$root_folder/connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks"
+  fi
+
+  salesforce_setup_require_tools
+
+  sf_tmp_dir=$(mktemp -d -t playground-salesforce-setup.XXXXXX)
+  trap 'rm -rf "$sf_tmp_dir"' EXIT
+
+  salesforce_setup_load_keystore "$keystore" "$generate_keystore"
+  log "🔐 using the certificate of $keystore"
+
+  # 1. the org
+  if [[ ! -n "$target_org" ]]
+  then
+      if [ ! -t 0 ]
+      then
+          logerror "❌ logging in needs a browser: run it in a terminal, or log in first (sf org login web --alias $alias) and pass --target-org $alias"
+          exit 1
+      fi
+      log "🌐 log into your Salesforce org in the browser that opens ($instance_url), then click Allow"
+      if ! sf org login web --alias "$alias" --instance-url "$instance_url"
+      then
+          logerror "❌ sf org login web failed"
+          exit 1
+      fi
+      target_org="$alias"
+  fi
+  salesforce_setup_resolve_org "$target_org"
+  log "☁️ org $sf_org_id ($sf_instance_url), user $sf_username"
+
+  user_json=$(sf data query --query "SELECT Email, Profile.Name FROM User WHERE Username = '$sf_username'" --target-org "$target_org" --json 2> /dev/null) || true
+  profile=$(echo "$user_json" | jq -r '.result.records[0].Profile.Name // empty')
+  email=$(echo "$user_json" | jq -r '.result.records[0].Email // empty')
+  if [ -z "$profile" ]
+  then
+      logerror "❌ could not read the profile of $sf_username"
+      echo "$user_json" | jq -r '.message // empty' >&2
+      exit 1
+  fi
+  log "👤 the External Client App is pre-authorized for profile \"$profile\""
+
+  # 2. the metadata, rendered from scripts/salesforce-org-setup/metadata
+  function xml_escape () {
+      printf '%s' "$1" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+  }
+  profile_xml=$(xml_escape "$profile")
+  email_xml=$(xml_escape "${email:-$sf_username}")
+
+  output_dir="/tmp/playground-salesforce-setup/$app_name"
+  rm -rf "$output_dir"
+  template_dir="$root_folder/scripts/salesforce-org-setup/metadata"
+  for template in $(cd "$template_dir" && find . -type f)
+  do
+      out="$output_dir/${template//@@APP_NAME@@/$app_name}"
+      mkdir -p "$(dirname "$out")"
+      content=$(cat "$template_dir/$template")
+      # quoted replacements: bash 5.2 would otherwise expand & in them
+      content="${content//@@APP_NAME@@/"$app_name"}"
+      content="${content//@@CERTIFICATE@@/"$sf_certificate"}"
+      content="${content//@@PROFILE@@/"$profile_xml"}"
+      content="${content//@@CONTACT_EMAIL@@/"$email_xml"}"
+      printf '%s\n' "$content" > "$out"
+  done
+  log "📝 metadata rendered in $output_dir"
+
+  if [[ -n "$dry_run" ]]
+  then
+      log "🧪 --dry-run: nothing deployed. To deploy it yourself:"
+      log "   sf project deploy start --metadata-dir $output_dir/app --target-org $target_org --wait 15"
+      log "   sf project deploy start --metadata-dir $output_dir/policies --target-org $target_org --wait 15"
+      exit 0
+  fi
+
+  # 3. deploy: the app first, then its policies, which only exist once the app does
+  function salesforce_deploy () {
+      dir="$1"
+      what="$2"
+      log "🚀 deploying $what"
+      sf project deploy start --metadata-dir "$dir" --target-org "$target_org" --wait 15 --json > "$sf_tmp_dir/deploy.json" 2> /dev/null || true
+      if [ "$(jq -r '(.result // .data // {}) | .success // false' "$sf_tmp_dir/deploy.json" 2> /dev/null)" != "true" ]
+      then
+          logerror "❌ failed to deploy $what"
+          jq -r '(.result // .data // {}) | .details.componentFailures // [] | if type == "array" then . else [.] end | .[] | "   \(.componentType) \(.fullName): \(.problem)"' "$sf_tmp_dir/deploy.json" 2> /dev/null >&2
+          jq -r '.message // empty' "$sf_tmp_dir/deploy.json" 2> /dev/null >&2
+          if grep -q "ChangeEvents_ContactChangeEvent" "$sf_tmp_dir/deploy.json" 2> /dev/null
+          then
+              logerror "   a Developer Edition org allows 5 Change Data Capture entities: unselect one in Setup > Change Data Capture"
+          fi
+          logerror "   rendered metadata: $output_dir"
+          exit 1
+      fi
+  }
+  salesforce_deploy "$output_dir/app" "External Client App $app_name, MyPlatformEvent__e and Change Data Capture on Contact"
+  salesforce_deploy "$output_dir/policies" "the policies of $app_name (pre-authorized for \"$profile\", IP restrictions relaxed)"
+
+  # 4. consumer key, and wait until a JWT bearer login works
+  consumer_key=$(salesforce_setup_get_consumer_key "$target_org" "$app_name")
+  if [ -z "$consumer_key" ]
+  then
+      logerror "❌ could not read the consumer key of $app_name back"
+      logerror "   find it in Setup > External Client App Manager > $app_name > Settings > OAuth Settings > Consumer Key and Secret"
+      exit 1
+  fi
+  log "🔑 consumer key of $app_name: ${consumer_key:0:12}…"
+
+  log "⏳ waiting for the JWT bearer login of $sf_username to work (a new External Client App takes 2 to 10 minutes to be active, max $max_wait seconds)"
+  deadline=$((SECONDS + max_wait))
+  while true
+  do
+      if salesforce_setup_jwt_token "$instance_url" "$consumer_key" "$sf_username" "$sf_jwt_key_file" > "$sf_tmp_dir/token.out"
+      then
+          break
+      fi
+      if [ $SECONDS -ge $deadline ]
+      then
+          logerror "❌ the JWT bearer login still fails after $max_wait seconds: $(cat "$sf_tmp_dir/token.out")"
+          logerror "   check Setup > Login History in Salesforce, then run 'playground salesforce check' later"
+          exit 1
+      fi
+      log "   not yet: $(jq -r '.error_description // .error // .' "$sf_tmp_dir/token.out" 2> /dev/null | head -1), retrying in 20 seconds"
+      sleep 20
+  done
+  log "✅ JWT bearer login works for $sf_username"
+
+  # 5. store
+  username_var=$(salesforce_setup_var_name SALESFORCE_USERNAME "$suffix" "$account2")
+  instance_var=$(salesforce_setup_var_name SALESFORCE_INSTANCE "$suffix" "$account2")
+  consumer_key_var=$(salesforce_setup_var_name SALESFORCE_CONSUMER_KEY_WITH_JWT "$suffix" "$account2")
+  password_var=$(salesforce_setup_var_name SALESFORCE_PASSWORD "$suffix" "$account2")
+  token_var=$(salesforce_setup_var_name SALESFORCE_SECURITY_TOKEN "$suffix" "$account2")
+
+  if [[ -n "$no_store" ]]
+  then
+      log "📋 --no-store, the values to export:"
+      echo "export $username_var=\"$sf_username\""
+      echo "export $instance_var=\"$instance_url\""
+      echo "export $consumer_key_var=\"$consumer_key\""
+  else
+      playground secrets set "$username_var" --value "$sf_username" --plain
+      playground secrets set "$instance_var" --value "$instance_url" --plain
+      playground secrets set "$consumer_key_var" --value "$consumer_key" --secret
+      log "💾 stored $username_var, $instance_var and $consumer_key_var"
+  fi
+
+  log "✋ Salesforce can't give these two back, store them yourself if not done yet:"
+  log "   playground secrets set $password_var"
+  log "   playground secrets set $token_var      (emailed by Salesforce: Settings > My Personal Information > Reset My Security Token)"
+  check_flags=""
+  if [[ -n "$suffix" ]]
+  then
+      check_flags="$check_flags --suffix $suffix"
+  fi
+  if [[ -n "$account2" ]]
+  then
+      check_flags="$check_flags --account2"
+  fi
+  log "🩺 check it any time with: playground salesforce check$check_flags"
+
+}
+
+# :command.function
+playground_salesforce_check_command() {
+
+  # src/commands/salesforce/check.sh
+  suffix="$(echo "${args[--suffix]}" | tr '[:lower:]' '[:upper:]')"
+  account2="${args[--account2]}"
+  keystore="${args[--keystore]}"
+
+  if [[ ! -n "$keystore" ]]
+  then
+      keystore="$root_folder/connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks"
+  fi
+  for tool in openssl curl jq
+  do
+      if ! command -v $tool > /dev/null 2>&1
+      then
+          logerror "❌ $tool is not installed"
+          exit 1
+      fi
+  done
+
+  sf_tmp_dir=$(mktemp -d -t playground-salesforce-check.XXXXXX)
+  trap 'rm -rf "$sf_tmp_dir"' EXIT
+
+  # same resolution as an example: exported variable, then the active secrets profile, then default
+  profile="$(get_active_secret_profile)"
+  function salesforce_check_value () {
+      name=$(salesforce_setup_var_name "$1" "$suffix" "$account2")
+      secret_get "$name" "$profile" 2> /dev/null || true
+  }
+  username_var=$(salesforce_setup_var_name SALESFORCE_USERNAME "$suffix" "$account2")
+  consumer_key_var=$(salesforce_setup_var_name SALESFORCE_CONSUMER_KEY_WITH_JWT "$suffix" "$account2")
+  instance_var=$(salesforce_setup_var_name SALESFORCE_INSTANCE "$suffix" "$account2")
+  username=$(salesforce_check_value SALESFORCE_USERNAME)
+  consumer_key=$(salesforce_check_value SALESFORCE_CONSUMER_KEY_WITH_JWT)
+  instance_url=$(salesforce_check_value SALESFORCE_INSTANCE)
+  instance_url="${instance_url:-https://login.salesforce.com}"
+
+  missing=0
+  for var in "$username_var:$username" "$consumer_key_var:$consumer_key"
+  do
+      if [ -z "${var#*:}" ]
+      then
+          logerror "❌ ${var%%:*} is not set"
+          missing=1
+      fi
+  done
+  if [ $missing -eq 1 ]
+  then
+      logerror "👉 playground salesforce setup$( [[ -n "$suffix" ]] && echo " --suffix $suffix" )$( [[ -n "$account2" ]] && echo " --account2" )"
+      exit 1
+  fi
+
+  salesforce_setup_load_keystore "$keystore" ""
+
+  failed=0
+  log "🔑 JWT bearer login of $username on $instance_url ($consumer_key_var ${consumer_key:0:12}…, certificate of $keystore)"
+  if salesforce_setup_jwt_token "$instance_url" "$consumer_key" "$username" "$sf_jwt_key_file" > "$sf_tmp_dir/token.out"
+  then
+      log "✅ JWT bearer login works ($sf_token_instance_url)"
+  else
+      answer=$(cat "$sf_tmp_dir/token.out")
+      logerror "❌ JWT bearer login rejected: $answer"
+      case "$answer" in
+          *"client identifier invalid"*)
+              logerror "   $consumer_key_var is not the consumer key of an External Client App of this org, or the app was created less than 10 minutes ago" ;;
+          *"hasn't approved this consumer"*|*"not approved"*)
+              logerror "   the app is not pre-authorized for this user: its OAuth policy must be 'Admin approved users are pre-authorized' and list the user's profile (playground salesforce setup does it)" ;;
+          *"invalid assertion"*|*"invalid signature"*|*"invalid_grant"*"certificate"*)
+              logerror "   the certificate of the External Client App does not match the private key of $keystore" ;;
+          *"audience is invalid"*)
+              logerror "   wrong $instance_var: https://login.salesforce.com, or https://test.salesforce.com for a sandbox" ;;
+          *"user hasn't been"*|*"inactive"*|*"locked"*|*"expired"*)
+              logerror "   the user $username can't log in: check it in Setup > Users" ;;
+      esac
+      logerror "   Salesforce shows the reason of every login in Setup > Login History"
+      exit 1
+  fi
+
+  function salesforce_check_query () {
+      curl -sS -m 30 -G -H "Authorization: Bearer $sf_access_token" "$sf_token_instance_url/services/data/v66.0/$1" --data-urlencode "q=$2"
+  }
+
+  nb=$(salesforce_check_query query "SELECT QualifiedApiName FROM EntityDefinition WHERE QualifiedApiName = 'MyPlatformEvent__e'" | jq -r '.totalSize // 0' 2> /dev/null)
+  if [ "${nb:-0}" -ge 1 ]
+  then
+      log "✅ Platform Event MyPlatformEvent__e exists"
+  else
+      logerror "❌ Platform Event MyPlatformEvent__e is missing (needed by the platform events examples)"
+      failed=1
+  fi
+
+  cdc_entities=$(salesforce_check_query tooling/query "SELECT SelectedEntity FROM PlatformEventChannelMember WHERE EventChannel = 'ChangeEvents'" | jq -r '.records[]?.SelectedEntity' 2> /dev/null | sort | tr '\n' ' ')
+  if [[ " $cdc_entities" == *" ContactChangeEvent "* ]]
+  then
+      log "✅ Change Data Capture is enabled on Contact (entities: $cdc_entities)"
+  else
+      logerror "❌ Change Data Capture is not enabled on Contact (needed by the CDC examples), entities: ${cdc_entities:-none}"
+      failed=1
+  fi
+
+  if [ $failed -eq 1 ]
+  then
+      logerror "👉 playground salesforce setup$( [[ -n "$suffix" ]] && echo " --suffix $suffix" )$( [[ -n "$account2" ]] && echo " --account2" ) deploys what is missing"
+      exit 1
+  fi
+  log "🎉 the org is ready for the Salesforce examples"
 
 }
 
@@ -63446,6 +64096,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    salesforce)
+      action="salesforce"
+      shift
+      playground_salesforce_parse_requirements "$@"
+      shift $#
+      ;;
+
     cloud-resources)
       action="cloud-resources"
       shift
@@ -70590,6 +71247,396 @@ playground_secrets_lint_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_salesforce_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_salesforce_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    setup)
+      action="setup"
+      shift
+      playground_salesforce_setup_parse_requirements "$@"
+      shift $#
+      ;;
+
+    check)
+      action="check"
+      shift
+      playground_salesforce_check_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_salesforce_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_salesforce_setup_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_salesforce_setup_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="salesforce setup"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --target-org | -o)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--target-org']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--target-org requires an argument: --target-org, -o TARGET_ORG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --alias)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--alias']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--alias requires an argument: --alias ALIAS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --instance-url)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--instance-url']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--instance-url requires an argument: --instance-url INSTANCE_URL" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --app-name)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--app-name']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--app-name requires an argument: --app-name APP_NAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --suffix)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--suffix']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--suffix requires an argument: --suffix SUFFIX" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --account2)
+
+        # :flag.case_no_arg
+        args['--account2']=1
+        shift
+        ;;
+
+      # :flag.case
+      --keystore)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--keystore']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--keystore requires an argument: --keystore KEYSTORE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --generate-keystore)
+
+        # :flag.case_no_arg
+        args['--generate-keystore']=1
+        shift
+        ;;
+
+      # :flag.case
+      --max-wait)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--max-wait']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-wait requires an argument: --max-wait MAX_WAIT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --dry-run)
+
+        # :flag.case_no_arg
+        args['--dry-run']=1
+        shift
+        ;;
+
+      # :flag.case
+      --no-store)
+
+        # :flag.case_no_arg
+        args['--no-store']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['--alias']:-} ]] || args['--alias']="kdp-salesforce"
+  [[ -n ${args['--instance-url']:-} ]] || args['--instance-url']="https://login.salesforce.com"
+  [[ -n ${args['--app-name']:-} ]] || args['--app-name']="kdp_jwt"
+  [[ -n ${args['--max-wait']:-} ]] || args['--max-wait']="600"
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--max-wait'] ]]; then
+    validation_output="$(validate_integer "${args['--max-wait']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--max-wait MAX_WAIT" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_salesforce_check_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_salesforce_check_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="salesforce check"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --suffix)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--suffix']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--suffix requires an argument: --suffix SUFFIX" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --account2)
+
+        # :flag.case_no_arg
+        args['--account2']=1
+        shift
+        ;;
+
+      # :flag.case
+      --keystore)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--keystore']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--keystore requires an argument: --keystore KEYSTORE" >&2
+          exit 1
+        fi
+        ;;
 
       --)
         shift
@@ -99846,6 +100893,11 @@ playground_completion() {
         playground_secrets_completion "$completion_current" "$@"
         return
         ;;
+      salesforce)
+        shift
+        playground_salesforce_completion "$completion_current" "$@"
+        return
+        ;;
       cloud-resources)
         shift
         playground_cloud_resources_completion "$completion_current" "$@"
@@ -100070,7 +101122,7 @@ playground_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" help status doctor config secrets cloud-resources ccloud-costs ccloud-costs-history run re-run get-ci-result history find-example switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog cleanup-cloud-resources repro get-docker-compose schema tcp-proxy tools analyze analyse debug get-jmx-metrics container pod topic consumer-group rbac connector-plugin connector ec2
+  completion_candidates "$completion_current" help status doctor config secrets salesforce cloud-resources ccloud-costs ccloud-costs-history run re-run get-ci-result history find-example switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog cleanup-cloud-resources repro get-docker-compose schema tcp-proxy tools analyze analyse debug get-jmx-metrics container pod topic consumer-group rbac connector-plugin connector ec2
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -103010,6 +104062,215 @@ playground_secrets_lint_completion() {
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_salesforce_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      setup)
+        shift
+        playground_salesforce_setup_completion "$completion_current" "$@"
+        return
+        ;;
+      check)
+        shift
+        playground_salesforce_check_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" setup check
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_salesforce_setup_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --target-org | -o)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--target-org"]=1
+
+        ;;
+      --alias)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--alias"]=1
+
+        ;;
+      --instance-url)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--instance-url"]=1
+
+        ;;
+      --app-name)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--app-name"]=1
+
+        ;;
+      --suffix)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--suffix"]=1
+
+        ;;
+      --account2)
+        completion_blocked_flags["--account2"]=1
+
+        shift
+        ;;
+      --keystore)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--keystore"]=1
+
+        ;;
+      --generate-keystore)
+        completion_blocked_flags["--generate-keystore"]=1
+
+        shift
+        ;;
+      --max-wait)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--max-wait"]=1
+
+        ;;
+      --dry-run)
+        completion_blocked_flags["--dry-run"]=1
+
+        shift
+        ;;
+      --no-store)
+        completion_blocked_flags["--no-store"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --target-org "$completion_current" --target-org -o
+    completion_flag_candidates --alias "$completion_current" --alias
+    completion_flag_candidates --instance-url "$completion_current" --instance-url
+    completion_flag_candidates --app-name "$completion_current" --app-name
+    completion_flag_candidates --suffix "$completion_current" --suffix
+    completion_flag_candidates --account2 "$completion_current" --account2
+    completion_flag_candidates --keystore "$completion_current" --keystore
+    completion_flag_candidates --generate-keystore "$completion_current" --generate-keystore
+    completion_flag_candidates --max-wait "$completion_current" --max-wait
+    completion_flag_candidates --dry-run "$completion_current" --dry-run
+    completion_flag_candidates --no-store "$completion_current" --no-store
+  fi
+
+}
+
+# :command.completion_function
+playground_salesforce_check_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --suffix)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--suffix"]=1
+
+        ;;
+      --account2)
+        completion_blocked_flags["--account2"]=1
+
+        shift
+        ;;
+      --keystore)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--keystore"]=1
+
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --suffix "$completion_current" --suffix
+    completion_flag_candidates --account2 "$completion_current" --account2
+    completion_flag_candidates --keystore "$completion_current" --keystore
   fi
 
 }
@@ -117467,6 +118728,9 @@ run() {
     "secrets profile") playground_secrets_profile_command ;;
     "secrets scan") playground_secrets_scan_command ;;
     "secrets lint") playground_secrets_lint_command ;;
+    "salesforce") playground_salesforce_command ;;
+    "salesforce setup") playground_salesforce_setup_command ;;
+    "salesforce check") playground_salesforce_check_command ;;
     "cloud-resources") playground_cloud_resources_command ;;
     "cloud-resources aws") playground_cloud_resources_aws_command ;;
     "cloud-resources aws list") playground_cloud_resources_aws_list_command ;;

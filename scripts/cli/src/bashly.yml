@@ -1354,6 +1354,141 @@ commands:
     examples:
     - playground secrets lint
 
+- name: salesforce
+  expose: always
+  group: Salesforce
+  help: |-
+    ☁️ Set up a Salesforce org for the Salesforce examples, and check it
+
+      setup   configure an org: External Client App (JWT bearer), Platform Event, Change Data Capture
+      check   verify that the stored credentials can log in, and that the org has what the examples need
+
+    Replaces the manual steps of the Salesforce example READMEs. Only signing
+    up for the Developer Edition org stays manual.
+  commands:
+  - name: setup
+    help: |-
+      🛠️ Configure a Salesforce org for the Salesforce examples
+
+      Deploys, with the Salesforce CLI (sf) installed on your machine:
+
+        • an External Client App with the OAuth JWT bearer flow, trusting the
+          certificate of salesforce-confluent.keystore.jks, pre-authorized for
+          the profile of your user (no browser approval) and with IP
+          restrictions relaxed
+        • the Platform Event MyPlatformEvent__e with the text field Message__c
+        • Change Data Capture on Contact
+
+      then reads the consumer key back, waits until a JWT bearer login works
+      (a new app takes 2 to 10 minutes to be active), and stores
+      SALESFORCE_USERNAME, SALESFORCE_INSTANCE and
+      SALESFORCE_CONSUMER_KEY_WITH_JWT with 'playground secrets set'.
+
+      Without --target-org, 'sf org login web' opens the browser once to log
+      in: that is the only manual step. Running it again on the same org
+      changes nothing.
+
+      SALESFORCE_PASSWORD and SALESFORCE_SECURITY_TOKEN can't be read from
+      Salesforce: the command tells you how to store them.
+
+      🎓 Tip: use --suffix KDP_CDC (or --account2 for the second org of the
+      sink examples) to store the per-test variables read by
+      salesforce_use_test_creds.
+    flags:
+    - &salesforce-target-org
+      long: --target-org
+      short: -o
+      arg: target_org
+      required: false
+      help: |-
+        🔑 Alias or username of an org the sf CLI is already logged into
+
+        Without it, 'sf org login web' opens the browser to log in.
+    - long: --alias
+      arg: alias
+      required: false
+      default: "kdp-salesforce"
+      help: |-
+        🏷️ Alias given to the org by 'sf org login web' (ignored with --target-org)
+    - &salesforce-instance-url
+      long: --instance-url
+      arg: instance_url
+      required: false
+      default: "https://login.salesforce.com"
+      help: |-
+        🌐 Login URL, stored as SALESFORCE_INSTANCE
+
+        https://test.salesforce.com for a sandbox.
+    - &salesforce-app-name
+      long: --app-name
+      arg: app_name
+      required: false
+      default: "kdp_jwt"
+      help: |-
+        📛 API name of the External Client App
+    - &salesforce-suffix
+      long: --suffix
+      arg: suffix
+      required: false
+      help: |-
+        🧩 Store the variables with this suffix, e.g. KDP_CDC gives SALESFORCE_USERNAME_KDP_CDC
+    - &salesforce-account2
+      long: --account2
+      help: |-
+        2️⃣ Store the variables of the second org (SALESFORCE_USERNAME_ACCOUNT2…), used by the sink examples
+    - &salesforce-keystore
+      long: --keystore
+      arg: keystore
+      required: false
+      help: |-
+        🔐 PKCS12 keystore (password confluent) holding the JWT private key and certificate
+
+        Default is connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks,
+        downloaded from the playground S3 bucket when missing (Confluent employees only).
+    - long: --generate-keystore
+      help: |-
+        🆕 Generate a new key pair when the keystore is missing
+
+        It is copied into every Salesforce example folder, so the examples use it.
+    - long: --max-wait
+      arg: max_wait
+      required: false
+      default: "600"
+      validate: integer
+      help: |-
+        ⏳ Max seconds to wait for the JWT bearer login to work after the deploy (default 600)
+    - long: --dry-run
+      help: |-
+        🧪 Only render the metadata in /tmp/playground-salesforce-setup, deploy and store nothing
+    - long: --no-store
+      help: |-
+        🚫 Print the values instead of storing them with 'playground secrets set'
+    examples:
+    - playground salesforce setup
+    - playground salesforce setup --target-org my-dev-org --suffix KDP_CDC
+    - playground salesforce setup --account2
+    - playground salesforce setup --instance-url https://test.salesforce.com --no-store
+
+  - name: check
+    help: |-
+      🩺 Check that the stored Salesforce credentials work
+
+      Logs in with the OAuth JWT bearer flow, exactly like a connector with
+      salesforce.grant.type=JWT_BEARER (stored SALESFORCE_USERNAME,
+      SALESFORCE_CONSUMER_KEY_WITH_JWT, SALESFORCE_INSTANCE and the keystore),
+      explains a rejection, then checks that the org has MyPlatformEvent__e and
+      Change Data Capture on Contact. Needs neither Docker nor the sf CLI.
+
+      Exits with 1 when something is missing.
+    flags:
+    - *salesforce-suffix
+    - *salesforce-account2
+    - *salesforce-keystore
+    examples:
+    - playground salesforce check
+    - playground salesforce check --suffix KDP_CDC
+    - playground salesforce check --account2
+
 - name: cloud-resources
   expose: always
   group: Cloud Resources

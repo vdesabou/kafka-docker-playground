@@ -459,6 +459,127 @@
       ]
     },
     {
+      "name": "salesforce",
+      "description": "☁️ Set up a Salesforce org for the Salesforce examples, and check it\n\n  setup   configure an org: External Client App (JWT bearer), Platform Event, Change Data Capture\n  check   verify that the stored credentials can log in, and that the org has what the examples need\n\nReplaces the manual steps of the Salesforce example READMEs. Only signing\nup for the Developer Edition org stays manual.",
+      "usage": "playground salesforce COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "setup",
+          "description": "🛠️ Configure a Salesforce org for the Salesforce examples\n\nDeploys, with the Salesforce CLI (sf) installed on your machine:\n\n  • an External Client App with the OAuth JWT bearer flow, trusting the\n    certificate of salesforce-confluent.keystore.jks, pre-authorized for\n    the profile of your user (no browser approval) and with IP\n    restrictions relaxed\n  • the Platform Event MyPlatformEvent__e with the text field Message__c\n  • Change Data Capture on Contact\n\nthen reads the consumer key back, waits until a JWT bearer login works\n(a new app takes 2 to 10 minutes to be active), and stores\nSALESFORCE_USERNAME, SALESFORCE_INSTANCE and\nSALESFORCE_CONSUMER_KEY_WITH_JWT with 'playground secrets set'.\n\nWithout --target-org, 'sf org login web' opens the browser once to log\nin: that is the only manual step. Running it again on the same org\nchanges nothing.\n\nSALESFORCE_PASSWORD and SALESFORCE_SECURITY_TOKEN can't be read from\nSalesforce: the command tells you how to store them.\n\n🎓 Tip: use --suffix KDP_CDC (or --account2 for the second org of the\nsink examples) to store the per-test variables read by\nsalesforce_use_test_creds.",
+          "usage": "playground salesforce setup [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--target-org",
+                "-o"
+              ],
+              "argument": "TARGET_ORG",
+              "description": "🔑 Alias or username of an org the sf CLI is already logged into\n\nWithout it, 'sf org login web' opens the browser to log in."
+            },
+            {
+              "names": [
+                "--alias"
+              ],
+              "argument": "ALIAS",
+              "description": "🏷️ Alias given to the org by 'sf org login web' (ignored with --target-org)\n\nDefault value: kdp-salesforce"
+            },
+            {
+              "names": [
+                "--instance-url"
+              ],
+              "argument": "INSTANCE_URL",
+              "description": "🌐 Login URL, stored as SALESFORCE_INSTANCE\n\nhttps://test.salesforce.com for a sandbox.\n\nDefault value: https://login.salesforce.com"
+            },
+            {
+              "names": [
+                "--app-name"
+              ],
+              "argument": "APP_NAME",
+              "description": "📛 API name of the External Client App\n\nDefault value: kdp_jwt"
+            },
+            {
+              "names": [
+                "--suffix"
+              ],
+              "argument": "SUFFIX",
+              "description": "🧩 Store the variables with this suffix, e.g. KDP_CDC gives SALESFORCE_USERNAME_KDP_CDC"
+            },
+            {
+              "names": [
+                "--account2"
+              ],
+              "argument": "",
+              "description": "2️⃣ Store the variables of the second org (SALESFORCE_USERNAME_ACCOUNT2…), used by the sink examples"
+            },
+            {
+              "names": [
+                "--keystore"
+              ],
+              "argument": "KEYSTORE",
+              "description": "🔐 PKCS12 keystore (password confluent) holding the JWT private key and certificate\n\nDefault is connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks,\ndownloaded from the playground S3 bucket when missing (Confluent employees only)."
+            },
+            {
+              "names": [
+                "--generate-keystore"
+              ],
+              "argument": "",
+              "description": "🆕 Generate a new key pair when the keystore is missing\n\nIt is copied into every Salesforce example folder, so the examples use it."
+            },
+            {
+              "names": [
+                "--max-wait"
+              ],
+              "argument": "MAX_WAIT",
+              "description": "⏳ Max seconds to wait for the JWT bearer login to work after the deploy (default 600)\n\nDefault value: 600"
+            },
+            {
+              "names": [
+                "--dry-run"
+              ],
+              "argument": "",
+              "description": "🧪 Only render the metadata in /tmp/playground-salesforce-setup, deploy and store nothing"
+            },
+            {
+              "names": [
+                "--no-store"
+              ],
+              "argument": "",
+              "description": "🚫 Print the values instead of storing them with 'playground secrets set'"
+            }
+          ]
+        },
+        {
+          "name": "check",
+          "description": "🩺 Check that the stored Salesforce credentials work\n\nLogs in with the OAuth JWT bearer flow, exactly like a connector with\nsalesforce.grant.type=JWT_BEARER (stored SALESFORCE_USERNAME,\nSALESFORCE_CONSUMER_KEY_WITH_JWT, SALESFORCE_INSTANCE and the keystore),\nexplains a rejection, then checks that the org has MyPlatformEvent__e and\nChange Data Capture on Contact. Needs neither Docker nor the sf CLI.\n\nExits with 1 when something is missing.",
+          "usage": "playground salesforce check [OPTIONS]",
+          "options": [
+            {
+              "names": [
+                "--suffix"
+              ],
+              "argument": "SUFFIX",
+              "description": "🧩 Store the variables with this suffix, e.g. KDP_CDC gives SALESFORCE_USERNAME_KDP_CDC"
+            },
+            {
+              "names": [
+                "--account2"
+              ],
+              "argument": "",
+              "description": "2️⃣ Store the variables of the second org (SALESFORCE_USERNAME_ACCOUNT2…), used by the sink examples"
+            },
+            {
+              "names": [
+                "--keystore"
+              ],
+              "argument": "KEYSTORE",
+              "description": "🔐 PKCS12 keystore (password confluent) holding the JWT private key and certificate\n\nDefault is connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks,\ndownloaded from the playground S3 bucket when missing (Confluent employees only)."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "cloud-resources",
       "description": "☁️ What the playground left behind in your cloud accounts, and what it costs\n\nExamples that talk to a real cloud create real resources, and an\ninterrupted run leaves them behind. These commands show what is still\nalive and what you are being billed for:\n\n  cloud-resources aws list            resources still up, scoped to you\n  cloud-resources aws costs           spend over a range of dates\n  cloud-resources aws costs-history   spend per month over the last year\n\nThe same three exist for azure.\n\n🧹 Nothing is deleted here. To actually remove the resources, use\n   'playground cleanup-cloud-resources'.",
       "usage": "playground cloud-resources COMMAND",

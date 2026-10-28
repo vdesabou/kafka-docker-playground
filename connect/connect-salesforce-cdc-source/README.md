@@ -9,8 +9,7 @@ The connector authenticates with the OAuth JWT Bearer flow (`salesforce.grant.ty
 ## Prerequisites
 
 * A Salesforce account (see [Register a test account](#register-a-test-account))
-* An External Client App with the JWT Bearer flow enabled (see [OAuth with JWT Bearer Flow](#oauth-with-jwt-bearer-flow))
-* Change Data Capture enabled for `Contact` (see [Enable Change Data Capture](#enable-change-data-capture))
+* An External Client App with the JWT Bearer flow enabled, and Change Data Capture enabled for `Contact`: `playground salesforce setup` does both (see [Automated setup](#automated-setup)), or follow [OAuth with JWT Bearer Flow](#oauth-with-jwt-bearer-flow) and [Enable Change Data Capture](#enable-change-data-capture)
 * CP 6.0.0 or later (the keystore was created with JDK 11). With CP 8.x, connector version 2.0.29 or later.
 * `salesforce-confluent.keystore.jks` (password `confluent`) in this folder. If it is missing, the script tries to download it from the playground S3 bucket (Confluent employees only, with AWS credentials set).
 
@@ -42,6 +41,33 @@ playground run -f salesforce-cdc-source.sh
 3. Logs in with the sfdx CLI (JWT) and creates a random Contact in Salesforce.
 4. Verifies the change event is received with `playground topic consume --topic sfdc-cdc-contacts`.
 5. Deletes the Contact created by the test on exit.
+
+## Automated setup
+
+Once you have an account (see [Register a test account](#register-a-test-account)), one command configures it for all the Salesforce examples. It needs the [Salesforce CLI](https://developer.salesforce.com/tools/salesforcecli) (`sf`) on your machine:
+
+```bash
+playground salesforce setup
+```
+
+1. Opens the browser once to log in (`sf org login web`). Pass `--target-org <alias>` to use an org `sf` is already logged into.
+2. Deploys an External Client App `kdp_jwt` with the JWT Bearer flow and the certificate of `salesforce-confluent.keystore.jks`, pre-authorized for the profile of your user (no browser approval) and with IP restrictions relaxed, the Platform Event `MyPlatformEvent__e` with the text field `Message__c`, and Change Data Capture on `Contact`. Running it again on the same org changes nothing.
+3. Reads the consumer key back, waits until a JWT Bearer login works (a new app takes 2 to 10 minutes to be active), and stores `SALESFORCE_USERNAME`, `SALESFORCE_INSTANCE` and `SALESFORCE_CONSUMER_KEY_WITH_JWT` with `playground secrets set`.
+
+`SALESFORCE_PASSWORD` and `SALESFORCE_SECURITY_TOKEN` can't be read from Salesforce: store them with `playground secrets set SALESFORCE_PASSWORD` and `playground secrets set SALESFORCE_SECURITY_TOKEN` (see [Find your security token](#find-your-security-token)).
+
+| Flag | Use |
+| --- | --- |
+| `--account2` | the second org of the sink examples (`SALESFORCE_*_ACCOUNT2`) |
+| `--suffix KDP_CDC` | per-test variables (`SALESFORCE_USERNAME_KDP_CDC`…) |
+| `--instance-url https://test.salesforce.com` | a sandbox |
+| `--generate-keystore` | create a new key pair when `salesforce-confluent.keystore.jks` is missing (copied into every Salesforce example folder) |
+| `--dry-run` | only render the metadata in `/tmp/playground-salesforce-setup` |
+| `--no-store` | print the values instead of storing them |
+
+Then, at any time, `playground salesforce check` (same `--suffix` / `--account2`) logs in with the JWT Bearer flow exactly like the connector, explains a rejection, and checks that `MyPlatformEvent__e` and Change Data Capture on `Contact` are there. It needs neither Docker nor `sf`.
+
+The manual steps below do the same by hand.
 
 ## Register a test account
 
