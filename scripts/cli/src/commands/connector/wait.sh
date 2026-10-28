@@ -128,7 +128,14 @@ do
         then
             logerror "❌ $connector_type connector $connector is FAILED, not waiting for it to be RUNNING"
             set +e
-            playground connector status --connector "$connector"
+            if [ -n "$PG_SKIP_AUTO_DIAGNOSE" ]
+            then
+                playground connector status --connector "$connector"
+            else
+                # status with the trace, error digest, offsets and next steps, on the connect logs of the wait plus a
+                # margin for the creation. Best effort: the wait fails anyway
+                playground connector diagnose --connector "$connector" --since "$((elapsed + 120))s" --max-findings 5 --no-open
+            fi
             exit 1
         fi
 

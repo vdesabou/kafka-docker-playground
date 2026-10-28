@@ -5699,16 +5699,18 @@ subcommands:
       tasks are still\nRUNNING one --interval later, since a task is RUNNING before
       it\nprocesses its first record and can fail right after.\n\nWhen waiting for
       RUNNING, it fails right away if the connector or one of\nits tasks is FAILED,
-      since a failed task does not recover on its own.\nA connector RUNNING without
-      any task for 30 seconds (Replicator without\nmatching topic yet, JDBC source
-      without table) is accepted with a\nwarning. A Datagen task that failed with
-      \"Stopping connector: generated\nthe configured N number of messages\" (\"iterations\"
-      reached) is\ncompleted, not FAILED, and counts as RUNNING.\nFor the same reason,
-      --state FAILED is reached as soon as the connector\nor one of its tasks is FAILED
-      (the connector itself usually stays\nRUNNING when only a task fails).\n\n\U0001F393
-      Tip: 'connector create-or-update' already waits for RUNNING. Use\nit for another
-      state, or after 'connector create-or-update --no-wait'.\n\n\U0001F36A Deep dive:
-      https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n\U0001F3AC
+      since a failed task does not recover on its own,\nand runs 'playground connector
+      diagnose --no-open' on it: status with\nthe trace, digest of the connect errors
+      since the wait started, offsets,\nnext steps and HTML report (PG_SKIP_AUTO_DIAGNOSE=1
+      for the status only).\nA connector RUNNING without any task for 30 seconds (Replicator
+      without\nmatching topic yet, JDBC source without table) is accepted with a\nwarning.
+      A Datagen task that failed with \"Stopping connector: generated\nthe configured
+      N number of messages\" (\"iterations\" reached) is\ncompleted, not FAILED, and
+      counts as RUNNING.\nFor the same reason, --state FAILED is reached as soon as
+      the connector\nor one of its tasks is FAILED (the connector itself usually stays\nRUNNING
+      when only a task fails).\n\n\U0001F393 Tip: 'connector create-or-update' already
+      waits for RUNNING. Use\nit for another state, or after 'connector create-or-update
+      --no-wait'.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%8C-the-sink-fails-right-after-it-is-deployed"
     usage: playground connector wait [OPTIONS]
     options:
@@ -6962,16 +6964,18 @@ subcommands:
       while you iterate on a configuration.\n\nThe command then waits for the connector
       and all its tasks to be\nRUNNING, displays the connector status, and fails with
       the error if\nthey are not, so a broken config stops the example immediately
-      instead\nof failing silently later. When the script that runs is a reproduction\nmodel,
-      a connector that is not RUNNING is only reported as a warning,\nsince a reproduction
-      model often creates a failing connector on\npurpose. Use --wait to fail there
-      too, --no-wait to skip the wait.\n\nFully managed connectors are only waited
-      for with --wait.\n\n\U0001F393 Tip: add --validate to have the config checked
-      by the plugin before\nit is deployed, which reports every invalid property at
-      once.\n\nAn update shows the keys added, removed and changed compared to the\nrunning
-      config (secrets masked). The config can also be given in the\nREST API format
-      ({\"name\": ..., \"config\": {...}}, as returned by\nGET /connectors/<name>),
-      or as the path of a json file.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n\U0001F3AC
+      instead\nof failing silently later. A FAILED connector or task is reported with\n'playground
+      connector diagnose' (trace, error digest, offsets, next\nsteps and HTML report).
+      When the script that runs is a reproduction\nmodel, a connector that is not
+      RUNNING is only reported as a warning,\nsince a reproduction model often creates
+      a failing connector on\npurpose. Use --wait to fail there too, --no-wait to
+      skip the wait.\n\nFully managed connectors are only waited for with --wait.\n\n\U0001F393
+      Tip: add --validate to have the config checked by the plugin before\nit is deployed,
+      which reports every invalid property at once.\n\nAn update shows the keys added,
+      removed and changed compared to the\nrunning config (secrets masked). The config
+      can also be given in the\nREST API format ({\"name\": ..., \"config\": {...}},
+      as returned by\nGET /connectors/<name>), or as the path of a json file.\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%8C-the-sink-fails-right-after-it-is-deployed\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%8F%97%EF%B8%8F-deploy-a-fully-managed-connector-with-terraform"
     usage: playground connector create-or-update [JSON] [OPTIONS]

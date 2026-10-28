@@ -94,6 +94,9 @@ Gotchas:
   sink offsets are committed every `offset.flush.interval.ms` (60 s by default). Run it again a minute later.
 - The exit code doesn't reflect the connector state (0, even with a FAILED task; 1 only when no connector exists):
   read the output, or use `playground connector wait --state RUNNING` in a script.
+- **You often don't need to run it**: when `connector create-or-update` or `connector wait` find a FAILED connector
+  or task while waiting for RUNNING, they run `connector diagnose --no-open` themselves before failing
+  (`PG_SKIP_AUTO_DIAGNOSE=1` to get only the status).
 - **Each run writes a new report** (the date is in the name): run it twice and open both reports to compare the
   lag or the offsets.
 

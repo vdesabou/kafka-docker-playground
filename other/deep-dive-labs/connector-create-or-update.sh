@@ -69,7 +69,8 @@ lab_expect_contains "✅ connector broken-sink was successfully created"
 lab_expect_contains "❌ connector broken-sink is FAILED, not waiting for it to be RUNNING"
 lab_expect_contains "Couldn't find or create file '/does/not/exist/output.json' for FileStreamSinkTask"
 lab_expect_contains "Caused by: java.nio.file.NoSuchFileException: /does/not/exist/output.json"
-lab_expect_contains "🩺 for the error digest, the progress and the next steps, run: playground connector diagnose --connector broken-sink"
+lab_expect_contains "🩺 diagnosing connector broken-sink"
+lab_expect_contains "🔥 a task or the connector FAILED: read the trace above, then after a fix: playground connector restart --connector broken-sink"
 lab_expect_contains "❌ connector broken-sink is not RUNNING (use --no-wait to skip the wait)"
 playground connector delete -c broken-sink
 lab_run playground connector create-or-update -c broken-sink --no-wait << 'EOF'
