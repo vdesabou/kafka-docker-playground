@@ -343,7 +343,7 @@ issue and deliver it as a pull request linked to that issue.
   - Labels: `enhancement ✨` for features and `bug 🐛` for fixes, written exactly like that (emoji
     included). Add `cfk` if the change is specific to the cfk environment. Never use `new 🆕`,
     `CI failing 🔥` or `CI ignore ⏭️`: they are reserved for CI-generated issues.
-  - No milestone.
+  - Milestone: the milestone of the current month, `MM-YYYY` (for example `10-2026`): `gh issue create --milestone "$(date +%m-%Y)"`. If it doesn't exist yet, create it first: `gh api repos/vdesabou/kafka-docker-playground/milestones -f title="$(date +%m-%Y)"`.
   - Body: a short, standalone description of the problem and the change.
 - **Commit:** same title as the issue, ending with ` #<issue number>`. Commit only the files of the change:
   - never the private `reproduction-models` submodule
@@ -355,6 +355,6 @@ issue and deliver it as a pull request linked to that issue.
     you don't have write access to the upstream repository.
   - Open it with `gh pr create --base master`, using the issue title. The body must contain
     `Fixes #<issue number>`.
-  - Use the same labels as the issue, and no milestone.
+  - Use the same labels as the issue, and no milestone (only the issue has one).
 - **CI:** a new example only runs in CI once its directory is added to a 🚀 line of the `test_list` matrix
   in `.github/workflows/ci.yml` (see Testing).

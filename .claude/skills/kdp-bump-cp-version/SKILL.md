@@ -35,6 +35,11 @@ curl -s "https://hub.docker.com/v2/repositories/confluentinc/cp-server/tags?name
 
 Anything other than `200`: stop, the release is not fully published yet.
 
+The docs changelog feed of the line tells which patches are released (one feed per minor, from 7.4):
+`playground cp-changelog --json | jq -r '.latest'` prints the newest CP version with a changelog, probing the
+next minor and major lines (`https://docs.confluent.io/platform/<x.y>/release-notes/changelog.xml`). A `NEW`
+newer than that is not documented yet: wait for its feed, the release is not announced.
+
 The Kafka clients built by some examples (`-Dkafka.client.tag=$KAFKA_CLIENT_TAG`) need **no change**:
 `set_kafka_client_tag` in `scripts/cli/src/lib/utils_function.sh` derives the Apache Kafka version from the CP
 version (CP 8.y = AK 4.y…), and falls back to the newest published `X.Y.0` when Maven Central doesn't have it yet.
@@ -77,7 +82,15 @@ samples recorded on that version, `--cp-version 7.9.0 --cp-version $OLD` example
 
 Then review what the new version changes for the playground, and fix it in the same PR when needed:
 
-- the release notes of `NEW` (removed or renamed configs, JDK change, KRaft / ZooKeeper changes),
+- the release notes of `NEW` (removed or renamed configs, JDK change, KRaft / ZooKeeper changes). The commits of
+  the community components between the two versions:
+
+  ```bash
+  playground cp-changelog --from $OLD --to $NEW --grep "remov|deprecat|rename|default|jdk|java|zookeeper|kraft"   # what can break examples
+  playground cp-changelog --from $OLD --to $NEW --security                                                       # for the PR body
+  ```
+
+  Confluent Server, Control Center and Connect enterprise changes are not in the feeds: read the release notes page for those,
 - version gates written for the previous line, such as `version_gt $TAG_BASE "8.2.99"` in `utils_function.sh` and
   `scripts/utils.sh`. They use "greater than", so a newer version is already on the right side: only check gates with an upper bound,
 - `CFK_VERSION` in `environment/cfk/start.sh`: check that this CFK version supports CP `NEW` (CFK release notes),
@@ -102,6 +115,7 @@ Ask before running: `playground run` stops the running environment. Give the use
 ## 4. Issue and PR
 
 Ask the user first (repo `CLAUDE.md`, "Contributing"). Title `👾⬆️ Upgrade playground to default CP <NEW>`,
-label `enhancement ✨`, no milestone. Commit only the files above plus the regenerated `scripts/cli/playground`
+label `enhancement ✨`, milestone of the current month on the issue (`--milestone "$(date +%m-%Y)"`), none on the PR. In the PR body, summarize the changes from `cp-changelog --from $OLD --to $NEW`
+(count per component, `--security` highlights, anything that made you fix an example), with the link of the feed page. Commit only the files above plus the regenerated `scripts/cli/playground`
 (never `reproduction-models`). After the merge, the nightly CI runs the whole matrix on `NEW` and
 `update-readme` refreshes the badges: watch the 🔥 issues of the next nightly for regressions specific to `NEW`.

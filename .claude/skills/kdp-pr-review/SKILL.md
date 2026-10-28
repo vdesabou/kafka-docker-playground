@@ -80,7 +80,7 @@ anything with customer data.
 - title with an emoji prefix (`🐛` bug, `🧠` CLI, `🧹` cleanup, `👾` new FM example, `⭐` big feature),
   the commit title ends with ` #<issue>`, the PR body contains `Fixes #<issue>`
 - labels `bug 🐛` / `enhancement ✨` (+ `cfk` / `podman`), never `new 🆕`, `CI failing 🔥`,
-  `CI ignore ⏭️`; no milestone
+  `CI ignore ⏭️`; the issue has the `MM-YYYY` milestone of its month, the PR has none
 - the PR body says what was verified and what was not
 
 ## 3. Report
