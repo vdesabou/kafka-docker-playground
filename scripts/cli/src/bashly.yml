@@ -4719,6 +4719,7 @@ commands:
 
       👉 Check documentation https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script
 
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-oracle-cdc
       🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%85%BE%EF%B8%8F-oracle-xstream-cdc-lags-or-is-idle
     flags: &analyze_oracle_xstream_report_flags
       - long: --file
@@ -9598,6 +9599,8 @@ commands:
 
       Only available when an oracle container is running. To analyze a report
       (also one sent by a customer), use 'playground analyze oracle-xstream-report'.
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-oracle-cdc
     filters:
     - oracle_running
     commands:
@@ -9613,6 +9616,8 @@ commands:
         analyzes it in one go.
 
         See https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script
+
+        🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-oracle-cdc
     - name: debug
       help: |
         🐞 Execute various SQL commands to debug xstream components
@@ -9630,6 +9635,8 @@ commands:
         Read it top to bottom when a connector is RUNNING but idle: a capture
         process not in CAPTURING CHANGES, or an SCN that never moves, tells
         you the problem is in the database and not in the connector.
+
+        🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-oracle-cdc
 
   - name: smt
     help: |-

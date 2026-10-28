@@ -27,6 +27,7 @@ shows up as a failing test: fix the CLI, or update the page and its lab together
 | `fully-managed.sh` | [Fully managed connectors (Confluent Cloud)](https://kafka-docker-playground.io/#/deep-dive-fully-managed) — skipped without Confluent Cloud credentials |
 | `topic-administration.sh` | [Topic administration](https://kafka-docker-playground.io/#/deep-dive-topic-administration) |
 | `connector-benchmark.sh` | [`connector benchmark`](https://kafka-docker-playground.io/#/deep-dive-connector-benchmark) |
+| `oracle-cdc.sh` | [Oracle CDC: LogMiner and XStream](https://kafka-docker-playground.io/#/deep-dive-oracle-cdc) (runs the Oracle XStream example itself, about 10 minutes; the LogMiner connector is not replayed) |
 | `secrets.sh` | [Credentials and the 1Password setup](https://kafka-docker-playground.io/#/deep-dive-secrets) (no container, a throwaway store with the `file` backend; the 1Password steps are not replayed) |
 
 The helpers shared by the scripts are in `lab-utils.bash` (`lab_run`, `lab_expect_contains`, `lab_expect_exit`…).
