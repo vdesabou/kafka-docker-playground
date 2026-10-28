@@ -135,7 +135,8 @@ if [[ ! -n "$display_only_total_cost" ]]
 then
     log "💰 Overall costs by service:"
 fi
-# also grouped by usage type, for the HTML report of costs-history: with two group-by, groups can come on several pages
+# also grouped by usage type, with the usage quantity (GB, requests...), for the HTML report of costs-history: with two
+# group-by, groups can come on several pages
 cost_data=""
 next_page_token=()
 while true
@@ -143,7 +144,7 @@ do
     page=$(aws ce get-cost-and-usage \
         --time-period Start=$start_date,End=$end_date \
         --granularity MONTHLY \
-        --metrics "UnblendedCost" \
+        --metrics "UnblendedCost" "UsageQuantity" \
         --group-by Type=DIMENSION,Key=SERVICE Type=DIMENSION,Key=USAGE_TYPE \
         --filter '{
             "Tags": {

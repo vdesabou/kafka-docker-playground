@@ -1,0 +1,57 @@
+{
+ "GroupDefinitions": [
+  {
+   "Type": "DIMENSION",
+   "Key": "SERVICE"
+  },
+  {
+   "Type": "DIMENSION",
+   "Key": "USAGE_TYPE"
+  }
+ ],
+ "ResultsByTime": [
+  {
+   "TimePeriod": {
+    "Start": "2025-10-28",
+    "End": "2025-11-28"
+   },
+   "Total": {},
+   "Groups": [
+    {
+     "Keys": [
+      "Amazon Elastic Compute Cloud - Compute",
+      "EUW3-BoxUsage:t3.2xlarge"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "33.9840000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "90.0000000000",
+       "Unit": "Hrs"
+      }
+     }
+    },
+    {
+     "Keys": [
+      "Amazon Virtual Private Cloud",
+      "EUW3-PublicIPv4:InUseAddress"
+     ],
+     "Metrics": {
+      "UnblendedCost": {
+       "Amount": "0.4500000000",
+       "Unit": "USD"
+      },
+      "UsageQuantity": {
+       "Amount": "90.0000000000",
+       "Unit": "Hrs"
+      }
+     }
+    }
+   ],
+   "Estimated": false
+  }
+ ],
+ "DimensionValueAttributes": []
+}

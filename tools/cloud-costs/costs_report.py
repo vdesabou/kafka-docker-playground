@@ -7,7 +7,9 @@ still billing flagged), per environment and line type (ccloud) or resource group
 --data-dir holds one raw response of the cost API per month, named <start date>_<end date>.json:
 
   ccloud  confluent billing cost list --output json: one line per day, product, resource and line type
-  aws     aws ce get-cost-and-usage, grouped by SERVICE and USAGE_TYPE (resources tagged cflt_managed_id=<user>)
+  aws     aws ce get-cost-and-usage, grouped by SERVICE and USAGE_TYPE, cost and usage quantity (resources tagged
+          cflt_managed_id=<user>); plus s3-buckets.json, the S3 buckets with that tag (save_aws_s3_buckets), for the
+          Amazon S3 details: cost and volume per kind of S3 usage, per month and per destination, the buckets, hints
   azure   Cost Management query, grouped by ServiceName and ResourceId (resources tagged cflt_managed_id=<user>)
 
 A month without file, or with a file that cannot be read, is shown as "no data" (the query failed).
@@ -102,6 +104,9 @@ def parse_aws(data, month: dict) -> List[dict]:
                 "price": "",
                 "amount": amount(g.get("Metrics", {}).get("UnblendedCost", {}).get("Amount")),
                 "discount": 0.0,
+                # GB, GB-Month, Requests... (files saved before UsageQuantity was asked for have none)
+                "quantity": amount(g.get("Metrics", {}).get("UsageQuantity", {}).get("Amount")),
+                "unit": g.get("Metrics", {}).get("UsageQuantity", {}).get("Unit") or "",
             })
     return out
 
@@ -244,7 +249,255 @@ def heat(v: float, mx: float) -> str:
     return f" class='heat' style='background:rgba(42,120,214,{0.06 + 0.5 * v / mx:.2f})'"
 
 
-def build(cloud: str, user: str, months: List[dict]) -> str:
+# ── Amazon S3 details (aws) ──────────────────────────────────────────────────
+
+S3_SERVICE = "Amazon Simple Storage Service"
+
+# region codes of the AWS usage types (EU is the old code of eu-west-1)
+AWS_REGIONS = {
+    "USE1": "us-east-1", "USE2": "us-east-2", "USW1": "us-west-1", "USW2": "us-west-2", "CAN1": "ca-central-1",
+    "CAN2": "ca-west-1", "EU": "eu-west-1", "EUW2": "eu-west-2", "EUW3": "eu-west-3", "EUC1": "eu-central-1",
+    "EUC2": "eu-central-2", "EUN1": "eu-north-1", "EUS1": "eu-south-1", "EUS2": "eu-south-2", "APN1": "ap-northeast-1",
+    "APN2": "ap-northeast-2", "APN3": "ap-northeast-3", "APS1": "ap-southeast-1", "APS2": "ap-southeast-2",
+    "APS3": "ap-south-1", "APS4": "ap-southeast-3", "APS5": "ap-south-2", "APS6": "ap-southeast-4", "APE1": "ap-east-1",
+    "SAE1": "sa-east-1", "MES1": "me-south-1", "MEC1": "me-central-1", "AFS1": "af-south-1", "ILC1": "il-central-1",
+    "UGW1": "us-gov-west-1", "UGE1": "us-gov-east-1",
+}
+
+# <source>-<destination>-AWS-Out-Bytes (USE1-USW2-AWS-Out-Bytes), and the region prefix of the other usage types
+S3_TRANSFER_RE = re.compile(r"^(?:([A-Z]+\d*)-)?([A-Z]+\d*)-AWS-(Out|In)-Bytes$")
+S3_PREFIX_RE = re.compile(r"^([A-Z]+\d*)-(.+)$")
+
+# storage class tokens of TimedStorage-<token>-ByteHrs, Retrieval-<token>, Requests-<token>-Tier1
+S3_CLASSES = [("GlacierByteHrs", "GLACIER"), ("GDA", "DEEP_ARCHIVE"), ("GIR", "GLACIER_IR"), ("SIA", "STANDARD_IA"),
+              ("ZIA", "ONEZONE_IA"), ("INT", "INTELLIGENT_TIERING"), ("RRS", "REDUCED_REDUNDANCY"), ("XZ", "EXPRESS_ONEZONE")]
+
+S3_KINDS = [  # key, label, what it is
+    ("storage", "💾 Storage", "data stored, per storage class"),
+    ("requests", "📨 Requests", "PUT, COPY, POST, LIST (Tier1), GET and the others (Tier2)"),
+    ("retrieval", "📤 Retrieval fee", "paid per GB read from Standard-IA, One Zone-IA and Glacier"),
+    ("internet", "🌐 Data sent to the Internet", "downloads from outside AWS (laptops, GitHub-hosted runners...)"),
+    ("region", "🔀 Data sent to another AWS region", "downloads from EC2, CI runners... running in another region"),
+    ("regional", "🏢 Data within the region", "between availability zones"),
+    ("in", "📥 Data received", "uploads, free"),
+    ("other", "🧩 Other", "early deletion, monitoring, inventory, bucket fees..."),
+]
+S3_KIND_LABEL = {k: label for k, label, _ in S3_KINDS}
+S3_READ_KINDS = ("retrieval", "internet", "region")
+
+
+def region_name(code: str) -> str:
+    return AWS_REGIONS.get(code, code)
+
+
+def storage_class(usage: str) -> str:
+    return next((name for token, name in S3_CLASSES if token in usage), "STANDARD")
+
+
+def s3_usage(usage: str) -> dict:
+    """Kind of an S3 usage type, its plain label, and for data sent out the destination ('Internet' or a region)"""
+    m = S3_TRANSFER_RE.match(usage)
+    if m:
+        src, dst = region_name(m.group(1) or "USE1"), region_name(m.group(2))
+        if m.group(3) == "In":
+            return {"kind": "in", "label": f"received from {dst} in {src}", "dest": ""}
+        return {"kind": "region", "label": f"{src} → {dst}", "dest": dst, "src": src}
+    p = S3_PREFIX_RE.match(usage)
+    region, rest = (region_name(p.group(1)), p.group(2)) if p else ("us-east-1", usage)
+    if rest.startswith("TimedStorage"):
+        return {"kind": "storage", "label": f"{storage_class(rest)} in {region}", "dest": ""}
+    if rest.startswith("Requests"):
+        tier = rest.rsplit("-", 1)[-1]
+        cls = storage_class(rest)
+        return {"kind": "requests", "label": f"{tier}{'' if cls == 'STANDARD' else ' ' + cls} in {region}", "dest": ""}
+    if rest.startswith("Retrieval"):
+        return {"kind": "retrieval", "label": f"{storage_class(rest)} in {region}", "dest": ""}
+    if rest == "DataTransfer-Out-Bytes":
+        return {"kind": "internet", "label": f"{region} → Internet", "dest": "Internet", "src": region}
+    if rest == "DataTransfer-In-Bytes":
+        return {"kind": "in", "label": f"from the Internet in {region}", "dest": ""}
+    if rest.startswith("DataTransfer-Regional"):
+        return {"kind": "regional", "label": f"within {region}", "dest": ""}
+    return {"kind": "other", "label": usage, "dest": ""}
+
+
+def fmt_quantity(q: float, unit: str) -> str:
+    if not q:
+        return "-"
+    if unit == "GB":
+        return f"{q / 1024:,.1f} TB" if q >= 1024 else f"{q:,.1f} GB" if q >= 1 else f"{q * 1024:,.1f} MB" if q * 1024 >= 0.1 else "<0.1 MB"
+    if unit == "GB-Month":
+        return f"{q:,.1f} GB-month"
+    if unit == "Requests":
+        return f"{q / 1e6:,.1f}M requests" if q >= 1e6 else f"{q / 1e3:,.1f}k requests" if q >= 1e3 else f"{q:,.0f} requests"
+    return f"{q:,.2f} {unit}".strip()
+
+
+def pct(v: float, total: float) -> str:
+    share = 100 * v / total if total else 0
+    return f"{share:.1f}%" if share < 1 else f"{share:.0f}%"
+
+
+def quantity_of(records: List[dict]) -> str:
+    """Volume of records of one kind: the sum per unit (a kind can mix units, other)"""
+    per_unit: Dict[str, float] = defaultdict(float)
+    for r in records:
+        per_unit[r.get("unit", "")] += r.get("quantity", 0.0)
+    return ", ".join(fmt_quantity(q, u) for u, q in per_unit.items() if q) or "-"
+
+
+def s3_section(months: List[dict], buckets: Optional[List[dict]], user: str) -> str:
+    """Card with the S3 costs per kind of usage, per month and per destination, the tagged buckets and hints; '' without S3 cost"""
+    for m in months:
+        for r in m["records"]:
+            if r["category"] == S3_SERVICE and "kind" not in r:
+                r.update(s3_usage(r["item"]))
+    s3 = [r for m in months for r in m["records"] if r["category"] == S3_SERVICE]
+    s3_total = sum(r["amount"] for r in s3)
+    if round(s3_total, 2) <= 0:
+        return ""
+    current = months[-1]
+    cur = [r for r in current["records"] if r["category"] == S3_SERVICE]
+    by_kind = sum_by(s3, "kind")
+    has_quantity = any(r.get("quantity") for r in s3)
+
+    # hints
+    hints = []
+    read_cost = sum(by_kind.get(k, 0.0) for k in S3_READ_KINDS)
+    storage_cost = by_kind.get("storage", 0.0)
+    if read_cost > 0.5 * s3_total:
+        hints.append({"severity": "HIGH", "text": f"{100 * read_cost / s3_total:.0f}% of the S3 cost ({money(read_cost)}) comes from reading the data "
+                                                  f"(data sent out and retrieval fees), storage is only {pct(storage_cost, s3_total)} "
+                                                  f"({money(storage_cost)}): something downloads it, deleting objects would barely change the bill."})
+    dests = sum_by([r for r in s3 if r["kind"] in ("internet", "region")], lambda r: (r["dest"], r.get("src", "")))
+    for (dest, src), v in ranked(dests)[:2]:
+        if v < 0.1 * s3_total:
+            break
+        gb = sum(r.get("quantity", 0.0) for r in s3 if r["kind"] in ("internet", "region") and r["dest"] == dest and r.get("src") == src)
+        volume = f"{fmt_quantity(gb, 'GB')} " if gb else ""
+        if dest == "Internet":
+            hints.append({"severity": "MEDIUM", "text": f"{volume}sent from {src} to the Internet ({money(v)}): downloads from outside AWS, "
+                                                        "laptops or GitHub-hosted runners (they run on Azure)."})
+        else:
+            hints.append({"severity": "MEDIUM", "text": f"{volume}sent from {src} to {dest} ({money(v)}): something running in {dest} "
+                                                        f"(EC2, CI runners...) downloads from the bucket; a copy in {dest}, or a cache on its side, "
+                                                        "would remove it."})
+    retrieval = by_kind.get("retrieval", 0.0)
+    if retrieval > max(storage_cost, 0.05 * s3_total):
+        ia = [b["name"] for b in buckets or [] if any("IA" in t for t in b.get("lifecycle", []))]
+        hints.append({"severity": "MEDIUM", "text": f"Retrieval fees ({money(retrieval)}) cost more than the storage ({money(storage_cost)}): the objects are "
+                                                    "read too often for an infrequent access class. STANDARD or INTELLIGENT_TIERING have no retrieval fee"
+                                                    + (f"; lifecycle rule moving objects to an IA class on {', '.join(ia)}." if ia else ".")})
+    if buckets is not None and read_cost > 0.1 * s3_total:
+        no_log = [b["name"] for b in buckets if not b.get("logging_target") and sum(s.get("bytes", 0) for s in b.get("storage", [])) > 1e9]
+        if no_log:
+            hints.append({"severity": "LOW", "text": f"Server access logging is off on {', '.join(no_log)}: nothing records who downloads. "
+                                                     "Turn it on (aws s3api put-bucket-logging) to see the requester and source IP of each GET."})
+    if buckets is None:
+        hints.append({"severity": "INFO", "text": f"The S3 buckets tagged cflt_managed_id={user} could not be listed (resourcegroupstaggingapi, CloudWatch)."})
+
+    parts = [rh.findings_html(rh.sort_findings(hints))] if hints else []
+
+    # per kind, 12 months and current period
+    rows = []
+    for k, label, what in S3_KINDS:
+        recs = [r for r in s3 if r["kind"] == k]
+        if not recs or round(sum(r["amount"] for r in recs), 4) == 0 and k != "in":
+            continue
+        crecs = [r for r in cur if r["kind"] == k]
+        v = sum(r["amount"] for r in recs)
+        row = [f"{e(label)}<div class='muted' style='font-size:.75rem'>{e(what)}</div>"]
+        if has_quantity:
+            row.append(e(quantity_of(recs)))
+        row += [money(v), f"{100 * v / s3_total:.1f}%"]
+        if has_quantity:
+            row.append(e(quantity_of(crecs)))
+        row.append(money(sum(r["amount"] for r in crecs)))
+        rows.append(row)
+    headers = ["Kind of usage"] + (["Volume"] if has_quantity else []) + ["Cost", "Share"] \
+        + (["Volume, current period"] if has_quantity else []) + ["Cost, current period"]
+    parts.append("<h3>Per kind of usage <span class='muted'>(last 12 months, and current period)</span></h3>"
+                 + rh.table(headers, rows, num=tuple(range(1, len(headers)))))
+
+    # kind x month
+    kinds = [k for k, _ in ranked(by_kind)]
+    per_month = [sum_by([r for r in m["records"] if r["category"] == S3_SERVICE], "kind") for m in months]
+    mx = max((v for pm in per_month for v in pm.values()), default=0)
+    month_headers = [f"<span title='{e(range_label(m))}'>{e(short_label(m))}</span>" for m in months]
+    rows = []
+    for k in kinds:
+        row = [e(S3_KIND_LABEL[k])]
+        for m, pm in zip(months, per_month):
+            v = pm.get(k, 0.0)
+            if not round(v, 4):
+                row.append("<span class='muted'>-</span>")
+                continue
+            q = quantity_of([r for r in m["records"] if r["category"] == S3_SERVICE and r["kind"] == k])
+            row.append(f"<span{heat(v, mx)} title='{e(q)}'>{money(v)}</span>")
+        rows.append(row)
+    parts.append("<h3>Per kind of usage and per month <span class='muted'>(hover a cell for the volume)</span></h3>"
+                 + rh.table(["Kind of usage"] + month_headers, rows, num=tuple(range(1, len(months) + 1))))
+
+    # data sent out, per destination
+    out_recs = [r for r in s3 if r["kind"] in ("internet", "region")]
+    if out_recs:
+        rows = []
+        for (dest, src), v in ranked(sum_by(out_recs, lambda r: (r["dest"], r.get("src", ""))))[:15]:
+            recs = [r for r in out_recs if r["dest"] == dest and r.get("src") == src]
+            crecs = [r for r in recs if r in cur]
+            row = [e(src), e(dest)]
+            if has_quantity:
+                row.append(e(quantity_of(recs)))
+            row.append(money(v))
+            if has_quantity:
+                row.append(e(quantity_of(crecs)))
+            row.append(money(sum(r["amount"] for r in crecs)))
+            rows.append(row)
+        headers = ["From", "To"] + (["Volume"] if has_quantity else []) + ["Cost"] \
+            + (["Volume, current period"] if has_quantity else []) + ["Cost, current period"]
+        parts.append("<h3>Data sent out, per destination <span class='muted'>(last 12 months, and current period)</span></h3>"
+                     + rh.table(headers, rows, num=tuple(range(2, len(headers)))))
+
+    # top usage types, with their plain meaning
+    rows = []
+    usage_tot = sum_by(s3, "item")
+    for usage, v in ranked(usage_tot)[:15]:
+        recs = [r for r in s3 if r["item"] == usage]
+        row = [f"<span class='mono' style='word-break:normal'>{e(usage)}</span>", e(S3_KIND_LABEL[recs[0]["kind"]]), e(recs[0]["label"])]
+        if has_quantity:
+            row.append(e(quantity_of(recs)))
+        row += [money(v), f"{100 * v / s3_total:.1f}%"]
+        rows.append(row)
+    headers = ["Usage type", "Kind", "Meaning"] + (["Volume"] if has_quantity else []) + ["Cost", "Share"]
+    parts.append("<h3>Top usage types <span class='muted'>(last 12 months)</span></h3>"
+                 + rh.table(headers, rows, num=tuple(range(3, len(headers)))))
+
+    # buckets
+    if buckets:
+        rows = []
+        for b in sorted(buckets, key=lambda b: -sum(s.get("bytes", 0) for s in b.get("storage", []))):
+            storage = b.get("storage", [])
+            size = sum(s.get("bytes", 0) for s in storage)
+            classes = ", ".join(f"{s['type'].replace('Storage', '')}: {rh.fmt_bytes(s['bytes'])}" for s in sorted(storage, key=lambda s: -s.get("bytes", 0)) if s.get("bytes"))
+            objects = f"{int(b['objects']):,}" if b.get("objects") is not None else "-"
+            logging = (f"✅ to {e(b['logging_target'])}" if b.get("logging_target") else "❌ off")
+            rows.append([f"<span class='mono' style='word-break:normal'>{e(b['name'])}</span>", e(b.get("region", "")),
+                         rh.fmt_bytes(size) if size else "<span class='muted'>empty</span>", e(classes or "-"), objects, logging,
+                         e(", ".join(b.get("lifecycle", [])) or "-")])
+        parts.append(f"<h3>{len(buckets)} bucket{'s' if len(buckets) > 1 else ''} tagged cflt_managed_id={e(user)} "
+                     "<span class='muted'>(size from the daily CloudWatch metrics)</span></h3>"
+                     + rh.table(["Bucket", "Region", "Size", "Per storage class", "Objects", "Access logging", "Lifecycle"], rows, num=(2, 4)))
+    elif buckets is not None:
+        parts.append(f"<p class='muted'>No S3 bucket tagged cflt_managed_id={e(user)} found.</p>")
+    parts.append("<p class='muted' style='font-size:.8rem;margin-top:8px'>Cost Explorer has no cost per bucket for this account: "
+                 "it needs the resource-level data, an opt-in of the payer account.</p>")
+
+    return rh.card(f"🪣 Amazon S3 details <span class='muted'>({money(s3_total)} over the last 12 months, "
+                   f"{100 * s3_total / max(sum(r['amount'] for m in months for r in m['records']), 0.01):.0f}% of the total)</span>",
+                   "".join(parts))
+
+
+def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict]] = None) -> str:
     lab = LABELS[cloud]
     today = date.today()
     records = [r for m in months for r in m["records"]]
@@ -357,6 +610,9 @@ def build(cloud: str, user: str, months: List[dict]) -> str:
         body.append(rh.card(f"🗓️ {lab['categories'].capitalize()} per month",
                             rh.table(headers, rows, num=tuple(range(1, len(months) + 2)))))
 
+        if cloud == "aws":
+            body.append(s3_section(months, buckets, user))
+
         if cloud == "ccloud" and billing_now:
             last_cost = sum_by([r for r in records if r["day"] == last_day], lambda r: r["item_id"] or r["item"])
             info = {}
@@ -463,8 +719,15 @@ def main() -> int:
     ap.add_argument("--html-out", required=True)
     a = ap.parse_args()
     months = fill_missing_months(load_months(a.cloud, a.data_dir))
+    # aws: the S3 buckets tagged cflt_managed_id=<user>, saved by costs-history (None: not listed)
+    buckets = None
+    try:
+        with open(os.path.join(a.data_dir, "s3-buckets.json"), encoding="utf-8") as fh:
+            buckets = json.load(fh)
+    except (OSError, ValueError):
+        pass
     with open(a.html_out, "w", encoding="utf-8") as fh:
-        fh.write(build(a.cloud, a.user, months))
+        fh.write(build(a.cloud, a.user, months, buckets if isinstance(buckets, list) else None))
     return 0
 
 

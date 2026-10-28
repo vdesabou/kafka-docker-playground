@@ -1,0 +1,42 @@
+[
+ {
+  "name": "kdp-dummy-artifacts",
+  "region": "us-east-1",
+  "storage": [
+   {
+    "type": "StandardIAStorage",
+    "bytes": 88046511104.0
+   },
+   {
+    "type": "StandardStorage",
+    "bytes": 161061273.0
+   }
+  ],
+  "objects": 412.0,
+  "logging_target": null,
+  "lifecycle": [
+   "STANDARD_IA after 30 days"
+  ]
+ },
+ {
+  "name": "kdp-dummy-sink-tests",
+  "region": "eu-west-3",
+  "storage": [
+   {
+    "type": "StandardStorage",
+    "bytes": 322122547.0
+   }
+  ],
+  "objects": 183406.0,
+  "logging_target": null,
+  "lifecycle": []
+ },
+ {
+  "name": "kdp-dummy-empty",
+  "region": "eu-west-1",
+  "storage": [],
+  "objects": null,
+  "logging_target": null,
+  "lifecycle": []
+ }
+]

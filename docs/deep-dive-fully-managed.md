@@ -171,7 +171,11 @@ Gotchas:
   per month and per day, per product, environment and line type, the resources still billing (a cost on each of the last 3
   days with data, with a monthly estimate) and the details of each month. `playground run` of a `ccloud` example prints its
   link at the end (`--sample ccloud_dummy` to try it on dummy data); `cloud-resources aws|azure costs-history` write the
-  same report for the AWS / Azure resources of the playground.
+  same report for the AWS / Azure resources of the playground. When S3 costs something, the AWS one adds the Amazon S3
+  details: cost and volume of each kind of S3 usage (storage, requests, retrieval fees, data sent to the Internet or to
+  another region), per month and per destination, the tagged buckets (size, access logging, lifecycle) and hints
+  (`cloud-resources aws costs-history --sample aws_dummy`). There is no cost per bucket: Cost Explorer needs the
+  resource-level data of the payer account for that.
 - **`playground stop` deletes the cluster the playground created**, with its topics and connectors, and keeps
   `ENVIRONMENT` / `CLUSTER_NAME` you exported. Run it in the `ccloud/fm-*` folder (its `stop.sh` calls
   `maybe_delete_ccloud_environment`).
