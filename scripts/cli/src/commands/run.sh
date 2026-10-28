@@ -2234,6 +2234,11 @@ function cleanup {
     playground connector status
   fi
 
+  if [ -z "$GITHUB_RUN_NUMBER" ]
+  then
+    display_newer_cp_patch_hint
+  fi
+
   playground open-docs --only-show-url
 
     if [ -z "$GITHUB_RUN_NUMBER" ]

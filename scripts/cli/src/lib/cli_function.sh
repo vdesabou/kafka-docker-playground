@@ -1933,7 +1933,14 @@ function get_tag_list_with_fzf() {
     fi
   fi
 
-  res=$(cat $root_folder/scripts/cli/$txt_file | sed '1!G;h;$!d' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🎯" --header="select cp version" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
+  # changes of the selected version, from the docs.confluent.io changelog feeds (7.4 onwards)
+  fzf_option_preview=()
+  if command -v python3 > /dev/null 2>&1
+  then
+    fzf_option_preview=(--preview "python3 -I '$root_folder/tools/cp-changelog/cp_changelog.py' --version {1} --format text 2>&1")
+  fi
+
+  res=$(cat $root_folder/scripts/cli/$txt_file | sed '1!G;h;$!d' | fzf -i --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --cycle --prompt="🎯" --header="select cp version" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer "${fzf_option_preview[@]}");echo "$cur@$res"
 }
 
 function get_any_files_with_fzf() {
@@ -7014,4 +7021,41 @@ function run_log_finish () {
     done
   fi
   log "📄 masked log of this run (${masked:-0} secrets masked), to share with a colleague: $run_log_file"
+}
+
+# end of playground run: tell when a newer patch of the running Confluent Platform version is published
+function display_newer_cp_patch_hint () {
+  if ! command -v python3 > /dev/null 2>&1
+  then
+    return
+  fi
+  current_cp_version=""
+  for container in broker connect
+  do
+    current_cp_version=$(docker inspect -f '{{.Config.Image}}' $container 2> /dev/null | cut -d ":" -f 2)
+    if [ -n "$current_cp_version" ]
+    then
+      break
+    fi
+  done
+  # official x.y.z tags only (no custom or nightly images)
+  if [[ ! "$current_cp_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+  then
+    return
+  fi
+  changelog_json=$(python3 -I "$root_folder/tools/cp-changelog/cp_changelog.py" --from "$current_cp_version" --same-line 2> /dev/null)
+  if [ $? -ne 0 ] || [ -z "$changelog_json" ] || [ "$(echo "$changelog_json" | jq -r '.up_to_date')" == "true" ]
+  then
+    return
+  fi
+  newer_cp_version=$(echo "$changelog_json" | jq -r '.versions[0].version // empty')
+  if [ -z "$newer_cp_version" ]
+  then
+    return
+  fi
+  nb_changes=$(echo "$changelog_json" | jq '[.versions[].changes | length] | add // 0')
+  nb_security=$(echo "$changelog_json" | jq '[.versions[].changes[] | select(.security)] | length')
+  log "📢 Confluent Platform $newer_cp_version is published (you run $current_cp_version): $nb_changes change(s), $nb_security security related"
+  log "📜 To see them: playground cp-changelog --from $current_cp_version --to $newer_cp_version (--security for the security ones only)"
+  log "🔄 To update: playground update-version --tag $newer_cp_version"
 }
