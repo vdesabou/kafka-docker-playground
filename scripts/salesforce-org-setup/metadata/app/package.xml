@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>@@APP_NAME@@</members>
+        <name>ExternalClientApplication</name>
+    </types>
+    <types>
+        <members>@@APP_NAME@@_oauth</members>
+        <name>ExtlClntAppOauthSettings</name>
+    </types>
+    <types>
+        <members>@@APP_NAME@@_glbloauth</members>
+        <name>ExtlClntAppGlobalOauthSettings</name>
+    </types>
+    <types>
+        <members>MyPlatformEvent__e</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>ChangeEvents_ContactChangeEvent</members>
+        <name>PlatformEventChannelMember</name>
+    </types>
+    <version>66.0</version>
+</Package>

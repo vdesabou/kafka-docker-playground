@@ -7120,3 +7120,172 @@ function display_newer_cp_patch_hint () {
   log "📜 To see them: playground cp-changelog --from $current_cp_version --to $newer_cp_version (--security for the security ones only)"
   log "🔄 To update: playground update-version --tag $newer_cp_version"
 }
+
+# playground salesforce setup|check: the org is driven with the Salesforce CLI (sf) installed on the
+# host. The sfdx-cli image of the examples is too old to know the External Client App metadata types,
+# and 'sf org login web' needs the host browser anyway.
+function salesforce_setup_require_tools () {
+  if ! command -v sf > /dev/null 2>&1
+  then
+    logerror "❌ the Salesforce CLI (sf) is not installed"
+    logerror "   install it with: npm install --global @salesforce/cli (or see https://developer.salesforce.com/tools/salesforcecli)"
+    exit 1
+  fi
+  for tool in openssl curl jq
+  do
+    if ! command -v $tool > /dev/null 2>&1
+    then
+      logerror "❌ $tool is not installed"
+      exit 1
+    fi
+  done
+}
+
+# Sets sf_username, sf_instance_url and sf_org_id from an org the host sf CLI is logged into.
+function salesforce_setup_resolve_org () {
+  target_org="$1"
+  org_json=$(sf org display --target-org "$target_org" --json 2> /dev/null) || true
+  if [ "$(echo "$org_json" | jq -r '.status // 1')" != "0" ]
+  then
+    logerror "❌ the Salesforce CLI is not logged into org $target_org"
+    echo "$org_json" | jq -r '.message // empty' >&2
+    logerror "   run without --target-org to log in with the browser, or log in first with: sf org login web --alias $target_org"
+    exit 1
+  fi
+  sf_username=$(echo "$org_json" | jq -r '.result.username')
+  sf_instance_url=$(echo "$org_json" | jq -r '.result.instanceUrl')
+  sf_org_id=$(echo "$org_json" | jq -r '.result.id')
+}
+
+# Salesforce example folders that read salesforce-confluent.keystore.jks from their own folder.
+function salesforce_setup_keystore_folders () {
+  grep -rl "salesforce_ensure_jwt_keystore\|salesforce_sfdx_login" "$root_folder/connect" "$root_folder/ccloud" --include='*.sh' 2> /dev/null | xargs -n1 dirname | sort -u
+}
+
+# Makes sure the keystore exists (download from the playground S3 bucket, or generate a new key pair
+# with --generate-keystore), then sets sf_certificate (base64 body of the certificate, as the External
+# Client App metadata wants it) and sf_jwt_key_file (unencrypted private key, in sf_tmp_dir).
+function salesforce_setup_load_keystore () {
+  keystore="$1"
+  generate="$2"
+
+  if [ ! -f "$keystore" ] && [ "$keystore" == "$root_folder/connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks" ]
+  then
+    (cd "$(dirname "$keystore")" && get_3rdparty_file "salesforce-confluent.keystore.jks") >&2 || true
+  fi
+
+  if [ ! -f "$keystore" ]
+  then
+    if [[ ! -n "$generate" ]]
+    then
+      logerror "❌ keystore $keystore is missing"
+      logerror "   pass --generate-keystore to create a new key pair (the External Client App then trusts this new certificate)"
+      exit 1
+    fi
+    log "🔐 generating a new key pair in $keystore (PKCS12, password confluent)"
+    if ! openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
+        -subj "/C=US/ST=Ca/L=PaloAlto/O=CONFLUENT/OU=TEST/CN=ca1.test.confluent.io" \
+        -keyout "$sf_tmp_dir/new.key" -out "$sf_tmp_dir/new.crt" > /dev/null 2>&1 \
+      || ! openssl pkcs12 -export -name salesforce-confluent -in "$sf_tmp_dir/new.crt" -inkey "$sf_tmp_dir/new.key" \
+        -passout pass:confluent -out "$keystore" > /dev/null 2>&1
+    then
+      logerror "❌ failed to generate the keystore"
+      exit 1
+    fi
+    rm -f "$sf_tmp_dir/new.key" "$sf_tmp_dir/new.crt"
+    if [ "$(basename "$keystore")" == "salesforce-confluent.keystore.jks" ]
+    then
+      for folder in $(salesforce_setup_keystore_folders)
+      do
+        if [ "$folder/salesforce-confluent.keystore.jks" != "$keystore" ]
+        then
+          if [ -f "$folder/salesforce-confluent.keystore.jks" ]
+          then
+            mv "$folder/salesforce-confluent.keystore.jks" "$folder/salesforce-confluent.keystore.jks.bak"
+          fi
+          cp "$keystore" "$folder/salesforce-confluent.keystore.jks"
+        fi
+      done
+      log "📋 copied it into every Salesforce example folder (previous ones kept as salesforce-confluent.keystore.jks.bak)"
+    fi
+  fi
+
+  sf_certificate=$(openssl pkcs12 -in "$keystore" -nokeys -clcerts -passin pass:confluent 2> /dev/null | openssl x509 2> /dev/null | grep -v -- "-----") || true
+  if [ -z "$sf_certificate" ]
+  then
+    logerror "❌ could not read the certificate of $keystore (password confluent expected)"
+    exit 1
+  fi
+  sf_jwt_key_file="$sf_tmp_dir/jwt.key"
+  (umask 077 && openssl pkcs12 -in "$keystore" -nocerts -nodes -passin pass:confluent -out "$sf_jwt_key_file" > /dev/null 2>&1) || true
+  if [ ! -s "$sf_jwt_key_file" ]
+  then
+    logerror "❌ could not read the private key of $keystore"
+    exit 1
+  fi
+}
+
+# Prints the consumer key of an External Client App created by 'playground salesforce setup', empty if
+# the app does not exist. Retrieving ExtlClntAppGlobalOauthSettings returns it.
+function salesforce_setup_get_consumer_key () {
+  target_org="$1"
+  app_name="$2"
+  retrieve_dir="$sf_tmp_dir/retrieve-$app_name"
+  rm -rf "$retrieve_dir"
+  sf project retrieve start --metadata "ExtlClntAppGlobalOauthSettings:${app_name}_glbloauth" \
+    --target-metadata-dir "$retrieve_dir" --unzip --target-org "$target_org" --json > "$sf_tmp_dir/retrieve.json" 2>&1 || true
+  file=$(find "$retrieve_dir" -name "${app_name}_glbloauth.ecaGlblOauth" 2> /dev/null | head -1)
+  if [ -n "$file" ]
+  then
+    sed -n 's#.*<consumerKey>\(.*\)</consumerKey>.*#\1#p' "$file" | head -1
+  fi
+}
+
+function salesforce_setup_base64url () {
+  openssl base64 -A | tr '+/' '-_' | tr -d '='
+}
+
+# One OAuth JWT bearer token request, exactly what a connector with salesforce.grant.type=JWT_BEARER
+# does. Prints Salesforce's answer (without the token), returns 0 when it contains an access token,
+# kept in sf_access_token / sf_token_instance_url for the REST calls of 'playground salesforce check'
+# (so don't call it in a subshell). Nothing is stored and the sf CLI logins are left alone.
+function salesforce_setup_jwt_token () {
+  login_url="${1%/}"
+  consumer_key="$2"
+  username="$3"
+  key_file="$4"
+
+  audience="https://login.salesforce.com"
+  if [[ "$login_url" == *test.salesforce.com* ]] || [[ "$login_url" == *.sandbox.my.salesforce.com* ]]
+  then
+    audience="https://test.salesforce.com"
+  fi
+  header=$(printf '{"alg":"RS256"}' | salesforce_setup_base64url)
+  claims=$(jq -cn --arg iss "$consumer_key" --arg sub "$username" --arg aud "$audience" --argjson exp "$(( $(date +%s) + 300 ))" \
+    '{iss: $iss, sub: $sub, aud: $aud, exp: $exp}' | salesforce_setup_base64url)
+  signature=$(printf '%s.%s' "$header" "$claims" | openssl dgst -sha256 -sign "$key_file" -binary | salesforce_setup_base64url)
+  response=$(curl -sS -m 30 -X POST "$login_url/services/oauth2/token" \
+    --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
+    --data-urlencode "assertion=$header.$claims.$signature" 2>&1) || true
+  sf_access_token=$(echo "$response" | jq -r '.access_token // empty' 2> /dev/null) || true
+  sf_token_instance_url=$(echo "$response" | jq -r '.instance_url // empty' 2> /dev/null) || true
+  echo "$response" | jq -c 'del(.access_token, .signature)' 2> /dev/null || echo "$response"
+  [ -n "$sf_access_token" ]
+}
+
+# Name of the variable for one value: SALESFORCE_USERNAME, SALESFORCE_USERNAME_KDP_CDC,
+# SALESFORCE_USERNAME_ACCOUNT2 or SALESFORCE_USERNAME_KDP_CDC_ACCOUNT2, as read by salesforce_use_test_creds.
+function salesforce_setup_var_name () {
+  name="$1"
+  suffix="$2"
+  account2="$3"
+  if [[ -n "$suffix" ]]
+  then
+    name="${name}_${suffix}"
+  fi
+  if [[ -n "$account2" ]]
+  then
+    name="${name}_ACCOUNT2"
+  fi
+  echo "$name"
+}
