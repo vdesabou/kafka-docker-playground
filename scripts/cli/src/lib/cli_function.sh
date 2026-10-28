@@ -3863,6 +3863,7 @@ function interactive_config_menu () {
     "check-and-update-repo-version|🔄|Check that the repo is up to date|true"
     "run-log|📄|Write a masked log of each run, to share it|true"
     "run-log-folder|🗂️|Folder of the run logs|$(run_log_default_folder)"
+    "open-diagnose-report-on-failure|🩺|Open the diagnose HTML report when a connector fails|true"
     "display-last-updated-connector-plugins|🆕|List recently released connector plugins at the end of a run|false"
     "display-last-updated-connector-plugins-days|📅|Days to look back for recently released connector plugins|3"
     "display-last-updated-connector-plugins-vendor|🏢|Vendor of recently released connector plugins (all: every vendor)|confluentinc"
