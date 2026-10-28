@@ -89,11 +89,13 @@ lab_expect_contains "WorkerSinkTask{id=bad-sink-0}"
 lab_expect_contains "1 file(s) with findings out of 1 scanned (binary files skipped: 0)"
 lab_expect_contains "✅ HTML report saved: $report_dir/lab-connect-$$-log-report.html"
 lab_expect_equals "$(grep -o 'A connector task was killed' "$report_dir/lab-connect-$$-log-report.html" | head -1)" "A connector task was killed" "known cause in the HTML report"
+lab_expect_equals "$(grep -o "<option value='bad-sink'>" "$report_dir/lab-connect-$$-log-report.html" | head -1)" "<option value='bad-sink'>" "connector filter in the HTML report"
 lab_run playground analyze logs -f "$saved_log.gz" --json
 lab_expect_exit 0
 lab_expect_contains '"files_with_findings": 1'
 lab_expect_contains '"title": "🧲 Unknown magic byte"'
 lab_expect_contains '"caused_by": "IllegalArgumentException: Unknown magic byte!"'
+lab_expect_contains '"connector": "bad-sink"'
 lab_run playground container logs -c connect --errors --html
 lab_expect_exit 0
 lab_expect_contains "✅ HTML report saved: /tmp/playground-log-reports/connect-errors-"

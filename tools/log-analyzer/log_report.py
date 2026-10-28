@@ -81,6 +81,8 @@ HINTS = [
 ]
 
 EXCEPTION_RE = re.compile(r"^(?:Caused by:\s*)?((?:[a-zA-Z_$][\w$]*\.)+[A-Z][\w$]*(?:Exception|Error|Throwable))(?::\s*(.*))?$")
+# connector of a record: the [connector|task-0] / [connector|worker] MDC context of Connect, or the id of the task
+CONNECTOR_RE = re.compile(r"\[([^\s|\]]+)\|(?:task-\d+|worker)\]|Worker(?:Source|Sink)Task\{id=(\S+)-\d+\}")
 
 
 def parse_records(path: str) -> List[dict]:
@@ -121,6 +123,8 @@ def finish_record(rec: dict) -> None:
     lines = rec.pop("lines")
     rec["text"] = "\n".join(lines)
     rec["message"] = lines[0] if lines else ""
+    m = CONNECTOR_RE.search(rec["message"])
+    rec["connector"] = (m.group(1) or m.group(2)) if m else None
     chain = [l.strip() for l in lines[1:] if l.startswith("    ") and not l.startswith("        ")]
     rec["chain"] = chain
     # deepest cause: last exception of the chain, else an exception named in the message
@@ -144,7 +148,6 @@ def all_records(files: List[dict]):
 
 
 KILLED_TASK_RE = re.compile(KILLED_TASK_PATTERN)
-CONNECTOR_RE = re.compile(r"\[([^\s|\]]+)\|task-\d+\]|Worker(?:Source|Sink)Task\{id=(\S+)-\d+\}")
 
 
 def earliest(matches: List[Tuple[int, dict, dict]]) -> Tuple[int, dict, dict]:
@@ -171,9 +174,8 @@ def killed_task_chains(matches: List[Tuple[int, dict, dict]]) -> List[dict]:
         g = groups.setdefault(key, {"exception": short_exception(thrown), "caused_by": short_exception(cause) if cause else "",
                                     "occurrences": 0, "connectors": OrderedDict(), "matches": []})
         g["occurrences"] += r["count"]
-        m = CONNECTOR_RE.search(r["message"])
-        if m:
-            g["connectors"][m.group(1) or m.group(2)] = True
+        if r["connector"]:
+            g["connectors"][r["connector"]] = True
         g["matches"].append((idx, f, r))
     out = []
     for g in groups.values():
@@ -235,15 +237,21 @@ def root_causes(files: List[dict]) -> List[dict]:
         key = (f"{r['root_cause']}: {re.sub(r'[0-9]+', '#', r['root_cause_message'])[:100]}" if r["root_cause"]
                else short_message(r["message"])[:160])
         c = causes.setdefault(key, {"root_cause": r["root_cause"], "label": key, "occurrences": 0, "records": 0, "files": OrderedDict(),
-                                    "example": r["root_cause_message"] or short_message(r["message"]), "level": r["level"]})
+                                    "connectors": OrderedDict(), "example": r["root_cause_message"] or short_message(r["message"]), "level": r["level"]})
         c["occurrences"] += r["count"]
         c["records"] += 1
         c["files"][f["label"]] = True
+        if r["connector"]:
+            c["connectors"][r["connector"]] = c["connectors"].get(r["connector"], 0) + r["count"]
+        else:
+            c["no_connector"] = True
         if LEVEL_ORDER.get(r["level"], 9) < LEVEL_ORDER.get(c["level"], 9):
             c["level"] = r["level"]
     out = []
     for c in causes.values():
         c["files"] = list(c["files"])
+        # most frequent first
+        c["connectors"] = sorted(c["connectors"], key=lambda n: -c["connectors"][n])
         out.append(c)
     out.sort(key=lambda c: (LEVEL_ORDER.get(c["level"], 9), -c["occurrences"]))
     return out
@@ -270,9 +278,12 @@ def findings(files: List[dict], hints: List[dict], causes: List[dict], top: int 
 
 def summary(files: List[dict]) -> dict:
     by_level = {"FATAL": 0, "ERROR": 0, "WARN": 0}
+    by_connector: Dict[str, int] = {}
     first, last = None, None
     for _, r in all_records(files):
         by_level[r["level"]] = by_level.get(r["level"], 0) + r["count"]
+        if r["connector"]:
+            by_connector[r["connector"]] = by_connector.get(r["connector"], 0) + r["count"]
         for ts in (r["first_ts"], r["last_ts"]):
             if ts:
                 first = ts if first is None or ts < first else first
@@ -280,6 +291,7 @@ def summary(files: List[dict]) -> dict:
     return {"files_scanned": len(files), "files_with_findings": sum(1 for f in files if f["records"]),
             "lines": sum(f["lines"] for f in files), "distinct": sum(f["distinct"] for f in files),
             "occurrences": sum(f["occurrences"] for f in files), "by_level": by_level,
+            "by_connector": dict(sorted(by_connector.items(), key=lambda kv: (-kv[1], kv[0]))),
             "first_timestamp": first, "last_timestamp": last}
 
 
@@ -345,6 +357,14 @@ def level_badge(level: str) -> str:
     return badge(level, level.lower())
 
 
+NO_CONNECTOR = "-"
+
+
+def connectors_attr(names: List[str], none: bool = False) -> str:
+    """data-connectors of a record or a root cause, for the connector filter: names (no space in them), "-" for none"""
+    return " data-connectors='" + e(" ".join(list(names) + ([NO_CONNECTOR] if none or not names else []))) + "'"
+
+
 def records_html(records: List[dict], open_first: int = 3, highlight: Optional[str] = None) -> str:
     """One collapsible block per distinct record; highlight: name that marks the records mentioning it."""
     out = []
@@ -354,40 +374,64 @@ def records_html(records: List[dict], open_first: int = 3, highlight: Optional[s
             when += f" → line {r['last_line']}" + (f" ({r['last_ts'].replace('T', ' ')})" if r["last_ts"] else "")
         mine = " <span class='st mine'>this connector</span>" if highlight and highlight in r["text"] else ""
         msg = short_message(r["message"])
-        out.append(f"<details data-level='{e(r['level'])}'{' open' if i < open_first else ''}><summary>{level_badge(r['level'])} ×{r['count']}{mine} "
-                   f"<span class='mono'>{e(msg[:180])}</span> <span class='legend'>· {e(when)}</span></summary>"
+        conn = f"<span class='legend mono'>[{e(r['connector'])}]</span> " if r.get("connector") else ""
+        out.append(f"<details data-level='{e(r['level'])}'{connectors_attr([r['connector']] if r.get('connector') else [])}"
+                   f"{' open' if i < open_first else ''}><summary>{level_badge(r['level'])} ×{r['count']}{mine} "
+                   f"{conn}<span class='mono'>{e(msg[:180])}</span> <span class='legend'>· {e(when)}</span></summary>"
                    f"<pre>{e(r['text'])}</pre></details>")
     return "".join(out)
 
 
-# level filter of the log report: hides the root causes and the records of the levels switched off
-LEVEL_FILTER_CSS = ("<style>.lvl-filter{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:6px;"
-                    "padding:8px 12px;margin-bottom:14px;border-radius:8px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);"
-                    "font-size:.78rem;color:#475569}.lvl-chip{border:0;cursor:pointer;font-family:inherit;font-size:.75rem}"
-                    ".lvl-chip[aria-pressed=false]{opacity:.35;text-decoration:line-through}[data-level][hidden]{display:none}"
-                    ".file-records[hidden]{display:none}html[data-theme=dark] .lvl-filter{background:#1e293b;color:#94a3b8}</style>")
-LEVEL_FILTER_SCRIPT = """<script>
+# filter bar of the log report: hides the root causes and the records of the levels switched off, and of the
+# connectors not selected (the [connector|task-0] MDC context of the records)
+FILTER_CSS = ("<style>.lvl-filter{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:6px;"
+              "padding:8px 12px;margin-bottom:14px;border-radius:8px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);"
+              "font-size:.78rem;color:#475569}.lvl-chip{border:0;cursor:pointer;font-family:inherit;font-size:.75rem}"
+              ".lvl-chip[aria-pressed=false]{opacity:.35;text-decoration:line-through}[data-level][hidden]{display:none}"
+              ".conn-filter{font-family:inherit;font-size:.75rem;max-width:420px;padding:2px 4px;border-radius:6px}"
+              ".lvl-filter .sep{margin-left:10px}"
+              ".file-records[hidden]{display:none}html[data-theme=dark] .lvl-filter{background:#1e293b;color:#94a3b8}</style>")
+FILTER_SCRIPT = """<script>
+function pgApplyFilters() {
+  const off = new Set([...document.querySelectorAll(".lvl-chip[aria-pressed=false]")].map(c => c.dataset.level));
+  const sel = document.querySelector(".conn-filter");
+  const conn = sel ? sel.value : "";
+  document.querySelectorAll("[data-level]:not(.lvl-chip)").forEach(el => {
+    const names = (el.dataset.connectors || "-").split(" ");
+    el.hidden = off.has(el.dataset.level) || (conn !== "" && !names.includes(conn));
+  });
+  // a file whose records are all hidden
+  document.querySelectorAll(".file-records").forEach(card => { card.hidden = !card.querySelector("details[data-level]:not([hidden])"); });
+}
 document.addEventListener("click", function (ev) {
   const chip = ev.target.closest(".lvl-chip");
   if (!chip) return;
   chip.setAttribute("aria-pressed", chip.getAttribute("aria-pressed") === "false" ? "true" : "false");
-  const off = new Set([...document.querySelectorAll(".lvl-chip[aria-pressed=false]")].map(c => c.dataset.level));
-  document.querySelectorAll("[data-level]:not(.lvl-chip)").forEach(el => { el.hidden = off.has(el.dataset.level); });
-  // a file whose records are all hidden
-  document.querySelectorAll(".file-records").forEach(card => { card.hidden = !card.querySelector("details[data-level]:not([hidden])"); });
+  pgApplyFilters();
 });
+document.addEventListener("change", function (ev) { if (ev.target.closest(".conn-filter")) pgApplyFilters(); });
 </script>"""
 
 
-def level_filter_html(by_level: Dict[str, int]) -> str:
-    """Chips FATAL / ERROR / WARN with their occurrences, when the report has 2 levels or more"""
+def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_connector: int) -> str:
+    """Chips FATAL / ERROR / WARN with their occurrences when the report has 2 levels or more, and a connector picker
+    when records have a connector context"""
     present = [lvl for lvl in LEVEL_ORDER if by_level.get(lvl)]
-    if len(present) < 2:
+    parts = []
+    if len(present) >= 2:
+        parts.append("Levels:" + "".join(f"<button type='button' class='st {lvl.lower()} lvl-chip' data-level='{lvl}' aria-pressed='true' "
+                                         f"title='show / hide the {lvl} records'>{lvl} ({by_level[lvl]})</button>" for lvl in present))
+    if by_connector:
+        options = [f"<option value=''>all ({len(by_connector)} connector(s){' + no connector' if without_connector else ''})</option>"]
+        options += [f"<option value='{e(name)}'>{e(name)} ({n})</option>" for name, n in by_connector.items()]
+        if without_connector:
+            options.append(f"<option value='{NO_CONNECTOR}'>— no connector context — ({without_connector})</option>")
+        parts.append(f"<span class='{'sep' if parts else ''}'>Connector:</span><select class='conn-filter' "
+                     "title='only the root causes and the records of this connector ([connector|task-0] context of the log line)'>"
+                     + "".join(options) + "</select>")
+    if not parts:
         return ""
-    return (LEVEL_FILTER_CSS + "<div class='lvl-filter'>Levels of the root causes and records:"
-            + "".join(f"<button type='button' class='st {lvl.lower()} lvl-chip' data-level='{lvl}' aria-pressed='true' "
-                      f"title='show / hide the {lvl} records'>{lvl} ({by_level[lvl]})</button>" for lvl in present)
-            + "</div>" + LEVEL_FILTER_SCRIPT)
+    return FILTER_CSS + "<div class='lvl-filter'>" + "".join(parts) + "</div>" + FILTER_SCRIPT
 
 
 def verdict(res: dict, levels: str, unit: str = "file") -> Tuple[str, str]:
@@ -407,6 +451,10 @@ def verdict(res: dict, levels: str, unit: str = "file") -> Tuple[str, str]:
         return "danger", (f"🚨 {errors} ERROR/FATAL occurrence(s), {s['distinct']} distinct record(s) in "
                           f"{s['files_with_findings']} {unit}(s){start}.")
     return "warn", f"⚠️ {s['by_level']['WARN']} WARN occurrence(s) in {s['files_with_findings']} {unit}(s), no ERROR/FATAL."
+
+
+def first_names(names: List[str], top: int = 3) -> str:
+    return ", ".join(names[:top]) + (f" (+{len(names) - top} more)" if len(names) > top else "")
 
 
 def html_report(res: dict, title: str, levels: str, skipped: int, heading: str = "🔥 Log Analysis",
@@ -435,15 +483,19 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     body = [verdict_html(*verdict(res, levels, unit)), kpis_html([kpis]), findings_html(res["findings"])]
     body += [card(e(t), f"<pre>{e(text)}</pre>") for t, text in sections]
     body.append(charts_html(res["files"], res["root_causes"]))
-    body.append(level_filter_html(s["by_level"]))
+    without_connector = sum(r["count"] for f in res["files"] for r in f["records"] if not r.get("connector"))
+    body.append(filter_html(s["by_level"], s["by_connector"], without_connector))
+    with_conn = bool(s["by_connector"])
     if res["root_causes"]:
-        rows = "".join(f"<tr data-level='{e(c['level'])}'><td>{level_badge(c['level'])}</td><td class='mono' title='{e(c['root_cause'] or '')}'>{e((c['root_cause'] or '—').split('.')[-1])}</td>"
+        rows = "".join(f"<tr data-level='{e(c['level'])}'{connectors_attr(c['connectors'], c.get('no_connector', False))}><td>{level_badge(c['level'])}</td><td class='mono' title='{e(c['root_cause'] or '')}'>{e((c['root_cause'] or '—').split('.')[-1])}</td>"
                        f"<td class='mono'>{e(c['example'][:300])}</td><td class='num'>{c['occurrences']}</td>"
                        f"<td class='num'>{c['records']}</td><td class='mono'>{e(', '.join(c['files'][:5]))}"
-                       f"{e(' …' if len(c['files']) > 5 else '')}</td></tr>" for c in res["root_causes"])
+                       f"{e(' …' if len(c['files']) > 5 else '')}</td>"
+                       + (f"<td class='mono' title='{e(', '.join(c['connectors']))}'>{e(first_names(c['connectors']))}</td>" if with_conn else "")
+                       + "</tr>" for c in res["root_causes"])
         body.append("<div class='table-card'><h2>🌳 Root causes (deepest exception of each record)</h2><table><tr><th>Level</th>"
                     "<th>Root cause</th><th>Message</th><th class='num'>Occurrences</th><th class='num'>Records</th>"
-                    f"<th>{Unit}s</th></tr>"
+                    f"<th>{Unit}s</th>{'<th>Connectors</th>' if with_conn else ''}</tr>"
                     f"{rows}</table></div>")
     if res["files"]:
         rows = "".join(f"<tr><td class='mono'>{e(f['label'])}</td><td class='num'>{f['lines']}</td><td class='num'>{f['distinct']}</td>"
