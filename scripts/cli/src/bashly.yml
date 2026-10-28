@@ -9361,7 +9361,10 @@ commands:
       processes its first record and can fail right after.
 
       When waiting for RUNNING, it fails right away if the connector or one of
-      its tasks is FAILED, since a failed task does not recover on its own.
+      its tasks is FAILED, since a failed task does not recover on its own,
+      and runs 'playground connector diagnose --no-open' on it: status with
+      the trace, digest of the connect errors since the wait started, offsets,
+      next steps and HTML report (PG_SKIP_AUTO_DIAGNOSE=1 for the status only).
       A connector RUNNING without any task for 30 seconds (Replicator without
       matching topic yet, JDBC source without table) is accepted with a
       warning. A Datagen task that failed with "Stopping connector: generated
@@ -9376,6 +9379,9 @@ commands:
 
       🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update
       🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%8C-the-sink-fails-right-after-it-is-deployed
+    environment_variables:
+    - name: PG_SKIP_AUTO_DIAGNOSE
+      help: "🩺 Set to 1 to display only the status of a FAILED connector, instead of running 'connector diagnose' on it (also for create-or-update)"
     flags:
     - *verbose
     - *connector
@@ -10893,7 +10899,9 @@ commands:
       The command then waits for the connector and all its tasks to be
       RUNNING, displays the connector status, and fails with the error if
       they are not, so a broken config stops the example immediately instead
-      of failing silently later. When the script that runs is a reproduction
+      of failing silently later. A FAILED connector or task is reported with
+      'playground connector diagnose' (trace, error digest, offsets, next
+      steps and HTML report). When the script that runs is a reproduction
       model, a connector that is not RUNNING is only reported as a warning,
       since a reproduction model often creates a failing connector on
       purpose. Use --wait to fail there too, --no-wait to skip the wait.

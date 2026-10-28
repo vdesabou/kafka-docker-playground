@@ -228,6 +228,10 @@ Gotchas:
   - the secrets masked (the REST API of a self-managed worker returns them in clear)
 - `status` on a FAILED connector ends with a hint: `playground connector diagnose --connector <name>` gives the error
   digest, the lag and the next steps.
+- When the wait for RUNNING finds a FAILED connector or task, `create-or-update` / `wait` run that
+  `connector diagnose` for you (`--no-open`, connect errors since the wait started, 5 findings at most), so the
+  output of a failed example or CI job already has the digest and the path of the HTML report. Set
+  `PG_SKIP_AUTO_DIAGNOSE=1` to get only the status.
 - `update` opens the config **and** the list of every parameter of the plugin in your editor: it's interactive, not for
   scripts.
 
@@ -307,9 +311,15 @@ EOF
 # ✅ 🌎onprem connector broken-sink was successfully created
 # ⏳ Waiting up to 120 seconds for 🌎onprem connector broken-sink to be RUNNING
 # ❌ 🌎onprem connector broken-sink is FAILED, not waiting for it to be RUNNING
+# 🩺 diagnosing 🌎onprem connector broken-sink              <- connector diagnose runs on its own
+# 🗺️  1/4 status
 # broken-sink   ✅ RUNNING  0:🛑 FAILED   tasks: org.apache.kafka.connect.errors.ConnectException: Couldn't find or create file '/does/not/exist/output.json' for FileStreamSinkTask
 #   … Caused by: java.nio.file.NoSuchFileException: /does/not/exist/output.json
-# 🩺 for the error digest, the progress and the next steps, run: playground connector diagnose --connector broken-sink
+# 🔥 2/4 errors: digest of connect ERROR/FATAL records since 120s (whole worker, not only this connector)
+# …
+# 👉 4/4 next steps
+#    🔥 a task or the connector FAILED: read the trace above, then after a fix: playground connector restart --connector broken-sink
+# …
 # ❌ 🌎onprem connector broken-sink is not RUNNING (use --no-wait to skip the wait)
 echo $?   # 1
 
