@@ -91,9 +91,9 @@ jobs:
                       "🚀3️⃣ ccloud/fm-solace-sink ccloud/fm-solace-source ccloud/fm-opensearch-sink ccloud/fm-sftp-sink ccloud/fm-redis-sink ccloud/fm-redis-kafka-sink ccloud/fm-redis-kafka-source ccloud/fm-active-mq-source ccloud/fm-clickhouse-sink ccloud/fm-debezium-mariadb-source ccloud/fm-debezium-mongodb-source ccloud/fm-mongodb-source ccloud/fm-mongodb-sink"
                     ]
     env:
-      # cfk only runs connect/ examples (see run-tests.sh): without any in the list, the job has nothing to do
+      # cfk only runs connect/ examples and the cfk.sh deep dive lab (see run-tests.sh): without any in the list, the job has nothing to do
       # podman skips fully managed connector tests (see run-tests.sh): lists with ccloud/fm- examples only hold those
-      SKIP_JOB: ${{ (startsWith(matrix.playground_environment, 'cfk') && !contains(matrix.test_list, 'connect/')) || ((github.event.inputs.container_engine == 'podman' || github.event.schedule == '17 6 * * *') && contains(matrix.test_list, 'ccloud/fm-')) }}
+      SKIP_JOB: ${{ (startsWith(matrix.playground_environment, 'cfk') && !contains(matrix.test_list, 'connect/') && !contains(matrix.test_list, 'other/deep-dive-labs')) || ((github.event.inputs.container_engine == 'podman' || github.event.schedule == '17 6 * * *') && contains(matrix.test_list, 'ccloud/fm-')) }}
     steps:
 
       # - name: Maximize build space
@@ -406,8 +406,8 @@ jobs:
                     ]
         playground_environment: ["${{ github.event.inputs.playground_environment }}"]
     env:
-      # cfk only runs connect/ examples (see run-tests.sh): without any in the list, the job has nothing to do
-      SKIP_JOB: ${{ startsWith(matrix.playground_environment, 'cfk') && !contains(matrix.test_list, 'connect/') }}
+      # cfk only runs connect/ examples and the cfk.sh deep dive lab (see run-tests.sh): without any in the list, the job has nothing to do
+      SKIP_JOB: ${{ startsWith(matrix.playground_environment, 'cfk') && !contains(matrix.test_list, 'connect/') && !contains(matrix.test_list, 'other/deep-dive-labs') }}
     steps:
 
       # - name: Maximize build space

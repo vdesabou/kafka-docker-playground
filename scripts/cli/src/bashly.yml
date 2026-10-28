@@ -4845,6 +4845,8 @@ commands:
       🔖 Exit code is 0 when the analysis completed (whatever was found, read the summary), 64 for an invalid, unsafe or empty bundle.
 
       🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%98%B8%EF%B8%8F-what-is-wrong-in-this-cfk-cluster
+
+      🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-cfk
     flags: &analyze_cfk_bundle_flags
       - long: --bundle
         short: -b
@@ -5951,6 +5953,8 @@ commands:
           ⛑️ Generate a Support bundle
 
           see https://docs.confluent.io/operator/current/co-troubleshooting.html#support-bundle
+
+          🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-cfk
         filters:
         - cfk_environment
         dependencies:

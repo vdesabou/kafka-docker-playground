@@ -132,6 +132,12 @@ CLI change that makes a page wrong shows up as a failing test.
 - 📖 [Read the deep dive](/deep-dive-replication.md)
 - 🧠 Commands: `start-environment --environment mdc-*`, `container exec -c connect-us|broker-europe …`, and the commands refused in an mdc environment
 
+### ☸️ Confluent for Kubernetes: the cfk environment, support bundles
+
+- 📖 [Read the deep dive](/deep-dive-cfk.md)
+- 🧠 Commands: `run --environment cfk`, `start-environment --environment cfk|cfk-rbac`, `debug cfk generate-bundle`, `analyze cfk-bundle`
+- 🎬 Bite size session: [☸️ What is wrong in this CFK cluster?](/sessions?id=☸️-what-is-wrong-in-this-cfk-cluster) (`analyze cfk-bundle`)
+
 ### 🐌 A slow or broken network, on purpose
 
 - 📖 [Read the deep dive](/deep-dive-network-traffic.md)

@@ -2690,7 +2690,8 @@ subcommands:
       it analyzes the samples shipped in cfk-analysis/samples: a quick way to see
       what it reports.\n\n\U0001F516 Exit code is 0 when the analysis completed (whatever
       was found, read the summary), 64 for an invalid, unsafe or empty bundle.\n\n\U0001F3AC
-      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%98%B8%EF%B8%8F-what-is-wrong-in-this-cfk-cluster"
+      Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%98%B8%EF%B8%8F-what-is-wrong-in-this-cfk-cluster\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-cfk"
     usage: playground analyze cfk-bundle [OPTIONS]
     options:
     - names:
@@ -3603,10 +3604,8 @@ subcommands:
     options: []
     subcommands:
     - name: generate-bundle
-      description: |-
-        ⛑️ Generate a Support bundle
-
-        see https://docs.confluent.io/operator/current/co-troubleshooting.html#support-bundle
+      description: "⛑️ Generate a Support bundle\n\nsee https://docs.confluent.io/operator/current/co-troubleshooting.html#support-bundle\n\n\U0001F36A
+        Deep dive: https://kafka-docker-playground.io/#/deep-dive-cfk"
       usage: playground debug cfk generate-bundle [OPTIONS]
       options:
       - names:

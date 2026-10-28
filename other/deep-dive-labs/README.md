@@ -25,6 +25,7 @@ shows up as a failing test: fix the CLI, or update the page and its lab together
 | `run-and-versions.sh` | [Running examples and changing versions (update-version steps only)](https://kafka-docker-playground.io/#/deep-dive-run-and-versions) |
 | `secured-environments.sh` | [Secured environments](https://kafka-docker-playground.io/#/deep-dive-secured-environments) (starts sasl-ssl then rbac-sasl-plain itself) |
 | `replication.sh` | [Replication between clusters](https://kafka-docker-playground.io/#/deep-dive-replication) (starts mdc-plaintext itself, replays Replicator, MirrorMaker 2 and Cluster Linking) |
+| `cfk.sh` | [Confluent for Kubernetes](https://kafka-docker-playground.io/#/deep-dive-cfk) (runs in the cfk CI job only, exits 111 with any other environment) |
 | `fully-managed.sh` | [Fully managed connectors (Confluent Cloud)](https://kafka-docker-playground.io/#/deep-dive-fully-managed) — skipped without Confluent Cloud credentials |
 | `topic-administration.sh` | [Topic administration](https://kafka-docker-playground.io/#/deep-dive-topic-administration) |
 | `connector-benchmark.sh` | [`connector benchmark`](https://kafka-docker-playground.io/#/deep-dive-connector-benchmark) |
@@ -32,7 +33,8 @@ shows up as a failing test: fix the CLI, or update the page and its lab together
 | `secrets.sh` | [Credentials and the 1Password setup](https://kafka-docker-playground.io/#/deep-dive-secrets) (no container, a throwaway store with the `file` backend; the 1Password steps are not replayed) |
 
 The helpers shared by the scripts are in `lab-utils.bash` (`lab_run`, `lab_expect_contains`, `lab_expect_exit`…).
-The labs need the plaintext environment (they exit 111 with another one).
+The labs need the plaintext environment (they exit 111 with another one), except `cfk.sh`, which needs `cfk`: in the cfk
+CI job, `run-tests.sh` runs only that script of the folder.
 
 ## How to run
 

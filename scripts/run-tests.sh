@@ -77,8 +77,8 @@ do
         continue
     fi
 
-    # Skip non-connect examples when using CfK environment
-    if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]] && [[ ! "$dir" =~ ^connect/ ]]
+    # Skip non-connect examples when using CfK environment (except the deep dive labs: cfk.sh runs there, see below)
+    if [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]] && [[ ! "$dir" =~ ^connect/ ]] && [ "$dir" != "other/deep-dive-labs" ]
     then
         log "####################################################"
         log "⏭ skipping dir $dir, CfK environment only supports connect/ examples"
@@ -138,6 +138,12 @@ do
     do
         force_test_connector_plugin_version=0
         if [[ "$script" = "stop.sh" ]]
+        then
+            continue
+        fi
+
+        # the deep dive labs need the plaintext environment, except cfk.sh, the lab of the CFK page
+        if [ "$dir" == "other/deep-dive-labs" ] && [[ "$PLAYGROUND_ENVIRONMENT" == cfk* ]] && [ "$script" != "cfk.sh" ]
         then
             continue
         fi
