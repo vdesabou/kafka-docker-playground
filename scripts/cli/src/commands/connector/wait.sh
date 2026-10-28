@@ -22,6 +22,12 @@ then
 else
     get_connect_url_and_security
 fi
+# cfk: the REST API is reached through a port-forward to connect-0, which dies with the pod (container restart)
+wait_on_cfk=""
+if [[ "$(playground state get run.environment)" == cfk* ]]
+then
+    wait_on_cfk=1
+fi
 
 # sets connector_state and tasks_states (one state per task) from the REST API, empty if not available yet
 function get_connector_states () {
@@ -39,6 +45,11 @@ function get_connector_states () {
     else
         if ! handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\"" > /dev/null 2>&1
         then
+            if [ -n "$wait_on_cfk" ]
+            then
+                # start a new port-forward for the next try (it fails until the new connect-0 is up)
+                get_connect_url_and_security > /dev/null 2>&1
+            fi
             return
         fi
     fi

@@ -74,8 +74,8 @@ SSL cluster" or "the connector gets `TopicAuthorizationException`". Takes about 
 | `ldap-authorizer-sasl-plain` | `SASL_PLAINTEXT` | `PLAIN`, `LdapAuthorizer` (groups from LDAP → ACLs) | `http` | `http` | `/service/kafka/users/client.properties` |
 | `rbac-sasl-plain` | `SASL_PLAINTEXT` (+ `TOKEN` listener) | `PLAIN`, clients `OAUTHBEARER` with MDS tokens, `ConfluentServerAuthorizer` | `http`, basic auth, `RbacAuthorizer` | `http`, basic auth (`connectorSubmitter`) | `/etc/kafka/secrets/client_without_interceptors.config` |
 
-Other types, with their own pages: `cfk` / `cfk-rbac` (Confluent for Kubernetes, see the
-[`analyze cfk-bundle` session](/sessions?id=☸️-what-is-wrong-in-this-cfk-cluster)), `mdc-plaintext` /
+Other types, with their own pages: `cfk` / `cfk-rbac` (Confluent for Kubernetes, see its
+[deep dive](/deep-dive-cfk.md)), `mdc-plaintext` /
 `mdc-sasl-plain` / `mdc-kerberos` (two clusters, see [replication between clusters](/deep-dive-replication.md)), and
 `ccloud` (Confluent Cloud, `bootstrap_ccloud_environment` in `ccloud/` examples).
 

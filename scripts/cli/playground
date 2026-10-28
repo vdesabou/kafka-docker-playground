@@ -7038,7 +7038,7 @@ playground_analyze_oracle_xstream_report_usage() {
 playground_analyze_cfk_bundle_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze cfk-bundle\n\n"
-    printf "  📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n  \n  🔍 Checks Warning events, pods (phase, waiting reasons, restarts, OOMKilled),\n  every platform.confluent.io custom resource (phase/state, ready replicas,\n  False conditions, failed connector tasks) and the ERROR/FATAL records of every\n  log (rotated and .gz included, with their Caused by chain and an occurrence\n  count), sorts them into ~30 categories (pod failures, TLS, auth, MDS/RBAC,\n  license, KRaft, replication, storage, scheduling, …) and prints concrete\n  remediation steps per category.\n  \n  🧭 Also prints the environment (Kubernetes version, CFK operator version,\n  application / init image of every component, from cluster-details.txt and the\n  CRs) and checks it against the CFK support matrix (Kubernetes, Confluent\n  Platform and Control Center ranges, init container on the operator version),\n  lists the recent changes (who edited which CR and when, from managedFields,\n  StatefulSet rollouts, pod (re)starts) and flags a JVM default truststore\n  (-Djavax.net.ssl.trustStore) set without its password, the cause of\n  \"trustAnchors parameter must be non-empty\". One issue per root cause: the\n  connector tasks it affects are listed with it.\n  \n  ✅ Works offline on any bundle produced by kubectl confluent support-bundle (or\n  playground debug cfk generate-bundle): no cfk environment needed.\n  \n  🔒 Sanitization (secrets / IPs / hostnames / emails / LDAP DNs) is ON by\n  default. It is best effort: review the output before sharing it. Pass\n  --no-sanitize only for internal/test bundles.\n  \n  🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.\n  \n  🔖 Use --json to emit machine-readable output for downstream tooling.\n  \n  🧩 Each issue is attributed to a component (kafka, kraftcontroller, connect,\n  schemaregistry, operator…) and to the instance (CR name, e.g. connect-peh) it\n  comes from. Use --component to keep only some of them, or the Component /\n  Instance buttons of the HTML report.\n  \n  🌐 Prints the text digest and also writes a self-contained HTML report in\n  --output-dir, opened in the browser in an interactive terminal.\n  \n  🧪 With --sample, it analyzes the samples shipped in cfk-analysis/samples: a\n  quick way to see what it reports.\n  \n  🔖 Exit code is 0 when the analysis completed (whatever was found, read the\n  summary), 64 for an invalid, unsafe or empty bundle.\n  \n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%E2%%98%%B8%%EF%%B8%%8F-what-is-wrong-in-this-cfk-cluster\n\n"
+    printf "  📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n  \n  🔍 Checks Warning events, pods (phase, waiting reasons, restarts, OOMKilled),\n  every platform.confluent.io custom resource (phase/state, ready replicas,\n  False conditions, failed connector tasks) and the ERROR/FATAL records of every\n  log (rotated and .gz included, with their Caused by chain and an occurrence\n  count), sorts them into ~30 categories (pod failures, TLS, auth, MDS/RBAC,\n  license, KRaft, replication, storage, scheduling, …) and prints concrete\n  remediation steps per category.\n  \n  🧭 Also prints the environment (Kubernetes version, CFK operator version,\n  application / init image of every component, from cluster-details.txt and the\n  CRs) and checks it against the CFK support matrix (Kubernetes, Confluent\n  Platform and Control Center ranges, init container on the operator version),\n  lists the recent changes (who edited which CR and when, from managedFields,\n  StatefulSet rollouts, pod (re)starts) and flags a JVM default truststore\n  (-Djavax.net.ssl.trustStore) set without its password, the cause of\n  \"trustAnchors parameter must be non-empty\". One issue per root cause: the\n  connector tasks it affects are listed with it.\n  \n  ✅ Works offline on any bundle produced by kubectl confluent support-bundle (or\n  playground debug cfk generate-bundle): no cfk environment needed.\n  \n  🔒 Sanitization (secrets / IPs / hostnames / emails / LDAP DNs) is ON by\n  default. It is best effort: review the output before sharing it. Pass\n  --no-sanitize only for internal/test bundles.\n  \n  🔖 Accepts a directory or a .tar / .tar.gz / .tgz / .zip archive.\n  \n  🔖 Use --json to emit machine-readable output for downstream tooling.\n  \n  🧩 Each issue is attributed to a component (kafka, kraftcontroller, connect,\n  schemaregistry, operator…) and to the instance (CR name, e.g. connect-peh) it\n  comes from. Use --component to keep only some of them, or the Component /\n  Instance buttons of the HTML report.\n  \n  🌐 Prints the text digest and also writes a self-contained HTML report in\n  --output-dir, opened in the browser in an interactive terminal.\n  \n  🧪 With --sample, it analyzes the samples shipped in cfk-analysis/samples: a\n  quick way to see what it reports.\n  \n  🔖 Exit code is 0 when the analysis completed (whatever was found, read the\n  summary), 64 for an invalid, unsafe or empty bundle.\n  \n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%E2%%98%%B8%%EF%%B8%%8F-what-is-wrong-in-this-cfk-cluster\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-cfk\n\n"
   else
     printf "playground analyze cfk-bundle - 📦 Analyze a Confluent for Kubernetes (CFK) support bundle\n\n"
   fi
@@ -8681,7 +8681,7 @@ playground_debug_cfk_cfk_bundle_analyze_usage() {
 playground_debug_cfk_generate_bundle_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground debug cfk generate-bundle\n\n"
-    printf "  ⛑️ Generate a Support bundle\n  \n  see\n  https://docs.confluent.io/operator/current/co-troubleshooting.html#support-bundle\n\n"
+    printf "  ⛑️ Generate a Support bundle\n  \n  see\n  https://docs.confluent.io/operator/current/co-troubleshooting.html#support-bundle\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-cfk\n\n"
   else
     printf "playground debug cfk generate-bundle - ⛑️ Generate a Support bundle\n\n"
   fi
@@ -21838,7 +21838,8 @@ function get_connector_config_json () {
     handle_ccloud_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config\" --header \"authorization: Basic $authorization\""
   elif [[ "$env_used" == cfk* ]]
   then
-    curl_output=$(kubectl -n confluent get connector "$connector" -o json 2>/dev/null | jq -c '.spec.configs // empty' 2>/dev/null)
+    # connector.class and tasks.max are not in spec.configs: they are spec.class and spec.taskMax of the CR
+    curl_output=$(kubectl -n confluent get connector "$connector" -o json 2>/dev/null | jq -c 'select(.spec != null) | (.spec.configs // {}) + {"connector.class": .spec.class, "tasks.max": (.spec.taskMax // 1 | tostring)}' 2>/dev/null)
   else
     get_connect_url_and_security
     handle_onprem_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/config\""
@@ -55192,6 +55193,12 @@ playground_connector_wait_command() {
   else
       get_connect_url_and_security
   fi
+  # cfk: the REST API is reached through a port-forward to connect-0, which dies with the pod (container restart)
+  wait_on_cfk=""
+  if [[ "$(playground state get run.environment)" == cfk* ]]
+  then
+      wait_on_cfk=1
+  fi
 
   # sets connector_state and tasks_states (one state per task) from the REST API, empty if not available yet
   function get_connector_states () {
@@ -55209,6 +55216,11 @@ playground_connector_wait_command() {
       else
           if ! handle_onprem_connect_rest_api "curl -s $security \"$connect_url/connectors/$connector/status\"" > /dev/null 2>&1
           then
+              if [ -n "$wait_on_cfk" ]
+              then
+                  # start a new port-forward for the next try (it fails until the new connect-0 is up)
+                  get_connect_url_and_security > /dev/null 2>&1
+              fi
               return
           fi
       fi

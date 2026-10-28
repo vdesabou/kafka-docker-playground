@@ -6573,7 +6573,8 @@ function get_connector_config_json () {
     handle_ccloud_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config\" --header \"authorization: Basic $authorization\""
   elif [[ "$env_used" == cfk* ]]
   then
-    curl_output=$(kubectl -n confluent get connector "$connector" -o json 2>/dev/null | jq -c '.spec.configs // empty' 2>/dev/null)
+    # connector.class and tasks.max are not in spec.configs: they are spec.class and spec.taskMax of the CR
+    curl_output=$(kubectl -n confluent get connector "$connector" -o json 2>/dev/null | jq -c 'select(.spec != null) | (.spec.configs // {}) + {"connector.class": .spec.class, "tasks.max": (.spec.taskMax // 1 | tostring)}' 2>/dev/null)
   else
     get_connect_url_and_security
     handle_onprem_connect_rest_api "curl $security -s -X GET -H \"Content-Type: application/json\" \"$connect_url/connectors/$connector/config\""

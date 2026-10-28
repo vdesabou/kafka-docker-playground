@@ -111,6 +111,7 @@ behave like this" question, read the matching page first:
 | topics: create, configs, counts | `docs/deep-dive-topic-administration.md` |
 | SASL / SSL / Kerberos / RBAC environments | `docs/deep-dive-secured-environments.md` |
 | two clusters (`mdc-*`), Replicator, MirrorMaker 2, Cluster Linking, offset translation | `docs/deep-dive-replication.md` |
+| Confluent for Kubernetes (`cfk`, `cfk-rbac`), k3d, support bundles | `docs/deep-dive-cfk.md` |
 | connector throughput, version comparison | `docs/deep-dive-connector-benchmark.md` |
 | fully managed connectors, Confluent Cloud | `docs/deep-dive-fully-managed.md` |
 | credentials, `playground secrets`, 1Password | `docs/deep-dive-secrets.md` |
