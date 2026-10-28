@@ -492,9 +492,10 @@ def s3_section(months: List[dict], buckets: Optional[List[dict]], user: str) -> 
     parts.append("<p class='muted' style='font-size:.8rem;margin-top:8px'>Cost Explorer has no cost per bucket for this account: "
                  "it needs the resource-level data, an opt-in of the payer account.</p>")
 
-    return rh.card(f"🪣 Amazon S3 details <span class='muted'>({money(s3_total)} over the last 12 months, "
-                   f"{100 * s3_total / max(sum(r['amount'] for m in months for r in m['records']), 0.01):.0f}% of the total)</span>",
-                   "".join(parts))
+    # id: link target (reports gallery of the docs: reports/aws-costs.html#s3-details)
+    return "<div id='s3-details'>" + rh.card(f"🪣 Amazon S3 details <span class='muted'>({money(s3_total)} over the last 12 months, "
+                                             f"{100 * s3_total / max(sum(r['amount'] for m in months for r in m['records']), 0.01):.0f}% of the total)</span>",
+                                             "".join(parts)) + "</div>"
 
 
 def build(cloud: str, user: str, months: List[dict], buckets: Optional[List[dict]] = None) -> str:

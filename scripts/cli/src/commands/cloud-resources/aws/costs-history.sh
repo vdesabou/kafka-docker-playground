@@ -7,7 +7,8 @@ if [[ -n "$sample" ]]
 then
     # dummy cost data, in the same format as the monthly files (and s3-buckets.json) saved below
     log "🧪 writing the HTML report from the dummy cost data of tools/cloud-costs/samples/$sample"
-    write_cloud_costs_report "aws" "$root_folder/tools/cloud-costs/samples/$sample" "$output_dir" "$no_open" "${USER}"
+    # a dummy user too, like the names of the sample (it is the report of the gallery of the documentation)
+    write_cloud_costs_report "aws" "$root_folder/tools/cloud-costs/samples/$sample" "$output_dir" "$no_open" "kdp-dummy"
     exit $?
 fi
 
