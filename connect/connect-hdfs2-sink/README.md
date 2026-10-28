@@ -29,6 +29,9 @@ playground run -f hdfs2-sink.sh
 4. Lists `/topics/hdfs-topic/partition=0` in HDFS and displays one Avro file with `playground tools read-avro-file`.
 5. Basic example: queries table `hdfs_topic` with `beeline` and checks `value1` is present.
 
-The Kerberos variant first makes `namenode1` the active namenode (retried for up to 5 minutes, until both namenodes answer), creates a `connect` principal and keytab in the KDC and configures `hdfs.authentication.kerberos`, `connect.hdfs.principal`, `connect.hdfs.keytab` and `hdfs.namenode.principal`.
+The Kerberos variant first makes `namenode1` the active namenode (retried for up to 10 minutes, until both namenodes answer), creates a `connect` principal and keytab in the KDC and configures `hdfs.authentication.kerberos`, `connect.hdfs.principal`, `connect.hdfs.keytab` and `hdfs.namenode.principal`.
 
-The namenodes are formatted (`namenode1`) and bootstrapped (`namenode2`) only once, at container start: `ha-kerberos/waitfor.sh` replaces the `006_waitfor` launcher plugin of the `flokkr/hadoop` image so that `namenode1` waits for the 3 journal nodes (port `8485`) and `namenode2` waits for `namenode1` (port `9820`) first (`WAITFOR`, `WAITFOR_TIMEOUT` in `docker-compose.plaintext.ha-kerberos.yml`).
+The namenodes are formatted (`namenode1`) and bootstrapped (`namenode2`) at container start, by two launcher plugins of the `flokkr/hadoop` image replaced with files of `ha-kerberos/`:
+
+- `waitfor.sh` (`006_waitfor`): `namenode1` waits for the 3 journal nodes (port `8485`) and `namenode2` waits for `namenode1` (port `9820`) first (`WAITFOR`, `WAITFOR_TIMEOUT` in `docker-compose.plaintext.ha-kerberos.yml`).
+- `hdfsinit.sh` (`012_hdfsinit`): an open port doesn't mean the service answers yet, so a failed `hdfs namenode -format` (for example `QuorumException: Unable to check if JNs are ready for formatting`) or `hdfs namenode -bootstrapStandby` is retried, 10 times 15 seconds apart (`HDFSINIT_RETRIES`, `HDFSINIT_RETRY_INTERVAL`). The image's plugin runs them once and starts the namenode even if they failed.
