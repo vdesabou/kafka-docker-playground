@@ -93,6 +93,7 @@ lab_run playground analyze logs -f "$saved_log.gz" --json
 lab_expect_exit 0
 lab_expect_contains '"files_with_findings": 1'
 lab_expect_contains '"title": "🧲 Unknown magic byte"'
+lab_expect_contains '"caused_by": "IllegalArgumentException: Unknown magic byte!"'
 lab_run playground container logs -c connect --errors --html
 lab_expect_exit 0
 lab_expect_contains "✅ HTML report saved: /tmp/playground-log-reports/connect-errors-"

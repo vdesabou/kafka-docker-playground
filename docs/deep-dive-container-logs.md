@@ -190,7 +190,7 @@ It holds **every** distinct record, not only the first `--max-findings` of each 
 | Section | What it shows |
 | --- | --- |
 | verdict and tiles | files scanned and with findings, distinct records, FATAL / ERROR / WARN occurrences |
-| 🔎 findings | well-known causes first (task killed, authentication, authorization, TLS, unknown magic byte, connection refused, `OutOfMemoryError`, class loading…), each with what to do, then the most frequent root causes no known cause explains |
+| 🔎 findings | well-known causes first (task killed, authentication, authorization, TLS, unknown magic byte, connection refused, `OutOfMemoryError`, class loading…), each with its earliest occurrence and what to do (for killed tasks: one line per distinct exception chain, with its `Caused by:`, count, connectors and first line, also in `.known_causes[].chains` of `--json`), then the most frequent root causes no known cause explains |
 | 📈 occurrences over time | ERROR/FATAL and WARN per time bucket, from the timestamps of the records |
 | 🌳 root causes | records grouped by their deepest exception (or by message when they have none), with occurrences and files |
 | 📄 one card per file | every distinct record, with its count, first and last line and timestamp, and its exception chain |
@@ -325,6 +325,8 @@ playground analyze logs -f /tmp/lab-connect.log.gz --json 2>/dev/null | jq -r '.
 # 🧨 A connector task was killed
 # 🧲 Unknown magic byte
 # …
+playground analyze logs -f /tmp/lab-connect.log.gz --json 2>/dev/null | jq -r '.known_causes[0].chains[] | "\(.occurrences) \(.connectors) \(.caused_by)"'
+# 1 ["bad-sink"] IllegalArgumentException: Unknown magic byte!   <- what killed the task: one line per distinct exception chain
 playground connector delete --connector bad-sink
 ```
 

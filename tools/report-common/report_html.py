@@ -58,6 +58,7 @@ h2{font-size:1.05rem;font-weight:600;margin-bottom:12px;color:#334155}
 .rec-badge.critical{background:#fee2e2;color:#dc2626}.rec-badge.high{background:#ffedd5;color:#ea580c}.rec-badge.medium{background:#fef3c7;color:#d97706}
 .rec-badge.low{background:#dcfce7;color:#16a34a}.rec-badge.info{background:#dbeafe;color:#2563eb}.rec-badge.ok{background:#cffafe;color:#0891b2}
 .rec-text{font-size:.88rem;flex:1;color:#334155}
+.rec-details{margin:6px 0 0;padding-left:18px}.rec-details li{margin:3px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;word-break:break-word}
 .table-card{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.07);overflow-x:auto;margin-bottom:22px}
 table{width:100%;border-collapse:collapse;font-size:.84rem}
 th{text-align:left;padding:7px 11px;background:#f8fafc;font-weight:600;border-bottom:2px solid #e2e8f0;color:#475569}
@@ -185,11 +186,14 @@ def sort_findings(items: List[dict]) -> List[dict]:
 
 
 def findings_html(items: List[dict]) -> str:
+    """items: {severity, text}, plus an optional details list shown as bullets under the text"""
     if not items:
         return ""
     return ("<div class='section-title'>🔎 Findings</div><div class='recs-list'>"
             + "".join(f'<div class="rec-card {f["severity"].lower()}"><span class="rec-badge {f["severity"].lower()}">'
-                      f'{SEVERITY_ICONS.get(f["severity"], "")} {e(f["severity"])}</span><span class="rec-text">{e(f["text"])}</span></div>'
+                      f'{SEVERITY_ICONS.get(f["severity"], "")} {e(f["severity"])}</span><span class="rec-text">{e(f["text"])}'
+                      + ("<ul class='rec-details'>" + "".join(f"<li>{e(d)}</li>" for d in f["details"]) + "</ul>" if f.get("details") else "")
+                      + "</span></div>"
                       for f in items)
             + "</div>")
 

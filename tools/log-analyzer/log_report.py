@@ -30,13 +30,14 @@ from report_html import (SERIES_1, SERIES_2, SEVERITY_ORDER, badge, card, charts
                          kpi, kpis_html, page, svg_hbars, svg_time_columns, time_bins, verdict_html)
 
 LEVEL_ORDER = {"FATAL": 0, "ERROR": 1, "WARN": 2}
+KILLED_TASK_PATTERN = r"Task threw an uncaught and unrecoverable exception|Task is being killed and will not recover"
 
 # well-known causes: (regex on the record, severity, title, what to do)
 HINTS = [
     (r"OutOfMemoryError", "CRITICAL", "💥 OutOfMemoryError",
      "the JVM ran out of heap (or metaspace / direct memory): raise -Xmx (KAFKA_HEAP_OPTS) or lower the batch sizes, "
      "and look at what fills the heap with playground debug heap-dump + playground analyze heap-dump"),
-    (r"Task threw an uncaught and unrecoverable exception|Task is being killed and will not recover",
+    (KILLED_TASK_PATTERN,
      "HIGH", "🧨 A connector task was killed",
      "it stays FAILED until it is restarted: fix the cause (the exception chain of the record), then "
      "playground connector restart --connector <connector>"),
@@ -142,22 +143,78 @@ def all_records(files: List[dict]):
             yield f, r
 
 
+KILLED_TASK_RE = re.compile(KILLED_TASK_PATTERN)
+CONNECTOR_RE = re.compile(r"\[([^\s|\]]+)\|task-\d+\]|Worker(?:Source|Sink)Task\{id=(\S+)-\d+\}")
+
+
+def earliest(matches: List[Tuple[int, dict, dict]]) -> Tuple[int, dict, dict]:
+    """The (file index, file, record) that happened first: by timestamp, else by file and line"""
+    return min(matches, key=lambda m: (m[2]["first_ts"] or "~", m[0], m[2]["first_line"]))
+
+
+def short_exception(line: str) -> str:
+    """'Caused by: org.x.FooException: msg' -> 'FooException: msg'"""
+    m = EXCEPTION_RE.match(line)
+    if not m:
+        return line
+    return m.group(1).split(".")[-1] + (f": {m.group(2)}" if m.group(2) else "")
+
+
+def killed_task_chains(matches: List[Tuple[int, dict, dict]]) -> List[dict]:
+    """Records of killed tasks grouped by exception chain (exception thrown + deepest cause), in order of first occurrence"""
+    groups: Dict[str, dict] = {}
+    for idx, f, r in matches:
+        thrown = r["chain"][0] if r["chain"] else short_message(r["message"])
+        cause = r["chain"][-1] if len(r["chain"]) > 1 else ""
+        # same chain on another table, topic or partition: {ORACDC.REDO.DB1-0=OffsetAndMetadata{offset=1}} and digits ignored
+        key = re.sub(r"[0-9]+", "#", re.sub(r"\{.*\}", "{…}", f"{thrown}\n{cause}"))
+        g = groups.setdefault(key, {"exception": short_exception(thrown), "caused_by": short_exception(cause) if cause else "",
+                                    "occurrences": 0, "connectors": OrderedDict(), "matches": []})
+        g["occurrences"] += r["count"]
+        m = CONNECTOR_RE.search(r["message"])
+        if m:
+            g["connectors"][m.group(1) or m.group(2)] = True
+        g["matches"].append((idx, f, r))
+    out = []
+    for g in groups.values():
+        _, f, r = earliest(g.pop("matches"))
+        out.append(dict(g, connectors=list(g["connectors"]), first_file=f["label"], first_line=r["first_line"],
+                        first_timestamp=r["first_ts"]))
+    out.sort(key=lambda g: (g["first_timestamp"] or "~", g["first_line"]))
+    return out
+
+
 def match_hints(files: List[dict], unit: str = "file") -> List[dict]:
     out = []
     for pattern, severity, title, advice in HINTS:
         rx = re.compile(pattern)
-        occurrences, labels, example = 0, OrderedDict(), None
-        for f, r in all_records(files):
-            if rx.search(r["text"]):
-                occurrences += r["count"]
-                labels[f["label"]] = True
-                if example is None:
-                    example = (f["label"], r["first_line"])
-        if occurrences:
-            where = (f"in {len(labels)} {unit}s (first at {example[0]} line {example[1]})" if len(labels) > 1
-                     else f"in {example[0]} (first at line {example[1]})")
-            out.append({"severity": severity, "title": title, "occurrences": occurrences, "files": list(labels),
-                        "text": f"{title}: {occurrences} occurrence(s) {where}: {advice}"})
+        matches = [(i, f, r) for i, f in enumerate(files) for r in f["records"] if rx.search(r["text"])]
+        if not matches:
+            continue
+        occurrences = sum(r["count"] for _, _, r in matches)
+        labels = list(OrderedDict((f["label"], True) for _, f, _ in matches))
+        _, first_f, first_r = earliest(matches)
+        first = f"line {first_r['first_line']}" + (f", {first_r['first_ts'].replace('T', ' ')}" if first_r["first_ts"] else "")
+        where = (f"in {len(labels)} {unit}s (first at {first_f['label']} {first})" if len(labels) > 1
+                 else f"in {first_f['label']} (first at {first})")
+        hint = {"severity": severity, "title": title, "occurrences": occurrences, "files": labels,
+                "text": f"{title}: {occurrences} occurrence(s) {where}: {advice}"}
+        if rx.pattern == KILLED_TASK_RE.pattern:
+            # the exception that killed the tasks is what to fix: one line per distinct chain
+            chains = killed_task_chains(matches)
+            hint["chains"] = chains
+            hint["text"] = (f"{title}: {occurrences} occurrence(s) {where}, {len(chains)} distinct exception chain(s) "
+                            f"(below, in order of first occurrence): {advice}")
+            details = []
+            for c in chains:
+                who = ", ".join(c["connectors"][:5]) + (f" (+{len(c['connectors']) - 5} more)" if len(c["connectors"]) > 5 else "")
+                details.append(f"×{c['occurrences']} {c['exception'][:250]}"
+                               + (f" ⬅️ Caused by: {c['caused_by'][:250]}" if c["caused_by"] else "")
+                               + (f" · {len(c['connectors'])} connector(s): {who}" if c["connectors"] else "")
+                               + f" · first at {c['first_file'] + ' ' if len(labels) > 1 else ''}line {c['first_line']}"
+                               + (f" ({c['first_timestamp'].replace('T', ' ')})" if c["first_timestamp"] else ""))
+            hint["details"] = details
+        out.append(hint)
     out.sort(key=lambda h: SEVERITY_ORDER.index(h["severity"]))
     return out
 
@@ -194,7 +251,7 @@ def root_causes(files: List[dict]) -> List[dict]:
 
 def findings(files: List[dict], hints: List[dict], causes: List[dict], top: int = 5, unit: str = "file") -> List[dict]:
     """Known causes first, then the most frequent root causes no known cause explains."""
-    res = [{"severity": h["severity"], "text": h["text"]} for h in hints]
+    res = [{k: h[k] for k in ("severity", "text", "details") if k in h} for h in hints]
     explained = [re.compile(p) for p, _, _, _ in HINTS]
     added = 0
     for c in causes:

@@ -150,7 +150,8 @@ def assess(c: dict) -> dict:
                                                 f"partition(s): run diagnose again to see whether it goes down"})
     if c["log_files"] is not None:
         hints = lr.match_hints([{"label": f["label"], "records": [r for r in f["records"] if mentions(c, r)]} for f in c["log_files"]])
-        f.extend({"severity": h["severity"], "text": h["text"].replace("<connector>", c["name"])} for h in hints)
+        f.extend({"severity": h["severity"], "text": h["text"].replace("<connector>", c["name"]), "details": h.get("details", [])}
+                 for h in hints)
         others = len([r for r in errors if r not in mine])
         if others:
             f.append({"severity": "INFO", "text": f"ℹ️ {others} other distinct ERROR/FATAL record(s) in the worker logs do not name "
