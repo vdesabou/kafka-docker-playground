@@ -5431,6 +5431,65 @@ function open_html_report() {
     fi
 }
 
+# S3 buckets tagged cflt_managed_id=<user>, for the "Amazon S3 details" of the HTML report of cloud-resources aws
+# costs-history: region, size per storage class and number of objects (daily CloudWatch metrics), server access logging,
+# lifecycle transitions. Cost Explorer has no cost per bucket without the resource-level data of the payer account.
+# Best effort: a bucket or a region that cannot be read is left out. $1: user, $2: output json file
+function save_aws_s3_buckets() {
+    local user="$1"
+    local out="$2"
+    local tmp_dir
+    tmp_dir=$(mktemp -d -t pg-aws-s3-buckets-XXXXXXXXXX)
+    local regions
+    regions=$(aws ec2 describe-regions --region us-east-1 --query 'Regions[].RegionName' --output text 2>/dev/null | tr '\t' '\n')
+    if [ -z "$regions" ]
+    then
+        rm -rf "$tmp_dir"
+        return 0
+    fi
+    # the tagging API only returns the buckets of the region it is called in: all the regions in parallel
+    local region
+    for region in $regions
+    do
+        aws resourcegroupstaggingapi get-resources --region "$region" --resource-type-filters s3 \
+            --tag-filters Key=cflt_managed_id,Values="$user" --query 'ResourceTagMappingList[].ResourceARN' --output text 2>/dev/null \
+            | tr '\t' '\n' | sed -n "s#^arn:aws:s3:::\(..*\)#\1 $region#p" > "$tmp_dir/buckets-$region.txt" &
+    done
+    wait
+    local start end
+    if [[ "$OSTYPE" == "darwin"* ]]
+    then
+        start=$(date -u -v-3d +%Y-%m-%dT00:00:00Z)
+    else
+        start=$(date -u -d "3 days ago" +%Y-%m-%dT00:00:00Z)
+    fi
+    end=$(date -u +%Y-%m-%dT00:00:00Z)
+    local bucket storage storage_type bytes objects logging lifecycle
+    # read on fd 3: the aws function of the playground can run docker run -i, which would eat the rest of the list on stdin
+    while read -r bucket region <&3
+    do
+        storage="[]"
+        for storage_type in $(aws cloudwatch list-metrics --region "$region" --namespace AWS/S3 --metric-name BucketSizeBytes \
+            --dimensions Name=BucketName,Value="$bucket" --query 'Metrics[].Dimensions[?Name==`StorageType`].Value' --output text 2>/dev/null)
+        do
+            bytes=$(aws cloudwatch get-metric-statistics --region "$region" --namespace AWS/S3 --metric-name BucketSizeBytes \
+                --dimensions Name=BucketName,Value="$bucket" Name=StorageType,Value="$storage_type" --start-time "$start" \
+                --end-time "$end" --period 86400 --statistics Average --output json 2>/dev/null | jq '[.Datapoints[]] | sort_by(.Timestamp) | last | .Average // 0')
+            storage=$(echo "$storage" | jq --arg t "$storage_type" --argjson b "${bytes:-0}" '. + [{type: $t, bytes: $b}]')
+        done
+        objects=$(aws cloudwatch get-metric-statistics --region "$region" --namespace AWS/S3 --metric-name NumberOfObjects \
+            --dimensions Name=BucketName,Value="$bucket" Name=StorageType,Value=AllStorageTypes --start-time "$start" \
+            --end-time "$end" --period 86400 --statistics Average --output json 2>/dev/null | jq '[.Datapoints[]] | sort_by(.Timestamp) | last | .Average // null')
+        logging=$(aws s3api get-bucket-logging --bucket "$bucket" --region "$region" --output json 2>/dev/null | jq '.LoggingEnabled.TargetBucket // null' 2>/dev/null)
+        lifecycle=$(aws s3api get-bucket-lifecycle-configuration --bucket "$bucket" --region "$region" --output json 2>/dev/null \
+            | jq '[.Rules[]? | select(.Status == "Enabled") | .Transitions[]? | "\(.StorageClass) after \(.Days) days"] | unique' 2>/dev/null)
+        jq -n --arg name "$bucket" --arg region "$region" --argjson storage "$storage" --argjson objects "${objects:-null}" \
+            --argjson logging "${logging:-null}" --argjson lifecycle "${lifecycle:-[]}" \
+            '{name: $name, region: $region, storage: $storage, objects: $objects, logging_target: $logging, lifecycle: $lifecycle}'
+    done 3< <(cat "$tmp_dir"/buckets-*.txt 2>/dev/null | sort -u) | jq -s '.' > "$out" 2>/dev/null || rm -f "$out"
+    rm -rf "$tmp_dir"
+}
+
 # HTML report of ccloud-costs-history / cloud-resources aws|azure costs-history (tools/cloud-costs/costs_report.py)
 # $1: ccloud, aws or azure, $2: folder with one raw cost API response per month (<start date>_<end date>.json),
 # $3: output dir, $4: non-empty to never open it, $5: user of the cflt_managed_id tag (aws, azure)

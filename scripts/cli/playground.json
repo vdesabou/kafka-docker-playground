@@ -493,7 +493,7 @@
             },
             {
               "name": "costs-history",
-              "description": "👛  Retrieve aws costs for each month since last year\n\nOne line per month over the past year, drawn as a histogram, which\nmakes a month that went wrong obvious at a glance. Use costs when you\nthen want to know which service it was.\n\nBy default it will only display total cost in dollars. Use the --detailed flag to see more information.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month, per service and usage type, the month x service matrix, the top usage types with the ones still billing, and the details of each month.",
+              "description": "👛  Retrieve aws costs for each month since last year\n\nOne line per month over the past year, drawn as a histogram, which\nmakes a month that went wrong obvious at a glance. Use costs when you\nthen want to know which service it was.\n\nBy default it will only display total cost in dollars. Use the --detailed flag to see more information.\n\n🌐 Also writes a self-contained HTML report in --output-dir, opened in the browser in an interactive terminal (--no-open to skip): cost per month, per service and usage type, the month x service matrix, the top usage types, and the details of each month.\n\n🪣 When S3 costs something, the report adds the Amazon S3 details: cost and volume (GB, requests) of each kind of S3 usage per month (storage, requests, Standard-IA retrieval, data sent to the Internet or to another region), the S3 buckets tagged cflt_managed_id=<user> (region, size per storage class, objects, access logging, lifecycle) and hints. Cost Explorer has no cost per bucket: that needs the resource-level data of the payer account.",
               "usage": "playground cloud-resources aws costs-history [OPTIONS]",
               "options": [
                 {
@@ -517,6 +517,14 @@
                   ],
                   "argument": "",
                   "description": "🚫 Do not open the HTML report in the browser"
+                },
+                {
+                  "names": [
+                    "--sample",
+                    "-s"
+                  ],
+                  "argument": "SAMPLE",
+                  "description": "🧪 Sample of tools/cloud-costs/samples: writes the HTML report from this dummy cost data, without calling AWS\n\nTo see what the report looks like before running it on your account.\n\nAllowed values: aws_dummy"
                 }
               ]
             }

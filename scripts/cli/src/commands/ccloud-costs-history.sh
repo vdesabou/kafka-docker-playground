@@ -55,6 +55,10 @@ readable_date () {
 }
 # Collect costs and display histograms
 while true; do
+    # the previous period ended today (same day of the month as the start date): nothing left, an empty period fails
+    if [[ ! "$current_date" < "$(date +%Y-%m-%d)" ]]; then
+        break
+    fi
     if [[ "$OSTYPE" == "darwin"* ]]; then
         end_date=$(date -j -v+1m -f "%Y-%m-%d" "$current_date" +%Y-%m-%d) # macOS: Add 1 month
     else
