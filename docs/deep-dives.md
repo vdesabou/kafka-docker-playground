@@ -55,6 +55,12 @@ CLI change that makes a page wrong shows up as a failing test.
 - 🧠 Commands: `connector create-or-update`, `status`, `offsets`… on Confluent Cloud
 - 🎬 Bite size session: [🚚 Move to fully managed](/sessions?id=🚚-move-a-self-managed-connector-to-fully-managed), [🏗️ Terraform](/sessions?id=🏗️-deploy-a-fully-managed-connector-with-terraform)
 
+### 🅾️ Oracle CDC: LogMiner and XStream, self-managed and fully managed
+
+- 📖 [Read the deep dive](/deep-dive-oracle-cdc.md)
+- 🧠 Commands: `analyze oracle-xstream-report`, `connector oracle-cdc-xstream generate-report`, `debug`
+- 🎬 Bite size session: [🅾️ Oracle XStream CDC lags or is idle](/sessions?id=🅾️-oracle-xstream-cdc-lags-or-is-idle)
+
 ## 🗃️ Topics and schemas
 
 ### 📨 Produce test data: schemas, payloads, keys, load

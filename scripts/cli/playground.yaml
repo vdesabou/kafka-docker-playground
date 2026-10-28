@@ -2590,7 +2590,8 @@ subcommands:
       streams pool advice chart, deltas between reports) in --output-dir, to share
       in a case; opened in the browser in an interactive terminal\n\n\U0001F516 Exit
       code is 0 when the analysis completed, 2 when the file is not an orclcdc_diag
-      report\n\n\U0001F449 Check documentation https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script\n\n\U0001F3AC
+      report\n\n\U0001F449 Check documentation https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-oracle-cdc\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%85%BE%EF%B8%8F-oracle-xstream-cdc-lags-or-is-idle"
     usage: playground analyze oracle-xstream-report [OPTIONS]
     options:
@@ -5861,7 +5862,8 @@ subcommands:
       say nothing about it.\n\n  debug             query the XStream views from the
       Oracle container\n  generate-report   run the official diagnostics script\n\nOnly
       available when an oracle container is running. To analyze a report\n(also one
-      sent by a customer), use 'playground analyze oracle-xstream-report'."
+      sent by a customer), use 'playground analyze oracle-xstream-report'.\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-oracle-cdc"
     usage: playground connector oracle-cdc-xstream COMMAND
     options: []
     subcommands:
@@ -5870,7 +5872,8 @@ subcommands:
         the diagnostics script Confluent support asks for, and opens the\nresult.
         This is the file to attach to a case rather than pasting\nindividual query
         outputs.\n\n\U0001F50E 'playground analyze oracle-xstream-report -c oracle'
-        generates it and\nanalyzes it in one go.\n\nSee https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script"
+        generates it and\nanalyzes it in one go.\n\nSee https://docs.confluent.io/kafka-connectors/oracle-xstream-cdc-source/current/troubleshooting.html#connector-diagnostics-script\n\n\U0001F36A
+        Deep dive: https://kafka-docker-playground.io/#/deep-dive-oracle-cdc"
       usage: playground connector oracle-cdc-xstream generate-report
       options: []
     - name: debug
@@ -5883,7 +5886,8 @@ subcommands:
         apply settings actually in effect\n  rules               the rules the XStream
         components are using\n\nRead it top to bottom when a connector is RUNNING
         but idle: a capture\nprocess not in CAPTURING CHANGES, or an SCN that never
-        moves, tells\nyou the problem is in the database and not in the connector."
+        moves, tells\nyou the problem is in the database and not in the connector.\n\n\U0001F36A
+        Deep dive: https://kafka-docker-playground.io/#/deep-dive-oracle-cdc"
       usage: playground connector oracle-cdc-xstream debug
       options: []
   - name: smt
