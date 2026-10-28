@@ -35,7 +35,13 @@ else
             continue
         fi
 
-        playground connector-plugin versions --connector-plugin $owner/$name --last 5
+        # release notes under each version: Confluent plugins only, the others have no changelog feed
+        with_changelog_flag=()
+        if [ "$owner" == "confluentinc" ]
+        then
+            with_changelog_flag=(--with-changelog)
+        fi
+        playground connector-plugin versions --connector-plugin $owner/$name --last 5 "${with_changelog_flag[@]}"
 
         # latest
         latest=$(playground connector-plugin versions --connector-plugin $owner/$name --last 1)
@@ -63,6 +69,10 @@ else
             echo "$current"
             log "Latest on Hub"
             echo "$latest"
+            if [ "$owner" == "confluentinc" ]
+            then
+                log "📜 To see everything that changed since v$version: playground connector-plugin changelog --connector-plugin $owner/$name --from $version"
+            fi
         fi 
     done
 fi

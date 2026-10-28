@@ -98,7 +98,8 @@ What the run prints, in order:
 ####################################################
 ```
 
-then the connector versions and status, and the links to the docs and the source code.
+then the connector versions (for Confluent plugins, the last 5 with their release notes, and the `connector-plugin changelog --from <yours>`
+command when yours is not the latest) and status, and the links to the docs and the source code.
 
 | Exit code | Printed | Meaning |
 | --- | --- | --- |

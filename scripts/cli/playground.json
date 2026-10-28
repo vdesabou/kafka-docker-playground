@@ -6011,7 +6011,7 @@
         },
         {
           "name": "versions",
-          "description": "🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n\nTells you in one line whether you are testing an outdated connector.\nTo move to the version reported as latest, re-run the example with\n'playground update-version --connector-tag <version>'.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%8E%AF-is-it-fixed-in-a-newer-version",
+          "description": "🧞 Get current and latest versions available on Confluent Hub for connector(s) used in example\n\nTells you in one line whether you are testing an outdated connector.\nTo move to the version reported as latest, re-run the example with\n'playground update-version --connector-tag <version>'.\n\nFor Confluent plugins, the last 5 versions come with their release notes\n(playground connector-plugin versions --with-changelog), and an outdated\nversion with the playground connector-plugin changelog command that lists\neverything that changed since.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-run-and-versions\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%8E%AF-is-it-fixed-in-a-newer-version",
           "usage": "playground connector versions",
           "options": []
         },
