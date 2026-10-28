@@ -489,6 +489,9 @@ commands:
       run-log true|false                 write a masked log of each
                                          'playground run' to share it
       run-log-folder <dir>               where to write the run logs
+      open-diagnose-report-on-failure    open the HTML report of the 'connector
+                                         diagnose' run when a connector fails
+                                         (true or false)
       display-last-updated-connector-plugins
                                          list the connector plugins released
                                          recently at the end of a
@@ -655,6 +658,23 @@ commands:
       help: folder
     examples:
     - playground config run-log-folder ~/Documents/playground-run-logs
+
+  - name: open-diagnose-report-on-failure
+    help: |-
+      🩺 open the HTML report when a connector fails (default true)
+
+      When 'connector create-or-update' or 'connector wait' find a FAILED
+      connector or task, they run 'playground connector diagnose' on it. Its
+      HTML report is opened in the browser from an interactive terminal (never
+      in CI). Set it to false to only print the path of the report.
+    args:
+    - name: enabled
+      required: false
+      default: "true"
+      allowed: ["true", "false"]
+    examples:
+    - playground config open-diagnose-report-on-failure false
+    - playground config open-diagnose-report-on-failure true
 
   - name: display-last-updated-connector-plugins
     help: |-
@@ -9364,9 +9384,11 @@ commands:
 
       When waiting for RUNNING, it fails right away if the connector or one of
       its tasks is FAILED, since a failed task does not recover on its own,
-      and runs 'playground connector diagnose --no-open' on it: status with
-      the trace, digest of the connect errors since the wait started, offsets,
-      next steps and HTML report (PG_SKIP_AUTO_DIAGNOSE=1 for the status only).
+      and runs 'playground connector diagnose' on it: status with the trace,
+      digest of the connect errors since the wait started, offsets, next
+      steps and HTML report, opened in the browser from an interactive
+      terminal ('playground config open-diagnose-report-on-failure false' to
+      only print its path, PG_SKIP_AUTO_DIAGNOSE=1 for the status only).
       A connector RUNNING without any task for 30 seconds (Replicator without
       matching topic yet, JDBC source without table) is accepted with a
       warning. A Datagen task that failed with "Stopping connector: generated
@@ -10909,7 +10931,8 @@ commands:
       they are not, so a broken config stops the example immediately instead
       of failing silently later. A FAILED connector or task is reported with
       'playground connector diagnose' (trace, error digest, offsets, next
-      steps and HTML report). When the script that runs is a reproduction
+      steps and HTML report, opened in the browser unless 'playground config
+      open-diagnose-report-on-failure false'). When the script that runs is a reproduction
       model, a connector that is not RUNNING is only reported as a warning,
       since a reproduction model often creates a failing connector on
       purpose. Use --wait to fail there too, --no-wait to skip the wait.

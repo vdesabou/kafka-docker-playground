@@ -133,8 +133,14 @@ do
                 playground connector status --connector "$connector"
             else
                 # status with the trace, error digest, offsets and next steps, on the connect logs of the wait plus a
-                # margin for the creation. Best effort: the wait fails anyway
-                playground connector diagnose --connector "$connector" --since "$((elapsed + 120))s" --max-findings 5 --no-open
+                # margin for the creation. Best effort: the wait fails anyway. The HTML report opens like a manual
+                # diagnose (interactive terminal only, never in CI) unless 'playground config open-diagnose-report-on-failure false'
+                maybe_no_open=""
+                if [ "$(playground config get open-diagnose-report-on-failure)" == "false" ]
+                then
+                    maybe_no_open="--no-open"
+                fi
+                playground connector diagnose --connector "$connector" --since "$((elapsed + 120))s" --max-findings 5 $maybe_no_open
             fi
             exit 1
         fi

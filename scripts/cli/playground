@@ -1662,7 +1662,7 @@ playground_state_del_usage() {
 playground_config_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground config\n\n"
-    printf "  ⚙️ Configure CLI\n  \n  Your preferences, kept between sessions:\n  \n    editor <name>                      the editor every command opens files\n                                       with (code, vi, nano...)\n    folder_zip_or_jar <dir>...         where to look for connector zips and\n                                       jars, in addition to the current\n                                       folder\n    clipboard true|false               copy connector config to the\n                                       clipboard (macOS only)\n    container-kill-all-before-run      kill every container before each run,\n                                       or just stop the example\n    cleanup-ccloud-resources-after-run delete the Confluent Cloud connectors\n                                       and topics of the last ccloud run on\n                                       stop and before the next run\n                                       (ask, true or false)\n    check-and-update-repo-version      warn when your clone is out of date\n    run-log true|false                 write a masked log of each\n                                       'playground run' to share it\n    run-log-folder <dir>               where to write the run logs\n    display-last-updated-connector-plugins\n                                       list the connector plugins released\n                                       recently at the end of a\n                                       self-managed run (true or false,\n                                       -days <n>, -vendor <vendor|all>)\n    open-ccloud-connector-in-browser   open fully managed connectors, and in\n    open-grafana-in-browser            which browser\n  \n  🎓 Tip: all of them can also be changed from the '⚙️ CLI preferences'\n  entry of the 'playground run' menu.\n\n"
+    printf "  ⚙️ Configure CLI\n  \n  Your preferences, kept between sessions:\n  \n    editor <name>                      the editor every command opens files\n                                       with (code, vi, nano...)\n    folder_zip_or_jar <dir>...         where to look for connector zips and\n                                       jars, in addition to the current\n                                       folder\n    clipboard true|false               copy connector config to the\n                                       clipboard (macOS only)\n    container-kill-all-before-run      kill every container before each run,\n                                       or just stop the example\n    cleanup-ccloud-resources-after-run delete the Confluent Cloud connectors\n                                       and topics of the last ccloud run on\n                                       stop and before the next run\n                                       (ask, true or false)\n    check-and-update-repo-version      warn when your clone is out of date\n    run-log true|false                 write a masked log of each\n                                       'playground run' to share it\n    run-log-folder <dir>               where to write the run logs\n    open-diagnose-report-on-failure    open the HTML report of the 'connector\n                                       diagnose' run when a connector fails\n                                       (true or false)\n    display-last-updated-connector-plugins\n                                       list the connector plugins released\n                                       recently at the end of a\n                                       self-managed run (true or false,\n                                       -days <n>, -vendor <vendor|all>)\n    open-ccloud-connector-in-browser   open fully managed connectors, and in\n    open-grafana-in-browser            which browser\n  \n  🎓 Tip: all of them can also be changed from the '⚙️ CLI preferences'\n  entry of the 'playground run' menu.\n\n"
   else
     printf "playground config - ⚙️ Configure CLI\n\n"
   fi
@@ -1684,6 +1684,7 @@ playground_config_usage() {
   printf "  %s   when running an example, always call playground container kill-all first. If set to false, it will call playground stop instead.\n" "$(green "container-kill-all-before-run")                "
   printf "  %s   📄 write a masked log of each 'playground run' (default true)\n" "$(green "run-log")                                      "
   printf "  %s   🗂️ folder of the run logs\n" "$(green "run-log-folder")                               "
+  printf "  %s   🩺 open the HTML report when a connector fails (default true)\n" "$(green "open-diagnose-report-on-failure")              "
   printf "  %s   🆕 at the end of a self-managed connector run, list the connector plugins released recently on Confluent Hub (default false)\n" "$(green "display-last-updated-connector-plugins")       "
   printf "  %s   📅 number of days to look back for display-last-updated-connector-plugins\n" "$(green "display-last-updated-connector-plugins-days")  "
   printf "  %s   🏢 vendor of the connector plugins listed by display-last-updated-connector-plugins\n" "$(green "display-last-updated-connector-plugins-vendor")"
@@ -2247,6 +2248,49 @@ playground_config_run_log_folder_usage() {
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
     printf "  playground config run-log-folder ~/Documents/playground-run-logs\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_config_open_diagnose_report_on_failure_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground config open-diagnose-report-on-failure\n\n"
+    printf "  🩺 open the HTML report when a connector fails (default true)\n  \n  When 'connector create-or-update' or 'connector wait' find a FAILED\n  connector or task, they run 'playground connector diagnose' on it. Its\n  HTML report is opened in the browser from an interactive terminal (never\n  in CI). Set it to false to only print the path of the report.\n\n"
+  else
+    printf "playground config open-diagnose-report-on-failure - 🩺 open the HTML report when a connector fails (default true)\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground config open-diagnose-report-on-failure [ENABLED]\n"
+  printf "  playground config open-diagnose-report-on-failure --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "ENABLED")"
+    printf "\n"
+    printf "    %s\n" "Allowed: true, false"
+    printf "    %s\n" "Default: true"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground config open-diagnose-report-on-failure false\n"
+    printf "  playground config open-diagnose-report-on-failure true\n"
     echo
 
   fi
@@ -12504,7 +12548,7 @@ playground_connector_status_usage() {
 playground_connector_wait_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector wait\n\n"
-    printf "  ⏳ Wait for connectors to reach a state\n  \n  Polls the connector status every --interval seconds until the connector\n  and all its tasks are in --state (RUNNING by default), and fails after\n  --max-wait seconds, displaying the status with the stack trace.\n  \n  RUNNING is only reached when the connector and its tasks are still\n  RUNNING one --interval later, since a task is RUNNING before it\n  processes its first record and can fail right after.\n  \n  When waiting for RUNNING, it fails right away if the connector or one of\n  its tasks is FAILED, since a failed task does not recover on its own,\n  and runs 'playground connector diagnose --no-open' on it: status with\n  the trace, digest of the connect errors since the wait started, offsets,\n  next steps and HTML report (PG_SKIP_AUTO_DIAGNOSE=1 for the status only).\n  A connector RUNNING without any task for 30 seconds (Replicator without\n  matching topic yet, JDBC source without table) is accepted with a\n  warning. A Datagen task that failed with \"Stopping connector: generated\n  the configured N number of messages\" (\"iterations\" reached) is\n  completed, not FAILED, and counts as RUNNING.\n  For the same reason, --state FAILED is reached as soon as the connector\n  or one of its tasks is FAILED (the connector itself usually stays\n  RUNNING when only a task fails).\n  \n  🎓 Tip: 'connector create-or-update' already waits for RUNNING. Use\n  it for another state, or after 'connector create-or-update --no-wait'.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%8C-the-sink-fails-right-after-it-is-deployed\n\n"
+    printf "  ⏳ Wait for connectors to reach a state\n  \n  Polls the connector status every --interval seconds until the connector\n  and all its tasks are in --state (RUNNING by default), and fails after\n  --max-wait seconds, displaying the status with the stack trace.\n  \n  RUNNING is only reached when the connector and its tasks are still\n  RUNNING one --interval later, since a task is RUNNING before it\n  processes its first record and can fail right after.\n  \n  When waiting for RUNNING, it fails right away if the connector or one of\n  its tasks is FAILED, since a failed task does not recover on its own,\n  and runs 'playground connector diagnose' on it: status with the trace,\n  digest of the connect errors since the wait started, offsets, next\n  steps and HTML report, opened in the browser from an interactive\n  terminal ('playground config open-diagnose-report-on-failure false' to\n  only print its path, PG_SKIP_AUTO_DIAGNOSE=1 for the status only).\n  A connector RUNNING without any task for 30 seconds (Replicator without\n  matching topic yet, JDBC source without table) is accepted with a\n  warning. A Datagen task that failed with \"Stopping connector: generated\n  the configured N number of messages\" (\"iterations\" reached) is\n  completed, not FAILED, and counts as RUNNING.\n  For the same reason, --state FAILED is reached as soon as the connector\n  or one of its tasks is FAILED (the connector itself usually stays\n  RUNNING when only a task fails).\n  \n  🎓 Tip: 'connector create-or-update' already waits for RUNNING. Use\n  it for another state, or after 'connector create-or-update --no-wait'.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%8C-the-sink-fails-right-after-it-is-deployed\n\n"
   else
     printf "playground connector wait - ⏳ Wait for connectors to reach a state\n\n"
   fi
@@ -14513,7 +14557,7 @@ playground_connector_connect_migration_utility_migrate_usage() {
 playground_connector_create_or_update_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector create-or-update\n\n"
-    printf "  🧑‍🎨  Create or update connector\n  \n  The command every example uses to deploy its connector. The json config\n  is read from stdin, usually as a heredoc, so it stays readable in the\n  script. If the connector already exists it is updated in place, which\n  makes the command safe to re-run while you iterate on a configuration.\n  \n  The command then waits for the connector and all its tasks to be\n  RUNNING, displays the connector status, and fails with the error if\n  they are not, so a broken config stops the example immediately instead\n  of failing silently later. A FAILED connector or task is reported with\n  'playground connector diagnose' (trace, error digest, offsets, next\n  steps and HTML report). When the script that runs is a reproduction\n  model, a connector that is not RUNNING is only reported as a warning,\n  since a reproduction model often creates a failing connector on\n  purpose. Use --wait to fail there too, --no-wait to skip the wait.\n  \n  Fully managed connectors are only waited for with --wait.\n  \n  🎓 Tip: add --validate to have the config checked by the plugin before\n  it is deployed, which reports every invalid property at once.\n  \n  An update shows the keys added, removed and changed compared to the\n  running config (secrets masked). The config can also be given in the\n  REST API format ({\"name\": ..., \"config\": {...}}, as returned by\n  GET /connectors/<name>), or as the path of a json file.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%8C-the-sink-fails-right-after-it-is-deployed\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%8F%%97%%EF%%B8%%8F-deploy-a-fully-managed-connector-with-terraform\n\n"
+    printf "  🧑‍🎨  Create or update connector\n  \n  The command every example uses to deploy its connector. The json config\n  is read from stdin, usually as a heredoc, so it stays readable in the\n  script. If the connector already exists it is updated in place, which\n  makes the command safe to re-run while you iterate on a configuration.\n  \n  The command then waits for the connector and all its tasks to be\n  RUNNING, displays the connector status, and fails with the error if\n  they are not, so a broken config stops the example immediately instead\n  of failing silently later. A FAILED connector or task is reported with\n  'playground connector diagnose' (trace, error digest, offsets, next\n  steps and HTML report, opened in the browser unless 'playground config\n  open-diagnose-report-on-failure false'). When the script that runs is a\n  reproduction\n  model, a connector that is not RUNNING is only reported as a warning,\n  since a reproduction model often creates a failing connector on\n  purpose. Use --wait to fail there too, --no-wait to skip the wait.\n  \n  Fully managed connectors are only waited for with --wait.\n  \n  🎓 Tip: add --validate to have the config checked by the plugin before\n  it is deployed, which reports every invalid property at once.\n  \n  An update shows the keys added, removed and changed compared to the\n  running config (secrets masked). The config can also be given in the\n  REST API format ({\"name\": ..., \"config\": {...}}, as returned by\n  GET /connectors/<name>), or as the path of a json file.\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%94%%8C-the-sink-fails-right-after-it-is-deployed\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%8F%%97%%EF%%B8%%8F-deploy-a-fully-managed-connector-with-terraform\n\n"
   else
     printf "playground connector create-or-update - 🧑‍🎨  Create or update connector\n\n"
   fi
@@ -19128,6 +19172,7 @@ function interactive_config_menu () {
     "check-and-update-repo-version|🔄|Check that the repo is up to date|true"
     "run-log|📄|Write a masked log of each run, to share it|true"
     "run-log-folder|🗂️|Folder of the run logs|$(run_log_default_folder)"
+    "open-diagnose-report-on-failure|🩺|Open the diagnose HTML report when a connector fails|true"
     "display-last-updated-connector-plugins|🆕|List recently released connector plugins at the end of a run|false"
     "display-last-updated-connector-plugins-days|📅|Days to look back for recently released connector plugins|3"
     "display-last-updated-connector-plugins-vendor|🏢|Vendor of recently released connector plugins (all: every vendor)|confluentinc"
@@ -32118,6 +32163,15 @@ playground_config_run_log_folder_command() {
   fi
   log "🗂️ configuring run-log-folder with $folder"
   playground config set run-log-folder "$folder"
+
+}
+
+# :command.function
+playground_config_open_diagnose_report_on_failure_command() {
+
+  # src/commands/config/open-diagnose-report-on-failure.sh
+  log "🩺 configuring open-diagnose-report-on-failure with ${args[enabled]}"
+  playground config set open-diagnose-report-on-failure "${args[enabled]}"
 
 }
 
@@ -55303,8 +55357,14 @@ playground_connector_wait_command() {
                   playground connector status --connector "$connector"
               else
                   # status with the trace, error digest, offsets and next steps, on the connect logs of the wait plus a
-                  # margin for the creation. Best effort: the wait fails anyway
-                  playground connector diagnose --connector "$connector" --since "$((elapsed + 120))s" --max-findings 5 --no-open
+                  # margin for the creation. Best effort: the wait fails anyway. The HTML report opens like a manual
+                  # diagnose (interactive terminal only, never in CI) unless 'playground config open-diagnose-report-on-failure false'
+                  maybe_no_open=""
+                  if [ "$(playground config get open-diagnose-report-on-failure)" == "false" ]
+                  then
+                      maybe_no_open="--no-open"
+                  fi
+                  playground connector diagnose --connector "$connector" --since "$((elapsed + 120))s" --max-findings 5 $maybe_no_open
               fi
               exit 1
           fi
@@ -66959,6 +67019,13 @@ playground_config_parse_requirements() {
       shift $#
       ;;
 
+    open-diagnose-report-on-failure)
+      action="open-diagnose-report-on-failure"
+      shift
+      playground_config_open_diagnose_report_on_failure_parse_requirements "$@"
+      shift $#
+      ;;
+
     display-last-updated-connector-plugins)
       action="display-last-updated-connector-plugins"
       shift
@@ -68271,6 +68338,87 @@ playground_config_run_log_folder_parse_requirements() {
     printf "examples:\n" >&2
     printf "  playground config run-log-folder ~/Documents/playground-run-logs\n" >&2
 
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_config_open_diagnose_report_on_failure_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_config_open_diagnose_report_on_failure_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="config open-diagnose-report-on-failure"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          # :argument.case
+          if [[ -z ${args['enabled']+x} ]]; then
+            args['enabled']=$1
+            shift
+          else
+            printf "invalid argument: %s\n" "$key" >&2
+            exit 1
+          fi
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['enabled']+x} ]]; then
+          args['enabled']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.default_assignments
+  [[ -n ${args['enabled']:-} ]] || args['enabled']="true"
+
+  # :command.whitelist_filter
+  if [[ -n ${args['enabled']:-} ]] && [[ ! ${args['enabled']:-} =~ ^(true|false)$ ]]; then
+    printf "%s\n" "enabled must be one of: true, false" >&2
     exit 1
   fi
 
@@ -101223,6 +101371,11 @@ playground_config_completion() {
         playground_config_run_log_folder_completion "$completion_current" "$@"
         return
         ;;
+      open-diagnose-report-on-failure)
+        shift
+        playground_config_open_diagnose_report_on_failure_completion "$completion_current" "$@"
+        return
+        ;;
       display-last-updated-connector-plugins)
         shift
         playground_config_display_last_updated_connector_plugins_completion "$completion_current" "$@"
@@ -101257,7 +101410,7 @@ playground_config_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" editor folder_zip_or_jar clipboard open-ccloud-connector-in-browser open-grafana-in-browser container-kill-all-before-run run-log run-log-folder display-last-updated-connector-plugins display-last-updated-connector-plugins-days display-last-updated-connector-plugins-vendor cleanup-ccloud-resources-after-run check-and-update-repo-version
+  completion_candidates "$completion_current" editor folder_zip_or_jar clipboard open-ccloud-connector-in-browser open-grafana-in-browser container-kill-all-before-run run-log run-log-folder open-diagnose-report-on-failure display-last-updated-connector-plugins display-last-updated-connector-plugins-days display-last-updated-connector-plugins-vendor cleanup-ccloud-resources-after-run check-and-update-repo-version
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -101717,6 +101870,47 @@ playground_config_run_log_folder_completion() {
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_config_open_diagnose_report_on_failure_completion() {
+  local completion_current="$1"
+  local completion_arg_index=0
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        if [[ $completion_arg_index -ge 1 ]]; then
+          return
+        fi
+        completion_arg_index=$((completion_arg_index + 1))
+        shift
+
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+  if [[ $completion_current != -* ]]; then
+    case "$completion_arg_index" in
+      0)
+        local -a completion_values=(
+          "true"
+          "false"
+        )
+        completion_candidates "$completion_current" "${completion_values[@]}"
+        ;;
+    esac
   fi
 
 }
@@ -117239,6 +117433,7 @@ run() {
     "config container-kill-all-before-run") playground_config_container_kill_all_before_run_command ;;
     "config run-log") playground_config_run_log_command ;;
     "config run-log-folder") playground_config_run_log_folder_command ;;
+    "config open-diagnose-report-on-failure") playground_config_open_diagnose_report_on_failure_command ;;
     "config display-last-updated-connector-plugins") playground_config_display_last_updated_connector_plugins_command ;;
     "config display-last-updated-connector-plugins-days") playground_config_display_last_updated_connector_plugins_days_command ;;
     "config display-last-updated-connector-plugins-vendor") playground_config_display_last_updated_connector_plugins_vendor_command ;;

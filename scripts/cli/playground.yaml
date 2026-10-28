@@ -64,7 +64,9 @@ subcommands:
     \ check-and-update-repo-version      warn when your clone is out of date\n  run-log
     true|false                 write a masked log of each\n                                     'playground
     run' to share it\n  run-log-folder <dir>               where to write the run
-    logs\n  display-last-updated-connector-plugins\n                                     list
+    logs\n  open-diagnose-report-on-failure    open the HTML report of the 'connector\n
+    \                                    diagnose' run when a connector fails\n                                     (true
+    or false)\n  display-last-updated-connector-plugins\n                                     list
     the connector plugins released\n                                     recently
     at the end of a\n                                     self-managed run (true or
     false,\n                                     -days <n>, -vendor <vendor|all>)\n
@@ -132,6 +134,14 @@ subcommands:
     description: "\U0001F5C2️ folder of the run logs\n\nDefault is /tmp/playground-run-logs.\n\nThe
       last 50 run logs of the folder are kept."
     usage: playground config run-log-folder FOLDER
+    options: []
+  - name: open-diagnose-report-on-failure
+    description: "\U0001FA7A open the HTML report when a connector fails (default
+      true)\n\nWhen 'connector create-or-update' or 'connector wait' find a FAILED\nconnector
+      or task, they run 'playground connector diagnose' on it. Its\nHTML report is
+      opened in the browser from an interactive terminal (never\nin CI). Set it to
+      false to only print the path of the report."
+    usage: playground config open-diagnose-report-on-failure [ENABLED]
     options: []
   - name: display-last-updated-connector-plugins
     description: "\U0001F195 at the end of a self-managed connector run, list the
@@ -5702,15 +5712,17 @@ subcommands:
       it\nprocesses its first record and can fail right after.\n\nWhen waiting for
       RUNNING, it fails right away if the connector or one of\nits tasks is FAILED,
       since a failed task does not recover on its own,\nand runs 'playground connector
-      diagnose --no-open' on it: status with\nthe trace, digest of the connect errors
-      since the wait started, offsets,\nnext steps and HTML report (PG_SKIP_AUTO_DIAGNOSE=1
-      for the status only).\nA connector RUNNING without any task for 30 seconds (Replicator
-      without\nmatching topic yet, JDBC source without table) is accepted with a\nwarning.
-      A Datagen task that failed with \"Stopping connector: generated\nthe configured
-      N number of messages\" (\"iterations\" reached) is\ncompleted, not FAILED, and
-      counts as RUNNING.\nFor the same reason, --state FAILED is reached as soon as
-      the connector\nor one of its tasks is FAILED (the connector itself usually stays\nRUNNING
-      when only a task fails).\n\n\U0001F393 Tip: 'connector create-or-update' already
+      diagnose' on it: status with the trace,\ndigest of the connect errors since
+      the wait started, offsets, next\nsteps and HTML report, opened in the browser
+      from an interactive\nterminal ('playground config open-diagnose-report-on-failure
+      false' to\nonly print its path, PG_SKIP_AUTO_DIAGNOSE=1 for the status only).\nA
+      connector RUNNING without any task for 30 seconds (Replicator without\nmatching
+      topic yet, JDBC source without table) is accepted with a\nwarning. A Datagen
+      task that failed with \"Stopping connector: generated\nthe configured N number
+      of messages\" (\"iterations\" reached) is\ncompleted, not FAILED, and counts
+      as RUNNING.\nFor the same reason, --state FAILED is reached as soon as the connector\nor
+      one of its tasks is FAILED (the connector itself usually stays\nRUNNING when
+      only a task fails).\n\n\U0001F393 Tip: 'connector create-or-update' already
       waits for RUNNING. Use\nit for another state, or after 'connector create-or-update
       --no-wait'.\n\n\U0001F36A Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-create-or-update\n\U0001F3AC
       Bite size session: https://kafka-docker-playground.io/#/sessions?id=%F0%9F%94%8C-the-sink-fails-right-after-it-is-deployed"
@@ -6970,11 +6982,12 @@ subcommands:
       and all its tasks to be\nRUNNING, displays the connector status, and fails with
       the error if\nthey are not, so a broken config stops the example immediately
       instead\nof failing silently later. A FAILED connector or task is reported with\n'playground
-      connector diagnose' (trace, error digest, offsets, next\nsteps and HTML report).
-      When the script that runs is a reproduction\nmodel, a connector that is not
-      RUNNING is only reported as a warning,\nsince a reproduction model often creates
-      a failing connector on\npurpose. Use --wait to fail there too, --no-wait to
-      skip the wait.\n\nFully managed connectors are only waited for with --wait.\n\n\U0001F393
+      connector diagnose' (trace, error digest, offsets, next\nsteps and HTML report,
+      opened in the browser unless 'playground config\nopen-diagnose-report-on-failure
+      false'). When the script that runs is a reproduction\nmodel, a connector that
+      is not RUNNING is only reported as a warning,\nsince a reproduction model often
+      creates a failing connector on\npurpose. Use --wait to fail there too, --no-wait
+      to skip the wait.\n\nFully managed connectors are only waited for with --wait.\n\n\U0001F393
       Tip: add --validate to have the config checked by the plugin before\nit is deployed,
       which reports every invalid property at once.\n\nAn update shows the keys added,
       removed and changed compared to the\nrunning config (secrets masked). The config

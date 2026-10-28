@@ -229,9 +229,10 @@ Gotchas:
 - `status` on a FAILED connector ends with a hint: `playground connector diagnose --connector <name>` gives the error
   digest, the lag and the next steps.
 - When the wait for RUNNING finds a FAILED connector or task, `create-or-update` / `wait` run that
-  `connector diagnose` for you (`--no-open`, connect errors since the wait started, 5 findings at most), so the
-  output of a failed example or CI job already has the digest and the path of the HTML report. Set
-  `PG_SKIP_AUTO_DIAGNOSE=1` to get only the status.
+  `connector diagnose` for you (connect errors since the wait started, 5 findings at most), so the output of a
+  failed example or CI job already has the digest and the path of the HTML report. From an interactive terminal the
+  report opens in the browser (never in CI): `playground config open-diagnose-report-on-failure false` to only print
+  its path. Set `PG_SKIP_AUTO_DIAGNOSE=1` to get only the status.
 - `update` opens the config **and** the list of every parameter of the plugin in your editor: it's interactive, not for
   scripts.
 
