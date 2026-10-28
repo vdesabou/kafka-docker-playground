@@ -197,7 +197,7 @@ It holds **every** distinct record, not only the first `--max-findings` of each 
 
 A sticky bar above the root causes filters them and the records: FATAL / ERROR / WARN chips with several levels
 (`--include-warnings`), and a **Connector** picker when the records carry the connector context of the Connect log
-line (`ERROR [my-connector|task-0] …`, `[my-connector|worker]`, `WorkerSinkTask{id=my-connector-0}`), most frequent
+line (`ERROR [my-connector|task-0] …`, `[my-connector|task-0|offsets]`, `[my-connector|worker]`, `WorkerSinkTask{id=my-connector-0}`), most frequent
 first, with "no connector context" for the worker records. On a worker running dozens of connectors, pick one to see
 only its errors. `--json` gives the same in `.summary.by_connector`, `.root_causes[].connectors` and
 `.files[].records[].connector`.

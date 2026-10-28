@@ -81,8 +81,9 @@ HINTS = [
 ]
 
 EXCEPTION_RE = re.compile(r"^(?:Caused by:\s*)?((?:[a-zA-Z_$][\w$]*\.)+[A-Z][\w$]*(?:Exception|Error|Throwable))(?::\s*(.*))?$")
-# connector of a record: the [connector|task-0] / [connector|worker] MDC context of Connect, or the id of the task
-CONNECTOR_RE = re.compile(r"\[([^\s|\]]+)\|(?:task-\d+|worker)\]|Worker(?:Source|Sink)Task\{id=(\S+)-\d+\}")
+# connector of a record: the [connector|task-0] / [connector|worker] MDC context of Connect, with an optional scope
+# ([connector|task-0|offsets], Oracle CDC [connector|task-0|redoLog]), or the id of the task
+CONNECTOR_RE = re.compile(r"\[([^\s|\]]+)\|(?:task-\d+|worker)(?:\|[^\s|\]]+)?\]|Worker(?:Source|Sink)Task\{id=(\S+)-\d+\}")
 
 
 def parse_records(path: str) -> List[dict]:
@@ -223,7 +224,9 @@ def match_hints(files: List[dict], unit: str = "file") -> List[dict]:
 
 def short_message(message: str) -> str:
     """The message of a record without its timestamp, level, [connector|task] context and (logger:line)."""
-    m = re.sub(r"^\[?\d{4}-\d{2}-\d{2}[ T][\d:,.]*\]?\s*", "", message)
+    # journalctl prefix: "Oct 06 07:35:50 host connect-distributed[1080]: "
+    m = re.sub(r"^[A-Z][a-z]{2} [ \d]\d \d\d:\d\d:\d\d \S+ [^\s:]+: ", "", message)
+    m = re.sub(r"^\[?\d{4}-\d{2}-\d{2}[ T][\d:,.]*\]?\s*", "", m)
     m = re.sub(r"^(\[[^]]*\]\s*)?(TRACE|DEBUG|INFO|WARN|WARNING|ERROR|FATAL|SEVERE)\b:?\s*", "", m)
     m = re.sub(r"^\[[^]]*\|[^]]*\]\s*", "", m)
     return re.sub(r"\s*\([\w$.]+:\d+\)\s*$", "", m)
