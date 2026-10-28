@@ -14,7 +14,7 @@ A Salesforce PushTopics Source connector reads Leads from a first Salesforce acc
 * Two Salesforce accounts: go to [Salesforce developer portal](https://developer.salesforce.com/signup/) and register two accounts.
 * On each account, an External Client App with the JWT Bearer flow: follow [these instructions](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-salesforce-cdc-source#oauth-with-jwt-bearer-flow). The same certificate (`salesforce-confluent.keystore.jks`) is used for both apps.
 * With CP 8.x, connector version 2.0.29 or later.
-* `salesforce-confluent.keystore.jks` (password `confluent`) in this folder. If it is missing, the script tries to download it from the playground S3 bucket (Confluent employees only, with AWS credentials set).
+* `salesforce-confluent.keystore.jks` (password `confluent`) in this folder. The keystore of `playground salesforce setup` (`~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks`) is copied here automatically; without it, the script tries to download the shared one from the playground S3 bucket (Confluent employees only, with AWS credentials set).
 
 | Variable | Description |
 | --- | --- |

@@ -6124,3 +6124,41 @@ function connect_cp_version_greater_than_8 () {
     return 1
   fi
 }
+# The JWT keystore of the Salesforce examples generated or imported by 'playground salesforce setup':
+# one per user, outside the repository (git clean can't remove it), next to the secrets store.
+function salesforce_user_keystore_path () {
+  echo "${PLAYGROUND_SECRETS_DIR:-$HOME/.config/kafka-docker-playground}/salesforce-confluent.keystore.jks"
+}
+
+# Copy the user keystore into every Salesforce example folder (and the extra folders given, e.g. a
+# reproduction model): the docker compose files mount it from there, sometimes from the folder of
+# another example. Only rewrites a copy that differs. Logs go to stderr.
+#
+#   salesforce_sync_user_keystore "$root_folder" "$PWD"
+function salesforce_sync_user_keystore () {
+  local root="$1"
+  shift
+  local user_keystore folder replaced=0
+  user_keystore="$(salesforce_user_keystore_path)"
+  if [ ! -f "$user_keystore" ]
+  then
+    return 0
+  fi
+  for folder in "$root"/connect/connect-salesforce-* "$root"/ccloud/fm-salesforce-* "$@"
+  do
+    if [ ! -d "$folder" ] || cmp -s "$user_keystore" "$folder/salesforce-confluent.keystore.jks"
+    then
+      continue
+    fi
+    if [ -f "$folder/salesforce-confluent.keystore.jks" ]
+    then
+      replaced=1
+    fi
+    rm -rf "$folder/salesforce-confluent.keystore.jks"
+    cp "$user_keystore" "$folder/salesforce-confluent.keystore.jks"
+  done
+  if [ $replaced -eq 1 ]
+  then
+    log "🔐 using your Salesforce keystore $user_keystore (copied into the example folders)" >&2
+  fi
+}

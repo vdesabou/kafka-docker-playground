@@ -846,6 +846,10 @@ function salesforce_ensure_jwt_keystore() {
   local target_dir="${1:-$PWD}"
   local keystore_path="$target_dir/salesforce-confluent.keystore.jks"
 
+  # The keystore of 'playground salesforce setup', when there is one, wins over the shared one of
+  # the S3 bucket: the External Client App of the user's org trusts its certificate.
+  salesforce_sync_user_keystore "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)" "$target_dir"
+
   if [ ! -f "$keystore_path" ]
   then
     # If a previous aborted run left a directory at this path, aws s3 cp will fail

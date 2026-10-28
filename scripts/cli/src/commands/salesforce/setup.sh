@@ -21,18 +21,12 @@ then
     logerror "❌ --suffix $suffix must only contain letters, digits and underscores"
     exit 1
 fi
-if [[ ! -n "$keystore" ]]
-then
-    keystore="$root_folder/connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks"
-fi
-
 salesforce_setup_require_tools
 
 sf_tmp_dir=$(mktemp -d -t playground-salesforce-setup.XXXXXX)
 trap 'rm -rf "$sf_tmp_dir"' EXIT
 
-salesforce_setup_load_keystore "$keystore" "$generate_keystore"
-log "🔐 using the certificate of $keystore"
+salesforce_setup_resolve_keystore "$keystore" "$generate_keystore"
 
 # 1. the org
 if [[ ! -n "$target_org" ]]

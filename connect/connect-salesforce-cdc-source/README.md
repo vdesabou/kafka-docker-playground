@@ -11,7 +11,7 @@ The connector authenticates with the OAuth JWT Bearer flow (`salesforce.grant.ty
 * A Salesforce account (see [Register a test account](#register-a-test-account))
 * An External Client App with the JWT Bearer flow enabled, and Change Data Capture enabled for `Contact`: `playground salesforce setup` does both (see [Automated setup](#automated-setup)), or follow [OAuth with JWT Bearer Flow](#oauth-with-jwt-bearer-flow) and [Enable Change Data Capture](#enable-change-data-capture)
 * CP 6.0.0 or later (the keystore was created with JDK 11). With CP 8.x, connector version 2.0.29 or later.
-* `salesforce-confluent.keystore.jks` (password `confluent`) in this folder. If it is missing, the script tries to download it from the playground S3 bucket (Confluent employees only, with AWS credentials set).
+* `salesforce-confluent.keystore.jks` (password `confluent`) in this folder. The keystore of `playground salesforce setup` (`~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks`) is copied here automatically; without it, the script tries to download the shared one from the playground S3 bucket (Confluent employees only, with AWS credentials set).
 
 | Variable | Description |
 | --- | --- |
@@ -51,8 +51,10 @@ playground salesforce setup
 ```
 
 1. Opens the browser once to log in (`sf org login web`). Pass `--target-org <alias>` to use an org `sf` is already logged into.
-2. Deploys an External Client App `kdp_jwt` with the JWT Bearer flow and the certificate of `salesforce-confluent.keystore.jks`, pre-authorized for the profile of your user (no browser approval) and with IP restrictions relaxed, the Platform Event `MyPlatformEvent__e` with the text field `Message__c`, and Change Data Capture on `Contact`. Running it again on the same org changes nothing.
+2. Deploys an External Client App `kdp_jwt` with the JWT Bearer flow and the certificate of your keystore (see below), pre-authorized for the profile of your user (no browser approval) and with IP restrictions relaxed, the Platform Event `MyPlatformEvent__e` with the text field `Message__c`, and Change Data Capture on `Contact`. Running it again on the same org changes nothing.
 3. Reads the consumer key back, waits until a JWT Bearer login works (a new app takes 2 to 10 minutes to be active), and stores `SALESFORCE_USERNAME`, `SALESFORCE_INSTANCE` and `SALESFORCE_CONSUMER_KEY_WITH_JWT` with `playground secrets set`.
+
+Your keystore (JWT private key and certificate, password `confluent`) is `~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks`, outside the repository, and the examples copy it into their folder. The first time, `setup` reuses the `salesforce-confluent.keystore.jks` already in this folder if there is one (so the orgs that trust it keep working), else generates a key pair that never leaves your machine. `--keystore <file>` imports another one, `--generate-keystore` replaces it with a new key pair (the orgs set up with the previous one must then be set up again).
 
 `SALESFORCE_PASSWORD` and `SALESFORCE_SECURITY_TOKEN` can't be read from Salesforce: store them with `playground secrets set SALESFORCE_PASSWORD` and `playground secrets set SALESFORCE_SECURITY_TOKEN` (see [Find your security token](#find-your-security-token)).
 
@@ -61,11 +63,11 @@ playground salesforce setup
 | `--account2` | the second org of the sink examples (`SALESFORCE_*_ACCOUNT2`) |
 | `--suffix KDP_CDC` | per-test variables (`SALESFORCE_USERNAME_KDP_CDC`…) |
 | `--instance-url https://test.salesforce.com` | a sandbox |
-| `--generate-keystore` | create a new key pair when `salesforce-confluent.keystore.jks` is missing (copied into every Salesforce example folder) |
+| `--generate-keystore` | replace your keystore with a new key pair |
 | `--dry-run` | only render the metadata in `/tmp/playground-salesforce-setup` |
 | `--no-store` | print the values instead of storing them |
 
-Then, at any time, `playground salesforce check` (same `--suffix` / `--account2`) logs in with the JWT Bearer flow exactly like the connector, explains a rejection, and checks that `MyPlatformEvent__e` and Change Data Capture on `Contact` are there. It needs neither Docker nor `sf`.
+Then, at any time, `playground salesforce check` (same `--suffix` / `--account2`) logs in with the JWT Bearer flow exactly like the connector, explains a rejection, and checks that `MyPlatformEvent__e` and Change Data Capture on `Contact` are there (warnings only: each is needed by some examples only). It needs neither Docker nor `sf`.
 
 The manual steps below do the same by hand.
 

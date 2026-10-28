@@ -15,7 +15,7 @@ See [Confluent Cloud examples](https://kafka-docker-playground.io/#/how-to-use?i
 
 * A Salesforce account with an External Client App using the JWT Bearer flow (see [Salesforce setup](#salesforce-setup))
 * A platform event `MyPlatformEvent__e` with a text field `Message__c` (see [Create a Platform Event in Salesforce](#create-a-platform-event-in-salesforce))
-* `salesforce-confluent.keystore.jks` (password `confluent`, it contains the private key matching the certificate of the External Client App) in this folder. If it is missing, the script tries to download it from the playground S3 bucket (Confluent employees only).
+* `salesforce-confluent.keystore.jks` (password `confluent`, it contains the private key matching the certificate of the External Client App) in this folder. The keystore of `playground salesforce setup` (`~/.config/kafka-docker-playground/salesforce-confluent.keystore.jks`) is copied here automatically; without it, the script tries to download the shared one from the playground S3 bucket (Confluent employees only).
 
 | Variable | Description |
 | --- | --- |
