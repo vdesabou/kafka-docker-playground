@@ -2,7 +2,8 @@
 
 Dummy `aws ce get-cost-and-usage` data (grouped by `SERVICE` and `USAGE_TYPE`, `UnblendedCost` and `UsageQuantity`),
 one file per month (`<start date>_<end date>.json`), plus `s3-buckets.json`, the way
-`playground cloud-resources aws costs-history` saves them for its HTML report. Every name is fake.
+`playground cloud-resources aws costs-history` saves them for its HTML report. Every name is fake, and `--sample` shows
+the tag of a fake user (`cflt_managed_id=kdp-dummy`).
 
 The story it tells: a bucket of large 3rd-party artifacts in us-east-1, moved to Standard-IA by a lifecycle rule and
 without access logging, downloaded more and more every month from the Internet and, since the third month, by
@@ -13,3 +14,5 @@ playground started a few days some months.
 ```bash
 playground cloud-resources aws costs-history --sample aws_dummy
 ```
+
+It is also the report of the gallery of the documentation (`docs/reports.md`).
