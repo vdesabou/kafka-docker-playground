@@ -190,7 +190,7 @@ It holds **every** distinct record, not only the first `--max-findings` of each 
 | Section | What it shows |
 | --- | --- |
 | verdict and tiles | files scanned and with findings, distinct records, FATAL / ERROR / WARN occurrences |
-| 🔎 findings | well-known causes first (task killed, authentication, authorization, TLS, unknown magic byte, connection refused, `OutOfMemoryError`, class loading…), each with its earliest occurrence and what to do (for killed tasks: one line per distinct exception chain, with its `Caused by:`, count, connectors and first line, also in `.known_causes[].chains` of `--json`), then the most frequent root causes no known cause explains |
+| 🔎 findings | well-known causes first (task killed, authentication, authorization, TLS, unknown magic byte, connection refused, `OutOfMemoryError`, class loading…), each with its earliest occurrence and what to do (for killed tasks: one line per distinct exception chain, with its `Caused by:`, count, connectors and first line, also in `.known_causes[].chains` of `--json`), then the most frequent root causes no known cause explains; chips above them filter by severity (same in every report with findings) |
 | 📈 occurrences over time | ERROR/FATAL and WARN per time bucket, from the timestamps of the records |
 | 🌳 root causes | records grouped by their deepest exception (or by message when they have none), with occurrences and files |
 | 📄 one card per file | every distinct record, with its count, first and last line and timestamp, and its exception chain |
@@ -380,6 +380,7 @@ playground analyze logs --sample connect_task_failure|support_bundle
 - `--errors` and `analyze logs` exit 0: not assertions. `--wait-for-log` matches old lines too, every 10 s.
 - Offline: one digest per file, archives extracted, `.gz` read on the fly, binaries skipped.
 - Offline also writes an HTML report (known causes, timeline, root causes, every record) in `--output-dir`; `--json` for scripts.
+  With several levels (`--include-warnings`), chips FATAL / ERROR / WARN above the root causes hide or show the records of a level.
 - Sources: [`container/logs.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/container/logs.sh),
   [`analyze/logs.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/commands/analyze/logs.sh),
   `summarize_log_errors` in [`cli_function.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/cli/src/lib/cli_function.sh),

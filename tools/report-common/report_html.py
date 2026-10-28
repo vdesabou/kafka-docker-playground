@@ -58,6 +58,8 @@ h2{font-size:1.05rem;font-weight:600;margin-bottom:12px;color:#334155}
 .rec-badge.critical{background:#fee2e2;color:#dc2626}.rec-badge.high{background:#ffedd5;color:#ea580c}.rec-badge.medium{background:#fef3c7;color:#d97706}
 .rec-badge.low{background:#dcfce7;color:#16a34a}.rec-badge.info{background:#dbeafe;color:#2563eb}.rec-badge.ok{background:#cffafe;color:#0891b2}
 .rec-text{font-size:.88rem;flex:1;color:#334155}
+.sev-filter{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:-4px 0 10px;font-size:.78rem;color:#475569}
+.rec-card[hidden]{display:none}.sev-chip{border:0;cursor:pointer;font-family:inherit}.sev-chip[aria-pressed=false]{opacity:.35;text-decoration:line-through}
 .rec-details{margin:6px 0 0;padding-left:18px}.rec-details li{margin:3px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;word-break:break-word}
 .table-card{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.07);overflow-x:auto;margin-bottom:22px}
 table{width:100%;border-collapse:collapse;font-size:.84rem}
@@ -185,17 +187,42 @@ def sort_findings(items: List[dict]) -> List[dict]:
     return sorted(items, key=lambda f: SEVERITY_ORDER.index(f["severity"]))
 
 
+# severity filter of findings_html: the chips of one block hide or show its cards (several blocks per page are independent)
+FINDINGS_FILTER_SCRIPT = """<script>
+if (!window.pgFindingsFilter) {
+  window.pgFindingsFilter = true;
+  document.addEventListener("click", function (ev) {
+    const chip = ev.target.closest(".sev-chip");
+    if (!chip) return;
+    chip.setAttribute("aria-pressed", chip.getAttribute("aria-pressed") === "false" ? "true" : "false");
+    const block = chip.closest(".findings");
+    const off = new Set([...block.querySelectorAll(".sev-chip[aria-pressed=false]")].map(c => c.dataset.sev));
+    block.querySelectorAll(".rec-card").forEach(card => { card.hidden = off.has(card.dataset.sev); });
+  });
+}
+</script>"""
+
+
 def findings_html(items: List[dict]) -> str:
-    """items: {severity, text}, plus an optional details list shown as bullets under the text"""
+    """items: {severity, text}, plus an optional details list shown as bullets under the text; with 2 severities or more,
+    chips above the cards filter them by severity"""
     if not items:
         return ""
-    return ("<div class='section-title'>🔎 Findings</div><div class='recs-list'>"
-            + "".join(f'<div class="rec-card {f["severity"].lower()}"><span class="rec-badge {f["severity"].lower()}">'
+    counts = {s: sum(1 for f in items if f["severity"] == s) for s in SEVERITY_ORDER}
+    present = [s for s in SEVERITY_ORDER if counts[s]]
+    chips = ""
+    if len(present) > 1:
+        chips = ("<div class='sev-filter'>Filter:"
+                 + "".join(f"<button type='button' class='rec-badge {s.lower()} sev-chip' data-sev='{s}' aria-pressed='true' "
+                           f"title='show / hide the {s} findings'>{SEVERITY_ICONS.get(s, '')} {s} ({counts[s]})</button>" for s in present)
+                 + f"</div>{FINDINGS_FILTER_SCRIPT}")
+    return ("<div class='findings'><div class='section-title'>🔎 Findings</div>" + chips + "<div class='recs-list'>"
+            + "".join(f'<div class="rec-card {f["severity"].lower()}" data-sev="{e(f["severity"])}"><span class="rec-badge {f["severity"].lower()}">'
                       f'{SEVERITY_ICONS.get(f["severity"], "")} {e(f["severity"])}</span><span class="rec-text">{e(f["text"])}'
                       + ("<ul class='rec-details'>" + "".join(f"<li>{e(d)}</li>" for d in f["details"]) + "</ul>" if f.get("details") else "")
                       + "</span></div>"
                       for f in items)
-            + "</div>")
+            + "</div></div>")
 
 
 def badge(text: str, cls: str = "") -> str:

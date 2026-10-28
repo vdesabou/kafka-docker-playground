@@ -354,10 +354,40 @@ def records_html(records: List[dict], open_first: int = 3, highlight: Optional[s
             when += f" → line {r['last_line']}" + (f" ({r['last_ts'].replace('T', ' ')})" if r["last_ts"] else "")
         mine = " <span class='st mine'>this connector</span>" if highlight and highlight in r["text"] else ""
         msg = short_message(r["message"])
-        out.append(f"<details{' open' if i < open_first else ''}><summary>{level_badge(r['level'])} ×{r['count']}{mine} "
+        out.append(f"<details data-level='{e(r['level'])}'{' open' if i < open_first else ''}><summary>{level_badge(r['level'])} ×{r['count']}{mine} "
                    f"<span class='mono'>{e(msg[:180])}</span> <span class='legend'>· {e(when)}</span></summary>"
                    f"<pre>{e(r['text'])}</pre></details>")
     return "".join(out)
+
+
+# level filter of the log report: hides the root causes and the records of the levels switched off
+LEVEL_FILTER_CSS = ("<style>.lvl-filter{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:6px;"
+                    "padding:8px 12px;margin-bottom:14px;border-radius:8px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);"
+                    "font-size:.78rem;color:#475569}.lvl-chip{border:0;cursor:pointer;font-family:inherit;font-size:.75rem}"
+                    ".lvl-chip[aria-pressed=false]{opacity:.35;text-decoration:line-through}[data-level][hidden]{display:none}"
+                    ".file-records[hidden]{display:none}html[data-theme=dark] .lvl-filter{background:#1e293b;color:#94a3b8}</style>")
+LEVEL_FILTER_SCRIPT = """<script>
+document.addEventListener("click", function (ev) {
+  const chip = ev.target.closest(".lvl-chip");
+  if (!chip) return;
+  chip.setAttribute("aria-pressed", chip.getAttribute("aria-pressed") === "false" ? "true" : "false");
+  const off = new Set([...document.querySelectorAll(".lvl-chip[aria-pressed=false]")].map(c => c.dataset.level));
+  document.querySelectorAll("[data-level]:not(.lvl-chip)").forEach(el => { el.hidden = off.has(el.dataset.level); });
+  // a file whose records are all hidden
+  document.querySelectorAll(".file-records").forEach(card => { card.hidden = !card.querySelector("details[data-level]:not([hidden])"); });
+});
+</script>"""
+
+
+def level_filter_html(by_level: Dict[str, int]) -> str:
+    """Chips FATAL / ERROR / WARN with their occurrences, when the report has 2 levels or more"""
+    present = [lvl for lvl in LEVEL_ORDER if by_level.get(lvl)]
+    if len(present) < 2:
+        return ""
+    return (LEVEL_FILTER_CSS + "<div class='lvl-filter'>Levels of the root causes and records:"
+            + "".join(f"<button type='button' class='st {lvl.lower()} lvl-chip' data-level='{lvl}' aria-pressed='true' "
+                      f"title='show / hide the {lvl} records'>{lvl} ({by_level[lvl]})</button>" for lvl in present)
+            + "</div>" + LEVEL_FILTER_SCRIPT)
 
 
 def verdict(res: dict, levels: str, unit: str = "file") -> Tuple[str, str]:
@@ -405,8 +435,9 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
     body = [verdict_html(*verdict(res, levels, unit)), kpis_html([kpis]), findings_html(res["findings"])]
     body += [card(e(t), f"<pre>{e(text)}</pre>") for t, text in sections]
     body.append(charts_html(res["files"], res["root_causes"]))
+    body.append(level_filter_html(s["by_level"]))
     if res["root_causes"]:
-        rows = "".join(f"<tr><td>{level_badge(c['level'])}</td><td class='mono' title='{e(c['root_cause'] or '')}'>{e((c['root_cause'] or '—').split('.')[-1])}</td>"
+        rows = "".join(f"<tr data-level='{e(c['level'])}'><td>{level_badge(c['level'])}</td><td class='mono' title='{e(c['root_cause'] or '')}'>{e((c['root_cause'] or '—').split('.')[-1])}</td>"
                        f"<td class='mono'>{e(c['example'][:300])}</td><td class='num'>{c['occurrences']}</td>"
                        f"<td class='num'>{c['records']}</td><td class='mono'>{e(', '.join(c['files'][:5]))}"
                        f"{e(' …' if len(c['files']) > 5 else '')}</td></tr>" for c in res["root_causes"])
@@ -426,7 +457,7 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
                        + e(", ".join(res["files_without_findings"][:500])) + "</p></details>" if res["files_without_findings"] else "")
                     + "</div>")
         for f in res["files"]:
-            body.append(f"<div class='table-card'><h2>📄 {e(f['label'])}</h2>{records_html(f['records'])}</div>")
+            body.append(f"<div class='table-card file-records'><h2>📄 {e(f['label'])}</h2>{records_html(f['records'])}</div>")
     meta = [f"&#128196; {e(title)}", f"🕐 {e(span)}", f"Levels: {e(levels)}"]
     meta += [f"<a href='{e(url)}' style='color:#fff'>{e(label)}</a>" for label, url in links]
     return page(f"{heading[2:].strip()} report — {title}", e(heading), meta, "".join(body),
