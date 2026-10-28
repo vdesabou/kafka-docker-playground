@@ -53,12 +53,15 @@ flags.
 
 - the menu: pick a category, find an example by typing a few words, then the options of that example, group by group
 - versions: Confluent Platform (`--tag`, or one component only), connector (`--connector-tag`, `--connector-zip`,
-  `--connector-jar`)
+  `--connector-jar`); both version pickers show what changed in the highlighted version, from the docs.confluent.io
+  changelogs
 - add-ons toggled on and off (Grafana, kcat, Control Center, ksqlDB...), several at once with `<tab>`
 - a bad combination (legacy Control Center with CP 8) blocks 🚀 in the menu, and is refused before anything is stopped
   with `-f`
 - the same example under another security environment (`--environment sasl-ssl`), another connector version, DEBUG logs
   for the connector (`--connect-log-level`)
+- the end of the run: the last connector versions with their release notes, and a hint when a newer patch of the CP
+  version is published (`playground cp-changelog --from <version>` lists its changes)
 - `playground re-run`, `playground history`, `-o` to open the example files, `playground secrets set`
 
 **Commands**
@@ -73,6 +76,7 @@ playground run -f $PWD/connect/connect-jdbc-postgresql-sink/postgres-sink.sh --e
 
 playground re-run      # the last example again, same flags
 playground history     # pick a previous run, edit its flags, run it
+playground cp-changelog --from 8.2.0   # what changed in Confluent Platform since 8.2.0 (--grep, --security, --component)
 ```
 
 > [!TIP]
@@ -97,12 +101,15 @@ in a few commands.
 
 **In this session**
 
-- `connector versions`: the CP version and the connector version that run, the last versions on Confluent Hub, and
-  whether yours is the latest
+- `connector versions`: the CP version and the connector version that run, the last versions on Confluent Hub with
+  their release notes, and whether yours is the latest
+- `connector-plugin changelog --from <theirs> --grep <symptom>`: is the bug fixed in a newer version, and in which one
 - `update-version --connector-tag`: the plugin installed again, `connect` restarted, the connector back to `RUNNING`
   with the same config: the example script is not run again
 - `update-version --connector-zip`: a build from engineering (the whole plugin), checked by producing one more record and
   counting the rows in PostgreSQL; `--connector-jar` replaces a single jar of the installed plugin
+- `cp-changelog --from 8.2.0 --to 8.3.2 --component kafka`: what changed in Connect (and the other community
+  components) between two CP versions
 - `update-version --connect-tag`: only `connect` is recreated, the brokers keep their version (an older or newer
   Connect cluster than the brokers); `--tag` moves every component
 - `update-version` writes nothing to the run history: a `re-run` goes back to the flags of the last `playground run`
@@ -113,10 +120,12 @@ in a few commands.
 # the customer's versions (off camera)
 playground run -f $PWD/connect/connect-jdbc-postgresql-sink/postgres-sink.sh --tag 8.2.0 --connector-tag 10.8.4
 
-playground connector versions                       # what runs, and the latest on Confluent Hub
+playground connector versions                       # what runs, and the latest on Confluent Hub (with release notes)
+playground connector-plugin changelog --connector-plugin confluentinc/kafka-connect-jdbc --from 10.8.4 --to 10.8.12 --grep 'sensitive|redact'
 playground update-version --connector-tag 10.8.12   # another connector version, the example is not run again
 playground connector wait --connector postgres-sink --max-wait 120
 playground update-version --connector-zip /tmp/engineering-build/confluentinc-kafka-connect-jdbc-10.9.9.zip   # or --connector-jar
+playground cp-changelog --from 8.2.0 --to 8.3.2 --component kafka --grep 'kafka.connect|connect '   # what changed in Connect
 playground update-version --connect-tag 8.3.2       # connect only (--tag: every component)
 playground status
 playground update-version                           # no flag: a menu with the versions running now
@@ -126,7 +135,8 @@ playground update-version                           # no flag: a menu with the v
 
 - 🍪 Deep dive: [running examples and changing versions: under the hood, hands-on lab and repro recipes](/deep-dive-run-and-versions.md)
 - 📚 [Specify versions](/how-to-use?id=🪄-specify-versions)
-- 🧠 CLI reference: [playground update-version](/playground%20update-version), [playground connector versions](/playground%20connector%20versions)
+- 🧠 CLI reference: [playground update-version](/playground%20update-version), [playground connector versions](/playground%20connector%20versions),
+  [playground connector-plugin changelog](/playground%20connector-plugin%20changelog), [playground cp-changelog](/playground%20cp-changelog)
 
 ## 🔐 The same example under SASL_SSL and RBAC
 
