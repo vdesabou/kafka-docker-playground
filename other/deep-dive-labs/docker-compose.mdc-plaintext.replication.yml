@@ -1,0 +1,12 @@
+---
+services:
+  # lab of https://kafka-docker-playground.io/#/deep-dive-replication (replication.sh):
+  # cluster links are created on the destination cluster (europe), as in multi-data-center/cluster-linking
+  broker-europe:
+    environment:
+      KAFKA_CONFLUENT_CLUSTER_LINK_ENABLE: "true"
+      KAFKA_CONFLUENT_CLUSTER_LINK_METADATA_TOPIC_REPLICATION_FACTOR: "1"
+
+  broker-us:
+    environment:
+      KAFKA_CONFLUENT_CLUSTER_LINK_METADATA_TOPIC_REPLICATION_FACTOR: "1"
