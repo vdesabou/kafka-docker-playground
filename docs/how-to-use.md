@@ -480,6 +480,8 @@ You can enable this with `--enable-rest-proxy` option of [playground run](/playg
 
 By default, there is only one kafka node enabled. To enable three nodes, select it in menu or use `--enable-multiple-brokers` option of [playground run](/playground%20run).
 
+With three nodes, the internal topics (`__consumer_offsets`, `__transaction_state`, `connect-offsets`, `connect-configs`, `connect-status`, `_confluent-license`, `_confluent-link-metadata`…) are created with 3 replicas and a min ISR of 2, like in production: a broker can be stopped (`playground broker stop`) or restarted (`playground broker rolling-restart`) without making them unavailable. With one node, they have 1 replica.
+
 ### 🥉 Enabling multiple connect workers
 
 By default, there is only one connect node enabled. To enable three connect nodes, select it in menu or use `--enable-multiple-connect-workers` option of [playground run](/playground%20run).
