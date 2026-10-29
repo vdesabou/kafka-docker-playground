@@ -59,6 +59,40 @@ records_file="$tmp_dir/records"
 nb_files=0
 nb_files_with_findings=0
 nb_skipped=0
+nb_duplicates=0
+# files analyzed so far, to skip a copy (a folder with an archive and its extracted folder): label by size, and the
+# checksum of each file, computed only when two files have the same size
+declare -A seen_by_size=()
+declare -A checksum_of=()
+
+# returns 0 (and logs it) when the file has the same content as a file already analyzed
+# $1: path, $2: label
+function is_duplicate_file () {
+    local path="$1"
+    local label="$2"
+    local size other sum
+    size=$(wc -c < "$path" | tr -d ' ')
+    if [ -n "${seen_by_size[$size]}" ]
+    then
+        sum=$(cksum < "$path")
+        while IFS= read -r other
+        do
+            [ -z "$other" ] && continue
+            if [ -z "${checksum_of[$other]}" ]
+            then
+                checksum_of[$other]=$(cksum < "${other%%$'\t'*}")
+            fi
+            if [ "${checksum_of[$other]}" == "$sum" ]
+            then
+                log "⏭️  $label: same content as ${other#*$'\t'}, skipped"
+                nb_duplicates=$((nb_duplicates+1))
+                return 0
+            fi
+        done <<< "${seen_by_size[$size]}"
+    fi
+    seen_by_size[$size]+="$path"$'\t'"$label"$'\n'
+    return 1
+}
 nb_extracted=0
 # secrets, IPs, hostnames, emails and LDAP DNs of the digests and of the records file are redacted (best effort), with
 # the same placeholder for a value everywhere (state file of tools/report-common/sanitizer.py)
@@ -200,12 +234,18 @@ function analyze_logs_path () {
             analyze_logs_path "$extract_dir" "$label:"
             ;;
         *.gz)
-            analyze_logs_digest "$label" < <(gzip -dc "$path" 2>/dev/null)
+            if ! is_duplicate_file "$path" "$label"
+            then
+                analyze_logs_digest "$label" < <(gzip -dc "$path" 2>/dev/null)
+            fi
             ;;
         *)
             if grep -Iq . "$path" 2>/dev/null
             then
-                analyze_logs_digest "$label" < "$path"
+                if ! is_duplicate_file "$path" "$label"
+                then
+                    analyze_logs_digest "$label" < "$path"
+                fi
             else
                 nb_skipped=$((nb_skipped+1))
             fi
@@ -265,6 +305,11 @@ then
     exit $cfk_exit
 fi
 
+duplicates_msg=""
+if [ $nb_duplicates -gt 0 ]
+then
+    duplicates_msg=", copies skipped: $nb_duplicates"
+fi
 levels="ERROR/FATAL"
 if [[ -n "$include_warnings" ]]
 then
@@ -272,9 +317,9 @@ then
 fi
 if [ $nb_files_with_findings -eq 0 ]
 then
-    log "✅ no $levels record found in $nb_files file(s) (binary files skipped: $nb_skipped)"
+    log "✅ no $levels record found in $nb_files file(s) (binary files skipped: $nb_skipped${duplicates_msg})"
 else
-    log "📊 $nb_files_with_findings file(s) with findings out of $nb_files scanned (binary files skipped: $nb_skipped)"
+    log "📊 $nb_files_with_findings file(s) with findings out of $nb_files scanned (binary files skipped: $nb_skipped${duplicates_msg})"
 fi
 
 if ! command -v python3 &>/dev/null

@@ -7015,7 +7015,7 @@ playground_analyze_heap_dump_usage() {
 playground_analyze_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze logs\n\n"
-    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped. Only files with findings are shown.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/), alone or\n  inside a folder or an archive, is detected and analyzed as a whole, in a\n  Docker image built on first use: Warning events, pods (phase, waiting reasons,\n  restarts, OOMKilled), every platform.confluent.io custom resource\n  (phase/state, ready replicas, False conditions, failed connector tasks), the\n  environment checked against the CFK support matrix (Kubernetes, CFK operator,\n  CP and init container versions), the recent changes (who edited which CR and\n  when, StatefulSet rollouts, pod restarts), a JVM default truststore set\n  without its password, and the ERROR/FATAL records of its logs, sorted into ~30\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling…) with remediation steps. Each issue is attributed to a\n  component and an instance (CR name), and to its connector: --component keeps\n  some of them, the HTML report has Component / Instance / Connector filters. 🔒\n  Secrets, IPs, hostnames, emails and LDAP DNs are sanitized by default (best\n  effort: review before sharing), --no-sanitize for internal bundles only.\n  --logs-only gives the plain log digest instead.\n  \n  🔒 Passwords and other secrets (password=…, JAAS configs, tokens, keys,\n  credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced by\n  placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the\n  report and the JSON) by default. It is best effort: review the output before\n  sharing it. --no-sanitize keeps them, for internal logs only.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
+    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file already\n  analyzed (an archive next to its extracted folder). Only files with\n  findings are shown.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/), alone or\n  inside a folder or an archive, is detected and analyzed as a whole, in a\n  Docker image built on first use: Warning events, pods (phase, waiting reasons,\n  restarts, OOMKilled), every platform.confluent.io custom resource\n  (phase/state, ready replicas, False conditions, failed connector tasks), the\n  environment checked against the CFK support matrix (Kubernetes, CFK operator,\n  CP and init container versions), the recent changes (who edited which CR and\n  when, StatefulSet rollouts, pod restarts), a JVM default truststore set\n  without its password, and the ERROR/FATAL records of its logs, sorted into ~30\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling…) with remediation steps. Each issue is attributed to a\n  component and an instance (CR name), and to its connector: --component keeps\n  some of them, the HTML report has Component / Instance / Connector filters. 🔒\n  Secrets, IPs, hostnames, emails and LDAP DNs are sanitized by default (best\n  effort: review before sharing), --no-sanitize for internal bundles only.\n  --logs-only gives the plain log digest instead.\n  \n  🔒 Passwords and other secrets (password=…, JAAS configs, tokens, keys,\n  credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced by\n  placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the\n  report and the JSON) by default. It is best effort: review the output before\n  sharing it. --no-sanitize keeps them, for internal logs only.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
   else
     printf "playground analyze logs - 🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n\n"
   fi
@@ -44183,6 +44183,40 @@ playground_analyze_logs_command() {
   nb_files=0
   nb_files_with_findings=0
   nb_skipped=0
+  nb_duplicates=0
+  # files analyzed so far, to skip a copy (a folder with an archive and its extracted folder): label by size, and the
+  # checksum of each file, computed only when two files have the same size
+  declare -A seen_by_size=()
+  declare -A checksum_of=()
+
+  # returns 0 (and logs it) when the file has the same content as a file already analyzed
+  # $1: path, $2: label
+  function is_duplicate_file () {
+      local path="$1"
+      local label="$2"
+      local size other sum
+      size=$(wc -c < "$path" | tr -d ' ')
+      if [ -n "${seen_by_size[$size]}" ]
+      then
+          sum=$(cksum < "$path")
+          while IFS= read -r other
+          do
+              [ -z "$other" ] && continue
+              if [ -z "${checksum_of[$other]}" ]
+              then
+                  checksum_of[$other]=$(cksum < "${other%%$'\t'*}")
+              fi
+              if [ "${checksum_of[$other]}" == "$sum" ]
+              then
+                  log "⏭️  $label: same content as ${other#*$'\t'}, skipped"
+                  nb_duplicates=$((nb_duplicates+1))
+                  return 0
+              fi
+          done <<< "${seen_by_size[$size]}"
+      fi
+      seen_by_size[$size]+="$path"$'\t'"$label"$'\n'
+      return 1
+  }
   nb_extracted=0
   # secrets, IPs, hostnames, emails and LDAP DNs of the digests and of the records file are redacted (best effort), with
   # the same placeholder for a value everywhere (state file of tools/report-common/sanitizer.py)
@@ -44324,12 +44358,18 @@ playground_analyze_logs_command() {
               analyze_logs_path "$extract_dir" "$label:"
               ;;
           *.gz)
-              analyze_logs_digest "$label" < <(gzip -dc "$path" 2>/dev/null)
+              if ! is_duplicate_file "$path" "$label"
+              then
+                  analyze_logs_digest "$label" < <(gzip -dc "$path" 2>/dev/null)
+              fi
               ;;
           *)
               if grep -Iq . "$path" 2>/dev/null
               then
-                  analyze_logs_digest "$label" < "$path"
+                  if ! is_duplicate_file "$path" "$label"
+                  then
+                      analyze_logs_digest "$label" < "$path"
+                  fi
               else
                   nb_skipped=$((nb_skipped+1))
               fi
@@ -44389,6 +44429,11 @@ playground_analyze_logs_command() {
       exit $cfk_exit
   fi
 
+  duplicates_msg=""
+  if [ $nb_duplicates -gt 0 ]
+  then
+      duplicates_msg=", copies skipped: $nb_duplicates"
+  fi
   levels="ERROR/FATAL"
   if [[ -n "$include_warnings" ]]
   then
@@ -44396,9 +44441,9 @@ playground_analyze_logs_command() {
   fi
   if [ $nb_files_with_findings -eq 0 ]
   then
-      log "✅ no $levels record found in $nb_files file(s) (binary files skipped: $nb_skipped)"
+      log "✅ no $levels record found in $nb_files file(s) (binary files skipped: $nb_skipped${duplicates_msg})"
   else
-      log "📊 $nb_files_with_findings file(s) with findings out of $nb_files scanned (binary files skipped: $nb_skipped)"
+      log "📊 $nb_files_with_findings file(s) with findings out of $nb_files scanned (binary files skipped: $nb_skipped${duplicates_msg})"
   fi
 
   if ! command -v python3 &>/dev/null
@@ -45915,6 +45960,40 @@ playground_debug_analyze_logs_command() {
   nb_files=0
   nb_files_with_findings=0
   nb_skipped=0
+  nb_duplicates=0
+  # files analyzed so far, to skip a copy (a folder with an archive and its extracted folder): label by size, and the
+  # checksum of each file, computed only when two files have the same size
+  declare -A seen_by_size=()
+  declare -A checksum_of=()
+
+  # returns 0 (and logs it) when the file has the same content as a file already analyzed
+  # $1: path, $2: label
+  function is_duplicate_file () {
+      local path="$1"
+      local label="$2"
+      local size other sum
+      size=$(wc -c < "$path" | tr -d ' ')
+      if [ -n "${seen_by_size[$size]}" ]
+      then
+          sum=$(cksum < "$path")
+          while IFS= read -r other
+          do
+              [ -z "$other" ] && continue
+              if [ -z "${checksum_of[$other]}" ]
+              then
+                  checksum_of[$other]=$(cksum < "${other%%$'\t'*}")
+              fi
+              if [ "${checksum_of[$other]}" == "$sum" ]
+              then
+                  log "⏭️  $label: same content as ${other#*$'\t'}, skipped"
+                  nb_duplicates=$((nb_duplicates+1))
+                  return 0
+              fi
+          done <<< "${seen_by_size[$size]}"
+      fi
+      seen_by_size[$size]+="$path"$'\t'"$label"$'\n'
+      return 1
+  }
   nb_extracted=0
   # secrets, IPs, hostnames, emails and LDAP DNs of the digests and of the records file are redacted (best effort), with
   # the same placeholder for a value everywhere (state file of tools/report-common/sanitizer.py)
@@ -46056,12 +46135,18 @@ playground_debug_analyze_logs_command() {
               analyze_logs_path "$extract_dir" "$label:"
               ;;
           *.gz)
-              analyze_logs_digest "$label" < <(gzip -dc "$path" 2>/dev/null)
+              if ! is_duplicate_file "$path" "$label"
+              then
+                  analyze_logs_digest "$label" < <(gzip -dc "$path" 2>/dev/null)
+              fi
               ;;
           *)
               if grep -Iq . "$path" 2>/dev/null
               then
-                  analyze_logs_digest "$label" < "$path"
+                  if ! is_duplicate_file "$path" "$label"
+                  then
+                      analyze_logs_digest "$label" < "$path"
+                  fi
               else
                   nb_skipped=$((nb_skipped+1))
               fi
@@ -46121,6 +46206,11 @@ playground_debug_analyze_logs_command() {
       exit $cfk_exit
   fi
 
+  duplicates_msg=""
+  if [ $nb_duplicates -gt 0 ]
+  then
+      duplicates_msg=", copies skipped: $nb_duplicates"
+  fi
   levels="ERROR/FATAL"
   if [[ -n "$include_warnings" ]]
   then
@@ -46128,9 +46218,9 @@ playground_debug_analyze_logs_command() {
   fi
   if [ $nb_files_with_findings -eq 0 ]
   then
-      log "✅ no $levels record found in $nb_files file(s) (binary files skipped: $nb_skipped)"
+      log "✅ no $levels record found in $nb_files file(s) (binary files skipped: $nb_skipped${duplicates_msg})"
   else
-      log "📊 $nb_files_with_findings file(s) with findings out of $nb_files scanned (binary files skipped: $nb_skipped)"
+      log "📊 $nb_files_with_findings file(s) with findings out of $nb_files scanned (binary files skipped: $nb_skipped${duplicates_msg})"
   fi
 
   if ! command -v python3 &>/dev/null

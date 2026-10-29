@@ -164,6 +164,7 @@ What it does with what you give it:
 | `.gz` | decompressed on the fly |
 | a CFK support bundle (a folder with `cluster-details.txt`, or `cluster-resources/` + `operator/`), alone or inside a folder or an archive | analyzed as a whole by the CFK analyzer (Docker): pods, custom resources, events, versions, recent changes and its logs, sanitized, in its own HTML report. See [the CFK deep dive](deep-dive-cfk.md). `--logs-only` gives the plain digest instead |
 | any other file | analyzed when it's text, **skipped when binary** (counted in the last line) |
+| a copy of a file already analyzed (an archive next to its extracted folder) | skipped (`⏭️ … same content as …`), counted in the last line |
 
 🔒 The digest, the HTML report and the JSON are **sanitized by default**:
 - **What is replaced:** passwords and other secrets (`password=…`, JAAS configs, tokens, API keys, credentials in

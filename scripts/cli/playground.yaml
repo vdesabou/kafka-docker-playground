@@ -2576,9 +2576,10 @@ subcommands:
       lines that merely contain \"error\" or \"failed\", never are.\n\n\U0001F4C2
       Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\nare extracted
       in a temporary folder, .gz files are decompressed on the\nfly, binary files
-      are skipped. Only files with findings are shown.\n\n☸️ A Confluent for Kubernetes
-      (CFK) support bundle (kubectl confluent support-bundle or playground debug cfk
-      generate-bundle: a folder with cluster-details.txt, or with cluster-resources/
+      are skipped, and so are the copies of a file already\nanalyzed (an archive next
+      to its extracted folder). Only files with\nfindings are shown.\n\n☸️ A Confluent
+      for Kubernetes (CFK) support bundle (kubectl confluent support-bundle or playground
+      debug cfk generate-bundle: a folder with cluster-details.txt, or with cluster-resources/
       and operator/), alone or inside a folder or an archive, is detected and analyzed
       as a whole, in a Docker image built on first use: Warning events, pods (phase,
       waiting reasons, restarts, OOMKilled), every platform.confluent.io custom resource
