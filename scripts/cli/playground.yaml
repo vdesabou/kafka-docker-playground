@@ -7815,6 +7815,52 @@ subcommands:
       argument: ''
       description: "\U0001F4D7 Only show list of all available parameters for connector
         (with default value when applicable)"
+  - name: metrics
+    description: "\U0001F4C8 Show the metrics of a connector: throughput, time, errors,
+      and the metrics of the connector itself\n\nAnswers \"is it making progress?\",
+      \"how many records were tolerated,\nskipped, retried or sent to the dead letter
+      queue?\" and \"where does\nthe time go, poll or put?\", one column per task:\n\n
+      \ throughput   records polled / written per second (source), read /\n               sent
+      per second (sink), and the totals since the task\n               started\n  time
+      \        average time of a poll (source) or a put (sink) batch,\n               offset
+      commit time and failures, running / pause ratio\n  errors       records that
+      failed, were skipped (errors.tolerance=all),\n               retried or sent
+      to the DLQ, last error time\n\n  connector    the other MBeans of the connector:
+      Debezium\n               (debezium.<plugin>:server=<topic.prefix>, also Oracle\n
+      \              XStream), MongoDB, Oracle CDC... any MBean with a\n               connector=<connector>
+      key\n\nEnds with what stands out (errors, skipped records, a slow put, a task\nthat
+      never got a record, a Debezium connector lagging, disconnected,\nwith a full
+      queue or snapshotting) and the command to run next. Rates\nare the averages
+      Kafka Connect computes over its last samples (about 1\nminute).\n\nRead over
+      JMX from the connect worker(s) running the tasks, with the\nkafka-jmx tool of
+      the connect image: no restart, nothing to install.\nFor a fully managed connector,
+      the metrics come from the Confluent\nCloud Telemetry API ('playground connector
+      display-metrics-api').\n\n\U0001F393 Tip: use --watch 10s while a load runs,
+      or 'playground connector\nbenchmark' to measure the throughput.\n\n⚠️ Not on
+      cfk environments: use 'playground get-jmx-metrics -c connect-0\n--domain kafka.connect'.\n\n\U0001F36A
+      Deep dive: https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting"
+    usage: playground connector metrics [OPTIONS]
+    options:
+    - names:
+      - "--verbose"
+      - "-v"
+      argument: ''
+      description: "\U0001F41E Show command being ran."
+    - names:
+      - "--connector"
+      - "-c"
+      argument: CONNECTOR
+      description: "\U0001F517 Connector name\n\n\U0001F393 Tip: If not specified,
+        the command will apply to all connectors"
+    - names:
+      - "--watch"
+      - "-w"
+      argument: INTERVAL
+      description: "\U0001F501 Refresh every <interval> (30, 30s, 5m) until ctrl-c"
+    - names:
+      - "--json"
+      argument: ''
+      description: "\U0001F916 Print the result as JSON\n\nConflicts with: --watch"
   - name: display-metrics-api
     description: |-
       〽️ Display metrics api for fully managed connector
