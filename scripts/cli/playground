@@ -7015,7 +7015,7 @@ playground_analyze_heap_dump_usage() {
 playground_analyze_logs_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground analyze logs\n\n"
-    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). Only files with findings are shown. The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/), alone or\n  inside a folder or an archive, is detected and analyzed as a whole, in a\n  Docker image built on first use: Warning events, pods (phase, waiting reasons,\n  restarts, OOMKilled), every platform.confluent.io custom resource\n  (phase/state, ready replicas, False conditions, failed connector tasks), the\n  environment checked against the CFK support matrix (Kubernetes, CFK operator,\n  CP and init container versions), the recent changes (who edited which CR and\n  when, StatefulSet rollouts, pod restarts), the configuration\n  (kafka.properties, zookeeper.properties, schemaregistry.properties,\n  connect.properties and controlcenter.properties rendered by CFK,\n  configOverrides, config logged at startup, connector configs from the\n  Connector CRs and the config dumps of the logs), a JVM default truststore set\n  without its password, and the ERROR/FATAL records of its logs, sorted into ~30\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling…) with remediation steps. Each issue is attributed to a\n  component and an instance (CR name), and to its connector: --component keeps\n  some of them, the HTML report has Component / Instance / Connector filters. 🔒\n  Secrets, IPs, hostnames, emails and LDAP DNs are sanitized by default (best\n  effort: review before sharing), --no-sanitize for internal bundles only.\n  --logs-only gives the plain log digest instead.\n  \n  🔒 Passwords and other secrets (password=…, JAAS configs, tokens, keys,\n  credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced by\n  placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the\n  report and the JSON) by default. It is best effort: review the output before\n  sharing it. --no-sanitize keeps them, for internal logs only.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
+    printf "  🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip\n  bundles\n  \n  The offline counterpart of 'playground container logs --errors', for\n  logs that do not come from a running container: a customer support\n  bundle, a CI artifact, a log file you were sent.\n  \n  Repeated records are de-duplicated with an occurrence count, stack\n  traces are collapsed to the exception chain (\"Caused by:\") plus a few\n  frames of the deepest cause. Only records with an explicit level are\n  reported (\" ERROR \", \"[ERROR]\", level=error, \"level\":\"error\"), plus\n  uncaught java exceptions: records logged at INFO/DEBUG/TRACE, and\n  level-less lines that merely contain \"error\" or \"failed\", never are.\n  \n  📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files\n  are extracted in a temporary folder, .gz files are decompressed on the\n  fly, binary files are skipped, and so are the copies of a file or of a\n  CFK support bundle already analyzed (an archive next to its extracted\n  folder). Only files with findings are shown. The HTML report also has\n  the configuration: the configs logged at startup (KafkaConfig values:,\n  DistributedConfig, connector and client configs…) and the .properties\n  and connector JSON files of the input.\n  \n  ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent\n  support-bundle or playground debug cfk generate-bundle: a folder with\n  cluster-details.txt, or with cluster-resources/ and operator/), alone or\n  inside a folder or an archive, is detected and analyzed as a whole, in a\n  Docker image built on first use: Warning events, pods (phase, waiting reasons,\n  restarts, OOMKilled), every platform.confluent.io custom resource\n  (phase/state, ready replicas, False conditions, failed connector tasks), the\n  environment checked against the CFK support matrix (Kubernetes, CFK operator,\n  CP and init container versions), the recent changes (who edited which CR and\n  when, StatefulSet rollouts, pod restarts), the configuration\n  (kafka.properties, zookeeper.properties, schemaregistry.properties,\n  connect.properties and controlcenter.properties rendered by CFK,\n  configOverrides, config logged at startup, connector configs from the\n  Connector CRs and the config dumps of the logs), a JVM default truststore set\n  without its password, and the ERROR/FATAL records of its logs, sorted into ~30\n  categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication,\n  storage, scheduling…) with remediation steps. Each issue is attributed to a\n  component and an instance (CR name), and to its connector: --component keeps\n  some of them, the HTML report has Component / Instance / Connector filters. 🔒\n  Secrets, IPs, hostnames, emails and LDAP DNs are sanitized by default (best\n  effort: review before sharing), --no-sanitize for internal bundles only.\n  --logs-only gives the plain log digest instead.\n  \n  🔒 Passwords and other secrets (password=…, JAAS configs, tokens, keys,\n  credentials in URLs), IPs, hostnames, emails and LDAP DNs are replaced by\n  placeholders (<REDACTED>, <IP-1>, <HOST-1>…, the same in the digest, the\n  report and the JSON) by default. It is best effort: review the output before\n  sharing it. --no-sanitize keeps them, for internal logs only.\n  \n  🧭 After the digest of each file, a short summary: time range, occurrences by\n  connector, known causes with what to do, root causes no known cause explains,\n  and the configuration logged at startup (connectors, components, clients) with\n  the keys changed between restarts. --connector keeps one connector,\n  --show-config prints a configuration.\n  \n  🌐 Also writes a self-contained HTML report in --output-dir, opened in the\n  browser in an interactive terminal: verdict, known causes (task killed,\n  authentication, TLS, unknown magic byte, OutOfMemoryError...), occurrences\n  over time, root causes (deepest exception of each record), files with\n  findings, and every distinct record.\n  \n  🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-container-logs\n  🎬 Bite size session:\n  https://kafka-docker-playground.io/#/sessions?id=%%F0%%9F%%95%%B5%%EF%%B8%%8F-a-connector-failed-read-the-logs-live-or-from-a-customer-bundle\n\n"
   else
     printf "playground analyze logs - 🔥 Show a digest of ERROR/FATAL records found in log files, folders or zip bundles\n\n"
   fi
@@ -7070,6 +7070,26 @@ playground_analyze_logs_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR (repeatable)")"
+    printf "    🔌 Only keep the records and the configuration of this connector\n    ([connector|task-0] / [connector|worker] context of the log lines,\n    WorkerSourceTask{id=connector-0}), in the digest, the summary, the HTML\n    report and the JSON\n    \n    🎓 Tip: can be set several times. The 🔌 by connector line of the summary\n    lists the names\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--with-worker")"
+    printf "    🧱 With --connector, also keep the records and configs without connector\n    context (worker, clients of the worker, Kafka)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--show-config NAME")"
+    printf "    ⚙️ Print the configuration logged at startup (last dump, with the keys\n    changed between restarts) as key = value: for a connector, its own configs\n    (a config contained in a bigger one with the same values is only named, its\n    producer / consumer / admin clients summed up in one line); for a config\n    class (ProducerConfig, DistributedConfig…) or a client id, every match\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json-sections SECTIONS")"
+    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, configuration\n    (default: all). For example --json-sections summary,findings,root_causes\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--component COMPONENT (repeatable)")"
     printf "    🧩 CFK support bundle: only keep the issues of this component (repeat\n    --component for several). other = not a CFK component (nodes, volumes,\n    unknown pods)\n"
     printf "    %s\n" "Allowed: kafka, kraftcontroller, zookeeper, connect, schemaregistry, ksqldb, controlcenter, kafkarestproxy, operator, other"
@@ -7101,6 +7121,8 @@ playground_analyze_logs_usage() {
     printf "  playground analyze logs -f support-bundle.zip --output-dir /tmp/log-reports\n"
     printf "  playground analyze logs -f connect.log --json\n"
     printf "  playground analyze logs --sample cfk_bundle\n"
+    printf "  playground analyze logs -f connect-logs.zip --connector my-jdbc-sink\n  --show-config my-jdbc-sink\n"
+    printf "  playground analyze logs -f connect.log --json --json-sections\n  summary,findings,root_causes\n"
     printf "  playground analyze logs -f ./support-bundle-ns-confluent.tar.gz --component\n  connect --severity high\n"
     printf "  playground analyze logs -f ./support-bundle-ns-confluent/ --logs-only\n"
     echo
@@ -8128,6 +8150,26 @@ playground_debug_analyze_logs_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--logs-only")"
     printf "    📜 Do not detect CFK support bundles: plain ERROR/FATAL digest of every log\n    file\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR (repeatable)")"
+    printf "    🔌 Only keep the records and the configuration of this connector\n    ([connector|task-0] / [connector|worker] context of the log lines,\n    WorkerSourceTask{id=connector-0}), in the digest, the summary, the HTML\n    report and the JSON\n    \n    🎓 Tip: can be set several times. The 🔌 by connector line of the summary\n    lists the names\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--with-worker")"
+    printf "    🧱 With --connector, also keep the records and configs without connector\n    context (worker, clients of the worker, Kafka)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--show-config NAME")"
+    printf "    ⚙️ Print the configuration logged at startup (last dump, with the keys\n    changed between restarts) as key = value: for a connector, its own configs\n    (a config contained in a bigger one with the same values is only named, its\n    producer / consumer / admin clients summed up in one line); for a config\n    class (ProducerConfig, DistributedConfig…) or a client id, every match\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json-sections SECTIONS")"
+    printf "    🗂️ With --json, only these sections, comma separated: summary, findings,\n    known_causes, root_causes, files, files_without_findings, configuration\n    (default: all). For example --json-sections summary,findings,root_causes\n"
     echo
 
     # :flag.usage
@@ -20796,6 +20838,8 @@ function install_confluent_plugin() {
 # (optionally WARN), each with an occurrence count, the exception chain and a
 # few frames of the deepest cause, instead of tens of thousands of raw lines.
 # $1: max number of findings to print, $2: non-empty to include WARN records
+# PG_LOG_DIGEST_CONNECTORS (space separated) prints only the records of these connectors ([connector|task-0] context),
+# plus the records without connector context with PG_LOG_DIGEST_WITH_WORKER; the records file keeps them all.
 # When PG_LOG_DIGEST_RECORDS_FILE is set, every distinct record (not only the first $1) is also appended to that
 # file for the HTML reports (tools/log-analyzer/log_report.py), labelled with PG_LOG_DIGEST_LABEL:
 #   @@PGFILE@@<tab>label<tab>lines<tab>distinct records<tab>occurrences
@@ -20807,11 +20851,13 @@ function install_confluent_plugin() {
 # [connector|task-0] context, ProducerConfig of a client…), the last one of each class / context / client.id, 50 at most:
 #   @@PGCFG@@<tab>config class<tab>[connector|task-0] context<tab>line<tab>timestamp<tab>client.id or name
 #   @@PGCFGL@@<tab>key=value, one per line
+#   @@PGCFGCHG@@<tab>line<tab>timestamp<tab>key=previous<tab>key=new: a key that changed since the previous dump of the config
 function summarize_log_errors() {
     local max_findings="${1:-40}"
     local include_warnings="${2:-}"
 
     PG_LOG_DIGEST_RECORDS_FILE="${PG_LOG_DIGEST_RECORDS_FILE:-}" PG_LOG_DIGEST_LABEL="${PG_LOG_DIGEST_LABEL:-}" \
+    PG_LOG_DIGEST_CONNECTORS="${PG_LOG_DIGEST_CONNECTORS:-}" PG_LOG_DIGEST_WITH_WORKER="${PG_LOG_DIGEST_WITH_WORKER:-}" \
     awk -v max_findings="$max_findings" -v include_warnings="$include_warnings" '
     # anything that does not look like the continuation of a stack trace or of a
     # multi-line message (indented line, "Caused by:", exception line) starts a record
@@ -20868,6 +20914,13 @@ function summarize_log_errors() {
         ctx[ctx_key] = ctx[ctx_key] ctx_line(NR, $0, " ")
         ctx_after--
     }
+    # a record of one of the connectors of PG_LOG_DIGEST_CONNECTORS: its [connector|task-0] / [connector|worker] context or
+    # its WorkerSourceTask{id=connector-0}; with PG_LOG_DIGEST_WITH_WORKER, also a record without connector context
+    function of_connectors(t,    n, i, names) {
+        n = split(connectors, names, " ")
+        for (i = 1; i <= n; i++) if (index(t, "[" names[i] "|") || index(t, "Task{id=" names[i] "-")) return 1
+        return with_worker != "" && t !~ /\[[^] |]+\|(task-[0-9]+|worker)/ && t !~ /Task\{id=/
+    }
     # a "<Class>Config values:" header: the "<tab>key = value" lines that follow are its config
     function cfg_start(    h) {
         cfg_end()
@@ -20891,7 +20944,28 @@ function summarize_log_errors() {
         sub(/ \([A-Za-z0-9_.$]*Config(:[0-9]+)?\)$/, "", v)
         if (length(v) > 1000) v = substr(v, 1, 1000) "..."
         if (k == "client.id" || (k == "name" && cfg_id == "")) cfg_id = v
+        # the key and the value converter of a task log the same class one after the other: two configs
+        if (k == "converter.type") cfg_id = cfg_id (cfg_id == "" ? "" : " ") v
         cfg_buf = cfg_buf k "=" v "\n"
+    }
+    # keys whose value differs between the previous dump of a config and this one (a restart with another config),
+    # appended to cfg_chg[key]: "line<tab>timestamp<tab>key=previous<tab>key=new" (key=value on both sides, so that the
+    # sanitizer redacts a secret on each). A dump lists every key of its config class, defaults included: a key in only
+    # one of them is another variant of the class logged at the same time (EnrichedConnectorConfig with or without the
+    # topic.creation.* group), not a change
+    function cfg_diff(key, old, new,    n, i, ol, nl, k, v, prev) {
+        split("", prev)
+        n = split(old, ol, "\n")
+        for (i = 1; i < n; i++) { k = substr(ol[i], 1, index(ol[i], "=") - 1); prev[k] = substr(ol[i], index(ol[i], "=") + 1) }
+        n = split(new, nl, "\n")
+        for (i = 1; i < n; i++) {
+            k = substr(nl[i], 1, index(nl[i], "=") - 1)
+            v = substr(nl[i], index(nl[i], "=") + 1)
+            if (nchg[key] < 50 && (k in prev) && prev[k] != v) {
+                cfg_chg[key] = cfg_chg[key] cfg_ln "\t" cfg_ts "\t" k "=" prev[k] "\t" k "=" v "\n"
+                nchg[key]++
+            }
+        }
     }
     function cfg_end(    key) {
         if (!cfg_on) return
@@ -20901,6 +20975,8 @@ function summarize_log_errors() {
         if (!(key in cfg_text)) {
             if (ncfg >= 50) return
             cfg_order[++ncfg] = key
+        } else if (cfg_text[key] != cfg_buf) {
+            cfg_diff(key, cfg_text[key], cfg_buf)
         }
         cfg_text[key] = cfg_buf
         cfg_head[key] = cfg_cls "\t" cfg_ctx "\t" cfg_ln "\t" cfg_ts "\t" cfg_id
@@ -20969,6 +21045,8 @@ function summarize_log_errors() {
     BEGIN {
         records_file = ENVIRON["PG_LOG_DIGEST_RECORDS_FILE"]
         label = ENVIRON["PG_LOG_DIGEST_LABEL"]
+        connectors = ENVIRON["PG_LOG_DIGEST_CONNECTORS"]
+        with_worker = ENVIRON["PG_LOG_DIGEST_WITH_WORKER"]
     }
     {
         # the 2 lines before a record, for its context
@@ -21020,26 +21098,38 @@ function summarize_log_errors() {
                 printf "@@PGCFG@@\t%s\n", cfg_head[k] >> records_file
                 n = split(cfg_text[k], cl, "\n")
                 for (j = 1; j < n; j++) printf "@@PGCFGL@@\t%s\n", cl[j] >> records_file
+                n = split(cfg_chg[k], cl, "\n")
+                for (j = 1; j < n; j++) printf "@@PGCFGCHG@@\t%s\n", cl[j] >> records_file
             }
             close(records_file)
         }
-        if (nkeys == 0) {
-            printf "✅ no %s record found in %d lines\n", (include_warnings == "" ? "ERROR/FATAL" : "ERROR/FATAL/WARN"), NR
+        # PG_LOG_DIGEST_CONNECTORS (analyze logs --connector): only the records of these connectors are printed
+        nshown_keys = nkeys
+        shown_occurrences = total_occurrences
+        if (connectors != "") {
+            nshown_keys = 0
+            shown_occurrences = 0
+            for (i = 1; i <= nkeys; i++) if (of_connectors(text[order[i]])) { nshown_keys++; shown_occurrences += count[order[i]] }
+        }
+        if (nshown_keys == 0) {
+            printf "✅ no %s record found in %d lines%s\n", (include_warnings == "" ? "ERROR/FATAL" : "ERROR/FATAL/WARN"), NR, (connectors == "" ? "" : sprintf(" for --connector %s (%d distinct record(s) of other connectors or without connector context)", connectors, nkeys))
             exit 0
         }
-        printf "🔎 %d distinct record(s), %d occurrence(s), in %d lines\n", nkeys, total_occurrences, NR
+        if (connectors == "") printf "🔎 %d distinct record(s), %d occurrence(s), in %d lines\n", nkeys, total_occurrences, NR
+        else printf "🔎 %d distinct record(s), %d occurrence(s) for --connector %s (%d distinct record(s) in the file), in %d lines\n", nshown_keys, shown_occurrences, connectors, nkeys, NR
         shown = 0
         split("FATAL ERROR WARN", severities, " ")
         for (s = 1; s <= 3; s++) {
             for (i = 1; i <= nkeys && shown < max_findings; i++) {
                 k = order[i]
                 if (level[k] != severities[s]) continue
+                if (connectors != "" && !of_connectors(text[k])) continue
                 icon = (level[k] == "WARN") ? "🟠" : "🔴"
                 printf "\n%s %s x%d (first seen line %d, last seen line %d)\n%s\n", icon, level[k], count[k], first_seen[k], last_seen[k], text[k]
                 shown++
             }
         }
-        if (shown < nkeys) printf "\n✂️ %d more distinct record(s) not shown, increase --max-findings or narrow with --since\n", nkeys - shown
+        if (shown < nshown_keys) printf "\n✂️ %d more distinct record(s) not shown, increase --max-findings or narrow with --since\n", nshown_keys - shown
     }'
 }
 
@@ -44219,6 +44309,10 @@ playground_analyze_logs_command() {
   severity="${args[--severity]}"
   no_sanitize="${args[--no-sanitize]}"
   eval "component_array=(${args[--component]})"
+  eval "connector_array=(${args[--connector]})"
+  with_worker="${args[--with-worker]}"
+  show_config="${args[--show-config]}"
+  json_sections="${args[--json-sections]}"
 
   # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
   if [[ -n "$json_out" ]]
@@ -44255,6 +44349,15 @@ playground_analyze_logs_command() {
           exit 1
       fi
   done
+
+  if [[ -n "$with_worker" && ${#connector_array[@]} -eq 0 ]]
+  then
+      logwarn "⚠️ --with-worker only applies with --connector"
+      with_worker=""
+  fi
+  # --connector: the digest of each file (summarize_log_errors) prints only the records of these connectors
+  export PG_LOG_DIGEST_CONNECTORS="${connector_array[*]}"
+  export PG_LOG_DIGEST_WITH_WORKER="$with_worker"
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   if [ -z "$PG_VERBOSE_MODE" ]
@@ -44602,9 +44705,35 @@ playground_analyze_logs_command() {
       title="sample ${sample_array[*]}"
   fi
   report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped")
+  for connector in "${connector_array[@]}"
+  do
+      report_args+=(--connector "$connector")
+  done
+  if [[ -n "$with_worker" ]]
+  then
+      report_args+=(--with-worker)
+  fi
+  # bounded summary of what the HTML report says first (known causes, root causes, connectors, configuration and its
+  # changes), on stderr with --json; then the configs asked with --show-config
+  if [ $nb_files_with_findings -gt 0 ] || [ -n "$show_config" ] || grep -q '^@@PGCFG@@' "$records_file"
+  then
+      echo ""
+      python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --text-summary
+      echo ""
+  fi
+  if [[ -n "$show_config" ]]
+  then
+      python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --show-config "$show_config"
+      echo ""
+  fi
   if [[ -n "$json_out" ]]
   then
-      python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --json > "$tmp_dir/logs.json" || exit $?
+      json_args=(--json)
+      if [[ -n "$json_sections" ]]
+      then
+          json_args+=(--json-sections "$json_sections")
+      fi
+      python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" "${json_args[@]}" > "$tmp_dir/logs.json" || exit $?
       # what was redacted (same key as the JSON of cfk-analysis), and the analysis of each CFK bundle
       jq --argjson redaction "$redaction" '. + {redaction_summary: $redaction}' "$tmp_dir/logs.json" > "$tmp_dir/logs-redacted.json"
       if [ ${#cfk_json_files[@]} -eq 0 ]
@@ -46047,6 +46176,10 @@ playground_debug_analyze_logs_command() {
   severity="${args[--severity]}"
   no_sanitize="${args[--no-sanitize]}"
   eval "component_array=(${args[--component]})"
+  eval "connector_array=(${args[--connector]})"
+  with_worker="${args[--with-worker]}"
+  show_config="${args[--show-config]}"
+  json_sections="${args[--json-sections]}"
 
   # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
   if [[ -n "$json_out" ]]
@@ -46083,6 +46216,15 @@ playground_debug_analyze_logs_command() {
           exit 1
       fi
   done
+
+  if [[ -n "$with_worker" && ${#connector_array[@]} -eq 0 ]]
+  then
+      logwarn "⚠️ --with-worker only applies with --connector"
+      with_worker=""
+  fi
+  # --connector: the digest of each file (summarize_log_errors) prints only the records of these connectors
+  export PG_LOG_DIGEST_CONNECTORS="${connector_array[*]}"
+  export PG_LOG_DIGEST_WITH_WORKER="$with_worker"
 
   tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
   if [ -z "$PG_VERBOSE_MODE" ]
@@ -46430,9 +46572,35 @@ playground_debug_analyze_logs_command() {
       title="sample ${sample_array[*]}"
   fi
   report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped")
+  for connector in "${connector_array[@]}"
+  do
+      report_args+=(--connector "$connector")
+  done
+  if [[ -n "$with_worker" ]]
+  then
+      report_args+=(--with-worker)
+  fi
+  # bounded summary of what the HTML report says first (known causes, root causes, connectors, configuration and its
+  # changes), on stderr with --json; then the configs asked with --show-config
+  if [ $nb_files_with_findings -gt 0 ] || [ -n "$show_config" ] || grep -q '^@@PGCFG@@' "$records_file"
+  then
+      echo ""
+      python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --text-summary
+      echo ""
+  fi
+  if [[ -n "$show_config" ]]
+  then
+      python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --show-config "$show_config"
+      echo ""
+  fi
   if [[ -n "$json_out" ]]
   then
-      python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --json > "$tmp_dir/logs.json" || exit $?
+      json_args=(--json)
+      if [[ -n "$json_sections" ]]
+      then
+          json_args+=(--json-sections "$json_sections")
+      fi
+      python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" "${json_args[@]}" > "$tmp_dir/logs.json" || exit $?
       # what was redacted (same key as the JSON of cfk-analysis), and the analysis of each CFK bundle
       jq --argjson redaction "$redaction" '. + {redaction_summary: $redaction}' "$tmp_dir/logs.json" > "$tmp_dir/logs-redacted.json"
       if [ ${#cfk_json_files[@]} -eq 0 ]
@@ -81117,6 +81285,61 @@ playground_analyze_logs_parse_requirements() {
         ;;
 
       # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--connector']+x} ]]; then
+            args['--connector']="$escaped"
+          else
+            args['--connector']="${args['--connector']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --with-worker)
+
+        # :flag.case_no_arg
+        args['--with-worker']=1
+        shift
+        ;;
+
+      # :flag.case
+      --show-config)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--show-config']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--show-config requires an argument: --show-config NAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json-sections)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--json-sections']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--json-sections requires an argument: --json-sections SECTIONS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --component)
 
         # :flag.case_arg
@@ -83848,6 +84071,61 @@ playground_debug_analyze_logs_parse_requirements() {
         # :flag.case_no_arg
         args['--logs-only']=1
         shift
+        ;;
+
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          escaped="$(printf '%q' "$2")"
+          if [[ -z ${args['--connector']+x} ]]; then
+            args['--connector']="$escaped"
+          else
+            args['--connector']="${args['--connector']} $escaped"
+          fi
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --with-worker)
+
+        # :flag.case_no_arg
+        args['--with-worker']=1
+        shift
+        ;;
+
+      # :flag.case
+      --show-config)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--show-config']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--show-config requires an argument: --show-config NAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --json-sections)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--json-sections']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--json-sections requires an argument: --json-sections SECTIONS" >&2
+          exit 1
+        fi
         ;;
 
       # :flag.case
@@ -109054,6 +109332,40 @@ playground_analyze_logs_completion() {
 
         shift
         ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
+      --with-worker)
+        completion_blocked_flags["--with-worker"]=1
+
+        shift
+        ;;
+      --show-config)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--show-config"]=1
+
+        ;;
+      --json-sections)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--json-sections"]=1
+
+        ;;
       --component)
         shift
         if [[ $# -eq 0 ]]; then
@@ -109113,6 +109425,10 @@ playground_analyze_logs_completion() {
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --logs-only "$completion_current" --logs-only
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --with-worker "$completion_current" --with-worker
+    completion_flag_candidates --show-config "$completion_current" --show-config
+    completion_flag_candidates --json-sections "$completion_current" --json-sections
     completion_flag_candidates --component "$completion_current" --component
     completion_flag_candidates --severity "$completion_current" --severity
     completion_flag_candidates --no-sanitize "$completion_current" --no-sanitize
@@ -110476,6 +110792,40 @@ playground_debug_analyze_logs_completion() {
 
         shift
         ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+
+        ;;
+      --with-worker)
+        completion_blocked_flags["--with-worker"]=1
+
+        shift
+        ;;
+      --show-config)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--show-config"]=1
+
+        ;;
+      --json-sections)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--json-sections"]=1
+
+        ;;
       --component)
         shift
         if [[ $# -eq 0 ]]; then
@@ -110535,6 +110885,10 @@ playground_debug_analyze_logs_completion() {
     completion_flag_candidates --output-dir "$completion_current" --output-dir -o
     completion_flag_candidates --json "$completion_current" --json
     completion_flag_candidates --logs-only "$completion_current" --logs-only
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --with-worker "$completion_current" --with-worker
+    completion_flag_candidates --show-config "$completion_current" --show-config
+    completion_flag_candidates --json-sections "$completion_current" --json-sections
     completion_flag_candidates --component "$completion_current" --component
     completion_flag_candidates --severity "$completion_current" --severity
     completion_flag_candidates --no-sanitize "$completion_current" --no-sanitize

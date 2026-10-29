@@ -8,6 +8,10 @@ logs_only="${args[--logs-only]}"
 severity="${args[--severity]}"
 no_sanitize="${args[--no-sanitize]}"
 eval "component_array=(${args[--component]})"
+eval "connector_array=(${args[--connector]})"
+with_worker="${args[--with-worker]}"
+show_config="${args[--show-config]}"
+json_sections="${args[--json-sections]}"
 
 # with --json, logs and the text digest go to stderr and only the analysis to stdout (same as analyze thread-dump)
 if [[ -n "$json_out" ]]
@@ -44,6 +48,15 @@ do
         exit 1
     fi
 done
+
+if [[ -n "$with_worker" && ${#connector_array[@]} -eq 0 ]]
+then
+    logwarn "⚠️ --with-worker only applies with --connector"
+    with_worker=""
+fi
+# --connector: the digest of each file (summarize_log_errors) prints only the records of these connectors
+export PG_LOG_DIGEST_CONNECTORS="${connector_array[*]}"
+export PG_LOG_DIGEST_WITH_WORKER="$with_worker"
 
 tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 if [ -z "$PG_VERBOSE_MODE" ]
@@ -391,9 +404,35 @@ then
     title="sample ${sample_array[*]}"
 fi
 report_args=(--records "$records_file" --title "$title" --levels "$levels" --skipped "$nb_skipped")
+for connector in "${connector_array[@]}"
+do
+    report_args+=(--connector "$connector")
+done
+if [[ -n "$with_worker" ]]
+then
+    report_args+=(--with-worker)
+fi
+# bounded summary of what the HTML report says first (known causes, root causes, connectors, configuration and its
+# changes), on stderr with --json; then the configs asked with --show-config
+if [ $nb_files_with_findings -gt 0 ] || [ -n "$show_config" ] || grep -q '^@@PGCFG@@' "$records_file"
+then
+    echo ""
+    python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --text-summary
+    echo ""
+fi
+if [[ -n "$show_config" ]]
+then
+    python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --show-config "$show_config"
+    echo ""
+fi
 if [[ -n "$json_out" ]]
 then
-    python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" --json > "$tmp_dir/logs.json" || exit $?
+    json_args=(--json)
+    if [[ -n "$json_sections" ]]
+    then
+        json_args+=(--json-sections "$json_sections")
+    fi
+    python3 -I "$root_folder/tools/log-analyzer/log_report.py" "${report_args[@]}" "${json_args[@]}" > "$tmp_dir/logs.json" || exit $?
     # what was redacted (same key as the JSON of cfk-analysis), and the analysis of each CFK bundle
     jq --argjson redaction "$redaction" '. + {redaction_summary: $redaction}' "$tmp_dir/logs.json" > "$tmp_dir/logs-redacted.json"
     if [ ${#cfk_json_files[@]} -eq 0 ]

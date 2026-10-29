@@ -12,6 +12,8 @@ playground container logs --errors, run with PG_LOG_DIGEST_RECORDS_FILE set:
   @@PGCTX@@<tab>raw lines around the first occurrence (2 before, the record, 2 after), one per line
   @@PGCFG@@<tab>config class<tab>[connector|task-0] context ("file" for a config file)<tab>line<tab>timestamp<tab>client.id or name
   @@PGCFGL@@<tab>key=value, one per line
+  @@PGCFGCHG@@<tab>line<tab>timestamp<tab>key=previous value<tab>key=new value (a key whose value changed between two
+                dumps of the same config: a restart with another config)
 
 Also used by playground get-ci-result --logs, container logs --errors --html and container display-error-all --html,
 and imported by tools/connector-diagnose/diagnose_report.py for the errors section of the connector report.
@@ -85,6 +87,12 @@ def parse_records(path: str) -> List[dict]:
                 rec = done = None
             elif line.startswith("@@PGCFGL@@\t") and current is not None and current["configs"]:
                 current["configs"][-1]["lines"].append(line.split("\t", 1)[1])
+            elif line.startswith("@@PGCFGCHG@@\t") and current is not None and current["configs"]:
+                parts = (line.split("\t") + [""] * 5)[1:5]
+                key, _, previous = parts[2].partition("=")
+                current["configs"][-1].setdefault("changes", []).append(
+                    {"line": int(parts[0]) if parts[0].isdigit() else None, "time": parts[1] or None, "key": key,
+                     "previous": previous, "value": parts[3].partition("=")[2]})
             elif line.startswith("@@PGCTX@@\t") and done is not None:
                 done["context"] = (done["context"] + "\n" if done.get("context") else "") + line.split("\t", 1)[1]
             elif rec is not None:
@@ -114,6 +122,28 @@ def finish_record(rec: dict) -> None:
         m = re.search(r"((?:[a-z_$][\w$]*\.)+[A-Z][\w$]*(?:Exception|Error|Throwable))", rec["message"])
         if m:
             rec["root_cause"] = m.group(1)
+
+
+def config_connector(c: dict) -> Optional[str]:
+    """connector of a config: its [connector|task-0] context, else the name of a connector config (file or log)"""
+    m = re.match(r"\[([^\s|\]]+)\|", c.get("context") or "")
+    if m:
+        return m.group(1)
+    if c["title"].endswith("ConnectorConfig") or c["title"] == "connector config":
+        return c.get("id")
+    return None
+
+
+def filter_connectors(files: List[dict], names: List[str], with_worker: bool = False) -> None:
+    """Keeps only the records and configs of these connectors (and those without a connector context with_worker),
+    in place: --connector of playground analyze logs"""
+    wanted = set(names)
+    for f in files:
+        f["records"] = [r for r in f["records"] if (r["connector"] in wanted) or (with_worker and not r["connector"])]
+        f["distinct"] = len(f["records"])
+        f["occurrences"] = sum(r["count"] for r in f["records"])
+        f["configs"] = [c for c in f.get("configs", [])
+                        if (config_connector(c) in wanted) or (with_worker and not config_connector(c))]
 
 
 def all_records(files: List[dict]):
@@ -174,8 +204,8 @@ def match_hints(files: List[dict], unit: str = "file") -> List[dict]:
         first = f"line {first_r['first_line']}" + (f", {first_r['first_ts'].replace('T', ' ')}" if first_r["first_ts"] else "")
         where = (f"in {len(labels)} {unit}s (first at {first_f['label']} {first})" if len(labels) > 1
                  else f"in {first_f['label']} (first at {first})")
-        hint = {"severity": severity, "title": title, "occurrences": occurrences, "files": labels,
-                "text": f"{title}: {occurrences} occurrence(s) {where}: {advice}"}
+        hint = {"severity": severity, "title": title, "occurrences": occurrences, "files": labels, "where": where,
+                "advice": advice, "text": f"{title}: {occurrences} occurrence(s) {where}: {advice}"}
         if rx.pattern == KILLED_TASK_RE.pattern:
             # the exception that killed the tasks is what to fix: one line per distinct chain
             chains = killed_task_chains(matches)
@@ -286,6 +316,35 @@ def shorten_labels(files: List[dict]) -> None:
         f["label"] = f["label"][len(prefix):]
 
 
+def drop_alternating_changes(config: dict, window: int = 60) -> None:
+    """Two configs logged with the same identity (two consumers with one client.id) look like a value going back and
+    forth: a change undone within `window` seconds (or 500 lines without timestamps) is not a restart with another
+    config, both are dropped"""
+    changes = config.get("changes") or []
+
+    def seconds(ch):
+        try:
+            return datetime.strptime(ch["time"], "%Y-%m-%dT%H:%M:%S").timestamp() if ch.get("time") else None
+        except ValueError:
+            return None
+
+    drop = set()
+    for i, a in enumerate(changes):
+        for j in range(i + 1, len(changes)):
+            b = changes[j]
+            if a["key"] != b["key"] or (a["previous"], a["value"]) != (b["value"], b["previous"]):
+                continue
+            ta, tb = seconds(a), seconds(b)
+            close = (abs(tb - ta) <= window) if ta is not None and tb is not None else \
+                (a.get("line") is not None and b.get("line") is not None and abs(b["line"] - a["line"]) <= 500)
+            if close:
+                drop.update((i, j))
+    if drop:
+        config["changes"] = [ch for k, ch in enumerate(changes) if k not in drop]
+        if not config["changes"]:
+            del config["changes"]
+
+
 def analyze(files: List[dict], unit: str = "file") -> dict:
     """unit: what a label is (file, container, script), for the texts of the findings"""
     shorten_labels(files)
@@ -294,12 +353,149 @@ def analyze(files: List[dict], unit: str = "file") -> dict:
     # the "<Class>Config values:" dumps of the logs and the config files of the input (.properties, connector JSON)
     configuration = [dict({k: v for k, v in c.items() if k != "lines"}, file=f["label"], text="\n".join(c["lines"]))
                      for f in files for c in f.get("configs", []) if c["lines"]]
+    for c in configuration:
+        drop_alternating_changes(c)
     for f in files:
         f.pop("configs", None)
     return {"summary": summary(files), "findings": findings(files, hints, causes, unit=unit), "known_causes": hints,
             "root_causes": causes, "files": [f for f in files if f["records"]],
             "files_without_findings": [f["label"] for f in files if not f["records"]],
             "configuration": configuration}
+
+
+# ── Text (terminal digest of playground analyze logs) ────────────────────────
+
+def config_inventory(configs: List[dict]) -> List[str]:
+    """one line per group of configs (connector, components, clients, files): what was logged"""
+    groups: Dict[Tuple[int, str], List[dict]] = {}
+    for c in configs:
+        groups.setdefault(config_group(c), []).append(c)
+    out = []
+    for group in sorted(groups):
+        titles = OrderedDict()
+        for c in groups[group]:
+            titles[c["title"]] = titles.get(c["title"], 0) + 1
+        names = [t + (f" ×{n}" if n > 1 else "") for t, n in titles.items()]
+        out.append(f"{group[1]}: " + ", ".join(names[:8]) + (f" (+{len(names) - 8} more)" if len(names) > 8 else ""))
+    return out
+
+
+def config_changes_lines(configs: List[dict], top: int = 10) -> List[str]:
+    """keys whose value changed between two dumps of the same config (a restart with another config), the same change
+    of the same config once, with the number of times and the first one"""
+    groups: Dict[Tuple[str, str, str, str], dict] = OrderedDict()
+    for c in configs:
+        who = " ".join(x for x in (c.get("context"), c.get("id")) if x)
+        for ch in c.get("changes", []):
+            g = groups.setdefault((f"{c['title']} {who}", ch["key"], ch["previous"], ch["value"]), {"n": 0, "first": ch})
+            g["n"] += 1
+    out = []
+    for (config, key, previous, value), g in groups.items():
+        ch = g["first"]
+        where = f"line {ch['line']}" if ch.get("line") else ""
+        if ch.get("time"):
+            where += f" ({ch['time'].replace('T', ' ')})"
+        out.append(f"{config}: {key} {previous[:80]} → {value[:80]}" + (f" ×{g['n']}" if g["n"] > 1 else "")
+                   + (f" · first {where}" if where else ""))
+    if len(out) > top:
+        out = out[:top] + [f"… {len(out) - top} more (--show-config <connector|config class|client id>, or the HTML report)"]
+    return out
+
+
+def text_summary(res: dict, connectors: List[str], top: int = 5) -> str:
+    """bounded summary printed after the per-file digests: what the HTML report says first (time range, connectors,
+    known causes with what to do, root causes no known cause explains, configuration logged and its changes)"""
+    s = res["summary"]
+    out = []
+    span = ""
+    if s["first_timestamp"]:
+        span = ", " + s["first_timestamp"].replace("T", " ")
+        if s["last_timestamp"] and s["last_timestamp"] != s["first_timestamp"]:
+            span += " → " + s["last_timestamp"].replace("T", " ")
+    scope = f" (--connector {' '.join(connectors)})" if connectors else ""
+    out.append(f"🧭 Summary{scope}: {s['occurrences']} occurrence(s) of {s['distinct']} distinct record(s) in "
+               f"{s['files_with_findings']} file(s){span}")
+    if s["by_connector"]:
+        without = sum(r["count"] for f in res["files"] for r in f["records"] if not r.get("connector"))
+        names = list(s["by_connector"].items())
+        line = ", ".join(f"{n} {c}" for n, c in names[:10]) + (f" (+{len(names) - 10} more)" if len(names) > 10 else "")
+        out.append(f"   🔌 by connector: {line}" + (f" · no connector context {without}" if without else ""))
+    if res["known_causes"]:
+        out.append("🧠 Known causes")
+        for h in res["known_causes"][:8]:
+            out.append(f"   [{h['severity']}] {h['title']} ×{h['occurrences']} {h['where']}")
+            out.append(f"      → {h['advice']}")
+            for d in h.get("details", [])[:5]:
+                out.append(f"      {d}")
+    explained = [re.compile(p) for p, _, _, _ in HINTS]
+    others = [c for c in res["root_causes"] if not any(rx.search(c["label"] + " " + c["example"]) for rx in explained)]
+    if others:
+        out.append("🌳 Root causes not explained by a known cause" + (f" (top {top} of {len(others)})" if len(others) > top else ""))
+        for c in others[:top]:
+            what = f"{c['root_cause'].split('.')[-1]}: {c['example']}" if c["root_cause"] else c["example"]
+            who = f" · {len(c['connectors'])} connector(s): {first_names(c['connectors'])}" if c["connectors"] else ""
+            out.append(f"   {c['level']} ×{c['occurrences']} {what[:220]}{who}")
+    configs = res.get("configuration") or []
+    if configs:
+        out.append(f"⚙️ Configuration logged ({len(configs)}), the last dump of each: --show-config <connector|config class|client id> prints one")
+        out += [f"   {line}" for line in config_inventory(configs)]
+        changes = config_changes_lines(configs)
+        if changes:
+            out.append("   🔁 changed between restarts:")
+            out += [f"      {line}" for line in changes]
+    return "\n".join(out)
+
+
+def config_block_text(c: dict, also: List[str] = ()) -> List[str]:
+    """one config as key = value lines, with its changes"""
+    where = c["file"] + (f":{c['line']}" if c.get("line") else "") + (f" ({c['time'].replace('T', ' ')})" if c.get("time") else "")
+    who = " ".join(x for x in (c.get("context"), c.get("id")) if x)
+    keys = c["text"].splitlines()
+    out = [f"⚙️ {c['title']} {who} · {len(keys)} keys · {where}"]
+    if also:
+        out.append(f"   (also logged, contained in this one: {', '.join(also)})")
+    out += [f"   {k.replace('=', ' = ', 1)}" for k in keys]
+    out += [f"   🔁 {line}" for line in config_changes_lines([c], top=50)]
+    return out + [""]
+
+
+def show_config(res: dict, name: str) -> str:
+    """--show-config: for a connector, its own configs (the ones contained in a bigger one with the same values are
+    only named, its clients summed up in one line); for a config class (ProducerConfig) or a client id, every match"""
+    wanted = name.lower()
+    every = res.get("configuration") or []
+    mine = [c for c in every if (config_connector(c) or "").lower() == wanted]
+    if mine:
+        own = [c for c in mine if c["title"] not in CLIENT_CONFIGS]
+        clients = [c for c in mine if c["title"] in CLIENT_CONFIGS]
+        items = [(c, dict(line.split("=", 1) for line in c["text"].splitlines() if "=" in line)) for c in own]
+        # biggest first: a config whose keys and values are all in a bigger one is the same config logged again
+        items.sort(key=lambda it: -len(it[1]))
+        kept: List[Tuple[dict, dict, List[str]]] = []
+        for c, kv in items:
+            container = next((k for k in kept if all(k[1].get(key) == v for key, v in kv.items())), None)
+            if container is not None and not c.get("changes"):
+                container[2].append(" ".join(x for x in (c["title"], c.get("context")) if x))
+            else:
+                kept.append((c, kv, []))
+        out = []
+        for c, _, also in sorted(kept, key=lambda k: (k[0]["file"], k[0].get("line") or 0)):
+            out += config_block_text(c, also)
+        if clients:
+            ids = [f"{c['title']} {c.get('id') or c.get('context') or ''}".strip() for c in clients]
+            out.append(f"📡 {len(clients)} client config(s) of {name}: {', '.join(ids[:10])}"
+                       + (f" (+{len(ids) - 10} more)" if len(ids) > 10 else "")
+                       + " · --show-config <client id> or <config class> prints one")
+        return "\n".join(out).rstrip()
+    configs = [c for c in every
+               if wanted in ((c.get("id") or "").lower(), c["title"].lower()) or wanted in (c.get("context") or "").lower()]
+    if not configs:
+        known = sorted({x for c in every for x in (config_connector(c), c["title"]) if x})
+        return f"⚙️ no configuration logged for {name}" + (f" (known: {', '.join(known[:30])})" if known else "")
+    out = []
+    for c in configs:
+        out += config_block_text(c)
+    return "\n".join(out).rstrip()
 
 
 # ── HTML ──────────────────────────────────────────────────────────────────────
@@ -463,9 +659,14 @@ def config_block_html(c: dict) -> str:
     where = c["file"] + (f":{c['line']}" if c.get("line") else "") + (f" ({c['time'].replace('T', ' ')})" if c.get("time") else "")
     what = " ".join(x for x in (c.get("context"), c.get("id")) if x)
     icon = "📄" if c["source"] == "file" else "🪵"
+    changes = "".join(f"<li class='mono'>{e(ch['key'])}: {e(ch['previous'])} → {e(ch['value'])}"
+                      + (f" <span class='legend'>· line {ch['line']}</span>" if ch.get("line") else "") + "</li>"
+                      for ch in c.get("changes", []))
+    changed = f" <span class='st warn'>🔁 {len(c['changes'])} key(s) changed between restarts</span>" if c.get("changes") else ""
     return (f"<details class='cfg'><summary>{icon} <strong>{e(c['title'])}</strong> <span class='mono'>{e(what)}</span> "
-            f"<span class='legend'>· {len(rows)} keys · {e(where)}</span></summary>"
-            f"<table class='cfg'><tr><th>Key</th><th>Value</th></tr>{''.join(rows)}</table></details>")
+            f"<span class='legend'>· {len(rows)} keys · {e(where)}</span>{changed}</summary>"
+            + (f"<p class='legend'>🔁 changed between two dumps of this config (a restart with another config):</p><ul>{changes}</ul>" if changes else "")
+            + f"<table class='cfg'><tr><th>Key</th><th>Value</th></tr>{''.join(rows)}</table></details>")
 
 
 def filter_html(by_level: Dict[str, int], by_connector: Dict[str, int], without_connector: int) -> str:
@@ -567,6 +768,8 @@ def html_report(res: dict, title: str, levels: str, skipped: int, heading: str =
             body.append(f"<div class='table-card file-records'><h2>📄 {e(f['label'])}</h2>{records_html(f['records'])}</div>")
     body.append(config_html(res.get("configuration") or []))
     meta = [f"&#128196; {e(title)}", f"🕐 {e(span)}", f"Levels: {e(levels)}"]
+    if res.get("filter"):
+        meta.append(f"🔌 --connector {e(' '.join(res['filter']['connectors']))}" + (" --with-worker" if res["filter"]["with_worker"] else ""))
     meta += [f"<a href='{e(url)}' style='color:#fff'>{e(label)}</a>" for label, url in links]
     return page(f"{heading[2:].strip()} report — {title}", e(heading), meta, "".join(body),
                 f"🛠️ Generated by {e(command)} (self-contained, no external resource). Records are cut to 300 "
@@ -588,17 +791,38 @@ def main() -> int:
     ap.add_argument("--link", nargs=2, action="append", default=[], metavar=("LABEL", "URL"), help="link in the header")
     ap.add_argument("--section", nargs=2, action="append", default=[], metavar=("TITLE", "FILE"),
                     help="text file shown as is after the findings")
+    ap.add_argument("--connector", action="append", default=[], help="keep only the records and configs of this connector")
+    ap.add_argument("--with-worker", action="store_true", help="with --connector, also keep what has no connector context")
+    ap.add_argument("--text-summary", action="store_true", help="print the bounded text summary of the terminal digest")
+    ap.add_argument("--show-config", metavar="NAME", help="print the configs of a connector, config class or client id")
+    ap.add_argument("--json-sections", metavar="LIST",
+                    help="comma separated sections of the JSON: summary,findings,known_causes,root_causes,files,"
+                         "files_without_findings,configuration (default: all)")
     args = ap.parse_args()
 
-    res = analyze(parse_records(args.records), args.unit)
+    files = parse_records(args.records)
+    if args.connector:
+        filter_connectors(files, args.connector, args.with_worker)
+    res = analyze(files, args.unit)
+    if args.connector:
+        res["filter"] = {"connectors": args.connector, "with_worker": args.with_worker}
     res["summary"]["binary_files_skipped"] = args.skipped
     res["summary"]["levels"] = args.levels
     if args.json:
         # the timestamps of every occurrence are only for the timeline of the HTML report
         compact = dict(res, files=[dict(f, records=[{k: v for k, v in r.items() if k != "timestamps"} for r in f["records"]])
                                    for f in res["files"]])
+        if args.json_sections:
+            sections = [x.strip() for x in args.json_sections.split(",") if x.strip()]
+            compact = {k: v for k, v in compact.items() if k in sections}
+        if args.connector:
+            compact["filter"] = {"connectors": args.connector, "with_worker": args.with_worker}
         # type: playground analyze logs also emits the JSON of cfk-analysis ("cfk-bundle") for a CFK support bundle
         print(json.dumps(dict({"type": "logs"}, **compact), indent=2, ensure_ascii=False))
+    if args.text_summary:
+        print(text_summary(res, args.connector))
+    if args.show_config:
+        print(show_config(res, args.show_config))
     if args.html_out:
         with open(args.html_out, "w", encoding="utf-8") as fh:
             sections = []
