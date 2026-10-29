@@ -313,6 +313,8 @@ playground_usage() {
   printf "  %s   ✨ Enable java remote debugging for the connector.\n" "$(green "connector enable-remote-debugging")         "
   printf "  %s   🛑 Disable java remote debugging for the connector.\n" "$(green "connector disable-remote-debugging")        "
   printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")                         "
+  printf "  %s   🧵 Show the tasks of a connector: state, worker, config and partitions\n" "$(green "connector tasks")                           "
+  printf "  %s   📚 Show the topics a connector is using, or reset that list\n" "$(green "connector topics")                          "
   printf "  %s   🛑 Stop connector (only available if CP > 7.5)\n" "$(green "connector stop")                            "
   printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")                          "
   printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")                          "
@@ -14243,6 +14245,8 @@ playground_connector_usage() {
   printf "  %s   ✨ Enable java remote debugging for the connector.\n" "$(green "enable-remote-debugging")         "
   printf "  %s   🛑 Disable java remote debugging for the connector.\n" "$(green "disable-remote-debugging")        "
   printf "  %s   ♻️  Restart connector\n" "$(green "restart")                         "
+  printf "  %s   🧵 Show the tasks of a connector: state, worker, config and partitions\n" "$(green "tasks")                           "
+  printf "  %s   📚 Show the topics a connector is using, or reset that list\n" "$(green "topics")                          "
   printf "  %s   🛑 Stop connector (only available if CP > 7.5)\n" "$(green "stop")                            "
   printf "  %s   ⏯️  Resume connector\n" "$(green "resume")                          "
   printf "  %s   🗑️  Delete connector\n" "$(green "delete")                          "
@@ -15256,7 +15260,7 @@ playground_connector_disable_remote_debugging_usage() {
 playground_connector_restart_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector restart\n\n"
-    printf "  ♻️  Restart connector\n  \n  The usual way to recover a connector whose tasks are FAILED after you\n  fixed the cause. Use --task-id to restart a single failed task and leave\n  the healthy ones alone.\n\n"
+    printf "  ♻️  Restart connector\n  \n  The usual way to recover a connector whose tasks are FAILED after you\n  fixed the cause. Use --task-id to restart a single failed task and leave\n  the healthy ones alone, or --only-failed to restart only what is FAILED,\n  in every connector when --connector is not set.\n\n"
   else
     printf "playground connector restart - ♻️  Restart connector\n\n"
   fi
@@ -15285,11 +15289,137 @@ playground_connector_restart_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--task-id, -t TASK_ID")"
     printf "    🔧 Restart specific task ID only (instead of restarting entire connector)\n"
+    printf "    %s\n" "Conflicts: --only-failed"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--only-failed")"
+    printf "    🩹 Restart only the connector instances and tasks that are FAILED, and leave\n    the RUNNING ones alone\n    \n    A connector with nothing FAILED is skipped. Uses the KIP-745 REST call\n    (restart?includeTasks=true&onlyFailed=true, CP 7.0+); with older CP\n    versions and fully managed connectors, restarts each FAILED task one by one.\n"
+    printf "    %s\n" "Conflicts: --task-id"
     echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector restart\n"
+    printf "  playground connector restart --connector filestream-sink --task-id 0\n"
+    printf "  playground connector restart --only-failed\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_tasks_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector tasks\n\n"
+    printf "  🧵 Show the tasks of a connector: state, worker, config and partitions\n  \n  Answers \"why does task 0 get all the tables, partitions or files?\" and\n  \"which worker runs which task after a rebalance?\":\n  \n    state and worker    of each task (/status), with a per-worker summary\n                        when there are several connect workers\n    task config         the keys whose value differs between the tasks,\n                        or from the connector config: this is how a\n                        connector splits its work (tables of a JDBC\n                        source, task.id, files...). --all-keys for the\n                        whole config of each task\n    partitions          for a sink, the topic partitions assigned to each\n                        task, from its consumer group connect-<connector>\n  \n  🎓 Tip: 'tasks.max' is a maximum, a source connector can create fewer\n  tasks (one JDBC task per table at most).\n  \n  🍪 Deep dive:\n  https://kafka-docker-playground.io/#/deep-dive-connector-troubleshooting\n\n"
+  else
+    printf "playground connector tasks - 🧵 Show the tasks of a connector: state, worker, config and partitions\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector tasks [OPTIONS]\n"
+  printf "  playground connector tasks --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--all-keys")"
+    printf "    📜 Show the whole config of each task, not only the keys that differ\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the result as JSON\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector tasks\n"
+    printf "  playground connector tasks --connector jdbc-source --all-keys\n"
+    printf "  playground connector tasks --connector filestream-sink --json\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_topics_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector topics\n\n"
+    printf "  📚 Show the topics a connector is using, or reset that list\n  \n  The active topics of each connector, as tracked by the worker (KIP-558):\n  the topics a source connector has written to, and the topics a sink\n  connector has consumed from (useful with topics.regex). The list only\n  grows while the connector runs: --reset empties it, and it fills again\n  with the topics used from then on.\n  \n  🎓 Tip: feed the result to 'playground topic consume --topic <t>' or\n  'playground topic dlq inspect'.\n  \n  ⚠️ Self-managed connectors only (CP 5.5+, topic.tracking.enable=true on\n  the worker, the default). --reset also needs\n  topic.tracking.allow.reset=true on the worker (the default).\n\n"
+  else
+    printf "playground connector topics - 📚 Show the topics a connector is using, or reset that list\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector topics [OPTIONS]\n"
+  printf "  playground connector topics --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--reset")"
+    printf "    🧹 Empty the list of active topics of the connector (PUT\n    /connectors/<connector>/topics/reset)\n"
+    printf "    %s\n" "Conflicts: --json"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--json")"
+    printf "    🤖 Print the result as JSON\n"
+    printf "    %s\n" "Conflicts: --reset"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector topics\n"
+    printf "  playground connector topics --connector s3-sink --json\n"
+    printf "  playground connector topics --connector s3-sink --reset\n"
     echo
 
   fi
@@ -62431,6 +62561,7 @@ playground_connector_restart_command() {
   connector="${args[--connector]}"
   verbose="${args[--verbose]}"
   task_id="${args[--task-id]}"
+  only_failed="${args[--only-failed]}"
 
   connector_type=$(playground state get run.connector_type)
   environment=$(playground state get run.environment)
@@ -62457,8 +62588,78 @@ playground_connector_restart_command() {
   then
       log "✨ --connector flag was not provided, applying command to all connectors"
   fi
+  restarted=()
   for connector in "${items[@]}"
   do
+      if [[ -n "$only_failed" ]]
+      then
+          if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
+          then
+              get_ccloud_connect
+              connect_api="https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector"
+              curl_auth="--header \"authorization: Basic $authorization\""
+              handle_ccloud_connect_rest_api "curl -s $curl_auth \"$connect_api/status\""
+          else
+              get_connect_url_and_security
+              connect_api="$connect_url/connectors/$connector"
+              curl_auth="$security"
+              handle_onprem_connect_rest_api "curl $security -s \"$connect_api/status\""
+          fi
+          if [ $? -ne 0 ] || [ -z "$curl_output" ]
+          then
+              logerror "❌ Could not get the status of $connector_type connector $connector"
+              exit 1
+          fi
+          connector_state=$(echo "$curl_output" | jq -r '.connector.state')
+          failed_task_ids=$(echo "$curl_output" | jq -r '.tasks[]? | select(.state == "FAILED") | .id' | tr '\n' ' ')
+          if [ "$connector_state" != "FAILED" ] && [ -z "${failed_task_ids// /}" ]
+          then
+              log "✅ Nothing is FAILED in $connector_type connector $connector, skipping it"
+              continue
+          fi
+          what=""
+          [ "$connector_state" == "FAILED" ] && what="connector instance"
+          if [ -n "${failed_task_ids// /}" ]
+          then
+              [ -n "$what" ] && what="$what and "
+              what="${what}FAILED task(s) ${failed_task_ids% }"
+          fi
+          log "🩹 Restarting the $what of $connector_type connector $connector"
+
+          tag=""
+          if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && [[ "$environment" != cfk* ]]
+          then
+              tag=$(get_running_cp_tag)
+          fi
+          if [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && { [[ "$environment" == cfk* ]] || { [ -n "$tag" ] && version_gt $tag "6.9.9"; }; }
+          then
+              # KIP-745: one call restarts the FAILED connector instance and the FAILED tasks only
+              handle_onprem_connect_rest_api "curl $security -s -X POST -H \"Content-Type: application/json\" \"$connect_api/restart?includeTasks=true&onlyFailed=true\"" || exit 1
+          else
+              if [ "$connector_state" == "FAILED" ]
+              then
+                  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
+                  then
+                      handle_ccloud_connect_rest_api "curl -s --request POST $curl_auth \"$connect_api/restart\"" || exit 1
+                  else
+                      handle_onprem_connect_rest_api "curl $security -s -X POST -H \"Content-Type: application/json\" \"$connect_api/restart\"" || exit 1
+                  fi
+              fi
+              for failed_task_id in $failed_task_ids
+              do
+                  log "🤹‍♂️ Restart task $failed_task_id"
+                  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
+                  then
+                      handle_ccloud_connect_rest_api "curl -s --request POST $curl_auth \"$connect_api/tasks/$failed_task_id/restart\"" || exit 1
+                  else
+                      handle_onprem_connect_rest_api "curl $security -s -X POST -H \"Content-Type: application/json\" \"$connect_api/tasks/$failed_task_id/restart\"" || exit 1
+                  fi
+              done
+          fi
+          restarted+=("$connector")
+          continue
+      fi
+
       if [[ -n "$task_id" ]]; then
           log "🔄 Restarting $connector_type connector $connector task $task_id"
       else
@@ -62498,7 +62699,7 @@ playground_connector_restart_command() {
           elif ! version_gt $tag "6.9.9"
           then
               # For older versions, restart all tasks individually
-              handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/tasks"
+              handle_onprem_connect_rest_api "curl $security -s -X GET \"$connect_url/connectors/$connector/tasks\""
 
               task_ids=$(echo "$curl_output" | jq -r '.[].id.task')
 
@@ -62518,12 +62719,323 @@ playground_connector_restart_command() {
       else
           log "🔄 $connector_type connector $connector has been restarted successfully"
       fi
+      restarted+=("$connector")
   done
+  if [ ${#restarted[@]} -eq 0 ]
+  then
+      exit 0
+  fi
   sleep 3
-  for connector in "${items[@]}"
+  for connector in "${restarted[@]}"
   do
   	playground connector status --connector $connector
   done
+}
+
+# :command.function
+playground_connector_tasks_command() {
+
+  # src/commands/connector/tasks.sh
+  connector="${args[--connector]}"
+  verbose="${args[--verbose]}"
+  all_keys="${args[--all-keys]}"
+  json="${args[--json]}"
+
+  connector_type=$(playground state get run.connector_type)
+
+  if [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+      log "connector tasks command is not supported with $connector_type connector"
+      exit 0
+  fi
+
+  if [[ ! -n "$connector" ]]
+  then
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No $connector_type connector is running !"
+          exit 1
+      fi
+  fi
+
+  # task configs returned by the REST API are not masked: hide the values of the keys that look like secrets
+  secret_keys_regex='(password|secret|jaas|token|credential|api[._]key|private[._]key|keystore\.key|access[._]key)'
+
+  function state_with_emoji() {
+      case "$1" in
+          RUNNING) echo "🟢 RUNNING" ;;
+          FAILED) echo "🛑 FAILED" ;;
+          PAUSED) echo "⏸️  PAUSED" ;;
+          STOPPED) echo "🛑 STOPPED" ;;
+          UNASSIGNED) echo "⌛ UNASSIGNED" ;;
+          RESTARTING) echo "🔄 RESTARTING" ;;
+          *) echo "$1" ;;
+      esac
+  }
+
+  items=($connector)
+  length=${#items[@]}
+  if ((length > 1)) && [[ -z "$json" ]]
+  then
+      log "✨ --connector flag was not provided, applying command to all connectors"
+  fi
+
+  results="[]"
+  for connector in "${items[@]}"
+  do
+      if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
+      then
+          get_ccloud_connect
+          handle_ccloud_connect_rest_api "curl -s --header \"authorization: Basic $authorization\" \"https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/status\""
+          if [ $? -ne 0 ] || [ -z "$curl_output" ]
+          then
+              logerror "❌ Could not get the status of $connector_type connector $connector"
+              exit 1
+          fi
+          status_json="$curl_output"
+          # the task configs and the worker of each task are not exposed for fully managed connectors
+          tasks_json="[]"
+          config_json="{}"
+          partitions_json="{}"
+      else
+          get_connect_url_and_security
+          handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors/$connector/status\""
+          if [ $? -ne 0 ] || [ -z "$curl_output" ]
+          then
+              logerror "❌ Could not get the status of $connector_type connector $connector"
+              exit 1
+          fi
+          status_json="$curl_output"
+          handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors/$connector/tasks\""
+          tasks_json="${curl_output:-[]}"
+          handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors/$connector/config\""
+          config_json="$curl_output"
+          [ -z "$config_json" ] && config_json="{}"
+
+          # sink: partitions assigned to each task, from the CLIENT-ID (connector-consumer-<connector>-<task>) of its consumer group
+          partitions_json="{}"
+          if [ "$(echo "$status_json" | jq -r '.type')" == "sink" ]
+          then
+              group=$(echo "$config_json" | jq -r '."consumer.override.group.id" // empty')
+              group=${group:-connect-$connector}
+              set +e
+              group_output=$(run_kafka_admin_tool kafka-consumer-groups --describe --group "$group" 2>/dev/null)
+              set -e
+              partitions_json=$(echo "$group_output" | awk -v prefix="connector-consumer-$connector-" '
+                  $1 != "GROUP" && NF >= 9 {
+                      client = $NF
+                      if (index(client, prefix) == 1) {
+                          task = substr(client, length(prefix) + 1)
+                          if (task ~ /^[0-9]+$/) print task "\t" $2 "-" $3
+                      }
+                  }' | jq -R -s 'split("\n") | map(select(length > 0) | split("\t")) | group_by(.[0]) | map({key: .[0][0], value: (map(.[1]) | sort)}) | from_entries')
+          fi
+      fi
+
+      result=$(jq -n \
+          --arg connector "$connector" \
+          --arg connector_type "$connector_type" \
+          --arg secret_regex "$secret_keys_regex" \
+          --argjson status "$status_json" \
+          --argjson tasks "$tasks_json" \
+          --argjson config "$config_json" \
+          --argjson partitions "$partitions_json" '
+          # also the passwords embedded in a value: password=... parameters of a jdbc url, user:password@ of a url
+          def mask: with_entries(if (.key | test($secret_regex; "i")) then .value = "********"
+              else .value |= (if type == "string" then gsub("(?<k>(password|pwd)=)[^&;]*"; "\(.k)********"; "i") | gsub("(?<s>://[^/:@]+:)[^/@]+@"; "\(.s)********@") else . end) end);
+          ($tasks | map({key: (.id.task | tostring), value: (.config // {})}) | from_entries) as $task_configs
+          | ($task_configs | [.[] | keys[]] | unique) as $all_keys
+          # a key differs when it is not in the connector config with the same value, or when the tasks do not all have the same value
+          | ($all_keys | map(select(. != "task.class") | select(. as $k |
+                ($task_configs | [.[] | .[$k]] | unique | length) > 1
+                or ($task_configs | to_entries | any(.value[$k] != $config[$k]))))) as $diff_keys
+          | {
+              connector: $connector,
+              connector_type: $connector_type,
+              type: ($status.type // null),
+              state: $status.connector.state,
+              worker_id: ($status.connector.worker_id // null),
+              tasks_max: ($config["tasks.max"] // null),
+              task_class: ($task_configs | [.[] | .["task.class"]] | unique | first // null),
+              tasks: ($status.tasks // [] | sort_by(.id) | map(
+                  (.id | tostring) as $id
+                  | {
+                      id: .id,
+                      state: .state,
+                      worker_id: (.worker_id // null),
+                      trace: ((.trace // "") | split("\n") | first // "" | if . == "" then null else . end),
+                      config_diff: (($task_configs[$id] // {}) | with_entries(select(.key as $k | $diff_keys | index($k))) | mask),
+                      config: (($task_configs[$id] // {}) | mask),
+                      partitions: ($partitions[$id] // null)
+                    }))
+            }')
+      results=$(echo "$results" | jq --argjson r "$result" '. + [$r]')
+
+      if [[ -n "$json" ]]
+      then
+          continue
+      fi
+
+      nb_tasks=$(echo "$result" | jq '.tasks | length')
+      log "🧵 Tasks of $connector_type connector $connector ($(echo "$result" | jq -r '[.type, ("connector " + .state), (if .worker_id then "on " + .worker_id else empty end), (if .tasks_max then "tasks.max=" + .tasks_max else empty end), "\($tasks_count) task(s)"] | map(select(. != null)) | join(", ")' --argjson tasks_count "$nb_tasks"))"
+      if [ "$nb_tasks" == "0" ]
+      then
+          logwarn "⚠️ The connector has no task: a source connector creates its tasks once it found work (tables, files...), check 'playground connector logs'"
+          continue
+      fi
+      task_class=$(echo "$result" | jq -r '.task_class // empty')
+      if [ -n "$task_class" ]
+      then
+          log "🧩 task.class: $task_class"
+      fi
+
+      is_sink=0
+      [ "$(echo "$result" | jq -r '.type')" == "sink" ] && [ "$connector_type" != "$CONNECTOR_TYPE_FULLY_MANAGED" ] && is_sink=1
+
+      printf "%-6s %-16s %-24s %s\n" "Task" "State" "Worker" "$( [ $is_sink == 1 ] && echo "Partitions" || echo "")"
+      echo "-------------------------------------------------------------------------------------------------------------"
+      while read -r task
+      do
+          id=$(echo "$task" | jq -r '.id')
+          state=$(state_with_emoji "$(echo "$task" | jq -r '.state')")
+          worker=$(echo "$task" | jq -r '.worker_id // "-"')
+          partitions=""
+          if [ $is_sink == 1 ]
+          then
+              partitions=$(echo "$task" | jq -r 'if .partitions then (.partitions | join(",")) else "- (no partition assigned)" end')
+          fi
+          printf "%-6s %-16s %-24s %s\n" "$id" "$state" "$worker" "$partitions"
+          trace=$(echo "$task" | jq -r '.trace // empty')
+          if [ -n "$trace" ]
+          then
+              echo "       ↳ $trace"
+          fi
+          if [[ -n "$all_keys" ]]
+          then
+              echo "$task" | jq -r '.config | to_entries | sort_by(.key)[] | "       \(.key)=\(.value)"'
+          else
+              echo "$task" | jq -r '.config_diff | to_entries | sort_by(.key)[] | "       ⚙️  \(.key)=\(.value)"'
+          fi
+      done < <(echo "$result" | jq -c '.tasks[]')
+      echo "-------------------------------------------------------------------------------------------------------------"
+
+      if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ]
+      then
+          log "ℹ️ Fully managed connector: the config and the worker of each task are not exposed"
+          continue
+      fi
+      if [[ -z "$all_keys" ]] && [ "$(echo "$result" | jq '[.tasks[].config_diff | length] | add // 0')" == "0" ]
+      then
+          log "⚙️ All the tasks have the same config as the connector (use --all-keys to see it)"
+      fi
+      nb_workers=$(echo "$result" | jq '[.tasks[].worker_id] | unique | length')
+      if [ "$nb_workers" -gt 1 ]
+      then
+          log "👷 Tasks per worker:"
+          echo "$result" | jq -r '.tasks | group_by(.worker_id)[] | "   \(.[0].worker_id): \(length) task(s) (\(map(.id | tostring) | join(",")))"'
+      fi
+      if [ $is_sink == 1 ]
+      then
+          unassigned=$(echo "$result" | jq '[.tasks[] | select(.partitions == null)] | length')
+          if [ "$unassigned" != "0" ]
+          then
+              log "💤 $unassigned task(s) without partition: tasks.max is higher than the number of partitions of the topics, or the consumer group is rebalancing"
+          fi
+      fi
+  done
+
+  if [[ -n "$json" ]]
+  then
+      echo "$results" | jq 'map(.tasks |= map(if $all then del(.config_diff) else del(.config) end))' --argjson all "$( [[ -n "$all_keys" ]] && echo true || echo false )"
+  fi
+
+}
+
+# :command.function
+playground_connector_topics_command() {
+
+  # src/commands/connector/topics.sh
+  connector="${args[--connector]}"
+  verbose="${args[--verbose]}"
+  reset="${args[--reset]}"
+  json="${args[--json]}"
+
+  connector_type=$(playground state get run.connector_type)
+
+  if [ "$connector_type" == "$CONNECTOR_TYPE_FULLY_MANAGED" ] || [ "$connector_type" == "$CONNECTOR_TYPE_CUSTOM" ]
+  then
+      log "connector topics command is not supported with $connector_type connector"
+      exit 0
+  fi
+
+  if [[ ! -n "$connector" ]]
+  then
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No $connector_type connector is running !"
+          exit 1
+      fi
+  fi
+
+  tag=$(get_running_cp_tag)
+  if [ -n "$tag" ] && ! version_gt $tag "5.4.99"
+  then
+      logerror "❌ the active topics of a connector are tracked since CP 5.5 (KIP-558), current version is $tag"
+      exit 1
+  fi
+
+  get_connect_url_and_security
+
+  items=($connector)
+  length=${#items[@]}
+  if ((length > 1)) && [[ -z "$json" ]]
+  then
+      log "✨ --connector flag was not provided, applying command to all connectors"
+  fi
+
+  results="{}"
+  for connector in "${items[@]}"
+  do
+      # the /topics endpoints do not check that the connector exists
+      if ! handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors/$connector/status\"" > /dev/null
+      then
+          logerror "❌ $connector_type connector $connector not found"
+          exit 1
+      fi
+      if [[ -n "$reset" ]]
+      then
+          log "🧹 Resetting the active topics of $connector_type connector $connector"
+          handle_onprem_connect_rest_api "curl $security -s -X PUT \"$connect_url/connectors/$connector/topics/reset\"" || exit 1
+          log "🧹 The active topics of $connector_type connector $connector have been reset, the list fills again with the topics it uses from now on"
+          continue
+      fi
+
+      handle_onprem_connect_rest_api "curl $security -s \"$connect_url/connectors/$connector/topics\"" || exit 1
+      topics=$(echo "$curl_output" | jq -c --arg c "$connector" '.[$c].topics // [] | sort')
+      results=$(echo "$results" | jq --arg c "$connector" --argjson t "$topics" '. + {($c): $t}')
+
+      if [[ -n "$json" ]]
+      then
+          continue
+      fi
+
+      nb=$(echo "$topics" | jq 'length')
+      if [ "$nb" == "0" ]
+      then
+          log "📚 $connector_type connector $connector has no active topic yet: it has not produced or consumed any record since it started or since its last reset"
+      else
+          log "📚 Active topics of $connector_type connector $connector ($nb):"
+          echo "$topics" | jq -r '.[]'
+      fi
+  done
+
+  if [[ -n "$json" ]]
+  then
+      echo "$results" | jq .
+  fi
+
 }
 
 # :command.function
@@ -103075,6 +103587,20 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
+    tasks)
+      action="tasks"
+      shift
+      playground_connector_tasks_parse_requirements "$@"
+      shift $#
+      ;;
+
+    topics)
+      action="topics"
+      shift
+      playground_connector_topics_parse_requirements "$@"
+      shift $#
+      ;;
+
     stop)
       action="stop"
       shift
@@ -105461,6 +105987,11 @@ playground_connector_restart_parse_requirements() {
 
       # :flag.case
       --task-id | -t)
+        # :flag.conflicts
+        if [[ -n "${args['--only-failed']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--only-failed" >&2
+          exit 1
+        fi
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
@@ -105471,6 +106002,19 @@ playground_connector_restart_parse_requirements() {
           printf "%s\n" "--task-id requires an argument: --task-id, -t TASK_ID" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --only-failed)
+        # :flag.conflicts
+        if [[ -n "${args['--task-id']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--task-id" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--only-failed']=1
+        shift
         ;;
 
       --)
@@ -105511,6 +106055,210 @@ playground_connector_restart_parse_requirements() {
       exit 1
     fi
   fi
+
+}
+
+# :command.parse_requirements
+playground_connector_tasks_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_tasks_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector tasks"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --all-keys)
+
+        # :flag.case_no_arg
+        args['--all-keys']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_connector_topics_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_topics_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector topics"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --reset)
+        # :flag.conflicts
+        if [[ -n "${args['--json']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--json" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--reset']=1
+        shift
+        ;;
+
+      # :flag.case
+      --json)
+        # :flag.conflicts
+        if [[ -n "${args['--reset']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--reset" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--json']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -126444,6 +127192,16 @@ playground_connector_completion() {
         playground_connector_restart_completion "$completion_current" "$@"
         return
         ;;
+      tasks)
+        shift
+        playground_connector_tasks_completion "$completion_current" "$@"
+        return
+        ;;
+      topics)
+        shift
+        playground_connector_topics_completion "$completion_current" "$@"
+        return
+        ;;
       stop)
         shift
         playground_connector_stop_completion "$completion_current" "$@"
@@ -126563,7 +127321,7 @@ playground_connector_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" status wait validate diff error-recommendations oracle-cdc-xstream smt offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart stop resume unpause delete diagnose history show-lag benchmark show-config show-config-parameters display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update edit alter
+  completion_candidates "$completion_current" status wait validate diff error-recommendations oracle-cdc-xstream smt offsets plugins pause versions sourcecode enable-remote-debugging disable-remote-debugging restart tasks topics stop resume unpause delete diagnose history show-lag benchmark show-config show-config-parameters display-metrics-api display-metrics-api-with-grafana select-config snippets open-docs log-level logs open-ccloud-connector-in-browser display-leader-name translate connect-migration-utility create-or-update update edit alter
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -127602,7 +128360,14 @@ playground_connector_restart_completion() {
         fi
         shift
         completion_blocked_flags["--task-id"]=1
+        completion_blocked_flags["--only-failed"]=1
 
+        ;;
+      --only-failed)
+        completion_blocked_flags["--only-failed"]=1
+        completion_blocked_flags["--task-id"]=1
+
+        shift
         ;;
       *)
         return
@@ -127615,6 +128380,119 @@ playground_connector_restart_completion() {
     completion_flag_candidates --verbose "$completion_current" --verbose -v
     completion_flag_candidates --connector "$completion_current" --connector -c
     completion_flag_candidates --task-id "$completion_current" --task-id -t
+    completion_flag_candidates --only-failed "$completion_current" --only-failed
+  fi
+
+}
+
+# :command.completion_function
+playground_connector_tasks_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+
+        ;;
+      --all-keys)
+        completion_blocked_flags["--all-keys"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --all-keys "$completion_current" --all-keys
+    completion_flag_candidates --json "$completion_current" --json
+  fi
+
+}
+
+# :command.completion_function
+playground_connector_topics_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      --connector | -c)
+        shift
+        if [[ $# -eq 0 ]]; then
+          if completion_output="$({ playground get-connector-list; } 2>/dev/null)"; then
+            completion_dynamic_candidates "$completion_current" "$completion_output"
+          fi
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--connector"]=1
+
+        ;;
+      --reset)
+        completion_blocked_flags["--reset"]=1
+        completion_blocked_flags["--json"]=1
+
+        shift
+        ;;
+      --json)
+        completion_blocked_flags["--json"]=1
+        completion_blocked_flags["--reset"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+    completion_flag_candidates --connector "$completion_current" --connector -c
+    completion_flag_candidates --reset "$completion_current" --reset
+    completion_flag_candidates --json "$completion_current" --json
   fi
 
 }
@@ -130062,6 +130940,8 @@ run() {
     "connector enable-remote-debugging") playground_connector_enable_remote_debugging_command ;;
     "connector disable-remote-debugging") playground_connector_disable_remote_debugging_command ;;
     "connector restart") playground_connector_restart_command ;;
+    "connector tasks") playground_connector_tasks_command ;;
+    "connector topics") playground_connector_topics_command ;;
     "connector stop") playground_connector_stop_command ;;
     "connector resume") playground_connector_resume_command ;;
     "connector delete") playground_connector_delete_command ;;
