@@ -7827,6 +7827,47 @@ function get_broker_ids () {
   run_kafka_admin_tool kafka-broker-api-versions 2>/dev/null | grep -o -E "\(id: [0-9]+" | grep -o -E "[0-9]+" | sort -n | uniq
 }
 
+# copies every record of topic $1 to topic $2 in one transaction of transactional id $3, ended with $4 (commit, abort or
+# open) and transaction.timeout.ms $5, with scripts/cli/src/transactional-copier (built on first use, run with the
+# kafka-clients of the broker container): returns 1 on error
+function run_transactional_copier () {
+  local input_topic="$1" output_topic="$2" transactional_id="$3" transaction="$4" transaction_timeout="$5"
+  local copier_dir="$root_folder/scripts/cli/src/transactional-copier"
+  local jar="$copier_dir/target/transactional-copier-1.0.0.jar"
+  local output rc=0
+  if [ ! -f "$jar" ] || [ -n "$(find "$copier_dir/src" "$copier_dir/pom.xml" -newer "$jar" 2>/dev/null)" ]
+  then
+    log "🏗 Building jar for transactional-copier"
+    mkdir -p "$copier_dir/target"
+    # built from a copy of the sources, like schema-validator: an IDE may write its own classes in target/classes
+    build_java_component_with_retry "transactional-copier" docker run -i --rm -v "$copier_dir:/usr/src/transactional-copier:ro" -v "$HOME/.m2":/root/.m2 -v "$root_folder/scripts/settings.xml:/tmp/settings.xml" -v "$copier_dir/target:/usr/src/target" maven:3.9.11-eclipse-temurin-17 bash -c "mkdir -p /usr/src/mymaven && cp -r /usr/src/transactional-copier/pom.xml /usr/src/transactional-copier/src /usr/src/mymaven/ && cd /usr/src/mymaven && mvn -s /tmp/settings.xml package && cp target/transactional-copier-1.0.0.jar /usr/src/target/"
+  fi
+
+  get_security_broker "--command-config"
+  local copier_cmd=(java -cp "/tmp/transactional-copier.jar:/usr/share/java/kafka/*" com.github.vdesabou.TransactionalCopier --bootstrap-server "$bootstrap_server" $security --input-topic "$input_topic" --output-topic "$output_topic" --transactional-id "$transactional_id" --transaction "$transaction" --transaction-timeout-ms "$transaction_timeout")
+  if [[ -n "$verbose" ]]
+  then
+    log "🐞 CLI command used (in $container)"
+    echo "${copier_cmd[*]}"
+  fi
+  if [[ "$environment" == cfk* ]]
+  then
+    kubectl -n confluent cp "$jar" "$container:/tmp/transactional-copier.jar" > /dev/null 2>&1 || { logerror "❌ could not copy the transactional copier to $container" ; return 1 ; }
+    output=$(kubectl -n confluent exec -i "$container" -- "${copier_cmd[@]}" 2>&1) || rc=$?
+  else
+    docker cp "$jar" "$container:/tmp/transactional-copier.jar" > /dev/null 2>&1 || { logerror "❌ could not copy the transactional copier to $container" ; return 1 ; }
+    output=$(docker exec -i "$container" "${copier_cmd[@]}" 2>&1) || rc=$?
+  fi
+  if [ $rc -ne 0 ] || ! echo "$output" | grep -q -E "^transaction (committed|aborted|left open)"
+  then
+    logerror "❌ the transactional copy to topic $output_topic failed:"
+    echo "$output" | grep -v -E "^[[:space:]]+at |^SLF4J|^log4j" | tail -20
+    return 1
+  fi
+  echo "$output" | grep -E "^records sent in the transaction|^transaction (committed|aborted|left open)"
+  return 0
+}
+
 # table of the partitions of a topic, with ⚠️ on the partitions whose leader is not the preferred (first) replica
 function print_topic_partition_assignment () {
   local topic="$1" p l r i preferred

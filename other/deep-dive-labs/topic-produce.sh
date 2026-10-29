@@ -86,4 +86,19 @@ then
 fi
 log "✅ $nb_ticks records sent at 5 records per second"
 
+log "Step 8: transactions, aborted then committed"
+lab_run playground topic produce -t lab-txn --nb-messages 3 --value 'paid-%g' --transactional-id lab-txn-id --transaction abort
+lab_expect_exit 0
+lab_expect_contains "records sent in the transaction of lab-txn-id: 3 {0=3}"
+lab_expect_contains "transaction aborted"
+lab_run playground topic consume --topic lab-txn --isolation-level read_committed --count
+lab_expect_equals "$(echo "$LAB_OUTPUT" | tail -1)" "0" "read_committed records after an aborted transaction"
+lab_run playground topic produce -t lab-txn --nb-messages 3 --value 'paid-%g' --transactional-id lab-txn-id
+lab_expect_exit 0
+lab_expect_contains "transaction committed"
+lab_run playground topic consume --topic lab-txn --isolation-level read_committed --count
+lab_expect_equals "$(echo "$LAB_OUTPUT" | tail -1)" "3" "read_committed records after a committed transaction"
+lab_run playground topic consume --topic lab-txn --count
+lab_expect_equals "$(echo "$LAB_OUTPUT" | tail -1)" "6" "read_uncommitted records"
+
 log "✅ all the outputs of the page are as expected"

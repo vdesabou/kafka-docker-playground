@@ -4610,6 +4610,27 @@
               ],
               "argument": "RECORD-SIZE",
               "description": "🏋️ Record size in bytes, eg. 1048576 for 1MB\n\n📢 If size is > 1Mb, --producer-property max.request.size and topic max.message.bytes will be automatically set to support the record size.\n\nNote that --no-null will be used when this option is set\n\nDefault value: 0"
+            },
+            {
+              "names": [
+                "--transactional-id"
+              ],
+              "argument": "TRANSACTIONAL-ID",
+              "description": "💱 Produce the records in one transaction, with this transactional.id\n\nThe records are produced as usual (keys, headers, schemas,\npartitioning) to a hidden staging topic with the same number of\npartitions, then copied byte for byte to the topic in one\ntransaction, which is committed, aborted or left open\n(--transaction). With the default subject name strategy, the\nschemas are registered under the subjects of the topic.\n\nUseful to reproduce what read_committed consumers do: an open\ntransaction holds the last stable offset of its partitions.\n\nNot available on Confluent Cloud, and not with --nb-messages -1."
+            },
+            {
+              "names": [
+                "--transaction"
+              ],
+              "argument": "TRANSACTION",
+              "description": "💱 How the transaction of --transactional-id ends: commit\n(default), abort, or open (left open, the coordinator aborts it\nafter --transaction-timeout)\n\nDefault value: commit\nAllowed values: commit, abort, open"
+            },
+            {
+              "names": [
+                "--transaction-timeout"
+              ],
+              "argument": "MS",
+              "description": "⏱️ transaction.timeout.ms of the transactional producer, in ms\n(default 60000): an open transaction is aborted by the coordinator\nafter it. At most transaction.max.timeout.ms of the brokers (15\nminutes by default)\n\nDefault value: 60000"
             }
           ]
         },

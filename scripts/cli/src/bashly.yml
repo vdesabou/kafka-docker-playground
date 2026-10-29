@@ -7818,9 +7818,51 @@ commands:
 
           It sets --property value.schema.id=x --property auto.register=false --property use.latest.version=true
 
+      - long: --transactional-id
+        arg: transactional-id
+        required: false
+        help: |-
+          💱 Produce the records in one transaction, with this transactional.id
+
+          The records are produced as usual (keys, headers, schemas,
+          partitioning) to a hidden staging topic with the same number of
+          partitions, then copied byte for byte to the topic in one
+          transaction, which is committed, aborted or left open
+          (--transaction). With the default subject name strategy, the
+          schemas are registered under the subjects of the topic.
+
+          Useful to reproduce what read_committed consumers do: an open
+          transaction holds the last stable offset of its partitions.
+
+          Not available on Confluent Cloud, and not with --nb-messages -1.
+      - long: --transaction
+        arg: transaction
+        required: false
+        default: "commit"
+        allowed:
+        - commit
+        - abort
+        - open
+        help: |-
+          💱 How the transaction of --transactional-id ends: commit
+          (default), abort, or open (left open, the coordinator aborts it
+          after --transaction-timeout)
+      - long: --transaction-timeout
+        arg: ms
+        validate: integer
+        required: false
+        default: "60000"
+        help: |-
+          ⏱️ transaction.timeout.ms of the transactional producer, in ms
+          (default 60000): an open transaction is aborted by the coordinator
+          after it. At most transaction.max.timeout.ms of the brokers (15
+          minutes by default)
+
       examples: |
 
         playground topic produce --tombstone --topic a-topic --key mykey
+
+        playground topic produce -t payments --nb-messages 10 --value 'payment-%g' --transactional-id payments-txn --transaction open --transaction-timeout 900000
 
         playground topic produce -t topic-json --nb-messages 10 << 'EOF'
         {

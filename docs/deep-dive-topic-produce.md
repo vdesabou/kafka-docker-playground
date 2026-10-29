@@ -122,6 +122,31 @@ Gotchas:
 - `--headers` and `--tombstone` need CP 7.2+, `--schema-id-in-header` CP 8.1.1+: the command fails early
   otherwise.
 
+### Transactions: `--transactional-id`
+
+```bash
+# committed (default), aborted, or left open: an open transaction blocks read_committed consumers
+playground topic produce -t payments --nb-messages 10 --value 'payment-%g' --transactional-id payments-txn --transaction open --transaction-timeout 900000
+# 💱 --transactional-id is set: the records are produced to staging topic _playground-txn-payments (1 partitions), then copied to topic payments in one transaction of payments-txn (--transaction open)
+# records sent in the transaction of payments-txn: 10 {0=10}
+# transaction left open, the coordinator aborts it after transaction.timeout.ms (900000 ms)
+```
+
+The console producers have no transaction support, so the records are first produced as usual (keys, headers,
+schemas, partitioning) to a hidden staging topic with the same number of partitions. A small transactional producer
+(`scripts/cli/src/transactional-copier`, built with Maven in Docker on first use, run with the `kafka-clients` of the
+broker container) then copies them byte for byte, partition by partition and in order, in one transaction, and
+commits it, aborts it or leaves it open. With the default subject name strategy, the schemas are registered under
+the subjects of the topic (same schema id). The staging topic and its subjects are deleted at the end.
+
+- `--transaction open` stops the producer without ending the transaction: the coordinator aborts it after
+  `--transaction-timeout` (default 60000 ms, at most `transaction.max.timeout.ms` of the brokers, 15 minutes). Until
+  then `read_committed` consumers don't read past its first record, even records produced after it without
+  transaction. See it with `playground broker transactions describe-producers --topic <t>`, end it with
+  `playground broker transactions abort` (see the [topic administration deep dive](/deep-dive-topic-administration.md)).
+- Not on Confluent Cloud, and not with `--nb-messages -1`. `--producer-property` applies to the staging write, not
+  to the transactional producer.
+
 ---
 
 ## 4. Volume, pace and size
@@ -249,6 +274,19 @@ playground topic produce -t lab-ticks --nb-messages -1 --throughput 5 --value '{
 playground topic get-number-records --topic lab-ticks
 ```
 
+**Step 8: transactions, aborted then committed**
+
+```bash
+playground topic produce -t lab-txn --nb-messages 3 --value 'paid-%g' --transactional-id lab-txn-id --transaction abort
+# records sent in the transaction of lab-txn-id: 3 {0=3}
+# transaction aborted
+playground topic consume --topic lab-txn --isolation-level read_committed --count     # 0
+playground topic produce -t lab-txn --nb-messages 3 --value 'paid-%g' --transactional-id lab-txn-id
+# transaction committed
+playground topic consume --topic lab-txn --isolation-level read_committed --count     # 3: the aborted ones are skipped
+playground topic consume --topic lab-txn --count                                       # 6: read_uncommitted reads them all
+```
+
 ```bash
 playground stop
 ```
@@ -270,6 +308,7 @@ playground stop
 | "ordering per key, several partitions" | `--nb-partitions 3 --key 'k%g'` (or a fixed key to pin one partition) |
 | "lag, rebalances under steady load" | `--nb-messages -1 --throughput 50` in the background, then `playground connector show-lag` |
 | "schema id in headers (new serializers)" | `--schema-id-in-header` (CP 8.1.1+) |
+| "`read_committed` consumer / exactly-once pipeline: committed, aborted or never ending transactions" | `--transactional-id <id> --transaction commit\|abort\|open` (`--transaction-timeout 900000` keeps an open one 15 minutes), then `topic consume --isolation-level read_committed --count` and `broker transactions describe-producers --topic <t>` |
 
 In a repro model, produce **before** creating a sink when the bug is on existing data, and use a quoted heredoc for the
 schema:
@@ -294,6 +333,7 @@ playground topic produce -t <topic> [--nb-messages N|-1] \
   [--value-format raw|avro|…] [--derive-value-schema-as AVRO|JSON|PROTOBUF] [--generate-only] \
   [--throughput N] [--record-size BYTES] [--nb-partitions N] [--compression-codec zstd] \
   [--producer-property k=v] [--value-subject-name-strategy …] [--compatibility …] [--validate] \
+  [--transactional-id <id> [--transaction commit|abort|open] [--transaction-timeout <ms>]] \
   [--delete-topic] [--consume] [--verbose]
 ```
 
