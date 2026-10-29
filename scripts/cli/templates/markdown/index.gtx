@@ -92,13 +92,17 @@ end
 if commands.any?
   grouped_commands.each do |group, commands|
     # private commands have no page (see render.rb): don't link to them
-    commands = commands.reject(&:private)
+    # bashly also lists the subcommands of an exposed command (expose: true) in its group, one level deep only:
+    # keep the direct subcommands and list every public descendant of each, nested by depth
+    depth = full_name.split.size
+    commands = commands.reject(&:private).select { |c| c.full_name.split.size == depth + 1 }
+    tree = ->(c) { [c] + c.commands.reject(&:private).flat_map { |s| tree.(s) } }
+    commands = commands.flat_map { |c| tree.(c) }
     next if commands.empty?
     > ### {{ group.gsub(/:$/, '').gsub(/\A=+\s*|\s*=+\z/, '') }}
     >
     commands.each do |subcommand|
-      # subcommands of an exposed command (expose: true) are listed in its group by bashly: nest them under it
-      indent = "  " * (subcommand.full_name.split.size - full_name.split.size - 1)
+      indent = "  " * (subcommand.full_name.split.size - depth - 1)
       > {{ indent }}- [{{ subcommand.name }}]({{ subcommand.full_name.gsub(' ', '%20') }}) - {{ subcommand.summary.for_kdp_inline }}
     end
     >
