@@ -17,6 +17,8 @@ the record).
 """
 
 KILLED_TASK_PATTERN = r"Task threw an uncaught and unrecoverable exception|Task is being killed and will not recover"
+# the log report lists the exception chains of this known cause: hints() rewrites the patterns, so match it by title
+KILLED_TASK_TITLE = "🧨 A connector task was killed"
 
 KNOWN_CAUSES = [
     {"name": "oom_killed", "severity": "critical", "category": "Resource Issues",
@@ -119,7 +121,7 @@ KNOWN_CAUSES = [
      "advice": "the committed offset was deleted by retention: the consumer restarts from auto.offset.reset"},
     {"name": "task_killed", "severity": "high", "category": "Connect Issues",
      "pattern": KILLED_TASK_PATTERN,
-     "title": "🧨 A connector task was killed",
+     "title": KILLED_TASK_TITLE,
      "advice": "it stays FAILED until it is restarted: fix the cause (the exception chain of the record), then "
                "playground connector restart --connector <connector>"},
     {"name": "dns_error", "severity": "high", "category": "Network Issues",
@@ -176,7 +178,7 @@ _SEVERITY_RANK = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 # order of the known causes in the log report (its verdict and findings follow it), the other titles come after, in
 # declaration order
 HINT_ORDER = [
-    "💥 OutOfMemoryError", "🧨 A connector task was killed", "🧩 Plugin not found", "📦 Class loading error",
+    "💥 OutOfMemoryError", KILLED_TASK_TITLE, "🧩 Plugin not found", "📦 Class loading error",
     "🔑 Authentication failure", "🚫 Authorization failure", "🔐 TLS handshake failure", "🧲 Unknown magic byte",
     "🔀 Serialization or conversion error", "🔌 Connection failure", "⏱️ Timeouts", "📏 Record too large",
     "❓ Unknown topic or partition", "⏮️ Offset out of range",

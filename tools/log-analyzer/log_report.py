@@ -34,7 +34,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from report_html import (SERIES_1, SERIES_2, SEVERITY_ORDER, badge, card, charts_grid, e, findings_html,  # noqa: E402
                          kpi, kpis_html, page, svg_hbars, svg_time_columns, time_bins, verdict_html)
 import known_causes  # noqa: E402
-from known_causes import KILLED_TASK_PATTERN  # noqa: E402
+from known_causes import KILLED_TASK_TITLE  # noqa: E402
 
 LEVEL_ORDER = {"FATAL": 0, "ERROR": 1, "WARN": 2}
 
@@ -152,9 +152,6 @@ def all_records(files: List[dict]):
             yield f, r
 
 
-KILLED_TASK_RE = re.compile(KILLED_TASK_PATTERN)
-
-
 def earliest(matches: List[Tuple[int, dict, dict]]) -> Tuple[int, dict, dict]:
     """The (file index, file, record) that happened first: by timestamp, else by file and line"""
     return min(matches, key=lambda m: (m[2]["first_ts"] or "~", m[0], m[2]["first_line"]))
@@ -206,7 +203,7 @@ def match_hints(files: List[dict], unit: str = "file") -> List[dict]:
                  else f"in {first_f['label']} (first at {first})")
         hint = {"severity": severity, "title": title, "occurrences": occurrences, "files": labels, "where": where,
                 "advice": advice, "text": f"{title}: {occurrences} occurrence(s) {where}: {advice}"}
-        if rx.pattern == KILLED_TASK_RE.pattern:
+        if title == KILLED_TASK_TITLE:
             # the exception that killed the tasks is what to fix: one line per distinct chain
             chains = killed_task_chains(matches)
             hint["chains"] = chains
