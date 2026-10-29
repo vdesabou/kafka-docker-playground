@@ -322,7 +322,9 @@ playground stop
 | Customer symptom | Command |
 | --- | --- |
 | "the connector is RUNNING but nothing arrives" | `connector diagnose`: lag 0 + clean logs + a DLQ in the config → `topic dlq inspect` |
-| "the task is FAILED" | `connector diagnose`: the trace in 1/4 and the digest in 2/4, then `connector restart` after the fix |
+| "the task is FAILED" | `connector diagnose`: the trace in 1/4 and the digest in 2/4, then `connector restart` after the fix (`--only-failed` to leave the RUNNING tasks alone, in every connector) |
+| "one task does all the work", "task 3 is idle" | `connector tasks`: the config each task got (`tables` of a JDBC source...) and, for a sink, the partitions of each task (`- (no partition assigned)` when `tasks.max` is above the number of partitions) |
+| "which topics does this connector really use?" (`topics.regex`, a source with a topic per table) | `connector tasks` for the split, `connector topics` for the active topics (`--reset` to start the list over) |
 | "which records failed, and since when?" | `dlq inspect`: original topic / partition / offset range per error, `--json` for the full list |
 | "`Unknown magic byte!` in the DLQ" | produce raw records to an Avro topic (`topic produce --value '{"id": %g}'`, see the [`topic produce` deep dive](/deep-dive-topic-produce.md)), sink with `AvroConverter` |
 | "schema registry was down for an hour" | `playground container kill -c schema-registry`, produce, restart it, `dlq replay` (the 🩺 video session) |
@@ -347,6 +349,9 @@ nb=$(playground topic dlq inspect --topic dlq --json | jq '[.groups[] | select(.
 playground connector diagnose [--connector <c>] [--since 1h] [--max-findings 15] [--output-dir /tmp/playground-diagnose] [--no-open] [--verbose]
 playground topic dlq inspect  [--connector <c> | --topic <dlq>] [--grep <java regex>] [--max-messages 10000] [--json] [--output-dir <dir>] [--no-open]
 playground topic dlq replay   [--connector <c> | --topic <dlq>] [--to <topic>] [--grep <java regex>] [--keep-error-headers] [--dry-run]
+playground connector restart  [--connector <c>] [--task-id <n> | --only-failed]
+playground connector tasks    [--connector <c>] [--all-keys] [--json]
+playground connector topics   [--connector <c>] [--reset | --json]
 ```
 
 ```json
@@ -383,4 +388,5 @@ playground topic dlq replay   [--connector <c> | --topic <dlq>] [--to <topic>] [
 - 👉 Example: [`other/reprocess-dlq-messages-with-sink-connector`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/reprocess-dlq-messages-with-sink-connector)
 - 🧠 CLI reference: [playground connector diagnose](/playground%20connector%20diagnose),
   [playground topic dlq inspect](/playground%20topic%20dlq%20inspect), [playground topic dlq replay](/playground%20topic%20dlq%20replay),
-  [playground connector show-lag](/playground%20connector%20show-lag), [playground connector snippets](/playground%20connector%20snippets)
+  [playground connector show-lag](/playground%20connector%20show-lag), [playground connector snippets](/playground%20connector%20snippets),
+  [playground connector tasks](/playground%20connector%20tasks), [playground connector topics](/playground%20connector%20topics)
