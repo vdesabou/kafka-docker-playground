@@ -148,6 +148,7 @@ environments where the raw command only works on `plaintext`.
 | `kafka-console-producer`, `kafka-avro-console-producer` | `playground topic produce -t <t> --nb-messages N` (+ schema on stdin) |
 | `kafka-console-consumer` | `playground topic consume --topic <t> --min-expected-messages N --timeout 60` |
 | `kafka-configs --entity-type users\|clients` (client quotas) | `playground quota get\|set\|delete` (`--user`, `--client-id`, `--connector <c>` for its tasks, `--all-users`, `--all-client-ids`) |
+| `kafka-configs --entity-type brokers` (dynamic broker configs) | `playground broker config get\|set\|delete` (`--key <k>`, `--value <v>`, `--broker <id>`, cluster-wide without it; `get --key <k>` shows the value and its source, `--all` every config) |
 | `kafka-reassign-partitions`, `kafka-leader-election` | `playground topic reassign` (`--replicas 2,3`, `--brokers 1,2,3`, `--throttle`, `--no-wait` / `--verify-only`) / `playground topic elect-leader` (`--leader <broker>` for a controlled leader move, `--unclean`); needs `--enable-multiple-brokers` |
 | `kafka-topics --create\|--list\|--delete\|--describe` | `playground topic create\|list\|delete\|describe` |
 | `GetOffsetShell` / counting records | `playground topic get-number-records --topic <t>` |

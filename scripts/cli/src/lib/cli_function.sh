@@ -7748,8 +7748,8 @@ function get_quota_entities () {
   fi
 }
 
-# runs kafka-configs for a quota entity of get_quota_entities ($1), with the other arguments: exits 1 on error (the
-# tool sometimes exits 0 on errors)
+# runs kafka-configs for a quota entity of get_quota_entities or a broker entity of broker_config_entity ($1), with
+# the other arguments: exits 1 on error (the tool sometimes exits 0 on errors)
 function run_quota_kafka_configs () {
   local entity="$1" output rc=0
   shift
@@ -7760,10 +7760,49 @@ function run_quota_kafka_configs () {
   if [ $rc -ne 0 ] || echo "$output" | grep -q -E "^Error|Exception"
   then
     logerror "❌ kafka-configs failed:"
-    echo "$output"
+    echo "$output" | grep -v -E "^[[:space:]]+at "
     return 1
   fi
   [[ -n "$output" ]] && echo "$output"
+  return 0
+}
+
+# kafka-configs entity (tab separated, for run_quota_kafka_configs) of broker $1, or of the cluster-wide default
+# when $1 is empty
+function broker_config_entity () {
+  if [[ -n "$1" ]]
+  then
+    printf '%s\t%s\t%s\t%s' --entity-type brokers --entity-name "$1"
+  else
+    printf '%s\t%s\t%s' --entity-type brokers --entity-default
+  fi
+}
+
+# sets broker_config_ids to broker $1 (checking that it exists), or to every broker when $1 is empty: returns 1 on
+# error
+function get_broker_config_ids () {
+  local broker="$1" ids
+  ids=$(get_broker_ids)
+  if [[ -z "$ids" ]]
+  then
+    logerror "❌ no broker found, is an environment running? (playground status)"
+    return 1
+  fi
+  if [[ -n "$broker" ]]
+  then
+    if ! echo "$ids" | grep -q -x "$broker"
+    then
+      logerror "❌ broker $broker does not exist, brokers are: $(echo $ids)"
+      return 1
+    fi
+    broker_config_ids=("$broker")
+  else
+    broker_config_ids=()
+    while read -r id
+    do
+      broker_config_ids+=("$id")
+    done <<< "$ids"
+  fi
   return 0
 }
 

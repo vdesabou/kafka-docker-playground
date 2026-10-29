@@ -93,4 +93,16 @@ lab_run playground topic delete -t lab-nope
 lab_expect_exit 0
 lab_expect_contains "❌ topic lab-nope does not exist and regex does not match any topic !"
 
+log "Step 7: dynamic broker config, without restart"
+lab_run playground broker config set --key log.retention.ms --value 60000
+lab_expect_exit 0
+lab_expect_contains "⚙️ Setting log.retention.ms=60000 cluster-wide"
+lab_expect_contains "DYNAMIC_DEFAULT_BROKER_CONFIG"
+lab_run playground broker config set --key broker.id --value 3
+lab_expect_exit 1
+lab_expect_contains "Cannot update these configs dynamically"
+lab_run playground broker config delete --key log.retention.ms
+lab_expect_exit 0
+lab_expect_contains "(not set)"
+
 log "✅ all the outputs of the page are as expected"

@@ -149,6 +149,8 @@ playground_usage() {
   printf "  %s   🔎 Display client quotas\n" "$(green "quota get")                                 "
   printf "  %s   🚦 Set client quotas\n" "$(green "quota set")                                 "
   printf "  %s   🗑️ Remove client quotas\n" "$(green "quota delete")                              "
+  printf "  %s   🖥️ Broker commands\n" "$(green "broker")                                    "
+  printf "  %s   ⚙️ Dynamic broker config commands\n" "$(green "broker config")                             "
   echo
   printf "%s\n" "$(bold "Schema commands:")"
   printf "  %s   🔰 Schema commands\n" "$(green "schema")                                    "
@@ -11830,6 +11832,228 @@ playground_quota_delete_usage() {
     printf "%s\n" "$(bold "Examples")"
     printf "  playground quota delete --connector filestream-sink\n"
     printf "  playground quota delete --all-users --request-percentage\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_broker_usage() {
+  printf "playground broker - 🖥️ Broker commands\n\n"
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground broker COMMAND\n"
+  printf "  playground broker [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "Kafka commands:")"
+  printf "  %s   ⚙️ Dynamic broker config commands\n" "$(green "config")       "
+  printf "  %s   🔎 Display dynamic broker configs\n" "$(green "config get")   "
+  printf "  %s   ⚙️ Set a dynamic broker config\n" "$(green "config set")   "
+  printf "  %s   🗑️ Remove a dynamic broker config\n" "$(green "config delete")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_broker_config_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground broker config\n\n"
+    printf "  ⚙️ Dynamic broker config commands\n  \n  Read and change the configuration of the running brokers, without\n  restart (wraps kafka-configs --entity-type brokers). Works on plaintext,\n  secured environments and cfk (not on Confluent Cloud, where broker\n  configs can't be changed).\n  \n    get      dynamic configs, or the value and source of one key\n    set      set a key, cluster-wide or on one broker\n    delete   remove a dynamic value (back to the static or default one)\n  \n  Without --broker, set and delete apply to the cluster-wide default,\n  used by every broker without its own value. Only the configs marked\n  \"dynamic\" (per-broker or cluster-wide) in the broker configuration\n  reference can be changed: kafka-configs refuses the others.\n  \n  🎓 Tip: changing a broker environment variable with 'playground\n  container set-environment-variables' also works for the read-only\n  configs, but recreates the container.\n\n"
+  else
+    printf "playground broker config - ⚙️ Dynamic broker config commands\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground broker config COMMAND\n"
+  printf "  playground broker config [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "Kafka commands:")"
+  printf "  %s   🔎 Display dynamic broker configs\n" "$(green "get")   "
+  printf "  %s   ⚙️ Set a dynamic broker config\n" "$(green "set")   "
+  printf "  %s   🗑️ Remove a dynamic broker config\n" "$(green "delete")"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_broker_config_get_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground broker config get\n\n"
+    printf "  🔎 Display dynamic broker configs\n  \n  Without --key, displays the dynamic configs set cluster-wide and on\n  each broker (or on --broker only). With --key, displays the value used\n  by each broker and where it comes from (DYNAMIC_BROKER_CONFIG,\n  DYNAMIC_DEFAULT_BROKER_CONFIG, STATIC_BROKER_CONFIG or DEFAULT_CONFIG).\n  With --all, displays every config of the broker.\n\n"
+  else
+    printf "playground broker config get - 🔎 Display dynamic broker configs\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground broker config get [OPTIONS]\n"
+  printf "  playground broker config get --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--broker, -b BROKER")"
+    printf "    🖥️ Broker id (default: all brokers, plus the cluster-wide default for set\n    and delete)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--key, -k KEY")"
+    printf "    🔑 Config key (e.g. log.retention.ms)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--all")"
+    printf "    📜 Display every config of the broker (static and default ones too), not only\n    the dynamic ones\n"
+    printf "    %s\n" "Conflicts: --key"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground broker config get\n"
+    printf "  playground broker config get --key num.io.threads\n"
+    printf "  playground broker config get --broker 1 --all\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_broker_config_set_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground broker config set\n\n"
+    printf "  ⚙️ Set a dynamic broker config\n  \n  Applied right away, without restart, cluster-wide or on --broker only.\n  A value with commas (a list) is sent as one value.\n\n"
+  else
+    printf "playground broker config set - ⚙️ Set a dynamic broker config\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground broker config set [OPTIONS]\n"
+  printf "  playground broker config set --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--broker, -b BROKER")"
+    printf "    🖥️ Broker id (default: all brokers, plus the cluster-wide default for set\n    and delete)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--key, -k KEY (required)")"
+    printf "    🔑 Config key (e.g. log.retention.ms)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--value VALUE (required)")"
+    printf "    ✏️ New value\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground broker config set --key log.retention.ms --value 60000\n"
+    printf "  playground broker config set --broker 1 --key num.io.threads --value 16\n"
+    printf "  playground broker config set --key leader.replication.throttled.rate --value\n  1048576\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_broker_config_delete_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground broker config delete\n\n"
+    printf "  🗑️ Remove a dynamic broker config\n  \n  The broker falls back to the next value: the cluster-wide default\n  (when removing it from --broker), the static one of server.properties,\n  or the Kafka default.\n\n"
+  else
+    printf "playground broker config delete - 🗑️ Remove a dynamic broker config\n\n"
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground broker config delete [OPTIONS]\n"
+  printf "  playground broker config delete --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    # :command.usage_options
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--broker, -b BROKER")"
+    printf "    🖥️ Broker id (default: all brokers, plus the cluster-wide default for set\n    and delete)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--key, -k KEY (required)")"
+    printf "    🔑 Config key (e.g. log.retention.ms)\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--verbose, -v")"
+    printf "    🐞 Show command being ran.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground broker config delete --key log.retention.ms\n"
+    printf "  playground broker config delete --broker 1 --key num.io.threads\n"
     echo
 
   fi
@@ -23992,8 +24216,8 @@ function get_quota_entities () {
   fi
 }
 
-# runs kafka-configs for a quota entity of get_quota_entities ($1), with the other arguments: exits 1 on error (the
-# tool sometimes exits 0 on errors)
+# runs kafka-configs for a quota entity of get_quota_entities or a broker entity of broker_config_entity ($1), with
+# the other arguments: exits 1 on error (the tool sometimes exits 0 on errors)
 function run_quota_kafka_configs () {
   local entity="$1" output rc=0
   shift
@@ -24004,10 +24228,49 @@ function run_quota_kafka_configs () {
   if [ $rc -ne 0 ] || echo "$output" | grep -q -E "^Error|Exception"
   then
     logerror "❌ kafka-configs failed:"
-    echo "$output"
+    echo "$output" | grep -v -E "^[[:space:]]+at "
     return 1
   fi
   [[ -n "$output" ]] && echo "$output"
+  return 0
+}
+
+# kafka-configs entity (tab separated, for run_quota_kafka_configs) of broker $1, or of the cluster-wide default
+# when $1 is empty
+function broker_config_entity () {
+  if [[ -n "$1" ]]
+  then
+    printf '%s\t%s\t%s\t%s' --entity-type brokers --entity-name "$1"
+  else
+    printf '%s\t%s\t%s' --entity-type brokers --entity-default
+  fi
+}
+
+# sets broker_config_ids to broker $1 (checking that it exists), or to every broker when $1 is empty: returns 1 on
+# error
+function get_broker_config_ids () {
+  local broker="$1" ids
+  ids=$(get_broker_ids)
+  if [[ -z "$ids" ]]
+  then
+    logerror "❌ no broker found, is an environment running? (playground status)"
+    return 1
+  fi
+  if [[ -n "$broker" ]]
+  then
+    if ! echo "$ids" | grep -q -x "$broker"
+    then
+      logerror "❌ broker $broker does not exist, brokers are: $(echo $ids)"
+      return 1
+    fi
+    broker_config_ids=("$broker")
+  else
+    broker_config_ids=()
+    while read -r id
+    do
+      broker_config_ids+=("$id")
+    done <<< "$ids"
+  fi
   return 0
 }
 
@@ -55765,6 +56028,149 @@ playground_quota_delete_command() {
 }
 
 # :command.function
+playground_broker_config_get_command() {
+
+  # src/commands/broker/config/get.sh
+  broker="${args[--broker]}"
+  key="${args[--key]}"
+  all="${args[--all]}"
+  verbose="${args[--verbose]}"
+
+  get_broker_config_ids "$broker" || exit 1
+
+  if [[ -n "$key" ]]
+  then
+      if [[ -n "$broker" ]]
+      then
+          log "🔎 Value of $key on broker $broker"
+      else
+          log "🔎 Value of $key on each broker"
+      fi
+      key_regex="${key//./\\.}"
+      found=0
+      for id in "${broker_config_ids[@]}"
+      do
+          output=$(run_quota_kafka_configs "$(broker_config_entity "$id")" --describe --all) || exit 1
+          line=$(echo "$output" | grep -E "^[[:space:]]*${key_regex}=" | head -1)
+          if [[ -z "$line" ]]
+          then
+              continue
+          fi
+          if [ $found -eq 0 ]
+          then
+              printf '%-8s %-20s %s\n' "BROKER" "VALUE" "SOURCE"
+              found=1
+          fi
+          value=$(echo "$line" | sed -E "s/^[[:space:]]*${key_regex}=(.*) sensitive=(true|false) synonyms=\{.*\}$/\1/")
+          synonyms=$(echo "$line" | sed -E 's/.* synonyms=\{(.*)\}$/\1/')
+          source="${synonyms%%:*}"
+          if [[ -z "$source" ]]
+          then
+              # no value and no default: another key gives it (e.g. log.retention.hours for log.retention.ms)
+              value="(not set)"
+              source="-"
+          elif echo "$line" | grep -q " sensitive=true "
+          then
+              value="(sensitive)"
+          fi
+          printf '%-8s %-20s %s\n' "$id" "$value" "$source"
+      done
+      if [ $found -eq 0 ]
+      then
+          logerror "❌ $key is not a broker config, check its name ('playground broker config get --all' lists them)"
+          exit 1
+      fi
+      exit 0
+  fi
+
+  if [[ -n "$all" ]]
+  then
+      for id in "${broker_config_ids[@]}"
+      do
+          log "📜 All configs of broker $id"
+          run_quota_kafka_configs "$(broker_config_entity "$id")" --describe --all | grep -v -E "are:$" || exit 1
+      done
+      exit 0
+  fi
+
+  # dynamic configs only: the cluster-wide default (unless --broker), then the ones of each broker
+  targets=()
+  [[ -z "$broker" ]] && targets+=("")
+  targets+=("${broker_config_ids[@]}")
+  for id in "${targets[@]}"
+  do
+      if [[ -n "$id" ]]
+      then
+          log "🔎 Dynamic configs of broker $id"
+      else
+          log "🔎 Cluster-wide dynamic configs (default of all brokers)"
+      fi
+      output=$(run_quota_kafka_configs "$(broker_config_entity "$id")" --describe) || exit 1
+      output=$(echo "$output" | grep -v -E "are:$" || true)
+      if [[ -n "$output" ]]
+      then
+          echo "$output"
+      else
+          log "🤷 none, set one with playground broker config set"
+      fi
+  done
+
+}
+
+# :command.function
+playground_broker_config_set_command() {
+
+  # src/commands/broker/config/set.sh
+  broker="${args[--broker]}"
+  key="${args[--key]}"
+  value="${args[--value]}"
+  verbose="${args[--verbose]}"
+
+  get_broker_config_ids "$broker" || exit 1
+
+  # kafka-configs splits --add-config on commas: a list goes between brackets
+  if [[ "$value" == *,* ]] && [[ "$value" != \[*\] ]]
+  then
+      value="[$value]"
+  fi
+
+  if [[ -n "$broker" ]]
+  then
+      log "⚙️ Setting $key=${args[--value]} on broker $broker"
+      get_args=(--broker "$broker")
+  else
+      log "⚙️ Setting $key=${args[--value]} cluster-wide"
+      get_args=()
+  fi
+  run_quota_kafka_configs "$(broker_config_entity "$broker")" --alter --add-config "$key=$value" || exit 1
+  playground broker config get --key "$key" "${get_args[@]}"
+
+}
+
+# :command.function
+playground_broker_config_delete_command() {
+
+  # src/commands/broker/config/delete.sh
+  broker="${args[--broker]}"
+  key="${args[--key]}"
+  verbose="${args[--verbose]}"
+
+  get_broker_config_ids "$broker" || exit 1
+
+  if [[ -n "$broker" ]]
+  then
+      log "🗑️ Removing $key from broker $broker"
+      get_args=(--broker "$broker")
+  else
+      log "🗑️ Removing cluster-wide $key"
+      get_args=()
+  fi
+  run_quota_kafka_configs "$(broker_config_entity "$broker")" --alter --delete-config "$key" || exit 1
+  playground broker config get --key "$key" "${get_args[@]}"
+
+}
+
+# :command.function
 playground_consumer_group_list_command() {
 
   # src/commands/consumer-group/list.sh
@@ -66724,6 +67130,13 @@ parse_requirements() {
       action="quota"
       shift
       playground_quota_parse_requirements "$@"
+      shift $#
+      ;;
+
+    broker)
+      action="broker"
+      shift
+      playground_broker_parse_requirements "$@"
       shift $#
       ;;
 
@@ -94796,6 +95209,557 @@ playground_quota_delete_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_broker_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_broker_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    config)
+      action="config"
+      shift
+      playground_broker_config_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_broker_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_broker_config_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_broker_config_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    get)
+      action="get"
+      shift
+      playground_broker_config_get_parse_requirements "$@"
+      shift $#
+      ;;
+
+    set)
+      action="set"
+      shift
+      playground_broker_config_set_parse_requirements "$@"
+      shift $#
+      ;;
+
+    delete)
+      action="delete"
+      shift
+      playground_broker_config_delete_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_broker_config_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.user_filter
+  filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_not_ccloud_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_broker_config_get_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_broker_config_get_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="broker config get"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --broker | -b)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--broker']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--broker requires an argument: --broker, -b BROKER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --key | -k)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--key']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--key requires an argument: --key, -k KEY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --all)
+        # :flag.conflicts
+        if [[ -n "${args['--key']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--key" >&2
+          exit 1
+        fi
+
+        # :flag.case_no_arg
+        args['--all']=1
+        shift
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--broker'] ]]; then
+    validation_output="$(validate_integer "${args['--broker']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--broker, -b BROKER" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_broker_config_set_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_broker_config_set_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="broker config set"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --broker | -b)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--broker']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--broker requires an argument: --broker, -b BROKER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --key | -k)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--key']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--key requires an argument: --key, -k KEY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --value)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--value']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--value requires an argument: --value VALUE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--key']+x} ]]; then
+    printf "missing required flag: --key, -k KEY\n" >&2
+    exit 1
+  fi
+  if [[ -z ${args['--value']+x} ]]; then
+    printf "missing required flag: --value VALUE\n" >&2
+    exit 1
+  fi
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--broker'] ]]; then
+    validation_output="$(validate_integer "${args['--broker']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--broker, -b BROKER" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
+playground_broker_config_delete_parse_requirements() {
+  local key
+
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        playground_broker_config_delete_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="broker config delete"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --broker | -b)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--broker']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--broker requires an argument: --broker, -b BROKER" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --key | -k)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          args['--key']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--key requires an argument: --key, -k KEY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --verbose | -v)
+
+        # :flag.case_no_arg
+        args['--verbose']=1
+        shift
+        ;;
+
+      --)
+        shift
+        while [[ $# -gt 0 ]]; do
+          key="$1"
+          # :command.parse_requirements_case
+          # :command.parse_requirements_case_simple
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+
+        done
+        break
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--key']+x} ]]; then
+    printf "missing required flag: --key, -k KEY\n" >&2
+    exit 1
+  fi
+
+  # :command.validations
+  # :flag.validations
+  if [[ -v args['--broker'] ]]; then
+    validation_output="$(validate_integer "${args['--broker']:-}")"
+    if [[ -n "${validation_output}" ]]; then
+      printf "validation error in %s:\n%s\n" "--broker, -b BROKER" "$validation_output" >&2
+      exit 1
+    fi
+  fi
+
+}
+
+# :command.parse_requirements
 playground_consumer_group_parse_requirements() {
   local key
 
@@ -105319,6 +106283,11 @@ playground_completion() {
         playground_quota_completion "$completion_current" "$@"
         return
         ;;
+      broker)
+        shift
+        playground_broker_completion "$completion_current" "$@"
+        return
+        ;;
       consumer-group)
         shift
         playground_consumer_group_completion "$completion_current" "$@"
@@ -105383,7 +106352,7 @@ playground_completion() {
         ;;
     esac
   done
-  completion_candidates "$completion_current" help status doctor config secrets salesforce cloud-resources ccloud-costs ccloud-costs-history run re-run get-ci-result history find-example switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog cleanup-cloud-resources repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota consumer-group flink rbac connector-plugin connector ec2
+  completion_candidates "$completion_current" help status doctor config secrets salesforce cloud-resources ccloud-costs ccloud-costs-history run re-run get-ci-result history find-example switch-ccloud switch-back switch-podman switch-docker update-version open stop remove-all-docker-images remove-cp-docker-images refresh-cp-docker-images cleanup-cloud-details open-docs open-changelog cp-changelog cleanup-cloud-resources repro get-docker-compose schema tcp-proxy tools analyze debug get-jmx-metrics container pod topic quota broker consumer-group flink rbac connector-plugin connector ec2
 
   if [[ $completion_current == -* ]]; then
     completion_flag_candidates --help "$completion_current" --help -h
@@ -118774,6 +119743,248 @@ playground_quota_delete_completion() {
 }
 
 # :command.completion_function
+playground_broker_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      config)
+        shift
+        playground_broker_config_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" config
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_broker_config_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      get)
+        shift
+        playground_broker_config_get_completion "$completion_current" "$@"
+        return
+        ;;
+      set)
+        shift
+        playground_broker_config_set_completion "$completion_current" "$@"
+        return
+        ;;
+      delete)
+        shift
+        playground_broker_config_delete_completion "$completion_current" "$@"
+        return
+        ;;
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+  completion_candidates "$completion_current" get set delete
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+  fi
+
+}
+
+# :command.completion_function
+playground_broker_config_get_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --broker | -b)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--broker"]=1
+
+        ;;
+      --key | -k)
+        shift
+        if [[ $# -eq 0 ]]; then
+          completion_candidates "$completion_current" background.threads compression.type follower.replication.throttled.rate leader.replication.throttled.rate log.cleaner.io.max.bytes.per.second log.cleaner.threads log.message.timestamp.type log.retention.bytes log.retention.ms log.segment.bytes max.connection.creation.rate max.connections max.connections.per.ip message.max.bytes min.insync.replicas num.io.threads num.network.threads num.replica.fetchers unclean.leader.election.enable
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--key"]=1
+
+        ;;
+      --all)
+        completion_blocked_flags["--all"]=1
+        completion_blocked_flags["--key"]=1
+
+        shift
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --broker "$completion_current" --broker -b
+    completion_flag_candidates --key "$completion_current" --key -k
+    completion_flag_candidates --all "$completion_current" --all
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_broker_config_set_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --broker | -b)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--broker"]=1
+
+        ;;
+      --key | -k)
+        shift
+        if [[ $# -eq 0 ]]; then
+          completion_candidates "$completion_current" background.threads compression.type follower.replication.throttled.rate leader.replication.throttled.rate log.cleaner.io.max.bytes.per.second log.cleaner.threads log.message.timestamp.type log.retention.bytes log.retention.ms log.segment.bytes max.connection.creation.rate max.connections max.connections.per.ip message.max.bytes min.insync.replicas num.io.threads num.network.threads num.replica.fetchers unclean.leader.election.enable
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--key"]=1
+
+        ;;
+      --value)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--value"]=1
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --broker "$completion_current" --broker -b
+    completion_flag_candidates --key "$completion_current" --key -k
+    completion_flag_candidates --value "$completion_current" --value
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
+playground_broker_config_delete_completion() {
+  local completion_current="$1"
+  shift
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help | -h)
+        completion_blocked_flags["--help"]=1
+        shift
+        ;;
+      --broker | -b)
+        shift
+        if [[ $# -eq 0 ]]; then
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--broker"]=1
+
+        ;;
+      --key | -k)
+        shift
+        if [[ $# -eq 0 ]]; then
+          completion_candidates "$completion_current" background.threads compression.type follower.replication.throttled.rate leader.replication.throttled.rate log.cleaner.io.max.bytes.per.second log.cleaner.threads log.message.timestamp.type log.retention.bytes log.retention.ms log.segment.bytes max.connection.creation.rate max.connections max.connections.per.ip message.max.bytes min.insync.replicas num.io.threads num.network.threads num.replica.fetchers unclean.leader.election.enable
+
+          return
+        fi
+        shift
+        completion_blocked_flags["--key"]=1
+
+        ;;
+      --verbose | -v)
+        completion_blocked_flags["--verbose"]=1
+
+        shift
+        ;;
+      *)
+        return
+        ;;
+    esac
+  done
+
+  if [[ $completion_current == -* ]]; then
+    completion_flag_candidates --help "$completion_current" --help -h
+    completion_flag_candidates --broker "$completion_current" --broker -b
+    completion_flag_candidates --key "$completion_current" --key -k
+    completion_flag_candidates --verbose "$completion_current" --verbose -v
+  fi
+
+}
+
+# :command.completion_function
 playground_consumer_group_completion() {
   local completion_current="$1"
   shift
@@ -124148,6 +125359,11 @@ run() {
     "quota get") playground_quota_get_command ;;
     "quota set") playground_quota_set_command ;;
     "quota delete") playground_quota_delete_command ;;
+    "broker") playground_broker_command ;;
+    "broker config") playground_broker_config_command ;;
+    "broker config get") playground_broker_config_get_command ;;
+    "broker config set") playground_broker_config_set_command ;;
+    "broker config delete") playground_broker_config_delete_command ;;
     "consumer-group") playground_consumer_group_command ;;
     "consumer-group list") playground_consumer_group_list_command ;;
     "consumer-group describe") playground_consumer_group_describe_command ;;

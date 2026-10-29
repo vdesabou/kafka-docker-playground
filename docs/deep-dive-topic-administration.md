@@ -17,6 +17,7 @@ work on every environment the playground starts, local or Confluent Cloud. Takes
 | --- | --- |
 | a topic with N partitions and some configs | `playground topic create -t <t> --nb-partitions 3 --config retention.ms=60000` |
 | change a config of a live topic | `playground topic alter -t <t> --add-config max.message.bytes=1000` (`--delete-config <k>` to remove it) |
+| change a config of the live brokers (the default of every topic, threads, throttles) | `playground broker config set --key log.retention.ms --value 60000` (`--broker <id>` for one broker, `get --key <k>` for the value and its source, `delete --key <k>`) |
 | partitions, replicas, ISR and config overrides | `playground topic describe [-t <t>]` |
 | the topics (without or with internal ones) | `playground topic list [--show-internal]` |
 | the topics by disk size | `playground topic list --sort-by-size` / `playground topic get-size [-t <t>]` |
@@ -312,6 +313,7 @@ playground stop
 | "the count doesn't match what the consumer reads" | `get-number-records` (offsets) vs `topic consume --count` (records): transactions, compaction or retention explain the gap |
 | "a source connector created nothing" | `topic wait-for-records -t <t> --min-expected-messages 1 --max-wait 120` (works before the topic exists), then `topic consume` |
 | "our topic has an odd config" | `topic describe -t <t>`: `Configs:` shows only the overrides; compare with the customer's `kafka-configs --describe` |
+| "it only happens with the broker setting of the customer" (`log.retention.ms`, `message.max.bytes`, `min.insync.replicas`, `log.cleaner.threads`…) | `playground broker config set --key <k> --value <v>` changes it on the running brokers, without restart; `broker config get --key <k>` shows the value each broker uses and where it comes from (`DYNAMIC_DEFAULT_BROKER_CONFIG`, `STATIC_BROKER_CONFIG`, `DEFAULT_CONFIG`). A key that isn't dynamic (`Cannot update these configs dynamically`) needs `container set-environment-variables` (recreates the broker) |
 | "start the repro from scratch" | `topic delete -t 'repro-.*'` (subjects included), or `--skip-delete-schema` to keep the schema history |
 | "which topics fill the disk?" | `topic list --sort-by-size` |
 | "the client fails / pauses when a partition leader moves (`NOT_LEADER_OR_FOLLOWER`, metadata refresh)" | `playground run --enable-multiple-brokers`, `topic create -t <t> --nb-partitions 3 --replication-factor 3`, then while the client runs: `topic elect-leader -t <t> --partition 0 --leader 2` (a leader change without stopping a broker) |
@@ -343,6 +345,9 @@ playground topic reassign -t <t> --replicas 2,3 [--partition N] | --brokers 1,2,
 playground topic reassign -t <t> --verify-only          # progress of a --no-wait reassignment
 playground topic elect-leader -t <t> [--partition N] [--leader <broker> | --unclean]
 playground topic display-consumer-offsets              # follows, ctrl-c
+playground broker config get [--broker <id>] [--key <k> | --all]
+playground broker config set --key <k> --value <v> [--broker <id>]   # cluster-wide without --broker
+playground broker config delete --key <k> [--broker <id>]
 playground topic tag list|create|delete|add|remove|show|search   # Confluent Cloud
 ```
 

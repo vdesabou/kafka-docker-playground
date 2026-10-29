@@ -5239,6 +5239,129 @@
       ]
     },
     {
+      "name": "broker",
+      "description": "🖥️ Broker commands",
+      "usage": "playground broker COMMAND",
+      "options": [],
+      "subcommands": [
+        {
+          "name": "config",
+          "description": "⚙️ Dynamic broker config commands\n\nRead and change the configuration of the running brokers, without\nrestart (wraps kafka-configs --entity-type brokers). Works on plaintext,\nsecured environments and cfk (not on Confluent Cloud, where broker\nconfigs can't be changed).\n\n  get      dynamic configs, or the value and source of one key\n  set      set a key, cluster-wide or on one broker\n  delete   remove a dynamic value (back to the static or default one)\n\nWithout --broker, set and delete apply to the cluster-wide default,\nused by every broker without its own value. Only the configs marked\n\"dynamic\" (per-broker or cluster-wide) in the broker configuration\nreference can be changed: kafka-configs refuses the others.\n\n🎓 Tip: changing a broker environment variable with 'playground\ncontainer set-environment-variables' also works for the read-only\nconfigs, but recreates the container.",
+          "usage": "playground broker config COMMAND",
+          "options": [],
+          "subcommands": [
+            {
+              "name": "get",
+              "description": "🔎 Display dynamic broker configs\n\nWithout --key, displays the dynamic configs set cluster-wide and on\neach broker (or on --broker only). With --key, displays the value used\nby each broker and where it comes from (DYNAMIC_BROKER_CONFIG,\nDYNAMIC_DEFAULT_BROKER_CONFIG, STATIC_BROKER_CONFIG or DEFAULT_CONFIG).\nWith --all, displays every config of the broker.",
+              "usage": "playground broker config get [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--broker",
+                    "-b"
+                  ],
+                  "argument": "BROKER",
+                  "description": "🖥️ Broker id (default: all brokers, plus the cluster-wide default for set and delete)"
+                },
+                {
+                  "names": [
+                    "--key",
+                    "-k"
+                  ],
+                  "argument": "KEY",
+                  "description": "🔑 Config key (e.g. log.retention.ms)"
+                },
+                {
+                  "names": [
+                    "--all"
+                  ],
+                  "argument": "",
+                  "description": "📜 Display every config of the broker (static and default ones too), not only the dynamic ones\n\nConflicts with: --key"
+                },
+                {
+                  "names": [
+                    "--verbose",
+                    "-v"
+                  ],
+                  "argument": "",
+                  "description": "🐞 Show command being ran."
+                }
+              ]
+            },
+            {
+              "name": "set",
+              "description": "⚙️ Set a dynamic broker config\n\nApplied right away, without restart, cluster-wide or on --broker only.\nA value with commas (a list) is sent as one value.",
+              "usage": "playground broker config set [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--broker",
+                    "-b"
+                  ],
+                  "argument": "BROKER",
+                  "description": "🖥️ Broker id (default: all brokers, plus the cluster-wide default for set and delete)"
+                },
+                {
+                  "names": [
+                    "--key",
+                    "-k"
+                  ],
+                  "argument": "KEY",
+                  "description": "🔑 Config key (e.g. log.retention.ms)\n\nRequired: ✓ Yes"
+                },
+                {
+                  "names": [
+                    "--value"
+                  ],
+                  "argument": "VALUE",
+                  "description": "✏️ New value\n\nRequired: ✓ Yes"
+                },
+                {
+                  "names": [
+                    "--verbose",
+                    "-v"
+                  ],
+                  "argument": "",
+                  "description": "🐞 Show command being ran."
+                }
+              ]
+            },
+            {
+              "name": "delete",
+              "description": "🗑️ Remove a dynamic broker config\n\nThe broker falls back to the next value: the cluster-wide default\n(when removing it from --broker), the static one of server.properties,\nor the Kafka default.",
+              "usage": "playground broker config delete [OPTIONS]",
+              "options": [
+                {
+                  "names": [
+                    "--broker",
+                    "-b"
+                  ],
+                  "argument": "BROKER",
+                  "description": "🖥️ Broker id (default: all brokers, plus the cluster-wide default for set and delete)"
+                },
+                {
+                  "names": [
+                    "--key",
+                    "-k"
+                  ],
+                  "argument": "KEY",
+                  "description": "🔑 Config key (e.g. log.retention.ms)\n\nRequired: ✓ Yes"
+                },
+                {
+                  "names": [
+                    "--verbose",
+                    "-v"
+                  ],
+                  "argument": "",
+                  "description": "🐞 Show command being ran."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "consumer-group",
       "description": "👥 Consumer group commands\n\nInspect any consumer group (not only the ones of sink connectors): which\ngroups exist, their state and members, and the committed offsets and lag\nper partition. Works on plaintext, secured environments, cfk and\nConfluent Cloud.\n\n  list            consumer groups, optionally with their state\n  describe        committed offsets and lag, or --state, or --members\n  reset-offsets   rewind or fast-forward a group (earliest, latest, datetime...)\n  delete          delete a group, or its offsets for one topic\n\n🎓 Tip: for a sink connector, 'playground connector show-lag' follows the\nlag until it reaches 0.\n\n🍪 Deep dive: https://kafka-docker-playground.io/#/deep-dive-offsets-and-lag\n🎬 Bite size session: https://kafka-docker-playground.io/#/sessions?id=%E2%8F%AA-the-lag-of-a-sink-is-stuck",
       "usage": "playground consumer-group COMMAND",
