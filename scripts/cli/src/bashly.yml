@@ -1365,6 +1365,9 @@ commands:
 
     Replaces the manual steps of the Salesforce example READMEs. Only signing
     up for the Developer Edition org stays manual.
+
+    📖 Step by step guide (Salesforce CLI install, second org, troubleshooting):
+    https://kafka-docker-playground.io/#/salesforce
   commands:
   - name: setup
     help: |-

@@ -2,6 +2,7 @@
 - [🐳 Introduction](/introduction.md)
 - [👾 Content](/content.md)
 - [🚀 How to Use](/how-to-use.md)
+- [☁️ Salesforce examples](/salesforce.md)
 - [🧠 CLI](/cli.md)
 - [📊 Reports](/reports.md)
 - [🎬 Bite size sessions](/sessions.md)

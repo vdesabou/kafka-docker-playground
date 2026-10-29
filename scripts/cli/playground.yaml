@@ -497,14 +497,13 @@ subcommands:
       argument: PROFILE
       description: "\U0001F5C2️ Secrets profile to use (default is the active one)"
 - name: salesforce
-  description: |-
-    ☁️ Set up a Salesforce org for the Salesforce examples, and check it
-
-      setup   configure an org: External Client App (JWT bearer), Platform Event, Change Data Capture
-      check   verify that the stored credentials can log in, and that the org has what the examples need
-
-    Replaces the manual steps of the Salesforce example READMEs. Only signing
-    up for the Developer Edition org stays manual.
+  description: "☁️ Set up a Salesforce org for the Salesforce examples, and check
+    it\n\n  setup   configure an org: External Client App (JWT bearer), Platform Event,
+    Change Data Capture\n  check   verify that the stored credentials can log in,
+    and that the org has what the examples need\n\nReplaces the manual steps of the
+    Salesforce example READMEs. Only signing\nup for the Developer Edition org stays
+    manual.\n\n\U0001F4D6 Step by step guide (Salesforce CLI install, second org,
+    troubleshooting):\nhttps://kafka-docker-playground.io/#/salesforce"
   usage: playground salesforce COMMAND
   options: []
   subcommands:

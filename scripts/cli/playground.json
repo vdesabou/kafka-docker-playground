@@ -460,7 +460,7 @@
     },
     {
       "name": "salesforce",
-      "description": "☁️ Set up a Salesforce org for the Salesforce examples, and check it\n\n  setup   configure an org: External Client App (JWT bearer), Platform Event, Change Data Capture\n  check   verify that the stored credentials can log in, and that the org has what the examples need\n\nReplaces the manual steps of the Salesforce example READMEs. Only signing\nup for the Developer Edition org stays manual.",
+      "description": "☁️ Set up a Salesforce org for the Salesforce examples, and check it\n\n  setup   configure an org: External Client App (JWT bearer), Platform Event, Change Data Capture\n  check   verify that the stored credentials can log in, and that the org has what the examples need\n\nReplaces the manual steps of the Salesforce example READMEs. Only signing\nup for the Developer Edition org stays manual.\n\n📖 Step by step guide (Salesforce CLI install, second org, troubleshooting):\nhttps://kafka-docker-playground.io/#/salesforce",
       "usage": "playground salesforce COMMAND",
       "options": [],
       "subcommands": [

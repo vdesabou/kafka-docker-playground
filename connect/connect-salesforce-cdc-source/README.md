@@ -44,6 +44,10 @@ playground run -f salesforce-cdc-source.sh
 
 ## Automated setup
 
+> The step by step guide, with the Salesforce CLI install, the second org of the sink examples and the
+> troubleshooting of `playground salesforce check`, is on the website:
+> [Salesforce examples: set up an org](https://kafka-docker-playground.io/#/salesforce).
+
 Once you have an account (see [Register a test account](#register-a-test-account)), one command configures it for all the Salesforce examples. It needs the [Salesforce CLI](https://developer.salesforce.com/tools/salesforcecli) (`sf`) on your machine:
 
 ```bash

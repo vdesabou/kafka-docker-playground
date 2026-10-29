@@ -9,7 +9,7 @@ The connectors authenticate with the OAuth JWT Bearer flow (`salesforce.grant.ty
 ## Prerequisites
 
 > [!TIP]
-> `playground salesforce setup` configures the Salesforce org (External Client App with the JWT Bearer flow, Platform Event, Change Data Capture) and stores `SALESFORCE_USERNAME`, `SALESFORCE_INSTANCE` and `SALESFORCE_CONSUMER_KEY_WITH_JWT`, see [Automated setup](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-salesforce-cdc-source#automated-setup). `playground salesforce check` verifies them.
+> `playground salesforce setup` configures the Salesforce org (External Client App with the JWT Bearer flow, Platform Event, Change Data Capture) and stores `SALESFORCE_USERNAME`, `SALESFORCE_INSTANCE` and `SALESFORCE_CONSUMER_KEY_WITH_JWT`, see [Salesforce examples: set up an org](https://kafka-docker-playground.io/#/salesforce) (Salesforce CLI install, second org, troubleshooting). `playground salesforce check` verifies them.
 
 * A Salesforce account: go to [Salesforce developer portal](https://developer.salesforce.com/signup/) and register an account.
 * An External Client App with the JWT Bearer flow: follow [these instructions](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-salesforce-cdc-source#oauth-with-jwt-bearer-flow).

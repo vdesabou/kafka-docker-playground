@@ -9,7 +9,7 @@ Leads are read from a first Salesforce account with a source connector (Bulk API
 ## Prerequisites
 
 > [!TIP]
-> `playground salesforce setup` (account #1) and `playground salesforce setup --account2` (account #2) configure the Salesforce orgs (External Client App with the JWT Bearer flow, Platform Event, Change Data Capture) and store `SALESFORCE_USERNAME`, `SALESFORCE_INSTANCE` and `SALESFORCE_CONSUMER_KEY_WITH_JWT` (`_ACCOUNT2` for account #2), see [Automated setup](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-salesforce-cdc-source#automated-setup). `playground salesforce check` (`--account2`) verifies them.
+> `playground salesforce setup` (account #1) and `playground salesforce setup --account2` (account #2) configure the Salesforce orgs (External Client App with the JWT Bearer flow, Platform Event, Change Data Capture) and store `SALESFORCE_USERNAME`, `SALESFORCE_INSTANCE` and `SALESFORCE_CONSUMER_KEY_WITH_JWT` (`_ACCOUNT2` for account #2), see [Salesforce examples: set up an org](https://kafka-docker-playground.io/#/salesforce) (Salesforce CLI install, second org, troubleshooting). `playground salesforce check` (`--account2`) verifies them.
 
 * Two Salesforce accounts (see [Register test accounts](#register-test-accounts)).
 * On each account, an External Client App with the JWT Bearer flow enabled (see [OAuth with JWT Bearer Flow](#oauth-with-jwt-bearer-flow)), trusting the same certificate. It is always used by the sfdx CLI, and also by the Bulk API connectors for versions that support `JWT_BEARER` (3.0.15 to 3.0.x, and later than 3.1.8). Older versions authenticate with username, password and security token. The PushTopic source connector always uses `JWT_BEARER`.

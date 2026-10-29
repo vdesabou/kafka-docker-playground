@@ -7,7 +7,7 @@ Quickly test the [Salesforce Bulk API Source](https://docs.confluent.io/current/
 ## Prerequisites
 
 > [!TIP]
-> `playground salesforce setup` configures the Salesforce org (External Client App with the JWT Bearer flow, Platform Event, Change Data Capture) and stores `SALESFORCE_USERNAME`, `SALESFORCE_INSTANCE` and `SALESFORCE_CONSUMER_KEY_WITH_JWT`, see [Automated setup](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-salesforce-cdc-source#automated-setup). `playground salesforce check` verifies them.
+> `playground salesforce setup` configures the Salesforce org (External Client App with the JWT Bearer flow, Platform Event, Change Data Capture) and stores `SALESFORCE_USERNAME`, `SALESFORCE_INSTANCE` and `SALESFORCE_CONSUMER_KEY_WITH_JWT`, see [Salesforce examples: set up an org](https://kafka-docker-playground.io/#/salesforce) (Salesforce CLI install, second org, troubleshooting). `playground salesforce check` verifies them.
 
 * A Salesforce account (see [Register a test account](#register-a-test-account)).
 * An External Client App with the JWT Bearer flow enabled (see [OAuth with JWT Bearer Flow](#oauth-with-jwt-bearer-flow)). It is always used by the sfdx CLI, and also by the connector for versions that support `JWT_BEARER` (3.0.15 to 3.0.x, and later than 3.1.8). Older versions authenticate with username, password and security token.

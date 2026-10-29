@@ -3324,7 +3324,7 @@ playground_secrets_lint_usage() {
 playground_salesforce_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground salesforce\n\n"
-    printf "  ☁️ Set up a Salesforce org for the Salesforce examples, and check it\n  \n    setup   configure an org: External Client App (JWT bearer), Platform Event,\n  Change Data Capture\n    check   verify that the stored credentials can log in, and that the org has\n  what the examples need\n  \n  Replaces the manual steps of the Salesforce example READMEs. Only signing\n  up for the Developer Edition org stays manual.\n\n"
+    printf "  ☁️ Set up a Salesforce org for the Salesforce examples, and check it\n  \n    setup   configure an org: External Client App (JWT bearer), Platform Event,\n  Change Data Capture\n    check   verify that the stored credentials can log in, and that the org has\n  what the examples need\n  \n  Replaces the manual steps of the Salesforce example READMEs. Only signing\n  up for the Developer Edition org stays manual.\n  \n  📖 Step by step guide (Salesforce CLI install, second org, troubleshooting):\n  https://kafka-docker-playground.io/#/salesforce\n\n"
   else
     printf "playground salesforce - ☁️ Set up a Salesforce org for the Salesforce examples, and check it\n\n"
   fi
