@@ -4669,9 +4669,9 @@ commands:
 
       📂 Folders are scanned recursively. .zip, .tar, .tar.gz and .tgz files
       are extracted in a temporary folder, .gz files are decompressed on the
-      fly, binary files are skipped, and so are the copies of a file already
-      analyzed (an archive next to its extracted folder). Only files with
-      findings are shown.
+      fly, binary files are skipped, and so are the copies of a file or of a
+      CFK support bundle already analyzed (an archive next to its extracted
+      folder). Only files with findings are shown.
 
       ☸️ A Confluent for Kubernetes (CFK) support bundle (kubectl confluent support-bundle or playground debug cfk generate-bundle: a folder with cluster-details.txt, or with cluster-resources/ and operator/), alone or inside a folder or an archive, is detected and analyzed as a whole, in a Docker image built on first use: Warning events, pods (phase, waiting reasons, restarts, OOMKilled), every platform.confluent.io custom resource (phase/state, ready replicas, False conditions, failed connector tasks), the environment checked against the CFK support matrix (Kubernetes, CFK operator, CP and init container versions), the recent changes (who edited which CR and when, StatefulSet rollouts, pod restarts), a JVM default truststore set without its password, and the ERROR/FATAL records of its logs, sorted into ~30 categories (pod failures, TLS, auth, MDS/RBAC, license, KRaft, replication, storage, scheduling…) with remediation steps. Each issue is attributed to a component and an instance (CR name), and to its connector: --component keeps some of them, the HTML report has Component / Instance / Connector filters. 🔒 Secrets, IPs, hostnames, emails and LDAP DNs are sanitized by default (best effort: review before sharing), --no-sanitize for internal bundles only. --logs-only gives the plain log digest instead.
 

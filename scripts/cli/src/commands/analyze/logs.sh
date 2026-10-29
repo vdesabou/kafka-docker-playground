@@ -119,6 +119,24 @@ function sanitize_file () {
 # CFK support bundles found in the input (folder and label), analyzed by cfk-analysis instead of the log digest
 cfk_bundles=()
 cfk_labels=()
+# fingerprint (relative path and size of each file) of each CFK bundle, to skip a copy (an archive next to its
+# extracted folder): fingerprint -> label
+declare -A cfk_fingerprints=()
+
+# returns 0 (and logs it) when the folder has the same files as a CFK bundle already found
+# $1: folder, $2: label
+function is_duplicate_cfk_bundle () {
+    local fingerprint
+    fingerprint=$(cd "$1" && find . -type f ! -path "*/__MACOSX/*" ! -name ".DS_Store" -exec wc -c {} + | grep -v ' total$' | sed 's/^ *//' | LC_ALL=C sort | cksum)
+    if [ -n "${cfk_fingerprints[$fingerprint]}" ]
+    then
+        log "⏭️  $2: same CFK support bundle as ${cfk_fingerprints[$fingerprint]}, skipped"
+        nb_duplicates=$((nb_duplicates+1))
+        return 0
+    fi
+    cfk_fingerprints[$fingerprint]="$2"
+    return 1
+}
 
 # a folder written by kubectl confluent support-bundle (or playground debug cfk generate-bundle): cluster-details.txt
 # and cluster-resources/ at the top, or operator/ next to a <namespace>/ folder with them (older layout)
@@ -169,8 +187,11 @@ function analyze_logs_path () {
     then
         if [[ -z "$logs_only" ]] && is_cfk_bundle "$path"
         then
-            cfk_bundles+=("$path")
-            cfk_labels+=("${label%:}")
+            if ! is_duplicate_cfk_bundle "$path" "${label%:}"
+            then
+                cfk_bundles+=("$path")
+                cfk_labels+=("${label%:}")
+            fi
             return
         fi
         # CFK bundles in sub folders: analyzed on their own, their files are left out of the log digest
