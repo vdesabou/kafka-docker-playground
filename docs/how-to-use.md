@@ -621,18 +621,23 @@ By default, Flink task/jobmanager is not started for every test.
 
 You can enable Flink for any connector using plaintext deployment with `--enable-flink` option of [playground run](/playground%20run) or by setting environment variable `ENABLE_FLINK=1` in your shell. 
 
-Once enabled, the CLI will ask if you need to download any connectors. Based on the response, you can download one or more connectors from Flink's [maven](https://repo.maven.apache.org/maven2/org/apache/flink/) repository. 
+Once enabled, the CLI will ask if you need to download any connectors. Based on the response, you can download one or more connectors from Flink's [maven](https://repo.maven.apache.org/maven2/org/apache/flink/) repository. To skip the question (in a script or CI), set `FLINK_URL` to the jar(s) to download.
 
-Additionally, you can start Flink in any of the available [deployment modes](https://nightlies.apache.org/flink/flink-docs-master/docs/deployment/overview/#deployment-modes) by navigating to the respective directory:
+🐹 Flink UI and REST API are reachable using [http://127.0.0.1:18081](http://127.0.0.1:18081).
 
-- `kafka-docker-playground/`
-  - `flink/`
-    - `flink_app_mode/start.sh`
-    - `flink_session_mode/start.sh`
-    - `flink_session_sql_mode/start.sh`
+Then run Flink SQL and manage the jobs with [playground flink](/playground%20flink) (see the [Flink SQL with Kafka](https://github.com/vdesabou/kafka-docker-playground/tree/master/flink/flink-sql-kafka) example):
 
+```bash
+# one SQL client session: CREATE TABLE and the INSERT INTO that uses it go in the same call
+playground flink sql << 'EOF'
+CREATE TABLE orders (id INT, product STRING) WITH ('connector' = 'datagen', 'rows-per-second' = '1');
+CREATE TABLE sink (id INT, product STRING) WITH ('connector' = 'print');
+INSERT INTO sink SELECT * FROM orders;
+EOF
 
-🐹 Flink UI is reachable using [http://127.0.0.1:8081](http://127.0.0.1:8081) within the flink child directory. If you enable Flink by starting connector deployment, [http://127.0.0.1:18081](http://127.0.0.1:18081) will be used. 
+playground flink list-jobs            # state, start time, duration, root cause of FAILED jobs
+playground flink cancel --all         # or --job <id>
+```
 
 ## 🔢 JMX Metrics
 

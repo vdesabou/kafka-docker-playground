@@ -154,6 +154,7 @@ environments where the raw command only works on `plaintext`.
 | `jstack`, `jmap`, `jcmd`, `tcpdump`, JFR, a java agent | `playground debug thread-dump\|heap-dump\|tcp-dump\|flight-recorder\|jscissors`, then `playground analyze thread-dump\|heap-dump\|gc-logs\|flight-recorder\|tcp-dump\|jscissors` |
 | `tc` / `iptables` in a container to slow down or cut its network (`add_latency`…) | `playground debug degrade-traffic` (`--latency`, `--jitter`, `--loss`, `--corruption`, `--rate`, `--action start\|stop\|status`) / `playground debug block-traffic` |
 | editing `log4j.properties` to raise a log level | `playground debug log-level set --package <pkg> --level TRACE` |
+| `docker exec sql-client bin/sql-client.sh`, `curl` on the Flink jobmanager REST API (`:18081/jobs`) | `playground flink sql` (statements on stdin or `--file`) / `playground flink list-jobs` (`--state`, `--json`) / `playground flink cancel` (`--job`, `--all`) |
 
 Legitimate exceptions — use the raw command only for these, and only when no flag above covers it:
 
